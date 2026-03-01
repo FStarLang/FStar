@@ -17,8 +17,8 @@
 *)
 
 module FStarC.CList
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStar.Tactics.Typeclasses
 open FStarC.Class.Ord
 open FStarC.Class.Listlike
@@ -68,25 +68,25 @@ instance ord_clist (a:Type0) (d : ord a) : Tot (ord (t a)) = {
   cmp = (fun l1 l2 -> cmp (to_list l1) (to_list l2));
 }
 
-let rec map (#a #b : Type0) (f : a -> b) (l : clist a) : clist b =
+let rec map (#a #b : Type0) (f : a -> ML b) (l : clist a) : ML (clist b) =
   match l with
   | CNil -> CNil
   | CCons x xs -> CCons (f x) (map f xs)
   | CCat xs ys -> ccat (map f xs) (map f ys)
 
-let rec existsb (#a : Type0) (p : a -> bool) (l : clist a) : bool =
+let rec existsb (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool =
   match l with
   | CNil -> false
-  | CCons x xs -> p x || existsb p xs
-  | CCat xs ys -> existsb p xs || existsb p ys
+  | CCons x xs -> let r = p x in let r2 = existsb p xs in r || r2
+  | CCat xs ys -> let r = existsb p xs in let r2 = existsb p ys in r || r2
 
-let rec for_all (#a : Type0) (p : a -> bool) (l : clist a) : bool =
+let rec for_all (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool =
   match l with
   | CNil -> true
-  | CCons x xs -> p x && for_all p xs
-  | CCat xs ys -> for_all p xs && for_all p ys
+  | CCons x xs -> let r = p x in let r2 = for_all p xs in r && r2
+  | CCat xs ys -> let r = for_all p xs in let r2 = for_all p ys in r && r2
 
-let rec partition (#a : Type0) (p : a -> bool) (l : clist a) : clist a * clist a =
+let rec partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a * clist a) =
   match l with
   | CNil -> (CNil, CNil)
   | CCons x xs ->
@@ -97,7 +97,7 @@ let rec partition (#a : Type0) (p : a -> bool) (l : clist a) : clist a * clist a
     let (us, vs) = partition p ys in
     (ccat ys us, ccat zs vs)
 
-let rec collect (#a #b : Type0) (f : a -> clist b) (l : clist a) : clist b =
+let rec collect (#a #b : Type0) (f : a -> ML (clist b)) (l : clist a) : ML (clist b) =
   match l with
   | CNil -> CNil
   | CCons x xs -> ccat (f x) (collect f xs)

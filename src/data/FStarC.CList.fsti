@@ -18,8 +18,8 @@
 
 (* Catenable lists, based on Jaskelioff and Rivas' "Functional Pearl: A Smart View on Datatypes" *)
 module FStarC.CList
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Class.Deq
 open FStarC.Class.Ord
 open FStarC.Class.Show
@@ -37,12 +37,12 @@ instance val showable_clist (a:Type0) (_ : showable a) : Tot (showable (t a))
 instance val eq_clist (a:Type0) (_ : deq a) : Tot (deq (t a))
 instance val ord_clist (a:Type0) (_ : ord a) : Tot (ord (t a))
 
-val map (#a #b : Type0) (f : a -> b) (l : clist a) : clist b
+val map (#a #b : Type0) (f : a -> ML b) (l : clist a) : ML (clist b)
 
-val existsb (#a : Type0) (p : a -> bool) (l : clist a) : bool
+val existsb (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool
 
-val for_all (#a : Type0) (p : a -> bool) (l : clist a) : bool
+val for_all (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool
 
-val partition (#a : Type0) (p : a -> bool) (l : clist a) : clist a * clist a
+val partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a * clist a)
 
-val collect : ('a -> clist 'b) -> clist 'a -> clist 'b
+val collect : ('a -> ML (clist 'b)) -> clist 'a -> ML (clist 'b)

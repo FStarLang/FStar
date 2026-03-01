@@ -5,11 +5,11 @@ open FStarC.Effect
 
 class monoid (a:Type) = {
    mzero : a;
-   mplus : a -> a -> a;
+   mplus : a -> a -> ML a;
 }
 
 (* Alias *)
-val ( ++ ) (#a:Type) {| monoid a |} : a -> a -> a
+val ( ++ ) (#a:Type) {| monoid a |} : a -> a -> ML a
 
 val msum (#a:Type) {| monoid a |} (xs:list a) : ML a
 

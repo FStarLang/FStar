@@ -16,7 +16,8 @@ let (<*>) u1 u2 =
   fun args ->
     let? f, args' = u1 args in
     let? v, args'' = u2 args' in
-    Some (f v, args'')
+    let r = f v in
+    Some (r, args'')
 
 let (<**>) u1 u2 = u1 <*> one u2
 

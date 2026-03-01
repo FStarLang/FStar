@@ -7,28 +7,28 @@ open FStarC.Class.Deq
 
 class ord (a:Type) = {
   super : deq a;
-  cmp : a -> a -> order;
+  cmp : a -> a -> ML order;
 }
 
-val (<?)  : #a:Type -> {| ord a |} -> a -> a -> bool
-val (<=?) : #a:Type -> {| ord a |} -> a -> a -> bool
-val (>?)  : #a:Type -> {| ord a |} -> a -> a -> bool
-val (>=?) : #a:Type -> {| ord a |} -> a -> a -> bool
+val (<?)  : #a:Type -> {| ord a |} -> a -> a -> ML bool
+val (<=?) : #a:Type -> {| ord a |} -> a -> a -> ML bool
+val (>?)  : #a:Type -> {| ord a |} -> a -> a -> ML bool
+val (>=?) : #a:Type -> {| ord a |} -> a -> a -> ML bool
 
-val min : #a:Type -> {| ord a |} -> a -> a -> a
-val max : #a:Type -> {| ord a |} -> a -> a -> a
+val min : #a:Type -> {| ord a |} -> a -> a -> ML a
+val max : #a:Type -> {| ord a |} -> a -> a -> ML a
 
 instance val ord_eq (a:Type) (d : ord a) : Tot (deq a)
 
 val sort
   (#a:Type) {| ord a |}
   (xs : list a)
-  : list a
+  : ML (list a)
 
 val sort_by
-  (#a:Type) (f : a -> a -> order)
+  (#a:Type) (f : a -> a -> ML order)
   (xs : list a)
-  : list a
+  : ML (list a)
 
 (* Deduplicate elements, preserving order as determined by the leftmost
 occurrence. So dedup [a,b,c,a,f,e,c] = [a,b,c,f,e] *)
@@ -41,12 +41,12 @@ val dedup
 val sort_dedup
   (#a:Type) {| ord a |}
   (xs : list a)
-  : list a
+  : ML (list a)
 
 (* Returns the difference of two lists, modulo order and duplication.
 The first component is the elements only present in xs, and the second
 is the elements only present in ys. *)
-val ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a
+val ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : ML (list a & list a)
 
 instance val ord_int    : ord int
 instance val ord_bool   : ord bool

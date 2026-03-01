@@ -15,7 +15,7 @@ let max x y = if x >=? y then x else y
 instance ord_eq (a:Type) (d : ord a) : Tot (deq a) = d.super
 
 let rec sort #a xs =
-   let rec insert (x:a) (xs:list a) : list a =
+   let rec insert (x:a) (xs:list a) : ML (list a) =
    match xs with
    | [] -> [x]
    | y::ys -> if x <=? y then x :: y :: ys else y :: insert x ys
@@ -28,7 +28,7 @@ let rec sort #a xs =
 we can just construct a dictionary with this new function
 without to use a newtype (which would involve a traversal
 of the list to convert into!). *)
-let sort_by #a (f : a -> a -> order) xs =
+let sort_by #a (f : a -> a -> ML order) xs =
   let d : ord a = {
     super = { (=?) = (fun a b -> f a b = Eq) };
     cmp = f;
@@ -40,7 +40,7 @@ let dedup #a xs : ML (list a) =
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
   List.rev out
 
-let rec insert_nodup #a {| ord a |} (x:a) (xs:list a) : list a =
+let rec insert_nodup #a {| ord a |} (x:a) (xs:list a) : ML (list a) =
   match xs with
   | [] -> [x]
   | y::ys ->
@@ -54,11 +54,12 @@ let rec sort_dedup #a xs =
   | [] -> []
   | x::xs -> insert_nodup x (sort_dedup xs)
 
-let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a =
+let ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : ML (list a & list a) =
   let open FStarC.Order in
   let xs = xs |> sort_dedup in
   let ys = ys |> sort_dedup in
-  let rec go (xd, yd) xs ys : list a & list a =
+  let rec go acc xs ys : ML (list a & list a) =
+    let (xd, yd) = acc in
     match xs, ys with
     | x::xs, y::ys -> (
       match cmp x y with

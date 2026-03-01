@@ -10,7 +10,7 @@ class hasNames (a:Type) = {
 }
 
 class hasBinders (a:Type) = {
-  boundNames : a -> flat_set bv;
+  boundNames : a -> ML (flat_set bv);
 }
 
 instance val hasNames_term : hasNames term

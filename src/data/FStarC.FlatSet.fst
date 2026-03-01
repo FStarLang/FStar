@@ -17,7 +17,6 @@
 *)
 
 module FStarC.FlatSet
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Class.Ord
 open FStarC.Effect
@@ -32,19 +31,19 @@ cannot (yet) do big changes here. *)
 (* Inv: no duplication. We are left-biased. *)
 let flat_set t = list t
 
-val add (#a:Type) {| ord a |} : a -> flat_set a -> flat_set a
+val add (#a:Type) {| ord a |} : a -> flat_set a -> ML (flat_set a)
 let rec add x s =
   match s with
   | [] -> [x]
-  | y::yy -> if x =? y then s else y :: add x yy
+  | y::yy -> let r = x =? y in if r then s else y :: add x yy
 
 val empty (#a:Type) : unit -> flat_set a
 let empty () = []
 
-val from_list (#a:Type) {| ord a |} : list a -> flat_set a
+val from_list (#a:Type) {| ord a |} : list a -> ML (flat_set a)
 let from_list xs = dedup xs
 
-val mem (#a:Type) {| ord a |} : a -> flat_set a -> bool
+val mem (#a:Type) {| ord a |} : a -> flat_set a -> ML bool
 let mem x s = List.existsb (fun y -> x =? y) s
 
 val singleton (#a:Type) {| ord a |} : a -> flat_set a
@@ -53,40 +52,40 @@ let singleton x = [x]
 val is_empty (#a:Type) : flat_set a -> bool
 let is_empty s = Nil? s
 
-val addn (#a:Type) {| ord a |} : list a -> flat_set a -> flat_set a
+val addn (#a:Type) {| ord a |} : list a -> flat_set a -> ML (flat_set a)
 let addn xs ys = List.fold_right add xs ys
 
-val remove (#a:Type) {| ord a |} : a -> flat_set a -> flat_set a
+val remove (#a:Type) {| ord a |} : a -> flat_set a -> ML (flat_set a)
 let rec remove x s =
   match s with
   | [] -> []
-  | y::yy -> if x =? y then yy else y :: remove x yy
+  | y::yy -> let r = x =? y in if r then yy else y :: remove x yy
 
 val elems (#a:Type) : flat_set a -> list a
 let elems s = s
 
-val for_all (#a:Type) : (a -> bool) -> flat_set a -> bool
+val for_all (#a:Type) : (a -> ML bool) -> flat_set a -> ML bool
 let for_all p s = elems s |> List.for_all p
 
-val for_any (#a:Type) : (a -> bool) -> flat_set a -> bool
+val for_any (#a:Type) : (a -> ML bool) -> flat_set a -> ML bool
 let for_any p s = elems s |> List.existsb p
 
-val subset (#a:Type) {| ord a |} : flat_set a -> flat_set a -> bool
+val subset (#a:Type) {| ord a |} : flat_set a -> flat_set a -> ML bool
 let subset s1 s2 = for_all (fun y -> mem y s2) s1
 
-val equal (#a:Type) {| ord a |} : flat_set a -> flat_set a -> bool
-let equal s1 s2 = sort s1 =? sort s2
+val equal (#a:Type) {| ord a |} : flat_set a -> flat_set a -> ML bool
+let equal s1 s2 = let r = sort s1 =? sort s2 in r
 
-val union (#a:Type) {| ord a |} : flat_set a -> flat_set a -> flat_set a
+val union (#a:Type) {| ord a |} : flat_set a -> flat_set a -> ML (flat_set a)
 let union s1 s2 = List.fold_left (fun s x -> add x s) s1 s2
 
-val inter (#a:Type) {| ord a |} : flat_set a -> flat_set a -> flat_set a
+val inter (#a:Type) {| ord a |} : flat_set a -> flat_set a -> ML (flat_set a)
 let inter s1 s2 = List.filter (fun y -> mem y s2) s1
 
-val diff (#a:Type) {| ord a |} : flat_set a -> flat_set a -> flat_set a
-let diff s1 s2 = List.filter (fun y -> not (mem y s2)) s1
+val diff (#a:Type) {| ord a |} : flat_set a -> flat_set a -> ML (flat_set a)
+let diff s1 s2 = List.filter (fun y -> let r = mem y s2 in not r) s1
 
-val collect (#a #b:Type) {| ord b |} : (a -> flat_set b) -> list a -> flat_set b
+val collect (#a #b:Type) {| ord b |} : (a -> ML (flat_set b)) -> list a -> ML (flat_set b)
 let collect f l = List.fold_right (fun x acc -> f x `union` acc) l (empty ())
 
 instance showable_set (a:Type) (_ : ord a) (_ : showable a) : Tot (showable (flat_set a)) = {

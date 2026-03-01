@@ -17,8 +17,8 @@
 *)
 
 module FStarC.RBSet
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Class.Ord
 open FStarC.Class.Show
 open FStarC.Class.Setlike
@@ -51,8 +51,8 @@ let blackroot (t:rbset 'a{N? t}) : rbset 'a =
   match t with
   | N (_, l, x, r) -> N (B, l, x, r)
 
-let add {| ord 'a |} (x:'a) (s:rbset 'a) : rbset 'a =
-  let rec add' (s:rbset 'a) : rbset 'a =
+let add {| ord 'a |} (x:'a) (s:rbset 'a) : ML (rbset 'a) =
+  let rec add' (s:rbset 'a) : ML (rbset 'a) =
     match s with
     | L -> N (R, L, x, L)
     | N (c, a, y, b) ->
@@ -62,14 +62,16 @@ let add {| ord 'a |} (x:'a) (s:rbset 'a) : rbset 'a =
   in
   blackroot (add' s)
 
-let filter {| ord 'a |} (predicate: 'a -> bool) (set: rbset 'a): rbset 'a =
-  let rec aux acc = function
+let filter {| ord 'a |} (predicate: 'a -> ML bool) (set: rbset 'a): ML (rbset 'a) =
+  let rec aux (acc : rbset 'a) (s : rbset 'a) : ML (rbset 'a) =
+    match s with
     | L -> acc
     | N (_, l, v, r) ->
-      aux (aux (if predicate v then add v acc else acc) l) r
+      let acc' = if predicate v then add v acc else acc in
+      aux (aux acc' l) r
   in aux (empty ()) set
 
-let rec extract_min #a {| ord a |} (t : rbset a{N? t}) : rbset a & a =
+let rec extract_min #a {| ord a |} (t : rbset a{N? t}) : ML (rbset a & a) =
   match t with
   | N (_, L, x, r) -> r, x
   | N (c, a, x, b) ->
@@ -79,7 +81,7 @@ let rec extract_min #a {| ord a |} (t : rbset a{N? t}) : rbset a & a =
 (* This is not the right way, see https://www.cs.cornell.edu/courses/cs3110/2020sp/a4/deletion.pdf
 for how to do it. But if we reach that complexity, I would like for
 this whole module to be verified. *)
-let rec remove {| ord 'a |} (x:'a) (t:rbset 'a) : rbset 'a =
+let rec remove {| ord 'a |} (x:'a) (t:rbset 'a) : ML (rbset 'a) =
   match t with
   | L -> L
   | N (c, l, y, r) ->
@@ -93,7 +95,7 @@ let rec remove {| ord 'a |} (x:'a) (t:rbset 'a) : rbset 'a =
         let (r', y') = extract_min r in
         balance c l y' r'
 
-let rec mem {| ord 'a |} (x:'a) (s:rbset 'a) : bool =
+let rec mem {| ord 'a |} (x:'a) (s:rbset 'a) : ML bool =
   match s with
   | L -> false
   | N (_, a, y, b) ->
@@ -106,16 +108,16 @@ let rec elems (s:rbset 'a) : list 'a =
   | L -> []
   | N (_, a, x, b) -> elems a @ [x] @ elems b
 
-let equal {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : bool =
+let equal {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML bool =
   elems s1 =? elems s2
 
-let rec union {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : rbset 'a =
+let rec union {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML (rbset 'a) =
   match s1 with
   | L -> s2
   | N (c, a, x, b) -> union a (union b (add x s2))
 
-let inter {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : rbset 'a =
-  let rec aux (s1:rbset 'a) (acc : rbset 'a) : rbset 'a =
+let inter {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML (rbset 'a) =
+  let rec aux (s1:rbset 'a) (acc : rbset 'a) : ML (rbset 'a) =
     match s1 with
     | L -> acc
     | N (_, a, x, b) ->
@@ -125,35 +127,35 @@ let inter {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : rbset 'a =
   in
   aux s1 L
 
-let rec diff {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : rbset 'a =
+let rec diff {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML (rbset 'a) =
   match s2 with
   | L -> s1
   | N (_, a, x, b) -> diff (diff (remove x s1) a) b
 
-let rec subset {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : bool =
+let rec subset {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML bool =
   match s1 with
   | L -> true
-  | N (_, a, x, b) -> mem x s2 && subset a s2 && subset b s2
+  | N (_, a, x, b) -> let r1 = mem x s2 in let r2 = subset a s2 in let r3 = subset b s2 in r1 && r2 && r3
 
-let rec for_all (p:'a -> bool) (s:rbset 'a) : bool =
+let rec for_all (p:'a -> ML bool) (s:rbset 'a) : ML bool =
   match s with
   | L -> true
-  | N (_, a, x, b) -> p x && for_all p a && for_all p b
+  | N (_, a, x, b) -> let r1 = p x in let r2 = for_all p a in let r3 = for_all p b in r1 && r2 && r3
 
-let rec for_any (p:'a -> bool) (s:rbset 'a) : bool =
+let rec for_any (p:'a -> ML bool) (s:rbset 'a) : ML bool =
   match s with
   | L -> false
-  | N (_, a, x, b) -> p x || for_any p a || for_any p b
+  | N (_, a, x, b) -> let r1 = p x in let r2 = for_any p a in let r3 = for_any p b in r1 || r2 || r3
 
 // Make this faster
-let from_list {| ord 'a |} (xs : list 'a) : rbset 'a =
+let from_list {| ord 'a |} (xs : list 'a) : ML (rbset 'a) =
   List.fold_left (fun s e -> add e s) L xs
 
-let addn {| ord 'a |} (xs : list 'a) (s : rbset 'a) : rbset 'a =
+let addn {| ord 'a |} (xs : list 'a) (s : rbset 'a) : ML (rbset 'a) =
   List.fold_left (fun s e -> add e s) s xs
 
-let collect #a {| ord a |} (f : a -> rbset a)
-    (l : list a) : rbset a =
+let collect #a {| ord a |} (f : a -> ML (rbset a))
+    (l : list a) : ML (rbset a) =
     List.fold_left (fun s e -> union (f e) s) L l
 
 instance setlike_rbset (a:Type) (_ : ord a) : Tot (setlike a (rbset a)) = {

@@ -4,7 +4,7 @@ open FStarC
 open FStarC.Effect
 
 class monad (m : Type -> Type) = {
-   return : #a:Type -> a -> m a;
+   return : #a:Type -> a -> ML (m a);
    bind   : #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b)
 }
 
@@ -60,7 +60,7 @@ val (<$>)
   (#m: Type -> Type)
   {| monad m |}
   (#a #b :Type)
-: (a -> b) -> m a -> ML (m b)
+: (a -> ML b) -> m a -> ML (m b)
 
 val (<*>) 
   (#m: Type -> Type)
@@ -72,5 +72,5 @@ val fmap
   (#m: Type -> Type)
   {| monad m |}
   (#a #b :Type)
-  (f : a -> b)
+  (f : a -> ML b)
 : m a -> ML (m b)

@@ -106,23 +106,22 @@ let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
-  let rec aux acc xs : list 'a & list 'a =
+let max_suffix (f : 'a -> ML bool) (xs : list 'a) : ML (list 'a & list 'a) =
+  let rec aux acc xs : ML (list 'a & list 'a) =
     match xs with
     | [] -> acc, []
-    | x::xs when f x ->
-      aux (x::acc) xs
     | x::xs ->
-      (acc, x::xs)
+      if f x then aux (x::acc) xs
+      else (acc, x::xs)
   in
   xs |> List.rev |> aux [] |> (fun (xs, ys) -> List.rev ys, xs)
 
-let rec eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a)
-  : bool
+let rec eq_list (f: 'a -> 'a -> ML bool) (l1 l2 : list 'a)
+  : ML bool
   = match l1, l2 with
     | [], [] -> true
     | [], _ | _, [] -> false
-    | x1::t1, x2::t2 -> f x1 x2 && eq_list f t1 t2
+    | x1::t1, x2::t2 -> let r = f x1 x2 in let r2 = eq_list f t1 t2 in r && r2
 
 let psmap_to_list m =
   psmap_fold m (fun k v a -> (k,v)::a) []

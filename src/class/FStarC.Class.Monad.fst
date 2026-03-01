@@ -63,7 +63,8 @@ let rec foldM_right f xs e =
 
 let (<$>) f x =
   let! v = x in
-  return (f v)
+  let r = f v in
+  return r
 
 let (<*>) ff x =
   let! f = ff in
@@ -72,4 +73,5 @@ let (<*>) ff x =
 
 let fmap f m =
   let! v = m in
-  return (f v)
+  let r = f v in
+  return r

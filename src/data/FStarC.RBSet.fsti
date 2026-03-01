@@ -17,8 +17,8 @@
 *)
 
 module FStarC.RBSet
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Class.Ord
 open FStarC.Class.Show
 open FStarC.Class.Setlike

@@ -70,7 +70,9 @@ let mk_interp2 #a #b #r
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let r = f a' b' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
 
@@ -83,7 +85,9 @@ let mk_nbe_interp2 #a #b #r
     fun cbs us args ->
       match args with
       | [(a, _); (b, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let r = f a' b' in
         return (NBE.embed solve cbs r)
       | _ ->
         None
@@ -98,7 +102,10 @@ let mk_interp3 #a #b #c #r
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let r = f a' b' c' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
 
@@ -112,7 +119,10 @@ let mk_nbe_interp3 #a #b #c #r
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let r = f a' b' c' in
         return (NBE.embed solve cbs r)
       | _ ->
         None
@@ -128,7 +138,11 @@ let mk_interp4 #a #b #c #d #r
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! d' = try_unembed_simple d in
+        let r = f a' b' c' d' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
 
@@ -143,7 +157,11 @@ let mk_nbe_interp4 #a #b #c #d #r
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! d' = NBE.unembed solve cbs d in
+        let r = f a' b' c' d' in
         return (NBE.embed solve cbs r)
       | _ ->
         None
@@ -160,7 +178,12 @@ let mk_interp5 #a #b #c #d #e #r
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d <*> try_unembed_simple e in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! d' = try_unembed_simple d in
+        let! e' = try_unembed_simple e in
+        let r = f a' b' c' d' e' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
 
@@ -176,7 +199,12 @@ let mk_nbe_interp5 #a #b #c #d #e #r
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d <*> NBE.unembed solve cbs e in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! d' = NBE.unembed solve cbs d in
+        let! e' = NBE.unembed solve cbs e in
+        let r = f a' b' c' d' e' in
         return (NBE.embed solve cbs r)
       | _ ->
         None
@@ -316,8 +344,9 @@ let mk2' #a #b #r #na #nb #nr
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! r = f a' b' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -325,8 +354,9 @@ let mk2' #a #b #r #na #nb #nr
     fun cbs us args ->
       match args with
       | [(a, _); (b, _)] ->
-        let! r = nbe_f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! r = nbe_f a' b' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in
@@ -346,8 +376,10 @@ let mk3' #a #b #c #r #na #nb #nc #nr
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! r = f a' b' c' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -355,8 +387,10 @@ let mk3' #a #b #c #r #na #nb #nc #nr
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _)] ->
-        let! r = nbe_f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! r = nbe_f a' b' c' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in
@@ -377,8 +411,11 @@ let mk4' #a #b #c #d #r #na #nb #nc #nd #nr
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! d' = try_unembed_simple d in
+        let! r = f a' b' c' d' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -386,8 +423,11 @@ let mk4' #a #b #c #d #r #na #nb #nc #nd #nr
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _)] ->
-        let! r = nbe_f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! d' = NBE.unembed solve cbs d in
+        let! r = nbe_f a' b' c' d' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in
@@ -409,8 +449,12 @@ let mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = f <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d <*> try_unembed_simple e in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! d' = try_unembed_simple d in
+        let! e' = try_unembed_simple e in
+        let! r = f a' b' c' d' e' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -418,8 +462,12 @@ let mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-        let! r = nbe_f <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d <*> NBE.unembed solve cbs e in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! d' = NBE.unembed solve cbs d in
+        let! e' = NBE.unembed solve cbs e in
+        let! r = nbe_f a' b' c' d' e' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in
@@ -442,8 +490,13 @@ let mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
     fun psc cb us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-        let! r = ff <$> try_unembed_simple a <*> try_unembed_simple b <*> try_unembed_simple c <*> try_unembed_simple d <*> try_unembed_simple e <*> try_unembed_simple f in
-        let! r = r in
+        let! a' = try_unembed_simple a in
+        let! b' = try_unembed_simple b in
+        let! c' = try_unembed_simple c in
+        let! d' = try_unembed_simple d in
+        let! e' = try_unembed_simple e in
+        let! f' = try_unembed_simple f in
+        let! r = ff a' b' c' d' e' f' in
         return (embed_simple psc.psc_range r)
       | _ -> failwith "arity"
   in
@@ -451,8 +504,13 @@ let mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
     fun cbs us args ->
       match args with
       | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-        let! r = nbe_ff <$> NBE.unembed solve cbs a <*> NBE.unembed solve cbs b <*> NBE.unembed solve cbs c <*> NBE.unembed solve cbs d <*> NBE.unembed solve cbs e <*> NBE.unembed solve cbs f in
-        let! r = r in
+        let! a' = NBE.unembed solve cbs a in
+        let! b' = NBE.unembed solve cbs b in
+        let! c' = NBE.unembed solve cbs c in
+        let! d' = NBE.unembed solve cbs d in
+        let! e' = NBE.unembed solve cbs e in
+        let! f' = NBE.unembed solve cbs f in
+        let! r = nbe_ff a' b' c' d' e' f' in
         return (NBE.embed solve cbs r)
       | _ -> failwith "arity"
   in

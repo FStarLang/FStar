@@ -50,9 +50,9 @@ val max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-val max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a
+val max_suffix (f : 'a -> ML bool) (xs : list 'a) : ML (list 'a & list 'a)
 
-val eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a) : bool
+val eq_list (f: 'a -> 'a -> ML bool) (l1 l2 : list 'a) : ML bool
 
 val psmap_to_list (m : PSMap.t 'a) : ML (list (string & 'a))
 val psmap_keys (m : PSMap.t 'a) : ML (list string)
