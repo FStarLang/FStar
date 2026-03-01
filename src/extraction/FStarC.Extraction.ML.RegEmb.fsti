@@ -15,7 +15,6 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.RegEmb
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module handles registering plugins and generating
 embeddings for their types. *)
@@ -32,12 +31,12 @@ open FStarC.Extraction.ML.UEnv
    is extracted along with an invocation to FStarC.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
-val maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1
-
 val interpret_plugin_as_term_fun :
               UEnv.uenv
             -> fv:fv
             -> t:typ
             -> arity:option int
             -> ml_fv:mlexpr'
-            -> option (mlexpr & mlexpr & int & bool)
+            -> ML (option (mlexpr & mlexpr & int & bool))
+
+val maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1)

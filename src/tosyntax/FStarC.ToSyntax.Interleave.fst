@@ -14,7 +14,6 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.Interleave
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 //Reorders the top-level definitions/declarations in a file
@@ -150,8 +149,8 @@ let is_definition_of x d =
 let rec prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
-   : list decl  //remaining iface decls
-   & list decl =  //d prefixed with relevant bits from iface
+   : ML (list decl  //remaining iface decls
+    & list decl) =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
        let karamel_private =
            FStarC.Parser.AST.mk_term
@@ -193,7 +192,8 @@ let rec prefix_with_iface_decls
          iface, [qualify_karamel_private impl]
        ) else (
          let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
-         let rec aux mutuals iface =
+         let rec aux mutuals iface
+            : ML (list decl & list decl) =
            match mutuals, iface with
            | [], _ -> [], iface
            | _::_, [] -> [], []
@@ -224,7 +224,8 @@ let rec prefix_with_iface_decls
     end
 
 let check_initial_interface (iface:list decl) =
-    let rec aux iface =
+    let rec aux iface
+        : ML unit =
         match iface with
         | [] -> ()
         | hd::tl -> begin
@@ -259,8 +260,8 @@ let check_initial_interface (iface:list decl) =
 let ml_mode_prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
-   : list decl    //remaining iface decls
-   & list decl =  //impl prefixed with relevant bits from iface
+   : ML (list decl    //remaining iface decls
+    & list decl) =  //impl prefixed with relevant bits from iface
 
 
    match impl.d with
@@ -336,7 +337,7 @@ let ml_mode_prefix_with_iface_decls
      | _ ->
        iface, iface_prefix_tycons@[impl]
 
-let ml_mode_check_initial_interface mname (iface:list decl) =
+let ml_mode_check_initial_interface mname (iface:list decl) : ML (list decl) =
   iface |> List.filter (fun d ->
     match d.d with
     | Tycon(_, _, tys)
@@ -353,16 +354,18 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
     | _ -> false)
 
 //Check if the interface declarations contain a #push-options "--MLish" pragma
-let iface_has_mlish_pragma (iface:list decl) : bool =
+let iface_has_mlish_pragma (iface:list decl) : ML bool =
   iface |> Util.for_some (fun d ->
     match d.d with
     | Pragma (PushOptions (Some s)) -> Util.contains s "--MLish"
     | _ -> false)
 
-let is_ml_mode (iface:list decl) : bool =
-  Options.ml_ish () || iface_has_mlish_pragma iface
+let is_ml_mode (iface:list decl) : ML bool =
+  let ml = Options.ml_ish () in
+  if ml then true
+  else iface_has_mlish_pragma iface
 
-let prefix_one_decl (ml_mode:bool) (iface:list decl) impl =
+let prefix_one_decl (ml_mode:bool) (iface:list decl) impl : ML (list decl & list decl) =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
@@ -387,7 +390,7 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
     | None ->
       (), E.set_iface_decls env mname decls
 
-let fixup_interleaved_decls (iface : list decl) : list decl =
+let fixup_interleaved_decls (iface : list decl) : ML (list decl) =
   let fix1 (d : decl) : decl =
     let d = { d with interleaved = true } in
     d

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Subst
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 
@@ -34,7 +33,7 @@ module S = FStarC.Syntax.Syntax
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)
 *)
-let rec apply_until_some (f : 'a -> option 'b) (s : list 'a) : option (list 'a & 'b) =
+let rec apply_until_some (f : 'a -> ML (option 'b)) (s : list 'a) : ML (option (list 'a & 'b)) =
   match s with
   | [] -> None
   | s0::rest ->
@@ -42,12 +41,12 @@ let rec apply_until_some (f : 'a -> option 'b) (s : list 'a) : option (list 'a &
       | None -> apply_until_some f rest
       | Some st -> Some (rest, st)
 
-let map_some_curry (f : 'a -> 'b -> 'c) (x : 'c) : option ('a & 'b) -> 'c =
+let map_some_curry (f : 'a -> 'b -> ML 'c) (x : 'c) : option ('a & 'b) -> ML 'c =
   function
   | None -> x
   | Some (a, b) -> f a b
 
-let apply_until_some_then_map (f : 'a -> option 'b) (s : list 'a) (g : list 'a -> 'b -> 'c) (t : 'c) : 'c =
+let apply_until_some_then_map (f : 'a -> ML (option 'b)) (s : list 'a) (g : list 'a -> 'b -> ML 'c) (t : 'c) : ML 'c =
     apply_until_some f s
     |> map_some_curry g t
 /////////////////////////////////////////////////////////////////////////
@@ -67,7 +66,7 @@ let compose_subst (s1 s2 : subst_ts) : subst_ts =
 
 //apply a delayed substitution s to t,
 //composing it with any other delayed substitution that may already be there
-let delay (t:term) (s : subst_ts) : term =
+let delay (t:term) (s : subst_ts) : ML term =
  match t.n with
  | Tm_delayed {tm=t'; substs=s'} ->
     //s' is the subsitution already associated with this node;
@@ -90,7 +89,7 @@ let delay (t:term) (s : subst_ts) : term =
       than Tm_uvar then the fastpath out match in compress will
       need to be updated.
 *)
-let rec force_uvar' t =
+let rec force_uvar' t : ML _ =
   match t.n with
   | Tm_uvar ({ctx_uvar_head=uv}, s) ->
       (match Unionfind.find uv with
@@ -100,13 +99,13 @@ let rec force_uvar' t =
 
 //wraps force_uvar' to propagate any position information
 //from the uvar to anything it may have been resolved to
-let force_uvar t =
+let force_uvar t : ML _ =
   let t', forced = force_uvar' t in
   if forced
   then delay t' ([], SomeUseRange t.pos)
   else t
 
-let rec compress_univ u = match u with
+let rec compress_univ u : ML _ = match u with
     | U_unif u' ->
       begin match Unionfind.univ_find u' with
         | Some u -> compress_univ u
@@ -136,7 +135,7 @@ let subst_univ_nm (x:univ_name) s = U.find_map s (function
     | UD(y, i) when (ident_equals x y) -> Some (U_bvar i)
     | _ -> None)
 
-let rec subst_univ s u =
+let rec subst_univ s u : ML _ =
     let u = compress_univ u in
     match u with
       | U_bvar x ->
@@ -151,7 +150,7 @@ let rec subst_univ s u =
       | U_succ u -> U_succ (subst_univ s u)
       | U_max us -> U_max (List.map (subst_univ s) us)
 
-let tag_with_range (t : term) (s : subst_ts) : term =
+let tag_with_range (t : term) (s : subst_ts) : ML term =
     match snd s with
     | NoUseRange -> t
     | SomeUseRange r ->
@@ -186,7 +185,7 @@ let mk_range r (s:subst_ts) =
 (* Applies a substitution to a node,
      immediately if it is a variable
      or builds a delayed node otherwise *)
-let rec subst' (s:subst_ts) (t:term) : term =
+let rec subst' (s:subst_ts) (t:term) : ML term =
   let subst_tail (tl:list (list subst_elt)) = subst' (tl, snd s) in
   match s with
   | [], NoUseRange
@@ -224,7 +223,7 @@ let subst_dec_order' s = function
   | Decreases_lex l -> Decreases_lex (l |> List.map (subst' s))
   | Decreases_wf (rel, e) -> Decreases_wf (subst' s rel, subst' s e)
 
-let subst_flags' s flags =
+let subst_flags' s flags : ML _ =
     flags |> List.map (function
         | DECREASES dec_order -> DECREASES (subst_dec_order' s dec_order)
         | f -> f)
@@ -234,12 +233,12 @@ let subst_bqual' s i =
   | Some (Meta t) -> Some (Meta (subst' s t))
   | _ -> i
 
-let subst_aqual' s (i:aqual) : aqual =
+let subst_aqual' s (i:aqual) : ML aqual =
   match i with
   | None -> None
   | Some a -> Some ({a with aqual_attributes = List.map (subst' s) a.aqual_attributes })
 
-let subst_comp_typ' s t =
+let subst_comp_typ' s t : ML _ =
   match s with
   | [], NoUseRange
   | [[]], NoUseRange -> t
@@ -250,7 +249,7 @@ let subst_comp_typ' s t =
             flags=subst_flags' s t.flags;
             effect_args=List.map (fun (t, imp) -> subst' s t, subst_aqual' s imp) t.effect_args}
 
-let subst_comp' s t =
+let subst_comp' s t : ML _ =
   match s with
   | [], NoUseRange
   | [[]], NoUseRange -> t
@@ -260,7 +259,7 @@ let subst_comp' s t =
       | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
-let subst_ascription' s (asc:ascription) =
+let subst_ascription' s (asc:ascription) : ML _ =
   let annot, topt, use_eq = asc in
   let annot = match annot with
               | Inl t -> Inl (subst' s t)
@@ -277,21 +276,21 @@ let shift n s = match s with
     | UD(x, i) -> UD(x, i+n)
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
-let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
-let subst_binder' s b =
+let shift_subst' n s : ML _ = fst s |> List.map (shift_subst n), snd s
+let subst_binder' s b : ML _ =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
     (subst_bqual' s b.binder_qual)
     b.binder_positivity
     (b.binder_attrs |> List.map (subst' s))
 
-let subst_binder s (b:binder) = subst_binder' ([s], NoUseRange) b
+let subst_binder s (b:binder) : ML _ = subst_binder' ([s], NoUseRange) b
 
-let subst_binders' s bs =
+let subst_binders' s bs : ML _ =
     bs |> List.mapi (fun i b ->
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
-let subst_binders s (bs:binders) = subst_binders' ([s], NoUseRange) bs
+let subst_binders s (bs:binders) : ML _ = subst_binders' ([s], NoUseRange) bs
 
 
 // NOTE: We don't descend into `imp` here since one cannot *apply* a
@@ -300,13 +299,13 @@ let subst_arg' s (t, imp) = (subst' s t, imp)
 
 let subst_args' s = List.map (subst_arg' s)
 
-let subst_univs_opt sub us_opt = 
+let subst_univs_opt sub us_opt : ML _ = 
     match us_opt with
     | None -> None
     | Some us -> Some (List.map (subst_univ sub) us)
 
-let subst_pat' s p : (pat & int) =
-    let rec aux n p : (pat & int) = match p.v with
+let subst_pat' s p : ML (pat & int) =
+    let rec aux n p : ML (pat & int) = match p.v with
       | Pat_constant _ -> p, n
 
       | Pat_cons(fv, us_opt, pats) ->
@@ -327,7 +326,7 @@ let subst_pat' s p : (pat & int) =
         {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
-let push_subst_lcomp s lopt = match lopt with
+let push_subst_lcomp s lopt : ML _ = match lopt with
     | None -> None
     | Some rc ->
         let residual_typ = Option.map (subst' s) rc.residual_typ in
@@ -338,11 +337,11 @@ let push_subst_lcomp s lopt = match lopt with
                  ; residual_flags  = rc.residual_flags } in
         Some rc
 
-let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
+let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : ML subst_ts =
     let should_retain x =
         u.ctx_uvar_binders |> U.for_some (fun b -> S.bv_eq x b.binder_bv)
     in
-    let rec aux = function
+    let rec aux (l:list (list subst_elt)) : ML (list subst_elt) = match l with
         | [] -> []
         | hd_subst::rest ->
           let hd =
@@ -373,7 +372,7 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
 //   see the Tm_uvar case in this function
 // Otherwise it will just compose s with the uvar subst
 // 
-let rec push_subst_aux (resolve_uvars:bool) s t =
+let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
@@ -491,13 +490,13 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
     | Tm_meta {tm=t; meta=m} ->
         mk (Tm_meta {tm=subst' s t; meta=m})
 
-let push_subst s t = push_subst_aux true s t
+let push_subst s t : ML _ = push_subst_aux true s t
 
 //
 // Only push the pending substitution down,
 //   no resolving uvars
 //
-let compress_subst (t:term) : term =
+let compress_subst (t:term) : ML term =
   match t.n with
   | Tm_delayed {tm=t; substs=s} ->
     let resolve_uvars = false in
@@ -531,14 +530,14 @@ let compress_subst (t:term) : term =
       non-trivial change to it, it would be wise to uncomment the check
       below and run a full regression build.
 *)
-let rec compress_slow (t:term) =
+let rec compress_slow (t:term) : ML _ =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed {tm=t'; substs=s} ->
         compress (push_subst s t')
     | _ ->
         t
-and compress (t:term) =
+and compress (t:term) : ML term =
   match t.n with
     | Tm_delayed _ | Tm_uvar _ ->
         let r = compress_slow t in
@@ -550,21 +549,21 @@ and compress (t:term) =
     | _ ->
         t
 
-let subst s t = subst' ([s], NoUseRange) t
-let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
-let subst_comp s t = subst_comp' ([s], NoUseRange) t
-let subst_bqual s imp = subst_bqual' ([s], NoUseRange) imp
-let subst_aqual s imp = subst_aqual' ([s], NoUseRange) imp
-let subst_ascription s (asc:ascription) = subst_ascription' ([s], NoUseRange) asc
-let subst_decreasing_order s dec = subst_dec_order' ([s], NoUseRange) dec
-let subst_residual_comp s rc =
+let subst s t : ML _ = subst' ([s], NoUseRange) t
+let set_use_range r t : ML _ = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
+let subst_comp s t : ML _ = subst_comp' ([s], NoUseRange) t
+let subst_bqual s imp : ML _ = subst_bqual' ([s], NoUseRange) imp
+let subst_aqual s imp : ML _ = subst_aqual' ([s], NoUseRange) imp
+let subst_ascription s (asc:ascription) : ML _ = subst_ascription' ([s], NoUseRange) asc
+let subst_decreasing_order s dec : ML _ = subst_dec_order' ([s], NoUseRange) dec
+let subst_residual_comp s rc : ML _ =
   match rc.residual_typ with
   | None -> rc
   | Some t -> {rc with residual_typ=subst s t |> Some}
-let closing_subst (bs:binders) =
+let closing_subst (bs:binders) : ML _ =
     List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
-let open_binders' bs =
-   let rec aux bs o = match bs with
+let open_binders' bs : ML _ =
+   let rec aux bs o : ML _ = match bs with
         | [] -> [], o
         | b::bs' ->
           let x' = {freshen_bv b.binder_bv with sort=subst o b.binder_bv.sort} in
@@ -574,22 +573,22 @@ let open_binders' bs =
           let bs', o = aux bs' o in
           (S.mk_binder_with_attrs x' imp b.binder_positivity attrs)::bs', o in
    aux bs []
-let open_binders (bs:binders) = fst (open_binders' bs)
-let open_term' (bs:binders) t =
+let open_binders (bs:binders) : ML _ = fst (open_binders' bs)
+let open_term' (bs:binders) t : ML _ =
    let bs', opening = open_binders' bs in
    bs', subst opening t, opening
-let open_term (bs:binders) t =
+let open_term (bs:binders) t : ML _ =
    let b, t, _ = open_term' bs t in
    b, t
-let open_comp (bs:binders) t =
+let open_comp (bs:binders) t : ML _ =
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
-let open_ascription bs asc =
+let open_ascription bs asc : ML _ =
   let bs', opening = open_binders' bs in
   bs', subst_ascription opening asc
 
-let open_pat (p:pat) : pat & subst_t =
-    let rec open_pat_aux sub p =
+let open_pat (p:pat) : ML (pat & subst_t) =
+    let rec open_pat_aux sub p : ML _ =
         match p.v with
         | Pat_constant _ -> p, sub
 
@@ -611,7 +610,8 @@ let open_pat (p:pat) : pat & subst_t =
     in
     open_pat_aux [] p
 
-let open_branch' (p, wopt, e) =
+let open_branch' br : ML _ =
+    let (p, wopt, e) = br in
     let p, opening = open_pat p in
     let wopt = match wopt with
         | None -> None
@@ -619,14 +619,14 @@ let open_branch' (p, wopt, e) =
     let e = subst opening e in
     (p, wopt, e), opening
 
-let open_branch br =
+let open_branch br : ML _ =
     let br, _ = open_branch' br in
     br
 
-let close (bs:binders) t = subst (closing_subst bs) t
-let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
-let close_binders (bs:binders) : binders =
-    let rec aux s (bs:binders) = match bs with
+let close (bs:binders) t : ML _ = subst (closing_subst bs) t
+let close_comp (bs:binders) (c:comp) : ML _ = subst_comp (closing_subst bs) c
+let close_binders (bs:binders) : ML binders =
+    let rec aux s (bs:binders) : ML _ = match bs with
         | [] -> []
         | b::tl ->
           let x = {b.binder_bv with sort=subst s b.binder_bv.sort} in
@@ -635,11 +635,11 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (S.mk_binder_with_attrs x imp b.binder_positivity attrs)::aux s' tl in
     aux [] bs
-let close_ascription (bs:binders) (asc:ascription) =
+let close_ascription (bs:binders) (asc:ascription) : ML _ =
   subst_ascription (closing_subst bs) asc
 
-let close_pat p =
-    let rec aux sub p = match p.v with
+let close_pat p : ML _ =
+    let rec aux sub p : ML _ = match p.v with
        | Pat_constant _ -> p, sub
 
        | Pat_cons(fv, us_opt, pats) ->
@@ -659,7 +659,8 @@ let close_pat p =
          {p with v=Pat_dot_term eopt}, sub in
     aux [] p
 
-let close_branch (p, wopt, e) =
+let close_branch br : ML _ =
+    let (p, wopt, e) = br in
     let p, closing = close_pat p in
     let wopt = match wopt with
         | None -> None
@@ -667,34 +668,34 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let univ_var_opening (us:univ_names) =
+let univ_var_opening (us:univ_names) : ML _ =
     let n = List.length us - 1 in
     let s = us |> List.mapi (fun i u -> UN(n - i, U_name u)) in
     s, us
 
-let univ_var_closing (us:univ_names) =
+let univ_var_closing (us:univ_names) : ML _ =
     let n = List.length us - 1 in
     us |> List.mapi (fun i u -> UD(u, n - i))
 
-let open_univ_vars  (us:univ_names) (t:term)  : univ_names & term =
+let open_univ_vars  (us:univ_names) (t:term) : ML (univ_names & term) =
     let s, us' = univ_var_opening us in
     let t = subst s t in
     us', t
 
-let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names & comp =
+let open_univ_vars_comp (us:univ_names) (c:comp) : ML (univ_names & comp) =
     let s, us' = univ_var_opening us in
     us', subst_comp s c
 
-let close_univ_vars (us:univ_names) (t:term) : term =
+let close_univ_vars (us:univ_names) (t:term) : ML term =
     let s = univ_var_closing us in
     subst s t
 
-let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
+let close_univ_vars_comp (us:univ_names) (c:comp) : ML comp =
     let n = List.length us - 1 in
     let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
     subst_comp s c
 
-let open_let_rec lbs (t:term) =
+let open_let_rec lbs (t:term) : ML _ =
     let n_let_recs, lbs, let_rec_opening =
       if is_top_level lbs
       then 0, lbs, []  //top-level let recs are not opened,
@@ -743,7 +744,7 @@ let open_let_rec lbs (t:term) =
     let t = subst let_rec_opening t in
     lbs, t
 
-let close_let_rec lbs (t:term) =
+let close_let_rec lbs (t:term) : ML _ =
     let n_let_recs, let_rec_closing =
       if is_top_level lbs
       then 0, [] //top-level let recs do not have to be closed
@@ -766,39 +767,42 @@ let close_let_rec lbs (t:term) =
     let t = subst let_rec_closing t in
     lbs, t
 
-let close_tscheme (binders:binders) ((us, t) : tscheme) =
+let close_tscheme (binders:binders) (ts : tscheme) : ML _ =
+    let (us, t) = ts in
     let n = List.length binders - 1 in
     let k = List.length us in
     let s = List.mapi (fun i b -> NM(b.binder_bv, k + (n - i))) binders in
     let t = subst s t in
     (us, t)
 
-let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
+let close_univ_vars_tscheme (us:univ_names) (ts:tscheme) : ML _ =
+   let (us', t) = ts in
    let n  = List.length us - 1 in
    let k = List.length us' in
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
 
-let subst_tscheme (s:list subst_elt) ((us, t):tscheme) =
+let subst_tscheme (s:list subst_elt) (ts:tscheme) : ML _ =
+    let (us, t) = ts in
     let s = shift_subst (List.length us) s in
     (us, subst s t)
 
-let opening_of_binders (bs:binders) =
+let opening_of_binders (bs:binders) : ML _ =
   let n = List.length bs - 1 in
   bs |> List.mapi (fun i b -> DB(n - i, b.binder_bv))
 
-let closing_of_binders (bs:binders) = closing_subst bs
+let closing_of_binders (bs:binders) : ML _ = closing_subst bs
 
-let open_term_1 b t =
+let open_term_1 b t : ML _ =
     match open_term [b] t with
     | [b], t -> b, t
     | _ -> failwith "impossible: open_term_1"
 
-let open_term_bvs bvs t =
+let open_term_bvs bvs t : ML _ =
     let bs, t = open_term (List.map mk_binder bvs) t in
     List.map (fun b -> b.binder_bv) bs, t
 
-let open_term_bv bv t =
+let open_term_bv bv t : ML _ =
     match open_term_bvs [bv] t with
     | [bv], t -> bv, t
     | _ -> failwith "impossible: open_term_bv"

@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Tactics.V2.Primops
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
@@ -53,7 +52,7 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 instance _ = RE.e_term (* REMOVE ME *)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:Sealed.sealed 'a) : tac 'a = return (Sealed.unseal x)
+let unseal (_typ:_) (x:Sealed.sealed 'a) : ML (tac 'a) = return (Sealed.unseal x)
 let unseal_step =
   (* Unseal is not in builtins. *)
   let s =

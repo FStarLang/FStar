@@ -15,7 +15,6 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -119,7 +118,7 @@ let path_of_ns (currentModule : mlsymbol) ns =
             | None -> [ns']
             | Some x -> x
 
-let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
+let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : ML mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
@@ -128,12 +127,12 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
      let ns, x = x in
      (path_of_ns currentModule ns, x)
 
-let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
+let ptsym_of_symbol (s : mlsymbol) : ML mlsymbol =
     if FStar.Char.lowercase (String.get s 0) <> String.get s 0
     then "l__" ^ s
     else s
 
-let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
+let ptsym (currentModule : mlsymbol) (mlp : mlpath) : ML mlsymbol =
     if (List.isEmpty (fst mlp))
     then ptsym_of_symbol (snd  mlp)
     else
@@ -141,7 +140,7 @@ let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
         String.concat "." (p @ [ptsym_of_symbol s])
 
 
-let ptctor (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
+let ptctor (currentModule : mlsymbol) (mlp : mlpath) : ML mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in
     let s = if FStar.Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
     String.concat "." (p @ [s])
@@ -318,7 +317,7 @@ let string_of_etag = function
     | E_ERASABLE -> "Erased"
     | E_IMPURE -> "Impure"
 
-let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
+let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) : ML doc =
     match ty with
     | MLTY_Var x ->
         let escape_tyvar s =
@@ -361,11 +360,11 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     | MLTY_Erased ->
       text "unit"
 
-and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
+and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) : ML doc =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : doc =
+let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : ML doc =
     match e.expr with
     | MLE_Coerce (e, t, t') ->
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
@@ -453,12 +452,12 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
             })
         | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
-        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (let b = is_bin_op p in b && unitVal=ml_unit) ->
                      doc_of_binop currentModule p e1 e2
 
         | (MLE_Name p, [e1]) when is_uni_op p -> doc_of_uniop currentModule p e1
 
-        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (let b = is_uni_op p in b && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
 
         | _ ->
             let e    = doc_of_expr  currentModule (e_app_prio, ILeft) e in
@@ -536,20 +535,20 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         // Type applications are only useful meta-data for backends without inference, for example Krml.
         // We just skip them here.
         doc_of_expr currentModule outer head
-and  doc_of_binop currentModule p e1 e2 : doc =
+and  doc_of_binop currentModule p e1 e2 : ML doc =
         let (_, prio, txt) = Option.must (as_bin_op p) in
         let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
         let e2  = doc_of_expr  currentModule (prio, Right) e2 in
         let doc = reduce1 [e1; text txt; e2] in
         parens doc
 
-and  doc_of_uniop currentModule p e1  : doc =
+and  doc_of_uniop currentModule p e1  : ML doc =
         let (_, txt) = Option.must (as_uni_op p) in
         let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
         let doc = reduce1 [text txt; parens e1] in
         parens doc
 (* -------------------------------------------------------------------- *)
-and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
+and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : ML doc =
     match pattern with
     | MLP_Wild     -> text "_"
     | MLP_Const  c -> text (string_of_mlconstant c)
@@ -591,7 +590,8 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
         combine (text " | ") ps
 
 (* -------------------------------------------------------------------- *)
-and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
+and doc_of_branch (currentModule : mlsymbol) (br : mlbranch) : ML doc =
+    let (p, cond, e) = br in
     let case =
         match cond with
         | None   -> reduce1 [text "|"; doc_of_pattern currentModule p]
@@ -606,7 +606,8 @@ and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
     ]
 
 (* -------------------------------------------------------------------- *)
-and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
+and doc_of_lets (currentModule : mlsymbol) (arg : (mlletflavor & bool & list mllb)) : ML doc =
+    let (rec_, top_level, lets) = arg in
     let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e; print_typ=pt} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
         //TODO: maybe extract the top-level binders from e and print it alongside name
@@ -617,7 +618,8 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if (not pt) then text ""
             else
-            if Util.codegen_fsharp () && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            let fsharp = Util.codegen_fsharp () in
+            if fsharp && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
                     | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
@@ -650,8 +652,11 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     combine hardline lets
 
 
-and doc_of_loc (lineno, file) =
-    if (Options.no_location_info()) || Util.codegen_fsharp () || file=" dummy" then
+and doc_of_loc (arg : (int & string)) : ML doc =
+    let (lineno, file) = arg in
+    let no_loc = Options.no_location_info() in
+    let fsharp = Util.codegen_fsharp () in
+    if no_loc || fsharp || file=" dummy" then
         empty
     else
         let file = Filepath.basename file in
@@ -718,7 +723,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 currentModule s =
+let rec doc_of_sig1 currentModule s : ML doc =
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
@@ -742,7 +747,7 @@ let rec doc_of_sig1 currentModule s =
         doc_of_mltydecl currentModule decls
 
 (* -------------------------------------------------------------------- *)
-and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
+and doc_of_sig (currentModule : mlsymbol) (s : mlsig) : ML doc =
     let docs = List.map (doc_of_sig1 currentModule) s in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
@@ -782,7 +787,7 @@ let doc_of_modbody (currentModule : mlsymbol) (m : mlmodulebody) =
         [doc; (match x.mlmodule1_m with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
     reduce (List.flatten docs)
 (* -------------------------------------------------------------------- *)
-let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : doc =
+let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : ML doc =
     let p_mod istop mod =
         let mod_name, sigmod = mod in
         let target_mod_name = Util.flatten_mlpath mod_name in
@@ -810,14 +815,14 @@ let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : doc =
 (* -------------------------------------------------------------------- *)
 let pretty (sz : int) (Doc doc) = doc
 
-let doc_of_mlmodule fsharp mlmodule =
+let doc_of_mlmodule fsharp mlmodule : ML doc =
     doc_of_mlmodule_r fsharp mlmodule
 
-let string_of_mlexpr cmod (e:mlexpr) =
+let string_of_mlexpr cmod (e:mlexpr) : ML string =
     let doc = doc_of_expr (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     pretty 0 doc
 
-let string_of_mlty (cmod) (e:mlty) =
+let string_of_mlty (cmod) (e:mlty) : ML string =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     pretty 0 doc
 

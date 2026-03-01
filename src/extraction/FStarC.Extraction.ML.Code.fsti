@@ -15,7 +15,6 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 open FStarC.Extraction.ML.Syntax
@@ -24,11 +23,11 @@ open FStarC.Pprint
 
 type doc = | Doc of string
 
-val doc_of_mlmodule:  fsharp:bool -> mlmodule -> doc
-val doc_of_sig :      mlsymbol -> mlsig -> doc
-val string_of_mlexpr: mlpath -> mlexpr -> string
-val string_of_mlty:   mlpath -> mlty -> string
+val doc_of_sig :      mlsymbol -> mlsig -> ML doc
 val pretty:           int -> doc -> string
+val doc_of_mlmodule:  fsharp:bool -> mlmodule -> ML doc
+val string_of_mlexpr: mlpath -> mlexpr -> ML string
+val string_of_mlty:   mlpath -> mlty -> ML string
 
 instance val showable_mlexpr : showable mlexpr
 instance val showable_mlty : showable mlty
