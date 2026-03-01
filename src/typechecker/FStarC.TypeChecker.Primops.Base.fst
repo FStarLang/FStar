@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Base
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module defines the type of primitive steps and some helpers. *)
 
@@ -16,12 +15,6 @@ let null_psc = { psc_range = Range.dummyRange ; psc_subst = fun () -> [] }
 let psc_range psc = psc.psc_range
 let psc_subst psc = psc.psc_subst ()
 
-let embed_simple {| EMB.embedding 'a |} (r:Range.t) (x:'a) : term =
-    EMB.embed x r None EMB.id_norm_cb
-
-let try_unembed_simple {| EMB.embedding 'a |} (x:term) : option 'a =
-    EMB.try_unembed x EMB.id_norm_cb
-
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive_step = {
@@ -35,6 +28,12 @@ let as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe) : primitive
     interpretation                 = f;
     interpretation_nbe             = f_nbe;
 }
+
+let embed_simple {| EMB.embedding 'a |} (r:Range.t) (x:'a) : ML term =
+    EMB.embed x r None EMB.id_norm_cb
+
+let try_unembed_simple {| EMB.embedding 'a |} (x:term) : ML (option 'a) =
+    EMB.try_unembed x EMB.id_norm_cb
 
 let mk_interp1 #a #r
   {| EMB.embedding a |}

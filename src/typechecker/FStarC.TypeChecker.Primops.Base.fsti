@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Base
-#push-options "--MLish --MLish_effect FStarC.Effect"
 (* This module defines the type of primitive steps and some helpers. *)
 
 open FStarC
@@ -19,9 +18,9 @@ val psc_range : psc -> FStarC.Range.t
 val psc_subst : psc -> subst_t
 
 type interp_t =
-    psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> option term
+    psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> ML (option term)
 type nbe_interp_t =
-    NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t
+    NBE.nbe_cbs -> universes -> NBE.args -> ML (option NBE.t)
 
 type primitive_step = {
     name:FStarC.Ident.lid;
@@ -41,8 +40,8 @@ val as_primitive_step_nbecbs
      : (Ident.lident & int & int & interp_t & nbe_interp_t) -> primitive_step
 
 (* Some helpers for the NBE. Does not really belong in this module. *)
-val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> term
-val try_unembed_simple: {| EMB.embedding 'a |} -> term -> option 'a
+val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> ML term
+val try_unembed_simple: {| EMB.embedding 'a |} -> term -> ML (option 'a)
 
 val mk_interp1 #a #r
   {| EMB.embedding a |}
