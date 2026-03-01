@@ -1,5 +1,4 @@
 module FStarC.MachineInts
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* A type representing all the kinds of machine integers, and an
 embedding instance for them. *)
@@ -68,19 +67,19 @@ let mask (k:machint_kind) : int =
   | 64  -> 0xffffffffffffffff
   | 128 -> 0xffffffffffffffffffffffffffffffff
 
-let int_to_t_lid_for (k:machint_kind) : Ident.lid =
+let int_to_t_lid_for (k:machint_kind) : ML Ident.lid =
   let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
   Ident.lid_of_path path Range.dummyRange
 
-let int_to_t_for (k:machint_kind) : S.term =
+let int_to_t_for (k:machint_kind) : ML S.term =
   let lid = int_to_t_lid_for k in
   S.fvar lid None
 
-let __int_to_t_lid_for (k:machint_kind) : Ident.lid =
+let __int_to_t_lid_for (k:machint_kind) : ML Ident.lid =
   let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
   Ident.lid_of_path path Range.dummyRange
 
-let __int_to_t_for (k:machint_kind) : S.term =
+let __int_to_t_for (k:machint_kind) : ML S.term =
   let lid = __int_to_t_lid_for k in
   S.fvar lid None
 
@@ -113,7 +112,7 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
     with_meta_ds rng t m
   in
-  let un (t:term) cb : option (machint k) =
+  let un (t:term) cb : ML (option (machint k)) =
     let (t, m) =
         (match (SS.compress t).n with
         | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
@@ -121,13 +120,14 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     in
     let t = U.unmeta_safe t in
     match (SS.compress t).n with
-    | Tm_app {hd; args=[(a,_)]} when U.is_fvar (int_to_t_lid_for k) hd
-                                  || U.is_fvar (__int_to_t_lid_for k) hd ->
+    | Tm_app {hd; args=[(a,_)]} ->
+      let is_int_to_t = U.is_fvar (int_to_t_lid_for k) hd in
+      let is___int_to_t = U.is_fvar (__int_to_t_lid_for k) hd in
+      if is_int_to_t || is___int_to_t then begin
       let a = U.unlazy_emb a in
       let! a : int = EMB.try_unembed a cb in
       Some (Mk a m)
-    | _ ->
-      None
+      end else None
   in
   EMB.mk_emb_full em un
     (fun () -> S.fvar (Ident.lid_of_path ["FStar"; module_name_for k; "t"] Range.dummyRange) None)
@@ -148,7 +148,7 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
     let t = int_to_t [as_arg it] in
     with_meta_ds t m
   in
-  let un cbs a : option (machint k) =
+  let un cbs a : ML (option (machint k)) =
     let (a, m) =
       (match a.nbe_t with
        | Meta(t, tm) ->
@@ -158,11 +158,14 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
        | _ -> (a, None))
     in
     match a.nbe_t with
-    | FV (fv1, [], [(a, _)])
-      when Ident.lid_equals (fv1.fv_name) (int_to_t_lid_for k)
-      || Ident.lid_equals (fv1.fv_name) (__int_to_t_lid_for k) ->
+    | FV (fv1, [], [(a, _)]) ->
+      let lid1 = int_to_t_lid_for k in
+      let lid2 = __int_to_t_lid_for k in
+      if Ident.lid_equals (fv1.fv_name) lid1
+      || Ident.lid_equals (fv1.fv_name) lid2 then begin
       let! a : int = unembed e_int cbs a in
       Some (Mk a m)
+      end else None
     | _ -> None
   in
   mk_emb em un

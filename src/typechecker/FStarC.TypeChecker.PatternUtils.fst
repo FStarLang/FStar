@@ -15,7 +15,7 @@
 *)
 
 module FStarC.TypeChecker.PatternUtils
-#push-options "--MLish --MLish_effect FStarC.Effect"
+
 open FStarC.Effect
 open FStarC
 open FStarC.Errors
@@ -43,7 +43,7 @@ let dbg_Patterns = Debug.get_toggle "Patterns"
 (* Utilities on patterns  *)
 (************************************************************************)
 
-let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
+let rec elaborate_pat env p : ML pat = //Adds missing implicit patterns to constructor patterns
     let maybe_dot inaccessible a r =
         if inaccessible
         then withinfo (Pat_dot_term None) r
@@ -59,7 +59,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
         let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
         let _, t = Env.lookup_datacon env fv.fv_name in
         let f, _ = U.arrow_formals t in
-        let rec aux formals pats =
+        let rec aux formals pats : ML (list (pat & bool)) =
             match formals, pats with
             | [], [] -> []
             | [], _::_ ->
@@ -125,8 +125,8 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
 exception Raw_pat_cannot_be_translated
 let raw_pat_as_exp (env:Env.env) (p:pat)
-  : option (term & list bv)
-  = let rec aux bs p = 
+  : ML (option (term & list bv))
+  = let rec aux bs p : ML (term & list bv) = 
         match p.v with
         | Pat_constant c ->
           let e =
@@ -177,11 +177,11 @@ let pat_as_exp (introduce_bv_uvars:bool)
                (inst_pat_cons_univs:bool)
                (env:Env.env)
                (p:pat)
-    : (list bv          (* pattern-bound variables (which may appear in the branch of match) *)
-     & term              (* expressions corresponding to the pattern *)
-     & guard_t           (* guard with just the implicit variables introduced in the pattern *)
-     & pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let intro_bv (env:Env.env) (x:bv) :(bv & guard_t & Env.env) =
+    : ML (list bv          (* pattern-bound variables (which may appear in the branch of match) *)
+       & term              (* expressions corresponding to the pattern *)
+       & guard_t           (* guard with just the implicit variables introduced in the pattern *)
+       & pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
+    let intro_bv (env:Env.env) (x:bv) : ML (bv & guard_t & Env.env) =
         if not introduce_bv_uvars
         then {x with sort=S.tun}, Env.trivial_guard, env
         else let t, _ = U.type_u() in
@@ -191,7 +191,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
     in
     // TODO: remove wildcards
     let rec pat_as_arg_with_env env (p:pat) :
-                                    (list bv    //all pattern-bound vars including wild-cards, in proper order
+                                    ML (list bv    //all pattern-bound vars including wild-cards, in proper order
                                     & list bv   //just the accessible vars, for the disjunctive pattern test
                                     & list bv   //just the wildcards
                                     & Env.env    //env extending with the pattern-bound variables
@@ -263,7 +263,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
               guard,
               {p with v=Pat_cons(fv, us_opt, List.rev pats)})
     in
-    let one_pat env p =
+    let one_pat env p : ML (list bv & list bv & list bv & term & guard_t & pat) =
         let p = elaborate_pat env p in
         let b, a, w, env, arg, guard, p = pat_as_arg_with_env env p in
         match b |> BU.find_dup bv_eq with

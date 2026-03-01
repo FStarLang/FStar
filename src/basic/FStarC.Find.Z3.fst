@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Find.Z3
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -48,7 +47,7 @@ let z3_install_suggestion (v : string) : list Pprint.document =
 it with -version and checking for non-empty output. Alternatively
 we could call [which] on it (if it's not an absolute path), but
 we shouldn't rely on the existence of a binary which. *)
-let z3_inpath (path:string) : bool =
+let z3_inpath (path:string) : ML bool =
   try
     let s = BU.run_process "z3_pathtest" path ["-version"] None in
     s <> ""
@@ -72,16 +71,16 @@ let z3_inpath (path:string) : bool =
 
 We cache the chosen executable for every Z3 version we've ran.
 *)
-let do_locate_z3 (v:string) : option string =
+let do_locate_z3 (v:string) : ML (option string) =
   let open FStarC.Class.Monad in
   let guard (b:bool) : option unit = if b then Some () else None in
-  let (<|>) o1 o2 () =
+  let (<|>) (o1: unit -> ML (option 'a)) (o2: unit -> ML (option 'a)) () : ML (option 'a) =
     match o1 () with
     | Some v -> Some v
     | None -> o2 ()
   in
   let path =
-    let in_lib () : option string =
+    let in_lib () : ML (option string) =
       let! root = Find.lib_root () in
       let path = Platform.exe (root ^ "/z3-" ^ v ^ "/bin/z3") in
       let path = Filepath.normalize_file_path path in
@@ -102,10 +101,10 @@ let do_locate_z3 (v:string) : option string =
     Format.print2 "do_locate_z3(%s) = %s\n" (Class.Show.show v) (Class.Show.show path);
   path
 
-let locate_z3 : (v : string) -> option string =
+let locate_z3 : string -> ML (option string) =
   let cache : SMap.t (option string) = SMap.create 5 in
   fun v ->
-    let find_or (k:string) (f : string -> option string) : option string =
+    let find_or (k:string) (f : string -> ML (option string)) : ML (option string) =
       match SMap.try_find cache k with
       | Some v -> v
       | None ->

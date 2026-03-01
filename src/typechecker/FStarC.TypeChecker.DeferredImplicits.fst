@@ -17,7 +17,6 @@
 *)
 
 module FStarC.TypeChecker.DeferredImplicits
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.List
@@ -43,13 +42,13 @@ open FStarC.Class.Setlike
 open FStarC.Class.Show
 module Listlike = FStarC.Class.Listlike
 
-let is_flex t =
+let is_flex t : ML bool =
   let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
   | Tm_uvar _ -> true
   | _ -> false
 
-let flex_uvar_head t =
+let flex_uvar_head t : ML ctx_uvar =
     let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
@@ -80,7 +79,7 @@ type goal_type =
   If no candidates are found we return None
   If no unique [c] exists we warn and return None
 *)
-let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
+let find_user_tac_for_uvar env (u:ctx_uvar) : ML (option sigelt) =
     (* This tries to unembed a Cons (Tm_constant (Const_string s1))
                                ...
                                Cons (Tm_constant (Const_string sn))
@@ -91,7 +90,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
        is just an attribute, and so it is not actually a type-correct term.
        
        So, the type arguments of the Cons may be missing *)
-    let rec attr_list_elements (e:term) : option (list string) =
+    let rec attr_list_elements (e:term) : ML (option (list string)) =
       let head, args = U.head_and_args (U.unmeta e) in
       match (U.un_uinst head).n, args with
       | Tm_fvar fv, _ when fv_eq_lid fv FStarC.Parser.Const.nil_lid ->
@@ -131,7 +130,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       (* Checking if a candidate is overridden, by scanning the list of all 
          candidates and seeing if any of them override it *)
       let is_overridden (candidate:sigelt)
-        : bool
+        : ML bool
         = (* A candidate may have more than one lid, in case it is a let rec
              It is overridden if any of its names are overridden *)
           let candidate_lids = U.lids_of_sigelt candidate in
@@ -145,8 +144,9 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
                  match (U.un_uinst head).n, args with
                  | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
                  | Tm_fvar fv, [(a', _); (overrides, _)]                 
-                   when fv_eq_lid fv FStarC.Parser.Const.override_resolve_implicits_handler_lid
-                     && TEQ.eq_tm_bool env a a' ->
+                   when (let b1 = fv_eq_lid fv FStarC.Parser.Const.override_resolve_implicits_handler_lid in
+                        let b2 = TEQ.eq_tm_bool env a a' in
+                        b1 && b2) ->
                    //other has an attribute [@@override_resolve_implicits_handler a overrides]
                    begin
                    match attr_list_elements overrides with
@@ -183,12 +183,12 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       
     | _ -> None
 
-let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
+let should_defer_uvar_to_user_tac env (u:ctx_uvar) : ML bool =
   if not env.enable_defer_to_tac
   then false
   else Some? (find_user_tac_for_uvar env u)
 
-let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
+let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) : ML unit =
   Profiling.profile (fun () ->
     let resolve_tac =
       match tac.sigel with
@@ -206,13 +206,14 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
 
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
-let solve_deferred_to_tactic_goals env g =
+let solve_deferred_to_tactic_goals env g : ML guard_t =
     if not env.enable_defer_to_tac then g else
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
-    let prob_as_implicit (_, reason, prob)
-      : implicit & sigelt =
+    let prob_as_implicit (x : _ & _ & _)
+      : ML (implicit & sigelt) =
+      let (_, reason, prob) = x in
       match prob with
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
@@ -281,7 +282,7 @@ let solve_deferred_to_tactic_goals env g =
     (** Each implicit is associated with a sigelt.
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
-    let bucketize (is:list (implicit & sigelt)) : list (implicits & sigelt) =
+    let bucketize (is:list (implicit & sigelt)) : ML (list (implicits & sigelt)) =
       let map : SMap.t (implicits & sigelt) = SMap.create 17 in
       List.iter
         (fun (i, s) ->

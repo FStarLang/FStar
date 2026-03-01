@@ -15,9 +15,9 @@
 *)
 
 module FStarC.TypeChecker.Cfg
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
+open FStarC.Effect
 open FStar.String
 open FStarC.Const
 open FStar.Char
@@ -76,8 +76,8 @@ type fsteps = {
 instance val deq_fsteps : deq fsteps
 
 val default_steps : fsteps
-val fstep_add_one : step -> fsteps -> fsteps
-val to_fsteps : list step -> fsteps
+val fstep_add_one : step -> fsteps -> ML fsteps
+val to_fsteps : list step -> ML fsteps
 
 type debug_switches = {
     gen              : bool;
@@ -108,41 +108,37 @@ type cfg = {
      compat_memo_ignore_cfg:bool; (* See #2155, #2161, #2986 *)
 }
 
-(* Profiling primitive operators *)
-val primop_time_reset : unit -> unit
-val primop_time_count : string -> int -> unit
-val primop_time_report : unit -> string
-
-val cfg_env: cfg -> Env.env
+val simplification_steps (env:Env.env_t): ML (PSMap.t primitive_step)
 
 instance val showable_cfg : showable cfg
 
-val log : cfg -> (unit -> unit) -> unit
-val log_top : cfg -> (unit -> unit) -> unit
-val log_cfg : cfg -> (unit -> unit) -> unit
-val log_primops : cfg -> (unit -> unit) -> unit
-val log_unfolding : cfg -> (unit -> unit) -> unit
-val log_nbe : cfg -> (unit -> unit) -> unit
+val cfg_env: cfg -> Env.env
 
-val is_prim_step: cfg -> fv -> bool
-val find_prim_step: cfg -> fv -> option primitive_step
+val find_prim_step: cfg -> fv -> ML (option primitive_step)
+val is_prim_step: cfg -> fv -> ML bool
 
-// val embed_simple: EMB.embedding 'a -> Range.t -> 'a -> term
-// val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
+val log : cfg -> (unit -> ML unit) -> ML unit
+val log_top : cfg -> (unit -> ML unit) -> ML unit
+val log_cfg : cfg -> (unit -> ML unit) -> ML unit
+val log_primops : cfg -> (unit -> ML unit) -> ML unit
+val log_unfolding : cfg -> (unit -> ML unit) -> ML unit
+val log_nbe : cfg -> (unit -> ML unit) -> ML unit
 
-val built_in_primitive_steps : PSMap.t primitive_step
-val simplification_steps (env:Env.env_t): PSMap.t primitive_step
+(* Profiling primitive operators *)
+val primop_time_reset : unit -> ML unit
+val primop_time_count : string -> int -> ML unit
+val primop_time_report : unit -> ML string
 
-val register_plugin : primitive_step -> unit
-val register_extra_step : primitive_step -> unit
+val register_plugin : primitive_step -> ML unit
+val register_extra_step : primitive_step -> ML unit
 
 (* for debugging *)
-val list_plugins : unit -> list primitive_step
-val list_extra_steps : unit -> list primitive_step
+val list_plugins : unit -> ML (list primitive_step)
+val list_extra_steps : unit -> ML (list primitive_step)
 
-val config': list primitive_step -> list step -> Env.env -> cfg
-val config: list step -> Env.env -> cfg
+val config': list primitive_step -> list step -> Env.env -> ML cfg
+val config: list step -> Env.env -> ML cfg
 
-val should_reduce_local_let : cfg -> letbinding -> bool
+val should_reduce_local_let : cfg -> letbinding -> ML bool
 
-val translate_norm_steps: list NormSteps.norm_step -> list Env.step
+val translate_norm_steps: list NormSteps.norm_step -> ML (list Env.step)

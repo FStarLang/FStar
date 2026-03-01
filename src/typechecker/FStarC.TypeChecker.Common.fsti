@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Common
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -61,7 +60,7 @@ type prob =
   | CProb of problem comp
 type prob_t = prob
 
-val as_tprob : prob -> problem typ
+val as_tprob : prob -> ML (problem typ)
 
 type probs = list prob
 
@@ -119,22 +118,22 @@ type id_info_table = {
     id_info_buffer: list identifier_info;
 }
 
-val check_uvar_ctx_invariant : string -> range -> bool -> gamma -> binders -> unit
+val check_uvar_ctx_invariant : string -> range -> bool -> gamma -> binders -> ML unit
 
-val mk_by_tactic : term -> term -> term
+val mk_by_tactic : term -> term -> ML term
 
 val delta_depth_greater_than : delta_depth -> delta_depth -> bool
 val decr_delta_depth : delta_depth -> option delta_depth
 
-val insert_col_info : int -> identifier_info -> list (int & identifier_info) -> list (int & identifier_info)
+val insert_col_info : int -> identifier_info -> list (int & identifier_info) -> ML (list (int & identifier_info))
 val find_nearest_preceding_col_info : int -> list (int & identifier_info) -> option identifier_info
 
 val id_info_table_empty : id_info_table
 
-val id_info_insert_bv : id_info_table -> bv -> typ -> id_info_table
-val id_info_insert_fv : id_info_table -> fv -> typ -> id_info_table
+val id_info_insert_bv : id_info_table -> bv -> typ -> ML id_info_table
+val id_info_insert_fv : id_info_table -> fv -> typ -> ML id_info_table
 val id_info_toggle    : id_info_table -> bool -> id_info_table
-val id_info_promote   : id_info_table -> (typ -> option typ) -> id_info_table
+val id_info_promote   : id_info_table -> (typ -> ML (option typ)) -> ML id_info_table
 val id_info_at_pos    : id_info_table -> string -> int -> int -> option identifier_info
 
 // Reason, term and uvar, and (rough) position where it is introduced
@@ -162,46 +161,46 @@ type guard_t = {
 }
 
 val trivial_guard : guard_t
-val conj_guard    : guard_t -> guard_t -> guard_t
+val conj_guard    : guard_t -> guard_t -> ML guard_t
 
 instance val monoid_guard_t : monoid guard_t (* conj_guard, trivial_guard *)
 
-val check_trivial : term -> guard_formula
-val imp_guard     : guard_t -> guard_t -> guard_t
-val conj_guards   : list guard_t -> guard_t
+val check_trivial : term -> ML guard_formula
+val imp_guard     : guard_t -> guard_t -> ML guard_t
+val conj_guards   : list guard_t -> ML guard_t
 
 // splits the guard into the logical component (snd in the returned tuple)
 //   and the rest (fst in the returned tuple)
 val split_guard   : guard_t -> guard_t & guard_t
 
-val weaken_guard_formula: guard_t -> typ -> guard_t
+val weaken_guard_formula: guard_t -> typ -> ML guard_t
 type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list cflag;
-    comp_thunk: ref (either (unit -> (comp & guard_t)) comp)
+    comp_thunk: ref (either (unit -> ML (comp & guard_t)) comp)
 }
 
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
     cflags: list cflag ->
-    comp_thunk: (unit -> (comp & guard_t)) -> lcomp
+    comp_thunk: (unit -> ML (comp & guard_t)) -> ML lcomp
 
-val lcomp_comp: lcomp -> (comp & guard_t)
-val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
-val lcomp_to_string : lcomp -> string (* CAUTION! can have side effects of forcing the lcomp *)
-val lcomp_set_flags : lcomp -> list S.cflag -> lcomp
-val is_total_lcomp : lcomp -> bool
-val is_tot_or_gtot_lcomp : lcomp -> bool
-val is_lcomp_partial_return : lcomp -> bool
-val is_pure_lcomp : lcomp -> bool
-val is_pure_or_ghost_lcomp : lcomp -> bool
-val set_result_typ_lc : lcomp -> typ -> lcomp
+val lcomp_comp: lcomp -> ML (comp & guard_t)
+val apply_lcomp : (comp -> ML comp) -> (guard_t -> ML guard_t) -> lcomp -> ML lcomp
+val lcomp_to_string : lcomp -> ML string (* CAUTION! can have side effects of forcing the lcomp *)
+val lcomp_set_flags : lcomp -> list S.cflag -> ML lcomp
+val is_total_lcomp : lcomp -> ML bool
+val is_tot_or_gtot_lcomp : lcomp -> ML bool
+val is_lcomp_partial_return : lcomp -> ML bool
+val is_pure_lcomp : lcomp -> ML bool
+val is_pure_or_ghost_lcomp : lcomp -> ML bool
+val set_result_typ_lc : lcomp -> typ -> ML lcomp
 val residual_comp_of_lcomp : lcomp -> residual_comp
-val lcomp_of_comp_guard : comp -> guard_t -> lcomp
+val lcomp_of_comp_guard : comp -> guard_t -> ML lcomp
 //lcomp_of_comp_guard with trivial guard
-val lcomp_of_comp : comp -> lcomp
+val lcomp_of_comp : comp -> ML lcomp
 
 val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
   : bool

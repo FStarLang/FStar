@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Real
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -29,7 +28,7 @@ instance e_tf : Syntax.Embeddings.embedding tf =
     | T -> U.t_true
     | F -> U.t_false
   in
-  let un (t:term) _norm : option tf =
+  let un (t:term) _norm : ML (option tf) =
     match (unmeta_div_results t).n with
     | Tm_fvar fv when FStarC.Syntax.Syntax.fv_eq_lid fv PC.true_lid -> Some T
     | Tm_fvar fv when FStarC.Syntax.Syntax.fv_eq_lid fv PC.false_lid -> Some F
@@ -60,16 +59,16 @@ instance nbe_e_tf : NBETerm.embedding tf =
   in
   mk_emb em un (fun () -> lid_as_typ PC.bool_lid [] []) (Syntax.Embeddings.emb_typ_of tf)
 
-let lt (r1 r2 : Real.real) : option tf =
+let lt (r1 r2 : Real.real) : ML (option tf) =
   Real.cmp r1 r2 |> Class.Monad.fmap (function Lt -> T | _ -> F)
-let le (r1 r2 : Real.real) : option tf =
+let le (r1 r2 : Real.real) : ML (option tf) =
   Real.cmp r1 r2 |> Class.Monad.fmap (function Lt | Eq -> T | _ -> F)
-let gt (r1 r2 : Real.real) : option tf =
+let gt (r1 r2 : Real.real) : ML (option tf) =
   Real.cmp r1 r2 |> Class.Monad.fmap (function Gt -> T | _ -> F)
-let ge (r1 r2 : Real.real) : option tf =
+let ge (r1 r2 : Real.real) : ML (option tf) =
   Real.cmp r1 r2 |> Class.Monad.fmap (function Gt | Eq -> T | _ -> F)
 
-let is_lit (s:string) (t:term)  : bool =
+let is_lit (s:string) (t:term)  : ML bool =
   match try_unembed_simple t with
   | Some r -> Real.cmp r (Real.Real s) = Some Eq
   | _ -> false
@@ -79,7 +78,7 @@ let bogus_cbs = {
     NBETerm.translate = (fun _ -> failwith "bogus_cbs translate");
 }
 
-let is_nbe_lit (s:string) (t:NBETerm.t)  : bool =
+let is_nbe_lit (s:string) (t:NBETerm.t)  : ML bool =
   match NBETerm.unembed NBETerm.e_real bogus_cbs t with
   | Some r -> Real.cmp r (Real.Real s) = Some Eq
   | _ -> false
@@ -89,7 +88,7 @@ let is_one      = is_lit "1.0"
 let is_nbe_zero = is_nbe_lit "0.0"
 let is_nbe_one  = is_nbe_lit "1.0"
 
-let add_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> option term
+let add_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> ML (option term)
 = fun psc _norm_cb _us args ->
   match args with
   | [(a1, None); (a2, None)] ->
@@ -98,7 +97,7 @@ let add_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> opt
     else None
   | _ -> None
 
-let mul_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> option term
+let mul_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> ML (option term)
 = fun psc _norm_cb _us args ->
   match args with
   | [(a1, None); (a2, None)] ->
@@ -107,8 +106,8 @@ let mul_op : psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> opt
     else None
   | _ -> None
 
-let add_op_nbe =
-  fun univs args ->
+let add_op_nbe : nbe_interp_t =
+  fun _cbs univs args ->
     match args with 
     | [(r, None); (l, None)] ->
       if is_nbe_zero l then Some r
@@ -116,8 +115,8 @@ let add_op_nbe =
       else None
     | _ -> None
 
-let mul_op_nbe =
-  fun univs args ->
+let mul_op_nbe : nbe_interp_t =
+  fun _cbs univs args ->
     match args with 
     | [(r, None); (l, None)] ->
       if is_nbe_one l then Some r
@@ -128,15 +127,14 @@ let mul_op_nbe =
 let of_int (i:int) : Real.real =
   Real.Real (string_of_int i ^ ".0")
 
-let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
-  as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
+let as_primitive_step is_strong l arity u_arity (f:interp_t) (f_nbe : nbe_interp_t) =
+  as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe)
 
-let ops = [
-  mk1 0 PC.real_of_int of_int;
-] @ List.map (as_primitive_step true) [
-  (PC.real_op_Addition, 2, 0, add_op, add_op_nbe);
-  (PC.real_op_Multiply, 2, 0, mul_op, mul_op_nbe);
-]
+let ops : list primitive_step =
+  let s1 = mk1 0 PC.real_of_int of_int in
+  let s2 = as_primitive_step true PC.real_op_Addition 2 0 add_op add_op_nbe in
+  let s3 = as_primitive_step true PC.real_op_Multiply 2 0 mul_op mul_op_nbe in
+  [s1; s2; s3]
 
 let simplify_ops = [
   mk2' 0 PC.real_op_LT  lt lt;
