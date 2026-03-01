@@ -16,7 +16,6 @@
    Author: N. Swamy
 *)
 module FStarC.Syntax.Hash
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -47,4 +46,4 @@ val term_map_empty  : #a:Type -> term_map a
 val term_map_add    : #a:Type -> t:term -> v:a -> term_map a -> term_map a
 val term_map_lookup : #a:Type -> t:term -> m:term_map a -> option a
 val term_map_mem    : #a:Type -> t:term -> m:term_map a -> bool
-val term_map_fold   : #a:Type -> #b:Type -> (term -> a -> b -> b) -> term_map a -> b -> b
+val term_map_fold   : #a:Type -> #b:Type -> (term -> a -> b -> ML b) -> term_map a -> b -> ML b

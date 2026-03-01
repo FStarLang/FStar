@@ -18,8 +18,8 @@
  * queries; this file collects helpers for them                  *)
 
 module FStarC.Interactive.QueryHelper
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
+open FStarC.Effect
 open FStarC.Range
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.Ide.Types
@@ -34,6 +34,6 @@ type sl_reponse = { slr_name: string;
                     slr_doc: option string;
                     slr_def: option string }
 
-val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
-val symlookup : TcEnv.env -> string -> option position -> list string -> option sl_reponse
-val ck_completion : repl_state -> string -> list CTable.completion_result
+val term_to_string : TcEnv.env -> Syntax.Syntax.term -> ML string
+val symlookup : TcEnv.env -> string -> option position -> list string -> ML (option sl_reponse)
+val ck_completion : repl_state -> string -> ML (list CTable.completion_result)
