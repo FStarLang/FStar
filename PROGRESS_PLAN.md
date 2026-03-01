@@ -93,24 +93,47 @@ The interleaver (`src/tosyntax/FStarC.ToSyntax.Interleave.fst`) needed significa
 ### Bug Found and Fixed: try_with Desugaring
 The `emit` function in `FStarC.Universal.fst` prints all ML modules AFTER all files are processed, at which point `restore_opts()` has reset `--MLish` to CLI value (false). The `try_with_ident()` function in `PrintML.ml` used runtime options to determine the effect module, producing `FStar_All.try_with` at print time while the ML AST contained `FStarC_Effect.try_with`. Fixed by matching both known paths statically.
 
-### Future: Remove `--MLish` Flag Entirely
+### Phase 9: Progressive MLish Removal — IN PROGRESS
 
-The goal is to progressively remove `#push-options "--MLish"` from each compiler source file, one file at a time, until none remain. Only then can the `--MLish` option and its compiler support be deleted.
+The goal is to progressively remove `#push-options "--MLish"` from each compiler source file until none remain. Only then can the `--MLish` option and its compiler support be deleted.
 
-**Per-file migration (repeat for each of 384 files):**
-Each file needs two kinds of changes to drop its `#push-options "--MLish"`:
+**Progress: 181/389 files processed (208 remaining)**
 
-1. **Explicit effect annotations on arrows**: In `--MLish` mode, all non-total arrows default to an ML-like effect. Without it, every effectful arrow must be explicitly annotated (e.g., `val foo : int -> int` becomes `val foo : int -> FStarC.Effect.ML int`). This applies to both `.fst` and `.fsti` files.
+**Key class/library changes made to support removal:**
+- `Deq.fsti`: `(=?) : a -> a -> ML bool`
+- `Ord.fsti`: `cmp : a -> a -> ML order`, all comparison operators ML
+- `Show.fsti`: `show : a -> ML string`
+- `Setlike.fsti`: ALL class fields → ML (implementations use ML =?/cmp)
+- `HasRange.fsti`: `pos`/`setPos` → ML
+- `Monoid.fsti`: `mplus` → ML, `(++)` → ML
+- `Monad.fsti`: `return` → ML, `<$>` accepts ML callbacks, `<*>` Tot inner arrows
+- `AppEmb.fsti`: `<$>`, `<$$>`, `<*>`, `<**>` accept ML function arguments
+- `Common.fsti`: `eq_list`, `max_suffix` accept ML callbacks
+- `Binders.fsti`: `boundNames` → ML
+- `List.fsti`: ALL higher-order functions (map, fold, filter, etc.) accept ML callbacks
+- `Util.fsti`: ALL I/O, higher-order functions → ML
+- `Format.fsti`: printer callbacks → ML
+- `Order.fsti`: `lex`, `compare_list`, `compare_option` → ML callbacks
 
-2. **Interface reordering**: In `--MLish` mode, the interleaver is lax about declaration order — it allows `TopLevelLet`, `Exception`, and `Pragma` intermixed with `Val` and `Tycon` in the `.fsti`, and matches them loosely against the `.fst`. Without `--MLish`, the standard interleaver requires strict ordering: each `.fsti` declaration must appear in the same order as its `.fst` counterpart. The `.fsti` may need reordering to match the `.fst` implementation order.
+**Short-circuit operator pattern**: `&&` and `||` require pure operands. ML operands must be let-bound first:
+```fstar
+(* Before *) x =? y && f z
+(* After  *) let r1 = x =? y in let r2 = f z in r1 && r2
+```
 
 **Checklist:**
-- [ ] **Migrate files progressively**: For each file, remove `#push-options "--MLish"`, add explicit effect annotations, reorder `.fsti` if needed, and verify it still passes. Start with simple files (few arrows, no `.fsti`) and work toward complex ones.
+- [x] **Phase 9a**: Remove pragma from 33 fsti-only files + small fst-only files (commit `a83dae1176`)
+- [x] **Phase 9b**: Remove pragma from 37 more files via sub-agent (commit `8fee8b2c69`)
+- [x] **Phase 9c**: Fix all cascading downstream failures from class/library changes (commit `fb77e679f6`)
+- [x] **Phase 9d**: Remove pragma from 27 more fsti files (commit `93a40acfc5`)
+- [x] **Phase 9e**: Remove pragma from 32 more files (commit `f2df9f9521`)
+- [ ] **Phase 9f**: Continue with remaining 208 files (process in batches, test after each)
 - [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated with the interleaving fixes, config.json no longer needs `--MLish` for bootstrapping.
 - [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Once no file uses `--MLish`, these are dead.
 - [ ] **Remove `--MLish` option definition from `FStarC.Options.fst`**: The option registration (lines 1164-1171), getter (lines 2145-2147), settable entry (lines 1774-1775).
 - [ ] **Remove `ml_ish()` checks from compiler**: ~15 call sites in Rel.fst, TcTerm.fst, TcInductive.fst, ToSyntax.fst, etc. Each needs the behavior inlined or removed.
 - [ ] **Simplify interleaver**: Remove `ml_mode` parameter, `is_ml_mode`, `iface_has_mlish_pragma`, `ml_mode_prefix_with_iface_decls`, and the lax interleaving paths. All files would use standard interleaving.
+- [ ] **Full bootstrap rebuild**: stage0→stage1→stage2→stage3 fixpoint verification
 
 ### Documentation
 - [ ] **Update CONTRIBUTING.md or relevant docs**: Document the migration process and any conventions for effect annotations in compiler sources
