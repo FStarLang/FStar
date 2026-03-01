@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V2.Interpreter
-#push-options "--MLish --MLish_effect FStarC.Effect"
+open FStarC.Effect
 
 module EMB   = FStarC.Syntax.Embeddings
 module NBET  = FStarC.TypeChecker.NBETerm
@@ -35,8 +35,8 @@ val mk1 :
   {| EMB.embedding 'res |} ->
   {| NBET.embedding 't1 |} ->
   {| NBET.embedding 'res |} ->
-  ('t1 -> 'res) ->
-  PO.primitive_step
+  ('t1 -> ML 'res) ->
+  ML PO.primitive_step
 let mk1 nm f =
   let lid = fstar_refl_builtins_lid nm in
   PO.mk1' 0 lid
@@ -51,8 +51,8 @@ val mk2 :
   {| NBET.embedding 't1 |} ->
   {| NBET.embedding 't2 |} ->
   {| NBET.embedding 'res |} ->
-  ('t1 -> 't2 -> 'res) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> ML 'res) ->
+  ML PO.primitive_step
 let mk2 nm f =
   let lid = fstar_refl_builtins_lid nm in
   PO.mk2' 0 lid
@@ -69,8 +69,8 @@ val mk3 :
   {| NBET.embedding 't2 |} ->
   {| NBET.embedding 't3 |} ->
   {| NBET.embedding 'res |} ->
-  ('t1 -> 't2 -> 't3 -> 'res) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> 't3 -> ML 'res) ->
+  ML PO.primitive_step
 let mk3 nm f =
   let lid = fstar_refl_builtins_lid nm in
   PO.mk3' 0 lid

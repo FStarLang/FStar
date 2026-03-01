@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.OCaml
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStar.List.Tot.Base
@@ -23,19 +22,19 @@ open FStarC.Effect
 
 let shellescape (s:string) : string =
   String.list_of_string s |>
-  List.map (function
+  FStar.List.Tot.Base.map (function
     | '\'' -> "'\"'\"'" // to escape single quotes we need to put them inside a double quote
-    | c -> String.make 1 c
+    | c -> FStar.String.make 1 c
   ) |>
   String.concat ""
 
-let new_ocamlpath () : string =
+let new_ocamlpath () : ML string =
   let ocamldir = Find.locate_ocaml () in
   let old_ocamlpath = Option.dflt "" (Util.expand_environment_variable "OCAMLPATH") in
   let new_ocamlpath = ocamldir ^ Platform.ocamlpath_sep ^ old_ocamlpath in
   new_ocamlpath
 
-let exec_in_ocamlenv #a (cmd : string) (args : list string) : a =
+let exec_in_ocamlenv #a (cmd : string) (args : list string) : ML a =
   let new_ocamlpath = new_ocamlpath () in
   (* Update OCAMLPATH and run the command *)
   Util.putenv "OCAMLPATH" new_ocamlpath;
