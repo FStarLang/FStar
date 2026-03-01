@@ -280,7 +280,7 @@ let run_unembedded_tactic_on_ps
   (rng_goal : Range.t)
   (background : bool)
   (arg : 'a)
-  (tau: 'a -> tac 'b)
+  (tau: 'a -> ML (tac 'b))
   (ps:proofstate)
   : ML (list goal // remaining goals
   & 'b) // return value

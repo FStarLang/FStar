@@ -198,4 +198,4 @@ let reflection_primops : list PO.primitive_step = [
   mk1 "range_of_sigelt" RB.range_of_sigelt;
 ]
 
-let _ = List.iter FStarC.TypeChecker.Cfg.register_extra_step reflection_primops
+let _ = FStarC.List.iter FStarC.TypeChecker.Cfg.register_extra_step reflection_primops

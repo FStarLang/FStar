@@ -44,7 +44,7 @@ val run_unembedded_tactic_on_ps :
     range -> (* position for the goal *)
     bool ->  (* whether this call is in the "background", like resolve_implicits *)
     'a ->
-    ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
+    ('a -> ML (Monad.tac 'b)) -> (* a term representing an `'a -> tac 'b` *)
     proofstate ->  (* proofstate *)
     ML (list goal & 'b) (* goals and return value *)
 

@@ -145,7 +145,7 @@ val wrap_err : pref:string -> tac 'a -> tac 'a
 
 (* As above, but as a tac<> with an implicit bind for brevity (in code that does use
 monadic notation...) *)
-val mlog : (unit -> ML unit) -> (unit -> tac 'a) -> tac 'a
+val mlog : (unit -> ML unit) -> (unit -> ML (tac 'a)) -> tac 'a
 
 val if_verbose_tac: (unit -> ML (tac unit)) -> tac unit
 val if_verbose: (unit -> ML unit) -> tac unit

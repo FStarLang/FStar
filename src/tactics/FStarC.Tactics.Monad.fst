@@ -319,7 +319,7 @@ let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
 let wrap_err (pref:string) (t : tac 'a) : tac 'a =
   wrap_err_doc [text ("'" ^ pref ^ "' failed")] t
 
-let mlog (f : unit -> ML unit) (cont : unit -> tac 'a) : tac 'a =
+let mlog (f : unit -> ML unit) (cont : unit -> ML (tac 'a)) : tac 'a =
   bind (log f) (fun _ -> cont ())
 
 let if_verbose_tac (f : unit -> ML (tac unit)) : tac unit =

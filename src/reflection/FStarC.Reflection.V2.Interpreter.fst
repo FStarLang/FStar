@@ -204,4 +204,4 @@ let reflection_primops : list PO.primitive_step = [
   mk1 "pack_ident" RB.pack_ident;
 ]
 
-let _ = List.iter FStarC.TypeChecker.Cfg.register_extra_step reflection_primops
+let _ = FStarC.List.iter FStarC.TypeChecker.Cfg.register_extra_step reflection_primops
