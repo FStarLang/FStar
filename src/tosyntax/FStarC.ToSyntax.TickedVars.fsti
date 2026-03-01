@@ -14,7 +14,6 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.TickedVars
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -25,14 +24,14 @@ open FStarC.Ident
 val free_ticked_vars
   (env : DsEnv.env)
   (t : term)
-  : list ident
+  : ML (list ident)
 
 val close
   (env : DsEnv.env)
   (t : term)
-  : term
+  : ML term
 
 val close_fun
   (env : DsEnv.env)
   (t : term)
-  : term
+  : ML term

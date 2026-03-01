@@ -14,22 +14,21 @@ See the License for the specific language governing permissions and
    limitations under the License.
 *)
 module FStarC.Syntax.Print.Ugly
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 
-val term_to_string        : term -> string
-val univ_to_string        : universe -> string
-val comp_to_string        : comp -> string
-val sigelt_to_string      : sigelt -> string
-val binder_to_string      : binder -> string
+val univ_to_string        : universe -> ML string
+val term_to_string        : term -> ML string
+val branch_to_string      : branch -> ML string
+val pat_to_string         : pat -> ML string
+val binder_to_string      : binder -> ML string
+val comp_to_string        : comp -> ML string
 
-val tscheme_to_string     : tscheme -> string
+val lb_to_string          : letbinding -> ML string
 
-val lb_to_string          : letbinding -> string
-val branch_to_string      : branch -> string
-val pat_to_string         : pat -> string
+val tscheme_to_string     : tscheme -> ML string
 
-val eff_decl_to_string    : eff_decl -> string
+val eff_decl_to_string    : eff_decl -> ML string
+val sigelt_to_string      : sigelt -> ML string

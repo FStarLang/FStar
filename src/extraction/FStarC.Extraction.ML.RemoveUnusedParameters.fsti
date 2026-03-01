@@ -15,15 +15,16 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
-#push-options "--MLish --MLish_effect FStarC.Effect"
+open FStarC.Effect
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 
 val env_t : Type0
 val initial_env : env_t
 type tydef = mlsymbol & metadata & either mltyscheme int
+
+val elim_tydefs (env:env_t) (tds:list tydef) : ML (env_t & list tydef)
+
 val set_current_module (e:env_t) (n:mlpath) : env_t
 
-val elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef
-
-val elim_mllib (env:env_t) (m:mlmodule) : env_t & mlmodule
+val elim_mllib (env:env_t) (m:mlmodule) : ML (env_t & mlmodule)

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Tactics.Printing
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -38,23 +37,23 @@ module PO      = FStarC.TypeChecker.Primops
 
 let dbg_Imp = Debug.get_toggle "Imp"
 
-let term_to_doc (e:Env.env) (t:term) : document =
+let term_to_doc (e:Env.env) (t:term) : ML document =
     group <| Print.term_to_doc' e.dsenv t
 
-let term_to_string (e:Env.env) (t:term) : string =
+let term_to_string (e:Env.env) (t:term) : ML string =
     Print.term_to_string' e.dsenv t
 
-let unshadow (bs : binders) (t : term) : binders & term =
+let unshadow (bs : binders) (t : term) : ML (binders & term) =
     (* string name of a bv *)
     let sset bv s = { bv with ppname = Ident.mk_ident (s, pos bv) } in //S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
-        let rec aux i =
+        let rec aux i : ML string =
             let t = b ^ "'" ^ show i in
             if f t then t else aux (i+1)
         in
         if f b then b else aux 0
     in
-    let rec go seen subst bs bs' t =
+    let rec go seen subst bs bs' t : ML (binders & term) =
         match bs with
         | [] -> List.rev bs', SS.subst subst t
         | b::bs -> begin
@@ -71,7 +70,7 @@ let unshadow (bs : binders) (t : term) : binders & term =
     in
     go [] [] bs [] t
 
-let maybe_rename_binders (ps : proofstate) (bs : binders) (t : term) : binders & term =
+let maybe_rename_binders (ps : proofstate) (bs : binders) (t : term) : ML (binders & term) =
  let rename_binders subst bs =
    bs |> List.map (function b ->
      let x = b.binder_bv in
@@ -91,7 +90,7 @@ let maybe_rename_binders (ps : proofstate) (bs : binders) (t : term) : binders &
    bs, t
  )
 
-let goal_to_doc (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : document =
+let goal_to_doc (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : ML document =
   let w =
     if Options.print_implicits ()
     then term_to_doc (goal_env g) (goal_witness g)
@@ -108,23 +107,24 @@ let goal_to_doc (kind : string) (maybe_num : option (int & int)) (ps:proofstate)
   let goal_binders, goal_ty = g.goal_ctx_uvar.ctx_uvar_binders, goal_type g in
   let goal_binders, goal_ty = maybe_rename_binders ps goal_binders goal_ty in
   let goal_binders, goal_ty = unshadow goal_binders goal_ty in
-  let pp_binder (b:binder) : document =
+  let pp_binder (b:binder) : ML document =
     group <| hang 2 <| parens (group (pp b.binder_bv ^/^ colon) ^/^ pp b.binder_bv.sort)
   in
   hang 2 <| group (doc_of_string kind ^/^ num) ^^ maybe_label ^/^
             separate_map (comma ^^ break_ 1) pp_binder goal_binders
             ^/^ group (doc_of_string "|-" ^/^ w ^/^ colon ^/^ term_to_doc (goal_env g) goal_ty)
 
-let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : string =
+let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : ML string =
   Pprint.render (goal_to_doc kind maybe_num ps g) ^ "\n"
 
 (* This is really just for reporting crashes. *)
-let goal_to_string_verbose (g:goal) : string =
+let goal_to_string_verbose (g:goal) : ML string =
   Pprint.render (pp g.goal_ctx_uvar.ctx_uvar_head) ^ "\n"
 
 (* Note: we use def ranges. In tactics we keep the position in there, while the
  * use range is the original position of the assertion / synth / splice. *)
-let ps_to_doc (msg, ps) : document =
+let ps_to_doc p : ML document =
+  let (msg, ps) = p in
   let p_imp imp = pp imp.imp_uvar.ctx_uvar_head in
   let n_active = List.length ps.goals in
   let n_smt    = List.length ps.smt_goals in
@@ -141,10 +141,11 @@ let ps_to_doc (msg, ps) : document =
     (List.mapi (fun i g -> goal_to_doc "SMT Goal" (Some (1 + n_active + i, n)) ps g) ps.smt_goals)
   ) ^^ hardline
 
-let ps_to_string (msg, ps) =
+let ps_to_string p : ML string =
+  let (msg, ps) = p in
   Pprint.render (ps_to_doc (msg, ps)) ^ "\n"
 
-let goal_to_json g =
+let goal_to_json g : ML FStarC.Json.json =
     let open FStarC.Json in
     let g_binders = g.goal_ctx_uvar.ctx_uvar_binders in
     let g_type = goal_type g in
@@ -156,7 +157,8 @@ let goal_to_json g =
                                    ("label", JsonStr g.label)
                                   ])]
 
-let ps_to_json (msg, ps) =
+let ps_to_json p : ML FStarC.Json.json =
+    let (msg, ps) = p in
     let open FStarC.Json in
     JsonAssoc ([("label", JsonStr msg);
                 ("depth", JsonInt ps.depth);
@@ -167,8 +169,10 @@ let ps_to_json (msg, ps) =
                  then [("location", Range.json_of_def_range (Range.refind_range ps.entry_range))]
                  else []))
 
-let do_dump_proofstate ps msg =
-    if not (Options.silent ()) || Options.interactive () then
+let do_dump_proofstate ps msg : ML unit =
+    let silent = Options.silent () in
+    let interactive = Options.interactive () in
+    if not silent || interactive then
         Options.with_saved_options (fun () ->
             Options.set_option "print_effect_args" (Options.Bool true);
             Format.print_generic "proof-state" ps_to_string ps_to_json (msg, ps);

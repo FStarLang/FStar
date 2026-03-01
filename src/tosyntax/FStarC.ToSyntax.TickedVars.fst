@@ -14,7 +14,6 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.TickedVars
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -31,15 +30,16 @@ open FStarC.Class.Setlike
 module C   = FStarC.Parser.Const
 module Env = FStarC.Syntax.DsEnv
 
-let ident_is_ticked (id: ident) : bool =
+let ident_is_ticked (id: ident) : ML bool =
   let nm   = string_of_id id in
-  String.length nm > 0 && String.get nm 0 = '\''
+  let len = String.length nm in
+  if len > 0 then String.get nm 0 = '\'' else false
 
 (* Empty namespace (so a local variable) and its name component starts with a tick *)
-let lident_is_ticked (id: lident) : bool =
+let lident_is_ticked (id: lident) : ML bool =
   let ns = ns_of_lid id in
   let id = ident_of_lid id in
-  Nil? ns && ident_is_ticked id
+  if Nil? ns then ident_is_ticked id else false
 
 instance _ : Class.Monoid.monoid (RBSet.t ident) = {
   mzero = RBSet.empty ();
@@ -54,16 +54,18 @@ these variables in order of appearence, but the current code
 will sort the list at the end, so an RBSet works fne. *)
 let m = writer (RBSet.t ident)
 
-let emit1 (x : ident) : m unit =
+let emit1 (x : ident) : ML (m unit) =
   emit (singleton x)
 
-let rec go_term (env : DsEnv.env) (t: term) : m unit =
+let rec go_term (env : DsEnv.env) (t: term) : ML (m unit) =
   match t.tm with
   | Paren t -> go_term env t
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Var a ->
-    if lident_is_ticked a && None? (Env.try_lookup_id env (Ident.ident_of_lid a)) then
+    let ticked = lident_is_ticked a in
+    let not_in_env = None? (Env.try_lookup_id env (Ident.ident_of_lid a)) in
+    if ticked && not_in_env then
       emit1 (Ident.ident_of_lid a)
     else
       return ()
@@ -191,12 +193,14 @@ let rec go_term (env : DsEnv.env) (t: term) : m unit =
   | Seq _ -> return ()
 
 
-and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
+and go_binder (env : DsEnv.env) (b: binder) : ML (m DsEnv.env) =
   match b.b with
   | Variable x ->
     (* This handles ticks in declarations like `type foo 'a`. The 'a
     is used in a binding position. *)
-    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
+    let ticked = ident_is_ticked x in
+    let not_in_env = None? (Env.try_lookup_id env x) in
+    if ticked && not_in_env then
       emit1 x
     else
       return ();!
@@ -204,7 +208,9 @@ and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
     return env'
 
   | Annotated (x, t) ->
-    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
+    let ticked = ident_is_ticked x in
+    let not_in_env = None? (Env.try_lookup_id env x) in
+    if ticked && not_in_env then
       emit1 x
     else
       return ();!
@@ -216,30 +222,31 @@ and go_binder (env : DsEnv.env) (b: binder) : m DsEnv.env =
     go_term env t;!
     return env
 
-and go_binders (env : DsEnv.env) (bs: list binder) : m DsEnv.env =
+and go_binders (env : DsEnv.env) (bs: list binder) : ML (m DsEnv.env) =
   foldM_left go_binder env bs
 
 (* GM: Note: variables are sorted alphabetically. This is weird to me,
    I would expect them to be abstracted over in textual order, but I'm
    retaining this feature. *)
-let free_ticked_vars env t : list ident =
-  let fvs, () = run_writer <| go_term env t in
+let free_ticked_vars env t : ML (list ident) =
+  let w = go_term env t in
+  let fvs, () = run_writer w in
   elems fvs // relying on elems from RBSet returning a sorted list
 
-let rec unparen t = match t.tm with
+let rec unparen t : ML term = match t.tm with
   | Paren t -> unparen t
   | _ -> t
 
-let tm_type r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
+let tm_type r : ML term = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
-let close env t =
+let close env t : ML term =
   let ftv = free_ticked_vars env t in
   if Nil? ftv then t else
     let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (pos x))) (pos x) Type_level (Some Implicit)) in
     let result = mk_term (Product(binders, t)) t.range t.level in
     result
 
-let close_fun env (t:term) =
+let close_fun env (t:term) : ML term =
   let ftv = free_ticked_vars env t in
   if Nil? ftv then t else
     let binders = ftv |> List.map (fun x -> mk_binder (Annotated(x, tm_type (pos x))) (pos x) Type_level (Some Implicit)) in

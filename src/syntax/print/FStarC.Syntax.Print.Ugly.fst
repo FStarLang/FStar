@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Syntax.Print.Ugly
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 open FStarC
@@ -35,7 +34,7 @@ module Unionfind  = FStarC.Syntax.Unionfind
 module C          = FStarC.Parser.Const
 module SU         = FStarC.Syntax.Util
 
-let sli (l:lident) : string =
+let sli (l:lident) : ML string =
     if Options.print_real_names()
     then string_of_lid l
     else string_of_id (ident_of_lid l)
@@ -43,51 +42,51 @@ let sli (l:lident) : string =
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
 
-let lid_to_string (l:lid) = sli l
+let lid_to_string (l:lid) : ML string = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name) fv.fv_delta
-let fv_to_string fv = lid_to_string fv.fv_name //^ "(@@" ^ showfv.fv_delta ^ ")"
-let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (show bv.index)
+let fv_to_string fv : ML string = lid_to_string fv.fv_name //^ "(@@" ^ showfv.fv_delta ^ ")"
+let bv_to_string bv : ML string = (string_of_id bv.ppname) ^ "#" ^ (show bv.index)
 
-let nm_to_string bv =
+let nm_to_string bv : ML string =
     if Options.print_real_names()
     then bv_to_string bv
     else (string_of_id bv.ppname)
 
-let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ show bv.index
+let db_to_string bv : ML string = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 
-let filter_imp aq =
+let filter_imp aq : ML bool =
    (* keep typeclass args *)
    match aq with
    | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
    | Some (Implicit _)
    | Some (Meta _) -> false
    | _ -> true
-let filter_imp_args args =
+let filter_imp_args args : ML (list arg) =
   args |> List.filter (function (_, None) -> true | (_, Some a) -> not a.aqual_implicit)
-let filter_imp_binders bs =
+let filter_imp_binders bs : ML (list binder) =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
 let const_to_string = C.const_to_string
 
-let lbname_to_string = function
+let lbname_to_string (x:lbname) : ML string = match x with
   | Inl l -> bv_to_string l
   | Inr l -> lid_to_string l.fv_name
 
-let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
-let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
-let univ_uvar_to_string u =
+let uvar_to_string u : ML string = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
+let version_to_string v : ML string = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
+let univ_uvar_to_string u : ML string =
     if (Options.hide_uvar_nums())
     then "?"
     else "?" ^ (Unionfind.univ_uvar_id u |> show)
             ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
-let rec int_of_univ n u = match Subst.compress_univ u with
+let rec int_of_univ n u : ML (int & option universe) = match Subst.compress_univ u with
     | U_zero -> n, None
     | U_succ u -> int_of_univ (n+1) u
     | _ -> n, Some u
 
-let rec univ_to_string u =
+let rec univ_to_string u : ML string =
 Errors.with_ctx "While printing universe" (fun () ->
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
@@ -103,11 +102,11 @@ Errors.with_ctx "While printing universe" (fun () ->
     | U_unknown -> "unknown"
 )
 
-let univs_to_string us = List.map univ_to_string us |> String.concat ", "
+let univs_to_string us : ML string = List.map univ_to_string us |> String.concat ", "
 
-let univ_names_to_string us = List.map (fun x -> (string_of_id x)) us |> String.concat ", "
+let univ_names_to_string us : ML string = List.map (fun x -> (string_of_id x)) us |> String.concat ", "
 
-let qual_to_string = function
+let qual_to_string (x:qualifier) : ML string = match x with
   | Assumption            -> "assume"
   | InternalAssumption    -> "internal_assume"
   | New                   -> "new"
@@ -133,19 +132,19 @@ let qual_to_string = function
   | Reflectable l         -> Format.fmt1 "(reflect %s)" (string_of_lid l)
   | OnlyName              -> "OnlyName"
 
-let quals_to_string quals =
+let quals_to_string quals : ML string =
     match quals with
     | [] -> ""
     | _ -> quals |> List.map qual_to_string |> String.concat " "
 
-let quals_to_string' quals =
+let quals_to_string' quals : ML string =
     match quals with
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
 let paren s = "(" ^ s ^ ")"
 
-let rec term_to_string x =
+let rec term_to_string x : ML string =
     Errors.with_ctx "While ugly-printing a term" (fun () ->
       let x = Subst.compress x in
       let x = if Options.print_implicits() then x else SU.unmeta x in
@@ -201,13 +200,15 @@ let rec term_to_string x =
         in
         pref ^ fv_to_string f
       | Tm_uvar (u, ([], _)) ->
-        if Options.print_bound_var_types()
-        && Options.print_effect_args()
+        let print_bvt = Options.print_bound_var_types() in
+        let print_eff = Options.print_effect_args() in
+        if print_bvt && print_eff
         then ctx_uvar_to_string_aux true u
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_uvar (u, s) ->
-        if Options.print_bound_var_types()
-        && Options.print_effect_args()
+        let print_bvt = Options.print_bound_var_types() in
+        let print_eff = Options.print_effect_args() in
+        if print_bvt && print_eff
         then Format.fmt2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
@@ -268,12 +269,13 @@ let rec term_to_string x =
       | Tm_unknown -> "_"
     )
 
-and branch_to_string (p, wopt, e) : string =
+and branch_to_string x : ML string =
+    let (p, wopt, e) = x in
     Format.fmt3 "%s %s -> %s"
                 (p |> pat_to_string)
                 (match wopt with | None -> "" | Some w -> Format.fmt1 "when %s" (w |> term_to_string))
                 (e |> term_to_string)
-and ctx_uvar_to_string_aux print_reason ctx_uvar =
+and ctx_uvar_to_string_aux print_reason ctx_uvar : ML string =
     let reason_string =
       if print_reason
       then Format.fmt1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
@@ -293,7 +295,7 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
              | Already_checked -> "Already_checked")
 
 
-and subst_elt_to_string = function
+and subst_elt_to_string (x:subst_elt) : ML string = match x with
    | DB(i, x) -> Format.fmt2 "DB (%s, %s)" (show i) (bv_to_string x)
    | DT(i, t) -> Format.fmt2 "DT (%s, %s)" (show i) (term_to_string t)
    | NM(x, i) -> Format.fmt2 "NM (%s, %s)" (bv_to_string x) (show i)
@@ -301,9 +303,9 @@ and subst_elt_to_string = function
    | UN(i, u) -> Format.fmt2 "UN (%s, %s)" (show i) (univ_to_string u)
    | UD(u, i) -> Format.fmt2 "UD (%s, %s)" (string_of_id u) (show i)
 
-and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
+and subst_to_string s : ML string = s |> List.map subst_elt_to_string |> String.concat "; "
 
-and pat_to_string x =
+and pat_to_string x : ML string =
   match x.v with
     | Pat_cons(l, us_opt, pats) ->
       Format.fmt3 "(%s%s%s)" 
@@ -327,7 +329,7 @@ and pat_to_string x =
     | Pat_constant c -> const_to_string c
 
 
-and lbs_to_string quals lbs =
+and lbs_to_string quals lbs : ML string =
 //    let lbs =
 //        if (Options.print_universes())
 //        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
@@ -348,11 +350,11 @@ and lbs_to_string quals lbs =
                                                              else "")
                                                             (term_to_string lb.lbtyp)
                                                             (lb.lbdef |> term_to_string))))
-and attrs_to_string = function
+and attrs_to_string (l:list term) : ML string = match l with
     | [] -> ""
     | tms -> Format.fmt1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
-and binder_attrs_to_string = function
+and binder_attrs_to_string (l:list term) : ML string = match l with
     | _ when Options.any_dump_module () -> ""
     (* ^ VALE HACK: Vale does not properly parse attributes on binders (yet).
     Just don't print them. *)
@@ -360,7 +362,7 @@ and binder_attrs_to_string = function
     | [] -> ""
     | tms -> Format.fmt1 "[@@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
-and bqual_to_string' s = function
+and bqual_to_string' s (q:bqual) : ML string = match q with
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
@@ -368,23 +370,24 @@ and bqual_to_string' s = function
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-and aqual_to_string' s = function
+and aqual_to_string' s (q:aqual) : ML string = match q with
   | Some { aqual_implicit=true } -> "#" ^ s
   | _ -> s
   
-and binder_to_string' is_arrow b =
+and binder_to_string' is_arrow b : ML string =
     let attrs = binder_attrs_to_string b.binder_attrs in
     if is_null_binder b
     then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
-    else if not is_arrow && not (Options.print_bound_var_types())
-    then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
-    else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
+    else let print_bvt = Options.print_bound_var_types() in
+         if not is_arrow && not print_bvt
+         then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
+         else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
 
-and binder_to_string b =  binder_to_string' false b
+and binder_to_string b : ML string =  binder_to_string' false b
 
-and arrow_binder_to_string b = binder_to_string' true b
+and arrow_binder_to_string b : ML string = binder_to_string' true b
 
-and binders_to_string sep bs =
+and binders_to_string sep bs : ML string =
     let bs =
       if (Options.print_implicits())
       then bs
@@ -393,27 +396,27 @@ and binders_to_string sep bs =
     then bs |> List.map arrow_binder_to_string |> String.concat sep
     else bs |> List.map binder_to_string |> String.concat sep
 
-and arg_to_string = function
+and arg_to_string (x:arg) : ML string = match x with
    | a,  imp -> aqual_to_string' (term_to_string a) imp
 
-and args_to_string args =
+and args_to_string args : ML string =
     let args =
       if (Options.print_implicits())
       then args
       else filter_imp_args args in
     args |> List.map arg_to_string |> String.concat " "
 
-and comp_to_string c =
+and comp_to_string c : ML string =
     Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
     | Total t ->
       begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
+        | Tm_type _ when not (if Options.print_implicits() then true else Options.print_universes()) -> term_to_string t
         | _ -> Format.fmt1 "Tot %s" (term_to_string t)
       end
     | GTotal t ->
       begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
+        | Tm_type _ when not (if Options.print_implicits() then true else Options.print_universes()) -> term_to_string t
         | _ -> Format.fmt1 "GTot %s" (term_to_string t)
       end
     | Comp c ->
@@ -425,17 +428,18 @@ and comp_to_string c =
                             (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (cflags_to_string c.flags)
-          else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
-          && not (Options.print_effect_args())
-          then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
-          else if not (Options.print_effect_args())
-                  && not (Options.print_implicits())
-                  && lid_equals c.effect_name (C.effect_ML_lid())
-          then term_to_string c.result_typ
-          else if not (Options.print_effect_args())
-               && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
-          else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          else let print_eff = Options.print_effect_args() in
+               let is_total = c.flags |> U.for_some (function TOTAL -> true | _ -> false) in
+               if is_total && not print_eff
+               then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
+               else let print_imp = Options.print_implicits() in
+                    let is_ml = lid_equals c.effect_name (C.effect_ML_lid()) in
+                    if not print_eff && not print_imp && is_ml
+                    then term_to_string c.result_typ
+                    else let is_mleffect = c.flags |> U.for_some (function MLEFFECT -> true | _ -> false) in
+                         if not print_eff && is_mleffect
+                         then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
+                         else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags
         |> List.collect (function DECREASES dec_order ->
             (match dec_order with
@@ -455,7 +459,7 @@ and comp_to_string c =
     )
 
 (* NB: this is reduced version of the one in Print *)
-and cflag_to_string c =
+and cflag_to_string c : ML string =
     match c with
         | TOTAL -> "total"
         | MLEFFECT -> "ml"
@@ -468,19 +472,19 @@ and cflag_to_string c =
         | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
-and cflags_to_string fs = FStarC.Common.string_of_list cflag_to_string fs
+and cflags_to_string fs : ML string = FStarC.Common.string_of_list cflag_to_string fs
 
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)
-and formula_to_string phi = term_to_string phi
+and formula_to_string phi : ML string = term_to_string phi
 
-let aqual_to_string aq = aqual_to_string' "" aq
-let bqual_to_string bq = bqual_to_string' "" bq
-let lb_to_string lb = lbs_to_string [] (false, [lb])
+let aqual_to_string aq : ML string = aqual_to_string' "" aq
+let bqual_to_string bq : ML string = bqual_to_string' "" bq
+let lb_to_string lb : ML string = lbs_to_string [] (false, [lb])
 
-let comp_to_string' env c = comp_to_string c
+let comp_to_string' env c : ML string = comp_to_string c
 
-let term_to_string' env x = term_to_string x
+let term_to_string' env x : ML string = term_to_string x
 
 
 //let subst_to_string subst =
@@ -493,16 +497,16 @@ let term_to_string' env x = term_to_string x
 //    Format.fmt2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
 
-let enclose_universes s =
+let enclose_universes s : ML string =
     if Options.print_universes ()
     then "<" ^ s ^ ">"
     else ""
 
-let tscheme_to_string s =
+let tscheme_to_string s : ML string =
     let (us, t) = s in
     Format.fmt2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
 
-let action_to_string a =
+let action_to_string a : ML string =
     Format.fmt5 "%s%s %s : %s = %s"
         (sli a.action_name)
         (binders_to_string " " a.action_params)
@@ -510,7 +514,7 @@ let action_to_string a =
         (term_to_string a.action_typ)
         (term_to_string a.action_defn)
 
-let wp_eff_combinators_to_string combs =
+let wp_eff_combinators_to_string combs : ML string =
   let tscheme_opt_to_string = function
     | Some ts -> tscheme_to_string ts
     | None -> "None" in
@@ -538,7 +542,7 @@ let wp_eff_combinators_to_string combs =
       tscheme_opt_to_string combs.return_repr;
       tscheme_opt_to_string combs.bind_repr ]
 
-let sub_eff_to_string se =
+let sub_eff_to_string se : ML string =
   let tsopt_to_string ts_opt =
     if Some? ts_opt then ts_opt |> Option.must |> tscheme_to_string
     else "<None>" in
@@ -546,7 +550,7 @@ let sub_eff_to_string se =
     (lid_to_string se.source) (lid_to_string se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
-let layered_eff_combinators_to_string combs =
+let layered_eff_combinators_to_string combs : ML string =
   let to_str (ts_t, ts_ty, kopt) =
     Format.fmt3 "(%s) : (%s)<%s>"
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
@@ -574,17 +578,17 @@ let layered_eff_combinators_to_string combs =
        else Format.fmt1 "; l_close = %s\n" (combs.l_close |> Option.must |> to_str2));
     ]
 
-let eff_combinators_to_string = function
+let eff_combinators_to_string (x:eff_combinators) : ML string = match x with
   | Primitive_eff combs
   | DM4F_eff combs -> wp_eff_combinators_to_string combs
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
-let eff_extraction_mode_to_string = function
+let eff_extraction_mode_to_string (x:eff_extraction_mode) : ML string = match x with
   | Extract_none s -> Format.fmt1 "none (%s)" s
   | Extract_reify -> "reify"
   | Extract_primitive -> "primitive"
 
-let eff_decl_to_string ed =
+let eff_decl_to_string ed : ML string =
     let actions_to_string actions =
         actions |>
         List.map action_to_string |>
@@ -604,7 +608,7 @@ let eff_decl_to_string ed =
          actions_to_string ed.actions]
 
 
-let rec sigelt_to_string (x: sigelt) =
+let rec sigelt_to_string (x: sigelt) : ML string =
    let basic =
       match x.sigel with
       | Sig_pragma p -> show p

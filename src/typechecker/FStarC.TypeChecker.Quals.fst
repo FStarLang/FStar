@@ -15,7 +15,6 @@
 *)
 
 module FStarC.TypeChecker.Quals
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Errors
@@ -54,7 +53,7 @@ let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) 
   in
   go [] xs
 
-let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
+let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
     (* If this is a splice, the attributes don't mean anything, they will
     just be passed through to the tactic to decide what to do. So just
     accept them. *)
@@ -128,7 +127,8 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
     in
 
     let check_no_subtyping_attribute se =
-      if U.has_attribute se.sigattrs C.no_subtping_attr_lid &&
+      let has_attr = U.has_attribute se.sigattrs C.no_subtping_attr_lid in
+      if has_attr &&
          (match se.sigel with
           | Sig_let _ -> false
           | _ -> true)
@@ -181,8 +181,9 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
               || visibility x
               || has_eq x))
         then err [];
-        if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
-           U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr
+        let has_unopteq = quals |> List.existsb (function Unopteq -> true | _ -> false) in
+        let has_erasable = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
+        if has_unopteq && has_erasable
         then err [text "The `unopteq` qualifier is not allowed on erasable inductives since they don't have decidable equality."]
       | Sig_declare_typ _ ->
         if quals |> BU.for_some has_eq
@@ -210,8 +211,9 @@ let check_erasable env quals (r:Range.t) se =
   let val_has_erasable_attr =
     lids |> BU.for_some (fun l ->
       let attrs_opt = Env.lookup_attrs_of_lid env l in
-      Some? attrs_opt
-      && U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr)
+      if Some? attrs_opt
+      then U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr
+      else false)
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
@@ -311,7 +313,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.tcinstance_lid
           | _ -> false)
   in
-  let check_instance_typ (ty:typ) : unit =
+  let check_instance_typ (ty:typ) : ML unit =
     let _, res = U.arrow_formals_comp ty in
     if not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
@@ -353,7 +355,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 
-let check_sigelt_quals_post env se =
+let check_sigelt_quals_post env se : ML unit =
   let quals = se.sigquals in
   let r = se.sigrng in
   check_erasable env quals r se;

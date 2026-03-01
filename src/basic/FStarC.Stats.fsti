@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Stats
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -31,8 +30,8 @@ val ever_enabled : ref bool
 (* Count the time taken by `f ()` under a given stats key. *)
 val record
   (key : string)
-  (f : unit -> 'a)
-  : 'a
+  (f : unit -> ML 'a)
+  : ML 'a
 
 (* Generates a message with a table for all stat keys. *)
-val print_all () : string
+val print_all (_:unit) : ML string

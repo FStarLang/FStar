@@ -15,7 +15,6 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.RemoveUnusedParameters
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -65,19 +64,19 @@ let initial_env : env_t = {
   tydef_map = PSMap.empty ()
 }
 
-let extend_env (env:env_t) (i:mlsymbol) (e:entry) : env_t = {
+let extend_env (env:env_t) (i:mlsymbol) (e:entry) : ML env_t = {
     env with
     tydef_map = PSMap.add env.tydef_map (string_of_mlpath (env.current_module,i)) e
 }
 
 let lookup_tyname (env:env_t) (name:mlpath)
-  : option entry
+  : ML (option entry)
   = PSMap.try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
 type var_set = RBSet.t mlident
 let empty_var_set : RBSet.t string = empty ()
-let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
+let rec freevars_of_mlty' (vars:var_set) (t:mlty) : ML var_set =
   match t with
   | MLTY_Var i ->
     add i vars
@@ -92,9 +91,9 @@ let freevars_of_mlty = freevars_of_mlty' empty_var_set
 (** The main rewriting in on MLTY_Named (args, name),
     which eliminates some of the args in case `name` has
     parameters that are marked as Omit in the environment *)
-let rec elim_mlty env mlty =
-  match mlty with
-  | MLTY_Var _ -> mlty
+let rec elim_mlty env t : ML mlty =
+  match t with
+  | MLTY_Var _ -> t
 
   | MLTY_Fun (t0, e, t1) ->
     MLTY_Fun(elim_mlty env t0, e, elim_mlty env t1)
@@ -123,12 +122,12 @@ let rec elim_mlty env mlty =
    | MLTY_Tuple tys -> //arity of tuples do not change
      MLTY_Tuple (List.map (elim_mlty env) tys)
    | MLTY_Top
-   | MLTY_Erased -> mlty
+   | MLTY_Erased -> t
 
 (** Note, the arity of expressions do not change.
     So, this just traverses an expression an eliminates
     type arguments in any subterm to e that is an mlty *)
-let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
+let rec elim_mlexpr' (env:env_t) (e:mlexpr') : ML mlexpr' =
   match e with
   | MLE_Const _
   | MLE_Var _
@@ -151,7 +150,8 @@ let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
   | MLE_Raise(p, es) -> MLE_Raise (p, List.map (elim_mlexpr env) es)
   | MLE_Try(e, branches) -> MLE_Try(elim_mlexpr env e, List.map (elim_branch env) branches)
 
-and elim_letbinding env (flavor, lbs) =
+and elim_letbinding env (lb:mlletbinding) : ML mlletbinding =
+  let (flavor, lbs) = lb in
   let elim_one_lb lb =
     let ts = Option.map (fun (vars, t) -> vars, elim_mlty env t) lb.mllb_tysc in
     let expr = elim_mlexpr env lb.mllb_def in
@@ -161,10 +161,11 @@ and elim_letbinding env (flavor, lbs) =
   in
   flavor, List.map elim_one_lb lbs
 
-and elim_branch env (pat, wopt, e) =
+and elim_branch env (b:mlbranch) : ML mlbranch =
+  let (pat, wopt, e) = b in
   pat, Option.map (elim_mlexpr env) wopt, elim_mlexpr env e
 
-and elim_mlexpr (env:env_t) (e:mlexpr) =
+and elim_mlexpr (env:env_t) (e:mlexpr) : ML mlexpr =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }
 
 exception Drop_tydef
@@ -245,7 +246,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     (name, metadata, List.rev parameters, mlty)
 
 let elim_tydef_or_decl (env:env_t) (td:tydef)
-  : env_t & tydef
+  : ML (env_t & tydef)
   = match td with
     | name, metadata, Inr arity ->
       let remove_typars_list =
@@ -272,7 +273,7 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       in
       env, (name, meta, Inl (params, mlty))
 
-let elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef =
+let elim_tydefs (env:env_t) (tds:list tydef) : ML (env_t & list tydef) =
   if Options.codegen() <> Some Options.FSharp then env, tds else
   let env, tds =
     List.fold_left
@@ -292,8 +293,7 @@ let elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef =
     computes the variables that are used and marks the unused ones as Omit
     in the environment and removes them from the definition here *)
 let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
-  : env_t
-  & one_mltydecl
+  : ML (env_t & one_mltydecl)
   = let {tydecl_name=name; tydecl_meta=meta; tydecl_parameters=parameters; tydecl_defn=body} = td in
     let elim_td td =
       match td with
@@ -382,5 +382,5 @@ let elim_mllib (env:env_t) (m:mlmodule) =
   in
   elim_one_lib env m
 
-let elim_mllibs (l:list mlmodule) : list mlmodule =
+let elim_mllibs (l:list mlmodule) : ML (list mlmodule) =
   snd (BU.fold_map elim_mllib initial_env l)

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Generalize
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -47,7 +46,7 @@ instance showable_univ_var : showable universe_uvar = {
 (* Generalizing types *)
 (**************************************************************************************)
 
-let gen_univs env (x:FlatSet.t universe_uvar) : list univ_name =
+let gen_univs env (x:FlatSet.t universe_uvar) : ML (list univ_name) =
     if is_empty x then []
     else let s = diff x (Env.univ_vars env) |> elems in // GGG: bad, order dependent
          if !dbg_Gen then
@@ -65,7 +64,7 @@ let gen_univs env (x:FlatSet.t universe_uvar) : list univ_name =
          in
          u_names
 
-let gather_free_univnames env t : FlatSet.t univ_name =
+let gather_free_univnames env t : ML (FlatSet.t univ_name) =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
     let univnames = diff tm_univnames ctx_univnames in
@@ -80,7 +79,7 @@ let check_universe_generalization
   (explicit_univ_names : list univ_name)
   (generalized_univ_names : list univ_name)
   (t : term)
-  : list univ_name
+  : ML (list univ_name)
 =
   match explicit_univ_names, generalized_univ_names with
   | [], _ -> generalized_univ_names
@@ -88,7 +87,7 @@ let check_universe_generalization
   | _ -> raise_error t Errors.Fatal_UnexpectedGeneralizedUniverse
            ("Generalized universe in a term containing explicit universe annotation : " ^ show t)
 
-let generalize_universes (env:env) (t0:term) : tscheme =
+let generalize_universes (env:env) (t0:term) : ML tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
     let univnames = elems (gather_free_univnames env t) in /// GGG: bad, order dependent
@@ -106,7 +105,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     univs, ts
   )
 
-let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbname & list univ_name & term & comp & list binder)) =
+let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : ML (option (list (lbname & list univ_name & term & comp & list binder))) =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -157,8 +156,9 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
             u1 |> BU.for_all (fun u ->
             u2 |> BU.for_some (fun u' -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head))
         in
-        if uvars_subseteq u1 u2
-        && uvars_subseteq u2 u1
+        let fwd = uvars_subseteq u1 u2 in
+        let bwd = uvars_subseteq u2 u1 in
+        if fwd && bwd
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in
@@ -181,7 +181,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list ctx_uvar) : list (bv & bqual) =
+     let gen_types (uvs:list ctx_uvar) : ML (list (bv & bqual)) =
          uvs |> List.concatMap (fun u ->
          (* If this implicit has a meta, don't generalize it. Just leave it
          unresolved for the resolve_implicits phase to fill it in. *)
@@ -261,7 +261,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
      in
      Some ecs
 
-let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname&univ_names&term&comp&list binder)) =
+let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : ML (list (lbname&univ_names&term&comp&list binder)) =
   assert (List.for_all (fun (l, _, _) -> Inr? l) lecs); //only generalize top-level lets
   if Debug.low () then
      Format.print1 "Generalizing: %s\n"

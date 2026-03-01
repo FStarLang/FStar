@@ -15,15 +15,15 @@
 *)
 
 module FStarC.Tactics.CtrlRewrite
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 open FStarC.Syntax.Syntax
 
 
 (* TODO: allow to pass information from ctrl_tac to rewriter? *)
-type controller_ty = term -> tac (bool & ctrl_flag)
+type controller_ty = term -> ML (tac (bool & ctrl_flag))
 type rewriter_ty   = tac unit
 
-val ctrl_rewrite: direction -> controller_ty -> rewriter_ty -> tac unit
+val ctrl_rewrite: direction -> controller_ty -> rewriter_ty -> ML (tac unit)

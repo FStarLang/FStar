@@ -1,5 +1,4 @@
 module FStarC.Syntax.VisitM
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -10,7 +9,7 @@ open FStarC.Class.Monad
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 
-type endo (m:Type -> Type) a = a -> m a
+type endo (m:Type -> Type) a = a -> ML (m a)
 
 (* local visitor monad, this class is not exposed, it's just
 a local shortcut. *)
@@ -43,28 +42,28 @@ let novfs (#m:Type->Type) {| monad m |} : lvm m = {
   proc_quotes     = false;
 }
 
-let f_aqual #m {|_ : lvm m|} aq : m _ =
+let f_aqual #m {|_ : lvm m|} aq : ML (m _) =
   let  {aqual_implicit=i; aqual_attributes=attrs} = aq in
   let! attrs = mapM f_term attrs in
   return {aqual_implicit=i; aqual_attributes=attrs}
 
-let on_sub_arg #m {|_ : lvm m|} (a : arg) : m arg =
+let on_sub_arg #m {|_ : lvm m|} (a : arg) : ML (m arg) =
   let  (t, q) = a in
   let! t = t |> f_term in
   let! q = q |> map_optM f_aqual in
   return (t, q)
 
-let on_sub_tscheme #m {| monad m |} {|_ : lvm m|}  (ts : tscheme) : m tscheme =
+let on_sub_tscheme #m {| monad m |} {|_ : lvm m|}  (ts : tscheme) : ML (m tscheme) =
   let  (us, t) = ts in
   let! t = t |> f_term in // FIXME: push univs
   return (us, t)
 
 (* Homeomorphic calls... for now *)
-let f_arg            #m {|_ : lvm m|} : _ -> m _ = on_sub_arg
-let f_args           #m {|d : lvm m|} : _ -> m _ = mapM (f_arg #m #d) // FIXME: why instantiate?
-let f_tscheme        #m {|_ : lvm m|} : tscheme -> m tscheme = on_sub_tscheme
+let f_arg            #m {|_ : lvm m|} : _ -> ML (m _) = on_sub_arg
+let f_args           #m {|d : lvm m|} : _ -> ML (m _) = mapM (f_arg #m #d) // FIXME: why instantiate?
+let f_tscheme        #m {|_ : lvm m|} : tscheme -> ML (m tscheme) = on_sub_tscheme
 
-let on_sub_meta #m {| d : lvm m |} (md : metadata) : m metadata =
+let on_sub_meta #m {| d : lvm m |} (md : metadata) : ML (m metadata) =
   match md with
   | Meta_pattern (pats, args) ->
     let! pats = pats |> mapM f_term in
@@ -84,7 +83,7 @@ let on_sub_meta #m {| d : lvm m |} (md : metadata) : m metadata =
   | Meta_labeled (s,r,b) -> return <|Meta_labeled (s,r,b)
   | Meta_desugared i     -> return <| Meta_desugared i
 
-let on_sub_letbinding #m {|lvm m|} (lb : letbinding) : m letbinding =
+let on_sub_letbinding #m {|lvm m|} (lb : letbinding) : ML (m letbinding) =
   let! lbname =
     match lb.lbname with
     | Inl bv -> Inl <$> f_binding_bv bv
@@ -98,7 +97,7 @@ let on_sub_letbinding #m {|lvm m|} (lb : letbinding) : m letbinding =
   let! lbdef = f_term lb.lbdef in // FIXME: push binder
   return <| { lbname; lbunivs; lbtyp; lbeff; lbattrs; lbpos; lbdef; }
 
-let on_sub_ascription #m {| lvm m |} (a : ascription) : m ascription =
+let on_sub_ascription #m {| lvm m |} (a : ascription) : ML (m ascription) =
   let (tc, tacopt, b) = a in
   let! tc = match tc with
             | Inl t -> Inl <$> f_term t
@@ -108,7 +107,7 @@ let on_sub_ascription #m {| lvm m |} (a : ascription) : m ascription =
   return (tc, tacopt, b)
 
 (* Compress+unlazy *)
-let rec compress (tm:term) : term =
+let rec compress (tm:term) : ML term =
   let tm = Subst.compress tm in
   match tm.n with
   (* unfold and retry *)
@@ -120,7 +119,7 @@ let rec compress (tm:term) : term =
 
 (* Not recursive itself! This does not apply anything deeply! The
 recursion on deep subterms comes from the knot being tied below. *)
-let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
+let on_sub_term #m {|d : lvm m |} (tm : term) : ML (m term) =
   let mk t = Syntax.mk t tm.pos in
   let tm = compress tm in
   match tm.n with
@@ -169,7 +168,7 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
 
   | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt} ->
     let! sc      = f_term sc in
-    let! asc_opt = asc_opt |> map_optM (fun (b, asc) -> Mktuple2 <$> f_binder b <*> on_sub_ascription asc <: m _) in
+    let! asc_opt = asc_opt |> map_optM (fun (b, asc) -> Mktuple2 <$> f_binder b <*> on_sub_ascription asc <: ML (m _)) in
     let! brs     = mapM f_br brs in
     let! rc_opt  = rc_opt |> map_optM f_residual_comp in
     return <| mk (Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt})
@@ -198,11 +197,11 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
     let! md  = md |> on_sub_meta in
     return <| mk (Tm_meta {tm=t; meta=md})
 
-let on_sub_binding_bv #m {|d : lvm m |} (x : bv) : m bv =
+let on_sub_binding_bv #m {|d : lvm m |} (x : bv) : ML (m bv) =
   let! sort = x.sort |> f_term in
   return { x with sort = sort }
 
-let on_sub_binder #m {|d : lvm m |} (b : binder) : m binder =
+let on_sub_binder #m {|d : lvm m |} (b : binder) : ML (m binder) =
   let! binder_bv = b.binder_bv |> f_binding_bv in
   let! binder_qual = b.binder_qual |> map_optM (function Meta t -> Meta <$> f_term t
                                                        | q -> return q) in
@@ -215,7 +214,7 @@ let on_sub_binder #m {|d : lvm m |} (b : binder) : m binder =
     binder_attrs;
   }
 
-let rec on_sub_pat #m {|d : lvm m |} (p0 : pat) : m pat =
+let rec on_sub_pat #m {|d : lvm m |} (p0 : pat) : ML (m pat) =
   let mk p = { v=p; p=p0.p } in
   match p0.v with
   | Pat_constant _ ->
@@ -223,7 +222,7 @@ let rec on_sub_pat #m {|d : lvm m |} (p0 : pat) : m pat =
 
   | Pat_cons (fv, us, subpats) ->
     let! us = us |> map_optM (mapM #m f_univ) in
-    let! subpats = subpats |> mapM (fun (p, b) -> Mktuple2 <$> on_sub_pat p <*> return b <: m _) in
+    let! subpats = subpats |> mapM (fun (p, b) -> Mktuple2 <$> on_sub_pat p <*> return b <: ML (m _)) in
     return <| mk (Pat_cons (fv, us, subpats))
 
   | Pat_var bv ->
@@ -234,14 +233,14 @@ let rec on_sub_pat #m {|d : lvm m |} (p0 : pat) : m pat =
     let! t = t |> map_optM f_term in
     return <| mk (Pat_dot_term t)
 
-let on_sub_br #m {|d : lvm m |} br : m _ =
+let on_sub_br #m {|d : lvm m |} br : ML (m _) =
   let  (pat, wopt, body) = br in
   let! pat = pat |> on_sub_pat in
   let! wopt = wopt |> map_optM f_term in
   let! body = body |> f_term in
   return (pat, wopt, body)
 
-let on_sub_comp_typ #m {|d : lvm m |} ct : m _ =
+let on_sub_comp_typ #m {|d : lvm m |} ct : ML (m _) =
   let! comp_univs = ct.comp_univs |> mapM f_univ in
   let  effect_name = ct.effect_name in
   let! result_typ = ct.result_typ |> f_term in
@@ -255,7 +254,7 @@ let on_sub_comp_typ #m {|d : lvm m |} ct : m _ =
     flags;
   }
 
-let on_sub_comp #m {|d : lvm m |} c : m comp =
+let on_sub_comp #m {|d : lvm m |} c : ML (m comp) =
   let! cn =
     match c.n with
     | Total typ  -> Total <$> f_term typ
@@ -264,15 +263,16 @@ let on_sub_comp #m {|d : lvm m |} c : m comp =
   in
   return <| Syntax.mk cn c.pos
 
-let __on_decreases #m {|d : lvm m |} f : cflag -> m cflag = function
+let __on_decreases #m {|d : lvm m |} (f : term -> ML (m term)) (cf : cflag) : ML (m cflag) =
+  match cf with
   | DECREASES (Decreases_lex l)      -> DECREASES <$> (Decreases_lex <$> mapM f l)
   | DECREASES (Decreases_wf (r, t))  -> DECREASES <$> (Decreases_wf <$> (Mktuple2 <$> f r <*>  f t))
   | f -> return f
 
-let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : m residual_comp =
+let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : ML (m residual_comp) =
   let  residual_effect = rc.residual_effect in
   let! residual_typ = rc.residual_typ |> map_optM f_term in
-  let! residual_flags = rc.residual_flags |> mapM (__on_decreases f_term) in
+  let! residual_flags = rc.residual_flags |> mapM (__on_decreases #m #d f_term) in
   // ^ review: residual flags should not have terms
   return <| {
     residual_effect;
@@ -280,7 +280,7 @@ let on_sub_residual_comp #m {|d : lvm m |} (rc : residual_comp) : m residual_com
     residual_flags;
   }
 
-let on_sub_univ #m {|d : lvm m |} (u : universe) : m universe =
+let on_sub_univ #m {|d : lvm m |} (u : universe) : ML (m universe) =
   let u = Subst.compress_univ u in
   match u with
   | U_max us ->
@@ -295,7 +295,7 @@ let on_sub_univ #m {|d : lvm m |} (u : universe) : m universe =
   | U_unif _ ->
     return u
 
-let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : m wp_eff_combinators =
+let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : ML (m wp_eff_combinators) =
   let! ret_wp       = wpcs.ret_wp        |> f_tscheme in
   let! bind_wp      = wpcs.bind_wp       |> f_tscheme in
   let! stronger     = wpcs.stronger      |> f_tscheme in
@@ -321,13 +321,13 @@ let on_sub_wp_eff_combinators #m {|d : lvm m |} (wpcs : wp_eff_combinators) : m 
     bind_repr;
   }
 
-let mapTuple2 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (t : 'a & 'c) : m ('b & 'd) =
+let mapTuple2 #m {| monad m |} (f : 'a -> ML (m 'b)) (g : 'c -> ML (m 'd)) (t : 'a & 'c) : ML (m ('b & 'd)) =
   Mktuple2 <$> f t._1 <*> g t._2
 
-let mapTuple3 #m {| monad m |} (f : 'a -> m 'b) (g : 'c -> m 'd) (h : 'e -> m 'f) (t : 'a & 'c & 'e) : m ('b & 'd & 'f) =
+let mapTuple3 #m {| monad m |} (f : 'a -> ML (m 'b)) (g : 'c -> ML (m 'd)) (h : 'e -> ML (m 'f)) (t : 'a & 'c & 'e) : ML (m ('b & 'd & 'f)) =
   Mktuple3 <$> f t._1 <*> g t._2 <*> h t._3
 
-let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combinators) : m layered_eff_combinators =
+let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combinators) : ML (m layered_eff_combinators) =
   let! l_repr         = lecs.l_repr         |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in
   let! l_return       = lecs.l_return       |> mapTuple2 (f_tscheme #m #d) (f_tscheme #m #d) in
   let! l_bind         = lecs.l_bind         |> mapTuple3 (f_tscheme #m #d) (f_tscheme #m #d) return in
@@ -343,7 +343,7 @@ let on_sub_layered_eff_combinators #m {|d : lvm m |} (lecs : layered_eff_combina
     l_close;
   }
 
-let on_sub_combinators #m {|d : lvm m |} (cbs : eff_combinators) : m eff_combinators =
+let on_sub_combinators #m {|d : lvm m |} (cbs : eff_combinators) : ML (m eff_combinators) =
   match cbs with
   | Primitive_eff wpcs ->
     let! wpcs = on_sub_wp_eff_combinators wpcs in
@@ -357,7 +357,7 @@ let on_sub_combinators #m {|d : lvm m |} (cbs : eff_combinators) : m eff_combina
     let! lecs = on_sub_layered_eff_combinators lecs in
     return <| Layered_eff lecs
 
-let on_sub_effect_signature #m {|d : lvm m |} (es : effect_signature) : m effect_signature =
+let on_sub_effect_signature #m {|d : lvm m |} (es : effect_signature) : ML (m effect_signature) =
   match es with
   | Layered_eff_sig (n, (us, t)) ->
     let! t = f_term t in
@@ -367,7 +367,7 @@ let on_sub_effect_signature #m {|d : lvm m |} (es : effect_signature) : m effect
     let! t = f_term t in
     return <| WP_eff_sig (us, t)
 
-let on_sub_action #m {|d : lvm m |} (a : action) : m action =
+let on_sub_action #m {|d : lvm m |} (a : action) : ML (m action) =
   let  action_name             = a.action_name in
   let  action_unqualified_name = a.action_unqualified_name in
   let  action_univs            = a.action_univs in
@@ -383,7 +383,7 @@ let on_sub_action #m {|d : lvm m |} (a : action) : m action =
     action_typ;
   }
 
-let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
+let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
   match se with
   | Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds; injective_type_params } ->
     let! params = params |> mapM f_binder in
@@ -434,7 +434,7 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
   | Sig_effect_abbrev {lid; us; bs; comp; cflags} ->
     let! binders = bs |> mapM f_binder in
     let! comp    = comp |> f_comp in
-    let! cflags  = cflags |> mapM (__on_decreases f_term) in
+    let! cflags  = cflags |> mapM (__on_decreases #m #d f_term) in
     // ^ review: residual flags should not have terms
     return <| Sig_effect_abbrev {lid; us; bs; comp; cflags}
 
@@ -471,7 +471,7 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
 
   | _ -> failwith "on_sub_sigelt: missing case"
 
-and on_sub_sigelt #m {|d : lvm m |} (se : sigelt) : m sigelt =
+and on_sub_sigelt #m {|d : lvm m |} (se : sigelt) : ML (m sigelt) =
   let! sigel    = se.sigel |> on_sub_sigelt' in
   let  sigrng   = se.sigrng in
   let  sigquals = se.sigquals in
@@ -481,14 +481,14 @@ and on_sub_sigelt #m {|d : lvm m |} (se : sigelt) : m sigelt =
   let  sigopens_and_abbrevs = se.sigopens_and_abbrevs in
   return <| { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts; sigopens_and_abbrevs; }
 
-let (>>=) (#m:_) {|monad m|} #a #b (c : m a) (f : a -> m b) =
+let (>>=) (#m:_) {|monad m|} #a #b (c : m a) (f : a -> ML (m b)) : ML (m b) =
   let! x = c in f x
 
-let (<<|) (#m:_) {|monad m|} #a #b (f : a -> m b) (c : m a) : m b=
+let (<<|) (#m:_) {|monad m|} #a #b (f : a -> ML (m b)) (c : m a) : ML (m b) =
   let! x = c in f x
 
 // Bottom up. The record is a reference so it can be easily cyclic.
-let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : lvm m =
+let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : ML (lvm m) =
   // needs explicit eta to not loop?
   let r : ref (lvm m) = mk_ref (novfs #m #md) in // FIXME implicits
   r :=
@@ -507,16 +507,16 @@ let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : lvm m =
     };
   !r
 
-let visitM_term_univs #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : term) : m term =
+let visitM_term_univs #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : term) : ML (m term) =
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
   f_term #_ #dict tm
 
-let visitM_term #m {| md : monad m |} (proc_quotes : bool) vt (tm : term) : m term =
+let visitM_term #m {| md : monad m |} (proc_quotes : bool) vt (tm : term) : ML (m term) =
   visitM_term_univs true vt return tm
 
-let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt) : m sigelt =
+let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt) : ML (m sigelt) =
   let dict : lvm m =
     tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in

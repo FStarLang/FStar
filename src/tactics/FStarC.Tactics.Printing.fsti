@@ -15,13 +15,12 @@
 *)
 
 module FStarC.Tactics.Printing
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Tactics.Types
 
-(* Dump a proofstate into the CLI or Emacs *)
-val do_dump_proofstate     : proofstate -> string -> unit
+val goal_to_string         : string -> option (int & int) -> proofstate -> goal -> ML string
+val goal_to_string_verbose : goal -> ML string
 
-(* Only for debugging *)
-val goal_to_string         : string -> option (int & int) -> proofstate -> goal -> string
-val goal_to_string_verbose : goal -> string
+(* Dump a proofstate into the CLI or Emacs *)
+val do_dump_proofstate     : proofstate -> string -> ML unit

@@ -1,6 +1,6 @@
 module FStarC.Syntax.Visit
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 
 (* This is a `map` visitor over terms, `visit f t` returns a version of
@@ -37,24 +37,24 @@ like (1+2)+(3+4) in a single call.
 *)
 val visit_term
   (proc_quotes : bool)
-  (f : term -> term)
+  (f : term -> ML term)
   (t : term)
-  : term
+  : ML term
 
 (* As above, but a callback for universes can also be provided that works
 in the same manner. In visit_term, it just defaults to the identity. *)
 val visit_term_univs
   (proc_quotes : bool)
-  (ft : term -> term)
-  (fu : universe -> universe)
+  (ft : term -> ML term)
+  (fu : universe -> ML universe)
   (t : term)
-  : term
+  : ML term
 
 (* As above, but works on any sigelt, visiting all of its underlying
 terms and universes. *)
 val visit_sigelt
   (proc_quotes : bool)
-  (vt : term -> term)
-  (vu : universe -> universe)
+  (vt : term -> ML term)
+  (vu : universe -> ML universe)
   (t : sigelt)
-  : sigelt
+  : ML sigelt

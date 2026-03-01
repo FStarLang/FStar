@@ -15,7 +15,6 @@
 *)
 
 module FStarC.SMTEncoding.ErrorReporting
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -31,17 +30,17 @@ open FStarC.Class.Show
 module BU = FStarC.Util
 
 exception Not_a_wp_implication of string
-let sort_labels (l:(list (error_label & bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
-let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
+let sort_labels (l:(list (error_label & bool))) : ML (list (error_label & bool)) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
+let remove_dups (l:labels) : ML labels = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
 type msg = string & Range.t
 type ranges = list (option string & Range.t)
 
 //decorate a term with an error label
 let __ctr = mk_ref 0
 
-let incr r = r := !r + 1
+let incr r : ML unit = r := !r + 1
 
-let fresh_label : Errors.error_message -> Range.t -> term -> label & term =
+let fresh_label : Errors.error_message -> Range.t -> term -> ML (label & term) =
     fun message range t ->
         let l = incr __ctr; Format.fmt1 "label_%s" (show !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
@@ -63,10 +62,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                                   //or something like that
                 (r:Range.t)            //the source range in which this query was asked
                 q            //the query
-               : labels      //the labels themselves
-               & term        //the query, decorated with labels
+               : ML (labels   //the labels themselves
+               & term)       //the query, decorated with labels
                =
-    let rec is_a_post_condition post_name_opt tm =
+    let rec is_a_post_condition post_name_opt tm : ML bool =
         match post_name_opt, tm.tm with
         | None, _ -> false
         | Some nm, FreeV fv ->
@@ -110,6 +109,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 (post_name_opt:option string) //the name of the current post-condition variable --- it is left uninstrumented
                 (labels:list label) //the labels accumulated so far
                 (q:term) //the term being instrumented
+     : ML (list label & term)
      =  match q.tm with
         | BoundV _
         | Integer _
@@ -318,10 +318,10 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:list decl -> Z3.z3result)
-    : unit =
+                 (askZ3:list decl -> ML Z3.z3result)
+    : ML unit =
 
-    let print_banner () =
+    let print_banner () : ML unit =
         let msg =
             Format.fmt4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
@@ -332,7 +332,8 @@ let detail_errors hint_replay
         Format.print_error msg
     in
 
-    let print_result ((_, msg, r), success) =
+    let print_result (x : label & bool) : ML unit =
+      let ((_, msg, r), success) = x in
       let open FStarC.Pprint in
       let open FStarC.Errors.Msg in
         if success
@@ -360,7 +361,7 @@ let detail_errors hint_replay
             Term.Assume a) in
 
     //check all active labels linearly and classify as eliminated/error
-    let rec linear_check eliminated errors active =
+    let rec linear_check eliminated errors active : ML (list (label & bool)) =
         FStarC.SMTEncoding.Z3.refresh (Some env.proof_ns);
         match active with
         | [] ->

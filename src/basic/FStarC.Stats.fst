@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Stats
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Class.Monoid
@@ -57,7 +56,7 @@ let st : SMap.t (ref bool & stat) = SMap.create 10
    the time in subcalls, if any). *)
 let stack : ref (list string) = mk_ref []
 
-let r_running (k : string) : ref bool =
+let r_running (k : string) : ML (ref bool) =
   match SMap.try_find st k with
   | None ->
     let r = alloc false in
@@ -66,7 +65,7 @@ let r_running (k : string) : ref bool =
   | Some (r, _) ->
     r
 
-let add (k : string) (s1 : stat) : unit =
+let add (k : string) (s1 : stat) : ML unit =
   let (r, s0) =
     match SMap.try_find st k with
     | None -> (alloc false, mzero)
@@ -76,8 +75,8 @@ let add (k : string) (s1 : stat) : unit =
 
 let do_record
   (key : string)
-  (f : unit -> 'a)
-  : 'a
+  (f : unit -> ML 'a)
+  : ML 'a
 =
   stack := key :: !stack;
   let running = r_running key in
@@ -109,19 +108,20 @@ let do_record
     raise e
 
 let record key f =
-  if !enabled then
+  let e = !enabled in
+  if e then
     do_record key f
   else
     f ()
 
-let lpad (len:int) (s:string) : string =
+let lpad (len:int) (s:string) : ML string =
   let l = String.length s in
   if l >= len then s else String.make (len - l) ' ' ^ s
 
 let max x y =
   if x > y then x else y
 
-let print_all () : string =
+let print_all () : ML string =
   let keys = SMap.keys st in
   let points = List.map (fun k -> k, snd <| Some?.v <| SMap.try_find st k) keys in
   (* Sort by (point) time. *)
@@ -131,7 +131,7 @@ let print_all () : string =
       (s2.ns_tree - s2.ns_sub) `Class.Ord.cmp` (s1.ns_tree - s1.ns_sub))
   in
   let longest_key = List.fold_left (fun acc (k, _) -> max acc (String.length k)) 20 points in
-  let pr1 (p : (string & stat)) : string =
+  let pr1 (p : (string & stat)) : ML string =
     let k, st = p in
     Format.fmt5 "  %s  %s %s ms %s ms %s ms"
       (lpad longest_key k)

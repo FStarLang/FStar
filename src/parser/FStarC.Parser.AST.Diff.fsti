@@ -16,14 +16,13 @@
    Authors: N. Swamy and Copilot
 *)
 module FStarC.Parser.AST.Diff
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Parser.AST
 
 (* Check if two decls are equal, ignoring range metadata.
    Used in FStarC.Interactive.Incremental *)
-val eq_term (t1 t2:term) : bool
-val eq_binder (b1 b2:binder) : bool
-val eq_pattern (p1 p2:pattern) : bool
-val eq_decl (d1 d2:decl) : bool
+val eq_term (t1 t2:term) : ML bool
+val eq_pattern (p1 p2:pattern) : ML bool
+val eq_binder (b1 b2:binder) : ML bool
+val eq_decl (d1 d2:decl) : ML bool

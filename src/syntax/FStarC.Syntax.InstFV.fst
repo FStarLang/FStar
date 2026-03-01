@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Syntax.InstFV
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
@@ -25,7 +24,7 @@ module SS = FStarC.Syntax.Subst
 
 let mk t s = S.mk s t.pos
 
-let rec inst (s:term -> fv -> term) t =
+let rec inst (s:term -> fv -> ML term) t : ML term =
     let t = SS.compress t in
     let mk = mk t in
     match t.n with
@@ -97,16 +96,16 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_meta {tm=t; meta=tag} ->
         mk (Tm_meta {tm=inst s t; meta=tag})
 
-and inst_binder s b =
+and inst_binder s b : ML binder =
   { b with
     binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
     binder_attrs = b.binder_attrs |> List.map (inst s) }
 
-and inst_binders s bs = bs |> List.map (inst_binder s)
+and inst_binders s bs : ML binders = bs |> List.map (inst_binder s)
 
-and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
+and inst_args s args0 : ML (list (term & aqual)) = args0 |> List.map (fun (a, imp) -> inst s a, imp)
 
-and inst_comp s c = match c.n with
+and inst_comp s c : ML comp = match c.n with
     | Total t -> S.mk_Total (inst s t)
     | GTotal t -> S.mk_GTotal (inst s t)
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
@@ -117,15 +116,15 @@ and inst_comp s c = match c.n with
                                         | f -> f)} in
                  S.mk_Comp ct
 
-and inst_decreases_order s = function
+and inst_decreases_order s : _ -> ML _ = function
     | Decreases_lex l -> Decreases_lex (l |> List.map (inst s))
     | Decreases_wf (rel, e) -> Decreases_wf (inst s rel, inst s e)
 
-and inst_lcomp_opt s l = match l with
+and inst_lcomp_opt s l : ML _ = match l with
     | None -> None
     | Some rc -> Some ({rc with residual_typ = Option.map (inst s) rc.residual_typ })
 
-and inst_ascription s (asc:ascription) =
+and inst_ascription s (asc:ascription) : ML ascription =
   let annot, topt, use_eq = asc in
   let annot =
     match annot with
@@ -134,10 +133,10 @@ and inst_ascription s (asc:ascription) =
   let topt = topt |> Option.map (inst s) in
   annot, topt, use_eq
 
-let instantiate i t = match i with
+let instantiate i t : ML term = match i with
     | [] -> t
     | _ ->
-      let inst_fv (t: term) (fv: S.fv) : term =
+      let inst_fv (t: term) (fv: S.fv) : ML term =
         begin match Option.find (fun (x, _) -> lid_equals x fv.fv_name) i with
             | None -> t
             | Some (_, us) -> mk t (Tm_uinst(t, us))

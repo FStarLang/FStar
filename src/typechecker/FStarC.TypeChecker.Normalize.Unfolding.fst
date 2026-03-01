@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Normalize.Unfolding
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -16,7 +15,7 @@ module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
-let should_unfold cfg should_reify fv qninfo : should_unfold_res =
+let should_unfold cfg should_reify fv qninfo : ML should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
       | None -> []
@@ -79,11 +78,11 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         no
 
     // Unfoldonce. NB: this is before the zeta case, so we unfold even if zeta is off
-    | _, true when Some? cfg.steps.unfold_once && BU.for_some (fv_eq_lid fv) (Some?.v cfg.steps.unfold_once) ->
+    | _, true when (if Some? cfg.steps.unfold_once then BU.for_some (fv_eq_lid fv) (Some?.v cfg.steps.unfold_once) else false) ->
         log_unfolding cfg (fun () -> Format.print_string " >> UnfoldOnce\n");
         once
 
-    | Some (Inr ({sigattrs=attrs}, _), _), _ when cfg.steps.for_extraction && Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) ->
+    | Some (Inr ({sigattrs=attrs}, _), _), _ when (if cfg.steps.for_extraction then Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) else false) ->
         log_unfolding cfg (fun () -> Format.print_string " >> Has extract_as attribute and we're extracting, unfold!");
         yes
 
@@ -148,8 +147,9 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     // do not unfold.
     // NB: Using specific attributes like UnfoldOnly will override this. This gives more
     // control to the user if they *really* want to unfold one of these.
-    | _ when Some? cfg.steps.dont_unfold_attr
-      && List.existsb (fun fa -> U.has_attribute attrs fa) (Some?.v cfg.steps.dont_unfold_attr) ->
+    | _ when (if Some? cfg.steps.dont_unfold_attr
+             then List.existsb (fun fa -> U.has_attribute attrs fa) (Some?.v cfg.steps.dont_unfold_attr)
+             else false) ->
         log_unfolding cfg (fun () -> Format.print_string " >> forbidden by attribute, not unfolding\n");
         no
 

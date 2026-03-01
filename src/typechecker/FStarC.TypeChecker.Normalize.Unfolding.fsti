@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Normalize.Unfolding
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.TypeChecker
@@ -15,7 +14,7 @@ type should_unfold_res =
     | Should_unfold_reify
 
 val should_unfold : cfg
-                 -> should_reify:(cfg -> bool)
+                 -> should_reify:(cfg -> ML bool)
                  -> fv
                  -> Env.qninfo
-                 -> should_unfold_res
+                 -> ML should_unfold_res

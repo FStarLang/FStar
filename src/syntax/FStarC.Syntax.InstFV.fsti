@@ -14,13 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Syntax.InstFV
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 
 type inst_t = list (lident & universes)
-val inst: (term -> fv -> term) -> term -> term
-val inst_binders: (term -> fv -> term) -> binders -> binders
-val instantiate: inst_t -> term -> term
+val inst: (term -> fv -> ML term) -> term -> ML term
+val inst_binders: (term -> fv -> ML term) -> binders -> ML binders
+val instantiate: inst_t -> term -> ML term
