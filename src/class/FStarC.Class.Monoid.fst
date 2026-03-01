@@ -1,5 +1,4 @@
 module FStarC.Class.Monoid
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -7,7 +6,7 @@ open FStarC.List
 
 let ( ++ ) #a {| monoid a |} = mplus #a
 
-let msum xs = fold_left mplus mzero xs
+let msum xs : ML _ = fold_left mplus mzero xs
 
 instance monoid_int : monoid int = {
    mzero = 0;

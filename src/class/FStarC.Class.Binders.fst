@@ -1,5 +1,4 @@
 module FStarC.Class.Binders
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

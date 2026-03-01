@@ -16,15 +16,14 @@
    limitations under the License.
 *)
 module FStarC.Thunk
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
-type thunk (a:Type) : Type = ref (either (unit -> a) a)
+type thunk (a:Type) : Type = ref (either (unit -> ML a) a)
 
-let mk (f:unit -> 'a) : thunk 'a = alloc (Inl f)
-let mkv (v:'a) : thunk 'a = alloc (Inr v)
+let mk (f:unit -> ML 'a) : ML (thunk 'a) = alloc (Inl f)
+let mkv (v:'a) : ML (thunk 'a) = alloc (Inr v)
 
-let force (t:thunk 'a) =
+let force (t:thunk 'a) : ML 'a =
     match !t with
     | Inr a -> a
     | Inl f ->
@@ -32,5 +31,5 @@ let force (t:thunk 'a) =
       t := Inr a;
       a
 
-let map (f : 'a -> 'b) (t:thunk 'a) : thunk 'b =
+let map (f : 'a -> ML 'b) (t:thunk 'a) : ML (thunk 'b) =
   mk (fun () -> f (force t))

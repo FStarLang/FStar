@@ -17,27 +17,26 @@
 *)
 
 module FStarC.Common
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
-val snapshot (msg:string) (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)
+val snapshot (msg:string) (push: 'a -> ML 'b) (stackref: ref (list 'c)) (arg: 'a) : ML (int & 'b)
 
-val rollback (msg:string) (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) : 'a
+val rollback (msg:string) (pop: unit -> ML 'a) (stackref: ref (list 'c)) (depth: option int) : ML 'a
 
-val runtime_assert (b:bool) (msg:string) : unit
+val runtime_assert (b:bool) (msg:string) : ML unit
 
 (* Why two? This function was added during a refactoring, and
 both variants existed. We cannot simply move to ";" since that is a
 breaking change to anything that parses F* source code (like Vale). *)
-val string_of_list  : ('a -> string) -> list 'a -> string
-val string_of_list' : ('a -> string) -> list 'a -> string
+val string_of_list  : ('a -> ML string) -> list 'a -> ML string
+val string_of_list' : ('a -> ML string) -> list 'a -> ML string
 
 val list_of_option (o:option 'a) : list 'a
 
-val string_of_option (f : 'a -> string) (o : option 'a) : string
+val string_of_option (f : 'a -> ML string) (o : option 'a) : ML string
 
 (* Was List.init, but F* doesn't have this in ulib *)
-val tabulate (n:int) (f : int -> 'a) : list 'a
+val tabulate (n:int) (f : int -> ML 'a) : ML (list 'a)
 
 (** max_prefix f xs returns (l, r) such that
   * every x in l satisfies f
@@ -55,8 +54,8 @@ val max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a
 
 val eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a) : bool
 
-val psmap_to_list (m : PSMap.t 'a) : list (string & 'a)
-val psmap_keys (m : PSMap.t 'a) : list string
-val psmap_values (m : PSMap.t 'a) : list 'a
+val psmap_to_list (m : PSMap.t 'a) : ML (list (string & 'a))
+val psmap_keys (m : PSMap.t 'a) : ML (list string)
+val psmap_values (m : PSMap.t 'a) : ML (list 'a)
 
 val option_to_list (o : option 'a) : list 'a

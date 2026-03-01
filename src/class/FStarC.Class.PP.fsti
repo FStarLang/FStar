@@ -1,5 +1,4 @@
 module FStarC.Class.PP
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Pprint

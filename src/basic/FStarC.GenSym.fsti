@@ -17,18 +17,17 @@
    A simple fresh symbol generator (gensym).
 *)
 module FStarC.GenSym
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
 (** Obtain a fresh ID. *)
-val next_id             : unit -> int
+val next_id             : unit -> ML int
 
 (** Reset the gensym. Names generated will not be fresh with respect to
 names generated before the reset. Should be used only when it is known
 that freshness across resets is not needed. *)
-val reset_gensym        : unit -> unit
+val reset_gensym        : unit -> ML unit
 
 (** Do something without affecting the gensym. Useful e.g. for printing,
 to make sure there's no side effect. *)
-val with_frozen_gensym  : (unit -> 'a) -> 'a
+val with_frozen_gensym  : (unit -> ML 'a) -> ML 'a

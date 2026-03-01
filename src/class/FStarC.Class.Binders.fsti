@@ -1,12 +1,12 @@
 module FStarC.Class.Binders
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 
 (* TODO: should be for any setlike *)
 class hasNames (a:Type) = {
-  freeNames : a -> flat_set bv;
+  freeNames : a -> ML (flat_set bv);
 }
 
 class hasBinders (a:Type) = {

@@ -1,5 +1,4 @@
 module FStarC.Class.Ord
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -36,7 +35,7 @@ let sort_by #a (f : a -> a -> order) xs =
   } in
   sort #a #d xs
 
-let dedup #a xs =
+let dedup #a xs : ML (list a) =
   let open FStarC.List in
   let out = fold_left (fun out x -> if existsb (fun y -> x =? y) out then out else x :: out) [] xs in
   List.rev out

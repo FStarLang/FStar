@@ -1,5 +1,4 @@
 module FStarC.Class.Ord
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Order
@@ -10,6 +9,16 @@ class ord (a:Type) = {
   super : deq a;
   cmp : a -> a -> order;
 }
+
+val (<?)  : #a:Type -> {| ord a |} -> a -> a -> bool
+val (<=?) : #a:Type -> {| ord a |} -> a -> a -> bool
+val (>?)  : #a:Type -> {| ord a |} -> a -> a -> bool
+val (>=?) : #a:Type -> {| ord a |} -> a -> a -> bool
+
+val min : #a:Type -> {| ord a |} -> a -> a -> a
+val max : #a:Type -> {| ord a |} -> a -> a -> a
+
+instance val ord_eq (a:Type) (d : ord a) : Tot (deq a)
 
 val sort
   (#a:Type) {| ord a |}
@@ -26,7 +35,7 @@ occurrence. So dedup [a,b,c,a,f,e,c] = [a,b,c,f,e] *)
 val dedup
   (#a:Type) {| ord a |}
   (xs : list a)
-  : list a
+  : ML (list a)
 
 (* Sort and deduplicate at once *)
 val sort_dedup
@@ -38,16 +47,6 @@ val sort_dedup
 The first component is the elements only present in xs, and the second
 is the elements only present in ys. *)
 val ord_list_diff (#a:Type0) {| ord a |} (xs ys : list a) : list a & list a
-
-instance val ord_eq (a:Type) (d : ord a) : Tot (deq a)
-
-val (<?)  : #a:Type -> {| ord a |} -> a -> a -> bool
-val (<=?) : #a:Type -> {| ord a |} -> a -> a -> bool
-val (>?)  : #a:Type -> {| ord a |} -> a -> a -> bool
-val (>=?) : #a:Type -> {| ord a |} -> a -> a -> bool
-
-val min : #a:Type -> {| ord a |} -> a -> a -> a
-val max : #a:Type -> {| ord a |} -> a -> a -> a
 
 instance val ord_int    : ord int
 instance val ord_bool   : ord bool

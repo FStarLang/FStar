@@ -1,13 +1,13 @@
 module FStarC.Syntax.Embeddings.AppEmb
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings.Base
 
 type appemb 'a =
-  args -> option ('a & args)
+  args -> ML (option ('a & args))
 
-let (let?) o f = match o with | None -> None | Some v -> f v
+let (let?) (o : option 'a) (f : 'a -> ML (option 'b)) : ML (option 'b) = match o with | None -> None | Some v -> f v
 
 val (<*>) : appemb ('a -> 'b) -> appemb 'a -> appemb 'b
 val (<**>) : appemb ('a -> 'b) -> embedding 'a -> appemb 'b
@@ -18,6 +18,6 @@ val (<$>) : ('a -> 'b) -> appemb 'a -> appemb 'b
 
 val (<$$>) : ('a -> 'b) -> embedding 'a -> appemb 'b
 
-val run : args -> appemb 'a -> option 'a
+val run : args -> appemb 'a -> ML (option 'a)
 
-val wrap : (term -> option 'a) -> appemb 'a
+val wrap : (term -> ML (option 'a)) -> appemb 'a

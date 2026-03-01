@@ -14,15 +14,14 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.UnsatCore
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 module BU = FStarC.Util
 
 let filter (core:unsat_core) (decls:list decl)
-: list decl
-= let rec aux theory =
+: ML (list decl)
+= let rec aux theory : ML _ =
     //so that we can use the tail-recursive fold_left
     let theory_rev = List.rev theory in
     let keep, n_retained, n_pruned =

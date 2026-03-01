@@ -15,12 +15,11 @@
 *)
 
 module FStarC.SMTEncoding.Solver.Cache
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 
-val query_cache_add (g:env) (q:term) : unit
-val try_find_query_cache (g:env) (q:term) : bool
+val query_cache_add (g:env) (q:term) : ML unit
+val try_find_query_cache (g:env) (q:term) : ML bool

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Parser.Const.ExtractAs
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -23,4 +22,4 @@ open FStarC.Syntax.Syntax
 
 val extract_as_lid : lid
 
-val is_extract_as_attr (attr: attribute) : option term
+val is_extract_as_attr (attr: attribute) : ML (option term)

@@ -15,7 +15,6 @@
 *)
 
 module FStarC.SMTEncoding.Solver.Cache
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -31,17 +30,19 @@ open FStarC.Syntax.Hash {} // instances
 let query_cache_ref : ref (RBSet.t hash_code) =
   mk_ref (empty ())
 
-let on () =
-  Options.query_cache () && Options.ide ()
+let on () : ML bool =
+  let qc = Options.query_cache () in
+  let ide = Options.ide () in
+  qc && ide
 
-let query_cache_add (g:env) (q:term) : unit =
+let query_cache_add (g:env) (q:term) : ML unit =
   if on () then (
     let h = hash (g, q) in
 //     Format.print1 "Adding query cache for %s\n" (show h);
     query_cache_ref := add h !query_cache_ref
   )
 
-let try_find_query_cache (g:env) (q:term) : bool =
+let try_find_query_cache (g:env) (q:term) : ML bool =
   if on () then (
     let h = hash (g, q) in
     let r = mem h !query_cache_ref in

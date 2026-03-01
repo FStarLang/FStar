@@ -1,6 +1,6 @@
 module FStarC.Syntax.Embeddings.AppEmb
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings.Base
 
@@ -11,8 +11,6 @@ let one (e : embedding 'a) : appemb 'a =
       match try_unembed t id_norm_cb with
       | None -> None
       | Some v -> Some (v, xs)
-
-let (let?) o f = match o with | None -> None | Some v -> f v
 
 let (<*>) u1 u2 =
   fun args ->
@@ -29,12 +27,12 @@ let (<$>) u1 u2 = pure u1 <*> u2
 
 let (<$$>) u1 u2 = pure u1 <*> one u2
 
-let run args u =
+let run args u : ML (option _) =
   match u args with
   | Some (r, []) -> Some r
   | _ -> None
 
-let wrap f =
+let wrap (f : _ -> ML (option _)) : appemb _ =
   fun args ->
     match args with
     | (t,_)::xs ->

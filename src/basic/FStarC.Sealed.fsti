@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Sealed
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 val sealed (a:Type u#a) : Type u#a
 

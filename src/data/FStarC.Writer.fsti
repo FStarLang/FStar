@@ -1,5 +1,4 @@
 module FStarC.Writer
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Class.Monoid
 open FStarC.Class.Monad

@@ -1,5 +1,4 @@
 module FStarC.Tactics.Common
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* NOTE: This file is exactly the same as its .fs/.fsi counterpart.
 It is only here so the equally-named interface file in ulib/ is not
@@ -9,8 +8,3 @@ any .ml file from an interface. Hence we keep both, exactly equal to
 each other. *)
 
 open FStarC.Syntax.Syntax
-
-exception NotAListLiteral
-exception TacticFailure of FStarC.Errors.Msg.error_message & option FStarC.Range.t
-exception EExn of term
-exception SKIP (* used by ctrl_rewrite *)

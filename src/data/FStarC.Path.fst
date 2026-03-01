@@ -16,7 +16,6 @@
    limitations under the License.
 *)
 module FStarC.Path
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Class.Deq
 

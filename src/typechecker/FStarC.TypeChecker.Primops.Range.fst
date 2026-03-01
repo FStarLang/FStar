@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Range
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -16,14 +15,14 @@ module PC = FStarC.Parser.Const
 (* this type only here to use typeclass hackery *)
 type unsealedRange = | U of Range.t
 
-let mk_range (fn : string) (from_l from_c to_l to_c : int) : Range.t =
+let mk_range (fn : string) (from_l from_c to_l to_c : int) : ML Range.t =
   Range.mk_range fn (mk_pos from_l from_c)
                     (mk_pos to_l   to_c)
 
-let __mk_range (fn : string) (from_l from_c to_l to_c : int) : unsealedRange =
+let __mk_range (fn : string) (from_l from_c to_l to_c : int) : ML unsealedRange =
   U (mk_range fn from_l from_c to_l to_c)
 
-let explode (r : unsealedRange) : (string & int & int & int & int) =
+let explode (r : unsealedRange) : ML (string & int & int & int & int) =
   match r with
   | U r ->
     let open FStarC.Range.Type in

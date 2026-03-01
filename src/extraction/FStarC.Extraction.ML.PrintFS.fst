@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.PrintFS
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Extraction.ML.Syntax
 open FStarC.Extraction.ML.Code
+open FStarC.Effect
 
-let print_fs (modul : mlmodule) : string =
+let print_fs (modul : mlmodule) : ML string =
   (* Use the old printer for F# extraction *)
   let d = Code.doc_of_mlmodule true modul in
   Code.pretty 120 d

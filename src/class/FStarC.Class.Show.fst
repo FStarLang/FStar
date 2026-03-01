@@ -1,5 +1,4 @@
 module FStarC.Class.Show
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -31,7 +30,7 @@ instance showable_string : showable string =
 instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {
   show =
     (fun l ->
-      let rec show_list_aux = (fun l ->
+      let rec show_list_aux (l : list a) : ML string = (
         match l with
         | [] -> ""
         | [x] -> show x

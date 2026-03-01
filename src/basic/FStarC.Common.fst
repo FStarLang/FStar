@@ -17,7 +17,6 @@
 *)
 
 module FStarC.Common
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -29,15 +28,15 @@ module SB = FStarC.StringBuffer
 
 let dbg = Debug.get_toggle "Snapshot"
 
-let snapshot msg (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
+let snapshot msg (push: 'a -> ML 'b) (stackref: ref (list 'c)) (arg: 'a) : ML (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in
   if !dbg then Format.print2 "(%s)snapshot %s\n" msg (string_of_int len);
   (len, arg'))
 
-let rollback msg (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
+let rollback msg (pop: unit -> ML 'a) (stackref: ref (list 'c)) (depth: option int) : ML 'a =
   if !dbg then Format.print2 "(%s)rollback %s ... " msg (match depth with None -> "None" | Some len ->string_of_int len);
-  let rec aux n : 'a =
+  let rec aux n : ML 'a =
     if n <= 0 then failwith "(rollback) Too many pops"
     else if n = 1 then pop ()
     else (ignore (pop ()); aux (n - 1)) in
@@ -50,10 +49,10 @@ let rollback msg (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int)
 let raise_failed_assertion msg =
   failwith (Format.fmt1 "Assertion failed: %s" msg)
 
-let runtime_assert b msg =
+let runtime_assert b msg : ML unit =
   if not b then raise_failed_assertion msg
 
-let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
+let __string_of_list (delim:string) (f : 'a -> ML string) (l : list 'a) : ML string =
   match l with
   | [] -> "[]"
   | x::xs ->
@@ -81,8 +80,8 @@ let string_of_option f = function
   | Some x -> "Some " ^ f x
 
 (* Was List.init, but F* doesn't have this in ulib *)
-let tabulate (n:int) (f : int -> 'a) : list 'a =
-  let rec aux i : list 'a =
+let tabulate (n:int) (f : int -> ML 'a) : ML (list 'a) =
+  let rec aux i : ML (list 'a) =
     if i < n
     then f i :: aux (i + 1)
     else []

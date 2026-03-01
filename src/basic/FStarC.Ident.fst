@@ -1,5 +1,4 @@
 module FStarC.Ident
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Range
@@ -24,11 +23,11 @@ let set_id_range r i = { i with idRange=r }
 
 let reserved_prefix = "uu___"
 
-let gen' s r =
+let gen' s r : ML ident =
     let i = GS.next_id() in
     mk_ident (s ^ show i, r)
 
-let gen r = gen' reserved_prefix r
+let gen r : ML ident = gen' reserved_prefix r
 
 let ident_of_lid l = l.ident
 
@@ -37,26 +36,26 @@ let id_of_text str = mk_ident(str, dummyRange)
 let string_of_id (id:ident) = id.idText
 let text_of_path path = Util.concat_l "." path
 let path_of_text text = String.split ['.'] text
-let path_of_ns ns = List.map string_of_id ns
-let path_of_lid lid = List.map string_of_id (lid.ns@[lid.ident])
+let path_of_ns ns : ML path = List.map string_of_id ns
+let path_of_lid lid : ML path = List.map string_of_id (lid.ns@[lid.ident])
 let ns_of_lid lid = lid.ns
 let ids_of_lid lid = lid.ns@[lid.ident]
-let lid_of_ns_and_id ns id =
+let lid_of_ns_and_id ns id : ML lident =
     let nsstr = List.map string_of_id ns |> text_of_path in
     {ns=ns;
      ident=id;
      nsstr=nsstr;
      str=(if nsstr="" then id.idText else nsstr ^ "." ^ id.idText)}
 
-let id_as_lid (id:ident) : lident =
+let id_as_lid (id:ident) : ML lident =
   lid_of_ns_and_id [] id
 
-let lid_of_ids ids =
+let lid_of_ids ids : ML lident =
     let ns, id = Util.prefix ids in
     lid_of_ns_and_id ns id
-let lid_of_str str =
+let lid_of_str str : ML lident =
     lid_of_ids (List.map id_of_text (Util.split str "."))
-let lid_of_path path pos =
+let lid_of_path path pos : ML lident =
     let ids = List.map (fun s -> mk_ident(s, pos)) path in
     lid_of_ids ids
 let text_of_lid lid = lid.str
@@ -64,16 +63,16 @@ let lid_equals l1 l2 = l1.str = l2.str
 let ident_equals id1 id2 = id1.idText = id2.idText
 let range_of_lid (lid:lid) = range_of_id lid.ident
 let set_lid_range l r = {l with ident={l.ident with idRange=r}}
-let lid_add_suffix l s =
+let lid_add_suffix l s : ML lident =
     let path = path_of_lid l in
     lid_of_path (path@[s]) (range_of_lid l)
 
-let ml_path_of_lid lid =
+let ml_path_of_lid lid : ML string =
     String.concat "_" <| (path_of_ns lid.ns)@[string_of_id lid.ident]
 
 let string_of_lid lid = lid.str
 
-let qual_id lid id =
+let qual_id lid id : ML lident =
     set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) (range_of_id id)
 
 let nsstr (l:lid) : string = l.nsstr

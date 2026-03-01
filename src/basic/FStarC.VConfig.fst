@@ -14,6 +14,5 @@
    limitations under the License.
 *)
 module FStarC.VConfig
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This file here to trigger extraction. *)

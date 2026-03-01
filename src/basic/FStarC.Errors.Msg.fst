@@ -1,5 +1,4 @@
 module FStarC.Errors.Msg
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -13,7 +12,7 @@ instance is_error_message_list_doc : is_error_message (list Pprint.document) = {
   to_doc_list = id;
 }
 
-let vconcat (ds:list document) : document =
+let vconcat (ds:list document) : ML document =
   match ds with
   | h::t ->
     List.fold_left (fun l r -> l ^^ hardline ^^ r) h t
@@ -23,20 +22,20 @@ let vconcat (ds:list document) : document =
 let text (s:string) : document =
   flow (break_ 1) (words s)
 
-let sublist (h:document) (ds:list document) : document =
+let sublist (h:document) (ds:list document) : ML document =
   nest 2 (hardline ^^ align (ds |> List.map (fun d -> h ^^ d) |> vconcat))
 
-let bulleted (ds:list document) : document =
+let bulleted (ds:list document) : ML document =
   sublist (doc_of_string "- ") ds
 
 let mkmsg (s:string) : list document =
   [arbitrary_string s]
 
-let renderdoc (d : document) : string =
+let renderdoc (d : document) : ML string =
   let one = Util.float_of_string "1.0" in
   pretty_string one 80 d
 
-let backtrace_doc () : document =
+let backtrace_doc () : ML document =
   let s = Util.stack_dump () in
   text "Stack trace:" ^/^
   arbitrary_string (Util.trim_string s)
@@ -54,13 +53,13 @@ let subdoc' (indent:bool) d =
 
 let subdoc d = subdoc' true d
 
-let render_as_doc (ds : list document) : document =
+let render_as_doc (ds : list document) : ML document =
   concat (List.map (fun d -> subdoc (group d)) ds)
 
-let rendermsg (ds : list document) : string =
+let rendermsg (ds : list document) : ML string =
   renderdoc (render_as_doc ds)
 
-let json_of_error_message (err_msg: list document): FStarC.Json.json
+let json_of_error_message (err_msg: list document): ML FStarC.Json.json
   = FStarC.List.map
       (fun doc -> FStarC.Json.JsonStr (renderdoc doc)) err_msg
     |> FStarC.Json.JsonList

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Parser.Const.ExtractAs
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -27,7 +26,7 @@ open FStarC.Syntax.Syntax
 let p2l l = lid_of_path l dummyRange
 let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
 
-let is_extract_as_attr (attr: attribute) : option term =
+let is_extract_as_attr (attr: attribute) : ML (option term) =
   let head, args = Syntax.Util.head_and_args attr in
   match (Subst.compress head).n, args with
   | Tm_fvar fv, [t, _] when Syntax.fv_eq_lid fv extract_as_lid ->
