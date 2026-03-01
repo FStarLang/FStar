@@ -16,6 +16,7 @@
   limitations under the License.
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
@@ -29,15 +30,25 @@ open FStarC.Class.Setlike
 open FStarC.Class.Show
 
 module I = FStarC.Ident
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module S  = FStarC.Syntax.Syntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module SS = FStarC.Syntax.Subst
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module A  = FStarC.Parser.AST
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module C = FStarC.Parser.Const
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module U = FStarC.Syntax.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module BU = FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module D = FStarC.Parser.ToDocument
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module UF = FStarC.Syntax.Unionfind
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module DsEnv = FStarC.Syntax.DsEnv
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Helpers to print/debug the resugaring phase *)
 let doc_to_string doc = FStarC.Pprint.pretty_string (float_of_string "1.0") 100 doc

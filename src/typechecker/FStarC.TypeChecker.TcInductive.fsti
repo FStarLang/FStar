@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.TcInductive
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC
 open FStarC.TypeChecker

@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.UEnv
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (** This module provides a typing environment used for extracting
     programs to ML. It addresses the following main concerns:

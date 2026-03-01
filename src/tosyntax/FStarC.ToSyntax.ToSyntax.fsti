@@ -14,6 +14,7 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.ToSyntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 open FStarC

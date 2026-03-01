@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Parser.AST
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -854,6 +855,7 @@ and attrs_opt_to_string = function
 let rec head_id_of_pat p = match p.pat with
   | PatName l -> [l]
   | PatVar (i, _, _) -> [FStarC.Ident.lid_of_ids [i]]
+  | PatOp i -> [FStarC.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []

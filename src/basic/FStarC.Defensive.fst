@@ -1,12 +1,15 @@
-﻿module FStarC.Defensive
+module FStarC.Defensive
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
+open FStarC.Range
 open FStarC.Class.Binders
 open FStarC.Class.Show
 open FStarC.Class.Ord
 open FStarC.Errors
 open FStarC.Pprint
+open FStarC.Class.PP
 open FStarC.Class.Setlike
 
 open FStarC.Syntax.Print {}

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tactics.Result
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* NOTE: This file is exactly the same as its .fs/.fsi counterpart.
 It is only here so the equally-named interface file in ulib/ is not

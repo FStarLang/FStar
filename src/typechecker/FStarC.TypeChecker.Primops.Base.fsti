@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Primops.Base
+#push-options "--MLish --MLish_effect FStarC.Effect"
 (* This module defines the type of primitive steps and some helpers. *)
 
 open FStarC

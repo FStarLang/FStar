@@ -15,6 +15,7 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Code
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

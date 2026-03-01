@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.V2.Basic
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module implements the primitives in
  * ulib/FStarC.Tactics.Builtins. It would be named

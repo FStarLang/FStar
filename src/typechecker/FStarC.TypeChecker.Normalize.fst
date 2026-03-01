@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.Normalize
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC

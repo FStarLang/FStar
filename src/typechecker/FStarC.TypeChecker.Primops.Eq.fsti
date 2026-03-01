@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Primops.Eq
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module Env = FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Primops.Base
 

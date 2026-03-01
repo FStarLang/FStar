@@ -17,6 +17,7 @@
    Operations over the FStarC.Range.Type.range type.
 *)
 module FStarC.Range.Ops
+#push-options "--MLish --MLish_effect FStarC.Effect"
 friend FStarC.Range.Type
 
 open FStarC

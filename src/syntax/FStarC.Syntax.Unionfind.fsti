@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.Unionfind
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module offers a transactional interface specialized for terms and
  * universes on top of the existing union-find implementation. *)

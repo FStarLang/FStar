@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Profiling
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 // When --profile module_name

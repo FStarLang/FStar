@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.SolverState
+#push-options "--MLish --MLish_effect FStarC.Effect"
 (**
   This module is an abstraction of state of the SMT solver, expressed in terms of the facts
   that are visible to it currently.

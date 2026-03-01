@@ -16,6 +16,7 @@
 
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Ident
 open FStarC.CheckedFiles

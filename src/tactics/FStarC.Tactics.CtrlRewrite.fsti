@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.CtrlRewrite
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Tactics.Types
 open FStarC.Tactics.Monad

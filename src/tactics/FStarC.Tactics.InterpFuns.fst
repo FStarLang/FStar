@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.InterpFuns
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module is awful, don't even look at it please. *)
 

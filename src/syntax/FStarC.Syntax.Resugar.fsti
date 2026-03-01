@@ -14,6 +14,7 @@
   limitations under the License.
 *)
 module FStarC.Syntax.Resugar //we should rename FStarC.ToSyntax to something else
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.Interpreter
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)

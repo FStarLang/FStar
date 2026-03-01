@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Extraction.ML.UEnv
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Class.Show
 open FStarC.Effect

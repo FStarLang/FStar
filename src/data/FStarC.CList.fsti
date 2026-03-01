@@ -18,6 +18,7 @@
 
 (* Catenable lists, based on Jaskelioff and Rivas' "Functional Pearl: A Smart View on Datatypes" *)
 module FStarC.CList
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Class.Deq
 open FStarC.Class.Ord

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Term
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -48,7 +49,6 @@ module U      = FStarC.Syntax.Util
 let dbg_Extraction     = Debug.get_toggle "Extraction"
 let dbg_ExtractionNorm = Debug.get_toggle "ExtractionNorm"
 
-exception Un_extractable
 
 open FStarC.Class.Show
 open FStarC.Class.Tagged
@@ -689,6 +689,7 @@ let head_of_type_is_extract_as_impure_effect g t =
   | _ -> false
 
 exception NotSupportedByExtension
+
 let translate_typ_t = g:uenv -> t:term -> mlty
 
 (* See below for register_pre_translate_typ *)

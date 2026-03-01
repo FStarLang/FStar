@@ -16,6 +16,7 @@
    Authors: N. Swamy and Copilot
 *)
 module FStarC.Parser.AST.Diff
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Parser.AST

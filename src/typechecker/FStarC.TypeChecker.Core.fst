@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Core
+#push-options "--MLish --MLish_effect FStarC.Effect"
 (*
 
 This module implements a core typechecker for pure and ghost F* terms.

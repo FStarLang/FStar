@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.Embeddings.Base
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -26,11 +27,17 @@ open FStarC.Class.Deq
 open FStarC.Syntax.Print {}
 
 module Err   = FStarC.Errors
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module Ident = FStarC.Ident
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module PC    = FStarC.Parser.Const
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module S     = FStarC.Syntax.Syntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module SS    = FStarC.Syntax.Subst
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module U     = FStarC.Syntax.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (*********************************************************************
 

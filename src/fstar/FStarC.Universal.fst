@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -604,6 +605,7 @@ let rec tc_one_file_internal
        tc_result, mllib, env
 
 and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exists:bool) : Syntax.modul & uenv =
+  let was_ml_ish = Options.ml_ish () in
   let decls = Ast.decls_of_modul ast_mod in
   let mname = match decls with
     | {d=Ast.TopLevelModule lid} :: rest -> lid
@@ -631,6 +633,7 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
       decls 
   in
   if None? mod then failwith "Impossible";
+  if was_ml_ish then Options.set_ml_ish ();
   let Some mod = mod in
   let mod, env =
     with_tcenv_of_env env (fun tcenv ->

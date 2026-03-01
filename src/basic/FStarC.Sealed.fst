@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Sealed
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This is the compiler-space version of the Sealed module in ulib.
 Here, we define it as just an identity, but we do not expose that in

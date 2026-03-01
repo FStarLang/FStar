@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Unionfind
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

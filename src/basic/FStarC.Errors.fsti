@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Errors
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 module Range = FStarC.Range
 

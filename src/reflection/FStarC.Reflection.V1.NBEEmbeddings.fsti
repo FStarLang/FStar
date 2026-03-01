@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Reflection.V1.NBEEmbeddings
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.TypeChecker.NBETerm

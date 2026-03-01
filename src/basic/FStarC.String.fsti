@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.String
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStar.Char

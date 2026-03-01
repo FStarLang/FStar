@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Primops
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module just contains the list of all builtin primitive steps
 with their implementations. *)

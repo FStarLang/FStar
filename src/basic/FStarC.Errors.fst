@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Errors
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStar.String
 open FStarC
@@ -23,8 +24,11 @@ open FStarC.Util
 open FStarC.Range
 open FStarC.Options
 module List = FStarC.List
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module BU = FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module PP = FStarC.Pprint
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Class.Monad
 open FStarC.Class.Show

@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Normalize.Unfolding
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.TypeChecker

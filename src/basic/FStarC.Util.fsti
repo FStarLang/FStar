@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* generic utils *)
 

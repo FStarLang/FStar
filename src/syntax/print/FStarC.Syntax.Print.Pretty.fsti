@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.Print.Pretty
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Syntax

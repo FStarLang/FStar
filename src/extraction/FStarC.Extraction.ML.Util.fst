@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

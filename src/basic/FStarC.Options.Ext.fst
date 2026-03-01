@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Options.Ext
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

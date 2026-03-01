@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.SMTEncoding.Term
 module ErrorReporting = FStarC.SMTEncoding.ErrorReporting

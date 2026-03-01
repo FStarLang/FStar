@@ -1,4 +1,5 @@
-﻿module FStarC.Tactics.V1.Primops
+module FStarC.Tactics.V1.Primops
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

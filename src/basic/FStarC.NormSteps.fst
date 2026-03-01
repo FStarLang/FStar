@@ -1,4 +1,5 @@
 module FStarC.NormSteps
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* A mirror of FStar.NormSteps in ulib *)
 

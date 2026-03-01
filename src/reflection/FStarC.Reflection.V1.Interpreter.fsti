@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V1.Interpreter
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module only has an initialization effect of registering
 many primitive steps in the normalizer. *)

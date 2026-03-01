@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Primops.MachineInts
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Primops about machine integers *)
 

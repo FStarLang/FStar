@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V1.Interpreter
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 module Cfg   = FStarC.TypeChecker.Cfg
 module EMB   = FStarC.Syntax.Embeddings

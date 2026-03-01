@@ -16,6 +16,7 @@
    Author: N. Swamy
 *)
 module FStarC.Syntax.Hash
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

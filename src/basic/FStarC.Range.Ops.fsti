@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Range.Ops
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Range.Type

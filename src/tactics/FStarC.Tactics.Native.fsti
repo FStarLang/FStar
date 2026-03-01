@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.Native
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Range
 open FStarC.Syntax.Syntax

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Time
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Utilities for times and dates. See FStarC.Timing for
    measuring time instead. *)

@@ -17,6 +17,7 @@
 *)
 
 module FStarC.Common
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 val snapshot (msg:string) (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b)

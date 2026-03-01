@@ -16,6 +16,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.DMFF
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.TypeChecker
 open FStarC.Syntax.Syntax

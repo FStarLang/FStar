@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
 *)
 
 module FStarC.CheckedFiles
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.SMap

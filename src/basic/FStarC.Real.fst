@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Real
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 module BU = FStarC.Util
 

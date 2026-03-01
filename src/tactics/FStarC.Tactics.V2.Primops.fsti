@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tactics.V2.Primops
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.TypeChecker.Primops.Base
 

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Pruning
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStar.List.Tot
 open FStarC

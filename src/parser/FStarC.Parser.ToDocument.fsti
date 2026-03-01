@@ -16,6 +16,7 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 val term_to_document : FStarC.Parser.AST.term -> FStarC.Pprint.document

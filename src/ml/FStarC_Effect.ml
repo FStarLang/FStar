@@ -8,8 +8,8 @@ let mk_ref = alloc
 let raise = raise
 let exit i = exit (Z.to_int i)
 exception Failure = Failure (* NB: reusing OCaml's native Failure. *)
-(* Not used: handled specially by extraction. If used,
-   you will get all sorts of weird failures (e.g. an incomplete match
-   on f2!). *)
-(* let try_with f1 f2 = try f1 () with | e -> f2 e *)
+(* Normally try_with is desugared by the printer (FStarC_Extraction_ML_PrintML)
+   into native OCaml try...with. This definition exists as a fallback in case
+   the desugaring does not fire. *)
+let try_with f1 f2 = try f1 () with | e -> f2 e
 (* let failwith x = raise (Failure x) *)

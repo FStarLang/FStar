@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.Embedding
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Ident
 open FStarC.Syntax.Syntax

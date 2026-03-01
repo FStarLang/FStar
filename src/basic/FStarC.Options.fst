@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Options
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.BaseTypes
 open FStarC
@@ -1770,6 +1771,8 @@ let settable = function
     | "log_types"
     | "max_fuel"
     | "max_ifuel"
+    | "MLish"
+    | "MLish_effect"
     | "no_plugins"
     | "__no_positivity"
     | "normalize_pure_terms_for_extraction"

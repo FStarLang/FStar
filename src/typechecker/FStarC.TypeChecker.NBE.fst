@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2017-2019 Microsoft Research
 
    Authors: Zoe Paraskevopoulou, Guido Martinez, Nikhil Swamy
@@ -16,6 +16,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.NBE
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC

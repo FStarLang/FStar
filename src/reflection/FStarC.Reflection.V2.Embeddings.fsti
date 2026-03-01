@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V2.Embeddings
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Syntax.Syntax

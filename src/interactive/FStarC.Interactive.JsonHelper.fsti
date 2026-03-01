@@ -18,6 +18,7 @@
  * FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Errors
 open FStarC.Json

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Errors.Codes
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 let default_settings : list error_setting =
   [

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Syntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 (* Type definitions for the core AST *)

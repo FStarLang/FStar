@@ -1,4 +1,5 @@
 module FStarC.Syntax.VisitM
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Syntax.Syntax
 open FStarC.Class.Monad

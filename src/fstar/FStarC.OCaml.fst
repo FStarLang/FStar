@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.OCaml
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStar.List.Tot.Base

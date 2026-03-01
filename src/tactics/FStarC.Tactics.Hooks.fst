@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Tactics.Hooks
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

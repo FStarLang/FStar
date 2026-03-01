@@ -17,6 +17,7 @@
 *)
 
 module FStarC.TypeChecker.Positivity
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax

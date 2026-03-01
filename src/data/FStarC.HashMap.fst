@@ -1,4 +1,5 @@
 module FStarC.HashMap
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This is implemented with a red black tree. We should use an actual hash table *)
 

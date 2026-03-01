@@ -1,4 +1,5 @@
 module FStarC.Hash
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 type hash_code

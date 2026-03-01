@@ -16,6 +16,7 @@
 
 // A dependency-finding routine
 module FStarC.Dependencies
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 (***********************************************************************)

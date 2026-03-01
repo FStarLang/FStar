@@ -1,4 +1,5 @@
 module FStarC.TypeChecker.Primops.Docs
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Find
+#push-options "--MLish --MLish_effect FStarC.Effect"
 (* Utilities for finding files in the include path and related
 operations. *)
 

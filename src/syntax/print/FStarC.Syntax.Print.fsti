@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
    limitations under the License.
 *)
 module FStarC.Syntax.Print
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

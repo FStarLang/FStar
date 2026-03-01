@@ -15,6 +15,7 @@
 *)
 
 module FStarC.SMTEncoding.Solver
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 val with_hints_db : string -> (unit -> 'a) -> 'a

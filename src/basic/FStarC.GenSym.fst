@@ -1,4 +1,5 @@
 ﻿module FStarC.GenSym
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

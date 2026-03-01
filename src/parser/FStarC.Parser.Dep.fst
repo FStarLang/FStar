@@ -24,6 +24,7 @@
     etc.
 *)
 module FStarC.Parser.Dep
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.List

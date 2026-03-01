@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Plugins
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 include FStarC.Plugins.Base

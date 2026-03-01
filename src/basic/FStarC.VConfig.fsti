@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.VConfig
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (** This type represents the set of verification-relevant options used
     to check a particular definition. It can be read from tactics via

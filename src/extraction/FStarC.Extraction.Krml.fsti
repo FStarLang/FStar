@@ -15,6 +15,7 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.Krml
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Class.Show

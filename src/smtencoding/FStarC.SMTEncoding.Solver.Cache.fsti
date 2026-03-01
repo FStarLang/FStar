@@ -15,6 +15,7 @@
 *)
 
 module FStarC.SMTEncoding.Solver.Cache
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

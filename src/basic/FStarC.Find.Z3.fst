@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Find.Z3
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.Generalize
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env

@@ -18,6 +18,7 @@
  * queries; this file collects helpers for them                  *)
 
 module FStarC.Interactive.QueryHelper
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Range
 open FStarC.TypeChecker.Env

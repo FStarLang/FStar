@@ -16,6 +16,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcInductive
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

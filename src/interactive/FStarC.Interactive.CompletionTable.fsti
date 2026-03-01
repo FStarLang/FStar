@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Interactive.CompletionTable
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 val path_elem : Type0
 type path = list path_elem

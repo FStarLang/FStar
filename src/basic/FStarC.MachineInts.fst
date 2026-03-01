@@ -1,4 +1,5 @@
 module FStarC.MachineInts
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* A type representing all the kinds of machine integers, and an
 embedding instance for them. *)

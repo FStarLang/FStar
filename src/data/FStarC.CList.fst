@@ -17,6 +17,7 @@
 *)
 
 module FStarC.CList
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStar.Tactics.Typeclasses
 open FStarC.Class.Ord

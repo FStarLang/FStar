@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Char
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module is only here to be able to mention a 'char' type without
 depending on FStar.Char, which brings in a lot of dependencies (see #3408).

@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.Tc
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -1228,6 +1229,9 @@ let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool
 
   if not loading_from_cache then (
     let missing = missing_definition_list env in
+    // Filter to only report missing definitions belonging to THIS module
+    let mname_ids = ids_of_lid m.name in
+    let missing = List.filter (fun l -> ns_of_lid l = mname_ids) missing in
     if Cons? missing then
       log_issue env Errors.Error_AdmitWithoutDefinition [
           Pprint.prefix 2 1 (text <| Format.fmt1 "Missing definitions in module %s:" (string_of_lid m.name))

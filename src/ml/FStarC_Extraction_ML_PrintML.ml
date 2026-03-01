@@ -93,14 +93,14 @@ let mk_top_mllb (e: mlexpr): mllb =
    mllb_attrs=[];
    print_typ=false }
 
-(* Find the try_with in the default effect module. For instance this can be
-FStar.All.try_with (for most users) or FStarC.Effect.try_with (during
-bootstrapping with "--MLish --MLish_effect FStarC.Effect"). *)
-let try_with_ident () =
-  let lid = FStarC_Parser_Const.try_with_lid () in
-  let ns = FStarC_Ident.ns_of_lid lid in
-  let id = FStarC_Ident.ident_of_lid lid in
-  path_to_ident (List.map FStarC_Ident.string_of_id ns, FStarC_Ident.string_of_id id)
+(* Match try_with from any known effect module. At print time the per-file
+   --MLish option may no longer be active, so we match all known paths
+   rather than relying on the runtime option. *)
+let try_with_idents : Longident.t Asttypes.loc list = [
+  path_to_ident (["FStar"; "All"], "try_with");
+  path_to_ident (["FStarC"; "Effect"], "try_with");
+]
+let is_try_with_ident x = List.exists (fun tw -> x = tw) try_with_idents
 
 (* For integer constants (not 0/1) in this range we will use Prims.of_int
  * Outside this range we will use string parsing to allow arbitrary sized
@@ -335,7 +335,7 @@ let rec build_expr (e: mlexpr): expression =
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when x = try_with_ident () ->
+  | Pexp_ident x when is_try_with_ident x ->
     (* resugar try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);

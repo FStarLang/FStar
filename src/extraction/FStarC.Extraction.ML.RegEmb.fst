@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.RegEmb
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module handles registering plugins and generating
 embeddings for their types. *)

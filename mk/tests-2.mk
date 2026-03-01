@@ -3,6 +3,8 @@ FSTAR_OPTIONS += --lax
 # only. Passing it here would mean the library is checked with
 # --MLish, which fails.
 FSTAR_OPTIONS += --MLish_effect 'FStarC.Effect'
+# Suppress unpopped #push-options warning from per-file MLish pragmas
+FSTAR_OPTIONS += --warn_error '-361'
 
 DEPFLAGS += --already_cached '+FStarC.*,-FStarC.Tests.*'
 

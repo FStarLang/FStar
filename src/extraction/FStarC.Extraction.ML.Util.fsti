@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC
 open FStarC.Ident

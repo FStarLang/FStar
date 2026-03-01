@@ -14,6 +14,7 @@
    limitations under the License.
  *)
 module FStarC.List
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 val isEmpty : (list 'a) -> Tot bool

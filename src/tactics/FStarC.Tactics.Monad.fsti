@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tactics.Monad
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env

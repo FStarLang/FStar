@@ -14,6 +14,7 @@
    limitations under the Licens
 *)
 module FStarC.Extraction.ML.Term
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Extraction.ML.UEnv
 open FStarC.Ident
 open FStarC.Syntax.Syntax

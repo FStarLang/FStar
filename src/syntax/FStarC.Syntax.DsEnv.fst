@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.DsEnv
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -1505,10 +1506,12 @@ let push_module_abbrev env x l =
              (Format.fmt1 "Module %s cannot be found" (Ident.string_of_lid l))
 
 let check_admits env m =
+  let mname_ids = ids_of_lid m.name in
   let admitted_sig_lids =
     env.sigaccum |> List.fold_left (fun lids se ->
       match se.sigel with
-      | Sig_declare_typ {lid=l; us=u; t} when not (se.sigquals |> List.contains Assumption) ->
+      | Sig_declare_typ {lid=l; us=u; t} when not (se.sigquals |> List.contains Assumption)
+                                            && ns_of_lid l = mname_ids ->
         // l is already fully qualified, so no name resolution
         begin match SMap.try_find (sigmap env) (string_of_lid l) with
           | Some ({sigel=Sig_let _}, _)

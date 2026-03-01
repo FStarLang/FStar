@@ -17,6 +17,7 @@
 (* Json helpers mainly for FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -27,6 +28,7 @@ open FStarC.TypeChecker.Env
 open FStarC.Class.Show
 
 module U = FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 let try_assoc (key: string) (d: assoct) =
   Option.map snd (U.try_find (fun (k, _) -> k = key) d)

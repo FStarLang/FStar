@@ -16,6 +16,7 @@
    limitations under the License.
 *)
 module FStarC.Thunk
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 type thunk (a:Type) : Type = ref (either (unit -> a) a)

@@ -18,6 +18,7 @@
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Ident

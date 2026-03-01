@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Range
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module simply bundles together these other two. See their
 interfaces for reference. *)

@@ -1,4 +1,4 @@
-﻿(*
+(*
   Copyright 2016 Microsoft Research
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect

@@ -15,6 +15,7 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 module FStarC.Syntax.MutRecTy
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Syntax.Syntax

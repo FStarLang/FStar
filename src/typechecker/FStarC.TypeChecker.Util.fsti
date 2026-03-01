@@ -15,6 +15,7 @@
 *)
 
 module FStarC.TypeChecker.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 open FStarC

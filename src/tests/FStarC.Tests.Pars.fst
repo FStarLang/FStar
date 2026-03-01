@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Tests.Pars
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Range

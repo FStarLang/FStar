@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Format
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Formatting/printing utils *)
 

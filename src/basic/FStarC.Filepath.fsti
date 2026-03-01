@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Filepath
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

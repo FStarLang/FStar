@@ -1,4 +1,5 @@
 module FStarC.HashMap
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* NOTE: THIS IS A CACHE. COLLISIONS WILL BE DROPPED/OVERWRITTEN.
 

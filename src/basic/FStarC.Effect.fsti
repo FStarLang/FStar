@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Effect
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 new_effect ALL = ALL_h unit
 
