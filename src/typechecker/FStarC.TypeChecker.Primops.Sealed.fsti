@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Sealed
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.TypeChecker.Primops.Base
 

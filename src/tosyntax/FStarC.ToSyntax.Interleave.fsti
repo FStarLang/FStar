@@ -14,8 +14,6 @@
   limitations under the License.
 *)
 module FStarC.ToSyntax.Interleave
-#push-options "--MLish --MLish_effect FStarC.Effect"
-open FStarC.Effect
 open FStarC.Effect
 open FStarC.Ident
 open FStarC.Parser.AST

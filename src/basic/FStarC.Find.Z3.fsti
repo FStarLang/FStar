@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Find.Z3
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Utilities for finding z3 *)
 
@@ -25,4 +24,4 @@ open FStarC.Effect
 val z3_install_suggestion (v : string) : list Pprint.document
 
 (* Locate executable for Z3 version [v]. *)
-val locate_z3 (v : string) : option string
+val locate_z3 (v : string) : ML (option string)

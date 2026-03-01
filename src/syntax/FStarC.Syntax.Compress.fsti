@@ -1,5 +1,4 @@
 module FStarC.Syntax.Compress
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Syntax.Syntax
 

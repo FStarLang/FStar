@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Prettyprint
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -24,4 +23,4 @@ type printing_mode =
   | FromTempToStdout
   | FromTempToFile
 
-val generate (m: printing_mode) (filenames  : list string) : unit
+val generate (m: printing_mode) (filenames  : list string) : ML unit

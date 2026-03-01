@@ -15,17 +15,16 @@
 *)
 
 module FStarC.Plugins
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 include FStarC.Plugins.Base
 
-val load_plugin          : string -> unit
-val load_plugins         : list string -> unit
-val load_plugins_dir     : string -> unit
-val compile_modules      : string -> list string -> unit
+val load_plugin          : string -> ML unit
+val load_plugins         : list string -> ML unit
+val load_plugins_dir     : string -> ML unit
+val compile_modules      : string -> list string -> ML unit
 
 (* Tries to load a plugin named like the extension. Returns true
 if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
-val autoload_plugin (ext:string) : bool
+val autoload_plugin (ext:string) : ML bool

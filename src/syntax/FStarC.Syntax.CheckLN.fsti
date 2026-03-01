@@ -1,5 +1,4 @@
 module FStarC.Syntax.CheckLN
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Syntax.Syntax
 

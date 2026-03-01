@@ -14,21 +14,20 @@
    limitations under the License.
 *)
 module FStarC.Option
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
-val map (f : 'a -> 'b) (o : option 'a)
-  : option 'b
+val map (f : 'a -> ML 'b) (o : option 'a)
+  : ML (option 'b)
 
-val must : option 'a -> 'a (* clearly partial *)
+val must : option 'a -> ML 'a
 
 val dflt : 'a -> option 'a -> Tot 'a
 
-val find: ('a -> bool) -> list 'a -> option 'a
+val find: ('a -> ML bool) -> list 'a -> ML (option 'a)
 
-val bind : option 'a -> ('a -> option 'b) -> option 'b
+val bind : option 'a -> ('a -> ML (option 'b)) -> ML (option 'b)
 
-val catch : option 'a -> (unit -> option 'a) -> option 'a
+val catch : option 'a -> (unit -> ML (option 'a)) -> ML (option 'a)
 
-val iter : ('a -> unit) -> option 'a -> unit
+val iter : ('a -> ML unit) -> option 'a -> ML unit

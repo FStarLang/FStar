@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 module FStarC.Parser.Driver
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 module Range      = FStarC.Range
 module AST        = FStarC.Parser.AST
 module ParseIt    = FStarC.Parser.ParseIt
@@ -28,7 +28,7 @@ type fragment =
     | Decls of list AST.decl // a partial set of declarations
     | DeclsWithContent of list (AST.decl & ParseIt.code_fragment)
 
-val parse_fragment : ParseIt.lang_opts -> ParseIt.input_frag -> fragment
+val parse_fragment : ParseIt.lang_opts -> ParseIt.input_frag -> ML fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
-val parse_file : string -> AST.file & list (string & Range.t)
+val parse_file : string -> ML (AST.file & list (string & Range.t))

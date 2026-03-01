@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Hooks
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module sets ties some know between modules in the compiler source tree,
 enabling more recursion and breaking some dependencies. It does this via a

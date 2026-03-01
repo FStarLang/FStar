@@ -21,7 +21,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 module FStarC.TypeChecker.DeferredImplicits
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
