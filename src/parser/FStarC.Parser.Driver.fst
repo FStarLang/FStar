@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Parser.Driver
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
 open FStarC
@@ -26,7 +25,7 @@ open FStarC.Class.Show
 
 let is_cache_file (fn: string) = Filepath.get_file_extension fn = ".cache"
 
-let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
+let parse_fragment lang_opt (frag: ParseIt.input_frag) =
     match ParseIt.parse lang_opt (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module
         Modul modul
@@ -41,7 +40,7 @@ let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
-let maybe_dump_module (m:modul) = 
+let maybe_dump_module (m:modul) : ML unit = 
     match m with
     | Module {mname; decls}
     | Interface {mname; decls} ->

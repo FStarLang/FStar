@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Debug
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -32,26 +31,26 @@ type saved_state = {
   level   : int;
 }
 
-let snapshot () : saved_state = {
+let snapshot () = {
   toggles = PSMap.fold !toggle_list (fun k r acc -> (k, !r) :: acc) [];
   any     = !anyref;
   all     = !_debug_all;
   level   = !dbg_level;
 }
 
-let register_toggle (k : string) : ref bool =
+let register_toggle (k : string) =
   let r = mk_ref false in
   if !_debug_all then
     r := true;
   toggle_list := PSMap.add !toggle_list k r;
   r
 
-let get_toggle (k : string) : ref bool =
+let get_toggle (k : string) =
   match PSMap.try_find !toggle_list k with
   | Some r -> r
   | None -> register_toggle k
 
-let restore (snapshot : saved_state) : unit =
+let restore (snapshot : saved_state) =
   (* Set everything to false, then set all the saved ones
   to true. *)
   PSMap.iter !toggle_list (fun k r -> r := false);
@@ -64,10 +63,10 @@ let restore (snapshot : saved_state) : unit =
   dbg_level := snapshot.level;
   ()
 
-let list_all_toggles () : list string =
+let list_all_toggles () =
   PSMap.keys !toggle_list
 
-let any () = !anyref || !_debug_all
+let any () = let a = !anyref in let b = !_debug_all in a || b
 
 let tag (s:string) =
   if any () then
@@ -75,17 +74,17 @@ let tag (s:string) =
 
 let enable () = anyref := true
 
-let low     () = !dbg_level >= 1 || !_debug_all
-let medium  () = !dbg_level >= 2 || !_debug_all
-let high    () = !dbg_level >= 3 || !_debug_all
-let extreme () = !dbg_level >= 4 || !_debug_all
+let low     () = let a = !dbg_level >= 1 in let b = !_debug_all in a || b
+let medium  () = let a = !dbg_level >= 2 in let b = !_debug_all in a || b
+let high    () = let a = !dbg_level >= 3 in let b = !_debug_all in a || b
+let extreme () = let a = !dbg_level >= 4 in let b = !_debug_all in a || b
 
 let set_level_low     () = dbg_level := 1
 let set_level_medium  () = dbg_level := 2
 let set_level_high    () = dbg_level := 3
 let set_level_extreme () = dbg_level := 4
 
-let enable_toggles (keys : list string) : unit =
+let enable_toggles (keys : list string) =
   if Cons? keys then
     enable ();
   keys |> List.iter (fun k ->
@@ -95,7 +94,8 @@ let enable_toggles (keys : list string) : unit =
     | "High" ->    set_level_high ()
     | "Extreme" -> set_level_extreme ()
     | _ ->
-      if String.length k > 0 && String.get k 0 = '-' then
+      let starts_with_dash = let c = String.get k 0 in String.length k > 0 && c = '-' in
+      if starts_with_dash then
         let k = String.substring k 1 (String.length k - 1) in
         let t = get_toggle k in
         t := false
@@ -104,12 +104,12 @@ let enable_toggles (keys : list string) : unit =
         t := true
   )
 
-let disable_all () : unit =
+let disable_all () =
   anyref := false;
   dbg_level := 0;
   PSMap.iter !toggle_list (fun k r -> r := false)
 
-let set_debug_all () : unit =
+let set_debug_all () =
   _debug_all := true;
   dbg_level := 4;
   PSMap.iter !toggle_list (fun k r -> r := true)

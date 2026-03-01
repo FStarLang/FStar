@@ -18,7 +18,7 @@
  * FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
-#push-options "--MLish --MLish_effect FStarC.Effect"
+open FStarC.Effect
 open FStarC
 open FStarC.Errors
 open FStarC.Json
@@ -26,17 +26,17 @@ open FStarC.Json
 // Type of an associative array
 type assoct = list (string & json)
 
-val try_assoc : string -> assoct -> option json // nothrow
+val try_assoc : string -> assoct -> ML (option json)
 
 exception InvalidQuery of string
 exception UnexpectedJsonType of string & json
 
-val write_json : json -> unit
-val js_fail : string -> json -> 'a
+val write_json : json -> ML unit
+val js_fail : string -> json -> ML 'a
 
-val js_int : json -> int
-val js_bool : json -> bool
-val js_str : json -> string
-val js_list : (json -> 'a) -> json -> list 'a
-val js_assoc : json -> assoct
-val json_debug: json -> string
+val js_int : json -> ML int
+val js_bool : json -> ML bool
+val js_str : json -> ML string
+val js_list : (json -> ML 'a) -> json -> ML (list 'a)
+val js_assoc : json -> ML assoct
+val json_debug: json -> ML string

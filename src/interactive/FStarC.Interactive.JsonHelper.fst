@@ -17,7 +17,6 @@
 (* Json helpers mainly for FStarC.Interactive.Ide                                            *)
 
 module FStarC.Interactive.JsonHelper
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -28,14 +27,9 @@ open FStarC.TypeChecker.Env
 open FStarC.Class.Show
 
 module U = FStarC.Util
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 let try_assoc (key: string) (d: assoct) =
   Option.map snd (U.try_find (fun (k, _) -> k = key) d)
-
-// All exceptions are guaranteed to be caught in the LSP server implementation
-exception InvalidQuery of string // Only in IDE
-exception UnexpectedJsonType of string & json
 
 let write_json (js: json) =
   Format.print_raw (string_of_json js);
@@ -45,19 +39,19 @@ let write_json (js: json) =
 let js_fail expected got =
   raise (UnexpectedJsonType (expected, got))
 
-let js_int : json -> int = function
+let js_int = function
   | JsonInt i -> i
   | other -> js_fail "int" other
-let js_bool : json -> bool = function
+let js_bool = function
   | JsonBool b -> b
   | other -> js_fail "int" other
-let js_str : json -> string = function
+let js_str = function
   | JsonStr s -> s
   | other -> js_fail "string" other
 let js_list k = function
   | JsonList l -> List.map k l
   | other -> js_fail "list" other
-let js_assoc : json -> assoct = function
+let js_assoc = function
   | JsonAssoc a -> a
   | other -> js_fail "dictionary" other
 

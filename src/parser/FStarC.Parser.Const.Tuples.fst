@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Parser.Const.Tuples
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -57,23 +56,23 @@ let mk_tuple_data_lid n r =
   set_lid_range l r
 
 let get_tuple_datacon_arity (s:string) : option int =
-  match List.tryFind (fun (_, _, s') -> s = s') tuple_table with
+  match FStar.List.Tot.Base.find (fun (_, _, s') -> s = s') tuple_table with
   | Some (n, _, _) -> Some n
   | None -> None
 let get_tuple_tycon_arity (s:string) : option int =
-  match List.tryFind (fun (_, s', _) -> s = s') tuple_table with
+  match FStar.List.Tot.Base.find (fun (_, s', _) -> s = s') tuple_table with
   | Some (n, _, _) -> Some n
   | None -> None
 
 let is_tuple_constructor_string (s:string) : bool =
-  List.existsb (fun (_, s', _) -> s = s') tuple_table
+  FStar.List.Tot.Base.existsb (fun (_, s', _) -> s = s') tuple_table
 
 let is_tuple_datacon_string (s:string) : bool =
-  List.existsb (fun (n, _, s') -> s = s') tuple_table
+  FStar.List.Tot.Base.existsb (fun (n, _, s') -> s = s') tuple_table
 
 let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
-let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
 let is_tuple_data_lid f n = lid_equals f (mk_tuple_data_lid n dummyRange)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
 
 (* Dtuples *)
 
@@ -103,18 +102,18 @@ let mk_dtuple_data_lid n r =
   set_lid_range l r
 
 let get_dtuple_datacon_arity (s:string) : option int =
-  match List.tryFind (fun (_, _, s') -> s = s') dtuple_table with
+  match FStar.List.Tot.Base.find (fun (_, _, s') -> s = s') dtuple_table with
   | Some (n, _, _) -> Some n
   | None -> None
 let get_dtuple_tycon_arity (s:string) : option int =
-  match List.tryFind (fun (_, s', _) -> s = s') dtuple_table with
+  match FStar.List.Tot.Base.find (fun (_, s', _) -> s = s') dtuple_table with
   | Some (n, _, _) -> Some n
   | None -> None
 
 let is_dtuple_constructor_string (s:string) : bool =
-  List.existsb (fun (_, s', _) -> s = s') dtuple_table
+  FStar.List.Tot.Base.existsb (fun (_, s', _) -> s = s') dtuple_table
 let is_dtuple_datacon_string (s:string) : bool =
-  List.existsb (fun (_, _, s') -> s = s') dtuple_table
+  FStar.List.Tot.Base.existsb (fun (_, _, s') -> s = s') dtuple_table
 
 let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
 let is_dtuple_data_lid f n = lid_equals f (mk_dtuple_data_lid n dummyRange)

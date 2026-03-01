@@ -1,5 +1,4 @@
 module FStarC.HashMap
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This is implemented with a red black tree. We should use an actual hash table *)
 
@@ -19,7 +18,7 @@ let add (#k #v : _)
   (key : k)
   (value : v)
   (m : hashmap k v)
-  : hashmap k v
+  
   = PIMap.add m (Hash.to_int <| hash key) (key, value)
 
 let remove (#k #v : _)
@@ -27,7 +26,7 @@ let remove (#k #v : _)
   {| hashable k |}
   (key : k)
   (m : hashmap k v)
-  : hashmap k v
+  
   = PIMap.remove m (Hash.to_int <| hash key) // coarse
 
 let lookup (#k #v : _)
@@ -35,7 +34,7 @@ let lookup (#k #v : _)
   {| hashable k |}
   (key : k)
   (m : hashmap k v)
-  : option v
+  
   = match PIMap.try_find m (Hash.to_int <| hash key) with
     | Some (key', v) when key =? key' -> Some v
     | _ -> None
@@ -46,7 +45,7 @@ let get (#k #v : _)
   {| hashable k |}
   (key : k)
   (m : hashmap k v)
-  : v
+  
   = Some?.v (lookup key m)
 
 let mem (#k #v : _)
@@ -54,20 +53,20 @@ let mem (#k #v : _)
   {| hashable k |}
   (key : k)
   (m : hashmap k v)
-  : bool
+  
   = Some? (lookup key m)
 
 
 let fold (#k #v : _)
   {| deq k |}
   {| hashable k |}
-  (f : k -> v -> 'a -> 'a)
+  (f : k -> v -> 'a -> ML 'a)
   (m : hashmap k v)
   (init:'a)
-: 'a
+: ML 'a
 = PIMap.fold m (fun _ (k,v) a -> f k v a) init
 
-let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> b) =
+let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> ML b) =
   let cache = mk_ref (empty #a #b) in
   let f_cached =
     fun x ->
