@@ -1,5 +1,4 @@
 module FStarC.PIMap
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -10,7 +9,7 @@ val empty: unit -> t 'value // GH-1161
 val add: t 'value -> int -> 'value -> t 'value
 val find_default: t 'value -> int -> 'value -> 'value
 val try_find: t 'value -> int -> option 'value
-val fold: t 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
+val fold: t 'value -> (int -> 'value -> 'a -> ML 'a) -> 'a -> ML 'a
 val remove: t 'value -> int -> t 'value
 
 inline_for_extraction type pimap = t

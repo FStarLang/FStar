@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Extraction.ML.PrintML
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Extraction.ML.Syntax
 

@@ -1,5 +1,4 @@
 module FStarC.Int.Extra
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

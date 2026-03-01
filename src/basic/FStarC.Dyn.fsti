@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Dyn
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

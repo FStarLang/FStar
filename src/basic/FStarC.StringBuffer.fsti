@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.StringBuffer
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -27,8 +26,8 @@ type t
 // sb |> add "hello" |> add " world" |> add "!"
 
 
-val create : int -> t
-val add: string -> t -> t
-val contents: t -> string
-val clear: t -> t
-val output_channel: FStarC.Util.out_channel -> t -> unit
+val create : int -> ML t
+val add: string -> t -> ML t
+val contents: t -> ML string
+val clear: t -> ML t
+val output_channel: FStarC.Util.out_channel -> t -> ML unit

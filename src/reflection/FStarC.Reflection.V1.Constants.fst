@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V1.Constants
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.Syntax.Syntax

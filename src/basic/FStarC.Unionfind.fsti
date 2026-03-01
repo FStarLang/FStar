@@ -14,21 +14,20 @@
    limitations under the License.
 *)
 module FStarC.Unionfind
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
 type puf 'a
 type p_uvar 'a
-val puf_empty: unit -> puf 'a
-val puf_fresh: puf 'a -> 'a -> p_uvar 'a
-val puf_id: puf 'a -> p_uvar 'a -> int
-val puf_fromid: puf 'a -> int -> p_uvar 'a
-val puf_find: puf 'a -> p_uvar 'a -> 'a
-val puf_union: puf 'a -> p_uvar 'a -> p_uvar 'a -> puf 'a
-val puf_equivalent: puf 'a -> p_uvar 'a -> p_uvar 'a -> bool
-val puf_change: puf 'a -> p_uvar 'a -> 'a -> puf 'a
-val puf_test: unit -> unit
+val puf_empty: unit -> ML (puf 'a)
+val puf_fresh: puf 'a -> 'a -> ML (p_uvar 'a)
+val puf_id: puf 'a -> p_uvar 'a -> ML int
+val puf_fromid: puf 'a -> int -> ML (p_uvar 'a)
+val puf_find: puf 'a -> p_uvar 'a -> ML 'a
+val puf_union: puf 'a -> p_uvar 'a -> p_uvar 'a -> ML (puf 'a)
+val puf_equivalent: puf 'a -> p_uvar 'a -> p_uvar 'a -> ML bool
+val puf_change: puf 'a -> p_uvar 'a -> 'a -> ML (puf 'a)
+val puf_test: unit -> ML unit
 
 //
 // Returns the unique id of the input uvar

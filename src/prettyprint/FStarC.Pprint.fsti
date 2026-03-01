@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Pprint
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStarC.BaseTypes
@@ -33,14 +32,14 @@ include FStar.Pprint
 val doc_of_char: FStar.Char.char -> document
 
 (** [concat_map f xs] is equivalent to [concat (List.map f xs)]. *)
-val concat_map: ('a -> document) -> list 'a -> document
+val concat_map: ('a -> ML document) -> list 'a -> ML document
 
 (** [separate_map sep f xs] is equivalent to [separate sep (List.map f xs)]. *)
-val separate_map: document -> ('a -> document) -> list 'a -> document
+val separate_map: document -> ('a -> ML document) -> list 'a -> ML document
 
 (** [optional f None] is the empty document. [optional f (Some x)] is
     the document [f x]. *)
-val optional: ('a -> document) -> option 'a -> document
+val optional: ('a -> ML document) -> option 'a -> ML document
 
 (** [split ok s] splits the string [s] before and after every occurrence of a
     character that satisfies the predicate [ok]. The substrings thus obtained
@@ -50,10 +49,10 @@ val optional: ('a -> document) -> option 'a -> document
 val split: (FStar.Char.char -> bool) -> string -> list document
 
 (** [flow_map sep f docs] is equivalent to [flow sep (List.map f docs)]. *)
-val flow_map: document -> ('a -> document) -> list 'a -> document
+val flow_map: document -> ('a -> ML document) -> list 'a -> ML document
 
 // Expose underlying Renderer.pretty implementations (avoid inner modules).
 // [pretty_string] uses ToBuffer:RENDERER implementation;
 // [print_out_channel] uses the ToChannel:RENDERER one.
 val pretty_string : float -> int -> document -> string
-val pretty_out_channel : float -> int -> document -> FStarC.Util.out_channel -> unit
+val pretty_out_channel : float -> int -> document -> FStarC.Util.out_channel -> ML unit

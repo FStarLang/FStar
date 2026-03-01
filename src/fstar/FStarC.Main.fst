@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Main
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -50,12 +49,12 @@ open FStarC.NormSteps {}
 
 (* process_args:  parses command line arguments, setting FStarC.Options *)
 (*                returns an error status and list of filenames        *)
-let process_args () : parse_cmdline_res & list string =
+let process_args () : ML (parse_cmdline_res & list string) =
   Options.parse_cmd_line ()
 
 (* printing a finished message *)
-let finished_message fmods errs =
-  let print_to = if errs > 0 then print_error else print_string in
+let finished_message fmods errs : ML unit =
+  let print_to : string -> ML unit = if errs > 0 then print_error else print_string in
   if not (Options.silent()) then begin
     fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
@@ -141,7 +140,7 @@ let set_error_trap () =
   in
   set_sigint_handler (sigint_handler_f h')
 
-let print_help_for (o : string) : unit =
+let print_help_for (o : string) : ML unit =
   match Options.help_for_option o with
   | None ->
     Format.print_string "Use `--help` to see all available options.\n";
@@ -153,8 +152,10 @@ let print_help_for (o : string) : unit =
 let go_normal () =
   let res, filenames0 = process_args () in
 
-  if Some? (Options.output_to()) &&
-     not (Some? (Options.dep ())) &&
+  let has_output_to = Some? (Options.output_to()) in
+  let has_dep = Some? (Options.dep ()) in
+  if has_output_to &&
+     not has_dep &&
      List.length filenames0 > 1
   then
     Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [
@@ -162,7 +163,7 @@ let go_normal () =
         command line (except for dependency analysis).";
     ];
 
-  let chopsuf (suf s : string) : option string =
+  let chopsuf (suf s : string) : ML (option string) =
     if ends_with s suf
     then Some (String.substring s 0 (String.length s - String.length suf))
     else None
@@ -238,7 +239,7 @@ let go_normal () =
       report_errors []
 
     (* --print: Emit files in canonical source syntax *)
-    | Success when Options.print () || Options.print_in_place () ->
+    | Success when (let p = Options.print () in let pp = Options.print_in_place () in p || pp) ->
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout
@@ -487,7 +488,7 @@ let go () =
 
   | _ -> go_normal ()
 
-let handle_error (e:exn) : unit =
+let handle_error (e:exn) : ML unit =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e
     else begin

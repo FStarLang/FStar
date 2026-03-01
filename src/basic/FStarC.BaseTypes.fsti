@@ -15,7 +15,6 @@
 *)
 
 module FStarC.BaseTypes
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 /// This module aggregates commonly used primitive type constants into
 /// a single module, providing abbreviations for them.

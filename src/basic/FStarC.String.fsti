@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 module FStarC.String
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 open FStar.Char
 
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)
-val make:    int -> char -> string
+val make:    int -> char -> ML string
 val split:   chars: list char -> s: string -> Tot (list string)
 val strcat:  string -> string -> Tot string
 val concat:  separator: string -> strings: list string -> Tot string
@@ -37,11 +36,11 @@ val escaped: string -> Tot string
 val string_of_char : char -> Tot string
 
 (* may fail with index out of bounds *)
-val substring: string -> start:int -> len:int -> string
-val get: string -> int -> char
-val collect: (char -> string) -> string -> string
-val index_of: string -> char -> int
-val index: string -> int -> char
+val substring: string -> start:int -> len:int -> ML string
+val get: string -> int -> ML char
+val collect: (char -> ML string) -> string -> ML string
+val index_of: string -> char -> ML int
+val index: string -> int -> ML char
 
 val list_of_string : string -> list char
 val string_of_list: list char -> string

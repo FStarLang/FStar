@@ -14,16 +14,15 @@
    limitations under the License.
 *)
 module FStarC.Timing
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
 type time_ns
 
-val now_ns : unit -> time_ns
+val now_ns : unit -> ML time_ns
 
 val diff_ms : time_ns -> time_ns -> int
 val diff_ns : time_ns -> time_ns -> int
 
-val record_ns (f : unit -> 'a) : 'a & int
-val record_ms (f : unit -> 'a) : 'a & int
+val record_ns : (unit -> ML 'a) -> ML ('a & int)
+val record_ms : (unit -> ML 'a) -> ML ('a & int)

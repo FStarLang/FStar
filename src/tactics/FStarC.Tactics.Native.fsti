@@ -15,8 +15,8 @@
 *)
 
 module FStarC.Tactics.Native
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
+open FStarC.Effect
 open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Tactics.Types
@@ -31,4 +31,4 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-val list_all            : unit -> list native_primitive_step
+val list_all            : unit -> ML (list native_primitive_step)

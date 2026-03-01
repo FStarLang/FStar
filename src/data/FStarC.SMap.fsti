@@ -1,23 +1,22 @@
 module FStarC.SMap
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
 (* mutable string map *)
 
 type t 'value
-val create : int -> t 'value
-val clear : t 'value -> unit
-val add : t 'value -> string -> 'value -> unit
-val of_list : list (string & 'value) -> t 'value
-val try_find : t 'value -> string -> option 'value
-val fold : t 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
-val remove : t 'value -> string -> unit
+val create : int -> ML (t 'value)
+val clear : t 'value -> ML unit
+val add : t 'value -> string -> 'value -> ML unit
+val of_list : list (string & 'value) -> ML (t 'value)
+val try_find : t 'value -> string -> ML (option 'value)
+val fold : t 'value -> (string -> 'value -> 'a -> ML 'a) -> 'a -> ML 'a
+val remove : t 'value -> string -> ML unit
 (* The list may contain duplicates. *)
-val keys : t 'value -> list string
-val copy : t 'value -> t 'value
-val size : t 'value -> int
-val iter : t 'value -> (string -> 'value -> unit) -> unit
+val keys : t 'value -> ML (list string)
+val copy : t 'value -> ML (t 'value)
+val size : t 'value -> ML int
+val iter : t 'value -> (string -> 'value -> ML unit) -> ML unit
 
 (* Aliases. We use inline_for_extraction so we don't have to define
 these in the underlying ML file. *)

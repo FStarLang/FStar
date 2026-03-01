@@ -14,15 +14,14 @@
    limitations under the License.
 *)
 module FStarC.Getopt
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.BaseTypes
 
 val noshort : char
 val nolong : string
 type opt_variant 'a =
-  | ZeroArgs of (unit -> 'a)
-  | OneArg of (string -> 'a) & string
+  | ZeroArgs of (unit -> ML 'a)
+  | OneArg of (string -> ML 'a) & string
 
 type opt' 'a = char & string & opt_variant 'a
 type opt = opt' unit
@@ -32,7 +31,7 @@ type parse_cmdline_res =
   | Error of (string & string) // second arg is the long name of the failed option
   | Success
 
-val parse_cmdline: list opt -> (string -> parse_cmdline_res) -> parse_cmdline_res
-val parse_string: list opt -> (string -> parse_cmdline_res) -> string -> parse_cmdline_res
-val parse_list: list opt -> (string -> parse_cmdline_res) -> list string -> parse_cmdline_res
-val cmdline: unit -> list string
+val parse_cmdline: list opt -> (string -> ML parse_cmdline_res) -> ML parse_cmdline_res
+val parse_string: list opt -> (string -> ML parse_cmdline_res) -> string -> ML parse_cmdline_res
+val parse_list: list opt -> (string -> ML parse_cmdline_res) -> list string -> ML parse_cmdline_res
+val cmdline: unit -> ML (list string)

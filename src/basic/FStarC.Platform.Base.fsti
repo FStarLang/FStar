@@ -1,5 +1,4 @@
 module FStarC.Platform.Base
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -11,4 +10,4 @@ type sys =
 val system : sys
 
 (* Tries to read the output of the `uname` command. *)
-val kernel () : string
+val kernel : unit -> ML string

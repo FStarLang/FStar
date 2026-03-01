@@ -20,8 +20,11 @@ open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Errors
 module BU = FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module O = FStarC.Options
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module G = FStarC.Getopt
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Format
 open FStarC.Class.Show
 

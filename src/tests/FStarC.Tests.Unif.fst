@@ -25,10 +25,15 @@ open FStarC.Errors
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module U = FStarC.Syntax.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module N = FStarC.TypeChecker.Normalize
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module Rel = FStarC.TypeChecker.Rel
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module Env = FStarC.TypeChecker.Env
+#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Ident

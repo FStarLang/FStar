@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Tests.Data
-#push-options "--MLish --MLish_effect FStarC.Effect"
 // tests about data structures
 
 
@@ -27,15 +26,15 @@ module RBSet = FStarC.RBSet
 open FStarC.Class.Setlike
 open FStarC.Class.Show
 
-let rec insert (n:int) {| setlike int 'set |} (s : 'set)  =
+let rec insert (n:int) {| setlike int 'set |} (s : 'set) : ML 'set =
   if n = 0 then s
   else insert (n-1) (add n s)
 
-let rec all_mem (n:int) {| setlike int 'set |} (s : 'set) =
+let rec all_mem (n:int) {| setlike int 'set |} (s : 'set) : ML bool =
   if n = 0 then true
-  else mem n s && all_mem (n-1) s
+  else let b = mem n s in let r = all_mem (n-1) s in b && r
 
-let rec all_remove (n:int) {| setlike int 'set |} (s : 'set) =
+let rec all_remove (n:int) {| setlike int 'set |} (s : 'set) : ML 'set =
   if n = 0 then s
   else all_remove (n-1) (remove n s)
 

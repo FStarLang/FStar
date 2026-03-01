@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Filepath
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
@@ -23,9 +22,9 @@ val is_path_absolute: string -> bool
 val join_paths: string -> string -> string
 val basename: string -> string (* name of file without directory *)
 val dirname : string -> string
-val getcwd: unit -> string
-val readdir: string -> list string
-val paths_to_same_file: string -> string -> bool
+val getcwd: unit -> ML string
+val readdir: string -> ML (list string)
+val paths_to_same_file: string -> string -> ML bool
 
 val file_exists: string -> Tot bool
 val is_directory: string -> Tot bool
@@ -35,4 +34,4 @@ according to input. *)
 val canonicalize : string -> string
 
 (* Like canonicalize, but always returns an absolute path. *)
-val normalize_file_path: string -> string
+val normalize_file_path: string -> ML string

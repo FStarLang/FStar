@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Parser.ParseIt
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -33,11 +32,11 @@ type input_frag = {
     frag_col:int
 }
 
-val read_vfs_entry : string -> option (time_of_day & string)
+val read_vfs_entry : string -> ML (option (time_of_day & string))
 // This lets the ide tell us about edits not (yet) reflected on disk.
-val add_vfs_entry: fname:string -> contents:string -> unit
+val add_vfs_entry: fname:string -> contents:string -> ML unit
 // This reads mtimes from the VFS as well
-val get_file_last_modification_time: fname:string -> time_of_day
+val get_file_last_modification_time: fname:string -> ML time_of_day
 
 type parse_frag =
     | Filename of filename
@@ -64,10 +63,10 @@ type parse_result =
 let lang_opts = option string
 val parse (ext_lang:lang_opts)
           (frag:parse_frag)
-: parse_result
-val find_file: string -> string
+: ML parse_result
+val find_file: string -> ML string
 
-val parse_warn_error: string -> option (list FStarC.Errors.error_setting)
+val parse_warn_error: string -> ML (option (list FStarC.Errors.error_setting))
 
 (* useful for unit testing and registered a #lang-fstar parser *)
 val parse_fstar_incrementally : AU.extension_lang_parser

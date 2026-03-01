@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Tests.Pars
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Range
@@ -185,7 +184,7 @@ let test_hashes () =
               (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in
-  let rec aux (n:int) =
+  let rec aux (n:int) : ML unit =
     if n = 0 then ()
     else (test_one_hash n; aux (n - 1))
   in
@@ -236,7 +235,9 @@ let parse_incremental_decls () =
     IncrementalFragment (decls1, _, parse_err1) -> (
       let check_range r l c =
           let p = start_of_range r in
-          if line_of_pos p = l && col_of_pos p = c
+          let lp = line_of_pos p in
+          let cp = col_of_pos p in
+          if lp = l && cp = c
           then ()
           else failwith (Format.fmt4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
                                  (show l)

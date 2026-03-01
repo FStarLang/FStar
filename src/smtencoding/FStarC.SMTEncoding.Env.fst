@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Env
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -57,30 +56,30 @@ let primitive_projector_by_pos env lid i =
                 mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| Format.fmt2 "%s_@%s" (string_of_lid lid) (show i)
-let mk_term_projector (lid:lident) (a:bv) : term =
+let mk_term_projector (lid:lident) (a:bv) : ML term =
     mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
-let mk_term_projector_by_pos (lid:lident) (i:int) : term =
+let mk_term_projector_by_pos (lid:lident) (i:int) : ML term =
     mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
 let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 (* ------------------------------------ *)
 (* New name generation *)
 type varops_t = {
-    push: unit -> unit;
-    pop: unit -> unit;
-    snapshot: unit -> (int & unit);
-    rollback: option int -> unit;
-    new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
-    new_fvar:lident -> string;
-    fresh:string -> string -> string;  (* module name -> prefix -> name *)
-    reset_fresh:unit -> unit;
-    next_id: unit -> int;
-    mk_unique:string -> string;
-    reset_scope: unit -> unit
+    push: unit -> ML unit;
+    pop: unit -> ML unit;
+    snapshot: unit -> ML (int & unit);
+    rollback: option int -> ML unit;
+    new_var:ident -> int -> ML string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
+    new_fvar:lident -> ML string;
+    fresh:string -> string -> ML string;  (* module name -> prefix -> name *)
+    reset_fresh:unit -> ML unit;
+    next_id: unit -> ML int;
+    mk_unique:string -> ML string;
+    reset_scope: unit -> ML unit
 }
 let varops =
     let initial_ctr = 100 in
     let ctr = mk_ref initial_ctr in
-    let new_scope () : SMap.t bool = SMap.create 100 in (* a scope records all the names used in that scope *)
+    let new_scope () : ML (SMap.t bool) = SMap.create 100 in (* a scope records all the names used in that scope *)
     let scopes = mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
@@ -135,9 +134,9 @@ type fvar_binding = {
     needs_fuel_and_universe_instantiations: option univ_names;
 }
 
-let list_of (i:int) (f:int -> 'a)
-: list 'a
-= let rec aux i out =
+let list_of (i:int) (f:int -> ML 'a)
+: ML (list 'a)
+= let rec aux i out : ML _ =
     if i = 0 then f i :: out
     else aux (i - 1) (f i :: out)
   in
@@ -222,7 +221,7 @@ type env_t = {
     global_cache:SMap.t (decls_elt & lident);  //cache for hashconsing, 2nd arg is the module name of the decl -- see Encode.fs where it is used and updated
 }
 
-let print_env (e:env_t) : string =
+let print_env (e:env_t) : ML string =
     let bvars = PSMap.fold e.bvar_bindings (fun _k pi acc ->
         PIMap.fold pi (fun _i (x, _term) acc ->
             show x :: acc) acc) [] in

@@ -1,18 +1,17 @@
 module FStarC.IMap
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 
 (* mutable map from integer keys *)
 
 type t 'value
-val create : int -> t 'value
-val clear : t 'value -> unit
-val add : t 'value -> int -> 'value -> unit
-val of_list : list (int&'value) -> t 'value
-val try_find : t 'value -> int -> option 'value
-val fold : t 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
-val remove : t 'value -> int -> unit
+val create : int -> ML (t 'value)
+val clear : t 'value -> ML unit
+val add : t 'value -> int -> 'value -> ML unit
+val of_list : list (int&'value) -> ML (t 'value)
+val try_find : t 'value -> int -> ML (option 'value)
+val fold : t 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> ML 'a
+val remove : t 'value -> int -> ML unit
 
 (* aliases *)
 inline_for_extraction type imap = t

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Json
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Effect
 

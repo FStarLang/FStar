@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Format
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* Formatting/printing utils *)
 
@@ -22,20 +21,20 @@ open FStarC.Effect
 open FStarC.Json
 
 type printer = {
-  printer_prinfo: string -> unit;
-  printer_prwarning: string -> unit;
-  printer_prerror: string -> unit;
-  printer_prgeneric: string -> (unit -> string) -> (unit -> json) -> unit
+  printer_prinfo: string -> ML unit;
+  printer_prwarning: string -> ML unit;
+  printer_prerror: string -> ML unit;
+  printer_prgeneric: string -> (unit -> ML string) -> (unit -> ML json) -> ML unit
 }
 
 val default_printer : printer
-val set_printer : printer -> unit
+val set_printer : printer -> ML unit
 
-val print_raw : string -> unit
-val print_generic: string -> ('a -> string) -> ('a -> json) -> 'a -> unit
-val print_any : 'a -> unit
+val print_raw : string -> ML unit
+val print_generic: string -> ('a -> ML string) -> ('a -> ML json) -> 'a -> ML unit
+val print_any : 'a -> ML unit
 
-val print_string (s : string) : unit
+val print_string (s : string) : ML unit
 
 val fmt
   (spec : string)
@@ -75,51 +74,51 @@ val fmt6
 val print
   (spec : string)
   (args : list string)
-  : unit
+  : ML unit
 
 val print1
   (spec : string)
   (arg1 : string)
-  : unit
+  : ML unit
 
 val print2
   (spec : string)
   (arg1 arg2 : string)
-  : unit
+  : ML unit
 
 val print3
   (spec : string)
   (arg1 arg2 arg3 : string)
-  : unit
+  : ML unit
 
 val print4
   (spec : string)
   (arg1 arg2 arg3 arg4 : string)
-  : unit
+  : ML unit
 
 val print5
   (spec : string)
   (arg1 arg2 arg3 arg4 arg5 : string)
-  : unit
+  : ML unit
 
 val print6
   (spec : string)
   (arg1 arg2 arg3 arg4 arg5 arg6 : string)
-  : unit
+  : ML unit
 
-val print_error: string -> unit
-val print1_error: string -> string -> unit
-val print2_error: string -> string -> string -> unit
-val print3_error: string -> string -> string -> string -> unit
+val print_error: string -> ML unit
+val print1_error: string -> string -> ML unit
+val print2_error: string -> string -> string -> ML unit
+val print3_error: string -> string -> string -> string -> ML unit
 
-val print_warning: string -> unit
-val print1_warning: string -> string -> unit
-val print2_warning: string -> string -> string -> unit
-val print3_warning: string -> string -> string -> string -> unit
+val print_warning: string -> ML unit
+val print1_warning: string -> string -> ML unit
+val print2_warning: string -> string -> string -> ML unit
+val print3_warning: string -> string -> string -> string -> ML unit
 
-val flush_stdout () : unit
+val flush_stdout : unit -> ML unit
 
-val stdout_isatty () : option bool
+val stdout_isatty : unit -> ML (option bool)
 
 // These functions have no effect
 val colorize : string -> (string & string) -> string

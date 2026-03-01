@@ -24,12 +24,19 @@ open FStarC.Syntax
 open FStarC.Syntax.Syntax
 
 module S = FStarC.Syntax.Syntax
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module U = FStarC.Syntax.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module SS = FStarC.Syntax.Subst
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module I = FStarC.Ident
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module UF = FStarC.Syntax.Unionfind
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module Const = FStarC.Parser.Const
+#push-options "--MLish --MLish_effect FStarC.Effect"
 module BU = FStarC.Util
+#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.Ident
 open FStarC.Range
@@ -56,18 +63,21 @@ let rec term_eq' t1 t2 =
     let t1 = SS.compress t1 in
     let t2 = SS.compress t2 in
     let binders_eq xs ys =
-        List.length xs = List.length ys
-        && List.forall2 (fun (x:binder) (y:binder) -> term_eq' x.binder_bv.sort y.binder_bv.sort) xs ys in
+        let len_eq = List.length xs = List.length ys in
+        let fv2_eq = List.forall2 (fun (x:binder) (y:binder) -> term_eq' x.binder_bv.sort y.binder_bv.sort) xs ys in
+        len_eq && fv2_eq in
     let args_eq xs ys =
-         List.length xs = List.length ys
-         && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp') xs ys in
+         let len_eq = List.length xs = List.length ys in
+         let fv2_eq = List.forall2 (fun (a, imp) (b, imp') -> let r = term_eq' a b in let q = U.eq_aqual imp imp' in r && q) xs ys in
+         len_eq && fv2_eq in
     let comp_eq (c:S.comp) (d:S.comp) =
         match c.n, d.n with
             | S.Total t, S.Total s -> term_eq' t s
             | S.Comp ct1, S.Comp ct2 ->
-              I.lid_equals ct1.effect_name ct2.effect_name
-              && term_eq' ct1.result_typ ct2.result_typ
-              && args_eq ct1.effect_args ct2.effect_args
+              let r1 = I.lid_equals ct1.effect_name ct2.effect_name in
+              let r2 = term_eq' ct1.result_typ ct2.result_typ in
+              let r3 = args_eq ct1.effect_args ct2.effect_args in
+              r1 && r2 && r3
             | _ -> false in
     match t1.n, t2.n with
       | Tm_lazy l, _ -> term_eq' (Option.must !lazy_chooser l.lkind l) t2
