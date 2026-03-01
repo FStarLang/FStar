@@ -1,5 +1,4 @@
 module FStarC.TypeChecker.Primops.Sealed
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC
 open FStarC.Effect
@@ -26,7 +25,7 @@ let ops =
         | [(ta, _); (tb, _); (s, _); (f, _)] ->
           begin
           let open EMB in
-          let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+          let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
               try_unembed x id_norm_cb
           in
           match try_unembed e_any ta,
@@ -45,7 +44,7 @@ let ops =
         | [(ta, _); (tb, _); (s, _); (f, _)] ->
           begin
           let open FStarC.TypeChecker.NBETerm in
-          let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+          let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : ML (option a) =
               unembed e bogus_cbs x
           in
           match try_unembed e_any ta,
@@ -66,7 +65,7 @@ let ops =
         | [(ta, _); (tb, _); (s, _); (f, _)] ->
           begin
           let open EMB in
-          let try_unembed (#a:Type) (e:embedding a) (x:term) : option a =
+          let try_unembed (#a:Type) (e:embedding a) (x:term) : ML (option a) =
               try_unembed x id_norm_cb
           in
           match try_unembed e_any ta,
@@ -84,7 +83,7 @@ let ops =
         | [(ta, _); (tb, _); (s, _); (f, _)] ->
           begin
           let open FStarC.TypeChecker.NBETerm in
-          let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : option a =
+          let try_unembed (#a:Type) (e:embedding a) (x:NBETerm.t) : ML (option a) =
               unembed e bogus_cbs x
           in
           match try_unembed e_any ta,
