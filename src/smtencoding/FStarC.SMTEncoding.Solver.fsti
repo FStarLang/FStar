@@ -15,11 +15,10 @@
 *)
 
 module FStarC.SMTEncoding.Solver
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
-val with_hints_db : string -> (unit -> 'a) -> 'a
-val flush_hints () : unit
+val flush_hints : unit -> ML unit
+val with_hints_db : string -> (unit -> ML 'a) -> ML 'a
 
-val dummy: FStarC.TypeChecker.Env.solver_t
 val solver: FStarC.TypeChecker.Env.solver_t
+val dummy: FStarC.TypeChecker.Env.solver_t

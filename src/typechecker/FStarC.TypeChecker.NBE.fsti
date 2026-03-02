@@ -16,7 +16,6 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.NBE
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC
 open FStarC.TypeChecker
@@ -28,13 +27,13 @@ open FStarC.TypeChecker.Normalize
 open FStarC.TypeChecker.NBETerm
 module PO = FStarC.TypeChecker.Primops
 
-val normalize_for_unit_test : steps:list Env.step
-               -> env : Env.env
-               -> e:term
-               -> term
-
 val normalize   : list PO.primitive_step
                 -> list Env.step
                 -> Env.env
                 -> term
-                -> term
+                -> ML term
+
+val normalize_for_unit_test : steps:list Env.step
+               -> env : Env.env
+               -> e:term
+               -> ML term

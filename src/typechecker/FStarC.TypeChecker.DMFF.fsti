@@ -16,20 +16,19 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.DMFF
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.TypeChecker
 open FStarC.Syntax.Syntax
 
 new val env : Type0
 
-val empty : Env.env -> (sconst -> typ) -> env
-val get_env: env -> Env.env
-val set_env : env -> Env.env -> env
-val gen_wps_for_free: Env.env -> binders -> bv -> term -> eff_decl -> sigelts & eff_decl
-val double_star: typ -> typ
-val star_type: env -> typ -> typ
-val star_expr: env -> term -> typ & term & term
-val trans_F  : env -> typ -> term -> term
-val recheck_debug : string -> FStarC.TypeChecker.Env.env -> term -> term
-val cps_and_elaborate : FStarC.TypeChecker.Env.env -> eff_decl -> (list sigelt & eff_decl & option sigelt)
+val empty : Env.env -> (sconst -> ML typ) -> ML env
+val gen_wps_for_free: Env.env -> binders -> bv -> term -> eff_decl -> ML (sigelts & eff_decl)
+val get_env: env -> ML Env.env
+val set_env : env -> Env.env -> ML env
+val double_star: typ -> ML typ
+val star_type: env -> typ -> ML typ
+val star_expr: env -> term -> ML (typ & term & term)
+val trans_F  : env -> typ -> term -> ML term
+val recheck_debug : string -> FStarC.TypeChecker.Env.env -> term -> ML term
+val cps_and_elaborate : FStarC.TypeChecker.Env.env -> eff_decl -> ML (list sigelt & eff_decl & option sigelt)
