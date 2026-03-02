@@ -112,14 +112,18 @@ val shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
 
 (* Rotate operators *)
 
-(** Rotate right for non-negative values *)
+(** Rotate right.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
 val rotate_right (a:t) (s:UInt32.t) : Pure t
-  (requires (0 <= v a /\ UInt32.v s < n))
+  (requires (UInt32.v s < n))
   (ensures (fun c -> FStar.Int.rotate_right (v a) (UInt32.v s) = v c))
 
-(** Rotate left for non-negative values *)
+(** Rotate left.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
 val rotate_left (a:t) (s:UInt32.t) : Pure t
-  (requires (0 <= v a /\ UInt32.v s < n))
+  (requires (UInt32.v s < n))
   (ensures (fun c -> FStar.Int.rotate_left (v a) (UInt32.v s) = v c))
 
 (* Comparison operators *)
