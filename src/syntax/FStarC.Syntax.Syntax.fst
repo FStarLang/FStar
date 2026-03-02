@@ -186,7 +186,7 @@ instance tagged_eff_extraction_mode : tagged eff_extraction_mode = {
 
 
 (* Helpers *)
-let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : ML quoteinfo =
+let on_antiquoted (f : (term -> ML term)) (qi : quoteinfo) : ML quoteinfo =
   let (s, aqs) = qi.antiquotations in
   let aqs' = List.map f aqs in
   { qi with antiquotations = (s, aqs') }
@@ -199,7 +199,7 @@ let lookup_aq (bv : bv) (aq : antiquotations) : ML term =
       failwith "antiquotation out of bounds"
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
-let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
+let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term)) = mk_ref None
 
 let mod_name (m: modul) = m.name
 

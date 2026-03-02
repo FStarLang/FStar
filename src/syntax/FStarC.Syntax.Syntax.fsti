@@ -776,13 +776,13 @@ type modul = {
   is_interface:bool;
 }
 
-val on_antiquoted : (term -> term) -> quoteinfo -> ML quoteinfo
+val on_antiquoted : (term -> ML term) -> quoteinfo -> ML quoteinfo
 
 (* Requires that bv.index is in scope for the antiquotation list. *)
 val lookup_aq : bv -> antiquotations -> ML term
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
-val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
+val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term))
 
 val mod_name: modul -> lident
 

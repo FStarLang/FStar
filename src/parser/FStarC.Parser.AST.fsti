@@ -234,20 +234,20 @@ type pragma =
   | Check of term
 
 type dep_scan_callbacks = {
-   scan_term: term -> unit;
-   scan_binder: binder -> unit;
-   scan_pattern: pattern -> unit;
-   add_lident: lident -> unit;
-   add_open: lident -> unit;
+   scan_term: term -> ML unit;
+   scan_binder: binder -> ML unit;
+   scan_pattern: pattern -> ML unit;
+   add_lident: lident -> ML unit;
+   add_open: lident -> ML unit;
 }
 
 type to_be_desugared = {
   lang_name: string;
   blob: FStarC.Dyn.dyn;
   idents: list ident;
-  to_string: FStarC.Dyn.dyn -> string;
-  eq: FStarC.Dyn.dyn -> FStarC.Dyn.dyn -> bool;
-  dep_scan: dep_scan_callbacks -> FStarC.Dyn.dyn -> unit
+  to_string: FStarC.Dyn.dyn -> ML string;
+  eq: FStarC.Dyn.dyn -> FStarC.Dyn.dyn -> ML bool;
+  dep_scan: dep_scan_callbacks -> FStarC.Dyn.dyn -> ML unit
 }
 
 type decl' =
