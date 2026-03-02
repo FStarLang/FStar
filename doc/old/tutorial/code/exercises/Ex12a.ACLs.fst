@@ -71,4 +71,6 @@ let dynamicChecking () =
   checkedWrite tmp "hello!";
   checkedWrite passwd "junk" (* this raises exception *)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main = staticChecking (); dynamicChecking ()
+#pop-options

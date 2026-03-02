@@ -6,7 +6,9 @@ open FStar.All
 open FStar.String
 open FStar.IO
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let init_print = print_string "\ninitializing...\n\n"
+#pop-options
 
 open Platform.Bytes
 (*open Seq
@@ -20,7 +22,9 @@ open MAC
 
 (*let log_prot = ST.alloc []*)
 val msg_buffer: ref message
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let msg_buffer = ST.alloc (empty_bytes)
+#pop-options
 
 val send: message -> ML unit
 let send m = msg_buffer := m
@@ -45,8 +49,10 @@ type reqresp (msg:message) =
 
 (* FIXME: this type annotation is a workaround for #486 *)
 val k: k:key{key_prop k == reqresp}
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let k = print_string "generating shared key...\n";
   keygen reqresp
+#pop-options
 
 
 val client_send : string16 -> ML unit
@@ -113,5 +119,7 @@ let test () =
     print_string "\n\n"
 
 val run : unit
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let run = test ()
+#pop-options
 (* check_marker *)

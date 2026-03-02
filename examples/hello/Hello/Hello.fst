@@ -17,4 +17,6 @@ module Hello
 
 open FStar.IO
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main = print_string "Hello F*!\n"
+#pop-options

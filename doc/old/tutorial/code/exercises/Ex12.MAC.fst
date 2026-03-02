@@ -53,7 +53,9 @@ type entry =
 
 
 private type log_t = ref (list entry)
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let log:log_t = ST.alloc #(list entry) []
+#pop-options
 
 // BEGIN: MacSpec
 val keygen: p:(text -> Type) -> ML (pkey p)

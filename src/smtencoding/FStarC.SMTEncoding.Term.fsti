@@ -67,6 +67,10 @@ type op =
   | BvMod
   | BvMul
   | BvUlt
+  | BvExtRol
+  | BvExtRor
+  | BvRol of int
+  | BvRor of int
   | BvUext of int
   | BvNot
   | NatToBv of int
@@ -256,8 +260,12 @@ val mkBvShr   : (int -> (term & term) -> Range.t -> term)
 val mkBvUdiv  : (int -> (term & term) -> Range.t -> term)
 val mkBvMod   : (int -> (term & term) -> Range.t -> term)
 val mkBvMul   : (int -> (term & term) -> Range.t -> term)
+val mkBvRol   : (int -> (term & term) -> Range.t -> term)
+val mkBvRor   : (int -> (term & term) -> Range.t -> term)
 val mkBvShl'  : (int -> (term & term) -> Range.t -> term)
 val mkBvShr'  : (int -> (term & term) -> Range.t -> term)
+val mkBvRol'  : (int -> (term & term) -> Range.t -> term)
+val mkBvRor'  : (int -> (term & term) -> Range.t -> term)
 val mkBvUdivUnsafe : (int -> (term & term) -> Range.t -> term)
 val mkBvModUnsafe  : (int -> (term & term) -> Range.t -> term)
 val mkBvMul'  : (int -> (term & term) -> Range.t -> term)

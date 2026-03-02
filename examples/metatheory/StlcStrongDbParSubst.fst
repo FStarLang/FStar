@@ -207,7 +207,7 @@ val substitution_beta :
       h1:typing g v t_x ->
       h2:typing (extend t_x g) e t ->
       Tot (typing g (subst (sub_beta v) e) t) (decreases e)
-let rec substitution_beta #e #v #t_x #t #g h1 h2 =
+let substitution_beta #e #v #t_x #t #g h1 h2 =
   let hs : subst_typing (sub_beta v) (extend t_x g) g =
     fun y -> if y = 0 then h1 else TyVar (y-1) in
   substitution (sub_beta v) h2 hs

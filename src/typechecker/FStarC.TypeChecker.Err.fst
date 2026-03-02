@@ -28,6 +28,7 @@ module N = FStarC.TypeChecker.Normalize
 
 open FStarC.Errors.Msg
 open FStarC.Class.Show
+open FStar.List.Tot
 
 let info_at_pos env file row col : option (either string lident & typ & Range.t) =
     match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with

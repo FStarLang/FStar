@@ -242,7 +242,7 @@ let has_flow_append (from to:loc) (fs fs':flows)
   : Lemma (has_flow from to fs ==>
            has_flow from to (fs @ fs') /\
            has_flow from to (fs' @ fs))
-  = let rec aux (rs:_)
+  = let aux (rs:_)
       : Lemma (requires
                   List.Tot.memP rs fs)
               (ensures
@@ -278,6 +278,7 @@ let rec add_source_monotonic (from to:loc) (r:label) (fs:flows)
     | [] -> ()
     | _::tl -> add_source_monotonic from to r tl
 
+#push-options "--warn_error -271" //Warning_SMTPatternIllFormed
 let has_flow_soundness #a #r #w #fs (f:ist a r w fs)
                        (from to:loc) (s:store) (k:int)
     : Lemma (requires
@@ -294,6 +295,7 @@ let has_flow_soundness #a #r #w #fs (f:ist a r w fs)
          assert (no_leakage f from to)
       in
       ()
+#pop-options
 
 let bind_comp_no_leakage (#a #b:Type)
                          (#w0 #r0 #w1 #r1:label)
@@ -524,6 +526,7 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) (fs0 fs1:flows) (f:ist a w0 r0 fs0)
     f
 
 /// Package it up as an effect
+#push-options "--warn_error -352" //Warning_Adhoc_IndexedEffect_Combinator
 reflectable
 layered_effect {
   IST : a:Type ->
@@ -537,6 +540,7 @@ layered_effect {
     bind = bind;
     subcomp = subcomp
 }
+#pop-options
 let read (l:loc) : IST int bot (single l) [] = IST?.reflect (iread l)
 let write (l:loc) (x:int) : IST unit (single l) bot [] = IST?.reflect (iwrite l x)
 
@@ -544,7 +548,9 @@ let tot a = unit -> Tot a
 let lift_tot (a:Type) (x:tot a)
   : ist a bot bot []
   = return a (x())
+#push-options "--warn_error -352" //Warning_Adhoc_IndexedEffect_Combinator
 sub_effect PURE ~> IST = lift_tot
+#pop-options
 
 ////////////////////////////////////////////////////////////////////////////////
 // Now for some examples

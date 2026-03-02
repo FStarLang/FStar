@@ -151,7 +151,7 @@ let piece_ghostly_connections (#t:Type) (p:piece t) : GTot Type0 =
   | _ -> p.phead == hd nodes /\
         p.ptail == last nodes
 
-let rec fragment_ghostly_connections (#t:Type) (f:fragment t) : GTot Type0 =
+let fragment_ghostly_connections (#t:Type) (f:fragment t) : GTot Type0 =
   fragment_for_each0 piece_ghostly_connections f
 
 /// Containment properties
@@ -163,7 +163,7 @@ let rec nodelist_contained0 (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 =
   match nl with
   | [] -> True
   | n :: ns -> h0 `contains` n /\ nodelist_contained0 h0 ns
-let rec nodelist_contained (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 =
+let nodelist_contained (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 =
   nodelist_contained0 h0 nl
 
 let dll_contained (#t:Type) (h0:heap) (d:dll t) : GTot Type0 =
@@ -176,7 +176,7 @@ let piece_contained (#t:Type) (h0:heap) (p:piece t) : GTot Type0 =
   h0 `contains` p.ptail /\
   nodelist_contained h0 p.pnodes
 
-let rec fragment_contained (#t:Type) (h0:heap) (f:fragment t) : GTot Type0 =
+let fragment_contained (#t:Type) (h0:heap) (f:fragment t) : GTot Type0 =
   fragment_for_each1 piece_contained h0 f
 
 /// Footprints
@@ -235,7 +235,7 @@ let piece_fp_b (#t:Type) (h0:heap) (p:piece t) : GTot Mod.loc =
     (Mod.loc_union (Mod.loc_buffer (p.phead@h0).blink) (Mod.loc_buffer (p.ptail@h0).blink))
     (nodelist_fp_b h0 p.pnodes)
 
-let rec fragment_fp0 (#t:Type) (f:fragment t) : GTot Mod.loc =
+let fragment_fp0 (#t:Type) (f:fragment t) : GTot Mod.loc =
   match f with
   | Frag0 -> Mod.loc_none
   | Frag1 p1 -> piece_fp0 p1
@@ -333,9 +333,9 @@ let dll_aa (#t:Type) (d:dll t) : GTot Type0 =
 let piece_aa (#t:Type) (p:piece t) : GTot Type0 =
   nodelist_aa p.pnodes
 
-let rec fragment_aa0 (#t:Type) (f:fragment t) : GTot Type0 =
+let fragment_aa0 (#t:Type) (f:fragment t) : GTot Type0 =
   fragment_for_each0 piece_aa f
-let rec fragment_aa_lr (#t:Type) (f:fragment t) : GTot Type0 =
+let fragment_aa_lr (#t:Type) (f:fragment t) : GTot Type0 =
   match f with
   | Frag0 -> True
   | Frag1 p1 -> True
@@ -372,7 +372,7 @@ let dll_conn (#t:Type) (h0:heap) (d:dll t) : GTot Type0 =
 let piece_conn (#t:Type) (h0:heap) (p:piece t) : GTot Type0 =
   nodelist_conn h0 p.pnodes
 
-let rec fragment_conn (#t:Type) (h0:heap) (f:fragment t) : GTot Type0 =
+let fragment_conn (#t:Type) (h0:heap) (f:fragment t) : GTot Type0 =
   fragment_for_each1 piece_conn h0 f
 
 /// Validity properties
@@ -876,7 +876,7 @@ let piece_merge_fp0 (#t:Type) (h0:heap)
 
 /// Fragment merging to a dll
 
-let rec fragment_defragmentable (#t:Type) (h0:heap) (f:fragment t{fragment_valid h0 f}) :
+let fragment_defragmentable (#t:Type) (h0:heap) (f:fragment t{fragment_valid h0 f}) :
   GTot Type0 =
   let aux (p1 p2:(p:piece t{piece_valid h0 p})) =
     let a, b = last p1.pnodes, hd p2.pnodes in
