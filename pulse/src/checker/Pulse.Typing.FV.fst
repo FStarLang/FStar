@@ -246,30 +246,7 @@ val freevars_open_term (e:term) (x:term) (i:index)
            (freevars e `Set.union` freevars x))
     [SMTPat (freevars (open_term' e x i))]
 
-let freevars_open_term_both (x:var) (t:term)
-: Lemma (freevars (open_term t x) `Set.subset` (freevars t `Set.union` Set.singleton x) /\
-         freevars t `Set.subset` freevars (open_term t x))
-= admit()
-
 let freevars_close_st_term e x i = freevars_close_st_term' e x i
-
-let contains_r (g:R.env) (x:var) = Some? (RT.lookup_bvar g x)
-assume val vars_of_env_r (g:R.env) :
-  s:Set.set var { forall x. Set.mem x s <==> contains_r g x } // = Set.intension (contains_r g)
-
-assume
-val refl_typing_freevars (#g:R.env) (#e:R.term) (#t:R.term) (#eff:_) 
-                         (_:RT.typing g e (eff, t))
-  : Lemma 
-    (ensures RT.freevars e `Set.subset` (vars_of_env_r g) /\
-             RT.freevars t `Set.subset` (vars_of_env_r g))
-
-assume
-val refl_equiv_freevars (#g:R.env) (#e1 #e2:R.term) (d:RT.equiv g e1 e2)
-  : Lemma (RT.freevars e1 `Set.subset` (vars_of_env_r g) /\
-           RT.freevars e2 `Set.subset` (vars_of_env_r g))
-
-
 
 assume
 val freevars_open_comp (c:comp) (x:term) (i:index)
@@ -278,69 +255,6 @@ val freevars_open_comp (c:comp) (x:term) (i:index)
       freevars_comp (open_comp' c x i) `Set.subset` 
       (freevars_comp c `Set.union` freevars x))
     [SMTPat (freevars_comp (open_comp' c x i))]
-
-#push-options "--fuel 2 --ifuel 2"
-let tot_or_ghost_typing_freevars
-  (g:env) (t:term) (ty:term) (eff:FStar.Tactics.V2.tot_or_ghost)
-  : Lemma 
-    (ensures freevars t `Set.subset` vars_of_env g /\
-             freevars ty `Set.subset` vars_of_env g)
-  = admit ()
-
-let tot_typing_freevars
-  (g:env) (t:term) (ty:term)
-  : Lemma 
-    (ensures freevars t `Set.subset` vars_of_env g /\
-             freevars ty `Set.subset` vars_of_env g)
-  = admit ()
-
-let bind_comp_freevars (g:env) (x:var) (c1:comp) (c2:comp) (c:comp)
-  : Lemma 
-    (requires freevars_comp c1 `Set.subset` vars_of_env g /\
-              freevars_comp c2 `Set.subset` (Set.union (vars_of_env g) (Set.singleton x)))
-    (ensures freevars_comp c `Set.subset` vars_of_env g)
-  = admit ()
-
-let slprop_equiv_freevars (g:env) (t0:term) (t1:term)
-  : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
-                   (freevars t1 `Set.subset` vars_of_env g))
-  = admit ()
-
-
-
-let st_equiv_freevars (g:env) (c1:comp) (c2:comp)
-  : Lemma
-    (requires freevars_comp c1 `Set.subset` vars_of_env g)
-    (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
-  = admit ()
-    
-let prop_validity_fv (g:env) (p:term)
-  : Lemma
-    (requires prop_validity g p)
-    (ensures freevars p `Set.subset` vars_of_env g)
-  = admit()
-
-let st_sub_freevars (g:env) (c1:comp) (c2:comp)
-  : Lemma
-    (requires freevars_comp c1 `Set.subset` vars_of_env g)
-    (ensures freevars_comp c2 `Set.subset` vars_of_env g)
-  = admit ()
-
-let src_typing_freevars_t (d':'a) =
-    (g:env) -> (t:st_term) -> (c:comp) ->
-    Lemma 
-    (ensures freevars_st t `Set.subset` vars_of_env g /\
-             freevars_comp c `Set.subset` vars_of_env g)
-
-let st_comp_typing_freevars (g:env) (st:st_comp)
-  : Lemma
-    (ensures freevars_st_comp st `Set.subset` vars_of_env g)
-  = admit ()
-
-let comp_typing_freevars  (g:env) (c:comp) (u:universe)
-  : Lemma 
-    (ensures freevars_comp c `Set.subset` vars_of_env g)
-  = admit ()
 
 let freevars_open_st_term_inv (e:st_term) 
                               (x:var {~ (x `Set.mem` freevars_st e) })
@@ -355,65 +269,3 @@ let freevars_open_st_term_inv (e:st_term)
      freevars_st (open_st_term e x) `set_minus` x;
     }
 #pop-options
-#pop-options
-
-let freevars_tm_arrow (b:binder) (q:option qualifier) (c:comp)
-  : Lemma (freevars (tm_arrow b q c) ==
-           Set.union (freevars b.binder_ty)
-                     (freevars_comp c)) =
-  admit ()
-
-let freevars_mk_eq2 (u:universe) (t e0 e1:term)
-  : Lemma (freevars (mk_eq2 u t e0 e1) ==
-           Set.union (freevars t)
-                     (Set.union (freevars e0)
-                                (freevars e1))) =
-  admit()
-
-let freevars_mk_reveal (u:universe) (t x_tm:term)
-  : Lemma (freevars (Pulse.Typing.mk_reveal u t x_tm) ==
-           Set.union (freevars t) (freevars x_tm)) =
-  admit ()
-
-let freevars_mk_erased (u:universe) (t:term)
-  : Lemma (freevars (mk_erased u t) == freevars t) =
-  admit ()
-
-let freevars_mk_fst (uL uR:universe) (aL aR x_tm:term)
-  : Lemma (freevars (Pulse.Typing.mk_fst uL uR aL aR x_tm) ==
-           Set.union (freevars aL)
-                     (Set.union (freevars aR)
-                                (freevars x_tm))) =
-  admit ()
-
-let freevars_mk_snd (uL uR:universe) (aL aR x_tm:term)
-  : Lemma (freevars (Pulse.Typing.mk_snd uL uR aL aR x_tm) ==
-           Set.union (freevars aL)
-                     (Set.union (freevars aR)
-                                (freevars x_tm))) =
-  admit ()
-
-let freevars_mk_tuple2 (uL uR:universe) (aL aR:term)
-  : Lemma (freevars (mk_tuple2 uL uR aL aR) ==
-           Set.union (freevars aL) (freevars aR)) =
-  admit ()
-
-let freevars_ref (t:term)
-  : Lemma (freevars (mk_ref t) == freevars t)
-  = admit()
-
-let freevars_array (t:term)
-  : Lemma (freevars (mk_array t) == freevars t)
-  = admit()
-
-
-(*****************************************************************************)
-
-(** Big lemma follows. We have to split it to make it digestible to SMT. *)
-
-let st_typing_freevars
-  (g:env) (t:st_term) (c:comp)
-: Lemma
-  (ensures freevars_st t `Set.subset` vars_of_env g /\
-           freevars_comp c `Set.subset` vars_of_env g)
-= admit ()
