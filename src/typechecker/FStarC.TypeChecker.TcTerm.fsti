@@ -15,7 +15,6 @@
 *)
 
 module FStarC.TypeChecker.TcTerm
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC
 open FStarC.TypeChecker
@@ -29,28 +28,27 @@ open FStarC.Const
 open FStarC.TypeChecker.Rel
 open FStarC.TypeChecker.Common
 
-val level_of_type: env -> term -> typ -> universe //the term argument is for error reporting only
-val tc_constant: env -> FStarC.Range.t -> sconst -> typ
-val tc_binders: env -> binders -> binders & env & guard_t & universes
-val tc_term: env -> term -> term & lcomp & guard_t
-val tc_maybe_toplevel_term: env -> term -> term & lcomp & guard_t
-val tc_comp: env -> comp -> comp & universe & guard_t
-val tc_pat : Env.env -> typ -> pat -> pat & list bv & list term & Env.env & term & term & guard_t & bool
-val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> term & typ & guard_t
-val universe_of: env -> term -> universe
-val typeof_tot_or_gtot_term_fastpath: env -> term -> Env.must_tot -> option typ
+val value_check_expected_typ: env -> term -> either typ lcomp -> guard_t -> ML (term & lcomp & guard_t)
+val comp_check_expected_typ: env -> term -> lcomp -> ML (term & lcomp & guard_t)
+val check_expected_effect: env -> use_eq:bool -> option comp -> (term & comp) -> ML (term & comp & guard_t)
 
-val tc_tot_or_gtot_term: env -> term -> term & lcomp & guard_t
+val tc_term: env -> term -> ML (term & lcomp & guard_t)
+val tc_maybe_toplevel_term: env -> term -> ML (term & lcomp & guard_t)
+val tc_tactic : typ -> typ -> env -> term -> ML (term & lcomp & guard_t)
+val tc_constant: env -> FStarC.Range.t -> sconst -> ML typ
+val tc_comp: env -> comp -> ML (comp & universe & guard_t)
+val tc_pat : Env.env -> typ -> pat -> ML (pat & list bv & list term & Env.env & term & term & guard_t & bool)
+val tc_binders: env -> binders -> ML (binders & env & guard_t & universes)
+val tc_tot_or_gtot_term: env -> term -> ML (term & lcomp & guard_t)
 //the last string argument is the reason to be printed in the error message
 //pass "" if NA
-val tc_check_tot_or_gtot_term: env -> term -> typ -> option string -> term & lcomp & guard_t
-val tc_tactic : typ -> typ -> env -> term -> term & lcomp & guard_t
-val tc_trivial_guard: env -> term -> term & lcomp
-val tc_attributes: env -> list term -> guard_t & list term
-val tc_check_trivial_guard: env -> term -> term -> term
+val tc_check_tot_or_gtot_term: env -> term -> typ -> option string -> ML (term & lcomp & guard_t)
+val tc_trivial_guard: env -> term -> ML (term & lcomp)
+val tc_attributes: env -> list term -> ML (guard_t & list term)
+val tc_check_trivial_guard: env -> term -> term -> ML term
 
-val value_check_expected_typ: env -> term -> either typ lcomp -> guard_t -> term & lcomp & guard_t
-val check_expected_effect: env -> use_eq:bool -> option comp -> (term & comp) -> term & comp & guard_t
-val comp_check_expected_typ: env -> term -> lcomp -> term & lcomp & guard_t
-
-val tc_tparams: env_t -> binders -> (binders & Env.env & universes)
+val typeof_tot_or_gtot_term: env -> term -> must_tot:bool -> ML (term & typ & guard_t)
+val level_of_type: env -> term -> typ -> ML universe //the term argument is for error reporting only
+val universe_of: env -> term -> ML universe
+val tc_tparams: env_t -> binders -> ML (binders & Env.env & universes)
+val typeof_tot_or_gtot_term_fastpath: env -> term -> Env.must_tot -> ML (option typ)
