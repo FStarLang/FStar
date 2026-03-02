@@ -23,7 +23,7 @@ open FStarC.VConfig
 
 (* Set externally, checks if the directory exists and otherwise
 logs an issue. Cannot do it here due to circular deps. *)
-val check_include_dir : ref (string -> unit)
+val check_include_dir : ref (string -> ML unit)
 
 (* Raised when a processing a pragma an a non-settable option
 appears there. *)
@@ -141,7 +141,7 @@ val desc_of_opt_type            : opt_type -> option string
 
 val abort_counter : ref int
 
-val set_option_warning_callback : (string -> unit) -> ML unit
+val set_option_warning_callback : (string -> ML unit) -> ML unit
 
 val settable                    : string -> bool
 
@@ -149,7 +149,7 @@ val all_specs_with_types        : list (char & string & opt_type & Pprint.docume
 
 val help_for_option             : string -> ML (option Pprint.document)
 
-val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> ML unit)
+val set_error_flags_callback    : ((unit  -> ML parse_cmdline_res) -> ML unit)
 
 val display_usage               : unit    -> ML unit
 

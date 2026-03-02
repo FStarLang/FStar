@@ -34,7 +34,7 @@ module List = FStarC.List
 
 (* Set externally, checks if the directory exists and otherwise
 logs an issue. Cannot do it here due to circular deps. *)
-let check_include_dir = mk_ref (fun (s:string) -> ())
+let check_include_dir = mk_ref (fun (s:string) -> () <: ML unit)
 
 module Ext = FStarC.Options.Ext
 
@@ -772,7 +772,7 @@ let interp_quake_arg (s:string)
 let set_option_warning_callback_aux,
     option_warning_callback =
     let cb = mk_ref None in
-    let set (f:string -> unit) =
+    let set (f:string -> ML unit) =
       cb := Some f
     in
     let call msg =
@@ -1857,7 +1857,7 @@ let help_for_option (s:string) : ML (option Pprint.document) =
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let set_error_flags_callback_aux,
     set_error_flags =
-    let callback : ref (option (unit -> parse_cmdline_res)) = mk_ref None in
+    let callback : ref (option (unit -> ML parse_cmdline_res)) = mk_ref None in
     let set f = callback := Some f in
     let call () =
       match !callback with

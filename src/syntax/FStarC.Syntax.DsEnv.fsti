@@ -23,7 +23,7 @@ open FStarC.Ident
 open FStarC.Class.Show
 module S = FStarC.Syntax.Syntax
 
-val ugly_sigelt_to_string_hook : ref (sigelt -> string)
+val ugly_sigelt_to_string_hook : ref (sigelt -> ML string)
 
 let open_module_or_namespace = S.open_module_or_namespace
 type used_marker = ref bool
@@ -40,7 +40,7 @@ type record_or_dc = {
 val env : Type0
 val dsenv_hooks : Type0
 
-type withenv 'a = env -> 'a & env
+type withenv 'a = env -> ML ('a & env)
 
 type foundname =
   | Term_name of typ & list attribute
@@ -135,7 +135,7 @@ val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> ML module_inclusion_info
 val prepare_module_or_interface: no_prelude:bool -> is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> ML (env & bool) //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> ML env
-val fail_or:  env -> (lident -> option 'a) -> lident -> ML 'a
-val fail_or2: env -> (ident -> option 'a) -> ident -> ML 'a
+val fail_or:  env -> (lident -> ML (option 'a)) -> lident -> ML 'a
+val fail_or2: env -> (ident -> ML (option 'a)) -> ident -> ML 'a
 val resolve_name: env -> lident -> ML (option (either bv fv))
 val set_no_prelude : env -> bool -> env

@@ -74,7 +74,7 @@ let typo_msg (x : string) (xs : list string) : ML Pprint.document =
 
 module BU = FStarC.Util
 
-let ugly_sigelt_to_string_hook : ref (sigelt -> string) = mk_ref (fun _ -> "")
+let ugly_sigelt_to_string_hook : ref (sigelt -> ML string) = mk_ref (fun _ -> "")
 let ugly_sigelt_to_string (se:sigelt) : ML string = !ugly_sigelt_to_string_hook se
 
 module S = FStarC.Syntax.Syntax
