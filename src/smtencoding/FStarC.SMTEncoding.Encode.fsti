@@ -14,27 +14,26 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.SMTEncoding.Term
 module ErrorReporting = FStarC.SMTEncoding.ErrorReporting
 module S = FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 type encoding_depth = int & int
-val push_encoding_state: string -> unit
-val pop_encoding_state:  string -> unit
-val snapshot_encoding: string -> encoding_depth
-val rollback_encoding: string -> option encoding_depth -> unit
-val init: Env.env -> unit
-val get_current_env: Env.env -> FStarC.SMTEncoding.Env.env_t
-val encode_sig: Env.env -> S.sigelt -> unit
-val encode_modul: Env.env -> S.modul -> decls_t & list FStarC.SMTEncoding.Env.fvar_binding
+val get_current_env: Env.env -> ML FStarC.SMTEncoding.Env.env_t
+val init: Env.env -> ML unit
+val snapshot_encoding: string -> ML encoding_depth
+val rollback_encoding: string -> option encoding_depth -> ML unit
+val push_encoding_state: string -> ML unit
+val pop_encoding_state:  string -> ML unit
+val encode_sig: Env.env -> S.sigelt -> ML unit
+val encode_modul: Env.env -> S.modul -> ML (decls_t & list FStarC.SMTEncoding.Env.fvar_binding)
 //the lident is the module name
-val encode_modul_from_cache: Env.env -> S.modul -> (decls_t & list FStarC.SMTEncoding.Env.fvar_binding) -> unit
-val encode_query: option (unit -> string)
+val encode_modul_from_cache: Env.env -> S.modul -> (decls_t & list FStarC.SMTEncoding.Env.fvar_binding) -> ML unit
+val encode_query: option (unit -> ML string)
                 -> Env.env
                 -> S.term
-                -> list decl  //prelude, translation of tcenv
+                -> ML (list decl  //prelude, translation of tcenv
                   & list ErrorReporting.label //labels in the query
                   & decl        //the query itself
-                  & list decl  //suffix, evaluating labels in the model, etc
+                  & list decl)  //suffix, evaluating labels in the model, etc

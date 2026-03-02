@@ -16,16 +16,15 @@
 
 (** Convert Parser.Ast to Pprint.document for prettyprinting. *)
 module FStarC.Parser.ToDocument
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 
-val term_to_document : FStarC.Parser.AST.term -> FStarC.Pprint.document
-val decl_to_document   : FStarC.Parser.AST.decl -> FStarC.Pprint.document
-val signature_to_document : FStarC.Parser.AST.decl -> FStarC.Pprint.document
-val pat_to_document : FStarC.Parser.AST.pattern -> FStarC.Pprint.document
-val binder_to_document : FStarC.Parser.AST.binder -> FStarC.Pprint.document
-val modul_to_document  : FStarC.Parser.AST.modul -> FStarC.Pprint.document
-val comments_to_document : list (string & FStarC.Range.t) -> FStarC.Pprint.document
-val modul_with_comments_to_document : FStarC.Parser.AST.modul -> list (string & FStarC.Range.t) -> FStarC.Pprint.document & list (string & FStarC.Range.t)
-val handleable_args_length : FStarC.Ident.ident -> int
-val decl_with_comments_to_document : FStarC.Parser.AST.decl -> list (string & FStarC.Range.t) -> FStarC.Pprint.document & list (string & FStarC.Range.t)
+val handleable_args_length : FStarC.Ident.ident -> ML int
+val term_to_document : FStarC.Parser.AST.term -> ML FStarC.Pprint.document
+val signature_to_document : FStarC.Parser.AST.decl -> ML FStarC.Pprint.document
+val decl_to_document   : FStarC.Parser.AST.decl -> ML FStarC.Pprint.document
+val pat_to_document : FStarC.Parser.AST.pattern -> ML FStarC.Pprint.document
+val binder_to_document : FStarC.Parser.AST.binder -> ML FStarC.Pprint.document
+val modul_to_document  : FStarC.Parser.AST.modul -> ML FStarC.Pprint.document
+val comments_to_document : list (string & FStarC.Range.t) -> ML FStarC.Pprint.document
+val modul_with_comments_to_document : FStarC.Parser.AST.modul -> list (string & FStarC.Range.t) -> ML (FStarC.Pprint.document & list (string & FStarC.Range.t))
+val decl_with_comments_to_document : FStarC.Parser.AST.decl -> list (string & FStarC.Range.t) -> ML (FStarC.Pprint.document & list (string & FStarC.Range.t))
