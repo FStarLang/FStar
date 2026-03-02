@@ -34,6 +34,7 @@ let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
 let is_val x d = match d.d with
     | Val(y, _) -> (string_of_id x) = (string_of_id y)
+    | DeclToBeDesugared { idents=[y] } -> (string_of_id x) = (string_of_id y)
     | _ -> false
 
 let is_type x d = match d.d with
@@ -211,6 +212,28 @@ let rec prefix_with_iface_decls
          in
          let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
          rest_iface, iface_hd::take_iface@[impl]
+       )
+
+     //Extension declarations (e.g., Pulse fn) in the interface:
+     //When the implementation defines the same name, consume the interface decl.
+     //If the implementation is also an extension decl, don't prefix the interface decl
+     //(since both will produce their own sigelts). Otherwise, prefix it so the val is available.
+     //This prevents the implementation from getting KrmlPrivate.
+     | DeclToBeDesugared { idents=[x] } ->
+       let def_ids = definition_lids impl in
+       let defines_x = Util.for_some (id_eq_lid x) def_ids in
+       if defines_x then (
+         match impl.d with
+         | DeclToBeDesugared _ ->
+           //both interface and impl are extension decls; each produces its own sigelt
+           iface_tl, [impl]
+         | _ ->
+           //impl is a regular let; need the interface decl to provide the val
+           iface_tl, [iface_hd; impl]
+       ) else (
+         //implementation doesn't define x; keep looking
+         let iface, ds = prefix_with_iface_decls iface_tl impl in
+         iface, iface_hd::ds
        )
 
      | Pragma _ ->
