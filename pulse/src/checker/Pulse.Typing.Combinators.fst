@@ -42,19 +42,6 @@ val construct_forall_typing
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
         : GTot (unit)
 
-let st_equiv_trans (g:env) (c0 c1 c2:comp)
-  : unit
-  = ()
-
-let t_equiv (g:env) (st:st_term) (c:comp) (c':comp)
-  : unit
-  = ()
-
-let slprop_equiv_typing (g:env) (t0 t1:term)
-  : GTot ((unit -> unit) &
-          (unit -> unit))
-  = (fun _ -> ()), (fun _ -> ())
-        
 let bind_t (case_c1 case_c2:comp_st -> bool) =
       (g:env) ->
       (pre:term) ->

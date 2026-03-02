@@ -26,13 +26,6 @@ let st_comp_with_pre (st:st_comp) (pre:term) : st_comp = { st with pre }
 let nvar_as_binder (x:nvar) (t:term) : binder =
   mk_binder_ppname t (fst x)
 
-val t_equiv (g:env) (st:st_term) (c:comp) (c':comp)
-  : unit
-  
-val slprop_equiv_typing (g:env) (t0 t1:term)
-  : GTot ((unit -> unit) &
-          (unit -> unit))
-
 let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
   C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
 

@@ -199,25 +199,6 @@ val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 val is_stateful_application (g:env) (e:term) 
 : T.Tac (option st_term)
 
-val norm_typing
-      (g:env) (e:term) (eff:T.tot_or_ghost) (t0:term)
-      (steps:list norm_step)
-  : T.Tac (t':term & unit)
-
-val norm_typing_inverse
-      (g:env) (e:term) (eff:T.tot_or_ghost) (t0:term)
-      (t1:term)
-      (u:universe)
-      (steps:list norm_step)
-  : T.Tac (option unit)
-
-val norm_st_typing_inverse
-      (g:env) (e:st_term) (t0:term)
-      (u:universe)
-      (t1:term)
-      (steps:list norm_step)
-  : T.Tac (option unit)
-
 val hoist
   (g:env)
   (tt:either term st_term)

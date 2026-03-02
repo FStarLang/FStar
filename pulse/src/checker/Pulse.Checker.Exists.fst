@@ -26,7 +26,6 @@ open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
-module FV = Pulse.Typing.FV
 
 let slprop_as_list_typing (#g:env) (#p:term)
   (x:term { List.Tot.memP x (slprop_as_list p) })
@@ -122,7 +121,6 @@ let check_intro_exists
 
   let Tm_ExistsSL u b p = tv in
 
-  Pulse.Typing.FV.tot_typing_freevars g t tm_slprop;
   let x = fresh g in
   let ty_typing, _ = (), () in
   let witness = 

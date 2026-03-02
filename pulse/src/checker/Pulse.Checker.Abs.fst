@@ -28,7 +28,7 @@ open FStar.List.Tot
 module RT = FStar.Reflection.Typing
 module P = Pulse.Syntax.Printer
 module PSB = Pulse.Syntax.Builder
-module FV = Pulse.Typing.FV
+
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
@@ -479,7 +479,7 @@ let rec check_abs_core
 
       let c_body = maybe_rewrite_body_typing g' body c_body asc in
 
-      FV.st_typing_freevars g' body c_body;      let body_closed = close_st_term body x in
+      let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
 
       // instantiate implicits in the attributes
@@ -585,7 +585,6 @@ let rec check_abs_core
 
       let c_body = maybe_rewrite_body_typing g' body c_body asc in
 
-      FV.st_typing_freevars g' body c_body;
       let body_closed = close_st_term body x in
       assume (open_st_term body_closed x == body);
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in

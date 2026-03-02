@@ -21,7 +21,6 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
-module FV = Pulse.Typing.FV
 open Pulse.Checker.Util
 open Pulse.Show
 
@@ -113,7 +112,6 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let u = CP.check_universe g ret_ty in
   let post = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in
-  Pulse.Typing.FV.freevars_close_term post x 0;
   let effect_annot = check_effect_annot g effect_annot in
   assume (open_term post' x == post);
   { g;
@@ -121,11 +119,6 @@ let intro_post_hint g effect_annot ret_ty_opt post =
     ret_ty; u;
     post=post';
     }
-
-let comp_typing_as_effect_annot_typing (g:env) (c:comp_st)
-: unit
-= ()
-  
 
 let post_hint_from_comp_typing g c = 
   let p : post_hint_t = 
@@ -177,59 +170,11 @@ let comp_st_with_post (c:comp_st) (post:term)
   | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
-let ve_unit_r g (p:term) : unit = 
-  ()
-
-let st_equiv_post (#g:env) (t:st_term) (c:comp_st)
-                  (post:term { freevars post `Set.subset` freevars (comp_post c)})
-                  (veq: (x:var { fresh_wrt x g (freevars (comp_post c)) } ->
-                         unit))
-  : Dv unit
-  = if eq_tm post (comp_post c) then ()
-    else
-      let c' = comp_st_with_post c post in
-
-      Pulse.Typing.Combinators.t_equiv g t c c'
-
-let simplify_post (g:env) (t:st_term) (c:comp_st)
-                  (post:term { comp_post c == tm_star post tm_emp})
-  : Dv unit
-  = st_equiv_post #g t c post (fun x -> ve_unit_r (push_binding g x ppname_default (comp_res c)) (open_term post x))
-
-let simplify_lemma (c:comp_st) (c':comp_st) (post_hint:post_hint_opt_t)
-  : Lemma
-    (requires
-        comp_post_matches_hint c post_hint /\
-        effect_annot_of_comp c == effect_annot_of_comp c' /\
-        comp_res c' == comp_res c /\
-        comp_u c' == comp_u c /\
-        comp_post c' == tm_star (comp_post c) tm_emp)
-    (ensures comp_post_matches_hint (comp_st_with_post c' (comp_post c)) post_hint /\
-             comp_pre (comp_st_with_post c' (comp_post c)) == comp_pre c')
-  = ()
-
-let slprop_equiv_typing_bk (#g:env) (#ctxt:_)
-                           (p:_)
-  : unit 
-  = let _, bk = slprop_equiv_typing g p ctxt in
-    bk ()
-
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
-
-#push-options "--fuel 0 --ifuel 0"
-let st_equiv_pre (#g:env) (t:st_term) (c:comp_st)
-                 (pre:term)
-                 (veq: unit)
-  : Dv unit
-  = if eq_tm pre (comp_pre c) then ()
-    else
-      let c' = comp_with_pre c pre in
-
-      Pulse.Typing.Combinators.t_equiv g t c c'
 
 let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
   (k:continuation_elaborator g1 ctxt g2 ctxt1)
@@ -238,12 +183,6 @@ let k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt
     let (| st, c |) = res in
     assert (comp_pre c == ctxt2);
     k post_hint (| st, comp_with_pre c ctxt1 |)
-
-let slprop_equiv_typing_fwd (#g:env) (#ctxt:_)
-                           (p:_)
-  : unit 
-  = let fwd, _ = slprop_equiv_typing g ctxt p in
-    fwd ()
 
 let k_elab_equiv_prefix
   (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt:term) (ctxt2:term)
@@ -638,58 +577,6 @@ let apply_conversion
       (eq:Ghost.erased (RT.related (elab_env g) t0 RT.R_Eq t1))
   : unit
   = ()
-
-let norm_typing
-      (g:env) (e:term) (eff:FStar.Tactics.V2.tot_or_ghost) (t0:term)
-      (steps:list norm_step)
-  : T.Tac (t':term & unit)
-  = let (| t', _, _ |) =
-      CP.norm_well_typed_term_alt #(elab_env g) #e #eff #t0 (magic()) steps
-    in
-    (| t', () |)
-
-module TermEq = FStar.Reflection.TermEq
-let norm_typing_inverse
-      (g:env) (e:term) (eff:FStar.Tactics.V2.tot_or_ghost) (t0:term)
-      (t1:term)
-      (u:universe)
-      (steps:list norm_step)
-  : T.Tac (option unit)
-  = let (| t1', t1'_typing, related_t1_t1' |) =
-      CP.norm_well_typed_term_alt #(elab_env g) #t1 #T.E_Total #(R.pack_ln (R.Tv_Type u)) (Ghost.hide (magic())) steps
-    in
-    if TermEq.term_eq t0 t1'
-    then Some ()
-    else None
-
-
-let norm_st_typing_inverse
-      (g:env) (e:st_term) (t0:term)
-      (u:universe)
-      (t1:term)
-      (steps:list norm_step)
-  : T.Tac (option unit)
-  = let d1 
-      : Ghost.erased (RT.tot_typing (elab_env g) t1 (RT.tm_type u))
-      = Ghost.hide (magic())
-    in
-    let (| t1', t1'_typing, related_t1_t1' |) =
-      CP.norm_well_typed_term_alt d1 steps
-    in
-    if TermEq.term_eq t0 t1'
-    then (
-      let t0_typing 
-        : Ghost.erased (RT.tot_typing (elab_env g) t0 (RT.tm_type u)) =
-        admit()
-      in
-      let eq
-        : Ghost.erased (RT.equiv (elab_env g) t0 t1)
-        = Ghost.hide (RT.Rel_sym _ _ _ related_t1_t1')
-      in
-
-      Some (Pulse.Typing.Combinators.t_equiv g e (C_Tot t0) (C_Tot t1))
-    )
-    else None
 
 open FStar.List.Tot    
 module RT = FStar.Reflection.Typing
