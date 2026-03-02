@@ -24,9 +24,9 @@ open FStarC.Syntax.Syntax
 module H = FStarC.Hash
 open FStarC.Class.Hashable
 
-val ext_hash_term (t:term) : H.hash_code
-val ext_hash_term_no_memo (t:term) : H.hash_code
-val equal_term (t0 t1:term) : bool
+val ext_hash_term (t:term) : ML H.hash_code
+val ext_hash_term_no_memo (t:term) : ML H.hash_code
+val equal_term (t0 t1:term) : ML bool
 
 (* uses ext_hash_term (with memo) *)
 instance val hashable_term : hashable term
@@ -42,8 +42,8 @@ instance val hashable_pragma     : hashable pragma
 instance val hashable_sigelt     : hashable sigelt
 
 val term_map (a:Type) : Type0
-val term_map_empty  : #a:Type -> term_map a
-val term_map_add    : #a:Type -> t:term -> v:a -> term_map a -> term_map a
-val term_map_lookup : #a:Type -> t:term -> m:term_map a -> option a
-val term_map_mem    : #a:Type -> t:term -> m:term_map a -> bool
+val term_map_empty  : #a:Type -> ML (term_map a)
+val term_map_add    : #a:Type -> t:term -> v:a -> term_map a -> ML (term_map a)
+val term_map_lookup : #a:Type -> t:term -> m:term_map a -> ML (option a)
+val term_map_mem    : #a:Type -> t:term -> m:term_map a -> ML bool
 val term_map_fold   : #a:Type -> #b:Type -> (term -> a -> b -> ML b) -> term_map a -> b -> ML b
