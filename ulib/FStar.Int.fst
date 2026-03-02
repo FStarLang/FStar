@@ -187,6 +187,10 @@ let shift_arithmetic_right_lemma_1 #n a s i = ()
 
 let shift_arithmetic_right_lemma_2 #n a s i = ()
 
+let shift_arithmetic_left_lemma_1 #n a s i = ()
+
+let shift_arithmetic_left_lemma_2 #n a s i = ()
+
 (* Rotate operators lemmas *)
 
 let rotate_left_lemma #n a s i = ()
