@@ -92,7 +92,15 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
       let rwr = RU.deep_compress rwr in // TODO: maybe this fails on uvars...
       rwr
 
-let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.term) = 
+noeq type ctxt' = {
+  ctxt: ctxt;
+  in_old: in_old:bool { in_old ==> Some? ctxt.ctxt_old };
+}
+
+let cur_ctxt c =
+  if c.in_old then Some?.v c.ctxt.ctxt_old else c.ctxt.ctxt_now
+
+let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.term) = 
   match R.inspect_ln t with
   | R.Tv_Abs b body ->
     debug g (fun _ -> [text "symb eval subterms abs 0"; pp t]);
@@ -145,7 +153,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
       match is_stateful_application g t with
       | Some _ ->
         let t = RU.mk_app_flat head args (T.range_of_term t) in
-        let t' = symb_eval_stateful_app g ctxt.ctxt_now t in
+        let t' = symb_eval_stateful_app g (cur_ctxt ctxt) t in
         true, t'
       | None ->
         if changed then
@@ -159,28 +167,23 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt) (t:R.term) : T.Tac (bool & R.ter
     | R.Tv_FVar fv, [t, _] ->
       if R.inspect_fv fv = old_lid then
         // let t = RU.mk_app_flat head args (T.range_of_term t) in
-        match is_stateful_application g t, ctxt.ctxt_old with
-        | _, None ->
+        if not (Some? ctxt.ctxt.ctxt_old) then
           T.fail_doc_at [
             text "'old' can only be used in postconditions";
           ] r
-        | None, _ ->
-          T.fail_doc_at [
-            text "'old' needs to be applied to a stateful computation, not:";
-            pp t;
-          ] r
-        | Some _, Some ctxt_old ->
-          let head, args = T.collect_app_ln t in
-          let g, changed, args = symb_eval_subterms_args g ctxt args in
-          let t = RU.mk_app_flat head args (T.range_of_term t) in
-          let t' = symb_eval_stateful_app g ctxt_old t in
-          true, t'
+        else (
+          (if ctxt.in_old then
+            warn_doc g r [
+              text "'old' only needs to be specified once";
+            ]);
+          symb_eval_subterms g { ctxt with in_old = true } t
+        )
       else
         fallback ()
     | _ ->
       fallback ()
 
-and symb_eval_subterms_args (g:env) (ctxt: ctxt) (args:list T.argv)
+and symb_eval_subterms_args (g:env) (ctxt: ctxt') (args:list T.argv)
 : T.Tac (env & bool & list T.argv)
 = T.fold_right
     (fun (arg, q) (g, changed, args) ->
@@ -219,7 +222,8 @@ let run_elim (g: env) (ctxt: slprop) : T.Tac (env & list nvar & slprop) =
   g', xs, list_as_slprop ctxt
 
 (* Adds add to the ctxt in a way that the prover will prefer it when ambiguous. *)
-let push_ctxt ctxt add = { ctxt with ctxt_now = tm_star add ctxt.ctxt_now }
+let push_ctxt (ctxt: ctxt') add =
+  { ctxt with ctxt = { ctxt.ctxt with ctxt_now = tm_star add ctxt.ctxt.ctxt_now } }
 
 let un_uinst (t: term) : R.term_view =
   match R.inspect_ln t with
@@ -282,7 +286,7 @@ let tc_term_phase1_with_type_twice g t ty =
 let or_emp (t: option slprop) : slprop =
   match t with Some t -> t | None -> tm_emp
 
-let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option slprop) =
+let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (option slprop) =
   match ts with
   | [] -> None
   | t::ts ->
@@ -336,7 +340,7 @@ let rec purify_spec_core (g: env) (ctxt: ctxt) (ts: list slprop) : T.Tac (option
       let t = T.norm_term_env (elab_env g) steps t in
       extrude g ctxt [t] ts
 
-and extrude (g: env) (ctxt: ctxt) (todo: list slprop) (ts: list slprop) : T.Tac (option slprop) =
+and extrude (g: env) (ctxt: ctxt') (todo: list slprop) (ts: list slprop) : T.Tac (option slprop) =
   match todo with
   | [] -> purify_spec_core g ctxt ts
   | t::todo ->
@@ -386,12 +390,14 @@ let run_elim_ctxt (g: env) (ctxt: ctxt) =
 
 let purify_term (g: env) (ctxt: ctxt) (t: term) : T.Tac term =
   let g', xs, ctxt = run_elim_ctxt g ctxt in
+  let ctxt = { ctxt; in_old = false } in
   let _, t = symb_eval_subterms g ctxt t in
   t
 
 let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let t = t0 in
   let g', xs, ctxt = run_elim_ctxt g ctxt in
+  let ctxt = { ctxt; in_old = false } in
   let t = purify_spec_core g' ctxt [t] |> or_emp in
   // TODO: check that xs is not free in t
   // If we call phase1 TC only once, then the universe instantiation in
