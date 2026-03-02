@@ -42,11 +42,6 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
     let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct in
     res
 
-let with_local_pre_typing (#g:env) (#pre:term)
-                          (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) n (i:option term)
-  : unit
-  = admit()
-
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
 
 let rec unrefine t : T.Tac term =
@@ -129,7 +124,6 @@ let check
         let x_tm = term_of_nvar px in
         let g_extended = extend_env g x binder.binder_ppname init_t in
         let body_pre = comp_withlocal_body_pre pre init_t x_tm init in
-        let body_pre_typing = () in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in

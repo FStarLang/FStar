@@ -53,16 +53,6 @@ let extend_post_hint
   res
 
 
-let with_local_array_pre_typing (#g:env) (#pre:term)
-  (init_t:term)
-  (init:option term)
-  (len:term)
-  (init_typing:(match init with Some init -> unit | _ -> unit))
-  (x:var { ~ (Set.mem x (dom g)) })
-  (n: ppname)
-  : unit
-  = admit()
-
 let is_annotated_type_array (t:term) : option term =
   match is_pure_app t with
   | Some (head, None, a) ->
@@ -152,7 +142,6 @@ let check
         let x_tm = term_of_nvar px in
         let g_extended = extend_env g init_t x binder.binder_ppname init in
         let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
-        let body_pre_typing = () in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in

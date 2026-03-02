@@ -31,16 +31,13 @@ assume
 val invert_forall_typing
         (g:env) (u:universe) (b:binder) (body:term)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
-  : GTot (
-    unit &
-    unit
-  )
+  : GTot unit
 
 assume
 val construct_forall_typing
         (g:env) (u:universe) (b:binder) (body:term)
         (x:var { freshv g x /\ ~ (x `Set.mem` freevars body) })
-        : GTot (unit)
+        : GTot unit
 
 let bind_t (case_c1 case_c2:comp_st -> bool) =
       (g:env) ->

@@ -523,7 +523,7 @@ let check_slprop_with_core (g:env)
   
 
 let non_informative_class_typing
-  (g:env) (u:universe) (ty:typ) (ty_typing : unit)
+  (g:env) (u:universe) (ty:typ)
   : my_erased (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u)))
   = E (magic())
 
@@ -555,7 +555,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
   : T.Tac (option (non_informative_t g u ty) & issues)
   = let goal = non_informative_class u ty in
     let r_env = elab_env g in
-    let constraint_typing = non_informative_class_typing g u ty () in
+    let constraint_typing = non_informative_class_typing g u ty in
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> Squash.return_squash tok
     in

@@ -45,8 +45,8 @@ let check_fndefn
     (d : decl{FnDefn? d.d})
     (g : stt_env{bindings g == []})
     (expected_t : option term)
-    (* Both of these unused: *)
-    (pre : term) (_pre_typing : unit)
+    (* pre is unused: *)
+    (pre : term)
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
   let g = let FnDefn {us} = d.d in push_univ_vars g us in
@@ -223,7 +223,7 @@ let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
         fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type slprop"; //fix range
 
       match d.d with
-      | FnDefn {} -> check_fndefn d g expected_t pre ()
+      | FnDefn {} -> check_fndefn d g expected_t pre
       | FnDecl {} ->
         if None? expected_t then
           check_fndecl d g

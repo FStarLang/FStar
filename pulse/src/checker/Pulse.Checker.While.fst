@@ -30,11 +30,6 @@ module RU = Pulse.RuntimeUtils
 
 let empty_env g = mk_env (fstar_env g)
 let push_empty_env_idem (g:env) : Lemma (push_env g (empty_env g) == g)[SMTPat (push_env g (empty_env g))] = admit()
-let body_typing_subst_true #g #x #post
-: unit = admit()
-let body_typing_ex #g #x #post
-: unit = admit()
-let unit_typing g : unit = admit()
 
 let inv_typing_weakening (g:env) (inv:slprop) 
 : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)})
@@ -247,7 +242,7 @@ let check_while
       assert g1'' `env_extends` g1';
 
 
-      let loop_ensures = Pulse.JoinComp.infer_post' g0 g1'' u0 tm_unit y () loop_ensures () in
+      let loop_ensures = Pulse.JoinComp.infer_post' g0 g1'' u0 tm_unit y loop_ensures in
       let loop_ensures = subst_loop_requires_marker_with_true loop_ensures.post in
       let loop_ensures = open_term' loop_ensures unit_const 0 in
 
@@ -282,7 +277,6 @@ let check_while
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
 
-  let body_pre_typing = () in
   let r_body = 
     check 
       (push_context "check_while_body" body.range g2) 

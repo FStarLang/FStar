@@ -368,7 +368,7 @@ let check_renaming
 #restart-solver
 #push-options "--z3rlimit_factor 2 --fuel 0 --ifuel 1"
 let rec peel_binders k (ex: slprop) pre r
-    (g:env) frame (bs: list binder) (t:term) (t_typ: unit) :
+    (g:env) frame (bs: list binder) (t:term) :
     T.Tac (g':env {env_extends g' g} & t': slprop & xs: list (universe & typ & nvar) &
       continuation_elaborator
         g (frame `tm_star` t)
@@ -382,8 +382,7 @@ let rec peel_binders k (ex: slprop) pre r
       let ty = mk_erased u b.binder_ty in
       let g' = push_binding g (snd x) (fst x) ty in
       let t' = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
-      let t'_typ : unit = () in
-      let (|g'', t'', bs', k'|) = peel_binders k ex pre r g' frame bs t' t'_typ in
+      let (|g'', t'', bs', k'|) = peel_binders k ex pre r g' frame bs t' in
       (| g'', t'', (u,b.binder_ty,x)::bs', k_elab_trans (Pulse.Checker.Prover.elim_exists g frame u b body x g') k' |)
     | _ -> 
       fail_doc g (Some r) [
@@ -432,7 +431,7 @@ let check_wild
       let k = List.Tot.length bs in
       let frame = list_as_slprop rest in
 
-      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex () in
+      let (|g', ex', bs, k|) = peel_binders k ex pre st.range g frame bs ex in
       let body = open_st_term_with_reveals body bs in
 
       let (| x'', g'', t'', ctxt'', k' |) =

@@ -63,20 +63,6 @@ let post_typing_as_abstraction
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
   = admit()
 
-(* This should be in reflection typing *)
-let fstar_equiv_preserves_typing
-    (g:R.env) (t1 : R.term) (typ : R.term) (t2 : R.term)
-    (eq : squash (T.equiv_token g t1 t2))
-    (t1_typing : RT.tot_typing g t1 typ)
-  : RT.tot_typing g t2 typ
-  = admit()
-
-let equiv_preserves_typing
-    (g:env) (t1 : term) (typ : term) (t2 : term)
-    (eq : squash (T.equiv_token (elab_env g) t1 t2))
-  : unit
-  = ()
-
 let check_effect_annot (g:env) (e:effect_annot)
   : T.Tac (e':effect_annot { effect_annot_labels_match e e' }) =
   let check_opens opens : T.Tac term =
@@ -295,24 +281,6 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
-#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
-
-let st_comp_typing_with_post_hint 
-      (#g:env) (#ctxt:_)
-      (post_hint:post_hint_opt g { PostHint? post_hint })
-      (c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint })
-: unit
-= let st = st_comp_of_comp c in
-  let PostHint ph = post_hint in
-  let x = RU.magic () in //fresh g in
-  assume (fresh_wrt x g (freevars ph.post));
-
-
-  assert (st.res == ph.ret_ty);
-  assert (st.post == ph.post);
-  ()
-#pop-options
-
 let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
   (e1:st_term)
   (c1:comp { C_Tot? c1 })
@@ -471,7 +439,6 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
     | _ -> () in
     
   assert (g' `env_extends` g);
-  let u_of_1_g' : unit = () in
   assert (~ (x `Set.mem` freevars (comp_post c1)));
   (| x, g', (comp_u c1, comp_res c1), ctxt', k |)
 #pop-options
@@ -570,13 +537,6 @@ let is_stateful_application (g:env) (e:term)
       | Some _ -> Some (as_stateful_application e head args)
   )
   | _ -> None
-
-let apply_conversion
-      (#g:env) (#e:term) (#eff:FStar.Tactics.V2.tot_or_ghost) (#t0:term)
-      (#t1:term)
-      (eq:Ghost.erased (RT.related (elab_env g) t0 RT.R_Eq t1))
-  : unit
-  = ()
 
 open FStar.List.Tot    
 module RT = FStar.Reflection.Typing

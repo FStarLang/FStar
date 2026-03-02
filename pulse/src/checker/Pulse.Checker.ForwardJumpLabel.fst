@@ -71,7 +71,6 @@ let check
     } in
     let lbl_x = fresh g in
     let g' = push_goto g lbl_x lbl lbl_c in
-    let pre_typing': unit = () in
     let post_hint' : post_hint_opt g' =
       assume post_hint_for_env_p g' post;
       PostHint post in

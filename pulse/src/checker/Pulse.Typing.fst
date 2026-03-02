@@ -495,9 +495,6 @@ let tm_inames_subset (inames1 inames2 : term) : term =
   wr (R.mk_e_app join [inames1; inames2])
      (T.range_of_term inames1)
 
-let tm_inames_subset_typing (g:env) (inames1 inames2 : term) : unit =
-  ()
-
 let prop_validity (g:env) (t:term) =
   FTB.prop_validity_token (elab_env g) t
 

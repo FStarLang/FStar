@@ -104,8 +104,8 @@ let rec bindings_var_dom : env_bindings -> Set.set var = function
 let var_dom (g: env) : Set.set var = bindings_var_dom (bindings g)
 
 let infer_post' (g:env) (g':env { g' `env_extends` g })
-  (u:universe) (t:typ) (x: var { lookup g' x == Some t }) (t_typ: unit)
-  (post:term) (post_typing: unit)
+  (u:universe) (t:typ) (x: var { lookup g' x == Some t })
+  (post:term)
 =
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
   let (| g1, post, _ |) = Pulse.Checker.Prover.elim_exists_and_pure #g' #post in
@@ -392,14 +392,12 @@ let rec join_comps
   (e_else:st_term)
   (c_else:comp_st)
   (post:post_hint_t)
-  : T.TacH (c:comp_st &
-          unit &
-          unit)
+  : T.TacH comp_st
          (requires
             comp_post_matches_hint c_then (PostHint post) /\
             comp_post_matches_hint c_else (PostHint post) /\
             comp_pre c_then == comp_pre c_else)
-         (ensures fun (| c, _, _ |) ->
+         (ensures fun c ->
            st_comp_of_comp c == st_comp_of_comp c_then /\
            comp_post_matches_hint c (PostHint post))
 = let g = g_then in
@@ -410,9 +408,9 @@ let rec join_comps
     let c = C_STAtomic inames obs st in
 
 
-    (| c, (), () |)
+    c
   | C_STGhost _ _, C_STGhost _ _
-  | C_ST _, C_ST _ -> (| c_then, (), () |)
+  | C_ST _, C_ST _ -> c_then
 
   | _ ->
     assert (EffectAnnotAtomicOrGhost? post.effect_annot);

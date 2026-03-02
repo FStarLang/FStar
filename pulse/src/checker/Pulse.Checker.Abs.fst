@@ -410,13 +410,6 @@ let maybe_rewrite_body_typing
               (show c)
               (show (C_Tot t)));
           let sq : squash (RT.equiv_token (elab_env g) t t') = () in
-          let t'_typing : unit =
-            (* t is equiv to t', and t has universe t. *)
-            magic ()
-          in
-          let tok' : unit =
-            ()
-          in
           C_Tot t
     )
 

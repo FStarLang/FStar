@@ -27,11 +27,6 @@ open Pulse.Checker.Prover
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 
-let slprop_as_list_typing (#g:env) (#p:term)
-  (x:term { List.Tot.memP x (slprop_as_list p) })
-  : unit
-  = assume false; ()
-
 let terms_to_string (t:list term)
   : T.Tac string 
   = String.concat "\n" (T.map Pulse.Syntax.Printer.term_to_string t)
