@@ -51,6 +51,8 @@ let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 let shift_arithmetic_right a s = Mk (shift_arithmetic_right (v a) (UInt32.v s))
 
+let shift_arithmetic_left a s = Mk (shift_arithmetic_left (v a) (UInt32.v s))
+
 let rotate_right a s = Mk (rotate_right (v a) (UInt32.v s))
 
 let rotate_left a s = Mk (rotate_left (v a) (UInt32.v s))

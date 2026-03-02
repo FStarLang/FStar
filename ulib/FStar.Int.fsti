@@ -399,6 +399,13 @@ let shift_right (#n:pos) (a:int_t n{0 <= a}) (s:nat) : Tot (int_t n) =
 let shift_arithmetic_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
   from_vec (shift_arithmetic_right_vec #n (to_vec #n a) s)
 
+(** Shift left on the two's complement representation.
+    Unlike [shift_left], this operates on any signed integer (including negative values).
+    The result is the same bitwise operation: shift bits left and fill with zeroes.
+    This matches the semantics of [<<] on signed integers in C++ and Rust. *)
+let shift_arithmetic_left (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
+  from_vec (shift_left_vec #n (to_vec #n a) s)
+
 (* Rotate operators *)
 
 (** Rotate left.
@@ -448,6 +455,16 @@ val shift_arithmetic_right_lemma_2: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n 
   Lemma (requires True)
         (ensures (nth (shift_arithmetic_right #n a s) i = nth #n a (i - s)))
 	[SMTPat (nth (shift_arithmetic_right #n a s) i)]
+
+val shift_arithmetic_left_lemma_1: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n && i >= n - s} ->
+  Lemma (requires True)
+	(ensures (nth (shift_arithmetic_left #n a s) i = false))
+	[SMTPat (nth (shift_arithmetic_left #n a s) i)]
+
+val shift_arithmetic_left_lemma_2: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n && i < n - s} ->
+  Lemma (requires True)
+        (ensures (nth (shift_arithmetic_left #n a s) i = nth #n a (i + s)))
+	[SMTPat (nth (shift_arithmetic_left #n a s) i)]
 
 (* Rotate operators lemmas *)
 val rotate_left_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
