@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Tests.Norm
-#push-options "--MLish --MLish_effect FStarC.Effect"
 //Normalization tests
 
 open FStarC
@@ -22,17 +21,11 @@ open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module U = FStarC.Syntax.Util
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module Const = FStarC.Parser.Const
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module BU = FStarC.Util
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module N = FStarC.TypeChecker.Normalize
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module Env = FStarC.TypeChecker.Env
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Ident
 open FStarC.Range
 open FStarC.Tests.Util
@@ -42,7 +35,7 @@ open FStarC.Class.Show
 
 (* A big chunk of this module is thunkued to not incur in a top-level effect. *)
 
-let run_all () =
+let run_all () : ML unit =
   let b = mk_binder in
   let id     = pars "fun x -> x" in
   let apply  = pars "fun f x -> f x" in
@@ -56,13 +49,13 @@ let run_all () =
   let pred   = pars "fun n f x -> n (fun g h -> h (g f)) (fun y -> x) (fun y -> y)" in
   let mul    = pars "fun m n f -> m (n f)" in
 
-  let rec encode n =
+  let rec encode n : ML term =
       if n = 0 then z
       else app succ [encode (n - 1)]
   in
   let minus m n = app n [pred; m] in
-  let let_ x e e' : term = app (U.abs [b x] e' None) [e] in
-  let mk_let x e e' : term =
+  let let_ x e e' : ML term = app (U.abs [b x] e' None) [e] in
+  let mk_let x e e' : ML term =
       let e' = FStarC.Syntax.Subst.subst [NM(x, 0)] e' in
       mk (Tm_let {lbs=(false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]); body=e'})
                             dummyRange
@@ -104,8 +97,8 @@ let run_all () =
                 lbattrs=[]; lbpos=dummyRange} in
       mk (Tm_let {lbs=(true, [lb]); body= subst [NM(minus, 0)] (app (nm minus) [t1; t2])}) dummyRange
   in
-  let encode_nat n =
-      let rec aux out n =
+  let encode_nat n : ML _ =
+      let rec aux out n : ML _ =
           if n=0 then out
           else aux (snat out) (n - 1) in
       aux znat n
@@ -264,7 +257,7 @@ let run_all () =
   in
 
 
-  let run_either i r expected normalizer =
+  let run_either i r expected (normalizer: _ -> _ -> ML _) : ML unit =
   //    force_term r;
       Format.print1 "%s: ... \n\n" (show i);
       let tcenv = Pars.init() in
@@ -311,7 +304,7 @@ let run_all () =
     (i, snd (FStarC.Util.return_execution_time nbe))
   in
 
-  let run_tests tests (run : _ -> _ -> _ -> 'a) : list 'a =
+  let run_tests tests (run : _ -> _ -> _ -> ML 'a) : ML (list 'a) =
     let l = List.map (function (no, test, res) -> run no test res) tests in
     l
   in

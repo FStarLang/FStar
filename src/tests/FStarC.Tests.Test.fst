@@ -14,23 +14,19 @@
    limitations under the License.
 *)
 module FStarC.Tests.Test
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Errors
 module BU = FStarC.Util
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module O = FStarC.Options
-#push-options "--MLish --MLish_effect FStarC.Effect"
 module G = FStarC.Getopt
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Format
 open FStarC.Class.Show
 
 open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
 
-let handle_error e =
+let handle_error e : ML unit =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e
     else begin
@@ -43,7 +39,7 @@ let handle_error e =
     FStarC.Errors.report_all () |> ignore;
     ()
 
-let main () =
+let main () : ML unit =
     Format.print_string "Initializing tests...\n";
     try
         let res, fs = O.parse_cmd_line () in
