@@ -47,13 +47,13 @@ type foundname =
   | Eff_name  of sigelt & lident
 
 val parsing_data_for_scope (e:env) : ML (list FStarC.Parser.Dep.parsing_data_elt)
-val with_restored_scope (e:env) (f: env -> 'a & env) : ML ('a & env)
+val with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env)
 
 instance val showable_env : showable env
 val mk_dsenv_hooks
-  (open_hook:env -> open_module_or_namespace -> unit)
-  (include_hook:env -> lident -> unit)
-  (module_abbrev_hook:env -> ident -> lident -> unit)
+  (open_hook:env -> open_module_or_namespace -> ML unit)
+  (include_hook:env -> lident -> ML unit)
+  (module_abbrev_hook:env -> ident -> lident -> ML unit)
   : dsenv_hooks
 
 val set_iface: env -> bool -> env

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Options
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 open FStarC.BaseTypes
 open FStarC
@@ -37,8 +36,6 @@ module List = FStarC.List
 logs an issue. Cannot do it here due to circular deps. *)
 let check_include_dir = mk_ref (fun (s:string) -> ())
 
-exception NotSettable of string
-
 module Ext = FStarC.Options.Ext
 
 let debug_embedding = mk_ref false
@@ -57,9 +54,9 @@ let as_string = function
 let as_list' = function
   | List ts -> ts
   | _ -> failwith "Impos: expected List"
-let as_list as_t x =
+let as_list (as_t: option_val -> ML 'a) x : ML (list 'a) =
   as_list' x |> List.map as_t
-let as_option as_t = function
+let as_option (as_t: option_val -> ML 'a) : option_val -> ML (option 'a) = function
   | Unset -> None
   | v -> Some (as_t v)
 let as_comma_string_list = function
@@ -103,10 +100,10 @@ let history1 =
 
 let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
 
-let snapshot_all () : history1 =
+let snapshot_all () : ML history1 =
   (Debug.snapshot (), Ext.save (), !Stats.enabled, !fstar_options)
 
-let restore_all (h : history1) : unit =
+let restore_all (h : history1) : ML unit =
   let dbg, ext, stats, opts = h in
   Debug.restore dbg;
   Ext.restore ext;
@@ -117,7 +114,7 @@ let restore_all (h : history1) : unit =
 let history : ref (list (list history1)) =
   mk_ref [] // IRRELEVANT: see clear() below
 
-let peek () = !fstar_options
+let peek () : ML optionstate = !fstar_options
 
 let internal_push () =
   let lev1::rest = !history in
@@ -353,7 +350,7 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
-let rec option_val_to_string (v:option_val) : string =
+let rec option_val_to_string (v:option_val) : ML string =
   match v with
   | Bool b -> "Bool " ^ show b
   | String s -> "String " ^ show s
@@ -366,7 +363,7 @@ instance showable_option_val : showable option_val = {
   show = option_val_to_string;
 }
 
-let rec eq_option_val (v1 v2 : option_val) : bool =
+let rec eq_option_val (v1 v2 : option_val) : ML bool =
   match v1, v2 with
   | Bool x1, Bool x2
   | String x1, String x2
@@ -382,7 +379,7 @@ instance deq_option_val : deq option_val = {
 }
 
 let rec list_try_find #a #b {| deq a |} (k : a) (l : list (a & b))
-: option b
+: ML (option b)
 =
   match l with
   | [] -> None
@@ -405,7 +402,7 @@ let show_options () =
     else
       return (k, v)
   in
-  let rec show_optionval v =
+  let rec show_optionval v : ML string =
     match v with
     | String s -> "\"" ^ s ^ "\"" // FIXME: proper escape
     | Bool b -> show b
@@ -456,7 +453,7 @@ let set_verification_options o =
   ] in
   List.iter (fun k -> set_option k (psmap_try_find o k |> Some?.v)) verifopts
 
-let lookup_opt s c =
+let lookup_opt s (c: option_val -> ML 'a) : ML 'a =
   c (get_option s)
 
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
@@ -608,7 +605,7 @@ let display_version () =
   Format.print_string (Format.fmt6 "F* %s\nplatform=%s\nsystem=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform (show FStarC.Platform.system) !_compiler !_date !_commit)
 
-let bold_doc (d:Pprint.document) : Pprint.document =
+let bold_doc (d:Pprint.document) : ML Pprint.document =
   let open FStarC.Pprint in
   (* very hacky, this would make no sense for documents going elsewhere
   other than stdout *)
@@ -620,7 +617,7 @@ let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Format.print_string (s ^ "\n"))
 
-let usage_for (o : opt & Pprint.document) : Pprint.document =
+let usage_for (o : opt & Pprint.document) : ML Pprint.document =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let ((short, flag, p), explain) = o in
@@ -642,7 +639,7 @@ let usage_for (o : opt & Pprint.document) : Pprint.document =
   group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
   group (blank 4 ^^ align explain) ^^ hardline
 
-let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
+let display_usage_aux (specs : list (opt & Pprint.document)) : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -653,7 +650,7 @@ let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   in
   Format.print_string (pretty_string (float_of_string "1.0") 80 d)
 
-let mk_spec (o : char & string & opt_variant option_val) : opt =
+let mk_spec (o : char & string & opt_variant option_val) : ML opt =
     let ns, name, arg = o in
     let arg =
         match arg with
@@ -695,7 +692,7 @@ function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
 "krml"]) "OCaml"`` and returns ``String "OCaml"``.
 
 `opt_name` is only used in error messages. **)
-let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : option_val =
+let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : ML option_val =
   try
     match typ with
     | Const c -> c
@@ -736,7 +733,7 @@ let rec desc_of_opt_type typ : option string =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let arg_spec_of_opt_type opt_name typ : opt_variant option_val =
+let arg_spec_of_opt_type opt_name typ : ML (opt_variant option_val) =
   let wrap s = "<" ^ s ^ ">" in
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
@@ -757,7 +754,7 @@ let abort_counter : ref int =
     mk_ref 0
 
 let interp_quake_arg (s:string)
-            : int & int & bool =
+            : ML (int & int & bool) =
            (* min,  max,  keep_going *)
   let ios = int_of_string in
   match split s "/" with
@@ -786,7 +783,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
+let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.document)) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -961,7 +958,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     "ext",
     PostProcessed (
       (fun o ->
-        let parse_ext (s:string) : list (string & string) =
+        let parse_ext (s:string) : ML (list (string & string)) =
           let exts = Util.split s ";" in
           List.collect (fun s ->
             match Util.split s "=" with
@@ -1728,7 +1725,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
 
-let specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
+let specs (warn_unsafe:bool) : ML (list (FStarC.Getopt.opt & Pprint.document)) =
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
@@ -1850,7 +1847,7 @@ let settable_specs =
       ((c, x, h'), doc)
   )
 
-let help_for_option (s:string) : option Pprint.document =
+let help_for_option (s:string) : ML (option Pprint.document) =
   match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
   | [] -> None
   | o::_ -> Some (usage_for o) // NB: there should be only one
@@ -1892,7 +1889,7 @@ let file_list_ : ref (list string) = mk_ref []
 *)
 
 
-let rec parse_filename_arg specs enable_filenames arg =
+let rec parse_filename_arg specs enable_filenames arg : ML parse_cmdline_res =
   if Util.starts_with arg "@"
   then begin
     // read and parse a response file
@@ -1944,7 +1941,7 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map String old_verify_module));
     Success
 
-let with_restored_cmd_line_options (f:unit -> 'a) : 'a =
+let with_restored_cmd_line_options (f:unit -> ML 'a) : ML 'a =
   let snap = snapshot_all () in
   let h = !history in
   let _ = restore_cmd_line_options true in
@@ -1961,7 +1958,8 @@ let should_check m =
   List.contains (String.lowercase m) l
 
 let should_verify m =
-  not (get_lax ()) && should_check m
+  if get_lax () then false
+  else should_check m
 
 let should_check_file fn =
     should_check (module_name_of_file_name fn)
@@ -1985,9 +1983,9 @@ let custom_prims () = get_prims()
 //   --already_cached
 let path_of_text text = String.split ['.'] text
 
-let parse_settings ns : list (list string & bool) =
+let parse_settings ns : ML (list (list string & bool)) =
     let cache = smap_create 31 in
-    let with_cache f s =
+    let with_cache (f: string -> ML (list (list string & bool))) s : ML (list (list string & bool)) =
       match smap_try_find cache s with
       | Some s -> s
       | None ->
@@ -2098,8 +2096,9 @@ let message_format               () =
 let force                        () = get_force ()
 let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
-let hint_info                    () = get_hint_info                   ()
-                                    || get_query_stats                ()
+let hint_info                    () = if get_hint_info ()
+                                     then true
+                                     else get_query_stats                ()
 let hint_dir                     () = get_hint_dir                    ()
 let hint_file                    () = get_hint_file                   ()
 let hint_file_for_src src_filename =
@@ -2136,8 +2135,9 @@ let load_cmxs                    () = get_load_cmxs                   ()
 let log_queries                  () = get_log_queries                 ()
 let log_failing_queries          () = get_log_failing_queries         ()
 let keep_query_captions          () =
-    get_keep_query_captions ()
-    && (log_queries () || log_failing_queries ())
+    if get_keep_query_captions ()
+    then (if log_queries () then true else log_failing_queries ())
+    else false
 
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
@@ -2167,7 +2167,7 @@ let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_expected_failures      () = get_print_expected_failures     ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = get_prn () || get_print_full_names()
+let print_real_names             () = if get_prn () then true else get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let proof_recovery               () = get_proof_recovery              ()
@@ -2249,7 +2249,7 @@ let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool
 let debug_all_modules            () = lookup_opt "debug_all_modules" as_bool
 
-let with_saved_options f =
+let with_saved_options (f: unit -> ML 'a) : ML 'a =
   // take some care to not mess up the stack on errors
   // (unless we're trying to track down an error)
   // TODO: This assumes `f` does not mess with the stack!
@@ -2308,15 +2308,15 @@ let print_pes pes =
              | Some s -> s)
 
 let find_setting_for_target tgt (s:list (codegen_t & string))
-  : option string
+  : ML (option string)
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
     | _ -> None
 
 let extract_settings
-  : unit -> option parsed_extract_setting
+  : unit -> ML (option parsed_extract_setting)
   = let memo:ref (option parsed_extract_setting & bool) = mk_ref (None, false) in
-    let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
+    let merge_parsed_extract_settings p0 p1 : ML parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with
         | None, None -> None
@@ -2403,7 +2403,7 @@ let extract_settings
              memo := (Some pes, true);
              Some pes
 
-let should_extract (m:string) (tgt:codegen_t) : bool =
+let should_extract (m:string) (tgt:codegen_t) : ML bool =
     let m = String.lowercase m in
     if m = "prims" then false
     else
@@ -2439,8 +2439,8 @@ let should_extract (m:string) (tgt:codegen_t) : bool =
             | [] -> false
             | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
         in
-        not (no_extract m) &&
-        (match get_extract_namespace (), get_extract_module() with
+        if no_extract m then false
+        else (match get_extract_namespace (), get_extract_module() with
         | [], [] ->
           // Neither is set; extract only files given in the command line.
           // Except for krml: there we retain the behavior of extracting everything
@@ -2448,13 +2448,14 @@ let should_extract (m:string) (tgt:codegen_t) : bool =
           if tgt = Krml
           then true
           else should_check m
-        | _ -> should_extract_namespace m || should_extract_module m)
+        | _ -> if should_extract_namespace m then true else should_extract_module m)
 
 let should_be_already_cached m =
   (* should_check is true for files in the command line,
   we exclude those from this check since they were explicitly
   requested. *)
-  not (should_check m) && (
+  if should_check m then false
+  else (
     match get_already_cached() with
     | None -> false
     | Some already_cached_setting ->
@@ -2468,16 +2469,20 @@ let profile_enabled modul_opt phase =
     matches_namespace_filter_opt phase (get_profile_component())
 
   | Some modul ->
-    (matches_namespace_filter_opt modul (get_profile())
-     && matches_namespace_filter_opt phase (get_profile_component()))
+    if matches_namespace_filter_opt modul (get_profile())
+    then if matches_namespace_filter_opt phase (get_profile_component()) then true
+         else false
+    else
 
     // A special case for --timing: this option should print the time
     // taken for each top-level decl, so we enable the profiler only for
     // the FStarC.TypeChecker.process_one_decl phase, and only for those
     // modules given in the command line.
-    || (timing ()
-        && phase = "FStarC.TypeChecker.Tc.process_one_decl"
-        && should_check modul)
+    if timing ()
+    then (if phase = "FStarC.TypeChecker.Tc.process_one_decl"
+          then should_check modul
+          else false)
+    else false
 
 exception File_argument of string
 
@@ -2532,7 +2537,7 @@ let get_vconfig () =
   in
   vcfg
 
-let set_vconfig (vcfg:vconfig) : unit =
+let set_vconfig (vcfg:vconfig) : ML unit =
   let option_as (tag : 'a -> option_val) (o : option 'a) : option_val =
     match o with
     | None -> Unset

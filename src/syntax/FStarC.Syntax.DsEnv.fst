@@ -169,9 +169,9 @@ type env = {
   no_prelude:           bool;                             (* whether the module was marked no_prelude *)
 }
 and dsenv_hooks =
-  { ds_push_open_hook : env -> open_module_or_namespace -> unit;
-    ds_push_include_hook : env -> lident -> unit;
-    ds_push_module_abbrev_hook : env -> ident -> lident -> unit }
+  { ds_push_open_hook : env -> open_module_or_namespace -> ML unit;
+    ds_push_include_hook : env -> lident -> ML unit;
+    ds_push_module_abbrev_hook : env -> ident -> lident -> ML unit }
 
 let parsing_data_for_scope (e:env) : ML (list FStarC.Parser.Dep.parsing_data_elt) =
   let curmod_scope =
@@ -193,7 +193,7 @@ let parsing_data_for_scope (e:env) : ML (list FStarC.Parser.Dep.parsing_data_elt
   in
   List.collect scope_mod_as_parsing_data scope_mods
 
-let with_restored_scope (e:env) (f: env -> 'a & env) : ML ('a & env) =
+let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
   let res, e1 = f e in
   res, 
   {e1 with 
