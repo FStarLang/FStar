@@ -754,10 +754,7 @@ let is_mkey (t:R.term) : bool =
   | _ -> false
 
 let binder_is_mkey (b:R.binder) : bool =
-  if List.Tot.existsb is_mkey (R.inspect_binder b).attrs then true else
-  // Treat type arguments as mkeys, as F* will happily unify terms of different types.
-  if R.Tv_Type? (R.inspect_ln (R.inspect_binder b).sort) then true else
-  false
+  List.Tot.existsb is_mkey (R.inspect_binder b).attrs
 
 let binder_is_pred (b:R.binder) : option nat =
   let doms, c = R.collect_arr_ln (R.inspect_binder b).sort in

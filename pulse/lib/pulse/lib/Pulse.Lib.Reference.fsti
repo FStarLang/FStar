@@ -31,8 +31,8 @@ val null #a : ref a
 
 val is_null #a (r : ref a) : b:bool{b <==> r == null #a}
 
-val pts_to_uninit (#a: Type u#a) ([@@@mkey]r: ref a) : slprop
-val pts_to (#a:Type u#a) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
+val pts_to_uninit (#[@@@mkey]a: Type u#a) ([@@@mkey]r: ref a) : slprop
+val pts_to (#[@@@mkey]a:Type u#a) ([@@@mkey]r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
 instance val is_send_pts_to #a r #p n : is_send (pts_to #a r #p n)
 instance val is_send_pts_to_uninit #a r : is_send (pts_to_uninit #a r)
