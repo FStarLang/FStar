@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Tactics.V1.Basic
-#push-options "--MLish --MLish_effect FStarC.Effect"
 
 (* This module implements the primitives in
  * ulib/FStarC.Tactics.Builtins. It would be named
@@ -25,6 +24,7 @@ module FStarC.Tactics.V1.Basic
  * annoyances too). *)
 
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.Reflection.V1.Data
@@ -35,70 +35,71 @@ module Range  = FStarC.Range
 
 (* Internal utilities *)
 val goal_typedness_deps : goal -> list ctx_uvar
-
-(* Helper *)
-val focus                  : tac 'a -> tac 'a
+val mark_goal_implicit_already_checked : goal -> ML unit
+val goal_with_type : goal -> typ -> ML goal
 
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStarC.Tactics.Builtins.fst` *)
 
-val top_env                : unit -> tac env
-val fresh                  : unit -> tac int
-val refine_intro           : unit -> tac unit
-val tc                     : env -> term -> tac typ
-val tcc                    : env -> term -> tac comp
-val unshelve               : term -> tac unit
-val unquote                : typ -> term -> tac term
-val norm                   : list NormSteps.norm_step -> tac unit
-val norm_term_env          : env -> list NormSteps.norm_step -> term -> tac term
-val norm_binder_type       : list NormSteps.norm_step -> binder -> tac unit
-val intro                  : unit -> tac binder
-val intro_rec              : unit -> tac (binder & binder)
-val rename_to              : binder -> string -> tac binder
-val revert                 : unit -> tac unit
-val binder_retype          : binder -> tac unit
-val clear_top              : unit -> tac unit
-val clear                  : binder -> tac unit
-val rewrite                : binder -> tac unit
-val t_exact                : bool -> bool -> term -> tac unit
-val t_apply                : bool -> bool -> bool -> term -> tac unit
-val t_apply_lemma          : bool -> bool -> term -> tac unit
 val print                  : string -> tac unit
 val debugging              : unit -> tac bool
 val dump                   : string -> tac unit
 val dump_all               : bool -> string -> tac unit
 val dump_uvars_of          : goal -> string -> tac unit
-val t_trefl                : (*allow_guards:*)bool -> tac unit
-val dup                    : unit -> tac unit
+val get_guard_policy       : unit -> tac guard_policy
+val set_guard_policy       : guard_policy -> tac unit
+val tadmit_t               : term -> tac unit
+val fresh                  : unit -> tac int
+val curms                  : unit -> tac int
+val tcc                    : env -> term -> tac comp
+val tc                     : env -> term -> tac typ
+
+(* Helper *)
+val focus                  : tac 'a -> tac 'a
+
+val intro                  : unit -> tac binder
+val intro_rec              : unit -> tac (binder & binder)
+val norm                   : list NormSteps.norm_step -> tac unit
+val norm_term_env          : env -> list NormSteps.norm_step -> term -> tac term
+val refine_intro           : unit -> tac unit
+val t_exact                : bool -> bool -> term -> tac unit
+val t_apply                : bool -> bool -> bool -> term -> tac unit
+val t_apply_lemma          : bool -> bool -> term -> tac unit
+val rewrite                : binder -> tac unit
+val rename_to              : binder -> string -> tac binder
+val binder_retype          : binder -> tac unit
+val norm_binder_type       : list NormSteps.norm_step -> binder -> tac unit
+val revert                 : unit -> tac unit
+val clear                  : binder -> tac unit
+val clear_top              : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv & int))
-val gather_explicit_guards_for_resolved_goals : unit -> tac unit
+val t_trefl                : (*allow_guards:*)bool -> tac unit
+val dup                    : unit -> tac unit
+val join                   : unit -> tac unit
 val set_options            : string -> tac unit
+val top_env                : unit -> tac env
+val lax_on                 : unit -> tac bool
+val unquote                : typ -> term -> tac term
 val uvar_env               : env -> option typ -> tac term
 val ghost_uvar_env         : env -> typ -> tac term
 val fresh_universe_uvar    : unit -> tac term
+val unshelve               : term -> tac unit
+val match_env              : env -> term -> term -> tac bool
 val unify_env              : env -> term -> term -> tac bool
 val unify_guard_env        : env -> term -> term -> tac bool
-val match_env              : env -> term -> term -> tac bool
 val launch_process         : string -> list string -> string -> tac string
 val fresh_bv_named         : string -> tac bv
 val change                 : typ -> tac unit
-val get_guard_policy       : unit -> tac guard_policy
-val set_guard_policy       : guard_policy -> tac unit
-val lax_on                 : unit -> tac bool
-val tadmit_t               : term -> tac unit
+val t_destruct             : term -> tac (list (fv & int))
+val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val inspect                : term -> tac term_view
 val pack                   : term_view -> tac term
 val pack_curried           : term_view -> tac term
-val join                   : unit -> tac unit
 val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
-val curms                  : unit -> tac int
 val set_urgency            : int -> tac unit
 val t_commute_applied_match : unit -> tac unit
-val goal_with_type : goal -> typ -> goal
-val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
 val push_bv_dsenv          : env -> string -> tac (env & bv)
 val term_to_string         : term -> tac string
