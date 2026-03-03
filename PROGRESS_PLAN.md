@@ -144,6 +144,28 @@ All `#push-options "--MLish --MLish_effect FStarC.Effect"` pragmas have been rem
 - [x] **Phase 9k**: Remove pragma from all remaining large files (Syntax.Syntax, Options, Env, Rel, TcTerm, ToSyntax, etc.)
 - [x] **Phase 9l**: Fix final cascading failures (tts_f, erase_univs, universe_of_binders, etc.)
 
+### Phase 9.5: Fix Runtime Crashes from Eager Evaluation — COMPLETE ✅
+
+Without `--MLish`, `&&`/`||` extract to OCaml with eager argument evaluation instead of short-circuit. Custom `mland`/`mlor`/`&.`/`|.` operators also evaluate arguments eagerly since they're normal function calls. This causes crashes when the second argument assumes the first is true/false.
+
+**Commit `71f4673982`** — "Fix runtime crashes from eager evaluation after --MLish removal"
+
+**Fixes applied (23 files):**
+- [x] Replace `mland`/`mlor` with `if-then-else` at call sites in TcTerm, TcEffect, Util, Rel
+- [x] Fix `binders_eq`: guard `forall2` with length check via `if-then-else`
+- [x] Fix `next_prob`: replace `|.` with pattern match to avoid `Option.must` crash on `None`
+- [x] Fix `is_smt_reifiable_effect`: use `if-then-else` instead of `let+&&`
+- [x] Add missing `| _ -> None` fallthrough in `MachineInts.e_machint`
+- [x] Remove `instance` from `e_tref`/`e_tref_nbe` (typeclass resolution fix)
+- [x] Restore exception declarations in `Errors.fst`
+- [x] Restore operator declarations (`>>=`, `let!`, `let?`) in `.fst` files
+- [x] Handle `Exception` and `TopLevelLet` in non-MLish interleaver
+- [x] Replace `BU.for_all` with `List.Tot.for_all`, `mland`/`mlor` with native `&&` in `ToSyntax.fst`
+- [x] Fix `EncodeTerm` helper signatures for non-MLish extraction
+- [x] Disable context pruning for `FStar.FiniteMap.Base` (pruning graph differs between `--MLish` and non-MLish extraction, causing FiniteSet.Ambient facts to be unreachable)
+
+**Context pruning issue**: The eager `&&` evaluation in the SMT encoder produces slightly different declaration shapes, which changes the pruning dependency graph. For `FStar.FiniteMap.Base`, this disconnects FiniteSet fact equations from the reachability roots, causing verification failure. Fixed with `#push-options "--ext context_pruning=false --z3rlimit 20"` in that file.
+
 ### Phase 10: Remove --MLish Compiler Support — TODO
 - [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated, config.json no longer needs `--MLish`
 - [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Dead code
