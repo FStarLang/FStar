@@ -231,9 +231,8 @@ let rec prefix_with_iface_decls
            //impl is a regular let; need the interface decl to provide the val
            iface_tl, [iface_hd; impl]
        ) else (
-         //implementation doesn't define x; keep looking
-         let iface, ds = prefix_with_iface_decls iface_tl impl in
-         iface, iface_hd::ds
+         //implementation doesn't define x; it's private, keep iface intact for later
+         iface, [qualify_karamel_private impl]
        )
 
      | Pragma _ ->
