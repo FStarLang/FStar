@@ -162,9 +162,28 @@ Without `--MLish`, `&&`/`||` extract to OCaml with eager argument evaluation ins
 - [x] Handle `Exception` and `TopLevelLet` in non-MLish interleaver
 - [x] Replace `BU.for_all` with `List.Tot.for_all`, `mland`/`mlor` with native `&&` in `ToSyntax.fst`
 - [x] Fix `EncodeTerm` helper signatures for non-MLish extraction
-- [x] Disable context pruning for `FStar.FiniteMap.Base` (pruning graph differs between `--MLish` and non-MLish extraction, causing FiniteSet.Ambient facts to be unreachable)
 
-**Context pruning issue**: The eager `&&` evaluation in the SMT encoder produces slightly different declaration shapes, which changes the pruning dependency graph. For `FStar.FiniteMap.Base`, this disconnects FiniteSet fact equations from the reachability roots, causing verification failure. Fixed with `#push-options "--ext context_pruning=false --z3rlimit 20"` in that file.
+### Phase 9.6: Fix Bootstrap Chain (stage2/stage3) — COMPLETE ✅
+
+**Commit `001afbae1a`** — "Fix bootstrap without --MLish: interleaver, extraction, and type shadowing"
+
+After Phase 9.5, the stage1 binary was able to extract stage2, but stage2 failed to compile due to several issues:
+
+**Fixes applied:**
+- [x] **Effect abbreviation resolution** (FStarC.Extraction.ML.Term.fst): `Env.norm_eff_name` before `effect_decl_opt` lookup — resolves ML→ALL abbreviation chain
+- [x] **Anonymous instance dedup** (FStarC.ToSyntax.Interleave.fst): `Nil? fst_lids` guard prevents filtering `instance _ : T = { ... }` declarations (PatWild → empty lids_of_let)
+- [x] **Exception dedup** (FStarC.ToSyntax.Interleave.fst): Extended dedup logic for `Exception` declarations (not just `TopLevelLet`)
+- [x] **Short-circuit purity** (ToSyntax.fst, TcTerm.fst, Interleave.fst): Replace `&&`/`||` with `mland`/if-then-else for ML-effect operands
+- [x] **FStarC_Effect.failwith** (FStarC_Effect.ml): Add `failwith` function for extraction without `--MLish`
+- [x] **Type shadowing in V1 Reflection** (FStarC.Reflection.V1.Data.fsti): Reorder `ppname_t`/`val as_ppname` before type abbreviations that shadow `FStarC.Syntax.Syntax`
+- [x] **DsEnv.fsti**: `set_iface_decls` returns `ML env` (required without `--MLish`)
+
+**Type shadowing root cause**: The non-MLish interleaver emits `.fsti` type declarations as prefix before `.fst` opens. In V1.Data, `type branch = pattern & term` was emitted BEFORE `.fst`'s `open FStarC.Syntax.Syntax`, which then re-introduced `FStarC.Syntax.Syntax.branch` (a different type: triple vs pair). Moving `val as_ppname` earlier ensures `.fst` opens come BEFORE the shadowing types.
+
+**Bootstrap verification:**
+- [x] stage0→stage1 ✅
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
 
 ### Phase 10: Remove --MLish Compiler Support — TODO
 - [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated, config.json no longer needs `--MLish`
