@@ -93,11 +93,11 @@ The interleaver (`src/tosyntax/FStarC.ToSyntax.Interleave.fst`) needed significa
 ### Bug Found and Fixed: try_with Desugaring
 The `emit` function in `FStarC.Universal.fst` prints all ML modules AFTER all files are processed, at which point `restore_opts()` has reset `--MLish` to CLI value (false). The `try_with_ident()` function in `PrintML.ml` used runtime options to determine the effect module, producing `FStar_All.try_with` at print time while the ML AST contained `FStarC_Effect.try_with`. Fixed by matching both known paths statically.
 
-### Phase 9: Progressive MLish Removal — IN PROGRESS
+### Phase 9: Progressive MLish Removal — COMPLETE ✅
 
-The goal is to progressively remove `#push-options "--MLish"` from each compiler source file until none remain. Only then can the `--MLish` option and its compiler support be deleted.
+All `#push-options "--MLish --MLish_effect FStarC.Effect"` pragmas have been removed from every compiler source file. Zero remain.
 
-**Progress: 181/389 files processed (208 remaining)**
+**Progress: 389/389 files processed (0 remaining)**
 
 **Key class/library changes made to support removal:**
 - `Deq.fsti`: `(=?) : a -> a -> ML bool`
@@ -114,6 +114,13 @@ The goal is to progressively remove `#push-options "--MLish"` from each compiler
 - `Util.fsti`: ALL I/O, higher-order functions → ML
 - `Format.fsti`: printer callbacks → ML
 - `Order.fsti`: `lex`, `compare_list`, `compare_option` → ML callbacks
+- `Primops.Base.fsti`: ALL mk* functions accept ML callbacks, psc_subst → ML
+- `Tactics.Monad.fsti`: `mlog` continuation → ML, `bind` already ML
+- `Tactics.Interpreter.fsti`: `run_unembedded_tactic_on_ps` tau → ML
+- `NBETerm.fsti`: `embedding` class fields → ML, `nbe_cbs` fields → ML
+- `Options.fsti`: callback refs → ML (set_option_warning_callback etc.)
+- `DsEnv.fsti`: `ugly_sigelt_to_string_hook` → ML, `withenv` → ML
+- `Syntax.Util.fsti`: `tts_f`/`ttd_f` → ML, `universe_of_binders` callback → ML
 
 **Short-circuit operator pattern**: `&&` and `||` require pure operands. ML operands must be let-bound first:
 ```fstar
@@ -121,18 +128,28 @@ The goal is to progressively remove `#push-options "--MLish"` from each compiler
 (* After  *) let r1 = x =? y in let r2 = f z in r1 && r2
 ```
 
+**FStarC.Effect.ML vs FStar.All.ML**: These are different effects (`unit` vs `heap` state). All compiler code must use `FStarC.List.*` (not `FStar.List.*`) when passing ML callbacks.
+
 **Checklist:**
-- [x] **Phase 9a**: Remove pragma from 33 fsti-only files + small fst-only files (commit `a83dae1176`)
-- [x] **Phase 9b**: Remove pragma from 37 more files via sub-agent (commit `8fee8b2c69`)
-- [x] **Phase 9c**: Fix all cascading downstream failures from class/library changes (commit `fb77e679f6`)
-- [x] **Phase 9d**: Remove pragma from 27 more fsti files (commit `93a40acfc5`)
-- [x] **Phase 9e**: Remove pragma from 32 more files (commit `f2df9f9521`)
-- [ ] **Phase 9f**: Continue with remaining 208 files (process in batches, test after each)
-- [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated with the interleaving fixes, config.json no longer needs `--MLish` for bootstrapping.
-- [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Once no file uses `--MLish`, these are dead.
-- [ ] **Remove `--MLish` option definition from `FStarC.Options.fst`**: The option registration (lines 1164-1171), getter (lines 2145-2147), settable entry (lines 1774-1775).
-- [ ] **Remove `ml_ish()` checks from compiler**: ~15 call sites in Rel.fst, TcTerm.fst, TcInductive.fst, ToSyntax.fst, etc. Each needs the behavior inlined or removed.
-- [ ] **Simplify interleaver**: Remove `ml_mode` parameter, `is_ml_mode`, `iface_has_mlish_pragma`, `ml_mode_prefix_with_iface_decls`, and the lax interleaving paths. All files would use standard interleaving.
+- [x] **Phase 9a**: Remove pragma from 33 fsti-only files + small fst-only files
+- [x] **Phase 9b**: Remove pragma from 37 more files via sub-agent
+- [x] **Phase 9c**: Fix all cascading downstream failures from class/library changes
+- [x] **Phase 9d**: Remove pragma from 27 more fsti files
+- [x] **Phase 9e**: Remove pragma from 32 more files
+- [x] **Phase 9f**: Remove pragma from 22 fst+fsti pairs (JsonHelper, Const, HashMap, etc.)
+- [x] **Phase 9g**: Remove pragma from 9 fst-only files (Hooks, Prettyprint, Primops.Docs, etc.)
+- [x] **Phase 9h**: Fix Primops.Base mk* to accept ML callbacks, psc_subst → ML
+- [x] **Phase 9i**: Remove pragma from 9 more pairs (Embeddings, Errors, Universal, Builtins, etc.)
+- [x] **Phase 9j**: Remove pragma from NBETerm, Normalize, InterpFuns, Krml, ML.Modul, V1/V2.Basic
+- [x] **Phase 9k**: Remove pragma from all remaining large files (Syntax.Syntax, Options, Env, Rel, TcTerm, ToSyntax, etc.)
+- [x] **Phase 9l**: Fix final cascading failures (tts_f, erase_univs, universe_of_binders, etc.)
+
+### Phase 10: Remove --MLish Compiler Support — TODO
+- [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated, config.json no longer needs `--MLish`
+- [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Dead code
+- [ ] **Remove `--MLish` option definition from `FStarC.Options.fst`**: Option registration, getter, settable entry
+- [ ] **Remove `ml_ish()` checks from compiler**: ~15 call sites in Rel.fst, TcTerm.fst, etc.
+- [ ] **Simplify interleaver**: Remove `ml_mode`, `is_ml_mode`, `iface_has_mlish_pragma`, lax interleaving paths
 - [ ] **Full bootstrap rebuild**: stage0→stage1→stage2→stage3 fixpoint verification
 
 ### Documentation
