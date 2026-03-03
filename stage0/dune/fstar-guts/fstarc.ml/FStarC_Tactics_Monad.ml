@@ -864,6 +864,9 @@ let wrap_err_doc (pref : FStarC_Errors_Msg.error_message) (t : 'a tac) :
            FStarC_Effect.raise
              (FStarC_Tactics_Common.TacticFailure
                 ((FStarC_List.op_At pref msg), r))
+       | FStarC_Errors.Error (err, msg, r, ctx) ->
+           FStarC_Effect.raise
+             (FStarC_Errors.Error (err, (FStarC_List.op_At pref msg), r, ctx))
        | e -> FStarC_Effect.raise e)
 let wrap_err (pref : Prims.string) (t : 'a tac) : 'a tac=
   let uu___ =

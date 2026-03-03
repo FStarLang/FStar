@@ -194,7 +194,7 @@ let defaults = [
   ("already_cached"                            , Unset);
   ("cache_checked_modules"                     , Bool false);
   ("cache_off"                                 , Bool false);
-  ("cmi"                                       , Bool false);
+  ("no_cmi"                                     , Bool false);
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
   ("compat_pre_core"                           , Unset);
@@ -470,7 +470,7 @@ let get_already_cached          ()      = lookup_opt "already_cached"           
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
-let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
+let get_no_cmi                  ()      = lookup_opt "no_cmi"                   as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_defensive               ()      = lookup_opt "defensive"                as_string
@@ -854,9 +854,9 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "Print the version for .checked files and exit.");
 
   ( noshort,
-    "cmi",
+    "no_cmi",
     Const (Bool true),
-    text "Inline across module interfaces during extraction (aka. cross-module inlining)");
+    text "Disable inlining across module interfaces during extraction (aka. cross-module inlining). Enabled by default.");
 
   ( noshort,
     "codegen",
@@ -2036,7 +2036,7 @@ let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
-let cmi                          () = get_cmi                         ()
+let cmi                          () = not (get_no_cmi                  ())
 
 let parse_codegen =
   function

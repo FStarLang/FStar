@@ -7213,118 +7213,101 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
     FStarC_Format.print5
       "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
       uu___1 uu___2 uu___3 uu___4 uu___5 in
-  if Prims.op_Negation rdc.FStarC_Syntax_DsEnv.is_record
-  then
-    (let uu___1 =
-       let uu___2 =
-         FStarC_Class_Show.show
-           (FStarC_Class_Show.show_option
-              (FStarC_Class_Show.show_either
-                 FStarC_Syntax_Print.showable_term
-                 FStarC_Syntax_Print.showable_term)) topt in
-       FStarC_Format.fmt1 "Type '%s' is not a record type." uu___2 in
-     FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range rng
-       FStarC_Errors_Codes.Error_CannotResolveRecord ()
-       (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-       (Obj.magic uu___1))
-  else ();
-  (let uu___1 =
-     FStarC_List.fold_left
-       (fun uu___2 uu___3 ->
-          match (uu___2, uu___3) with
-          | ((fields, as_rev, missing), (field_name, uu___4)) ->
-              let uu___5 =
-                FStarC_List.partition
-                  (fun uu___6 ->
-                     match uu___6 with
-                     | (fn, uu___7) -> field_name_matches fn rdc field_name)
-                  fields in
-              (match uu___5 with
-               | (matching, rest) ->
-                   (match matching with
-                    | (uu___6, a1)::[] -> (rest, (a1 :: as_rev), missing)
-                    | [] ->
-                        let uu___6 = not_found field_name in
-                        (match uu___6 with
-                         | FStar_Pervasives_Native.None ->
-                             (rest, as_rev, (field_name :: missing))
-                         | FStar_Pervasives_Native.Some a1 ->
-                             (rest, (a1 :: as_rev), missing))
-                    | x1::x2::uu___6 ->
-                        let uu___7 =
-                          let uu___8 = FStarC_Ident.string_of_id field_name in
-                          let uu___9 =
-                            FStarC_Ident.string_of_lid
-                              rdc.FStarC_Syntax_DsEnv.typename in
-                          FStarC_Format.fmt2
-                            "Field '%s' of record type '%s' is given multiple assignments."
-                            uu___8 uu___9 in
-                        FStarC_Errors.raise_error
-                          FStarC_Ident.hasrange_lident
-                          (FStar_Pervasives_Native.fst x1)
-                          FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
-                          (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_string)
-                          (Obj.magic uu___7)))) (fas, [], [])
-       rdc.FStarC_Syntax_DsEnv.fields in
-   match uu___1 with
-   | (rest, as_rev, missing) ->
-       let pp_missing uu___2 =
-         FStarC_Pprint.separate_map
-           (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma
-              (FStar_Pprint.break_ Prims.int_one))
-           (fun f ->
-              let uu___3 =
-                let uu___4 =
-                  FStarC_Class_Show.show FStarC_Ident.showable_ident f in
-                FStar_Pprint.doc_of_string uu___4 in
-              FStar_Pprint.squotes uu___3) missing in
-       ((match (rest, missing) with
-         | ([], []) -> ()
-         | ((f, uu___3)::uu___4, uu___5) ->
-             let uu___6 =
-               let uu___7 =
-                 let uu___8 =
-                   let uu___9 =
-                     FStarC_Class_Show.show FStarC_Ident.showable_lident f in
-                   let uu___10 =
-                     FStarC_Class_Show.show FStarC_Ident.showable_lident
-                       rdc.FStarC_Syntax_DsEnv.typename in
-                   FStarC_Format.fmt2 "No field '%s' in record type '%s'."
-                     uu___9 uu___10 in
-                 FStarC_Errors_Msg.text uu___8 in
-               let uu___8 =
-                 let uu___9 =
-                   if Prims.uu___is_Cons missing
-                   then
-                     let uu___10 = FStarC_Errors_Msg.text "Missing fields:" in
-                     let uu___11 = pp_missing () in
-                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
-                       uu___10 uu___11
-                   else FStar_Pprint.empty in
-                 [uu___9] in
-               uu___7 :: uu___8 in
-             FStarC_Errors.raise_error FStarC_Ident.hasrange_lident f
-               FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___6)
-         | ([], uu___3) ->
+  let uu___ =
+    FStarC_List.fold_left
+      (fun uu___1 uu___2 ->
+         match (uu___1, uu___2) with
+         | ((fields, as_rev, missing), (field_name, uu___3)) ->
              let uu___4 =
-               let uu___5 =
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
-                       FStarC_Class_Show.show FStarC_Ident.showable_lident
-                         rdc.FStarC_Syntax_DsEnv.typename in
-                     FStarC_Format.fmt1
-                       "Missing fields for record type '%s':" uu___8 in
-                   FStarC_Errors_Msg.text uu___7 in
-                 let uu___7 = pp_missing () in
-                 FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
-                   uu___7 in
-               [uu___5] in
-             FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
-               rng FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___4));
-        FStarC_List.rev as_rev))
+               FStarC_List.partition
+                 (fun uu___5 ->
+                    match uu___5 with
+                    | (fn, uu___6) -> field_name_matches fn rdc field_name)
+                 fields in
+             (match uu___4 with
+              | (matching, rest) ->
+                  (match matching with
+                   | (uu___5, a1)::[] -> (rest, (a1 :: as_rev), missing)
+                   | [] ->
+                       let uu___5 = not_found field_name in
+                       (match uu___5 with
+                        | FStar_Pervasives_Native.None ->
+                            (rest, as_rev, (field_name :: missing))
+                        | FStar_Pervasives_Native.Some a1 ->
+                            (rest, (a1 :: as_rev), missing))
+                   | x1::x2::uu___5 ->
+                       let uu___6 =
+                         let uu___7 = FStarC_Ident.string_of_id field_name in
+                         let uu___8 =
+                           FStarC_Ident.string_of_lid
+                             rdc.FStarC_Syntax_DsEnv.typename in
+                         FStarC_Format.fmt2
+                           "Field '%s' of record type '%s' is given multiple assignments."
+                           uu___7 uu___8 in
+                       FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
+                         (FStar_Pervasives_Native.fst x1)
+                         FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
+                         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                         (Obj.magic uu___6)))) (fas, [], [])
+      rdc.FStarC_Syntax_DsEnv.fields in
+  match uu___ with
+  | (rest, as_rev, missing) ->
+      let pp_missing uu___1 =
+        FStarC_Pprint.separate_map
+          (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma
+             (FStar_Pprint.break_ Prims.int_one))
+          (fun f ->
+             let uu___2 =
+               let uu___3 =
+                 FStarC_Class_Show.show FStarC_Ident.showable_ident f in
+               FStar_Pprint.doc_of_string uu___3 in
+             FStar_Pprint.squotes uu___2) missing in
+      ((match (rest, missing) with
+        | ([], []) -> ()
+        | ((f, uu___2)::uu___3, uu___4) ->
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    FStarC_Class_Show.show FStarC_Ident.showable_lident f in
+                  let uu___9 =
+                    FStarC_Class_Show.show FStarC_Ident.showable_lident
+                      rdc.FStarC_Syntax_DsEnv.typename in
+                  FStarC_Format.fmt2 "No field '%s' in record type '%s'."
+                    uu___8 uu___9 in
+                FStarC_Errors_Msg.text uu___7 in
+              let uu___7 =
+                let uu___8 =
+                  if Prims.uu___is_Cons missing
+                  then
+                    let uu___9 = FStarC_Errors_Msg.text "Missing fields:" in
+                    let uu___10 = pp_missing () in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___9 uu___10
+                  else FStar_Pprint.empty in
+                [uu___8] in
+              uu___6 :: uu___7 in
+            FStarC_Errors.raise_error FStarC_Ident.hasrange_lident f
+              FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
+              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___5)
+        | ([], uu___2) ->
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      FStarC_Class_Show.show FStarC_Ident.showable_lident
+                        rdc.FStarC_Syntax_DsEnv.typename in
+                    FStarC_Format.fmt1 "Missing fields for record type '%s':"
+                      uu___7 in
+                  FStarC_Errors_Msg.text uu___6 in
+                let uu___6 = pp_missing () in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                  uu___6 in
+              [uu___4] in
+            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
+              rng FStarC_Errors_Codes.Fatal_MissingFieldInRecord ()
+              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic uu___3));
+       FStarC_List.rev as_rev)

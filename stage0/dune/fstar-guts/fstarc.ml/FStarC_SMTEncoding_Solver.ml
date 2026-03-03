@@ -2148,7 +2148,7 @@ let encode_and_ask (can_split : Prims.bool) (is_retry : Prims.bool)
                          (is_retry ||
                             (let uu___9 = FStarC_Options.split_queries () in
                              uu___9 = FStarC_Options.Always))
-                           && (FStarC_Debug.any ()) in
+                           && (FStarC_Effect.op_Bang dbg_SMTQuery) in
                        if uu___8
                        then
                          let n = FStarC_List.length labels in
@@ -2273,7 +2273,9 @@ let split_and_solve (retrying : Prims.bool)
   (tcenv : FStarC_TypeChecker_Env.env) (q : FStarC_Syntax_Syntax.term) :
   unit=
   (let uu___1 =
-     retrying && ((FStarC_Debug.any ()) || (FStarC_Options.query_stats ())) in
+     retrying &&
+       ((FStarC_Effect.op_Bang dbg_SMTQuery) ||
+          (FStarC_Options.query_stats ())) in
    if uu___1
    then
      let uu___2 =
@@ -2338,7 +2340,8 @@ let do_solve_maybe_split
           | SplitQueryAndRetry -> split_and_solve true use_env_msg tcenv q)
      | FStarC_Options.Always ->
          ((let uu___3 =
-             (FStarC_Debug.any ()) || (FStarC_Options.query_stats ()) in
+             (FStarC_Effect.op_Bang dbg_SMTQuery) ||
+               (FStarC_Options.query_stats ()) in
            if uu___3
            then
              let uu___4 =

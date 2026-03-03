@@ -1998,7 +1998,37 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_TypeChecker_NBETerm.e_any
                                                                     FStarC_Tactics_V2_Basic.stats_record
                                                                     FStarC_Tactics_V2_Basic.stats_record in
-                                                                    [uu___235] in
+                                                                    let uu___236
+                                                                    =
+                                                                    let uu___237
+                                                                    =
+                                                                    let uu___238
+                                                                    =
+                                                                    FStarC_Tactics_Interpreter.e_tactic_thunk
+                                                                    FStarC_Syntax_Embeddings.e_any in
+                                                                    let uu___239
+                                                                    =
+                                                                    FStarC_Tactics_Interpreter.e_tactic_nbe_thunk
+                                                                    FStarC_TypeChecker_NBETerm.e_any in
+                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_4
+                                                                    Prims.int_one
+                                                                    "with_error_context"
+                                                                    FStarC_Syntax_Embeddings.e_any
+                                                                    FStarC_Syntax_Embeddings.e_any
+                                                                    FStarC_Syntax_Embeddings.e_string
+                                                                    uu___238
+                                                                    FStarC_Syntax_Embeddings.e_any
+                                                                    FStarC_TypeChecker_NBETerm.e_any
+                                                                    FStarC_TypeChecker_NBETerm.e_any
+                                                                    FStarC_TypeChecker_NBETerm.e_string
+                                                                    uu___239
+                                                                    FStarC_TypeChecker_NBETerm.e_any
+                                                                    FStarC_Tactics_V2_Basic.with_error_context
+                                                                    FStarC_Tactics_V2_Basic.with_error_context in
+                                                                    [uu___237] in
+                                                                    uu___235
+                                                                    ::
+                                                                    uu___236 in
                                                                     uu___233
                                                                     ::
                                                                     uu___234 in

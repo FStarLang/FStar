@@ -1683,55 +1683,14 @@ let __tc (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                      (fun uu___1 ->
                         (fun uu___1 ->
                            let uu___1 = Obj.magic uu___1 in
+                           let uu___2 =
+                             FStarC_TypeChecker_TcTerm.typeof_tot_or_gtot_term
+                               e t true in
                            Obj.magic
-                             (try
-                                (fun uu___2 ->
-                                   (fun uu___2 ->
-                                      match () with
-                                      | () ->
-                                          let uu___3 =
-                                            FStarC_TypeChecker_TcTerm.typeof_tot_or_gtot_term
-                                              e t true in
-                                          Obj.magic
-                                            (FStarC_Class_Monad.return
-                                               FStarC_Tactics_Monad.monad_tac
-                                               () (Obj.magic uu___3))) uu___2)
-                                  ()
-                              with
-                              | FStarC_Errors.Error
-                                  (uu___3, msg, uu___4, uu___5) ->
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let uu___9 =
-                                          let uu___10 =
-                                            FStarC_Errors_Msg.text
-                                              "Cannot type" in
-                                          let uu___11 = ttd e t in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___10 uu___11 in
-                                        let uu___10 =
-                                          let uu___11 =
-                                            FStarC_Errors_Msg.text
-                                              "in context" in
-                                          let uu___12 =
-                                            let uu___13 =
-                                              FStarC_TypeChecker_Env.all_binders
-                                                e in
-                                            FStarC_Class_PP.pp
-                                              (FStarC_Class_PP.pp_list
-                                                 FStarC_Syntax_Print.pretty_binder)
-                                              uu___13 in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___11 uu___12 in
-                                        FStar_Pprint.op_Hat_Slash_Hat uu___9
-                                          uu___10 in
-                                      [uu___8] in
-                                    FStarC_List.op_At uu___7 msg in
-                                  FStarC_Tactics_Monad.fail_doc uu___6))
-                          uu___1))) uu___))) uu___1 uu___
+                             (FStarC_Class_Monad.return
+                                FStarC_Tactics_Monad.monad_tac ()
+                                (Obj.magic uu___2))) uu___1))) uu___)))
+    uu___1 uu___
 let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.typ *
     FStarC_TypeChecker_Common.guard_t) FStarC_Tactics_Monad.tac=
@@ -1862,60 +1821,19 @@ let __tc_ghost (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                FStarC_TypeChecker_Env.missing_decl =
                                  (e.FStarC_TypeChecker_Env.missing_decl)
                              } in
-                           Obj.magic
-                             (try
-                                (fun uu___2 ->
-                                   (fun uu___2 ->
-                                      match () with
-                                      | () ->
-                                          let uu___3 =
-                                            FStarC_TypeChecker_TcTerm.tc_tot_or_gtot_term
-                                              e1 t in
-                                          (match uu___3 with
-                                           | (t1, lc, g) ->
-                                               Obj.magic
-                                                 (FStarC_Class_Monad.return
-                                                    FStarC_Tactics_Monad.monad_tac
-                                                    ()
-                                                    (Obj.magic
-                                                       (t1,
-                                                         (lc.FStarC_TypeChecker_Common.res_typ),
-                                                         g))))) uu___2) ()
-                              with
-                              | FStarC_Errors.Error
-                                  (uu___3, msg, uu___4, uu___5) ->
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let uu___9 =
-                                          let uu___10 =
-                                            FStarC_Errors_Msg.text
-                                              "Cannot type" in
-                                          let uu___11 = ttd e1 t in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___10 uu___11 in
-                                        let uu___10 =
-                                          let uu___11 =
-                                            FStarC_Errors_Msg.text
-                                              "in context" in
-                                          let uu___12 =
-                                            let uu___13 =
-                                              FStarC_TypeChecker_Env.all_binders
-                                                e1 in
-                                            FStarC_Class_PP.pp
-                                              (FStarC_Class_PP.pp_list
-                                                 FStarC_Syntax_Print.pretty_binder)
-                                              uu___13 in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___11 uu___12 in
-                                        FStar_Pprint.op_Hat_Slash_Hat uu___9
-                                          uu___10 in
-                                      [uu___8] in
-                                    FStarC_List.op_At uu___7 msg in
-                                  FStarC_Tactics_Monad.fail_doc uu___6))
-                          uu___1))) uu___))) uu___1 uu___
+                           let uu___2 =
+                             FStarC_TypeChecker_TcTerm.tc_tot_or_gtot_term e1
+                               t in
+                           match uu___2 with
+                           | (t1, lc, g) ->
+                               Obj.magic
+                                 (FStarC_Class_Monad.return
+                                    FStarC_Tactics_Monad.monad_tac ()
+                                    (Obj.magic
+                                       (t1,
+                                         (lc.FStarC_TypeChecker_Common.res_typ),
+                                         g)))) uu___1))) uu___))) uu___1
+    uu___
 let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
   (FStarC_Syntax_Syntax.term * FStarC_TypeChecker_Common.lcomp *
     FStarC_TypeChecker_Common.guard_t) FStarC_Tactics_Monad.tac=
@@ -2159,55 +2077,13 @@ let __tc_lax (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
                                FStarC_TypeChecker_Env.missing_decl =
                                  (e1.FStarC_TypeChecker_Env.missing_decl)
                              } in
+                           let uu___2 =
+                             FStarC_TypeChecker_TcTerm.tc_term e2 t in
                            Obj.magic
-                             (try
-                                (fun uu___2 ->
-                                   (fun uu___2 ->
-                                      match () with
-                                      | () ->
-                                          let uu___3 =
-                                            FStarC_TypeChecker_TcTerm.tc_term
-                                              e2 t in
-                                          Obj.magic
-                                            (FStarC_Class_Monad.return
-                                               FStarC_Tactics_Monad.monad_tac
-                                               () (Obj.magic uu___3))) uu___2)
-                                  ()
-                              with
-                              | FStarC_Errors.Error
-                                  (uu___3, msg, uu___4, uu___5) ->
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let uu___9 =
-                                          let uu___10 =
-                                            FStarC_Errors_Msg.text
-                                              "Cannot type" in
-                                          let uu___11 = ttd e2 t in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___10 uu___11 in
-                                        let uu___10 =
-                                          let uu___11 =
-                                            FStarC_Errors_Msg.text
-                                              "in context" in
-                                          let uu___12 =
-                                            let uu___13 =
-                                              FStarC_TypeChecker_Env.all_binders
-                                                e2 in
-                                            FStarC_Class_PP.pp
-                                              (FStarC_Class_PP.pp_list
-                                                 FStarC_Syntax_Print.pretty_binder)
-                                              uu___13 in
-                                          FStar_Pprint.prefix
-                                            (Prims.of_int (2)) Prims.int_one
-                                            uu___11 uu___12 in
-                                        FStar_Pprint.op_Hat_Slash_Hat uu___9
-                                          uu___10 in
-                                      [uu___8] in
-                                    FStarC_List.op_At uu___7 msg in
-                                  FStarC_Tactics_Monad.fail_doc uu___6))
-                          uu___1))) uu___))) uu___1 uu___
+                             (FStarC_Class_Monad.return
+                                FStarC_Tactics_Monad.monad_tac ()
+                                (Obj.magic uu___2))) uu___1))) uu___)))
+    uu___1 uu___
 let tcc (e : env) (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.comp FStarC_Tactics_Monad.tac=
   let uu___ =
@@ -12286,3 +12162,8 @@ let stats_record (a1 : 'a) (wp : 'b) (s : Prims.string)
   FStarC_Tactics_Monad.mk_tac
     (fun ps ->
        FStarC_Stats.record s (fun uu___ -> FStarC_Tactics_Monad.run f ps))
+let with_error_context (a1 : 'a) (wp : 'b) (s : Prims.string)
+  (f : 'c FStarC_Tactics_Monad.tac) : 'c FStarC_Tactics_Monad.tac=
+  FStarC_Tactics_Monad.mk_tac
+    (fun ps ->
+       FStarC_Errors.with_ctx s (fun uu___ -> FStarC_Tactics_Monad.run f ps))
