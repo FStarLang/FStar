@@ -1937,7 +1937,7 @@ let effect_sig_ts (sig:effect_signature) : tscheme =
   | Layered_eff_sig (_, ts)
   | WP_eff_sig ts -> ts
 
-let apply_eff_sig (f:tscheme -> tscheme) = function
+let apply_eff_sig (f:tscheme -> ML tscheme) _x_ : ML _ = match _x_ with
   | Layered_eff_sig (n, ts) -> Layered_eff_sig (n, f ts)
   | WP_eff_sig ts -> WP_eff_sig (f ts)
 
@@ -1956,7 +1956,7 @@ let is_dm4f (ed:eff_decl) : bool =
   | DM4F_eff _ -> true
   | _ -> false
 
-let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
+let apply_wp_eff_combinators (f:tscheme -> ML tscheme) (combs:wp_eff_combinators)
 : ML wp_eff_combinators
 = { ret_wp = f combs.ret_wp;
     bind_wp = f combs.bind_wp;
@@ -1970,7 +1970,7 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
     return_repr = Option.map f combs.return_repr;
     bind_repr = Option.map f combs.bind_repr }
 
-let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
+let apply_layered_eff_combinators (f:tscheme -> ML tscheme) (combs:layered_eff_combinators)
 : ML layered_eff_combinators
 = let map2 (ts1, ts2) = (f ts1, f ts2) in
   let map3 (ts1, ts2, k) = (f ts1, f ts2, k) in
@@ -1981,7 +1981,7 @@ let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_comb
     l_if_then_else = map3 combs.l_if_then_else;
     l_close = Option.map map2 combs.l_close; }
 
-let apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : ML eff_combinators =
+let apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators =
   match combs with
   | Primitive_eff combs -> Primitive_eff (apply_wp_eff_combinators f combs)
   | DM4F_eff combs -> DM4F_eff (apply_wp_eff_combinators f combs)

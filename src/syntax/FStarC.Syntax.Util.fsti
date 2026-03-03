@@ -573,16 +573,16 @@ val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
 
 val effect_sig_ts (sig:effect_signature) : tscheme
 
-val apply_eff_sig (f:tscheme -> tscheme) : effect_signature -> effect_signature
+val apply_eff_sig (f:tscheme -> ML tscheme) : effect_signature -> ML effect_signature
 
 val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 
 val is_layered (ed:eff_decl) : bool
 val is_dm4f (ed:eff_decl) : bool
 
-val apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators) : ML wp_eff_combinators
-val apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators) : ML layered_eff_combinators
-val apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : ML eff_combinators
+val apply_wp_eff_combinators (f:tscheme -> ML tscheme) (combs:wp_eff_combinators) : ML wp_eff_combinators
+val apply_layered_eff_combinators (f:tscheme -> ML tscheme) (combs:layered_eff_combinators) : ML layered_eff_combinators
+val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
 
 val get_layered_close_combinator (ed:eff_decl) : option tscheme
 val get_wp_close_combinator (ed:eff_decl) : option tscheme
