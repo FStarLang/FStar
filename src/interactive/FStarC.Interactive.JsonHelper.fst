@@ -28,6 +28,10 @@ open FStarC.Class.Show
 
 module U = FStarC.Util
 
+// All exceptions are guaranteed to be caught in the LSP server implementation
+exception InvalidQuery of string // Only in IDE
+exception UnexpectedJsonType of string & json
+
 let try_assoc (key: string) (d: assoct) =
   Option.map snd (U.try_find (fun (k, _) -> k = key) d)
 

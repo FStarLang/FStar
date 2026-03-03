@@ -84,8 +84,6 @@ instance showable_implicit_checking_status : showable implicit_checking_status =
           | Implicit_has_typing_guard (tm, typ) -> "Implicit_has_typing_guard");
 }
 
-let mland (x:bool) (y:bool) : bool = if x then y else false
-let mlor (x:bool) (y:bool) : bool = if x then true else y
 let ( &. ) (x:bool) (y:bool) : bool = if x then y else false
 let ( |. ) (x:bool) (y:bool) : bool = if x then true else y
 
@@ -1312,8 +1310,9 @@ let intersect_binders (g:gamma) (v1:binders) (v2:binders) : ML binders =
 
 let binders_eq v1 v2 : ML _
   =
-  (List.length v1 = List.length v2)
-  &. (List.forall2 (fun ({binder_bv=a}) ({binder_bv=b}) -> S.bv_eq a b) v1 v2)
+  if (List.length v1 = List.length v2)
+  then (List.forall2 (fun ({binder_bv=a}) ({binder_bv=b}) -> S.bv_eq a b) v1 v2)
+  else false
 
 let name_exists_in_binders x bs : ML _
   =
@@ -1665,8 +1664,9 @@ let next_prob wl : ML (option (prob & list prob & rank_t)) =
           then match min with
                | None -> Some (hd, out@tl, rank)
                | Some m -> Some (hd, out@m::tl, rank)
-          else if min_rank = None
-               |. rank_less_than rank (Option.must min_rank)
+          else if (match min_rank with
+                   | None -> true
+                   | Some r -> rank_less_than rank r)
           then match min with
                | None -> aux (Some rank, Some hd, out) tl
                | Some m -> aux (Some rank, Some hd, m::out) tl

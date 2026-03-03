@@ -1655,7 +1655,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
        then Format.print2 "Formula (%s)  %s\n"
                      (tag_of phi)
                      (show phi) in
-    let enc (f:list term -> ML term) : Range.t -> args -> ML (term & decls_t) = fun r l ->
+    let enc (f:list term -> ML term) r l : ML (term & decls_t) =
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in
 
@@ -1665,7 +1665,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
 
-    let enc_prop_c (f: list term -> ML term) : Range.t -> args -> ML (term & decls_t) = fun r l ->
+    let enc_prop_c (f: list term -> ML term) r l : ML (term & decls_t) =
         let decls, phis =
             BU.fold_map (fun decls (t, _) ->
                 let phi, decls' = encode_formula t env in
@@ -1683,7 +1683,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
         else enc (bin_op mkEq) r rf
     in
 
-    let mk_imp r : args -> ML (term & decls_t) = function
+    let mk_imp r = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
@@ -1694,7 +1694,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite r: args -> ML (term & decls_t) = function
+    let mk_ite r = function
         | [(guard, _); (_then, _); (_else, _)] ->
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
@@ -1705,7 +1705,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
         | _ -> failwith "impossible" in
 
 
-    let unboxInt_l : (list term -> ML term) -> list term -> ML term = fun f l -> f (List.map Term.unboxInt l) in
+    let unboxInt_l (f: list term -> ML term) l : ML term = f (List.map Term.unboxInt l) in
     let connectives : list (Ident.lident & (Range.range -> args -> ML (term & decls_t))) = [
         (Const.and_lid,   enc_prop_c (bin_op mkAnd));
         (Const.or_lid,    enc_prop_c (bin_op mkOr));

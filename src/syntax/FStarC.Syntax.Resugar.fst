@@ -311,6 +311,8 @@ let passes : ref (list resugar_pass_t) = mk_ref []
 which is complete. *)
 let register_pass p = passes := p :: !passes
 
+exception SkipResugar
+
 let resugar_term' (env: DsEnv.env) (t:S.term) : ML A.term =
   let rec aux (passes:list resugar_pass_t) env t : ML _ =
     match passes with

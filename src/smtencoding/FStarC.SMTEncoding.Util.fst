@@ -122,9 +122,9 @@ let mk_LexTop : term = {tm=App(Var "LexTop", []); freevars=alloc None; rng=Range
 
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : ML bool =
   let l = TcEnv.norm_eff_name en l in
-  let b1 = TcEnv.is_reifiable_effect en l in
-  let b2 = not (l |> TcEnv.get_effect_decl en |> U.is_layered) in
-  b1 && b2
+  if TcEnv.is_reifiable_effect en l
+  then not (l |> TcEnv.get_effect_decl en |> U.is_layered)
+  else false
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : ML bool =
   match c.n with

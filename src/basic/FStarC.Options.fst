@@ -36,6 +36,8 @@ module List = FStarC.List
 logs an issue. Cannot do it here due to circular deps. *)
 let check_include_dir = mk_ref (fun (s:string) -> () <: ML unit)
 
+exception NotSettable of string
+
 module Ext = FStarC.Options.Ext
 
 let debug_embedding = mk_ref false

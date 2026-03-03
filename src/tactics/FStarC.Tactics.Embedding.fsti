@@ -53,8 +53,8 @@ instance val e_unfold_side_nbe        : NBETerm.embedding Core.side
 instance val e_tot_or_ghost           : embedding Core.tot_or_ghost
 instance val e_tot_or_ghost_nbe       : NBETerm.embedding Core.tot_or_ghost
 
-instance val e_tref (#a:Type)         : Tot (embedding (tref a))
-instance val e_tref_nbe (#a:Type)     : Tot (NBETerm.embedding (tref a))
+val e_tref (#a:Type)         : Tot (embedding (tref a))
+val e_tref_nbe (#a:Type)     : Tot (NBETerm.embedding (tref a))
 
 instance val e_guard_policy           : embedding guard_policy
 instance val e_guard_policy_nbe       : NBETerm.embedding guard_policy

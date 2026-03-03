@@ -128,6 +128,7 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
       let! a : int = EMB.try_unembed a cb in
       Some (Mk a m)
       end else None
+    | _ -> None
   in
   EMB.mk_emb_full em un
     (fun () -> S.fvar (Ident.lid_of_path ["FStar"; module_name_for k; "t"] Range.dummyRange) None)

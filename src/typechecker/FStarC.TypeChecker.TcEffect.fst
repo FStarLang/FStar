@@ -41,9 +41,6 @@ module BU = FStarC.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 
-let mland (x:bool) (y:bool) : bool = if x then y else false
-let mlor (x:bool) (y:bool) : bool = if x then true else y
-
 let dbg = Debug.get_toggle "ED"
 let dbg_LayeredEffectsTc = Debug.get_toggle "LayeredEffectsTc"
 
@@ -83,8 +80,9 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us_t: univ_names 
     match us with
     | [] -> ()
     | _ ->
-     if mland (List.length us = List.length g_us)
-      (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us)
+     if (if List.length us = List.length g_us
+         then List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+         else false)
      then ()
      else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (Format.fmt4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
@@ -126,8 +124,7 @@ let mteq (env:env) (t1 t2:typ) : ML bool =
 //
 let eq_binders env (bs1 bs2:binders) : ML (option (list S.indexed_effect_binder_kind)) =
   if List.fold_left2 (fun (b, ss) b1 b2 ->
-       mland b
-       (mteq env (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort),
+       (if b then mteq env (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort else false),
        ss@[NT (b1.binder_bv, b2.binder_bv |> S.bv_to_name)]) (true, []) bs1 bs2
 
      |> fst
@@ -161,7 +158,7 @@ let bind_combinator_kind (env:env)
   : ML (option (list indexed_effect_binder_kind)) =
 
   let debug s =
-    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
+    if (if Debug.medium () then true else !dbg_LayeredEffectsTc)
     then Format.print1 "%s\n" s in
 
   debug (Format.fmt1
@@ -503,7 +500,7 @@ let validate_indexed_effect_bind_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
+  if (if Debug.medium () then true else !dbg_LayeredEffectsTc)
   then Format.print2 "Bind %s has %s kind\n" bind_name (show kind);
 
   k, kind
@@ -716,7 +713,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let k = U.arrow (a_b::rest_bs@[f]) c in
 
-  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
+  if (if Debug.medium () then true else !dbg_LayeredEffectsTc) then
     Format.print1 "Expected type of subcomp before unification: %s\n"
       (show k);
 
@@ -752,7 +749,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
+  if (if Debug.medium () then true else !dbg_LayeredEffectsTc)
   then Format.print2 "Subcomp %s has %s kind\n" subcomp_name (show kind);
 
 
@@ -962,7 +959,7 @@ let validate_indexed_effect_ite_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
+  if (if Debug.medium () then true else !dbg_LayeredEffectsTc)
   then Format.print2 "Ite %s has %s kind\n" ite_name
          (show kind);
 
@@ -1130,8 +1127,8 @@ let validate_indexed_effect_lift_shape (env:env)
       raise_error r Errors.Fatal_UnexpectedExpressionType
                    (lift_t_shape_error "either not an arrow, or not enough binders") in
 
-  if (not (mlor (lid_equals lift_eff PC.effect_PURE_lid)
-           (mland (lid_equals lift_eff PC.effect_GHOST_lid) (Env.is_erasable_effect env m_eff_name))))
+  if (not (if lid_equals lift_eff PC.effect_PURE_lid then true
+           else (if lid_equals lift_eff PC.effect_GHOST_lid then Env.is_erasable_effect env m_eff_name else false)))
   then raise_error r Errors.Fatal_UnexpectedExpressionType
                     (lift_t_shape_error "the lift combinator has an unexpected effect: \
                       it must either be PURE or if the source effect is erasable then may be GHOST");
@@ -1197,7 +1194,7 @@ let validate_indexed_effect_lift_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
+  if (if Debug.medium () then true else !dbg_LayeredEffectsTc)
   then Format.print2 "Lift %s has %s kind\n" lift_name
          (show kind);
 
@@ -1215,7 +1212,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
     Format.print1 "Typechecking layered effect: \n\t%s\n" (show ed);
 
   //we don't support effect binders in layered effects yet
-  if mlor (List.length ed.univs <> 0) (List.length ed.binders <> 0) then
+  if (if List.length ed.univs <> 0 then true else List.length ed.binders <> 0) then
     raise_error ed.mname Errors.Fatal_UnexpectedEffect 
       ("Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")");
 
@@ -1823,7 +1820,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
       ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
       act.action_defn in
     
-    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
+    if (if Debug.medium () then true else !dbg_LayeredEffectsTc) then
       Format.print2 "Typechecked action definition: %s and action type: %s\n"
         (show act_defn) (show act_typ);
 
@@ -1843,13 +1840,13 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
                (Format.fmt3 "Unexpected non-function type for action %s:%s (%s)"
                  (show ed.mname) (show act.action_name) (show act_typ)) in
 
-    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
+    if (if Debug.medium () then true else !dbg_LayeredEffectsTc) then
       Format.print1 "Expected action type: %s\n" (show k);
 
     let g = Rel.teq env act_typ k in
     List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
 
-    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
+    if (if Debug.medium () then true else !dbg_LayeredEffectsTc) then
       Format.print1 "Expected action type after unification: %s\n" (show k);
     
     let act_typ =
@@ -1878,7 +1875,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         U.arrow bs (S.mk_Comp ct)
       | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType (err_msg k) in
 
-    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
+    if (if Debug.medium () then true else !dbg_LayeredEffectsTc) then
       Format.print1 "Action type after injecting it into the monad: %s\n" (show act_typ);
     
     let act =
@@ -1890,8 +1887,9 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
           action_defn = act_defn;
           action_typ = SS.close_univ_vars us act_typ }
       else
-        if mland (List.length us = List.length act.action_univs)
-           (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us act.action_univs)
+        if (if List.length us = List.length act.action_univs
+            then List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us act.action_univs
+            else false)
         then { act with
           action_defn = act_defn;
           action_typ = SS.close_univ_vars act.action_univs act_typ }
@@ -1926,11 +1924,12 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
       let env = Env.push_univ_vars env0 us in
       let env = Env.push_binders env [a_b] in
       let _, r = List.fold_left (fun (env, r) b ->
-        let r = mland r (N.non_info_norm env b.binder_bv.sort) in
+        let r = if r then N.non_info_norm env b.binder_bv.sort else false in
         Env.push_binders env [b], r) (env, true) rest_bs in
-      if mland (mland r
-         (Substitutive_combinator? bind_kind))
-         (mlor is_reifiable (lid_equals ed.mname PC.effect_TAC_lid))
+      if (if r
+         then Substitutive_combinator? bind_kind
+         else false)
+         && (if is_reifiable then true else lid_equals ed.mname PC.effect_TAC_lid)
       then S.Extract_reify
       else let m =
              if not r
@@ -1993,8 +1992,9 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
       let open FStarC.Class.PP in
       let open FStarC.Errors.Msg in
       //if ed.univs is already set, it must be the case that us = ed.univs, else error out
-      if (mland (List.length ed_univs = List.length us)
-         (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us))
+      if (if List.length ed_univs = List.length us
+         then List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us
+         else false)
       then us, bs
       else raise_error ed.mname Errors.Fatal_UnexpectedNumberOfUniverse [
              text "Expected and generalized universes in effect declaration for"
@@ -2061,8 +2061,9 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
     match us with
     | [] -> g_us, t
     | _ ->
-     if mland (List.length us = List.length g_us)
-        (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us)
+     if (if List.length us = List.length g_us
+         then List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+         else false)
      then g_us, t
      else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (Format.fmt4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
@@ -2459,9 +2460,10 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.t) : ML
   else
     let m1_erasable = Env.is_erasable_effect env m1 in
     let m2_erasable = Env.is_erasable_effect env m2 in
-    if mland (mland m2_erasable
-       (not m1_erasable))
-       (not (lid_equals m1 PC.effect_PURE_lid))
+    if (if m2_erasable
+       then not m1_erasable
+       else false)
+       && (not (lid_equals m1 PC.effect_PURE_lid))
     then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
 
 let tc_lift env sub r : ML _ =
@@ -2480,7 +2482,7 @@ let tc_lift env sub r : ML _ =
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
-  if mlor (ed_src |> U.is_layered) (ed_tgt |> U.is_layered)
+  if (if ed_src |> U.is_layered then true else ed_tgt |> U.is_layered)
   then tc_layered_lift (Env.set_range env r) sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -2570,7 +2572,7 @@ let tc_lift env sub r : ML _ =
         (Format.fmt3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
                     (lift_wp |> fst |> List.length |> show));
-    if mland (Some? lift) (lift |> Option.must |> fst |> List.length <> 1) then
+    if (match lift with None -> false | Some (us, _) -> List.length us <> 1) then
       raise_error r Errors.Fatal_TooManyUniverse
         (Format.fmt3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
@@ -2609,7 +2611,7 @@ let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r
     let expected_result_typ =
       match tps with
       | ({binder_bv=x})::tl ->
-        if mland is_default_effect (not (tl = []))
+        if (if is_default_effect then not (tl = []) else false)
         then raise_error r Errors.Fatal_UnexpectedEffect
                           (Format.fmt2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
                             (string_of_lid lid)
@@ -2653,8 +2655,8 @@ let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lid
   let m = Env.norm_eff_name env m in
   let n = Env.norm_eff_name env n in
 
-  if mlor (lid_equals m PC.effect_GHOST_lid)
-     (lid_equals n PC.effect_GHOST_lid)
+  if (if lid_equals m PC.effect_GHOST_lid then true
+      else lid_equals n PC.effect_GHOST_lid)
   then err "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
   else
     let m_erasable = Env.is_erasable_effect env m in
@@ -2663,9 +2665,9 @@ let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lid
 
 
     if p_erasable
-    then if mland (not m_erasable) (not (lid_equals m PC.effect_PURE_lid))
+    then if (if not m_erasable then not (lid_equals m PC.effect_PURE_lid) else false)
          then err (Format.fmt1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid m))
-         else if mland (not n_erasable) (not (lid_equals n PC.effect_PURE_lid))
+         else if (if not n_erasable then not (lid_equals n PC.effect_PURE_lid) else false)
          then err (Format.fmt1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid n))
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)

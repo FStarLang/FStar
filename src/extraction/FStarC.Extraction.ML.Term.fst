@@ -687,7 +687,9 @@ let head_of_type_is_extract_as_impure_effect g t =
   | Tm_fvar fv -> has_extract_as_impure_effect g fv
   | _ -> false
 
+exception NotSupportedByExtension
 
+let translate_typ_t = g:uenv -> t:term -> ML mlty
 
 (* See below for register_pre_translate_typ *)
 let ref_translate_term_to_mlty : ref translate_typ_t =
@@ -1196,6 +1198,7 @@ let maybe_promote_effect ml_e tag t =
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
+let translate_t = g:uenv -> t:term -> ML (mlexpr & e_tag & mlty)
 let ref_term_as_mlexpr : ref translate_t =
   mk_ref (fun _ _ -> raise NotSupportedByExtension)
 

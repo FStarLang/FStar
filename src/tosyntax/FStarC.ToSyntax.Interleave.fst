@@ -218,6 +218,27 @@ let rec prefix_with_iface_decls
         (* Don't interleave pragmas on interface into implementation *)
         prefix_with_iface_decls iface_tl impl
 
+     | Exception(id, _) ->
+       (* If impl also defines the same exception, skip the iface declaration *)
+       begin match impl.d with
+       | Exception(id', _) when (string_of_id id) = (string_of_id id') ->
+         iface_tl, [impl]
+       | _ ->
+         let iface, ds = prefix_with_iface_decls iface_tl impl in
+         iface, iface_hd::ds
+       end
+
+     | TopLevelLet(_, defs) ->
+       (* If impl also defines the same names, skip the iface let definition *)
+       let iface_lids = lids_of_let defs in
+       let impl_lids = definition_lids impl in
+       if iface_lids |> Util.for_some (fun l ->
+            impl_lids |> Util.for_some (fun l' -> id_eq_lid (ident_of_lid l) l'))
+       then iface_tl, [impl]
+       else
+         let iface, ds = prefix_with_iface_decls iface_tl impl in
+         iface, iface_hd::ds
+
      | _ ->
        let iface, ds = prefix_with_iface_decls iface_tl impl in
        iface, iface_hd::ds

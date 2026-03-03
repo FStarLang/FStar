@@ -155,7 +155,7 @@ let returnM : 'Aa . 'Aa -> 'Aa = fun x  -> x
 
 type ('Aa,'Awp) as_requires = 'Awp
 type ('Aa,'Awp,'Ax) as_ensures = unit
-let admit () = failwith "Prims.admit: cannot be executed"
+let admit () = let bt = Printexc.get_callstack 40 in Printf.eprintf "Prims.admit CALLED:\n%s\n%!" (Printexc.raw_backtrace_to_string bt); failwith "Prims.admit: cannot be executed"
 let magic () = failwith "Prims.magic: cannot be executed"
 let unsafe_coerce : 'Aa 'Ab . 'Aa -> 'Ab =
   fun x -> Obj.magic x

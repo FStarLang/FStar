@@ -290,7 +290,7 @@ let iface_decls env l : ML _ =
     | Some (_, decls) -> Some decls
 let set_iface_decls env l ds =
     let _, rest =
-        FStar.List.Tot.partition
+        FStarC.List.partition
             (fun (m, _) -> Ident.lid_equals l m)
             env.remaining_iface_decls in
     {env with remaining_iface_decls=(l, ds)::rest; iface_interleaving_init=true}

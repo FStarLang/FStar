@@ -40,9 +40,6 @@ module Env = FStarC.Syntax.DsEnv
 module EMB = FStarC.Syntax.Embeddings
 module SS  = FStarC.Syntax.Subst
 
-let mland (x:bool) (y:bool) : bool = if x then y else false
-let mlor (x:bool) (y:bool) : bool = if x then true else y
-
 let extension_tosyntax_table 
   : SMap.t extension_tosyntax_decl_t
   = SMap.create 20
@@ -197,9 +194,10 @@ let tm_type r = mk_term (Name (lid_of_path   [ "Type"] r)) r Kind
 let rec is_comp_type env t : ML _ =
     match (unparen t).tm with
     (* we're right at the beginning of Prims, when (G)Tot isn't yet fully defined *)
-    | Name l when mland (lid_equals (Env.current_module env) C.prims_lid)
-                  (let s = string_of_id (ident_of_lid l) in
-                   mlor (s = "Tot") (s = "GTot")) ->
+    | Name l when (if lid_equals (Env.current_module env) C.prims_lid
+                   then (let s = string_of_id (ident_of_lid l) in
+                         if s = "Tot" then true else s = "GTot")
+                   else false) ->
       true
 
     | Name l
@@ -1020,14 +1018,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
 
     (* if op_Star has not been rebound, then it's reserved for tuples *)
     | Op(op_star, [lhs;rhs]) when
-      (mland (Ident.string_of_id op_star = "*")
-       (op_as_term env 2 op_star |> None?)) ->
+      (if Ident.string_of_id op_star = "*"
+       then (op_as_term env 2 op_star |> None?)
+       else false) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t : ML _ = match t.tm with
         // * is left-associative
         | Op(id, [t1;t2]) when
-           mland (string_of_id id = "*") (None? (op_as_term env 2 op_star)) ->
+           (if string_of_id id = "*" then None? (op_as_term env 2 op_star) else false) ->
           flatten t1 @ [ t2 ]
         | _ -> [t]
       in
@@ -1092,7 +1091,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         S.fvar_with_dd (Ident.set_lid_range Const.false_lid top.range) None,
                               noaqs
     | Projector (eff_name, id)
-      when mland (is_special_effect_combinator (string_of_id id)) (Env.is_effect_name env eff_name) ->
+      when (if is_special_effect_combinator (string_of_id id) then Env.is_effect_name env eff_name else false) ->
       (* TODO : would it be possible to normalize the effect name at that point so that *)
       (* we get back the original effect definition instead of an effect abbreviation *)
       let txt = string_of_id id in
@@ -1528,9 +1527,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                                 text "Suggestion: replace this pattern with a variable."
                               ] in
                          t
-                    else if mland (Options.ml_ish ()) //we're type-checking the compiler itself, e.g.
-                    (mland (Some? (Env.try_lookup_effect_name env (C.effect_ML_lid()))) //ML is in scope (not still in prims, e.g)
-                    (not is_rec || List.length args <> 0)) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                    else if (if Options.ml_ish () //we're type-checking the compiler itself, e.g.
+                    then (if Some? (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
+                          then (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
+                          else false)
+                    else false)
                     then AST.ml_comp t
                     else AST.tot_comp t
                 in
@@ -1615,8 +1616,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
 
       let attrs, (head_pat, defn) = List.hd lbs in
       let attrs = add_extra_attrs attrs in
-      if mlor is_rec
-       (is_app_pattern head_pat)
+      if (if is_rec then true else is_app_pattern head_pat)
       then ds_let_rec_or_app()
       else ds_non_rec attrs head_pat defn body
 
@@ -2241,7 +2241,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     in
     let is_smt_pat (t,_) =
       match (unparen t).tm with
-      | ListLiteral ts -> List.Tot.for_all is_smt_pat1 ts
+      | ListLiteral ts -> BU.for_all is_smt_pat1 ts
       | _ -> false
     in
     let pre_process_comp_typ (t:AST.term) =
@@ -2349,14 +2349,16 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
 
 
       (* we're right at the beginning of Prims, when Tot isn't yet fully defined *)
-      | Name l when (mland (lid_equals (Env.current_module env) C.prims_lid)
-                          ((string_of_id (ident_of_lid l)) = "Tot")) ->
+      | Name l when (if lid_equals (Env.current_module env) C.prims_lid
+                     then (string_of_id (ident_of_lid l)) = "Tot"
+                     else false) ->
         (* we have an explicit effect annotation ... no need to add anything *)
         (Ident.set_lid_range Const.effect_Tot_lid head.range,  []), args
 
       (* we're right at the beginning of Prims, when GTot isn't yet fully defined *)
-      | Name l when (mland (lid_equals (Env.current_module env) C.prims_lid)
-                          ((string_of_id (ident_of_lid l)) = "GTot")) ->
+      | Name l when (if lid_equals (Env.current_module env) C.prims_lid
+                     then (string_of_id (ident_of_lid l)) = "GTot"
+                     else false) ->
         (* we have an explicit effect annotation ... no need to add anything *)
         (Ident.set_lid_range Const.effect_GTot_lid head.range, []), args
 
@@ -2564,7 +2566,7 @@ and desugar_binder_aq env b : ML ((option ident & S.term & list S.attribute) & a
   | Variable x      ->
     let ident_is_ticked (id: ident) : ML bool =
       let nm   = string_of_id id in
-      mland (String.length nm > 0) (String.get nm 0 = '\'')
+      (if String.length nm > 0 then String.get nm 0 = '\'' else false)
     in
     if ident_is_ticked x
     then
@@ -3612,7 +3614,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
           in
           (* If the name begins with _, or if it has the no_method attribute, then
            * it will not be defined. So we filter it out of the names declared by the splice. *)
-          let meths = List.filter (fun x -> mland (not (String.index (string_of_id (ident_of_lid x)) 0 = '_')) (not (has_no_method_attr x))) meths in
+          let meths = List.filter (fun x -> if not (String.index (string_of_id (ident_of_lid x)) 0 = '_') then not (has_no_method_attr x) else false) meths in
           let is_typed = false in
           [{ sigel = Sig_splice {is_typed; lids=meths; tac=mkclass lid};
              sigquals = [];
@@ -4068,7 +4070,7 @@ let desugar_modul_common (curmod: option S.modul) env (m:AST.modul) : ML (env_t 
     | None, _ ->
         env
     | Some ({ name = prev_lid }), Module {mname = current_lid }
-      when mland (lid_equals prev_lid current_lid) (Options.interactive ()) ->
+      when (if lid_equals prev_lid current_lid then Options.interactive () else false) ->
         // If we're in the interactive mode reading the contents of an fst after
         // desugaring the corresponding fsti, don't finish the fsti
         env

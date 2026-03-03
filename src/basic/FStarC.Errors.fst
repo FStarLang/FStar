@@ -111,6 +111,10 @@ let update_flags (l:list (error_flag & (int & int)))
   List.collect set_flag_for_range error_range_settings
   @ default_settings
 
+exception Error   of error
+exception Stop
+exception Empty_frag
+
 let json_of_issue_level level
   = JsonStr ( match level with
             | ENotImplemented -> "NotImplemented"

@@ -63,9 +63,6 @@ let dbg_UniverseOf     = Debug.get_toggle "UniverseOf"
 
 (* Some local utilities *)
 (* short-circuit boolean operators that work with ML operands *)
-let mland (x:bool) (y:bool) : bool = if x then y else false
-let mlor (x:bool) (y:bool) : bool = if x then true else y
-let coerce_ml_to_tot (#a #b:Type) (f: a -> ML b) : (a -> b) = admit ()
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
 
@@ -175,8 +172,9 @@ let check_erasable_binder_attributes env attrs (binder_ty:typ) : ML unit =
     attrs |>
     List.iter
       (fun attr ->
-        if mland (U.is_fvar Const.erasable_attr attr)
-                (not (N.non_info_norm env binder_ty))
+        if (if U.is_fvar Const.erasable_attr attr
+            then not (N.non_info_norm env binder_ty)
+            else false)
         then raise_error attr Errors.Fatal_QulifierListNotPermitted
                 ("Incompatible attributes:  an erasable attribute on a binder must bind a name at an non-informative type"))
 
@@ -294,11 +292,14 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
     match copt with
     | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
-        if mlor (mland (Options.ml_ish())
-                      (Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c)))
-               (mland (Options.ml_ish ())
-                      (mland (Options.lax ())
-                             (not (U.is_pure_or_ghost_comp c))))
+        if (if Options.ml_ish()
+            then Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c)
+            else false)
+           || (if Options.ml_ish ()
+               then (if Options.lax ()
+                     then not (U.is_pure_or_ghost_comp c)
+                     else false)
+               else false)
         then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
@@ -576,15 +577,16 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
                   | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
                   | Tm_name _, Tm_name _ -> false  //do not warn for names, e.g. in polymorphic functions, the names may be instantiated at the call sites
                   | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
-                    mlor (warn h1 h2) (mlor (List.length args1 <> List.length args2)
-                    (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2)))
+                    (if warn h1 h2 then true
+                     else (if List.length args1 <> List.length args2 then true
+                     else List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2)))
                   | Tm_refine {b=t1; phi=phi1}, Tm_refine {b=t2; phi=phi2} ->
-                    mlor (warn t1.sort t2.sort) (warn phi1 phi2)
+                    (if warn t1.sort t2.sort then true else warn phi1 phi2)
                   | Tm_uvar _, _
                   | _, Tm_uvar _ -> false
                   | _, _ -> true in
 
-           (if mland (not env.phase1) (mland should_warn (warn t1 t2))
+           (if (if not env.phase1 then (if should_warn then warn t1 t2 else false) else false)
             then match (SS.compress t1).n, (SS.compress t2).n with
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
@@ -1277,7 +1279,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   // If we're on the first phase, we don't synth, and just wait for the next phase
   | Tm_app {hd=head; args=[(tau, None)]}
   | Tm_app {hd=head; args=[(_, Some ({ aqual_implicit = true })); (tau, None)]}
-        when mland (U.is_synth_by_tactic head) (not env.phase1) ->
+        when (if U.is_synth_by_tactic head then not env.phase1 else false) ->
     (* Got an application of synth_by_tactic, process it *)
 
     // no "as" clause
@@ -1285,7 +1287,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     tc_synth head env args top.pos
 
   | Tm_app {hd=head; args}
-        when mland (U.is_synth_by_tactic head) (not env.phase1) ->
+        when (if U.is_synth_by_tactic head then not env.phase1 else false) ->
     (* We have some extra args, move them out of the way *)
     let args1, args2 =
         match args with
@@ -1317,7 +1319,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e, c, g =
       (* If the function is shortcircuiting, we must check that the arguments are
       pure/ghost. We skirt this check with --MLish, though. *)
-      if mland (TcUtil.short_circuit_head head) (mland (not (Options.ml_ish ())) (not env.phase1))
+      if (if TcUtil.short_circuit_head head then (if not (Options.ml_ish ()) then not env.phase1 else false) else false)
       then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
            // //TODO: this is not efficient:
            // //      It is quadratic in the size of boolean terms
@@ -1331,10 +1333,10 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       else check_application_args env head chead g_head args (Env.expected_typ env0)
     in
     let e, c, implicits =
-        if mlor (TcComm.is_tot_or_gtot_lcomp c)
+        if (if TcComm.is_tot_or_gtot_lcomp c then true
         // Also instantiate in phase1, dropping any precondition,
         // since it will be recomputed correctly in phase2.
-               (mland env.phase1 (TcComm.is_pure_or_ghost_lcomp c))
+               else (if env.phase1 then TcComm.is_pure_or_ghost_lcomp c else false))
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, mzero
@@ -1545,7 +1547,7 @@ and tc_match (env : Env.env) (top : term) : ML (term & lcomp & guard_t) =
             (fun (branch, f, eff_label, cflags, c, g, erasable_branch) (caccum, gaccum, erasable) ->
                (f, eff_label, cflags |> Option.must, c |> Option.must)::caccum,
                g ++ gaccum,
-               (mlor erasable erasable_branch)) t_eqns ([], mzero, false) in
+               (if erasable then true else erasable_branch)) t_eqns ([], mzero, false) in
         let cases, g, erasable = r in
         match ret_opt with
         | None ->
@@ -1699,7 +1701,7 @@ and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option S.fv_qual) (e:term
       | Some (Record_ctor _) -> true
       | _ -> false
   in
-  if mland (is_data_ctor q) (not (Env.is_datacon env v)) then
+  if (if is_data_ctor q then not (Env.is_datacon env v) else false) then
     raise_error env Errors.Fatal_MissingDataConstructor
                 (Format.fmt1 "Expected a data constructor; got %s" (show v));
 
@@ -1823,7 +1825,7 @@ and tc_value env (e:term) : ML (term
       (* The Data_ctor qualifier is mostly set by desugaring, but
          may be missing in tactic-generated terms. In general,
          we should try to not rely on desugaring. *)
-      if mland (None? fv.fv_qual) (Env.is_datacon env fv.fv_name)
+      if (if None? fv.fv_qual then Env.is_datacon env fv.fv_name else false)
       then { fv with fv_qual = Some Data_ctor }
       else fv
     in
@@ -2114,7 +2116,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
               | Some (Inl more_bs) ->  //more actual args
                 let c = SS.subst_comp subst c_expected in
                 (* the expected type is explicitly curried *)
-                let cond = mlor (Options.ml_ish ()) (U.is_named_tot c) in
+                let cond = if Options.ml_ish () then true else U.is_named_tot c in
                 if cond then
                   let t = N.unfold_whnf env_bs (U.comp_result c) in
                   match t.n with
@@ -2209,7 +2211,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
 
-        if mland (not (special imp imp')) (not (U.eq_bqual imp imp')) then
+        if (if not (special imp imp') then not (U.eq_bqual imp imp') else false) then
           let open FStarC.Errors.Msg in
           let open FStarC.Pprint in
           let open FStarC.Class.PP in
@@ -2354,7 +2356,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & lcomp & guard_t)
                | Tm_constant (Const_reflect _) -> true
                | _ -> false)
             | _ -> false) in
-        if mland (c_opt |> Some?) is_reflect_body
+        if (if c_opt |> Some? then is_reflect_body else false)
         then
           Env.clear_expected_typ envbody |> fst,
           S.mk
@@ -2434,19 +2436,17 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & lcomp & guard_t)
           if Options.no_positivity()
           then ()
           else (
-           if mland (U.is_binder_unused b)
-                    (not (Positivity.name_unused_in_type envbody b.binder_bv body))
-           then raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
+           if U.is_binder_unused b then
+             if not (Positivity.name_unused_in_type envbody b.binder_bv body) then
+               raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
                               (Format.fmt1 "Binder %s is marked unused, but its use in the definition is not"
-                                          (show b))
-                               ;
+                                          (show b));
 
-           if mland (U.is_binder_strictly_positive b)
-                    (not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body))
-           then raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
+           if U.is_binder_strictly_positive b then
+             if not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body) then
+               raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
                               (Format.fmt1 "Binder %s is marked strictly positive, but its use in the definition is not"
                                              (show b))
-                                
           ))      
         bs 
     in
@@ -2588,14 +2588,16 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
        *)
       let cres, inserted_return_in_cres =
         let head_is_pure_and_some_arg_is_effectful =
-            mland (TcComm.is_pure_or_ghost_lcomp chead)
-                  (BU.for_some (fun (_, _, lc) -> mlor (not (TcComm.is_pure_or_ghost_lcomp lc))
-                                                       (TcUtil.should_not_inline_lc lc))
-                               arg_comps_rev)
+            if TcComm.is_pure_or_ghost_lcomp chead
+            then BU.for_some (fun (_, _, lc) -> if not (TcComm.is_pure_or_ghost_lcomp lc) then true
+                                                       else TcUtil.should_not_inline_lc lc)
+                                arg_comps_rev
+            else false
         in
         let term = S.mk_Tm_app head (List.rev arg_rets_rev) head.pos in
-        if mland (TcComm.is_pure_or_ghost_lcomp cres)
-                 (head_is_pure_and_some_arg_is_effectful)
+        if (if TcComm.is_pure_or_ghost_lcomp cres
+            then head_is_pure_and_some_arg_is_effectful
+            else false)
             // || Some? (Env.expected_typ env))
         then let _ = if Debug.extreme () then Format.print1 "(a) Monadic app: Return inserted in monadic application: %s\n" (show term) in
              TcUtil.maybe_assume_result_eq_pure_term env term cres, true
@@ -2719,11 +2721,12 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                end else begin
                    //this argument is effectful, warn if the function would be erased
                    //special casing for ignore, may be use an attribute instead?
-                   let warn_effectful_args  =
-                     mland (TcUtil.must_erase_for_extraction env chead.res_typ)
-                           (not (match (U.un_uinst head).n with
+                   let warn_effectful_args =
+                     if TcUtil.must_erase_for_extraction env chead.res_typ
+                     then not (match (U.un_uinst head).n with
                            | Tm_fvar fv -> S.fv_eq_lid fv (Parser.Const.psconst "ignore")
-                           | _ -> true))
+                           | _ -> true)
+                     else false
                    in
                    if warn_effectful_args then
                      Errors.log_issue e Errors.Warning_EffectfulArgumentToErasedFunction
@@ -2832,8 +2835,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 //                if debug env Options.High then Format.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in
             let xterm = S.bv_to_name x, aq in  //AR: fix for #1123, we were dropping the qualifiers
-            if mlor (TcComm.is_tot_or_gtot_lcomp c) //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
-                    (TcUtil.is_pure_or_ghost_effect env c.eff_name)
+            if (if TcComm.is_tot_or_gtot_lcomp c then true //early in prims, Tot and GTot are primitive, not defined in terms of Pure/Ghost yet
+                else TcUtil.is_pure_or_ghost_effect env c.eff_name)
             then let subst = maybe_extend_subst subst (List.hd bs) e in
                  tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, fvs) rest rest'
             else tc_args head_info (subst, (arg, Some x, c)::outargs, xterm::arg_rets, g, x::fvs) rest rest'
@@ -2941,7 +2944,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : ML (term
     let r = Env.get_range env in
     let tf = SS.compress (U.comp_result chead) in
     match tf.n with
-        | Tm_arrow {bs; comp=c} when (mland (U.is_total_comp c) (List.length bs=List.length args)) ->
+        | Tm_arrow {bs; comp=c} when (if U.is_total_comp c then List.length bs=List.length args else false) ->
           let res_t = U.comp_result c in
           let args, guard, ghost =
             List.fold_left2
@@ -2952,9 +2955,10 @@ and check_short_circuit_args env head chead g_head args expected_topt : ML (term
                  in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in
                 let g = Env.imp_guard (Env.guard_of_guard_formula short) g in
-                let ghost = mlor ghost
-                                (mland (not (TcComm.is_total_lcomp c))
-                                       (not (TcUtil.is_pure_effect env c.eff_name))) in
+                let ghost = if ghost then true
+                                else (if not (TcComm.is_total_lcomp c)
+                                      then not (TcUtil.is_pure_effect env c.eff_name)
+                                      else false) in
                 seen@[e,aq], guard ++ g, ghost)
               ([], g_head, false)
               args
@@ -3650,8 +3654,8 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
             | Pat_cons (_, _, pat_args), Tm_app {hd=head; args} ->
                 //application pattern
                 let f = head_constructor head in
-                if mlor (not (Env.is_datacon env f))
-                        (List.length pat_args <> List.length args)
+                if (if not (Env.is_datacon env f) then true
+                    else List.length pat_args <> List.length args)
                 then failwith "Impossible: application patterns must be fully-applied data constructors"
                 else let sub_term_guards =
                         List.zip pat_args args |>
@@ -3747,8 +3751,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
      //
      let close_branch_with_substitutions =
        let m = c.eff_name |> Env.norm_eff_name env in
-       mland (Env.is_layered_effect env m)
-             (None? (m |> Env.get_effect_decl env |> U.get_layered_close_combinator)) in
+       (if Env.is_layered_effect env m
+        then None? (m |> Env.get_effect_decl env |> U.get_layered_close_combinator)
+        else false) in
 
      (* (b) *)
      let c_weak, g_when_weak =
@@ -3787,8 +3792,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
      let binders = List.map S.mk_binder pat_bvs in
      let maybe_return_c_weak (should_return:bool) : ML lcomp =
        let c_weak =
-         if mland should_return
-                 (TcComm.is_pure_or_ghost_lcomp c_weak)
+         if (if should_return
+                then TcComm.is_pure_or_ghost_lcomp c_weak
+                else false)
          then TcUtil.maybe_assume_result_eq_pure_term (Env.push_bvs scrutinee_env pat_bvs) branch_exp c_weak
          else c_weak in
        if close_branch_with_substitutions
@@ -3901,7 +3907,7 @@ and check_top_level_let env e : ML _ =
            if ok
            then e2, c1
            else (
-             if mland (not (Options.ml_ish ())) (not env.phase1) then
+             if (if not (Options.ml_ish ()) then not env.phase1 else false) then
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
              mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
            )
@@ -3958,7 +3964,7 @@ and maybe_intro_smt_lemma env lem_typ c2 : ML _ =
              in
              List.rev us
          in
-         let quant = U.smt_lemma_as_forall lem_typ (coerce_ml_to_tot universe_of_binders) in
+         let quant = U.smt_lemma_as_forall lem_typ universe_of_binders in
          TcUtil.weaken_precondition env c2 (NonTrivial quant)
     else c2
 
@@ -3979,8 +3985,9 @@ and check_inner_let env e : ML _ =
        let is_inline_let = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_attr) lb.lbattrs in
        let is_inline_let_vc = BU.for_some (U.is_fvar FStarC.Parser.Const.inline_let_vc_attr) lb.lbattrs in
        let _ =
-        if mland (is_inline_let || is_inline_let_vc)  //inline let is allowed only if it is pure or ghost
-                 (not (mlor pure_or_ghost (Env.is_erasable_effect env c1.eff_name)))  //inline let is allowed on erasable effects
+        if (if (is_inline_let || is_inline_let_vc)  //inline let is allowed only if it is pure or ghost
+            then not (if pure_or_ghost then true else Env.is_erasable_effect env c1.eff_name)  //inline let is allowed on erasable effects
+            else false)
         then raise_error e1
                Errors.Fatal_ExpectedPureExpression
                (Format.fmt2 "Definitions marked @inline_let are expected to be pure or ghost; \
@@ -4026,11 +4033,15 @@ and check_inner_let env e : ML _ =
        let lb =
          let attrs =
            let add_inline_let =  //add inline_let if
-             mland (not is_inline_let)  //the letbinding is not already inline_let, and
-                   (mlor (mland pure_or_ghost  //either it is pure/ghost with unit type, or
-                               (U.is_unit c1.res_typ))
-                         (mland (Env.is_erasable_effect env c1.eff_name)  //c1 is erasable and cres is not
-                                (not (Env.is_erasable_effect env cres.eff_name)))) in
+             (if not is_inline_let  //the letbinding is not already inline_let, and
+              then (if (if pure_or_ghost  //either it is pure/ghost with unit type, or
+                        then U.is_unit c1.res_typ
+                        else false)
+                    then true
+                    else (if Env.is_erasable_effect env c1.eff_name  //c1 is erasable and cres is not
+                          then not (Env.is_erasable_effect env cres.eff_name)
+                          else false))
+              else false) in
            if add_inline_let
            then U.inline_let_attr::lb.lbattrs
            else lb.lbattrs in
@@ -4277,8 +4288,8 @@ and build_let_rec_env _top_level env lbs : ML (list letbinding & env_t & guard_t
           | None -> Some univ_vars, Env.push_univ_vars env univ_vars //no polymorphic recursion on universes
           | Some uvs ->
             let uvs_mismatch = 
-              mlor (List.length uvs <> List.length univ_vars)
-                   (not (List.forall2 (fun u1 u2 -> Ident.ident_equals u1 u2) uvs univ_vars)) in
+              (if List.length uvs <> List.length univ_vars then true
+               else not (List.forall2 (fun u1 u2 -> Ident.ident_equals u1 u2) uvs univ_vars)) in
             if uvs_mismatch
             then
               raise_error lbtyp Errors.Fatal_IncompatibleSetOfUniverse [
@@ -4803,7 +4814,7 @@ let tc_tparams env0 (tps:binders) : ML (binders & Env.env & universes) =
 
 let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : ML (option typ) =
   let mk_tm_type u = S.mk (Tm_type u) t.pos in
-  let effect_ok k = mlor (not must_tot) (N.non_info_norm env k) in
+  let effect_ok k = if not must_tot then true else N.non_info_norm env k in
   let t = SS.compress t in
   match t.n with
   | Tm_delayed _
@@ -4882,8 +4893,8 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
     let t_hd = __typeof_tot_or_gtot_term_fastpath env hd must_tot in
     Option.bind t_hd (fun t_hd ->
       Option.bind (apply_well_typed env t_hd args) (fun t ->
-        if mlor (effect_ok t)
-                (List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> Some?) args)
+        if (if effect_ok t then true
+            else List.for_all (fun (a, _) -> __typeof_tot_or_gtot_term_fastpath env a must_tot |> Some?) args)
         then Some t
         else None))
 
@@ -4894,9 +4905,10 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
 
   | Tm_ascribed {asc=(Inr c, _, _)} ->
     let k = U.comp_result c in
-    if mlor (mlor (not must_tot)
-                  (c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid))
-            (N.non_info_norm env k)
+    if (if (if not must_tot then true
+            else c |> U.comp_effect_name |> Env.norm_eff_name env |> lid_equals Const.effect_PURE_lid)
+        then true
+        else N.non_info_norm env k)
     then Some k
     else None
 

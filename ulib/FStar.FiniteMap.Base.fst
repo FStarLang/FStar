@@ -42,6 +42,10 @@ module FSet = FStar.FiniteSet.Base
 open FStar.FiniteSet.Ambient
 module T = FStar.Tactics.V2
 
+// Context pruning can be too aggressive for this module, removing
+// FiniteSet.Ambient facts needed by map operations. Disable it.
+#push-options "--ext context_pruning=false --z3rlimit 20"
+
 // Finite maps
 type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a & setfun_t a b keys)
 

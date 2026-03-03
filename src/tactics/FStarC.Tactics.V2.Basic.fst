@@ -2275,6 +2275,13 @@ let exn_to_issue (e:exn)  : ML (Errors.issue) =
     issue_ctx = get_ctx ()
   })
 
+let uvar_solution = bv & term
+let remaining_uvar_t = bv & typ
+let remaining_uvars_t = list remaining_uvar_t
+let issues = list FStarC.Errors.issue
+
+let refl_tac (a : Type) = tac (option a & issues)
+
 let __refl_typing_builtin_wrapper (f:unit -> ML ('a & list refl_guard_and_tok_t))  : ML (tac (option 'a & issues)) =
   (* We ALWAYS rollback the state. This wrapper is meant to ensure that
   the UF graph is not affected by whatever we are wrapping. This means

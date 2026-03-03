@@ -12,6 +12,8 @@ let one (e : embedding 'a) : appemb 'a =
       | None -> None
       | Some v -> Some (v, xs)
 
+let (let?) (o : option 'a) (f : 'a -> ML (option 'b)) : ML (option 'b) = match o with | None -> None | Some v -> f v
+
 let (<*>) u1 u2 =
   fun args ->
     let? f, args' = u1 args in
