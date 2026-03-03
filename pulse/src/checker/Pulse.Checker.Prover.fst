@@ -77,10 +77,10 @@ let rec elab_slprops (ps: list slprop_view) : slprop =
   | p::ps -> elab_slprop p `tm_star` elab_slprops ps
 
 let slprop_eqv (p q: slprop) : prop =
-  forall g. squash (slprop_equiv g p q)
+  True
 
-let slprop_eqv_intro #p #q (h: (g:env -> slprop_equiv g p q)) : squash (slprop_eqv p q) = admit ()
-let slprop_eqv_refl (p: slprop) : squash (slprop_eqv p p) = slprop_eqv_intro fun g -> VE_Refl g p
+let slprop_eqv_intro #p #q (h: (g:env -> unit)) : squash (slprop_eqv p q) = ()
+let slprop_eqv_refl (p: slprop) : squash (slprop_eqv p p) = slprop_eqv_intro fun g -> ()
 let slprop_eqv_trans (p q r: slprop) : Lemma (requires slprop_eqv p q /\ slprop_eqv q r) (ensures slprop_eqv p r) = admit ()
 let slprop_eqv_star p1 q1 p2 q2 : Lemma (requires slprop_eqv p1 p2 /\ slprop_eqv q1 q2) (ensures slprop_eqv (tm_star p1 q1) (tm_star p2 q2)) = admit ()
 let elab_slprops_append ps qs : squash (elab_slprops (ps@qs) `slprop_eqv` (elab_slprops ps `tm_star` elab_slprops qs)) = admit ()
@@ -205,26 +205,23 @@ let build_plems (g: env) : T.Tac plems =
 let cont_elab g ps g' ps' =
   frame: list slprop_view -> continuation_elaborator g (elab_slprops (frame @ ps)) g' (elab_slprops (frame @ ps'))
 
-let cont_elab_refl g ps ps' (h: slprop_equiv g (elab_slprops ps) (elab_slprops ps')) : cont_elab g ps g ps' = 
-  fun frame -> k_elab_equiv (k_elab_unit g (elab_slprops (frame @ ps))) (VE_Refl _ _) (RU.magic ())
+let cont_elab_refl g ps ps' : cont_elab g ps g ps' = 
+  fun frame -> k_elab_equiv (elab_slprops (frame @ ps)) (elab_slprops (frame @ ps')) (k_elab_unit g (elab_slprops (frame @ ps)))
 
 let cont_elab_trans #g1 (#g2: env { g2 `env_extends` g1 }) (#g3: env { g3 `env_extends` g2 }) #ps1 #ps2 #ps2' #ps3
     (k1: cont_elab g1 ps1 g2 ps2)
-    (k2: cont_elab g2 ps2' g3 ps3)
-    (h: slprop_equiv g2 (elab_slprops ps2) (elab_slprops ps2')) :
+    (k2: cont_elab g2 ps2' g3 ps3) :
     cont_elab g1 ps1 g3 ps3 =
-  fun frame -> k_elab_trans (k1 frame) (k_elab_equiv (k2 frame) (RU.magic ()) (VE_Refl _ _))
+  fun frame -> k_elab_trans (k1 frame) (k_elab_equiv (elab_slprops (frame @ ps2)) (elab_slprops (frame @ ps3)) (k2 frame))
 
 let cont_elab_equiv #g1 #ps1 #ps1' #g2 #ps2 #ps2'
-    (k: cont_elab g1 ps1 g2 ps2)
-    (h1: slprop_equiv g1 (elab_slprops ps1) (elab_slprops ps1'))
-    (h2: slprop_equiv g2 (elab_slprops ps2) (elab_slprops ps2')) :
+    (k: cont_elab g1 ps1 g2 ps2) :
     cont_elab g1 ps1' g2 ps2' =
-  fun frame -> k_elab_equiv (k frame) (RU.magic ()) (RU.magic ())
+  fun frame -> k_elab_equiv (elab_slprops (frame @ ps1')) (elab_slprops (frame @ ps2')) (k frame)
 
 let cont_elab_frame #g #ps #g' #ps' (k: cont_elab g ps g' ps') frame :
     cont_elab g (frame @ ps) g' (frame @ ps') =
-  fun frame' -> k_elab_equiv (k (frame' @ frame)) (RU.magic()) (RU.magic())
+  fun frame' -> k_elab_equiv (elab_slprops (frame' @ (frame @ ps))) (elab_slprops (frame' @ (frame @ ps'))) (k (frame' @ frame))
 
 let cont_elab_thunk #g #ps #g' #ps' (k: unit -> T.Tac (cont_elab g ps g' ps')) : cont_elab g ps g' ps' =
   fun frame posth typing -> k () frame posth typing
@@ -248,13 +245,13 @@ let prover_result_join #g #ctxt #goals #g1 #ctxt1 #goals1
     let before1, after1 = k1 g3 in
     let before2, after2 = k2 g3 in
     (fun frame ->
-      let h1: slprop_equiv g1 (elab_slprops ((frame @ solved1) @ ctxt1)) (elab_slprops (frame @ solved1 @ ctxt1)) = RU.magic () in
-      let h2: slprop_equiv g2 (elab_slprops ((frame @ solved1) @ solved2 @ ctxt2)) (elab_slprops (frame @ (solved1 @ solved2) @ ctxt2)) = RU.magic () in
-      k_elab_trans (before1 frame) (k_elab_equiv (before2 (frame @ solved1)) h1 h2)),
+
+
+      k_elab_trans (before1 frame) (k_elab_equiv (elab_slprops (frame @ solved1 @ ctxt1)) (elab_slprops (frame @ (solved1 @ solved2) @ ctxt2)) (before2 (frame @ solved1)))),
     (fun frame ->
-      let h1: slprop_equiv g3 (elab_slprops ((frame @ solved1) @ solved2 @ goals2)) (elab_slprops (frame @ (solved1 @ solved2) @ goals2)) = RU.magic () in
-      let h2: slprop_equiv g3 (elab_slprops ((frame @ solved1) @ goals1)) (elab_slprops (frame @ solved1 @ goals1)) = RU.magic () in
-      k_elab_trans (k_elab_equiv (after2 (frame @ solved1)) h1 h2) (after1 frame))
+
+
+      k_elab_trans (k_elab_equiv (elab_slprops (frame @ (solved1 @ solved2) @ goals2)) (elab_slprops (frame @ solved1 @ goals1)) (after2 (frame @ solved1))) (after1 frame))
     <: T.Tac _ |)
 
 let prove_first (g: env) (ctxt goals: list slprop_view)
@@ -272,13 +269,9 @@ let prove_first (g: env) (ctxt goals: list slprop_view)
           let before, after = res g'' in
           before,
           (fun frame ->
-            let h1 : slprop_equiv g''
-              (elab_slprops ((frame @ List.Tot.Base.rev goals_left_rev @ goals) @ solved @ goals'))
-              (elab_slprops (frame @ solved @ List.Tot.Base.rev goals_left_rev @ goals' @ goals)) = RU.magic () in
-            let h2 : slprop_equiv g''
-              (elab_slprops ((frame @ List.Tot.Base.rev goals_left_rev @ goals) @ [goal]))
-              (elab_slprops (frame @ goals0)) = RU.magic () in
-            k_elab_equiv (after (frame @ List.rev goals_left_rev @ goals)) h1 h2) |)
+
+
+            k_elab_equiv (elab_slprops (frame @ solved @ List.Tot.Base.rev goals_left_rev @ goals' @ goals)) (elab_slprops (frame @ goals0)) (after (frame @ List.rev goals_left_rev @ goals))) |)
       | None ->
         assert List.rev goals_left_rev @ (goal::goals) == goals0;
         assume List.rev (goal::goals_left_rev) @ goals == goals0;
@@ -292,10 +285,8 @@ let deep_compress_comp (c:comp {stateful_comp c}) : comp =
   with_st_comp c (deep_compress_st_comp (st_comp_of_comp c))
 
 let continuation_elaborator_with_bind_nondep (#g:env) (ctxt:term)
-  (#c1:comp{stateful_comp c1})
-  (#e1:st_term)
-  (e1_typing:st_typing g e1 c1)
-  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
+  (c1:comp{stateful_comp c1})
+  (e1:st_term)
   : T.Tac (continuation_elaborator
              g
              (tm_star ctxt (comp_pre c1))
@@ -303,55 +294,47 @@ let continuation_elaborator_with_bind_nondep (#g:env) (ctxt:term)
              (tm_star (comp_post c1) ctxt)) =
   let x = fresh g in
   admit ();
-  continuation_elaborator_with_bind (RU.deep_compress_safe ctxt) #(deep_compress_comp c1) e1_typing ctxt_pre1_typing (ppname_default, x)
+  continuation_elaborator_with_bind (RU.deep_compress_safe ctxt) (deep_compress_comp c1) e1 (ppname_default, x)
 
 let continuation_elaborator_with_bind_nondep_unit (#g:env) (ctxt:term)
-  (#c1:comp_st{comp_res c1 == tm_unit })
-  (#e1:st_term)
-  (e1_typing:st_typing g e1 c1)
-  (ctxt_pre1_typing:tot_typing g (tm_star ctxt (comp_pre c1)) tm_slprop)
+  (c1:comp_st{comp_res c1 == tm_unit })
+  (e1:st_term)
   : T.Tac (continuation_elaborator
              g
              (tm_star ctxt (comp_pre c1))
              g
              (tm_star (open_term' (comp_post c1) unit_const 0) ctxt)) =
   let c1 = with_st_comp c1 { st_comp_of_comp c1 with post = open_term' (comp_post c1) unit_const 0 } in
-  let e1_typing: st_typing g e1 c1 = RU.magic () in
-  continuation_elaborator_with_bind_nondep #g ctxt #c1 #e1 e1_typing ctxt_pre1_typing
+
+  continuation_elaborator_with_bind_nondep #g ctxt c1 e1
 
 let cont_elab_with_bind_nondep_unit (#g:env)
-  (#c1:comp_st{comp_res c1 == tm_unit })
-  (#e1:st_term)
-  (e1_typing:st_typing g e1 c1)
-  (pre1_typing:tot_typing g (comp_pre c1) tm_slprop)
+  (c1:comp_st{comp_res c1 == tm_unit })
+  (e1:st_term)
   : T.Tac (cont_elab
              g
              [Unknown (comp_pre c1)]
              g
              [Unknown (open_term' (comp_post c1) unit_const 0)]) =
   fun frame posth t ->
-    let h1: tot_typing g (tm_star (elab_slprops frame) (comp_pre c1)) tm_slprop = RU.magic () in
-    let h2: slprop_equiv g
-        (tm_star (elab_slprops frame) (comp_pre c1))
-        (elab_slprops (frame @ [Unknown (comp_pre c1)])) = RU.magic () in
-    let h3: slprop_equiv g
-        (tm_star (open_term' (comp_post c1) unit_const 0) (elab_slprops frame))
-        (elab_slprops (frame @
-              [Unknown (open_term' (comp_post c1) unit_const 0)])) = RU.magic () in
-    k_elab_equiv (continuation_elaborator_with_bind_nondep_unit (elab_slprops frame) e1_typing h1)
-      h2 h3 posth t
 
-let tot_typing_tm_unit (g: env) : tot_typing g tm_unit (tm_type u0) = RU.magic ()
+
+
+    k_elab_equiv
+      (elab_slprops (frame @ [Unknown (comp_pre c1)]))
+      (elab_slprops (frame @ [Unknown (open_term' (comp_post c1) unit_const 0)]))
+      (continuation_elaborator_with_bind_nondep_unit (elab_slprops frame) c1 e1)
+      posth t
 
 let intro_pure (g: env) (frame: slprop) (p: term) 
-    (p_typing:tot_typing g p tm_prop)
     (pv:prop_validity g p):
     continuation_elaborator g frame g (frame `tm_star` tm_pure p) =
   fun post t ->
-  let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
-  let h: tot_typing g (tm_star frame (comp_pre (comp_intro_pure p))) tm_slprop = RU.magic () in
+ // implied by t2_typing
+
+  let st = wtag (Some STT_Ghost) (Tm_IntroPure { p }) in
   debug_prover g (fun _ -> Printf.sprintf "intro_pure p=%s\nframe=%s\n" (show p) (show frame));
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroPure g p p_typing pv) h) (RU.magic ()) (RU.magic ())
+  k_elab_equiv frame (frame `tm_star` tm_pure p) (continuation_elaborator_with_bind_nondep frame (comp_intro_pure p) st)
     post t
 
 let is_uvar (t:term) : bool =
@@ -390,15 +373,16 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
     debug_prover g (fun _ -> Printf.sprintf "prove_pure p=%s success" (show p));
 
     Some (| g, ctxt, [], [], fun g'' ->
-      let p_typing: tot_typing g'' p tm_prop = RU.magic() in // implied by t2_typing
-      let pv = check_prop_validity g'' p p_typing in
-      cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
+ // implied by t2_typing
+      let pv = check_prop_validity g'' p in
+      cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
-        let h1: slprop_equiv g'' (elab_slprops frame) (elab_slprops (frame @ [] @ [])) = RU.magic () in
-        let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (tm_pure p)) (elab_slprops (frame @ [goal])) = RU.magic () in
-        k_elab_equiv 
-          (intro_pure g'' (elab_slprops frame) p p_typing pv) 
-          h1 h2)
+
+
+        k_elab_equiv
+          (elab_slprops (frame @ [] @ []))
+          (elab_slprops (frame @ [goal]))
+          (intro_pure g'' (elab_slprops frame) p pv))
       <: T.Tac _ |)
     end
   | _ -> None
@@ -407,16 +391,16 @@ let intro_with_pure (g: env) (frame: slprop) (p: term) (n: ppname) (v: term) :
     continuation_elaborator g (frame `tm_star` v) g (frame `tm_star` tm_with_pure p n v) =
   fun post t ->
   let g = push_context g "check_intro_with_pure" (RU.range_of_term p) in
-  let p_typing: tot_typing g p tm_prop = RU.magic() in // implied by t2_typing
-  let pv = check_prop_validity g p p_typing in
-  let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
+ // implied by t2_typing
+  let pv = check_prop_validity g p in
+ // implied by t2_typing
   let ty = mk_squash u0 p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=v; post=tm_with_pure p n v } in
-  let typing: st_typing g st c = RU.magic () in
-  let h: tot_typing g (tm_star frame (comp_pre c)) tm_slprop = RU.magic () in
+
+
   debug_prover g (fun _ -> Printf.sprintf "intro_pure p=%s\nframe=%s\n" (show p) (show frame));
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame typing h) (RU.magic ()) (RU.magic ())
+  k_elab_equiv (frame `tm_star` v) (frame `tm_star` tm_with_pure p n v) (continuation_elaborator_with_bind_nondep frame c st)
     post t
 
 let prove_with_pure (g: env) (ctxt: list slprop_view) skip_eq_uvar (goal: slprop_view) :
@@ -426,12 +410,11 @@ let prove_with_pure (g: env) (ctxt: list slprop_view) skip_eq_uvar (goal: slprop
     if pure_eq_unif g p skip_eq_uvar then None else
 
     Some (| g, ctxt, [Unknown v], [], fun g'' ->
-      cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
+      cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
-        let h1: slprop_equiv g'' (tm_star (elab_slprops frame) v) (elab_slprops (frame @ [Unknown v] @ [])) = RU.magic () in
-        let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (tm_with_pure p n v))
-          (elab_slprops (frame @ [goal])) = RU.magic () in
-        k_elab_equiv (intro_with_pure g'' (elab_slprops frame) p n v) h1 h2)
+
+
+        k_elab_equiv (elab_slprops (frame @ [Unknown v] @ [])) (elab_slprops (frame @ [goal])) (intro_with_pure g'' (elab_slprops frame) p n v))
       <: T.Tac _ |)
   | _ -> None
 
@@ -439,16 +422,17 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
     continuation_elaborator g (frame `tm_star` open_term' body e 0) g (frame `tm_star` tm_exists_sl u b body) =
   fun post t ->
   let g = push_context g "check_intro_exists" (RU.range_of_term body) in
-  let frame_typ : tot_typing g frame tm_slprop = RU.magic () in // implied by t2_typing
-  let binder_ty_typ : tot_typing g b.binder_ty (tm_type u) = RU.magic() in // implied by t2_typing
-  let tm_ex_typ : tot_typing g (tm_exists_sl u b body) tm_slprop = RU.magic() in // implied by t2_typing
-  let e_typ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
+ // implied by t2_typing
+ // implied by t2_typing
+ // implied by t2_typing
+  let _ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
     [text "Cannot find witness for" ^/^ pp (tm_exists_sl u b body)]) in
-  let h1: tot_typing g (tm_star frame (comp_pre (comp_intro_exists u b body e))) tm_slprop = RU.magic () in
-  let h2: slprop_equiv g (tm_star frame (comp_pre (comp_intro_exists u b body e))) (tm_star frame (open_term' body e 0)) = RU.magic () in
-  let h3: slprop_equiv g (tm_star (comp_post (comp_intro_exists u b body e)) frame) (tm_star frame (tm_exists_sl u b body)) = RU.magic () in
+
+
+
+  let st = wtag (Some STT_Ghost) (Tm_IntroExists { p = tm_exists_sl u b body; witnesses = [e] }) in
   debug_prover g (fun _ -> Printf.sprintf "intro_exists %s\nframe=%s\n" (show (tm_exists_sl u b body)) (show frame));
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame (T_IntroExists g u b body e binder_ty_typ tm_ex_typ e_typ) h1) h2 h3
+  k_elab_equiv (frame `tm_star` open_term' body e 0) (frame `tm_star` tm_exists_sl u b body) (continuation_elaborator_with_bind_nondep frame (comp_intro_exists u b body e) st)
     post t
 
 let prove_exists (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
@@ -458,11 +442,11 @@ let prove_exists (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     // unnecessarily restrictive environment for uvar
     let e = RU.new_implicit_var "witness for exists*" (RU.range_of_term body) (elab_env g) b.binder_ty false in
     Some (| g, ctxt, [Unknown (open_term' body e 0)], [], fun g'' ->
-      cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
+      cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
-        let h1: slprop_equiv g'' (tm_star (elab_slprops frame) (open_term' body e 0)) (elab_slprops (frame @ [] @ [Unknown (open_term' body e 0)])) = RU.magic () in
-        let h2: slprop_equiv g'' (tm_star (elab_slprops frame) (tm_exists_sl u b body)) (elab_slprops (frame @ [goal])) = RU.magic () in
-        k_elab_equiv (intro_exists g'' (elab_slprops frame) u b body e) h1 h2)
+
+
+        k_elab_equiv (elab_slprops (frame @ [] @ [Unknown (open_term' body e 0)])) (elab_slprops (frame @ [goal])) (intro_exists g'' (elab_slprops frame) u b body e))
       <: T.Tac _ |)
   | _ -> None
 
@@ -470,13 +454,13 @@ let unpack_and_norm_goal (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
   | Unknown goal ->
-    let (| goal', goal_eq_goal' |) = normalize_slprop g goal false in
+    let goal' = normalize_slprop g goal false in
     let goal'' = inspect_slprop g goal' in
     (match goal'' with
     | [Unknown _] -> None
     | _ -> Some (| g, ctxt, goal'', [], fun g' ->
-      let h: slprop_equiv g' (elab_slprops ([] @ goal'')) (elab_slprops [Unknown goal]) = RU.magic () in
-      cont_elab_refl _ _ _ (VE_Refl _ _), cont_elab_refl _ _ _ h
+
+      cont_elab_refl _ _ _, cont_elab_refl _ _ _
       <: T.Tac _ |))
   | _ -> None
 
@@ -499,13 +483,12 @@ let elim_first' (g: env) (ctxt0 goals: list slprop_view)
         assert goals' == [];
         Some (| g', List.rev ctxt_left_rev @ ctxt' @ ctxt, goals, solved, fun (g'': env { env_extends g'' g' }) ->
           let before, after = res g'' in
-          let h1: slprop_equiv g (elab_slprops ((List.Tot.Base.rev ctxt_left_rev @ ctxt) @ [c])) (elab_slprops ctxt0) = RU.magic () in
-          let h2: slprop_equiv g' (elab_slprops ((List.Tot.Base.rev ctxt_left_rev @ ctxt) @ solved @ ctxt'))
-            (elab_slprops (solved @ List.Tot.Base.rev ctxt_left_rev @ ctxt' @ ctxt)) = RU.magic () in
-          let h3: slprop_equiv g'' (elab_slprops (goals @ solved @ goals')) (elab_slprops (solved @ goals)) = RU.magic () in
-          let h4: slprop_equiv g'' (elab_slprops (goals @ [])) (elab_slprops goals) = RU.magic () in
-          cont_elab_equiv (cont_elab_frame before (List.rev ctxt_left_rev @ ctxt)) h1 h2,
-          cont_elab_equiv (cont_elab_frame after goals) h3 h4 |)
+
+
+
+
+          cont_elab_equiv (cont_elab_frame before (List.rev ctxt_left_rev @ ctxt)),
+          cont_elab_equiv (cont_elab_frame after goals) |)
       | None ->
         assert List.rev ctxt_left_rev @ (c::ctxt) == ctxt0;
         assume List.rev (c::ctxt_left_rev) @ ctxt == ctxt0;
@@ -520,25 +503,26 @@ let elim_first (g: env) (ctxt0 goals: list slprop_view)
   | None -> None
 
 let unreachable_elim_typing (g: env) (u: universe) (res: term) (post: term) :
-    t:st_term & st_typing g t (C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post }) =
-  let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
+    st_term =
   let c = C_STGhost tm_emp_inames { u; res; pre=tm_is_unreachable; post } in
-  let typing: st_typing g st c = RU.magic () in
-  (| st, typing |)
+  let st = wtag (Some STT_Ghost) (Tm_Unreachable { c }) in
+  st
 
 let unreachable_elim (g: env) (goals: list slprop_view) : cont_elab g [IsUnreachable] g goals = fun frame post t ->
-  let frame = elab_slprops frame in
-  let (| st, typing |) = unreachable_elim_typing g u0 tm_unit frame in
-  let h: tot_typing g (tm_star frame tm_is_unreachable) tm_slprop = RU.magic () in
-  k_elab_equiv (continuation_elaborator_with_bind_nondep frame typing h) (RU.magic ()) (RU.magic ())
+  let frame_t = elab_slprops frame in
+  let c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=tm_is_unreachable; post=frame_t } in
+  let st = unreachable_elim_typing g u0 tm_unit frame_t in
+
+
+  k_elab_equiv (elab_slprops (frame @ [IsUnreachable])) (elab_slprops (frame @ goals)) (continuation_elaborator_with_bind_nondep frame_t c st)
     post t
 
 let elim_is_unreachable (g: env) (ctxt goals: list slprop_view) :
     T.Tac (option (prover_result g ctxt goals)) =
   if not (List.existsb IsUnreachable? ctxt) then None else
   // TODO: maybe add `_: squash False` to the environment?
-  let h1 : slprop_equiv g (elab_slprops ctxt) (elab_slprops ([IsUnreachable] @ [IsUnreachable])) = RU.magic () in
-  Some (| g, [IsUnreachable], [], [IsUnreachable], (fun g'' -> cont_elab_refl _ _ _ h1, unreachable_elim _ _ <: T.Tac _)|)
+
+  Some (| g, [IsUnreachable], [], [IsUnreachable], (fun g'' -> cont_elab_refl _ _ _, unreachable_elim _ _ <: T.Tac _)|)
 
 let elim_is_unreachable' (g: env) (ctxt goals: list slprop_view) :
     T.Tac (option (prover_result_samegoals g ctxt goals)) =
@@ -548,23 +532,23 @@ let elim_is_unreachable' (g: env) (ctxt goals: list slprop_view) :
     if not (List.existsb IsUnreachable? ctxt) then None else
     // TODO: maybe add `_: squash False` to the environment?
     Some (| g, [IsUnreachable], goals, [IsUnreachable], (fun g'' ->
-      let h1 : slprop_equiv g (elab_slprops ctxt) (elab_slprops ([IsUnreachable] @ [IsUnreachable])) = RU.magic () in
-      let h2: slprop_equiv g'' (elab_slprops [IsUnreachable]) (elab_slprops ([IsUnreachable] @ goals)) = RU.magic () in
-      cont_elab_refl _ _ _ h1,
-      cont_elab_equiv (unreachable_elim g'' goals) h2 (VE_Refl _ _)
+
+
+      cont_elab_refl _ _ _,
+      cont_elab_equiv (unreachable_elim g'' goals)
       <: T.Tac _)|)
 
 let unpack_and_norm_ctxt (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
   match ctxt with
   | Unknown ctxt ->
-    let (| ctxt', ctxt_eq_ctxt' |) = normalize_slprop g ctxt false in
+    let ctxt' = normalize_slprop g ctxt false in
     let ctxt'' = inspect_slprop g ctxt' in
     (match ctxt'' with
     | [Unknown _] -> None
     | _ -> Some (| g, ctxt'', [], [], fun g' ->
-      let h: slprop_equiv g ctxt (elab_slprops ([] @ ctxt'')) = RU.magic () in
-      cont_elab_refl _ _ _ h, cont_elab_refl _ _ _ (VE_Refl _ _)
+
+      cont_elab_refl _ _ _, cont_elab_refl _ _ _
       <: T.Tac _ |))
   | _ -> None
 
@@ -574,12 +558,12 @@ let elim_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd x) (d
   let ty = mk_squash u0 p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_pure p; post=tm_emp } in
-  let typing: st_typing g st c = RU.magic () in
-  let h: tot_typing g (tm_star frame (comp_pre c)) tm_slprop = RU.magic () in
-  let h2: slprop_equiv g' (tm_star (open_term_nv (comp_post c) x) frame) frame = RU.magic () in
+
+
+
   let k: continuation_elaborator g (tm_star frame (tm_pure p)) g' (tm_star tm_emp frame) =
-    continuation_elaborator_with_bind frame typing h x in
-  k_elab_equiv k (VE_Refl _ _) h2 post t
+    continuation_elaborator_with_bind frame c st x in
+  k_elab_equiv (frame `tm_star` tm_pure p) frame k post t
 
 let elim_pure_step (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
@@ -590,10 +574,10 @@ let elim_pure_step (g: env) (ctxt: slprop_view) :
     let g' = push_binding g (snd x) (fst x) ty in
     Some (| g', [], [], [], fun g'' ->
       (fun frame ->
-        let h1: slprop_equiv g (tm_star (elab_slprops frame) (tm_pure p)) (elab_slprops (frame @ [ctxt])) = RU.magic () in
-        let h2: slprop_equiv g' (elab_slprops frame) (elab_slprops (frame @ [] @ [])) = RU.magic () in
-      k_elab_equiv (elim_pure g (elab_slprops frame) p x g') h1 h2),
-      cont_elab_refl _ _ _ (VE_Refl _ _)
+
+
+      k_elab_equiv (elab_slprops (frame @ [ctxt])) (elab_slprops (frame @ [] @ [])) (elim_pure g (elab_slprops frame) p x g')),
+      cont_elab_refl _ _ _
       <: T.Tac _ |)
   | _ -> None
 
@@ -605,12 +589,12 @@ let elim_with_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd 
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_with_pure p (fst x) v; post=v } in
   assume open_term v (snd x) == v; // no loose bvars
-  let typing: st_typing g st c = RU.magic () in
-  let h: tot_typing g (tm_star frame (comp_pre c)) tm_slprop = RU.magic () in
-  let h2: slprop_equiv g' (tm_star (open_term_nv (comp_post c) x) frame) (tm_star frame v) = RU.magic () in
+
+
+
   let k: continuation_elaborator g (tm_star frame (tm_with_pure p (fst x) v)) g' (tm_star v frame) =
-    continuation_elaborator_with_bind frame typing h x in
-  k_elab_equiv k (VE_Refl _ _) h2 post t
+    continuation_elaborator_with_bind frame c st x in
+  k_elab_equiv (frame `tm_star` tm_with_pure p (fst x) v) (frame `tm_star` v) k post t
 
 let elim_with_pure_step (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
@@ -621,10 +605,10 @@ let elim_with_pure_step (g: env) (ctxt: slprop_view) :
     let g' = push_binding g (snd x) (fst x) ty in
     Some (| g', [Unknown v], [], [], fun g'' ->
       (fun frame ->
-        let h1: slprop_equiv g (tm_star (elab_slprops frame) (tm_with_pure p (fst x) v)) (elab_slprops (frame @ [ctxt])) = RU.magic () in
-        let h2: slprop_equiv g' (tm_star (elab_slprops frame) v) (elab_slprops (frame @ [Unknown v] @ [])) = RU.magic () in
-      k_elab_equiv (elim_with_pure g (elab_slprops frame) p x v g') h1 h2),
-      cont_elab_refl _ _ _ (VE_Refl _ _)
+
+
+      k_elab_equiv (elab_slprops (frame @ [ctxt])) (elab_slprops (frame @ [Unknown v] @ [])) (elim_with_pure g (elab_slprops frame) p x v g')),
+      cont_elab_refl _ _ _
       <: T.Tac _ |)
   | _ -> None
 
@@ -634,16 +618,17 @@ let elim_exists (g: env) (frame: slprop) u b body (x: nvar { ~(Set.mem (snd x) (
     continuation_elaborator g (frame `tm_star` tm_exists_sl u b body)
       g' (frame `tm_star` open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0) = fun post t ->
   let c = comp_elim_exists u b.binder_ty body x in
-  let h1: tot_typing g b.binder_ty (tm_type u) = RU.magic () in
-  let h2: tot_typing g (tm_exists_sl u (as_binder b.binder_ty) body) tm_slprop = RU.magic () in
-  let typing: st_typing g _ c  = T_ElimExists g u b.binder_ty body (snd x) h1 h2 in
-  let h: tot_typing g (tm_star frame (comp_pre c)) tm_slprop = RU.magic () in
+
+
+  let st : st_term = wtag (Some STT_Ghost) (Tm_ElimExists { p = tm_exists_sl u (as_binder b.binder_ty) body }) in
+
+
   let c_post_x = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
   assume open_term (comp_post c) (snd x) == c_post_x;
-  let h2: slprop_equiv g' (tm_star c_post_x frame) (tm_star frame c_post_x) = RU.magic () in
+
   let k: continuation_elaborator g (tm_star frame (tm_exists_sl u b body)) g' (tm_star c_post_x frame) =
-    continuation_elaborator_with_bind frame typing h x in
-  k_elab_equiv k (VE_Refl _ _) h2 post t
+    continuation_elaborator_with_bind frame c st x in
+  k_elab_equiv (frame `tm_star` tm_exists_sl u b body) (frame `tm_star` c_post_x) k post t
 
 let elim_exists_step (g: env) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g [ctxt])) =
@@ -657,10 +642,10 @@ let elim_exists_step (g: env) (ctxt: slprop_view) :
     let result = open_term' body (mk_reveal u b.binder_ty (term_of_nvar x)) 0 in
     Some (| g', [Unknown result], [], [], fun g'' ->
       (fun frame ->
-        let h1: slprop_equiv g (tm_star (elab_slprops frame) (tm_exists_sl u b body)) (elab_slprops (frame @ [ctxt])) = RU.magic () in
-        let h2: slprop_equiv g' (tm_star (elab_slprops frame) result) (elab_slprops (frame @ [] @ [Unknown result])) = RU.magic () in
-        k_elab_equiv (elim_exists g (elab_slprops frame) u b body x g') h1 h2),
-      cont_elab_refl _ _ _ (VE_Refl _ _)
+
+
+        k_elab_equiv (elab_slprops (frame @ [ctxt])) (elab_slprops (frame @ [] @ [Unknown result])) (elim_exists g (elab_slprops frame) u b body x g')),
+      cont_elab_refl _ _ _
       <: T.Tac _ |)
   | _ -> None
 
@@ -680,7 +665,7 @@ open Pulse.PP
 
 module RT = FStar.Reflection.Typing
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
-: T.Tac (slprop_equiv g p q)
+: T.Tac (unit)
 = 
   let p = RU.deep_compress_safe p in
   let q = RU.deep_compress_safe q in
@@ -693,8 +678,7 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
       pp q;
     ]
   | Some token ->
-    VE_Ext g p q (RT.Rel_eq_token _ _ _ ())
-
+    ()
 
 let on_name = R.inspect_fv (R.pack_fv <| Pulse.Reflection.Util.mk_pulse_lib_core_lid "on")
 let on_head_id : head_id = FVarHead on_name
@@ -920,11 +904,9 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: result of unify %s and %s is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
     Some (| g, rest_ctxt, [], [cand], fun g' ->
-      let h2: slprop_equiv g' (elab_slprop cand) goal = check_slprop_equiv_ext (RU.range_of_term goal) _ _ _ in
-      let h1: slprop_equiv g (elab_slprops ctxt) (elab_slprops ([cand] @ rest_ctxt)) = RU.magic () in
-      let h2: slprop_equiv g' (elab_slprops ([cand] @ [])) goal = h2 in
-      cont_elab_refl _ _ _ h1,
-      cont_elab_refl _ _ _ h2
+      let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop cand) goal in
+      cont_elab_refl _ _ _,
+      cont_elab_refl _ _ _
       <: T.Tac _ |)
   | _ -> None
 
@@ -949,11 +931,9 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     debug_prover g (fun _ -> Printf.sprintf "prove_atom: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
     Some (| g, rest_ctxt, [], [cand], fun g' ->
-      let h2: slprop_equiv g' (elab_slprop cand) goal = check_slprop_equiv_ext (RU.range_of_term goal) _ _ _ in
-      let h1: slprop_equiv g (elab_slprops ctxt) (elab_slprops ([cand] @ rest_ctxt)) = RU.magic () in
-      let h2: slprop_equiv g' (elab_slprops ([cand] @ [])) goal = h2 in
-      cont_elab_refl _ _ _ h1,
-      cont_elab_refl _ _ _ h2
+      let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop cand) goal in
+      cont_elab_refl _ _ _,
+      cont_elab_refl _ _ _
       <: T.Tac _
     |)
   | _ -> None
@@ -1024,16 +1004,13 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
         Some (| g, [Unknown post'], [], [], fun g'' ->
           let typing = core_check_term g t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g c = RU.magic () in
-          let typing: st_typing g t' c = T_STGhost g t c typing ni in
-          let h1: tot_typing g (comp_pre c) tm_slprop = RU.magic () in
-          let h2: slprop_equiv g (elab_slprops [Unknown (comp_pre c)]) (elab_slprops [ctxt]) =
-            assume elab_slprop ctxt == pre; VE_Refl _ _ in
-          let h3: slprop_equiv g (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)])
-            (elab_slprops ([] @ [Unknown post'])) = VE_Refl _ _ in
-          let k_t = cont_elab_with_bind_nondep_unit typing h1 in
-          cont_elab_equiv k_t h2 h3,
-          cont_elab_refl g'' ([] @ []) [] (VE_Refl _ _) |)
+
+
+
+          assume (elab_slprop ctxt == pre);
+          let k_t = cont_elab_with_bind_nondep_unit c t' in
+          cont_elab_equiv k_t,
+          cont_elab_refl g'' ([] @ []) [] |)
       ) else
         None
     | _ -> None)
@@ -1068,14 +1045,14 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
         Some (| g, ctxt, [Unknown pre], [], fun g'' ->
           let typing = core_check_term g'' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g'' c = RU.magic () in
-          let typing: st_typing g'' t' c = T_STGhost g'' t c typing ni in
-          let h1: tot_typing g'' (comp_pre c) tm_slprop = RU.magic () in
-          let h2: slprop_equiv g'' (elab_slprops [Unknown (comp_pre c)]) (elab_slprops ([] @ [Unknown pre])) = VE_Refl _ _ in
-          let h3: slprop_equiv g'' (elab_slprops [Unknown (open_term' (comp_post c) unit_const 0)]) (elab_slprops [goal]) = RU.magic () in
-          let k_typing = cont_elab_with_bind_nondep_unit typing h1 in
-          cont_elab_refl g ctxt ([] @ ctxt) (VE_Refl _ _),
-          cont_elab_equiv k_typing h2 h3
+
+
+
+
+
+          let k_typing = cont_elab_with_bind_nondep_unit c t' in
+          cont_elab_refl g ctxt ([] @ ctxt),
+          cont_elab_equiv k_typing
         |)
       ) else
         None
@@ -1129,8 +1106,8 @@ let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctx
   let (| g', ctxt', goals', solved, k |) = res in
   (| g', ctxt', cont_elab_thunk fun _ ->
     let k1, k2 = k g' in
-    let h: slprop_equiv g' (elab_slprops (solved @ ctxt')) (elab_slprops (ctxt' @ solved @ goals')) = RU.magic () in
-    cont_elab_trans k1 (cont_elab_frame k2 ctxt') h |)
+
+    cont_elab_trans k1 (cont_elab_frame k2 ctxt') |)
 
 #restart-solver
 #push-options "--split_queries always --z3rlimit 15"
@@ -1172,20 +1149,17 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
           let c = C_STGhost inames { pre; post; res; u } in
           let typing = core_check_term g' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
-          let ni: non_informative g' c = RU.magic () in
-          let typing: st_typing g' t' c = T_STGhost g' t c typing ni in
-          let h1: tot_typing g' (comp_pre c) tm_slprop = RU.magic () in
-          let h2: slprop_equiv g' (elab_slprops (ctxt' @ [Unknown (comp_pre c)])) (elab_slprops (ctxt' @ [Unknown pre])) =
-            RU.magic () in
-          let h3: slprop_equiv g'
-            (elab_slprops (ctxt' @ [Unknown (open_term' (comp_post c) unit_const 0)]))
-            (elab_slprops ([goal] @ ctxt' @ post''_rest)) = RU.magic () in
-          let k_typing = cont_elab_with_bind_nondep_unit typing h1 in
+
+
+
+
+
+          let k_typing = cont_elab_with_bind_nondep_unit c t' in
           let k_typing = cont_elab_frame k_typing ctxt' in
           let k_typing: cont_elab g' (ctxt' @ [Unknown pre]) g' ([goal] @ ctxt' @ post''_rest) =
-            cont_elab_equiv k_typing h2 h3 in
-          cont_elab_trans k k_typing (VE_Refl _ _),
-          cont_elab_refl g'' ([goal] @ []) [goal] (VE_Refl _ _)
+            cont_elab_equiv k_typing in
+          cont_elab_trans k k_typing,
+          cont_elab_refl g'' ([goal] @ []) [goal]
           <: cont_elab g ctxt g' ([goal] @ ctxt' @ post''_rest) & cont_elab g'' ([goal] @ []) g'' [goal]
           |)
         <: T.Tac (prover_result g ctxt [goal])
@@ -1316,8 +1290,8 @@ let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover
     prover_result_join step step2
   | None ->
     (| g, ctxt, goals, [], fun g'' ->
-      cont_elab_refl g _ _ (VE_Refl _ _),
-      cont_elab_refl g'' ([] @ goals) goals (VE_Refl _ _)
+      cont_elab_refl g _ _,
+      cont_elab_refl g'' ([] @ goals) goals
       <: T.Tac _ |)
 
 let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [Unknown ctxt] [Unknown goals]) =
@@ -1330,10 +1304,10 @@ let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [
   let (| g1, ctxt1, goals1, solved1, k1 |) = try_prove_core pg [Unknown ctxt'] [Unknown goals'] in
   (| g1, ctxt1, goals1, solved1, fun (g2: env { env_extends g2 g1 }) ->
     let before, after = k1 g2 in
-    let h1: slprop_equiv g ctxt' ctxt = RU.magic () in
-    let h2: slprop_equiv g2 goals' goals = RU.magic () in
-    cont_elab_equiv before h1 (VE_Refl _ _),
-    cont_elab_equiv after (VE_Refl _ _) h2 |)
+
+
+    cont_elab_equiv before,
+    cont_elab_equiv after |)
 
 let prove rng (g: env) (ctxt goals: slprop) allow_amb :
     T.Tac (g':env { env_extends g' g } &
@@ -1353,10 +1327,8 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
     (Some rng)
   else
     let (| g', ctxt', k |) = prover_result_solved_unpack res in
-    let h: slprop_equiv g'
-        (elab_slprops ([] @ ctxt' @ [Unknown goals]))
-        (tm_star goals (RU.deep_compress_safe (elab_slprops ctxt'))) = RU.magic () in
-    (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv (k []) (VE_Refl _ _) h |)
+
+    (| g', RU.deep_compress_safe (elab_slprops ctxt'), k_elab_equiv ctxt (tm_star goals (RU.deep_compress_safe (elab_slprops ctxt'))) (k []) |)
 
 let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
     T.Tac (prover_result_nogoals pg.penv_env ctxt) =
@@ -1364,8 +1336,8 @@ let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
   let g = pg.penv_env in
   let noop () : prover_result g ctxt [] =
     (| g, ctxt, [], [], fun g'' ->
-      cont_elab_refl g _ _ (VE_Refl _ _),
-      cont_elab_refl g'' [] [] (VE_Refl _ _)
+      cont_elab_refl g _ _,
+      cont_elab_refl g'' [] []
       <: T.Tac _ |) in
   debug_prover g (fun _ -> Printf.sprintf "eliminating\n%s\n" (show_slprops ctxt));
   let step : option (prover_result_nogoals g ctxt) =
@@ -1379,37 +1351,34 @@ let rec try_elim_core (pg: penv) (ctxt: list slprop_view) :
   | None -> noop ()
 
 let elim_exists_and_pure (#g:env) (#ctxt:slprop)
-    (ctxt_typing:tot_typing g ctxt tm_slprop)
     : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_slprop &
             continuation_elaborator g ctxt g' ctxt') =
   let ss = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
   let ctxt' = Pulse.Checker.Prover.Substs.ss_term ctxt ss in
   let pg = mk_penv g false in
   let (| g', ctxt'', goals'', solved, k |) = try_elim_core pg [Unknown ctxt'] in
-  let h: tot_typing g' (elab_slprops ctxt'') tm_slprop = RU.magic () in // TODO thread through prover
-  (| g', elab_slprops ctxt'', h, fun post_hint post_hint_typ ->
-    let h1: slprop_equiv g (elab_slprops ([] @ [Unknown ctxt'])) ctxt = (RU.magic() <: slprop_equiv g ctxt' ctxt) in
-    let h2: slprop_equiv g' (elab_slprops (ctxt'' @ solved @ goals'')) (elab_slprops ([] @ solved @ ctxt'')) = RU.magic () in
-    let h3: slprop_equiv g' (elab_slprops (ctxt'' @ [])) (elab_slprops ctxt'') = RU.magic () in
+ // TODO thread through prover
+  (| g', elab_slprops ctxt'', fun post_hint post_hint_typ ->
+
     let before, after = k g' in
-    k_elab_trans (k_elab_equiv (before []) h1 (VE_Refl _ _))
-      (k_elab_equiv (after ctxt'') h2 h3) post_hint post_hint_typ |)
+    k_elab_trans (k_elab_equiv ctxt (elab_slprops ([] @ solved @ ctxt'')) (before []))
+      (k_elab_equiv (elab_slprops ([] @ solved @ ctxt'')) (elab_slprops ctxt'') (after ctxt'')) post_hint post_hint_typ |)
 
 let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { g `env_extends` post_hint.g }) :
     T.Tac (continuation_elaborator g tm_is_unreachable (push_binding g (snd x) (fst x) post_hint.ret_ty) (open_term_nv post_hint.post x)) =
-  let h: tot_typing g tm_is_unreachable tm_slprop = RU.magic () in
-  let (| c, c_typ |) = Pulse.Typing.Combinators.comp_for_post_hint h post_hint (snd x) in
-  let typ = T_Unreachable g c c_typ in
+
+  let c = Pulse.Typing.Combinators.comp_for_post_hint g tm_is_unreachable post_hint (snd x) in
+  let st = wtag (Some (ctag_of_comp_st c)) (Tm_Unreachable { c }) in
+
   let g' = push_binding g (snd x) (fst x) post_hint.ret_ty in
   let post_opened = open_term_nv post_hint.post x in
   let k_elim: continuation_elaborator g (tm_star tm_emp tm_is_unreachable) g' (tm_star post_opened tm_emp) =
-    let h3: tot_typing g (tm_star tm_emp tm_is_unreachable) tm_slprop = RU.magic () in
-    continuation_elaborator_with_bind #g tm_emp typ h3 x in
-  let h4: slprop_equiv g (tm_star tm_emp tm_is_unreachable) tm_is_unreachable = RU.magic () in
-  let h5: slprop_equiv g' (tm_star post_opened tm_emp) post_opened = RU.magic () in
-  k_elab_equiv k_elim h4 h5
+
+    continuation_elaborator_with_bind #g tm_emp c st x in
+
+
+  k_elab_equiv tm_is_unreachable post_opened k_elim
 
 #restart-solver
 #push-options "--z3rlimit_factor 2 --split_queries always"
@@ -1422,13 +1391,13 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
   | NoHint -> r
   | TypeHint _ -> retype_checker_result post_hint r
   | PostHint post_hint ->
-    let (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |) = r in
+    let (| x, g2, (u_ty, ty), ctxt', k |) = r in
     let k: continuation_elaborator g ctxt g2 ctxt' = k in
 
     // TODO: subtyping
     if not (eq_tm (RU.deep_compress_safe ty) (RU.deep_compress_safe post_hint.ret_ty))
     then (
-      let (| g3, ctxt3, ctxt3_typing, k3 |) = elim_exists_and_pure #g2 #ctxt' ctxt'_typing in
+      let (| g3, ctxt3, k3 |) = elim_exists_and_pure #g2 #ctxt' in
       let k3: continuation_elaborator g2 ctxt' g3 ctxt3 = k3 in
 
       if ctxt3 `eq_tm` tm_is_unreachable then (
@@ -1436,11 +1405,11 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
         let ppname = mk_ppname_no_range "_posth" in
         let post_hint_opened = open_term_nv post_hint.post (ppname, y) in
         let g4 = push_binding g3 y ppname post_hint.ret_ty in
-        let h1: universe_of g4 post_hint.ret_ty post_hint.u = RU.magic () in
-        let h2: tot_typing g4 post_hint_opened tm_slprop = RU.magic () in
+
+
         let k_unreach: continuation_elaborator g3 ctxt3 g4 post_hint_opened =
           k_unreach g3 (ppname, y) post_hint in
-        (| y, g4, (| post_hint.u, post_hint.ret_ty, h1 |), (| post_hint_opened, h2 |),
+        (| y, g4, (post_hint.u, post_hint.ret_ty), post_hint_opened,
           k_elab_trans k (k_elab_trans k3 k_unreach) |)
       ) else
         fail_doc g (Some rng) [
@@ -1452,7 +1421,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
       let post_hint_opened = open_term_nv post_hint.post (ppname, x) in
 
       if eq_tm post_hint_opened ctxt'
-      then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
+      then (| x, g2, (u_ty, ty), ctxt', k |)
       else
         let (| g3, remaining_ctxt, k_post |) =
           prove rng g2 ctxt' post_hint_opened false in
@@ -1468,22 +1437,22 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
             else text "Did you forget to free this resource?");
           ]
         else
-          let h3: slprop_equiv g3 (tm_star post_hint_opened remaining_ctxt) post_hint_opened = RU.magic () in
+
           // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
-          let h1: universe_of g3 ty u_ty = RU.magic () in
+
           // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
-          let h2: tot_typing g3 post_hint_opened tm_slprop = RU.magic () in
-          (| x, g3, (| u_ty, ty, h1 |), (| post_hint_opened, h2 |),
-            k_elab_trans k (k_elab_equiv k_post (VE_Refl _ _) h3) |)
+
+          (| x, g3, (u_ty, ty), post_hint_opened,
+            k_elab_trans k (k_elab_equiv ctxt' post_hint_opened k_post) |)
 #pop-options
 
 let try_frame_pre (allow_ambiguous : bool) (#g:env)
-    (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)
-    (d:(t:st_term & c:comp_st & st_typing g t c))
+    (#ctxt:slprop)
+    (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
     T.Tac (checker_result_t g ctxt NoHint) =
-  let (| t, c, d |) = d in
+  let (| t, c |) = d in
   let (| g', ctxt', k |) = prove t.range g ctxt (comp_pre c) allow_ambiguous in
-  let d: st_typing g' t c = RU.magic () in // weakening from g to g'
-  let h1: tot_typing g' ctxt' tm_slprop = RU.magic() in // weakening from to g'
-  checker_result_for_st_typing (k _ (| t, add_frame c ctxt', T_Frame _ _ _ ctxt' h1 d |)) res_ppname
+ // weakening from g to g'
+ // weakening from to g'
+  checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname

@@ -29,7 +29,6 @@ module P = Pulse.Syntax.Printer
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Admit? t.term })
@@ -44,8 +43,7 @@ let check
   let x = fresh g in
   let px = v_as_nv x in
   let res
-    : (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint } &
-       comp_typing g c (universe_of_comp c))
+    : c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint }
     = match post, post_hint with
       | None, NoHint
       | None, TypeHint _ ->
@@ -58,24 +56,29 @@ let check
              (P.term_to_string post2.post))
       
       | Some post, _ ->
-        let (| u, t_typing |) = check_universe g t in    
+        let u = check_universe g t in    
         let post_opened = open_term_nv post px in      
-        let (| post_opened, post_typing |) = 
+        let post_opened = 
           check_tot_term (push_binding g x (fst px) t) post_opened tm_slprop
         in
         let post = close_term post_opened x in
         let s : st_comp = {u;res=t;pre;post} in
         assume (open_term (close_term post_opened x) x == post_opened);
-        let d_s : st_comp_typing _ s = STC _ s x t_typing pre_typing post_typing in
-        (match c with
-         | STT -> (| _,  CT_ST _ _ d_s |)
-         | STT_Ghost -> (| _, CT_STGhost _ tm_emp_inames _ (RU.magic ()) d_s |)
-         | STT_Atomic -> (| _, CT_STAtomic _ tm_emp_inames Neutral _ (RU.magic ()) d_s |))
 
-      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint pre_typing post x
+        (match c with
+         | STT -> C_ST s
+         | STT_Ghost -> C_STGhost tm_emp_inames s
+         | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
+
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre post x
   in
-  let (| c, d_c |) = res in
-  let d = T_Admit _ _ d_c in
+  let c = res in
+  let admit_st = wtag (Some (ctag_of_comp_st c))
+                      (Tm_Admit { ctag=ctag_of_comp_st c;
+                                  u=comp_u c;
+                                  typ=comp_res c;
+                                  post=None }) in
+
   FStar.Tactics.BreakVC.break_vc ();
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.
@@ -92,4 +95,4 @@ let check
     ] in
     info_doc_env g (Some t0.range) msg
   end else ()) <: T.Tac unit;
-  checker_result_for_st_typing (| _, _, d |) res_ppname
+  checker_result_for_st_typing (| admit_st, c |) res_ppname

@@ -24,16 +24,15 @@ open Pulse.Typing
 val __normalize_slprop
   (g:env)
   (v:slprop)
-  : T.Tac (v':slprop & slprop_equiv g v v')
+  : T.Tac slprop
 
 val normalize_slprop
   (g:env)
   (v:slprop)
   (use_rewrites_to : bool)
-  : T.Tac (v':slprop & slprop_equiv g v v')
+  : T.Tac slprop
 
 val normalize_slprop_welltyped
   (g:env)
   (v:slprop)
-  (v_typing:tot_typing g v tm_slprop)
-  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
+  : T.Tac slprop

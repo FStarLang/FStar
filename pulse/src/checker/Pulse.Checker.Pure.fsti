@@ -35,29 +35,27 @@ val instantiate_term_implicits_uvs (g:env) (t:term)
   : T.Tac (uvs:env { disjoint g uvs } & term & term)  // uvs
 
 val universe_of_well_typed_term (g:env) (t:term)
-  : T.Tac (u:universe & universe_of g t u)
+  : T.Tac universe
 
 val check_universe (g:env) (t:term)
-  : T.Tac (u:universe & universe_of g t u)
+  : T.Tac universe
 
 val compute_term_type (g:env) (t:term)
   : T.Tac (t:term &
            eff:T.tot_or_ghost &
-           ty:term &
-           typing g t eff ty)
+           ty:term)
 
 val compute_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term  &
            eff:T.tot_or_ghost &
            ty:term &
-           (u:universe & universe_of g ty u) &
-           typing g t eff ty)
+           universe)
 
 val check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
-  : T.Tac (e:term & typing g e eff t)
+  : T.Tac term
 
 val check_term_at_type (g:env) (e:term) (t:term)
-  : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t)
+  : T.Tac (e:term & eff:T.tot_or_ghost)
 
 val tc_term_phase1 (g:env) (t:term) : T.Tac (term & term & T.tot_or_ghost)
 val tc_term_phase1_with_type (g: env) (t:term) (expected_typ: term) : T.Tac (term & T.tot_or_ghost)
@@ -65,61 +63,54 @@ val tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe)
 
 val core_compute_term_type (g:env) (t:term)
   : T.Tac (eff:T.tot_or_ghost &
-           ty:term &
-           typing g t eff ty)
+           ty:term)
 
 val core_check_term' (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
     (extra_msg: unit -> T.Tac (list Pprint.document))
-  : T.Tac (typing g e eff t)
+  : T.Tac unit
 
 val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
-  : T.Tac (typing g e eff t)
+  : T.Tac unit
 
 val core_check_term_at_type (g:env) (e:term) (t:term)
-  : T.Tac (eff:T.tot_or_ghost & typing g e eff t)
+  : T.Tac T.tot_or_ghost
 
 val check_slprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t tm_slprop)
+  : T.Tac term
 
 val check_slprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t tm_slprop)
+  : T.Tac unit
 
 val try_get_non_informative_witness (g:env) (u:universe) (t:term)
-  (t_typing:universe_of g t u)
   : T.Tac (option (non_informative_t g u t))
 
 val get_non_informative_witness (g:env) (u:universe) (t:term)
-  (t_typing:universe_of g t u)
   : T.Tac (non_informative_t g u t)
 
-val try_check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+val try_check_prop_validity (g:env) (p:term)
   : T.Tac (option (Pulse.Typing.prop_validity g p))
 
-val check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
+val check_prop_validity (g:env) (p:term)
   : T.Tac (Pulse.Typing.prop_validity g p)
 
 val compute_tot_term_type (g:env) (t:term)
-  : T.Tac (t:term & ty:typ & tot_typing g t ty)
+  : T.Tac (t:term & ty:typ)
 
 val compute_tot_term_type_and_u (g:env) (t:term)
   : T.Tac (t:term &
            u:universe &
-           ty:typ &
-           universe_of g ty u &
-           tot_typing g t ty)
+           ty:typ)
 
 val check_tot_term (g:env) (e:term) (t:term)
-  : T.Tac (e:term &
-           tot_typing g e t)
+  : T.Tac term
 
 val core_compute_tot_term_type (g:env) (t:term)
-  : T.Tac (ty:typ &
-           tot_typing g t ty)
+  : T.Tac typ
 
 val core_check_tot_term (g:env) (e:term) (t:typ)
-  : T.Tac (tot_typing g e t)
+  : T.Tac unit
 
 val is_non_informative (g:env) (c:comp)
   : T.Tac (option (T.non_informative_token (elab_env g) (elab_comp c)))

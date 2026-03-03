@@ -28,7 +28,7 @@ open Pulse.Checker.Base
 let __normalize_slprop
   (g:env)
   (v:slprop)
-  : T.Tac (v':slprop & slprop_equiv g v v')
+  : T.Tac slprop
 =
   (* Keep things reduced *)
   let steps = [unascribe; primops; iota] in
@@ -48,30 +48,27 @@ let __normalize_slprop
 
   let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Pulse.Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
-  let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
-  (| v', v_equiv_v' |)
+  v'
 
 let normalize_slprop
   (g:env)
   (v:slprop)
   (use_rewrites_to : bool)
-  : T.Tac (v':slprop & slprop_equiv g v v')
+  : T.Tac slprop
 =
   if use_rewrites_to then
     let rwr = Pulse.Checker.Prover.RewritesTo.get_subst_from_env g in
     let v' = PS.ss_term v rwr in
-    let eq_v_v' : slprop_equiv g v v' = VE_Ext _ _ _ (RU.magic ()) in
-    let (| v'', eq_v'_v'' |) = __normalize_slprop g v' in
-    (| v'', VE_Trans _ _ _ _ eq_v_v' eq_v'_v'' |)
+    let v'' = __normalize_slprop g v' in
+    v''
   else
     __normalize_slprop g v
 
 let normalize_slprop_welltyped
   (g:env)
   (v:slprop)
-  (v_typing:tot_typing g v tm_slprop)
-  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
+  : T.Tac slprop
 =
-  let (| v', v_equiv_v' |) = normalize_slprop g v true in
+  let v' = normalize_slprop g v true in
   // FIXME: prove (or add axiom) that equiv preserves typing
-  (| v', v_equiv_v', E (magic()) |)
+  v'

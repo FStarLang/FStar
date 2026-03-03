@@ -28,7 +28,6 @@ open Pulse.Checker.Prover
 let check'
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g { PostHint? post_hint })
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
@@ -41,7 +40,7 @@ let check'
     let v = (R.inspect_namedv v).uniq in
     (match lookup_goto g v with
     | Some (lbln, lbl_c) ->
-      let (| arg, arg_typ |) = check_tot_term g arg (comp_res lbl_c) in
+      let arg = check_tot_term g arg (comp_res lbl_c) in
       let c' = with_st_comp lbl_c {
         u = ph.u;
         res = ph.ret_ty;
@@ -49,13 +48,9 @@ let check'
         post = ph.post
       } in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
-      let typing: st_typing g t c' =
-        let x' = fresh g in assume fresh_wrt x' g (freevars ph.post);
-        let pht = post_hint_typing g ph x' in
-        T_Goto _ (lbln, v) arg lbl_c arg_typ ph.u ph.ret_ty pht.ty_typing ph.post x' pht.post_typing in
-      let (| c'', typing'' |) = match_comp_res_with_post_hint typing post_hint in
+      let c' = match_comp_res_with_post_hint t c' post_hint in
       prove_post_hint #g
-        (try_frame_pre false #g pre_typing (|_,c'',typing''|) res_ppname)
+        (try_frame_pre false #g (|t,c'|) res_ppname)
         post_hint
         rng
     | None ->
@@ -66,7 +61,6 @@ let check'
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
@@ -74,11 +68,11 @@ let check
 = match post_hint with
   | NoHint ->
     let post_hint' = intro_post_hint g EffectAnnotSTT None tm_is_unreachable in
-    let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | TypeHint ty ->
     let post_hint' = intro_post_hint g EffectAnnotSTT (Some ty) tm_is_unreachable in
-    let res = check' g pre pre_typing (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t in
     retype_checker_result _ res
   | PostHint post ->
-    check' g pre pre_typing post_hint res_ppname t
+    check' g pre post_hint res_ppname t

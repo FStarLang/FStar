@@ -49,23 +49,9 @@ let extend_post_hint
     | None -> mk_array_pts_to_uninit_post init_t arr) in
   let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
-  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) _ c_typing in
+  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) conjunct in
   res
 
-
-let with_local_array_pre_typing (#g:env) (#pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
-  (init_t:term)
-  (init:option term)
-  (len:term)
-  (init_typing:(match init with Some init -> tot_typing g init init_t | _ -> unit))
-  (len_typing:tot_typing g len tm_szt)
-  (x:var { ~ (Set.mem x (dom g)) })
-  (n: ppname)
-  : tot_typing (extend_env g init_t x n init)
-               (comp_withlocal_array_body_pre pre init_t (term_of_nvar (n, x)) init len)
-               tm_slprop
-  = admit()
 
 let is_annotated_type_array (t:term) : option term =
   match is_pure_app t with
@@ -91,7 +77,6 @@ let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocalArray? t.term })
@@ -112,17 +97,16 @@ let check
     let _ = Tactics.BreakVC.break_vc () in
     let g = push_context "check_withlocal_array" t.range g in
     let Tm_WithLocalArray {binder; initializer; length; body} = t.term in
-    let (| init, init_u, init_t, init_t_typing, init_typing |)
-      : (init:option term & u:universe & ty:term & universe_of g ty u &
-        (match init with Some t -> tot_typing g t ty | None -> unit)) =
+    let (| init, init_u, init_t |)
+      : (init:option term & u:universe & ty:term) =
       (* Check against annotation if any *)
       let ty = binder.binder_ty in
       match inspect_term ty with
       | Tm_Unknown ->
         (match initializer with
         | Some initializer ->
-          let (| init, init_u, init_t, init_t_typing, init_typing |) = compute_tot_term_type_and_u g initializer in
-          (| Some init, init_u, init_t, init_t_typing, init_typing |)
+          let (| init, init_u, init_t |) = compute_tot_term_type_and_u g initializer in
+          (| Some init, init_u, init_t |)
         | None ->
           fail g (Some <| head_range t)
             "allocating a local array: type must be specified when there is no initializer")
@@ -134,17 +118,15 @@ let check
             (Printf.sprintf "expected annotated type to be an array, found: %s"
               (P.term_to_string ty))
         | Some ty ->
-          let (| u, ty_typing |) = check_universe g ty in
-          let ty_typing : universe_of g ty u = ty_typing in
+          let u = check_universe g ty in
           match initializer with
           | Some initializer ->
-            let (| init, init_typing |) = check_term g initializer T.E_Total ty in
-            let init_typing : typing g init T.E_Total ty = init_typing in
-            (| Some init, u, ty, ty_typing, init_typing |)
+            let init = check_term g initializer T.E_Total ty in
+            (| Some init, u, ty |)
           | None ->
-            (| None, u, ty, ty_typing, () |)
+            (| None, u, ty |)
     in
-    let (| len, len_typing |) =
+    let len =
       check_tot_term g length tm_szt in
     if not (eq_univ init_u u0)
     then (
@@ -160,41 +142,22 @@ let check
         let x_tm = term_of_nvar px in
         let g_extended = extend_env g init_t x binder.binder_ppname init in
         let body_pre = comp_withlocal_array_body_pre pre init_t x_tm init len in
-        let body_pre_typing =
-          with_local_array_pre_typing pre_typing init_t init len init_typing len_typing x binder.binder_ppname in
         // elaborating this post here,
         //   so that later we can check the computed post to be equal to this one
         let post : post_hint_for_env g = post in
         assume ~(x `Set.mem` freevars post.post);
           let body_post = extend_post_hint g post init_t init x binder.binder_ppname in
-          let (| opened_body, c_body, body_typing |) =
+          let (| opened_body, c_body |) =
             let r =
-              check g_extended body_pre body_pre_typing (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
+              check g_extended body_pre (PostHint body_post) binder.binder_ppname (open_st_term_nv body px) in
             apply_checker_result_k r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
           let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
           let c_typing =
-            let post_typing_rec = post_hint_typing g post x in
-            intro_comp_typing g c pre_typing 
-              post_typing_rec.effect_annot_typing
-              post_typing_rec.ty_typing
-              x post_typing_rec.post_typing
+            intro_comp_typing g c
+              x
           in
-          match init with
-          | Some init ->
-            let d = T_WithLocalArray g binder.binder_ppname init len body init_t c x
-              init_typing
-              len_typing
-              init_t_typing
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
-          | None ->
-            let d = T_WithLocalArrayUninit g binder.binder_ppname len body init_t c x
-              len_typing
-              init_t_typing
-              c_typing
-              body_typing in
-            checker_result_for_st_typing (| _, _, d |) res_ppname
+          let st = wrst c (Tm_WithLocalArray { binder = mk_binder_ppname (mk_array init_t) binder.binder_ppname; initializer=init; length=len; body }) in
+          checker_result_for_st_typing (| st, c |) res_ppname
 #pop-options

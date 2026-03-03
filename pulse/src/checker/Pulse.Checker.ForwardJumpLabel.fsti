@@ -27,7 +27,6 @@ open Pulse.Checker.Base
 val check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ForwardJumpLabel? t.term })

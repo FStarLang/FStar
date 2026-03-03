@@ -39,7 +39,7 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
     if not (y `Set.mem` freevars post) then post
     else (
       let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
-      let (| u, _ |) = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
+      let u = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
       tm_exists_sl u b (close_term post y)
     )
   in
@@ -104,11 +104,11 @@ let rec bindings_var_dom : env_bindings -> Set.set var = function
 let var_dom (g: env) : Set.set var = bindings_var_dom (bindings g)
 
 let infer_post' (g:env) (g':env { g' `env_extends` g })
-  #u #t (x: var { lookup g' x == Some t }) (t_typ: universe_of g' t u)
-  #post (post_typing: tot_typing g' post tm_slprop)
+  (u:universe) (t:typ) (x: var { lookup g' x == Some t })
+  (post:term)
 =
   // simplify post by applying elimination rules (particularly `frame ** is_unreachable ~~> is_unreachable`)
-  let (| g1, post, _, _ |) = Pulse.Checker.Prover.elim_exists_and_pure post_typing in
+  let (| g1, post, _ |) = Pulse.Checker.Prover.elim_exists_and_pure #g' #post in
   let bs0 = bindings g in
   let dom_g = var_dom g in
   let fvs_t = freevars t in
@@ -122,17 +122,15 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
           Pulse.PP.text " that escape its environment"]
   in
   let mk_post_hint (post:term) : T.Tac (p:post_hint_for_env g {p.g==g /\ p.effect_annot == EffectAnnotSTT }) = 
-    let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g t in
+    let u = Pulse.Checker.Pure.check_universe g t in
     let x = fresh g in
     let post' = open_term_nv post (ppname_default, x) in 
     let g' = push_binding g x ppname_default t in
-    // we just constructed it; should ideally prove it well-typed rather then re-checking it
-    let post_typing_src : tot_typing g' post' tm_slprop = RU.magic () in
     assume (fresh_wrt x g (freevars post));
     {
-      g; effect_annot=EffectAnnotSTT; effect_annot_typing=();
-      ret_ty=t; u; ty_typing;
-      post; x; post_typing_src; post_typing=RU.magic()
+      g; effect_annot=EffectAnnotSTT;
+      ret_ty=t; u;
+      post
     }
   in
   let post = RU.beta_lax (elab_env g) post in // clean up spurious dependencies on variables
@@ -293,26 +291,23 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
       list_as_slprop (remaining::pures1@pures2@matched)
 
 let rec join_effect_annot g (e1 e2:effect_annot)
-: T.Tac (e:effect_annot & effect_annot_typing g e)
+: T.Tac effect_annot
 = match e1, e2 with
   | _, EffectAnnotSTT
-  | EffectAnnotSTT, _ -> (| EffectAnnotSTT, () |)
+  | EffectAnnotSTT, _ -> EffectAnnotSTT
   
   | EffectAnnotGhost { opens=o1 }, EffectAnnotGhost { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotGhost { opens = o } in
-    (| e, ty |)
+    EffectAnnotGhost { opens = o }
   | EffectAnnotAtomic { opens=o1 }, EffectAnnotAtomic { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotAtomic { opens = o } in
-    (| e, ty |)
+    EffectAnnotAtomic { opens = o }
   | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotAtomicOrGhost { opens=o2 } ->
     let o = tm_join_inames o1 o2 in
     let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    let e = EffectAnnotAtomicOrGhost { opens = o } in
-    (| e, ty |)
+    EffectAnnotAtomicOrGhost { opens = o }
 
   | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotGhost _ ->
     join_effect_annot g (EffectAnnotGhost {opens=o1}) e2
@@ -354,9 +349,9 @@ let join_post #g #hyp #b
   let x = fresh g in
   let g' = push_binding g x ppname_default p1.ret_ty in
   let p1_post = open_term_nv p1.post (ppname_default, x) in
-  let (| p1_post, _ |) = normalize_slprop g' p1_post true in
+  let p1_post = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
-  let (| p2_post, _ |) = normalize_slprop g' p2_post true in
+  let p2_post = normalize_slprop g' p2_post true in
   let joined_post = join_slprop g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
@@ -364,14 +359,14 @@ let join_post #g #hyp #b
       (T.term_to_string joined_post)
   );
   assume (fresh_wrt x g (freevars joined_post));
-  let (| u, ty_typing |) = Pulse.Checker.Pure.check_universe g p1.ret_ty in
+  let u = Pulse.Checker.Pure.check_universe g p1.ret_ty in
   let joined_post' = open_term_nv joined_post (ppname_default, x) in 
-  let post_typing_src = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
-  let (| eff, eff_ty |) = join_effect_annot g p1.effect_annot p2.effect_annot in
+  let _ = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
+  let eff = join_effect_annot g p1.effect_annot p2.effect_annot in
   let res : post_hint_for_env g =
-    {g; effect_annot=eff; effect_annot_typing=eff_ty;
-     ret_ty=p1.ret_ty; u=u; ty_typing; x;
-     post=joined_post; post_typing_src; post_typing=RU.magic()}
+    {g; effect_annot=eff;
+     ret_ty=p1.ret_ty; u=u;
+     post=joined_post}
   in
   res
 
@@ -393,44 +388,40 @@ let rec join_comps
   (g_then:env)
   (e_then:st_term)
   (c_then:comp_st)
-  (e_then_typing:st_typing g_then e_then c_then)
   (g_else:env)
   (e_else:st_term)
   (c_else:comp_st)
-  (e_else_typing:st_typing g_else e_else c_else)
   (post:post_hint_t)
-  : T.TacH (c:comp_st &
-          st_typing g_then e_then c &
-          st_typing g_else e_else c)
+  : T.TacH comp_st
          (requires
             comp_post_matches_hint c_then (PostHint post) /\
             comp_post_matches_hint c_else (PostHint post) /\
             comp_pre c_then == comp_pre c_else)
-         (ensures fun (| c, _, _ |) ->
+         (ensures fun c ->
            st_comp_of_comp c == st_comp_of_comp c_then /\
            comp_post_matches_hint c (PostHint post))
 = let g = g_then in
   assert (st_comp_of_comp c_then == st_comp_of_comp c_else);
   match c_then, c_else with
-  | C_STAtomic _ obs1 _, C_STAtomic _ obs2 _ ->
+  | C_STAtomic inames obs1 st, C_STAtomic _ obs2 _ ->
     let obs = join_obs obs1 obs2 in
-    let e_then_typing = T_Lift _ _ _ _ e_then_typing (Lift_Observability g_then c_then obs) in
-    let e_else_typing = T_Lift _ _ _ _ e_else_typing (Lift_Observability g_else c_else obs) in
-    (| _, e_then_typing, e_else_typing |)
+    let c = C_STAtomic inames obs st in
+
+
+    c
   | C_STGhost _ _, C_STGhost _ _
-  | C_ST _, C_ST _ -> (| _, e_then_typing, e_else_typing |)
+  | C_ST _, C_ST _ -> c_then
 
   | _ ->
     assert (EffectAnnotAtomicOrGhost? post.effect_annot);
     match c_then, c_else with
     | C_STGhost _ _, C_STAtomic _ _ _ ->
-      let d : st_typing g_then e_then (st_ghost_as_atomic c_then) =
-        lift_ghost_atomic e_then_typing in
+
       st_ghost_as_atomic_matches_post_hint c_then post;
-      join_comps _ _ _ d _ _ _ e_else_typing post
+      join_comps g_then e_then (st_ghost_as_atomic c_then) g_else e_else c_else post
 
     | C_STAtomic _ _ _, C_STGhost _ _ ->
-      let d = lift_ghost_atomic e_else_typing in
+
       st_ghost_as_atomic_matches_post_hint c_else post;
-      join_comps _ _ _ e_then_typing _ _ _ d post
+      join_comps g_then e_then c_then g_else e_else (st_ghost_as_atomic c_else) post
 #pop-options

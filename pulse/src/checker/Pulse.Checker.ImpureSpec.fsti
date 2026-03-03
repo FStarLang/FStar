@@ -31,4 +31,4 @@ val purify_spec (g: env) (ctxt: ctxt) (t: slprop) :
   T.Tac slprop
 
 val purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) :
-  T.Tac (t:slprop & tot_typing g t tm_slprop)
+  T.Tac slprop

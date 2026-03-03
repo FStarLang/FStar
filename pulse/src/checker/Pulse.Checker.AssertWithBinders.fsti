@@ -30,7 +30,6 @@ let head_wild (st:st_term) =
 val check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })
