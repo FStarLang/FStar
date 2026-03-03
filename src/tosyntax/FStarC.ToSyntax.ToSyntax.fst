@@ -4137,7 +4137,7 @@ let partial_ast_modul_to_modul modul a_modul : ML (withenv S.modul) =
 
 let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
                      (mii:module_inclusion_info)
-                     (erase_univs:S.term -> S.term) : ML (withenv unit) =
+                     (erase_univs:S.term -> ML S.term) : ML (withenv unit) =
   fun en ->
       let erase_univs_ed ed =
           let erase_binders bs =

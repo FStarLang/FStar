@@ -36,9 +36,9 @@ open FStarC.Class.Setlike
 
 (* A hook into FStarC.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStarC.Main *)
-val tts_f : ref (option (term -> string))
+val tts_f : ref (option (term -> ML string))
 val tts (t:term) : ML string
-val ttd_f : ref (option (term -> Pprint.document))
+val ttd_f : ref (option (term -> ML Pprint.document))
 val ttd (t:term) : ML Pprint.document
 
 val mk_discriminator (lid:lident) : ML lident
@@ -555,7 +555,7 @@ val unthunk (t:term) : ML term
 
 val unthunk_lemma_post (t:term) : ML term
 
-val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
+val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term
 
 (* End SMT Lemma utilities *)

@@ -39,13 +39,13 @@ open FStarC.Class.Tagged
 
 (* A hook into FStarC.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStarC.Main *)
-let tts_f : ref (option (term -> string)) = mk_ref None
+let tts_f : ref (option (term -> ML string)) = mk_ref None
 let tts t : ML string =
     match !tts_f with
     | None -> "<<hook unset>>"
     | Some f -> f t
 
-let ttd_f : ref (option (term -> Pprint.document)) = mk_ref None
+let ttd_f : ref (option (term -> ML Pprint.document)) = mk_ref None
 let ttd t : ML Pprint.document =
     match !ttd_f with
     | None -> Pprint.doc_of_string "<<hook unset>>"
@@ -1899,7 +1899,7 @@ let unthunk (t:term) : ML term =
 let unthunk_lemma_post t =
     unthunk t
 
-let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
+let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
 : ML term
 = let binders, pre, post, patterns =
     match destruct_lemma_with_smt_patterns t with

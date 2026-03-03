@@ -52,9 +52,9 @@ val partial_ast_modul_to_modul:  option S.modul -> AST.modul -> ML (withenv Synt
 
 val add_partial_modul_to_env: Syntax.modul
                     -> module_inclusion_info
-                    -> erase_univs:(S.term -> S.term)
+                    -> erase_univs:(S.term -> ML S.term)
                     -> ML (withenv unit)
 val add_modul_to_env: Syntax.modul
                     -> module_inclusion_info
-                    -> erase_univs:(S.term -> S.term)
+                    -> erase_univs:(S.term -> ML S.term)
                     -> ML (withenv unit)
