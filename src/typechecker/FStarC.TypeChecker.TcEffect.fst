@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.TcEffect
-#push-options "--MLish --MLish_effect FStarC.Effect"
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -42,10 +41,13 @@ module BU = FStarC.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 
-let dbg                  = Debug.get_toggle "ED"
+let mland (x:bool) (y:bool) : bool = if x then y else false
+let mlor (x:bool) (y:bool) : bool = if x then true else y
+
+let dbg = Debug.get_toggle "ED"
 let dbg_LayeredEffectsTc = Debug.get_toggle "LayeredEffectsTc"
 
-let dmff_cps_and_elaborate env ed =
+let dmff_cps_and_elaborate (env:Env.env) (ed:S.eff_decl) : ML (list sigelt & eff_decl & option sigelt) =
   (* This is only an elaboration rule not a typechecking one *)
 
   // Let the power of Dijkstra generate everything "for free", then defer
@@ -59,7 +61,8 @@ let dmff_cps_and_elaborate env ed =
  * n is the number of universes that the combinator should be polymorphic in
  * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
  *)
-let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names & term & typ) =
+let check_and_gen env (eff_name:string) (comb:string) (n:int) (us_t: univ_names & term) : ML (univ_names & term & typ) =
+  let (us, t) = us_t in
   Errors.with_ctx ("While checking combinator " ^ comb ^ " = " ^ show (us, t)) (fun () ->
   let us, t = SS.open_univ_vars us t in
   let t, ty =
@@ -80,8 +83,8 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
     match us with
     | [] -> ()
     | _ ->
-     if List.length us = List.length g_us &&
-      List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     if mland (List.length us = List.length g_us)
+      (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us)
      then ()
      else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (Format.fmt4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
@@ -93,7 +96,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
 (*
  * A small gadget to get a uvar for pure wp with given result type
  *)
-let pure_wp_uvar env (t:typ) (reason:string) (r:Range.t) : term & guard_t =
+let pure_wp_uvar env (t:typ) (reason:string) (r:Range.t) : ML (term & guard_t) =
   let pure_wp_t =
     let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> Option.must in
     let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
@@ -105,12 +108,12 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.t) : term & guard_t =
   let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Strict None false in
   pure_wp_uvar, guard_wp
 
-let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
+let (let?) (#a #b:Type) (f:option a) (g:a -> ML (option b)) : ML (option b) =
   match f with
   | None -> None
   | Some x -> g x
 
-let mteq (env:env) (t1 t2:typ) : bool =
+let mteq (env:env) (t1 t2:typ) : ML bool =
   try
     Rel.teq_nosmt_force env t1 t2
    with
@@ -121,17 +124,17 @@ let mteq (env:env) (t1 t2:typ) : bool =
 //
 // bs1 and bs2 are opened binders from the signature and the effect combinator
 //
-let eq_binders env (bs1 bs2:binders) : option (list S.indexed_effect_binder_kind) =
+let eq_binders env (bs1 bs2:binders) : ML (option (list S.indexed_effect_binder_kind)) =
   if List.fold_left2 (fun (b, ss) b1 b2 ->
-       b &&
-       mteq env (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort,
+       mland b
+       (mteq env (SS.subst ss b1.binder_bv.sort) b2.binder_bv.sort),
        ss@[NT (b1.binder_bv, b2.binder_bv |> S.bv_to_name)]) (true, []) bs1 bs2
 
      |> fst
   then bs1 |> List.map (fun _ -> Substitutive_binder) |> Some
   else None
 
-let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.t) =
+let log_ad_hoc_combinator_warning (comb_name:string) (r:Range.t) : ML unit =
   log_issue r Errors.Warning_Adhoc_IndexedEffect_Combinator [
     Errors.text (Format.fmt1 "Combinator %s is not a substitutive indexed effect combinator, \
                    it is better to make it one if possible for better performance and ease of use" comb_name)
@@ -155,10 +158,10 @@ let bind_combinator_kind (env:env)
   (k:typ)
   (num_effect_params:int)
   (has_range_binders:bool)
-  : option (list indexed_effect_binder_kind) =
+  : ML (option (list indexed_effect_binder_kind)) =
 
   let debug s =
-    if Debug.medium () || !dbg_LayeredEffectsTc
+    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
     then Format.print1 "%s\n" s in
 
   debug (Format.fmt1
@@ -369,7 +372,7 @@ let validate_indexed_effect_bind_shape (env:env)
   (r:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
-  : typ & indexed_effect_combinator_kind =
+  : ML (typ & indexed_effect_combinator_kind) =
 
   let bind_name = Format.fmt3 "(%s , %s) |> %s"
     (string_of_lid m_eff_name)
@@ -500,7 +503,7 @@ let validate_indexed_effect_bind_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if Debug.medium () || !dbg_LayeredEffectsTc
+  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
   then Format.print2 "Bind %s has %s kind\n" bind_name (show kind);
 
   k, kind
@@ -518,7 +521,7 @@ let subcomp_combinator_kind (env:env)
   (k:typ)
   (num_effect_params:int)
 
-  : option S.indexed_effect_combinator_kind =
+  : ML (option S.indexed_effect_combinator_kind) =
 
   // the idea is same as that of bind
   //   we will check that each binder in k has expected type,
@@ -586,7 +589,7 @@ let subcomp_combinator_kind (env:env)
     then Some ()
     else None in
 
-  let check_ret_t (f_or_g_bs:binders) : option unit =
+  let check_ret_t (f_or_g_bs:binders) : ML (option unit) =
     let expected_t =
       match n_repr_ts with
       | Some repr_ts ->
@@ -656,7 +659,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
   (subcomp_t:typ)
   (num_effect_params:int)
   (r:Range.t)
-  : typ & indexed_effect_combinator_kind =
+  : ML (typ & indexed_effect_combinator_kind) =
 
   let subcomp_name = Format.fmt2 "%s <: %s"
     (string_of_lid m_eff_name)
@@ -713,7 +716,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let k = U.arrow (a_b::rest_bs@[f]) c in
 
-  if Debug.medium () || !dbg_LayeredEffectsTc then
+  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
     Format.print1 "Expected type of subcomp before unification: %s\n"
       (show k);
 
@@ -749,7 +752,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if Debug.medium () || !dbg_LayeredEffectsTc
+  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
   then Format.print2 "Subcomp %s has %s kind\n" subcomp_name (show kind);
 
 
@@ -765,7 +768,7 @@ let ite_combinator_kind (env:env)
   (tm:term)
   (num_effect_params:int)
 
-  : option S.indexed_effect_combinator_kind =
+  : ML (option S.indexed_effect_combinator_kind) =
 
   let a_b::rest_bs, _, _ = U.abs_formals tm in
 
@@ -816,7 +819,7 @@ let ite_combinator_kind (env:env)
     then Some ()
     else None in
 
-  let check_g_b (f_or_g_bs:binders) : option unit =
+  let check_g_b (f_or_g_bs:binders) : ML (option unit) =
     let expected_g_b_sort =
       let _, t = Env.inst_tscheme_with repr_ts [U_name u] in
       S.mk_Tm_app t
@@ -878,7 +881,7 @@ let validate_indexed_effect_ite_shape (env:env)
   (num_effect_params:int)
   (r:Range.t)
 
-  : term & indexed_effect_combinator_kind =
+  : ML (term & indexed_effect_combinator_kind) =
 
   let ite_name = Format.fmt1 "ite_%s" (string_of_lid eff_name) in
 
@@ -959,7 +962,7 @@ let validate_indexed_effect_ite_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if Debug.medium () || !dbg_LayeredEffectsTc
+  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
   then Format.print2 "Ite %s has %s kind\n" ite_name
          (show kind);
 
@@ -980,7 +983,7 @@ let validate_indexed_effect_close_shape (env:env)
   (u_b:univ_name)
   (close_tm:term)
   (num_effect_params:int)
-  (r:Range.t) : term =
+  (r:Range.t) : ML term =
 
   let close_name = Format.fmt1 "close_%s" (string_of_lid eff_name) in
 
@@ -1036,7 +1039,7 @@ let lift_combinator_kind (env:env)
   (m_repr_ts:option tscheme)
   (u:univ_name)
   (k:typ)
-  : option (list indexed_effect_binder_kind) =
+  : ML (option (list indexed_effect_binder_kind)) =
 
   let a_b::rest_bs, _ = U.arrow_formals k in
 
@@ -1100,7 +1103,7 @@ let validate_indexed_effect_lift_shape (env:env)
   (u:univ_name)
   (lift_t:typ)
   (r:Range.t)
-  : typ & indexed_effect_combinator_kind =
+  : ML (typ & indexed_effect_combinator_kind) =
 
   let lift_name = Format.fmt2 "%s ~> %s"
     (string_of_lid m_eff_name)
@@ -1127,8 +1130,8 @@ let validate_indexed_effect_lift_shape (env:env)
       raise_error r Errors.Fatal_UnexpectedExpressionType
                    (lift_t_shape_error "either not an arrow, or not enough binders") in
 
-  if (not ((lid_equals lift_eff PC.effect_PURE_lid) ||
-           (lid_equals lift_eff PC.effect_GHOST_lid && Env.is_erasable_effect env m_eff_name)))
+  if (not (mlor (lid_equals lift_eff PC.effect_PURE_lid)
+           (mland (lid_equals lift_eff PC.effect_GHOST_lid) (Env.is_erasable_effect env m_eff_name))))
   then raise_error r Errors.Fatal_UnexpectedExpressionType
                     (lift_t_shape_error "the lift combinator has an unexpected effect: \
                       it must either be PURE or if the source effect is erasable then may be GHOST");
@@ -1194,7 +1197,7 @@ let validate_indexed_effect_lift_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if Debug.medium () || !dbg_LayeredEffectsTc
+  if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc)
   then Format.print2 "Lift %s has %s kind\n" lift_name
          (show kind);
 
@@ -1206,13 +1209,13 @@ let validate_indexed_effect_lift_shape (env:env)
  *
  * If the effect is reifiable, returns reify__M sigelt also
  *)
-let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
+let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) : ML _ =
 Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if !dbg_LayeredEffectsTc then
     Format.print1 "Typechecking layered effect: \n\t%s\n" (show ed);
 
   //we don't support effect binders in layered effects yet
-  if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
+  if mlor (List.length ed.univs <> 0) (List.length ed.binders <> 0) then
     raise_error ed.mname Errors.Fatal_UnexpectedEffect 
       ("Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")");
 
@@ -1223,9 +1226,9 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
 
   //helper function to get (a:Type ?u), returns the binder and ?u
-  let fresh_a_and_u_a (a:string) : binder & universe = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
+  let fresh_a_and_u_a (a:string) : ML (binder & universe) = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
   //helper function to get (x:a)
-  let fresh_x_a (x:string) (a:binder) : binder = S.gen_bv x None (S.bv_to_name a.binder_bv) |> S.mk_binder in
+  let fresh_x_a (x:string) (a:binder) : ML binder = S.gen_bv x None (S.bv_to_name a.binder_bv) |> S.mk_binder in
 
 
   (*
@@ -1610,7 +1613,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
      *
      * The input env has the squash p (resp. squash (not p)) binder for the then (resp. else) branch
      *)
-    let check_branch env ite_f_or_g_sort attr_opt : unit =
+    let check_branch env ite_f_or_g_sort attr_opt : ML unit =
       let subst, uvars, g_uvars = subcomp_bs |> List.fold_left
         (fun (subst, uvars, g) b ->
           let sort = SS.subst subst b.binder_bv.sort in
@@ -1782,7 +1785,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
    *
    * TODO: this code has a lot in common with actions for non-layered effects, we should reuse
    *)
-  let tc_action env (act:action) : action =
+  let tc_action env (act:action) : ML action =
     let env0 = env in
     let r = act.action_defn.pos in
     if List.length act.action_params <> 0
@@ -1820,7 +1823,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
       ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
       act.action_defn in
     
-    if Debug.medium () || !dbg_LayeredEffectsTc then
+    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
       Format.print2 "Typechecked action definition: %s and action type: %s\n"
         (show act_defn) (show act_typ);
 
@@ -1840,20 +1843,20 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
                (Format.fmt3 "Unexpected non-function type for action %s:%s (%s)"
                  (show ed.mname) (show act.action_name) (show act_typ)) in
 
-    if Debug.medium () || !dbg_LayeredEffectsTc then
+    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
       Format.print1 "Expected action type: %s\n" (show k);
 
     let g = Rel.teq env act_typ k in
     List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
 
-    if Debug.medium () || !dbg_LayeredEffectsTc then
+    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
       Format.print1 "Expected action type after unification: %s\n" (show k);
     
     let act_typ =
       let err_msg t = Format.fmt3
         "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
         (string_of_lid ed.mname) (string_of_lid act.action_name) (show t) in
-      let repr_args t : universes & term & args =
+      let repr_args t : ML (universes & term & args) =
         match (SS.compress t).n with
         | Tm_app {hd=head;args=a::is} ->
           (match (SS.compress head).n with
@@ -1875,7 +1878,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         U.arrow bs (S.mk_Comp ct)
       | _ -> raise_error r Errors.Fatal_ActionMustHaveFunctionType (err_msg k) in
 
-    if Debug.medium () || !dbg_LayeredEffectsTc then
+    if mlor (Debug.medium ()) (!dbg_LayeredEffectsTc) then
       Format.print1 "Action type after injecting it into the monad: %s\n" (show act_typ);
     
     let act =
@@ -1887,8 +1890,8 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
           action_defn = act_defn;
           action_typ = SS.close_univ_vars us act_typ }
       else
-        if List.length us = List.length act.action_univs &&
-           List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us act.action_univs
+        if mland (List.length us = List.length act.action_univs)
+           (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us act.action_univs)
         then { act with
           action_defn = act_defn;
           action_typ = SS.close_univ_vars act.action_univs act_typ }
@@ -1923,11 +1926,11 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
       let env = Env.push_univ_vars env0 us in
       let env = Env.push_binders env [a_b] in
       let _, r = List.fold_left (fun (env, r) b ->
-        let r = r && N.non_info_norm env b.binder_bv.sort in
+        let r = mland r (N.non_info_norm env b.binder_bv.sort) in
         Env.push_binders env [b], r) (env, true) rest_bs in
-      if r &&
-         Substitutive_combinator? bind_kind &&
-         (is_reifiable || lid_equals ed.mname PC.effect_TAC_lid)
+      if mland (mland r
+         (Substitutive_combinator? bind_kind))
+         (mlor is_reifiable (lid_equals ed.mname PC.effect_TAC_lid))
       then S.Extract_reify
       else let m =
              if not r
@@ -1962,7 +1965,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
     extraction_mode }
   )
 
-let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
+let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : ML S.eff_decl =
 Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if !dbg then
     Format.print1 "Typechecking eff_decl: \n\t%s\n" (show ed);
@@ -1990,8 +1993,8 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
       let open FStarC.Class.PP in
       let open FStarC.Errors.Msg in
       //if ed.univs is already set, it must be the case that us = ed.univs, else error out
-      if (List.length ed_univs = List.length us &&
-         List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us)
+      if (mland (List.length ed_univs = List.length us)
+         (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) ed_univs us))
       then us, bs
       else raise_error ed.mname Errors.Fatal_UnexpectedNumberOfUniverse [
              text "Expected and generalized universes in effect declaration for"
@@ -2035,7 +2038,8 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
    *     n is the expected number of free universes (after generalization)
    *     env_opt is an optional env (e.g. bind_repr is typechecked lax)
    *)
-  let check_and_gen' (comb:string) (n:int) env_opt (us, t) k : tscheme =
+  let check_and_gen' (comb:string) (n:int) env_opt (us_t:univ_names & term) k : ML tscheme =
+    let (us, t) = us_t in
     let env = if Some? env_opt then env_opt |> Option.must else env in
     let us, t = SS.open_univ_vars us t in
     let t =
@@ -2057,8 +2061,8 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
     match us with
     | [] -> g_us, t
     | _ ->
-     if List.length us = List.length g_us &&
-        List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us
+     if mland (List.length us = List.length g_us)
+        (List.forall2 (fun u1 u2 -> S.order_univ_name u1 u2 = 0) us g_us)
      then g_us, t
      else raise_error t Errors.Fatal_UnexpectedNumberOfUniverse
             (Format.fmt4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
@@ -2395,12 +2399,12 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
   ed
 )
 
-let tc_eff_decl env ed quals attrs =
+let tc_eff_decl env ed quals attrs : ML _ =
   if ed |> U.is_layered
   then tc_layered_eff_decl env ed quals attrs
   else tc_non_layered_eff_decl env ed quals attrs
 
-let monad_signature env m s =
+let monad_signature env m s : ML _ =
  let fail () = Err.unexpected_signature_for_monad env (range_of_lid m) m s in
  let s = SS.compress s in
  match s.n with
@@ -2416,7 +2420,7 @@ let monad_signature env m s =
  * Typecheck lift to/from a layered effect
  *
  *)
-let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
+let tc_layered_lift env0 (sub:S.sub_eff) : ML S.sub_eff =
   if !dbg_LayeredEffectsTc then
     Format.print1 "Typechecking sub_effect: %s\n" (show sub);
 
@@ -2444,7 +2448,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   sub
 
-let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.t) : unit =
+let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.t) : ML unit =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (Format.fmt3 "Error defining a lift/subcomp %s ~> %s: %s"
                                   (string_of_lid m1) (string_of_lid m2) reason) in
@@ -2455,12 +2459,12 @@ let check_lift_for_erasable_effects env (m1:lident) (m2:lident) (r:Range.t) : un
   else
     let m1_erasable = Env.is_erasable_effect env m1 in
     let m2_erasable = Env.is_erasable_effect env m2 in
-    if m2_erasable     &&
-       not m1_erasable &&
-       not (lid_equals m1 PC.effect_PURE_lid)
+    if mland (mland m2_erasable
+       (not m1_erasable))
+       (not (lid_equals m1 PC.effect_PURE_lid))
     then err "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
 
-let tc_lift env sub r =
+let tc_lift env sub r : ML _ =
   if lid_equals sub.source sub.target
   then raise_error r Fatal_UnexpectedEffect
                     (Format.fmt1
@@ -2476,7 +2480,7 @@ let tc_lift env sub r =
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
 
-  if ed_src |> U.is_layered || ed_tgt |> U.is_layered
+  if mlor (ed_src |> U.is_layered) (ed_tgt |> U.is_layered)
   then tc_layered_lift (Env.set_range env r) sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
@@ -2566,14 +2570,15 @@ let tc_lift env sub r =
         (Format.fmt3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
                     (lift_wp |> fst |> List.length |> show));
-    if Some? lift && lift |> Option.must |> fst |> List.length <> 1 then
+    if mland (Some? lift) (lift |> Option.must |> fst |> List.length <> 1) then
       raise_error r Errors.Fatal_TooManyUniverse
         (Format.fmt3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
                     (show sub.source) (show sub.target)
                     (lift |> Option.must |> fst |> List.length |> show));
     ({ sub with lift_wp=Some lift_wp; lift=lift })
 
-let tc_effect_abbrev env (lid, uvs, tps, c) r =
+let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r : ML _ =
+  let (lid, uvs, tps, c) = lid_uvs_tps_c in
   let env0 = env in
   //assert (uvs = []); AR: not necessarily, two phases
 
@@ -2604,7 +2609,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
     let expected_result_typ =
       match tps with
       | ({binder_bv=x})::tl ->
-        if is_default_effect && not (tl = [])
+        if mland is_default_effect (not (tl = []))
         then raise_error r Errors.Fatal_UnexpectedEffect
                           (Format.fmt2 "Effect %s is marked as a default effect for %s, but it has more than one arguments"
                             (string_of_lid lid)
@@ -2640,7 +2645,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   (lid, uvs, tps, c)
 
 
-let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) (r:Range.t) =
+let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lident) (r:Range.t) : ML unit =
   let err reason = raise_error r Errors.Fatal_UnexpectedEffect
                                 (Format.fmt4 "Error definition polymonadic bind (%s, %s) |> %s: %s"
                                   (show m) (show n) (show p) reason) in
@@ -2648,8 +2653,8 @@ let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lid
   let m = Env.norm_eff_name env m in
   let n = Env.norm_eff_name env n in
 
-  if lid_equals m PC.effect_GHOST_lid ||
-     lid_equals n PC.effect_GHOST_lid
+  if mlor (lid_equals m PC.effect_GHOST_lid)
+     (lid_equals n PC.effect_GHOST_lid)
   then err "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
   else
     let m_erasable = Env.is_erasable_effect env m in
@@ -2658,13 +2663,13 @@ let check_polymonadic_bind_for_erasable_effects env (m:lident) (n:lident) (p:lid
 
 
     if p_erasable
-    then if not m_erasable && not (lid_equals m PC.effect_PURE_lid)
+    then if mland (not m_erasable) (not (lid_equals m PC.effect_PURE_lid))
          then err (Format.fmt1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid m))
-         else if not n_erasable && not (lid_equals n PC.effect_PURE_lid)
+         else if mland (not n_erasable) (not (lid_equals n PC.effect_PURE_lid))
          then err (Format.fmt1 "target effect is erasable but %s is neither erasable nor PURE" (string_of_lid n))
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
-  : (S.tscheme & S.tscheme & S.indexed_effect_combinator_kind) =
+  : ML (S.tscheme & S.tscheme & S.indexed_effect_combinator_kind) =
 
   let eff_name = Format.fmt3 "(%s, %s) |> %s)"
     (m |> ident_of_lid |> string_of_id)
@@ -2721,7 +2726,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
   (us, t), (us, k |> SS.close_univ_vars us), kind
 
 
-let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
+let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : ML _ =
   let r = (snd ts).pos in
 
   check_lift_for_erasable_effects env0 m n r;
