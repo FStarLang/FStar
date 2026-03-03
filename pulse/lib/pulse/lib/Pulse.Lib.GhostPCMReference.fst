@@ -71,8 +71,8 @@ fn read u#a
   returns v:(v:a { compatible p x v /\ p.refine v })
   ensures pts_to r (f v)
 {
-  with inst. unfold small_token u#a inst; let inst = inst; fold small_token inst;
-  U.downgrade_val (C.ghost_read #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (raise_refine p x f));
+  with inst. assert small_token inst;
+  U.downgrade_val (C.ghost_read #(U.raise_t #inst a) r (U.raise_val (reveal x)) (raise_refine p x f));
 }
 
 
@@ -100,8 +100,8 @@ fn write u#a
   requires pts_to r x
   ensures  pts_to r y
 {
-  with inst. unfold small_token u#a inst; let inst = inst; fold small_token inst;
-  C.ghost_write #(U.raise_t a) #(raise p) r (hide (U.raise_val (reveal x))) (hide (U.raise_val (reveal y)))
+  with inst. assert small_token inst;
+  C.ghost_write #(U.raise_t #inst a) r (U.raise_val (reveal x)) (U.raise_val (reveal y))
     (raise_upd f)
 }
 
@@ -116,10 +116,9 @@ fn share u#a
   ensures pts_to r v0
   ensures pts_to r v1
 {
-  with inst. unfold small_token u#a inst; let inst = inst;
+  with inst. assert small_token inst;
   fold small_token inst;
-  fold small_token inst;
-  C.ghost_share #_ #(PR.raise pcm) r (U.raise_val v0) (U.raise_val v1)
+  C.ghost_share #(U.raise_t #inst a) r (U.raise_val v0) (U.raise_val v1)
 }
 
 [@@allow_ambiguous]
@@ -135,9 +134,11 @@ fn gather u#a
   returns  squash (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
 {
-  with inst. assert C.ghost_pcm_pts_to #_ #(raise #a #inst pcm) r (U.raise_val #a #inst v1);
-  drop_ (small_token inst);
-  C.ghost_gather #_ #(PR.raise #a #inst pcm) r (U.raise_val #a #inst v0) (U.raise_val #a #inst v1)
+  with inst0. assert C.ghost_pcm_pts_to r (U.raise_val #a #inst0 v0);
+  with inst1. assert C.ghost_pcm_pts_to r (U.raise_val #a #inst1 v1);
+  drop_ (small_token inst1);
+  rewrite each inst1 as inst0;
+  C.ghost_gather #(U.raise_t #inst0 a) r (U.raise_val v0) (U.raise_val v1)
 }
 
 ghost fn pts_to_not_null u#a (#a:Type u#a)

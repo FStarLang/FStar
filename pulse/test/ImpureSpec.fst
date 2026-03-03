@@ -102,7 +102,7 @@ fn test10 (x: bool)
 fn test11 (x:ref (ref int))
   preserves nested_live x
   returns w:_
-  ensures pure (w == old(!(old(!x))))
+  ensures pure (w == old(! !x))
 {
   !(!x);
 }

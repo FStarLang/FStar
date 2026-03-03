@@ -238,6 +238,7 @@ fn mask_alloc_with_vis u#a (elt: Type u#a) {| small_type u#a |}
   let arr: array elt = { base_ref = b; base_len = SZ.v n; length = SZ.v n; offset = 0; alloc_loc = l; vis };
   rewrite each b as lptr_of arr;
   assert pure (v `Map.equal` mk_carrier' arr 1.0R (Seq.create (SZ.v n) None) (fun _ -> l_True) (vis l));
+  rewrite each hide (SZ.v n) as arr.base_len;
   fold pts_to_mask arr (Seq.create (SZ.v n) None) (fun _ -> l_True);
   arr
 }
@@ -290,6 +291,7 @@ ghost fn pcm_rw u#a (#t: Type u#a)
   let i = get_mask_idx m2 (length a2);
   assert pure (mask_nonempty m2 (length a2) ==>
     Map.sel (mk_carrier' a2 p2 s2 m2 (process_of l)) (i + a2.offset) == Some ((Seq.index s2 i, process_of l), p2));
+  rewrite each a1.base_len as a2.base_len;
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
