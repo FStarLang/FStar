@@ -294,12 +294,11 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
     | None  ->
         if (if Options.ml_ish()
             then Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c)
-            else false)
-           || (if Options.ml_ish ()
-               then (if Options.lax ()
-                     then not (U.is_pure_or_ghost_comp c)
-                     else false)
-               else false)
+            else if Options.ml_ish ()
+                then (if Options.lax ()
+                      then not (U.is_pure_or_ghost_comp c)
+                      else false)
+                else false)
         then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return

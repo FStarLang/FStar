@@ -13,3 +13,4 @@ exception Failure = Failure (* NB: reusing OCaml's native Failure. *)
    the desugaring does not fire. *)
 let try_with f1 f2 = try f1 () with | e -> f2 e
 (* let failwith x = raise (Failure x) *)
+let failwith (x:string) = raise (Failure x)

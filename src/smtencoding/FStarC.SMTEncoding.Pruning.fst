@@ -206,9 +206,6 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   let is_ambient_refinement ty =
     match ty.tm with
     | App(Var "Prims.squash", _) -> true
-    // When loaded from checked files, squash may appear in token form:
-    // ApplyTT(Prims.squash@tok(...), arg)
-    | App(Var "ApplyTT", {tm=App(Var "Prims.squash@tok", _)}::_) -> true
     | App(Var name, _) 
     | FreeV(FV(name, _, _)) -> BU.starts_with name "Tm_refine_"
     | _ -> false
@@ -216,7 +213,6 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   let ambient_refinement_payload ty =
     match ty.tm with
     | App(Var "Prims.squash", [_;t]) -> t
-    | App(Var "ApplyTT", {tm=App(Var "Prims.squash@tok", _)}::[t]) -> t
     | _ -> ty
   in
   begin

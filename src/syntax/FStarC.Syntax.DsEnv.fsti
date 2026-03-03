@@ -71,7 +71,7 @@ val set_current_module: env -> lident -> env
 val clear_scope_mods: env -> env
 val current_module: env -> ML lident
 val iface_decls : env -> lident -> ML (option (list Parser.AST.decl))
-val set_iface_decls: env -> lident -> list Parser.AST.decl -> env
+val set_iface_decls: env -> lident -> list Parser.AST.decl -> ML env
 val iface_interleaving_init: env -> bool
 val qualify: env -> ident -> ML lident
 val syntax_only: env -> bool
