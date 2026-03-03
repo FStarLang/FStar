@@ -1007,6 +1007,12 @@ and desugar_decl (env:env_t)
   | Sugar.FnDecl { id; us; binders; ascription=Inr ascription; range } ->
     fail "Unexpected FnDecl with F* type" range
 
+  | Sugar.SlpropDefn { id; binders; body; range } ->
+    let! env, bs, bvs = desugar_binders env binders in
+    let! body = desugar_term env body in
+    let! qbs = map2 faux bs bvs in
+    return (SW.slprop_defn range id qbs body)
+
   | _ ->
     fail "Unexpected Pulse declaration" (Sugar.range_of_decl d)
 

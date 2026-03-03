@@ -223,6 +223,17 @@ and fn_defn = {
   range:rng
 }
 
+and slprop_defn = {
+  id:ident;
+  // is_rec:bool;
+  // us:list ident;
+  binders:binders;
+  // measure:option A.term; // with binders in scope
+  body:A.term;
+  decorations:list A.decoration;  
+  range:rng
+}
+
 and let_init =
   | Array_initializer of array_init
   | Default_initializer of option A.term & list lambda
@@ -367,6 +378,7 @@ instance showable_stmt : showable stmt = {
 type decl =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
+  | SlpropDefn of slprop_defn
 open FStarC.Class.Deq
 let eq_ident (i1 i2:Ident.ident) = i1 =? i2
 let eq_lident (i1 i2:Ident.lident) = i1 =? i2
@@ -395,6 +407,7 @@ let rec eq_decl (d1 d2:decl) =
   match d1, d2 with
   | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
   | FnDecl d1, FnDecl d2 -> eq_fn_decl d1 d2
+  | SlpropDefn d1, SlpropDefn d2 -> eq_slprop_defn d1 d2
   | _ -> false
 and eq_fn_decl (f1 f2:fn_decl) =
   eq_ident f1.id f2.id &&
@@ -409,6 +422,13 @@ and eq_fn_defn (f1 f2:fn_defn) =
   eq_ascription f1.ascription f2.ascription &&
   eq_opt AD.eq_term f1.measure f2.measure &&
   eq_body f1.body f2.body
+and eq_slprop_defn (f1 f2:slprop_defn) =
+  eq_ident f1.id f2.id &&
+  // f1.is_rec = f2.is_rec &&
+  // forall2 eq_ident f1.us f2.us &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
+  // eq_opt AD.eq_term f1.measure f2.measure &&
+  AD.eq_term f1.body f2.body
 and eq_ascription (a1 a2:either computation_type (option A.term)) =
   match a1, a2 with
   | Inl c1, Inl c2 -> eq_computation_type c1 c2
@@ -543,6 +563,7 @@ let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : unit =
   match d with
   | FnDefn f -> scan_fn_defn cbs f
   | FnDecl d -> scan_fn_decl cbs d
+  | SlpropDefn d -> scan_slprop_defn cbs d
 and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) =
   iter (scan_binder cbs) f.binders;
   scan_ascription cbs f.ascription
@@ -551,6 +572,10 @@ and scan_fn_defn (cbs:A.dep_scan_callbacks) (f:fn_defn) =
   ieither (scan_computation_type cbs) (iopt cbs.scan_term) f.ascription;
   iopt cbs.scan_term f.measure;
   ieither (scan_stmt cbs) (scan_lambda cbs) f.body
+and scan_slprop_defn (cbs:A.dep_scan_callbacks) (f:slprop_defn) =
+  iter (scan_binder cbs) f.binders;
+  // iopt cbs.scan_term f.measure;
+  cbs.scan_term f.body
 and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) =
   cbs.scan_binder b
 and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) =
@@ -645,6 +670,7 @@ let range_of_decl (d:decl) =
   match d with
   | FnDefn f -> f.range
   | FnDecl d -> d.range
+  | SlpropDefn d -> d.range
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
 let mk_comp tag literally annots range =
   {
@@ -657,6 +683,7 @@ let add_decorations d ds =
   match d with
   | FnDefn f -> FnDefn { f with decorations=ds @ f.decorations }
   | FnDecl f -> FnDecl { f with decorations=ds @ f.decorations }
+  | SlpropDefn f -> SlpropDefn { f with decorations=ds @ f.decorations }
   
 // let mk_slprop_exists binders body = SLPropExists { binders; body }
 let mk_expr e args = Expr { e; args }
@@ -676,6 +703,9 @@ let mk_fn_defn id is_rec us binders ascription measure body decorations range
 let mk_fn_decl id us binders ascription decorations range
 : fn_decl
 = { id; us; binders; ascription; decorations; range }
+let mk_slprop_defn id binders body decorations range
+: slprop_defn
+= { id; binders; body; decorations; range }
 let mk_open lid = Open lid
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
 let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
