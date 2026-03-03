@@ -64,18 +64,14 @@ let compose_subst (s1 s2 : subst_ts) : subst_ts =
                | _ -> snd s1 in
     (s, ropt)
 
-//apply a delayed substitution s to t,
-//composing it with any other delayed substitution that may already be there
+// Apply a delayed substitution s to t.
+// This may nest Tm_delayed nodes, that is fine. If we coallesce
+// them, that implies composing the substitutions and potentially breaking
+// sharing.
+let delay' (t:term) (s : subst_ts) rng : term =
+    mk_Tm_delayed (t, s) rng
 let delay (t:term) (s : subst_ts) : term =
- match t.n with
- | Tm_delayed {tm=t'; substs=s'} ->
-    //s' is the subsitution already associated with this node;
-    //s is the new subsitution to add to it
-    //compose substitutions by concatenating them
-    //the order of concatenation is important!
-    mk_Tm_delayed (t', compose_subst s' s) t.pos
- | _ ->
-    mk_Tm_delayed (t, s) t.pos
+    delay' t s t.pos
 
 (*
     force_uvar' (t:term) : term * bool
@@ -198,11 +194,11 @@ let rec subst' (s:subst_ts) (t:term) : term =
     | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
     | Tm_delayed {tm=t';substs=s'} ->
-        //s' is the subsitution already associated with this node;
-        //s is the new subsitution to add to it
-        //compose substitutions by concatenating them
-        //the order of concatenation is important!
-        mk_Tm_delayed (t', compose_subst s' s) t.pos
+        (* I really just want this:
+           delay t s
+        Or to remove this completely and fall in the default case above.
+        But somehow, that's incredibly bad for ranges. *)
+        delay' t' (compose_subst s' s) t.pos
 
     | Tm_bvar a ->
         apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
@@ -214,10 +210,7 @@ let rec subst' (s:subst_ts) (t:term) : term =
         mk (Tm_type (subst_univ (fst s) u)) (mk_range t0.pos s)
 
     | _ ->
-      //NS: 04/12/2018
-      //    Substitutions on Tm_uvar just gets delayed
-      //    since its solution may eventually end up being an open term
-      mk_Tm_delayed (t0, s) (mk_range t.pos s)
+      delay' t0 s (mk_range t.pos s)
 
 let subst_dec_order' s = function
   | Decreases_lex l -> Decreases_lex (l |> List.map (subst' s))
@@ -337,46 +330,15 @@ let push_subst_lcomp s lopt = match lopt with
                  ; residual_flags  = rc.residual_flags } in
         Some rc
 
-let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
-    let should_retain x =
-        u.ctx_uvar_binders |> U.for_some (fun b -> S.bv_eq x b.binder_bv)
-    in
-    let rec aux = function
-        | [] -> []
-        | hd_subst::rest ->
-          let hd =
-              hd_subst |> List.collect (function
-              | NT(x, t) ->
-                if should_retain x
-                then [NT(x, delay t (rest, NoUseRange))]
-                else []
-              | NM(x, i) ->
-                if should_retain x
-                then let x_i = S.bv_to_tm ({x with index=i}) in
-                     let t = subst' (rest, NoUseRange) x_i in
-                     match t.n with
-                     | Tm_bvar x_j -> [NM(x, x_j.index)]
-                     | _ -> [NT(x, t)]
-                else []
-              | _ -> [])
-          in
-          hd @ aux rest
-    in
-    match aux (fst s0 @ fst s) with
-    | [] -> [], snd s
-    |  s' -> [s'], snd s
-
 //
-// If resolve_uvars is true, it will lookup the unionfind graph
-//   and use uvar solution, if it has already been solved
-//   see the Tm_uvar case in this function
-// Otherwise it will just compose s with the uvar subst
+// Push a substitution one level down.
 // 
-let rec push_subst_aux (resolve_uvars:bool) s t =
+let rec push_subst (s : subst_ts) (t : term) : term =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible (delayed node in push_subst)"
+    | Tm_delayed _ ->
+      push_subst s (compress_subst t)
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -385,7 +347,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
              * The hope is that this does not occur often and so
              * we still get good performance. *)
           let t = Option.must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
-          push_subst_aux resolve_uvars s t
+          push_subst s t
         | _ ->
             (* All others must be closed, so don't bother *)
             tag_with_range t s
@@ -396,14 +358,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
     | Tm_unknown -> tag_with_range t s //these are always closed
 
     | Tm_uvar (uv, s0) ->
-      let fallback () =
-        tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-      in
-      if not resolve_uvars
-      then fallback ()
-      else (match (Unionfind.find uv.ctx_uvar_head) with
-            | None -> fallback ()
-            | Some t -> push_subst_aux resolve_uvars (compose_subst s0 s) t)
+      tag_with_range ({t with n = Tm_uvar(uv, compose_subst s0 s)}) s
 
     | Tm_type _
     | Tm_bvar _
@@ -489,19 +444,25 @@ let rec push_subst_aux (resolve_uvars:bool) s t =
 
     | Tm_meta {tm=t; meta=m} ->
         mk (Tm_meta {tm=subst' s t; meta=m})
-
-let push_subst s t = push_subst_aux true s t
-
 //
 // Only push the pending substitution down,
 //   no resolving uvars
 //
-let compress_subst (t:term) : term =
+and compress_subst (t:term) : term =
   match t.n with
   | Tm_delayed {tm=t; substs=s} ->
-    let resolve_uvars = false in
-    push_subst_aux resolve_uvars s t
+    push_subst s t
   | _ -> t
+
+let compress_post_check (t:term) : unit =
+  match t.n with
+  | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed"
+  | Tm_uvar ({ctx_uvar_head=uv}, s) -> (
+    match Unionfind.find uv with
+        | Some t' -> failwith "compress attempting to return a solved uvar"
+        | None -> ()
+  )
+  | _ -> ()
 
 (* compress:
       This is used pervasively, throughout the codebase
@@ -513,41 +474,21 @@ let compress_subst (t:term) : term =
          2. eliminate any top-level (Tm_uvar uv) node,
             when uv has been assigned a solution already
 
-      `compress` should will *not* memoize the result of uvar
-      solutions (since those could be reverted), nor the result
-      of `push_subst` (since it internally uses the unionfind
-      graph too).
-
-      The function is broken into a fast-path where the
-      result can be easily determined and a recursive slow
-      path.
-
-      Warning: if force_uvar changes to operate on inputs other than
-      Tm_uvar then the fastpath out match in compress will need to be
-      updated.
-
-      This function should NEVER return a Tm_delayed. If you do any
-      non-trivial change to it, it would be wise to uncomment the check
-      below and run a full regression build.
+      This function should NEVER return a Tm_delayed, nor a resolved uvar. If
+      you do any non-trivial change to it, it would be wise to uncomment the
+      check below and run a full regression build.
 *)
-let rec compress_slow (t:term) =
+let rec compress (t:term) =
+  let r =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed {tm=t'; substs=s} ->
-        compress (push_subst s t')
+      compress (push_subst s t')
     | _ ->
-        t
-and compress (t:term) =
-  match t.n with
-    | Tm_delayed _ | Tm_uvar _ ->
-        let r = compress_slow t in
-        (* begin match r.n with *)
-        (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)
-        (* | _ -> () *)
-        (* end; *)
-        r
-    | _ ->
-        t
+      t
+  in
+  // compress_post_check r;
+  r
 
 let subst s t = subst' ([s], NoUseRange) t
 let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
