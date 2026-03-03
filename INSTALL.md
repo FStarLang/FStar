@@ -5,7 +5,6 @@
   * [Binary package](#binary-package)
     * [Installing a binary package](#installing-a-binary-package)
     * [Testing a binary package](#testing-a-binary-package)
-  * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
   * [Nix Package](#nix-package)
   * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
@@ -140,16 +139,6 @@ commands. (Note: On Windows this requires Cygwin and `make`)
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
 
-## Running F\* from a docker image ##
-
-An alternative to installing binaries is to install a docker image.
-We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
-with emacs support and `fstarlang/fstar` for purists.
-The image is automatically kept up to date through a cloud build.
-
-You only have to install docker and an X server for your platform and you are good to go.
-See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image)
-for the details on how to use docker.
 
 ## Chocolatey Package on Windows ##
 
