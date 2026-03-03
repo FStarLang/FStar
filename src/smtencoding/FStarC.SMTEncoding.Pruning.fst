@@ -53,6 +53,11 @@ let mk_remaining_triggers ts = {
 // This option prunes away all top-level assumptions that have no patterns on them
 let no_ambients () = Options.Ext.enabled "context_pruning_no_ambients"
 
+let should_retain_assumption (a:assumption) =
+  if a.assumption_caption = Some "pretyping" //pretyping assumptions are deprecated
+  then Options.Ext.enabled "pretyping_axioms" //unless '--ext pretyping_axioms' is on
+  else true
+
 type pruning_state = {
   defs_and_decls: list decl;
   defs_and_decls_map: PSMap.t decl;
@@ -504,6 +509,8 @@ let rec scan (ds:list assumption)
         (fun acc triggered_assumption ->
           let assumption = triggered_assumption.assumption in
           if! already_reached assumption.assumption_name
+          then return acc
+          else if not (should_retain_assumption assumption)
           then return acc
           else (
             reached_assumption assumption.assumption_name ;!
