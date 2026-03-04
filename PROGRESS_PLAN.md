@@ -122,10 +122,11 @@ All `#push-options "--MLish --MLish_effect FStarC.Effect"` pragmas have been rem
 - `DsEnv.fsti`: `ugly_sigelt_to_string_hook` → ML, `withenv` → ML
 - `Syntax.Util.fsti`: `tts_f`/`ttd_f` → ML, `universe_of_binders` callback → ML
 
-**Short-circuit operator pattern**: `&&` and `||` require pure operands. ML operands must be let-bound first:
+**Short-circuit operator pattern**: `&&` and `||` require pure operands. ML operands must use `if-then-else` to preserve short-circuit semantics:
 ```fstar
-(* Before *) x =? y && f z
-(* After  *) let r1 = x =? y in let r2 = f z in r1 && r2
+(* Before -- fstar2 with --MLish *) x =? y && f z
+(* WRONG -- changes evaluation order *) let r1 = x =? y in let r2 = f z in r1 && r2
+(* CORRECT -- preserves short-circuit *) if x =? y then f z else false
 ```
 
 **FStarC.Effect.ML vs FStar.All.ML**: These are different effects (`unit` vs `heap` state). All compiler code must use `FStarC.List.*` (not `FStar.List.*`) when passing ML callbacks.
@@ -183,6 +184,28 @@ After Phase 9.5, the stage1 binary was able to extract stage2, but stage2 failed
 **Bootstrap verification:**
 - [x] stage0→stage1 ✅
 - [x] stage1→stage2 extraction + compilation ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
+
+### Phase 9.7: Preserve Short-Circuit Evaluation in SMT Encoding — COMPLETE ✅
+
+**Commit `a64e97f07f`** — "Preserve short-circuit evaluation in SMT encoding after --MLish removal"
+
+The Phase 9 pragma removal inadvertently changed evaluation order in SMT encoding code. Without `--MLish`, F* enforces pure operands for `&&`/`||`, so previous automatic rewrites eagerly let-bound ML operands. This changed evaluation order from short-circuit to eager, producing different SMT output and breaking context pruning for `FStar.FiniteMap.Base`.
+
+**Root cause**: Eager let-binding like `let a = f() in let b = g() in a && b` evaluates both `f()` and `g()` upfront, while original `f() && g()` short-circuits (skips `g()` when `f()` is false). This affected SMT term generation in encoding functions that use `Options.*`, `BU.for_some`, `List.existsb`, and `Syntax.Util.*`.
+
+**Fix pattern**: Convert `a && b` (ML operands) to `if a then b else false` and `a || b` to `if a then true else b`. This satisfies F*'s purity requirement while preserving identical short-circuit semantics.
+
+**Files changed:**
+- [x] `Encode.fst`: 11 eager let-binding patterns → if-then-else (encode_free_var, should_thunk, has_masked/has_impure, when guards, lax&&ml_ish, Options.Ext.enabled, etc.)
+- [x] `EncodeTerm.fst`: squash/formula `when` guard, Tm_arrow encoding, is_impure/is_reifiable
+- [x] `SolverState.fst`: keep_assumption/already_given `||` filters
+- [x] `Z3.fst`: solver version mismatch, hint recording/use checks
+- [x] `FiniteMap.Base.fst`: Removed `context_pruning=false` workaround (no longer needed)
+
+**Bootstrap verification:**
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] FiniteMap.Base verifies with context pruning enabled ✅
 - [x] stage2→stage3 fixpoint: **0 differences** ✅
 
 ### Phase 10: Remove --MLish Compiler Support — TODO
