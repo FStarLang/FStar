@@ -43,15 +43,8 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       tm_exists_sl u b (close_term post y)
     )
   in
-  (* generate exists (_:squash pr). post 
-     Useful if the well-formedness of post depends on pr in scope *)
-  let guard_with_squash pr (post:slprop) : T.Tac slprop =
-    let n, u, pr = pr in
-    let b = {binder_ty=mk_squash u pr; binder_ppname=n; binder_attrs=Sealed.seal []} in
-    tm_exists_sl u_zero b post
-  in
   let maybe_elim_rewrites_to pr (post:term) : T.Tac term =
-    let _, _, property = pr in
+    let n, _, property = pr in
     let open R in
     let hd, args = T.collect_app_ln property in
     match T.inspect_ln hd, args with
@@ -62,15 +55,15 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
         | Tv_Var n1 ->
           let n1 = inspect_namedv n1 in
           if n1.uniq = x_ret then
-            tm_star post (tm_pure (RT.eq2 u typ lhs rhs))
+            tm_with_pure (RT.eq2 u typ lhs rhs) n post
           else
             Pulse.Syntax.Naming.subst_term post [RT.NT n1.uniq rhs]
         | _ -> 
           let eq = RT.eq2 u typ lhs rhs in
-          tm_star post (tm_pure eq)
+          tm_with_pure eq n post
       )
-      else tm_star post (tm_pure property) //guard_with_squash pr post?
-    | _ -> tm_star post (tm_pure property) //guard_with_squash pr post?
+      else tm_with_pure property n post
+    | _ -> tm_with_pure property n post
   in
   let close_post = close_post x_ret dom_g g1 in
   match bs1 with
@@ -257,7 +250,15 @@ and combine_args g b (args1 args2:list R.argv) : T.Tac (list R.argv) =
     (combine_terms true g b (a1, a2), v1)::combine_args g b args1 args2
   | _ -> []
 
-let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
+let guard_with_pure then_ b (pred: term) n (acc: slprop) : slprop =
+  match inspect_term acc with
+  | Tm_IsUnreachable -> acc
+  | _ ->
+    tm_with_pure
+      (mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) pred)
+      n acc
+
+let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
 = match inspect_term p1, inspect_term p2 with
   | Tm_IsUnreachable, _ -> p2
@@ -269,6 +270,11 @@ let join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
   | _, Tm_ForallSL .. ->
     //Not doing anything interesting to share binders
     RT.mk_if b p1 p2
+
+  | Tm_WithPure pred1 n1 p1, _ ->
+    guard_with_pure true b pred1 n1 <| join_slprop g b ex1 ex1 p1 p2
+  | _, Tm_WithPure pred2 n2 p2 ->
+    guard_with_pure false b pred2 n2 <| join_slprop g b ex1 ex1 p1 p2
 
   | _ ->
     let open Pulse.Show in

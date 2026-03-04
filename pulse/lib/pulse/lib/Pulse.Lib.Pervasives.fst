@@ -21,6 +21,7 @@ include Pulse.Lib.Core
 include Pulse.Lib.Inv
 include Pulse.Lib.Send
 include Pulse.Lib.Forall
+include Pulse.Lib.WithPure
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
 include Pulse.Lib.Reference.Array
