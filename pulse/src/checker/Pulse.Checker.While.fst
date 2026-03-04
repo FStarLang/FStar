@@ -63,7 +63,9 @@ let rec subst_loop_requires_marker (t: term) (v: term -> term) : Dv term =
     | _ -> default ()
   )
   | R.Tv_Abs b body ->
-    R.pack_ln (R.Tv_Abs b (subst_loop_requires_marker body v))
+    let b = R.inspect_binder b in
+    let b = { b with sort = subst_loop_requires_marker b.sort v } in
+    R.pack_ln (R.Tv_Abs (R.pack_binder b) (subst_loop_requires_marker body v))
   | _ -> t
 
 let subst_loop_requires_marker_with_true t = subst_loop_requires_marker t fun _ -> tm_l_true

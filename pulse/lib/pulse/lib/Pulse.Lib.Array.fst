@@ -18,6 +18,7 @@ module Pulse.Lib.Array
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
+open Pulse.Lib.WithPure
 open Pulse.Lib.Array.Basic
 open Pulse.Class.PtsTo
 open FStar.Ghost
