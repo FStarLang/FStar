@@ -60,6 +60,9 @@ let mk_fn_defn q id is_rec us bs body range =
     | Inr (lambda, typ) ->
       PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec us (List.flatten bs) (Inr typ) None (Inr lambda) range
 
+let mk_slprop_defn id bs body decors range =
+  PulseSyntaxExtension_Sugar.mk_slprop_defn id (List.flatten bs) body decors range
+
 let add_decorations decors ds =
   List.map (function
     | Inl p -> Inl (PulseSyntaxExtension_Sugar.add_decorations p decors)
@@ -68,7 +71,7 @@ let add_decorations decors ds =
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE
+%token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE PREDICATE
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
@@ -143,6 +146,12 @@ pulseDecl:
 
       | Inr (typ, None) ->
         raise_error_text (rr $loc) Fatal_SyntaxError "Ascriptions of lambdas without bodies are not yet supported"
+    }
+  
+  | LET PREDICATE lid=lidentOrOperator bs=pulseBinderList EQUALS body=term
+    {
+      let decors = [] in
+      PulseSyntaxExtension_Sugar.SlpropDefn (mk_slprop_defn lid bs body decors (rr $loc))
     }
  
 (* defining this as two tokens, option(qual) FN, seems to cause menhir to report an

@@ -587,3 +587,8 @@ let decl_to_string (d:decl) : T.Tac string =
     "fn " ^
     fst (R.inspect_ident id) ^ " " ^
     String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs)
+  | SlpropDefn {id;  bs; body} ->
+    "let predicate " ^
+     fst (R.inspect_ident id) ^ " " ^ 
+     String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs) ^
+      " = " ^ term_to_string body ^ "\n"

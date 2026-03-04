@@ -270,3 +270,5 @@ let fn_defn rng id isrec us bs comp meas body =
   PSB.mk_decl (PSB.mk_fn_defn id isrec us bs comp meas body) rng
 let fn_decl rng id us bs comp =
   PSB.mk_decl (PSB.mk_fn_decl id us bs comp) rng
+let slprop_defn rng id bs body =
+  PSB.mk_decl (PSB.mk_slprop_defn id bs body) rng

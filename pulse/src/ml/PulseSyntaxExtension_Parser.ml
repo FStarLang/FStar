@@ -13,6 +13,7 @@ let rewrite_token (tok:FP.token)
   = match tok with
     | IDENT "mut" -> PP.MUT
     | IDENT "invariant" -> PP.INVARIANT
+    | IDENT "predicate" -> PP.PREDICATE
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
     | IDENT "each" -> PP.EACH

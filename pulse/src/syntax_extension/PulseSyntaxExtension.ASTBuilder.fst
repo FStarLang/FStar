@@ -145,9 +145,16 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
     match maybe_report_error first_error decls with
     | Inl err -> Inl err
     | Inr decls ->
+      let should_be_irreducible (d:PulseSyntaxExtension.Sugar.decl) =
+        let open PulseSyntaxExtension.Sugar in
+        match d with
+        | SlpropDefn {} -> false
+        | FnDefn {} | FnDecl {} -> true
+      in
       let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
         let open PulseSyntaxExtension.Sugar in
         match d with
+        | SlpropDefn { id; range }
         | FnDefn { id; range }
         | FnDecl { id; range } -> id, range
       in
@@ -159,8 +166,19 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
         let decors =
           let open PulseSyntaxExtension.Sugar in
           match d with
+          | SlpropDefn { decorations }
           | FnDefn { decorations }
           | FnDecl { decorations } -> decorations
+        in
+        let decors =
+          if not (should_be_irreducible d) then decors else
+          let attrs, quals = List.partition DeclAttributes? decors in
+          let attrs =
+            match attrs with
+            | [] -> [DeclAttributes[ str "uninterpreted_by_smt" r ]]
+            | DeclAttributes attrs :: tl -> DeclAttributes (str "uninterpreted_by_smt" r::attrs) :: tl
+          in
+          Qualifier Irreducible::quals@attrs
         in
         let d =
           let open FStarC.Dyn in
@@ -173,17 +191,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
             dep_scan=(fun cbs d -> PulseSyntaxExtension.Sugar.scan_decl cbs (undyn d));
           }
         in
-        let d =
-          let attrs, quals = List.partition DeclAttributes? decors in
-          let attrs =
-            match attrs with
-            | [] -> [DeclAttributes[ str "uninterpreted_by_smt" r ]]
-            | DeclAttributes attrs :: tl -> DeclAttributes (str "uninterpreted_by_smt" r::attrs) :: tl
-          in
-          let decors = Qualifier Irreducible::quals@attrs in
-          mk_decl d r decors
-        in
-        d
+        mk_decl d r decors
       in
       Inr <|
       List.map

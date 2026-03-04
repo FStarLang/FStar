@@ -158,3 +158,10 @@ val fn_decl :
   bs:list (option qualifier & binder & bv) ->
   comp:comp ->
   decl
+
+val slprop_defn :
+  range ->
+  name:ident ->
+  bs:list (option qualifier & binder & bv) ->
+  body:term ->
+  decl

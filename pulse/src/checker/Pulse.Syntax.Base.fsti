@@ -358,9 +358,21 @@ type fn_decl = {
 }
 
 noeq
+type slprop_defn = {
+  id : R.ident;
+  // isrec : bool;
+  // us : list R.univ_name;
+  bs : list (option qualifier & binder & bv);
+  // meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
+  body : term; (* bs in scope *)
+}
+
+
+noeq
 type decl' =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
+  | SlpropDefn of slprop_defn
 
 and decl = {
   d : decl';

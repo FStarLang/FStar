@@ -33,6 +33,46 @@ let debug_main g (s: unit -> T.Tac string) : T.Tac unit =
   if RU.debug_at_level (fstar_env g) "pulse.main" then
     T.print (s ())
 
+let rec elab_slprop_defn (g: env) (binders: list (option qualifier & binder & bv)) (body: term) : T.Tac term =
+  match binders with
+  | [] ->
+    Pulse.Checker.ImpureSpec.purify_spec g { ctxt_now = tm_emp; ctxt_old = None } body
+  | (quals, b, bv)::binders ->
+    let b_ty, b_u = Pulse.Checker.Pure.tc_type_phase1 g b.binder_ty in
+    assume freshv g bv.bv_index;
+    let g' = push_binding g bv.bv_index b.binder_ppname b_ty in
+    let body = elab_slprop_defn g' binders body in
+    R.pack_ln (R.Tv_Abs (R.pack_binder {
+      sort = b_ty;
+      qual = elab_qual quals;
+      ppname = b.binder_ppname.name;
+      attrs = [];
+    }) (close_term body bv.bv_index))
+
+let check_slprop_defn
+    (d : decl{SlpropDefn? d.d})
+    (g : stt_env{bindings g == []})
+    (expected_t : option term)
+    (* Both of these unused: *)
+    (pre : term)
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
+= 
+  let SlpropDefn { id; bs; body } = d.d in
+  let nm = fst (inspect_ident id) in
+
+  let cur_module = T.cur_module () in
+
+  let body: term = elab_slprop_defn g bs body in
+
+  [], (false, R.pack_sigelt (R.Sg_Let false [
+    R.pack_lb {
+      lb_fv = R.pack_fv (cur_module @ [nm]);
+      lb_us = [];
+      lb_typ = tm_unknown;
+      lb_def = body;
+    }
+  ]), None), []
+
 let set_impl src_g #g #t (se: RT.sigelt_for g t) (r: bool) (impl: R.term) : T.Tac (RT.sigelt_for g t) =
   let checked, se, blob = se in
   debug_main src_g (fun _ ->
@@ -229,6 +269,7 @@ let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
           check_fndecl d g
         else
           fail g (Some d.range) "pulse main: expected type provided for a FnDecl?"
+      | SlpropDefn {} -> check_slprop_defn d g expected_t pre
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in
