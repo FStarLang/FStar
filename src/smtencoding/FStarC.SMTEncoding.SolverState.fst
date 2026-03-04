@@ -148,27 +148,23 @@ let filter_using_facts_from
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
         // the assumption is either tagged in a prior RetainAssumptions decl
-        let b1 = decl_names_contains a.assumption_name retain_assumptions in
+        if decl_names_contains a.assumption_name retain_assumptions then true
         // Or, it is enabled by the using_facts_from setting
-        let b2 = a.assumption_fact_ids 
-          |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false) in
-        b1 || b2
+        else a.assumption_fact_ids 
+          |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false)
     in
     let already_given_map : SMap.t bool = SMap.create 1000 in
     let add_assumption a = SMap.add already_given_map a.assumption_name true in
     let already_given (a:assumption)
     : ML bool
-    = let b1 = Some? (SMap.try_find already_given_map a.assumption_name) in
-      let b2 = already_given_decl a.assumption_name in
-      b1 || b2
+    = if Some? (SMap.try_find already_given_map a.assumption_name) then true
+      else already_given_decl a.assumption_name
     in
     let map_decl (d:decl)
     : ML (list decl)
     = match d with
       | Assume a -> (
-        let ka = keep_assumption a in
-        let ag = already_given a in
-        if ka && not ag
+        if (if keep_assumption a then not (already_given a) else false)
         then (add_assumption a; [d])
         else []
       )

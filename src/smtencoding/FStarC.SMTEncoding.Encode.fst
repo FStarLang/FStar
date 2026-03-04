@@ -172,9 +172,9 @@ let prims =
     in
     let mk : lident -> string -> ML (term & int & list decl) =
         fun l v ->
-            let found = List.find (fun (l', _) -> lid_equals l l') prims in
-            let (_, b) = Option.must found in
-            b (Ident.range_of_lid l) v in
+            match List.find (fun (l', _) -> lid_equals l l') prims with
+            | Some (_, b) -> b (Ident.range_of_lid l) v
+            | None -> failwith "prims mk: not found" in
     let is : lident -> ML bool =
         fun l -> BU.for_some (fun (l', _) -> lid_equals l l') prims in
     {mk=mk;
@@ -453,12 +453,9 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
     let lid = fv.fv_name in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
     let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
-    let is_pure_or_ghost = U.is_pure_or_ghost_function t_norm in
-    let is_reifiable = is_smt_reifiable_function env.tcenv t_norm in
-    let is_lemma = U.is_lemma t_norm in
-    if not <| (is_pure_or_ghost || is_reifiable)
-    || is_lemma
-    || uninterpreted
+    if (if not (if U.is_pure_or_ghost_function t_norm then true else is_smt_reifiable_function env.tcenv t_norm)
+        then true
+        else if U.is_lemma t_norm then true else uninterpreted)
     then let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
@@ -537,17 +534,14 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
 
                     | _ -> false
                 in
-                let nsstr_check = nsstr lid <> "Prims" in
-                let no_univs = List.length us = 0 in
-                let not_logic = not (quals |> List.contains Logic) in
-                let not_squash = not (is_squash t_norm) in
-                let not_type = not (is_type t_norm) in
                 // Thunk if ...
-                nsstr_check  //not in prims
-                && no_univs //has no universe binders
-                && not_logic //not logic qualified terms
-                && not_squash //not ambient squashed properties
-                && not_type //not : Type terms, since ambient typing hypotheses for these are cheap
+                if (nsstr lid <> "Prims"  //not in prims
+                && List.length us = 0 //has no universe binders
+                && not (quals |> List.contains Logic)) //not logic qualified terms
+                then (if not (is_squash t_norm) //not ambient squashed properties
+                      then not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
+                      else false)
+                else false
               in
               let thunked, vars =
                  match vars with
@@ -949,8 +943,7 @@ let encode_top_level_let :
                     let app_is_prop = Term.mk_subtype_of_unit app in
                     if should_encode_logical
                     then (
-                       let ext_enabled = Options.Ext.enabled "retain_old_prop_typing" in
-                      if is_sub_singleton && not ext_enabled
+                       if (if is_sub_singleton then not (Options.Ext.enabled "retain_old_prop_typing") else false)
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
@@ -1149,9 +1142,7 @@ let encode_top_level_let :
               //decls is a list of decls_elt ... each of which contains a list decl in it
               //we need to go through each of those, accumulate DeclFuns and remove them from there
               let prefix_decls, elts, rest = List.fold_left (fun (prefix_decls, elts, rest) elt ->
-                let has_key = elt.key |> Some? in
-                let has_decl_fun = List.existsb isDeclFun elt.decls in
-                if has_key && has_decl_fun
+                if (if Some? elt.key then List.existsb isDeclFun elt.decls else false)
                 then prefix_decls, elts@[elt], rest
                 else let elt_decl_funs, elt_rest = List.partition isDeclFun elt.decls in
                      prefix_decls @ elt_decl_funs, elts, rest @ [{ elt with decls = elt_rest }]
@@ -1162,11 +1153,9 @@ let encode_top_level_let :
           prefix_decls@elts@rest@eqns, env0
         in
 
-        let has_masked = quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false) in
-        let has_impure = typs  |> BU.for_some (fun t -> let is_pg = U.is_pure_or_ghost_function t in
-                                                  let is_reif = is_smt_reifiable_function env.tcenv t in
-                                                  not <| (is_pg || is_reif)) in
-        if has_masked || has_impure
+        if (if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
+            then true
+            else typs |> BU.for_some (fun t -> not (if U.is_pure_or_ghost_function t then true else is_smt_reifiable_function env.tcenv t)))
         then decls, env_decls
         else
           if not is_rec
@@ -1213,9 +1202,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
             let univ_eqs = List.mapi (fun i u -> mkEq(mkFreeV u, mkApp(mk_univ_projector_name l i, [xx]))) univ_vars in
             let base_eqs = is_l::univ_eqs in
             let inversion_case, decls' =
-              let compat_injectivity = Options.Ext.enabled "compat:injectivity" in
-              if injective_type_params
-              || compat_injectivity
+              if (if injective_type_params then true else Options.Ext.enabled "compat:injectivity")
               then (
                 let _univs, data_t = Env.lookup_datacon env.tcenv l in
                 let args, res = U.arrow_formals data_t in
@@ -1342,8 +1329,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
   let injective_type_params =
-    let compat = Options.Ext.enabled "compat:injectivity" in
-    injective_type_params || compat
+    if injective_type_params then true else Options.Ext.enabled "compat:injectivity"
   in
   let univ_fields =
           univs
@@ -1505,9 +1491,7 @@ let encode_datacon (env:env_t) (se:sigelt)
                           else
                             let t = U.unrefine (U.comp_result c) in
                             let t = norm t in
-                            let is_t = is_type t in
-                            let is_ss = U.is_sub_singleton t in
-                            if is_t || is_ss
+                            if (if is_type t then true else U.is_sub_singleton t)
                             then None //ordering on Type and squashed values is not useful
                             else (
                               let head, _ = U.head_and_args_full t in
@@ -1831,9 +1815,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
      (* Irreducible and opaque lets. Replace the definitions by a dummy val decl (if none
         exists) and re-run. *)
      | Sig_let {lbs}
-        when (let is_irred = se.sigquals |> List.contains S.Irreducible in
-              let is_opaque = se.sigattrs |> BU.for_some is_opaque_to_smt in
-              is_irred || is_opaque) ->
+        when (if se.sigquals |> List.contains S.Irreducible then true
+              else se.sigattrs |> BU.for_some is_opaque_to_smt) ->
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (Inr?.v lb.lbname).fv_name in
@@ -1873,9 +1856,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
       [], env
 
     (* `unfold let` definitions in prims do not get encoded. *)
-    | Sig_let {lids} when (let from_prims = lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims") in
-                             let has_unfold = se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false) in
-                             from_prims && has_unfold) ->
+    | Sig_let {lids} when (if lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
+                             then se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)
+                             else false) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       if !dbg_SMTEncoding then
         Format.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
@@ -1955,10 +1938,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
       let decls, elts, rest =
         List.fold_left
           (fun (decls, elts, rest) elt ->
-             let has_key = Some? elt.key in
-            let has_decl_fun = List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls in
-            if has_key //NS: Not sure what this case is for
-            && has_decl_fun
+            if (if Some? elt.key then List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls else false)
             then decls, elts@[elt], rest 
             else ( //Pull the function symbol decls to the front
               let elt_decls, elt_rest =
@@ -2166,9 +2146,7 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
 }
 
 let encode_modul tcenv modul =
-  let lax = Options.lax() in
-  let ml_ish = Options.ml_ish() in
-  if lax && ml_ish then [], []
+  if (if Options.lax() then Options.ml_ish() else false) then [], []
   else begin
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
@@ -2232,9 +2210,7 @@ let encode_modul tcenv modul =
   ) end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
-  let lax = Options.lax () in
-  let ml_ish = Options.ml_ish () in
-  if lax && ml_ish then ()
+  if (if Options.lax () then Options.ml_ish () else false) then ()
   else
     let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
@@ -2277,9 +2253,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env bindings in
-    let dbg_med = Debug.medium () in
-    let dbg_smt = !dbg_SMTEncoding in
-    if dbg_med || dbg_smt
+    if (if Debug.medium () then true else !dbg_SMTEncoding)
     then Format.print1 "Encoding query formula {: %s\n" (show q);
     let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
@@ -2287,9 +2261,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let caption =
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
-      let log_q = Options.log_queries () in
-      let log_fq = Options.log_failing_queries () in
-      if log_q || log_fq
+      if (if Options.log_queries () then true else Options.log_failing_queries ())
       then [Caption ("Encoding query formula : " ^ (show q));
             Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
       else []
@@ -2302,10 +2274,9 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
-    if dbg_med || dbg_smt
+    if (if Debug.medium () then true else !dbg_SMTEncoding)
     then Format.print_string "} Done encoding\n";
-    let dbg_t = !dbg_Time in
-    if dbg_med || dbg_smt || dbg_t
+    if (if Debug.medium () then true else if !dbg_SMTEncoding then true else !dbg_Time)
     then Format.print1 "Encoding took %sms\n" (show ms);
     query_prelude, labels, qry, suffix
   )

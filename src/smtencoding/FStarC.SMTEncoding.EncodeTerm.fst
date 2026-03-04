@@ -94,10 +94,9 @@ let head_normal env t =
 let head_redex env t =
     match (U.un_uinst t).n with
     | Tm_abs {rc_opt=Some rc} ->
-      let b1 = Ident.lid_equals rc.residual_effect Const.effect_Tot_lid in
-      let b2 = Ident.lid_equals rc.residual_effect Const.effect_GTot_lid in
-      let b3 = List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags in
-      b1 || b2 || b3
+      if Ident.lid_equals rc.residual_effect Const.effect_Tot_lid then true
+      else if Ident.lid_equals rc.residual_effect Const.effect_GTot_lid then true
+      else List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
     | Tm_uinst({n=Tm_fvar fv}, _)
     | Tm_fvar fv ->
@@ -799,13 +798,9 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
       | Tm_arrow {bs=binders; comp=c} ->
         let module_name = env.current_module_name in
         let binders, res = SS.open_comp binders c in
-        let chk1 =
-            let b1 = env.encode_non_total_function_typ in
-            let b2 = U.is_pure_or_ghost_comp res in
-            b1 && b2
-        in
-        let chk2 = U.is_tot_or_gtot_comp res in
-        if chk1 || chk2
+        if  (if env.encode_non_total_function_typ
+             then (if U.is_pure_or_ghost_comp res then true else U.is_tot_or_gtot_comp res)
+             else U.is_tot_or_gtot_comp res)
         then 
              let t0_univ = env.tcenv.universe_of env.tcenv t0 in
              let vars, guards_l, env', decls, bvs = encode_binders None binders env in
@@ -1137,19 +1132,13 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         | Tm_fvar fv, [(arg, _)]
         | Tm_uinst({n=Tm_fvar fv}, _), [(arg, _)]
             when
-             (S.fv_eq_lid fv Const.squash_lid
-              || S.fv_eq_lid fv Const.auto_squash_lid) ->
-          let is_formula = Some? (Syntax.Formula.destruct_typ_as_formula arg) in
-          if is_formula then begin
-           let dummy = S.new_bv None t_unit in
-           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
-           encode_term t env
-          end
-          else
-           let head_tm, decls0 = encode_term head env in
-           let arg_tm, decls1 = encode_term arg env in
-           let t = mk_ApplyTT head_tm arg_tm in
-           t, decls0@decls1
+             (if (S.fv_eq_lid fv Const.squash_lid
+                  || S.fv_eq_lid fv Const.auto_squash_lid)
+              then Some? (Syntax.Formula.destruct_typ_as_formula arg)
+              else false) ->
+          let dummy = S.new_bv None t_unit in
+          let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
+          encode_term t env
 
         | Tm_fvar fv, _
         | Tm_uinst({n=Tm_fvar fv}, _), _
@@ -1423,13 +1412,11 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
               fallback ()
 
             | Some rc ->
-              let imp = is_impure rc in
-              let is_reifiable = is_smt_reifiable_rc env.tcenv rc in
-              if imp && not is_reifiable
+              if (if is_impure rc then not (is_smt_reifiable_rc env.tcenv rc) else false)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                let body = if is_reifiable
+                let body = if is_smt_reifiable_rc env.tcenv rc
                            then TcUtil.norm_reify env.tcenv []
                                   (U.mk_reify body (Some rc.residual_effect))
                            else body
