@@ -228,8 +228,10 @@ let rec prefix_with_iface_decls
          iface, iface_hd::ds
        end
 
-     | TopLevelLet(_, defs) ->
-       (* If impl also defines the same names, skip the iface let definition *)
+     | TopLevelLet(_, defs) when iface_hd.attrs = [] ->
+       (* If impl also defines the same names, skip the iface let definition.
+          But only when the iface let has no attributes—an [@@expect_failure] let
+          is a test, not a real definition, so it should be kept. *)
        let iface_lids = lids_of_let defs in
        let impl_lids = definition_lids impl in
        if iface_lids |> Util.for_some (fun l ->
@@ -471,6 +473,9 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
             let iface_let_names =
               List.collect (fun (d:decl) ->
                 if not d.interleaved then []
+                (* Don't count attributed iface lets (e.g., [@@expect_failure])
+                   as duplicates—they are tests, not real definitions *)
+                else if not (Nil? d.attrs) then []
                 else match d.d with
                 | TopLevelLet(_, defs) ->
                   lids_of_let defs |> List.map (fun l -> string_of_id (ident_of_lid l))
