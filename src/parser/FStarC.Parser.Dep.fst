@@ -53,11 +53,11 @@ let fly_deps_enabled () =
       let res = 
         if Options.Ext.enabled "fly_deps"
         then (
-          let dep_on = Some? (Options.dep()) in //if we're doing dep, then we want a full scan now
-          //dump_module: it's a debug feature, but Vale also depends on its output
-          //so don't change that yet
-          let dump_on = Options.any_dump_module() in
-          if dep_on || dump_on 
+          if (if Some? (Options.dep()) //if we're doing dep, then we want a full scan now
+              then true
+              //dump_module: it's a debug feature, but Vale also depends on its output
+              //so don't change that yet
+              else Options.any_dump_module())
           then (
             if debug_fly_deps ()
             then (
@@ -372,13 +372,13 @@ let cache_file_name =
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
         let expected_cache_file = Find.prepend_cache_dir cache_fn in
-        let dep_on = Some? (Options.dep()) in //if we're in the dependence analysis
-        let not_cached = not (Options.should_be_already_cached mname) in //and checked file is in the
-        let not_exists = not (Filepath.file_exists expected_cache_file) in //wrong spot ... complain
-        let not_same = not (Filepath.paths_to_same_file path expected_cache_file) in
-        if dep_on
-        && not_cached
-        && (not_exists || not_same)
+        if (if Some? (Options.dep()) //if we're in the dependence analysis
+            then (if not (Options.should_be_already_cached mname) //and checked file is in the
+                  then (if not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
+                        then true
+                        else not (Filepath.paths_to_same_file path expected_cache_file))
+                  else false)
+            else false)
         then (
           let open FStarC.Pprint in
           let open FStarC.Errors.Msg in
@@ -396,9 +396,7 @@ let cache_file_name =
          * preference to relative filenames. This is mostly since
          * GNU make doesn't resolve paths in targets, so we try
          * to keep target paths relative. See issue #1978. *)
-        let exists_ = Filepath.file_exists expected_cache_file in
-        let same_ = Filepath.paths_to_same_file path expected_cache_file in
-        if exists_ && same_
+        if (if Filepath.file_exists expected_cache_file then Filepath.paths_to_same_file path expected_cache_file else false)
         then expected_cache_file
         else path
       | None ->

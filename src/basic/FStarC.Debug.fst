@@ -94,8 +94,7 @@ let enable_toggles (keys : list string) =
     | "High" ->    set_level_high ()
     | "Extreme" -> set_level_extreme ()
     | _ ->
-      let starts_with_dash = let c = String.get k 0 in String.length k > 0 && c = '-' in
-      if starts_with_dash then
+      if (if String.length k > 0 then String.get k 0 = '-' else false) then
         let k = String.substring k 1 (String.length k - 1) in
         let t = get_toggle k in
         t := false
