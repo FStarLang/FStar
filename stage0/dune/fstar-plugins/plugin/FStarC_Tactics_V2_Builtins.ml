@@ -163,3 +163,6 @@ let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_t
 
 let stats_record (s : string) (f : unit -> 'c __tac) : 'c __tac =
   from_tac_2 "B.stats_record" (B.stats_record () ()) s (to_tac_0 (f ()))
+
+let with_error_context (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.with_error_context" (B.with_error_context () ()) s (to_tac_0 (f ()))

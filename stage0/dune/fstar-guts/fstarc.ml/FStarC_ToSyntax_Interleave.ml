@@ -8,6 +8,12 @@ let is_val (x : FStarC_Ident.ident) (d : FStarC_Parser_AST.decl) :
   match d.FStarC_Parser_AST.d with
   | FStarC_Parser_AST.Val (y, uu___) ->
       (FStarC_Ident.string_of_id x) = (FStarC_Ident.string_of_id y)
+  | FStarC_Parser_AST.DeclToBeDesugared
+      { FStarC_Parser_AST.lang_name = uu___; FStarC_Parser_AST.blob = uu___1;
+        FStarC_Parser_AST.idents = y::[];
+        FStarC_Parser_AST.to_string = uu___2; FStarC_Parser_AST.eq = uu___3;
+        FStarC_Parser_AST.dep_scan = uu___4;_}
+      -> (FStarC_Ident.string_of_id x) = (FStarC_Ident.string_of_id y)
   | uu___ -> false
 let is_type (x : FStarC_Ident.ident) (d : FStarC_Parser_AST.decl) :
   Prims.bool=
@@ -262,6 +268,23 @@ let rec prefix_with_iface_decls (iface : FStarC_Parser_AST.decl Prims.list)
                  | (take_iface, rest_iface) ->
                      (rest_iface,
                        (FStarC_List.op_At (iface_hd :: take_iface) [impl])))
+          | FStarC_Parser_AST.DeclToBeDesugared
+              { FStarC_Parser_AST.lang_name = uu___1;
+                FStarC_Parser_AST.blob = uu___2;
+                FStarC_Parser_AST.idents = x::[];
+                FStarC_Parser_AST.to_string = uu___3;
+                FStarC_Parser_AST.eq = uu___4;
+                FStarC_Parser_AST.dep_scan = uu___5;_}
+              ->
+              let def_ids = definition_lids impl in
+              let defines_x = FStarC_Util.for_some (id_eq_lid x) def_ids in
+              if defines_x
+              then
+                (match impl.FStarC_Parser_AST.d with
+                 | FStarC_Parser_AST.DeclToBeDesugared uu___6 ->
+                     (iface_tl, [impl])
+                 | uu___6 -> (iface_tl, [iface_hd; impl]))
+              else (iface, [qualify_karamel_private impl])
           | FStarC_Parser_AST.Pragma uu___1 ->
               prefix_with_iface_decls iface_tl impl
           | FStarC_Parser_AST.Exception (id, uu___1) ->

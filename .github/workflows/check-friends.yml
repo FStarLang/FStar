@@ -31,8 +31,8 @@ jobs:
           path: karamel/
           repository: FStarLang/karamel
 
-      - name: Build krml
-        run: make -C karamel -skj$(nproc)
+      - name: Build krml (minimal)
+        run: make -C karamel -skj$(nproc) minimal
 
       # krml is a symlink to _build/default/src/Karamel.exe, but we want to exclude _build.
       # So, overwrite the link with the actual file.
@@ -49,6 +49,7 @@ jobs:
   test-krml:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
+    if: false # No karamel test since it needs a full build (and Low*)
     needs:
       - build-krml
     steps:
@@ -227,92 +228,10 @@ jobs:
       - name: Test
         run: . $HOME/.cargo/env && make -C pulse -skj$(nproc) test
 
-  build-hacl:
-    # runs-on: [self-hosted, linux, big] # using a faster runner
-    # NOTE: To use a self-hosted runner, we must make sure that
-    # the runner is executing as UID 1001 (which is the one the
-    # docker container uses) or it will be unable to write to its
-    # workspace. This is simply a terrible design by github actions.
-    # Somehow the cloud runners work regardless of the uid in
-    # the container.
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-krml
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - name: Checkout hacl-star
-        uses: actions/checkout@master
-        with:
-          path: hacl-star/
-          repository: hacl-star/hacl-star
-
-      - run: echo "HACL_HOME=$(pwd)/hacl-star" >> $GITHUB_ENV
-
-      - name: Get Vale
-        run: ./hacl-star/tools/get_vale.sh
-
-      - name: Build
-        run: |
-          make -C hacl-star -skj$(nproc)
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: hacl-star
-          hometag: HACL
-
-  test-hacl:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-hacl
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - name: Get Vale (again)
-        run: ./hacl-star/tools/get_vale.sh
-
-      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
-
-      - name: Test
-        run: make -C hacl-star -skj$(nproc) test
-
   build-everparse:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
+    if: false # Currently needs Low*
     needs:
       - build-krml
       - build-pulse
@@ -371,6 +290,7 @@ jobs:
   test-everparse:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
+    if: false # Currently needs Low*
     needs:
       - build-everparse
     steps:
@@ -418,242 +338,6 @@ jobs:
         # outputs, they are too noisy (they have gensym'd names) and do
         # not really indicate a failure.
         run: make -C everparse -skj$(nproc) test EVERPARSE_NO_DIFF=1
-
-  build-merkle-tree:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-krml
-      - build-hacl
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - name: Checkout merkle-tree
-        uses: actions/checkout@master
-        with:
-          path: merkle-tree/
-          repository: hacl-star/merkle-tree
-
-      - name: Build
-        run: |
-          make -C merkle-tree -skj$(nproc) dist/libmerkletree.a
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: merkle-tree
-
-  test-merkle-tree:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-merkle-tree
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: merkle-tree
-
-      - name: Test
-        run: make -C merkle-tree -skj$(nproc) test
-
-  build-mitls-fstar:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-krml
-      - build-hacl
-      - build-everparse
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everparse
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - name: Checkout mitls-fstar
-        uses: actions/checkout@master
-        with:
-          path: mitls-fstar/
-          repository: project-everest/mitls-fstar
-
-      - name: Build
-        run: make -C mitls-fstar/src/tls -skj$(nproc)
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: mitls-fstar
-          hometag: MITLS
-
-  test-mitls-fstar:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-mitls-fstar
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everparse
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: mitls-fstar
-
-      - name: Build
-        run: make -C mitls-fstar/src/tls -skj$(nproc) test
-
-  build-everquic-crypto:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-krml
-      - build-hacl
-      - build-everparse
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everparse
-
-      - name: Checkout everquic-crypto
-        uses: actions/checkout@master
-        with:
-          path: everquic-crypto/
-          repository: project-everest/everquic-crypto
-
-      - name: Build
-        run: |
-          make -C everquic-crypto -skj$(nproc) dist/libeverquic.a
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: everquic-crypto
-
-  test-everquic-crypto:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base
-    needs:
-      - build-everquic-crypto
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: hacl-star
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everquic-crypto
-
-      - name: Test
-        run: make -C everquic-crypto -skj$(nproc) test
 
   starmalloc:
     runs-on: ubuntu-latest

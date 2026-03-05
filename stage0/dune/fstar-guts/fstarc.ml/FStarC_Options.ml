@@ -253,7 +253,7 @@ let defaults : (Prims.string * option_val) Prims.list=
   ("already_cached", Unset);
   ("cache_checked_modules", (Bool false));
   ("cache_off", (Bool false));
-  ("cmi", (Bool false));
+  ("no_cmi", (Bool false));
   ("codegen-lib", (List []));
   ("codegen", Unset);
   ("compat_pre_core", Unset);
@@ -555,7 +555,7 @@ let get_cache_checked_modules (uu___ : unit) : Prims.bool=
 let get_cache_off (uu___ : unit) : Prims.bool= lookup_opt "cache_off" as_bool
 let get_print_cache_version (uu___ : unit) : Prims.bool=
   lookup_opt "print_cache_version" as_bool
-let get_cmi (uu___ : unit) : Prims.bool= lookup_opt "cmi" as_bool
+let get_no_cmi (uu___ : unit) : Prims.bool= lookup_opt "no_cmi" as_bool
 let get_codegen (uu___ : unit) : Prims.string FStar_Pervasives_Native.option=
   lookup_opt "codegen" (as_option as_string)
 let get_codegen_lib (uu___ : unit) : Prims.string Prims.list=
@@ -2890,9 +2890,10 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                             (text
                                "Generate code for further compilation to executable code, or build a compiler plugin"))
                             :: uu___13 in
-                        (FStarC_Getopt.noshort, "cmi", (Const (Bool true)),
+                        (FStarC_Getopt.noshort, "no_cmi",
+                          (Const (Bool true)),
                           (text
-                             "Inline across module interfaces during extraction (aka. cross-module inlining)"))
+                             "Disable inlining across module interfaces during extraction (aka. cross-module inlining). Enabled by default."))
                           :: uu___12 in
                       (FStarC_Getopt.noshort, "print_cache_version",
                         (Const (Bool true)),
@@ -3302,7 +3303,8 @@ let cache_checked_modules (uu___ : unit) : Prims.bool=
 let cache_off (uu___ : unit) : Prims.bool= get_cache_off ()
 let print_cache_version (uu___ : unit) : Prims.bool=
   get_print_cache_version ()
-let cmi (uu___ : unit) : Prims.bool= get_cmi ()
+let cmi (uu___ : unit) : Prims.bool=
+  let uu___3 = get_no_cmi () in Prims.op_Negation uu___3
 let parse_codegen (uu___ : Prims.string) :
   codegen_t FStar_Pervasives_Native.option=
   match uu___ with
