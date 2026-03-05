@@ -225,13 +225,27 @@ Additional crash bugs found from eager let-binding of `&&`/`||` operands. These 
 - [x] tests2 extraction passes ✅
 - [x] stage2→stage3 fixpoint: **0 differences** ✅
 
-### Phase 10: Remove --MLish Compiler Support — TODO
-- [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated, config.json no longer needs `--MLish`
-- [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Dead code
-- [ ] **Remove `--MLish` option definition from `FStarC.Options.fst`**: Option registration, getter, settable entry
-- [ ] **Remove `ml_ish()` checks from compiler**: ~15 call sites in Rel.fst, TcTerm.fst, etc.
-- [ ] **Simplify interleaver**: Remove `ml_mode`, `is_ml_mode`, `iface_has_mlish_pragma`, lax interleaving paths
-- [ ] **Full bootstrap rebuild**: stage0→stage1→stage2→stage3 fixpoint verification
+### Phase 10: Remove --MLish Compiler Support — COMPLETE ✅
+
+**Commit `be57cbbd60`** — "Remove --MLish compiler flag entirely"
+
+The `--MLish` and `--MLish_effect` compiler options have been completely removed from the codebase. No code path in the compiler checks `Options.ml_ish()` anymore.
+
+**Source changes (19 files, -305/+52 lines):**
+- [x] `Options.fst/fsti`: Removed option definitions, getters, setters, settable entries
+- [x] `Rel.fst`: Removed 8 `ml_ish()` checks (SMT gating, smt_ok guards)
+- [x] `TcTerm.fst`: Removed 6 `ml_ish()` conditionals (short-circuit, effect defaults, constructor marking)
+- [x] `Util.fst`: Removed 7 `ml_ish()` optimization-disabling guards
+- [x] `TcInductive.fst`: Simplified constructor totality check
+- [x] `Encode.fst`: Removed 2 lax+ml_ish early-return guards
+- [x] `ToSyntax.fst`: Removed 4 `ml_ish()` checks
+- [x] `Universal.fst`: Removed ml_ish save/restore in fly_deps_check
+- [x] `Interleave.fst`: Removed `ml_mode_prefix_with_iface_decls` (90 lines), `ml_mode_check_initial_interface`, `iface_has_mlish_pragma`, `is_ml_mode`; simplified `prefix_one_decl` and `interleave_module`
+- [x] `Parser.Const.fst`: Simplified `ef_base()` to always return `FStar.All`
+- [x] `config.json`: Removed `--MLish`, `--MLish_effect`, `-361`
+- [x] Build system: Removed `--MLish`/`--MLish_effect` from `generic-0.mk`, `fstar-01.mk`, `fstar-12.mk`, `tests-1.mk`, `tests-2.mk`
+- [x] Stage0: Updated 148 ML files + uncommented `failwith` in `FStarC_Effect.ml`
+- [x] Full bootstrap verified: stage2=stage3 (0 differences)
 
 ### Documentation
 - [ ] **Update CONTRIBUTING.md or relevant docs**: Document the migration process and any conventions for effect annotations in compiler sources
