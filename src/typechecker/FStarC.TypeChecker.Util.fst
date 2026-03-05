@@ -295,9 +295,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
           | Tm_abs _ ->
             let bs, body, rcopt = U.abs_formals_maybe_unascribe_body false e in
             let mk_comp t =
-              if Options.ml_ish()
-              then U.ml_comp t t.pos
-              else S.mk_Total t
+              S.mk_Total t
             in
             let mk_arrow c = U.arrow bs c in
             let rec aux_abs_body body : ML _ =
@@ -535,14 +533,12 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
     else if U.is_unit a
     then S.mk_Total a
     else let wp =
-           if (if Options.lax() then Options.ml_ish() else false) //NS: Disabling this optimization temporarily
-           then S.tun
-           else let ret_wp = ed |> U.get_return_vc_combinator in
-                mk_Tm_app
-                  (inst_effect_fun_with [u_a] env ed ret_wp)
-                  [S.as_arg a; S.as_arg e]
-                  e.pos in
-         mk_comp ed u_a a wp [RETURN]
+            let ret_wp = ed |> U.get_return_vc_combinator in
+                 mk_Tm_app
+                   (inst_effect_fun_with [u_a] env ed ret_wp)
+                   [S.as_arg a; S.as_arg e]
+                   e.pos in
+          mk_comp ed u_a a wp [RETURN]
   in
   if !dbg_Return
   then Format.print3 "(%s) returning %s at comp type %s\n"
@@ -659,11 +655,7 @@ let is_function t : ML _ = match (compress t).n with
 let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
-    else if (if Options.lax()
-             then Options.ml_ish() //NS: disabling this optimization temporarily
-             else false)
-    then c
-    else begin
+        else begin
             (*
              * We make an environment containing all the BVs so the calls
              * to env.universe_of and unfold_effect_abbrev below are properly scoped.
@@ -1416,11 +1408,7 @@ let weaken_comp env (c:comp) (formula:term) : ML (comp & guard_t) =
 let weaken_precondition env lc (f:guard_formula) : ML lcomp =
   let weaken () =
       let c, g_c = TcComm.lcomp_comp lc in
-      if (if Options.lax ()
-          then Options.ml_ish() //NS: Disabling this optimization temporarily
-          else false)
-      then c, g_c
-      else match f with
+            match f with
            | Trivial -> c, g_c
            | NonTrivial f ->
              let c, g_w = weaken_comp env c f in
@@ -1546,15 +1534,9 @@ let bind
           else flags
   in
   let bind_it () =
-      if (if Options.lax ()
-          then Options.ml_ish() //NS: disabling this optimization temporarily
-          else false)
-      then
-         let u_t = env.universe_of env lc2.res_typ in
-         lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ [], Env.trivial_guard  //AR: TODO: FIXME: fix for layered effects
-      else begin
-          let c1, g_c1 = TcComm.lcomp_comp lc1 in
-          let c2, g_c2 = TcComm.lcomp_comp lc2 in
+       begin
+           let c1, g_c1 = TcComm.lcomp_comp lc1 in
+           let c2, g_c2 = TcComm.lcomp_comp lc2 in
 
           (*
            * AR: we need to be careful about handling g_c2 since it may have x free
@@ -2196,12 +2178,7 @@ let bind_cases env0 (res_t:typ)
     in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
-        if (if Options.lax()
-            then Options.ml_ish() //NS: Disabling this optimization temporarily
-            else false)
-        then
-             lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
-        else begin
+                begin
             let maybe_return eff_label_then (cthen: bool -> ML lcomp) : ML lcomp =
                if (if should_not_inline_whole_match then true
                    else not (is_pure_or_ghost_effect env eff))
@@ -2792,12 +2769,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
           let strengthen () =
-              if (if Options.lax()
-                  then Options.ml_ish() //NS: disabling this optimization temporarily
-                  else false)
-              then
-                TcComm.lcomp_comp lc
-              else begin
+              begin
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with

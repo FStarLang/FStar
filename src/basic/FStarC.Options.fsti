@@ -279,12 +279,6 @@ val max_fuel                    : unit    -> ML int
 
 val max_ifuel                   : unit    -> ML int
 
-val ml_ish                      : unit    -> ML bool
-
-val ml_ish_effect               : unit    -> ML string
-
-val set_ml_ish                  : unit    -> ML unit
-
 val normalize_pure_terms_for_extraction
                                 : unit    -> ML bool
 

@@ -49,16 +49,13 @@ let add (uu___ : 'a FStarC_Class_Ord.ord) (x : 'a) (s : 'a rbset) : 'a rbset=
   let uu___1 = add' s in blackroot uu___1
 let filter (uu___ : 'a FStarC_Class_Ord.ord) (predicate : 'a -> Prims.bool)
   (set : 'a rbset) : 'a rbset=
-  let rec aux acc uu___1 =
-    match uu___1 with
+  let rec aux acc s =
+    match s with
     | L -> acc
-    | N (uu___2, l, v, r) ->
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = predicate v in
-            if uu___5 then add uu___ v acc else acc in
-          aux uu___4 l in
-        aux uu___3 r in
+    | N (uu___1, l, v, r) ->
+        let acc' =
+          let uu___2 = predicate v in if uu___2 then add uu___ v acc else acc in
+        let uu___2 = aux acc' l in aux uu___2 r in
   aux (empty ()) set
 let rec extract_min :
   'a . 'a FStarC_Class_Ord.ord -> 'a rbset -> ('a rbset * 'a) =
@@ -102,15 +99,12 @@ let rec elems : 'a . 'a rbset -> 'a Prims.list =
     match s with
     | L -> []
     | N (uu___, a1, x, b) ->
-        let uu___1 = elems a1 in
-        let uu___2 = let uu___3 = elems b in FStarC_List.op_At [x] uu___3 in
-        FStarC_List.op_At uu___1 uu___2
+        FStarC_List.op_At (elems a1) (FStarC_List.op_At [x] (elems b))
 let equal (uu___ : 'a FStarC_Class_Ord.ord) (s1 : 'a rbset) (s2 : 'a rbset) :
   Prims.bool=
-  let uu___1 = elems s1 in
-  let uu___2 = elems s2 in
   FStarC_Class_Deq.op_Equals_Question
-    (FStarC_Class_Ord.ord_eq (FStarC_Class_Ord.ord_list uu___)) uu___1 uu___2
+    (FStarC_Class_Ord.ord_eq (FStarC_Class_Ord.ord_list uu___)) (elems s1)
+    (elems s2)
 let rec union :
   'a . 'a FStarC_Class_Ord.ord -> 'a rbset -> 'a rbset -> 'a rbset =
   fun uu___ s1 s2 ->
@@ -146,17 +140,23 @@ let rec subset :
     match s1 with
     | L -> true
     | N (uu___1, a1, x, b) ->
-        ((mem uu___ x s2) && (subset uu___ a1 s2)) && (subset uu___ b s2)
+        let r1 = mem uu___ x s2 in
+        let r2 = subset uu___ a1 s2 in
+        let r3 = subset uu___ b s2 in (r1 && r2) && r3
 let rec for_all : 'a . ('a -> Prims.bool) -> 'a rbset -> Prims.bool =
   fun p s ->
     match s with
     | L -> true
-    | N (uu___, a1, x, b) -> ((p x) && (for_all p a1)) && (for_all p b)
+    | N (uu___, a1, x, b) ->
+        let r1 = p x in
+        let r2 = for_all p a1 in let r3 = for_all p b in (r1 && r2) && r3
 let rec for_any : 'a . ('a -> Prims.bool) -> 'a rbset -> Prims.bool =
   fun p s ->
     match s with
     | L -> false
-    | N (uu___, a1, x, b) -> ((p x) || (for_any p a1)) || (for_any p b)
+    | N (uu___, a1, x, b) ->
+        let r1 = p x in
+        let r2 = for_any p a1 in let r3 = for_any p b in (r1 || r2) || r3
 let from_list (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list) :
   'a rbset= FStarC_List.fold_left (fun s e -> add uu___ e s) L xs
 let addn (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list)
@@ -194,7 +194,7 @@ let showable_rbset (uu___ : 'a FStarC_Class_Show.showable) :
     FStarC_Class_Show.show =
       (fun s ->
          let uu___1 =
-           let uu___2 = elems s in
-           FStarC_Class_Show.show (FStarC_Class_Show.show_list uu___) uu___2 in
+           FStarC_Class_Show.show (FStarC_Class_Show.show_list uu___)
+             (elems s) in
          Prims.strcat "RBSet " uu___1)
   }

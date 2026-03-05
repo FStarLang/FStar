@@ -25,11 +25,13 @@ let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
   then false
   else
-    (FStarC_Class_Ord.op_Less_Equals_Question FStarC_Range_Type.ord_pos
-       r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos)
-      &&
-      (FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
-         r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos)
+    (let a =
+       FStarC_Class_Ord.op_Less_Equals_Question FStarC_Range_Type.ord_pos
+         r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos in
+     let b =
+       FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
+         r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos in
+     a && b)
 let string_of_pos (pos : FStarC_Range_Type.pos) : Prims.string=
   let uu___ =
     FStarC_Class_Show.show FStarC_Class_Show.showable_int
@@ -42,16 +44,14 @@ let file_of_range (r : FStarC_Range_Type.range) : Prims.string=
   (r.FStarC_Range_Type.def_range).FStarC_Range_Type.file_name
 let set_file_of_range (r : FStarC_Range_Type.range) (f : Prims.string) :
   FStarC_Range_Type.range=
-  let uu___ =
-    let uu___1 = r.FStarC_Range_Type.def_range in
-    let uu___2 = FStarC_Filepath.basename f in
-    {
-      FStarC_Range_Type.file_name = uu___2;
-      FStarC_Range_Type.start_pos = (uu___1.FStarC_Range_Type.start_pos);
-      FStarC_Range_Type.end_pos = (uu___1.FStarC_Range_Type.end_pos)
-    } in
   {
-    FStarC_Range_Type.def_range = uu___;
+    FStarC_Range_Type.def_range =
+      (let uu___ = r.FStarC_Range_Type.def_range in
+       {
+         FStarC_Range_Type.file_name = (FStarC_Filepath.basename f);
+         FStarC_Range_Type.start_pos = (uu___.FStarC_Range_Type.start_pos);
+         FStarC_Range_Type.end_pos = (uu___.FStarC_Range_Type.end_pos)
+       });
     FStarC_Range_Type.use_range = (r.FStarC_Range_Type.use_range)
   }
 let string_of_rng (r : FStarC_Range_Type.rng) : Prims.string=
@@ -105,9 +105,8 @@ let compare_use_range (r1 : FStarC_Range_Type.range)
   compare_rng r1.FStarC_Range_Type.use_range r2.FStarC_Range_Type.use_range
 let range_before_pos (m1 : FStarC_Range_Type.range)
   (p : FStarC_Range_Type.pos) : Prims.bool=
-  let uu___ = end_of_range m1 in
   FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos p
-    uu___
+    (end_of_range m1)
 let end_of_line (p : FStarC_Range_Type.pos) : FStarC_Range_Type.pos=
   {
     FStarC_Range_Type.line = (p.FStarC_Range_Type.line);
@@ -115,37 +114,23 @@ let end_of_line (p : FStarC_Range_Type.pos) : FStarC_Range_Type.pos=
   }
 let extend_to_end_of_line (r : FStarC_Range_Type.range) :
   FStarC_Range_Type.range=
-  let uu___ = file_of_range r in
-  let uu___1 = start_of_range r in
-  let uu___2 = let uu___3 = end_of_range r in end_of_line uu___3 in
-  FStarC_Range_Type.mk_range uu___ uu___1 uu___2
+  FStarC_Range_Type.mk_range (file_of_range r) (start_of_range r)
+    (end_of_line (end_of_range r))
 let json_of_pos (pos : FStarC_Range_Type.pos) : FStarC_Json.json=
-  let uu___ =
-    let uu___1 = let uu___2 = line_of_pos pos in FStarC_Json.JsonInt uu___2 in
-    let uu___2 =
-      let uu___3 = let uu___4 = col_of_pos pos in FStarC_Json.JsonInt uu___4 in
-      [uu___3] in
-    uu___1 :: uu___2 in
-  FStarC_Json.JsonList uu___
+  FStarC_Json.JsonList
+    [FStarC_Json.JsonInt (line_of_pos pos);
+    FStarC_Json.JsonInt (col_of_pos pos)]
 let json_of_range_fields (file : Prims.string) (b : FStarC_Range_Type.pos)
   (e : FStarC_Range_Type.pos) : FStarC_Json.json=
-  let uu___ =
-    let uu___1 =
-      let uu___2 = let uu___3 = json_of_pos b in ("beg", uu___3) in
-      let uu___3 =
-        let uu___4 = let uu___5 = json_of_pos e in ("end", uu___5) in
-        [uu___4] in
-      uu___2 :: uu___3 in
-    ("fname", (FStarC_Json.JsonStr file)) :: uu___1 in
-  FStarC_Json.JsonAssoc uu___
+  FStarC_Json.JsonAssoc
+    [("fname", (FStarC_Json.JsonStr file));
+    ("beg", (json_of_pos b));
+    ("end", (json_of_pos e))]
 let json_of_use_range (r : FStarC_Range_Type.range) : FStarC_Json.json=
-  let uu___ = file_of_use_range r in
-  let uu___1 = start_of_use_range r in
-  let uu___2 = end_of_use_range r in json_of_range_fields uu___ uu___1 uu___2
+  json_of_range_fields (file_of_use_range r) (start_of_use_range r)
+    (end_of_use_range r)
 let json_of_def_range (r : FStarC_Range_Type.range) : FStarC_Json.json=
-  let uu___ = file_of_range r in
-  let uu___1 = start_of_range r in
-  let uu___2 = end_of_range r in json_of_range_fields uu___ uu___1 uu___2
+  json_of_range_fields (file_of_range r) (start_of_range r) (end_of_range r)
 let intersect_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   FStarC_Range_Type.rng=
   if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name

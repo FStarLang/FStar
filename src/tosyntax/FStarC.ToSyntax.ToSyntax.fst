@@ -1527,13 +1527,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                                 text "Suggestion: replace this pattern with a variable."
                               ] in
                          t
-                    else if (if Options.ml_ish () //we're type-checking the compiler itself, e.g.
-                    then (if Some? (Env.try_lookup_effect_name env (C.effect_ML_lid())) //ML is in scope (not still in prims, e.g)
-                          then (not is_rec || List.length args <> 0) //and we don't have something like `let rec f : t -> t' = fun x -> e`
-                          else false)
-                    else false)
-                    then AST.ml_comp t
-                    else AST.tot_comp t
+                     else AST.tot_comp t
                 in
                 mk_term (Ascribed(def, t, tacopt, false)) def.range Expr
             in
@@ -2372,11 +2366,9 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
 
       | _ when allow_type_promotion ->
         let default_effect =
-          if Options.ml_ish ()
-          then Const.effect_ML_lid()
-          else (if Options.warn_default_effects()
-                then FStarC.Errors.log_issue head Errors.Warning_UseDefaultEffect "Using default effect Tot";
-                Const.effect_Tot_lid) in
+          (if Options.warn_default_effects()
+           then FStarC.Errors.log_issue head Errors.Warning_UseDefaultEffect "Using default effect Tot";
+           Const.effect_Tot_lid) in
         (Ident.set_lid_range default_effect head.range, []), [t, Nothing]
 
       | _ ->
@@ -2775,10 +2767,9 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
              let quals = se.sigquals in
              let quals = if List.contains S.Assumption quals
                          then quals
-                         else (if not (Options.ml_ish ()) then
-                                 log_issue se Errors.Warning_AddImplicitAssumeNewQualifier
-                                   (Format.fmt1 "Adding an implicit 'assume new' qualifier on %s" (show l));
-                                 S.Assumption :: S.New :: quals) in
+                         else (log_issue se Errors.Warning_AddImplicitAssumeNewQualifier
+                                 (Format.fmt1 "Adding an implicit 'assume new' qualifier on %s" (show l));
+                               S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
                 | _ -> mk (Tm_arrow {bs=typars; comp=mk_Total k}) se.sigrng in
@@ -4111,14 +4102,12 @@ let desugar_modul env (m:AST.modul) : ML (env_t & Syntax.modul) =
 //External API for modules
 /////////////////////////////////////////////////////////////////////////////////////////
 let with_options (f:unit -> ML 'a) : ML 'a =
-  let light, r =
+  let r =
     Options.with_saved_options (fun () ->
       let r = f () in
-      let light = Options.ml_ish () in
-      light, r
+      r
     )
   in
-  if light then Options.set_ml_ish ();
   r
 
 let ast_modul_to_modul modul : ML (withenv S.modul) =

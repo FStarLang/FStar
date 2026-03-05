@@ -1,12 +1,10 @@
 {
   "fstar_exe": "../stage0/out/bin/fstar.exe",
   "options": [
-    "--MLish",
-    "--MLish_effect", "FStarC.Effect",
     "--lax",
     "--cache_dir", "../stage1/fstarc.checked",
     "--warn_error",
-    "-271-272-241-319-274-361"
+    "-271-272-241-319-274"
   ],
   "include_dirs": [
     "."

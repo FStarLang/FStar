@@ -13,16 +13,10 @@ let fix_module (ps : FStarC_TypeChecker_Primops_Base.primitive_step) :
   if uu___
   then
     let p' =
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_List.tl p in FStarC_List.tl uu___5 in
-            FStarC_List.tl uu___4 in
-          FStarC_List.tl uu___3 in
-        FStarC_List.tl uu___2 in
       FStarC_List.op_At ["FStar"; "Stubs"; "Tactics"; "V1"; "Builtins"]
-        uu___1 in
+        (FStarC_List.tl
+           (FStarC_List.tl
+              (FStarC_List.tl (FStarC_List.tl (FStarC_List.tl p))))) in
     let uu___1 =
       let uu___2 =
         FStarC_Class_HasRange.pos FStarC_Ident.hasrange_lident
@@ -47,7 +41,7 @@ let fix_module (ps : FStarC_TypeChecker_Primops_Base.primitive_step) :
       FStarC_TypeChecker_Primops_Base.interpretation_nbe =
         (ps.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
     }
-  else failwith "huh?"
+  else FStarC_Effect.failwith "huh?"
 let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
     let uu___1 =
@@ -337,7 +331,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                         FStarC_Tactics_V1_Basic.unquote
                                                         (fun uu___50 uu___51
                                                            ->
-                                                           failwith
+                                                           FStarC_Effect.failwith
                                                              "NBE unquote") in
                                                     let uu___50 =
                                                       let uu___51 =

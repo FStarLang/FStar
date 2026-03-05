@@ -250,8 +250,6 @@ let defaults = [
   ("max_fuel"                                  , Int 8);
   ("max_ifuel"                                 , Int 2);
   ("message_format"                            , String "auto");
-  ("MLish"                                     , Bool false);
-  ("MLish_effect"                              , String "FStar.Effect");
   ("no_extract"                                , List []);
   ("no_location_info"                          , Bool false);
   ("no_plugins"                                , Bool false);
@@ -508,8 +506,6 @@ let get_log_failing_queries     ()      = lookup_opt "log_failing_queries"      
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_prelude              ()      = lookup_opt "no_prelude"               as_bool
@@ -1160,16 +1156,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "Number of unrolling of inductive datatypes to try at most (default 2)");
 
   ( noshort,
-    "MLish",
-    Const (Bool true),
-    text "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-  ( noshort,
-    "MLish_effect",
-    SimpleStr "module_name",
-    text "Set the default effect *module* for --MLish (default: FStar.Effect)");
-
-  ( noshort,
     "no_default_includes",
     WithSideEffect ((fun _ -> Find.set_no_default_includes true),
                     Const (Bool true)),
@@ -1770,8 +1756,6 @@ let settable = function
     | "log_types"
     | "max_fuel"
     | "max_ifuel"
-    | "MLish"
-    | "MLish_effect"
     | "no_plugins"
     | "__no_positivity"
     | "normalize_pure_terms_for_extraction"
@@ -2144,9 +2128,6 @@ let keep_query_captions          () =
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let ml_ish                       () = get_MLish                       ()
-let ml_ish_effect                () = get_MLish_effect                ()
-let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()

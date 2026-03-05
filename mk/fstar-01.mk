@@ -1,10 +1,4 @@
 FSTAR_OPTIONS += --lax
-# HACK ALERT! --MLish passed by generic.mk to FStarC modules
-# only. Passing it here would mean the library is checked with
-# --MLish, which fails.
-FSTAR_OPTIONS += --MLish_effect 'FStarC.Effect'
-# Suppress unpopped #push-options warning from per-file MLish pragmas
-FSTAR_OPTIONS += --warn_error '-361'
 
 EXTRACT :=
 EXTRACT += --extract 'FStarC'

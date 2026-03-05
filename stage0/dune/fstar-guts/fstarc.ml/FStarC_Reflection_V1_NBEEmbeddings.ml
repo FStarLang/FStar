@@ -16,10 +16,8 @@ let mkConstruct (fv : FStarC_Syntax_Syntax.fv)
     (FStarC_List.rev ts)
 let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) :
   FStarC_Syntax_Syntax.emb_typ=
-  let uu___ =
-    let uu___1 = FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name in
-    (uu___1, []) in
-  FStarC_Syntax_Syntax.ET_app uu___
+  FStarC_Syntax_Syntax.ET_app
+    ((FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name), [])
 let mk_emb'
   (x :
     FStarC_TypeChecker_NBETerm.nbe_cbs ->
@@ -35,9 +33,8 @@ let mk_lazy (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (obj : 'uuuuu)
   (ty : FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax)
   (kind : FStarC_Syntax_Syntax.lazy_kind) : FStarC_TypeChecker_NBETerm.t=
   let li =
-    let uu___ = FStarC_Dyn.mkdyn obj in
     {
-      FStarC_Syntax_Syntax.blob = uu___;
+      FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn obj);
       FStarC_Syntax_Syntax.lkind = kind;
       FStarC_Syntax_Syntax.ltyp = ty;
       FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -110,11 +107,10 @@ let rec mapM_opt :
     match l with
     | [] -> FStar_Pervasives_Native.Some []
     | x::xs ->
-        let uu___ = f x in
-        FStarC_Option.bind uu___
+        FStarC_Option.bind (f x)
           (fun x1 ->
-             let uu___1 = mapM_opt f xs in
-             FStarC_Option.bind uu___1
+             let uu___ = mapM_opt f xs in
+             FStarC_Option.bind uu___
                (fun xs1 -> FStar_Pervasives_Native.Some (x1 :: xs1)))
 let e_term_aq
   (aq :
@@ -133,12 +129,11 @@ let e_term_aq
     match t.FStarC_TypeChecker_NBETerm.nbe_t with
     | FStarC_TypeChecker_NBETerm.Quote (tm, qi) ->
         let uu___ =
-          FStarC_Reflection_V1_Embeddings.e_term_aq (Prims.int_zero, []) in
-        let uu___1 =
           FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_quoted (tm, qi))
             FStarC_Range_Type.dummyRange in
-        FStarC_Syntax_Embeddings_Base.unembed uu___ uu___1
-          FStarC_Syntax_Embeddings_Base.id_norm_cb
+        FStarC_Syntax_Embeddings_Base.unembed
+          (FStarC_Reflection_V1_Embeddings.e_term_aq (Prims.int_zero, []))
+          uu___ FStarC_Syntax_Embeddings_Base.id_norm_cb
     | uu___ -> FStar_Pervasives_Native.None in
   {
     FStarC_TypeChecker_NBETerm.em = embed_term;
@@ -309,17 +304,13 @@ let e_const :
           FStarC_Reflection_V1_Constants.ref_C_False.FStarC_Reflection_V1_Constants.fv
           [] []
     | FStarC_Reflection_V1_Data.C_Int i ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              FStarC_TypeChecker_NBETerm.mk_t
-                (FStarC_TypeChecker_NBETerm.Constant
-                   (FStarC_TypeChecker_NBETerm.Int i)) in
-            FStarC_TypeChecker_NBETerm.as_arg uu___2 in
-          [uu___1] in
         mkConstruct
           FStarC_Reflection_V1_Constants.ref_C_Int.FStarC_Reflection_V1_Constants.fv
-          [] uu___
+          []
+          [FStarC_TypeChecker_NBETerm.as_arg
+             (FStarC_TypeChecker_NBETerm.mk_t
+                (FStarC_TypeChecker_NBETerm.Constant
+                   (FStarC_TypeChecker_NBETerm.Int i)))]
     | FStarC_Reflection_V1_Data.C_String s ->
         let uu___ =
           let uu___1 =
@@ -489,13 +480,11 @@ let rec e_pattern_aq :
               let uu___4 =
                 let uu___5 =
                   let uu___6 =
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 = e_pattern_aq aq in
-                        FStarC_TypeChecker_NBETerm.e_tuple2 uu___9
-                          FStarC_TypeChecker_NBETerm.e_bool in
-                      FStarC_TypeChecker_NBETerm.e_list uu___8 in
-                    FStarC_TypeChecker_NBETerm.embed uu___7 cb ps in
+                    FStarC_TypeChecker_NBETerm.embed
+                      (FStarC_TypeChecker_NBETerm.e_list
+                         (FStarC_TypeChecker_NBETerm.e_tuple2
+                            (e_pattern_aq aq)
+                            FStarC_TypeChecker_NBETerm.e_bool)) cb ps in
                   FStarC_TypeChecker_NBETerm.as_arg uu___6 in
                 [uu___5] in
               uu___3 :: uu___4 in
@@ -555,13 +544,11 @@ let rec e_pattern_aq :
                FStarC_Option.bind uu___4
                  (fun us ->
                     let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          let uu___8 = e_pattern_aq aq in
-                          FStarC_TypeChecker_NBETerm.e_tuple2 uu___8
-                            FStarC_TypeChecker_NBETerm.e_bool in
-                        FStarC_TypeChecker_NBETerm.e_list uu___7 in
-                      FStarC_TypeChecker_NBETerm.unembed uu___6 cb ps in
+                      FStarC_TypeChecker_NBETerm.unembed
+                        (FStarC_TypeChecker_NBETerm.e_list
+                           (FStarC_TypeChecker_NBETerm.e_tuple2
+                              (e_pattern_aq aq)
+                              FStarC_TypeChecker_NBETerm.e_bool)) cb ps in
                     FStarC_Option.bind uu___5
                       (fun ps1 ->
                          FStar_Pervasives_Native.Some
@@ -616,8 +603,7 @@ let e_branch_aq
   :
   (FStarC_Reflection_V1_Data.pattern * FStarC_Syntax_Syntax.term)
     FStarC_TypeChecker_NBETerm.embedding=
-  let uu___ = e_pattern_aq aq in
-  FStarC_TypeChecker_NBETerm.e_tuple2 uu___ (e_term_aq aq)
+  FStarC_TypeChecker_NBETerm.e_tuple2 (e_pattern_aq aq) (e_term_aq aq)
 let e_argv_aq
   (aq :
     (Prims.int * FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax
@@ -650,7 +636,7 @@ let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind)
       FStarC_Class_Deq.op_Equals_Question FStarC_Syntax_Syntax.deq_lazy_kind
         k k'
       -> FStarC_Dyn.undyn v
-  | uu___ -> failwith "Not a Lazy of the expected kind (NBE)"
+  | uu___ -> FStarC_Effect.failwith "Not a Lazy of the expected kind (NBE)"
 let e_ident :
   FStarC_Reflection_V1_Data.ident FStarC_TypeChecker_NBETerm.embedding=
   FStarC_TypeChecker_NBETerm.e_tuple2 FStarC_TypeChecker_NBETerm.e_string
@@ -1003,10 +989,9 @@ let e_term_view_aq
             let uu___4 =
               let uu___5 =
                 let uu___6 =
-                  let uu___7 =
-                    let uu___8 = e_branch_aq aq in
-                    FStarC_TypeChecker_NBETerm.e_list uu___8 in
-                  FStarC_TypeChecker_NBETerm.embed uu___7 cb brs in
+                  FStarC_TypeChecker_NBETerm.embed
+                    (FStarC_TypeChecker_NBETerm.e_list (e_branch_aq aq)) cb
+                    brs in
                 FStarC_TypeChecker_NBETerm.as_arg uu___6 in
               [uu___5] in
             uu___3 :: uu___4 in
@@ -2285,9 +2270,8 @@ let e_qualifiers :
     FStarC_TypeChecker_NBETerm.embedding=
   FStarC_TypeChecker_NBETerm.e_list e_qualifier
 let e_vconfig : FStarC_Order.order FStarC_TypeChecker_NBETerm.embedding=
-  let emb cb o = failwith "emb vconfig NBE" in
-  let unemb cb t = failwith "unemb vconfig NBE" in
-  let uu___ =
-    FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.vconfig_lid
-      FStar_Pervasives_Native.None in
-  mk_emb' emb unemb uu___
+  let emb cb o = FStarC_Effect.failwith "emb vconfig NBE" in
+  let unemb cb t = FStarC_Effect.failwith "unemb vconfig NBE" in
+  mk_emb' emb unemb
+    (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.vconfig_lid
+       FStar_Pervasives_Native.None)

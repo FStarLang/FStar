@@ -4,8 +4,8 @@ let json_of_issue : FStarC_Errors.issue -> FStarC_Json.json=
   FStarC_Interactive_Ide_Types.json_of_issue
 let with_captured_errors' (env : FStarC_TypeChecker_Env.env_t)
   (sigint_handler : FStarC_Util.sigint_handler)
-  (f : FStarC_TypeChecker_Env.env_t -> 'uuuuu FStar_Pervasives_Native.option)
-  : 'uuuuu FStar_Pervasives_Native.option=
+  (f : FStarC_TypeChecker_Env.env_t -> 'a FStar_Pervasives_Native.option) :
+  'a FStar_Pervasives_Native.option=
   try
     (fun uu___ ->
        match () with
@@ -30,8 +30,8 @@ let with_captured_errors' (env : FStarC_TypeChecker_Env.env_t)
   | FStarC_Errors.Stop -> FStar_Pervasives_Native.None
 let with_captured_errors (env : FStarC_TypeChecker_Env.env_t)
   (sigint_handler : FStarC_Util.sigint_handler)
-  (f : FStarC_TypeChecker_Env.env_t -> 'uuuuu FStar_Pervasives_Native.option)
-  : 'uuuuu FStar_Pervasives_Native.option=
+  (f : FStarC_TypeChecker_Env.env_t -> 'a FStar_Pervasives_Native.option) :
+  'a FStar_Pervasives_Native.option=
   let uu___ = FStarC_Options.trace_error () in
   if uu___ then f env else with_captured_errors' env sigint_handler f
 type env_t = FStarC_TypeChecker_Env.env
@@ -61,8 +61,10 @@ let run_repl_transaction (st : FStarC_Interactive_Ide_Types.repl_state)
   match uu___ with
   | (env, finish_name_tracking) ->
       let check_success uu___1 =
-        (let uu___2 = FStarC_Errors.get_err_count () in
-         uu___2 = Prims.int_zero) && (Prims.op_Negation must_rollback) in
+        let uu___2 =
+          let uu___3 = FStarC_Errors.get_err_count () in
+          uu___3 = Prims.int_zero in
+        if uu___2 then Prims.op_Negation must_rollback else false in
       let uu___1 =
         let uu___2 =
           with_captured_errors env FStarC_Util.sigint_raise
@@ -74,8 +76,13 @@ let run_repl_transaction (st : FStarC_Interactive_Ide_Types.repl_state)
                    st1.FStarC_Interactive_Ide_Types.repl_lang in
                FStar_Pervasives_Native.Some uu___3) in
         match uu___2 with
-        | FStar_Pervasives_Native.Some (curmod, env1, lds) when
-            check_success () -> (curmod, env1, true, lds)
+        | FStar_Pervasives_Native.Some (curmod, env1, lds) ->
+            let uu___3 = check_success () in
+            if uu___3
+            then (curmod, env1, true, lds)
+            else
+              ((st1.FStarC_Interactive_Ide_Types.repl_curmod), env1, false,
+                [])
         | uu___3 ->
             ((st1.FStarC_Interactive_Ide_Types.repl_curmod), env, false, []) in
       (match uu___1 with
@@ -127,8 +134,8 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
       let uu___1 = FStarC_Interactive_Ide_Types.string_of_repl_task task in
       FStarC_Format.print2 "%s %s" verb uu___1
     else () in
-  let rec revert_many st1 uu___ =
-    match uu___ with
+  let rec revert_many st1 l =
+    match l with
     | [] -> st1
     | (_id, (task, _st'))::entries ->
         (debug "Reverting" task;
@@ -139,9 +146,6 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
             FStarC_TypeChecker_Env.dep_graph
               st1.FStarC_Interactive_Ide_Types.repl_env in
           let st'1 =
-            let uu___3 =
-              FStarC_TypeChecker_Env.set_dep_graph
-                st'.FStarC_Interactive_Ide_Types.repl_env dep_graph in
             {
               FStarC_Interactive_Ide_Types.repl_line =
                 (st'.FStarC_Interactive_Ide_Types.repl_line);
@@ -153,7 +157,9 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
                 (st'.FStarC_Interactive_Ide_Types.repl_deps_stack);
               FStarC_Interactive_Ide_Types.repl_curmod =
                 (st'.FStarC_Interactive_Ide_Types.repl_curmod);
-              FStarC_Interactive_Ide_Types.repl_env = uu___3;
+              FStarC_Interactive_Ide_Types.repl_env =
+                (FStarC_TypeChecker_Env.set_dep_graph
+                   st'.FStarC_Interactive_Ide_Types.repl_env dep_graph);
               FStarC_Interactive_Ide_Types.repl_stdin =
                 (st'.FStarC_Interactive_Ide_Types.repl_stdin);
               FStarC_Interactive_Ide_Types.repl_names =
@@ -213,11 +219,17 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
                   } in
                 aux uu___4 tasks2 []
               else FStar_Pervasives.Inr st2))
-    | (task::tasks2, prev::previous1) when
-        let uu___ = FStarC_Interactive_PushHelper.update_task_timestamps task in
-        (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev)) =
-          uu___
-        -> (debug "Skipping" task; aux st1 tasks2 previous1)
+    | (task::tasks2, prev::previous1) ->
+        let uu___ =
+          let uu___1 =
+            FStarC_Interactive_PushHelper.update_task_timestamps task in
+          (FStar_Pervasives_Native.fst (FStar_Pervasives_Native.snd prev)) =
+            uu___1 in
+        if uu___
+        then (debug "Skipping" task; aux st1 tasks2 previous1)
+        else
+          (let uu___2 = revert_many st1 (prev :: previous1) in
+           aux uu___2 (task :: tasks2) [])
     | (tasks2, previous1) ->
         let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
   aux st tasks
@@ -241,11 +253,9 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state)
     match uu___ with
     | FStar_Pervasives_Native.Some v -> v
     | FStar_Pervasives_Native.None ->
-        let uu___1 =
-          let uu___2 =
-            FStarC_Format.fmt2 "Missing key [%s] in %s." key errloc in
-          FStarC_Interactive_JsonHelper.InvalidQuery uu___2 in
-        FStarC_Effect.raise uu___1 in
+        FStarC_Effect.raise
+          (FStarC_Interactive_JsonHelper.InvalidQuery
+             (FStarC_Format.fmt2 "Missing key [%s] in %s." key errloc)) in
   let request = FStarC_Interactive_JsonHelper.js_assoc json in
   let qid =
     let uu___ = assoc "query" "query-id" request in
@@ -469,8 +479,8 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state)
                    FStar_Pervasives_Native.Some uu___3 in
                  FStarC_Interactive_Ide_Types.Cancel uu___2
              | uu___2 ->
-                 let uu___3 = FStarC_Format.fmt1 "Unknown query '%s'" query in
-                 FStarC_Interactive_Ide_Types.ProtocolViolation uu___3 in
+                 FStarC_Interactive_Ide_Types.ProtocolViolation
+                   (FStarC_Format.fmt1 "Unknown query '%s'" query) in
            {
              FStarC_Interactive_Ide_Types.qq = uu___1;
              FStarC_Interactive_Ide_Types.qid = qid
@@ -501,8 +511,7 @@ let deserialize_interactive_query
       wrap_js_failure "?" expected got
 let parse_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state)
   (query_str : Prims.string) : FStarC_Interactive_Ide_Types.query=
-  let uu___ = FStarC_Json.json_of_string query_str in
-  match uu___ with
+  match FStarC_Json.json_of_string query_str with
   | FStar_Pervasives_Native.None ->
       {
         FStarC_Interactive_Ide_Types.qq =
@@ -778,18 +787,17 @@ let snippets_of_fstar_option (name : Prims.string)
         arg_snippets_of_type elem_spec
     | FStarC_Options.WithSideEffect (uu___, elem_spec) ->
         arg_snippets_of_type elem_spec in
-  let uu___ = arg_snippets_of_type typ in
-  FStarC_List.map (mk_snippet name) uu___
-let rec json_of_fstar_option_value (uu___ : FStarC_Options.option_val) :
+  FStarC_List.map (mk_snippet name) (arg_snippets_of_type typ)
+let rec json_of_fstar_option_value (v : FStarC_Options.option_val) :
   FStarC_Json.json=
-  match uu___ with
+  match v with
   | FStarC_Options.Bool b -> FStarC_Json.JsonBool b
   | FStarC_Options.String s -> FStarC_Json.JsonStr s
   | FStarC_Options.Path s -> FStarC_Json.JsonStr s
   | FStarC_Options.Int n -> FStarC_Json.JsonInt n
   | FStarC_Options.List vs ->
-      let uu___1 = FStarC_List.map json_of_fstar_option_value vs in
-      FStarC_Json.JsonList uu___1
+      let uu___ = FStarC_List.map json_of_fstar_option_value vs in
+      FStarC_Json.JsonList uu___
   | FStarC_Options.Unset -> FStarC_Json.JsonNull
 let alist_of_fstar_option (opt : fstar_option) :
   (Prims.string * FStarC_Json.json) Prims.list=
@@ -808,17 +816,12 @@ let alist_of_fstar_option (opt : fstar_option) :
               json_of_opt (fun uu___8 -> FStarC_Json.JsonStr uu___8)
                 opt.opt_documentation in
             ("documentation", uu___7) in
-          let uu___7 =
-            let uu___8 =
-              let uu___9 =
-                let uu___10 = kind_of_fstar_option_type opt.opt_type in
-                FStarC_Json.JsonStr uu___10 in
-              ("type", uu___9) in
-            [uu___8;
-            ("permission-level",
-              (FStarC_Json.JsonStr
-                 (string_of_option_permission_level opt.opt_permission_level)))] in
-          uu___6 :: uu___7 in
+          [uu___6;
+          ("type",
+            (FStarC_Json.JsonStr (kind_of_fstar_option_type opt.opt_type)));
+          ("permission-level",
+            (FStarC_Json.JsonStr
+               (string_of_option_permission_level opt.opt_permission_level)))] in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
     ("signature", (FStarC_Json.JsonStr (opt.opt_sig))) :: uu___1 in
@@ -859,8 +862,8 @@ let json_of_message (level : Prims.string) (js_contents : FStarC_Json.json) :
       ("contents", js_contents)] in
     ("kind", (FStarC_Json.JsonStr "message")) :: uu___1 in
   FStarC_Json.JsonAssoc uu___
-let forward_message (callback : FStarC_Json.json -> 'uuuuu)
-  (level : Prims.string) (contents : FStarC_Json.json) : 'uuuuu=
+let forward_message (callback : FStarC_Json.json -> unit)
+  (level : Prims.string) (contents : FStarC_Json.json) : unit=
   let uu___ = json_of_message level contents in callback uu___
 let json_of_hello : FStarC_Json.json=
   let js_version =
@@ -878,8 +881,7 @@ let write_hello (uu___ : unit) : unit=
 let sig_of_fstar_option (name : Prims.string) (typ : FStarC_Options.opt_type)
   : Prims.string=
   let flag = Prims.strcat "--" name in
-  let uu___ = FStarC_Options.desc_of_opt_type typ in
-  match uu___ with
+  match FStarC_Options.desc_of_opt_type typ with
   | FStar_Pervasives_Native.None -> flag
   | FStar_Pervasives_Native.Some arg_sig ->
       Prims.strcat flag (Prims.strcat " " arg_sig)
@@ -893,26 +895,25 @@ let fstar_options_list_cache : fstar_option Prims.list=
              let uu___2 = FStarC_SMap.try_find defaults name in
              FStarC_Option.map
                (fun default_value ->
-                  let uu___3 = sig_of_fstar_option name typ in
-                  let uu___4 = snippets_of_fstar_option name typ in
-                  let uu___5 =
+                  let uu___3 = snippets_of_fstar_option name typ in
+                  let uu___4 =
                     if doc = FStar_Pprint.empty
                     then FStar_Pervasives_Native.None
                     else
-                      (let uu___7 = FStarC_Errors_Msg.renderdoc doc in
-                       FStar_Pervasives_Native.Some uu___7) in
-                  let uu___6 =
-                    let uu___7 = FStarC_Options.settable name in
-                    if uu___7 then OptSet else OptReadOnly in
+                      (let uu___6 = FStarC_Errors_Msg.renderdoc doc in
+                       FStar_Pervasives_Native.Some uu___6) in
                   {
                     opt_name = name;
-                    opt_sig = uu___3;
+                    opt_sig = (sig_of_fstar_option name typ);
                     opt_value = FStarC_Options.Unset;
                     opt_default = default_value;
                     opt_type = typ;
-                    opt_snippets = uu___4;
-                    opt_documentation = uu___5;
-                    opt_permission_level = uu___6
+                    opt_snippets = uu___3;
+                    opt_documentation = uu___4;
+                    opt_permission_level =
+                      (if FStarC_Options.settable name
+                       then OptSet
+                       else OptReadOnly)
                   }) uu___2) FStarC_Options.all_specs_with_types in
   FStarC_List.sortWith
     (fun o1 o2 ->
@@ -1058,14 +1059,10 @@ let run_segment (st : FStarC_Interactive_Ide_Types.repl_state)
         (FStar_Pervasives.Inl st))
   | FStar_Pervasives_Native.Some decls ->
       let json_of_decl decl =
-        let uu___1 =
-          let uu___2 =
-            let uu___3 =
-              FStarC_Range_Ops.json_of_def_range
-                decl.FStarC_Parser_AST.drange in
-            ("def_range", uu___3) in
-          [uu___2] in
-        FStarC_Json.JsonAssoc uu___1 in
+        FStarC_Json.JsonAssoc
+          [("def_range",
+             (FStarC_Range_Ops.json_of_def_range
+                decl.FStarC_Parser_AST.drange))] in
       let js_decls =
         let uu___1 = FStarC_List.map json_of_decl decls in
         FStarC_Json.JsonList uu___1 in
@@ -1146,9 +1143,6 @@ let load_deps (st : FStarC_Interactive_Ide_Types.repl_state) :
   | FStar_Pervasives_Native.None -> FStar_Pervasives.Inr st
   | FStar_Pervasives_Native.Some (deps, tasks, dep_graph) ->
       let st1 =
-        let uu___1 =
-          FStarC_TypeChecker_Env.set_dep_graph
-            st.FStarC_Interactive_Ide_Types.repl_env dep_graph in
         {
           FStarC_Interactive_Ide_Types.repl_line =
             (st.FStarC_Interactive_Ide_Types.repl_line);
@@ -1160,7 +1154,9 @@ let load_deps (st : FStarC_Interactive_Ide_Types.repl_state) :
             (st.FStarC_Interactive_Ide_Types.repl_deps_stack);
           FStarC_Interactive_Ide_Types.repl_curmod =
             (st.FStarC_Interactive_Ide_Types.repl_curmod);
-          FStarC_Interactive_Ide_Types.repl_env = uu___1;
+          FStarC_Interactive_Ide_Types.repl_env =
+            (FStarC_TypeChecker_Env.set_dep_graph
+               st.FStarC_Interactive_Ide_Types.repl_env dep_graph);
           FStarC_Interactive_Ide_Types.repl_stdin =
             (st.FStarC_Interactive_Ide_Types.repl_stdin);
           FStarC_Interactive_Ide_Types.repl_names =
@@ -1181,12 +1177,11 @@ let load_deps (st : FStarC_Interactive_Ide_Types.repl_state) :
             FStar_Pervasives.Inl (st2, deps)))
 let rephrase_dependency_error (issue : FStarC_Errors.issue) :
   FStarC_Errors.issue=
-  let uu___ =
-    let uu___1 =
-      FStarC_Errors_Msg.text "Error while computing or loading dependencies" in
-    uu___1 :: (issue.FStarC_Errors.issue_msg) in
   {
-    FStarC_Errors.issue_msg = uu___;
+    FStarC_Errors.issue_msg =
+      ((FStarC_Errors_Msg.text
+          "Error while computing or loading dependencies") ::
+      (issue.FStarC_Errors.issue_msg));
     FStarC_Errors.issue_level = (issue.FStarC_Errors.issue_level);
     FStarC_Errors.issue_range = (issue.FStarC_Errors.issue_range);
     FStarC_Errors.issue_number = (issue.FStarC_Errors.issue_number);
@@ -1198,43 +1193,35 @@ let write_full_buffer_fragment_progress
     let uu___ =
       let uu___1 =
         let uu___2 =
-          FStarC_Range_Ops.json_of_def_range cf.FStarC_Parser_ParseIt.range in
-        ("range", uu___2) in
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 =
+          let uu___3 =
+            let uu___4 =
               FStarC_Util.digest_of_string cf.FStarC_Parser_ParseIt.code in
-            FStarC_Json.JsonStr uu___5 in
-          ("code-digest", uu___4) in
-        [uu___3] in
-      uu___1 :: uu___2 in
+            FStarC_Json.JsonStr uu___4 in
+          ("code-digest", uu___3) in
+        [uu___2] in
+      ("range",
+        (FStarC_Range_Ops.json_of_def_range cf.FStarC_Parser_ParseIt.range))
+        :: uu___1 in
     FStarC_Json.JsonAssoc uu___ in
   match di with
   | FStarC_Interactive_Incremental.FullBufferStarted ->
       write_progress (FStar_Pervasives_Native.Some "full-buffer-started") []
   | FStarC_Interactive_Incremental.FragmentStarted d ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange in
-          ("ranges", uu___2) in
-        [uu___1] in
       write_progress
-        (FStar_Pervasives_Native.Some "full-buffer-fragment-started") uu___
+        (FStar_Pervasives_Native.Some "full-buffer-fragment-started")
+        [("ranges",
+           (FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange))]
   | FStarC_Interactive_Incremental.FragmentSuccess
       (d, cf, FStarC_Interactive_Ide_Types.FullCheck) ->
       let uu___ =
         let uu___1 =
           let uu___2 =
-            FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange in
-          ("ranges", uu___2) in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = json_of_code_fragment cf in
-            ("code-fragment", uu___4) in
-          [uu___3] in
-        uu___1 :: uu___2 in
+            let uu___3 = json_of_code_fragment cf in
+            ("code-fragment", uu___3) in
+          [uu___2] in
+        ("ranges",
+          (FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange)) ::
+          uu___1 in
       write_progress (FStar_Pervasives_Native.Some "full-buffer-fragment-ok")
         uu___
   | FStarC_Interactive_Incremental.FragmentSuccess
@@ -1242,25 +1229,19 @@ let write_full_buffer_fragment_progress
       let uu___ =
         let uu___1 =
           let uu___2 =
-            FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange in
-          ("ranges", uu___2) in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = json_of_code_fragment cf in
-            ("code-fragment", uu___4) in
-          [uu___3] in
-        uu___1 :: uu___2 in
+            let uu___3 = json_of_code_fragment cf in
+            ("code-fragment", uu___3) in
+          [uu___2] in
+        ("ranges",
+          (FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange)) ::
+          uu___1 in
       write_progress
         (FStar_Pervasives_Native.Some "full-buffer-fragment-lax-ok") uu___
   | FStarC_Interactive_Incremental.FragmentFailed d ->
-      let uu___ =
-        let uu___1 =
-          let uu___2 =
-            FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange in
-          ("ranges", uu___2) in
-        [uu___1] in
       write_progress
-        (FStar_Pervasives_Native.Some "full-buffer-fragment-failed") uu___
+        (FStar_Pervasives_Native.Some "full-buffer-fragment-failed")
+        [("ranges",
+           (FStarC_Range_Ops.json_of_def_range d.FStarC_Parser_AST.drange))]
   | FStarC_Interactive_Incremental.FragmentError issues ->
       let qid =
         let uu___ = FStarC_Effect.op_Bang repl_current_qid in
@@ -1300,15 +1281,15 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
   let uu___ = FStarC_CheckedFiles.load_module_from_cache env filename in
   match uu___ with
   | FStar_Pervasives_Native.None ->
-      failwith (Prims.strcat "cannot find checked file for " filename)
+      FStarC_Effect.failwith
+        (Prims.strcat "cannot find checked file for " filename)
   | FStar_Pervasives_Native.Some tc_result ->
       let uu___1 =
         FStarC_Universal.with_dsenv_of_tcenv env
           (fun ds ->
-             let uu___2 =
-               FStarC_Syntax_DsEnv.set_current_module ds
-                 (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name in
-             ((), uu___2)) in
+             ((),
+               (FStarC_Syntax_DsEnv.set_current_module ds
+                  (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name))) in
       (match uu___1 with
        | (uu___2, env1) ->
            let uu___3 =
@@ -1326,12 +1307,10 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                     match lids with
                     | [] -> false
                     | lid::lids1 ->
-                        let uu___5 =
-                          let uu___6 = FStarC_Ident.string_of_lid lid in
-                          uu___6 = until_lid in
-                        if uu___5 then true else pred1 lids1 in
-                  let uu___5 = FStarC_Syntax_Util.lids_of_sigelt se in
-                  pred1 uu___5 in
+                        if (FStarC_Ident.string_of_lid lid) = until_lid
+                        then true
+                        else pred1 lids1 in
+                  pred1 (FStarC_Syntax_Util.lids_of_sigelt se) in
                 let uu___5 =
                   trunc_modul tc_result.FStarC_CheckedFiles.checked_module
                     pred in
@@ -1339,7 +1318,7 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                  | (found_decl, m) ->
                      if Prims.op_Negation found_decl
                      then
-                       failwith
+                       FStarC_Effect.failwith
                          (Prims.strcat
                             "did not find declaration with lident " until_lid)
                      else
@@ -1358,10 +1337,9 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                             let uu___9 =
                               FStarC_Universal.with_dsenv_of_tcenv env4
                                 (fun ds ->
-                                   let uu___10 =
-                                     FStarC_Syntax_DsEnv.set_current_module
-                                       ds m.FStarC_Syntax_Syntax.name in
-                                   ((), uu___10)) in
+                                   ((),
+                                     (FStarC_Syntax_DsEnv.set_current_module
+                                        ds m.FStarC_Syntax_Syntax.name))) in
                             (match uu___9 with
                              | (uu___10, env5) ->
                                  let env6 =
@@ -1401,33 +1379,46 @@ let run_load_partial_file (st : FStarC_Interactive_Ide_Types.repl_state)
                  st2.FStarC_Interactive_Ide_Types.repl_fname decl_name in
              FStar_Pervasives_Native.Some uu___2) in
       (match uu___1 with
-       | FStar_Pervasives_Native.Some (env1, curmod) when
-           let uu___2 = FStarC_Errors.get_err_count () in
-           uu___2 = Prims.int_zero ->
-           let st3 =
-             {
-               FStarC_Interactive_Ide_Types.repl_line =
-                 (st2.FStarC_Interactive_Ide_Types.repl_line);
-               FStarC_Interactive_Ide_Types.repl_column =
-                 (st2.FStarC_Interactive_Ide_Types.repl_column);
-               FStarC_Interactive_Ide_Types.repl_fname =
-                 (st2.FStarC_Interactive_Ide_Types.repl_fname);
-               FStarC_Interactive_Ide_Types.repl_deps_stack =
-                 (st2.FStarC_Interactive_Ide_Types.repl_deps_stack);
-               FStarC_Interactive_Ide_Types.repl_curmod =
-                 (FStar_Pervasives_Native.Some curmod);
-               FStarC_Interactive_Ide_Types.repl_env = env1;
-               FStarC_Interactive_Ide_Types.repl_stdin =
-                 (st2.FStarC_Interactive_Ide_Types.repl_stdin);
-               FStarC_Interactive_Ide_Types.repl_names =
-                 (st2.FStarC_Interactive_Ide_Types.repl_names);
-               FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
-                 (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
-               FStarC_Interactive_Ide_Types.repl_lang =
-                 (st2.FStarC_Interactive_Ide_Types.repl_lang)
-             } in
-           ((FStarC_Interactive_Ide_Types.QueryOK, (FStarC_Json.JsonList [])),
-             (FStar_Pervasives.Inl st3))
+       | FStar_Pervasives_Native.Some (env1, curmod) ->
+           let uu___2 =
+             let uu___3 = FStarC_Errors.get_err_count () in
+             uu___3 = Prims.int_zero in
+           if uu___2
+           then
+             let st3 =
+               {
+                 FStarC_Interactive_Ide_Types.repl_line =
+                   (st2.FStarC_Interactive_Ide_Types.repl_line);
+                 FStarC_Interactive_Ide_Types.repl_column =
+                   (st2.FStarC_Interactive_Ide_Types.repl_column);
+                 FStarC_Interactive_Ide_Types.repl_fname =
+                   (st2.FStarC_Interactive_Ide_Types.repl_fname);
+                 FStarC_Interactive_Ide_Types.repl_deps_stack =
+                   (st2.FStarC_Interactive_Ide_Types.repl_deps_stack);
+                 FStarC_Interactive_Ide_Types.repl_curmod =
+                   (FStar_Pervasives_Native.Some curmod);
+                 FStarC_Interactive_Ide_Types.repl_env = env1;
+                 FStarC_Interactive_Ide_Types.repl_stdin =
+                   (st2.FStarC_Interactive_Ide_Types.repl_stdin);
+                 FStarC_Interactive_Ide_Types.repl_names =
+                   (st2.FStarC_Interactive_Ide_Types.repl_names);
+                 FStarC_Interactive_Ide_Types.repl_buffered_input_queries =
+                   (st2.FStarC_Interactive_Ide_Types.repl_buffered_input_queries);
+                 FStarC_Interactive_Ide_Types.repl_lang =
+                   (st2.FStarC_Interactive_Ide_Types.repl_lang)
+               } in
+             ((FStarC_Interactive_Ide_Types.QueryOK,
+                (FStarC_Json.JsonList [])), (FStar_Pervasives.Inl st3))
+           else
+             (let json_error_list =
+                let uu___4 = collect_errors () in
+                FStarC_List.map json_of_issue uu___4 in
+              let json_errors = FStarC_Json.JsonList json_error_list in
+              let st3 =
+                FStarC_Interactive_PushHelper.pop_repl "load partial file"
+                  st2 in
+              ((FStarC_Interactive_Ide_Types.QueryNOK, json_errors),
+                (FStar_Pervasives.Inl st3)))
        | uu___2 ->
            let json_error_list =
              let uu___3 = collect_errors () in
@@ -1716,10 +1707,9 @@ let run_push (st : FStarC_Interactive_Ide_Types.repl_state)
   ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) *
     (FStarC_Interactive_Ide_Types.repl_state, Prims.int)
     FStar_Pervasives.either)=
-  let uu___ =
-    (let uu___1 = FStarC_Parser_Dep.fly_deps_enabled () in
-     Prims.op_Negation uu___1) && (nothing_left_to_pop st) in
-  if uu___
+  let fly_deps = FStarC_Parser_Dep.fly_deps_enabled () in
+  let nltp = nothing_left_to_pop st in
+  if (Prims.op_Negation fly_deps) && nltp
   then run_push_with_deps st query
   else run_push_without_deps st query
 let run_symbol_lookup (st : FStarC_Interactive_Ide_Types.repl_state)
@@ -1773,18 +1763,14 @@ let run_module_lookup (st : FStarC_Interactive_Ide_Types.repl_state)
       FStar_Pervasives.Inl "No such module or namespace"
   | FStar_Pervasives_Native.Some (FStarC_Interactive_CompletionTable.Module
       mod_info) ->
-      let uu___1 =
-        let uu___2 =
-          FStarC_Interactive_CompletionTable.alist_of_mod_info mod_info in
-        ("module", uu___2) in
-      FStar_Pervasives.Inr uu___1
+      FStar_Pervasives.Inr
+        ("module",
+          (FStarC_Interactive_CompletionTable.alist_of_mod_info mod_info))
   | FStar_Pervasives_Native.Some
       (FStarC_Interactive_CompletionTable.Namespace ns_info) ->
-      let uu___1 =
-        let uu___2 =
-          FStarC_Interactive_CompletionTable.alist_of_ns_info ns_info in
-        ("namespace", uu___2) in
-      FStar_Pervasives.Inr uu___1
+      FStar_Pervasives.Inr
+        ("namespace",
+          (FStarC_Interactive_CompletionTable.alist_of_ns_info ns_info))
 let run_code_lookup (st : FStarC_Interactive_Ide_Types.repl_state)
   (symbol : Prims.string)
   (pos_opt :
@@ -1960,9 +1946,9 @@ let run_autocomplete (st : FStarC_Interactive_Ide_Types.repl_state)
   | FStarC_Interactive_Ide_Types.CKModuleOrNamespace (modules, namespaces) ->
       run_module_autocomplete st search_term modules namespaces
 let run_and_rewind (st : FStarC_Interactive_Ide_Types.repl_state)
-  (sigint_default : 'uuuuu)
-  (task : FStarC_Interactive_Ide_Types.repl_state -> 'uuuuu) :
-  ('uuuuu * (FStarC_Interactive_Ide_Types.repl_state, 'uuuuu1)
+  (sigint_default : 'a)
+  (task : FStarC_Interactive_Ide_Types.repl_state -> 'a) :
+  ('a * (FStarC_Interactive_Ide_Types.repl_state, 'uuuuu)
     FStar_Pervasives.either)=
   let st1 =
     FStarC_Interactive_PushHelper.push_repl "run_and_rewind"
@@ -2222,8 +2208,8 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
     let found =
       match term.st_term with
       | NameContainsStr str ->
-          let uu___ = FStarC_Ident.string_of_lid candidate.sc_lid in
-          FStarC_Util.contains uu___ str
+          FStarC_Util.contains (FStarC_Ident.string_of_lid candidate.sc_lid)
+            str
       | TypeContainsLid lid ->
           let uu___ = sc_fvars tcenv candidate in
           FStarC_Class_Setlike.mem ()
@@ -2249,11 +2235,9 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
       let parsed =
         if beg_quote <> end_quote
         then
-          let uu___ =
-            let uu___1 =
-              FStarC_Format.fmt1 "Improperly quoted search term: %s" term1 in
-            InvalidSearch uu___1 in
-          FStarC_Effect.raise uu___
+          FStarC_Effect.raise
+            (InvalidSearch
+               (FStarC_Format.fmt1 "Improperly quoted search term: %s" term1))
         else
           if beg_quote
           then (let uu___1 = strip_quotes term1 in NameContainsStr uu___1)
@@ -2264,24 +2248,20 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
                  tcenv.FStarC_TypeChecker_Env.dsenv lid in
              match uu___2 with
              | FStar_Pervasives_Native.None ->
-                 let uu___3 =
-                   let uu___4 =
-                     FStarC_Format.fmt1 "Unknown identifier: %s" term1 in
-                   InvalidSearch uu___4 in
-                 FStarC_Effect.raise uu___3
+                 FStarC_Effect.raise
+                   (InvalidSearch
+                      (FStarC_Format.fmt1 "Unknown identifier: %s" term1))
              | FStar_Pervasives_Native.Some lid1 -> TypeContainsLid lid1) in
       { st_negate = negate; st_term = parsed } in
     let terms = FStarC_List.map parse_one (FStarC_Util.split search_str1 " ") in
     let cmp x y = (st_cost x.st_term) - (st_cost y.st_term) in
     FStarC_Util.sort_with cmp terms in
   let pprint_one term =
-    let uu___ =
-      match term.st_term with
-      | NameContainsStr s -> FStarC_Format.fmt1 "\"%s\"" s
-      | TypeContainsLid l ->
-          let uu___1 = FStarC_Ident.string_of_lid l in
-          FStarC_Format.fmt1 "%s" uu___1 in
-    Prims.strcat (if term.st_negate then "-" else "") uu___ in
+    Prims.strcat (if term.st_negate then "-" else "")
+      (match term.st_term with
+       | NameContainsStr s -> FStarC_Format.fmt1 "\"%s\"" s
+       | TypeContainsLid l ->
+           FStarC_Format.fmt1 "%s" (FStarC_Ident.string_of_lid l)) in
   let results =
     try
       (fun uu___ ->
@@ -2293,9 +2273,8 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
              let matches_all candidate =
                FStarC_List.for_all (st_matches candidate) terms in
              let cmp r1 r2 =
-               let uu___1 = FStarC_Ident.string_of_lid r1.sc_lid in
-               let uu___2 = FStarC_Ident.string_of_lid r2.sc_lid in
-               FStarC_Util.compare uu___1 uu___2 in
+               FStarC_Util.compare (FStarC_Ident.string_of_lid r1.sc_lid)
+                 (FStarC_Ident.string_of_lid r2.sc_lid) in
              let results1 = FStarC_List.filter matches_all all_candidates in
              let sorted = FStarC_Util.sort_with cmp results1 in
              let js = FStarC_List.map (json_of_search_result tcenv) sorted in
@@ -2304,12 +2283,10 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
                   let kwds =
                     let uu___1 = FStarC_List.map pprint_one terms in
                     FStarC_Util.concat_l " " uu___1 in
-                  let uu___1 =
-                    let uu___2 =
-                      FStarC_Format.fmt1 "No results found for query [%s]"
-                        kwds in
-                    InvalidSearch uu___2 in
-                  FStarC_Effect.raise uu___1
+                  FStarC_Effect.raise
+                    (InvalidSearch
+                       (FStarC_Format.fmt1 "No results found for query [%s]"
+                          kwds))
               | uu___1 ->
                   (FStarC_Interactive_Ide_Types.QueryOK,
                     (FStarC_Json.JsonList js)))) ()
@@ -2471,7 +2448,17 @@ let validate_query (st : FStarC_Interactive_Ide_Types.repl_state)
                (q.FStarC_Interactive_Ide_Types.qid)
            }
        | uu___1 -> q)
-let rec run_query (st : FStarC_Interactive_Ide_Types.repl_state)
+let validate_and_run_query_ref :
+  (FStarC_Interactive_Ide_Types.repl_state ->
+     FStarC_Interactive_Ide_Types.query ->
+       ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json
+         Prims.list) * (FStarC_Interactive_Ide_Types.repl_state, Prims.int)
+         FStar_Pervasives.either))
+    FStarC_Effect.ref=
+  FStarC_Effect.mk_ref
+    (fun uu___ uu___1 ->
+       FStarC_Effect.failwith "validate_and_run_query not initialized")
+let run_query (st : FStarC_Interactive_Ide_Types.repl_state)
   (q : FStarC_Interactive_Ide_Types.query) :
   ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json Prims.list)
     * (FStarC_Interactive_Ide_Types.repl_state, Prims.int)
@@ -2509,7 +2496,9 @@ let rec run_query (st : FStarC_Interactive_Ide_Types.repl_state)
             (FStarC_List.iter
                (write_response q.FStarC_Interactive_Ide_Types.qid
                   FStarC_Interactive_Ide_Types.QueryOK) issues;
-             (let res = fold_query validate_and_run_query queries st in
+             (let res =
+                let uu___3 = FStarC_Effect.op_Bang validate_and_run_query_ref in
+                fold_query uu___3 queries st in
               write_full_buffer_fragment_progress
                 FStarC_Interactive_Incremental.FullBufferFinished;
               res))))
@@ -2533,8 +2522,11 @@ let rec run_query (st : FStarC_Interactive_Ide_Types.repl_state)
          (FStar_Pervasives.Inl st)))
   | FStarC_Interactive_Ide_Types.Cancel uu___ ->
       ((FStarC_Interactive_Ide_Types.QueryOK, []), (FStar_Pervasives.Inl st))
-and validate_and_run_query (st : FStarC_Interactive_Ide_Types.repl_state)
-  (query : FStarC_Interactive_Ide_Types.query) : run_query_result=
+let validate_and_run_query (st : FStarC_Interactive_Ide_Types.repl_state)
+  (query : FStarC_Interactive_Ide_Types.query) :
+  ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json Prims.list)
+    * (FStarC_Interactive_Ide_Types.repl_state, Prims.int)
+    FStar_Pervasives.either)=
   let query1 = validate_query st query in
   FStarC_Effect.op_Colon_Equals repl_current_qid
     (FStar_Pervasives_Native.Some (query1.FStarC_Interactive_Ide_Types.qid));
@@ -2546,6 +2538,9 @@ and validate_and_run_query (st : FStarC_Interactive_Ide_Types.repl_state)
        query1.FStarC_Interactive_Ide_Types.qid uu___3
    else ());
   run_query st query1
+let uu___0 : unit=
+  FStarC_Effect.op_Colon_Equals validate_and_run_query_ref
+    validate_and_run_query
 let js_repl_eval (st : FStarC_Interactive_Ide_Types.repl_state)
   (query : FStarC_Interactive_Ide_Types.query) :
   (FStarC_Json.json Prims.list * (FStarC_Interactive_Ide_Types.repl_state,
@@ -2581,13 +2576,14 @@ let js_repl_init_opts (uu___ : unit) : unit=
   | (res, fnames) ->
       (match res with
        | FStarC_Getopt.Error (msg, uu___2) ->
-           failwith (Prims.strcat "repl_init: " msg)
+           FStarC_Effect.failwith (Prims.strcat "repl_init: " msg)
        | FStarC_Getopt.Success ->
            (match fnames with
             | [] ->
-                failwith "repl_init: No file name given in --ide invocation"
+                FStarC_Effect.failwith
+                  "repl_init: No file name given in --ide invocation"
             | h::uu___2::uu___3 ->
-                failwith
+                FStarC_Effect.failwith
                   "repl_init: Too many file names given in --ide invocation"
             | uu___2 -> ()))
 let rec go (st : FStarC_Interactive_Ide_Types.repl_state) : Prims.int=

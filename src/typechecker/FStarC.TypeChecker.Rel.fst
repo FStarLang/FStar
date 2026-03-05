@@ -4449,13 +4449,11 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
            &. no_free_uvars t2
            then
              if not wl.smt_ok
-             |. Options.ml_ish ()
              then if equal t1 t2
                   then solve (solve_prob orig None [] wl)
                   else rigid_rigid_delta problem wl head1 head2 t1 t2
              else solve_with_smt()
            else if not wl.smt_ok
-                |. Options.ml_ish()
            then rigid_rigid_delta problem wl head1 head2 t1 t2
            else (
             try_solve_then_or_else
@@ -4957,8 +4955,6 @@ let with_guard env prob dopt : ML _
 let try_teq smt_ok env t1 t2 : ML (option guard_t) =
   def_check_scoped t1.pos "try_teq.1" env t1;
   def_check_scoped t2.pos "try_teq.2" env t2;
-  // --MLish disables use of SMT. See PR #3123 for explanation.
-  let smt_ok = smt_ok &. not (Options.ml_ish ()) in
   Profiling.profile
     (fun () ->
       if !dbg_RelTop then
@@ -5105,7 +5101,6 @@ let solve_universe_inequalities env ineqs : ML unit =
     UF.commit tx
 
 let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_ok env (g:guard_t) : ML guard_t =
-  let smt_ok = smt_ok &. not (Options.ml_ish ()) in
   Errors.with_ctx "While solving deferred constraints" (fun () ->
   Profiling.profile (fun () ->
    let imps_l = g.implicits |> Listlike.to_list in
@@ -5173,7 +5168,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
 let solve_deferred_constraints env (g:guard_t) : ML _
   =
     let defer_ok = NoDefer in
-    let smt_ok = not (Options.ml_ish ()) in
+    let smt_ok = true in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
@@ -5182,7 +5177,7 @@ let solve_non_tactic_deferred_constraints maybe_defer_flex_flex env (g:guard_t) 
   Errors.with_ctx "solve_non_tactic_deferred_constraints" (fun () ->
     def_check_scoped Range.dummyRange "solve_non_tactic_deferred_constraints.g" env g;
     let defer_ok = if maybe_defer_flex_flex then DeferFlexFlexOnly else NoDefer in
-    let smt_ok = not (Options.ml_ish ()) in
+    let smt_ok = true in
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
   )
@@ -5272,7 +5267,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : ML (opti
 
   let g =
     let defer_ok = NoDefer in
-    let smt_ok = not (Options.ml_ish ()) &. use_smt in
+    let smt_ok = use_smt in
     let deferred_to_tac_ok = true in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
   in
@@ -5346,7 +5341,7 @@ let check_subtyping env t1 t2 : ML _
     then Format.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let env_x = Env.push_bv env x in
-    let smt_ok = not (Options.ml_ish ()) in
+    let smt_ok = true in
     let g = with_guard env_x prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
     match g with
     | None -> (

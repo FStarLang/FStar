@@ -2146,8 +2146,7 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
 }
 
 let encode_modul tcenv modul =
-  if (if Options.lax() then Options.ml_ish() else false) then [], []
-  else begin
+  begin
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
@@ -2210,9 +2209,7 @@ let encode_modul tcenv modul =
   ) end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
-  if (if Options.lax () then Options.ml_ish () else false) then ()
-  else
-    let tcenv = Env.set_current_module tcenv tcmod.name in
+  let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
     then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);

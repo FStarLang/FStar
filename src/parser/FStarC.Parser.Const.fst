@@ -277,14 +277,10 @@ let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
-(* The "All" monad and its associated symbols.
-
-NOTE: With --MLish and --MLish_effect <module> this is somewhat configurable *)
+(* The "All" monad and its associated symbols. *)
 
 let ef_base () =
-  if Options.ml_ish ()
-  then String.split ['.'] <| Options.ml_ish_effect ()
-  else ["FStar"; "All"]
+  ["FStar"; "All"]
 
 let effect_ALL_lid () = p2l <| ef_base () @ ["ALL"]
 let effect_ML_lid  () = p2l <| ef_base () @ ["ML"]

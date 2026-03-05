@@ -272,129 +272,11 @@ let check_initial_interface (iface:list decl) =
     aux iface;
     iface |> List.filter (fun d -> match d.d with TopLevelModule _ -> false | _ -> true)
 
-//////////////////////////////////////////////////////////////////////
-//A weaker variant, for use only in --MLish mode
-//////////////////////////////////////////////////////////////////////
-//in --MLish mode: the interleaving rules are WAY more lax
-//      this is basically only in support of bootstrapping the compiler
-//      Here, if you have a `let x = e` in the implementation
-//      Then prefix it with `val x : t`, if any in the interface
-//      Don't enforce any ordering constraints
-let ml_mode_prefix_with_iface_decls
-        (iface:list decl)
-        (impl:decl)
-   : ML (list decl    //remaining iface decls
-    & list decl) =  //impl prefixed with relevant bits from iface
-
-
-   match impl.d with
-   | TopLevelModule _
-   | Open _
-   | Friend _
-   | Include _
-   | ModuleAbbrev _ ->
-     let iface_prefix_opens, iface =
-       List.span (fun d -> match d.d with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
-     in
-           let iface =
-       List.filter 
-         (fun d ->
-           match d.d with
-           | Val _
-           | Tycon _
-           | Exception _
-           | TopLevelLet _
-           | Pragma _ -> true //only retain the vals/pragmas/exceptions/lets in --MLish mode
-           | _ -> false)
-         iface
-     in
-     iface, [impl]@iface_prefix_opens
-     
-   | _ ->
-
-     // Span leading Tycon/Pragma/Exception/TopLevelLet from iface
-     let iface_prefix_all, iface =
-       List.span (fun d -> match d.d with | Tycon _ | Pragma _ | Exception _ | TopLevelLet _ -> true | _ -> false) iface
-     in
-     // Split prefix: emit Tycon/Pragma immediately; defer Exception/TopLevelLet
-     let iface_prefix_tycons = List.filter (fun d -> Tycon? d.d || Pragma? d.d) iface_prefix_all in
-     let deferred = List.filter (fun d -> not (Tycon? d.d || Pragma? d.d)) iface_prefix_all in
-     let iface = deferred @ iface in
-
-     let is_val_or_let x d = match d.d with
-       | Val(y, _) -> (string_of_id x) = (string_of_id y)
-       | TopLevelLet(_, defs) ->
-         let lids = lids_of_let defs in
-         lids |> Util.for_some (fun l -> id_eq_lid x l)
-       | _ -> false in
-     let maybe_get_iface_vals lids iface =
-       List.partition
-         (fun d -> lids |> Util.for_some (fun x -> is_val_or_let (ident_of_lid x) d))
-         iface in
-
-     match impl.d with
-     | TopLevelLet _ ->
-       let xs = definition_lids impl in
-       let val_xs, rest_iface = maybe_get_iface_vals xs iface in
-       let val_only = List.filter (fun d -> Val? d.d) val_xs in
-       // Also filter matching TopLevelLets from rest_iface
-       let rest_iface = List.filter (fun d ->
-         match d.d with
-         | TopLevelLet(_, defs) ->
-           let d_lids = lids_of_let defs in
-           not (d_lids |> Util.for_some (fun l -> xs |> Util.for_some (fun x -> id_eq_lid (ident_of_lid x) l)))
-         | _ -> true) rest_iface in
-       rest_iface, iface_prefix_tycons@val_only@[impl]
-     | Exception(id, _) ->
-       // Filter matching exceptions from iface to avoid duplicates
-       let not_matching_exn d = match d.d with
-         | Exception(id', _) -> (string_of_id id) <> (string_of_id id')
-         | _ -> true in
-       let iface = List.filter not_matching_exn iface in
-       iface, iface_prefix_tycons@[impl]
-     | Tycon _ ->
-       let xs = definition_lids impl in
-       let val_xs, rest_iface = maybe_get_iface_vals xs iface in
-       let val_only = List.filter (fun d -> Val? d.d) val_xs in
-       rest_iface, iface_prefix_tycons@val_only@[impl]
-     | _ ->
-       iface, iface_prefix_tycons@[impl]
-
-let ml_mode_check_initial_interface mname (iface:list decl) : ML (list decl) =
-  iface |> List.filter (fun d ->
-    match d.d with
-    | Tycon(_, _, tys)
-      when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-      raise_error d Errors.Fatal_AbstractTypeDeclarationInInterface
-        "Interface contains an abstract 'type' declaration; use 'val' instead"
-    | Tycon _
-    | Val _
-    | Exception _
-    | TopLevelLet _
-    | Open _
-    | ModuleAbbrev _
-    | Pragma _ -> true
-    | _ -> false)
-
-//Check if the interface declarations contain a #push-options "--MLish" pragma
-let iface_has_mlish_pragma (iface:list decl) : ML bool =
-  iface |> Util.for_some (fun d ->
-    match d.d with
-    | Pragma (PushOptions (Some s)) -> Util.contains s "--MLish"
-    | _ -> false)
-
-let is_ml_mode (iface:list decl) : ML bool =
-  let ml = Options.ml_ish () in
-  if ml then true
-  else iface_has_mlish_pragma iface
-
-let prefix_one_decl (ml_mode:bool) (iface:list decl) impl : ML (list decl & list decl) =
+let prefix_one_decl (iface:list decl) impl : ML (list decl & list decl) =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
-      if ml_mode
-      then ml_mode_prefix_with_iface_decls iface impl
-      else prefix_with_iface_decls iface impl
+      prefix_with_iface_decls iface impl
 
 //////////////////////////////////////////////////////////////////////////
 //Top-level interface
@@ -402,10 +284,7 @@ let prefix_one_decl (ml_mode:bool) (iface:list decl) impl : ML (list decl & list
 module E = FStarC.Syntax.DsEnv
 let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
   fun (env:E.env) ->
-    let decls =
-        if is_ml_mode l
-        then ml_mode_check_initial_interface mname l
-        else check_initial_interface l in
+    let decls = check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
       raise_error mname Errors.Fatal_InterfaceAlreadyProcessed
@@ -427,9 +306,8 @@ let prefix_with_interface_decls (impl:decl) : E.withenv (list decl) =
       | None ->
         [impl], env
       | Some iface ->
-        let ml_mode = is_ml_mode iface in
         let iface = fixup_interleaved_decls iface in
-        let iface, impl = prefix_one_decl ml_mode iface impl in
+        let iface, impl = prefix_one_decl iface impl in
         let env = E.set_iface_decls env (E.current_module env) iface in
         impl, env
     in
@@ -445,12 +323,11 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
       match E.iface_decls env l with
       | None -> a, env
       | Some iface ->
-        let ml_mode = is_ml_mode iface in
         let iface = fixup_interleaved_decls iface in
         let iface, impls =
             List.fold_left
                 (fun (iface, impls) impl ->
-                    let iface, impls' = prefix_one_decl ml_mode iface impl in
+                    let iface, impls' = prefix_one_decl iface impl in
                     iface, impls@impls')
                 (iface, [])
                 impls
@@ -466,10 +343,9 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         (* Remove .fst TopLevelLet/Exception entries that duplicate .fsti entries.
            This handles the case where both .fsti and .fst define the same let binding
            (e.g., operator aliases in FStarC.Class.Monad) or the same exception
-           (e.g., SkipResugar in FStarC.Syntax.Resugar). The non-MLish interleaver
+           (e.g., SkipResugar in FStarC.Syntax.Resugar). The interleaver
            emits .fsti TopLevelLets/Exceptions as prefix material; the .fst copies are redundant. *)
         let impls =
-          if not ml_mode then
             let iface_let_names =
               List.collect (fun (d:decl) ->
                 if not d.interleaved then []
@@ -500,7 +376,6 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                 | Exception(id, _) ->
                   not (iface_exn_names |> Util.for_some (fun m -> (string_of_id id) = m))
                 | _ -> true) impls
-          else impls
         in
         let env =
             if Options.interactive()

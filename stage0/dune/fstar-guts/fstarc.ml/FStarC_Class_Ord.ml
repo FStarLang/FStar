@@ -82,7 +82,8 @@ let ord_list_diff (uu___ : 'a ord) (xs : 'a Prims.list) (ys : 'a Prims.list)
   : ('a Prims.list * 'a Prims.list)=
   let xs1 = sort_dedup uu___ xs in
   let ys1 = sort_dedup uu___ ys in
-  let rec go uu___1 xs2 ys2 =
+  let rec go acc xs2 ys2 =
+    let uu___1 = acc in
     match uu___1 with
     | (xd, yd) ->
         (match (xs2, ys2) with

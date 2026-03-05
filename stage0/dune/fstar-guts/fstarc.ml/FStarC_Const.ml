@@ -82,8 +82,7 @@ let __proj__Const_reflect__item___0 (projectee : sconst) : FStarC_Ident.lid=
 let eq_const (c1 : sconst) (c2 : sconst) : Prims.bool=
   match (c1, c2) with
   | (Const_int (s1, o1), Const_int (s2, o2)) ->
-      (let uu___ = FStarC_Util.ensure_decimal s1 in
-       let uu___1 = FStarC_Util.ensure_decimal s2 in uu___ = uu___1) &&
+      ((FStarC_Util.ensure_decimal s1) = (FStarC_Util.ensure_decimal s2)) &&
         (o1 = o2)
   | (Const_string (a, uu___), Const_string (b, uu___1)) -> a = b
   | (Const_reflect l1, Const_reflect l2) -> FStarC_Ident.lid_equals l1 l2
@@ -92,7 +91,7 @@ let eq_const (c1 : sconst) (c2 : sconst) : Prims.bool=
 let rec pow2 (x : Prims.int) : Prims.int=
   if x = Prims.int_zero
   then Prims.int_one
-  else (let uu___1 = pow2 (x - Prims.int_one) in (Prims.of_int (2)) * uu___1)
+  else (Prims.of_int (2)) * (pow2 (x - Prims.int_one))
 let bounds (signedness1 : signedness) (width1 : width) :
   (Prims.int * Prims.int)=
   let n =
@@ -104,9 +103,7 @@ let bounds (signedness1 : signedness) (width1 : width) :
     | Sizet -> (Prims.of_int (16)) in
   let uu___ =
     match signedness1 with
-    | Unsigned ->
-        let uu___1 = let uu___2 = pow2 n in uu___2 - Prims.int_one in
-        (Prims.int_zero, uu___1)
+    | Unsigned -> (Prims.int_zero, ((pow2 n) - Prims.int_one))
     | Signed ->
         let upper = pow2 (n - Prims.int_one) in
         ((- upper), (upper - Prims.int_one)) in
@@ -116,7 +113,5 @@ let within_bounds (repr : Prims.string) (signedness1 : signedness)
   let uu___ = bounds signedness1 width1 in
   match uu___ with
   | (lower, upper) ->
-      let value =
-        let uu___1 = FStarC_Util.ensure_decimal repr in
-        FStarC_Util.int_of_string uu___1 in
+      let value = FStarC_Util.int_of_string (FStarC_Util.ensure_decimal repr) in
       (lower <= value) && (value <= upper)

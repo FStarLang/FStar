@@ -55,18 +55,14 @@ FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 %$(EXTENSION): FF=$(notdir $<)
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached ',*' -c $< -o $@
-	@# Pass --MLish for FStarC modules: stage0 does not support
-	@# per-file #push-options "--MLish" pragmas.
+	$(FSTAR) --already_cached ',*' -c $< -o $@
 	touch -c $@ # update timestamp even if cache hit
 	$(maybe_touch)
 
 %.$(EEXT): FF=$(notdir $<)
 %.$(EEXT):
 	$(call msg, "EXTRACT", $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
-	@# Pass --MLish for FStarC modules: stage0 does not support
-	@# per-file #push-options "--MLish" pragmas.
+	$(FSTAR) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
 	$(maybe_touch)
 
 %.krml: FF=$(notdir $<)

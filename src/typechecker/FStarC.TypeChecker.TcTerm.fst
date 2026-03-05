@@ -292,13 +292,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
     match copt with
     | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
-        if (if Options.ml_ish()
-            then Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c)
-            else if Options.ml_ish ()
-                then (if Options.lax ()
-                      then not (U.is_pure_or_ghost_comp c)
-                      else false)
-                else false)
+        if false
         then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
@@ -1317,8 +1311,8 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, g_head ++ g) in
     let e, c, g =
       (* If the function is shortcircuiting, we must check that the arguments are
-      pure/ghost. We skirt this check with --MLish, though. *)
-      if (if TcUtil.short_circuit_head head then (if not (Options.ml_ish ()) then not env.phase1 else false) else false)
+      pure/ghost. *)
+      if (if TcUtil.short_circuit_head head then not env.phase1 else false)
       then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
            // //TODO: this is not efficient:
            // //      It is quadratic in the size of boolean terms
@@ -2115,7 +2109,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
               | Some (Inl more_bs) ->  //more actual args
                 let c = SS.subst_comp subst c_expected in
                 (* the expected type is explicitly curried *)
-                let cond = if Options.ml_ish () then true else U.is_named_tot c in
+                let cond = U.is_named_tot c in
                 if cond then
                   let t = N.unfold_whnf env_bs (U.comp_result c) in
                   match t.n with
@@ -2896,9 +2890,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             in
             let cres, guard =
                 let t, _, g = TcUtil.new_implicit_var "result type" tf.pos env (U.type_u() |> fst) false in
-                if Options.ml_ish ()
-                then U.ml_comp t r, guard ++ g
-                else S.mk_Total t, guard ++ g
+                S.mk_Total t, guard ++ g
             in
             let bs_cres = U.arrow bs cres in
             if Debug.extreme ()
@@ -3906,7 +3898,7 @@ and check_top_level_let env e : ML _ =
            if ok
            then e2, c1
            else (
-             if (if not (Options.ml_ish ()) then not env.phase1 else false) then
+             if not env.phase1 then
                Err.warn_top_level_effect (Env.get_range env); // maybe warn
              mk (Tm_meta {tm=e2; meta=Meta_desugared Masked_effect}) e2.pos, c1 //and tag it as masking an effect
            )
@@ -4230,7 +4222,6 @@ and build_let_rec_env _top_level env lbs : ML (list letbinding & env_t & guard_t
                             // plus the term elaborated with implicit binders
                             // (TODO: move all that logic to desugaring)
      =
-     if Options.ml_ish () then None else
 
      let lbtyp0 = lbtyp in
      let actuals, body, body_lc = abs_formals lbdef in

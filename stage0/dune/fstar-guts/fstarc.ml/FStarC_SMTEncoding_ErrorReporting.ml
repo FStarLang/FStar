@@ -8,16 +8,13 @@ let __proj__Not_a_wp_implication__item__uu___ (projectee : Prims.exn) :
   Prims.string= match projectee with | Not_a_wp_implication uu___ -> uu___
 let sort_labels
   (l : (FStarC_SMTEncoding_Term.error_label * Prims.bool) Prims.list) :
-  ((FStarC_SMTEncoding_Term.fv * FStarC_Errors_Msg.error_message *
-    FStarC_Range_Type.range) * Prims.bool) Prims.list=
+  (FStarC_SMTEncoding_Term.error_label * Prims.bool) Prims.list=
   FStarC_List.sortWith
     (fun uu___ uu___1 ->
        match (uu___, uu___1) with
        | (((uu___2, uu___3, r1), uu___4), ((uu___5, uu___6, r2), uu___7)) ->
            FStarC_Range_Ops.compare r1 r2) l
-let remove_dups (l : labels) :
-  (FStarC_SMTEncoding_Term.fv * FStarC_Errors_Msg.error_message *
-    FStarC_Range_Type.t) Prims.list=
+let remove_dups (l : labels) : labels=
   FStarC_Util.remove_dups
     (fun uu___ uu___1 ->
        match (uu___, uu___1) with
@@ -52,7 +49,7 @@ let label_goals
     match (post_name_opt, (tm.FStarC_SMTEncoding_Term.tm)) with
     | (FStar_Pervasives_Native.None, uu___) -> false
     | (FStar_Pervasives_Native.Some nm, FStarC_SMTEncoding_Term.FreeV fv) ->
-        let uu___ = FStarC_SMTEncoding_Term.fv_name fv in nm = uu___
+        nm = (FStarC_SMTEncoding_Term.fv_name fv)
     | (uu___, FStarC_SMTEncoding_Term.App
        (FStarC_SMTEncoding_Term.Var "Valid", tm1::[])) ->
         is_a_post_condition post_name_opt tm1
@@ -95,25 +92,24 @@ let label_goals
         let msg2 =
           if flag
           then
-            let uu___1 =
-              let uu___2 =
-                FStarC_Errors_Msg.text "Failed to verify implicit argument: " in
-              FStar_Pprint.op_Hat_Hat uu___2 msg_prefix in
-            uu___1 :: msg1
+            (FStar_Pprint.op_Hat_Hat
+               (FStarC_Errors_Msg.text "Failed to verify implicit argument: ")
+               msg_prefix)
+            :: msg1
           else msg1 in
         let rng1 =
           match ropt with
           | FStar_Pervasives_Native.None -> rng
           | FStar_Pervasives_Native.Some r1 ->
               let uu___1 =
-                let uu___2 = FStarC_Range_Type.use_range rng in
-                let uu___3 = FStarC_Range_Type.use_range r1 in
-                FStarC_Range_Ops.rng_included uu___2 uu___3 in
+                FStarC_Range_Ops.rng_included
+                  (FStarC_Range_Type.use_range rng)
+                  (FStarC_Range_Type.use_range r1) in
               if uu___1
               then rng
               else
-                (let uu___3 = FStarC_Range_Type.def_range rng in
-                 FStarC_Range_Type.set_def_range r1 uu___3) in
+                FStarC_Range_Type.set_def_range r1
+                  (FStarC_Range_Type.def_range rng) in
         fresh_label msg2 rng1 t in
       let rec aux default_msg ropt post_name_opt labels1 q1 =
         match q1.FStarC_SMTEncoding_Term.tm with
@@ -150,24 +146,22 @@ let label_goals
                              Prims.strcat "^^post_condition_" uu___3 in
                            let names =
                              let uu___3 =
-                               FStarC_SMTEncoding_Term.mk_fv
-                                 (post_name, post) in
-                             let uu___4 =
                                FStarC_List.map
                                  (fun s ->
-                                    let uu___5 =
-                                      let uu___6 =
-                                        let uu___7 =
-                                          let uu___8 =
+                                    let uu___4 =
+                                      let uu___5 =
+                                        let uu___6 =
+                                          let uu___7 =
                                             FStarC_GenSym.next_id () in
                                           FStarC_Class_Show.show
                                             FStarC_Class_Show.showable_int
-                                            uu___8 in
-                                        Prims.strcat "^^" uu___7 in
-                                      (uu___6, s) in
-                                    FStarC_SMTEncoding_Term.mk_fv uu___5)
+                                            uu___7 in
+                                        Prims.strcat "^^" uu___6 in
+                                      (uu___5, s) in
+                                    FStarC_SMTEncoding_Term.mk_fv uu___4)
                                  sorts in
-                             uu___3 :: uu___4 in
+                             (FStarC_SMTEncoding_Term.mk_fv (post_name, post))
+                               :: uu___3 in
                            let instantiation =
                              FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV
                                names in
@@ -213,10 +207,9 @@ let label_goals
                                                 if uu___7
                                                 then
                                                   let uu___8 =
-                                                    let uu___9 =
-                                                      FStarC_Errors_Msg.mkmsg
-                                                        "Could not prove post-condition" in
-                                                    aux uu___9
+                                                    aux
+                                                      (FStarC_Errors_Msg.mkmsg
+                                                         "Could not prove post-condition")
                                                       FStar_Pervasives_Native.None
                                                       (FStar_Pervasives_Native.Some
                                                          post_name) labels1
@@ -370,11 +363,8 @@ let label_goals
                               Prims.strcat "^^" uu___6 in
                             (uu___5, s) in
                           FStarC_SMTEncoding_Term.mk_fv uu___4) sorts' in
-                   let uu___4 =
-                     let uu___5 =
-                       FStarC_SMTEncoding_Term.mk_fv (new_post_name, post) in
-                     [uu___5] in
-                   FStarC_List.op_At uu___3 uu___4 in
+                   FStarC_List.op_At uu___3
+                     [FStarC_SMTEncoding_Term.mk_fv (new_post_name, post)] in
                  let instantiation =
                    FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV names in
                  let uu___3 =
@@ -572,55 +562,67 @@ let label_goals
             (match uu___3 with | (lab, q2) -> ((lab :: labels1), q2))
         | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.RealDiv, uu___1) ->
-            failwith "Impossible: non-propositional term"
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Add, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Sub, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Div, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Mul, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Minus, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Mod, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvAnd, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvXor, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvOr, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvAdd, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvSub, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvShl, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvShr, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRol uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRor uu___1, uu___2) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRol, uu___1) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRor, uu___1) ->
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.BvUdiv, uu___1) ->
-            failwith "Impossible: non-propositional term"
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvMod, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvMul, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.BvUext uu___1, uu___2) ->
-            failwith "Impossible: non-propositional term"
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvNot, uu___1)
-            -> failwith "Impossible: non-propositional term"
+            -> FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.BvToNat, uu___1) ->
-            failwith "Impossible: non-propositional term"
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.NatToBv uu___1, uu___2) ->
-            failwith "Impossible: non-propositional term"
+            FStarC_Effect.failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.ITE, uu___1)
-            -> failwith "Impossible: arity mismatch"
+            -> FStarC_Effect.failwith "Impossible: arity mismatch"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Imp, uu___1)
-            -> failwith "Impossible: arity mismatch"
+            -> FStarC_Effect.failwith "Impossible: arity mismatch"
         | FStarC_SMTEncoding_Term.Quant
             (FStarC_SMTEncoding_Term.Forall, pats, iopt, sorts, body) ->
             let uu___1 = aux default_msg ropt post_name_opt labels1 body in
@@ -641,9 +643,8 @@ let label_goals
                      q1.FStarC_SMTEncoding_Term.rng in
                  (labels2, uu___2)) in
       (FStarC_Effect.op_Colon_Equals __ctr Prims.int_zero;
-       (let uu___2 = FStarC_Errors_Msg.mkmsg "Assertion failed" in
-        aux uu___2 FStar_Pervasives_Native.None FStar_Pervasives_Native.None
-          [] q))
+       aux (FStarC_Errors_Msg.mkmsg "Assertion failed")
+         FStar_Pervasives_Native.None FStar_Pervasives_Native.None [] q)
 let detail_errors (hint_replay : Prims.bool)
   (env : FStarC_TypeChecker_Env.env) (all_labels : labels)
   (askZ3 :
@@ -652,8 +653,8 @@ let detail_errors (hint_replay : Prims.bool)
   let print_banner uu___ =
     let msg1 =
       let uu___1 =
-        let uu___2 = FStarC_TypeChecker_Env.get_range env in
-        FStarC_Range_Ops.string_of_range uu___2 in
+        FStarC_Range_Ops.string_of_range
+          (FStarC_TypeChecker_Env.get_range env) in
       let uu___2 =
         FStarC_Class_Show.show FStarC_Class_Show.showable_int
           (Prims.of_int (5)) in
@@ -664,7 +665,8 @@ let detail_errors (hint_replay : Prims.bool)
         "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
         (if hint_replay then "hint replay" else "error") uu___1 uu___2 uu___3 in
     FStarC_Format.print_error msg1 in
-  let print_result uu___ =
+  let print_result x =
+    let uu___ = x in
     match uu___ with
     | ((uu___1, msg1, r), success) ->
         if success
@@ -675,15 +677,12 @@ let detail_errors (hint_replay : Prims.bool)
         else
           if hint_replay
           then
-            (let uu___3 =
-               let uu___4 =
-                 FStarC_Errors_Msg.text
-                   "Hint failed to replay this sub-proof" in
-               uu___4 :: msg1 in
-             FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
-               FStarC_Errors_Codes.Warning_HintFailedToReplayProof ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___3))
+            FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
+              FStarC_Errors_Codes.Warning_HintFailedToReplayProof ()
+              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+              (Obj.magic
+                 ((FStarC_Errors_Msg.text
+                     "Hint failed to replay this sub-proof") :: msg1))
           else
             (let uu___4 =
                let uu___5 =
@@ -717,17 +716,16 @@ let detail_errors (hint_replay : Prims.bool)
                    let uu___5 = FStarC_SMTEncoding_Util.mkFreeV l in
                    (uu___5, FStarC_SMTEncoding_Util.mkTrue) in
                  FStarC_SMTEncoding_Util.mkEq uu___4 in
-               let uu___4 =
-                 let uu___5 = FStarC_SMTEncoding_Term.fv_name l in
-                 Prims.strcat "@disable_label_" uu___5 in
-               let uu___5 = FStarC_SMTEncoding_Term.free_top_level_names tm in
+               let uu___4 = FStarC_SMTEncoding_Term.free_top_level_names tm in
                {
                  FStarC_SMTEncoding_Term.assumption_term = uu___3;
                  FStarC_SMTEncoding_Term.assumption_caption =
                    (FStar_Pervasives_Native.Some "Disabling label");
-                 FStarC_SMTEncoding_Term.assumption_name = uu___4;
+                 FStarC_SMTEncoding_Term.assumption_name =
+                   (Prims.strcat "@disable_label_"
+                      (FStarC_SMTEncoding_Term.fv_name l));
                  FStarC_SMTEncoding_Term.assumption_fact_ids = [];
-                 FStarC_SMTEncoding_Term.assumption_free_names = uu___5
+                 FStarC_SMTEncoding_Term.assumption_free_names = uu___4
                } in
              FStarC_SMTEncoding_Term.Assume a) labs in
   let rec linear_check eliminated errors active =

@@ -43,8 +43,7 @@ let renderdoc (d : FStar_Pprint.document) : Prims.string=
   FStarC_Pprint.pretty_string one (Prims.of_int (80)) d
 let backtrace_doc (uu___ : unit) : FStar_Pprint.document=
   let s = FStarC_Util.stack_dump () in
-  let uu___1 = text "Stack trace:" in
-  FStar_Pprint.op_Hat_Slash_Hat uu___1
+  FStar_Pprint.op_Hat_Slash_Hat (text "Stack trace:")
     (FStar_Pprint.arbitrary_string (FStarC_Util.trim_string s))
 let subdoc' (indent : Prims.bool) (d : FStar_Pprint.document) :
   FStar_Pprint.document=
