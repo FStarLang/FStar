@@ -208,6 +208,23 @@ The Phase 9 pragma removal inadvertently changed evaluation order in SMT encodin
 - [x] FiniteMap.Base verifies with context pruning enabled ✅
 - [x] stage2→stage3 fixpoint: **0 differences** ✅
 
+### Phase 9.8: Fix Crash Bugs from Eager Evaluation — COMPLETE ✅
+
+**Commit `737207cdfd`** — "Fix crashes from eager evaluation of short-circuit operators"
+
+Additional crash bugs found from eager let-binding of `&&`/`||` operands. These crashed the dep scanner and caused both the CI `build/tests2` and `opam/smoke test` failures.
+
+**Crashes fixed:**
+- [x] `FStarC.Parser.Dep.fst`: `paths_to_same_file` calls `Unix.stat` which crashes on non-existent files. Original short-circuited with `file_exists && paths_to_same_file`. Two instances fixed.
+- [x] `FStarC.Debug.fst`: `String.get k 0` crashes on empty strings. Original short-circuited with `String.length k > 0 && ...`.
+- [x] `FStarC.Common.fst`: `eq_list` eagerly recursed full list even on first mismatch.
+- [x] `FStarC.Parser.Dep.fst`: `fly_deps_enabled` — `Options.dep() || Options.any_dump_module()` converted to if-then-else.
+
+**Bootstrap verification:**
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] tests2 extraction passes ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
+
 ### Phase 10: Remove --MLish Compiler Support — TODO
 - [ ] **Remove `--MLish` from `config.json`**: After stage0 is updated, config.json no longer needs `--MLish`
 - [ ] **Remove `--MLish_effect` from `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`**: Dead code
