@@ -1310,19 +1310,21 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let head, chead, g_head = tc_term (no_inst env) head in
     let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, g_head ++ g) in
     let e, c, g =
-      (* If the function is shortcircuiting, we must check that the arguments are
-      pure/ghost. *)
-      if (if TcUtil.short_circuit_head head then not env.phase1 else false)
-      then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
-           // //TODO: this is not efficient:
-           // //      It is quadratic in the size of boolean terms
-           // //      e.g., a && b && c && d ... & zzzz will be huge
-           // let c = if Env.should_verify env &&
-           //         not (U.is_lcomp_partial_return c) &&
-           //         U.is_pure_or_ghost_lcomp c
-           //         then TcUtil.maybe_assume_result_eq_pure_term env e c
-           //         else c in
-           e, c, g
+      if (let sc = TcUtil.short_circuit_head head in if sc then not env.phase1 else false)
+      then
+        if Options.lax ()
+        then
+          (* In lax mode, elaborate && and || to if-then-else
+             to enforce proper short-circuit evaluation order
+             for impure arguments. Other SC ops (/\, \/, ==>) go
+             through check_application_args as in --MLish mode. *)
+          match maybe_elaborate_short_circuit_args env0 head args with
+          | Some rewritten -> tc_term env0 rewritten
+          | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
+        else
+          (* In verification mode (phase2), enforce purity of
+             arguments to all short-circuit operators. *)
+          check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
       else check_application_args env head chead g_head args (Env.expected_typ env0)
     in
     let e, c, implicits =
@@ -2924,6 +2926,32 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
     in
 
     check_function_app thead mzero
+
+(******************************************************************************)
+(* ELABORATION OF SHORT-CIRCUIT BOOLEAN OPERATORS:                            *)
+(*   When in lax mode, rewrite `e1 && e2` / `e1 || e2` to enforce            *)
+(*   proper short-circuit evaluation order. In non-lax (verification) mode,   *)
+(*   check_short_circuit_args already handles purity enforcement.             *)
+(*     e1 && e2  -->  if e1 then e2 else false                                *)
+(*     e1 || e2  -->  if e1 then true else e2                                 *)
+(******************************************************************************)
+and maybe_elaborate_short_circuit_args env0 head args
+  : ML (option term)
+  = match (U.un_uinst head).n with
+    | Tm_fvar fv when S.fv_eq_lid fv Const.op_And || S.fv_eq_lid fv Const.op_Or ->
+      let is_and = S.fv_eq_lid fv Const.op_And in
+      begin match args with
+      | [(e1, _aq1); (e2, _aq2)] ->
+        let r = e1.pos in
+        let rewritten =
+          if is_and
+          then U.if_then_else e1 e2 U.exp_false_bool
+          else U.if_then_else e1 U.exp_true_bool e2
+        in
+        Some ({rewritten with pos = r})
+      | _ -> None
+      end
+    | _ -> None
 
 (******************************************************************************)
 (* SPECIAL CASE OF CHECKING APPLICATIONS:                                     *)
