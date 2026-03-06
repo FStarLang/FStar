@@ -2257,13 +2257,8 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
       if (if Options.log_queries () then true else Options.log_failing_queries ())
-      then
-        let q_str =
-          try Print.Ugly.term_to_string q
-          with _ -> "<could not print>"
-        in
-        [Caption ("Encoding query formula : " ^ q_str);
-         Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
+      then [Caption ("Encoding query formula : " ^ (show q));
+            Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
       else []
     in
     let query_prelude =

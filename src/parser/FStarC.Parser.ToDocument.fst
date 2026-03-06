@@ -1951,6 +1951,11 @@ and p_tmEqWith (p_X: _ -> ML _) e : ML _ =
   p_tmEqWith' p_X n e
 
 and p_tmEqWith' (p_X: _ -> ML _) curr e : ML _ = match e.tm with
+  (* := must be matched before the generic infix Op case below, which
+     would otherwise swallow it and fall through to p_tmNoEqWith, causing
+     an infinite pretty-printing loop. *)
+  | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
+      group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
   (* We don't have any information to print `infix` aplication *)
   | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
                            not (Ident.string_of_id op = "==>"
@@ -1964,8 +1969,6 @@ and p_tmEqWith' (p_X: _ -> ML _) curr e : ML _ = match e.tm with
         let left, mine, right = levels op in
         paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
       else p_tmNoEqWith p_X e
-  | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
-      group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
   | Op(id, [e]) when string_of_id id = "-" ->
       let left, mine, right = levels "-" in
       minus ^/^ p_tmEqWith' p_X mine e
