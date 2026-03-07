@@ -157,6 +157,7 @@ fn pts_to_uninit_not_null u#a (#a: Type u#a) (r:ref a)
 
 val to_array_ghost #a (r: ref a) : GTot (array a)
 
+[@@pulse_impure_spec_no_proof_required]
 unobservable
 fn to_array_mask u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
   requires r |-> Frac p v
@@ -175,6 +176,7 @@ fn return_to_array_mask u#a (#a: Type u#a) (r: ref a) #p #v #m
 
 val array_at_ghost (#a: Type u#a) (arr: array a) (i: nat { i < length arr }) : GTot (r:ref a { to_array_ghost r == gsub arr i (i+1) })
 
+[@@pulse_impure_spec_no_proof_required]
 unobservable
 fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p
     (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v /\ Some? (Seq.index v (SizeT.v i)) }) #mask
@@ -185,6 +187,7 @@ fn array_at u#a (#a: Type u#a) (arr: array a) (i: SizeT.t) #p
   ensures r |-> Frac p (Some?.v (Seq.index v (SizeT.v i)))
   ensures pts_to_mask arr #p v (fun k -> mask k /\ k <> SizeT.v i)
 
+[@@pulse_impure_spec_no_proof_required]
 unobservable
 fn array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: SizeT.t)
     (#v: erased (Seq.seq (option a)) { SizeT.v i < length arr /\ length arr == Seq.length v }) #mask

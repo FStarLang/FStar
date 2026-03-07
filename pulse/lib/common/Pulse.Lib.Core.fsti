@@ -50,6 +50,17 @@ val pulse_eager_elim : unit
 val pulse_eager_intro : unit
 val pulse_intro : unit
 
+(**
+Tags stateful functions where we don't need to run the prover to resolve the
+output in impure specs.
+
+This happens when all the variables in the rhs of the rewrites_to are only in
+mkeys, e.g. in unobservable functions like Array.sub that are only stateful to
+ensure the requirement that we only extract `x + n` for live pointers, but where
+ther result of the function does not depend on the slprop context.
+*)
+val pulse_impure_spec_no_proof_required : unit
+
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit
 
