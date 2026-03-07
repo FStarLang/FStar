@@ -211,9 +211,9 @@ let missing_definition_list (e:env) : ML (list lident) =
 type sigtable = SMap.t sigelt
 
 let should_verify env : ML _ =
-    if Options.lax () then false
-    else if env.admit then false
-    else Options.should_verify (string_of_lid env.curmodule)
+    not (Options.lax ())
+    && not env.admit
+    && Options.should_verify (string_of_lid env.curmodule)
 
 let visible_at d q = match d, q with
   | NoDelta,    _
@@ -802,9 +802,8 @@ let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) : ML 
   | Some (Inr (se, None), _) ->
     begin match se.sigel with
       | Sig_let {lbs=(is_rec, lbs)}
-        when (if visible_with delta_levels se.sigquals
-              then (not is_rec || rec_ok)
-              else false) ->
+        when visible_with delta_levels se.sigquals
+          && (not is_rec || rec_ok) ->
           BU.find_map lbs (fun lb ->
               let fv = Inr?.v lb.lbname in
               if fv_eq_lid fv lid
@@ -839,9 +838,8 @@ let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : ML (delta_depth) =
         then delta_equational
         else delta_constant
       in
-      if (if se.sigquals |> BU.for_some (Assumption?)
-         then not (se.sigquals |> BU.for_some (New?))
-         else false)
+      if se.sigquals |> BU.for_some (Assumption?)
+        && not (se.sigquals |> BU.for_some (New?))
       then Delta_abstract d0
       else d0
 
@@ -1064,25 +1062,23 @@ let norm_eff_name =
 let is_erasable_effect env l : ML _ =
   l
   |> norm_eff_name env
-  |> (fun l -> if lid_equals l Const.effect_GHOST_lid then true
-           else S.lid_as_fv l None
+  |> (fun l -> lid_equals l Const.effect_GHOST_lid ||
+           S.lid_as_fv l None
            |> fv_has_erasable_attr env)
 
 let rec non_informative env t : ML _ =
     match (U.unrefine t).n with
     | Tm_type _ -> true
     | Tm_fvar fv ->
-      if fv_eq_lid fv Const.unit_lid then true
-      else if fv_eq_lid fv Const.squash_lid then true
-      else if fv_eq_lid fv Const.erased_lid then true
-      else fv_has_erasable_attr env fv
+      fv_eq_lid fv Const.unit_lid
+      || fv_eq_lid fv Const.squash_lid
+      || fv_eq_lid fv Const.erased_lid
+      || fv_has_erasable_attr env fv
     | Tm_app {hd=head} -> non_informative env head
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow {comp=c} ->
-      if is_pure_or_ghost_comp c then
-        (if non_informative env (comp_result c) then true
-         else is_erasable_effect env (comp_effect_name c))
-      else is_erasable_effect env (comp_effect_name c)
+      (is_pure_or_ghost_comp c && non_informative env (comp_result c))
+      || is_erasable_effect env (comp_effect_name c)
     | _ -> false
 
 let num_effect_indices env name r : ML _ =
@@ -1157,10 +1153,10 @@ let is_interpreted (env:env) head : ML bool =
         Const.op_Negation] in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
-          if BU.for_some (Ident.lid_equals fv.fv_name) interpreted_symbols then true
-          else (match delta_depth_of_fv env fv with
-               | Delta_equational_at_level _ -> true
-               | _ -> false)
+          BU.for_some (Ident.lid_equals fv.fv_name) interpreted_symbols ||
+            (match delta_depth_of_fv env fv with
+             | Delta_equational_at_level _ -> true
+             | _ -> false)
         | _ -> false
 
 let is_irreducible env l : ML _ =
@@ -1420,9 +1416,8 @@ let is_total_effect (env:env) (effect_lid:lident) : ML (bool) =
 
 let is_reifiable_effect (env:env) (effect_lid:lident) : ML (bool) =
     let effect_lid = norm_eff_name env effect_lid in
-    let b = is_user_reifiable_effect env effect_lid in
-    if b then true
-    else Ident.lid_equals effect_lid Const.effect_TAC_lid
+    is_user_reifiable_effect env effect_lid
+    || Ident.lid_equals effect_lid Const.effect_TAC_lid
 
 let is_reifiable_rc (env:env) (c:S.residual_comp) : ML (bool) =
     is_reifiable_effect env c.residual_effect
@@ -1697,14 +1692,12 @@ let update_effect_lattice env src tgt st_mlift : ML _ =
   let order = new_edges@env.effects.order in
 
   order |> List.iter (fun edge ->
-    let is_div = Ident.lid_equals edge.msource Const.effect_DIV_lid in
-    if is_div
-    then (if lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-          then
-            raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
-              (Format.fmt1 "Divergent computations cannot be included in an effect %s marked 'total'"
-                              (show edge.mtarget)))
-    else ());
+    if Ident.lid_equals edge.msource Const.effect_DIV_lid
+    && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
+    then
+      raise_error env Errors.Fatal_DivergentComputationCannotBeIncludedInTotal
+        (Format.fmt1 "Divergent computations cannot be included in an effect %s marked 'total'"
+                        (show edge.mtarget)));
 
   //
   //Compute upper bounds
@@ -1929,9 +1922,8 @@ let is_trivial g : ML bool =
     is_empty (snd g.univ_ineqs)
   then
     g.implicits |> CList.for_all (fun imp ->
-         let should_check = U.ctx_uvar_should_check imp.imp_uvar in
-         if Allow_unresolved? should_check then true
-         else (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
+         (Allow_unresolved? (U.ctx_uvar_should_check imp.imp_uvar))
+         || (match Unionfind.find imp.imp_uvar.ctx_uvar_head with
              | Some _ -> true
              | None -> false))
   else

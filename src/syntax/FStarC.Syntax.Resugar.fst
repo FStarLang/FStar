@@ -53,8 +53,7 @@ let map_opt = List.filter_map
 let bv_as_unique_ident (x:S.bv) : ML I.ident =
   let unique_name =
     if starts_with reserved_prefix (string_of_id x.ppname)
-    then (string_of_id x.ppname) ^ (show x.index)
-    else if Options.print_real_names () then
+    ||  Options.print_real_names () then
       (string_of_id x.ppname) ^ (show x.index)
     else
       (string_of_id x.ppname)
@@ -381,11 +380,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
          mk (A.Var (I.id_as_lid <| I.mk_ident ("SMTPat", I.range_of_lid a)))
        else if (lid_equals a C.smtpatOr_lid) then
          mk (A.Var (I.id_as_lid <| I.mk_ident ("SMTPatOr", I.range_of_lid a)))
-       else if lid_equals a C.assert_lid then
-         mk (A.Var (maybe_shorten_fv env fv))
-       else if lid_equals a C.assume_lid then
-         mk (A.Var (maybe_shorten_fv env fv))
-       else if FStar.Char.uppercase (String.get s 0) <> String.get s 0 then
+       else if (lid_equals a C.assert_lid || lid_equals a C.assume_lid
+                || FStar.Char.uppercase (String.get s 0) <> String.get s 0) then
          mk (A.Var (maybe_shorten_fv env fv))
        else // FIXME check in environment instead of checking case
          mk (A.Construct (maybe_shorten_fv env fv, []))
@@ -467,9 +463,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
 
     (* Drop b2t unless --print_implicits() *)
     | Tm_app {hd={n=Tm_fvar fv}; args=[(e, _)]}
-      when (if not (Options.print_implicits())
-            then S.fv_eq_lid fv C.b2t_lid
-            else false) ->
+      when not (Options.print_implicits())
+           && S.fv_eq_lid fv C.b2t_lid ->
       resugar_term' env e
 
     | Tm_app {hd; args}
@@ -540,9 +535,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       in
       (* We have a projector, applied to at least one argument, and the first argument
       is explicit (so not one of the parameters of the type). In this case we resugar nicely. *)
-      let is_proj = Some? (is_projector e) in
-      let can_proj = if is_proj then (if List.length args >= 1 then None? (snd (List.hd args)) else false) else false in
-      if can_proj then
+      if Some? (is_projector e) && List.length args >= 1 && None? (snd (List.hd args)) then
         let arg1 :: rest_args = args in
         let (_, fi) = Some?.v (is_projector e) in
         let arg = resugar_term' env (fst arg1) in
@@ -553,14 +546,10 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                        let qq = resugar_aqual env q in
                        mk (A.App (acc, aa, qq)))
                      h
-      else
-      let hide_reveal_single =
-        if Options.print_implicits () then false
-        else if Options.Ext.enabled "show_hide_reveal" then false
-        else if is_hide_or_reveal e then List.length args = 1
-        else false
-      in
-      if hide_reveal_single
+      else if not (Options.print_implicits ())
+           && not (Options.Ext.enabled "show_hide_reveal")
+           && is_hide_or_reveal e
+           && List.length args = 1 //args already filtered
       then (
         let [(e, _)] = args in
         resugar_term' env e
@@ -711,15 +700,14 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
           resugar_as_app e args
 
         (* These have implicits, don't do the fancy printing when --print_implicits is on *)
-        | Some (op, _) when (if Options.print_implicits () then
-                                (op = "="
-                                || op = "=="
-                                || op = "==="
-                                || op = "@"
-                                || op = ":="
-                                || op = "|>"
-                                || op = "<<")
-                             else false) ->
+        | Some (op, _) when (op = "="
+                          || op = "=="
+                          || op = "==="
+                          || op = "@"
+                          || op = ":="
+                          || op = "|>"
+                          || op = "<<")
+            && Options.print_implicits () ->
           resugar_as_app e args
 
         | Some (op, _) 
@@ -1274,7 +1262,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : ML A.pattern =
   let must_print args =
     args |> List.existsML (fun (pattern, is_implicit) ->
       match pattern.v with
-      | Pat_var bv -> if is_implicit then mem bv branch_bv else false
+      | Pat_var bv -> is_implicit && mem bv branch_bv
       | _ -> false)
   in
   let resugar_plain_pat_cons' fv args =
@@ -1317,10 +1305,8 @@ and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : ML A.pattern =
       mk (A.PatName fv.fv_name)
 
 
-    | Pat_cons(fv, _, args) when (if is_tuple_constructor_lid fv.fv_name
-                                then not (must_print args) else false) ->
-
-
+    | Pat_cons(fv, _, args) when (is_tuple_constructor_lid fv.fv_name
+                               && not (must_print args)) ->
       let args =
         args |>
         List.filter_map (fun (p, is_implicit) ->

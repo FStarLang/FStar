@@ -211,9 +211,8 @@ let check_erasable env quals (r:Range.t) se =
   let val_has_erasable_attr =
     lids |> BU.for_some (fun l ->
       let attrs_opt = Env.lookup_attrs_of_lid env l in
-      if Some? attrs_opt
-      then U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr
-      else false)
+      Some? attrs_opt
+      && U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr)
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)

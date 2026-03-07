@@ -176,7 +176,7 @@ let with_hints_db fname f =
     f ()
   else begin
     (* If --record_hints is set at this time, and this is not an interactive, we're fully refreshing. *)
-    initialize_hints_db fname (if Options.record_hints () then not (Options.interactive ()) else false);
+    initialize_hints_db fname (Options.record_hints () && not (Options.interactive ()));
     let result = f () in
     // for the moment, there should be no need to trap exceptions to finalize the hints db
     // no cleanup needs to occur if an error occurs.
@@ -275,8 +275,8 @@ let with_fuel_and_diagnostics settings label_assumptions =
     (if settings.query_record_hints
      then [ Term.GetUnsatCore ]
      else [])
-    @(if (if Options.print_z3_statistics() then true
-          else Options.query_stats ()) then [Term.GetStatistics] else []) //stats
+    @(if (Options.print_z3_statistics() ||
+          Options.query_stats ()) then [Term.GetStatistics] else []) //stats
     @settings.query_suffix //recover error labels and a final "Done!" message
 
 
@@ -639,7 +639,7 @@ let query_info settings z3result =
                 then (add_discarded_name s; [])
                 else [ components |> String.concat "."]
         in
-        let should_log = if Options.hint_info () then true else Options.query_stats () in
+        let should_log = Options.hint_info () || Options.query_stats () in
         let maybe_log (f:unit -> ML unit) = if should_log then f () in
         match core with
         | None ->
@@ -654,8 +654,8 @@ let query_info settings z3result =
             Format.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
                       (get_discarded_names() |> String.concat ", "))
     in
-    if (if Options.hint_info() then true
-    else Options.query_stats())
+    if Options.hint_info()
+    || Options.query_stats()
     then begin
         let status_string, errs = Z3.status_string_and_errors z3result.z3result_status in
         let at_log_file =
@@ -896,16 +896,15 @@ let make_solver_configs
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if (if use_hints () then next_hint |> Some? else false)
+        if use_hints () && next_hint |> Some?
         then
           let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> Option.must in
           (* Make sure the recorded fuels are allowed now, so we don't
           keep succeeding with a hint even after reducing the maximum allowed
           fuels. *)
           let between i j k = i <= k && k <= j in
-          if (if between (Options.initial_fuel()) (Options.max_fuel()) i
-              then between (Options.initial_ifuel()) (Options.max_ifuel()) j
-              else false)
+          if between (Options.initial_fuel()) (Options.max_fuel()) i
+          && between (Options.initial_ifuel()) (Options.max_ifuel()) j
           then
             [{default_settings with query_hint=Some core;
                                     query_fuel=i;
@@ -934,9 +933,8 @@ let make_solver_configs
     in
 
     let max_fuel_max_ifuel =
-      if (if Options.max_fuel()    >  Options.initial_fuel()
-          then Options.max_ifuel()   >=  Options.initial_ifuel()
-          else false)
+      if Options.max_fuel()    >  Options.initial_fuel()
+      && Options.max_ifuel()   >=  Options.initial_ifuel()
       then [{default_settings with query_fuel=Options.max_fuel();
                                    query_ifuel=Options.max_ifuel()}]
       else []
@@ -989,7 +987,7 @@ let ask_solver_quake
 
     let default_settings = List.hd configs in
     let name = full_query_id default_settings in
-    let quaking = if hi > 1 then not (Options.retry ()) else false in
+    let quaking = hi > 1 && not (Options.retry ()) in
     let quaking_or_retrying = hi > 1 in
     let hi = if hi < 1 then 1 else hi in
     let lo =
@@ -1038,15 +1036,14 @@ let ask_solver_quake
     let nsuccess, nfailures, rs =
         fold_nat'
             (fun (nsucc, nfail, rs) n ->
-                 if (if not (Options.quake_keep ())
-                    then (nsucc >= lo (* already have enough successes *)
-                          || nfail > hi-lo) (* already have too many failures *)
-                    else false)
+                 if not (Options.quake_keep ())
+                    && (nsucc >= lo (* already have enough successes *)
+                        || nfail > hi-lo) (* already have too many failures *)
                  then (nsucc, nfail, rs)
                  else begin
                  if quaking_or_retrying
-                    then (if (if Options.interactive () then true else Debug.any ()) (* only on emacs or when debugging *)
-                          then (if n>0 then (* no need to print last *)
+                    && (Options.interactive () || Debug.any ()) (* only on emacs or when debugging *)
+                    && n>0 then (* no need to print last *)
                    Format.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
                        (if quaking then "Quake" else "Retry")
                        name
@@ -1054,7 +1051,7 @@ let ask_solver_quake
                        (* ^ if --retrying, it does not make sense to print successes since
                         * they must be exactly 0 *)
                        (if quaking then show nfail else show nfail ^ " times")
-                       (show (hi-n))));
+                       (show (hi-n));
                  let r = run_one (seed+n) in
                  let nsucc, nfail =
                     match r with
@@ -1234,9 +1231,9 @@ let ask_solver
     (Though all other configs also contain it.) *)
     let default_settings = List.hd configs in
     let skip : bool =
-        if env.tcenv.admit then true
-        else if Env.too_early_in_prims env.tcenv then true
-        else (match Options.admit_except () with
+        env.tcenv.admit ||
+        Env.too_early_in_prims env.tcenv   ||
+        (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("
            then full_query_id default_settings <> id
@@ -1246,7 +1243,7 @@ let ask_solver
     let ans =
       if skip
       then (
-        if (if Options.record_hints () then next_hint |> Some? else false) then
+        if Options.record_hints () && next_hint |> Some? then
           //restore the hint as is, cf. #1651
           next_hint |> Option.must |> store_hint;
         ans_ok
@@ -1278,7 +1275,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : ML u
     (* If nsuccess < lo, we have a failure. We report summarized
      * information if doing --quake (and not --query_stats) *)
     if nsuccess < lo then begin
-      if (if quaking_or_retrying then not (Options.query_stats ()) else false) then begin
+      if quaking_or_retrying && not (Options.query_stats ()) then begin
         let errors_to_report errs =
             errors_to_report a.tried_recovery ({default_settings with query_errors=errs})
         in
@@ -1394,9 +1391,8 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML (li
       | _ when tcenv.admit -> ([], ans_ok)
 
       | Assume _ ->
-        if (if (if is_retry then true else Options.split_queries() = Options.Always)
-            then !dbg_SMTQuery
-            else false)
+        if (is_retry || Options.split_queries() = Options.Always)
+        && !dbg_SMTQuery
         then (
           let n = List.length labels in
           if n <> 1
@@ -1456,7 +1452,7 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML unit =
     failwith "impossible: bad answer from encode_and_ask"
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : ML unit =
-  if (if retrying then (if !dbg_SMTQuery then true else Options.query_stats ()) else false) then begin
+  if retrying && (!dbg_SMTQuery || Options.query_stats ()) then begin
     Format.print1 "(%s)\tQuery-stats splitting query because retrying failed query\n"
                    (show (Env.get_range tcenv))
   end;
@@ -1471,7 +1467,7 @@ let split_and_solve (retrying:bool) use_env_msg tcenv q : ML unit =
 
   goals |> List.iter (fun (env, goal) -> do_solve false retrying use_env_msg env goal);
 
-  if (if FStarC.Errors.get_err_count() = 0 then retrying else false)
+  if FStarC.Errors.get_err_count() = 0 && retrying
   then ( //query succeeded after a retry
     FStarC.TypeChecker.Err.log_issue
       tcenv
@@ -1508,7 +1504,7 @@ let do_solve_maybe_split use_env_msg tcenv q : ML unit =
       end
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
-      if (if !dbg_SMTQuery then true else Options.query_stats ()) then
+      if !dbg_SMTQuery || Options.query_stats () then
         Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
                       (show (Env.get_range tcenv));
       split_and_solve false use_env_msg tcenv q

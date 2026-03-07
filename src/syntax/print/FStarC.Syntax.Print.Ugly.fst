@@ -411,12 +411,12 @@ and comp_to_string c : ML string =
     match c.n with
     | Total t ->
       begin match (compress t).n with
-        | Tm_type _ when not (if Options.print_implicits() then true else Options.print_universes()) -> term_to_string t
+        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
         | _ -> Format.fmt1 "Tot %s" (term_to_string t)
       end
     | GTotal t ->
       begin match (compress t).n with
-        | Tm_type _ when not (if Options.print_implicits() then true else Options.print_universes()) -> term_to_string t
+        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
         | _ -> Format.fmt1 "GTot %s" (term_to_string t)
       end
     | Comp c ->

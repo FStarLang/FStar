@@ -553,8 +553,8 @@ let lid_is_curmod env lid : ML _ =
   | Some m -> lid_equals lid m
 
 let module_is_defined env lid : ML _ =
-    if lid_is_curmod env lid then true
-    else List.existsb (fun x -> lid_equals lid (fst x)) env.modules
+    lid_is_curmod env lid ||
+    List.existsb (fun x -> lid_equals lid (fst x)) env.modules
 
 let resolve_module_name env lid (honor_ns: bool) : ML (option lident) =
     let nslen = List.length (ns_of_lid lid) in
@@ -592,8 +592,7 @@ let namespace_is_open env lid : ML _ =
   is_open env lid Open_namespace
 
 let module_is_open env lid : ML _ =
-  if lid_is_curmod env lid then true
-  else is_open env lid Open_module
+  lid_is_curmod env lid || is_open env lid Open_module
 
 // FIXME this could be faster (module_is_open and namespace_is_open are slow)
 let shorten_module_path env ids is_full_path : ML _ =
@@ -686,9 +685,8 @@ let lb_fv lbs lid : ML _ =
         if S.fv_eq_lid fv lid then Some fv else None) |> Option.must
 
 let ns_of_lid_equals (lid: lident) (ns: lident) =
-    if List.length (ns_of_lid lid) = List.length (ids_of_lid ns)
-    then lid_equals (lid_of_ids (ns_of_lid lid)) ns
-    else false
+    List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
+    lid_equals (lid_of_ids (ns_of_lid lid)) ns
 
 let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundname) =
   let occurrence_range = Ident.range_of_lid lid in
@@ -1192,7 +1190,7 @@ let push_bv env x : ML _ =
 
 let push_top_level_rec_binding env0 (x:ident) : ML (env & ref bool) =
   let l = qualify env0 x in
-  if (if unique false true env0 l then true else Options.interactive ())
+  if unique false true env0 l || Options.interactive ()
   then
     let used_marker = mk_ref false in
     (push_scope_mod env0 (Rec_binding (x,l,used_marker)), used_marker)
@@ -1348,9 +1346,8 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
                 -> [(lid_of_str s, lid)]
             | _ -> []
         end
-        |> List.filter (fun (cons, lid) -> if ns_of_lid cons =?  ns_of_lid lid
-                                           then ns_of_lid lid  =? ids_of_lid ns
-                                           else false)
+        |> List.filter (fun (cons, lid) -> ns_of_lid cons =?  ns_of_lid lid
+                                    && ns_of_lid lid  =? ids_of_lid ns)
         |> List.map (fun (cons, lid) -> (ident_of_lid cons, ident_of_lid lid))
       in constructor_lid_to_desugared_record_lids
        |> List.filter (fun (cons, _) -> List.find (fun (lid, _) -> lid =? cons) l |> Some?)
@@ -1390,7 +1387,7 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
       let final_idents = List.mapi (fun i (id, renamed) -> (Option.dflt id renamed, i)) l in
       match final_idents |> FStarC.Util.find_dup (fun (x, _) (y, _) -> x =? y) with
       | Some (id, i) ->
-        let others = List.filter (fun (id', i') -> if id =? id' then not (i =? i') else false) final_idents in
+        let others = List.filter (fun (id', i') -> id =? id' && not (i =? i')) final_idents in
         List.mapi (fun nth (other, _) ->
           let nth = match nth with | 0 -> "first" | 1 -> "second" | 2 -> "third" | nth -> show (nth + 1) ^ "th" in
           {

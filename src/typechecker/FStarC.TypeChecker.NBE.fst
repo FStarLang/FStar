@@ -302,10 +302,9 @@ let should_reduce_recursive_definition
       false, acc, []  (* It's partial! *)
     | t :: ts, in_decreases_clause :: bs ->
       if in_decreases_clause
-       then (if isAccu (fst t)  //one of the recursive arguments is symbolic, so we shouldn't reduce
-             then false, List.rev_append ts acc, []
-             else aux ts bs (t::acc))
-       else aux ts bs (t::acc)
+      && isAccu (fst t)  //one of the recursive arguments is symbolic, so we shouldn't reduce
+      then false, List.rev_append ts acc, []
+      else aux ts bs (t::acc)
   in
   aux arguments formals_in_decreases []
 
@@ -511,8 +510,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
       mk_t <| Reflect (translate cfg bs (fst arg))
 
     | Tm_app {hd={n=Tm_fvar fv}; args=[_]}
-         when (if S.fv_eq_lid fv PC.assert_lid then true
-               else S.fv_eq_lid fv PC.assert_norm_lid) ->
+         when S.fv_eq_lid fv PC.assert_lid ||
+              S.fv_eq_lid fv PC.assert_norm_lid ->
       debug (fun () -> Format.print_string "Eliminated assertion\n");
       mk_t (Constant Unit)
 
@@ -1175,7 +1174,7 @@ and translate_monadic mty cfg bs e : ML t =
 and translate_monadic_lift msmt cfg bs e : ML t =
    let (msrc, mtgt, ty) = msmt in
    let e = U.unascribe e in
-   if (if U.is_pure_effect msrc then true else U.is_div_effect msrc)
+   if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
         let ret = match (SS.compress (ed |> U.get_return_repr |> Some?.v |> snd)).n with
                   | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) e.pos
@@ -1529,11 +1528,11 @@ let normalize psteps (steps:list Env.step)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  if (if !dbg_NBETop then true else !dbg_NBE)
+  if !dbg_NBETop || !dbg_NBE
   then Format.print1 "Calling NBE with (%s) {\n" (show e);
   let cfg = new_config cfg in
   let r = readback cfg (translate cfg [] e) in
-  if (if !dbg_NBETop then true else !dbg_NBE)
+  if !dbg_NBETop || !dbg_NBE
   then Format.print1 "}\nNBE returned (%s)\n" (show r);
   r
 

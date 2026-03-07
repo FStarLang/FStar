@@ -71,7 +71,8 @@ let new_implicit_var reason r env k unrefine =
   Env.new_implicit_var_aux reason r env k Strict None unrefine
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : ML guard_t =
-  if (if Options.eager_subtyping () then true else solve_deferred)
+  if Options.eager_subtyping ()
+  || solve_deferred
   then
     let solve_now, defer =
       g.deferred |> Listlike.to_list |> List.partition (fun (_, _, p) -> Rel.flex_prob_closing env xs p)
@@ -577,7 +578,8 @@ let join_effects env l1_in l2_in : ML _ =
       ]
 
 let join_lcomp env c1 c2 : ML _ =
-  if (if TcComm.is_total_lcomp c1 then TcComm.is_total_lcomp c2 else false)
+  if TcComm.is_total_lcomp c1
+  && TcComm.is_total_lcomp c2
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
@@ -806,9 +808,8 @@ let should_return env eopt lc : ML _ =
       //  we always return it, unless it is a non TAC layered effect
       //      
       let c_eff_name = c |> U.comp_effect_name |> Env.norm_eff_name env in
-      if (if is_pure_or_ghost_lcomp lc  //check that lc was pure or ghost
-          then lid_equals c_eff_name C.effect_TAC_lid  //and c is TAC
-          else false)
+      if is_pure_or_ghost_lcomp lc &&  //check that lc was pure or ghost
+         lid_equals c_eff_name C.effect_TAC_lid  //and c is TAC
       then false  //then not effectful (i.e. return)
       else c_eff_name |> Env.is_layered_effect env
     else
@@ -832,16 +833,13 @@ let should_return env eopt lc : ML _ =
   match eopt with
   | None -> false //no term to return
   | Some e ->
-    (if TcComm.is_pure_or_ghost_lcomp lc          //condition (a), (see above)
-     then (if not lc_is_unit_or_effectful               //condition (b)
-           then (if (let head, _ = U.head_and_args_full e in
-                     match (U.un_uinst head).n with
-                     | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
-                     | _ -> true)
-                 then not (should_not_inline_lc lc)                   //condition (d)
-                 else false)
-           else false)
-     else false)
+    TcComm.is_pure_or_ghost_lcomp lc           &&  //condition (a), (see above)
+    not lc_is_unit_or_effectful                &&  //condition (b)
+    (let head, _ = U.head_and_args_full e in
+     match (U.un_uinst head).n with
+     | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv))  //condition (c)
+     | _ -> true)                               &&
+   not (should_not_inline_lc lc)                   //condition (d)
 
 //
 // apply a substitutive indexed bind (including a polymonadic bind)
@@ -1179,17 +1177,12 @@ let mk_indexed_bind env
     (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
     (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
 
-  if (if (if Env.is_erasable_effect env m
-          then (if not (Env.is_erasable_effect env p)
-                then not (N.non_info_norm env ct1.result_typ)
-                else false)
-          else false)
-      then true
-      else (if Env.is_erasable_effect env n
-            then (if not (Env.is_erasable_effect env p)
-                  then not (N.non_info_norm env ct2.result_typ)
-                  else false)
-            else false))
+  if (Env.is_erasable_effect env m &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct1.result_typ)) ||
+     (Env.is_erasable_effect env n &&
+      not (Env.is_erasable_effect env p) &&
+      not (N.non_info_norm env ct2.result_typ))
   then raise_error r1 Errors.Fatal_UnexpectedEffect [
            text "Cannot apply bind" ^/^ doc_of_string (bind_name ()) ^/^ text "since" ^/^ pp p
              ^/^ text "is not erasable and one of the computations is informative."
@@ -1308,7 +1301,7 @@ let mk_bind env
     c, Env.conj_guard g_lift g_bind
 
 let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:comp) (f:formula) flags : ML (comp & guard_t) =
-    if (if env.phase1 then true else Env.too_early_in_prims env)
+    if env.phase1 || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
          (*
@@ -1464,9 +1457,9 @@ let strengthen_precondition
 
 
 let lcomp_has_trivial_postcondition (lc:lcomp) : ML _ =
-    (if TcComm.is_tot_or_gtot_lcomp lc then true
-     else BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
-                   lc.cflags)
+    TcComm.is_tot_or_gtot_lcomp lc
+    || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
+                   lc.cflags
 
 
 (*
@@ -1506,15 +1499,14 @@ let bind
       (env:Env.env) (e1opt:option term) (lc1:lcomp) (binder_lc2:lcomp_with_binder) : ML lcomp =
   let (b, lc2) = binder_lc2 in
   let debug (f: unit -> ML unit) : ML unit =
-      if (if Debug.extreme () then true else !dbg_bind)
+      if Debug.extreme () || !dbg_bind
       then f ()
   in
   let lc1, lc2 = N.ghost_to_pure_lcomp2 env (lc1, lc2) in  //downgrade from ghost to pure, if possible
   let joined_eff = join_lcomp env lc1 lc2 in
   let bind_flags =
-      if (if should_not_inline_lc lc1
-          then true
-          else should_not_inline_lc lc2)
+      if should_not_inline_lc lc1
+      || should_not_inline_lc lc2
       then [SHOULD_NOT_INLINE]
       else let flags =
               if TcComm.is_total_lcomp lc1
@@ -1523,9 +1515,8 @@ let bind
                    else if TcComm.is_tot_or_gtot_lcomp lc2
                    then [SOMETRIVIAL]
                    else []
-              else if (if TcComm.is_tot_or_gtot_lcomp lc1
-                      then TcComm.is_tot_or_gtot_lcomp lc2
-                      else false)
+              else if TcComm.is_tot_or_gtot_lcomp lc1
+                   && TcComm.is_tot_or_gtot_lcomp lc2
               then [SOMETRIVIAL]
               else []
           in
@@ -1572,7 +1563,7 @@ let bind
                    if U.is_ml_comp c2 //|| not (U.is_free [Inr x] (U.freevars_comp c2))
                    then Inl (c2, "trivial ml")
                    else Inr "c1 trivial; but c2 is not ML"
-            else if (if U.is_ml_comp c1 then U.is_ml_comp c2 else false)
+            else if U.is_ml_comp c1 && U.is_ml_comp c2
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
@@ -1604,9 +1595,9 @@ let bind
                 in
                 match e1opt, b with
                 | Some e, Some x when (
-                    (if not (optimize_bind_vc()) then true // optimization is disabled
-                     else (if not is_let_binding then true //non-let bindings, e.g., in applications, are inlined
-                           else is_layered)) // layered effects do not always support closing with universal quantification
+                    not (optimize_bind_vc()) || // optimization is disabled
+                    not is_let_binding || //non-let bindings, e.g., in applications, are inlined
+                    is_layered // layered effects do not always support closing with universal quantification
                   ) ->
                   let c2, g_close, _ =
                     c2 |> SS.subst_comp [NT (x, e)] |> maybe_close_with_unit_refinement x
@@ -1658,9 +1649,8 @@ let bind
                    let c2, g_close = close_with_type_of_x x c2 in
                    Inl (c2, Env.conj_guards [ trivial_guard; g_close ], "c1 Tot only close")
                  | _, _ -> aux_with_trivial_guard ()
-            else if (if U.is_tot_or_gtot_comp c1
-                     then U.is_tot_or_gtot_comp c2
-                     else false)
+            else if U.is_tot_or_gtot_comp c1
+                 && U.is_tot_or_gtot_comp c2
             then Inl (S.mk_GTotal (U.comp_result c2), trivial_guard, "both GTot")
             else aux_with_trivial_guard ()
           in
@@ -1687,7 +1677,8 @@ let bind
               | None -> env.universe_of env t, t
               | Some u -> u, t in
             //c1 and c2 are bound to the input comps
-            if (if Some? b then should_return env e1opt lc1 else false)
+            if Some? b
+            && should_return env e1opt lc1
             then let e1 = Option.must e1opt in
                  let x = Option.must b in
                  //we will inline e1 in the WP of c2
@@ -1719,10 +1710,9 @@ let bind
                  //    M.bind (lift_(Pure/Ghost)_M wp1)
                  //           (x == e1 ==> lift_M2_M (wp2[e1/x]))
 
-                 if (if U.is_partial_return c1
-                     then (if not (optimize_bind_vc()) then true //optimization is disabled
-                           else not is_let_binding)
-                     else false)
+                 if U.is_partial_return c1
+                 && (not (optimize_bind_vc()) || //optimization is disabled
+                     not is_let_binding)
                  then
                       let _ = debug (fun () ->
                         Format.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
@@ -1733,7 +1723,7 @@ let bind
                       let _ = debug (fun () ->
                         Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = 
-                        if (if not (optimize_bind_vc()) then true else not is_let_binding)
+                        if not (optimize_bind_vc()) || not is_let_binding
                         then SS.subst_comp [NT(x,e1)] c2
                         else c2
                       in
@@ -1780,7 +1770,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
    * AR: m is the effect that we are going to do return in
    *)
   let m =
-    if (if m_opt |> None? then true else is_ghost_effect env lc.eff_name)
+    if m_opt |> None? || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
     else m_opt |> Option.must in
 
@@ -1828,13 +1818,10 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
 
 let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : ML lcomp =
   let should_return =
-      (if not env.phase1
-       then (if not (Env.too_early_in_prims env) //we're not too early in prims
-             then (if should_return env (Some e) lc
-                   then not (TcComm.is_lcomp_partial_return lc)
-                   else false)
-             else false)
-       else false)
+      not env.phase1
+   && not (Env.too_early_in_prims env) //we're not too early in prims
+   && should_return env (Some e) lc
+   && not (TcComm.is_lcomp_partial_return lc)
   in
   if not should_return then lc
   else assume_result_eq_pure_term_in_m env m_opt e lc
@@ -1868,16 +1855,13 @@ let maybe_return_e2_and_bind
          * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
          *     we must return eff2 into eff1,
          *)
-        if (if lid_equals eff2 C.effect_PURE_lid
-            then (if Env.join_opt env eff1 eff2 |> None?
-                  then Env.exists_polymonadic_bind env eff1 eff2 |> None?
-                  else false)
-            else false)
+        if lid_equals eff2 C.effect_PURE_lid &&
+           Env.join_opt env eff1 eff2 |> None? &&
+           Env.exists_polymonadic_bind env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
-        else if (if (if not (is_pure_or_ghost_effect env eff1) then true
-                     else should_not_inline_lc lc1)
-                 then is_pure_or_ghost_effect env eff2
-                 else false)
+        else if (not (is_pure_or_ghost_effect env eff1)
+             ||  should_not_inline_lc lc1)
+             && is_pure_or_ghost_effect env eff2
         then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r is_let_binding env e1opt lc1 (x, lc2)
@@ -2180,8 +2164,8 @@ let bind_cases env0 (res_t:typ)
         let u_res_t = env.universe_of env res_t in
                 begin
             let maybe_return eff_label_then (cthen: bool -> ML lcomp) : ML lcomp =
-               if (if should_not_inline_whole_match then true
-                   else not (is_pure_or_ghost_effect env eff))
+               if should_not_inline_whole_match
+                   || not (is_pure_or_ghost_effect env eff)
                then cthen true //inline each the branch, if eligible
                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
@@ -2360,16 +2344,16 @@ let maybe_lift env e c1 c2 t : ML _ =
     let m1 = Env.norm_eff_name env c1 in
     let m2 = Env.norm_eff_name env c2 in
     if Ident.lid_equals m1 m2
-    || (if U.is_pure_effect c1 then U.is_ghost_effect c2 else false)
-    || (if U.is_pure_effect c2 then U.is_ghost_effect c1 else false)
+    || (U.is_pure_effect c1 && U.is_ghost_effect c2)
+    || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic_lift(m1, m2, t)}) e.pos
 
 let maybe_monadic env e c t : ML _ =
     let m = Env.norm_eff_name env c in
-    if (if is_pure_or_ghost_effect env m then true
-        else (if Ident.lid_equals m C.effect_Tot_lid then true
-              else Ident.lid_equals m C.effect_GTot_lid)) //for the cases in prims where Pure is not yet defined
+    if is_pure_or_ghost_effect env m
+    || Ident.lid_equals m C.effect_Tot_lid
+    || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic (m, t)}) e.pos
 
@@ -2521,7 +2505,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   (* Bail out early if either the computed or expected type are not
   defined at the head *)
-  bool_guard (if is_head_defined exp_t then is_head_defined checked.res_typ else false);?
+  bool_guard (is_head_defined exp_t && is_head_defined checked.res_typ);?
 
   (* The computed type for `e`. *)
   let computed_t = head_unfold env checked.res_typ in
@@ -2532,7 +2516,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   match (U.un_uinst head).n, args with
   (* b2t is primitive... for now *)
-  | Tm_fvar fv, [] when (if S.fv_eq_lid fv C.bool_lid then is_type exp_t else false) ->
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
     let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
     let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
     Some (U.mk_app (S.fvar C.b2t_lid None) [S.as_arg e], lc_res, Env.trivial_guard)
@@ -2612,11 +2596,9 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
     | _ -> false
   in
   let should_coerce =
-      (if (if env.phase1 then true else Options.lax ())
-       then (if not env.nocoerce
-             then not (head_types_equal lc.res_typ exp_t)
-             else false)
-       else false)
+      (env.phase1 || Options.lax ()) &&
+      not env.nocoerce &&
+      not (head_types_equal lc.res_typ exp_t)
   in
   if not should_coerce then (
     if !dbg_Coercions then
@@ -2648,13 +2630,9 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
         let hd, args = U.leftmost_head_and_args e in
         match (SS.compress hd).n, args with
         | Tm_uinst (hd, _), [(_, aq_t); (e, aq_e)]
-          when (if U.is_fvar hide_or_reveal hd
-                then (if Some? aq_t
-                      then (if (Some?.v aq_t).aqual_implicit
-                            then (if aq_e = None then true else not (Some?.v aq_e).aqual_implicit)
-                            else false)
-                      else false)
-                else false) ->
+          when U.is_fvar hide_or_reveal hd &&
+               Some? aq_t && (Some?.v aq_t).aqual_implicit &&
+               (aq_e = None || not (Some?.v aq_e).aqual_implicit) ->
           Some e
         | _ -> None
       in
@@ -2695,12 +2673,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
     Format.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
             (show use_eq) (show e) (TcComm.lcomp_to_string lc) (show t);
   let use_eq =
-    (if use_eq then true            //caller wants to check equality
-     else (if env.use_eq_strict then true
-     else match Env.effect_decl_opt env lc.eff_name with
-      // See issue #881 for why weakening result type of a reifiable computation is problematic
-      | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
-      | _ -> false)) in
+    use_eq            ||  //caller wants to check equality
+    env.use_eq_strict ||
+    (match Env.effect_decl_opt env lc.eff_name with
+     // See issue #881 for why weakening result type of a reifiable computation is problematic
+     | Some (ed, qualifiers) -> qualifiers |> List.contains Reifiable
+     | _ -> false) in
   let gopt = if use_eq
              then Rel.try_teq true env lc.res_typ t, false
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
@@ -2964,7 +2942,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : ML (term & typ & guard_t)
        let number_of_implicits t =
             let formals = unfolded_arrow_formals env t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> if None? imp then true else U.eq_bqual imp (Some Equality)) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> None? imp || U.eq_bqual imp (Some Equality)) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -3265,8 +3243,8 @@ let must_erase_for_extraction (g:env) (t:typ) : ML _ =
       | Tm_arrow _ ->
            let bs, c = U.arrow_formals_comp t in
            let env = FStarC.TypeChecker.Env.push_binders env bs in
-           (if Env.is_erasable_effect env (U.comp_effect_name c) then true  //includes GHOST
-            else (if U.is_pure_or_ghost_comp c then aux env (U.comp_result c) else false))
+           (Env.is_erasable_effect env (U.comp_effect_name c))  //includes GHOST
+           || (U.is_pure_or_ghost_comp c && aux env (U.comp_result c))
       | Tm_refine {b={sort=t}} ->
            aux env t
       | Tm_app {hd=head}
@@ -3288,7 +3266,7 @@ let must_erase_for_extraction (g:env) (t:typ) : ML _ =
                              Env.Iota;
                              Env.Unascribe] env t in
 //        debug g (fun () -> Format.print1 "aux %s\n" (show t));
-        let res = if Env.non_informative env t then true else descend env t in
+        let res = Env.non_informative env t || descend env t in
         if !dbg_Extraction
         then Format.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
         res
@@ -3366,11 +3344,9 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm : ML _ =
 
 let check_non_informative_type_for_lift env m1 m2 t (r:Range.t) : ML unit =
   //raise an error if m1 is erasable, m2 is not erasable, and t is informative
-  if (if Env.is_erasable_effect env m1
-      then (if not (Env.is_erasable_effect env m2)
-            then not (N.non_info_norm env t)
-            else false)
-      else false)
+  if Env.is_erasable_effect env m1       &&
+     not (Env.is_erasable_effect env m2) &&
+     not (N.non_info_norm env t)
   then Errors.raise_error r Errors.Error_TypeError
           (Format.fmt3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
             (string_of_lid m1)
@@ -3498,7 +3474,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
     let u, wp = List.hd lift_ct.comp_univs, fst (List.hd lift_ct.effect_args) in
     Env.pure_precondition_for_trivial_post env u lift_ct.result_typ wp Range.dummyRange in
 
-  if (if !dbg_LayeredEffects then Debug.extreme () else false)
+  if !dbg_LayeredEffects &&
+     Debug.extreme ()
   then Format.print1 "Guard for lift is: %s" (show fml);
 
   let c = mk_Comp ({
@@ -3558,7 +3535,7 @@ let get_field_projector_name env datacon index : ML _ =
 
 
 let get_mlift_for_subeff env (sub:S.sub_eff) : ML Env.mlift =
-  if (if Env.is_layered_effect env sub.source then true else Env.is_layered_effect env sub.target)
+  if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
     ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> Option.must) (sub.kind |> Option.must);
@@ -3743,11 +3720,10 @@ let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constr
    the qualifier.
 *)
 let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) : ML _ =
-    (if Ident.ident_equals field (Ident.ident_of_lid field_name)
-     then (if ns_of_lid field_name <> []
-           then nsstr field_name = nsstr rdc.typename
-           else true)
-     else false)
+    Ident.ident_equals field (Ident.ident_of_lid field_name) &&
+    (if ns_of_lid field_name <> []
+     then nsstr field_name = nsstr rdc.typename
+     else true)
 
 (*
   The field assignments of a record constructor can be given out of

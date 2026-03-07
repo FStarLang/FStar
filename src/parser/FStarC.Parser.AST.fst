@@ -342,8 +342,7 @@ let as_frag (ds:list decl) : ML inputFragment =
   match d.d with
   | TopLevelModule m ->
       let no_prelude =
-        if Options.no_prelude () then true
-        else
+        Options.no_prelude () ||
         d.attrs |> List.existsb (function t ->
           match t.tm with
           | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true

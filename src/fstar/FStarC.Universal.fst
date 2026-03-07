@@ -257,8 +257,8 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
     match d.d with
     | FStarC.Parser.AST.TopLevelModule lid ->
       let no_prelude =
-        if Options.no_prelude () then true (* only affects current module *)
-        else d.attrs |> List.existsb (function t ->
+        Options.no_prelude () || (* only affects current module *)
+        d.attrs |> List.existsb (function t ->
           match t.tm with
           | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
           | _ -> false)
@@ -333,7 +333,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
         else FStarC.Extraction.ML.PrintML.print_ml
       in
 
-      if (let o = Some? (Options.output_to ()) in o && List.length mllib > 1) then
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
         raise_error0 Errors.Fatal_OptionsNotCompatible [
           text "Cannot provide -o and extract multiple modules";
           text "Please use -o with a single module, or specify an output directory with --odir";
@@ -354,7 +354,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
       //   in the binary format to a file
       // The first component is the list of dependencies
       //
-      if (let o = Some? (Options.output_to ()) in o && List.length mllib > 1) then
+      if Some? (Options.output_to ()) && List.length mllib > 1 then
         raise_error0 Errors.Fatal_OptionsNotCompatible [
           text "Cannot provide -o and extract multiple modules";
           text "Please use -o with a single module, or specify an output directory with --odir";
@@ -397,11 +397,9 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
 let needs_interleaving intf impl : ML bool =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
-  if m1 = m2
-  then if List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"]
-       then List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
-       else false
-  else false
+  m1 = m2 &&
+  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
+  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
 
 let rec tc_one_file_internal
         (fly_deps:bool)
@@ -522,28 +520,24 @@ let rec tc_one_file_internal
          * If codegen was given, the the user wants an ml/krml file, and it is fine
          * to load the cache.
          *)
-        if Options.should_check_file fn then (
-          if (let f = Options.force () in
-              if f then true
-              else (let o = Some? (Options.output_to ()) in
-                    if o then None? (Options.codegen ())
-                    else false))
-          then None
-          else r)
+        if Options.should_check_file fn && (
+             Options.force () ||
+             (Some? (Options.output_to ()) && None? (Options.codegen ()))
+           )
+        then None
         else r
       in
       match r with
       | None ->
-        if (let c = Options.should_be_already_cached (FStarC.Parser.Dep.module_name_of_file fn) in
-            if c then not (Options.force ()) else false)
+        if Options.should_be_already_cached (FStarC.Parser.Dep.module_name_of_file fn)
+        && not (Options.force ())
         then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
                  text <| Format.fmt1 "Expected %s to already be checked." fn
                ];
 
-        if (let c = Some? (Options.codegen()) in
-            if c then (let cm = Options.cmi() in
-                       if cm then not (Options.force ()) else false)
-            else false)
+        if (Some? (Options.codegen())
+        && Options.cmi())
+        && not (Options.force ())
         then FStarC.Errors.raise_error0 FStarC.Errors.Error_AlreadyCachedAssertionFailure [
                  text "Cross-module inlining expects all modules to be checked first.";
                  text <| Format.fmt1 "Module %s was not checked." fn;
@@ -551,11 +545,9 @@ let rec tc_one_file_internal
 
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 
-        if (let e = FStarC.Errors.get_err_count() = 0 in
-            if e
-            then (if Options.lax() then true  //we'll write out a .checked.lax file
-                  else Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
-            else false)
+        if FStarC.Errors.get_err_count() = 0
+        && (Options.lax()  //we'll write out a .checked.lax file
+            || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)

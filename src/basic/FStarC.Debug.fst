@@ -94,7 +94,7 @@ let enable_toggles (keys : list string) =
     | "High" ->    set_level_high ()
     | "Extreme" -> set_level_extreme ()
     | _ ->
-      if (if String.length k > 0 then String.get k 0 = '-' else false) then
+      if String.length k > 0 && String.get k 0 = '-' then
         let k = String.substring k 1 (String.length k - 1) in
         let t = get_toggle k in
         t := false

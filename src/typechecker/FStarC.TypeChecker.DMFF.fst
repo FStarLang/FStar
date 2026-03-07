@@ -359,12 +359,12 @@ let gen_wps_for_free
   (* Invariant: [x] and [y] have type [t] *)
   let rec is_discrete t : ML bool = match (SS.compress t).n with
     | Tm_type _ -> false
-    | Tm_arrow {bs; comp=c} -> if List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs then is_discrete (U.comp_result c) else false
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
     | _ -> true
   in
   let rec is_monotonic t : ML bool = match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_arrow {bs; comp=c} -> if List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs then is_monotonic (U.comp_result c) else false
+    | Tm_arrow {bs; comp=c} -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
     | _ -> is_discrete t
   in
   let rec mk_rel (rel: term -> term -> ML term) t x y : ML term =
@@ -377,7 +377,7 @@ let gen_wps_for_free
     | Tm_arrow {bs=[ binder ]; comp={ n = GTotal b }}
     | Tm_arrow {bs=[ binder ]; comp={ n = Total b }} ->
         let a = binder.binder_bv.sort in
-        if (if is_monotonic a then true else is_monotonic b) //this is an important special case; most monads have zero-order results
+        if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
              let body = mk_rel b
                             (U.mk_app x [ S.as_arg (S.bv_to_name a1) ])
@@ -631,10 +631,10 @@ and star_type' env t : ML term =
         match (SS.compress head).n with
         | Tm_fvar fv when (
           // TODO: implement a better check (non-dependent, user-defined data type)
-          if fv_eq_lid fv PC.option_lid then true
-          else if fv_eq_lid fv PC.either_lid then true
-          else if fv_eq_lid fv PC.eq2_lid then true
-          else is_tuple_constructor (SS.compress head)
+          fv_eq_lid fv PC.option_lid ||
+          fv_eq_lid fv PC.either_lid ||
+          fv_eq_lid fv PC.eq2_lid ||
+          is_tuple_constructor (SS.compress head)
         ) ->
             true
         | Tm_fvar fv ->
@@ -795,9 +795,9 @@ let rec check (env: env) (e: term) (context_nm: nm): ML (nm & term & term) =
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
-      if not (is_unknown t2.n) then (if not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
+      if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
         raise_error0 Errors.Fatal_TypeMismatch
-          (Format.fmt3 "[check]: the expression [%s] has type [%s] but should have type [%s]" (show e) (show t1) (show t2)))
+          (Format.fmt3 "[check]: the expression [%s] has type [%s] but should have type [%s]" (show e) (show t1) (show t2))
     in
     match rec_nm, context_nm with
     | N t1, N t2
@@ -1279,8 +1279,8 @@ and trans_F_ (env: env_) (c: typ) (wp: term): ML term =
   | Tm_app {hd=head; args} ->
       // It's a product, the only form of [Tm_app] allowed.
       let wp_head, wp_args = head_and_args wp in
-      if (if not (List.length wp_args = List.length args) then true
-         else not (is_constructor wp_head (PC.mk_tuple_data_lid (List.length wp_args) Range.dummyRange))) then
+      if not (List.length wp_args = List.length args) ||
+         not (is_constructor wp_head (PC.mk_tuple_data_lid (List.length wp_args) Range.dummyRange)) then
         failwith "mismatch";
       mk (Tm_app {hd=head; args=List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_aqual_implicit q then "implicit" else "explicit" in

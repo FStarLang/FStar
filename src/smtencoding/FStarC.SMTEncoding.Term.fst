@@ -321,9 +321,8 @@ let boxRealFun       = mkBoxFunctions "BoxReal"
 // Assume the Box/Unbox functions to be injective
 let isInjective s =
     if (FStar.String.length s >= 3) then
-        if String.substring s 0 3 = "Box"
-        then not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
-        else false
+        String.substring s 0 3 = "Box" &&
+        not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
     else false
 
 let mk t r : ML term = {tm=t; freevars=mk_ref None; rng=r}
@@ -408,7 +407,7 @@ let mkBvModUnsafe sz (t1, t2) r = mkApp'(BvMod, [t1;t2]) r
 let mkBvUlt = mk_bin_op BvUlt
 let mkIff = mk_bin_op Iff
 let mkEq (t1, t2) r = match t1.tm, t2.tm with
-    | App (Var f1, [s1]), App (Var f2, [s2]) when (if f1 = f2 then isInjective f1 else false) ->
+    | App (Var f1, [s1]), App (Var f2, [s2]) when f1 = f2 && isInjective f1 ->
         mk_bin_op Eq (s1, s2) r
     | _ -> mk_bin_op Eq (t1, t2) r
 let mkLT  = mk_bin_op LT

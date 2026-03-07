@@ -375,11 +375,11 @@ let rec traverse_for_spinoff
         let res =
           match (U.un_uinst hd).n with
           | Tm_fvar fv ->
-            if S.fv_eq_lid fv PC.and_lid then true
-            else if S.fv_eq_lid fv PC.imp_lid then true
-            else if S.fv_eq_lid fv PC.forall_lid then true
-            else if S.fv_eq_lid fv PC.auto_squash_lid then true
-            else S.fv_eq_lid fv PC.squash_lid
+            S.fv_eq_lid fv PC.and_lid ||
+            S.fv_eq_lid fv PC.imp_lid ||
+            S.fv_eq_lid fv PC.forall_lid ||
+            S.fv_eq_lid fv PC.auto_squash_lid ||
+            S.fv_eq_lid fv PC.squash_lid
 
           | Tm_meta _
           | Tm_ascribed _
@@ -557,9 +557,9 @@ let rec traverse_for_spinoff
             begin
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(t, Some aq0); (body, aq)]
-               when (let fv_ok = if S.fv_eq_lid fv PC.forall_lid then true
-                                  else S.fv_eq_lid fv PC.exists_lid in
-                     fv_ok && aq0.aqual_implicit) ->
+               when (S.fv_eq_lid fv PC.forall_lid ||
+                     S.fv_eq_lid fv PC.exists_lid) &&
+                    aq0.aqual_implicit ->
                 let r0 = traverse pol e hd in
                 let rt = traverse (flip pol) e t in
                 let rbody = traverse pol e body in
@@ -581,8 +581,9 @@ let rec traverse_for_spinoff
                     (fun hd args ->
                        match (U.un_uinst hd).n, args with
                        | Tm_fvar fv, [(t, _)]
-                         when (let ok = if simplified then S.fv_eq_lid fv PC.squash_lid else false in
-                               if ok then TEQ.eq_tm e t U.t_true = TEQ.Equal else false) ->
+                         when simplified &&
+                              S.fv_eq_lid fv PC.squash_lid &&
+                              TEQ.eq_tm e t U.t_true = TEQ.Equal ->
                          //simplify squash True to True
                          //important for simplifying queries to Trivial
                          if !dbg_SpinoffAll then Format.print_string "Simplified squash True to True";

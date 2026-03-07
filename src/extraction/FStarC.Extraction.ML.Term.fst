@@ -1295,8 +1295,8 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                 let default_add_unit () =
                                   match rest_args with
                                   | [] ->
-                                    if not (is_fstar_value body) then true
-                                    else not (U.is_pure_comp c)
+                                    not (is_fstar_value body)
+                                    || not (U.is_pure_comp c)
                                   | _ -> false
                                 in
                                 match orig_lbdef with
@@ -1308,8 +1308,8 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                     if n_tbinders <= List.length orig_bs then
                                       let _, orig_rest = BU.first_N n_tbinders orig_bs in
                                       (match orig_rest with
-                                       | [] -> if not (is_fstar_value orig_body) then true
-                                              else not (U.is_pure_comp c)
+                                       | [] -> not (is_fstar_value orig_body)
+                                              || not (U.is_pure_comp c)
                                        | _ -> false)
                                     else default_add_unit ()
                                   | _ -> default_add_unit ()
@@ -1650,9 +1650,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
 
         (* Push applications into match branches *)
         | Tm_app {hd=head; args}
-          when (let is_m = is_match head in
-                if is_m then args |> should_apply_to_match_branches
-                else false) ->
+          when is_match head &&
+               args |> should_apply_to_match_branches ->
           args |> apply_to_match_branches head |> term_as_mlexpr g
 
         (* HACK HACK HACK HACK HACK
@@ -1670,8 +1669,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
         (* A regular application. *)
         | Tm_app {hd=head; args} ->
           let is_total rc =
-              if Ident.lid_equals rc.residual_effect PC.effect_Tot_lid then true
-              else rc.residual_flags |> FStarC.List.existsb (function TOTAL -> true | _ -> false)
+              Ident.lid_equals rc.residual_effect PC.effect_Tot_lid
+              || rc.residual_flags |> List.existsb (function TOTAL -> true | _ -> false)
           in
 
           begin match (head |> SS.compress |> U.unascribe).n with  //AR: unascribe, gives more opportunities for beta
@@ -1727,35 +1726,19 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                         let app = maybe_eta_data_and_project_record g is_data t (mk_head()) in
                         app, f, t
 
-                    | (arg, _)::rest, MLTY_Fun (formal_t, f', t) ->
-                      let is_ty = is_type g arg in
-                      if (if is_ty then type_leq g formal_t ml_unit_ty else false)
-                      then
-                       //non-prefix type app; this type argument gets erased to unit
-                       extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
-                      else (
-                       //This is the main case of an actualy argument e0 provided to a function
-                       //that expects an argument of type tExpected
-                       let r = arg.pos in
-                       let expected_effect =
-                             if (let lax = Options.lax() in
-                             if lax then FStarC.TypeChecker.Util.short_circuit_head head
-                             else false)
-                             then E_IMPURE
-                             else E_PURE in
-                       let e0, tInferred =
-                           check_term_as_mlexpr g arg expected_effect formal_t in
-                       extract_app is_data (mlhead, (e0, expected_effect)::mlargs_f) (join_l r [f;f'], t) rest
-                      )
+                    | (arg, _)::rest, MLTY_Fun (formal_t, f', t)
+                            when (is_type g arg
+                                  && type_leq g formal_t ml_unit_ty) ->
+                      //non-prefix type app; this type argument gets erased to unit
+                      extract_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join arg.pos f f', t) rest
 
                     | (e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
                       //This is the main case of an actualy argument e0 provided to a function
                       //that expects an argument of type tExpected
                       let r = e0.pos in
                       let expected_effect =
-                            if (let lax = Options.lax() in
-                            if lax then FStarC.TypeChecker.Util.short_circuit_head head
-                            else false)
+                            if Options.lax()
+                            && FStarC.TypeChecker.Util.short_circuit_head head
                             then E_IMPURE
                             else E_PURE in
                       let e0, tInferred =
@@ -1913,9 +1896,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
           e, f, t
 
         | Tm_let {lbs=(false, [lb]); body=e'}
-          when (let not_top = not (is_top_level [lb]) in
-                if not_top then Some? (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs)
-                else false) ->
+          when not (is_top_level [lb])
+          && Some? (U.get_attribute FStarC.Parser.Const.rename_let_attr lb.lbattrs) ->
           let b = S.mk_binder (Inl?.v lb.lbname) in
           let ({binder_bv=x}), body = SS.open_term_1 b e' in
           // Format.print_string "Reached let with rename_let attribute\n";
@@ -1999,7 +1981,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                               (Some (Ident.string_of_lid (Env.current_module tcenv)))
                               "FStarC.Extraction.ML.Term.normalize_lb_def"
                         in
-                        if (let dbg = !dbg_Extraction in if dbg then true else !dbg_ExtractionNorm)
+                        if !dbg_Extraction || !dbg_ExtractionNorm
                         then let _ = Format.print2 "Starting to normalize top-level let %s = %s\n"
                                        (show lb.lbname)
                                        (show lb.lbdef)
@@ -2025,7 +2007,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              let meta = if (if has_c_inline then true else Options.Ext.get "extraction_inline_all" <> "") then CInline :: meta else meta in
+              let meta = if has_c_inline || Options.Ext.get "extraction_inline_all" <> "" then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let orig_lbdefs = if top_level then List.map (fun lb -> Some lb.lbdef) orig_lbs else [] in

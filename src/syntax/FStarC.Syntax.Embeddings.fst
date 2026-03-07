@@ -137,8 +137,8 @@ let lazy_unembed (pa:printer 'a) (et: unit -> ML emb_typ) (x:term) (ta: unit -> 
     let x = unmeta_div_results x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
-      if (if et <> et' then true
-      else !Options.eager_embedding)
+      if et <> et'
+      || !Options.eager_embedding
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
                    then Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"

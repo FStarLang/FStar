@@ -718,7 +718,7 @@ let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option res
   let tail = S.mk (Tm_abs {bs=b1::bs; body; rc_opt=ropt}) body.pos in
   S.mk (Tm_abs {bs=[b0]; body=tail; rc_opt=None}) body.pos
 
-let is_gtot_comp c = if U.is_tot_or_gtot_comp c then not (U.is_total_comp c) else false
+let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
 let rec context_included (g0 g1: list binding) : ML bool =
   if BU.physical_equality g0 g1 then true else
@@ -730,9 +730,8 @@ let rec context_included (g0 g1: list binding) : ML bool =
      match b0, b1 with
      | Binding_var x0, Binding_var x1 ->
        if x0.index = x1.index
-       then if equal_term x0.sort x1.sort
-            then context_included g0' g1'
-            else false
+       then equal_term x0.sort x1.sort
+            && context_included g0' g1'
        else context_included g0 g1'
 
      | Binding_lid _, Binding_lid _
@@ -1332,16 +1331,14 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                check_relation_args g EQUALITY args0 args1)
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
           in
-          if guard_ok then
-           if (rel=EQUALITY) then
-            if (let e0 = equatable g t0 in if e0 then true else equatable g t1)
-            then (
-              handle_with 
-                (no_guard (compare_head_and_args ()))
-                (fun _ -> emit_guard t0 t1)
-            )
-            else compare_head_and_args ()
-           else compare_head_and_args ()
+          if guard_ok &&
+            (rel=EQUALITY) && 
+            (equatable g t0 || equatable g t1)
+          then (
+            handle_with 
+              (no_guard (compare_head_and_args ()))
+              (fun _ -> emit_guard t0 t1)
+          )
           else compare_head_and_args ()
         )
 
@@ -2222,7 +2219,7 @@ let check_term_top g e topt (must_tot:bool)
     then Format.print1 "(%s) Entering core ... \n"
                    (show (get_goal_ctr()));
 
-    if (let d = !dbg in if d then true else !dbg_Top)
+    if !dbg || !dbg_Top
     then (Format.print3 "(%s) Entering core with %s <: %s\n"
                    (show (get_goal_ctr()))
                    (show e) 
@@ -2236,7 +2233,7 @@ let check_term_top g e topt (must_tot:bool)
         None
         "FStarC.TypeChecker.Core.check_term_top"
     in
-    if (let d = !dbg in if d then true else !dbg_Top)
+    if !dbg || !dbg_Top
     then Format.print2 "(%s) Core result = %s\n"
                    (show (get_goal_ctr()))
                    (show res);
@@ -2248,7 +2245,7 @@ let check_term_top g e topt (must_tot:bool)
         // Options.set_option "debug" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
         // Options.pop();
-        if (let d = !dbg in if d then true else (let dt = !dbg_Top in if dt then true else !dbg_Exit))
+        if !dbg || !dbg_Top || !dbg_Exit
         then begin
           Format.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (show (get_goal_ctr()))
@@ -2266,13 +2263,13 @@ let check_term_top g e topt (must_tot:bool)
         Success ((et, Some guard), cache)
 
       | Success _ ->
-        if (let d = !dbg in if d then true else !dbg_Top)
+        if !dbg || !dbg_Top
         then Format.print1 "(%s) Exiting core (ok)\n"
                     (show (get_goal_ctr()));
         res
 
       | Error _ ->
-        if (let d = !dbg in if d then true else !dbg_Top)
+        if !dbg || !dbg_Top
         then Format.print1 "(%s) Exiting core (failed)\n"
                        (show (get_goal_ctr()));
         res

@@ -531,8 +531,8 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) : ML _ =
      let head, args = U.head_and_args index in
      match (U.un_uinst head).n, args with
      | Tm_fvar fv, [_td; _tr; (f, _)] -> 
-       if (if S.fv_eq_lid fv C.fext_on_domain_lid then true
-        else S.fv_eq_lid fv C.fext_on_domain_g_lid)
+       if S.fv_eq_lid fv C.fext_on_domain_lid 
+       ||  S.fv_eq_lid fv C.fext_on_domain_g_lid
        then f (* if the index is on_domain(_g) #t #s f, 
                  return only f *)
        else index
@@ -628,34 +628,31 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
       //in these cases, fv_lid is used in t
        false
      | Tm_abs {bs; body=t} ->
-       if binders_ok bs then ok t else false
+       binders_ok bs && ok t
      | Tm_arrow {bs; comp=c} ->
-       if binders_ok bs then ok_comp c else false
+       binders_ok bs && ok_comp c
      | Tm_refine {b=bv; phi=t} ->
-       if ok bv.sort then ok t else false
+       ok bv.sort && ok t
      | Tm_app {hd=head; args} ->
        if mutuals_occur_in head
        then false
        else L.for_all
               (fun (a, qual) -> 
-                if (match qual with
+                (match qual with
                  | None -> false
-                 | Some q -> U.contains_unused_attribute q.aqual_attributes)
-                then true
-                else ok a)
+                 | Some q -> U.contains_unused_attribute q.aqual_attributes) ||
+                ok a)
               args
       | Tm_match {scrutinee=t; brs=branches} ->
-        if ok t then
+        ok t &&
         L.for_all
             (fun (_, _, br) -> ok br)
              branches
-        else false
       | Tm_ascribed {tm=t; asc} ->
         ok t
       | Tm_let {lbs=(_, lbs); body=t} ->
-        if L.for_all (fun lb -> if ok lb.lbtyp then ok lb.lbdef else false) lbs
-        then ok t
-        else false
+        List.for_all (fun lb -> ok lb.lbtyp && ok lb.lbdef) lbs
+        && ok t
       | Tm_uvar _ ->
         false
       | Tm_delayed _ ->
@@ -671,9 +668,8 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
     | Total t -> ok t
     | GTotal t -> ok t
     | Comp c ->
-      if ok c.result_typ then
-      L.for_all (fun (a, _) -> ok a) c.effect_args
-      else false              
+      ok c.result_typ &&
+      List.for_all (fun (a, _) -> ok a) c.effect_args              
   in
   ok t
 
@@ -714,16 +710,14 @@ let already_unfolded (ilid:lident)
   : ML bool
   = List.existsML 
       (fun (lid, l, n) ->
-         if Ident.lid_equals lid ilid then
-         if List.length args >= n then
+         Ident.lid_equals lid ilid &&
+         List.length args >= n &&
          (let args = fst (L.splitAt n args) in
           List.fold_left2 
-            (fun b a a' -> if b then Rel.teq_nosmt_force env (fst a) (fst a') else false)
+            (fun b a a' -> b && Rel.teq_nosmt_force env (fst a) (fst a'))
             true
             args
-            l)
-          else false
-          else false)
+            l))
       !unfolded
 
 (** The main check for strict positivity
@@ -858,8 +852,8 @@ let rec ty_strictly_positive_in_type (env:env)
    | Tm_arrow {comp=c} ->  //in_type is an arrow
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
      let check_comp =
-       if U.is_pure_or_ghost_comp c then true
-       else (c |> U.comp_effect_name
+       U.is_pure_or_ghost_comp c ||
+       (c |> U.comp_effect_name
           |> Env.norm_eff_name env
           |> Env.lookup_effect_quals env
           |> List.contains S.TotalEffect) in
@@ -1000,11 +994,11 @@ and ty_strictly_positive_in_args (env:env)
                        
           let this_occurrence_ok = 
             // either the ty_lid does not occur at all in the argument
-            if mutuals_unused_in_type mutuals arg then true
+            mutuals_unused_in_type mutuals arg ||
             // Or the binder is marked unused
             // E.g., val f ([@@@unused] a : Type) : Type
             // the binder is ([@@@unused] a : Type)
-            else if U.is_binder_unused b then true
+            U.is_binder_unused b ||
             // Or the binder is marked strictly positive
             // and the occurrence of ty_lid in arg is also strictly positive
             // E.g., val f ([@@@strictly_positive] a : Type) : Type
@@ -1012,9 +1006,8 @@ and ty_strictly_positive_in_args (env:env)
             // and
             //       type t = | T of f t     is okay
             // but   type t = | T of f (t -> unit) is not okay
-            else (if U.is_binder_strictly_positive b then
-             ty_strictly_positive_in_type env mutuals arg unfolded
-             else false)
+            (U.is_binder_strictly_positive b &&
+             ty_strictly_positive_in_type env mutuals arg unfolded)
              
           in
           if not this_occurrence_ok
@@ -1230,8 +1223,8 @@ let name_strictly_positive_in_type env (bv:bv) t : ML _ =
 *)
 let name_unused_in_type env (bv:bv) t : ML _ =
   let t, fv_lid = name_as_fv_in_t t bv in
-  if not (ty_occurs_in fv_lid t) then true
-  else mutuals_unused_in_type [fv_lid] (normalize env t)
+  not (ty_occurs_in fv_lid t) ||
+  mutuals_unused_in_type [fv_lid] (normalize env t)
 
 (*  Check that the mutuals are
     strictly positive in every field of the data constructor dlid
@@ -1265,13 +1258,10 @@ let ty_strictly_positive_in_datacon_decl (env:env_t)
         let incorrectly_annotated_binder =
             L.tryFind 
               (fun b ->
-                 if (if U.is_binder_unused b
-                  then not (name_unused_in_type env b.binder_bv f.binder_bv.sort)
-                  else false)
-                 then true
-                 else (if U.is_binder_strictly_positive b
-                  then not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)
-                  else false))
+                 (U.is_binder_unused b
+                  && not (name_unused_in_type env b.binder_bv f.binder_bv.sort)) ||
+                 (U.is_binder_strictly_positive b
+                  && not (name_strictly_positive_in_type env b.binder_bv f.binder_bv.sort)))
               ty_bs
         in
         match incorrectly_annotated_binder with

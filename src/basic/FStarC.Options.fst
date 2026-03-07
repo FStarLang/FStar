@@ -1944,8 +1944,7 @@ let should_check m =
   List.contains (String.lowercase m) l
 
 let should_verify m =
-  if get_lax () then false
-  else should_check m
+  not (get_lax ()) && should_check m
 
 let should_check_file fn =
     should_check (module_name_of_file_name fn)
@@ -2082,9 +2081,8 @@ let message_format               () =
 let force                        () = get_force ()
 let help                         () = get_help                        ()
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
-let hint_info                    () = if get_hint_info ()
-                                     then true
-                                     else get_query_stats                ()
+let hint_info                    () = get_hint_info                   ()
+                                    || get_query_stats                ()
 let hint_dir                     () = get_hint_dir                    ()
 let hint_file                    () = get_hint_file                   ()
 let hint_file_for_src src_filename =
@@ -2121,9 +2119,8 @@ let load_cmxs                    () = get_load_cmxs                   ()
 let log_queries                  () = get_log_queries                 ()
 let log_failing_queries          () = get_log_failing_queries         ()
 let keep_query_captions          () =
-    if get_keep_query_captions ()
-    then (if log_queries () then true else log_failing_queries ())
-    else false
+    get_keep_query_captions ()
+    && (log_queries () || log_failing_queries ())
 
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
@@ -2150,7 +2147,7 @@ let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
 let print_expected_failures      () = get_print_expected_failures     ()
 let print_implicits              () = get_print_implicits             ()
-let print_real_names             () = if get_prn () then true else get_print_full_names()
+let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
 let proof_recovery               () = get_proof_recovery              ()
@@ -2422,8 +2419,8 @@ let should_extract (m:string) (tgt:codegen_t) : ML bool =
             | [] -> false
             | l -> l |> Util.for_some (fun n -> String.lowercase n = m)
         in
-        if no_extract m then false
-        else (match get_extract_namespace (), get_extract_module() with
+        not (no_extract m) &&
+        (match get_extract_namespace (), get_extract_module() with
         | [], [] ->
           // Neither is set; extract only files given in the command line.
           // Except for krml: there we retain the behavior of extracting everything
@@ -2431,14 +2428,13 @@ let should_extract (m:string) (tgt:codegen_t) : ML bool =
           if tgt = Krml
           then true
           else should_check m
-        | _ -> if should_extract_namespace m then true else should_extract_module m)
+        | _ -> should_extract_namespace m || should_extract_module m)
 
 let should_be_already_cached m =
   (* should_check is true for files in the command line,
   we exclude those from this check since they were explicitly
   requested. *)
-  if should_check m then false
-  else (
+  not (should_check m) && (
     match get_already_cached() with
     | None -> false
     | Some already_cached_setting ->
@@ -2452,20 +2448,16 @@ let profile_enabled modul_opt phase =
     matches_namespace_filter_opt phase (get_profile_component())
 
   | Some modul ->
-    if matches_namespace_filter_opt modul (get_profile())
-    then if matches_namespace_filter_opt phase (get_profile_component()) then true
-         else false
-    else
+    (matches_namespace_filter_opt modul (get_profile())
+     && matches_namespace_filter_opt phase (get_profile_component()))
 
     // A special case for --timing: this option should print the time
     // taken for each top-level decl, so we enable the profiler only for
     // the FStarC.TypeChecker.process_one_decl phase, and only for those
     // modules given in the command line.
-    if timing ()
-    then (if phase = "FStarC.TypeChecker.Tc.process_one_decl"
-          then should_check modul
-          else false)
-    else false
+    || (timing ()
+        && phase = "FStarC.TypeChecker.Tc.process_one_decl"
+        && should_check modul)
 
 exception File_argument of string
 

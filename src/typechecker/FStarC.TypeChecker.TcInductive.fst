@@ -169,11 +169,8 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          // If the annotation is eqtype, then the type cannot contain the noeq qualifier
          // nor the unopteq qualifier. That is, if the user wants to annotate an inductive
          // as eqtype, they must run the full hasEq check
-         let valid_type = (let is_eq = U.is_eqtype_no_unrefine t in
-                          if is_eq then (if not (s.sigquals |> List.contains Noeq) then not (s.sigquals |> List.contains Unopteq) else false)
-                          else (teq_nosmt_force env t t_type)) in
-
-
+         let valid_type = (U.is_eqtype_no_unrefine t && not (s.sigquals |> List.contains Noeq) && not (s.sigquals |> List.contains Unopteq)) ||
+                          (teq_nosmt_force env t t_type) in
          if not valid_type then
              raise_error s Errors.Error_InductiveAnnotNotAType [
                  text (Format.fmt2 "Type annotation %s for inductive %s is not Type or eqtype, \
@@ -426,9 +423,8 @@ let is_haseq_lid lid : ML _ =
   let str = (string_of_lid lid) in
   let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
-  if len > haseq_suffix_len
-  then String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
-  else false
+  len > haseq_suffix_len &&
+  String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
 
 let get_haseq_axiom_lid lid =
     lid_of_ids (ns_of_lid lid @ [(id_of_text (string_of_id (ident_of_lid lid) ^ haseq_suffix))])
@@ -643,7 +639,7 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
    and exists_mutual tl : ML _ =
      match tl with
      | [] -> false
-     | hd::tl -> if is_mutual hd then true else exists_mutual tl
+     | hd::tl -> is_mutual hd || exists_mutual tl
   in
 
 
@@ -1049,21 +1045,20 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let imp_binders = tps @ indices |> List.map (fun b -> {b with binder_qual=mk_implicit b.binder_qual}) in
 
     let early_prims_inductive =
-      if lid_equals C.prims_lid (Env.current_module env)
-      then List.existsb (fun s -> s = (string_of_id (ident_of_lid tc))) early_prims_inductives
-      else false
+      lid_equals C.prims_lid  (Env.current_module env) &&
+      List.existsb (fun s -> s = (string_of_id (ident_of_lid tc))) early_prims_inductives
     in
 
     let discriminator_ses =
-        if (let not_data = fvq <> Data_ctor in
-            if not_data then true else U.has_attribute attrs C.no_auto_projectors_decls_attr)
+        if fvq <> Data_ctor // We do not generate discriminators for record types
+          || U.has_attribute attrs C.no_auto_projectors_decls_attr
         then []
         else
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in
             let only_decl =
-              if early_prims_inductive then true
-              else U.has_attribute attrs C.no_auto_projectors_attr
+              early_prims_inductive ||
+              U.has_attribute attrs C.no_auto_projectors_attr
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1154,8 +1149,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let projectors_ses =
-      if (if U.has_attribute attrs C.no_auto_projectors_decls_attr then true
-          else U.has_attribute attrs C.meta_projectors_attr)
+      if U.has_attribute attrs C.no_auto_projectors_decls_attr
+        || U.has_attribute attrs C.meta_projectors_attr
       then []
       else
       fields |> List.mapi (fun i ({binder_bv=x}) ->
@@ -1168,8 +1163,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             else S.mk_Total t in
           let t = SS.close_univ_vars uvs <| U.arrow binders result_comp in
           let only_decl =
-            if early_prims_inductive then true
-            else U.has_attribute attrs C.no_auto_projectors_attr
+            early_prims_inductive ||
+            U.has_attribute attrs C.no_auto_projectors_attr
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)

@@ -505,7 +505,7 @@ let lookup err =
   let v, level, i = lookup_error flags err in
   let with_level level = v, level, i in
   match v with
-  | Warning_Defensive when (let x = Options.defensive_error () in if x then true else Options.defensive_abort ()) ->
+  | Warning_Defensive when Options.defensive_error () || Options.defensive_abort () ->
     with_level CAlwaysError
 
   | Warning_WarnOnUse ->

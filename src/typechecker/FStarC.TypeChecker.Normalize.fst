@@ -132,19 +132,15 @@ let head_of t = let hd, _ = U.head_and_args_full t in hd
 
 (* Decides whether a memo taken in config c1 is valid when reducing in config c2. *)
 let cfg_equivalent (c1 c2 : Cfg.cfg) : ML bool =
-  if c1.steps =? c2.steps then
-    if c1.delta_level =? c2.delta_level then
-      c1.normalize_pure_lets =? c2.normalize_pure_lets
-    else false
-  else false
+  c1.steps =? c2.steps &&
+  c1.delta_level =? c2.delta_level &&
+  c1.normalize_pure_lets =? c2.normalize_pure_lets
 
 let read_memo cfg (r:memo (Cfg.cfg & 'a)) : ML (option 'a) =
   match !r with
   (* We only take this memoized value if the cfg matches the current
   one, or if we are running in compatibility mode for it. *)
-  | Some (cfg', a) when (if cfg.compat_memo_ignore_cfg then true
-                         else if BU.physical_equality cfg cfg' then true
-                         else cfg_equivalent cfg' cfg) ->
+  | Some (cfg', a) when cfg.compat_memo_ignore_cfg || BU.physical_equality cfg cfg' || cfg_equivalent cfg' cfg ->
     Some a
   | _ -> None
 
@@ -513,8 +509,8 @@ let rec maybe_weakly_reduced tm :  ML bool =
           maybe_weakly_reduced t
 
         | Comp ct ->
-          if maybe_weakly_reduced ct.result_typ then true
-          else BU.for_some (fun (a, _) -> maybe_weakly_reduced a) ct.effect_args
+          maybe_weakly_reduced ct.result_typ
+          || BU.for_some (fun (a, _) -> maybe_weakly_reduced a) ct.effect_args
     in
     let t = Subst.compress tm in
     match t.n with
@@ -539,23 +535,23 @@ let rec maybe_weakly_reduced tm :  ML bool =
         true
 
       | Tm_app {hd=t; args} ->
-        if maybe_weakly_reduced t then true
-        else args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a)
+        maybe_weakly_reduced t
+        || (args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a))
 
       | Tm_ascribed {tm=t1; asc} ->
-        if maybe_weakly_reduced t1 then true
-        else let asc_tc, asc_tac, _ = asc in
-           if (match asc_tc with
-               | Inl t2 -> maybe_weakly_reduced t2
-               | Inr c2 -> aux_comp c2)
-           then true
-           else (match asc_tac with
-                 | None -> false
-                 | Some tac -> maybe_weakly_reduced tac)
+        maybe_weakly_reduced t1
+        || (let asc_tc, asc_tac, _ = asc in
+           (match asc_tc with
+            | Inl t2 -> maybe_weakly_reduced t2
+            | Inr c2 -> aux_comp c2)
+           ||
+           (match asc_tac with
+            | None -> false
+            | Some tac -> maybe_weakly_reduced tac))
 
       | Tm_meta {tm=t; meta=m} ->
-        if maybe_weakly_reduced t then true
-        else (match m with
+        maybe_weakly_reduced t
+        || (match m with
            | Meta_pattern (_, args) ->
              BU.for_some (BU.for_some (fun (a, _) -> maybe_weakly_reduced a)) args
 
@@ -627,7 +623,7 @@ let is_fext_on_domain (t:term) : ML (option term) =
   match (SS.compress t).n with
   | Tm_app {hd; args} ->
     (match (U.un_uinst hd).n with
-    | Tm_fvar fv when (if is_on_dom fv then List.length args = 3 else false) ->  //first two are type arguments, third is the function
+    | Tm_fvar fv when is_on_dom fv && List.length args = 3 ->  //first two are type arguments, third is the function
       let f = args |> List.tl |> List.tl |> List.hd |> fst in  //get f
       Some f
     | _ -> None)
@@ -666,7 +662,7 @@ let rec args_are_binders args bs : ML bool =
     match args, bs with
     | (t, _)::args, b::bs ->
         begin match (SS.compress t).n with
-        | Tm_name bv' -> if S.bv_eq b.binder_bv bv' then args_are_binders args bs else false
+        | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
         | _ -> false
         end
     | [], [] -> true
@@ -714,13 +710,12 @@ let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
         | Tm_refine {b; phi} when U.term_eq phi U.t_true -> unrefine_true b.sort
         | _ -> t
       in
-      if List.length bs = List.length bs_q then
-        List.forall2 (fun b1 b2 ->
-          let s1 = b1.binder_bv.sort |> unrefine_true in
-          let s2 = b2.binder_bv.sort |> unrefine_true in
-          U.term_eq s1 s2)
-          bs bs_q
-      else false
+      List.length bs = List.length bs_q &&
+      List.forall2 (fun b1 b2 ->
+        let s1 = b1.binder_bv.sort |> unrefine_true in
+        let s2 = b2.binder_bv.sort |> unrefine_true in
+        U.term_eq s1 s2)
+        bs bs_q
     in
     let is_bv (bv:S.bv) (t:term) =
       match (SS.compress t).n with
@@ -731,7 +726,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
       let chgd = mk_ref false in
       let t' = t |> Syntax.Visit.visit_term false (fun t ->
                       let hd, args = U.head_and_args t in
-                      if (if List.length args = arity then is_bv bv hd else false) then (
+                      if List.length args = arity && is_bv bv hd then (
                         chgd := true;
                         s
                       ) else
@@ -879,11 +874,9 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
 
           // Normalization requests
           | Tm_fvar fv when
-              (if should_consider_norm_requests cfg then
-               Some? (is_norm_request_head fv)
-              else false) ->
-            let k = Some?.v (is_norm_request_head fv) in
-            handle_norm_request cfg env stack k t
+              should_consider_norm_requests cfg &&
+              Some? (is_norm_request_head fv) ->
+            handle_norm_request cfg env stack (Some?.v (is_norm_request_head fv)) t
 
           // A top-level name, possibly unfold it.
           // In either case, also drop the environment, no free indices here.
@@ -1056,11 +1049,10 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 List.fold_right
                   (fun (a, aq) stack ->
                     let a =
-                      if (if (Cfg.cfg_env cfg).erase_erasable_args ||
+                      if ((Cfg.cfg_env cfg).erase_erasable_args ||
                           cfg.steps.for_extraction ||
-                          cfg.debug.erase_erasable_args //just for experimentation
-                       then U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
-                       else false)
+                          cfg.debug.erase_erasable_args) //just for experimentation
+                      && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
                       then U.exp_unit
                       else a
                     in
@@ -1219,9 +1211,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
 
             (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
             (* This is important for tactics, see issue #1594 *)
-            else if (if cfg.steps.tactics
-                    then U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
-                    else false)
+            else if cfg.steps.tactics
+                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
             then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> Inl?.v)]; body; rc_opt=None}) t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
@@ -1315,9 +1306,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 then (
                   //In Extraction, we want to erase sub-terms with erasable effect
                   //Or pure terms with non-informative return types
-                  if (if Env.is_erasable_effect cfg.tcenv m_from then true
-                     else if U.is_pure_effect m_from then Env.non_informative cfg.tcenv ty
-                     else false)
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
                   then (
                     rebuild cfg env stack (S.mk (Tm_meta {tm=U.exp_unit; meta=m}) t.pos)
                   )
@@ -1333,10 +1323,9 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 then (
                   //In Extraction, we want to erase sub-terms with erasable effect
                   //Or pure terms with non-informative return types
-                  if (if Env.is_erasable_effect cfg.tcenv m_from then true
-                     else if Env.is_erasable_effect cfg.tcenv m_to then true
-                     else if U.is_pure_effect m_from then Env.non_informative cfg.tcenv ty
-                     else false)
+                  if Env.is_erasable_effect cfg.tcenv m_from
+                  ||  Env.is_erasable_effect cfg.tcenv m_to
+                  || (U.is_pure_effect m_from && Env.non_informative cfg.tcenv ty)
                   then (
                     rebuild cfg env stack (S.mk (Tm_meta {tm=U.exp_unit; meta=m}) t.pos)
                   )
@@ -1407,13 +1396,10 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : ML ter
       | _ -> false
     in
     let maybe_warn_if_unfolding_plugin () =
-     if (if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
-         then if not (Options.no_plugins ())                   // haven't explicitly disabled plugins
-              then if !plugin_unfold_warn_ctr > 0              // we haven't raised too many warnings
-                   then is_plugin ()                           // and it is in fact a plugin
-                   else false
-              else false
-         else false)
+     if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
+         && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
+         && !plugin_unfold_warn_ctr > 0                   // we haven't raised too many warnings
+         && is_plugin ()                                  // and it is in fact a plugin
      then begin
        // then warn about it
        let msg = Format.fmt1 "Unfolding name which is marked as a plugin: %s" (show f) in
@@ -1880,9 +1866,8 @@ and reify_lift cfg e msrc mtgt t : ML term =
    *       but to run, we are relying on return
    *     Disabling this for layered effects, and using the lift instead
    *)
-  if (if (if U.is_pure_effect msrc then true else U.is_div_effect msrc)
-     then not (mtgt |> Env.is_layered_effect env)
-     else false)
+  if (U.is_pure_effect msrc || U.is_div_effect msrc) &&
+     not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
     let _, repr = ed |> U.get_eff_repr |> Option.must in
@@ -1974,9 +1959,8 @@ and norm_comp : cfg -> env -> comp -> ML comp =
               // then drop the effect arguments
               //
               let effect_args =
-                if (if cfg.steps.for_extraction
-                    then not (get_extraction_mode cfg.tcenv ct.effect_name = Extract_reify)
-                    else false)
+                if cfg.steps.for_extraction
+                && not (get_extraction_mode cfg.tcenv ct.effect_name = Extract_reify)
                 then ct.effect_args |> List.map (fun _ -> S.unit_const |> S.as_arg)
                 else ct.effect_args |> List.mapi (fun idx (a, i) -> (norm cfg env [] a, i)) in
               let flags = ct.flags |> List.map (function
@@ -2089,10 +2073,10 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
         | Tm_fvar fv ->
             let l = S.lid_of_fv fv in
-               if Ident.lid_equals l PC.int_lid then true
-            else if Ident.lid_equals l PC.bool_lid then true
-            else if Ident.lid_equals l PC.string_lid then true
-            else Ident.lid_equals l PC.exn_lid
+               (Ident.lid_equals l PC.int_lid)
+            || (Ident.lid_equals l PC.bool_lid)
+            || (Ident.lid_equals l PC.string_lid)
+            || (Ident.lid_equals l PC.exn_lid)
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
@@ -2246,7 +2230,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
         in
         match args with
         | [(t, _); (ty, _)]
-          when (if is_unit ty then U.is_sub_singleton t else false) ->
+          when is_unit ty && U.is_sub_singleton t ->
           w U.t_true, false
         | _ -> tm, false
       end
@@ -2355,7 +2339,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
 
         (* If we are doing hnf (and the head is not a primop), then there is
         no need to normalize the argument. *)
-        if (if cfg.steps.hnf then not (is_partial_primop_app cfg t) else false) then (
+        if cfg.steps.hnf && not (is_partial_primop_app cfg t) then (
            let arg = closure_as_term cfg env_arg tm in
            let t = extend_app t (arg, aq) r in
            rebuild cfg env_arg stack t
@@ -2400,25 +2384,21 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
         //
         let is_non_tac_layered_effect m =
           let norm_m = m |> Env.norm_eff_name cfg.tcenv in
-          if not (Ident.lid_equals norm_m PC.effect_TAC_lid)
-          then norm_m |> Env.is_layered_effect cfg.tcenv
-          else false in
+          (not (Ident.lid_equals norm_m PC.effect_TAC_lid)) &&
+          norm_m |> Env.is_layered_effect cfg.tcenv in
 
         begin match (SS.compress t).n with
         | Tm_meta {meta=Meta_monadic (m, _)}
-          when (if is_non_tac_layered_effect m then
-                not cfg.steps.for_extraction
-               else false) ->
+          when is_non_tac_layered_effect m &&
+               not cfg.steps.for_extraction ->
           fallback (Format.fmt1
                       "Meta_monadic for a non-TAC layered effect %s in non-extraction mode"
                       (Ident.string_of_lid m)) ()
 
         | Tm_meta {meta=Meta_monadic (m, _)}
-          when (if is_non_tac_layered_effect m then
-                if cfg.steps.for_extraction then
-                  S.Extract_none? (get_extraction_mode cfg.tcenv m)
-                else false
-               else false) ->
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               S.Extract_none? (get_extraction_mode cfg.tcenv m) ->
           //
           // If the effect is an indexed effect, that is non-extractable
           //
@@ -2428,11 +2408,9 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                           (Ident.string_of_lid m) msg)
 
         | Tm_meta {meta=Meta_monadic (m, _)}
-          when (if is_non_tac_layered_effect m then
-                if cfg.steps.for_extraction then
-                  get_extraction_mode cfg.tcenv m = S.Extract_primitive
-                else false
-               else false) ->
+          when is_non_tac_layered_effect m &&
+               cfg.steps.for_extraction    &&
+               get_extraction_mode cfg.tcenv m = S.Extract_primitive ->
 
           // If primitive extraction, don't reify
           fallback (Format.fmt1
@@ -2440,24 +2418,19 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                       (Ident.string_of_lid m)) ()
 
         | Tm_meta {meta=Meta_monadic_lift (msrc, mtgt, _)}
-          when (if (if is_non_tac_layered_effect msrc then true
-                    else is_non_tac_layered_effect mtgt) then
-                not cfg.steps.for_extraction
-               else false) ->
+          when (is_non_tac_layered_effect msrc ||
+                is_non_tac_layered_effect mtgt) &&
+               not cfg.steps.for_extraction ->
           fallback (Format.fmt2
                     "Meta_monadic_lift for a non-TAC layered effect %s ~> %s in non extraction mode"
                     (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
 
         | Tm_meta {meta=Meta_monadic_lift (msrc, mtgt, _)}
-          when (if cfg.steps.for_extraction then
-                (if (if is_non_tac_layered_effect msrc
-                     then S.Extract_none? (get_extraction_mode cfg.tcenv msrc)
-                     else false)
-                 then true
-                 else if is_non_tac_layered_effect mtgt
-                 then S.Extract_none? (get_extraction_mode cfg.tcenv mtgt)
-                 else false)
-               else false) ->
+          when cfg.steps.for_extraction &&
+               ((is_non_tac_layered_effect msrc &&
+                 S.Extract_none? (get_extraction_mode cfg.tcenv msrc)) ||
+                (is_non_tac_layered_effect mtgt &&
+                 S.Extract_none? (get_extraction_mode cfg.tcenv mtgt))) ->
 
           raise_error t Errors.Fatal_UnexpectedEffect
                        (Format.fmt2 "Normalizer cannot reify %s ~> %s for extraction"
@@ -2627,12 +2600,11 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                                                   rc_opt=lopt0}) r)
             | _ ->
               let scrutinee =
-                if (if cfg.steps.iota
-                   then if (not cfg.steps.weak)
-                   then if (not cfg.steps.compress_uvars)
-                   then if cfg.steps.weakly_reduce_scrutinee
-                   then maybe_weakly_reduced scrutinee
-                   else false else false else false else false)
+                if cfg.steps.iota
+                && (not cfg.steps.weak)
+                && (not cfg.steps.compress_uvars)
+                && cfg.steps.weakly_reduce_scrutinee
+                && maybe_weakly_reduced scrutinee
                 then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
                           scrutinee_env
                           []
@@ -2855,7 +2827,7 @@ let non_info_norm env t =
  *)
 
 let maybe_promote_t env non_informative_only t =
-  if not non_informative_only then true else non_info_norm env t
+  not non_informative_only || non_info_norm env t
 
 let ghost_to_pure_aux env non_informative_only c =
     match c.n with
@@ -2864,9 +2836,8 @@ let ghost_to_pure_aux env non_informative_only c =
       if maybe_promote_t env non_informative_only t then {c with n = Total t} else c
     | Comp ct ->
         let l = Env.norm_eff_name env ct.effect_name in
-        if (if U.is_ghost_effect l
-           then maybe_promote_t env non_informative_only ct.result_typ
-           else false)
+        if U.is_ghost_effect l
+        && maybe_promote_t env non_informative_only ct.result_typ
         then let ct =
                  match downgrade_ghost_effect_name ct.effect_name with
                  | Some pure_eff ->
@@ -2880,9 +2851,8 @@ let ghost_to_pure_aux env non_informative_only c =
     | _ -> c
 
 let ghost_to_pure_lcomp_aux env non_informative_only (lc:lcomp) =
-    if (if U.is_ghost_effect lc.eff_name
-       then maybe_promote_t env non_informative_only lc.res_typ
-       else false)
+    if U.is_ghost_effect lc.eff_name
+    && maybe_promote_t env non_informative_only lc.res_typ
     then match downgrade_ghost_effect_name lc.eff_name with
          | Some pure_eff ->
            { TcComm.apply_lcomp (ghost_to_pure_aux env non_informative_only) (fun g -> g) lc
@@ -3276,7 +3246,7 @@ let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : ML (list
       (bs_l, S.mk_Total (U.arrow bs_r c))
 
     (* We need more, descend if `c` is total *)
-    | bs, c when (if len < n then if U.is_total_comp c then not (U.has_decreases c) else false else false) ->
+    | bs, c when len < n && U.is_total_comp c && not (U.has_decreases c) ->
       let (bs', c') = aux true (n-len) (U.comp_result c) in
       (bs@bs', c')
 

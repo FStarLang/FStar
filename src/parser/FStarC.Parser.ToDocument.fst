@@ -73,8 +73,8 @@ let rec all (f: 'a -> bool) (l: list 'a): bool =
   | x :: xs -> if f x then all f xs else false
 
 let all1_explicit (args:list (term&imp)) : ML bool =
-    if List.isEmpty args then false
-    else BU.for_all (function
+    not (List.isEmpty args) &&
+    BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
 
@@ -2054,11 +2054,9 @@ and p_appTerm e : ML _ = match e.tm with
       )
 
   (* (explicit) tuples and dependent tuples are handled below *)
-  | Construct (lid, args) when is_general_construction e ->
-    let skip_dtuple = if is_dtuple_constructor lid then all1_explicit args else false in
-    let skip_tuple = if is_tuple_constructor lid then all1_explicit args else false in
-    if skip_dtuple || skip_tuple then p_indexingTerm e
-    else
+  | Construct (lid, args) when is_general_construction e
+        && not (is_dtuple_constructor lid && all1_explicit args)
+        && not (is_tuple_constructor  lid && all1_explicit args) ->
     begin match args with
       | [] -> p_quident lid
       | [arg] -> group (p_quident lid ^/^ p_argTerm arg)

@@ -283,8 +283,8 @@ let is_type_name g fv =
 
 (** Is [fv] the name of an F* inductive type or type abbreviation? *)
 let is_fv_type g fv =
-    if is_type_name g fv then true
-    else g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
+    is_type_name g fv ||
+    g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : ML (list mlsymbol) =
   match ns with
@@ -562,7 +562,7 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
     in
     let rec subsetMlidents (la : list mlident) (lb : list mlident) : ML bool =
       match la with
-      | h::tla -> if List.contains h lb then subsetMlidents tla lb else false
+      | h::tla -> List.contains h lb && subsetMlidents tla lb
       | [] -> true
     in
     let tySchemeIsClosed (tys : mltyscheme) : ML bool =

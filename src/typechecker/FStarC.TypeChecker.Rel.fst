@@ -1308,11 +1308,9 @@ let intersect_binders (g:gamma) (v1:binders) (v2:binders) : ML binders =
         ([], ctx_binders) in
     List.rev isect
 
-let binders_eq v1 v2 : ML _
-  =
-  if (List.length v1 = List.length v2)
-  then (List.forall2 (fun ({binder_bv=a}) ({binder_bv=b}) -> S.bv_eq a b) v1 v2)
-  else false
+let binders_eq v1 v2 : ML _ =
+  List.length v1 = List.length v2
+  && List.forall2 (fun ({binder_bv=a}) ({binder_bv=b}) -> S.bv_eq a b) v1 v2
 
 let name_exists_in_binders x bs : ML _
   =
@@ -3410,7 +3408,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         (* If, possibly after some extra normalization in the above block,
         the RHS has become syntactically equal to the LHS, solve the problem
         and carry on. See #3264. *)
-        if term_is_uvar ctx_uv rhs &. Nil? args_lhs then
+        if term_is_uvar ctx_uv rhs && Nil? args_lhs then
           solve (solve_prob orig None [] wl)
         else
         if not occurs_ok
@@ -3750,8 +3748,8 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                   Env.fv_has_attr env fv PC.unifier_hint_injective_lid
                 | _ -> false
               in
-              let is_reveal = U.is_fvar PC.reveal head1 |. U.is_fvar PC.reveal head2 in
-              if Some? d &. wl.smt_ok &. not treat_as_injective |. is_reveal then
+              let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in
+              if Some? d && wl.smt_ok && not treat_as_injective || is_reveal then
                 try_solve_without_smt_or_else wl
                     solve_sub_probs_no_smt
                     (try_reveal_reveal_or_retry d)
@@ -4974,7 +4972,7 @@ let teq env t1 t2 : ML guard_t =
       Err.basic_type_error env env.range None t2 t1;
       trivial_guard
     | Some g ->
-        if !dbg_Rel |. !dbg_RelTop then
+        if !dbg_Rel || !dbg_RelTop then
           Format.print3 "teq of %s and %s succeeded with guard %s\n"
                         (show t1) (show t2) (guard_to_string env g);
         g
@@ -4986,7 +4984,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 : ML _
   =
   Profiling.profile (fun () ->
     let rel = if use_eq then EQ else SUB in
-    if !dbg_Rel |. !dbg_RelTop then
+    if !dbg_Rel || !dbg_RelTop then
       Format.print3 "sub_comp of %s --and-- %s --with-- %s\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB");
     let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
     let wl = { wl with repr_subcomp_allowed = true } in
@@ -4995,7 +4993,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 : ML _
     let (r, ms) = Timing.record_ms
                   (fun () -> with_guard env prob <| solve_and_commit (singleton wl prob true)  (fun _ -> None))
     in
-    if !dbg_Rel |. !dbg_RelTop |. !dbg_RelBench then
+    if !dbg_Rel || !dbg_RelTop || !dbg_RelBench then
       Format.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB") (show ms);
     r)
   (Some (Ident.string_of_lid (Env.current_module env)))
@@ -5195,7 +5193,7 @@ let do_discharge_vc use_env_range_msg env vc : ML unit =
       Options.with_saved_options (fun () ->
         ignore <| Options.set_options "--no_tactics";
         let did_anything, vcs = env.solver.preprocess env vc in
-        if debug &. did_anything then
+        if debug && did_anything then
           diag [text "Tactic preprocessing produced" ^/^ pp (List.length vcs <: int) ^/^ text "goals"];
         let vcs = vcs |> List.map (fun (env, goal, opts) ->
                             // NB: No Eager_unfolding. Why?
@@ -5279,7 +5277,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : ML (opti
   let ret_g = {g with guard_f = Trivial} in
   if env.admit then (
     let open FStarC.Class.PP in
-    if debug &. not (Trivial? g.guard_f) &. not env.phase1 then
+    if debug && not (Trivial? g.guard_f) && not env.phase1 then
       diag [
         text "Skipping VC because verification is disabled.";
         text "VC =" ^/^ pp g;
@@ -5345,14 +5343,14 @@ let check_subtyping env t1 t2 : ML _
     let g = with_guard env_x prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
     match g with
     | None -> (
-      if !dbg_Rel |. !dbg_RelTop then
+      if !dbg_Rel || !dbg_RelTop then
         Format.print2 "check_subtyping FAILED: %s <: %s\n"
                       (N.term_to_string env_x t1)
                       (N.term_to_string env_x t2);
         None
     )
     | Some g -> (
-      if !dbg_Rel |. !dbg_RelTop then
+      if !dbg_Rel || !dbg_RelTop then
         Format.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
                       (N.term_to_string env_x t1)
                       (N.term_to_string env_x t2)
@@ -5698,7 +5696,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         if defer_open_metas &. is_open then (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
-          if !dbg_Rel |. !dbg_Imps then
+          if !dbg_Rel || !dbg_Imps then
             Format.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
         ) else if is_open &. not (meta_tac_allowed_for_open_problem tac)

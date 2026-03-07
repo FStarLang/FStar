@@ -453,9 +453,9 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
     let lid = fv.fv_name in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
     let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
-    if (if not (if U.is_pure_or_ghost_function t_norm then true else is_smt_reifiable_function env.tcenv t_norm)
-        then true
-        else if U.is_lemma t_norm then true else uninterpreted)
+    if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
+    || U.is_lemma t_norm
+    || uninterpreted
     then let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
             | _ -> [] in
@@ -535,13 +535,11 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                     | _ -> false
                 in
                 // Thunk if ...
-                if (nsstr lid <> "Prims"  //not in prims
+                nsstr lid <> "Prims"  //not in prims
                 && List.length us = 0 //has no universe binders
-                && not (quals |> List.contains Logic)) //not logic qualified terms
-                then (if not (is_squash t_norm) //not ambient squashed properties
-                      then not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
-                      else false)
-                else false
+                && not (quals |> List.contains Logic) //not logic qualified terms
+                && not (is_squash t_norm) //not ambient squashed properties
+                && not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
               in
               let thunked, vars =
                  match vars with
@@ -943,7 +941,7 @@ let encode_top_level_let :
                     let app_is_prop = Term.mk_subtype_of_unit app in
                     if should_encode_logical
                     then (
-                       if (if is_sub_singleton then not (Options.Ext.enabled "retain_old_prop_typing") else false)
+                      if is_sub_singleton && not (Options.Ext.enabled "retain_old_prop_typing")
                       then (
                         Util.mkAssume(mkForall (S.range_of_lbname lbn)
                                             ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
@@ -1142,7 +1140,7 @@ let encode_top_level_let :
               //decls is a list of decls_elt ... each of which contains a list decl in it
               //we need to go through each of those, accumulate DeclFuns and remove them from there
               let prefix_decls, elts, rest = List.fold_left (fun (prefix_decls, elts, rest) elt ->
-                if (if Some? elt.key then List.existsb isDeclFun elt.decls else false)
+                if elt.key |> Some? && List.existsb isDeclFun elt.decls
                 then prefix_decls, elts@[elt], rest
                 else let elt_decl_funs, elt_rest = List.partition isDeclFun elt.decls in
                      prefix_decls @ elt_decl_funs, elts, rest @ [{ elt with decls = elt_rest }]
@@ -1153,9 +1151,9 @@ let encode_top_level_let :
           prefix_decls@elts@rest@eqns, env0
         in
 
-        if (if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
-            then true
-            else typs |> BU.for_some (fun t -> not (if U.is_pure_or_ghost_function t then true else is_smt_reifiable_function env.tcenv t)))
+        if quals |> BU.for_some (function HasMaskedEffect -> true | _ -> false)
+        || typs  |> BU.for_some (fun t -> not <| (U.is_pure_or_ghost_function t ||
+                                                  is_smt_reifiable_function env.tcenv t))
         then decls, env_decls
         else
           if not is_rec
@@ -1202,7 +1200,8 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
             let univ_eqs = List.mapi (fun i u -> mkEq(mkFreeV u, mkApp(mk_univ_projector_name l i, [xx]))) univ_vars in
             let base_eqs = is_l::univ_eqs in
             let inversion_case, decls' =
-              if (if injective_type_params then true else Options.Ext.enabled "compat:injectivity")
+              if injective_type_params
+              || Options.Ext.enabled "compat:injectivity"
               then (
                 let _univs, data_t = Env.lookup_datacon env.tcenv l in
                 let args, res = U.arrow_formals data_t in
@@ -1329,7 +1328,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
   let injective_type_params =
-    if injective_type_params then true else Options.Ext.enabled "compat:injectivity"
+    injective_type_params || Options.Ext.enabled "compat:injectivity"
   in
   let univ_fields =
           univs
@@ -1491,7 +1490,7 @@ let encode_datacon (env:env_t) (se:sigelt)
                           else
                             let t = U.unrefine (U.comp_result c) in
                             let t = norm t in
-                            if (if is_type t then true else U.is_sub_singleton t)
+                            if is_type t || U.is_sub_singleton t
                             then None //ordering on Type and squashed values is not useful
                             else (
                               let head, _ = U.head_and_args_full t in
@@ -1815,8 +1814,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
      (* Irreducible and opaque lets. Replace the definitions by a dummy val decl (if none
         exists) and re-run. *)
      | Sig_let {lbs}
-        when (if se.sigquals |> List.contains S.Irreducible then true
-              else se.sigattrs |> BU.for_some is_opaque_to_smt) ->
+        when se.sigquals |> List.contains S.Irreducible
+          || se.sigattrs |> BU.for_some is_opaque_to_smt ->
        let attrs = se.sigattrs in
        let env, decls = BU.fold_map (fun env lb ->
         let lid = (Inr?.v lb.lbname).fv_name in
@@ -1856,9 +1855,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
       [], env
 
     (* `unfold let` definitions in prims do not get encoded. *)
-    | Sig_let {lids} when (if lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
-                             then se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)
-                             else false) ->
+    | Sig_let {lids} when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
+                             && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       if !dbg_SMTEncoding then
         Format.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
@@ -1938,7 +1936,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
       let decls, elts, rest =
         List.fold_left
           (fun (decls, elts, rest) elt ->
-            if (if Some? elt.key then List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls else false)
+            if Some? elt.key //NS: Not sure what this case is for
+            && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
             then decls, elts@[elt], rest 
             else ( //Pull the function symbol decls to the front
               let elt_decls, elt_rest =
@@ -2250,13 +2249,15 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env bindings in
-    if (if Debug.medium () then true else !dbg_SMTEncoding)
+    if Debug.medium () || !dbg_SMTEncoding
     then Format.print1 "Encoding query formula {: %s\n" (show q);
     let (phi, qdecls), ms = Timing.record_ms (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
-      if (if Options.log_queries () then true else Options.log_failing_queries ())
+      (* If these options are off, the Captions will be dropped anyway,
+      but by checking here we can skip the printing. *)
+      if Options.log_queries () || Options.log_failing_queries ()
       then [Caption ("Encoding query formula : " ^ (show q));
             Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
       else []
@@ -2269,9 +2270,9 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
-    if (if Debug.medium () then true else !dbg_SMTEncoding)
+    if Debug.medium () || !dbg_SMTEncoding
     then Format.print_string "} Done encoding\n";
-    if (if Debug.medium () then true else if !dbg_SMTEncoding then true else !dbg_Time)
+    if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then Format.print1 "Encoding took %sms\n" (show ms);
     query_prelude, labels, qry, suffix
   )
