@@ -279,11 +279,12 @@ let rec type_leq_c (unfold_ty : unfold_t)
              FStarC_Extraction_ML_Syntax.loc = uu___1;_}
            ->
            let tl1 = type_leq unfold_ty t1' t1 in
-           if tl1 && (eff_leq f f')
+           if (if tl1 then eff_leq f f' else false)
            then
              (if
-                (f = FStarC_Extraction_ML_Syntax.E_PURE) &&
-                  (f' = FStarC_Extraction_ML_Syntax.E_ERASABLE)
+                (if f = FStarC_Extraction_ML_Syntax.E_PURE
+                 then f' = FStarC_Extraction_ML_Syntax.E_ERASABLE
+                 else false)
               then
                 let tl2 = type_leq unfold_ty t2 t2' in
                 (if tl2
@@ -327,7 +328,7 @@ let rec type_leq_c (unfold_ty : unfold_t)
        | uu___ ->
            let tl1 = type_leq unfold_ty t1' t1 in
            let tl2 = type_leq unfold_ty t2 t2' in
-           if (tl1 && (eff_leq f f')) && tl2
+           if (if (if tl1 then eff_leq f f' else false) then tl2 else false)
            then (true, e)
            else (false, FStar_Pervasives_Native.None))
   | (FStarC_Extraction_ML_Syntax.MLTY_Named (args, path),

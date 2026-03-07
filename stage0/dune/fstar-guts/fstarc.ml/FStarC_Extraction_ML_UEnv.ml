@@ -50,8 +50,9 @@ let __proj__ErasedFv__item___0 (projectee : mlbinding) :
   FStarC_Syntax_Syntax.fv= match projectee with | ErasedFv _0 -> _0
 let plug (uu___ : unit) : Prims.bool=
   let c = FStarC_Options.codegen () in
-  (c = (FStar_Pervasives_Native.Some FStarC_Options.Plugin)) ||
-    (c = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib))
+  if c = (FStar_Pervasives_Native.Some FStarC_Options.Plugin)
+  then true
+  else c = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib)
 let plug_no_lib (uu___ : unit) : Prims.bool=
   let uu___1 = FStarC_Options.codegen () in
   uu___1 = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib)
@@ -445,8 +446,9 @@ let lookup_tydef (env : uenv) (uu___ : FStarC_Extraction_ML_Syntax.mlpath) :
       FStarC_Util.find_map env.tydefs
         (fun tydef1 ->
            if
-             (ty_name = tydef1.tydef_name) &&
-               (module_name = tydef1.tydef_mlmodule_name)
+             (if ty_name = tydef1.tydef_name
+              then module_name = tydef1.tydef_mlmodule_name
+              else false)
            then FStar_Pervasives_Native.Some (tydef1.tydef_def)
            else FStar_Pervasives_Native.None)
 let has_tydef_declaration (u : uenv) (l : FStarC_Ident.lid) : Prims.bool=
@@ -560,13 +562,16 @@ let rename_conventional (s : Prims.string)
     else (let uu___2 = aux cs in 39 :: uu___2) in
   let sanitize_term uu___ =
     let valid c =
-      ((FStarC_Util.is_letter_or_digit c) || (c = 95)) || (c = 39) in
+      if (if FStarC_Util.is_letter_or_digit c then true else c = 95)
+      then true
+      else c = 39 in
     let cs' =
       FStarC_List.fold_right
         (fun c cs1 ->
            FStarC_List.op_At (if valid c then [c] else [95; 95]) cs1) cs [] in
     match cs' with
-    | c::cs1 when (FStarC_Util.is_digit c) || (c = 39) -> 95 :: c :: cs1
+    | c::cs1 when if FStarC_Util.is_digit c then true else c = 39 -> 95 :: c
+        :: cs1
     | uu___1 -> cs in
   let uu___ =
     if is_local_type_variable then sanitize_typ () else sanitize_term () in

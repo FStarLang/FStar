@@ -5129,17 +5129,20 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                             (match uu___15 with
                                              | (uu___16, r) ->
                                                  if
-                                                   (if r
+                                                   (if
+                                                      (if r
+                                                       then
+                                                         FStarC_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                           bind_kind
+                                                       else false)
                                                     then
-                                                      FStarC_Syntax_Syntax.uu___is_Substitutive_combinator
-                                                        bind_kind
-                                                    else false) &&
-                                                     ((if is_reifiable
+                                                      (if is_reifiable
                                                        then true
                                                        else
                                                          FStarC_Ident.lid_equals
                                                            ed.FStarC_Syntax_Syntax.mname
-                                                           FStarC_Parser_Const.effect_TAC_lid))
+                                                           FStarC_Parser_Const.effect_TAC_lid)
+                                                    else false)
                                                  then
                                                    FStarC_Syntax_Syntax.Extract_reify
                                                  else
@@ -7350,9 +7353,11 @@ let check_lift_for_erasable_effects (env : FStarC_TypeChecker_Env.env)
     (let m1_erasable = FStarC_TypeChecker_Env.is_erasable_effect env m11 in
      let m2_erasable = FStarC_TypeChecker_Env.is_erasable_effect env m2 in
      if
-       (if m2_erasable then Prims.op_Negation m1_erasable else false) &&
-         (Prims.op_Negation
-            (FStarC_Ident.lid_equals m11 FStarC_Parser_Const.effect_PURE_lid))
+       (if (if m2_erasable then Prims.op_Negation m1_erasable else false)
+        then
+          Prims.op_Negation
+            (FStarC_Ident.lid_equals m11 FStarC_Parser_Const.effect_PURE_lid)
+        else false)
      then
        err
          "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
@@ -7808,39 +7813,45 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                               FStarC_Errors_Msg.is_error_message_string)
                            (Obj.magic uu___7))
                       else ();
-                      if
-                        (match lift1 with
-                         | FStar_Pervasives_Native.None -> false
-                         | FStar_Pervasives_Native.Some (us, uu___8) ->
-                             (FStarC_List.length us) <> Prims.int_one)
-                      then
-                        (let uu___8 =
+                      (let uu___8 =
+                         if FStar_Pervasives_Native.uu___is_Some lift1
+                         then
                            let uu___9 =
-                             FStarC_Class_Show.show
-                               FStarC_Ident.showable_lident
-                               sub.FStarC_Syntax_Syntax.source in
+                             let uu___10 =
+                               let uu___11 = FStarC_Option.must lift1 in
+                               FStar_Pervasives_Native.fst uu___11 in
+                             FStarC_List.length uu___10 in
+                           uu___9 <> Prims.int_one
+                         else false in
+                       if uu___8
+                       then
+                         let uu___9 =
                            let uu___10 =
                              FStarC_Class_Show.show
                                FStarC_Ident.showable_lident
-                               sub.FStarC_Syntax_Syntax.target in
+                               sub.FStarC_Syntax_Syntax.source in
                            let uu___11 =
-                             let uu___12 =
-                               let uu___13 =
-                                 let uu___14 = FStarC_Option.must lift1 in
-                                 FStar_Pervasives_Native.fst uu___14 in
-                               FStarC_List.length uu___13 in
                              FStarC_Class_Show.show
-                               FStarC_Class_Show.showable_nat uu___12 in
+                               FStarC_Ident.showable_lident
+                               sub.FStarC_Syntax_Syntax.target in
+                           let uu___12 =
+                             let uu___13 =
+                               let uu___14 =
+                                 let uu___15 = FStarC_Option.must lift1 in
+                                 FStar_Pervasives_Native.fst uu___15 in
+                               FStarC_List.length uu___14 in
+                             FStarC_Class_Show.show
+                               FStarC_Class_Show.showable_nat uu___13 in
                            FStarC_Format.fmt3
                              "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                             uu___9 uu___10 uu___11 in
+                             uu___10 uu___11 uu___12 in
                          FStarC_Errors.raise_error
                            FStarC_Class_HasRange.hasRange_range r
                            FStarC_Errors_Codes.Fatal_TooManyUniverse ()
                            (Obj.magic
                               FStarC_Errors_Msg.is_error_message_string)
-                           (Obj.magic uu___8))
-                      else ();
+                           (Obj.magic uu___9)
+                       else ());
                       {
                         FStarC_Syntax_Syntax.source =
                           (sub.FStarC_Syntax_Syntax.source);

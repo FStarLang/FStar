@@ -351,22 +351,27 @@ let tc_tycon (env : FStarC_TypeChecker_Env.env_t)
                                (match uu___6 with
                                 | (t_type, u) ->
                                     let valid_type =
-                                      let is_eq =
-                                        FStarC_Syntax_Util.is_eqtype_no_unrefine
-                                          t in
-                                      if is_eq
-                                      then
-                                        (if
-                                           Prims.op_Negation
-                                             (FStarC_List.contains
-                                                FStarC_Syntax_Syntax.Noeq
-                                                s.FStarC_Syntax_Syntax.sigquals)
-                                         then
-                                           Prims.op_Negation
-                                             (FStarC_List.contains
-                                                FStarC_Syntax_Syntax.Unopteq
-                                                s.FStarC_Syntax_Syntax.sigquals)
-                                         else false)
+                                      let uu___7 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            FStarC_Syntax_Util.is_eqtype_no_unrefine
+                                              t in
+                                          if uu___9
+                                          then
+                                            Prims.op_Negation
+                                              (FStarC_List.contains
+                                                 FStarC_Syntax_Syntax.Noeq
+                                                 s.FStarC_Syntax_Syntax.sigquals)
+                                          else false in
+                                        if uu___8
+                                        then
+                                          Prims.op_Negation
+                                            (FStarC_List.contains
+                                               FStarC_Syntax_Syntax.Unopteq
+                                               s.FStarC_Syntax_Syntax.sigquals)
+                                        else false in
+                                      if uu___7
+                                      then true
                                       else
                                         FStarC_TypeChecker_Rel.teq_nosmt_force
                                           env1 t t_type in
@@ -2536,8 +2541,7 @@ let mk_discriminator_and_indexed_projectors
     else false in
   let discriminator_ses =
     let uu___ =
-      let not_data = fvq <> FStarC_Syntax_Syntax.Data_ctor in
-      if not_data
+      if fvq <> FStarC_Syntax_Syntax.Data_ctor
       then true
       else
         FStarC_Syntax_Util.has_attribute attrs
@@ -2623,7 +2627,7 @@ let mk_discriminator_and_indexed_projectors
                           let b =
                             FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
                               imp in
-                          if b && (j < ntps)
+                          if (if b then j < ntps else false)
                           then
                             ((pos
                                 (FStarC_Syntax_Syntax.Pat_dot_term
@@ -2866,7 +2870,7 @@ let mk_discriminator_and_indexed_projectors
                                        (FStarC_Syntax_Syntax.Pat_var
                                           projection)), b)
                                  else
-                                   if b && (j < ntps)
+                                   if (if b then j < ntps else false)
                                    then
                                      ((pos
                                          (FStarC_Syntax_Syntax.Pat_dot_term

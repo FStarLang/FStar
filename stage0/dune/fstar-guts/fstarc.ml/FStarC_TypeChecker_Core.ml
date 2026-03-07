@@ -754,11 +754,13 @@ let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
            | FStarC_Syntax_Syntax.Comp ct ->
                let e_tag =
                  if
-                   (FStarC_Ident.lid_equals
-                      ct.FStarC_Syntax_Syntax.effect_name
-                      FStarC_Parser_Const.effect_Pure_lid)
-                     ||
-                     (FStarC_Ident.lid_equals
+                   (if
+                      FStarC_Ident.lid_equals
+                        ct.FStarC_Syntax_Syntax.effect_name
+                        FStarC_Parser_Const.effect_Pure_lid
+                    then true
+                    else
+                      FStarC_Ident.lid_equals
                         ct.FStarC_Syntax_Syntax.effect_name
                         FStarC_Parser_Const.effect_Lemma_lid)
                  then FStar_Pervasives_Native.Some E_Total
@@ -2901,9 +2903,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -2935,28 +2939,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (FStarC_Syntax_Syntax.Tm_fvar uu___5, uu___6) ->
                    let head_matches1 = head_matches t01 t11 in
@@ -2969,9 +2973,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -3003,28 +3009,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (FStarC_Syntax_Syntax.Tm_app uu___5, uu___6) ->
                    let head_matches1 = head_matches t01 t11 in
@@ -3037,9 +3043,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -3071,28 +3079,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (uu___5, FStarC_Syntax_Syntax.Tm_uinst uu___6) ->
                    let head_matches1 = head_matches t01 t11 in
@@ -3105,9 +3113,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -3139,28 +3149,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (uu___5, FStarC_Syntax_Syntax.Tm_fvar uu___6) ->
                    let head_matches1 = head_matches t01 t11 in
@@ -3173,9 +3183,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -3207,28 +3219,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (uu___5, FStarC_Syntax_Syntax.Tm_app uu___6) ->
                    let head_matches1 = head_matches t01 t11 in
@@ -3241,9 +3253,11 @@ let rec check_relation' (g : env) (rel : relation)
                          | (head1, args1) ->
                              if
                                Prims.op_Negation
-                                 (head_matches1 &&
-                                    ((FStarC_List.length args0) =
-                                       (FStarC_List.length args1)))
+                                 (if head_matches1
+                                  then
+                                    (FStarC_List.length args0) =
+                                      (FStarC_List.length args1)
+                                  else false)
                              then maybe_unfold_and_retry t01 t11
                              else
                                (let compare_head_and_args uu___10 ctx cache =
@@ -3275,28 +3289,28 @@ let rec check_relation' (g : env) (rel : relation)
                                           t11 in
                                       uu___13 ctx cache
                                   | res -> res in
-                                if guard_ok
+                                let uu___10 =
+                                  if
+                                    (if guard_ok
+                                     then rel = EQUALITY
+                                     else false)
+                                  then
+                                    let uu___11 = equatable g t01 in
+                                    (if uu___11
+                                     then true
+                                     else equatable g t11)
+                                  else false in
+                                if uu___10
                                 then
-                                  (if rel = EQUALITY
-                                   then
-                                     let uu___10 =
-                                       let e0 = equatable g t01 in
-                                       if e0 then true else equatable g t11 in
-                                     (if uu___10
-                                      then
-                                        fun ctx cache ->
-                                          let uu___11 =
-                                            no_guard
-                                              (compare_head_and_args ()) ctx
-                                              cache in
-                                          match uu___11 with
-                                          | Error uu___12 ->
-                                              let uu___13 =
-                                                emit_guard t01 t11 in
-                                              uu___13 ctx cache
-                                          | res -> res
-                                      else compare_head_and_args ())
-                                   else compare_head_and_args ())
+                                  fun ctx cache ->
+                                    let uu___11 =
+                                      no_guard (compare_head_and_args ()) ctx
+                                        cache in
+                                    match uu___11 with
+                                    | Error uu___12 ->
+                                        let uu___13 = emit_guard t01 t11 in
+                                        uu___13 ctx cache
+                                    | res -> res
                                 else compare_head_and_args ())))
                | (FStarC_Syntax_Syntax.Tm_abs
                   { FStarC_Syntax_Syntax.bs = b0::b1::bs;
@@ -7986,8 +8000,9 @@ and pattern_branch_condition (g : env)
         match uu___ with
         | (is_induc, datacons) ->
             if
-              (Prims.op_Negation is_induc) ||
-                ((FStarC_List.length datacons) > Prims.int_one)
+              (if Prims.op_Negation is_induc
+               then true
+               else (FStarC_List.length datacons) > Prims.int_one)
             then
               let discriminator =
                 FStarC_Syntax_Util.mk_discriminator
@@ -8110,7 +8125,10 @@ let check_term_top' (g : FStarC_TypeChecker_Env.env)
                      Success ((x, FStar_Pervasives_Native.None), cache))
             | FStar_Pervasives_Native.Some t ->
                 let uu___4 =
-                  if must_tot || ((FStar_Pervasives_Native.fst x) = E_Total)
+                  if
+                    (if must_tot
+                     then true
+                     else (FStar_Pervasives_Native.fst x) = E_Total)
                   then
                     let uu___5 = FStarC_Syntax_Syntax.mk_Total t in
                     (uu___5, E_Total)
@@ -8196,8 +8214,8 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
      FStarC_Format.print1 "(%s) Entering core ... \n" uu___2
    else ());
   (let uu___2 =
-     let d = FStarC_Effect.op_Bang dbg in
-     if d then true else FStarC_Effect.op_Bang dbg_Top in
+     let uu___3 = FStarC_Effect.op_Bang dbg in
+     if uu___3 then true else FStarC_Effect.op_Bang dbg_Top in
    if uu___2
    then
      let uu___3 =
@@ -8226,8 +8244,8 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
           uu___5 ctx initial_cache) FStar_Pervasives_Native.None
        "FStarC.TypeChecker.Core.check_term_top" in
    (let uu___5 =
-      let d = FStarC_Effect.op_Bang dbg in
-      if d then true else FStarC_Effect.op_Bang dbg_Top in
+      let uu___6 = FStarC_Effect.op_Bang dbg in
+      if uu___6 then true else FStarC_Effect.op_Bang dbg_Top in
     if uu___5
     then
       let uu___6 =
@@ -8249,12 +8267,10 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
           let guard1 =
             FStarC_TypeChecker_Normalize.normalize simplify_steps g guard0 in
           ((let uu___6 =
-              let d = FStarC_Effect.op_Bang dbg in
-              if d
-              then true
-              else
-                (let dt = FStarC_Effect.op_Bang dbg_Top in
-                 if dt then true else FStarC_Effect.op_Bang dbg_Exit) in
+              let uu___7 =
+                let uu___8 = FStarC_Effect.op_Bang dbg in
+                if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
+              if uu___7 then true else FStarC_Effect.op_Bang dbg_Exit in
             if uu___6
             then
               ((let uu___8 =
@@ -8301,8 +8317,8 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
            Success ((et, (FStar_Pervasives_Native.Some guard1)), cache))
       | Success uu___5 ->
           ((let uu___7 =
-              let d = FStarC_Effect.op_Bang dbg in
-              if d then true else FStarC_Effect.op_Bang dbg_Top in
+              let uu___8 = FStarC_Effect.op_Bang dbg in
+              if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
             if uu___7
             then
               let uu___8 =
@@ -8313,8 +8329,8 @@ let check_term_top (g : FStarC_TypeChecker_Env.env)
            res)
       | Error uu___5 ->
           ((let uu___7 =
-              let d = FStarC_Effect.op_Bang dbg in
-              if d then true else FStarC_Effect.op_Bang dbg_Top in
+              let uu___8 = FStarC_Effect.op_Bang dbg in
+              if uu___8 then true else FStarC_Effect.op_Bang dbg_Top in
             if uu___7
             then
               let uu___8 =

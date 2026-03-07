@@ -37,7 +37,8 @@ let mix (f : FStarC_Hash.hash_code mm) (g : FStarC_Hash.hash_code mm) :
     match uu___ with
     | (x, b0) ->
         let uu___1 = g b in
-        (match uu___1 with | (y, b1) -> ((FStarC_Hash.mix x y), (b0 && b1)))
+        (match uu___1 with
+         | (y, b1) -> ((FStarC_Hash.mix x y), (if b0 then b1 else false)))
 let nil_hc : FStarC_Hash.hash_code mm= of_int (Prims.of_int (1229))
 let cons_hc : FStarC_Hash.hash_code mm= of_int (Prims.of_int (1231))
 let mix_list (l : FStarC_Hash.hash_code mm Prims.list) :

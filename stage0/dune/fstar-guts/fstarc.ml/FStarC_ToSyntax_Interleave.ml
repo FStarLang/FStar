@@ -531,8 +531,9 @@ let interleave_module (a : FStarC_Parser_AST.modul)
                                        -> [FStarC_Ident.string_of_id id]
                                    | uu___4 -> [])) impls2 in
                          if
-                           (Prims.uu___is_Nil iface_let_names) &&
-                             (Prims.uu___is_Nil iface_exn_names)
+                           (if Prims.uu___is_Nil iface_let_names
+                            then Prims.uu___is_Nil iface_exn_names
+                            else false)
                          then impls2
                          else
                            FStarC_List.filter

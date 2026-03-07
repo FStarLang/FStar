@@ -119,7 +119,7 @@ let tacprint3 (s : Prims.string) (x : Prims.string) (y : Prims.string)
 let print (msg : Prims.string) : unit FStarC_Tactics_Monad.tac=
   let b = let uu___ = FStarC_Options.silent () in Prims.op_Negation uu___ in
   let c = FStarC_Options.interactive () in
-  if b || c then tacprint msg else ();
+  if (if b then true else c) then tacprint msg else ();
   FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac () (Obj.repr ())
 let debugging (uu___ : unit) : Prims.bool FStarC_Tactics_Monad.tac=
   (fun uu___ ->
@@ -280,7 +280,7 @@ let destruct_eq' (typ : FStarC_Syntax_Syntax.typ) :
       when
       let b1 = FStarC_Ident.lid_equals l FStarC_Parser_Const.eq2_lid in
       let b2 = FStarC_Ident.lid_equals l FStarC_Parser_Const.c_eq2_lid in
-      b1 || b2 -> FStar_Pervasives_Native.Some (e1, e2)
+      if b1 then true else b2 -> FStar_Pervasives_Native.Some (e1, e2)
   | uu___1 ->
       let uu___2 = FStarC_Syntax_Util.unb2t typ1 in
       (match uu___2 with
@@ -874,10 +874,12 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.missing_decl)
                } in
              let must_tot1 =
-               must_tot &&
-                 (Prims.op_Negation
-                    (FStarC_Syntax_Syntax.uu___is_Allow_ghost
-                       dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)) in
+               if must_tot
+               then
+                 Prims.op_Negation
+                   (FStarC_Syntax_Syntax.uu___is_Allow_ghost
+                      dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)
+               else false in
              let uu___2 =
                let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ u in
                core_check env2 sol uu___3 must_tot1 in
@@ -905,9 +907,11 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                     FStarC_TypeChecker_Rel.simplify_guard env2 guard in
                   let b = FStarC_Options.disallow_unification_guards () in
                   if
-                    (b && (Prims.op_Negation allow_guards)) &&
-                      (FStarC_TypeChecker_Common.uu___is_NonTrivial
-                         guard1.FStarC_TypeChecker_Common.guard_f)
+                    (if (if b then Prims.op_Negation allow_guards else false)
+                     then
+                       FStarC_TypeChecker_Common.uu___is_NonTrivial
+                         guard1.FStarC_TypeChecker_Common.guard_f
+                     else false)
                   then
                     let uu___3 =
                       let uu___4 =
@@ -3449,8 +3453,10 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                  uu___6 in
                                                              let uu___6 =
                                                                if
-                                                                 only_match
-                                                                   && b
+                                                                 (if
+                                                                    only_match
+                                                                  then b
+                                                                  else false)
                                                                then
                                                                  FStarC_Tactics_Monad.fail
                                                                    "t_apply: only_match is on, but the type of the term to apply is not a uvar"
@@ -3674,8 +3680,10 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     free_in_some_goal
                                                                     g.FStarC_Tactics_Types.goal_ctx_uvar in
                                                                     Prims.op_Negation
-                                                                    (uopt &&
-                                                                    b1))
+                                                                    (if uopt
+                                                                    then b1
+                                                                    else
+                                                                    false))
                                                                     (FStarC_List.flatten
                                                                     sub_goals) in
                                                                     FStarC_List.map
@@ -3742,7 +3750,7 @@ let lemma_or_sq (c : FStarC_Syntax_Syntax.comp) :
       else
         (let b1 = FStarC_Syntax_Util.is_pure_effect eff_name in
          let b2 = FStarC_Syntax_Util.is_ghost_effect eff_name in
-         if b1 || b2
+         if (if b1 then true else b2)
          then
            let uu___2 = FStarC_Syntax_Util.un_squash res in
            FStarC_Option.map (fun post -> (FStarC_Syntax_Util.t_true, post))
@@ -5476,7 +5484,7 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                    ->
                    let b1 = is_allow_untyped_uvar t1 in
                    let b2 = is_allow_untyped_uvar t2 in
-                   if b1 || b2
+                   if (if b1 then true else b2)
                    then skip_register
                    else
                      (let uu___10 =
@@ -7374,9 +7382,12 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     let uu___12
                                                                     =
                                                                     failwhen
-                                                                    (erasable
-                                                                    &&
-                                                                    not_irr)
+                                                                    (if
+                                                                    erasable
+                                                                    then
+                                                                    not_irr
+                                                                    else
+                                                                    false)
                                                                     "cannot destruct erasable type to solve proof-relevant goal" in
                                                                     FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
@@ -9357,7 +9368,7 @@ let no_uvars_in_term (t : FStarC_Syntax_Syntax.term) : Prims.bool=
       (Obj.magic
          (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
       (Obj.magic uu___) in
-  b1 && b2
+  if b1 then b2 else false
 let no_univ_uvars_in_term (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ = FStarC_Syntax_Free.univs t in
   FStarC_Class_Setlike.is_empty ()
@@ -9399,7 +9410,7 @@ let refl_is_non_informative (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.typ)
   (fun g t ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term t in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -9451,7 +9462,7 @@ let refl_check_relation (uu___5 : relation) (uu___4 : Prims.bool)
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term t0 in
      let _b3 = no_uvars_in_term t1 in
-     if (_b1 && _b2) && _b3
+     if (if (if _b1 then _b2 else false) then _b3 else false)
      then
        Obj.magic
          (Obj.repr
@@ -9548,7 +9559,7 @@ let refl_core_compute_term_type (uu___1 : env)
   (fun g e ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -9623,7 +9634,7 @@ let refl_core_check_term (uu___3 : env) (uu___2 : FStarC_Syntax_Syntax.term)
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
      let _b3 = no_uvars_in_term t in
-     if (_b1 && _b2) && _b3
+     if (if (if _b1 then _b2 else false) then _b3 else false)
      then
        Obj.magic
          (Obj.repr
@@ -9698,7 +9709,7 @@ let refl_core_check_term_at_type (uu___2 : env)
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
      let _b3 = no_uvars_in_term t in
-     if (_b1 && _b2) && _b3
+     if (if (if _b1 then _b2 else false) then _b3 else false)
      then
        Obj.magic
          (Obj.repr
@@ -9774,7 +9785,7 @@ let refl_tc_term (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
   (fun g e ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -10137,7 +10148,7 @@ let refl_universe_of (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term) :
        | u1 -> u1 in
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -10195,7 +10206,7 @@ let refl_check_prop_validity (uu___1 : env)
   (fun g e ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -10295,7 +10306,7 @@ let refl_instantiate_implicits (uu___3 : env)
   (fun g e expected_typ inst_extra ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr
@@ -10629,7 +10640,10 @@ let refl_try_unify (uu___3 : env)
      let _b4 =
        let uu___ = FStarC_List.map FStar_Pervasives_Native.snd uvs in
        FStarC_List.for_all no_uvars_in_term uu___ in
-     if ((_b1 && _b2) && _b3) && _b4
+     if
+       (if (if (if _b1 then _b2 else false) then _b3 else false)
+        then _b4
+        else false)
      then
        Obj.magic
          (Obj.repr
@@ -10925,7 +10939,7 @@ let refl_maybe_relate_after_unfolding (uu___2 : env)
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term t0 in
      let _b3 = no_uvars_in_term t1 in
-     if (_b1 && _b2) && _b3
+     if (if (if _b1 then _b2 else false) then _b3 else false)
      then
        Obj.magic
          (Obj.repr
@@ -10972,7 +10986,7 @@ let refl_maybe_unfold_head (uu___1 : env) (uu___ : FStarC_Syntax_Syntax.term)
   (fun g e ->
      let _b1 = no_uvars_in_g g in
      let _b2 = no_uvars_in_term e in
-     if _b1 && _b2
+     if (if _b1 then _b2 else false)
      then
        Obj.magic
          (Obj.repr

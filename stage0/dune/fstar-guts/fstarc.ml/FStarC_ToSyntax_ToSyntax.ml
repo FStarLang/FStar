@@ -1389,7 +1389,8 @@ let rec desugar_data_pat (top_level_ascr_allowed : Prims.bool) (env : env_t)
                | (annots', binder1, aqs2) ->
                    ((match p3.FStarC_Syntax_Syntax.v with
                      | FStarC_Syntax_Syntax.Pat_var uu___4 -> ()
-                     | uu___4 when top && top_level_ascr_allowed -> ()
+                     | uu___4 when
+                         if top then top_level_ascr_allowed else false -> ()
                      | uu___4 ->
                          FStarC_Errors.raise_error
                            FStarC_Parser_AST.hasRange_pattern orig
@@ -2965,8 +2966,9 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
    | FStarC_Parser_AST.Let (qual, lbs, body) ->
        let is_rec = qual = FStarC_Parser_AST.LocalRec in
        (if
-          (Prims.op_Negation is_rec) &&
-            ((FStarC_List.length lbs) > Prims.int_one)
+          (if Prims.op_Negation is_rec
+           then (FStarC_List.length lbs) > Prims.int_one
+           else false)
         then
           (let lb = FStarC_List.nth lbs Prims.int_one in
            FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_pattern
@@ -4581,7 +4583,7 @@ and desugar_comp (r : FStarC_Range_Type.range)
   let fail code msg =
     FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r code ()
       (Obj.magic FStarC_Errors_Msg.is_error_message_string) (Obj.magic msg) in
-  let mland a b = a && b in
+  let mland a b = if a then b else false in
   let is_requires uu___ =
     match uu___ with
     | (t1, uu___1) ->
@@ -4604,10 +4606,12 @@ and desugar_comp (r : FStarC_Range_Type.range)
     match (unparen t1).FStarC_Parser_AST.tm with
     | FStarC_Parser_AST.Construct (smtpat, uu___) ->
         let s = FStarC_Ident.string_of_lid smtpat in
-        ((s = "SMTPat") || (s = "SMTPatT")) || (s = "SMTPatOr")
+        if (if s = "SMTPat" then true else s = "SMTPatT")
+        then true
+        else s = "SMTPatOr"
     | FStarC_Parser_AST.Var smtpat ->
         let s = FStarC_Ident.string_of_lid smtpat in
-        (s = "smt_pat") || (s = "smt_pat_or")
+        if s = "smt_pat" then true else s = "smt_pat_or"
     | uu___ -> false in
   let is_smt_pat uu___ =
     match uu___ with
@@ -4749,14 +4753,18 @@ and desugar_comp (r : FStarC_Range_Type.range)
                   FStarC_Parser_Const.effect_GTot_lid
                   head.FStarC_Parser_AST.range), []), args)
          | FStarC_Parser_AST.Name l when
-             (((FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
-                 "Type")
-                ||
-                ((FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
-                   "Type0"))
-               ||
-               ((FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
-                  "Effect")
+             if
+               (if
+                  (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
+                    "Type"
+                then true
+                else
+                  (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
+                    "Type0")
+             then true
+             else
+               (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) =
+                 "Effect"
              ->
              (((FStarC_Ident.set_lid_range FStarC_Parser_Const.effect_Tot_lid
                   head.FStarC_Parser_AST.range), []),
@@ -4852,19 +4860,29 @@ and desugar_comp (r : FStarC_Range_Type.range)
                       let no_additional_args =
                         let is_empty l =
                           match l with | [] -> true | uu___5 -> false in
-                        (((is_empty decreases_clause) && (is_empty rest2)) &&
-                           (is_empty cattributes))
-                          && (is_empty universes1) in
+                        if
+                          (if
+                             (if is_empty decreases_clause
+                              then is_empty rest2
+                              else false)
+                           then is_empty cattributes
+                           else false)
+                        then is_empty universes1
+                        else false in
                       if
-                        no_additional_args &&
-                          (FStarC_Ident.lid_equals eff
-                             FStarC_Parser_Const.effect_Tot_lid)
+                        (if no_additional_args
+                         then
+                           FStarC_Ident.lid_equals eff
+                             FStarC_Parser_Const.effect_Tot_lid
+                         else false)
                       then FStarC_Syntax_Syntax.mk_Total result_typ
                       else
                         if
-                          no_additional_args &&
-                            (FStarC_Ident.lid_equals eff
-                               FStarC_Parser_Const.effect_GTot_lid)
+                          (if no_additional_args
+                           then
+                             FStarC_Ident.lid_equals eff
+                               FStarC_Parser_Const.effect_GTot_lid
+                           else false)
                         then FStarC_Syntax_Syntax.mk_GTotal result_typ
                         else
                           (let flags =
@@ -6402,7 +6420,7 @@ let get_fail_attr (warn : Prims.bool)
        FStar_Pervasives_Native.Some (e2, rng2, l2)) ->
         let uu___ =
           let uu___1 = FStarC_Range_Ops.union_ranges rng1 rng2 in
-          ((FStarC_List.op_At e1 e2), uu___1, (l1 || l2)) in
+          ((FStarC_List.op_At e1 e2), uu___1, (if l1 then true else l2)) in
         FStar_Pervasives_Native.Some uu___
     | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.None) ->
         FStar_Pervasives_Native.Some x
@@ -6466,7 +6484,9 @@ let rec desugar_effect (env : FStarC_Syntax_DsEnv.env)
           FStar_Pervasives_Native.fst uu___2 in
         FStarC_List.length uu___1 in
       let for_free =
-        (num_indices = Prims.int_one) && (Prims.op_Negation is_layered) in
+        if num_indices = Prims.int_one
+        then Prims.op_Negation is_layered
+        else false in
       (if for_free
        then
          FStarC_Errors.log_issue FStarC_Parser_AST.hasRange_decl d
@@ -6569,7 +6589,7 @@ let rec desugar_effect (env : FStarC_Syntax_DsEnv.env)
                         | FStarC_Parser_AST.Tycon
                             (uu___4, uu___5, (FStarC_Parser_AST.TyconAbbrev
                              (name, action_params, uu___6, defn))::[])
-                            when for_free || is_layered ->
+                            when if for_free then true else is_layered ->
                             let uu___7 = desugar_binders env2 action_params in
                             (match uu___7 with
                              | (env3, action_params1) ->
@@ -6697,9 +6717,11 @@ let rec desugar_effect (env : FStarC_Syntax_DsEnv.env)
                                                   b_attrs
                                                   FStarC_Parser_Const.effect_parameter_attr in
                                               (if
-                                                 is_param &&
-                                                   (Prims.op_Negation
-                                                      allow_param)
+                                                 (if is_param
+                                                  then
+                                                    Prims.op_Negation
+                                                      allow_param
+                                                  else false)
                                                then
                                                  FStarC_Errors.raise_error
                                                    FStarC_Parser_AST.hasRange_decl
@@ -6718,7 +6740,9 @@ let rec desugar_effect (env : FStarC_Syntax_DsEnv.env)
                                                 ((if is_param
                                                   then n + Prims.int_one
                                                   else n),
-                                                  (allow_param && is_param),
+                                                  (if allow_param
+                                                   then is_param
+                                                   else false),
                                                   (FStarC_List.op_At bs2
                                                      [{
                                                         FStarC_Syntax_Syntax.binder_bv
@@ -7754,30 +7778,32 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
   | FStarC_Parser_AST.TopLevelLet (isrec, lets) ->
       let quals = d.FStarC_Parser_AST.quals in
       let expand_toplevel_pattern =
-        (isrec = FStarC_Parser_AST.NoLetQualifier) &&
-          (match lets with
-           | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
-                FStarC_Parser_AST.prange = uu___1;_},
-              uu___2)::[] -> false
-           | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
-                FStarC_Parser_AST.prange = uu___1;_},
-              uu___2)::[] -> false
-           | ({
-                FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
-                  ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
-                     FStarC_Parser_AST.prange = uu___1;_},
-                   uu___2);
-                FStarC_Parser_AST.prange = uu___3;_},
-              uu___4)::[] -> false
-           | ({
-                FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
-                  ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
-                     FStarC_Parser_AST.prange = uu___1;_},
-                   uu___2);
-                FStarC_Parser_AST.prange = uu___3;_},
-              uu___4)::[] -> false
-           | (p, uu___)::[] -> Prims.op_Negation (is_app_pattern p)
-           | uu___ -> false) in
+        if isrec = FStarC_Parser_AST.NoLetQualifier
+        then
+          match lets with
+          | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
+               FStarC_Parser_AST.prange = uu___1;_},
+             uu___2)::[] -> false
+          | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
+               FStarC_Parser_AST.prange = uu___1;_},
+             uu___2)::[] -> false
+          | ({
+               FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
+                 ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
+                    FStarC_Parser_AST.prange = uu___1;_},
+                  uu___2);
+               FStarC_Parser_AST.prange = uu___3;_},
+             uu___4)::[] -> false
+          | ({
+               FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
+                 ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
+                    FStarC_Parser_AST.prange = uu___1;_},
+                  uu___2);
+               FStarC_Parser_AST.prange = uu___3;_},
+             uu___4)::[] -> false
+          | (p, uu___)::[] -> Prims.op_Negation (is_app_pattern p)
+          | uu___ -> false
+        else false in
       if Prims.op_Negation expand_toplevel_pattern
       then
         let lets1 =
@@ -8052,8 +8078,9 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
                     (FStarC_FlatSet.setlike_flat_set
                        FStarC_Syntax_Syntax.ord_ident)) (Obj.magic uu___2) in
              if
-               (FStarC_List.isEmpty bvs) &&
-                 (Prims.op_Negation (is_var_pattern pat))
+               (if FStarC_List.isEmpty bvs
+                then Prims.op_Negation (is_var_pattern pat)
+                else false)
              then build_coverage_check main_let
              else FStarC_List.fold_left build_projection main_let bvs)
   | FStarC_Parser_AST.Assume (id, t) ->
@@ -8087,8 +8114,9 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
         desugar_term env uu___ in
       let quals1 =
         if
-          (FStarC_Syntax_DsEnv.iface env) &&
-            (FStarC_Syntax_DsEnv.admitted_iface env)
+          (if FStarC_Syntax_DsEnv.iface env
+           then FStarC_Syntax_DsEnv.admitted_iface env
+           else false)
         then FStarC_Parser_AST.Assumption :: quals
         else quals in
       let lid = FStarC_Syntax_DsEnv.qualify env id in
@@ -8202,8 +8230,9 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
       let top_attrs = d_attrs in
       if
         Prims.op_Negation
-          ((FStarC_Syntax_Util.is_layered src_ed) ||
-             (FStarC_Syntax_Util.is_layered dst_ed))
+          (if FStarC_Syntax_Util.is_layered src_ed
+           then true
+           else FStarC_Syntax_Util.is_layered dst_ed)
       then
         let uu___ =
           match l.FStarC_Parser_AST.lift_op with

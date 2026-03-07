@@ -1941,15 +1941,14 @@ type qninfo =
     FStar_Pervasives_Native.option
 type sigtable = FStarC_Syntax_Syntax.sigelt FStarC_SMap.t
 let should_verify (env1 : env) : Prims.bool=
-  let uu___ = FStarC_Options.lax () in
+  let uu___ =
+    let uu___1 =
+      let uu___2 = FStarC_Options.lax () in Prims.op_Negation uu___2 in
+    if uu___1 then Prims.op_Negation env1.admit else false in
   if uu___
-  then false
-  else
-    if env1.admit
-    then false
-    else
-      FStarC_Options.should_verify
-        (FStarC_Ident.string_of_lid env1.curmodule)
+  then
+    FStarC_Options.should_verify (FStarC_Ident.string_of_lid env1.curmodule)
+  else false
 let visible_at (d : delta_level) (q : FStarC_Syntax_Syntax.qualifier) :
   Prims.bool=
   match (d, q) with
@@ -2655,9 +2654,9 @@ let set_current_module (env1 : env) (lid : FStarC_Ident.lident) : env=
 let has_interface (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   FStarC_Util.for_some
     (fun m ->
-       m.FStarC_Syntax_Syntax.is_interface &&
-         (FStarC_Ident.lid_equals m.FStarC_Syntax_Syntax.name l))
-    env1.modules
+       if m.FStarC_Syntax_Syntax.is_interface
+       then FStarC_Ident.lid_equals m.FStarC_Syntax_Syntax.name l
+       else false) env1.modules
 let find_in_sigtab (env1 : env) (lid : FStarC_Ident.lident) :
   FStarC_Syntax_Syntax.sigelt FStar_Pervasives_Native.option=
   FStarC_SMap.try_find (sigtab env1) (FStarC_Ident.string_of_lid lid)
@@ -2695,8 +2694,10 @@ let inst_tscheme_with_range (r : FStarC_Range_Type.range)
 let check_effect_is_not_a_template (ed : FStarC_Syntax_Syntax.eff_decl)
   (rng : FStarC_Range_Type.t) : unit=
   if
-    ((FStarC_List.length ed.FStarC_Syntax_Syntax.univs) <> Prims.int_zero) ||
-      ((FStarC_List.length ed.FStarC_Syntax_Syntax.binders) <> Prims.int_zero)
+    (if (FStarC_List.length ed.FStarC_Syntax_Syntax.univs) <> Prims.int_zero
+     then true
+     else
+       (FStarC_List.length ed.FStarC_Syntax_Syntax.binders) <> Prims.int_zero)
   then
     let msg =
       let uu___ =
@@ -2864,17 +2865,23 @@ let try_add_sigelt (force : Prims.bool) (env1 : env)
          let uu___3 = FStarC_SMap.try_find (sigtab env1) s in
          FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
        (if
-          (FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
-             old_se.FStarC_Syntax_Syntax.sigel)
-            &&
-            (((FStarC_Syntax_Syntax.uu___is_Sig_let
-                 se.FStarC_Syntax_Syntax.sigel)
-                ||
-                (FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
-                   se.FStarC_Syntax_Syntax.sigel))
-               ||
-               (FStarC_Syntax_Syntax.uu___is_Sig_datacon
-                  se.FStarC_Syntax_Syntax.sigel))
+          (if
+             FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
+               old_se.FStarC_Syntax_Syntax.sigel
+           then
+             (if
+                (if
+                   FStarC_Syntax_Syntax.uu___is_Sig_let
+                     se.FStarC_Syntax_Syntax.sigel
+                 then true
+                 else
+                   FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
+                     se.FStarC_Syntax_Syntax.sigel)
+              then true
+              else
+                FStarC_Syntax_Syntax.uu___is_Sig_datacon
+                  se.FStarC_Syntax_Syntax.sigel)
+           else false)
         then ()
         else
           (let uu___4 =
@@ -3105,8 +3112,9 @@ let try_lookup_lid_aux
              if uu___6
              then
                (if
-                  (FStarC_List.contains FStarC_Syntax_Syntax.Assumption qs)
-                    || env1.is_iface
+                  (if FStarC_List.contains FStarC_Syntax_Syntax.Assumption qs
+                   then true
+                   else env1.is_iface)
                 then
                   let uu___7 =
                     let uu___8 = inst_tscheme1 (uvs, t) in (uu___8, rng) in
@@ -3512,7 +3520,9 @@ let lookup_definition_qninfo_aux (rec_ok : Prims.bool)
            when
            let uu___2 =
              visible_with delta_levels se.FStarC_Syntax_Syntax.sigquals in
-           if uu___2 then (Prims.op_Negation is_rec) || rec_ok else false ->
+           if uu___2
+           then (if Prims.op_Negation is_rec then true else rec_ok)
+           else false ->
            FStarC_Util.find_map lbs
              (fun lb ->
                 let fv =
@@ -3641,9 +3651,11 @@ and fv_delta_depth (env1 : env) (fv : FStarC_Syntax_Syntax.fv) :
   | FStarC_Syntax_Syntax.Delta_abstract
       (FStarC_Syntax_Syntax.Delta_constant_at_level l) ->
       if
-        ((FStarC_Ident.string_of_lid env1.curmodule) =
-           (FStarC_Ident.nsstr fv.FStarC_Syntax_Syntax.fv_name))
-          && (Prims.op_Negation env1.is_iface)
+        (if
+           (FStarC_Ident.string_of_lid env1.curmodule) =
+             (FStarC_Ident.nsstr fv.FStarC_Syntax_Syntax.fv_name)
+         then Prims.op_Negation env1.is_iface
+         else false)
       then FStarC_Syntax_Syntax.Delta_constant_at_level l
       else FStarC_Syntax_Syntax.delta_constant
   | d1 -> d1
@@ -3927,15 +3939,18 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
   match uu___ with
   | FStarC_Syntax_Syntax.Tm_type uu___1 -> true
   | FStarC_Syntax_Syntax.Tm_fvar fv ->
-      if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid
+      if
+        (if
+           (if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid
+            then true
+            else
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.squash_lid)
+         then true
+         else
+           FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid)
       then true
-      else
-        if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid
-        then true
-        else
-          if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid
-          then true
-          else fv_has_erasable_attr env1 fv
+      else fv_has_erasable_attr env1 fv
   | FStarC_Syntax_Syntax.Tm_app
       { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_}
       -> non_informative env1 head
@@ -3943,13 +3958,13 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
   | FStarC_Syntax_Syntax.Tm_arrow
       { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
       ->
-      let uu___2 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
+        if uu___3
+        then non_informative env1 (FStarC_Syntax_Util.comp_result c)
+        else false in
       if uu___2
-      then
-        let uu___3 = non_informative env1 (FStarC_Syntax_Util.comp_result c) in
-        (if uu___3
-         then true
-         else is_erasable_effect env1 (FStarC_Syntax_Util.comp_effect_name c))
+      then true
       else is_erasable_effect env1 (FStarC_Syntax_Util.comp_effect_name c)
   | uu___1 -> false
 let num_effect_indices (env1 : env) (name : FStarC_Ident.lident)
@@ -4013,7 +4028,10 @@ let lookup_projector (env1 : env) (lid : FStarC_Ident.lident) (i : Prims.int)
            { FStarC_Syntax_Syntax.bs1 = binders;
              FStarC_Syntax_Syntax.comp = uu___3;_}
            ->
-           if (i < Prims.int_zero) || (i >= (FStarC_List.length binders))
+           if
+             (if i < Prims.int_zero
+              then true
+              else i >= (FStarC_List.length binders))
            then fail ()
            else
              (let b = FStarC_List.nth binders i in
@@ -4137,10 +4155,10 @@ let is_interpreted (env1 : env) (head : FStarC_Syntax_Syntax.term) :
       if uu___1
       then true
       else
-        (let uu___3 = delta_depth_of_fv env1 fv in
-         match uu___3 with
-         | FStarC_Syntax_Syntax.Delta_equational_at_level uu___4 -> true
-         | uu___4 -> false)
+        (let uu___2 = delta_depth_of_fv env1 fv in
+         match uu___2 with
+         | FStarC_Syntax_Syntax.Delta_equational_at_level uu___3 -> true
+         | uu___3 -> false)
   | uu___1 -> false
 let is_irreducible (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   let uu___ = lookup_qname env1 l in
@@ -4319,11 +4337,15 @@ let join_opt (env1 : env) (l1 : FStarC_Ident.lident)
   then FStar_Pervasives_Native.Some (l1, identity_mlift, identity_mlift)
   else
     if
-      ((FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GTot_lid) &&
-         (FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_Tot_lid))
-        ||
-        ((FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_GTot_lid) &&
-           (FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_Tot_lid))
+      (if
+         (if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GTot_lid
+          then FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_Tot_lid
+          else false)
+       then true
+       else
+         if FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_GTot_lid
+         then FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_Tot_lid
+         else false)
     then
       FStar_Pervasives_Native.Some
         (FStarC_Parser_Const.effect_GTot_lid, identity_mlift, identity_mlift)
@@ -4333,8 +4355,9 @@ let join_opt (env1 : env) (l1 : FStarC_Ident.lident)
            (fun uu___3 ->
               match uu___3 with
               | (m1, m2, uu___4, uu___5, uu___6) ->
-                  (FStarC_Ident.lid_equals l1 m1) &&
-                    (FStarC_Ident.lid_equals l2 m2)) (env1.effects).joins in
+                  if FStarC_Ident.lid_equals l1 m1
+                  then FStarC_Ident.lid_equals l2 m2
+                  else false) (env1.effects).joins in
        match uu___2 with
        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
        | FStar_Pervasives_Native.Some (uu___3, uu___4, m3, j1, j2) ->
@@ -4357,17 +4380,21 @@ let join (env1 : env) (l1 : FStarC_Ident.lident) (l2 : FStarC_Ident.lident) :
 let monad_leq (env1 : env) (l1 : FStarC_Ident.lident)
   (l2 : FStarC_Ident.lident) : edge FStar_Pervasives_Native.option=
   if
-    (FStarC_Ident.lid_equals l1 l2) ||
-      ((FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_Tot_lid) &&
-         (FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_GTot_lid))
+    (if FStarC_Ident.lid_equals l1 l2
+     then true
+     else
+       if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_Tot_lid
+       then FStarC_Ident.lid_equals l2 FStarC_Parser_Const.effect_GTot_lid
+       else false)
   then
     FStar_Pervasives_Native.Some
       { msource = l1; mtarget = l2; mlift = identity_mlift; mpath = [] }
   else
     FStarC_Option.find
       (fun e ->
-         (FStarC_Ident.lid_equals l1 e.msource) &&
-           (FStarC_Ident.lid_equals l2 e.mtarget)) (env1.effects).order
+         if FStarC_Ident.lid_equals l1 e.msource
+         then FStarC_Ident.lid_equals l2 e.mtarget
+         else false) (env1.effects).order
 let wp_sig_aux (decls : (FStarC_Syntax_Syntax.eff_decl * 'uuuuu) Prims.list)
   (m : FStarC_Ident.lident) :
   (FStarC_Syntax_Syntax.bv * FStarC_Syntax_Syntax.term'
@@ -4681,8 +4708,8 @@ let is_total_effect (env1 : env) (effect_lid : FStarC_Ident.lident) :
 let is_reifiable_effect (env1 : env) (effect_lid : FStarC_Ident.lident) :
   Prims.bool=
   let effect_lid1 = norm_eff_name env1 effect_lid in
-  let b = is_user_reifiable_effect env1 effect_lid1 in
-  if b
+  let uu___ = is_user_reifiable_effect env1 effect_lid1 in
+  if uu___
   then true
   else FStarC_Ident.lid_equals effect_lid1 FStarC_Parser_Const.effect_TAC_lid
 let is_reifiable_rc (env1 : env) (c : FStarC_Syntax_Syntax.residual_comp) :
@@ -4744,9 +4771,11 @@ let rec record_vals_and_defns (g : env) (se : FStarC_Syntax_Syntax.sigelt) :
         FStarC_Syntax_Syntax.t2 = uu___1;_}
       ->
       if
-        (FStarC_List.contains FStarC_Syntax_Syntax.Assumption
-           se.FStarC_Syntax_Syntax.sigquals)
-          || g.is_iface
+        (if
+           FStarC_List.contains FStarC_Syntax_Syntax.Assumption
+             se.FStarC_Syntax_Syntax.sigquals
+         then true
+         else g.is_iface)
       then g
       else record_val_for g lid
   | FStarC_Syntax_Syntax.Sig_let
@@ -4918,8 +4947,9 @@ let exists_polymonadic_bind (env1 : env) (m : FStarC_Ident.lident)
       (fun uu___1 ->
          match uu___1 with
          | (m1, n1, uu___2, uu___3) ->
-             (FStarC_Ident.lid_equals m m1) && (FStarC_Ident.lid_equals n n1))
-      (env1.effects).polymonadic_binds in
+             if FStarC_Ident.lid_equals m m1
+             then FStarC_Ident.lid_equals n n1
+             else false) (env1.effects).polymonadic_binds in
   match uu___ with
   | FStar_Pervasives_Native.Some (uu___1, uu___2, p, t) ->
       FStar_Pervasives_Native.Some (p, t)
@@ -4934,8 +4964,9 @@ let exists_polymonadic_subcomp (env1 : env) (m : FStarC_Ident.lident)
       (fun uu___1 ->
          match uu___1 with
          | (m1, n1, uu___2, uu___3) ->
-             (FStarC_Ident.lid_equals m m1) && (FStarC_Ident.lid_equals n n1))
-      (env1.effects).polymonadic_subcomps in
+             if FStarC_Ident.lid_equals m m1
+             then FStarC_Ident.lid_equals n n1
+             else false) (env1.effects).polymonadic_subcomps in
   match uu___ with
   | FStar_Pervasives_Native.Some (uu___1, uu___2, ts, k) ->
       FStar_Pervasives_Native.Some (ts, k)
@@ -5048,8 +5079,9 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
         else
           FStarC_Option.find
             (fun e ->
-               (FStarC_Ident.lid_equals e.msource i) &&
-                 (FStarC_Ident.lid_equals e.mtarget j)) order in
+               if FStarC_Ident.lid_equals e.msource i
+               then FStarC_Ident.lid_equals e.mtarget j
+               else false) order in
   let ms =
     FStarC_List.map
       (fun uu___ ->
@@ -5120,28 +5152,27 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
   let order = FStarC_List.op_At new_edges (env1.effects).order in
   FStarC_List.iter
     (fun edge2 ->
-       let is_div =
-         FStarC_Ident.lid_equals edge2.msource
-           FStarC_Parser_Const.effect_DIV_lid in
-       if is_div
-       then
-         let uu___1 =
+       let uu___1 =
+         if
+           FStarC_Ident.lid_equals edge2.msource
+             FStarC_Parser_Const.effect_DIV_lid
+         then
            let uu___2 = lookup_effect_quals env1 edge2.mtarget in
-           FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect uu___2 in
-         (if uu___1
-          then
-            let uu___2 =
-              let uu___3 =
-                FStarC_Class_Show.show FStarC_Ident.showable_lident
-                  edge2.mtarget in
-              FStarC_Format.fmt1
-                "Divergent computations cannot be included in an effect %s marked 'total'"
-                uu___3 in
-            FStarC_Errors.raise_error hasRange_env env1
-              FStarC_Errors_Codes.Fatal_DivergentComputationCannotBeIncludedInTotal
-              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-              (Obj.magic uu___2)
-          else ())
+           FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect uu___2
+         else false in
+       if uu___1
+       then
+         let uu___2 =
+           let uu___3 =
+             FStarC_Class_Show.show FStarC_Ident.showable_lident
+               edge2.mtarget in
+           FStarC_Format.fmt1
+             "Divergent computations cannot be included in an effect %s marked 'total'"
+             uu___3 in
+         FStarC_Errors.raise_error hasRange_env env1
+           FStarC_Errors_Codes.Fatal_DivergentComputationCannotBeIncludedInTotal
+           () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+           (Obj.magic uu___2)
        else ()) order;
   (let joins =
      let ubs = FStarC_SMap.create (Prims.of_int (10)) in
@@ -5908,8 +5939,9 @@ let should_enc_path
     match (xs, ys) with
     | ([], uu___) -> true
     | (x::xs1, y::ys1) ->
-        ((FStarC_String.lowercase x) = (FStarC_String.lowercase y)) &&
-          (str_i_prefix xs1 ys1)
+        if (FStarC_String.lowercase x) = (FStarC_String.lowercase y)
+        then str_i_prefix xs1 ys1
+        else false
     | (uu___, uu___1) -> false in
   let uu___ =
     FStarC_List.tryFind
@@ -6063,7 +6095,7 @@ let string_of_proof_ns (env1 : env) : Prims.string=
   let aux uu___ =
     match uu___ with
     | (p, b) ->
-        if (p = []) && b
+        if (if p = [] then b else false)
         then "*"
         else
           Prims.strcat (if b then "+" else "-") (FStarC_Ident.text_of_path p) in
@@ -6097,24 +6129,33 @@ let guard_form (g : guard_t) : FStarC_TypeChecker_Common.guard_formula=
   g.FStarC_TypeChecker_Common.guard_f
 let is_trivial (g : guard_t) : Prims.bool=
   if
-    (((FStarC_TypeChecker_Common.uu___is_Trivial
-         g.FStarC_TypeChecker_Common.guard_f)
-        &&
-        (FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
-           g.FStarC_TypeChecker_Common.deferred))
-       &&
-       (FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
-          (FStar_Pervasives_Native.fst g.FStarC_TypeChecker_Common.univ_ineqs)))
-      &&
-      (FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
-         (FStar_Pervasives_Native.snd g.FStarC_TypeChecker_Common.univ_ineqs))
+    (if
+       (if
+          (if
+             FStarC_TypeChecker_Common.uu___is_Trivial
+               g.FStarC_TypeChecker_Common.guard_f
+           then
+             FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
+               g.FStarC_TypeChecker_Common.deferred
+           else false)
+        then
+          FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
+            (FStar_Pervasives_Native.fst
+               g.FStarC_TypeChecker_Common.univ_ineqs)
+        else false)
+     then
+       FStarC_Class_Listlike.is_empty (FStarC_CList.listlike_clist ())
+         (FStar_Pervasives_Native.snd g.FStarC_TypeChecker_Common.univ_ineqs)
+     else false)
   then
     FStarC_CList.for_all
       (fun imp ->
-         let should_check =
-           FStarC_Syntax_Util.ctx_uvar_should_check
-             imp.FStarC_TypeChecker_Common.imp_uvar in
-         if FStarC_Syntax_Syntax.uu___is_Allow_unresolved should_check
+         let uu___ =
+           let uu___1 =
+             FStarC_Syntax_Util.ctx_uvar_should_check
+               imp.FStarC_TypeChecker_Common.imp_uvar in
+           FStarC_Syntax_Syntax.uu___is_Allow_unresolved uu___1 in
+         if uu___
          then true
          else
            (let uu___1 =

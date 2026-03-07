@@ -328,7 +328,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                          u'.FStarC_Syntax_Syntax.ctx_uvar_head) u21) u11 in
            let fwd = uvars_subseteq u1 u2 in
            let bwd = uvars_subseteq u2 u1 in
-           if fwd && bwd
+           if (if fwd then bwd else false)
            then ()
            else
              (let uu___4 = lec_hd in

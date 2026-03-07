@@ -81,7 +81,7 @@ let read_fstar_include (fn : Prims.string) :
                       let uu___3 = FStarC_String.get s1 Prims.int_zero in
                       uu___3 = 35 in
                     Prims.op_Negation uu___2 in
-                  ne && nc) uu___1 in
+                  if ne then nc else false) uu___1 in
            FStar_Pervasives_Native.Some subdirs) ()
   with
   | uu___ ->

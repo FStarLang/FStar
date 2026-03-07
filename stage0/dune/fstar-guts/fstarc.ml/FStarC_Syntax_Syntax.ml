@@ -2511,8 +2511,9 @@ let rec eq_pat (p1 : pat) (p2 : pat) : Prims.bool=
   | (Pat_constant c1, Pat_constant c2) -> FStarC_Const.eq_const c1 c2
   | (Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2)) ->
       if
-        (fv_eq fv1 fv2) &&
-          ((FStarC_List.length as1) = (FStarC_List.length as2))
+        (if fv_eq fv1 fv2
+         then (FStarC_List.length as1) = (FStarC_List.length as2)
+         else false)
       then
         let uu___ =
           FStarC_List.forall2

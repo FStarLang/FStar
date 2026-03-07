@@ -841,7 +841,7 @@ let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
   | Lazy (FStar_Pervasives.Inr (b, et'), thunk) ->
       let et_val = et () in
       let eager = FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
-      if (et_val <> et') || eager
+      if (if et_val <> et' then true else eager)
       then
         let res = let uu___ = FStarC_Thunk.force thunk in f uu___ in
         ((let uu___1 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in

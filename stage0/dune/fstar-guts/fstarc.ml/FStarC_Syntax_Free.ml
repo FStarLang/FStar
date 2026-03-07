@@ -576,7 +576,7 @@ and should_invalidate_cache (n : FStarC_Syntax_Syntax.free_vars)
          | FStar_Pervasives_Native.Some uu___1 -> true
          | FStar_Pervasives_Native.None -> false)
       (Obj.magic n.FStarC_Syntax_Syntax.free_univs) in
-  (b1 || b2) || b3
+  if (if b1 then true else b2) then true else b3
 let names (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.bv FStarC_FlatSet.t=
   let uu___ =

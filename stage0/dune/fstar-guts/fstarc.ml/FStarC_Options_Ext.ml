@@ -41,8 +41,11 @@ let get (k : key) : value=
 let enabled (k : key) : Prims.bool=
   let v = get k in
   let v1 = FStarC_String.lowercase v in
-  (v1 <> "") &&
-    (Prims.op_Negation (((v1 = "off") || (v1 = "false")) || (v1 = "0")))
+  if v1 <> ""
+  then
+    Prims.op_Negation
+      (if (if v1 = "off" then true else v1 = "false") then true else v1 = "0")
+  else false
 let is_prefix (s1 : Prims.string) (s2 : Prims.string) : Prims.bool=
   let l1 = FStarC_String.length s1 in
   let l2 = FStarC_String.length s2 in

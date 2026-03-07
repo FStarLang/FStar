@@ -101,20 +101,20 @@ let head_redex (env : FStarC_SMTEncoding_Env.env_t)
         FStarC_Syntax_Syntax.rc_opt = FStar_Pervasives_Native.Some rc;_}
       ->
       if
-        FStarC_Ident.lid_equals rc.FStarC_Syntax_Syntax.residual_effect
-          FStarC_Parser_Const.effect_Tot_lid
+        (if
+           FStarC_Ident.lid_equals rc.FStarC_Syntax_Syntax.residual_effect
+             FStarC_Parser_Const.effect_Tot_lid
+         then true
+         else
+           FStarC_Ident.lid_equals rc.FStarC_Syntax_Syntax.residual_effect
+             FStarC_Parser_Const.effect_GTot_lid)
       then true
       else
-        if
-          FStarC_Ident.lid_equals rc.FStarC_Syntax_Syntax.residual_effect
-            FStarC_Parser_Const.effect_GTot_lid
-        then true
-        else
-          FStarC_List.existsb
-            (fun uu___5 ->
-               match uu___5 with
-               | FStarC_Syntax_Syntax.TOTAL -> true
-               | uu___6 -> false) rc.FStarC_Syntax_Syntax.residual_flags
+        FStarC_List.existsb
+          (fun uu___3 ->
+             match uu___3 with
+             | FStarC_Syntax_Syntax.TOTAL -> true
+             | uu___4 -> false) rc.FStarC_Syntax_Syntax.residual_flags
   | FStarC_Syntax_Syntax.Tm_uinst
       ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
          FStarC_Syntax_Syntax.pos = uu___1;
@@ -431,44 +431,68 @@ let is_arithmetic_primitive
   (args : 'uuuuu Prims.list) : Prims.bool=
   match ((head.FStarC_Syntax_Syntax.n), args) with
   | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___::uu___1::[]) ->
-      ((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.op_Addition)
-                   ||
-                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.op_Subtraction))
-                  ||
-                  (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.op_Multiply))
-                 ||
-                 (FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.op_Division))
-                ||
-                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                   FStarC_Parser_Const.op_Modulus))
-               ||
-               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.real_op_LT))
-              ||
-              (FStarC_Syntax_Syntax.fv_eq_lid fv
-                 FStarC_Parser_Const.real_op_LTE))
-             ||
-             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.real_op_GT))
-            ||
-            (FStarC_Syntax_Syntax.fv_eq_lid fv
-               FStarC_Parser_Const.real_op_GTE))
-           ||
-           (FStarC_Syntax_Syntax.fv_eq_lid fv
-              FStarC_Parser_Const.real_op_Addition))
-          ||
-          (FStarC_Syntax_Syntax.fv_eq_lid fv
-             FStarC_Parser_Const.real_op_Subtraction))
-         ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Parser_Const.real_op_Multiply))
-        ||
-        (FStarC_Syntax_Syntax.fv_eq_lid fv
-           FStarC_Parser_Const.real_op_Division)
+      if
+        (if
+           (if
+              (if
+                 (if
+                    (if
+                       (if
+                          (if
+                             (if
+                                (if
+                                   (if
+                                      (if
+                                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                                           FStarC_Parser_Const.op_Addition
+                                       then true
+                                       else
+                                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                                           FStarC_Parser_Const.op_Subtraction)
+                                    then true
+                                    else
+                                      FStarC_Syntax_Syntax.fv_eq_lid fv
+                                        FStarC_Parser_Const.op_Multiply)
+                                 then true
+                                 else
+                                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                                     FStarC_Parser_Const.op_Division)
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.op_Modulus)
+                           then true
+                           else
+                             FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.real_op_LT)
+                        then true
+                        else
+                          FStarC_Syntax_Syntax.fv_eq_lid fv
+                            FStarC_Parser_Const.real_op_LTE)
+                     then true
+                     else
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.real_op_GT)
+                  then true
+                  else
+                    FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.real_op_GTE)
+               then true
+               else
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Parser_Const.real_op_Addition)
+            then true
+            else
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.real_op_Subtraction)
+         then true
+         else
+           FStarC_Syntax_Syntax.fv_eq_lid fv
+             FStarC_Parser_Const.real_op_Multiply)
+      then true
+      else
+        FStarC_Syntax_Syntax.fv_eq_lid fv
+          FStarC_Parser_Const.real_op_Division
   | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___::[]) ->
       FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.op_Minus
   | uu___ -> false
@@ -490,73 +514,135 @@ let is_BitVector_primitive
   : Prims.bool=
   match ((head.FStarC_Syntax_Syntax.n), args) with
   | (FStarC_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[]) ->
-      (((((((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
-                             FStarC_Parser_Const.bv_and_lid)
-                            ||
-                            (FStarC_Syntax_Syntax.fv_eq_lid fv
-                               FStarC_Parser_Const.bv_xor_lid))
-                           ||
-                           (FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.bv_or_lid))
-                          ||
-                          (FStarC_Syntax_Syntax.fv_eq_lid fv
-                             FStarC_Parser_Const.bv_add_lid))
-                         ||
-                         (FStarC_Syntax_Syntax.fv_eq_lid fv
-                            FStarC_Parser_Const.bv_sub_lid))
-                        ||
-                        (FStarC_Syntax_Syntax.fv_eq_lid fv
-                           FStarC_Parser_Const.bv_shift_left_lid))
-                       ||
-                       (FStarC_Syntax_Syntax.fv_eq_lid fv
-                          FStarC_Parser_Const.bv_shift_right_lid))
-                      ||
-                      (FStarC_Syntax_Syntax.fv_eq_lid fv
-                         FStarC_Parser_Const.bv_udiv_lid))
-                     ||
-                     (FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.bv_mod_lid))
-                    ||
-                    (FStarC_Syntax_Syntax.fv_eq_lid fv
-                       FStarC_Parser_Const.bv_mul_lid))
-                   ||
-                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.bv_shift_left'_lid))
-                  ||
-                  (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.bv_shift_right'_lid))
-                 ||
-                 (FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.bv_rotate_left_lid))
-                ||
-                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                   FStarC_Parser_Const.bv_rotate_right_lid))
-               ||
-               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.bv_rotate_left'_lid))
-              ||
-              (FStarC_Syntax_Syntax.fv_eq_lid fv
-                 FStarC_Parser_Const.bv_rotate_right'_lid))
-             ||
-             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.bv_udiv_unsafe_lid))
-            ||
-            (FStarC_Syntax_Syntax.fv_eq_lid fv
-               FStarC_Parser_Const.bv_mod_unsafe_lid))
-           ||
-           (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_mul'_lid))
-          ||
-          (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_ult_lid))
-         ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_uext_lid))
-        && (isInteger sz_arg.FStarC_Syntax_Syntax.n)
+      if
+        (if
+           (if
+              (if
+                 (if
+                    (if
+                       (if
+                          (if
+                             (if
+                                (if
+                                   (if
+                                      (if
+                                         (if
+                                            (if
+                                               (if
+                                                  (if
+                                                     (if
+                                                        (if
+                                                           (if
+                                                              (if
+                                                                 (if
+                                                                    FStarC_Syntax_Syntax.fv_eq_lid
+                                                                    fv
+                                                                    FStarC_Parser_Const.bv_and_lid
+                                                                  then true
+                                                                  else
+                                                                    FStarC_Syntax_Syntax.fv_eq_lid
+                                                                    fv
+                                                                    FStarC_Parser_Const.bv_xor_lid)
+                                                               then true
+                                                               else
+                                                                 FStarC_Syntax_Syntax.fv_eq_lid
+                                                                   fv
+                                                                   FStarC_Parser_Const.bv_or_lid)
+                                                            then true
+                                                            else
+                                                              FStarC_Syntax_Syntax.fv_eq_lid
+                                                                fv
+                                                                FStarC_Parser_Const.bv_add_lid)
+                                                         then true
+                                                         else
+                                                           FStarC_Syntax_Syntax.fv_eq_lid
+                                                             fv
+                                                             FStarC_Parser_Const.bv_sub_lid)
+                                                      then true
+                                                      else
+                                                        FStarC_Syntax_Syntax.fv_eq_lid
+                                                          fv
+                                                          FStarC_Parser_Const.bv_shift_left_lid)
+                                                   then true
+                                                   else
+                                                     FStarC_Syntax_Syntax.fv_eq_lid
+                                                       fv
+                                                       FStarC_Parser_Const.bv_shift_right_lid)
+                                                then true
+                                                else
+                                                  FStarC_Syntax_Syntax.fv_eq_lid
+                                                    fv
+                                                    FStarC_Parser_Const.bv_udiv_lid)
+                                             then true
+                                             else
+                                               FStarC_Syntax_Syntax.fv_eq_lid
+                                                 fv
+                                                 FStarC_Parser_Const.bv_mod_lid)
+                                          then true
+                                          else
+                                            FStarC_Syntax_Syntax.fv_eq_lid fv
+                                              FStarC_Parser_Const.bv_mul_lid)
+                                       then true
+                                       else
+                                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                                           FStarC_Parser_Const.bv_shift_left'_lid)
+                                    then true
+                                    else
+                                      FStarC_Syntax_Syntax.fv_eq_lid fv
+                                        FStarC_Parser_Const.bv_shift_right'_lid)
+                                 then true
+                                 else
+                                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                                     FStarC_Parser_Const.bv_rotate_left_lid)
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.bv_rotate_right_lid)
+                           then true
+                           else
+                             FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.bv_rotate_left'_lid)
+                        then true
+                        else
+                          FStarC_Syntax_Syntax.fv_eq_lid fv
+                            FStarC_Parser_Const.bv_rotate_right'_lid)
+                     then true
+                     else
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.bv_udiv_unsafe_lid)
+                  then true
+                  else
+                    FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.bv_mod_unsafe_lid)
+               then true
+               else
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Parser_Const.bv_mul'_lid)
+            then true
+            else
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.bv_ult_lid)
+         then true
+         else
+           FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_uext_lid)
+      then isInteger sz_arg.FStarC_Syntax_Syntax.n
+      else false
   | (FStarC_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::[]) ->
-      (((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.nat_to_bv_lid)
-          ||
-          (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_not_lid))
-         ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_to_nat_lid))
-        && (isInteger sz_arg.FStarC_Syntax_Syntax.n)
+      if
+        (if
+           (if
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.nat_to_bv_lid
+            then true
+            else
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.bv_not_lid)
+         then true
+         else
+           FStarC_Syntax_Syntax.fv_eq_lid fv
+             FStarC_Parser_Const.bv_to_nat_lid)
+      then isInteger sz_arg.FStarC_Syntax_Syntax.n
+      else false
   | uu___ -> false
 let encode_univ_name (u : FStarC_Syntax_Syntax.univ_name) :
   (FStarC_SMTEncoding_Term.fv * FStarC_SMTEncoding_Term.term)=
@@ -881,10 +967,11 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t)
         match ((head.FStarC_Syntax_Syntax.n), args_e) with
         | (FStarC_Syntax_Syntax.Tm_fvar fv,
            uu___4::(sz_arg, uu___5)::uu___6::[]) when
-            (FStarC_Syntax_Syntax.fv_eq_lid fv
-               FStarC_Parser_Const.bv_uext_lid)
-              && (isInteger sz_arg.FStarC_Syntax_Syntax.n)
-            ->
+            if
+              FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.bv_uext_lid
+            then isInteger sz_arg.FStarC_Syntax_Syntax.n
+            else false ->
             let uu___7 =
               let uu___8 = getInteger sz_arg.FStarC_Syntax_Syntax.n in
               FStar_Pervasives_Native.Some uu___8 in
@@ -1375,8 +1462,9 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
               let tkey_hash = FStarC_SMTEncoding_Term.hash_of_term tok1 in
               let uu___4 =
                 if
-                  (fvb.FStarC_SMTEncoding_Env.smt_arity > Prims.int_zero) &&
-                    is_nullary
+                  (if fvb.FStarC_SMTEncoding_Env.smt_arity > Prims.int_zero
+                   then is_nullary
+                   else false)
                 then
                   let uu___5 = FStarC_SMTEncoding_Env.kick_partial_app fvb in
                   match uu___5 with
@@ -1494,8 +1582,9 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
               let tkey_hash = FStarC_SMTEncoding_Term.hash_of_term tok1 in
               let uu___8 =
                 if
-                  (fvb.FStarC_SMTEncoding_Env.smt_arity > Prims.int_zero) &&
-                    is_nullary
+                  (if fvb.FStarC_SMTEncoding_Env.smt_arity > Prims.int_zero
+                   then is_nullary
+                   else false)
                 then
                   let uu___9 = FStarC_SMTEncoding_Env.kick_partial_app fvb in
                   match uu___9 with
@@ -1540,12 +1629,12 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
         (match uu___2 with
          | (binders1, res) ->
              let uu___3 =
-               if env.FStarC_SMTEncoding_Env.encode_non_total_function_typ
-               then
-                 let uu___4 = FStarC_Syntax_Util.is_pure_or_ghost_comp res in
-                 (if uu___4
-                  then true
-                  else FStarC_Syntax_Util.is_tot_or_gtot_comp res)
+               let uu___4 =
+                 if env.FStarC_SMTEncoding_Env.encode_non_total_function_typ
+                 then FStarC_Syntax_Util.is_pure_or_ghost_comp res
+                 else false in
+               if uu___4
+               then true
                else FStarC_Syntax_Util.is_tot_or_gtot_comp res in
              if uu___3
              then
@@ -2124,11 +2213,13 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                                  let cvars1 =
                                    FStarC_List.filter
                                      (fun y ->
-                                        ((FStarC_SMTEncoding_Term.fv_name y)
-                                           <> x1)
-                                          &&
-                                          ((FStarC_SMTEncoding_Term.fv_name y)
-                                             <> fsym)) cvars in
+                                        if
+                                          (FStarC_SMTEncoding_Term.fv_name y)
+                                            <> x1
+                                        then
+                                          (FStarC_SMTEncoding_Term.fv_name y)
+                                            <> fsym
+                                        else false) cvars in
                                  let cvars2 =
                                    let univ_vars =
                                      let uu___8 =
@@ -2348,10 +2439,12 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                        | (FStarC_Syntax_Syntax.Tm_fvar fv, (arg, uu___6)::[])
                            when
                            if
-                             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                FStarC_Parser_Const.squash_lid)
-                               ||
-                               (FStarC_Syntax_Syntax.fv_eq_lid fv
+                             (if
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.squash_lid
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
                                   FStarC_Parser_Const.auto_squash_lid)
                            then
                              let uu___7 =
@@ -2375,10 +2468,12 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                            uu___9),
                           (arg, uu___10)::[]) when
                            if
-                             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                FStarC_Parser_Const.squash_lid)
-                               ||
-                               (FStarC_Syntax_Syntax.fv_eq_lid fv
+                             (if
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.squash_lid
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
                                   FStarC_Parser_Const.auto_squash_lid)
                            then
                              let uu___11 =
@@ -2393,15 +2488,19 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                            let t2 = FStarC_Syntax_Util.refine dummy arg in
                            encode_term t2 env
                        | (FStarC_Syntax_Syntax.Tm_fvar fv, uu___6) when
-                           (Prims.op_Negation
-                              env.FStarC_SMTEncoding_Env.encoding_quantifier)
-                             &&
-                             ((FStarC_Syntax_Syntax.fv_eq_lid fv
-                                 FStarC_Parser_Const.forall_lid)
-                                ||
-                                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                   FStarC_Parser_Const.exists_lid))
-                           -> encode_deeply_embedded_quantifier t0 env
+                           if
+                             Prims.op_Negation
+                               env.FStarC_SMTEncoding_Env.encoding_quantifier
+                           then
+                             (if
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.forall_lid
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.exists_lid)
+                           else false ->
+                           encode_deeply_embedded_quantifier t0 env
                        | (FStarC_Syntax_Syntax.Tm_uinst
                           ({
                              FStarC_Syntax_Syntax.n =
@@ -2411,15 +2510,19 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                              FStarC_Syntax_Syntax.hash_code = uu___8;_},
                            uu___9),
                           uu___10) when
-                           (Prims.op_Negation
-                              env.FStarC_SMTEncoding_Env.encoding_quantifier)
-                             &&
-                             ((FStarC_Syntax_Syntax.fv_eq_lid fv
-                                 FStarC_Parser_Const.forall_lid)
-                                ||
-                                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                   FStarC_Parser_Const.exists_lid))
-                           -> encode_deeply_embedded_quantifier t0 env
+                           if
+                             Prims.op_Negation
+                               env.FStarC_SMTEncoding_Env.encoding_quantifier
+                           then
+                             (if
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.forall_lid
+                              then true
+                              else
+                                FStarC_Syntax_Syntax.fv_eq_lid fv
+                                  FStarC_Parser_Const.exists_lid)
+                           else false ->
+                           encode_deeply_embedded_quantifier t0 env
                        | (FStarC_Syntax_Syntax.Tm_uinst
                           ({
                              FStarC_Syntax_Syntax.n =
@@ -3734,11 +3837,13 @@ and encode_formula (phi : FStarC_Syntax_Syntax.typ)
                   fallback phi3
               | uu___5 -> fallback phi2)
          | (FStarC_Syntax_Syntax.Tm_fvar fv, (t, uu___1)::[]) when
-             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.squash_lid)
-               ||
-               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.auto_squash_lid)
+             if
+               FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Parser_Const.squash_lid
+             then true
+             else
+               FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Parser_Const.auto_squash_lid
              -> encode_formula t env
          | uu___1 ->
              let encode_valid uu___2 =

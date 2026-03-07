@@ -167,22 +167,22 @@ let head_of (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
 let cfg_equivalent (c1 : FStarC_TypeChecker_Cfg.cfg)
   (c2 : FStarC_TypeChecker_Cfg.cfg) : Prims.bool=
   let uu___ =
-    FStarC_Class_Deq.op_Equals_Question FStarC_TypeChecker_Cfg.deq_fsteps
-      c1.FStarC_TypeChecker_Cfg.steps c2.FStarC_TypeChecker_Cfg.steps in
-  if uu___
-  then
     let uu___1 =
+      FStarC_Class_Deq.op_Equals_Question FStarC_TypeChecker_Cfg.deq_fsteps
+        c1.FStarC_TypeChecker_Cfg.steps c2.FStarC_TypeChecker_Cfg.steps in
+    if uu___1
+    then
       FStarC_Class_Deq.op_Equals_Question
         (FStarC_Class_Deq.deq_list FStarC_TypeChecker_Env.deq_delta_level)
         c1.FStarC_TypeChecker_Cfg.delta_level
-        c2.FStarC_TypeChecker_Cfg.delta_level in
-    (if uu___1
-     then
-       FStarC_Class_Deq.op_Equals_Question
-         (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-         c1.FStarC_TypeChecker_Cfg.normalize_pure_lets
-         c2.FStarC_TypeChecker_Cfg.normalize_pure_lets
-     else false)
+        c2.FStarC_TypeChecker_Cfg.delta_level
+    else false in
+  if uu___
+  then
+    FStarC_Class_Deq.op_Equals_Question
+      (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+      c1.FStarC_TypeChecker_Cfg.normalize_pure_lets
+      c2.FStarC_TypeChecker_Cfg.normalize_pure_lets
   else false
 let read_memo (cfg : FStarC_TypeChecker_Cfg.cfg)
   (r : (FStarC_TypeChecker_Cfg.cfg * 'a) FStarC_Syntax_Syntax.memo) :
@@ -190,13 +190,12 @@ let read_memo (cfg : FStarC_TypeChecker_Cfg.cfg)
   let uu___ = FStarC_Effect.op_Bang r in
   match uu___ with
   | FStar_Pervasives_Native.Some (cfg', a1) when
-      if cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg
+      if
+        (if cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg
+         then true
+         else FStarC_Util.physical_equality cfg cfg')
       then true
-      else
-        if FStarC_Util.physical_equality cfg cfg'
-        then true
-        else cfg_equivalent cfg' cfg
-      -> FStar_Pervasives_Native.Some a1
+      else cfg_equivalent cfg' cfg -> FStar_Pervasives_Native.Some a1
   | uu___1 -> FStar_Pervasives_Native.None
 let set_memo (cfg : FStarC_TypeChecker_Cfg.cfg)
   (r : (FStarC_TypeChecker_Cfg.cfg * 'a) FStarC_Syntax_Syntax.memo) (t : 'a)
@@ -613,10 +612,11 @@ let reduce_primops (norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb)
                    let uu___3 = FStarC_TypeChecker_Cfg.find_prim_step cfg fv in
                    (match uu___3 with
                     | FStar_Pervasives_Native.Some prim_step when
-                        prim_step.FStarC_TypeChecker_Primops_Base.strong_reduction_ok
-                          ||
-                          (Prims.op_Negation
-                             cfg.FStarC_TypeChecker_Cfg.strong)
+                        if
+                          prim_step.FStarC_TypeChecker_Primops_Base.strong_reduction_ok
+                        then true
+                        else
+                          Prims.op_Negation cfg.FStarC_TypeChecker_Cfg.strong
                         ->
                         let l = FStarC_List.length args in
                         if
@@ -852,13 +852,15 @@ let reduce_equality (norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb)
   reduce_primops norm_cb uu___ tm
 let should_consider_norm_requests (cfg : FStarC_TypeChecker_Cfg.cfg) :
   Prims.bool=
-  (Prims.op_Negation
-     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.no_full_norm)
-    &&
-    (Prims.op_Negation
-       (FStarC_Ident.lid_equals
-          (cfg.FStarC_TypeChecker_Cfg.tcenv).FStarC_TypeChecker_Env.curmodule
-          FStarC_Parser_Const.prims_lid))
+  if
+    Prims.op_Negation
+      (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.no_full_norm
+  then
+    Prims.op_Negation
+      (FStarC_Ident.lid_equals
+         (cfg.FStarC_TypeChecker_Cfg.tcenv).FStarC_TypeChecker_Env.curmodule
+         FStarC_Parser_Const.prims_lid)
+  else false
 let is_nbe_request (s : FStarC_TypeChecker_Env.step Prims.list) : Prims.bool=
   FStarC_Util.for_some
     (FStarC_Class_Deq.op_Equals_Question FStarC_TypeChecker_Env.deq_step
@@ -926,8 +928,8 @@ let rec maybe_weakly_reduced
         then true
         else
           FStarC_Util.for_some
-            (fun uu___2 ->
-               match uu___2 with | (a, uu___3) -> maybe_weakly_reduced a)
+            (fun uu___1 ->
+               match uu___1 with | (a, uu___2) -> maybe_weakly_reduced a)
             ct.FStarC_Syntax_Syntax.effect_args in
   let t = FStarC_Syntax_Subst.compress tm in
   match t.FStarC_Syntax_Syntax.n with
@@ -955,8 +957,8 @@ let rec maybe_weakly_reduced
       then true
       else
         FStarC_Util.for_some
-          (fun uu___2 ->
-             match uu___2 with | (a, uu___3) -> maybe_weakly_reduced a) args
+          (fun uu___1 ->
+             match uu___1 with | (a, uu___2) -> maybe_weakly_reduced a) args
   | FStarC_Syntax_Syntax.Tm_ascribed
       { FStarC_Syntax_Syntax.tm = t1; FStarC_Syntax_Syntax.asc = asc;
         FStarC_Syntax_Syntax.eff_opt = uu___;_}
@@ -965,14 +967,14 @@ let rec maybe_weakly_reduced
       if uu___1
       then true
       else
-        (let uu___3 = asc in
-         match uu___3 with
-         | (asc_tc, asc_tac, uu___4) ->
-             let uu___5 =
+        (let uu___2 = asc in
+         match uu___2 with
+         | (asc_tc, asc_tac, uu___3) ->
+             let uu___4 =
                match asc_tc with
                | FStar_Pervasives.Inl t2 -> maybe_weakly_reduced t2
                | FStar_Pervasives.Inr c2 -> aux_comp c2 in
-             if uu___5
+             if uu___4
              then true
              else
                (match asc_tac with
@@ -986,19 +988,19 @@ let rec maybe_weakly_reduced
       then true
       else
         (match m with
-         | FStarC_Syntax_Syntax.Meta_pattern (uu___2, args) ->
+         | FStarC_Syntax_Syntax.Meta_pattern (uu___1, args) ->
              FStarC_Util.for_some
                (FStarC_Util.for_some
-                  (fun uu___3 ->
-                     match uu___3 with
-                     | (a, uu___4) -> maybe_weakly_reduced a)) args
-         | FStarC_Syntax_Syntax.Meta_monadic_lift (uu___2, uu___3, t') ->
+                  (fun uu___2 ->
+                     match uu___2 with
+                     | (a, uu___3) -> maybe_weakly_reduced a)) args
+         | FStarC_Syntax_Syntax.Meta_monadic_lift (uu___1, uu___2, t') ->
              maybe_weakly_reduced t'
-         | FStarC_Syntax_Syntax.Meta_monadic (uu___2, t') ->
+         | FStarC_Syntax_Syntax.Meta_monadic (uu___1, t') ->
              maybe_weakly_reduced t'
-         | FStarC_Syntax_Syntax.Meta_labeled uu___2 -> false
-         | FStarC_Syntax_Syntax.Meta_desugared uu___2 -> false
-         | FStarC_Syntax_Syntax.Meta_named uu___2 -> false)
+         | FStarC_Syntax_Syntax.Meta_labeled uu___1 -> false
+         | FStarC_Syntax_Syntax.Meta_desugared uu___1 -> false
+         | FStarC_Syntax_Syntax.Meta_named uu___1 -> false)
 let decide_unfolding (cfg : FStarC_TypeChecker_Cfg.cfg)
   (stack1 : stack_elt Prims.list) (fv : FStarC_Syntax_Syntax.fv)
   (qninfo : FStarC_TypeChecker_Env.qninfo) :
@@ -1839,10 +1841,10 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
          let uu___2 = is_norm_request_head fv in
          FStar_Pervasives_Native.uu___is_Some uu___2
        else false ->
-       let k =
-         let uu___2 = is_norm_request_head fv in
-         FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
-       handle_norm_request cfg env1 stack2 k t1
+       let uu___2 =
+         let uu___3 = is_norm_request_head fv in
+         FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
+       handle_norm_request cfg env1 stack2 uu___2 t1
    | FStarC_Syntax_Syntax.Tm_fvar fv ->
        let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
        let qninfo =
@@ -1905,10 +1907,14 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
         | Dummy -> FStarC_Effect.failwith "Term variable not found"
         | Clos (env2, t0, r, fix) ->
             if
-              ((Prims.op_Negation fix) ||
-                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
-                ||
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full
+              (if
+                 (if Prims.op_Negation fix
+                  then true
+                  else
+                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
+               then true
+               else
+                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
             then
               let uu___3 = read_memo cfg r in
               (match uu___3 with
@@ -1928,9 +1934,11 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
                      then
                        match stack2 with
                        | [] when
-                           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
-                             ||
-                             (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars
+                           (if
+                              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
+                            then true
+                            else
+                              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars)
                            -> rebuild cfg env3 stack2 t'
                        | uu___6 -> norm cfg env3 stack2 t'
                      else rebuild cfg env3 stack2 t'))
@@ -1953,11 +1961,12 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
              (uu___2, FStarC_Syntax_Syntax.Meta_monadic_lift
               (src, tgt, uu___3), uu___4))::tl
              when
-             (FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid)
-               &&
-               (FStarC_Ident.lid_equals tgt
-                  FStarC_Parser_Const.effect_DIV_lid)
-             -> maybe_strip_meta_divs tl
+             if
+               FStarC_Ident.lid_equals src
+                 FStarC_Parser_Const.effect_PURE_lid
+             then
+               FStarC_Ident.lid_equals tgt FStarC_Parser_Const.effect_DIV_lid
+             else false -> maybe_strip_meta_divs tl
          | (Arg uu___2)::uu___3 -> FStar_Pervasives_Native.Some stack3
          | uu___2 -> FStar_Pervasives_Native.None in
        let fallback uu___2 =
@@ -2116,11 +2125,15 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
                        let a1 =
                          let uu___3 =
                            if
-                             ((FStarC_TypeChecker_Cfg.cfg_env cfg).FStarC_TypeChecker_Env.erase_erasable_args
-                                ||
-                                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
-                               ||
-                               (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args
+                             (if
+                                (if
+                                   (FStarC_TypeChecker_Cfg.cfg_env cfg).FStarC_TypeChecker_Env.erase_erasable_args
+                                 then true
+                                 else
+                                   (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
+                              then true
+                              else
+                                (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args)
                            then FStarC_Syntax_Util.aqual_is_erasable aq
                            else false in
                          if uu___3 then FStarC_Syntax_Util.exp_unit else a in
@@ -2222,8 +2235,10 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
    | FStarC_Syntax_Syntax.Tm_refine
        { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___2;_}
        when
-       (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-         ||
+       if
+         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+       then true
+       else
          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine
        -> norm cfg env1 stack2 x.FStarC_Syntax_Syntax.sort
    | FStarC_Syntax_Syntax.Tm_refine
@@ -2379,11 +2394,16 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
               (t1.FStarC_Syntax_Syntax.pos)))
          :: stack2 in
        if
-         ((cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota &&
-            (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee)
-           &&
-           (Prims.op_Negation
-              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak)
+         (if
+            (if
+               (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
+             then
+               (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee
+             else false)
+          then
+            Prims.op_Negation
+              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
+          else false)
        then
          let cfg' =
            {
@@ -2482,9 +2502,10 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
        { FStarC_Syntax_Syntax.lbs = (b, lbs);
          FStarC_Syntax_Syntax.body1 = lbody;_}
        when
-       (FStarC_Syntax_Syntax.is_top_level lbs) &&
+       if FStarC_Syntax_Syntax.is_top_level lbs
+       then
          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars
-       ->
+       else false ->
        let lbs1 =
          FStarC_List.map
            (fun lb ->
@@ -2713,15 +2734,21 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
        { FStarC_Syntax_Syntax.lbs = (true, lbs);
          FStarC_Syntax_Syntax.body1 = body;_}
        when
-       (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars
-         ||
-         (((Prims.op_Negation
-              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
-             &&
-             (Prims.op_Negation
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full))
-            &&
-            (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations)
+       if
+         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars
+       then true
+       else
+         if
+           (if
+              Prims.op_Negation
+                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+            then
+              Prims.op_Negation
+                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full
+            else false)
+         then
+           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations
+         else false
        ->
        let uu___2 = FStarC_Syntax_Subst.open_let_rec lbs body in
        (match uu___2 with
@@ -2812,12 +2839,13 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
    | FStarC_Syntax_Syntax.Tm_let
        { FStarC_Syntax_Syntax.lbs = lbs; FStarC_Syntax_Syntax.body1 = body;_}
        when
-       (Prims.op_Negation
-          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
-         &&
-         (Prims.op_Negation
-            (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
-       ->
+       if
+         Prims.op_Negation
+           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+       then
+         Prims.op_Negation
+           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full
+       else false ->
        let uu___2 = closure_as_term cfg env1 t1 in
        rebuild cfg env1 stack2 uu___2
    | FStarC_Syntax_Syntax.Tm_let
@@ -2930,22 +2958,22 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
              then
                let uu___3 =
                  let uu___4 =
-                   FStarC_TypeChecker_Env.is_erasable_effect
-                     cfg.FStarC_TypeChecker_Cfg.tcenv m_from in
+                   let uu___5 =
+                     FStarC_TypeChecker_Env.is_erasable_effect
+                       cfg.FStarC_TypeChecker_Cfg.tcenv m_from in
+                   if uu___5
+                   then true
+                   else
+                     FStarC_TypeChecker_Env.is_erasable_effect
+                       cfg.FStarC_TypeChecker_Cfg.tcenv m_to in
                  if uu___4
                  then true
                  else
-                   (let uu___6 =
-                      FStarC_TypeChecker_Env.is_erasable_effect
-                        cfg.FStarC_TypeChecker_Cfg.tcenv m_to in
-                    if uu___6
-                    then true
-                    else
-                      if FStarC_Syntax_Util.is_pure_effect m_from
-                      then
-                        FStarC_TypeChecker_Env.non_informative
-                          cfg.FStarC_TypeChecker_Cfg.tcenv ty
-                      else false) in
+                   if FStarC_Syntax_Util.is_pure_effect m_from
+                   then
+                     FStarC_TypeChecker_Env.non_informative
+                       cfg.FStarC_TypeChecker_Cfg.tcenv ty
+                   else false in
                (if uu___3
                 then
                   let uu___4 =
@@ -3057,21 +3085,21 @@ and do_unfold_fv (cfg : FStarC_TypeChecker_Cfg.cfg)
     | uu___1 -> false in
   let maybe_warn_if_unfolding_plugin uu___ =
     let uu___1 =
-      if
-        FStar_Pervasives_Native.uu___is_Some
-          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
-      then
-        let uu___2 =
-          let uu___3 = FStarC_Options.no_plugins () in
-          Prims.op_Negation uu___3 in
-        (if uu___2
-         then
-           let uu___3 =
-             let uu___4 = FStarC_Effect.op_Bang plugin_unfold_warn_ctr in
-             uu___4 > Prims.int_zero in
-           (if uu___3 then is_plugin () else false)
-         else false)
-      else false in
+      let uu___2 =
+        let uu___3 =
+          if
+            FStar_Pervasives_Native.uu___is_Some
+              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
+          then
+            let uu___4 = FStarC_Options.no_plugins () in
+            Prims.op_Negation uu___4
+          else false in
+        if uu___3
+        then
+          let uu___4 = FStarC_Effect.op_Bang plugin_unfold_warn_ctr in
+          uu___4 > Prims.int_zero
+        else false in
+      if uu___2 then is_plugin () else false in
     if uu___1
     then
       let msg =
@@ -3168,9 +3196,11 @@ and do_unfold_fv (cfg : FStarC_TypeChecker_Cfg.cfg)
                        uu___5 :: env2) empty_env us' in
                 norm cfg env1 stack2 t1))
           | uu___3 when
-              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.erase_universes
-                ||
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.allow_unbound_universes
+              (if
+                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.erase_universes
+               then true
+               else
+                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.allow_unbound_universes)
               -> norm cfg empty_env stack1 t1
           | uu___3 ->
               let uu___4 =
@@ -4063,8 +4093,10 @@ and do_reify_monadic (fallback : unit -> FStarC_Syntax_Syntax.term)
                                      cfg.FStarC_TypeChecker_Cfg.tcenv
                                      eff_name in
                                  if
-                                   is_total_effect ||
-                                     (FStarC_Ident.lid_equals eff_name
+                                   (if is_total_effect
+                                    then true
+                                    else
+                                      FStarC_Ident.lid_equals eff_name
                                         FStarC_Parser_Const.effect_TAC_lid)
                                  then
                                    let uu___10 =
@@ -4735,16 +4767,17 @@ and maybe_simplify_aux (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                -> clearly_inhabited (FStarC_Syntax_Util.comp_result c)
            | FStarC_Syntax_Syntax.Tm_fvar fv ->
                let l = FStarC_Syntax_Syntax.lid_of_fv fv in
-               if FStarC_Ident.lid_equals l FStarC_Parser_Const.int_lid
+               if
+                 (if
+                    (if FStarC_Ident.lid_equals l FStarC_Parser_Const.int_lid
+                     then true
+                     else
+                       FStarC_Ident.lid_equals l FStarC_Parser_Const.bool_lid)
+                  then true
+                  else
+                    FStarC_Ident.lid_equals l FStarC_Parser_Const.string_lid)
                then true
-               else
-                 if FStarC_Ident.lid_equals l FStarC_Parser_Const.bool_lid
-                 then true
-                 else
-                   if
-                     FStarC_Ident.lid_equals l FStarC_Parser_Const.string_lid
-                   then true
-                   else FStarC_Ident.lid_equals l FStarC_Parser_Const.exn_lid
+               else FStarC_Ident.lid_equals l FStarC_Parser_Const.exn_lid
            | uu___3 -> false in
          let simplify arg =
            let uu___2 = simp_t (FStar_Pervasives_Native.fst arg) in
@@ -5712,8 +5745,9 @@ and rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
         else ()));
   (let f_opt = is_fext_on_domain t in
    if
-     (FStar_Pervasives_Native.uu___is_Some f_opt) &&
-       (match stack1 with | (Arg uu___1)::uu___2 -> true | uu___1 -> false)
+     (if FStar_Pervasives_Native.uu___is_Some f_opt
+      then match stack1 with | (Arg uu___1)::uu___2 -> true | uu___1 -> false
+      else false)
    then let uu___1 = FStarC_Option.must f_opt in norm cfg env1 stack1 uu___1
    else
      (let uu___2 = maybe_simplify cfg env1 stack1 t in
@@ -5885,16 +5919,17 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
              FStarC_Syntax_Syntax.meta = FStarC_Syntax_Syntax.Meta_monadic
                (m, uu___2);_}
            when
-           let uu___3 = is_non_tac_layered_effect m in
+           let uu___3 =
+             let uu___4 = is_non_tac_layered_effect m in
+             if uu___4
+             then
+               (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+             else false in
            if uu___3
            then
-             (if
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-              then
-                let uu___4 =
-                  get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv m in
-                FStarC_Syntax_Syntax.uu___is_Extract_none uu___4
-              else false)
+             let uu___4 =
+               get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv m in
+             FStarC_Syntax_Syntax.uu___is_Extract_none uu___4
            else false ->
            let uu___3 =
              get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv m in
@@ -5913,16 +5948,17 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
              FStarC_Syntax_Syntax.meta = FStarC_Syntax_Syntax.Meta_monadic
                (m, uu___2);_}
            when
-           let uu___3 = is_non_tac_layered_effect m in
+           let uu___3 =
+             let uu___4 = is_non_tac_layered_effect m in
+             if uu___4
+             then
+               (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+             else false in
            if uu___3
            then
-             (if
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-              then
-                let uu___4 =
-                  get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv m in
-                uu___4 = FStarC_Syntax_Syntax.Extract_primitive
-              else false)
+             let uu___4 =
+               get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv m in
+             uu___4 = FStarC_Syntax_Syntax.Extract_primitive
            else false ->
            fallback
              (FStarC_Format.fmt1
@@ -5965,13 +6001,13 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
              (if uu___3
               then true
               else
-                (let uu___5 = is_non_tac_layered_effect mtgt in
-                 if uu___5
+                (let uu___4 = is_non_tac_layered_effect mtgt in
+                 if uu___4
                  then
-                   let uu___6 =
+                   let uu___5 =
                      get_extraction_mode cfg.FStarC_TypeChecker_Cfg.tcenv
                        mtgt in
-                   FStarC_Syntax_Syntax.uu___is_Extract_none uu___6
+                   FStarC_Syntax_Syntax.uu___is_Extract_none uu___5
                  else false))
            else false ->
            FStarC_Errors.raise_error
@@ -6095,8 +6131,10 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                  "match is irreducible: scrutinee=%s\nbranches=%s\n" uu___4
                  uu___5);
           (let whnf =
-             (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
-               ||
+             if
+               (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
+             then true
+             else
                (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.hnf in
            let cfg_exclude_zeta =
              if
@@ -6337,22 +6375,22 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                  let scrutinee1 =
                    let uu___6 =
                      if
-                       (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
-                     then
                        (if
-                          Prims.op_Negation
-                            (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
-                        then
                           (if
+                             (if
+                                (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
+                              then
+                                Prims.op_Negation
+                                  (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weak
+                              else false)
+                           then
                              Prims.op_Negation
                                (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.compress_uvars
-                           then
-                             (if
-                                (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee
-                              then maybe_weakly_reduced scrutinee
-                              else false)
                            else false)
+                        then
+                          (cfg1.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee
                         else false)
+                     then maybe_weakly_reduced scrutinee
                      else false in
                    if uu___6
                    then
@@ -6926,15 +6964,19 @@ let ghost_to_pure2 (env1 : FStarC_TypeChecker_Env.env)
               let c2_erasable =
                 FStarC_TypeChecker_Env.is_erasable_effect env1 c2_eff in
               if
-                c1_erasable &&
-                  (FStarC_Ident.lid_equals c2_eff
-                     FStarC_Parser_Const.effect_GHOST_lid)
+                (if c1_erasable
+                 then
+                   FStarC_Ident.lid_equals c2_eff
+                     FStarC_Parser_Const.effect_GHOST_lid
+                 else false)
               then let uu___3 = ghost_to_pure env1 c21 in (c11, uu___3)
               else
                 if
-                  c2_erasable &&
-                    (FStarC_Ident.lid_equals c1_eff
-                       FStarC_Parser_Const.effect_GHOST_lid)
+                  (if c2_erasable
+                   then
+                     FStarC_Ident.lid_equals c1_eff
+                       FStarC_Parser_Const.effect_GHOST_lid
+                   else false)
                 then (let uu___4 = ghost_to_pure env1 c11 in (uu___4, c21))
                 else (c11, c21)))
 let ghost_to_pure_lcomp2 (env1 : FStarC_TypeChecker_Env.env)
@@ -6962,16 +7004,20 @@ let ghost_to_pure_lcomp2 (env1 : FStarC_TypeChecker_Env.env)
               let lc2_erasable =
                 FStarC_TypeChecker_Env.is_erasable_effect env1 lc2_eff in
               if
-                lc1_erasable &&
-                  (FStarC_Ident.lid_equals lc2_eff
-                     FStarC_Parser_Const.effect_GHOST_lid)
+                (if lc1_erasable
+                 then
+                   FStarC_Ident.lid_equals lc2_eff
+                     FStarC_Parser_Const.effect_GHOST_lid
+                 else false)
               then
                 let uu___3 = ghost_to_pure_lcomp env1 lc21 in (lc11, uu___3)
               else
                 if
-                  lc2_erasable &&
-                    (FStarC_Ident.lid_equals lc1_eff
-                       FStarC_Parser_Const.effect_GHOST_lid)
+                  (if lc2_erasable
+                   then
+                     FStarC_Ident.lid_equals lc1_eff
+                       FStarC_Parser_Const.effect_GHOST_lid
+                   else false)
                 then
                   (let uu___4 = ghost_to_pure_lcomp env1 lc11 in
                    (uu___4, lc21))
@@ -8063,14 +8109,14 @@ let get_n_binders' (env1 : FStarC_TypeChecker_Env.env)
                     FStarC_Syntax_Syntax.mk_Total uu___3 in
                   (bs_l, uu___2))
          | (bs1, c1) when
-             if len < n1
+             let uu___1 =
+               if len < n1
+               then FStarC_Syntax_Util.is_total_comp c1
+               else false in
+             if uu___1
              then
-               let uu___1 = FStarC_Syntax_Util.is_total_comp c1 in
-               (if uu___1
-                then
-                  let uu___2 = FStarC_Syntax_Util.has_decreases c1 in
-                  Prims.op_Negation uu___2
-                else false)
+               let uu___2 = FStarC_Syntax_Util.has_decreases c1 in
+               Prims.op_Negation uu___2
              else false ->
              let uu___1 =
                aux true (n1 - len) (FStarC_Syntax_Util.comp_result c1) in

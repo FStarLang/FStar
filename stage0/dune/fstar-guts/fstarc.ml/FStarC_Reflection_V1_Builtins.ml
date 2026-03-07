@@ -1155,7 +1155,8 @@ let eqprod (uu___ : unit) :
     ('uuuuu1 -> 'uuuuu1 -> Prims.bool) ->
       ('uuuuu * 'uuuuu1) -> ('uuuuu * 'uuuuu1) -> Prims.bool=
   FStarC_Syntax_Util.eqprod
-let op_Amp_Amp_Dot (b1 : Prims.bool) (b2 : Prims.bool) : Prims.bool= b1 && b2
+let op_Amp_Amp_Dot (b1 : Prims.bool) (b2 : Prims.bool) : Prims.bool=
+  if b1 then b2 else false
 let rec term_eq (t1 : FStarC_Syntax_Syntax.term)
   (t2 : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ =

@@ -46,7 +46,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
         let uu___ =
           FStarC_Syntax_DsEnv.try_lookup_id env (FStarC_Ident.ident_of_lid a) in
         FStar_Pervasives_Native.uu___is_None uu___ in
-      if ticked && not_in_env
+      if (if ticked then not_in_env else false)
       then emit1 (FStarC_Ident.ident_of_lid a)
       else
         FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
@@ -466,7 +466,7 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
            let uu___ = FStarC_Syntax_DsEnv.try_lookup_id env x in
            FStar_Pervasives_Native.uu___is_None uu___ in
          let uu___ =
-           if ticked && not_in_env
+           if (if ticked then not_in_env else false)
            then emit1 x
            else
              FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
@@ -490,7 +490,7 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
            let uu___ = FStarC_Syntax_DsEnv.try_lookup_id env x in
            FStar_Pervasives_Native.uu___is_None uu___ in
          let uu___ =
-           if ticked && not_in_env
+           if (if ticked then not_in_env else false)
            then emit1 x
            else
              FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()

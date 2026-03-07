@@ -201,7 +201,7 @@ let prim_types (uu___ : unit) : 'uuuuu Prims.list= []
 let prim_constructors : (Prims.string * Prims.string) Prims.list=
   [("Some", "Some"); ("None", "None"); ("Nil", "[]"); ("Cons", "::")]
 let is_prims_ns (ns : FStarC_Extraction_ML_Syntax.mlsymbol Prims.list) :
-  Prims.bool= (ns = ["Prims"]) || (ns = ["Fstarcompiler.Prims"])
+  Prims.bool= if ns = ["Prims"] then true else ns = ["Fstarcompiler.Prims"]
 let as_bin_op (uu___ : FStarC_Extraction_ML_Syntax.mlpath) :
   (FStarC_Extraction_ML_Syntax.mlsymbol * (Prims.int * fixity) *
     Prims.string) FStar_Pervasives_Native.option=
@@ -256,20 +256,23 @@ let maybe_paren (uu___ : ((Prims.int * fixity) * assoc))
             let uu___2 = _outer in
             (match uu___2 with
              | (po, fo) ->
-                 (pi > po) ||
-                   ((match (fi, side1) with
-                     | (Postfix, Left) -> true
-                     | (Prefix, Right) -> true
-                     | (Infix (Left), Left) ->
-                         (pi = po) && (fo = (Infix Left))
-                     | (Infix (Right), Right) ->
-                         (pi = po) && (fo = (Infix Right))
-                     | (Infix (Left), ILeft) ->
-                         (pi = po) && (fo = (Infix Left))
-                     | (Infix (Right), IRight) ->
-                         (pi = po) && (fo = (Infix Right))
-                     | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
-                     | (uu___3, uu___4) -> false))) in
+                 if pi > po
+                 then true
+                 else
+                   (match (fi, side1) with
+                    | (Postfix, Left) -> true
+                    | (Prefix, Right) -> true
+                    | (Infix (Left), Left) ->
+                        if pi = po then fo = (Infix Left) else false
+                    | (Infix (Right), Right) ->
+                        if pi = po then fo = (Infix Right) else false
+                    | (Infix (Left), ILeft) ->
+                        if pi = po then fo = (Infix Left) else false
+                    | (Infix (Right), IRight) ->
+                        if pi = po then fo = (Infix Right) else false
+                    | (uu___3, NonAssoc) ->
+                        if pi = po then fi = fo else false
+                    | (uu___3, uu___4) -> false)) in
       if noparens inner outer side then doc1 else parens doc1
 let escape_byte_hex (x : FStarC_BaseTypes.byte) : Prims.string=
   Prims.strcat "\\x" (FStarC_Util.hex_string_of_byte x)
@@ -326,8 +329,12 @@ let string_of_mlconstant (sctt : FStarC_Extraction_ML_Syntax.mlconstant) :
            FStarC_Class_Show.show FStarC_Class_Show.showable_nat nc in
          Prims.strcat uu___2
            (if
-              ((nc >= (Prims.of_int (32))) && (nc = (Prims.of_int (127)))) &&
-                (nc < (Prims.of_int (34)))
+              (if
+                 (if nc >= (Prims.of_int (32))
+                  then nc = (Prims.of_int (127))
+                  else false)
+               then nc < (Prims.of_int (34))
+               else false)
             then
               Prims.strcat " (*"
                 (Prims.strcat (FStarC_Util.string_of_char c) "*)")
@@ -562,11 +569,13 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
                                                            FStarC_Extraction_ML_Syntax.loc
                                                              = uu___6;_}::[])
            when
-           ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-              "FStarC.Effect.try_with")
-             ||
-             ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-                "FStar.All.try_with")
+           if
+             (FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
+               "FStarC.Effect.try_with"
+           then true
+           else
+             (FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
+               "FStar.All.try_with"
            ->
            let branches =
              match possible_match with
@@ -605,8 +614,8 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
            unitVal::[]),
           e11::e2::[]) when
            let b = is_bin_op p in
-           b && (unitVal = FStarC_Extraction_ML_Syntax.ml_unit) ->
-           doc_of_binop currentModule p e11 e2
+           if b then unitVal = FStarC_Extraction_ML_Syntax.ml_unit else false
+           -> doc_of_binop currentModule p e11 e2
        | (FStarC_Extraction_ML_Syntax.MLE_Name p, e11::[]) when is_uni_op p
            -> doc_of_uniop currentModule p e11
        | (FStarC_Extraction_ML_Syntax.MLE_App
@@ -618,8 +627,8 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
            unitVal::[]),
           e11::[]) when
            let b = is_uni_op p in
-           b && (unitVal = FStarC_Extraction_ML_Syntax.ml_unit) ->
-           doc_of_uniop currentModule p e11
+           if b then unitVal = FStarC_Extraction_ML_Syntax.ml_unit else false
+           -> doc_of_uniop currentModule p e11
        | uu___ ->
            let e2 = doc_of_expr currentModule (e_app_prio, ILeft) e1 in
            let args1 =
@@ -913,8 +922,12 @@ and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
               else
                 (let fsharp = FStarC_Extraction_ML_Util.codegen_fsharp () in
                  if
-                   fsharp &&
-                     ((rec_ = FStarC_Extraction_ML_Syntax.Rec) || top_level)
+                   (if fsharp
+                    then
+                      (if rec_ = FStarC_Extraction_ML_Syntax.Rec
+                       then true
+                       else top_level)
+                    else false)
                  then
                    match tys with
                    | FStar_Pervasives_Native.Some (uu___6::uu___7, uu___8) ->
@@ -975,7 +988,8 @@ and doc_of_loc (arg : (Prims.int * Prims.string)) : doc=
   | (lineno, file) ->
       let no_loc = FStarC_Options.no_location_info () in
       let fsharp = FStarC_Extraction_ML_Util.codegen_fsharp () in
-      if (no_loc || fsharp) || (file = " dummy")
+      if
+        (if (if no_loc then true else fsharp) then true else file = " dummy")
       then empty
       else
         (let file1 = FStarC_Filepath.basename file in

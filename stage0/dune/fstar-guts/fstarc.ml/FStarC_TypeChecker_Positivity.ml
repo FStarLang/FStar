@@ -872,21 +872,21 @@ let already_unfolded (ilid : FStarC_Ident.lident)
     (fun uu___1 ->
        match uu___1 with
        | (lid, l, n) ->
-           if FStarC_Ident.lid_equals lid ilid
-           then
-             (if (FStarC_List.length args) >= n
-              then
-                let args1 =
-                  FStar_Pervasives_Native.fst (FStarC_List.splitAt n args) in
-                FStarC_List.fold_left2
-                  (fun b a a' ->
-                     if b
-                     then
-                       FStarC_TypeChecker_Rel.teq_nosmt_force env
-                         (FStar_Pervasives_Native.fst a)
-                         (FStar_Pervasives_Native.fst a')
-                     else false) true args1 l
+           if
+             (if FStarC_Ident.lid_equals lid ilid
+              then (FStarC_List.length args) >= n
               else false)
+           then
+             let args1 =
+               FStar_Pervasives_Native.fst (FStarC_List.splitAt n args) in
+             FStarC_List.fold_left2
+               (fun b a a' ->
+                  if b
+                  then
+                    FStarC_TypeChecker_Rel.teq_nosmt_force env
+                      (FStar_Pervasives_Native.fst a)
+                      (FStar_Pervasives_Native.fst a')
+                  else false) true args1 l
            else false) uu___
 let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
   (mutuals : FStarC_Ident.lident Prims.list)
@@ -1012,13 +1012,13 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                if uu___7
                then true
                else
-                 (let uu___9 =
-                    let uu___10 =
+                 (let uu___8 =
+                    let uu___9 =
                       FStarC_TypeChecker_Env.norm_eff_name env
                         (FStarC_Syntax_Util.comp_effect_name c) in
-                    FStarC_TypeChecker_Env.lookup_effect_quals env uu___10 in
+                    FStarC_TypeChecker_Env.lookup_effect_quals env uu___9 in
                   FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect
-                    uu___9) in
+                    uu___8) in
              if Prims.op_Negation check_comp
              then
                (debug_positivity env
@@ -1189,17 +1189,17 @@ and ty_strictly_positive_in_args (env : FStarC_TypeChecker_Env.env)
                     "Checking positivity of %s in argument %s and binder %s"
                     uu___5 uu___6 uu___7);
              (let this_occurrence_ok =
-                let uu___4 = mutuals_unused_in_type mutuals arg in
+                let uu___4 =
+                  let uu___5 = mutuals_unused_in_type mutuals arg in
+                  if uu___5
+                  then true
+                  else FStarC_Syntax_Util.is_binder_unused b in
                 if uu___4
                 then true
                 else
-                  if FStarC_Syntax_Util.is_binder_unused b
-                  then true
-                  else
-                    if FStarC_Syntax_Util.is_binder_strictly_positive b
-                    then
-                      ty_strictly_positive_in_type env mutuals arg unfolded
-                    else false in
+                  if FStarC_Syntax_Util.is_binder_strictly_positive b
+                  then ty_strictly_positive_in_type env mutuals arg unfolded
+                  else false in
               if Prims.op_Negation this_occurrence_ok
               then
                 (debug_positivity env
@@ -1401,8 +1401,8 @@ let name_unused_in_type (env : FStarC_TypeChecker_Env.env)
       if uu___1
       then true
       else
-        (let uu___3 = normalize env t1 in
-         mutuals_unused_in_type [fv_lid] uu___3)
+        (let uu___2 = normalize env t1 in
+         mutuals_unused_in_type [fv_lid] uu___2)
 let ty_strictly_positive_in_datacon_decl (env : FStarC_TypeChecker_Env.env_t)
   (mutuals : FStarC_Ident.lident Prims.list) (dlid : FStarC_Ident.lident)
   (ty_bs : FStarC_Syntax_Syntax.binders)
@@ -1451,11 +1451,11 @@ let ty_strictly_positive_in_datacon_decl (env : FStarC_TypeChecker_Env.env_t)
                        else
                          if FStarC_Syntax_Util.is_binder_strictly_positive b
                          then
-                           (let uu___6 =
+                           (let uu___5 =
                               name_strictly_positive_in_type env
                                 b.FStarC_Syntax_Syntax.binder_bv
                                 (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                            Prims.op_Negation uu___6)
+                            Prims.op_Negation uu___5)
                          else false) ty_bs1 in
                 match incorrectly_annotated_binder with
                 | FStar_Pervasives_Native.None -> ()

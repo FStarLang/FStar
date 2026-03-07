@@ -3218,7 +3218,8 @@ let should_check (m : Prims.string) : Prims.bool=
   let l = get_verify_module () in
   FStarC_List.contains (FStarC_String.lowercase m) l
 let should_verify (m : Prims.string) : Prims.bool=
-  let uu___ = get_lax () in if uu___ then false else should_check m
+  let uu___ = let uu___3 = get_lax () in Prims.op_Negation uu___3 in
+  if uu___ then should_check m else false
 let should_check_file (fn : Prims.string) : Prims.bool=
   let uu___ = module_name_of_file_name fn in should_check uu___
 let should_verify_file (fn : Prims.string) : Prims.bool=
@@ -3610,7 +3611,9 @@ let module_matches_namespace_filter (m : Prims.string)
     match (m_components1, path) with
     | (uu___, []) -> true
     | (m2::ms, p::ps) ->
-        (m2 = (FStarC_String.lowercase p)) && (matches_path ms ps)
+        if m2 = (FStarC_String.lowercase p)
+        then matches_path ms ps
+        else false
     | uu___ -> false in
   let uu___ =
     FStarC_Util.try_find
@@ -3838,28 +3841,28 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
            | l ->
                FStarC_Util.for_some
                  (fun n -> (FStarC_String.lowercase n) = m2) l in
-         let uu___4 = no_extract m1 in
+         let uu___4 = let uu___5 = no_extract m1 in Prims.op_Negation uu___5 in
          if uu___4
-         then false
-         else
-           (let uu___6 =
-              let uu___7 = get_extract_namespace () in
-              let uu___8 = get_extract_module () in (uu___7, uu___8) in
-            match uu___6 with
+         then
+           let uu___5 =
+             let uu___6 = get_extract_namespace () in
+             let uu___7 = get_extract_module () in (uu___6, uu___7) in
+           (match uu___5 with
             | ([], []) -> if tgt = Krml then true else should_check m1
-            | uu___7 ->
-                let uu___8 = should_extract_namespace m1 in
-                if uu___8 then true else should_extract_module m1))
+            | uu___6 ->
+                let uu___7 = should_extract_namespace m1 in
+                if uu___7 then true else should_extract_module m1)
+         else false)
 let should_be_already_cached (m : Prims.string) : Prims.bool=
-  let uu___ = should_check m in
+  let uu___ = let uu___3 = should_check m in Prims.op_Negation uu___3 in
   if uu___
-  then false
-  else
-    (let uu___4 = get_already_cached () in
-     match uu___4 with
-     | FStar_Pervasives_Native.None -> false
-     | FStar_Pervasives_Native.Some already_cached_setting ->
-         module_matches_namespace_filter m already_cached_setting)
+  then
+    let uu___3 = get_already_cached () in
+    match uu___3 with
+    | FStar_Pervasives_Native.None -> false
+    | FStar_Pervasives_Native.Some already_cached_setting ->
+        module_matches_namespace_filter m already_cached_setting
+  else false
 let profile_enabled (modul_opt : Prims.string FStar_Pervasives_Native.option)
   (phase : Prims.string) : Prims.bool=
   match modul_opt with
@@ -3868,22 +3871,23 @@ let profile_enabled (modul_opt : Prims.string FStar_Pervasives_Native.option)
       matches_namespace_filter_opt phase uu___
   | FStar_Pervasives_Native.Some modul ->
       let uu___ =
-        let uu___3 = get_profile () in
-        matches_namespace_filter_opt modul uu___3 in
-      if uu___
-      then
         let uu___3 =
+          let uu___4 = get_profile () in
+          matches_namespace_filter_opt modul uu___4 in
+        if uu___3
+        then
           let uu___4 = get_profile_component () in
-          matches_namespace_filter_opt phase uu___4 in
-        (if uu___3 then true else false)
+          matches_namespace_filter_opt phase uu___4
+        else false in
+      if uu___
+      then true
       else
-        (let uu___4 = timing () in
-         if uu___4
-         then
-           (if phase = "FStarC.TypeChecker.Tc.process_one_decl"
-            then should_check modul
-            else false)
-         else false)
+        (let uu___3 =
+           let uu___4 = timing () in
+           if uu___4
+           then phase = "FStarC.TypeChecker.Tc.process_one_decl"
+           else false in
+         if uu___3 then should_check modul else false)
 exception File_argument of Prims.string 
 let uu___is_File_argument (projectee : Prims.exn) : Prims.bool=
   match projectee with | File_argument uu___ -> true | uu___ -> false

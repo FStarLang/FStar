@@ -68,7 +68,9 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
       (env.FStarC_TypeChecker_Env.use_eq_strict);
     FStarC_TypeChecker_Env.is_iface = (env.FStarC_TypeChecker_Env.is_iface);
     FStarC_TypeChecker_Env.admit =
-      ((check_kind = FStarC_Interactive_Ide_Types.LaxCheck) || lax);
+      (if check_kind = FStarC_Interactive_Ide_Types.LaxCheck
+       then true
+       else lax);
     FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
     FStarC_TypeChecker_Env.failhard = (env.FStarC_TypeChecker_Env.failhard);
     FStarC_TypeChecker_Env.flychecking =

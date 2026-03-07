@@ -177,7 +177,7 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
          FStar_Pervasives_Native.uu___is_Some uu___1 in
        let interface_checked_file_name =
          let is_impl = FStarC_Parser_Dep.is_implementation fn1 in
-         if is_impl && has_interface
+         if (if is_impl then has_interface else false)
          then
            let uu___1 =
              let uu___2 =
@@ -193,7 +193,7 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : Prims.string)
               let b2 =
                 let uu___1 = FStarC_Parser_Dep.lowercase_module_name fn2 in
                 uu___1 = module_name in
-              Prims.op_Negation (b1 && b2)) deps_of_fn in
+              Prims.op_Negation (if b1 then b2 else false)) deps_of_fn in
        let binary_deps1 =
          FStarC_List.sortWith
            (fun fn11 fn2 ->
@@ -364,7 +364,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                              (fun uu___7 uu___8 ->
                                 match (uu___7, uu___8) with
                                 | ((x, y), (x', y')) ->
-                                    if (x <> x') || (y <> y')
+                                    if (if x <> x' then true else y <> y')
                                     then
                                       let uu___9 =
                                         FStarC_Parser_Dep.print_digest
@@ -420,9 +420,10 @@ let load_module_from_cache_internal :
            let fail msg cache_file1 =
              let scf = FStarC_Options.should_check_file fn1 in
              let af = FStarC_Effect.op_Bang already_failed in
-             let suppress_warning = (try_load || scf) || af in
+             let suppress_warning =
+               if (if try_load then true else scf) then true else af in
              let d = FStarC_Effect.op_Bang dbg in
-             if (Prims.op_Negation suppress_warning) || d
+             if (if Prims.op_Negation suppress_warning then true else d)
              then
                (FStarC_Effect.op_Colon_Equals already_failed true;
                 FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
@@ -455,7 +456,10 @@ let load_module_from_cache_internal :
            let uu___1 = FStarC_Parser_Dep.lowercase_module_name fn in
            FStarC_Parser_Dep.interface_of deps uu___1 in
          let is_impl = FStarC_Parser_Dep.is_implementation fn in
-         if is_impl && (FStar_Pervasives_Native.uu___is_Some i_fn_opt)
+         if
+           (if is_impl
+            then FStar_Pervasives_Native.uu___is_Some i_fn_opt
+            else false)
          then
            let i_fn = FStarC_Option.must i_fn_opt in
            let i_tc = load_with_profiling i_fn in
@@ -511,7 +515,7 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
   (tc_result1 : tc_result) : unit=
   let ccm = FStarC_Options.cache_checked_modules () in
   let co = FStarC_Options.cache_off () in
-  if ccm && (Prims.op_Negation co)
+  if (if ccm then Prims.op_Negation co else false)
   then
     (debug
        (fun uu___2 ->

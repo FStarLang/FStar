@@ -749,36 +749,123 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
            FStarC_Class_Deq.op_Equals_Question
              (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.tactics
              f2.tactics in
-         ((((((((((((((((((((((((((((((b_beta && b_iota) && b_zeta) &&
-                                       b_zeta_full)
-                                      && b_weak)
-                                     && b_hnf)
-                                    && b_primops)
-                                   && b_dunfold)
-                                  && b_until)
-                                 && b_only)
-                                && b_fully)
-                               && b_attr)
-                              && b_qual)
-                             && b_ns)
-                            && b_dattr)
-                           && b_pure)
-                          && b_simp)
-                         && b_erase)
-                        && b_unbound)
-                       && b_reify)
-                      && b_compress)
-                     && b_nofull)
-                    && b_nouvars)
-                   && b_unmeta)
-                  && b_unasc)
-                 && b_fullnorm)
-                && b_weak_scrut)
-               && b_nbe)
-              && b_extract)
-             && b_unref)
-            && b_defunivs)
-           && b_tactics)
+         if
+           (if
+              (if
+                 (if
+                    (if
+                       (if
+                          (if
+                             (if
+                                (if
+                                   (if
+                                      (if
+                                         (if
+                                            (if
+                                               (if
+                                                  (if
+                                                     (if
+                                                        (if
+                                                           (if
+                                                              (if
+                                                                 (if
+                                                                    (
+                                                                    if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    (if
+                                                                    b_beta
+                                                                    then
+                                                                    b_iota
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_zeta
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_zeta_full
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_weak
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_hnf
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_primops
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_dunfold
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_until
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_only
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_fully
+                                                                    else
+                                                                    false)
+                                                                    then
+                                                                    b_attr
+                                                                    else
+                                                                    false)
+                                                                  then b_qual
+                                                                  else false)
+                                                               then b_ns
+                                                               else false)
+                                                            then b_dattr
+                                                            else false)
+                                                         then b_pure
+                                                         else false)
+                                                      then b_simp
+                                                      else false)
+                                                   then b_erase
+                                                   else false)
+                                                then b_unbound
+                                                else false)
+                                             then b_reify
+                                             else false)
+                                          then b_compress
+                                          else false)
+                                       then b_nofull
+                                       else false)
+                                    then b_nouvars
+                                    else false)
+                                 then b_unmeta
+                                 else false)
+                              then b_unasc
+                              else false)
+                           then b_fullnorm
+                           else false)
+                        then b_weak_scrut
+                        else false)
+                     then b_nbe
+                     else false)
+                  then b_extract
+                  else false)
+               then b_unref
+               else false)
+            then b_defunivs
+            else false)
+         then b_tactics
+         else false)
   }
 let default_steps : fsteps=
   {
@@ -2567,8 +2654,8 @@ let config'
       else ();
       v_EraseErasableArgs in
     {
-      gen = (v_Norm || dbg_flag);
-      top = (v_NormTop || dbg_flag);
+      gen = (if v_Norm then true else dbg_flag);
+      top = (if v_NormTop then true else dbg_flag);
       cfg = v_NormCfg;
       primop = v_Primops;
       unfolding = v_Unfolding;
@@ -2588,8 +2675,9 @@ let config'
     strong = false;
     memoize_lazy = true;
     normalize_pure_lets =
-      ((Prims.op_Negation steps.pure_subterms_within_computations) ||
-         v_normalize_pure);
+      (if Prims.op_Negation steps.pure_subterms_within_computations
+       then true
+       else v_normalize_pure);
     reifying = false;
     compat_memo_ignore_cfg = v_compat_memo
   }
@@ -2606,7 +2694,10 @@ let should_reduce_local_let (cfg1 : cfg)
      let has_no_inline =
        FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
          FStarC_Parser_Const.no_inline_let_attr in
-     if (cfg1.steps).pure_subterms_within_computations && has_inline
+     if
+       (if (cfg1.steps).pure_subterms_within_computations
+        then has_inline
+        else false)
      then true
      else
        if has_no_inline
@@ -2617,12 +2708,17 @@ let should_reduce_local_let (cfg1 : cfg)
               lb.FStarC_Syntax_Syntax.lbeff in
           let is_pure = FStarC_Syntax_Util.is_pure_effect n in
           let is_ghost = FStarC_Syntax_Util.is_ghost_effect n in
-          if is_pure && (cfg1.normalize_pure_lets || has_inline)
+          if
+            (if is_pure
+             then (if cfg1.normalize_pure_lets then true else has_inline)
+             else false)
           then true
           else
-            is_ghost &&
-              (Prims.op_Negation
-                 (cfg1.steps).pure_subterms_within_computations)))
+            if is_ghost
+            then
+              Prims.op_Negation
+                (cfg1.steps).pure_subterms_within_computations
+            else false))
 let translate_norm_step (s : FStarC_NormSteps.norm_step) :
   FStarC_TypeChecker_Env.step Prims.list=
   match s with

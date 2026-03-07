@@ -78,18 +78,22 @@ let rec merge_hints (prev : FStarC_Hints.hints) (next : FStarC_Hints.hints) :
   | ((FStar_Pervasives_Native.Some p)::prev1, (FStar_Pervasives_Native.Some
      n)::next1) ->
       if
-        ((FStarC_String.compare p.FStarC_Hints.hint_name
-            n.FStarC_Hints.hint_name)
-           < Prims.int_zero)
-          ||
-          ((p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name) &&
-             (p.FStarC_Hints.hint_index < n.FStarC_Hints.hint_index))
+        (if
+           (FStarC_String.compare p.FStarC_Hints.hint_name
+              n.FStarC_Hints.hint_name)
+             < Prims.int_zero
+         then true
+         else
+           if p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name
+           then p.FStarC_Hints.hint_index < n.FStarC_Hints.hint_index
+           else false)
       then (FStar_Pervasives_Native.Some p) ::
         (merge_hints prev1 ((FStar_Pervasives_Native.Some n) :: next1))
       else
         if
-          (p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name) &&
-            (p.FStarC_Hints.hint_index = n.FStarC_Hints.hint_index)
+          (if p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name
+           then p.FStarC_Hints.hint_index = n.FStarC_Hints.hint_index
+           else false)
         then (FStar_Pervasives_Native.Some n) :: (merge_hints prev1 next1)
         else (FStar_Pervasives_Native.Some n) ::
           (merge_hints ((FStar_Pervasives_Native.Some p) :: prev1) next1)
@@ -438,9 +442,9 @@ let get_hint_for (qname : Prims.string) (qindex : Prims.int) :
         (fun uu___1 ->
            match uu___1 with
            | FStar_Pervasives_Native.Some hint when
-               (hint.FStarC_Hints.hint_name = qname) &&
-                 (hint.FStarC_Hints.hint_index = qindex)
-               -> FStar_Pervasives_Native.Some hint
+               if hint.FStarC_Hints.hint_name = qname
+               then hint.FStarC_Hints.hint_index = qindex
+               else false -> FStar_Pervasives_Native.Some hint
            | uu___2 -> FStar_Pervasives_Native.None)
   | uu___1 -> FStar_Pervasives_Native.None
 let query_errors (settings : query_settings)
@@ -555,9 +559,12 @@ let errors_to_report (tried_recovery : Prims.bool)
                     then ((ic + Prims.int_one), cc, uc, bc)
                     else
                       if
-                        ((FStarC_Util.starts_with err1 "canceled") ||
-                           (FStarC_Util.starts_with err1 "(resource"))
-                          || (FStarC_Util.starts_with err1 "timeout")
+                        (if
+                           (if FStarC_Util.starts_with err1 "canceled"
+                            then true
+                            else FStarC_Util.starts_with err1 "(resource")
+                         then true
+                         else FStarC_Util.starts_with err1 "timeout")
                       then (ic, (cc + Prims.int_one), uc, bc)
                       else
                         if
@@ -1278,7 +1285,7 @@ let make_solver_configs (can_split : Prims.bool) (is_retry : Prims.bool)
                      core;
                    FStarC_Hints.query_elapsed_time = uu___6;
                    FStarC_Hints.hash = h;_} ->
-                   let between i1 j1 k = (i1 <= k) && (k <= j1) in
+                   let between i1 j1 k = if i1 <= k then k <= j1 else false in
                    let uu___7 =
                      let uu___8 =
                        let uu___9 = FStarC_Options.initial_fuel () in
@@ -1512,49 +1519,47 @@ let ask_solver_quake (configs : query_settings Prims.list) : answer=
                  let uu___4 = FStarC_Options.quake_keep () in
                  Prims.op_Negation uu___4 in
                if uu___3
-               then (nsucc >= lo1) || (nfail > (hi1 - lo1))
+               then (if nsucc >= lo1 then true else nfail > (hi1 - lo1))
                else false in
              if uu___2
              then (nsucc, nfail, rs)
              else
-               (if quaking_or_retrying
-                then
-                  (let uu___5 =
-                     let uu___6 = FStarC_Options.interactive () in
-                     if uu___6 then true else FStarC_Debug.any () in
-                   if uu___5
-                   then
-                     (if n > Prims.int_zero
-                      then
-                        let uu___6 =
-                          if quaking
-                          then
-                            let uu___7 =
-                              FStarC_Class_Show.show
-                                FStarC_Class_Show.showable_int nsucc in
-                            FStarC_Format.fmt1 "succeeded %s times and "
-                              uu___7
-                          else "" in
-                        let uu___7 =
-                          if quaking
-                          then
-                            FStarC_Class_Show.show
-                              FStarC_Class_Show.showable_int nfail
-                          else
-                            (let uu___9 =
-                               FStarC_Class_Show.show
-                                 FStarC_Class_Show.showable_int nfail in
-                             Prims.strcat uu___9 " times") in
-                        let uu___8 =
+               ((let uu___5 =
+                   let uu___6 =
+                     if quaking_or_retrying
+                     then
+                       let uu___7 = FStarC_Options.interactive () in
+                       (if uu___7 then true else FStarC_Debug.any ())
+                     else false in
+                   if uu___6 then n > Prims.int_zero else false in
+                 if uu___5
+                 then
+                   let uu___6 =
+                     if quaking
+                     then
+                       let uu___7 =
+                         FStarC_Class_Show.show
+                           FStarC_Class_Show.showable_int nsucc in
+                       FStarC_Format.fmt1 "succeeded %s times and " uu___7
+                     else "" in
+                   let uu___7 =
+                     if quaking
+                     then
+                       FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                         nfail
+                     else
+                       (let uu___9 =
                           FStarC_Class_Show.show
-                            FStarC_Class_Show.showable_int (hi1 - n) in
-                        FStarC_Format.print5
-                          "%s: so far query %s %sfailed %s (%s runs remain)\n"
-                          (if quaking then "Quake" else "Retry") name uu___6
-                          uu___7 uu___8
-                      else ())
-                   else ())
-                else ();
+                            FStarC_Class_Show.showable_int nfail in
+                        Prims.strcat uu___9 " times") in
+                   let uu___8 =
+                     FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                       (hi1 - n) in
+                   FStarC_Format.print5
+                     "%s: so far query %s %sfailed %s (%s runs remain)\n"
+                     (if quaking then "Quake" else "Retry") name uu___6
+                     uu___7 uu___8
+                 else ());
                 (let r = run_one (seed + n) in
                  let uu___5 =
                    match r with
@@ -1832,23 +1837,22 @@ let ask_solver (env : FStarC_SMTEncoding_Env.env_t)
   (query_settings Prims.list * answer)=
   let default_settings = FStarC_List.hd configs in
   let skip =
-    if (env.FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.admit
+    let uu___ =
+      if (env.FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.admit
+      then true
+      else
+        FStarC_TypeChecker_Env.too_early_in_prims
+          env.FStarC_SMTEncoding_Env.tcenv in
+    if uu___
     then true
     else
-      (let uu___1 =
-         FStarC_TypeChecker_Env.too_early_in_prims
-           env.FStarC_SMTEncoding_Env.tcenv in
-       if uu___1
-       then true
-       else
-         (let uu___3 = FStarC_Options.admit_except () in
-          match uu___3 with
-          | FStar_Pervasives_Native.Some id ->
-              if FStarC_Util.starts_with id "("
-              then
-                let uu___4 = full_query_id default_settings in uu___4 <> id
-              else default_settings.query_name <> id
-          | FStar_Pervasives_Native.None -> false)) in
+      (let uu___1 = FStarC_Options.admit_except () in
+       match uu___1 with
+       | FStar_Pervasives_Native.Some id ->
+           if FStarC_Util.starts_with id "("
+           then let uu___2 = full_query_id default_settings in uu___2 <> id
+           else default_settings.query_name <> id
+       | FStar_Pervasives_Native.None -> false) in
   let ans =
     if skip
     then
@@ -2133,8 +2137,8 @@ let encode_and_ask (can_split : Prims.bool) (is_retry : Prims.bool)
                            if is_retry
                            then true
                            else
-                             (let uu___11 = FStarC_Options.split_queries () in
-                              uu___11 = FStarC_Options.Always) in
+                             (let uu___10 = FStarC_Options.split_queries () in
+                              uu___10 = FStarC_Options.Always) in
                          if uu___9
                          then FStarC_Effect.op_Bang dbg_SMTQuery
                          else false in

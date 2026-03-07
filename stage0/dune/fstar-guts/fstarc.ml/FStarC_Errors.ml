@@ -42,7 +42,8 @@ let lookup_error_range (settings : ('uuuuu * 'uuuuu1 * Prims.int) Prims.list)
       let uu___1 =
         FStarC_List.partition
           (fun uu___2 ->
-             match uu___2 with | (uu___3, uu___4, i) -> (l <= i) && (i <= h))
+             match uu___2 with
+             | (uu___3, uu___4, i) -> if l <= i then i <= h else false)
           settings in
       (match uu___1 with | (matches, uu___2) -> matches)
 let error_number (uu___ : FStarC_Errors_Codes.error_setting) : Prims.int=
@@ -318,7 +319,10 @@ let issue_to_doc' (print_hdr : Prims.bool) (issue1 : issue) :
       let level_header =
         FStar_Pprint.doc_of_string (string_of_issue_level issue1.issue_level) in
       let num_opt =
-        if (issue1.issue_level = EError) || (issue1.issue_level = EWarning)
+        if
+          (if issue1.issue_level = EError
+           then true
+           else issue1.issue_level = EWarning)
         then
           let uu___ =
             optional_def
@@ -355,11 +359,13 @@ let issue_to_doc' (print_hdr : Prims.bool) (issue1 : issue) :
   let seealso =
     match r with
     | FStar_Pervasives_Native.Some r1 when
-        ((FStarC_Range_Type.def_range r1) <> (FStarC_Range_Type.use_range r1))
-          &&
-          ((FStarC_Range_Type.def_range r1) <>
-             (FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange))
-        ->
+        if
+          (FStarC_Range_Type.def_range r1) <>
+            (FStarC_Range_Type.use_range r1)
+        then
+          (FStarC_Range_Type.def_range r1) <>
+            (FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange)
+        else false ->
         let uu___ =
           let uu___1 =
             let uu___2 = FStarC_Range_Ops.string_of_range r1 in
@@ -760,8 +766,8 @@ let lookup (err : FStarC_Errors_Codes.error_code) :
       let with_level level1 = (v, level1, i) in
       (match v with
        | FStarC_Errors_Codes.Warning_Defensive when
-           let x = FStarC_Options.defensive_error () in
-           if x then true else FStarC_Options.defensive_abort () ->
+           let uu___1 = FStarC_Options.defensive_error () in
+           if uu___1 then true else FStarC_Options.defensive_abort () ->
            with_level FStarC_Errors_Codes.CAlwaysError
        | FStarC_Errors_Codes.Warning_WarnOnUse ->
            let level' =

@@ -41,6 +41,15 @@ let int_to_uint8 (x:Prims.int) : uint8 = Z.to_int x % 256
 let shift_right (a:uint8) (b:Stdint.Uint32.t) : uint8 = a lsr (Stdint.Uint32.to_int b)
 let shift_left  (a:uint8) (b:Stdint.Uint32.t) : uint8 = (a lsl (Stdint.Uint32.to_int b)) land 255
 
+(* Rotate operations *)
+let rotate_left (a:uint8) (b:Stdint.Uint32.t) : uint8 =
+  let amount = (Stdint.Uint32.to_int b) mod 8 in
+  ((a lsl amount) lor (a lsr (8 - amount))) land 255
+
+let rotate_right (a:uint8) (b:Stdint.Uint32.t) : uint8 =
+  let amount = (Stdint.Uint32.to_int b) mod 8 in
+  ((a lsr amount) lor (a lsl (8 - amount))) land 255
+
 (* Comparison operators *)
 let eq (a:uint8) (b:uint8) : bool = a = b
 let gt (a:uint8) (b:uint8) : bool = a > b

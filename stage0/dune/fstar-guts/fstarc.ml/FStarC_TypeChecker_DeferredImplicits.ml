@@ -141,7 +141,7 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                            let b2 =
                              FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
                                env a a' in
-                           b1 && b2 ->
+                           if b1 then b2 else false ->
                            let uu___5 = attr_list_elements overrides in
                            (match uu___5 with
                             | FStar_Pervasives_Native.None -> false
@@ -160,7 +160,7 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                            let b2 =
                              FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
                                env a a' in
-                           b1 && b2 ->
+                           if b1 then b2 else false ->
                            let uu___4 = attr_list_elements overrides in
                            (match uu___4 with
                             | FStar_Pervasives_Native.None -> false

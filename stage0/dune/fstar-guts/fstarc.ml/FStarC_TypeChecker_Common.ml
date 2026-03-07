@@ -606,7 +606,7 @@ let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
            let is_auto_squash =
              FStarC_Syntax_Syntax.fv_eq_lid sq
                FStarC_Parser_Const.auto_squash_lid in
-           if is_squash || is_auto_squash
+           if (if is_squash then true else is_auto_squash)
            then
              let uu___3 = check_trivial v in
              (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
@@ -752,7 +752,7 @@ let is_total_lcomp (c : lcomp) : Prims.bool=
          | FStarC_Syntax_Syntax.TOTAL -> true
          | FStarC_Syntax_Syntax.RETURN -> true
          | uu___1 -> false) c.cflags in
-  name_eq || has_flag
+  if name_eq then true else has_flag
 let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
   let is_tot =
     FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid in
@@ -765,7 +765,7 @@ let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
          | FStarC_Syntax_Syntax.TOTAL -> true
          | FStarC_Syntax_Syntax.RETURN -> true
          | uu___1 -> false) c.cflags in
-  (is_tot || is_gtot) || has_flag
+  if (if is_tot then true else is_gtot) then true else has_flag
 let is_lcomp_partial_return (c : lcomp) : Prims.bool=
   FStarC_Util.for_some
     (fun uu___ ->
@@ -782,11 +782,11 @@ let is_pure_lcomp (lc : lcomp) : Prims.bool=
          match uu___ with
          | FStarC_Syntax_Syntax.LEMMA -> true
          | uu___1 -> false) lc.cflags in
-  (is_tot || is_pure) || is_lemma
+  if (if is_tot then true else is_pure) then true else is_lemma
 let is_pure_or_ghost_lcomp (lc : lcomp) : Prims.bool=
   let is_pure = is_pure_lcomp lc in
   let is_ghost = FStarC_Syntax_Util.is_ghost_effect lc.eff_name in
-  is_pure || is_ghost
+  if is_pure then true else is_ghost
 let set_result_typ_lc (lc : lcomp) (t : FStarC_Syntax_Syntax.typ) : lcomp=
   mk_lcomp lc.eff_name t lc.cflags
     (fun uu___ ->

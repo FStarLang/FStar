@@ -731,7 +731,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
   else
     (let env = FStarC_Tactics_Types.goal_env g in
      let lax = FStarC_Options.lax () in
-     if env.FStarC_TypeChecker_Env.phase1 || lax
+     if (if env.FStarC_TypeChecker_Env.phase1 then true else lax)
      then ()
      else
        (let uv = g.FStarC_Tactics_Types.goal_ctx_uvar in
@@ -860,7 +860,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
             then
               let dbg = FStarC_Effect.op_Bang dbg_Core in
               let dbg_rg = FStarC_Effect.op_Bang dbg_RegisterGoal in
-              (if dbg || dbg_rg
+              (if (if dbg then true else dbg_rg)
                then
                  let uu___7 =
                    FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
@@ -871,7 +871,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
             else
               (let dbg = FStarC_Effect.op_Bang dbg_Core in
                let dbg_rg = FStarC_Effect.op_Bang dbg_RegisterGoal in
-               if dbg || dbg_rg
+               if (if dbg then true else dbg_rg)
                then
                  (let uu___8 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int i in

@@ -1487,8 +1487,9 @@ let rec extract_one_pat (imp : Prims.bool)
                                           expected_arg_ty term_as_mlexpr in
                                       (match uu___9 with
                                        | (g3, p2, ok') ->
-                                           ((g3, f_ty2, (ok1 && ok')), p2))))
-                          (g1, f_ty, true) restPats in
+                                           ((g3, f_ty2,
+                                              (if ok1 then ok' else false)),
+                                             p2)))) (g1, f_ty, true) restPats in
                       (match uu___5 with
                        | ((g2, f_ty1, sub_pats_ok), restMLPats) ->
                            let uu___6 =
@@ -1516,7 +1517,10 @@ let rec extract_one_pat (imp : Prims.bool)
                                     (uu___9,
                                       (FStarC_List.flatten when_clauses)) in
                                   FStar_Pervasives_Native.Some uu___8 in
-                                (g2, uu___7, (sub_pats_ok && pat_ty_compat))))))))
+                                (g2, uu___7,
+                                  (if sub_pats_ok
+                                   then pat_ty_compat
+                                   else false))))))))
 let extract_pat (g : FStarC_Extraction_ML_UEnv.uenv)
   (p : FStarC_Syntax_Syntax.pat)
   (expected_t : FStarC_Extraction_ML_Syntax.mlty)
@@ -2001,11 +2005,11 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                                   if uu___10
                                                   then true
                                                   else
-                                                    (let uu___12 =
+                                                    (let uu___11 =
                                                        FStarC_Syntax_Util.is_pure_comp
                                                          c1 in
                                                      Prims.op_Negation
-                                                       uu___12)
+                                                       uu___11)
                                               | uu___10 -> false in
                                             match orig_lbdef with
                                             | FStar_Pervasives_Native.Some
@@ -2060,12 +2064,12 @@ let rec extract_lb_sig (g : FStarC_Extraction_ML_UEnv.uenv)
                                                                     uu___13
                                                                     then true
                                                                     else
-                                                                    (let uu___15
+                                                                    (let uu___14
                                                                     =
                                                                     FStarC_Syntax_Util.is_pure_comp
                                                                     c1 in
                                                                     Prims.op_Negation
-                                                                    uu___15)
+                                                                    uu___14)
                                                                   | uu___13
                                                                     -> false))
                                                           else
@@ -2250,7 +2254,9 @@ and extract_lb_iface (g : FStarC_Extraction_ML_UEnv.uenv)
   let is_top =
     FStarC_Syntax_Syntax.is_top_level (FStar_Pervasives_Native.snd lbs) in
   let is_rec =
-    (Prims.op_Negation is_top) && (FStar_Pervasives_Native.fst lbs) in
+    if Prims.op_Negation is_top
+    then FStar_Pervasives_Native.fst lbs
+    else false in
   let lbs1 = extract_lb_sig g lbs [] in
   FStarC_Util.fold_map
     (fun env uu___ ->
@@ -2841,8 +2847,8 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
    | FStarC_Syntax_Syntax.Tm_app
        { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = args;_}
        when
-       let is_m = is_match head in
-       if is_m then should_apply_to_match_branches args else false ->
+       let uu___1 = is_match head in
+       if uu___1 then should_apply_to_match_branches args else false ->
        let uu___1 = apply_to_match_branches head args in
        term_as_mlexpr g uu___1
    | FStarC_Syntax_Syntax.Tm_app
@@ -2860,10 +2866,11 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
              FStarC_Syntax_Syntax.hash_code = uu___7;_};
          FStarC_Syntax_Syntax.args = args;_}
        when
-       (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.tac_bind_lid)
-         ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Parser_Const.lift_div_tac_lid)
+       if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.tac_bind_lid
+       then true
+       else
+         FStarC_Syntax_Syntax.fv_eq_lid fv
+           FStarC_Parser_Const.lift_div_tac_lid
        ->
        let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
        let uu___8 =
@@ -2901,10 +2908,11 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
              FStarC_Syntax_Syntax.hash_code = uu___3;_};
          FStarC_Syntax_Syntax.args = args;_}
        when
-       (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.tac_bind_lid)
-         ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv
-            FStarC_Parser_Const.lift_div_tac_lid)
+       if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.tac_bind_lid
+       then true
+       else
+         FStarC_Syntax_Syntax.fv_eq_lid fv
+           FStarC_Parser_Const.lift_div_tac_lid
        ->
        let lid = FStarC_Syntax_Syntax.lid_of_fv fv in
        let uu___4 =
@@ -2943,10 +2951,10 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
          then true
          else
            FStarC_List.existsb
-             (fun uu___2 ->
-                match uu___2 with
+             (fun uu___1 ->
+                match uu___1 with
                 | FStarC_Syntax_Syntax.TOTAL -> true
-                | uu___3 -> false) rc.FStarC_Syntax_Syntax.residual_flags in
+                | uu___2 -> false) rc.FStarC_Syntax_Syntax.residual_flags in
        let uu___1 =
          let uu___2 =
            let uu___3 = FStarC_Syntax_Subst.compress head in
@@ -3080,56 +3088,30 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                      maybe_eta_data_and_project_record g is_data t1 uu___5 in
                    (app, f, t1)
                | ((arg, uu___4)::rest, FStarC_Extraction_ML_Syntax.MLTY_Fun
-                  (formal_t, f', t2)) ->
-                   let is_ty = is_type g arg in
-                   let uu___5 =
-                     if is_ty
-                     then
-                       type_leq g formal_t
-                         FStarC_Extraction_ML_Syntax.ml_unit_ty
-                     else false in
+                  (formal_t, f', t2)) when
+                   let uu___5 = is_type g arg in
                    if uu___5
                    then
+                     type_leq g formal_t
+                       FStarC_Extraction_ML_Syntax.ml_unit_ty
+                   else false ->
+                   let uu___5 =
                      let uu___6 =
-                       let uu___7 =
-                         FStarC_Extraction_ML_Util.join
-                           arg.FStarC_Syntax_Syntax.pos f f' in
-                       (uu___7, t2) in
-                     extract_app is_data
-                       (mlhead,
-                         ((FStarC_Extraction_ML_Syntax.ml_unit,
-                            FStarC_Extraction_ML_Syntax.E_PURE) :: mlargs_f))
-                       uu___6 rest
-                   else
-                     (let r = arg.FStarC_Syntax_Syntax.pos in
-                      let expected_effect =
-                        let uu___7 =
-                          let lax = FStarC_Options.lax () in
-                          if lax
-                          then
-                            FStarC_TypeChecker_Util.short_circuit_head head
-                          else false in
-                        if uu___7
-                        then FStarC_Extraction_ML_Syntax.E_IMPURE
-                        else FStarC_Extraction_ML_Syntax.E_PURE in
-                      let uu___7 =
-                        check_term_as_mlexpr g arg expected_effect formal_t in
-                      match uu___7 with
-                      | (e0, tInferred) ->
-                          let uu___8 =
-                            let uu___9 =
-                              FStarC_Extraction_ML_Util.join_l r [f; f'] in
-                            (uu___9, t2) in
-                          extract_app is_data
-                            (mlhead, ((e0, expected_effect) :: mlargs_f))
-                            uu___8 rest)
+                       FStarC_Extraction_ML_Util.join
+                         arg.FStarC_Syntax_Syntax.pos f f' in
+                     (uu___6, t2) in
+                   extract_app is_data
+                     (mlhead,
+                       ((FStarC_Extraction_ML_Syntax.ml_unit,
+                          FStarC_Extraction_ML_Syntax.E_PURE) :: mlargs_f))
+                     uu___5 rest
                | ((e0, uu___4)::rest, FStarC_Extraction_ML_Syntax.MLTY_Fun
                   (tExpected, f', t2)) ->
                    let r = e0.FStarC_Syntax_Syntax.pos in
                    let expected_effect =
                      let uu___5 =
-                       let lax = FStarC_Options.lax () in
-                       if lax
+                       let uu___6 = FStarC_Options.lax () in
+                       if uu___6
                        then FStarC_TypeChecker_Util.short_circuit_head head
                        else false in
                      if uu___5
@@ -3508,9 +3490,7 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
        { FStarC_Syntax_Syntax.lbs = (false, lb::[]);
          FStarC_Syntax_Syntax.body1 = e';_}
        when
-       let not_top =
-         Prims.op_Negation (FStarC_Syntax_Syntax.is_top_level [lb]) in
-       if not_top
+       if Prims.op_Negation (FStarC_Syntax_Syntax.is_top_level [lb])
        then
          let uu___1 =
            FStarC_Syntax_Util.get_attribute
@@ -3724,8 +3704,8 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                                  (FStarC_TypeChecker_Env.current_module tcenv)))
                            "FStarC.Extraction.ML.Term.normalize_lb_def" in
                        let uu___2 =
-                         let dbg = FStarC_Effect.op_Bang dbg_Extraction in
-                         if dbg
+                         let uu___3 = FStarC_Effect.op_Bang dbg_Extraction in
+                         if uu___3
                          then true
                          else FStarC_Effect.op_Bang dbg_ExtractionNorm in
                        if uu___2
@@ -3803,10 +3783,10 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                                 if has_c_inline
                                 then true
                                 else
-                                  (let uu___7 =
+                                  (let uu___6 =
                                      FStarC_Options_Ext.get
                                        "extraction_inline_all" in
-                                   uu___7 <> "") in
+                                   uu___6 <> "") in
                               if uu___5
                               then FStarC_Extraction_ML_Syntax.CInline ::
                                 meta
@@ -3998,8 +3978,10 @@ and term_as_mlexpr' (g : FStarC_Extraction_ML_UEnv.uenv)
                                                            (mlbranch,
                                                              f_branch,
                                                              t_branch))) p in
-                                              ((compat && pat_t_compat),
-                                                uu___11))))) true pats in
+                                              ((if compat
+                                                then pat_t_compat
+                                                else false), uu___11)))))
+                        true pats in
                     match uu___6 with
                     | (pat_t_compat, mlbranches) ->
                         let mlbranches1 = FStarC_List.flatten mlbranches in

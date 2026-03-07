@@ -603,26 +603,27 @@ let rec traverse_for_spinoff (pol1 : pol)
           match uu___1 with
           | FStarC_Syntax_Syntax.Tm_fvar fv ->
               if
-                FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid
-              then true
-              else
-                if
-                  FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.imp_lid
-                then true
-                else
-                  if
-                    FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.forall_lid
-                  then true
-                  else
-                    if
-                      FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.auto_squash_lid
+                (if
+                   (if
+                      (if
+                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.and_lid
+                       then true
+                       else
+                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.imp_lid)
                     then true
                     else
                       FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.squash_lid
+                        FStarC_Parser_Const.forall_lid)
+                 then true
+                 else
+                   FStarC_Syntax_Syntax.fv_eq_lid fv
+                     FStarC_Parser_Const.auto_squash_lid)
+              then true
+              else
+                FStarC_Syntax_Syntax.fv_eq_lid fv
+                  FStarC_Parser_Const.squash_lid
           | FStarC_Syntax_Syntax.Tm_meta uu___2 -> true
           | FStarC_Syntax_Syntax.Tm_ascribed uu___2 -> true
           | FStarC_Syntax_Syntax.Tm_abs uu___2 -> true
@@ -1041,15 +1042,16 @@ let rec traverse_for_spinoff (pol1 : pol)
                 | (FStarC_Syntax_Syntax.Tm_fvar fv,
                    (t2, FStar_Pervasives_Native.Some aq0)::(body, aq)::[])
                     when
-                    let fv_ok =
-                      if
-                        FStarC_Syntax_Syntax.fv_eq_lid fv
-                          FStarC_Parser_Const.forall_lid
-                      then true
-                      else
-                        FStarC_Syntax_Syntax.fv_eq_lid fv
-                          FStarC_Parser_Const.exists_lid in
-                    fv_ok && aq0.FStarC_Syntax_Syntax.aqual_implicit ->
+                    if
+                      (if
+                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.forall_lid
+                       then true
+                       else
+                         FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.exists_lid)
+                    then aq0.FStarC_Syntax_Syntax.aqual_implicit
+                    else false ->
                     let r0 = traverse1 pol1 e hd in
                     let rt = traverse1 (flip pol1) e t2 in
                     let rbody = traverse1 pol1 e body in
@@ -1076,7 +1078,9 @@ let rec traverse_for_spinoff (pol1 : pol)
                                comb2 (fun a1 args1 -> (a1, q) :: args1) r' r2)
                         args (tpure []) in
                     let simplified =
-                      (uu___is_Simplified r0) || (uu___is_Simplified r1) in
+                      if uu___is_Simplified r0
+                      then true
+                      else uu___is_Simplified r1 in
                     comb2
                       (fun hd1 args1 ->
                          let uu___6 =
@@ -1087,13 +1091,12 @@ let rec traverse_for_spinoff (pol1 : pol)
                          match uu___6 with
                          | (FStarC_Syntax_Syntax.Tm_fvar fv,
                             (t2, uu___7)::[]) when
-                             let ok =
-                               if simplified
-                               then
-                                 FStarC_Syntax_Syntax.fv_eq_lid fv
-                                   FStarC_Parser_Const.squash_lid
-                               else false in
-                             if ok
+                             if
+                               (if simplified
+                                then
+                                  FStarC_Syntax_Syntax.fv_eq_lid fv
+                                    FStarC_Parser_Const.squash_lid
+                                else false)
                              then
                                let uu___8 =
                                  FStarC_TypeChecker_TermEqAndSimplify.eq_tm e

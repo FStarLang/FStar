@@ -141,7 +141,9 @@ let tacprint3 (s : Prims.string) (x : Prims.string) (y : Prims.string)
 let print (msg : Prims.string) : unit FStarC_Tactics_Monad.tac=
   let silent = FStarC_Options.silent () in
   let interactive = FStarC_Options.interactive () in
-  if (Prims.op_Negation silent) || interactive then tacprint msg else ();
+  if (if Prims.op_Negation silent then true else interactive)
+  then tacprint msg
+  else ();
   ret ()
 let debugging (uu___ : unit) : Prims.bool FStarC_Tactics_Monad.tac=
   (bind ()) FStarC_Tactics_Monad.get
@@ -273,9 +275,10 @@ let destruct_eq' (typ : FStarC_Syntax_Syntax.typ) :
        uu___1::(e1, FStar_Pervasives_Native.None)::(e2,
                                                     FStar_Pervasives_Native.None)::[]))
       when
-      (FStarC_Ident.lid_equals l FStarC_Parser_Const.eq2_lid) ||
-        (FStarC_Ident.lid_equals l FStarC_Parser_Const.c_eq2_lid)
-      -> FStar_Pervasives_Native.Some (e1, e2)
+      if FStarC_Ident.lid_equals l FStarC_Parser_Const.eq2_lid
+      then true
+      else FStarC_Ident.lid_equals l FStarC_Parser_Const.c_eq2_lid ->
+      FStar_Pervasives_Native.Some (e1, e2)
   | uu___1 ->
       let uu___2 = FStarC_Syntax_Util.unb2t typ1 in
       (match uu___2 with
@@ -681,10 +684,12 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.missing_decl)
                } in
              let must_tot1 =
-               must_tot &&
-                 (Prims.op_Negation
-                    (FStarC_Syntax_Syntax.uu___is_Allow_ghost
-                       dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)) in
+               if must_tot
+               then
+                 Prims.op_Negation
+                   (FStarC_Syntax_Syntax.uu___is_Allow_ghost
+                      dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)
+               else false in
              let uu___2 =
                let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ u in
                core_check env2 sol uu___3 must_tot1 in
@@ -711,9 +716,14 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                   let disallow =
                     FStarC_Options.disallow_unification_guards () in
                   if
-                    (disallow && (Prims.op_Negation allow_guards)) &&
-                      (FStarC_TypeChecker_Common.uu___is_NonTrivial
-                         guard1.FStarC_TypeChecker_Common.guard_f)
+                    (if
+                       (if disallow
+                        then Prims.op_Negation allow_guards
+                        else false)
+                     then
+                       FStarC_TypeChecker_Common.uu___is_NonTrivial
+                         guard1.FStarC_TypeChecker_Common.guard_f
+                     else false)
                   then
                     let uu___3 =
                       FStarC_Class_Show.show
@@ -3182,8 +3192,10 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                     free_in_some_goal
                                                                     g.FStarC_Tactics_Types.goal_ctx_uvar in
                                                                     Prims.op_Negation
-                                                                    (uopt &&
-                                                                    free))
+                                                                    (if uopt
+                                                                    then free
+                                                                    else
+                                                                    false))
                                                                     (FStarC_List.flatten
                                                                     sub_goals) in
                                                                     FStarC_List.map
@@ -3249,7 +3261,7 @@ let lemma_or_sq (c : FStarC_Syntax_Syntax.comp) :
       else
         (let is_pure = FStarC_Syntax_Util.is_pure_effect eff_name in
          let is_ghost = FStarC_Syntax_Util.is_ghost_effect eff_name in
-         if is_pure || is_ghost
+         if (if is_pure then true else is_ghost)
          then
            let uu___2 = FStarC_Syntax_Util.un_squash res in
            FStarC_Option.map (fun post -> (FStarC_Syntax_Util.t_true, post))
@@ -3441,7 +3453,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     let d2 =
                                                                     FStarC_Effect.op_Bang
                                                                     dbg_2635 in
-                                                                    d || d2 in
+                                                                    if d
+                                                                    then true
+                                                                    else d2 in
                                                                     (if dbg
                                                                     then
                                                                     (let uu___18
@@ -4640,7 +4654,7 @@ let _t_trefl (allow_guards : Prims.bool) (l : FStarC_Syntax_Syntax.term)
                    ->
                    let au1 = is_allow_untyped_uvar t1 in
                    let au2 = is_allow_untyped_uvar t2 in
-                   if au1 || au2
+                   if (if au1 then true else au2)
                    then skip_register
                    else
                      (let uu___10 =
@@ -5030,7 +5044,7 @@ let eq_binding (b1 : FStarC_Syntax_Syntax.binding)
       let teq =
         FStarC_Syntax_Util.term_eq bv1.FStarC_Syntax_Syntax.sort
           bv2.FStarC_Syntax_Syntax.sort in
-      eq && teq
+      if eq then teq else false
   | (FStarC_Syntax_Syntax.Binding_lid (lid1, uu___),
      FStarC_Syntax_Syntax.Binding_lid (lid2, uu___1)) ->
       FStarC_Ident.lid_equals lid1 lid2
@@ -5425,7 +5439,9 @@ let lax_on (uu___ : unit) : Prims.bool FStarC_Tactics_Monad.tac=
                 let lax = FStarC_Options.lax () in
                 Obj.magic
                   (ret
-                     (lax ||
+                     (if lax
+                      then true
+                      else
                         (FStarC_Tactics_Types.goal_env g).FStarC_TypeChecker_Env.admit)))
                uu___1))) uu___
 let unquote (ty : FStarC_Syntax_Syntax.term) (tm : FStarC_Syntax_Syntax.term)
@@ -6508,10 +6524,13 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     let uu___12
                                                                     =
                                                                     failwhen
-                                                                    (erasable
-                                                                    &&
-                                                                    (Prims.op_Negation
-                                                                    irr))
+                                                                    (if
+                                                                    erasable
+                                                                    then
+                                                                    Prims.op_Negation
+                                                                    irr
+                                                                    else
+                                                                    false)
                                                                     "cannot destruct erasable type to solve proof-relevant goal" in
                                                                     FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Tactics_Monad.monad_tac
@@ -8351,7 +8370,7 @@ let no_uvars_in_term (t : FStarC_Syntax_Syntax.term) : Prims.bool=
       (Obj.magic
          (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
       (Obj.magic uu___) in
-  uv && un
+  if uv then un else false
 let no_uvars_in_g (g : env) : Prims.bool=
   FStarC_Util.for_all
     (fun uu___ ->

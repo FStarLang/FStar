@@ -39,7 +39,8 @@ let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
       (fun uu___ uu___1 ->
          match (uu___, uu___1) with
          | ((a, b, c, d), (x, y, z, w)) ->
-             ((a || x), (b || y), (c || z), (d || w))) l
+             ((if a then true else x), (if b then true else y),
+               (if c then true else z), (if d then true else w))) l
       (false, false, false, false) in
   let default_unfolding uu___ =
     FStarC_TypeChecker_Cfg.log_unfolding cfg
@@ -75,23 +76,33 @@ let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
          cfg.FStarC_TypeChecker_Cfg.delta_level in
      yesno uu___2) in
   let selective_unfold =
-    (((((FStar_Pervasives_Native.uu___is_Some
-           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only)
-          ||
-          (FStar_Pervasives_Native.uu___is_Some
-             (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once))
-         ||
-         (FStar_Pervasives_Native.uu___is_Some
-            (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully))
-        ||
-        (FStar_Pervasives_Native.uu___is_Some
-           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr))
-       ||
-       (FStar_Pervasives_Native.uu___is_Some
-          (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual))
-      ||
-      (FStar_Pervasives_Native.uu___is_Some
-         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace) in
+    if
+      (if
+         (if
+            (if
+               (if
+                  FStar_Pervasives_Native.uu___is_Some
+                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only
+                then true
+                else
+                  FStar_Pervasives_Native.uu___is_Some
+                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once)
+             then true
+             else
+               FStar_Pervasives_Native.uu___is_Some
+                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully)
+          then true
+          else
+            FStar_Pervasives_Native.uu___is_Some
+              (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr)
+       then true
+       else
+         FStar_Pervasives_Native.uu___is_Some
+           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual)
+    then true
+    else
+      FStar_Pervasives_Native.uu___is_Some
+        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace in
   let res =
     if FStarC_TypeChecker_Env.qninfo_is_action qninfo
     then
@@ -190,13 +201,16 @@ let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
               uu___7),
              uu___8),
             uu___9) when
-             (is_rec &&
-                (Prims.op_Negation
-                   (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta))
-               &&
-               (Prims.op_Negation
-                  (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
-             ->
+             if
+               (if is_rec
+                then
+                  Prims.op_Negation
+                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+                else false)
+             then
+               Prims.op_Negation
+                 (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full
+             else false ->
              (FStarC_TypeChecker_Cfg.log_unfolding cfg
                 (fun uu___11 ->
                    FStarC_Format.print_string

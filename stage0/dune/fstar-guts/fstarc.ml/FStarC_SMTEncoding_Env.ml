@@ -50,7 +50,9 @@ let primitive_projector_by_pos (env : FStarC_TypeChecker_Env.env)
            (match uu___3 with
             | (binders, uu___4) ->
                 if
-                  (i < Prims.int_zero) || (i >= (FStarC_List.length binders))
+                  (if i < Prims.int_zero
+                   then true
+                   else i >= (FStarC_List.length binders))
                 then fail ()
                 else
                   (let b = FStarC_List.nth binders i in
@@ -427,15 +429,18 @@ let showable_fvar_binding : fvar_binding FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = fvb_to_string }
 let check_valid_fvb (fvb : fvar_binding) : unit=
   if
-    ((FStar_Pervasives_Native.uu___is_Some fvb.smt_token) ||
-       (FStar_Pervasives_Native.uu___is_Some fvb.smt_fuel_partial_app))
-      && fvb.fvb_thunked
+    (if
+       (if FStar_Pervasives_Native.uu___is_Some fvb.smt_token
+        then true
+        else FStar_Pervasives_Native.uu___is_Some fvb.smt_fuel_partial_app)
+     then fvb.fvb_thunked
+     else false)
   then
     FStarC_Effect.failwith
       (FStarC_Format.fmt1 "Unexpected thunked SMT symbol: %s"
          (FStarC_Ident.string_of_lid fvb.fvar_lid))
   else
-    if fvb.fvb_thunked && (fvb.smt_arity <> Prims.int_zero)
+    if (if fvb.fvb_thunked then fvb.smt_arity <> Prims.int_zero else false)
     then
       FStarC_Effect.failwith
         (FStarC_Format.fmt1 "Unexpected arity of thunked SMT symbol: %s"
@@ -774,10 +779,12 @@ let fail_fvar_lookup (env : env_t) (a : FStarC_Ident.lident) : 'uuuuu=
   | uu___ ->
       let quals = FStarC_TypeChecker_Env.quals_of_qninfo q in
       if
-        (FStar_Pervasives_Native.uu___is_Some quals) &&
-          (FStarC_List.contains
+        (if FStar_Pervasives_Native.uu___is_Some quals
+         then
+           FStarC_List.contains
              FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen
-             (FStar_Pervasives_Native.__proj__Some__item__v quals))
+             (FStar_Pervasives_Native.__proj__Some__item__v quals)
+         else false)
       then
         let uu___1 =
           let uu___2 = FStarC_Class_Show.show FStarC_Ident.showable_lident a in
@@ -875,7 +882,10 @@ let push_zfuel_name (env : env_t) (x : FStarC_Ident.lident)
     global_cache = (env.global_cache)
   }
 let force_thunk (fvb : fvar_binding) : FStarC_SMTEncoding_Term.term=
-  if (Prims.op_Negation fvb.fvb_thunked) || (fvb.smt_arity <> Prims.int_zero)
+  if
+    (if Prims.op_Negation fvb.fvb_thunked
+     then true
+     else fvb.smt_arity <> Prims.int_zero)
   then
     FStarC_Effect.failwith
       (FStarC_Format.fmt1 "Forcing a non-thunk %s in the SMT encoding"

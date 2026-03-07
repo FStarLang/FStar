@@ -1488,22 +1488,22 @@ and star_type' (env1 : env)
         match uu___ with
         | FStarC_Syntax_Syntax.Tm_fvar fv when
             if
-              FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.option_lid
+              (if
+                 (if
+                    FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.option_lid
+                  then true
+                  else
+                    FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.either_lid)
+               then true
+               else
+                 FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Parser_Const.eq2_lid)
             then true
             else
-              if
-                FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.either_lid
-              then true
-              else
-                if
-                  FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.eq2_lid
-                then true
-                else
-                  (let uu___4 = FStarC_Syntax_Subst.compress head1 in
-                   FStarC_Syntax_Util.is_tuple_constructor uu___4)
+              (let uu___1 = FStarC_Syntax_Subst.compress head1 in
+               FStarC_Syntax_Util.is_tuple_constructor uu___1)
             -> true
         | FStarC_Syntax_Syntax.Tm_fvar fv ->
             let uu___1 =
@@ -1913,32 +1913,29 @@ let rec check (env1 : env) (e : FStarC_Syntax_Syntax.term) (context_nm : nm)
     match uu___ with
     | (rec_nm, s_e, u_e) ->
         let check1 t1 t2 =
-          if Prims.op_Negation (is_unknown t2.FStarC_Syntax_Syntax.n)
-          then
-            let uu___1 =
+          let uu___1 =
+            if Prims.op_Negation (is_unknown t2.FStarC_Syntax_Syntax.n)
+            then
               let uu___2 =
                 let uu___3 = FStarC_TypeChecker_Rel.teq env1.tcenv t1 t2 in
                 FStarC_TypeChecker_Env.is_trivial uu___3 in
-              Prims.op_Negation uu___2 in
-            (if uu___1
-             then
-               let uu___2 =
-                 let uu___3 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-                 let uu___4 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                     t1 in
-                 let uu___5 =
-                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
-                     t2 in
-                 FStarC_Format.fmt3
-                   "[check]: the expression [%s] has type [%s] but should have type [%s]"
-                   uu___3 uu___4 uu___5 in
-               FStarC_Errors.raise_error0
-                 FStarC_Errors_Codes.Fatal_TypeMismatch ()
-                 (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                 (Obj.magic uu___2)
-             else ())
+              Prims.op_Negation uu___2
+            else false in
+          if uu___1
+          then
+            let uu___2 =
+              let uu___3 =
+                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
+              let uu___4 =
+                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t1 in
+              let uu___5 =
+                FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t2 in
+              FStarC_Format.fmt3
+                "[check]: the expression [%s] has type [%s] but should have type [%s]"
+                uu___3 uu___4 uu___5 in
+            FStarC_Errors.raise_error0 FStarC_Errors_Codes.Fatal_TypeMismatch
+              () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+              (Obj.magic uu___2)
           else () in
         (match (rec_nm, context_nm) with
          | (N t1, N t2) -> (check1 t1 t2; (rec_nm, s_e, u_e))
@@ -3292,13 +3289,13 @@ and trans_F_ (env1 : env_) (c : FStarC_Syntax_Syntax.typ)
                     ((FStarC_List.length wp_args) = (FStarC_List.length args))
                 then true
                 else
-                  (let uu___6 =
-                     let uu___7 =
+                  (let uu___5 =
+                     let uu___6 =
                        FStarC_Parser_Const_Tuples.mk_tuple_data_lid
                          (FStarC_List.length wp_args)
                          FStarC_Range_Type.dummyRange in
-                     FStarC_Syntax_Util.is_constructor wp_head uu___7 in
-                   Prims.op_Negation uu___6) in
+                     FStarC_Syntax_Util.is_constructor wp_head uu___6 in
+                   Prims.op_Negation uu___5) in
               if uu___4 then FStarC_Effect.failwith "mismatch" else ());
              (let uu___4 =
                 let uu___5 =

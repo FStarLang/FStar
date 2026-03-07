@@ -6822,8 +6822,9 @@ and solve_t_flex_rigid_eq (orig : FStarC_TypeChecker_Common.prob)
                            | ((uvars1, occurs_ok1, msg1), rhs2) ->
                                let uu___8 =
                                  let uu___9 = term_is_uvar ctx_uv rhs2 in
-                                 op_Amp_Dot uu___9
-                                   (Prims.uu___is_Nil args_lhs) in
+                                 if uu___9
+                                 then Prims.uu___is_Nil args_lhs
+                                 else false in
                                if uu___8
                                then
                                  let uu___9 =
@@ -7823,18 +7824,25 @@ and solve_t' (problem : tprob) (wl : worklist) : solution=
                                      let uu___9 =
                                        FStarC_Syntax_Util.is_fvar
                                          FStarC_Parser_Const.reveal head1 in
-                                     let uu___10 =
+                                     if uu___9
+                                     then true
+                                     else
                                        FStarC_Syntax_Util.is_fvar
                                          FStarC_Parser_Const.reveal head2 in
-                                     op_Bar_Dot uu___9 uu___10 in
                                    if
-                                     op_Bar_Dot
-                                       (op_Amp_Dot
-                                          (op_Amp_Dot
-                                             (FStar_Pervasives_Native.uu___is_Some
-                                                d) wl1.smt_ok)
-                                          (Prims.op_Negation
-                                             treat_as_injective)) is_reveal
+                                     (if
+                                        (if
+                                           (if
+                                              FStar_Pervasives_Native.uu___is_Some
+                                                d
+                                            then wl1.smt_ok
+                                            else false)
+                                         then
+                                           Prims.op_Negation
+                                             treat_as_injective
+                                         else false)
+                                      then true
+                                      else is_reveal)
                                    then
                                      try_solve_without_smt_or_else wl1
                                        solve_sub_probs_no_smt
@@ -12884,8 +12892,7 @@ let teq (env : FStarC_TypeChecker_Env.env) (t1 : FStarC_Syntax_Syntax.typ)
   | FStar_Pervasives_Native.Some g ->
       ((let uu___2 =
           let uu___3 = FStarC_Effect.op_Bang dbg_Rel in
-          let uu___4 = FStarC_Effect.op_Bang dbg_RelTop in
-          op_Bar_Dot uu___3 uu___4 in
+          if uu___3 then true else FStarC_Effect.op_Bang dbg_RelTop in
         if uu___2
         then
           let uu___3 =
@@ -12914,8 +12921,7 @@ let sub_or_eq_comp (env : FStarC_TypeChecker_Env.env) (use_eq : Prims.bool)
          else FStarC_TypeChecker_Common.SUB in
        (let uu___2 =
           let uu___3 = FStarC_Effect.op_Bang dbg_Rel in
-          let uu___4 = FStarC_Effect.op_Bang dbg_RelTop in
-          op_Bar_Dot uu___3 uu___4 in
+          if uu___3 then true else FStarC_Effect.op_Bang dbg_RelTop in
         if uu___2
         then
           let uu___3 =
@@ -12960,10 +12966,12 @@ let sub_or_eq_comp (env : FStarC_TypeChecker_Env.env) (use_eq : Prims.bool)
                   ((let uu___6 =
                       let uu___7 =
                         let uu___8 = FStarC_Effect.op_Bang dbg_Rel in
-                        let uu___9 = FStarC_Effect.op_Bang dbg_RelTop in
-                        op_Bar_Dot uu___8 uu___9 in
-                      let uu___8 = FStarC_Effect.op_Bang dbg_RelBench in
-                      op_Bar_Dot uu___7 uu___8 in
+                        if uu___8
+                        then true
+                        else FStarC_Effect.op_Bang dbg_RelTop in
+                      if uu___7
+                      then true
+                      else FStarC_Effect.op_Bang dbg_RelBench in
                     if uu___6
                     then
                       let uu___7 =
@@ -13430,7 +13438,7 @@ let do_discharge_vc
                 env vc in
             match uu___3 with
             | (did_anything, vcs1) ->
-                (if op_Amp_Dot debug did_anything
+                (if (if debug then did_anything else false)
                  then
                    (let uu___5 =
                       let uu___6 =
@@ -13548,12 +13556,15 @@ let discharge_guard'
    if env.FStarC_TypeChecker_Env.admit
    then
      (if
-        op_Amp_Dot
-          (op_Amp_Dot debug
-             (Prims.op_Negation
+        (if
+           (if debug
+            then
+              Prims.op_Negation
                 (FStarC_TypeChecker_Common.uu___is_Trivial
-                   g1.FStarC_TypeChecker_Common.guard_f)))
-          (Prims.op_Negation env.FStarC_TypeChecker_Env.phase1)
+                   g1.FStarC_TypeChecker_Common.guard_f)
+            else false)
+         then Prims.op_Negation env.FStarC_TypeChecker_Env.phase1
+         else false)
       then
         (let uu___2 =
            let uu___3 =
@@ -13684,8 +13695,9 @@ let check_subtyping (env : FStarC_TypeChecker_Env.env)
              | FStar_Pervasives_Native.None ->
                  ((let uu___4 =
                      let uu___5 = FStarC_Effect.op_Bang dbg_Rel in
-                     let uu___6 = FStarC_Effect.op_Bang dbg_RelTop in
-                     op_Bar_Dot uu___5 uu___6 in
+                     if uu___5
+                     then true
+                     else FStarC_Effect.op_Bang dbg_RelTop in
                    if uu___4
                    then
                      let uu___5 =
@@ -13699,8 +13711,9 @@ let check_subtyping (env : FStarC_TypeChecker_Env.env)
              | FStar_Pervasives_Native.Some g1 ->
                  ((let uu___4 =
                      let uu___5 = FStarC_Effect.op_Bang dbg_Rel in
-                     let uu___6 = FStarC_Effect.op_Bang dbg_RelTop in
-                     op_Bar_Dot uu___5 uu___6 in
+                     if uu___5
+                     then true
+                     else FStarC_Effect.op_Bang dbg_RelTop in
                    if uu___4
                    then
                      let uu___5 =
@@ -14463,9 +14476,9 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
                                    ((let uu___8 =
                                        let uu___9 =
                                          FStarC_Effect.op_Bang dbg_Rel in
-                                       let uu___10 =
-                                         FStarC_Effect.op_Bang dbg_Imps in
-                                       op_Bar_Dot uu___9 uu___10 in
+                                       if uu___9
+                                       then true
+                                       else FStarC_Effect.op_Bang dbg_Imps in
                                      if uu___8
                                      then
                                        let uu___9 =

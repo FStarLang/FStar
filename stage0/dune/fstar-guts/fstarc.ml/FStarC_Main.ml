@@ -160,8 +160,9 @@ let go_normal (uu___ : unit) : unit=
         let uu___2 = FStarC_Options.dep () in
         FStar_Pervasives_Native.uu___is_Some uu___2 in
       (if
-         (has_output_to && (Prims.op_Negation has_dep)) &&
-           ((FStarC_List.length filenames0) > Prims.int_one)
+         (if (if has_output_to then Prims.op_Negation has_dep else false)
+          then (FStarC_List.length filenames0) > Prims.int_one
+          else false)
        then
          FStarC_Errors.raise_error0
            FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
@@ -273,7 +274,8 @@ let go_normal (uu___ : unit) : unit=
                       (FStarC_Parser_Dep.print deps; report_errors [])))
             | FStarC_Getopt.Success when
                 let p = FStarC_Options.print () in
-                let pp = FStarC_Options.print_in_place () in p || pp ->
+                let pp = FStarC_Options.print_in_place () in
+                if p then true else pp ->
                 let printing_mode =
                   let uu___7 = FStarC_Options.print () in
                   if uu___7

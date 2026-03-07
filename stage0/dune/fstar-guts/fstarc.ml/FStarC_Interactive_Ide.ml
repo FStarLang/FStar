@@ -1600,7 +1600,7 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
         | (success, st2) ->
             let st3 = set_flychecking_flag st2 false in
             let status =
-              if success || peek_only
+              if (if success then true else peek_only)
               then FStarC_Interactive_Ide_Types.QueryOK
               else FStarC_Interactive_Ide_Types.QueryNOK in
             let errs = collect_errors () in
@@ -1709,7 +1709,7 @@ let run_push (st : FStarC_Interactive_Ide_Types.repl_state)
     FStar_Pervasives.either)=
   let fly_deps = FStarC_Parser_Dep.fly_deps_enabled () in
   let nltp = nothing_left_to_pop st in
-  if (Prims.op_Negation fly_deps) && nltp
+  if (if Prims.op_Negation fly_deps then nltp else false)
   then run_push_with_deps st query
   else run_push_without_deps st query
 let run_symbol_lookup (st : FStarC_Interactive_Ide_Types.repl_state)

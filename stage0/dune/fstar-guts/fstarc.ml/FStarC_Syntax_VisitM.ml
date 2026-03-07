@@ -653,8 +653,10 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                               (Obj.magic uu___2))) uu___2))) uu___1)
   | FStarC_Syntax_Syntax.Tm_quoted (qtm, qi) ->
       if
-        d.proc_quotes ||
-          (qi.FStarC_Syntax_Syntax.qkind = FStarC_Syntax_Syntax.Quote_dynamic)
+        (if d.proc_quotes
+         then true
+         else
+           qi.FStarC_Syntax_Syntax.qkind = FStarC_Syntax_Syntax.Quote_dynamic)
       then
         let uu___ = f_term d qtm in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___

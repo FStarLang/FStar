@@ -266,7 +266,7 @@ let module_name_of_file (f : Prims.string) : Prims.string=
            (FStarC_List.op_At
               [FStarC_Errors_Msg.text
                  (FStarC_Format.fmt1 "Not a valid FStar file: '%s'" f)]
-              (if FStarC_Platform.windows && (f = "..")
+              (if (if FStarC_Platform.windows then f = ".." else false)
                then
                  [FStarC_Errors_Msg.text
                     "Note: In Windows-compiled versions of F*, a literal\n          asterisk as argument will be expanded to a list of files,\n          **even if quoted**. It is possible you provided such an\n          argument which got expanded to the list of all files in this\n          directory, causing spurious arguments that F* attempts to interpret as files.";
@@ -399,15 +399,16 @@ let parsing_data_elt_eq (e1 : parsing_data_elt) (e2 : parsing_data_elt) :
   match (e1, e2) with
   | (P_begin_module l1, P_begin_module l2) -> FStarC_Ident.lid_equals l1 l2
   | (P_open (b1, l1), P_open (b2, l2)) ->
-      (b1 = b2) && (FStarC_Ident.lid_equals l1 l2)
+      if b1 = b2 then FStarC_Ident.lid_equals l1 l2 else false
   | (P_implicit_open_module_or_namespace (k1, l1),
      P_implicit_open_module_or_namespace (k2, l2)) ->
-      (k1 = k2) && (FStarC_Ident.lid_equals l1 l2)
+      if k1 = k2 then FStarC_Ident.lid_equals l1 l2 else false
   | (P_dep (b1, l1), P_dep (b2, l2)) ->
-      (b1 = b2) && (FStarC_Ident.lid_equals l1 l2)
+      if b1 = b2 then FStarC_Ident.lid_equals l1 l2 else false
   | (P_alias (i1, l1), P_alias (i2, l2)) ->
-      ((FStarC_Ident.string_of_id i1) = (FStarC_Ident.string_of_id i2)) &&
-        (FStarC_Ident.lid_equals l1 l2)
+      if (FStarC_Ident.string_of_id i1) = (FStarC_Ident.string_of_id i2)
+      then FStarC_Ident.lid_equals l1 l2
+      else false
   | (P_lid l1, P_lid l2) -> FStarC_Ident.lid_equals l1 l2
   | (P_inline_for_extraction, P_inline_for_extraction) -> true
   | (uu___, uu___1) -> false
@@ -639,8 +640,8 @@ let file_of_dep_aux (use_checked_file : Prims.bool)
     FStarC_Util.for_some
       (fun fn ->
          let is_impl = is_implementation fn in
-         let mn = lowercase_module_name fn in is_impl && (key = mn))
-      all_cmd_line_files in
+         let mn = lowercase_module_name fn in
+         if is_impl then key = mn else false) all_cmd_line_files in
   let maybe_use_cache_of f =
     if use_checked_file then cache_file_name f else f in
   match d with
@@ -661,7 +662,7 @@ let file_of_dep_aux (use_checked_file : Prims.bool)
         let uu___ = FStarC_Options.dep () in
         FStar_Pervasives_Native.uu___is_None uu___ in
       let has_impl = cmd_line_has_impl key in
-      if no_dep && has_impl
+      if (if no_dep then has_impl else false)
       then
         let uu___ = FStarC_Options.expose_interfaces () in
         (if uu___
@@ -979,8 +980,9 @@ let enter_namespace (original_map : files_for_module_name)
     match mopt with
     | FStar_Pervasives_Native.None -> false
     | FStar_Pervasives_Native.Some (intf, impl) ->
-        (FStar_Pervasives_Native.uu___is_Some intf) ||
-          (FStar_Pervasives_Native.uu___is_Some impl) in
+        if FStar_Pervasives_Native.uu___is_Some intf
+        then true
+        else FStar_Pervasives_Native.uu___is_Some impl in
   FStarC_SMap.iter original_map
     (fun k _fn ->
        if FStarC_Util.starts_with k sprefix1
@@ -997,7 +999,7 @@ let enter_namespace (original_map : files_for_module_name)
                  let uu___3 = FStarC_Effect.op_Bang warned_about in
                  FStarC_List.mem suffix_filename uu___3 in
                Prims.op_Negation uu___2 in
-             (if se && not_warned
+             (if (if se then not_warned else false)
               then
                 let str =
                   let uu___2 = FStarC_Option.must suffix_filename in
@@ -1046,7 +1048,7 @@ let prelude : (open_kind * FStarC_Ident.lid) Prims.list=
 let peek_past_interfaces (uu___ : unit) : Prims.bool=
   let dm = FStarC_Options_Ext.enabled "dep_minimal" in
   let fd = fly_deps_enabled () in
-  if dm || fd
+  if (if dm then true else fd)
   then false
   else (let uu___2 = FStarC_Options.ide () in Prims.op_Negation uu___2)
 let collect_module_or_decls (filename : Prims.string)
@@ -1633,7 +1635,9 @@ let maybe_use_interface (file_system_map : files_for_module_name)
   let module_name1 = lowercase_module_name file_name1 in
   let is_impl = is_implementation file_name1 in
   let has_intf = has_interface file_system_map module_name1 in
-  if is_impl && has_intf then [UseInterface module_name1] else []
+  if (if is_impl then has_intf else false)
+  then [UseInterface module_name1]
+  else []
 let deps_from_parsing_data (pd : parsing_data)
   (original_map : files_for_module_name) (filename : Prims.string) :
   (dependence Prims.list * Prims.bool * dependence Prims.list)=
@@ -1644,7 +1648,9 @@ let deps_from_parsing_data (pd : parsing_data)
     let is_intf = is_interface filename in
     let has_impl = has_implementation original_map mname in
     let peek = peek_past_interfaces () in
-    if (is_intf && has_impl) && peek then [UseImplementation mname] else [] in
+    if (if (if is_intf then has_impl else false) then peek else false)
+    then [UseImplementation mname]
+    else [] in
   let auto_open =
     let open_module_ns =
       let uu___ = namespace_of_module mname in
@@ -1689,7 +1695,7 @@ let deps_from_parsing_data (pd : parsing_data)
      match uu___1 with
      | FStar_Pervasives_Native.Some module_name1 ->
          let fly = fly_deps_enabled () in
-         (if is_friend && fly
+         (if (if is_friend then fly else false)
           then
             (let already_depends_on_iface =
                let uu___3 = FStarC_Effect.op_Bang deps1 in
@@ -1723,7 +1729,7 @@ let deps_from_parsing_data (pd : parsing_data)
       if Prims.op_Negation let_open
       then add_dependence_edge original_map lid false
       else false in
-    if r1 || r2
+    if (if r1 then true else r2)
     then true
     else
       (if let_open
@@ -1740,7 +1746,8 @@ let deps_from_parsing_data (pd : parsing_data)
   let record_open_namespace lid implicit_open =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key implicit_open in
-    if (Prims.op_Negation r) && (Prims.op_Negation implicit_open)
+    if
+      (if Prims.op_Negation r then Prims.op_Negation implicit_open else false)
     then
       let uu___ =
         let uu___1 = string_of_lid lid true in
@@ -1835,13 +1842,16 @@ let deps_from_parsing_data (pd : parsing_data)
     else () in
   let elts =
     let fly = fly_deps_enabled () in
-    if fly && pd.no_prelude
+    if (if fly then pd.no_prelude else false)
     then
       match pd.elts with
       | (P_open (false, fstar_lid))::(P_open (false, prelude_lid'))::rest
           when
-          (FStarC_Ident.lid_equals FStarC_Parser_Const.fstar_ns_lid fstar_lid)
-            && (FStarC_Ident.lid_equals prelude_lid prelude_lid')
+          (if
+             FStarC_Ident.lid_equals FStarC_Parser_Const.fstar_ns_lid
+               fstar_lid
+           then FStarC_Ident.lid_equals prelude_lid prelude_lid'
+           else false)
           ->
           FStarC_List.op_At ((P_open (false, fstar_lid)) ::
             (P_open (false, prelude_lid)) :: auto_open) rest
@@ -1949,7 +1959,7 @@ let widen_deps (friends1 : module_name Prims.list)
                   | PreferInterface m ->
                       let is_friend = FStarC_List.contains m friends1 in
                       let has_impl = has_implementation file_system_map m in
-                      if is_friend && has_impl
+                      if (if is_friend then has_impl else false)
                       then
                         (FStarC_Effect.op_Colon_Equals widened1 true;
                          FriendImplementation m)
@@ -2075,7 +2085,7 @@ let phase1 (file_system_map : files_for_module_name)
    else ());
   (let widened = false in
    let cmi = FStarC_Options.cmi () in
-   if cmi && for_extraction
+   if (if cmi then for_extraction else false)
    then
      widen_deps interfaces_needing_inlining dep_graph file_system_map widened
    else (widened, dep_graph))
@@ -2208,7 +2218,7 @@ let collect_deps_of_decl (deps1 : deps) (filename : Prims.string)
                    | FStarC_Parser_AST.Const (FStarC_Const.Const_string
                        ("no_prelude", uu___6)) -> true
                    | uu___6 -> false) attrs in
-            np || has_attr in
+            if np then true else has_attr in
           FStar_Pervasives.Inl
             (FStarC_Parser_AST.Module
                {
@@ -2399,7 +2409,7 @@ let collect (all_cmd_line_files : file_name Prims.list)
                     { edges = direct_deps; color = Black };
                   (let is_intf = is_interface filename in
                    let peek = peek_past_interfaces () in
-                   if is_intf && peek
+                   if (if is_intf then peek else false)
                    then
                      let uu___6 =
                        let uu___7 = lowercase_module_name filename in
@@ -2493,7 +2503,7 @@ let deps_of : deps -> Prims.string -> Prims.string Prims.list=
               if is_intf
               then let uu___2 = implementation_of_file f in on_cli uu___2
               else false in
-            (if on_cli_f || on_cli_impl
+            (if (if on_cli_f then true else on_cli_impl)
              then
                let uu___2 =
                  parsing_data_of_modul deps1 f FStar_Pervasives_Native.None in
@@ -2593,7 +2603,7 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       let r2 =
         let uu___ = FStarC_SMap.try_find visited_other_modules lc_module_name in
         FStar_Pervasives_Native.uu___is_None uu___ in
-      r1 || r2 in
+      if r1 then true else r2 in
     let mark_visiting lc_module_name =
       let ml_file_opt =
         FStarC_SMap.try_find remaining_output_files lc_module_name in
@@ -2804,7 +2814,7 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                           if uu___5
                           then
                             let cmi_ = FStarC_Options.cmi () in
-                            (if cmi_ && widened1
+                            (if (if cmi_ then widened1 else false)
                              then
                                (let mname = lowercase_module_name file_name1 in
                                 (let uu___8 = output_ml_file file_name1 in
@@ -2846,7 +2856,7 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                                        let se =
                                          FStarC_Options.should_extract mn_df
                                            FStarC_Options.OCaml in
-                                       (mn_df <> mn_fn) && se)
+                                       if mn_df <> mn_fn then se else false)
                                     all_fst_files_dep in
                                 FStarC_List.map output_cmx_file
                                   extracted_fst_files in
@@ -2871,10 +2881,13 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                                    uu___8 in
                                Prims.op_Negation uu___7 in
                              let is_intf = is_interface file_name1 in
-                             if no_impl && is_intf
+                             if (if no_impl then is_intf else false)
                              then
                                let cmi__ = FStarC_Options.cmi () in
-                               (if cmi__ && (widened1 || true)
+                               (if
+                                  (if cmi__
+                                   then (if widened1 then true else true)
+                                   else false)
                                 then
                                   let uu___7 = output_krml_file file_name1 in
                                   print_entry uu___7 (cache_file_name1 ::
@@ -3039,7 +3052,7 @@ let deps_has_implementation (deps1 : deps)
        let is_impl = is_implementation f in
        let mn =
          let uu___1 = module_name_of_file f in FStarC_String.lowercase uu___1 in
-       is_impl && (mn = m)) uu___
+       if is_impl then mn = m else false) uu___
 let all_files (deps1 : deps) : Prims.string Prims.list=
   let uu___ = FStarC_Effect.op_Bang deps1.all_files in
   FStarC_Class_Setlike.elems ()

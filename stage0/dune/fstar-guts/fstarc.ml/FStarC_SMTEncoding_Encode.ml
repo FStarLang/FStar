@@ -1529,18 +1529,17 @@ let encode_free_var (uninterpreted : Prims.bool)
       let uu___1 =
         let uu___2 =
           let uu___3 =
-            let uu___4 = FStarC_Syntax_Util.is_pure_or_ghost_function t_norm in
-            if uu___4
-            then true
-            else
-              FStarC_SMTEncoding_Util.is_smt_reifiable_function
-                env.FStarC_SMTEncoding_Env.tcenv t_norm in
-          Prims.op_Negation uu___3 in
-        if uu___2
-        then true
-        else
-          (let uu___4 = FStarC_Syntax_Util.is_lemma t_norm in
-           if uu___4 then true else uninterpreted) in
+            let uu___4 =
+              let uu___5 =
+                FStarC_Syntax_Util.is_pure_or_ghost_function t_norm in
+              if uu___5
+              then true
+              else
+                FStarC_SMTEncoding_Util.is_smt_reifiable_function
+                  env.FStarC_SMTEncoding_Env.tcenv t_norm in
+            Prims.op_Negation uu___4 in
+          if uu___3 then true else FStarC_Syntax_Util.is_lemma t_norm in
+        if uu___2 then true else uninterpreted in
       if uu___1
       then
         let arg_sorts =
@@ -1898,22 +1897,27 @@ let encode_free_var (uninterpreted : Prims.bool)
                                        FStarC_Syntax_Syntax.fv_eq_lid fv1
                                          FStarC_Parser_Const.unit_lid
                                    | uu___13 -> false) in
-                            if
-                              (((FStarC_Ident.nsstr lid) <> "Prims") &&
-                                 ((FStarC_List.length us) = Prims.int_zero))
-                                &&
-                                (Prims.op_Negation
-                                   (FStarC_List.contains
-                                      FStarC_Syntax_Syntax.Logic quals))
-                            then
-                              let uu___10 =
+                            let uu___10 =
+                              if
+                                (if
+                                   (if (FStarC_Ident.nsstr lid) <> "Prims"
+                                    then
+                                      (FStarC_List.length us) =
+                                        Prims.int_zero
+                                    else false)
+                                 then
+                                   Prims.op_Negation
+                                     (FStarC_List.contains
+                                        FStarC_Syntax_Syntax.Logic quals)
+                                 else false)
+                              then
                                 let uu___11 = is_squash t_norm in
-                                Prims.op_Negation uu___11 in
-                              (if uu___10
-                               then
-                                 let uu___11 = is_type t_norm in
-                                 Prims.op_Negation uu___11
-                               else false)
+                                Prims.op_Negation uu___11
+                              else false in
+                            if uu___10
+                            then
+                              let uu___11 = is_type t_norm in
+                              Prims.op_Negation uu___11
                             else false in
                           let uu___9 =
                             match vars with
@@ -2865,10 +2869,14 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t)
                                                       uu___16) ->
                                                        let uu___17 =
                                                          if
-                                                           (fvb.FStarC_SMTEncoding_Env.fvb_thunked
-                                                              && (vars = []))
-                                                             &&
-                                                             (univ_vars = [])
+                                                           (if
+                                                              (if
+                                                                 fvb.FStarC_SMTEncoding_Env.fvb_thunked
+                                                               then vars = []
+                                                               else false)
+                                                            then
+                                                              univ_vars = []
+                                                            else false)
                                                          then
                                                            let dummy_var =
                                                              FStarC_SMTEncoding_Term.mk_fv
@@ -2972,14 +2980,18 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t)
                                                                 body in
                                                             let should_encode_logical
                                                               =
-                                                              (Prims.op_Negation
-                                                                 is_smt_theory_symbol)
-                                                                &&
-                                                                ((FStarC_List.contains
+                                                              if
+                                                                Prims.op_Negation
+                                                                  is_smt_theory_symbol
+                                                              then
+                                                                (if
+                                                                   FStarC_List.contains
                                                                     FStarC_Syntax_Syntax.Logic
-                                                                    quals)
-                                                                   ||
-                                                                   is_logical) in
+                                                                    quals
+                                                                 then true
+                                                                 else
+                                                                   is_logical)
+                                                              else false in
                                                             let make_eqn name
                                                               pat app1 body1
                                                               =
@@ -4010,16 +4022,16 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t)
                          else
                            FStarC_Util.for_some
                              (fun t ->
-                                let uu___8 =
-                                  let uu___9 =
+                                let uu___7 =
+                                  let uu___8 =
                                     FStarC_Syntax_Util.is_pure_or_ghost_function
                                       t in
-                                  if uu___9
+                                  if uu___8
                                   then true
                                   else
                                     FStarC_SMTEncoding_Util.is_smt_reifiable_function
                                       env1.FStarC_SMTEncoding_Env.tcenv t in
-                                Prims.op_Negation uu___8) typs1 in
+                                Prims.op_Negation uu___7) typs1 in
                        if uu___5
                        then (decls1, env_decls)
                        else
@@ -4691,8 +4703,9 @@ let encode_datacon (env : FStarC_SMTEncoding_Env.env_t)
                                       FStarC_List.mapi
                                         (fun n x ->
                                            let field_projectible =
-                                             (n >= n_tps) ||
-                                               injective_type_params1 in
+                                             if n >= n_tps
+                                             then true
+                                             else injective_type_params1 in
                                            {
                                              FStarC_SMTEncoding_Term.field_name
                                                =
@@ -8249,16 +8262,16 @@ let encode_query
                                        "} Done encoding\n"
                                    else ());
                                   (let uu___10 =
-                                     let uu___11 = FStarC_Debug.medium () in
+                                     let uu___11 =
+                                       let uu___12 = FStarC_Debug.medium () in
+                                       if uu___12
+                                       then true
+                                       else
+                                         FStarC_Effect.op_Bang
+                                           dbg_SMTEncoding in
                                      if uu___11
                                      then true
-                                     else
-                                       (let uu___13 =
-                                          FStarC_Effect.op_Bang
-                                            dbg_SMTEncoding in
-                                        if uu___13
-                                        then true
-                                        else FStarC_Effect.op_Bang dbg_Time) in
+                                     else FStarC_Effect.op_Bang dbg_Time in
                                    if uu___10
                                    then
                                      let uu___11 =

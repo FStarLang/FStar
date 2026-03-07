@@ -9,7 +9,7 @@ let rec is_under :
     | ([], uu___1) -> false
     | (h1::t1, h2::t2) ->
         let r = FStarC_Class_Deq.op_Equals_Question uu___ h1 h2 in
-        let r2 = is_under uu___ t1 t2 in r && r2
+        let r2 = is_under uu___ t1 t2 in if r then r2 else false
 let search_forest (uu___ : 'a FStarC_Class_Deq.deq) (p : 'a path)
   (f : ('a, 'q) forest) : 'q=
   let uu___1 = f in

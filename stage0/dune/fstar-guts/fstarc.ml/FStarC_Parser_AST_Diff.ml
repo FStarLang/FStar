@@ -1,5 +1,6 @@
 open Prims
-let op_Amp_Amp_Amp (a : Prims.bool) (b : Prims.bool) : Prims.bool= a && b
+let op_Amp_Amp_Amp (a : Prims.bool) (b : Prims.bool) : Prims.bool=
+  if a then b else false
 let eq_ident (i1 : FStarC_Ident.ident) (i2 : FStarC_Ident.ident) :
   Prims.bool= FStarC_Ident.ident_equals i1 i2
 let rec eq_list :

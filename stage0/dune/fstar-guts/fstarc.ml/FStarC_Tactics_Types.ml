@@ -248,14 +248,16 @@ let tracepoint_with_psc (psc : FStarC_TypeChecker_Primops_Base.psc)
   (ps : proofstate) : Prims.bool=
   let do_trace = FStarC_Options.tactic_trace () in
   let trace_depth = FStarC_Options.tactic_trace_d () in
-  if do_trace || (ps.depth <= trace_depth)
+  if (if do_trace then true else ps.depth <= trace_depth)
   then (let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE")
   else ();
   true
 let tracepoint (ps : proofstate) : Prims.bool=
   let do_trace = FStarC_Options.tactic_trace () in
   let trace_depth = FStarC_Options.tactic_trace_d () in
-  if do_trace || (ps.depth <= trace_depth) then ps.__dump ps "TRACE" else ();
+  if (if do_trace then true else ps.depth <= trace_depth)
+  then ps.__dump ps "TRACE"
+  else ();
   true
 let set_proofstate_range (ps : proofstate) (r : FStarC_Range_Type.t) :
   proofstate=

@@ -345,7 +345,7 @@ let rec term_to_string (x : FStarC_Syntax_Syntax.term) : Prims.string=
        | FStarC_Syntax_Syntax.Tm_uvar (u, ([], uu___1)) ->
            let print_bvt = FStarC_Options.print_bound_var_types () in
            let print_eff = FStarC_Options.print_effect_args () in
-           if print_bvt && print_eff
+           if (if print_bvt then print_eff else false)
            then ctx_uvar_to_string_aux true u
            else
              (let uu___3 =
@@ -357,7 +357,7 @@ let rec term_to_string (x : FStarC_Syntax_Syntax.term) : Prims.string=
        | FStarC_Syntax_Syntax.Tm_uvar (u, s) ->
            let print_bvt = FStarC_Options.print_bound_var_types () in
            let print_eff = FStarC_Options.print_effect_args () in
-           if print_bvt && print_eff
+           if (if print_bvt then print_eff else false)
            then
              let uu___1 = ctx_uvar_to_string_aux true u in
              let uu___2 =
@@ -726,7 +726,10 @@ and binder_to_string' (is_arrow : Prims.bool)
     Prims.strcat attrs uu___
   else
     (let print_bvt = FStarC_Options.print_bound_var_types () in
-     if (Prims.op_Negation is_arrow) && (Prims.op_Negation print_bvt)
+     if
+       (if Prims.op_Negation is_arrow
+        then Prims.op_Negation print_bvt
+        else false)
      then
        let uu___1 =
          let uu___2 = nm_to_string b.FStarC_Syntax_Syntax.binder_bv in
@@ -832,7 +835,7 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                        match uu___3 with
                        | FStarC_Syntax_Syntax.TOTAL -> true
                        | uu___4 -> false) c1.FStarC_Syntax_Syntax.flags in
-                if is_total && (Prims.op_Negation print_eff)
+                if (if is_total then Prims.op_Negation print_eff else false)
                 then
                   let uu___3 =
                     term_to_string c1.FStarC_Syntax_Syntax.result_typ in
@@ -844,9 +847,12 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                      FStarC_Ident.lid_equals
                        c1.FStarC_Syntax_Syntax.effect_name uu___4 in
                    if
-                     ((Prims.op_Negation print_eff) &&
-                        (Prims.op_Negation print_imp))
-                       && is_ml
+                     (if
+                        (if Prims.op_Negation print_eff
+                         then Prims.op_Negation print_imp
+                         else false)
+                      then is_ml
+                      else false)
                    then term_to_string c1.FStarC_Syntax_Syntax.result_typ
                    else
                      (let is_mleffect =
@@ -855,7 +861,10 @@ and comp_to_string (c : FStarC_Syntax_Syntax.comp) : Prims.string=
                              match uu___5 with
                              | FStarC_Syntax_Syntax.MLEFFECT -> true
                              | uu___6 -> false) c1.FStarC_Syntax_Syntax.flags in
-                      if (Prims.op_Negation print_eff) && is_mleffect
+                      if
+                        (if Prims.op_Negation print_eff
+                         then is_mleffect
+                         else false)
                       then
                         let uu___5 =
                           term_to_string c1.FStarC_Syntax_Syntax.result_typ in

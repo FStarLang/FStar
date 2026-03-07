@@ -187,7 +187,7 @@ let e_machint (k : machint_kind) :
                       let is___int_to_t =
                         let uu___3 = __int_to_t_lid_for k in
                         FStarC_Syntax_Util.is_fvar uu___3 hd in
-                      if is_int_to_t || is___int_to_t
+                      if (if is_int_to_t then true else is___int_to_t)
                       then
                         Obj.repr
                           (let a1 = FStarC_Syntax_Util.unlazy_emb a in
@@ -267,10 +267,12 @@ let nbe_machint (k : machint_kind) :
                      (let lid1 = int_to_t_lid_for k in
                       let lid2 = __int_to_t_lid_for k in
                       if
-                        (FStarC_Ident.lid_equals
-                           fv1.FStarC_Syntax_Syntax.fv_name lid1)
-                          ||
-                          (FStarC_Ident.lid_equals
+                        (if
+                           FStarC_Ident.lid_equals
+                             fv1.FStarC_Syntax_Syntax.fv_name lid1
+                         then true
+                         else
+                           FStarC_Ident.lid_equals
                              fv1.FStarC_Syntax_Syntax.fv_name lid2)
                       then
                         Obj.repr

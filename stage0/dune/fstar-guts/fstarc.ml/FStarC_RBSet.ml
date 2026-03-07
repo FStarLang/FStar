@@ -142,21 +142,26 @@ let rec subset :
     | N (uu___1, a1, x, b) ->
         let r1 = mem uu___ x s2 in
         let r2 = subset uu___ a1 s2 in
-        let r3 = subset uu___ b s2 in (r1 && r2) && r3
+        let r3 = subset uu___ b s2 in
+        if (if r1 then r2 else false) then r3 else false
 let rec for_all : 'a . ('a -> Prims.bool) -> 'a rbset -> Prims.bool =
   fun p s ->
     match s with
     | L -> true
     | N (uu___, a1, x, b) ->
         let r1 = p x in
-        let r2 = for_all p a1 in let r3 = for_all p b in (r1 && r2) && r3
+        let r2 = for_all p a1 in
+        let r3 = for_all p b in
+        if (if r1 then r2 else false) then r3 else false
 let rec for_any : 'a . ('a -> Prims.bool) -> 'a rbset -> Prims.bool =
   fun p s ->
     match s with
     | L -> false
     | N (uu___, a1, x, b) ->
         let r1 = p x in
-        let r2 = for_any p a1 in let r3 = for_any p b in (r1 || r2) || r3
+        let r2 = for_any p a1 in
+        let r3 = for_any p b in
+        if (if r1 then true else r2) then true else r3
 let from_list (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list) :
   'a rbset= FStarC_List.fold_left (fun s e -> add uu___ e s) L xs
 let addn (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list)

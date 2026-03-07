@@ -114,8 +114,9 @@ let rec unmeta_div_results (t : FStarC_Syntax_Syntax.term) :
           (src, dst, uu___1);_}
       ->
       if
-        (FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid) &&
-          (FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid)
+        (if FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid
+         then FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid
+         else false)
       then unmeta_div_results t'
       else t
   | FStarC_Syntax_Syntax.Tm_meta
@@ -280,7 +281,7 @@ let lazy_unembed (pa : 'a printer) (et : FStarC_Syntax_Syntax.emb_typ)
         FStarC_Syntax_Syntax.rng = uu___1;_}
       ->
       let eager = FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
-      if (et <> et') || eager
+      if (if et <> et' then true else eager)
       then
         let res = let uu___2 = FStarC_Thunk.force t in f uu___2 in
         ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in

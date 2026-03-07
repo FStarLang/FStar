@@ -399,7 +399,7 @@ let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate)
   (msg : Prims.string) : unit=
   let silent = FStarC_Options.silent () in
   let interactive = FStarC_Options.interactive () in
-  if (Prims.op_Negation silent) || interactive
+  if (if Prims.op_Negation silent then true else interactive)
   then
     FStarC_Options.with_saved_options
       (fun uu___ ->

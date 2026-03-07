@@ -86,7 +86,7 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
                        with
                        | (uu___4, FStar_Pervasives_Native.Some
                           (FStarC_Syntax_Syntax.Implicit inaccessible)) when
-                           inaccessible && p_imp ->
+                           if inaccessible then p_imp else false ->
                            (match p1.FStarC_Syntax_Syntax.v with
                             | FStarC_Syntax_Syntax.Pat_dot_term uu___5 ->
                                 let uu___6 = aux formals' pats' in (p1, true)
@@ -365,8 +365,9 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
              let uu___1 =
                let hd = FStarC_Syntax_Syntax.fv_to_tm fv in
                if
-                 (Prims.op_Negation inst_pat_cons_univs) ||
-                   (FStar_Pervasives_Native.uu___is_Some us_opt)
+                 (if Prims.op_Negation inst_pat_cons_univs
+                  then true
+                  else FStar_Pervasives_Native.uu___is_Some us_opt)
                then let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
                else
                  (let uu___3 =

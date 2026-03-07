@@ -452,11 +452,11 @@ let tc_one_fragment (is_interface : Prims.bool)
               then true
               else
                 FStarC_List.existsb
-                  (fun uu___3 ->
-                     match uu___3.FStarC_Parser_AST.tm with
+                  (fun uu___2 ->
+                     match uu___2.FStarC_Parser_AST.tm with
                      | FStarC_Parser_AST.Const (FStarC_Const.Const_string
-                         ("no_prelude", uu___4)) -> true
-                     | uu___4 -> false) d.FStarC_Parser_AST.attrs in
+                         ("no_prelude", uu___3)) -> true
+                     | uu___3 -> false) d.FStarC_Parser_AST.attrs in
             let modul =
               FStarC_Parser_AST.Module
                 {
@@ -545,10 +545,12 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
           then FStarC_Extraction_ML_PrintFS.print_fs
           else FStarC_Extraction_ML_PrintML.print_ml in
         ((let uu___1 =
-            let o =
-              let uu___2 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___2 in
-            o && ((FStarC_List.length mllib) > Prims.int_one) in
+            let uu___2 =
+              let uu___3 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 in
+            if uu___2
+            then (FStarC_List.length mllib) > Prims.int_one
+            else false in
           if uu___1
           then
             FStarC_Errors.raise_error0
@@ -580,10 +582,12 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
           then FStarC_Extraction_ML_PrintFS.print_fs
           else FStarC_Extraction_ML_PrintML.print_ml in
         ((let uu___1 =
-            let o =
-              let uu___2 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___2 in
-            o && ((FStarC_List.length mllib) > Prims.int_one) in
+            let uu___2 =
+              let uu___3 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 in
+            if uu___2
+            then (FStarC_List.length mllib) > Prims.int_one
+            else false in
           if uu___1
           then
             FStarC_Errors.raise_error0
@@ -615,10 +619,12 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
           then FStarC_Extraction_ML_PrintFS.print_fs
           else FStarC_Extraction_ML_PrintML.print_ml in
         ((let uu___1 =
-            let o =
-              let uu___2 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___2 in
-            o && ((FStarC_List.length mllib) > Prims.int_one) in
+            let uu___2 =
+              let uu___3 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 in
+            if uu___2
+            then (FStarC_List.length mllib) > Prims.int_one
+            else false in
           if uu___1
           then
             FStarC_Errors.raise_error0
@@ -650,10 +656,12 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
           then FStarC_Extraction_ML_PrintFS.print_fs
           else FStarC_Extraction_ML_PrintML.print_ml in
         ((let uu___1 =
-            let o =
-              let uu___2 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___2 in
-            o && ((FStarC_List.length mllib) > Prims.int_one) in
+            let uu___2 =
+              let uu___3 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 in
+            if uu___2
+            then (FStarC_List.length mllib) > Prims.int_one
+            else false in
           if uu___1
           then
             FStarC_Errors.raise_error0
@@ -681,10 +689,12 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
                        FStarC_Util.write_file filename ml)) mllib)
     | FStar_Pervasives_Native.Some (FStarC_Options.Extension) ->
         ((let uu___1 =
-            let o =
-              let uu___2 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___2 in
-            o && ((FStarC_List.length mllib) > Prims.int_one) in
+            let uu___2 =
+              let uu___3 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___3 in
+            if uu___2
+            then (FStarC_List.length mllib) > Prims.int_one
+            else false in
           if uu___1
           then
             FStarC_Errors.raise_error0
@@ -747,15 +757,14 @@ let needs_interleaving (intf : Prims.string) (impl : Prims.string) :
   Prims.bool=
   let m1 = FStarC_Parser_Dep.lowercase_module_name intf in
   let m2 = FStarC_Parser_Dep.lowercase_module_name impl in
-  if m1 = m2
-  then
-    (if
+  if
+    (if m1 = m2
+     then
        FStarC_List.mem (FStarC_Filepath.get_file_extension intf)
          ["fsti"; "fsi"]
-     then
-       FStarC_List.mem (FStarC_Filepath.get_file_extension impl)
-         ["fst"; "fs"]
      else false)
+  then
+    FStarC_List.mem (FStarC_Filepath.get_file_extension impl) ["fst"; "fs"]
   else false
 let rec tc_one_file_internal (fly_deps : Prims.bool)
   (env : FStarC_Extraction_ML_UEnv.uenv)
@@ -921,34 +930,34 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
               FStarC_CheckedFiles.load_module_from_cache
                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) fn in
           let r1 =
-            let uu___3 = FStarC_Options.should_check_file fn in
-            if uu___3
-            then
-              let uu___4 =
-                let f = FStarC_Options.force () in
-                if f
-                then true
-                else
-                  (let o =
-                     let uu___6 = FStarC_Options.output_to () in
-                     FStar_Pervasives_Native.uu___is_Some uu___6 in
-                   if o
-                   then
-                     let uu___6 = FStarC_Options.codegen () in
-                     FStar_Pervasives_Native.uu___is_None uu___6
-                   else false) in
-              (if uu___4 then FStar_Pervasives_Native.None else r)
-            else r in
+            let uu___3 =
+              let uu___4 = FStarC_Options.should_check_file fn in
+              if uu___4
+              then
+                let uu___5 = FStarC_Options.force () in
+                (if uu___5
+                 then true
+                 else
+                   (let uu___6 =
+                      let uu___7 = FStarC_Options.output_to () in
+                      FStar_Pervasives_Native.uu___is_Some uu___7 in
+                    if uu___6
+                    then
+                      let uu___7 = FStarC_Options.codegen () in
+                      FStar_Pervasives_Native.uu___is_None uu___7
+                    else false))
+              else false in
+            if uu___3 then FStar_Pervasives_Native.None else r in
           match r1 with
           | FStar_Pervasives_Native.None ->
               ((let uu___4 =
-                  let c =
-                    let uu___5 = FStarC_Parser_Dep.module_name_of_file fn in
-                    FStarC_Options.should_be_already_cached uu___5 in
-                  if c
+                  let uu___5 =
+                    let uu___6 = FStarC_Parser_Dep.module_name_of_file fn in
+                    FStarC_Options.should_be_already_cached uu___6 in
+                  if uu___5
                   then
-                    let uu___5 = FStarC_Options.force () in
-                    Prims.op_Negation uu___5
+                    let uu___6 = FStarC_Options.force () in
+                    Prims.op_Negation uu___6
                   else false in
                 if uu___4
                 then
@@ -962,17 +971,15 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                              "Expected %s to already be checked." fn)])
                 else ());
                (let uu___5 =
-                  let c =
-                    let uu___6 = FStarC_Options.codegen () in
-                    FStar_Pervasives_Native.uu___is_Some uu___6 in
-                  if c
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Options.codegen () in
+                      FStar_Pervasives_Native.uu___is_Some uu___8 in
+                    if uu___7 then FStarC_Options.cmi () else false in
+                  if uu___6
                   then
-                    let cm = FStarC_Options.cmi () in
-                    (if cm
-                     then
-                       let uu___6 = FStarC_Options.force () in
-                       Prims.op_Negation uu___6
-                     else false)
+                    let uu___7 = FStarC_Options.force () in
+                    Prims.op_Negation uu___7
                   else false in
                 if uu___5
                 then
@@ -990,13 +997,13 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                 match uu___5 with
                 | (parsing_data, tc_result, mllib, env1) ->
                     ((let uu___7 =
-                        let e =
-                          let uu___8 = FStarC_Errors.get_err_count () in
-                          uu___8 = Prims.int_zero in
-                        if e
+                        let uu___8 =
+                          let uu___9 = FStarC_Errors.get_err_count () in
+                          uu___9 = Prims.int_zero in
+                        if uu___8
                         then
-                          let uu___8 = FStarC_Options.lax () in
-                          (if uu___8
+                          let uu___9 = FStarC_Options.lax () in
+                          (if uu___9
                            then true
                            else
                              FStarC_Options.should_verify
@@ -1066,10 +1073,14 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                           FStarC_Options.should_extract
                             (FStarC_Ident.string_of_lid
                                tcmod.FStarC_Syntax_Syntax.name) tgt in
-                        se &&
-                          ((Prims.op_Negation
-                              tcmod.FStarC_Syntax_Syntax.is_interface)
-                             || (tgt = FStarC_Options.Krml)) in
+                        if se
+                        then
+                          (if
+                             Prims.op_Negation
+                               tcmod.FStarC_Syntax_Syntax.is_interface
+                           then true
+                           else tgt = FStarC_Options.Krml)
+                        else false in
                       if uu___5
                       then
                         let uu___6 = maybe_extract_mldefs tcmod env1 in

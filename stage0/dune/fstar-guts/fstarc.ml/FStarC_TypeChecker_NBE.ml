@@ -354,13 +354,13 @@ let should_reduce_recursive_definition
     | (uu___, []) -> (true, acc, ts)
     | ([], uu___::uu___1) -> (false, acc, [])
     | (t::ts1, in_decreases_clause::bs) ->
-        if in_decreases_clause
-        then
-          (if
+        if
+          (if in_decreases_clause
+           then
              FStarC_TypeChecker_NBETerm.isAccu
                (FStar_Pervasives_Native.fst t)
-           then (false, (FStarC_List.rev_append ts1 acc), [])
-           else aux ts1 bs (t :: acc))
+           else false)
+        then (false, (FStarC_List.rev_append ts1 acc), [])
         else aux ts1 bs (t :: acc) in
   aux arguments formals_in_decreases []
 let find_sigelt_in_gamma (cfg : config) (env : FStarC_TypeChecker_Env.env)
@@ -583,9 +583,11 @@ let rec translate (cfg : config)
    | FStarC_Syntax_Syntax.Tm_refine
        { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = tm;_} ->
        if
-         ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-           ||
-           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine
+         (if
+            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+          then true
+          else
+            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine)
        then translate cfg bs bv.FStarC_Syntax_Syntax.sort
        else
          mk_t1
@@ -799,10 +801,14 @@ let rec translate (cfg : config)
    | FStarC_Syntax_Syntax.Tm_app
        { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = args;_}
        when
-       ((FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg).FStarC_TypeChecker_Env.erase_erasable_args
-          ||
-          ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
-         ||
+       if
+         (if
+            (FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg).FStarC_TypeChecker_Env.erase_erasable_args
+          then true
+          else
+            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
+       then true
+       else
          ((cfg.core_cfg).FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args
        ->
        let uu___2 = translate cfg bs head in
@@ -1161,10 +1167,12 @@ let rec translate (cfg : config)
          FStarC_Syntax_Syntax.body1 = body;_}
        ->
        if
-         (Prims.op_Negation
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
-           &&
-           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations
+         (if
+            Prims.op_Negation
+              ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+          then
+            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations
+          else false)
        then
          let vars =
            FStarC_List.map
@@ -1574,7 +1582,7 @@ and translate_fv (cfg : config)
     FStarC_TypeChecker_Env.lookup_qname
       (FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg)
       (FStarC_Syntax_Syntax.lid_of_fv fvar) in
-  if (is_constr qninfo) || (is_constr_fv fvar)
+  if (if is_constr qninfo then true else is_constr_fv fvar)
   then FStarC_TypeChecker_NBETerm.mkConstruct fvar [] []
   else
     (let uu___1 =
@@ -1745,8 +1753,10 @@ and translate_fv (cfg : config)
                    match lbm with
                    | FStar_Pervasives_Native.Some lb ->
                        if
-                         is_rec &&
-                           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+                         (if is_rec
+                          then
+                            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+                          else false)
                        then
                          let uu___9 = let_rec_arity lb in
                          (match uu___9 with
@@ -1814,8 +1824,10 @@ and translate_fv (cfg : config)
                    match lbm with
                    | FStar_Pervasives_Native.Some lb ->
                        if
-                         is_rec &&
-                           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+                         (if is_rec
+                          then
+                            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
+                          else false)
                        then
                          let uu___9 = let_rec_arity lb in
                          (match uu___9 with

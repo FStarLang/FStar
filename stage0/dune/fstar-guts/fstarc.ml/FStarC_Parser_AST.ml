@@ -1447,11 +1447,11 @@ let as_frag (ds : decl Prims.list) : inputFragment=
              then true
              else
                FStarC_List.existsb
-                 (fun uu___3 ->
-                    match uu___3.tm with
+                 (fun uu___2 ->
+                    match uu___2.tm with
                     | Const (FStarC_Const.Const_string
-                        ("no_prelude", uu___4)) -> true
-                    | uu___4 -> false) d.attrs in
+                        ("no_prelude", uu___3)) -> true
+                    | uu___3 -> false) d.attrs in
            let m1 = as_mlist ((m, d, no_prelude), []) ds1 in
            FStar_Pervasives.Inl m1
        | uu___1 ->
@@ -1518,8 +1518,9 @@ let compile_op (arity : Prims.int) (s : Prims.string)
   | uu___ ->
       let uu___1 =
         if
-          (FStarC_Util.starts_with s "let") ||
-            (FStarC_Util.starts_with s "and")
+          (if FStarC_Util.starts_with s "let"
+           then true
+           else FStarC_Util.starts_with s "and")
         then
           let uu___2 =
             let uu___3 =
@@ -1529,8 +1530,9 @@ let compile_op (arity : Prims.int) (s : Prims.string)
           (uu___2, uu___3)
         else
           if
-            (FStarC_Util.starts_with s "exists") ||
-              (FStarC_Util.starts_with s "forall")
+            (if FStarC_Util.starts_with s "exists"
+             then true
+             else FStarC_Util.starts_with s "forall")
           then
             (let uu___3 =
                let uu___4 =

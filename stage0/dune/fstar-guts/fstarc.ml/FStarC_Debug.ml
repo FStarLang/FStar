@@ -64,7 +64,7 @@ let list_all_toggles (uu___ : unit) : Prims.string Prims.list=
   let uu___1 = FStarC_Effect.op_Bang toggle_list in FStarC_PSMap.keys uu___1
 let any (uu___ : unit) : Prims.bool=
   let a = FStarC_Effect.op_Bang anyref in
-  let b = FStarC_Effect.op_Bang _debug_all in a || b
+  let b = FStarC_Effect.op_Bang _debug_all in if a then true else b
 let tag (s : Prims.string) : unit=
   let uu___ = any () in
   if uu___
@@ -75,22 +75,22 @@ let enable (uu___ : unit) : unit= FStarC_Effect.op_Colon_Equals anyref true
 let low (uu___ : unit) : Prims.bool=
   let a =
     let uu___1 = FStarC_Effect.op_Bang dbg_level in uu___1 >= Prims.int_one in
-  let b = FStarC_Effect.op_Bang _debug_all in a || b
+  let b = FStarC_Effect.op_Bang _debug_all in if a then true else b
 let medium (uu___ : unit) : Prims.bool=
   let a =
     let uu___1 = FStarC_Effect.op_Bang dbg_level in
     uu___1 >= (Prims.of_int (2)) in
-  let b = FStarC_Effect.op_Bang _debug_all in a || b
+  let b = FStarC_Effect.op_Bang _debug_all in if a then true else b
 let high (uu___ : unit) : Prims.bool=
   let a =
     let uu___1 = FStarC_Effect.op_Bang dbg_level in
     uu___1 >= (Prims.of_int (3)) in
-  let b = FStarC_Effect.op_Bang _debug_all in a || b
+  let b = FStarC_Effect.op_Bang _debug_all in if a then true else b
 let extreme (uu___ : unit) : Prims.bool=
   let a =
     let uu___1 = FStarC_Effect.op_Bang dbg_level in
     uu___1 >= (Prims.of_int (4)) in
-  let b = FStarC_Effect.op_Bang _debug_all in a || b
+  let b = FStarC_Effect.op_Bang _debug_all in if a then true else b
 let set_level_low (uu___ : unit) : unit=
   FStarC_Effect.op_Colon_Equals dbg_level Prims.int_one
 let set_level_medium (uu___ : unit) : unit=

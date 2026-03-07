@@ -1105,10 +1105,11 @@ let resolve_module_name (env1 : env) (lid : FStarC_Ident.lident)
         let uu___2 = module_is_defined env1 new_lid in
         if uu___2 then FStar_Pervasives_Native.Some new_lid else aux q
     | (Module_abbrev (name, modul))::uu___ when
-        (nslen = Prims.int_zero) &&
-          ((FStarC_Ident.string_of_id name) =
-             (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)))
-        -> FStar_Pervasives_Native.Some modul
+        if nslen = Prims.int_zero
+        then
+          (FStarC_Ident.string_of_id name) =
+            (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid))
+        else false -> FStar_Pervasives_Native.Some modul
     | uu___::q -> aux q in
   aux env1.scope_mods
 let is_open (env1 : env) (lid : FStarC_Ident.lident)
@@ -1118,7 +1119,7 @@ let is_open (env1 : env) (lid : FStarC_Ident.lident)
        match uu___ with
        | Open_module_or_namespace
            ((ns, k, FStarC_Syntax_Syntax.Unrestricted), uu___2) ->
-           (k = open_kind) && (FStarC_Ident.lid_equals lid ns)
+           if k = open_kind then FStarC_Ident.lid_equals lid ns else false
        | uu___2 -> false) env1.scope_mods
 let namespace_is_open (env1 : env) (lid : FStarC_Ident.lident) : Prims.bool=
   is_open env1 lid FStarC_Syntax_Syntax.Open_namespace
@@ -1152,7 +1153,10 @@ let shorten_module_path (env1 : env) (ids : FStarC_Ident.ident Prims.list)
          | FStar_Pervasives_Native.None -> ([], ids1)
          | FStar_Pervasives_Native.Some (stripped_ids, rev_kept_ids) ->
              (stripped_ids, (FStarC_List.rev rev_kept_ids))) in
-  if is_full_path && ((FStarC_List.length ids) > Prims.int_zero)
+  if
+    (if is_full_path
+     then (FStarC_List.length ids) > Prims.int_zero
+     else false)
   then
     let uu___ =
       let uu___2 = FStarC_Ident.lid_of_ids ids in
@@ -1306,7 +1310,7 @@ let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
                     match uu___5 with
                     | FStarC_Syntax_Syntax.Assumption -> true
                     | uu___6 -> false) quals in
-             if any_val || is_assumption
+             if (if any_val then true else is_assumption)
              then
                let lid2 =
                  FStarC_Ident.set_lid_range lid1
@@ -1964,12 +1968,16 @@ let extract_record (e : env)
                                 FStarC_List.collect
                                   (fun f ->
                                      if
-                                       (FStarC_Syntax_Syntax.is_null_bv
-                                          f.FStarC_Syntax_Syntax.binder_bv)
-                                         ||
-                                         (is_rec &&
-                                            (FStarC_Syntax_Syntax.is_bqual_implicit
-                                               f.FStarC_Syntax_Syntax.binder_qual))
+                                       (if
+                                          FStarC_Syntax_Syntax.is_null_bv
+                                            f.FStarC_Syntax_Syntax.binder_bv
+                                        then true
+                                        else
+                                          if is_rec
+                                          then
+                                            FStarC_Syntax_Syntax.is_bqual_implicit
+                                              f.FStarC_Syntax_Syntax.binder_qual
+                                          else false)
                                      then []
                                      else [f]) formals in
                               let fields' =
@@ -2481,11 +2489,15 @@ let push_sigelt' (fail_on_dup : Prims.bool) (env1 : env)
           (match () with
            | () ->
                let is_iface =
-                 env3.iface && (Prims.op_Negation env3.admitted_iface) in
+                 if env3.iface
+                 then Prims.op_Negation env3.admitted_iface
+                 else false in
                let uu___4 = sigmap env3 in
                FStarC_SMap.add uu___4 (FStarC_Ident.string_of_lid lid)
                  (se,
-                   (env3.iface && (Prims.op_Negation env3.admitted_iface)))))) in
+                   (if env3.iface
+                    then Prims.op_Negation env3.admitted_iface
+                    else false))))) in
   FStarC_List.iter
     (fun uu___2 ->
        match uu___2 with
@@ -3211,11 +3223,12 @@ let check_admits (env1 : env) (m : FStarC_Syntax_Syntax.modul) :
              { FStarC_Syntax_Syntax.lid2 = l; FStarC_Syntax_Syntax.us2 = u;
                FStarC_Syntax_Syntax.t2 = t;_}
              when
-             (Prims.op_Negation
-                (FStarC_List.contains FStarC_Syntax_Syntax.Assumption
-                   se.FStarC_Syntax_Syntax.sigquals))
-               && ((FStarC_Ident.ns_of_lid l) = mname_ids)
-             ->
+             if
+               Prims.op_Negation
+                 (FStarC_List.contains FStarC_Syntax_Syntax.Assumption
+                    se.FStarC_Syntax_Syntax.sigquals)
+             then (FStarC_Ident.ns_of_lid l) = mname_ids
+             else false ->
              let uu___ =
                let uu___2 = sigmap env1 in
                FStarC_SMap.try_find uu___2 (FStarC_Ident.string_of_lid l) in
@@ -3700,7 +3713,7 @@ let prepare_module_or_interface (no_prelude : Prims.bool) (intf : Prims.bool)
   (mii : module_inclusion_info) : (env * Prims.bool)=
   let prep env2 =
     let auto_open =
-      if mii.mii_no_prelude || no_prelude
+      if (if mii.mii_no_prelude then true else no_prelude)
       then []
       else FStarC_Parser_Dep.prelude in
     let auto_open1 =
@@ -3776,7 +3789,10 @@ let prepare_module_or_interface (no_prelude : Prims.bool) (intf : Prims.bool)
           Prims.op_Negation uu___5 in
         if uu___4
         then
-          (if (Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface) || intf
+          (if
+             (if Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface
+              then true
+              else intf)
            then
              FStarC_Errors.raise_error FStarC_Ident.hasrange_lident mname
                FStarC_Errors_Codes.Fatal_DuplicateModuleOrInterface ()
