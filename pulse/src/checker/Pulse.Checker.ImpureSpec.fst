@@ -65,6 +65,9 @@ let prove (g: env) (goal: slprop) (ctxt: slprop) (r: range) : T.Tac unit =
   let (| g', ctxt', _ |) = Pulse.Checker.Prover.prove r g ctxt goal allow_amb in
   ()
 
+let is_no_proof_app (g: env) (t: term) : T.Tac bool =
+  Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.pulse_impure_spec_no_proof_required" t
+
 let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   let t, ty, _ = tc_term_phase1 g t in
   debug g (fun _ -> [ text "impure spec inferred type"; pp t; pp ty ]);
@@ -87,7 +90,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
       ] (Some (RU.range_of_term t))
     | Some rwr ->
       let allow_amb = true in
-      prove g pre ctxt (RU.range_of_term t);
+      (if not (is_no_proof_app g t) then prove g pre ctxt (RU.range_of_term t));
       debug g (fun _ -> [text "evaluated" ^/^ pp t ^/^ text "to" ^/^ pp rwr]);
       let rwr = RU.deep_compress rwr in // TODO: maybe this fails on uvars...
       rwr

@@ -30,6 +30,8 @@ let pulse_eager_elim = ()
 let pulse_eager_intro = ()
 let pulse_intro = ()
 
+let pulse_impure_spec_no_proof_required = ()
+
 let allow_ambiguous = ()
 
 let slprop = slprop

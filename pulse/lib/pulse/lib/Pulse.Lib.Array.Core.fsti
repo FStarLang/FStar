@@ -231,6 +231,7 @@ ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j:
     pure (Seq.length v' == length arr /\
       (forall (k:nat). k < j - i ==> Seq.index v k == Seq.index v' (k + i)))
 
+[@@pulse_impure_spec_no_proof_required]
 unobservable
 fn sub u#a (#t: Type u#a) (arr: array t) #f #mask (i: SZ.t) (j: erased nat)
     (#v: erased (Seq.seq (option t)) { SZ.v i <= j /\ j <= Seq.length (reveal v) })

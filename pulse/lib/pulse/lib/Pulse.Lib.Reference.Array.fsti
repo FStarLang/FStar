@@ -22,6 +22,7 @@ open Pulse.Class.PtsTo
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
 
+[@@pulse_impure_spec_no_proof_required]
 inline_for_extraction
 unobservable
 fn to_array u#a (#a: Type u#a) (r: ref a) #p (#v: erased a)
