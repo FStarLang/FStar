@@ -73,13 +73,14 @@ let equal_iff = function
 // anything when either result is NotEqual or Unknown, hence this returns Unknown
 // in most cases.
 // The second comparison is thunked for efficiency.
-let eq_and r s =
-    if r = Equal && s () = Equal
-    then Equal
+let eq_and r (s: unit -> ML eq_result) : ML eq_result =
+    if r = Equal then
+      if s () = Equal then Equal
+      else Unknown
     else Unknown
 
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
-let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
+let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
     let equal_data (f1:S.fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) (n_parms:int) =
@@ -139,8 +140,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_bvar bv1, Tm_bvar bv2 ->
       equal_if (bv1.index = bv2.index)
 
-    | Tm_lazy _, _ -> eq_tm env (unlazy t1) t2
-    | _, Tm_lazy _ -> eq_tm env t1 (unlazy t2)
+    | Tm_lazy _, _ -> let t1 = unlazy t1 in eq_tm env t1 t2
+    | _, Tm_lazy _ -> let t2 = unlazy t2 in eq_tm env t1 t2
 
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
@@ -238,7 +239,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
 
     | _ -> Unknown
 
-and eq_antiquotations (env:env_t) a1 a2 =
+and eq_antiquotations (env:env_t) a1 a2 : ML eq_result =
   // Basically this;
   //  List.fold_left2 (fun acc t1 t2 -> eq_inj acc (eq_tm t1 t2)) Equal a1 a2
   // but lazy and handling lists of different size
@@ -255,8 +256,8 @@ and eq_antiquotations (env:env_t) a1 a2 =
        | _ -> Unknown)
     | Equal -> eq_antiquotations env a1 a2
 
-and branch_matches env b1 b2 =
-    let related_by f o1 o2 =
+and branch_matches env b1 b2 : ML eq_result =
+    let related_by (f: _ -> _ -> ML bool) o1 o2 : ML bool =
         match o1, o2 with
         | None, None -> true
         | Some x, Some y -> f x y
@@ -267,13 +268,15 @@ and branch_matches env b1 b2 =
     if eq_pat p1 p2
     then begin
          // We check the `when` branches too, even if unsupported for now
-         if eq_tm env t1 t2 = Equal && related_by (fun t1 t2 -> eq_tm env t1 t2 = Equal) w1 w2
+         let eq1 = eq_tm env t1 t2 = Equal in
+         let eq2 = related_by (fun t1 t2 -> eq_tm env t1 t2 = Equal) w1 w2 in
+         if eq1 && eq2
          then Equal
          else Unknown
          end
     else Unknown
 
-and eq_args env (a1:args) (a2:args) : eq_result =
+and eq_args env (a1:args) (a2:args) : ML eq_result =
     match a1, a2 with
     | [], [] -> Equal
     | (a, _)::a1, (b, _)::b1 ->
@@ -282,7 +285,7 @@ and eq_args env (a1:args) (a2:args) : eq_result =
        | _ -> Unknown)
     | _ -> Unknown
 
-and eq_comp env (c1 c2:comp) : eq_result =
+and eq_comp env (c1 c2:comp) : ML eq_result =
   match c1.n, c2.n with
   | Total t1, Total t2
   | GTotal t1, GTotal t2 ->
@@ -297,9 +300,9 @@ and eq_comp env (c1 c2:comp) : eq_result =
                              //ignoring cflags
   | _ -> NotEqual
 
-let eq_tm_bool e t1 t2 = eq_tm e t1 t2 = Equal
+let eq_tm_bool e t1 t2 : ML bool = eq_tm e t1 t2 = Equal
 
-let simplify (debug:bool) (env:env_t) (tm:term) : term =
+let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
     let w t = {t with pos=tm.pos} in
     let simp_t t =
         // catch annotated subformulae too
@@ -308,17 +311,19 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
         | Tm_fvar fv when S.fv_eq_lid fv PC.false_lid -> Some false
         | _ -> None
     in
-    let rec args_are_binders args bs =
+    let rec args_are_binders args bs : ML bool =
         match args, bs with
         | (t, _)::args, b::bs ->
             begin match (SS.compress t).n with
-            | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
+            | Tm_name bv' ->
+              let eq = S.bv_eq b.binder_bv bv' in
+              if eq then args_are_binders args bs else false
             | _ -> false
             end
         | [], [] -> true
         | _, _ -> false
     in
-    let is_applied (bs:binders) (t : term) : option bv =
+    let is_applied (bs:binders) (t : term) : ML (option bv) =
         if debug then
             Format.print2 "WPE> is_applied %s -- %s\n"  (show t) (tag_of t);
         let hd, args = U.head_and_args_full t in
@@ -332,7 +337,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
             Some bv
         | _ -> None
     in
-    let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
+    let is_applied_maybe_squashed (bs : binders) (t : term) : ML (option bv) =
         if debug then
             Format.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
         match is_squash t with
@@ -343,7 +348,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
                | _ -> is_applied bs t
                end
     in
-    let is_const_match (phi : term) : option bool =
+    let is_const_match (phi : term) : ML (option bool) =
         match (SS.compress phi).n with
         (* Trying to be efficient, but just checking if they all agree *)
         (* Note, if we wanted to do this for any term instead of just True/False
@@ -381,7 +386,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
         let args = List.map maybe_un_auto_squash_arg args in
         S.mk_Tm_app head args t.pos
     in
-    let rec clearly_inhabited (ty : typ) : bool =
+    let rec clearly_inhabited (ty : typ) : ML bool =
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
         | Tm_arrow {comp=c} -> clearly_inhabited (U.comp_result c)
@@ -500,7 +505,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
          *     For other types, such as lists, whose hasEq is derived by the typechecker,
          *       we leave them as is
          *)
-        let t_has_eq_for_sure (t:S.term) :bool =
+        let t_has_eq_for_sure (t:S.term) : ML bool =
           //Axioms from prims
           let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
           match (SS.compress t).n with

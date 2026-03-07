@@ -38,7 +38,7 @@ let disentangle_abbrevs_from_bundle
     (quals:   list qualifier)
     (members: list lident)
     (rng:   FStarC.Range.t)
-    : sigelt & list sigelt =
+    : ML (sigelt & list sigelt) =
 
    (* NS: Attributes on the type constructors and abbreviation are gathered,
           and placed on the bundle.
@@ -100,7 +100,7 @@ let disentangle_abbrevs_from_bundle
         reordered after being unfolded. *)
         let not_unfolded_yet = mk_ref type_abbrev_sigelts in
 
-        let remove_not_unfolded lid =
+        let remove_not_unfolded lid : ML unit =
             not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} ->
                   not (lid_equals lid fv.fv_name)
@@ -110,7 +110,7 @@ let disentangle_abbrevs_from_bundle
 
         (* Replace a free variable corresponding to a type
         abbreviation, with memoization. *)
-        let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
+        let rec unfold_abbrev_fv (t: term) (fv : S.fv) : ML term =
             let replacee (x: sigelt) = match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv' } ] )}
                   when lid_equals fv'.fv_name fv.fv_name ->
@@ -134,7 +134,7 @@ let disentangle_abbrevs_from_bundle
                   end
 
         (* Start unfolding in a type abbreviation that has not occurred before. *)
-        and unfold_abbrev (x: sigelt) = match x.sigel with
+        and unfold_abbrev (x: sigelt) : ML term = match x.sigel with
             | Sig_let {lbs=(false, [lb])} ->
                 (* eliminate some qualifiers for definitions *)
                 let quals = x.sigquals |> List.filter begin function
@@ -157,7 +157,7 @@ let disentangle_abbrevs_from_bundle
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
         in
 
-        let rec aux () = match !not_unfolded_yet with
+        let rec aux () : ML (list sigelt) = match !not_unfolded_yet with
             | x :: _ -> let _unused = unfold_abbrev x in aux ()
             | _ -> List.rev !rev_unfolded_type_abbrevs
 
@@ -168,25 +168,25 @@ let disentangle_abbrevs_from_bundle
 
       (* Now, unfold in inductive types and data constructors *)
 
-      let filter_out_type_abbrevs l =
+      let filter_out_type_abbrevs l : ML (list lident) =
           List.filter (fun lid -> FStarC.List.for_all (fun lid' -> not (lid_equals lid lid')) type_abbrevs) l
       in
 
       let inductives_with_abbrevs_unfolded =
 
-          let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
+          let find_in_unfolded fv : ML (option term) = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
               | Sig_let {lbs=(_, [ { lbname = Inr fv' ; lbdef = tm } ] )} when (lid_equals fv'.fv_name fv.fv_name) ->
                 Some tm
               | _ -> None
           end
           in
 
-          let unfold_fv (t: term) (fv: S.fv) : term = match find_in_unfolded fv with
+          let unfold_fv (t: term) (fv: S.fv) : ML term = match find_in_unfolded fv with
               | Some t' -> t'
               | _ -> t
           in
 
-          let unfold_in_sig (x: sigelt) = match x.sigel with
+          let unfold_in_sig (x: sigelt) : ML (list sigelt) = match x.sigel with
               | Sig_inductive_typ {lid; us=univs; params=bnd;
                                    num_uniform_params=num_uniform;
                                    t=ty; mutuals=mut; ds=dc;

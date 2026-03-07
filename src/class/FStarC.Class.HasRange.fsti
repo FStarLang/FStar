@@ -4,8 +4,8 @@ open FStarC.Effect
 open FStarC.Range.Type
 
 class hasRange (a:Type) = {
-  pos : a -> range;
-  setPos : range -> a -> a;
+  pos : a -> ML range;
+  setPos : range -> a -> ML a;
 }
 
 instance val hasRange_range : hasRange range

@@ -26,30 +26,25 @@ let do_dynlink (fname : Prims.string) : unit=
       ((let uu___2 =
           let uu___3 =
             let uu___4 =
-              FStarC_Format.fmt1 "Failed to load plugin file %s" fname in
-            FStarC_Errors_Msg.text uu___4 in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStarC_Errors_Msg.text "Reason:" in
-              let uu___7 = FStarC_Errors_Msg.text e in
-              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
-                uu___7 in
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 =
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
                       FStarC_Errors.errno
                         FStarC_Errors_Codes.Error_PluginDynlink in
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                      uu___10 in
+                      uu___8 in
                   FStarC_Format.fmt1
                     "Remove the `--load` option or use `--warn_error -%s` to ignore and continue."
-                    uu___9 in
-                FStarC_Errors_Msg.text uu___8 in
-              [uu___7] in
-            uu___5 :: uu___6 in
-          uu___3 :: uu___4 in
+                    uu___7 in
+                FStarC_Errors_Msg.text uu___6 in
+              [uu___5] in
+            (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+               (FStarC_Errors_Msg.text "Reason:") (FStarC_Errors_Msg.text e))
+              :: uu___4 in
+          (FStarC_Errors_Msg.text
+             (FStarC_Format.fmt1 "Failed to load plugin file %s" fname))
+            :: uu___3 in
         FStarC_Errors.log_issue0 FStarC_Errors_Codes.Error_PluginDynlink ()
           (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
           (Obj.magic uu___2));
@@ -108,11 +103,11 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
         let uu___1 =
           let uu___2 =
             let uu___3 = FStarC_List.map pkg packages in
-            FStar_List_Tot_Base.append uu___3
+            FStar_List_Tot_Base.op_At uu___3
               ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"] in
-          FStar_List_Tot_Base.append ["-w"; "-8-11-20-21-26-28"] uu___2 in
-        FStar_List_Tot_Base.append ["-I"; dir] uu___1 in
-      FStar_List_Tot_Base.append ["ocamlopt"; "-shared"] uu___ in
+          FStar_List_Tot_Base.op_At ["-w"; "-8-11-20-21-26-28"] uu___2 in
+        FStar_List_Tot_Base.op_At ["-I"; dir] uu___1 in
+      FStar_List_Tot_Base.op_At ["ocamlopt"; "-shared"] uu___ in
     let old_ocamlpath =
       let uu___ = FStarC_Util.expand_environment_variable "OCAMLPATH" in
       match uu___ with
@@ -128,17 +123,15 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
     then
       let uu___ =
         let uu___1 =
-          FStarC_Errors_Msg.text "Failed to compile native tactic." in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
               FStarC_Format.fmt2 "Command\n`%s`\nreturned with exit code %s"
-                cmd uu___5 in
-            FStarC_Errors_Msg.text uu___4 in
-          [uu___3] in
-        uu___1 :: uu___2 in
+                cmd uu___4 in
+            FStarC_Errors_Msg.text uu___3 in
+          [uu___2] in
+        (FStarC_Errors_Msg.text "Failed to compile native tactic.") :: uu___1 in
       FStarC_Errors.raise_error0
         FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ()
         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)

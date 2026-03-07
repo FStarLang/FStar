@@ -22,11 +22,11 @@ val thunk (a:Type0) : Type0
 type t 'a = thunk 'a
 
 (* Creating thunks *)
-val mk : (unit -> 'a) -> thunk 'a
-val mkv : 'a -> thunk 'a
+val mk : (unit -> ML 'a) -> ML (thunk 'a)
+val mkv : 'a -> ML (thunk 'a)
 
 (* Forcing *)
-val force : thunk 'a -> 'a
+val force : thunk 'a -> ML 'a
 
 (* Mapping an operation over the thunk, lazily *)
-val map : ('a -> 'b) -> thunk 'a -> thunk 'b
+val map : ('a -> ML 'b) -> thunk 'a -> ML (thunk 'b)

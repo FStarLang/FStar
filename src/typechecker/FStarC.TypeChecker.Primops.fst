@@ -23,12 +23,12 @@ open FStarC.TypeChecker.Primops.Base
 (*******************************************************************)
 
 (* Most primitive steps don't use the NBE cbs, so they can use this wrapper. *)
-let as_primitive_step is_strong (l, arity, u_arity, f, f_nbe) =
-  Primops.Base.as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
+let as_primitive_step is_strong l arity u_arity (f:interp_t) (f_nbe : nbe_interp_t) =
+  Primops.Base.as_primitive_step_nbecbs is_strong (l, arity, u_arity, f, f_nbe)
 
 (* and_op and or_op are special cased because they are short-circuting,
   * can run without unembedding its second argument. *)
-let and_op : psc -> EMB.norm_cb -> universes -> args -> option term
+let and_op : psc -> EMB.norm_cb -> universes -> args -> ML (option term)
   = fun psc _norm_cb _us args ->
     match args with
     | [(a1, None); (a2, None)] ->
@@ -41,7 +41,7 @@ let and_op : psc -> EMB.norm_cb -> universes -> args -> option term
         end
     | _ -> failwith "Unexpected number of arguments"
 
-let or_op : psc -> EMB.norm_cb -> universes -> args -> option term
+let or_op : psc -> EMB.norm_cb -> universes -> args -> ML (option term)
   = fun psc _norm_cb _us args ->
     match args with
     | [(a1, None); (a2, None)] ->
@@ -106,11 +106,13 @@ let simple_ops : list primitive_step = [
 ]
 
 let short_circuit_ops : list primitive_step =
-  List.map (as_primitive_step true)
-  [
-    (PC.op_And, 2, 0, and_op, (fun _us -> NBETerm.and_op));
-    (PC.op_Or, 2, 0, or_op, (fun _us -> NBETerm.or_op));
-  ]
+  let nbe_and : nbe_interp_t =
+    fun _cb _us args -> NBETerm.and_op args in
+  let nbe_or : nbe_interp_t =
+    fun _cb _us args -> NBETerm.or_op args in
+  let s1 = as_primitive_step true PC.op_And 2 0 and_op nbe_and in
+  let s2 = as_primitive_step true PC.op_Or 2 0 or_op nbe_or in
+  [s1; s2]
 
 let built_in_primitive_steps_list : list primitive_step =
   simple_ops
@@ -125,9 +127,9 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.Range.ops
   @ Primops.Real.ops
 
-let env_dependent_ops (env:Env.env_t) = Primops.Eq.dec_eq_ops env
+let env_dependent_ops (env:Env.env_t) : ML _ = Primops.Eq.dec_eq_ops env
 
-let simplification_ops_list (env:Env.env_t) : list primitive_step =
+let simplification_ops_list (env:Env.env_t) : ML (list primitive_step) =
   Primops.Eq.prop_eq_ops env
   @ Primops.Real.simplify_ops
   @ Primops.Erased.simplify_ops

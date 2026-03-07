@@ -24,24 +24,24 @@ new
 val ext_state : Type0
 
 (* Set a key-value pair in the map *)
-val set (k:key) (v:value) : unit
+val set (k:key) (v:value) : ML unit
 
 (* Get the value from the map, or return "" if not there *)
-val get (k:key) : value
+val get (k:key) : ML value
 
 (* For boolean-like options, return true if enabled. We consider an
 extension enabled when set to a non-empty string what is NOT "off",
 "false", or "0" (and this comparison is case-insensitive). *)
-val enabled (k:key) : bool
+val enabled (k:key) : ML bool
 
 (* Get a list of all KV pairs that "begin" with k, considered
 as a namespace. *)
-val getns (ns:string) : list (key & value)
+val getns (ns:string) : ML (list (key & value))
 
 (* List all pairs *)
-val all () : list (key & value)
+val all () : ML (list (key & value))
 
-val save () : ext_state
-val restore (s:ext_state) : unit
+val save () : ML ext_state
+val restore (s:ext_state) : ML unit
 
-val reset () : unit
+val reset () : ML unit

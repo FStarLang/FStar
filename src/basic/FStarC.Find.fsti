@@ -20,57 +20,57 @@ operations. *)
 open FStarC.Effect
 
 (* --include *)
-val get_include_path () : list string
-val set_include_path (path : list string) : unit
+val get_include_path () : ML (list string)
+val set_include_path (path : list string) : ML unit
 
 (* --cache_dir *)
-val get_cache_dir () : option string
-val set_cache_dir (path : string) : unit
+val get_cache_dir () : ML (option string)
+val set_cache_dir (path : string) : ML unit
 
 (* --odir *)
-val get_odir () : option string
-val set_odir (path : string) : unit
+val get_odir () : ML (option string)
+val set_odir (path : string) : ML unit
 
 (* --no_default_includes *)
-val get_no_default_includes () : bool
-val set_no_default_includes (b : bool) : unit
+val get_no_default_includes () : ML bool
+val set_no_default_includes (b : bool) : ML unit
 
-val get_with_fstarc () : bool
-val set_with_fstarc (b : bool) : unit
+val get_with_fstarc () : ML bool
+val set_with_fstarc (b : bool) : ML unit
 
 (* A bit silly to have this, but this is the directory where the fstar.exe executable is in. *)
 val fstar_bin_directory : string
 
 (* The root directory of the F* library, if any *)
-val lib_root () : option string
+val lib_root () : ML (option string)
 
 (* Given a directory, follow the fstar.include files and return
 all transitive includes. *)
-val expand_include_d (dirname : string) : list string
+val expand_include_d (dirname : string) : ML (list string)
 
 (* The full include path. We search files in all of these directories. *)
-val full_include_path () : list string
+val full_include_path () : ML (list string)
 
 (* Try to find a file in the include path with a given basename. *)
-val find_file (basename : string) : option string
+val find_file (basename : string) : ML (option string)
 
 (* As above, but also looks in the output directory (--odir). This is useful to find
 plugins that we might have created. *)
-val find_file_odir (basename : string) : option string
+val find_file_odir (basename : string) : ML (option string)
 
-val prepend_cache_dir           : string  -> string
-val prepend_output_dir          : string  -> string
+val prepend_cache_dir           : string  -> ML string
+val prepend_output_dir          : string  -> ML string
 
 (* Return absolute path of directory where fstar.exe lives *)
-val locate () : string
+val locate () : ML string
 
 (* Return absolute path of F* library, if any.
 (this will be empty with --no_default_includes) *)
-val locate_lib () : option string
+val locate_lib () : ML (option string)
 
 (* Return absolute path of OCaml-installed components of F*. *)
-val locate_ocaml () : string
+val locate_ocaml () : ML string
 
 (* Try to find a file from a path we might have read in a checked file.
 Essentially find_file(basename f). *)
-val refind_file (f:string) : string
+val refind_file (f:string) : ML string

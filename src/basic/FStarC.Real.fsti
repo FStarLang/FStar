@@ -24,4 +24,4 @@ open FStarC.Order
 type real = | Real of string
 
 (* Compares two reals, may return None if unknown. *)
-val cmp (r1 r2 : real) : option order
+val cmp (r1 r2 : real) : ML (option order)

@@ -36,7 +36,7 @@ let pout1 s x = if !dbg_Plugin then Format.print1 s x
 let perr  s   = if !dbg_Plugin then Format.print_error s
 let perr1 s x = if !dbg_Plugin then Format.print1_error s x
 
-let do_dynlink (fname:string) : unit =
+let do_dynlink (fname:string) : ML unit =
   try
     dynlink_loadfile fname
   with DynlinkError e ->
@@ -49,7 +49,7 @@ let do_dynlink (fname:string) : unit =
     (* If we weren't ignoring this error, just stop now *)
     E.stop_if_err ()
 
-let dynlink (fname:string) : unit =
+let dynlink (fname:string) : ML unit =
   if List.mem fname !loaded then (
     pout1 "Plugin %s already loaded, skipping\n" fname
   ) else (
@@ -60,7 +60,7 @@ let dynlink (fname:string) : unit =
     ()
   )
 
-let load_plugin tac =
+let load_plugin tac : ML _ =
   if not (!loaded_plugin_lib) then (
     pout "Loading fstar.pluginlib before first plugin\n";
     do_dynlink (Filepath.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
@@ -69,10 +69,10 @@ let load_plugin tac =
   );
   dynlink tac
 
-let load_plugins tacs =
+let load_plugins tacs : ML _ =
   List.iter load_plugin tacs
 
-let load_plugins_dir dir =
+let load_plugins_dir dir : ML _ =
   (* Dynlink all .cmxs files in the given directory *)
   (* fixme: confusion between FStarC.String and FStar.String *)
   Filepath.readdir dir
@@ -80,7 +80,7 @@ let load_plugins_dir dir =
   |> List.map (fun s -> dir ^ "/" ^ s)
   |> load_plugins
 
-let compile_modules dir ms =
+let compile_modules dir ms : ML _ =
    let compile m =
      let packages = [ "fstar.pluginlib" ] in
      let pkg pname = "-package " ^ pname in
@@ -123,7 +123,7 @@ let compile_modules dir ms =
 (* Tries to load a plugin named like the extension. Returns true
 if it could find a plugin with the proper name. This will fail hard
 if loading the plugin fails. *)
-let autoload_plugin (ext:string) : bool =
+let autoload_plugin (ext:string) : ML bool =
   if Options.Ext.enabled "noautoload" then false else (
   if !dbg_Plugin then
     Format.print1 "Trying to find a plugin for extension %s\n" ext;

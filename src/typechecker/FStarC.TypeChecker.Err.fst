@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ open FStarC.Errors.Msg
 open FStarC.Class.Show
 open FStar.List.Tot
 
-let info_at_pos env file row col : option (either string lident & typ & Range.t) =
+let info_at_pos env file row col : ML (option (either string lident & typ & Range.t)) =
     match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
     | Some info ->
@@ -46,46 +46,46 @@ let info_at_pos env file row col : option (either string lident & typ & Range.t)
  * It will also prioritize them in that order, prefering to show
  * a discrepancy of implicits before one of universes, etc.
  *)
-let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b & b =
-    let print () : b & b & bool =
+let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> ML b) (x : a) (y : a) : ML (b & b) =
+    let print () : ML (b & b & bool) =
         let xs = f x in
         let ys = f y in
         xs, ys, xs <> ys
     in
-    let rec blist_leq (l1 : list bool) (l2 : list bool) =
+    let rec blist_leq (l1 : list bool) (l2 : list bool) : ML bool =
         match l1, l2 with
         | h1::t1, h2::t2 ->
-            (not h1 || h2) && blist_leq t1 t2
+            let v1 = (not h1 || h2) in let v2 = blist_leq t1 t2 in v1 && v2
         | [], [] ->
             true
         | _ ->
             failwith "print_discrepancy: bad lists"
     in
-    let rec succ (l : list bool) : list bool =
+    let rec succ (l : list bool) : ML (list bool) =
         match l with
         | false::t -> true::t
         | true::t -> false::(succ t)
         | [] -> failwith ""
     in
-    let full (l : list bool) : bool =
+    let full (l : list bool) : ML bool =
         List.for_all (fun b -> b) l
     in
-    let get_bool_option (s:string) : bool =
+    let get_bool_option (s:string) : ML bool =
         match Options.get_option s with
         | Options.Bool b -> b
         | _ -> failwith "print_discrepancy: impossible"
     in
-    let set_bool_option (s:string) (b:bool) : unit =
+    let set_bool_option (s:string) (b:bool) : ML unit =
         Options.set_option s (Options.Bool b)
     in
-    let get () : list bool =
+    let get () : ML (list bool) =
         let pi  = get_bool_option "print_implicits" in
         let pu  = get_bool_option "print_universes" in
         let pea = get_bool_option "print_effect_args" in
         let pf  = get_bool_option "print_full_names" in
         [pi; pu; pea; pf]
     in
-    let set (l : list bool) : unit =
+    let set (l : list bool) : ML unit =
         match l with
         | [pi; pu; pea; pf] ->
           set_bool_option "print_implicits"   pi;
@@ -95,7 +95,7 @@ let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b & b
         | _ -> failwith "impossible: print_discrepancy"
     in
     let bas = get () in
-    let rec go (cur : list bool) =
+    let rec go (cur : list bool) : ML _ =
         match () with
         (* give up, nothing more we can do *)
         | () when full cur ->
@@ -123,7 +123,7 @@ let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b & b
 let errors_smt_detail env
         (errs : list Errors.error)
         (smt_detail : Errors.error_message)
-: list Errors.error
+: ML (list Errors.error)
 =
     let errs =
         errs
@@ -150,23 +150,23 @@ let errors_smt_detail env
     in
     errs
 
-let add_errors env errs =
+let add_errors env errs : ML unit =
     FStarC.Errors.add_errors (errors_smt_detail env errs [])
 
-let log_issue env r (e, m) : unit =
+let log_issue env r x : ML unit = let (e, m) = x in
  add_errors env [e, m, r, Errors.get_ctx ()]
 
-let log_issue_text env r (e, m) : unit =
+let log_issue_text env r x : ML unit = let (e, m) = x in
   log_issue env r (e, [Errors.text m])
 
-let err_msg_type_strings env t1 t2 :(string & string) =
+let err_msg_type_strings env t1 t2 : ML (string & string) =
   print_discrepancy (N.term_to_string env) t1 t2
 
 // let err_msg_type_docs env t1 t2 :(Pprint.document * Pprint.document) =
 
 //   print_discrepancy (N.term_to_doc env) t1 t2
 
-let err_msg_comp_strings env c1 c2 :(string & string) =
+let err_msg_comp_strings env c1 c2 : ML (string & string) =
   print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)
@@ -174,7 +174,7 @@ let exhaustiveness_check = [
   FStarC.Errors.Msg.text "Patterns are incomplete"
 ]
 
-let subtyping_failed : env -> typ -> typ -> unit -> error_message =
+let subtyping_failed : env -> typ -> typ -> unit -> ML error_message =
      fun env t1 t2 () ->
       //  let s1, s2 = err_msg_type_strings env t1 t2 in
       let ppt = N.term_to_doc env in
@@ -185,12 +185,12 @@ let subtyping_failed : env -> typ -> typ -> unit -> error_message =
 
 let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
-let unexpected_signature_for_monad #a env (rng:Range.t) (m:lident) k : a =
+let unexpected_signature_for_monad #a env (rng:Range.t) (m:lident) k : ML a =
   Errors.raise_error rng Errors.Fatal_UnexpectedSignatureForMonad
     (Format.fmt2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
     (show m) (N.term_to_string env k))
 
-let expected_a_term_of_type_t_got_a_function env (rng:Range.t) msg (t:typ) (e:term) =
+let expected_a_term_of_type_t_got_a_function #a env (rng:Range.t) msg (t:typ) (e:term) : ML a =
   Errors.raise_error rng Errors.Fatal_ExpectTermGotFunction
     (Format.fmt3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
     (N.term_to_string env t) (show e) msg)
@@ -198,7 +198,7 @@ let expected_a_term_of_type_t_got_a_function env (rng:Range.t) msg (t:typ) (e:te
 let unexpected_implicit_argument =
   (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
 
-let expected_expression_of_type #a env (rng:Range.t) t1 e t2 : a =
+let expected_expression_of_type #a env (rng:Range.t) t1 e t2 : ML a =
   // let s1, s2 = err_msg_type_strings env t1 t2 in
   // MISSING: print discrepancy!
   let d1 = N.term_to_doc env t1 in
@@ -211,12 +211,12 @@ let expected_expression_of_type #a env (rng:Range.t) t1 e t2 : a =
     prefix 4 1 (text "of type") d2
   ]
 
-let expected_pattern_of_type env (t1 e t2 : term) =
+let expected_pattern_of_type env (t1 e t2 : term) : ML _ =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedPattern, (Format.fmt3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
     s1 (show e) s2))
 
-let basic_type_error env (rng:Range.t) eopt t1 t2 =
+let basic_type_error env (rng:Range.t) eopt t1 t2 : ML unit =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   let open FStarC.Errors.Msg in
   let msg = match eopt with
@@ -234,7 +234,7 @@ let basic_type_error env (rng:Range.t) eopt t1 t2 =
 
 (* It does not make sense to use the same code for a catcheable and uncatcheable
 error, but that's what this was doing. *)
-let raise_basic_type_error #a env (rng:Range.t) eopt t1 t2 : a =
+let raise_basic_type_error #a env (rng:Range.t) eopt t1 t2 : ML a =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   let open FStarC.Errors.Msg in
   let msg = match eopt with
@@ -253,43 +253,43 @@ let raise_basic_type_error #a env (rng:Range.t) eopt t1 t2 : a =
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
 
-let constructor_fails_the_positivity_check env (d:term) (l:lid) =
+let constructor_fails_the_positivity_check env (d:term) (l:lid) : ML _ =
   (Errors.Fatal_ConstructorFailedCheck, (Format.fmt2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
     (show d) (show l)))
 
-let inline_type_annotation_and_val_decl (l:lid) =
+let inline_type_annotation_and_val_decl (l:lid) : ML _ =
   (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (Format.fmt1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (show l)))
 
 (* CH: unsure if the env is good enough for normalizing t here *)
-let inferred_type_causes_variable_to_escape env t (x:bv) =
+let inferred_type_causes_variable_to_escape env t (x:bv) : ML _ =
   (Errors.Fatal_InferredTypeCauseVarEscape, (Format.fmt2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
     (N.term_to_string env t) (show x)))
 
-let expected_function_typ #a env (rng:Range.t) t : a =
+let expected_function_typ #a env (rng:Range.t) t : ML a =
   Errors.raise_error rng Errors.Fatal_FunctionTypeExpected [
       text "Expected a function.";
       prefix 2 1 (text "Got an expression of type:")
         (N.term_to_doc env t);
     ]
 
-let expected_poly_typ env (f:term) t targ =
+let expected_poly_typ env (f:term) t targ : ML _ =
   (Errors.Fatal_PolyTypeExpected, (Format.fmt3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
     (show f) (N.term_to_string env t) (N.term_to_string env targ)))
 
-let disjunctive_pattern_vars (v1 v2 : list bv) =
+let disjunctive_pattern_vars (v1 v2 : list bv) : ML _ =
   let vars v =
     v |> List.map show |> String.concat ", " in
   (Errors.Fatal_DisjuctivePatternVarsMismatch, (Format.fmt2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)))
 
-let name_and_result c = match c.n with
+let name_and_result c : ML _ = match c.n with
   | Total t -> "Tot", t
   | GTotal t -> "GTot", t
   | Comp ct -> show ct.effect_name, ct.result_typ
   // TODO: ^ Use the resugaring environment to possibly shorten the effect name
 
-let computed_computation_type_does_not_match_annotation #a env (r:Range.t) e c c' : a =
+let computed_computation_type_does_not_match_annotation #a env (r:Range.t) e c c' : ML a =
   let ppt = N.term_to_doc env in
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
@@ -300,7 +300,7 @@ let computed_computation_type_does_not_match_annotation #a env (r:Range.t) e c c
     prefix 2 1 (text "and effect") (text f2)
   ]
 
-let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.t) e c c' : a =
+let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.t) e c c' : ML a =
   let ppc = N.comp_to_doc env in
   Errors.raise_error r Errors.Fatal_ComputedTypeNotMatchAnnotation [
     prefix 2 1 (text "Computed type") (ppc c) ^/^
@@ -308,11 +308,11 @@ let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.t) e 
     text "and no subtyping was allowed";
   ]
 
-let unexpected_non_trivial_precondition_on_term #a env f : a =
+let unexpected_non_trivial_precondition_on_term #a env f : ML a =
   Errors.raise_error env Errors.Fatal_UnExpectedPreCondition
     (Format.fmt1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
 
-let __expected_eff_expression (effname:string) (rng:Range.t) (e:term) (c:comp) (reason:option string) =
+let __expected_eff_expression #a (effname:string) (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a =
   let open FStarC.Class.PP in
   let open FStarC.Pprint in
   Errors.raise_error rng Errors.Fatal_ExpectedGhostExpression [
@@ -324,19 +324,19 @@ let __expected_eff_expression (effname:string) (rng:Range.t) (e:term) (c:comp) (
     prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
   ]
 
-let expected_pure_expression (rng:Range.t) (e:term) (c:comp) (reason:option string) =
+let expected_pure_expression #a (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a =
   __expected_eff_expression "pure" rng e c reason
 
-let expected_ghost_expression (rng:Range.t)(e:term) (c:comp) (reason:option string) =
+let expected_ghost_expression #a (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a =
   __expected_eff_expression "ghost" rng e c reason
 
-let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
+let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) : ML _ =
   (Errors.Fatal_UnexpectedEffect, (Format.fmt2 "Expected a computation with effect %s; but it has effect %s" (show c1) (show c2)))
 
-let failed_to_prove_specification_of (l : lbname) (lbls : list string) =
+let failed_to_prove_specification_of (l : lbname) (lbls : list string) : ML _ =
   (Errors.Error_TypeCheckerFailToProve, (Format.fmt2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
 
-let warn_top_level_effect (rng:Range.t) : unit =
+let warn_top_level_effect (rng:Range.t) : ML unit =
   Errors.log_issue rng
     Errors.Warning_TopLevelEffect
     "Top-level let-bindings must be total; this term may have effects"

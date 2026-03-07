@@ -18,6 +18,7 @@
  * text fragments and update state; this file collects helpers for them *)
 
 module FStarC.Interactive.PushHelper
+
 open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
@@ -36,20 +37,26 @@ module DsEnv = FStarC.Syntax.DsEnv
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 
-let repl_stack: ref repl_stack_t = mk_ref []
+let repl_stack : ref repl_stack_t = mk_ref []
 
-let set_check_kind env check_kind =
-  { env with admit = (check_kind = LaxCheck || Options.lax());
-             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
+let set_check_kind env check_kind : ML env_t =
+  let lax = Options.lax() in
+  let dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck) in
+  { env with admit = (check_kind = LaxCheck || lax);
+             dsenv = dsenv }
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
-let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) =
-  let wrap fname = { tf_fname = fname; tf_modtime = Time.get_time_of_day () } in
+let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) : ML (list repl_task) =
+  let wrap (fname:string) : ML timed_fname = { tf_fname = fname; tf_modtime = Time.get_time_of_day () } in
   let rec aux (deps:list string) (final_tasks:list repl_task)
-    : list repl_task =
+    : ML (list repl_task) =
     match deps with
-    | intf :: impl :: deps' when needs_interleaving intf impl ->
-      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
+    | intf :: impl :: deps' ->
+      let ni = needs_interleaving intf impl in
+      if ni then
+        LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
+      else
+        LDSingle (wrap intf) :: aux (impl :: deps') final_tasks
     | intf_or_impl :: deps' ->
       LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
     | [] -> final_tasks in
@@ -60,9 +67,9 @@ let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) =
 The dependencies are a list of file name.  The steps are a list of
 ``repl_task`` elements, to be executed by ``run_repl_task``. **)
 let deps_and_repl_ld_tasks_of_our_file filename
-    : list string
-    & list repl_task
-    & FStarC.Parser.Dep.deps =
+    : ML (list string
+        & list repl_task
+        & FStarC.Parser.Dep.deps) =
   let get_mod_name fname =
     Parser.Dep.lowercase_module_name fname in
   let our_mod_name =
@@ -97,12 +104,12 @@ let deps_and_repl_ld_tasks_of_our_file filename
   real_deps, tasks, dep_graph
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot_env env msg : repl_depth_t & env_t =
+let snapshot_env env msg : ML (repl_depth_t & env_t) =
   let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
 
-let push_repl msg push_kind_opt task st =
+let push_repl msg push_kind_opt task st : ML repl_state =
   let depth, env = snapshot_env st.repl_env msg in
   //clear buffered queries when pushing, otherwise this can cause an infinite loop
   //of reprocessing queries when popping
@@ -113,8 +120,9 @@ let push_repl msg push_kind_opt task st =
     { st with repl_env = set_check_kind env push_kind } // repl_env is the only mutable part of st
 
 (* Record the issues that were raised by the last push *)
-let adjust_topmost_push_frag (f:repl_task -> repl_task) =
-  match !repl_stack with
+let adjust_topmost_push_frag (f:repl_task -> repl_task) : ML unit =
+  let stk = !repl_stack in
+  match stk with
   | (depth, (PushFragment x, st))::rest -> (
     let pf = f (PushFragment x) in
     repl_stack := (depth, (pf, st)) :: rest
@@ -122,18 +130,22 @@ let adjust_topmost_push_frag (f:repl_task -> repl_task) =
   | _ -> ()
 
 
-let add_issues_to_push_fragment (issues: list json) =
-  let adjust = function
+let add_issues_to_push_fragment (issues: list json) : ML unit =
+  let adjust (t:repl_task) : repl_task =
+    match t with
     | PushFragment(frag, push_kind, i, deps) ->
       PushFragment(frag, push_kind, issues @ i, deps)
+    | x -> x
   in
   adjust_topmost_push_frag adjust
 
 (* Record dependences that were loaded on the fly to the last push *)
-let add_filenames_to_push_fragment (deps: list string) =
-  let adjust = function
+let add_filenames_to_push_fragment (deps: list string) : ML unit =
+  let adjust (t:repl_task) : repl_task =
+    match t with
     | PushFragment(frag, push_kind, i, deps') ->
       PushFragment(frag, push_kind, i, deps@deps')
+    | x -> x
   in
   adjust_topmost_push_frag adjust
 
@@ -159,7 +171,8 @@ exception, skipping all code that would ``pop`` previously pushed state.
 That's why we need ``rollback``: all that rollback does is call ``pop``
 sufficiently many times to get back into the state we were before the
 corresponding ``pop``. **)
-let rollback_env solver msg (ctx_depth, opt_depth) =
+let rollback_env solver msg depth : ML env_t =
+  let (ctx_depth, opt_depth) = depth in
   let env = TypeChecker.Tc.rollback_context solver msg (Some ctx_depth) in
   Options.rollback (Some opt_depth);
   env
@@ -169,8 +182,9 @@ let should_reset (task:repl_task) =
   | PushFragment (_, _, _, deps) -> Cons? deps
   | _ -> false
 
-let pop_repl msg st =
-  match !repl_stack with
+let pop_repl msg st : ML repl_state =
+  let stk = !repl_stack in
+  match stk with
   | [] -> failwith "(pop_repl) Too many pops"
   | (depth, (p, st')) :: stack_tl ->
     // Format.print1 "(pop_repl) popping %s\n" (string_of_repl_task p);
@@ -188,7 +202,7 @@ let pop_repl msg st =
 
 
 (** Load the file or files described by `task` **)
-let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
+let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: repl_task) lds : ML (optmod_t & env_t & lang_decls_t) =
   match task with
   | LDInterleaved (intf, impl) ->
     curmod, load_file env (Some intf.tf_fname) impl.tf_fname, []
@@ -218,13 +232,13 @@ let run_repl_task (repl_fname:string) (curmod: optmod_t) (env: env_t) (task: rep
 (* Name tracking: required for completions *)
 (*******************************************)
 
-let query_of_ids (ids: list ident) : CTable.query =
+let query_of_ids (ids: list ident) : ML CTable.query =
   List.map string_of_id ids
 
-let query_of_lid (lid: lident) : CTable.query =
+let query_of_lid (lid: lident) : ML CTable.query =
   query_of_ids (ns_of_lid lid @ [ident_of_lid lid])
 
-let update_names_from_event cur_mod_str table evt =
+let update_names_from_event cur_mod_str table evt : ML CTable.table =
   let is_cur_mod lid = (string_of_lid lid) = cur_mod_str in
   match evt with
   | NTAlias (host, id, included) ->
@@ -256,17 +270,17 @@ let update_names_from_event cur_mod_str table evt =
            tbl ns_query (string_of_id (ident_of_lid lid)) lid)
       table lids
 
-let commit_name_tracking' cur_mod names name_events =
+let commit_name_tracking' cur_mod names name_events : ML CTable.table =
   let cur_mod_str = match cur_mod with
                     | None -> "" | Some md -> string_of_lid (SS.mod_name md) in
   let updater = update_names_from_event cur_mod_str in
   List.fold_left updater names name_events
 
-let commit_name_tracking st name_events =
+let commit_name_tracking st name_events : ML repl_state =
   let names = commit_name_tracking' st.repl_curmod st.repl_names name_events in
   { st with repl_names = names }
 
-let fresh_name_tracking_hooks () =
+let fresh_name_tracking_hooks () : ML (ref (list name_tracking_event) & DsEnv.dsenv_hooks & TcEnv.tcenv_hooks) =
   let events = mk_ref [] in
   let push_event evt = events := evt :: !events in
   events,
@@ -278,7 +292,7 @@ let fresh_name_tracking_hooks () =
       (fun _ s -> push_event (NTBinding s)) }
 
 let track_name_changes (env: env_t)
-    : env_t & (env_t -> env_t & list name_tracking_event) =
+    : ML (env_t & (env_t -> ML (env_t & list name_tracking_event))) =
   let set_hooks dshooks tchooks env =
     let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in
@@ -291,12 +305,13 @@ let track_name_changes (env: env_t)
            List.rev !events)
 
 // Little helper
-let tf_of_fname fname =
+let tf_of_fname fname : ML timed_fname =
   { tf_fname = fname;
     tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
 
 // Little helper: update timestamps in argument task to last modification times.
-let update_task_timestamps = function
+let update_task_timestamps (task:repl_task) : ML repl_task =
+  match task with
   | LDInterleaved (intf, impl) ->
     LDInterleaved (tf_of_fname intf.tf_fname, tf_of_fname impl.tf_fname)
   | LDSingle intf_or_impl ->
@@ -305,7 +320,7 @@ let update_task_timestamps = function
     LDInterfaceOfCurrentFile (tf_of_fname intf.tf_fname)
   | other -> other
 
-let add_module_completions this_fname deps table =
+let add_module_completions this_fname deps table : ML CTable.table =
   let open FStarC.PSMap in
   let capitalize str = if str = "" then str
                        else let first = String.substring str 0 1 in

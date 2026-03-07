@@ -24,7 +24,7 @@ module UU = FStarC.Syntax.Unionfind
 module BU = FStarC.Util
 
 (* maybe memo *)
-let mm (t:Type) = bool -> t & bool
+let mm (t:Type) = bool -> ML (t & bool)
 
 let (let?) (f:mm 't) (g: 't -> mm 's) : mm 's =
   fun b ->
@@ -39,7 +39,7 @@ let no_memo : mm unit = fun _ -> (), false
 
 module H = FStarC.Hash
 
-let maybe_memoize (h:syntax 'a) (f:syntax 'a -> mm H.hash_code) : mm H.hash_code =
+let maybe_memoize (h:syntax 'a) (f:syntax 'a -> ML (mm H.hash_code)) : mm H.hash_code =
   fun should_memo ->
     if should_memo
     then (
@@ -65,14 +65,14 @@ let mix (f:mm H.hash_code) (g:mm H.hash_code) : mm H.hash_code =
 let nil_hc : mm H.hash_code = of_int 1229
 let cons_hc : mm H.hash_code = of_int 1231
 
-let mix_list (l:list (mm H.hash_code)) : mm H.hash_code =
+let mix_list (l:list (mm H.hash_code)) : ML (mm H.hash_code) =
   List.fold_right mix l nil_hc
 
 let mix_list_lit = mix_list
 
-let hash_list (h:'a -> mm H.hash_code) (ts:list 'a) : mm H.hash_code = mix_list (List.map h ts)
+let hash_list (h:'a -> ML (mm H.hash_code)) (ts:list 'a) : ML (mm H.hash_code) = mix_list (List.map h ts)
 
-let hash_option (h:'a -> mm H.hash_code) (o:option 'a) : mm H.hash_code =
+let hash_option (h:'a -> ML (mm H.hash_code)) (o:option 'a) : ML (mm H.hash_code) =
   match o with
   | None -> ret (H.of_int 1237)
   | Some o -> mix (ret (H.of_int 1249)) (h o)
@@ -81,23 +81,23 @@ let hash_option (h:'a -> mm H.hash_code) (o:option 'a) : mm H.hash_code =
 let hash_doc (d : Pprint.document) : mm H.hash_code =
   of_string (Pprint.pretty_string (float_of_string "1.0") 80 d)
 
-let hash_doc_list (ds : list Pprint.document) : mm H.hash_code =
+let hash_doc_list (ds : list Pprint.document) : ML (mm H.hash_code) =
   hash_list hash_doc ds
 
-let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a & 'b))
-  : mm H.hash_code
+let hash_pair (h:'a -> ML (mm H.hash_code)) (i:'b -> ML (mm H.hash_code)) (x:('a & 'b))
+  : ML (mm H.hash_code)
   = mix (h (fst x)) (i (snd x))
 
 let rec hash_term (t:term)
-  : mm H.hash_code
+  : ML (mm H.hash_code)
   = maybe_memoize t hash_term'
 
 and hash_comp c
-  : mm H.hash_code
+  : ML (mm H.hash_code)
   = maybe_memoize c hash_comp'
 
 and hash_term' (t:term)
-  : mm H.hash_code
+  : ML (mm H.hash_code)
   = // if Debug.any ()
     // then FStarC.Util.print1 "Hash_term %s\n" (FStarC.Syntax.show t);
     match (SS.compress t).n with
@@ -134,7 +134,7 @@ and hash_term' (t:term)
     | Tm_delayed _ -> failwith "Impossible"
 
 and hash_comp' (c:comp)
-  : mm H.hash_code
+  : ML (mm H.hash_code)
   = match c.n with
     | Total t ->
       mix_list_lit
@@ -153,7 +153,9 @@ and hash_comp' (c:comp)
          hash_list hash_arg ct.effect_args;
          hash_list hash_flag ct.flags]
 
-and hash_lb lb =
+and hash_lb lb
+  : ML (mm H.hash_code)
+  =
   mix_list_lit
     [ of_int 79;
       hash_lbname lb.lbname;
@@ -163,11 +165,16 @@ and hash_lb lb =
       hash_term lb.lbdef;
       hash_list hash_term lb.lbattrs]
 
-and hash_match_returns (b, asc) =
+and hash_match_returns x
+  : ML (mm H.hash_code)
+  =
+  let (b, asc) = x in
   mix (hash_binder b)
       (hash_ascription asc)
 
-and hash_branch b =
+and hash_branch b
+  : ML (mm H.hash_code)
+  =
   let p, topt, t = b in
   mix_list_lit
     [of_int 83;
@@ -175,7 +182,9 @@ and hash_branch b =
      hash_option hash_term topt;
      hash_term t]
 
-and hash_pat p =
+and hash_pat p
+  : ML (mm H.hash_code)
+  =
   match p.v with
   | Pat_constant c -> mix (of_int 89) (hash_constant c)
   | Pat_cons(fv, us, args) ->
@@ -188,16 +197,20 @@ and hash_pat p =
   | Pat_dot_term t -> mix_list_lit [of_int 107; hash_option hash_term t]
 
 
-and hash_bv b = hash_term b.sort
-and hash_fv fv = of_string (Ident.string_of_lid fv.fv_name)
-and hash_binder (b:binder) =
+and hash_bv b : ML (mm H.hash_code) = hash_term b.sort
+and hash_fv fv : ML (mm H.hash_code) = of_string (Ident.string_of_lid fv.fv_name)
+and hash_binder (b:binder)
+  : ML (mm H.hash_code)
+  =
   mix_list_lit
     [hash_bv b.binder_bv;
      hash_option hash_bqual b.binder_qual;
      hash_list hash_term b.binder_attrs]
 
-and hash_universe =
-  function
+and hash_universe u
+  : ML (mm H.hash_code)
+  =
+  match u with
   | U_zero -> of_int 179
   | U_succ u -> mix (of_int 181) (hash_universe u)
   | U_max us -> mix (of_int 191) (hash_list hash_universe us)
@@ -206,37 +219,51 @@ and hash_universe =
   | U_unif uv -> mix (of_int 199) (hash_universe_uvar uv)
   | U_unknown -> of_int 211
 
-and hash_arg (t, aq) =
+and hash_arg x
+  : ML (mm H.hash_code)
+  =
+  let (t, aq) = x in
   mix (hash_term t) (hash_option hash_arg_qualifier aq)
 
-and hash_arg_qualifier aq =
+and hash_arg_qualifier aq
+  : ML (mm H.hash_code)
+  =
   mix (hash_bool aq.aqual_implicit)
         (hash_list hash_term aq.aqual_attributes)
 
-and hash_bqual =
-  function
+and hash_bqual bq
+  : ML (mm H.hash_code)
+  =
+  match bq with
   | Implicit true -> of_int 419
   | Implicit false -> of_int 421
   | Meta t -> mix (of_int 431) (hash_term t)
   | Equality -> of_int 433
 
-and hash_uvar (u, _) = of_int (UU.uvar_id u.ctx_uvar_head)
+and hash_uvar x : ML (mm H.hash_code) = let (u, _) = x in of_int (UU.uvar_id u.ctx_uvar_head)
 
-and hash_universe_uvar u = of_int (UU.univ_uvar_id u)
+and hash_universe_uvar u : ML (mm H.hash_code) = of_int (UU.univ_uvar_id u)
 
-and hash_ascription (a, to, b) =
+and hash_ascription x
+  : ML (mm H.hash_code)
+  =
+  let (a, to, b) = x in
   mix
     (match a with
     | Inl t -> hash_term t
     | Inr c -> hash_comp c)
     (hash_option hash_term to)
 
-and hash_bool b =
+and hash_bool b
+  : ML (mm H.hash_code)
+  =
   if b then of_int 307
   else of_int 311
 
-and hash_constant =
-  function
+and hash_constant c
+  : ML (mm H.hash_code)
+  =
+  match c with
   | Const_effect -> of_int 283
   | Const_unit -> of_int 293
   | Const_bool b -> hash_bool b
@@ -252,7 +279,10 @@ and hash_constant =
   | Const_reify _ -> of_int 367
   | Const_reflect l -> mix (of_int 373) (hash_lid l)
 
-and hash_sw (s, w) =
+and hash_sw x
+  : ML (mm H.hash_code)
+  =
+  let (s, w) = x in
   mix
   (match s with
    | Unsigned -> of_int 547
@@ -264,20 +294,26 @@ and hash_sw (s, w) =
    | Int64 -> of_int 577
    | Sizet -> of_int 583)
 
-and hash_ident i = of_string (Ident.string_of_id i)
-and hash_lid l = of_string (Ident.string_of_lid l)
-and hash_lbname l =
+and hash_ident i : ML (mm H.hash_code) = of_string (Ident.string_of_id i)
+and hash_lid l : ML (mm H.hash_code) = of_string (Ident.string_of_lid l)
+and hash_lbname l
+  : ML (mm H.hash_code)
+  =
   match l with
   | Inl bv -> hash_bv bv
   | Inr fv -> hash_fv fv
-and hash_rc rc =
+and hash_rc rc
+  : ML (mm H.hash_code)
+  =
   mix_list_lit
     [ hash_lid rc.residual_effect;
       hash_option hash_term rc.residual_typ;
       hash_list hash_flag rc.residual_flags ]
 
-and hash_flag =
-  function
+and hash_flag f
+  : ML (mm H.hash_code)
+  =
+  match f with
   | TOTAL -> of_int 947
   | MLEFFECT -> of_int 953
   | LEMMA -> of_int 967
@@ -290,7 +326,9 @@ and hash_flag =
   | DECREASES (Decreases_lex ts) -> mix (of_int 1013) (hash_list hash_term ts)
   | DECREASES (Decreases_wf (t0, t1)) -> mix (of_int 2341) (hash_list hash_term [t0;t1])
 
-and hash_meta m =
+and hash_meta m
+  : ML (mm H.hash_code)
+  =
   match m with
   | Meta_pattern (ts, args) ->
     mix_list_lit
@@ -322,7 +360,9 @@ and hash_meta m =
        hash_lid m1;
        hash_term t]
 
-and hash_meta_source_info m =
+and hash_meta_source_info m
+  : ML (mm H.hash_code)
+  =
    match m with
    | Sequence -> of_int 1049
    | Primop -> of_int 1051
@@ -330,35 +370,53 @@ and hash_meta_source_info m =
    | Meta_smt_pat -> of_int 1063
    | Machine_integer sw -> mix (of_int 1069) (hash_sw sw)
 
-and hash_lazyinfo li = of_int 0 //no meaningful way to hash the blob
+and hash_lazyinfo li : ML (mm H.hash_code) = of_int 0 //no meaningful way to hash the blob
 
-and hash_quoteinfo qi =
+and hash_quoteinfo qi
+  : ML (mm H.hash_code)
+  =
   mix
     (hash_bool (qi.qkind = Quote_static))
     (hash_list hash_term (snd qi.antiquotations))
 
 ////////////////////////////////////////////////////////////////////////////////
-let rec equal_list f l1 l2 =
-  match l1, l2 with
-  | [], [] -> true
-  | h1::t1, h2::t2 -> f h1 h2 && equal_list f t1 t2
-  | _ -> false
+(* ML-compatible boolean conjunction. Unlike &&, this does not require
+   its arguments to be pure/ghost. Both arguments are eagerly evaluated. *)
+private let ml_and (a:bool) (b:bool) : bool = if a then b else false
 
-let equal_opt f o1 o2 =
-  match o1, o2 with
-  | None, None -> true
-  | Some a, Some b -> f a b
-  | _ -> false
+let rec equal_list (f:'a -> 'a -> ML bool) (l1 l2:list 'a)
+  : ML bool
+  = match l1, l2 with
+    | [], [] -> true
+    | h1::t1, h2::t2 -> ml_and (f h1 h2) (equal_list f t1 t2)
+    | _ -> false
 
-let equal_pair f g (x1, y1) (x2, y2) = f x1 x2 && g y1 y2
+let equal_opt (f:'a -> 'a -> ML bool) (o1 o2:option 'a)
+  : ML bool
+  = match o1, o2 with
+    | None, None -> true
+    | Some a, Some b -> f a b
+    | _ -> false
+
+let equal_pair (f:'a -> 'a -> ML bool) (g:'b -> 'b -> ML bool) (x1:('a & 'b)) (x2:('a & 'b))
+  : ML bool
+  = ml_and (f (fst x1) (fst x2)) (g (snd x1) (snd x2))
 
 let equal_poly x y = x=y
 
-let ext_hash_term (t:term) = fst (hash_term t true)
-let ext_hash_term_no_memo (t:term) = fst (hash_term t false)
+let ext_hash_term (t:term)
+  : ML H.hash_code
+  = let r = hash_term t in
+    let (h, _) = r true in
+    h
+let ext_hash_term_no_memo (t:term)
+  : ML H.hash_code
+  = let r = hash_term t in
+    let (h, _) = r false in
+    h
 
 let rec equal_term (t1 t2:term)
-  : bool
+  : ML bool
   = if physical_equality t1 t2 then true else
     if physical_equality t1.n t2.n then true else
     if ext_hash_term t1 <> ext_hash_term t2 then false else
@@ -367,112 +425,134 @@ let rec equal_term (t1 t2:term)
     | Tm_name x, Tm_name y -> x.index = y.index
     | Tm_fvar f, Tm_fvar g -> equal_fv f g
     | Tm_uinst (t1, u1), Tm_uinst (t2, u2) ->
-      equal_term t1 t2 &&
-      equal_list equal_universe u1 u2
+      ml_and (equal_term t1 t2)
+             (equal_list equal_universe u1 u2)
     | Tm_constant c1, Tm_constant c2 -> equal_constant c1 c2
     | Tm_type u1, Tm_type u2 -> equal_universe u1 u2
     | Tm_abs {bs=bs1; body=t1; rc_opt=rc1}, Tm_abs {bs=bs2; body=t2; rc_opt=rc2} ->
-      equal_list equal_binder bs1 bs2 &&
-      equal_term t1 t2 &&
-      equal_opt equal_rc rc1 rc2
+      ml_and (equal_list equal_binder bs1 bs2)
+      (ml_and (equal_term t1 t2)
+              (equal_opt equal_rc rc1 rc2))
     | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
-      equal_list equal_binder bs1 bs2 &&
-      equal_comp c1 c2
+      ml_and (equal_list equal_binder bs1 bs2)
+             (equal_comp c1 c2)
     | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->
-      equal_bv b1 b2 &&
-      equal_term t1 t2
+      ml_and (equal_bv b1 b2)
+             (equal_term t1 t2)
     | Tm_app _, Tm_app _ ->
       let hd1, args1 = FStarC.Syntax.Util.head_and_args_full t1 in
       let hd2, args2 = FStarC.Syntax.Util.head_and_args_full t2 in
-      equal_term hd1 hd2 &&
-      equal_list equal_arg args1 args2
+      ml_and (equal_term hd1 hd2)
+             (equal_list equal_arg args1 args2)
     | Tm_match {scrutinee=t1; ret_opt=asc_opt1; brs=bs1; rc_opt=ropt1},
       Tm_match {scrutinee=t2; ret_opt=asc_opt2; brs=bs2; rc_opt=ropt2} ->
-      equal_term t1 t2 &&
-      equal_opt equal_match_returns asc_opt1 asc_opt2 &&
-      equal_list equal_branch bs1 bs2 &&
-      equal_opt equal_rc ropt1 ropt2
+      ml_and (equal_term t1 t2)
+      (ml_and (equal_opt equal_match_returns asc_opt1 asc_opt2)
+      (ml_and (equal_list equal_branch bs1 bs2)
+              (equal_opt equal_rc ropt1 ropt2)))
     | Tm_ascribed {tm=t1; asc=a1; eff_opt=l1},
       Tm_ascribed {tm=t2; asc=a2; eff_opt=l2} ->
-      equal_term t1 t2 &&
-      equal_ascription a1 a2 &&
-      equal_opt Ident.lid_equals l1 l2
+      ml_and (equal_term t1 t2)
+      (ml_and (equal_ascription a1 a2)
+              (equal_opt Ident.lid_equals l1 l2))
     | Tm_let {lbs=(r1, lbs1); body=t1}, Tm_let {lbs=(r2, lbs2); body=t2} ->
-      r1 = r2 &&
-      equal_list equal_letbinding lbs1 lbs2 &&
-      equal_term t1 t2
+      ml_and (r1 = r2)
+      (ml_and (equal_list equal_letbinding lbs1 lbs2)
+              (equal_term t1 t2))
     | Tm_uvar u1, Tm_uvar u2 ->
       equal_uvar u1 u2
     | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
-      equal_term t1 t2 &&
-      equal_meta m1 m2
+      ml_and (equal_term t1 t2)
+             (equal_meta m1 m2)
     | Tm_lazy l1, Tm_lazy l2 ->
       equal_lazyinfo l1 l2
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      equal_term t1 t2 &&
-      equal_quoteinfo q1 q2
+      ml_and (equal_term t1 t2)
+             (equal_quoteinfo q1 q2)
     | Tm_unknown, Tm_unknown ->
       true
     | _ -> false
 
-and equal_comp c1 c2 =
+and equal_comp c1 c2
+  : ML bool
+  =
   if physical_equality c1 c2 then true else
   match c1.n, c2.n with
   | Total t1, Total t2
   | GTotal t1, GTotal t2 ->
     equal_term t1 t2
   | Comp ct1, Comp ct2 ->
-    Ident.lid_equals ct1.effect_name ct2.effect_name &&
-    equal_list equal_universe ct1.comp_univs ct2.comp_univs &&
-    equal_term ct1.result_typ ct2.result_typ &&
-    equal_list equal_arg ct1.effect_args ct2.effect_args &&
-    equal_list equal_flag ct1.flags ct2.flags
+    ml_and (Ident.lid_equals ct1.effect_name ct2.effect_name)
+    (ml_and (equal_list equal_universe ct1.comp_univs ct2.comp_univs)
+    (ml_and (equal_term ct1.result_typ ct2.result_typ)
+    (ml_and (equal_list equal_arg ct1.effect_args ct2.effect_args)
+            (equal_list equal_flag ct1.flags ct2.flags))))
   | _ -> false
 
-and equal_binder b1 b2 =
+and equal_binder b1 b2
+  : ML bool
+  =
   if physical_equality b1 b2 then true else
-  equal_bv b1.binder_bv b2.binder_bv &&
-  equal_bqual b1.binder_qual b2.binder_qual &&
-  equal_list equal_term b1.binder_attrs b2.binder_attrs
+  ml_and (equal_bv b1.binder_bv b2.binder_bv)
+  (ml_and (equal_bqual b1.binder_qual b2.binder_qual)
+          (equal_list equal_term b1.binder_attrs b2.binder_attrs))
 
-and equal_match_returns (b1, asc1) (b2, asc2) =
-  equal_binder b1 b2 &&
-  equal_ascription asc1 asc2
+and equal_match_returns x1 x2
+  : ML bool
+  =
+  let (b1, asc1) = x1 in
+  let (b2, asc2) = x2 in
+  ml_and (equal_binder b1 b2)
+         (equal_ascription asc1 asc2)
 
-and equal_ascription x1 x2 =
+and equal_ascription x1 x2
+  : ML bool
+  =
   if physical_equality x1 x2 then true else
   let a1, t1, b1 = x1 in
   let a2, t2, b2 = x2 in
-  (match a1, a2 with
-   | Inl t1, Inl t2 -> equal_term t1 t2
-   | Inr c1, Inr c2 -> equal_comp c1 c2
-   | _ -> false) &&
-  equal_opt equal_term t1 t2 &&
-  b1 = b2
+  ml_and (match a1, a2 with
+          | Inl t1, Inl t2 -> equal_term t1 t2
+          | Inr c1, Inr c2 -> equal_comp c1 c2
+          | _ -> false)
+  (ml_and (equal_opt equal_term t1 t2)
+          (b1 = b2))
 
-and equal_letbinding l1 l2 =
+and equal_letbinding l1 l2
+  : ML bool
+  =
   if physical_equality l1 l2 then true else
-  equal_lbname l1.lbname l2.lbname &&
-  equal_list Ident.ident_equals l1.lbunivs l2.lbunivs &&
-  equal_term l1.lbtyp l2.lbtyp &&
-  Ident.lid_equals l1.lbeff l2.lbeff &&
-  equal_term l1.lbdef l2.lbdef &&
-  equal_list equal_term l1.lbattrs l2.lbattrs
+  ml_and (equal_lbname l1.lbname l2.lbname)
+  (ml_and (equal_list Ident.ident_equals l1.lbunivs l2.lbunivs)
+  (ml_and (equal_term l1.lbtyp l2.lbtyp)
+  (ml_and (Ident.lid_equals l1.lbeff l2.lbeff)
+  (ml_and (equal_term l1.lbdef l2.lbdef)
+          (equal_list equal_term l1.lbattrs l2.lbattrs)))))
 
-and equal_uvar (u1, (s1, _)) (u2, (s2, _)) =
-  UU.equiv u1.ctx_uvar_head u2.ctx_uvar_head &&
-  equal_list (equal_list equal_subst_elt) s1 s2
+and equal_uvar x1 x2
+  : ML bool
+  =
+  let (u1, (s1, _)) = x1 in
+  let (u2, (s2, _)) = x2 in
+  ml_and (UU.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
+         (equal_list (equal_list equal_subst_elt) s1 s2)
 
-and equal_bv b1 b2 =
+and equal_bv b1 b2
+  : ML bool
+  =
   if physical_equality b1 b2 then true else
-  Ident.ident_equals b1.ppname b2.ppname &&
-  equal_term b1.sort b2.sort
+  ml_and (Ident.ident_equals b1.ppname b2.ppname)
+         (equal_term b1.sort b2.sort)
 
-and equal_fv f1 f2 =
+and equal_fv f1 f2
+  : ML bool
+  =
   if physical_equality f1 f2 then true else
   Ident.lid_equals f1.fv_name f2.fv_name
 
-and equal_universe u1 u2 =
+and equal_universe u1 u2
+  : ML bool
+  =
   if physical_equality u1 u2 then true else
   match (SS.compress_univ u1), (SS.compress_univ u2) with
   | U_zero, U_zero -> true
@@ -484,13 +564,15 @@ and equal_universe u1 u2 =
   | U_unknown, U_unknown -> true
   | _ -> false
 
-and equal_constant c1 c2 =
+and equal_constant c1 c2
+  : ML bool
+  =
   if physical_equality c1 c2 then true else
   match c1, c2 with
   | Const_effect, Const_effect
   | Const_unit, Const_unit -> true
   | Const_bool b1, Const_bool b2 -> b1 = b2
-  | Const_int (s1, o1), Const_int(s2, o2) -> s1=s2 && o1=o2
+  | Const_int (s1, o1), Const_int(s2, o2) -> ml_and (s1=s2) (o1=o2)
   | Const_char c1, Const_char c2 -> c1=c2
   | Const_real s1, Const_real s2 -> s1=s2
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
@@ -501,123 +583,153 @@ and equal_constant c1 c2 =
   | Const_reflect l1, Const_reflect l2 -> Ident.lid_equals l1 l2
   | _ -> false
 
-and equal_arg arg1 arg2 =
+and equal_arg arg1 arg2
+  : ML bool
+  =
   if physical_equality arg1 arg2 then true else
   let t1, a1 = arg1 in
   let t2, a2 = arg2 in
-  equal_term t1 t2 &&
-  equal_opt equal_arg_qualifier a1 a2
+  ml_and (equal_term t1 t2)
+         (equal_opt equal_arg_qualifier a1 a2)
 
-and equal_bqual b1 b2 =
+and equal_bqual b1 b2
+  : ML bool
+  =
   equal_opt equal_binder_qualifier b1 b2
 
-and equal_binder_qualifier b1 b2 =
+and equal_binder_qualifier b1 b2
+  : ML bool
+  =
   match b1, b2 with
   | Implicit b1, Implicit b2 -> b1 = b2
   | Equality, Equality -> true
   | Meta t1, Meta t2 -> equal_term t1 t2
   | _ -> false
 
-and equal_branch (p1, w1, t1) (p2, w2, t2) =
-  equal_pat p1 p2 &&
-  equal_opt equal_term w1 w2 &&
-  equal_term t1 t2
+and equal_branch x1 x2
+  : ML bool
+  =
+  let (p1, w1, t1) = x1 in
+  let (p2, w2, t2) = x2 in
+  ml_and (equal_pat p1 p2)
+  (ml_and (equal_opt equal_term w1 w2)
+          (equal_term t1 t2))
 
-and equal_pat p1 p2 =
+and equal_pat p1 p2
+  : ML bool
+  =
   if physical_equality p1 p2 then true else
   match p1.v, p2.v with
   | Pat_constant c1, Pat_constant c2 ->
     equal_constant c1 c2
   | Pat_cons(fv1, us1, args1), Pat_cons(fv2, us2, args2) ->
-    equal_fv fv1 fv2 &&
-    equal_opt (equal_list equal_universe) us1 us2 &&
-    equal_list (equal_pair equal_pat equal_poly) args1 args2
+    ml_and (equal_fv fv1 fv2)
+    (ml_and (equal_opt (equal_list equal_universe) us1 us2)
+            (equal_list (equal_pair equal_pat equal_poly) args1 args2))
   | Pat_var bv1, Pat_var bv2 ->
     equal_bv bv1 bv2
   | Pat_dot_term t1, Pat_dot_term t2 ->
     equal_opt equal_term t1 t2
   | _ -> false
 
-and equal_meta m1 m2 =
+and equal_meta m1 m2
+  : ML bool
+  =
   match m1, m2 with
   | Meta_pattern (ts1, args1), Meta_pattern (ts2, args2) ->
-    equal_list equal_term ts1 ts2 &&
-    equal_list (equal_list equal_arg) args1 args2
+    ml_and (equal_list equal_term ts1 ts2)
+           (equal_list (equal_list equal_arg) args1 args2)
   | Meta_named l1, Meta_named l2  ->
     Ident.lid_equals l1 l2
   | Meta_labeled (s1, r1, _), Meta_labeled (s2, r2, _) ->
-    s1 = s2 &&
-    Range.compare r1 r2 = 0
+    ml_and (s1 = s2)
+           (Range.compare r1 r2 = 0)
   | Meta_desugared msi1, Meta_desugared msi2 ->
     msi1 = msi2
   | Meta_monadic(m1, t1), Meta_monadic(m2, t2) ->
-    Ident.lid_equals m1 m2 &&
-    equal_term t1 t2
+    ml_and (Ident.lid_equals m1 m2)
+           (equal_term t1 t2)
   | Meta_monadic_lift (m1, n1, t1), Meta_monadic_lift (m2, n2, t2) ->
-    Ident.lid_equals m1 m2 &&
-    Ident.lid_equals n1 n2 &&
-    equal_term t1 t2
+    ml_and (Ident.lid_equals m1 m2)
+    (ml_and (Ident.lid_equals n1 n2)
+            (equal_term t1 t2))
   | _ -> false
 
-and equal_lazyinfo l1 l2 =
+and equal_lazyinfo l1 l2
+  : ML bool
+  =
   (* We cannot really compare the blobs. Just try physical
   equality (first matching kinds). *)
-  l1.lkind = l1.lkind && BU.physical_equality l1.blob l2.blob
+  ml_and (l1.lkind = l1.lkind) (BU.physical_equality l1.blob l2.blob)
 
-and equal_quoteinfo q1 q2 =
-  q1.qkind = q2.qkind &&
-  (fst q1.antiquotations) = (fst q2.antiquotations) &&
-  equal_list equal_term (snd q1.antiquotations) (snd q2.antiquotations)
+and equal_quoteinfo q1 q2
+  : ML bool
+  =
+  ml_and (q1.qkind = q2.qkind)
+  (ml_and ((fst q1.antiquotations) = (fst q2.antiquotations))
+          (equal_list equal_term (snd q1.antiquotations) (snd q2.antiquotations)))
 
-and equal_rc r1 r2 =
-  Ident.lid_equals r1.residual_effect r2.residual_effect &&
-  equal_opt equal_term r1.residual_typ r2.residual_typ &&
-  equal_list equal_flag r1.residual_flags r2.residual_flags
+and equal_rc r1 r2
+  : ML bool
+  =
+  ml_and (Ident.lid_equals r1.residual_effect r2.residual_effect)
+  (ml_and (equal_opt equal_term r1.residual_typ r2.residual_typ)
+          (equal_list equal_flag r1.residual_flags r2.residual_flags))
 
-and equal_flag f1 f2 =
+and equal_flag f1 f2
+  : ML bool
+  =
   match f1, f2 with
   | DECREASES t1, DECREASES t2 ->
     equal_decreases_order t1 t2
 
   | _ -> f1 = f2
 
-and equal_decreases_order d1 d2 =
+and equal_decreases_order d1 d2
+  : ML bool
+  =
   match d1, d2 with
   | Decreases_lex ts1, Decreases_lex ts2 ->
     equal_list equal_term ts1 ts2
 
   | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
-    equal_term t1 t2 &&
-    equal_term t1' t2'
+    ml_and (equal_term t1 t2)
+           (equal_term t1' t2')
   | _ -> false
 
-and equal_arg_qualifier a1 a2 =
-  a1.aqual_implicit = a2.aqual_implicit &&
-  equal_list equal_term a1.aqual_attributes a2.aqual_attributes
+and equal_arg_qualifier a1 a2
+  : ML bool
+  =
+  ml_and (a1.aqual_implicit = a2.aqual_implicit)
+         (equal_list equal_term a1.aqual_attributes a2.aqual_attributes)
 
-and equal_lbname l1 l2 =
+and equal_lbname l1 l2
+  : ML bool
+  =
   match l1, l2 with
   | Inl b1, Inl b2 -> Ident.ident_equals b1.ppname b2.ppname
   | Inr f1, Inr f2 -> Ident.lid_equals f1.fv_name f2.fv_name
   | _ -> false
 
-and equal_subst_elt s1 s2 =
+and equal_subst_elt s1 s2
+  : ML bool
+  =
   match s1, s2 with
   | DB (i1, bv1), DB(i2, bv2)
   | NM (bv1, i1), NM (bv2, i2) ->
-    i1=i2 && equal_bv bv1 bv2
+    ml_and (i1=i2) (equal_bv bv1 bv2)
   | NT (bv1, t1), NT (bv2, t2) ->
-    equal_bv bv1 bv2 &&
-    equal_term t1 t2
+    ml_and (equal_bv bv1 bv2)
+           (equal_term t1 t2)
   | UN (i1, u1), UN (i2, u2) ->
-    i1 = i2 &&
-    equal_universe u1 u2
+    ml_and (i1 = i2)
+           (equal_universe u1 u2)
   | UD (un1, i1), UD (un2, i2) ->
-    i1 = i2 &&
-    Ident.ident_equals un1 un2
+    ml_and (i1 = i2)
+           (Ident.ident_equals un1 un2)
   | DT (i1, t1), DT (i2, t2) ->
-    i1 = i2 &&
-    equal_term t1 t2
+    ml_and (i1 = i2)
+           (equal_term t1 t2)
   | _ -> false
 
 instance hashable_term : hashable term = {
@@ -669,10 +781,10 @@ instance hashable_pragma : hashable pragma = {
           );
 }
 
-let rec hash_sigelt (se:sigelt) : hash_code =
+let rec hash_sigelt (se:sigelt) : ML hash_code =
   hash_sigelt' se.sigel
 
-and hash_sigelt' (se:sigelt') : hash_code =
+and hash_sigelt' (se:sigelt') : ML hash_code =
   match se with
   | Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds; injective_type_params} ->
     hash 0 `H.mix`
@@ -730,8 +842,8 @@ instance deq_term : deq term = {
 
 module H = FStarC.HashMap
 let term_map (a:Type) = H.hashmap term a
-let term_map_empty (#a:Type) : term_map a = H.empty #term #a
-let term_map_add (#a:Type) (t:term) (v:a) (m:term_map a) : term_map a = H.add t v m
-let term_map_lookup (#a:Type) (t:term) (m:term_map a) : option a = H.lookup t m
-let term_map_mem (#a:Type) (t:term) (m:term_map a) : bool = H.mem t m
-let term_map_fold #a #b (f:term -> a -> b -> b) (m:term_map a) (i:b) : b = H.fold f m i
+let term_map_empty (#a:Type) : ML (term_map a) = H.empty #term #a
+let term_map_add (#a:Type) (t:term) (v:a) (m:term_map a) : ML (term_map a) = H.add t v m
+let term_map_lookup (#a:Type) (t:term) (m:term_map a) : ML (option a) = H.lookup t m
+let term_map_mem (#a:Type) (t:term) (m:term_map a) : ML bool = H.mem t m
+let term_map_fold #a #b (f:term -> a -> b -> ML b) (m:term_map a) (i:b) : ML b = H.fold f m i

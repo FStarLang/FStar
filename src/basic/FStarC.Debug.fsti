@@ -19,53 +19,33 @@ module FStarC.Debug
 open FStarC
 open FStarC.Effect
 
-(* State handling for this module. Used by FStarC.Options, which
-is the only module that modifies the debug state. *)
 val saved_state : Type0
-val snapshot () : saved_state
-val restore (s:saved_state) : unit
+val snapshot () : ML saved_state
 
-(* Enable debugging. This will make any() return true, but
-does not enable any particular toggle. *)
-val enable () : unit
+val get_toggle (k : string) : ML (ref bool)
 
-(* Are we doing *any* kind of debugging? *)
-val any () : bool
+val restore (s:saved_state) : ML unit
 
-(* Print a quick message on stdout whenever debug is on. If the string
-is not a constant, put this under an if to thunk it. *)
-val tag (s : string) : unit
+val list_all_toggles () : ML (list string)
 
-(* Obtain the toggle for a given debug key *)
-val get_toggle (k : string) : ref bool
+val any () : ML bool
 
-(* List all registered toggles *)
-val list_all_toggles () : list string
+val tag (s : string) : ML unit
 
-(* Vanilla debug levels. Each level implies the previous lower one. *)
-val low     () : bool
-val medium  () : bool
-val high    () : bool
-val extreme () : bool
+val enable () : ML unit
 
-(* Enable a list of debug toggles. If will also call enable()
-is key is non-empty, and will recognize "Low", "Medium",
-"High", "Extreme" as special and call the corresponding
-set_level_* function.
+val low     () : ML bool
+val medium  () : ML bool
+val high    () : ML bool
+val extreme () : ML bool
 
-If any elemnt of the list starts with '-', then we disable
-that toggle instead. *)
-val enable_toggles (keys : list string) : unit
+val set_level_low     () : ML unit
+val set_level_medium  () : ML unit
+val set_level_high    () : ML unit
+val set_level_extreme () : ML unit
 
-(* Sets the debug level to zero and sets all registered toggles
-to false. any() will return false after this. *)
-val disable_all () : unit
+val enable_toggles (keys : list string) : ML unit
 
-(* Nuclear option: enable ALL debug toggles. *)
-val set_debug_all () : unit
+val disable_all () : ML unit
 
-(* Not used externally at the moment. *)
-val set_level_low     () : unit
-val set_level_medium  () : unit
-val set_level_high    () : unit
-val set_level_extreme () : unit
+val set_debug_all () : ML unit

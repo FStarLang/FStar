@@ -15,7 +15,6 @@
 *)
 module FStarC.TypeChecker.Tc
 open FStarC.Effect
-open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
@@ -24,25 +23,25 @@ val run_postprocess
   (for_extraction : bool)
   (env : env)
   (se : sigelt)
-  : sigelt
+  : ML sigelt
 
-val check_module: env -> modul -> bool -> modul & env
-val load_checked_module: env -> modul -> env
-val load_partial_checked_module: env -> modul -> env
+val snapshot_context: env -> string -> ML ((int & int & solver_depth_t & int) & env)
+val rollback_context: solver_t -> string -> option (int & int & solver_depth_t & int) -> ML env
+val push_context: env -> string -> ML env
+val pop_context: env -> string -> ML env
 
-val pop_context: env -> string -> env
-val push_context: env -> string -> env
-val snapshot_context: env -> string -> ((int & int & solver_depth_t & int) & env)
-val rollback_context: solver_t -> string -> option (int & int & solver_depth_t & int) -> env
-
-val compress_and_norm: env -> typ -> option typ
-val tc_decls: env -> list sigelt -> list sigelt & env
-val tc_partial_modul: env -> modul -> modul & env
-val tc_more_partial_modul: env -> modul -> list sigelt -> modul & list sigelt & env
+val compress_and_norm: env -> typ -> ML (option typ)
+val tc_decls: env -> list sigelt -> ML (list sigelt & env)
+val tc_partial_modul: env -> modul -> ML (modul & env)
+val tc_more_partial_modul: env -> modul -> list sigelt -> ML (modul & list sigelt & env)
 val finish_partial_modul
  (should_pop:bool)
  (loading_from_cache:bool)
  (iface_exists:bool)
  (en:env) 
  (m:modul)
-: (modul & env)
+: ML (modul & env)
+
+val load_checked_module: env -> modul -> ML env
+val load_partial_checked_module: env -> modul -> ML env
+val check_module: env -> modul -> bool -> ML (modul & env)

@@ -5,16 +5,16 @@ open FStarC.Syntax.Syntax
 
 type hashtable 'a
 
-val create (size:int) : hashtable 'a
+val create (size:int) : ML (hashtable 'a)
 
-val insert (key:term) (value:'a) (ht:hashtable 'a) : unit
+val insert (key:term) (value:'a) (ht:hashtable 'a) : ML unit
   
-val lookup (key:term) (ht:hashtable 'a) : option 'a
+val lookup (key:term) (ht:hashtable 'a) : ML (option 'a)
 
-val clear (ht:hashtable 'a) : unit
+val clear (ht:hashtable 'a) : ML unit
 
-val reset_counters (x:hashtable 'a) : unit
+val reset_counters (x:hashtable 'a) : ML unit
 
-val print_stats (x:hashtable 'a) : unit
+val print_stats (x:hashtable 'a) : ML unit
 
-val iter (f: term -> 'a -> unit) (ht: hashtable 'a) : unit
+val iter (f: (term -> 'a -> ML unit)) (ht: hashtable 'a) : ML unit

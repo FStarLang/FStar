@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.SMTEncoding.Encode
+
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -68,8 +69,8 @@ let norm_with_steps steps env t =
       "FStarC.SMTEncoding.Encode.norm"
 
 type prims_t = {
-    mk:lident -> string -> term & int & list decl;
-    is:lident -> bool;
+    mk:lident -> string -> ML (term & int & list decl);
+    is:lident -> ML bool;
 }
 
 (* Only for the definitions of prims below *)
@@ -84,7 +85,7 @@ let prims =
     let asym, a = fresh_fvar module_name "a" Term_sort in
     let xsym, x = fresh_fvar module_name "x" Term_sort in
     let ysym, y = fresh_fvar module_name "y" Term_sort in
-    let quant_with_pre (rel:defn_rel_type) vars precondition body : Range.t -> string -> term & int & list decl = fun rng x ->
+    let quant_with_pre (rel:defn_rel_type) vars precondition body : Range.t -> string -> ML (term & int & list decl) = fun rng x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map fv_sort, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
@@ -138,7 +139,7 @@ let prims =
     let axy = List.map mk_fv [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = List.map mk_fv [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = List.map mk_fv [(xsym, Term_sort)] in
-    let prims = [
+    let prims : list (lident & (Range.t -> string -> ML (term & int & list decl))) = [
         //equality
         (Const.op_Eq,          (quant Eq axy (boxBool <| mkEq(x,y))));
         (Const.op_notEq,       (quant Eq axy (boxBool <| mkNot(mkEq(x,y)))));
@@ -169,14 +170,13 @@ let prims =
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
-    let mk : lident -> string -> term & int & list decl =
+    let mk : lident -> string -> ML (term & int & list decl) =
         fun l v ->
-            prims |>
-            List.find (fun (l', _) -> lid_equals l l') |>
-            Option.map (fun (_, b) -> b (Ident.range_of_lid l) v) |>
-            Option.must in
-    let is : lident -> bool =
-        fun l -> prims |> BU.for_some (fun (l', _) -> lid_equals l l') in
+            match List.find (fun (l', _) -> lid_equals l l') prims with
+            | Some (_, b) -> b (Ident.range_of_lid l) v
+            | None -> failwith "prims mk: not found" in
+    let is : lident -> ML bool =
+        fun l -> BU.for_some (fun (l', _) -> lid_equals l l') prims in
     {mk=mk;
      is=is}
 
@@ -196,7 +196,7 @@ let pretype_axiom term_constr_eq rng env tapp vars =
                          Some "pretyping",
                          (varops.mk_unique (module_name ^ "_pretyping_" ^ (BU.digest_of_string tapp_hash))))
 
-let primitive_type_axioms : env -> lident -> string -> term -> list decl =
+let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
     let xx = mk_fv ("x", Term_sort) in
     let x = mkFreeV xx in
 
@@ -205,12 +205,12 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
 
     let mkForall_fuel env = mkForall_fuel (Ident.string_of_lid (Env.current_module env)) in
 
-    let mk_unit : env -> string -> term -> list decl = fun env nm tt ->
+    let mk_unit : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         [Util.mkAssume(mk_HasType mk_Term_unit tt, Some "unit typing", "unit_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mkEq(x, mk_Term_unit))),  Some "unit inversion", "unit_inversion");] in
-    let mk_bool : env -> string -> term -> list decl = fun env nm tt ->
+    let mk_bool : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = mk_fv ("b", Bool_sort) in
         let b = mkFreeV bb in
@@ -218,7 +218,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                                 ([[Term.boxBool b]], [bb], mk_HasType (Term.boxBool b) tt), Some "bool typing", "bool_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
-    let mk_int : env -> string -> term -> list decl  = fun env nm tt ->
+    let mk_int : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
@@ -238,7 +238,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                                                    mkLT (Term.unboxInt y, Term.unboxInt x)],
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
-    let mk_real : env -> string -> term -> list decl  = fun env nm tt ->
+    let mk_real : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let aa = mk_fv ("a", Sort "Real") in
         let a = mkFreeV aa in
@@ -261,19 +261,19 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                           Some "real inversion",
                           "real_inversion")]
     in
-    let mk_str : env -> string -> term -> list decl  = fun env nm tt ->
+    let mk_str : env -> string -> term -> ML (list decl) = fun env nm tt ->
         let typing_pred = mk_HasType x tt in
         let bb = mk_fv ("b", String_sort) in
         let b = mkFreeV bb in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxString b]], [bb], mk_HasType (Term.boxString b) tt), Some "string typing", "string_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxStringFun) x)),  Some "string inversion", "string_inversion")] in
-    let mk_true_interp : env -> string -> term -> list decl = fun env nm true_tm ->
+    let mk_true_interp : env -> string -> term -> ML (list decl) = fun env nm true_tm ->
         let valid = mkApp("Valid", [true_tm]) in
         [Util.mkAssume(valid, Some "True interpretation", "true_interp")] in
-    let mk_false_interp : env -> string -> term -> list decl = fun env nm false_tm ->
+    let mk_false_interp : env -> string -> term -> ML (list decl) = fun env nm false_tm ->
         let valid = mkApp("Valid", [false_tm]) in
         [Util.mkAssume(mkIff(mkFalse, valid), Some "False interpretation", "false_interp")] in
-    let mk_and_interp : env -> string -> term -> list decl = fun env conj _ ->
+    let mk_and_interp : env -> string -> term -> ML (list decl) = fun env conj _ ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -283,7 +283,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_and_a_b]], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation", "l_and-interp")] in
-    let mk_or_interp : env -> string -> term -> list decl = fun env disj _ ->
+    let mk_or_interp : env -> string -> term -> ML (list decl) = fun env disj _ ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -293,7 +293,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
-    let mk_eq2_interp : env -> string -> term -> list decl = fun env eq2 tt ->
+    let mk_eq2_interp : env -> string -> term -> ML (list decl) = fun env eq2 tt ->
         let uu = mk_fv ("u", univ_sort) in
         let aa = mk_fv ("a", Term_sort) in
         let xx = mk_fv ("x", Term_sort) in
@@ -309,7 +309,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                        Some "Eq2 interpretation",
                        "eq2-interp")]
     in
-    let mk_eq3_interp : env -> string -> term -> list decl = fun env eq3 tt ->
+    let mk_eq3_interp : env -> string -> term -> ML (list decl) = fun env eq3 tt ->
         let uu = mk_fv ("u", univ_sort) in
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
@@ -326,7 +326,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                        Some "Eq3 interpretation",
                        "eq3-interp")]
     in
-    let mk_imp_interp : env -> string -> term -> list decl = fun env imp tt ->
+    let mk_imp_interp : env -> string -> term -> ML (list decl) = fun env imp tt ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -336,7 +336,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_imp_a_b]], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation", "l_imp-interp")] in
-    let mk_iff_interp : env -> string -> term -> list decl = fun env iff tt ->
+    let mk_iff_interp : env -> string -> term -> ML (list decl) = fun env iff tt ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
         let a = mkFreeV aa in
@@ -346,17 +346,17 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let valid_a = mkApp("Valid", [a]) in
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_iff_a_b]], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation", "l_iff-interp")] in
-    let mk_not_interp : env -> string -> term -> list decl = fun env l_not tt ->
+    let mk_not_interp : env -> string -> term -> ML (list decl) = fun env l_not tt ->
         let aa = mk_fv ("a", Term_sort) in
         let a = mkFreeV aa in
         let l_not_a = mkApp(l_not, [a]) in
         let valid = mkApp("Valid", [l_not_a]) in
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
-   let mk_range_interp : env -> string -> term -> list decl = fun env range tt ->
+   let mk_range_interp : env -> string -> term -> ML (list decl) = fun env range tt ->
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
-   let mk_inversion_axiom : env -> string -> term -> list decl = fun env inversion tt ->
+   let mk_inversion_axiom : env -> string -> term -> ML (list decl) = fun env inversion tt ->
        // (assert (forall ((u Universe) (t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion u t))
        //                        (forall ((x Term))
@@ -379,7 +379,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         in
         [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [uu;tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
    in
-   let mk_with_type_axiom : env -> string -> term -> list decl = fun env with_type tt ->
+   let mk_with_type_axiom : env -> string -> term -> ML (list decl) = fun env with_type tt ->
         (* (assert (forall ((u Universe) (t Term) (e Term))
                            (! (and (= (Prims.with_type u t e)
                                        e)
@@ -402,7 +402,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
                        Some "with_type primitive axiom",
                        "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
    in
-   let prims =  [(Const.unit_lid,   mk_unit);
+   let prims : list (lident & (env -> string -> term -> ML (list decl))) =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.real_lid,   mk_real);
@@ -449,7 +449,7 @@ let encode_smt_lemma env fv t =
 
 let close_universes rng univ_fvs pat body = mkForall rng ([[pat]], univ_fvs, body)
 
-let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
+let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_t) =
     let lid = fv.fv_name in
     let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
     let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
@@ -665,7 +665,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals :decls_t & env_t =
               g, env
 
 
-let declare_top_level_let env x us t t_norm : fvar_binding & decls_t & env_t =
+let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t) =
   match lookup_fvar_binding env x.fv_name with
   (* Need to introduce a new name decl *)
   | None ->
@@ -715,7 +715,7 @@ exception Let_rec_unencodeable
 let copy_env (en:env_t) = { en with global_cache = SMap.copy en.global_cache}
 
 let encode_top_level_let :
-    env_t -> (bool & list letbinding) -> list qualifier -> decls_t & env_t =
+    env_t -> (bool & list letbinding) -> list qualifier -> ML (decls_t & env_t) =
     fun env (is_rec, bindings) quals ->
 
 
@@ -740,7 +740,7 @@ let encode_top_level_let :
     in
 
     let destruct_bound_function t e
-      : (S.binders    //arguments of the (possibly reified) lambda abstraction
+      : ML (S.binders    //arguments of the (possibly reified) lambda abstraction
        & S.term       //body of the (possibly reified) lambda abstraction
        & S.comp)      //result comp
 //       * bool         //if set, we should generate a curried application of f
@@ -754,7 +754,7 @@ let encode_top_level_let :
           SS.subst_comp subst comp
       in
 
-      let rec arrow_formals_comp_norm norm t =
+      let rec arrow_formals_comp_norm norm t : ML (S.binders & S.comp) =
         //NS: tried using U.arrow_formals_comp here
         //    but that flattens Tot effects quite aggressively
         let t = U.unascribe <| SS.compress t in
@@ -1169,7 +1169,7 @@ let encode_top_level_let :
       [decl] |> mk_decls_trivial, env
 
 let encode_sig_inductive (env:env_t) (se:sigelt)
-: decls_t & env_t
+: ML (decls_t & env_t)
 = let Sig_inductive_typ
         { lid=t; us=universe_names; params=tps;
           t=k; ds=datas; injective_type_params } = se.sigel in 
@@ -1311,7 +1311,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   (decls |> mk_decls_trivial)@binder_decls@aux, env
 
 let encode_datacon (env:env_t) (se:sigelt)
-: decls_t & env_t
+: ML (decls_t & env_t)
 = let Sig_datacon {lid=d; us; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
   let quals = se.sigquals in
   let us, t = SS.open_univ_vars us t in
@@ -1475,7 +1475,7 @@ let encode_datacon (env:env_t) (se:sigelt)
           let codomain_prec_l, cod_decls =
             List.fold_left2
               (fun (codomain_prec_l, cod_decls) formal var ->
-                  let rec binder_and_codomain_type t =
+                  let rec binder_and_codomain_type t : ML (option (S.binders & S.comp)) =
                       let t = U.unrefine t in
                       match (SS.compress t).n with
                       | Tm_arrow _ ->
@@ -1647,7 +1647,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   (datacons |> mk_decls_trivial) @ g, env
 
 
-let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
+let rec encode_sigelt (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
     let nm = Print.sigelt_to_string_short se in
     let g, env = Errors.with_ctx (Format.fmt1 "While encoding top-level declaration `%s`"
                                              (Print.sigelt_to_string_short se))
@@ -1667,7 +1667,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
                 @([Caption (Format.fmt1 "</end encoding %s>" nm); EmptyLine] |> mk_decls_trivial) in
     g, env
 
-and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
+and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
     if !dbg_SMTEncoding
     then (Format.print1 "@@@Encoding sigelt %s\n" (show se));
 
@@ -1953,7 +1953,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
       in
       (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t) =
+let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & env_t) =
      (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing.
 
                Consider:
@@ -2079,7 +2079,7 @@ let place_decl_in_fact_dbs (env:env_t) (fact_db_ids:list fact_db_id) (d:decl) : 
       Assume ({a with assumption_fact_ids=fact_db_ids})
     | _ -> d
 
-let place_decl_elt_in_fact_dbs (env:env_t) (fact_db_ids:list fact_db_id) (elt:decls_elt) :decls_elt =
+let place_decl_elt_in_fact_dbs (env:env_t) (fact_db_ids:list fact_db_id) (elt:decls_elt) : ML decls_elt =
   { elt with decls = elt.decls |> List.map (place_decl_in_fact_dbs env fact_db_ids) }
 
 let fact_dbs_for_lid (env:env_t) (lid:Ident.lid) =
@@ -2103,7 +2103,7 @@ let encode_top_level_facts (env:env_t) (se:sigelt) =
  * AR: Recover hashconsing of decls -- both within a module and across modules
  *     Using and updating env.global_cache
  *)
-let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
+let recover_caching_and_update_env (env:env_t) (decls:decls_t) : ML decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
     else (
@@ -2129,7 +2129,7 @@ let encode_sig tcenv se =
    set_env env;
    Z3.giveZ3 (caption (decls |> recover_caching_and_update_env env |> decls_list_of))
 
-let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit =
+let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) : ML unit =
   let caption decls =
     if Options.log_queries()
     then let msg = "Externals for " ^ name in
@@ -2145,8 +2145,7 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
 }
 
 let encode_modul tcenv modul =
-  if Options.lax() && Options.ml_ish() then [], []
-  else begin
+  begin
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
@@ -2209,9 +2208,7 @@ let encode_modul tcenv modul =
   ) end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
-  if Options.lax () && Options.ml_ish () then ()
-  else
-    let tcenv = Env.set_current_module tcenv tcmod.name in
+  let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = Format.fmt2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Debug.medium ()
     then Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> show);
@@ -2225,16 +2222,16 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
 
 open FStarC.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
-  : list decl  //prelude, translation of  tcenv
+  : ML (list decl  //prelude, translation of  tcenv
   & list ErrorReporting.label //labels in the query
   & decl        //the query itself
-  & list decl  //suffix, evaluating labels in the model, etc.
+  & list decl)  //suffix, evaluating labels in the model, etc.
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
     let q, bindings =
-        let rec aux bindings = match bindings with
+        let rec aux bindings : ML _ = match bindings with
             | S.Binding_var x::rest ->
                 let out, rest = aux rest in
                 let t =

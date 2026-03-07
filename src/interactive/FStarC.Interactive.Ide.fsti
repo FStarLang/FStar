@@ -18,4 +18,4 @@ module FStarC.Interactive.Ide
 
 open FStarC.Effect
 
-val interactive_mode (filename:string): unit
+val interactive_mode (filename:string): ML unit

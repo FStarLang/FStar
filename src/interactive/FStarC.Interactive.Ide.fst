@@ -23,11 +23,7 @@ open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper { 
-  js_bool, js_int, js_str, js_list, js_assoc, try_assoc,
-  write_json, json_debug,
-  UnexpectedJsonType, InvalidQuery,
-}
+open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Interactive.Ide.Types
@@ -53,7 +49,7 @@ module QH = FStarC.Interactive.QueryHelper
 // NOTE! This is not FStarC.Errors.json_of_issue
 let json_of_issue = FStarC.Interactive.Ide.Types.json_of_issue
 
-let with_captured_errors' (env : env_t) sigint_handler f =
+let with_captured_errors' (env : env_t) sigint_handler (f : env_t -> ML (option 'a)) =
   try
     Util.with_sigint_handler sigint_handler (fun _ -> f env)
   with
@@ -77,7 +73,7 @@ let with_captured_errors' (env : env_t) sigint_handler f =
   | Stop ->
     None
 
-let with_captured_errors env sigint_handler f =
+let with_captured_errors env sigint_handler (f : env_t -> ML (option 'a)) =
   if Options.trace_error () then f env
   else with_captured_errors' env sigint_handler f
   
@@ -106,14 +102,16 @@ let run_repl_transaction st push_kind must_rollback task =
   let st = push_repl "run_repl_transaction" push_kind task st in
   let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking …
 
-  let check_success () =
-    get_err_count () = 0 && not must_rollback in
+  let check_success () : ML bool =
+    if get_err_count () = 0 then not must_rollback else false in
 
   // Run the task (and capture errors)
   let curmod, env, success, lds =
     match with_captured_errors env Util.sigint_raise
               (fun env -> Some <| run_repl_task st.repl_fname st.repl_curmod env task st.repl_lang) with
-    | Some (curmod, env, lds) when check_success () -> curmod, env, true, lds
+    | Some (curmod, env, lds) ->
+      if check_success () then curmod, env, true, lds
+      else st.repl_curmod, env, false, []
     | _ -> st.repl_curmod, env, false, [] in
 
   let env, name_events = finish_name_tracking env in //  …end name tracking
@@ -141,7 +139,7 @@ This function is stateful: it uses ``push_repl`` and ``pop_repl``.
 
 `progress_callback` is called once per task, right before the task is run. **)
 let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
-                             (progress_callback: repl_task -> unit) =
+                             (progress_callback: repl_task -> ML unit) =
   let debug verb task =
     if !dbg then
       Format.print2 "%s %s" verb (string_of_repl_task task) in
@@ -149,7 +147,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
   (* Run as many ``pop_repl`` as there are entries in the input stack.
   Elements of the input stack are expected to match the topmost ones of
   ``!repl_stack`` *)
-  let rec revert_many st = function
+  let rec revert_many (st:repl_state) (l:list repl_stack_entry_t) : ML repl_state = match l with
     | [] -> st
     | (_id, (task, _st')) :: entries ->
       //NS: this assertion has been failing for a while in debug mode; not sure why
@@ -158,11 +156,13 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       let st' = pop_repl "run_repl_ls_transactions" st in
       let dep_graph = FStarC.TypeChecker.Env.dep_graph st.repl_env in
       let st' = {st' with repl_env=FStarC.TypeChecker.Env.set_dep_graph st'.repl_env dep_graph} in
-      revert_many st' entries in
+      revert_many st' entries
+  in
 
   let rec aux (st: repl_state)
               (tasks: list repl_task)
-              (previous: list repl_stack_entry_t) =
+              (previous: list repl_stack_entry_t)
+              : ML (either repl_state repl_state) =
     match tasks, previous with
     // All done: return the final state.
     | [], [] ->
@@ -181,10 +181,16 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       else Inr st
 
     // We've already run ``task`` previously, and no update is needed: skip.
-    | task :: tasks, prev :: previous
-        when fst (snd prev) = update_task_timestamps task ->
-      debug "Skipping" task;
-      aux st tasks previous
+    | task :: tasks, prev :: previous ->
+      if fst (snd prev) = update_task_timestamps task
+      then begin
+        debug "Skipping" task;
+        aux st tasks previous
+      end
+      else
+        // We have a timestamp mismatch or a new dependency:
+        // revert now-obsolete dependencies and resume loading.
+        aux (revert_many st (prev :: previous)) (task :: tasks) []
 
     // We have a timestamp mismatch or a new dependency:
     // revert now-obsolete dependencies and resume loading.
@@ -284,13 +290,13 @@ let deserialize_interactive_query st js_query =
   | InvalidQuery msg -> { qid = "?"; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure "?" expected got
 
-let parse_interactive_query st query_str : query =
+let parse_interactive_query st query_str : ML query =
   match json_of_string query_str with
   | None -> { qid = "?"; qq = ProtocolViolation "Json parsing failed." }
   | Some request -> deserialize_interactive_query st request
 
-let buffer_input_queries (st:repl_state) : repl_state =
-  let rec aux qs (st:repl_state) : repl_state =
+let buffer_input_queries (st:repl_state) : ML repl_state =
+  let rec aux qs (st:repl_state) : ML repl_state =
     let done qs st =
         {st with repl_buffered_input_queries =
                  st.repl_buffered_input_queries @ List.rev qs}
@@ -313,7 +319,7 @@ let buffer_input_queries (st:repl_state) : repl_state =
   in
   aux [] st
 
-let read_interactive_query (st:repl_state) : option (query & repl_state) =
+let read_interactive_query (st:repl_state) : ML (option (query & repl_state)) =
     match st.repl_buffered_input_queries with
     | [] -> (
       match Util.read_line st.repl_stdin with
@@ -397,7 +403,7 @@ let snippets_of_fstar_option name typ =
     | Options.WithSideEffect (_, elem_spec) -> arg_snippets_of_type elem_spec in
   List.map (mk_snippet name) (arg_snippets_of_type typ)
 
-let rec json_of_fstar_option_value = function
+let rec json_of_fstar_option_value (v:Options.option_val) : ML json = match v with
   | Options.Bool b -> JsonBool b
   | Options.String s
   | Options.Path s -> JsonStr s
@@ -437,7 +443,7 @@ let json_of_message level js_contents =
              ("level", JsonStr level);
              ("contents", js_contents)]
 
-let forward_message callback level contents =
+let forward_message (callback : json -> ML unit) level contents =
   callback (json_of_message level contents)
 
 let json_of_hello =
@@ -640,8 +646,8 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FullBufferFinished ->
       write_progress (Some "full-buffer-finished") []
 
-let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool & SS.modul =
-  let rec filter decls acc =
+let trunc_modul (m: SS.modul) (pred : SS.sigelt -> ML bool) : ML (bool & SS.modul) =
+  let rec filter decls acc : ML (bool & list SS.sigelt) =
     match decls with
     | [] -> false, List.rev acc
     | d::ds ->
@@ -672,7 +678,7 @@ let load_partial_checked_file (env: TcEnv.env) (filename: string) (until_lid: st
   // TODO: opens / includes
   env, m
 
-let run_load_partial_file st decl_name: (query_status & json) & either repl_state int =
+let run_load_partial_file st decl_name: ML ((query_status & json) & either repl_state int) =
   match load_deps st with
   | Inr st ->
     let errors = List.map rephrase_dependency_error (collect_errors ()) in
@@ -684,9 +690,16 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
     let env = st.repl_env in
     match with_captured_errors env Util.sigint_raise
               (fun env -> Some <| load_partial_checked_file env st.repl_fname decl_name) with
-    | Some (env, curmod) when get_err_count () = 0 ->
-      let st = { st with repl_curmod = Some curmod; repl_env = env } in
-      ((QueryOK, JsonList []), Inl st)
+    | Some (env, curmod) ->
+      if get_err_count () = 0
+      then
+        let st = { st with repl_curmod = Some curmod; repl_env = env } in
+        ((QueryOK, JsonList []), Inl st)
+      else
+        let json_error_list = collect_errors () |> List.map json_of_issue in
+        let json_errors = JsonList json_error_list in
+        let st = pop_repl "load partial file" st in
+        (QueryNOK, json_errors), Inl st
     | _ ->
       let json_error_list = collect_errors () |> List.map json_of_issue in
       let json_errors = JsonList json_error_list in
@@ -699,7 +712,7 @@ let json_errors () =
   js_errors 
 
 let run_push_without_deps st query
-  : (query_status & json) & either repl_state int =
+  : ML ((query_status & json) & either repl_state int) =
   let set_flychecking_flag st flag =
     { st with repl_env = { st.repl_env with flychecking = flag } } in
 
@@ -769,7 +782,9 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  if not (FStarC.Parser.Dep.fly_deps_enabled()) && nothing_left_to_pop st then
+  let fly_deps = FStarC.Parser.Dep.fly_deps_enabled() in
+  let nltp = nothing_left_to_pop st in
+  if not fly_deps && nltp then
     run_push_with_deps st query
   else
     run_push_without_deps st query
@@ -890,7 +905,7 @@ let run_autocomplete st search_term context =
   | CKModuleOrNamespace (modules, namespaces) ->
     run_module_autocomplete st search_term modules namespaces
 
-let run_and_rewind st sigint_default task =
+let run_and_rewind st sigint_default (task : repl_state -> ML 'a) =
   let st = push_repl "run_and_rewind" (Some FullCheck) Noop st in
   let results =
     try Util.with_sigint_handler Util.sigint_raise (fun _ -> Inl <| task st)
@@ -901,7 +916,7 @@ let run_and_rewind st sigint_default task =
   | Inl results -> (results, Inl st)
   | Inr e -> raise e // CPC fixme add a test with two computations
 
-let run_with_parsed_and_tc_term st term line column continuation =
+let run_with_parsed_and_tc_term st term line column (continuation : TcEnv.env -> SS.term -> ML (query_status & json)) =
   let dummy_let_fragment term =
     let dummy_decl = Format.fmt1 "let __compute_dummy__ = (%s)" term in
     { frag_fname = " input"; frag_text = dummy_decl; frag_line = 0; frag_col = 0 } in
@@ -1113,10 +1128,10 @@ let maybe_cancel_queries st l =
   )
   | _ -> l, st
 
-let rec fold_query (f:repl_state -> query -> run_query_result)
+let rec fold_query (f:repl_state -> query -> ML run_query_result)
                    (l:list query)
                    (st:repl_state)
-  : run_query_result
+  : ML run_query_result
   = match l with
     | [] -> (QueryOK, []), Inl st
     | q::l ->
@@ -1134,12 +1149,15 @@ let validate_query st (q: query) : query =
   match q.qq with
   | Push { push_kind = SyntaxCheck; push_peek_only = false } ->
     { qid = q.qid; qq = ProtocolViolation "Cannot use 'kind': 'syntax' with 'query': 'push'" }
-  | _ -> match st.repl_curmod with
-        | None when query_needs_current_module q.qq ->
-          { qid = q.qid; qq = GenericError "Current module unset" }
-        | _ -> q
+  | _ -> (match st.repl_curmod with
+         | None when query_needs_current_module q.qq ->
+           { qid = q.qid; qq = GenericError "Current module unset" }
+         | _ -> q)
 
-let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
+let validate_and_run_query_ref : ref (repl_state -> query -> ML ((query_status & list json) & either repl_state int)) =
+  mk_ref (fun _ _ -> failwith "validate_and_run_query not initialized")
+
+let run_query st (q: query) : ML ((query_status & list json) & either repl_state int) =
   match q.qq with
   | Exit -> as_json_list (run_exit st)
   | DescribeProtocol -> as_json_list (run_describe_protocol st)
@@ -1158,7 +1176,7 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
       run_full_buffer st q.qid code full_kind with_symbols write_full_buffer_fragment_progress
     in
     List.iter (write_response q.qid QueryOK) issues;
-    let res = fold_query validate_and_run_query queries st in
+    let res = fold_query !validate_and_run_query_ref queries st in
     write_full_buffer_fragment_progress FullBufferFinished;
     res
   )
@@ -1180,12 +1198,15 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
   | Cancel _ ->
     //This should be handled in the fold_query loop above
     (QueryOK, []), Inl st
-and validate_and_run_query st query =
+
+let validate_and_run_query st query : ML ((query_status & list json) & either repl_state int) =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
   if !dbg
   then Format.print2 "Running query %s: %s\n" query.qid (query_to_string query);
   run_query st query
+
+let _ = validate_and_run_query_ref := validate_and_run_query
 
 (** This is the body of the JavaScript port's main loop. **)
 let js_repl_eval st query =
@@ -1215,7 +1236,7 @@ let js_repl_init_opts () =
     | _ -> ()
 
 (** This is the main loop for the desktop version **)
-let rec go st : int =
+let rec go st : ML int =
   match read_interactive_query st with
   | None -> 0
   | Some (query, st) ->
@@ -1228,14 +1249,14 @@ let rec go st : int =
 // No printing here — collect everything for future use
 let interactive_error_handler = Errors.mk_catch_handler ()
 
-let interactive_printer printer =
+let interactive_printer (printer : json -> ML unit) =
   { printer_prinfo = (fun s -> forward_message printer "info" (JsonStr s));
     printer_prwarning = (fun s -> forward_message printer "warning" (JsonStr s));
     printer_prerror = (fun s -> forward_message printer "error" (JsonStr s));
     printer_prgeneric = (fun label get_string get_json ->
                          forward_message printer label (get_json ())) }
 
-let install_ide_mode_hooks printer =
+let install_ide_mode_hooks (printer : json -> ML unit) =
   Format.set_printer (interactive_printer printer);
   FStarC.Errors.set_handler interactive_error_handler
 
@@ -1265,7 +1286,7 @@ let interactive_mode' init_st =
   in
   if exit_code <> 0 then exit exit_code
 
-let interactive_mode (filename:string): unit =
+let interactive_mode (filename:string): ML unit =
   install_ide_mode_hooks write_json;
   // Ignore unexpected interrupts (some methods override this handler)
   Util.set_sigint_handler Util.sigint_ignore;

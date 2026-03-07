@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,27 +109,19 @@ otherwise since reduction is blocked.)
 
 *********************************************************************)
 
-let id_norm_cb : norm_cb = function
-    | Inr x -> x
-    | Inl l -> S.fv_to_tm (S.lid_as_fv l None)
 exception Embedding_failure
 exception Unembedding_failure
 
-let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
+let map_shadow (s:shadow_term) (f:term -> ML term) : ML shadow_term =
     Option.map (Thunk.map f) s
 let force_shadow (s:shadow_term) = Option.map Thunk.force s
 
-type printer 'a = 'a -> string
+type printer 'a = 'a -> ML string
 
 let unknown_printer (typ:typ) _ =
     Format.fmt1 "unknown %s" (show typ)
 
-let term_as_fv t =
-    match (SS.compress t).n with
-    | Tm_fvar fv -> fv
-    | _ -> failwith (Format.fmt1 "Embeddings not defined for type %s" (show t))
-
-let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:unit -> ML emb_typ) rng (ta: unit -> ML term) (x:'a) (f:unit -> ML term) : ML term =
     if !Options.debug_embedding
     then Format.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (show (ta ()))
@@ -140,7 +132,7 @@ let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a
     else let thunk = Thunk.mk f in
          U.mk_lazy x S.tun (Lazy_embedding (et (), thunk)) (Some rng)
 
-let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> term) (f:term -> option 'a) : option 'a =
+let lazy_unembed (pa:printer 'a) (et: unit -> ML emb_typ) (x:term) (ta: unit -> ML term) (f:term -> ML (option 'a)) : ML (option 'a) =
     let et = et () in
     let x = unmeta_div_results x in
     match x.n with
@@ -201,8 +193,8 @@ let e_any =
         (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
 let e_unit =
-    let em (u:unit) rng _shadow _norm : term = { U.exp_unit with pos = rng } in
-    let un (t0:term) _norm : option unit =
+    let em (u:unit) rng _shadow _norm : ML term = { U.exp_unit with pos = rng } in
+    let un (t0:term) _norm : ML (option unit) =
         let t = U.unascribe t0 in
         match t.n with
         | S.Tm_constant C.Const_unit -> Some ()
@@ -216,11 +208,11 @@ let e_unit =
         (fun () -> ET_app(PC.unit_lid |> Ident.string_of_lid, []))
 
 let e_bool =
-    let em (b:bool) rng _shadow _norm : term =
+    let em (b:bool) rng _shadow _norm : ML term =
         let t = if b then U.exp_true_bool else U.exp_false_bool in
         { t with pos = rng }
     in
-    let un (t:term) _norm : option bool =
+    let un (t:term) _norm : ML (option bool) =
         match (SS.compress t).n with
         | Tm_constant(FStarC.Const.Const_bool b) -> Some b
         | _ -> None
@@ -233,11 +225,11 @@ let e_bool =
         (fun () -> ET_app(PC.bool_lid |> Ident.string_of_lid, []))
 
 let e_char =
-    let em (c:char) (rng:range) _shadow _norm : term =
+    let em (c:char) (rng:range) _shadow _norm : ML term =
         let t = U.exp_char c in
         { t with pos = rng }
     in
-    let un (t:term) _norm : option char =
+    let un (t:term) _norm : ML (option char) =
         match (SS.compress t).n with
         | Tm_constant(FStarC.Const.Const_char c) -> Some c
         | _ -> None
@@ -252,7 +244,7 @@ let e_char =
 let e_int =
     let ty = S.t_int in
     let emb_t_int = ET_app(PC.int_lid |> Ident.string_of_lid, []) in
-    let em (i:int) (rng:range) _shadow _norm : term =
+    let em (i:int) (rng:range) _shadow _norm : ML term =
         lazy_embed
             Prims.string_of_int
             (fun () -> emb_t_int)
@@ -261,7 +253,7 @@ let e_int =
             i
             (fun () -> U.exp_int (show i))
     in
-    let un (t:term) _norm : option int =
+    let un (t:term) _norm : ML (option int) =
         lazy_unembed
             Prims.string_of_int
             (fun () -> emb_t_int)
@@ -281,11 +273,11 @@ let e_int =
 
 let e_string =
     let emb_t_string = ET_app(PC.string_lid |> Ident.string_of_lid, []) in
-    let em (s:string) (rng:range) _shadow _norm : term =
+    let em (s:string) (rng:range) _shadow _norm : ML term =
         S.mk (Tm_constant(FStarC.Const.Const_string(s, rng)))
              rng
     in
-    let un (t:term) _norm : option string =
+    let un (t:term) _norm : ML (option string) =
         match (SS.compress t).n with
         | Tm_constant(FStarC.Const.Const_string(s, _)) -> Some s
         | _ -> None
@@ -301,11 +293,11 @@ let e_real =
     let open FStarC.Real in
     let ty = S.t_real in
     let emb_t_real = ET_app(PC.real_lid |> Ident.string_of_lid, []) in
-    let em (r:real) (rng:range) _shadow _norm : term =
+    let em (r:real) (rng:range) _shadow _norm : ML term =
       let Real s = r in
       mk (Tm_constant (Const.Const_real s)) rng
     in
-    let un (t:term) _norm : option real =
+    let un (t:term) _norm : ML (option real) =
       match (unmeta_div_results t).n with
       | Tm_constant (Const.Const_real s) -> Some (Real s)
       | _ -> None
@@ -323,7 +315,7 @@ let e_option (ea : embedding 'a) : Tot _ =
         ET_app(PC.option_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
     let printer x = FStarC.Common.string_of_option (printer_of ea) x in
-    let em (o:option 'a) (rng:range) shadow norm : term =
+    let em (o:option 'a) (rng:range) shadow norm : ML term =
         lazy_embed
             printer
             emb_t_option_a
@@ -349,7 +341,7 @@ let e_option (ea : embedding 'a) : Tot _ =
                               [S.iarg (type_of ea); S.as_arg (embed a rng shadow_a norm)]
                               rng)
     in
-    let un (t:term)  norm : option (option 'a) =
+    let un (t:term)  norm : ML (option (option 'a)) =
         lazy_unembed
             printer
             emb_t_option_a
@@ -378,7 +370,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let printer (x, y) =
         Format.fmt2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
     in
-    let em (x:('a & 'b)) (rng:range) shadow norm : term =
+    let em (x:('a & 'b)) (rng:range) shadow norm : ML term =
         lazy_embed
             printer
             emb_t_pair
@@ -404,7 +396,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                              S.as_arg (embed (snd x) rng shadow_b norm)]
                             rng)
     in
-    let un (t:term)  norm : option ('a & 'b) =
+    let un (t:term)  norm : ML (option ('a & 'b)) =
         lazy_unembed
             printer
             emb_t_pair
@@ -435,7 +427,8 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let printer (x, y, z) =
         Format.fmt3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
     in
-    let em ((x1, x2, x3):('a & 'b & 'c)) (rng:range) shadow norm : term =
+    let em (tup:('a & 'b & 'c)) (rng:range) shadow norm : ML term =
+        let (x1, x2, x3) = tup in
         lazy_embed
             printer
             emb_t_pair
@@ -465,7 +458,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                              S.as_arg (embed x3 rng shadow_c norm)]
                             rng)
     in
-    let un (t:term) norm : option ('a & 'b & 'c) =
+    let un (t:term) norm : ML (option ('a & 'b & 'c)) =
         lazy_unembed
             printer
             emb_t_pair
@@ -497,7 +490,8 @@ let e_tuple4 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
     let printer (x, y, z, w) =
         Format.fmt4 "(%s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w)
     in
-    let em (x1, x2, x3, x4) (rng:range) shadow norm : term =
+    let em (tup:('a & 'b & 'c & 'd)) (rng:range) shadow norm : ML term =
+        let (x1, x2, x3, x4) = tup in
         lazy_embed
             printer
             emb_t_pair
@@ -531,7 +525,7 @@ let e_tuple4 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
                              S.as_arg (embed x4 rng shadow_d norm)]
                             rng)
     in
-    let un (t:term) norm : option ('a & 'b & 'c & 'd) =
+    let un (t:term) norm : ML (option ('a & 'b & 'c & 'd)) =
         lazy_unembed
             printer
             emb_t_pair
@@ -564,7 +558,8 @@ let e_tuple5 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
     let printer (x, y, z, w, v) =
         Format.fmt5 "(%s, %s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w) (printer_of ee v)
     in
-    let em (x1, x2, x3, x4, x5) (rng:range) shadow norm : term =
+    let em (tup:('a & 'b & 'c & 'd & 'e)) (rng:range) shadow norm : ML term =
+        let (x1, x2, x3, x4, x5) = tup in
         lazy_embed
             printer
             emb_t_pair
@@ -602,7 +597,7 @@ let e_tuple5 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding
                              S.as_arg (embed x5 rng shadow_e norm)]
                             rng)
     in
-    let un (t:term) norm : option ('a & 'b & 'c & 'd & 'e) =
+    let un (t:term) norm : ML (option ('a & 'b & 'c & 'd & 'e)) =
         lazy_unembed
             printer
             emb_t_pair
@@ -638,7 +633,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
         | Inl a -> Format.fmt1 "Inl %s" (printer_of ea a)
         | Inr b -> Format.fmt1 "Inr %s" (printer_of eb b)
     in
-    let em (s:either 'a 'b) (rng:range) shadow norm : term =
+    let em (s:either 'a 'b) (rng:range) shadow norm : ML term =
         lazy_embed
             printer
             emb_t_sum_a_b
@@ -679,7 +674,7 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
                             rng)
              )
     in
-    let un (t:term) norm : option (either 'a 'b) =
+    let un (t:term) norm : ML (option (either 'a 'b)) =
         lazy_unembed
             printer
             emb_t_sum_a_b
@@ -712,7 +707,7 @@ let e_list (ea:embedding 'a) =
     let printer =
         (fun (l:list 'a) -> "[" ^ (List.map (printer_of ea) l |> String.concat "; ") ^ "]")
     in
-    let rec em (l:list 'a) (rng:range) shadow_l norm : term =
+    let rec em (l:list 'a) (rng:range) shadow_l norm : ML term =
         lazy_embed
             printer
             emb_t_list_a
@@ -747,7 +742,7 @@ let e_list (ea:embedding 'a) =
                                S.as_arg (em tl rng shadow_tl norm)]
                               rng)
     in
-    let rec un (t:term) norm : option (list 'a) =
+    let rec un (t:term) norm : ML (option (list 'a)) =
         lazy_unembed
             printer
             emb_t_list_a
@@ -803,7 +798,7 @@ let e_norm_step : embedding NormSteps.norm_step =
     let typ () = S.t_norm_step in
     let emb_t_norm_step () = ET_app (PC.norm_step_lid |> Ident.string_of_lid, []) in
     let printer _ = "norm_step" in
-    let em (n:NormSteps.norm_step) (rng:range) _shadow norm : term =
+    let em (n:NormSteps.norm_step) (rng:range) _shadow norm : ML term =
         lazy_embed
             printer
             emb_t_norm_step
@@ -860,7 +855,7 @@ let e_norm_step : embedding NormSteps.norm_step =
 
                 )
     in
-    let un (t:term) norm : option NormSteps.norm_step =
+    let un (t:term) norm : ML (option NormSteps.norm_step) =
         lazy_unembed
             printer
             emb_t_norm_step
@@ -923,7 +918,7 @@ let e_norm_step : embedding NormSteps.norm_step =
         emb_t_norm_step
 
 let e_vconfig =
-    let em (vcfg:vconfig) (rng:Range.t) _shadow norm : term =
+    let em (vcfg:vconfig) (rng:Range.t) _shadow norm : ML term =
       (* The order is very important here, even if this is a record. *)
       S.mk_Tm_app (tdataconstr PC.mkvconfig_lid) // TODO: should this be a record constructor? does it matter?
                   [S.as_arg (embed vcfg.initial_fuel                              rng None norm);
@@ -957,7 +952,7 @@ let e_vconfig =
                   ]
                   rng
     in
-    let un (t:term) norm : option vconfig =
+    let un (t:term) norm : ML (option vconfig) =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         (* Sigh *)
@@ -1078,7 +1073,7 @@ let e_order =
       | Gt -> ord_Gt
       in { r with pos = rng }
   in
-  let unembed_order (t:term) cb : option order =
+  let unembed_order (t:term) cb : ML (option order) =
       let t = U.unascribe t in
       let hd, args = U.head_and_args t in
       match (U.un_uinst hd).n, args with
@@ -1103,7 +1098,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
     in
     let emb_t_arr_a_b () = ET_fun(emb_typ_of 'a (), emb_typ_of 'b ()) in
     let printer (f:'a -> 'b) = "<fun>" in
-    let em (f:'a -> 'b) rng shadow_f norm =
+    let em (f:('a -> 'b)) rng shadow_f (norm:norm_cb) : ML term =
         // let f_wrapped (x:term) =
         //     let shadow_app = map_shadow shadow_f (fun f ->
         //         S.mk_Tm_app f [S.as_arg x] None rng)
@@ -1138,14 +1133,14 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                                    (BU.stack_dump());
                   res)
     in
-    let un (f:term) norm : option ('a -> 'b) =
+    let un (f:term) (norm:norm_cb) : ML (option ('a -> 'b)) =
         lazy_unembed
             printer
             emb_t_arr_a_b
             f
             typ
             (fun f ->
-                let f_wrapped (a:'a) : 'b =
+                let f_wrapped (a:'a) : ML 'b =
                     if !Options.debug_embedding then
                     Format.print2 "Calling back into normalizer for %s\n%s\n"
                               (show f)
@@ -1156,7 +1151,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                     | None -> raise Unembedding_failure
                     | Some b -> b
                 in
-                Some f_wrapped)
+                Some (coerce_eq () f_wrapped))
     in
     mk_emb_full
         em
@@ -1171,7 +1166,7 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
         ET_app(PC.sealed_lid |> Ident.string_of_lid, [emb_typ_of 'a ()])
     in
     let printer x = "(seal " ^ printer_of ea (Sealed.unseal x) ^ ")" in
-    let em (a:Sealed.sealed 'a) (rng:range) shadow norm : term =
+    let em (a:Sealed.sealed 'a) (rng:range) shadow norm : ML term =
       let shadow_a =
         (* TODO: this application below is in TAC.. OK? *)
         map_shadow shadow (fun t ->
@@ -1184,7 +1179,7 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
                   [S.iarg (type_of ea); S.as_arg (embed (Sealed.unseal a) rng shadow_a norm)]
                   rng
     in
-    let un (t:term) norm : option (Sealed.sealed 'a) =
+    let un (t:term) norm : ML (option (Sealed.sealed 'a)) =
       let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.seal_lid ->
@@ -1207,10 +1202,10 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
  * via typeclass resolution) with e_sealed.
  *)
 let e___range =
-    let em (r:range) (rng:range) _shadow _norm : term =
+    let em (r:range) (rng:range) _shadow _norm : ML term =
         S.mk (Tm_constant (C.Const_range r)) rng
     in
-    let un (t:term) _norm : option range =
+    let un (t:term) _norm : ML (option range) =
         match (SS.compress t).n with
         | Tm_constant (C.Const_range r) -> Some r
         | _ -> None
@@ -1236,7 +1231,7 @@ let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document
 
 let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
                          (f:'a -> 'b) (fv_lid:Ident.lid) norm
-   : universes -> args -> option term =
+   : universes -> args -> ML (option term) =
     let rng = Ident.range_of_lid fv_lid in
     let f_wrapped _us args =
         //arity mismatches are handled by the caller
@@ -1256,7 +1251,7 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
 
 let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
                          (f:'a -> 'b -> 'c) fv_lid norm
-   : universes -> args -> option term =
+   : universes -> args -> ML (option term) =
     let rng = Ident.range_of_lid fv_lid in
     let f_wrapped _us args =
         //arity mismatches are handled by the caller
@@ -1278,7 +1273,7 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
 let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
                          (ec:embedding 'c) (ed:embedding 'd)
                          (f:'a -> 'b -> 'c -> 'd) fv_lid norm
-   : universes -> args -> option term =
+   : universes -> args -> ML (option term) =
     let rng = Ident.range_of_lid fv_lid in
     let f_wrapped _us args =
         //arity mismatches are handled by the caller
@@ -1298,7 +1293,7 @@ let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
     in
     f_wrapped
 
-let debug_wrap (s:string) (f:unit -> 'a) =
+let debug_wrap (s:string) (f:unit -> ML 'a) : ML 'a =
     if !Options.debug_embedding
     then Format.print1 "++++starting %s\n" s;
     let res = f () in

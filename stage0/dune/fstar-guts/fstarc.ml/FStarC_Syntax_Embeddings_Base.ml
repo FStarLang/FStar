@@ -15,9 +15,8 @@ let id_norm_cb : norm_cb=
     match uu___ with
     | FStar_Pervasives.Inr x -> x
     | FStar_Pervasives.Inl l ->
-        let uu___1 =
-          FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-        FStarC_Syntax_Syntax.fv_to_tm uu___1
+        FStarC_Syntax_Syntax.fv_to_tm
+          (FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None)
 exception Embedding_failure 
 let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool=
   match projectee with | Embedding_failure -> true | uu___ -> false
@@ -82,7 +81,7 @@ let term_as_fv (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.fv=
         let uu___3 =
           FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
         FStarC_Format.fmt1 "Embeddings not defined for type %s" uu___3 in
-      failwith uu___2
+      FStarC_Effect.failwith uu___2
 let mk_emb (em1 : 'a raw_embedder) (un1 : 'a raw_unembedder)
   (fv : FStarC_Syntax_Syntax.fv) : 'a embedding=
   {
@@ -95,12 +94,9 @@ let mk_emb (em1 : 'a raw_embedder) (un1 : 'a raw_unembedder)
     typ = (fun uu___ -> FStarC_Syntax_Syntax.fv_to_tm fv);
     e_typ =
       (fun uu___ ->
-         let uu___1 =
-           let uu___2 =
-             let uu___3 = FStarC_Syntax_Syntax.lid_of_fv fv in
-             FStarC_Ident.string_of_lid uu___3 in
-           (uu___2, []) in
-         FStarC_Syntax_Syntax.ET_app uu___1)
+         FStarC_Syntax_Syntax.ET_app
+           ((FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)),
+             []))
   }
 let mk_emb_full (em1 : 'a raw_embedder) (un1 : 'a raw_unembedder)
   (typ1 : unit -> FStarC_Syntax_Syntax.typ) (printe : 'a -> Prims.string)
@@ -117,18 +113,19 @@ let rec unmeta_div_results (t : FStarC_Syntax_Syntax.term) :
         FStarC_Syntax_Syntax.meta = FStarC_Syntax_Syntax.Meta_monadic_lift
           (src, dst, uu___1);_}
       ->
-      let uu___2 =
+      if
         (FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid) &&
-          (FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid) in
-      if uu___2 then unmeta_div_results t' else t
+          (FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid)
+      then unmeta_div_results t'
+      else t
   | FStarC_Syntax_Syntax.Tm_meta
       { FStarC_Syntax_Syntax.tm2 = t';
         FStarC_Syntax_Syntax.meta = FStarC_Syntax_Syntax.Meta_monadic
           (m, uu___1);_}
       ->
-      let uu___2 =
-        FStarC_Ident.lid_equals m FStarC_Parser_Const.effect_DIV_lid in
-      if uu___2 then unmeta_div_results t' else t
+      if FStarC_Ident.lid_equals m FStarC_Parser_Const.effect_DIV_lid
+      then unmeta_div_results t'
+      else t
   | FStarC_Syntax_Syntax.Tm_meta
       { FStarC_Syntax_Syntax.tm2 = t'; FStarC_Syntax_Syntax.meta = uu___1;_}
       -> unmeta_div_results t'
@@ -161,27 +158,27 @@ let unembed (e : 'a embedding) (t : FStarC_Syntax_Syntax.term) (n : norm_cb)
   then
     (let uu___1 =
        let uu___2 =
-         let uu___3 = FStarC_Errors_Msg.text "Unembedding failed for type" in
-         let uu___4 =
-           let uu___5 = type_of e in
-           FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term uu___5 in
-         FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+         let uu___3 =
+           let uu___4 = type_of e in
+           FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term uu___4 in
+         FStar_Pprint.op_Hat_Slash_Hat
+           (FStarC_Errors_Msg.text "Unembedding failed for type") uu___3 in
        let uu___3 =
          let uu___4 =
-           let uu___5 = FStarC_Errors_Msg.text "emb_typ = " in
-           let uu___6 =
-             let uu___7 =
-               let uu___8 = emb_typ_of e () in
+           let uu___5 =
+             let uu___6 =
+               let uu___7 = emb_typ_of e () in
                FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
-                 uu___8 in
-             FStar_Pprint.doc_of_string uu___7 in
-           FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
+                 uu___7 in
+             FStar_Pprint.doc_of_string uu___6 in
+           FStar_Pprint.op_Hat_Slash_Hat
+             (FStarC_Errors_Msg.text "emb_typ = ") uu___5 in
          let uu___5 =
            let uu___6 =
-             let uu___7 = FStarC_Errors_Msg.text "Term =" in
-             let uu___8 =
+             let uu___7 =
                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t in
-             FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+             FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Term =")
+               uu___7 in
            [uu___6] in
          uu___4 :: uu___5 in
        uu___2 :: uu___3 in
@@ -194,7 +191,7 @@ let unembed (e : 'a embedding) (t : FStarC_Syntax_Syntax.term) (n : norm_cb)
 let embed_as (ea : 'a embedding) (ab : 'a -> 'b) (ba : 'b -> 'a)
   (o : FStarC_Syntax_Syntax.typ FStar_Pervasives_Native.option) :
   'b embedding=
-  mk_emb_full (fun x -> let uu___ = ba x in embed ea uu___)
+  mk_emb_full (fun x -> embed ea (ba x))
     (fun t cb ->
        let uu___ = try_unembed ea t cb in FStarC_Option.map ab uu___)
     (fun uu___ ->
@@ -202,7 +199,7 @@ let embed_as (ea : 'a embedding) (ab : 'a -> 'b) (ba : 'b -> 'a)
        | FStar_Pervasives_Native.Some t -> t
        | uu___1 -> type_of ea)
     (fun x ->
-       let uu___ = let uu___1 = ba x in ea.print uu___1 in
+       let uu___ = ea.print (ba x) in
        FStarC_Format.fmt1 "(embed_as>> %s)\n" uu___) ea.e_typ
 let e_lazy (k : FStarC_Syntax_Syntax.lazy_kind)
   (ty : FStarC_Syntax_Syntax.typ) : 'a embedding=
@@ -282,39 +279,38 @@ let lazy_unembed (pa : 'a printer) (et : FStarC_Syntax_Syntax.emb_typ)
         FStarC_Syntax_Syntax.ltyp = uu___;
         FStarC_Syntax_Syntax.rng = uu___1;_}
       ->
-      let uu___2 =
-        (et <> et') || (FStarC_Effect.op_Bang FStarC_Options.eager_embedding) in
-      if uu___2
+      let eager = FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
+      if (et <> et') || eager
       then
-        let res = let uu___3 = FStarC_Thunk.force t in f uu___3 in
-        ((let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___4
+        let res = let uu___2 = FStarC_Thunk.force t in f uu___2 in
+        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___3
           then
-            let uu___5 =
+            let uu___4 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
-            let uu___6 =
+            let uu___5 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
                 et' in
-            let uu___7 =
+            let uu___6 =
               match res with
               | FStar_Pervasives_Native.None -> "None"
               | FStar_Pervasives_Native.Some x2 ->
-                  let uu___8 = pa x2 in Prims.strcat "Some " uu___8 in
+                  let uu___7 = pa x2 in Prims.strcat "Some " uu___7 in
             FStarC_Format.print3
-              "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n" uu___5
-              uu___6 uu___7
+              "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n" uu___4
+              uu___5 uu___6
           else ());
          res)
       else
         (let a1 = FStarC_Dyn.undyn b in
-         (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___5
+         (let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___4
           then
-            let uu___6 =
+            let uu___5 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
-            let uu___7 = pa a1 in
+            let uu___6 = pa a1 in
             FStarC_Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-              uu___6 uu___7
+              uu___5 uu___6
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->
@@ -361,9 +357,8 @@ let mk_extracted_embedding (name : Prims.string)
         op_let_Question uu___1
           (fun hd_lid ->
              let uu___2 =
-               let uu___3 = FStarC_Ident.string_of_lid hd_lid in
-               let uu___4 = FStarC_List.map FStar_Pervasives_Native.fst args in
-               (uu___3, uu___4) in
+               let uu___3 = FStarC_List.map FStar_Pervasives_Native.fst args in
+               ((FStarC_Ident.string_of_lid hd_lid), uu___3) in
              u uu___2) in
   let ee x rng _topt _norm = e x in
   let uu___ =
@@ -371,7 +366,7 @@ let mk_extracted_embedding (name : Prims.string)
     FStarC_Syntax_Syntax.lid_as_fv uu___1 FStar_Pervasives_Native.None in
   mk_emb ee uu uu___
 let extracted_embed (e : 'a embedding) (x : 'a) : FStarC_Syntax_Syntax.term=
-  let uu___ = embed e x in
-  uu___ FStarC_Range_Type.dummyRange FStar_Pervasives_Native.None id_norm_cb
+  embed e x FStarC_Range_Type.dummyRange FStar_Pervasives_Native.None
+    id_norm_cb
 let extracted_unembed (e : 'a embedding) (t : FStarC_Syntax_Syntax.term) :
   'a FStar_Pervasives_Native.option= try_unembed e t id_norm_cb

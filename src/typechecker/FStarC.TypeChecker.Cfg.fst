@@ -18,7 +18,7 @@ module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util
 module I   = FStarC.Ident
 
-let steps_to_string f =
+let steps_to_string f : ML string =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
     | None -> "None"
@@ -96,38 +96,45 @@ let steps_to_string f =
 
 instance deq_fsteps : deq fsteps = {
   (=?) = (fun f1 f2 ->
-            f1.beta =? f2.beta &&
-            f1.iota =? f2.iota &&
-            f1.zeta =? f2.zeta &&
-            f1.zeta_full =? f2.zeta_full &&
-            f1.weak =? f2.weak &&
-            f1.hnf =? f2.hnf &&
-            f1.primops =? f2.primops &&
-            f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets &&
-            f1.unfold_until =? f2.unfold_until &&
-            f1.unfold_only =? f2.unfold_only &&
-            f1.unfold_fully =? f2.unfold_fully &&
-            f1.unfold_attr =? f2.unfold_attr &&
-            f1.unfold_qual =? f2.unfold_qual &&
-            f1.unfold_namespace =? f2.unfold_namespace &&
-            f1.dont_unfold_attr =? f2.dont_unfold_attr &&
-            f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
-            f1.simplify =? f2.simplify &&
-            f1.erase_universes =? f2.erase_universes &&
-            f1.allow_unbound_universes =? f2.allow_unbound_universes &&
-            f1.reify_ =? f2.reify_ &&
-            f1.compress_uvars =? f2.compress_uvars &&
-            f1.no_full_norm =? f2.no_full_norm &&
-            f1.check_no_uvars =? f2.check_no_uvars &&
-            f1.unmeta =? f2.unmeta &&
-            f1.unascribe =? f2.unascribe &&
-            f1.in_full_norm_request =? f2.in_full_norm_request &&
-            f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee &&
-            f1.nbe_step =? f2.nbe_step &&
-            f1.for_extraction =? f2.for_extraction &&
-            f1.unrefine =? f2.unrefine &&
-            f1.default_univs_to_zero =? f2.default_univs_to_zero &&
-            f1.tactics =? f2.tactics
+            let b_beta = f1.beta =? f2.beta in
+            let b_iota = f1.iota =? f2.iota in
+            let b_zeta = f1.zeta =? f2.zeta in
+            let b_zeta_full = f1.zeta_full =? f2.zeta_full in
+            let b_weak = f1.weak =? f2.weak in
+            let b_hnf = f1.hnf =? f2.hnf in
+            let b_primops = f1.primops =? f2.primops in
+            let b_dunfold = f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets in
+            let b_until = f1.unfold_until =? f2.unfold_until in
+            let b_only = f1.unfold_only =? f2.unfold_only in
+            let b_fully = f1.unfold_fully =? f2.unfold_fully in
+            let b_attr = f1.unfold_attr =? f2.unfold_attr in
+            let b_qual = f1.unfold_qual =? f2.unfold_qual in
+            let b_ns = f1.unfold_namespace =? f2.unfold_namespace in
+            let b_dattr = f1.dont_unfold_attr =? f2.dont_unfold_attr in
+            let b_pure = f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations in
+            let b_simp = f1.simplify =? f2.simplify in
+            let b_erase = f1.erase_universes =? f2.erase_universes in
+            let b_unbound = f1.allow_unbound_universes =? f2.allow_unbound_universes in
+            let b_reify = f1.reify_ =? f2.reify_ in
+            let b_compress = f1.compress_uvars =? f2.compress_uvars in
+            let b_nofull = f1.no_full_norm =? f2.no_full_norm in
+            let b_nouvars = f1.check_no_uvars =? f2.check_no_uvars in
+            let b_unmeta = f1.unmeta =? f2.unmeta in
+            let b_unasc = f1.unascribe =? f2.unascribe in
+            let b_fullnorm = f1.in_full_norm_request =? f2.in_full_norm_request in
+            let b_weak_scrut = f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee in
+            let b_nbe = f1.nbe_step =? f2.nbe_step in
+            let b_extract = f1.for_extraction =? f2.for_extraction in
+            let b_unref = f1.unrefine =? f2.unrefine in
+            let b_defunivs = f1.default_univs_to_zero =? f2.default_univs_to_zero in
+            let b_tactics = f1.tactics =? f2.tactics in
+            b_beta && b_iota && b_zeta && b_zeta_full && b_weak && b_hnf &&
+            b_primops && b_dunfold && b_until && b_only && b_fully &&
+            b_attr && b_qual && b_ns && b_dattr && b_pure &&
+            b_simp && b_erase && b_unbound && b_reify && b_compress &&
+            b_nofull && b_nouvars && b_unmeta && b_unasc && b_fullnorm &&
+            b_weak_scrut && b_nbe && b_extract && b_unref && b_defunivs &&
+            b_tactics
             );
 }
 
@@ -167,7 +174,7 @@ let default_steps : fsteps = {
     tactics = false;
 }
 
-let fstep_add_one s fs =
+let fstep_add_one s fs : ML fsteps =
   let optlist = function None -> [] | Some xs -> xs in
     match s with
     | Beta -> { fs with beta = true }
@@ -215,7 +222,7 @@ let fstep_add_one s fs =
     | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
     | Tactics -> { fs with tactics = true }
 
-let to_fsteps (s : list step) : fsteps =
+let to_fsteps (s : list step) : ML fsteps =
     List.fold_right fstep_add_one s default_steps
 
 let no_debug_switches = {
@@ -235,26 +242,26 @@ let no_debug_switches = {
 (* Primitive step sets. They are represented as a persistent string map *)
 type prim_step_set = PSMap.t primitive_step
 
-let empty_prim_steps () : prim_step_set =
+let empty_prim_steps () : ML prim_step_set =
     PSMap.empty ()
 
-let add_step (s : primitive_step) (ss : prim_step_set) =
+let add_step (s : primitive_step) (ss : prim_step_set) : ML prim_step_set =
     PSMap.add ss (I.string_of_lid s.name) s
 
-let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
+let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : ML prim_step_set =
     PSMap.merge s1 s2
 
-let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
+let add_steps (m : prim_step_set) (l : list primitive_step) : ML prim_step_set =
     List.fold_right add_step l m
 
-let prim_from_list (l : list primitive_step) : prim_step_set =
+let prim_from_list (l : list primitive_step) : ML prim_step_set =
     add_steps (empty_prim_steps ()) l
 (* / Primitive step sets *)
 
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
-let env_dependent_ops env = prim_from_list (env_dependent_ops env)
-let simplification_steps env = prim_from_list (simplification_ops_list env)
+let env_dependent_ops env : ML prim_step_set = prim_from_list (env_dependent_ops env)
+let simplification_steps env : ML (PSMap.t primitive_step) = prim_from_list (simplification_ops_list env)
 
 instance showable_cfg : showable cfg = {
   show = (fun cfg ->
@@ -267,59 +274,59 @@ instance showable_cfg : showable cfg = {
 
 let cfg_env cfg = cfg.tcenv
 
-let find_prim_step cfg fv =
+let find_prim_step cfg fv : ML (option primitive_step) =
     PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name)
 
-let is_prim_step cfg fv =
+let is_prim_step cfg fv : ML bool =
     Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name))
 
-let log cfg f =
+let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
 
-let log_top cfg f =
+let log_top cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.top then f () else ()
 
-let log_cfg cfg f =
+let log_cfg cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.cfg then f () else ()
 
-let log_primops cfg f =
+let log_primops cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.primop then f () else ()
 
 let dbg_unfolding = Debug.get_toggle "Unfolding"
-let log_unfolding cfg f =
+let log_unfolding cfg (f: unit -> ML unit) : ML unit =
   if !dbg_unfolding then f () else ()
 
-let log_nbe cfg f =
+let log_nbe cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
 let primop_time_map : SMap.t int = SMap.create 50
 
-let primop_time_reset () =
+let primop_time_reset () : ML unit =
     SMap.clear primop_time_map
 
-let primop_time_count (nm : string) (ns : int) : unit =
+let primop_time_count (nm : string) (ns : int) : ML unit =
     match SMap.try_find primop_time_map nm with
     | None     -> SMap.add primop_time_map nm ns
     | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
 
-let fixto n s =
+let fixto n s : ML string =
     if String.length s < n
     then (make (n - String.length s) ' ') ^ s
     else s
 
-let primop_time_report () : string =
+let primop_time_report () : ML string =
     let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (Format.fmt2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 
 let extendable_primops_dirty : ref bool = mk_ref true
 
-type register_prim_step_t = primitive_step -> unit
-type retrieve_prim_step_t = unit -> prim_step_set
+type register_prim_step_t = primitive_step -> ML unit
+type retrieve_prim_step_t = unit -> ML prim_step_set
 let mk_extendable_primop_set ()
-  : register_prim_step_t
-  & retrieve_prim_step_t =
+  : ML (register_prim_step_t
+      & retrieve_prim_step_t) =
   let steps = mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
@@ -332,22 +339,22 @@ let mk_extendable_primop_set ()
 let plugins = mk_extendable_primop_set ()
 let extra_steps = mk_extendable_primop_set ()
 
-let register_plugin (p:primitive_step) = fst plugins p
-let retrieve_plugins () =
+let register_plugin (p:primitive_step) : ML unit = fst plugins p
+let retrieve_plugins () : ML prim_step_set =
     if Options.no_plugins ()
     then empty_prim_steps ()
     else snd plugins ()
 
-let register_extra_step  p  = fst extra_steps p
-let retrieve_extra_steps () = snd extra_steps ()
+let register_extra_step  p : ML unit = fst extra_steps p
+let retrieve_extra_steps () : ML prim_step_set = snd extra_steps ()
 
-let list_plugins () : list primitive_step =
+let list_plugins () : ML (list primitive_step) =
     FStarC.Common.psmap_values (retrieve_plugins ())
 
-let list_extra_steps () : list primitive_step =
+let list_extra_steps () : ML (list primitive_step) =
     FStarC.Common.psmap_values (retrieve_extra_steps ())
 
-let cached_steps : unit -> prim_step_set =
+let cached_steps : unit -> ML prim_step_set =
     let memo : ref prim_step_set = mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
@@ -363,7 +370,7 @@ let cached_steps : unit -> prim_step_set =
       else
       !memo
 
-let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strategy
+let add_nbe s : ML fsteps = // ZP : Turns nbe flag on, to be used as the default norm strategy
     if Options.use_nbe ()
     then { s with nbe_step = true }
     else s
@@ -380,7 +387,7 @@ let dbg_print_normalized = Debug.get_toggle "print_normalized_terms"
 let dbg_NBE = Debug.get_toggle "NBE"
 let dbg_UNSOUND_EraseErasableArgs = Debug.get_toggle "UNSOUND_EraseErasableArgs"
 
-let config' psteps s e =
+let config' psteps s e : ML cfg =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
@@ -396,55 +403,72 @@ let config' psteps s e =
     let steps = to_fsteps s |> add_nbe in
     let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
+    let v_Norm = !dbg_Norm in
+    let v_NormTop = !dbg_NormTop in
+    let v_NormCfg = !dbg_NormCfg in
+    let v_Primops = !dbg_Primops in
+    let v_Unfolding = !dbg_Unfolding in
+    let v_380 = !dbg_380 in
+    let v_WPE = !dbg_WPE in
+    let v_NormDelayed = !dbg_NormDelayed in
+    let v_print_normalized = !dbg_print_normalized in
+    let v_NBE = !dbg_NBE in
+    let v_EraseErasableArgs = !dbg_UNSOUND_EraseErasableArgs in
+    let v_normalize_pure = Options.normalize_pure_terms_for_extraction() in
+    let v_compat_memo = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg" in
     {
       tcenv = e;
       debug = {
-        gen = !dbg_Norm || dbg_flag;
-        top = !dbg_NormTop || dbg_flag;
-        cfg = !dbg_NormCfg;
-        primop = !dbg_Primops;
-        unfolding = !dbg_Unfolding;
-        b380 = !dbg_380;
-        wpe = !dbg_WPE;
-        norm_delayed = !dbg_NormDelayed;
-        print_normalized = !dbg_print_normalized;
-        debug_nbe = !dbg_NBE;
+        gen = v_Norm || dbg_flag;
+        top = v_NormTop || dbg_flag;
+        cfg = v_NormCfg;
+        primop = v_Primops;
+        unfolding = v_Unfolding;
+        b380 = v_380;
+        wpe = v_WPE;
+        norm_delayed = v_NormDelayed;
+        print_normalized = v_print_normalized;
+        debug_nbe = v_NBE;
         erase_erasable_args = (
-         if !dbg_UNSOUND_EraseErasableArgs then
+         if v_EraseErasableArgs then
            Errors.log_issue e Errors.Warning_WarnOnUse
              "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound";
-         !dbg_UNSOUND_EraseErasableArgs);
+         v_EraseErasableArgs);
       };
       steps = steps;
       delta_level = d;
       primitive_steps = psteps;
       strong = false;
       memoize_lazy = true;
-      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
+      normalize_pure_lets = (not steps.pure_subterms_within_computations) || v_normalize_pure;
       reifying = false;
-      compat_memo_ignore_cfg = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg";
+      compat_memo_ignore_cfg = v_compat_memo;
    }
 
-let config s e = config' [] s e
+let config s e : ML cfg = config' [] s e
 
-let should_reduce_local_let cfg lb =
+let should_reduce_local_let cfg lb : ML bool =
   if cfg.steps.do_not_unfold_pure_lets
   then false //we're not allowed to do any local delta steps
-  else if cfg.steps.pure_subterms_within_computations &&
-          U.has_attribute lb.lbattrs PC.inline_let_attr
-  then true //1. we're extracting, and it's marked @inline_let
-  else if U.has_attribute lb.lbattrs PC.no_inline_let_attr
-  then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
   else
-    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
-    if U.is_pure_effect n &&
-       (cfg.normalize_pure_lets
-        || U.has_attribute lb.lbattrs PC.inline_let_attr)
-    then true //Or, 3. it's pure and we are either not extracting, or it's marked @inline_let
-    else U.is_ghost_effect n && //Or, 4. it's ghost and we're not extracting
-         not (cfg.steps.pure_subterms_within_computations)
+    let has_inline = U.has_attribute lb.lbattrs PC.inline_let_attr in
+    let has_no_inline = U.has_attribute lb.lbattrs PC.no_inline_let_attr in
+    if cfg.steps.pure_subterms_within_computations &&
+       has_inline
+    then true //1. we're extracting, and it's marked @inline_let
+    else if has_no_inline
+    then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
+    else
+      let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+      let is_pure = U.is_pure_effect n in
+      let is_ghost = U.is_ghost_effect n in
+      if is_pure &&
+         (cfg.normalize_pure_lets || has_inline)
+      then true //Or, 3. it's pure and we are either not extracting, or it's marked @inline_let
+      else is_ghost && //Or, 4. it's ghost and we're not extracting
+           not (cfg.steps.pure_subterms_within_computations)
 
-let translate_norm_step = function
+let translate_norm_step s : ML (list Env.step) = match s with
     | NormSteps.Zeta ->    [Zeta]
     | NormSteps.ZetaFull -> [ZetaFull]
     | NormSteps.Iota ->    [Iota]
@@ -471,7 +495,7 @@ let translate_norm_step = function
     | NormSteps.NBE -> [NBE]
     | NormSteps.Unmeta -> [Unmeta]
 
-let translate_norm_steps s =
+let translate_norm_steps s : ML (list Env.step) =
     let s = List.concatMap translate_norm_step s in
     let add_exclude s z = if BU.for_some ((=?) z) s then s else Exclude z :: s in
     let s = Beta::s in

@@ -1,4 +1,6 @@
 open Prims
+type ppname_t = Prims.string FStarC_Sealed.sealed
+let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
 type name = Prims.string Prims.list
 type typ = FStarC_Syntax_Syntax.term
 type binders = FStarC_Syntax_Syntax.binder Prims.list
@@ -79,8 +81,6 @@ let uu___is_Q_Meta (projectee : aqualv) : Prims.bool=
 let __proj__Q_Meta__item___0 (projectee : aqualv) :
   FStarC_Syntax_Syntax.term= match projectee with | Q_Meta _0 -> _0
 type argv = (FStarC_Syntax_Syntax.term * aqualv)
-type ppname_t = Prims.string FStarC_Sealed.sealed
-let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
 type bv_view = {
   bv_ppname: ppname_t ;
   bv_index: Prims.int }

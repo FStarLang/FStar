@@ -548,7 +548,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     uu___82
                                                                     uu___83
                                                                     ->
-                                                                    failwith
+                                                                    FStarC_Effect.failwith
                                                                     "NBE unquote") in
                                                                     let uu___82
                                                                     =
@@ -1690,9 +1690,15 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     =
                                                                     let uu___213
                                                                     =
-                                                                    let uu___214
-                                                                    =
-                                                                    e_ret_t
+                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_4
+                                                                    Prims.int_zero
+                                                                    "instantiate_implicits"
+                                                                    FStarC_Reflection_V2_Embeddings.e_env
+                                                                    uu___0
+                                                                    (FStarC_Syntax_Embeddings.e_option
+                                                                    uu___0)
+                                                                    FStarC_Syntax_Embeddings.e_bool
+                                                                    (e_ret_t
                                                                     (FStarC_Syntax_Embeddings.e_tuple3
                                                                     (FStarC_Syntax_Embeddings.e_list
                                                                     (FStarC_Syntax_Embeddings.e_tuple2
@@ -1702,10 +1708,13 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (solve
                                                                     uu___0)
                                                                     (solve
-                                                                    uu___0)) in
-                                                                    let uu___215
-                                                                    =
-                                                                    nbe_e_ret_t
+                                                                    uu___0)))
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_env
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    (FStarC_TypeChecker_NBETerm.e_option
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
+                                                                    FStarC_TypeChecker_NBETerm.e_bool
+                                                                    (nbe_e_ret_t
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple3
                                                                     (FStarC_TypeChecker_NBETerm.e_list
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple2
@@ -1715,42 +1724,13 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     (solve
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
                                                                     (solve
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)) in
-                                                                    FStarC_Tactics_InterpFuns.mk_tac_step_4
-                                                                    Prims.int_zero
-                                                                    "instantiate_implicits"
-                                                                    FStarC_Reflection_V2_Embeddings.e_env
-                                                                    uu___0
-                                                                    (FStarC_Syntax_Embeddings.e_option
-                                                                    uu___0)
-                                                                    FStarC_Syntax_Embeddings.e_bool
-                                                                    uu___214
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_env
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                                                    (FStarC_TypeChecker_NBETerm.e_option
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)
-                                                                    FStarC_TypeChecker_NBETerm.e_bool
-                                                                    uu___215
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_attribute)))
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits
                                                                     FStarC_Tactics_V2_Basic.refl_instantiate_implicits in
                                                                     let uu___214
                                                                     =
                                                                     let uu___215
                                                                     =
-                                                                    let uu___216
-                                                                    =
-                                                                    e_ret_t
-                                                                    (FStarC_Syntax_Embeddings.e_list
-                                                                    (FStarC_Syntax_Embeddings.e_tuple2
-                                                                    FStarC_Reflection_V2_Embeddings.e_namedv
-                                                                    FStarC_Reflection_V2_Embeddings.e_term)) in
-                                                                    let uu___217
-                                                                    =
-                                                                    nbe_e_ret_t
-                                                                    (FStarC_TypeChecker_NBETerm.e_list
-                                                                    (FStarC_TypeChecker_NBETerm.e_tuple2
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_namedv
-                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_term)) in
                                                                     FStarC_Tactics_InterpFuns.mk_tac_step_4
                                                                     Prims.int_zero
                                                                     "try_unify"
@@ -1761,7 +1741,11 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_Embeddings.e_term))
                                                                     uu___0
                                                                     uu___0
-                                                                    uu___216
+                                                                    (e_ret_t
+                                                                    (FStarC_Syntax_Embeddings.e_list
+                                                                    (FStarC_Syntax_Embeddings.e_tuple2
+                                                                    FStarC_Reflection_V2_Embeddings.e_namedv
+                                                                    FStarC_Reflection_V2_Embeddings.e_term)))
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_env
                                                                     (FStarC_TypeChecker_NBETerm.e_list
                                                                     (FStarC_TypeChecker_NBETerm.e_tuple2
@@ -1769,7 +1753,11 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_term))
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                                                    uu___217
+                                                                    (nbe_e_ret_t
+                                                                    (FStarC_TypeChecker_NBETerm.e_list
+                                                                    (FStarC_TypeChecker_NBETerm.e_tuple2
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_namedv
+                                                                    FStarC_Reflection_V2_NBEEmbeddings.e_term)))
                                                                     FStarC_Tactics_V2_Basic.refl_try_unify
                                                                     FStarC_Tactics_V2_Basic.refl_try_unify in
                                                                     let uu___216

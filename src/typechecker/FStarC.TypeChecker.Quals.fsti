@@ -17,6 +17,7 @@
 module FStarC.TypeChecker.Quals
 
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
   
@@ -32,5 +33,5 @@ Currently, the only things that must be checked after the function is typechecke
 - The instance attribute for typeclasses
 *)
 
-val check_sigelt_quals_pre  : env -> sigelt -> unit
-val check_sigelt_quals_post : env -> sigelt -> unit
+val check_sigelt_quals_pre  : env -> sigelt -> ML unit
+val check_sigelt_quals_post : env -> sigelt -> ML unit

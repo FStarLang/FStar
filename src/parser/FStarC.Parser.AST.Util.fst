@@ -26,13 +26,13 @@ open FStarC.Const
 open FStarC.Parser.AST
 
 let concat_map = List.collect
-let opt_map f (x:option 'a) = match x with | None -> [] | Some x -> f x
+let opt_map (f: 'a -> ML (list 'b)) (x:option 'a) : ML _ = match x with | None -> [] | Some x -> f x
 
 let rec lidents_of_term (t:term)
-: list FStarC.Ident.lident
+: ML (list FStarC.Ident.lident)
 = lidents_of_term' t.tm
 and lidents_of_term' (t:term')
-: list FStarC.Ident.lident
+: ML (list FStarC.Ident.lident)
 = match t with
   | Wild -> []
   | Const _ -> []
@@ -89,10 +89,10 @@ and lidents_of_term' (t:term')
   | ElimAnd (t1, t2, t3, b1, b2, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
   | ListLiteral ts -> concat_map lidents_of_term ts
   | SeqLiteral ts -> concat_map lidents_of_term ts
-and lidents_of_branch (p, _, t) = lidents_of_pattern p @ lidents_of_term t
-and lidents_of_calc_step = function
+and lidents_of_branch b : ML _ = let (p, _, t) = b in lidents_of_pattern p @ lidents_of_term t
+and lidents_of_calc_step (x:calc_step) : ML _ = match x with
   | CalcStep (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
-and lidents_of_pattern p =
+and lidents_of_pattern p : ML _ =
   match p.pat with
   | PatWild _ -> []
   | PatConst _ -> []
@@ -107,28 +107,29 @@ and lidents_of_pattern p =
   | PatOp _ -> []
   | PatVQuote t -> lidents_of_term t
   | PatRest -> []
-and lidents_of_binder b =
+and lidents_of_binder b : ML _ =
   match b.b with
   | Annotated (_, t)
   | NoName t -> lidents_of_term t
   | _ -> []
 
-let lidents_of_tycon_record (_, _, _, t) =
+let lidents_of_tycon_record r : ML _ =
+  let (_, _, _, t) = r in
   lidents_of_term t
 
-let lidents_of_constructor_payload (t:constructor_payload) =
+let lidents_of_constructor_payload (t:constructor_payload) : ML _ =
   match t with
   | VpOfNotation t -> lidents_of_term t
   | VpArbitrary t -> lidents_of_term t
   | VpRecord (tc, None) -> concat_map lidents_of_tycon_record tc
   | VpRecord (tc, Some t) -> concat_map lidents_of_tycon_record tc @ lidents_of_term t
   
-let lidents_of_tycon_variant (tc:(ident & option constructor_payload & attributes_)) =
+let lidents_of_tycon_variant (tc:(ident & option constructor_payload & attributes_)) : ML _ =
   match tc with
   | _, None, _ -> []
   | _, Some t, _ -> lidents_of_constructor_payload t
 
-let lidents_of_tycon (tc:tycon) =
+let lidents_of_tycon (tc:tycon) : ML _ =
   match tc with
   | TyconAbstract (_, bs, k) -> concat_map lidents_of_binder bs @ opt_map lidents_of_term k
   | TyconAbbrev (_, bs, k, t) -> concat_map lidents_of_binder bs @ opt_map lidents_of_term k @ lidents_of_term t
@@ -141,14 +142,14 @@ let lidents_of_tycon (tc:tycon) =
     opt_map lidents_of_term k @
     concat_map lidents_of_tycon_variant tcs
 
-let lidents_of_lift (l:lift) = 
+let lidents_of_lift (l:lift) : ML _ = 
   [l.msource; l.mdest]@
   (match l.lift_op with
    | NonReifiableLift t -> lidents_of_term t
    | ReifiableLift (t1, t2) -> lidents_of_term t1 @ lidents_of_term t2
    | LiftForFree t -> lidents_of_term t)
 
-let rec lidents_of_decl (d:decl) =
+let rec lidents_of_decl (d:decl) : ML _ =
   match d.d with
   | TopLevelModule _ -> []
   | Open (l, _)
@@ -171,7 +172,7 @@ let rec lidents_of_decl (d:decl) =
   | DeclSyntaxExtension _
   | DeclToBeDesugared _ -> []
 
-and lidents_of_effect_decl (ed:effect_decl) =
+and lidents_of_effect_decl (ed:effect_decl) : ML _ =
   match ed with
   | DefineEffect  (_, bs, t, ds) ->
     concat_map lidents_of_binder bs @
@@ -182,12 +183,13 @@ and lidents_of_effect_decl (ed:effect_decl) =
     lidents_of_term t
 
 let extension_parser_table : SMap.t extension_parser = SMap.create 20
-let register_extension_parser (ext:string) (parser:extension_parser) =
+let register_extension_parser (ext:string) (parser:extension_parser) : ML unit =
   SMap.add extension_parser_table ext parser
 
-let lookup_extension_parser (ext:string) =
+let lookup_extension_parser (ext:string) : ML _ =
   let do () = SMap.try_find extension_parser_table ext in
-  match do () with
+  let r = do () in
+  match r with
   | None ->
     if Plugins.autoload_plugin ext
     then do ()
@@ -195,7 +197,7 @@ let lookup_extension_parser (ext:string) =
   | r -> r
 
 let as_open_namespaces_and_abbrevs (ls:list decl)
-: open_namespaces_and_abbreviations
+: ML open_namespaces_and_abbreviations
 = List.fold_right
     (fun d out ->
       match d.d with
@@ -206,9 +208,9 @@ let as_open_namespaces_and_abbrevs (ls:list decl)
     {open_namespaces = []; module_abbreviations = []}
 
 let extension_lang_parser_table : SMap.t extension_lang_parser = SMap.create 20
-let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
+let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) : ML unit =
   SMap.add extension_lang_parser_table ext parser
-let lookup_extension_lang_parser (ext:string) =
+let lookup_extension_lang_parser (ext:string) : ML _ =
   let r = SMap.try_find extension_lang_parser_table ext in
   match r with
   | None ->
@@ -218,7 +220,7 @@ let lookup_extension_lang_parser (ext:string) =
   | _ -> r
 
 let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:range)
-: list decl
+: ML (list decl)
 = let extension_parser = lookup_extension_lang_parser lang_name in
   match extension_parser with
   | None ->

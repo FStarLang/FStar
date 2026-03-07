@@ -27,10 +27,10 @@ instance deq_option #a (_ : deq a) : Tot (deq (option a)) = {
            | _, _ -> false)
 }
 
-let rec eqList (#a : Type) (eq : deq a) (xs : list a) (ys : list a) : bool =
+let rec eqList (#a : Type) (eq : deq a) (xs : list a) (ys : list a) : ML bool =
   match xs, ys with
   | [], [] -> true
-  | x::xs, y::ys -> x =? y && eqList #a eq xs ys
+  | x::xs, y::ys -> let r = x =? y in let r2 = eqList #a eq xs ys in r && r2
   | _, _ -> false
 
 instance deq_list #a (d : deq a) : Tot (deq (list a)) = {
@@ -45,26 +45,26 @@ instance deq_either #a #b (d1 : deq a) (d2 : deq b) : Tot (deq (either a b)) = {
 }
 
 instance deq_tuple2 #a #b (d1 : deq a) (d2 : deq b) : Tot (deq (a & b)) = {
-   (=?) = (fun (x1, x2) (y1, y2) -> x1 =? y1 && x2 =? y2)
+   (=?) = (fun (x1, x2) (y1, y2) -> let r1 = x1 =? y1 in let r2 = x2 =? y2 in r1 && r2)
 }
 
 instance deq_tuple3 #a #b #c (d1 : deq a) (d2 : deq b) (d3 : deq c) : Tot (deq (a & b & c)) = {
-   (=?) = (fun (x1, x2, x3) (y1, y2, y3) -> x1 =? y1 && x2 =? y2 && x3 =? y3)
+   (=?) = (fun (x1, x2, x3) (y1, y2, y3) -> let r1 = x1 =? y1 in let r2 = x2 =? y2 in let r3 = x3 =? y3 in r1 && r2 && r3)
 }
 
 instance deq_tuple4 #a #b #c #d (d1 : deq a) (d2 : deq b) (d3 : deq c) (d4 : deq d) : Tot (deq (a & b & c & d)) = {
-   (=?) = (fun (x1, x2, x3, x4) (y1, y2, y3, y4) -> x1 =? y1 && x2 =? y2 && x3 =? y3 && x4 =? y4)
+   (=?) = (fun (x1, x2, x3, x4) (y1, y2, y3, y4) -> let r1 = x1 =? y1 in let r2 = x2 =? y2 in let r3 = x3 =? y3 in let r4 = x4 =? y4 in r1 && r2 && r3 && r4)
 }
 
 instance deq_tuple5 #a #b #c #d #e (d1 : deq a) (d2 : deq b) (d3 : deq c) (d4 : deq d) (d5 : deq e) : Tot (deq (a & b & c & d & e)) = {
-   (=?) = (fun (x1, x2, x3, x4, x5) (y1, y2, y3, y4, y5) -> x1 =? y1 && x2 =? y2 && x3 =? y3 && x4 =? y4 && x5 =? y5)
+   (=?) = (fun (x1, x2, x3, x4, x5) (y1, y2, y3, y4, y5) -> let r1 = x1 =? y1 in let r2 = x2 =? y2 in let r3 = x3 =? y3 in let r4 = x4 =? y4 in let r5 = x5 =? y5 in r1 && r2 && r3 && r4 && r5)
 }
 
 instance deq_tuple6 #a #b #c #d #e #f (d1 : deq a) (d2 : deq b) (d3 : deq c) (d4 : deq d) (d5 : deq e) (d6 : deq f) : Tot (deq (a & b & c & d & e & f)) = {
-   (=?) = (fun (x1, x2, x3, x4, x5, x6) (y1, y2, y3, y4, y5, y6) -> x1 =? y1 && x2 =? y2 && x3 =? y3 && x4 =? y4 && x5 =? y5 && x6 =? y6)
+   (=?) = (fun (x1, x2, x3, x4, x5, x6) (y1, y2, y3, y4, y5, y6) -> let r1 = x1 =? y1 in let r2 = x2 =? y2 in let r3 = x3 =? y3 in let r4 = x4 =? y4 in let r5 = x5 =? y5 in let r6 = x6 =? y6 in r1 && r2 && r3 && r4 && r5 && r6)
 }
 
-let rec mem (#a:Type) {| deq a |} (x : a) (xs : list a) : bool =
+let rec mem (#a:Type) {| deq a |} (x : a) (xs : list a) : ML bool =
   match xs with
   | [] -> false
-  | y::ys -> x =? y || mem x ys
+  | y::ys -> let r = x =? y in let r2 = mem x ys in r || r2

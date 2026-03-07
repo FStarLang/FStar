@@ -2,7 +2,8 @@ open Prims
 let lazy_chooser (k : FStarC_Syntax_Syntax.lazy_kind)
   (i : FStarC_Syntax_Syntax.lazyinfo) : FStarC_Syntax_Syntax.term=
   match k with
-  | FStarC_Syntax_Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
+  | FStarC_Syntax_Syntax.BadLazy ->
+      FStarC_Effect.failwith "lazy chooser: got a BadLazy"
   | FStarC_Syntax_Syntax.Lazy_bv ->
       FStarC_Reflection_V2_Embeddings.unfold_lazy_bv i
   | FStarC_Syntax_Syntax.Lazy_namedv ->
@@ -43,8 +44,7 @@ let lazy_chooser (k : FStarC_Syntax_Syntax.lazy_kind)
       FStarC_Syntax_Util.exp_string "((tref))"
   | FStarC_Syntax_Syntax.Lazy_embedding (uu___, t) -> FStarC_Thunk.force t
   | FStarC_Syntax_Syntax.Lazy_extension s ->
-      let uu___ = FStarC_Format.fmt1 "((extension %s))" s in
-      FStarC_Syntax_Util.exp_string uu___
+      FStarC_Syntax_Util.exp_string (FStarC_Format.fmt1 "((extension %s))" s)
 let uu___0 : unit=
   FStarC_Effect.op_Colon_Equals
     FStarC_Syntax_DsEnv.ugly_sigelt_to_string_hook

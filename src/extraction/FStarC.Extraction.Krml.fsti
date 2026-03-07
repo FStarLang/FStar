@@ -17,6 +17,7 @@
 module FStarC.Extraction.Krml
 
 open FStarC
+open FStarC.Effect
 open FStarC.Class.Show
 
 type version = int
@@ -33,4 +34,4 @@ type file = string & program
     Serialization/parsing is with output_value/input_value. *)
 type binary_format = version & list file
 
-val translate : Extraction.ML.UEnv.uenv -> list Extraction.ML.Syntax.mlmodule -> list file
+val translate : Extraction.ML.UEnv.uenv -> list Extraction.ML.Syntax.mlmodule -> ML (list file)

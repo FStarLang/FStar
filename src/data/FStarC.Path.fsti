@@ -17,6 +17,7 @@
 *)
 module FStarC.Path
 
+open FStarC.Effect
 open FStarC.Class.Deq
 
 type path a = list a
@@ -24,6 +25,6 @@ type path a = list a
 type forest (a:Type) (qual:Type) =
   list (path a & qual) & qual
 
-val is_under {| deq 'a |} (p1 p2 : path 'a) : bool
+val is_under {| deq 'a |} (p1 p2 : path 'a) : ML bool
 
-val search_forest #a #q {| deq a |} (p:path a) (f : forest a q) : q
+val search_forest #a #q {| deq a |} (p:path a) (f : forest a q) : ML q

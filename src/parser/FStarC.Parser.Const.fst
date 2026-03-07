@@ -277,14 +277,10 @@ let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
-(* The "All" monad and its associated symbols.
-
-NOTE: With --MLish and --MLish_effect <module> this is somewhat configurable *)
+(* The "All" monad and its associated symbols. *)
 
 let ef_base () =
-  if Options.ml_ish ()
-  then String.split ['.'] <| Options.ml_ish_effect ()
-  else ["FStar"; "All"]
+  ["FStar"; "All"]
 
 let effect_ALL_lid () = p2l <| ef_base () @ ["ALL"]
 let effect_ML_lid  () = p2l <| ef_base () @ ["ML"]
@@ -403,7 +399,7 @@ let gen_reset =
     gen, reset
 let next_id = fst gen_reset
 
-let sli (l:lident) : string =
+let sli (l:lident) : ML string =
   if FStarC.Options.print_real_names()
   then string_of_lid l
   else string_of_id (ident_of_lid l)
@@ -433,8 +429,8 @@ let is_name (lid:lident) =
 let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
 (* tactic constants *)
-let fstar_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Range.dummyRange
-let fstar_stubs_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
+let fstar_tactics_lid' s : ML lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Range.dummyRange
+let fstar_stubs_tactics_lid' s : ML lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tac_bind_lid = fstar_tactics_lid' ["Effect"; "tac_bind"]
@@ -481,14 +477,14 @@ let dsl_tac_typ_lid = lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"]
 
 
 (* Calculational proofs, from FStar.Calc *)
-let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Range.dummyRange
+let calc_lid i : ML lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Range.dummyRange
 let calc_init_lid   = calc_lid "calc_init"
 let calc_step_lid   = calc_lid "calc_step"
 let calc_finish_lid = calc_lid "calc_finish"
 let calc_push_impl_lid = calc_lid "calc_push_impl"
 
 (* Classical proofs, from FStar.Classical *)
-let classical_sugar_lid i : lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Range.dummyRange
+let classical_sugar_lid i : ML lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Range.dummyRange
 
 let forall_intro_lid = classical_sugar_lid "forall_intro"
 let exists_intro_lid = classical_sugar_lid "exists_intro"

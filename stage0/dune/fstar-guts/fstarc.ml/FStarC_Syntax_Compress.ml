@@ -96,9 +96,9 @@ let deep_compress (allow_uvars : Prims.bool) (allow_names : Prims.bool)
     (fun uu___ ->
        FStarC_Errors.with_ctx "While deep-compressing a term"
          (fun uu___1 ->
-            let uu___2 = compress1_t allow_uvars allow_names in
-            let uu___3 = compress1_u allow_uvars allow_names in
-            FStarC_Syntax_Visit.visit_term_univs true uu___2 uu___3 tm))
+            FStarC_Syntax_Visit.visit_term_univs true
+              (compress1_t allow_uvars allow_names)
+              (compress1_u allow_uvars allow_names) tm))
 let deep_compress_uvars :
   FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term=
   deep_compress false true
@@ -111,9 +111,8 @@ let deep_compress_if_no_uvars (tm : FStarC_Syntax_Syntax.term) :
             match () with
             | () ->
                 let uu___2 =
-                  let uu___3 = compress1_t false true in
-                  let uu___4 = compress1_u false true in
-                  FStarC_Syntax_Visit.visit_term_univs true uu___3 uu___4 tm in
+                  FStarC_Syntax_Visit.visit_term_univs true
+                    (compress1_t false true) (compress1_u false true) tm in
                 FStar_Pervasives_Native.Some uu___2) ()
        with
        | FStarC_Errors.Error
@@ -129,6 +128,6 @@ let deep_compress_se (allow_uvars : Prims.bool) (allow_names : Prims.bool)
          FStarC_Format.fmt1 "While deep-compressing %s" uu___2 in
        FStarC_Errors.with_ctx uu___1
          (fun uu___2 ->
-            let uu___3 = compress1_t allow_uvars allow_names in
-            let uu___4 = compress1_u allow_uvars allow_names in
-            FStarC_Syntax_Visit.visit_sigelt true uu___3 uu___4 se))
+            FStarC_Syntax_Visit.visit_sigelt true
+              (compress1_t allow_uvars allow_names)
+              (compress1_u allow_uvars allow_names) se))

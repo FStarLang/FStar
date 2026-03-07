@@ -8,7 +8,8 @@ let query_cache_ref : FStarC_Hash.hash_code FStarC_RBSet.t FStarC_Effect.ref=
          ()) in
   FStarC_Effect.mk_ref uu___
 let on (uu___ : unit) : Prims.bool=
-  (FStarC_Options.query_cache ()) && (FStarC_Options.ide ())
+  let qc = FStarC_Options.query_cache () in
+  let ide = FStarC_Options.ide () in qc && ide
 let query_cache_add (g : FStarC_TypeChecker_Env.env)
   (q : FStarC_Syntax_Syntax.term) : unit=
   let uu___ = on () in

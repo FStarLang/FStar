@@ -21,4 +21,4 @@ open FStarC.SMTEncoding.Term
 type unsat_core = list string
 
 val filter (s:unsat_core) (decls:list decl)
-: list decl
+: ML (list decl)

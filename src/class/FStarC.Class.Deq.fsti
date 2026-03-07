@@ -3,10 +3,10 @@ module FStarC.Class.Deq
 open FStarC.Effect
 
 class deq (a:Type) = {
-  (=?) : a -> a -> bool;
+  (=?) : a -> a -> ML bool;
 }
 
-val (<>?) : #a:Type -> {| deq a |} -> a -> a -> bool
+val (<>?) : #a:Type -> {| deq a |} -> a -> a -> ML bool
 
 instance val deq_int    : deq int
 instance val deq_bool   : deq bool
@@ -61,4 +61,4 @@ instance val deq_tuple6
    (_ : deq 'f)
 : Tot (deq ('a & 'b & 'c & 'd & 'e & 'f))
 
-val mem (#a:Type) {| deq a |} (x : a) (xs : list a) : bool
+val mem (#a:Type) {| deq a |} (x : a) (xs : list a) : ML bool

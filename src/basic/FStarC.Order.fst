@@ -28,7 +28,7 @@ let lt (o : order) : bool = o = Lt
 let eq (o : order) : bool = o = Eq
 
 // Lexicographical combination, thunked to be lazy
-let lex (o1 : order) (o2 : unit -> order) : order =
+let lex (o1 : order) (o2 : unit -> ML order) : ML order =
     match o1, o2 with
     | Lt, _ -> Lt
     | Eq, _ -> o2 ()
@@ -55,15 +55,15 @@ let compare_bool (b1 b2 : bool) : order =
  *)
 let rec compare_list (#a:Type)
   (l1 l2:list a)
-  (f:(x:a{x << l1} -> y:a{y << l2} -> order))
-  : order
+  (f:(x:a{x << l1} -> y:a{y << l2} -> ML order))
+  : ML order
   = match l1, l2 with
     | [], [] -> Eq
     | [], _ -> Lt
     | _, [] -> Gt
     | x::xs, y::ys -> lex (f x y) (fun _ -> compare_list xs ys f)
 
-let compare_option (f : 'a -> 'a -> order) (x : option 'a) (y : option 'a) : order =
+let compare_option (f : 'a -> 'a -> ML order) (x : option 'a) (y : option 'a) : ML order =
     match x, y with
     | None   , None   -> Eq
     | None   , Some _ -> Lt

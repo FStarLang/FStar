@@ -5,18 +5,16 @@ open FStarC.Effect
 
 instance monad_option : monad option = {
   return = (fun x -> Some x); // FIXME: without the we gell ill-typed ML
-  bind   = Option.bind;
+  bind   = (fun o f -> match o with | None -> None | Some v -> f v);
 }
 
 (* Aliases. Need to declare a very precise type for them. *)
-(* FIXME: Having to repeat these here in the fst is due to bad interleaving
-   in --MLish mode. *)
-let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
-let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> m b) -> m b = bind
+let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
+let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
 
 instance monad_list : monad list = {
   return = (fun x -> [x]);
-  bind   = (fun x f -> List.concatMap f x)
+  bind   = (fun l f -> List.concatMap f l)
 }
 
 let rec mapM f l =
@@ -27,17 +25,16 @@ let rec mapM f l =
     let! ys = mapM f xs in
     return (y::ys)
 
-let mapMi #m #_ #a #b f l =
-  (* FIXME: need to annotate the return type, why? *)
-  let rec mapMi_go i f l : m (list b) =
+let mapMi #m #_ #a #b (f : int -> a -> ML (m b)) l =
+  let rec mapMi_go i l : ML (m (list b)) =
     match l with
     | [] -> return []
     | x::xs ->
       let! y = f i x in
-      let! ys = mapMi_go (i+1) f xs in
+      let! ys = mapMi_go (i+1) xs in
       return (y::ys)
   in
-  mapMi_go 0 f l
+  mapMi_go 0 l
 
 let map_optM f l =
   match l with
@@ -69,7 +66,8 @@ let rec foldM_right f xs e =
 
 let (<$>) f x =
   let! v = x in
-  return (f v)
+  let r = f v in
+  return r
 
 let (<*>) ff x =
   let! f = ff in
@@ -78,4 +76,5 @@ let (<*>) ff x =
 
 let fmap f m =
   let! v = m in
-  return (f v)
+  let r = f v in
+  return r

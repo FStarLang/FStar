@@ -29,19 +29,19 @@ module BU    = FStarC.Util
 module O     = FStarC.Options
 
 type vops_t = {
-    next_major : unit -> S.version;
-    next_minor : unit -> S.version
+    next_major : unit -> ML S.version;
+    next_minor : unit -> ML S.version
 }
 
 let vops =
     let major = mk_ref 0 in
     let minor = mk_ref 0 in
-    let next_major () =
+    let next_major () : ML _ =
         minor := 0;
         {major=(BU.incr major; !major);
          minor=0}
     in
-    let next_minor () =
+    let next_minor () : ML _ =
         {major=(!major);
          minor=(BU.incr minor; !minor)}
     in
@@ -61,7 +61,7 @@ type uf = {
   ro:bool;
 }
 
-let empty (v:version) = {
+let empty (v:version) : ML _ = {
     term_graph = PU.puf_empty();
     univ_graph = PU.puf_empty();
     version = v;
@@ -75,26 +75,23 @@ let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
 let state : ref uf =
   mk_ref (empty (vops.next_major()))
 
-type tx =
-    | TX of uf
-
 (* getting and setting the current unionfind graph
      -- used during backtracking in the tactics engine *)
-let get () = !state
+let get () : ML _ = !state
 
 
-let set_ro () =
+let set_ro () : ML unit =
     let s = get () in
     state := { s with ro = true }
 
-let set_rw () =
+let set_rw () : ML unit =
     let s = get () in
     state := { s with ro = false }
 
-let with_uf_enabled (f : unit -> 'a) : 'a =
+let with_uf_enabled (f : unit -> ML 'a) : ML 'a =
     let s = get () in
     set_rw ();
-    let restore () = if s.ro then set_ro () in
+    let restore () : ML unit = if s.ro then set_ro () in
 
     let r =
         if O.trace_error ()
@@ -108,44 +105,46 @@ let with_uf_enabled (f : unit -> 'a) : 'a =
     restore ();
     r
 
-let fail_if_ro () =
+let fail_if_ro () : ML unit =
     if (get ()).ro then
       raise_error0 Fatal_BadUvar "Internal error: UF graph was in read-only mode"
 
-let set (u:uf) =
+let set (u:uf) : ML unit =
     fail_if_ro ();
     state := u
 
-let reset () =
+let reset () : ML unit =
     fail_if_ro ();
     let v = vops.next_major () in
-//    printfn "UF version = %s" (version_to_string v);
     set ({ empty v with ro = false })
+
+type tx =
+    | TX of uf
 
 ////////////////////////////////////////////////////////////////////////////////
 //Transacational interface, used in FStarC.TypeChecker.Rel
 ////////////////////////////////////////////////////////////////////////////////
-let new_transaction () =
+let new_transaction () : ML _ =
     let tx = TX (get ()) in
     set ({get() with version=vops.next_minor()});
     tx
+let rollback t : ML _ = let TX uf = t in set uf
 let commit (tx:tx) = ()
-let rollback (TX uf) = set uf
 let update_in_tx (r:ref 'a) (x:'a) = ()
 
 ////////////////////////////////////////////////////////////////////////////////
 //Interface for term unification
 ////////////////////////////////////////////////////////////////////////////////
 (* private *)
-let get_term_graph () = (get()).term_graph
-let get_version () = (get()).version
+let get_term_graph () : ML _ = (get()).term_graph
+let get_version () : ML _ = (get()).version
 
 (* private *)
-let set_term_graph tg =
+let set_term_graph tg : ML _ =
   set ({get() with term_graph = tg})
 
 (*private*)
-let chk_v_t (su:S.uvar) = 
+let chk_v_t (su:S.uvar) : ML _ = 
     let u, v, rng = su in
     let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> show) in
     let expected = get_version () in
@@ -161,29 +160,30 @@ let chk_v_t (su:S.uvar) =
         text "Got version: " ^/^ doc_of_string (version_to_string v);
       ]
 
-let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
-let uvar_unique_id u = PU.puf_unique_id (chk_v_t u)
-let fresh decoration (rng:Range.t)  =
+let fresh decoration (rng:Range.t) : ML _ =
     fail_if_ro ();
     PU.puf_fresh (get_term_graph()) (None, decoration), get_version(), rng
+let uvar_id u : ML _  = PU.puf_id (get_term_graph()) (chk_v_t u)
+let uvar_unique_id u : ML _ = PU.puf_unique_id (chk_v_t u)
 
-let find_core u = PU.puf_find (get_term_graph()) (chk_v_t u)
-let find u     = fst (find_core u)
-let find_decoration u = snd (find_core u)
-let change u t = let _, dec = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t, dec))
-let change_decoration u d =  let t, _ = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (t, d))
-let equiv u v  = PU.puf_equivalent (get_term_graph()) (chk_v_t u) (chk_v_t v)
-let union  u v = set_term_graph (PU.puf_union (get_term_graph()) (chk_v_t u) (chk_v_t v))
+let find_core u : ML _ = PU.puf_find (get_term_graph()) (chk_v_t u)
+let find u : ML _     = fst (find_core u)
+let find_decoration u : ML _ = snd (find_core u)
+let change u t : ML _ = let _, dec = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t, dec))
+let change_decoration u d : ML _ =  let t, _ = find_core u in set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (t, d))
+let equiv u v : ML _  = PU.puf_equivalent (get_term_graph()) (chk_v_t u) (chk_v_t v)
+let union  u v : ML _ = set_term_graph (PU.puf_union (get_term_graph()) (chk_v_t u) (chk_v_t v))
 
 ////////////////////////////////////////////////////////////////////////////////
 //Interface for universe unification
 ////////////////////////////////////////////////////////////////////////////////
 
 (*private*)
-let get_univ_graph () = (get()).univ_graph
+let get_univ_graph () : ML _ = (get()).univ_graph
 
 (*private*)
-let chk_v_u (u, v, rng) =
+let chk_v_u x : ML _ =
+    let (u, v, rng) = x in
     let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> show) in
     let expected = get_version () in
     if v.major = expected.major
@@ -199,15 +199,15 @@ let chk_v_u (u, v, rng) =
       ]
 
 (*private*)
-let set_univ_graph (ug:ugraph) =
+let set_univ_graph (ug:ugraph) : ML _ =
   set ({get() with univ_graph = ug})
 
-let univ_uvar_id u  = PU.puf_id (get_univ_graph()) (chk_v_u u)
-let univ_fresh (rng:Range.t) =
+let univ_fresh (rng:Range.t) : ML _ =
     fail_if_ro ();
     PU.puf_fresh (get_univ_graph()) None, get_version(), rng
+let univ_uvar_id u : ML _  = PU.puf_id (get_univ_graph()) (chk_v_u u)
 
-let univ_find u     = PU.puf_find (get_univ_graph()) (chk_v_u u)
-let univ_change u t = set_univ_graph (PU.puf_change (get_univ_graph()) (chk_v_u u) (Some t))
-let univ_equiv  u v = PU.puf_equivalent (get_univ_graph()) (chk_v_u u) (chk_v_u v)
-let univ_union  u v = set_univ_graph (PU.puf_union (get_univ_graph()) (chk_v_u u) (chk_v_u v))
+let univ_find u : ML _     = PU.puf_find (get_univ_graph()) (chk_v_u u)
+let univ_change u t : ML _ = set_univ_graph (PU.puf_change (get_univ_graph()) (chk_v_u u) (Some t))
+let univ_equiv  u v : ML _ = PU.puf_equivalent (get_univ_graph()) (chk_v_u u) (chk_v_u v)
+let univ_union  u v : ML _ = set_univ_graph (PU.puf_union (get_univ_graph()) (chk_v_u u) (chk_v_u v))

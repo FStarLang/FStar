@@ -56,17 +56,14 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
                                     (FStarC_Syntax_Syntax.Implicit
                                     inaccessible) ->
                                     let a =
-                                      let uu___7 =
-                                        let uu___8 =
-                                          FStarC_Syntax_Syntax.range_of_bv t1 in
-                                        FStar_Pervasives_Native.Some uu___8 in
-                                      FStarC_Syntax_Syntax.new_bv uu___7
-                                        FStarC_Syntax_Syntax.tun in
+                                      FStarC_Syntax_Syntax.new_bv
+                                        (FStar_Pervasives_Native.Some
+                                           (FStarC_Syntax_Syntax.range_of_bv
+                                              t1)) FStarC_Syntax_Syntax.tun in
                                     let r =
                                       FStarC_Ident.range_of_lid
                                         fv.FStarC_Syntax_Syntax.fv_name in
-                                    let uu___7 = maybe_dot inaccessible a r in
-                                    (uu___7, true)
+                                    ((maybe_dot inaccessible a r), true)
                                 | uu___7 ->
                                     let uu___8 =
                                       let uu___9 =
@@ -95,20 +92,19 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
                                 let uu___6 = aux formals' pats' in (p1, true)
                                   :: uu___6
                             | FStarC_Syntax_Syntax.Pat_var v when
-                                let uu___5 =
-                                  FStarC_Ident.string_of_id
-                                    v.FStarC_Syntax_Syntax.ppname in
-                                uu___5 = FStarC_Ident.reserved_prefix ->
+                                (FStarC_Ident.string_of_id
+                                   v.FStarC_Syntax_Syntax.ppname)
+                                  = FStarC_Ident.reserved_prefix
+                                ->
                                 let a =
                                   FStarC_Syntax_Syntax.new_bv
                                     (FStar_Pervasives_Native.Some
                                        (p1.FStarC_Syntax_Syntax.p))
                                     FStarC_Syntax_Syntax.tun in
                                 let p2 =
-                                  let uu___5 =
-                                    FStarC_Ident.range_of_lid
-                                      fv.FStarC_Syntax_Syntax.fv_name in
-                                  maybe_dot inaccessible a uu___5 in
+                                  maybe_dot inaccessible a
+                                    (FStarC_Ident.range_of_lid
+                                       fv.FStarC_Syntax_Syntax.fv_name) in
                                 let uu___5 = aux formals' pats' in (p2, true)
                                   :: uu___5
                             | uu___5 ->
@@ -144,10 +140,9 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
                                   (p1.FStarC_Syntax_Syntax.p))
                                FStarC_Syntax_Syntax.tun in
                            let p2 =
-                             let uu___5 =
-                               FStarC_Ident.range_of_lid
-                                 fv.FStarC_Syntax_Syntax.fv_name in
-                             maybe_dot inaccessible a uu___5 in
+                             maybe_dot inaccessible a
+                               (FStarC_Ident.range_of_lid
+                                  fv.FStarC_Syntax_Syntax.fv_name) in
                            let uu___5 = aux formals' pats2 in (p2, true) ::
                              uu___5
                        | (uu___4, FStar_Pervasives_Native.Some
@@ -158,20 +153,17 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env)
                                   (p1.FStarC_Syntax_Syntax.p))
                                FStarC_Syntax_Syntax.tun in
                            let p2 =
-                             let uu___6 =
-                               FStarC_Ident.range_of_lid
-                                 fv.FStarC_Syntax_Syntax.fv_name in
-                             maybe_dot false a uu___6 in
+                             maybe_dot false a
+                               (FStarC_Ident.range_of_lid
+                                  fv.FStarC_Syntax_Syntax.fv_name) in
                            let uu___6 = aux formals' pats2 in (p2, true) ::
                              uu___6
                        | (uu___4, imp) ->
-                           let uu___5 =
-                             let uu___6 =
-                               FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
-                                 imp in
-                             (p1, uu___6) in
-                           let uu___6 = aux formals' pats' in uu___5 ::
-                             uu___6) in
+                           let uu___5 = aux formals' pats' in
+                           (p1,
+                             (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
+                                imp))
+                             :: uu___5) in
                 let uu___4 =
                   let uu___5 =
                     let uu___6 = aux f pats1 in (fv, us_opt, uu___6) in
@@ -224,13 +216,8 @@ let raw_pat_as_exp (env : FStarC_TypeChecker_Env.env)
                    let uu___3 = aux bs1 p2 in
                    (match uu___3 with
                     | (ep, bs2) ->
-                        let uu___4 =
-                          let uu___5 =
-                            let uu___6 =
-                              FStarC_Syntax_Syntax.as_aqual_implicit i in
-                            (ep, uu___6) in
-                          uu___5 :: args in
-                        (uu___4, bs2))) pats ([], bs) in
+                        (((ep, (FStarC_Syntax_Syntax.as_aqual_implicit i)) ::
+                          args), bs2))) pats ([], bs) in
         (match uu___ with
          | (args, bs1) ->
              let hd = FStarC_Syntax_Syntax.fv_to_tm fv in
@@ -267,9 +254,8 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
        match uu___1 with
        | (t, uu___2) ->
            let uu___3 =
-             let uu___4 = FStarC_Syntax_Syntax.range_of_bv x in
              FStarC_TypeChecker_Env.new_implicit_var_aux "pattern bv type"
-               uu___4 env1 t
+               (FStarC_Syntax_Syntax.range_of_bv x) env1 t
                (FStarC_Syntax_Syntax.Allow_untyped "pattern bv type")
                FStar_Pervasives_Native.None false in
            (match uu___3 with
@@ -282,8 +268,7 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
                       (x.FStarC_Syntax_Syntax.index);
                     FStarC_Syntax_Syntax.sort = t_x
                   } in
-                let uu___5 = FStarC_TypeChecker_Env.push_bv env1 x1 in
-                (x1, guard, uu___5))) in
+                (x1, guard, (FStarC_TypeChecker_Env.push_bv env1 x1)))) in
   let rec pat_as_arg_with_env env1 p1 =
     match p1.FStarC_Syntax_Syntax.v with
     | FStarC_Syntax_Syntax.Pat_constant c ->
@@ -385,8 +370,8 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
                then let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
                else
                  (let uu___3 =
-                    let uu___4 = FStarC_Syntax_Syntax.lid_of_fv fv in
-                    FStarC_TypeChecker_Env.lookup_datacon env2 uu___4 in
+                    FStarC_TypeChecker_Env.lookup_datacon env2
+                      (FStarC_Syntax_Syntax.lid_of_fv fv) in
                   match uu___3 with
                   | (us, uu___4) ->
                       if (FStarC_List.length us) = Prims.int_zero
@@ -418,14 +403,13 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
         (match uu___1 with
          | FStar_Pervasives_Native.Some x ->
              let m = FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv x in
-             let uu___2 =
-               FStarC_Format.fmt1
-                 "The pattern variable \"%s\" was used more than once" m in
              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
                p3.FStarC_Syntax_Syntax.p
                FStarC_Errors_Codes.Fatal_NonLinearPatternVars ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-               (Obj.magic uu___2)
+               (Obj.magic
+                  (FStarC_Format.fmt1
+                     "The pattern variable \"%s\" was used more than once" m))
          | uu___2 -> (b, a, w, arg, guard, p3)) in
   let uu___ = one_pat env p in
   match uu___ with | (b, uu___1, uu___2, tm, guard, p1) -> (b, tm, guard, p1)

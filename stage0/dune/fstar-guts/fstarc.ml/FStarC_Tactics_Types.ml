@@ -186,6 +186,99 @@ let __proj__Mkproofstate__item__dump_on_failure (projectee : proofstate) :
       guard_policy = guard_policy1; freshness; tac_verb_dbg; local_state;
       urgency; dump_on_failure;_} -> dump_on_failure
 type ref_proofstate = proofstate FStarC_Effect.ref
+let decr_depth (ps : proofstate) : proofstate=
+  {
+    main_context = (ps.main_context);
+    all_implicits = (ps.all_implicits);
+    goals = (ps.goals);
+    smt_goals = (ps.smt_goals);
+    splice_quals = (ps.splice_quals);
+    splice_attrs = (ps.splice_attrs);
+    depth = (ps.depth - Prims.int_one);
+    __dump = (ps.__dump);
+    psc = (ps.psc);
+    entry_range = (ps.entry_range);
+    guard_policy = (ps.guard_policy);
+    freshness = (ps.freshness);
+    tac_verb_dbg = (ps.tac_verb_dbg);
+    local_state = (ps.local_state);
+    urgency = (ps.urgency);
+    dump_on_failure = (ps.dump_on_failure)
+  }
+let incr_depth (ps : proofstate) : proofstate=
+  {
+    main_context = (ps.main_context);
+    all_implicits = (ps.all_implicits);
+    goals = (ps.goals);
+    smt_goals = (ps.smt_goals);
+    splice_quals = (ps.splice_quals);
+    splice_attrs = (ps.splice_attrs);
+    depth = (ps.depth + Prims.int_one);
+    __dump = (ps.__dump);
+    psc = (ps.psc);
+    entry_range = (ps.entry_range);
+    guard_policy = (ps.guard_policy);
+    freshness = (ps.freshness);
+    tac_verb_dbg = (ps.tac_verb_dbg);
+    local_state = (ps.local_state);
+    urgency = (ps.urgency);
+    dump_on_failure = (ps.dump_on_failure)
+  }
+let set_ps_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate)
+  : proofstate=
+  {
+    main_context = (ps.main_context);
+    all_implicits = (ps.all_implicits);
+    goals = (ps.goals);
+    smt_goals = (ps.smt_goals);
+    splice_quals = (ps.splice_quals);
+    splice_attrs = (ps.splice_attrs);
+    depth = (ps.depth);
+    __dump = (ps.__dump);
+    psc;
+    entry_range = (ps.entry_range);
+    guard_policy = (ps.guard_policy);
+    freshness = (ps.freshness);
+    tac_verb_dbg = (ps.tac_verb_dbg);
+    local_state = (ps.local_state);
+    urgency = (ps.urgency);
+    dump_on_failure = (ps.dump_on_failure)
+  }
+let tracepoint_with_psc (psc : FStarC_TypeChecker_Primops_Base.psc)
+  (ps : proofstate) : Prims.bool=
+  let do_trace = FStarC_Options.tactic_trace () in
+  let trace_depth = FStarC_Options.tactic_trace_d () in
+  if do_trace || (ps.depth <= trace_depth)
+  then (let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE")
+  else ();
+  true
+let tracepoint (ps : proofstate) : Prims.bool=
+  let do_trace = FStarC_Options.tactic_trace () in
+  let trace_depth = FStarC_Options.tactic_trace_d () in
+  if do_trace || (ps.depth <= trace_depth) then ps.__dump ps "TRACE" else ();
+  true
+let set_proofstate_range (ps : proofstate) (r : FStarC_Range_Type.t) :
+  proofstate=
+  {
+    main_context = (ps.main_context);
+    all_implicits = (ps.all_implicits);
+    goals = (ps.goals);
+    smt_goals = (ps.smt_goals);
+    splice_quals = (ps.splice_quals);
+    splice_attrs = (ps.splice_attrs);
+    depth = (ps.depth);
+    __dump = (ps.__dump);
+    psc = (ps.psc);
+    entry_range =
+      (FStarC_Range_Type.set_def_range ps.entry_range
+         (FStarC_Range_Type.def_range r));
+    guard_policy = (ps.guard_policy);
+    freshness = (ps.freshness);
+    tac_verb_dbg = (ps.tac_verb_dbg);
+    local_state = (ps.local_state);
+    urgency = (ps.urgency);
+    dump_on_failure = (ps.dump_on_failure)
+  }
 let goal_env (g : goal) : FStarC_TypeChecker_Env.env= g.goal_main_env
 let goal_range (g : goal) : FStarC_Range_Type.t=
   (g.goal_main_env).FStarC_TypeChecker_Env.range
@@ -221,15 +314,18 @@ let goal_with_env (g : goal) (env : FStarC_TypeChecker_Env.env) : goal=
     is_guard = (g.is_guard);
     label = (g.label)
   }
-let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) :
-  goal=
+let is_guard (g : goal) : Prims.bool= g.is_guard
+let get_label (g : goal) : Prims.string= g.label
+let set_label (l : Prims.string) (g : goal) : goal=
   {
     goal_main_env = (g.goal_main_env);
-    goal_ctx_uvar = ctx_u;
+    goal_ctx_uvar = (g.goal_ctx_uvar);
     opts = (g.opts);
     is_guard = (g.is_guard);
-    label = (g.label)
+    label = l
   }
+let goals_of (ps : proofstate) : goal Prims.list= ps.goals
+let smt_goals_of (ps : proofstate) : goal Prims.list= ps.smt_goals
 let mk_goal (env : FStarC_TypeChecker_Env.env)
   (u : FStarC_Syntax_Syntax.ctx_uvar) (o : FStarC_Options.optionstate)
   (b : Prims.bool) (l : Prims.string) : goal=
@@ -339,113 +435,14 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env)
         (env.FStarC_TypeChecker_Env.missing_decl)
     } i.FStarC_TypeChecker_Common.imp_uvar uu___ false
     i.FStarC_TypeChecker_Common.imp_reason
-let decr_depth (ps : proofstate) : proofstate=
-  {
-    main_context = (ps.main_context);
-    all_implicits = (ps.all_implicits);
-    goals = (ps.goals);
-    smt_goals = (ps.smt_goals);
-    splice_quals = (ps.splice_quals);
-    splice_attrs = (ps.splice_attrs);
-    depth = (ps.depth - Prims.int_one);
-    __dump = (ps.__dump);
-    psc = (ps.psc);
-    entry_range = (ps.entry_range);
-    guard_policy = (ps.guard_policy);
-    freshness = (ps.freshness);
-    tac_verb_dbg = (ps.tac_verb_dbg);
-    local_state = (ps.local_state);
-    urgency = (ps.urgency);
-    dump_on_failure = (ps.dump_on_failure)
-  }
-let incr_depth (ps : proofstate) : proofstate=
-  {
-    main_context = (ps.main_context);
-    all_implicits = (ps.all_implicits);
-    goals = (ps.goals);
-    smt_goals = (ps.smt_goals);
-    splice_quals = (ps.splice_quals);
-    splice_attrs = (ps.splice_attrs);
-    depth = (ps.depth + Prims.int_one);
-    __dump = (ps.__dump);
-    psc = (ps.psc);
-    entry_range = (ps.entry_range);
-    guard_policy = (ps.guard_policy);
-    freshness = (ps.freshness);
-    tac_verb_dbg = (ps.tac_verb_dbg);
-    local_state = (ps.local_state);
-    urgency = (ps.urgency);
-    dump_on_failure = (ps.dump_on_failure)
-  }
-let set_ps_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate)
-  : proofstate=
-  {
-    main_context = (ps.main_context);
-    all_implicits = (ps.all_implicits);
-    goals = (ps.goals);
-    smt_goals = (ps.smt_goals);
-    splice_quals = (ps.splice_quals);
-    splice_attrs = (ps.splice_attrs);
-    depth = (ps.depth);
-    __dump = (ps.__dump);
-    psc;
-    entry_range = (ps.entry_range);
-    guard_policy = (ps.guard_policy);
-    freshness = (ps.freshness);
-    tac_verb_dbg = (ps.tac_verb_dbg);
-    local_state = (ps.local_state);
-    urgency = (ps.urgency);
-    dump_on_failure = (ps.dump_on_failure)
-  }
-let tracepoint_with_psc (psc : FStarC_TypeChecker_Primops_Base.psc)
-  (ps : proofstate) : Prims.bool=
-  (let uu___1 =
-     (FStarC_Options.tactic_trace ()) ||
-       (let uu___2 = FStarC_Options.tactic_trace_d () in ps.depth <= uu___2) in
-   if uu___1
-   then let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE"
-   else ());
-  true
-let tracepoint (ps : proofstate) : Prims.bool=
-  (let uu___1 =
-     (FStarC_Options.tactic_trace ()) ||
-       (let uu___2 = FStarC_Options.tactic_trace_d () in ps.depth <= uu___2) in
-   if uu___1 then ps.__dump ps "TRACE" else ());
-  true
-let set_proofstate_range (ps : proofstate) (r : FStarC_Range_Type.t) :
-  proofstate=
-  let uu___ =
-    let uu___1 = FStarC_Range_Type.def_range r in
-    FStarC_Range_Type.set_def_range ps.entry_range uu___1 in
-  {
-    main_context = (ps.main_context);
-    all_implicits = (ps.all_implicits);
-    goals = (ps.goals);
-    smt_goals = (ps.smt_goals);
-    splice_quals = (ps.splice_quals);
-    splice_attrs = (ps.splice_attrs);
-    depth = (ps.depth);
-    __dump = (ps.__dump);
-    psc = (ps.psc);
-    entry_range = uu___;
-    guard_policy = (ps.guard_policy);
-    freshness = (ps.freshness);
-    tac_verb_dbg = (ps.tac_verb_dbg);
-    local_state = (ps.local_state);
-    urgency = (ps.urgency);
-    dump_on_failure = (ps.dump_on_failure)
-  }
-let goals_of (ps : proofstate) : goal Prims.list= ps.goals
-let smt_goals_of (ps : proofstate) : goal Prims.list= ps.smt_goals
-let is_guard (g : goal) : Prims.bool= g.is_guard
-let get_label (g : goal) : Prims.string= g.label
-let set_label (l : Prims.string) (g : goal) : goal=
+let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) :
+  goal=
   {
     goal_main_env = (g.goal_main_env);
-    goal_ctx_uvar = (g.goal_ctx_uvar);
+    goal_ctx_uvar = ctx_u;
     opts = (g.opts);
     is_guard = (g.is_guard);
-    label = l
+    label = (g.label)
   }
 type ctrl_flag =
   | Continue 

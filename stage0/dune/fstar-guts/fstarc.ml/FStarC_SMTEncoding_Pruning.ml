@@ -55,6 +55,13 @@ let mk_remaining_triggers (ts : triggers_set) :
   { remaining_triggers = ts; already_triggered = [] }
 let no_ambients (uu___ : unit) : Prims.bool=
   FStarC_Options_Ext.enabled "context_pruning_no_ambients"
+let should_retain_assumption (a : FStarC_SMTEncoding_Term.assumption) :
+  Prims.bool=
+  if
+    a.FStarC_SMTEncoding_Term.assumption_caption =
+      (FStar_Pervasives_Native.Some "pretyping")
+  then FStarC_Options_Ext.enabled "pretyping_axioms"
+  else true
 type pruning_state =
   {
   defs_and_decls: FStarC_SMTEncoding_Term.decl Prims.list ;
@@ -175,32 +182,27 @@ let init_macro_freenames : Prims.string Prims.list FStarC_PSMap.t=
     ("is-BoxString", ["BoxString"]);
     ("is-BoxReal", ["BoxReal"])]
 let init : pruning_state=
-  let uu___ = FStarC_PSMap.empty () in
-  let uu___1 = FStarC_PSMap.empty () in
-  let uu___2 = FStarC_PSMap.empty () in
-  let uu___3 = FStarC_PSMap.empty () in
   {
     defs_and_decls = [];
-    defs_and_decls_map = uu___;
+    defs_and_decls_map = (FStarC_PSMap.empty ());
     macro_freenames = init_macro_freenames;
-    trigger_to_assumption = uu___1;
-    assumption_to_triggers = uu___2;
-    assumption_name_map = uu___3;
+    trigger_to_assumption = (FStarC_PSMap.empty ());
+    assumption_to_triggers = (FStarC_PSMap.empty ());
+    assumption_name_map = (FStarC_PSMap.empty ());
     ambients = [];
     extra_roots = [];
     pruned_ambients = []
   }
 let add_trigger_to_assumption (a : FStarC_SMTEncoding_Term.assumption)
   (p : pruning_state) (trig : Prims.string) : pruning_state=
-  let uu___ = FStarC_PSMap.try_find p.trigger_to_assumption trig in
-  match uu___ with
+  match FStarC_PSMap.try_find p.trigger_to_assumption trig with
   | FStar_Pervasives_Native.None ->
-      let uu___1 = FStarC_PSMap.add p.trigger_to_assumption trig [a] in
       {
         defs_and_decls = (p.defs_and_decls);
         defs_and_decls_map = (p.defs_and_decls_map);
         macro_freenames = (p.macro_freenames);
-        trigger_to_assumption = uu___1;
+        trigger_to_assumption =
+          (FStarC_PSMap.add p.trigger_to_assumption trig [a]);
         assumption_to_triggers = (p.assumption_to_triggers);
         assumption_name_map = (p.assumption_name_map);
         ambients = (p.ambients);
@@ -208,12 +210,12 @@ let add_trigger_to_assumption (a : FStarC_SMTEncoding_Term.assumption)
         pruned_ambients = (p.pruned_ambients)
       }
   | FStar_Pervasives_Native.Some l ->
-      let uu___1 = FStarC_PSMap.add p.trigger_to_assumption trig (a :: l) in
       {
         defs_and_decls = (p.defs_and_decls);
         defs_and_decls_map = (p.defs_and_decls_map);
         macro_freenames = (p.macro_freenames);
-        trigger_to_assumption = uu___1;
+        trigger_to_assumption =
+          (FStarC_PSMap.add p.trigger_to_assumption trig (a :: l));
         assumption_to_triggers = (p.assumption_to_triggers);
         assumption_name_map = (p.assumption_name_map);
         ambients = (p.ambients);
@@ -280,16 +282,15 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
   (p : pruning_state) : pruning_state=
   let add_assumption_with_triggers triggers1 =
     let p1 =
-      let uu___ =
-        FStarC_PSMap.add p.assumption_to_triggers
-          a.FStarC_SMTEncoding_Term.assumption_name
-          (mk_remaining_triggers triggers1) in
       {
         defs_and_decls = (p.defs_and_decls);
         defs_and_decls_map = (p.defs_and_decls_map);
         macro_freenames = (p.macro_freenames);
         trigger_to_assumption = (p.trigger_to_assumption);
-        assumption_to_triggers = uu___;
+        assumption_to_triggers =
+          (FStarC_PSMap.add p.assumption_to_triggers
+             a.FStarC_SMTEncoding_Term.assumption_name
+             (mk_remaining_triggers triggers1));
         assumption_name_map = (p.assumption_name_map);
         ambients = (p.ambients);
         extra_roots = (p.extra_roots);
@@ -673,17 +674,16 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
 let add_assumption_to_triggers (a : FStarC_SMTEncoding_Term.assumption)
   (p : pruning_state) (trigs : triggers_set) : pruning_state=
   let p1 =
-    let uu___ =
-      FStarC_PSMap.add p.assumption_name_map
-        a.FStarC_SMTEncoding_Term.assumption_name
-        (FStarC_SMTEncoding_Term.Assume a) in
     {
       defs_and_decls = (p.defs_and_decls);
       defs_and_decls_map = (p.defs_and_decls_map);
       macro_freenames = (p.macro_freenames);
       trigger_to_assumption = (p.trigger_to_assumption);
       assumption_to_triggers = (p.assumption_to_triggers);
-      assumption_name_map = uu___;
+      assumption_name_map =
+        (FStarC_PSMap.add p.assumption_name_map
+           a.FStarC_SMTEncoding_Term.assumption_name
+           (FStarC_SMTEncoding_Term.Assume a));
       ambients = (p.ambients);
       extra_roots = (p.extra_roots);
       pruned_ambients = (p.pruned_ambients)
@@ -691,16 +691,15 @@ let add_assumption_to_triggers (a : FStarC_SMTEncoding_Term.assumption)
   match trigs with
   | [] -> maybe_add_ambient a p1
   | uu___ ->
-      let uu___1 =
-        FStarC_PSMap.add p1.assumption_to_triggers
-          a.FStarC_SMTEncoding_Term.assumption_name
-          (mk_remaining_triggers trigs) in
       {
         defs_and_decls = (p1.defs_and_decls);
         defs_and_decls_map = (p1.defs_and_decls_map);
         macro_freenames = (p1.macro_freenames);
         trigger_to_assumption = (p1.trigger_to_assumption);
-        assumption_to_triggers = uu___1;
+        assumption_to_triggers =
+          (FStarC_PSMap.add p1.assumption_to_triggers
+             a.FStarC_SMTEncoding_Term.assumption_name
+             (mk_remaining_triggers trigs));
         assumption_name_map = (p1.assumption_name_map);
         ambients = (p1.ambients);
         extra_roots = (p1.extra_roots);
@@ -708,12 +707,12 @@ let add_assumption_to_triggers (a : FStarC_SMTEncoding_Term.assumption)
       }
 let trigger_reached (p : pruning_state) (trig : Prims.string) :
   pruning_state=
-  let uu___ = FStarC_PSMap.remove p.trigger_to_assumption trig in
   {
     defs_and_decls = (p.defs_and_decls);
     defs_and_decls_map = (p.defs_and_decls_map);
     macro_freenames = (p.macro_freenames);
-    trigger_to_assumption = uu___;
+    trigger_to_assumption =
+      (FStarC_PSMap.remove p.trigger_to_assumption trig);
     assumption_to_triggers = (p.assumption_to_triggers);
     assumption_name_map = (p.assumption_name_map);
     ambients = (p.ambients);
@@ -722,47 +721,44 @@ let trigger_reached (p : pruning_state) (trig : Prims.string) :
   }
 let remove_trigger_for_assumption (p : pruning_state) (trig : sym)
   (aname : Prims.string) : (pruning_state * Prims.bool * sym Prims.list)=
-  let uu___ = FStarC_PSMap.try_find p.assumption_to_triggers aname in
-  match uu___ with
+  match FStarC_PSMap.try_find p.assumption_to_triggers aname with
   | FStar_Pervasives_Native.None -> (p, false, [])
   | FStar_Pervasives_Native.Some l ->
       let l1 =
-        let uu___1 =
+        let uu___ =
           FStarC_List.map
-            (fun uu___2 ->
+            (fun uu___1 ->
                (fun ts ->
                   Obj.magic
                     (FStarC_Class_Setlike.remove ()
                        (Obj.magic
                           (FStarC_RBSet.setlike_rbset
                              FStarC_Class_Ord.ord_string)) trig.sym_name
-                       (Obj.magic ts))) uu___2) l.remaining_triggers in
+                       (Obj.magic ts))) uu___1) l.remaining_triggers in
         {
-          remaining_triggers = uu___1;
+          remaining_triggers = uu___;
           already_triggered = (trig :: (l.already_triggered))
         } in
       let eligible =
         FStarC_Util.for_some
-          (fun uu___1 ->
+          (fun uu___ ->
              (Obj.magic
                 (FStarC_Class_Setlike.is_empty ()
                    (Obj.magic
                       (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
-               uu___1) l1.remaining_triggers in
-      let uu___1 =
-        let uu___2 = FStarC_PSMap.add p.assumption_to_triggers aname l1 in
-        {
-          defs_and_decls = (p.defs_and_decls);
-          defs_and_decls_map = (p.defs_and_decls_map);
-          macro_freenames = (p.macro_freenames);
-          trigger_to_assumption = (p.trigger_to_assumption);
-          assumption_to_triggers = uu___2;
-          assumption_name_map = (p.assumption_name_map);
-          ambients = (p.ambients);
-          extra_roots = (p.extra_roots);
-          pruned_ambients = (p.pruned_ambients)
-        } in
-      (uu___1, eligible, (l1.already_triggered))
+               uu___) l1.remaining_triggers in
+      ({
+         defs_and_decls = (p.defs_and_decls);
+         defs_and_decls_map = (p.defs_and_decls_map);
+         macro_freenames = (p.macro_freenames);
+         trigger_to_assumption = (p.trigger_to_assumption);
+         assumption_to_triggers =
+           (FStarC_PSMap.add p.assumption_to_triggers aname l1);
+         assumption_name_map = (p.assumption_name_map);
+         ambients = (p.ambients);
+         extra_roots = (p.extra_roots);
+         pruned_ambients = (p.pruned_ambients)
+       }, eligible, (l1.already_triggered))
 let rec assumptions_of_decl (d : FStarC_SMTEncoding_Term.decl) :
   FStarC_SMTEncoding_Term.assumption Prims.list=
   match d with
@@ -796,12 +792,11 @@ let rec add_decl (d : FStarC_SMTEncoding_Term.decl) (p : pruning_state) :
         FStarC_Class_Setlike.elems ()
           (Obj.magic (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))
           (Obj.magic uu___3) in
-      let uu___3 = FStarC_PSMap.add p.defs_and_decls_map macro d in
-      let uu___4 = FStarC_PSMap.add p.macro_freenames macro free_names in
       {
         defs_and_decls = (d :: (p.defs_and_decls));
-        defs_and_decls_map = uu___3;
-        macro_freenames = uu___4;
+        defs_and_decls_map = (FStarC_PSMap.add p.defs_and_decls_map macro d);
+        macro_freenames =
+          (FStarC_PSMap.add p.macro_freenames macro free_names);
         trigger_to_assumption = (p.trigger_to_assumption);
         assumption_to_triggers = (p.assumption_to_triggers);
         assumption_name_map = (p.assumption_name_map);
@@ -810,10 +805,9 @@ let rec add_decl (d : FStarC_SMTEncoding_Term.decl) (p : pruning_state) :
         pruned_ambients = (p.pruned_ambients)
       }
   | FStarC_SMTEncoding_Term.DeclFun (name, uu___, uu___1, uu___2) ->
-      let uu___3 = FStarC_PSMap.add p.defs_and_decls_map name d in
       {
         defs_and_decls = (d :: (p.defs_and_decls));
-        defs_and_decls_map = uu___3;
+        defs_and_decls_map = (FStarC_PSMap.add p.defs_and_decls_map name d);
         macro_freenames = (p.macro_freenames);
         trigger_to_assumption = (p.trigger_to_assumption);
         assumption_to_triggers = (p.assumption_to_triggers);
@@ -868,10 +862,12 @@ let mark_trigger_reached (x : sym) : unit st=
     (fun uu___ ->
        (fun ctxt1 ->
           let ctxt1 = Obj.magic ctxt1 in
-          let uu___ =
-            let uu___1 = trigger_reached ctxt1.p x.sym_name in
-            { p = uu___1; reached = (ctxt1.reached) } in
-          Obj.magic (put uu___)) uu___)
+          Obj.magic
+            (put
+               {
+                 p = (trigger_reached ctxt1.p x.sym_name);
+                 reached = (ctxt1.reached)
+               })) uu___)
 let find_assumptions_waiting_on_trigger (uu___ : sym) :
   FStarC_SMTEncoding_Term.assumption Prims.list st=
   (fun x ->
@@ -880,10 +876,9 @@ let find_assumptions_waiting_on_trigger (uu___ : sym) :
           (fun uu___ ->
              (fun ctxt1 ->
                 let ctxt1 = Obj.magic ctxt1 in
-                let uu___ =
-                  FStarC_PSMap.try_find (ctxt1.p).trigger_to_assumption
-                    x.sym_name in
-                match uu___ with
+                match FStarC_PSMap.try_find (ctxt1.p).trigger_to_assumption
+                        x.sym_name
+                with
                 | FStar_Pervasives_Native.None ->
                     Obj.magic
                       (FStarC_Class_Monad.return st_monad () (Obj.magic []))
@@ -898,14 +893,13 @@ let reached_assumption (aname : Prims.string) : unit st=
           let ctxt1 = Obj.magic ctxt1 in
           let p =
             let uu___ = ctxt1.p in
-            let uu___1 =
-              FStarC_PSMap.remove (ctxt1.p).assumption_to_triggers aname in
             {
               defs_and_decls = (uu___.defs_and_decls);
               defs_and_decls_map = (uu___.defs_and_decls_map);
               macro_freenames = (uu___.macro_freenames);
               trigger_to_assumption = (uu___.trigger_to_assumption);
-              assumption_to_triggers = uu___1;
+              assumption_to_triggers =
+                (FStarC_PSMap.remove (ctxt1.p).assumption_to_triggers aname);
               assumption_name_map = (uu___.assumption_name_map);
               ambients = (uu___.ambients);
               extra_roots = (uu___.extra_roots);
@@ -934,16 +928,16 @@ let remove_trigger_for (uu___1 : sym)
                     a.FStarC_SMTEncoding_Term.assumption_name in
                 match uu___ with
                 | (p, eligible, already_triggered) ->
-                    let uu___1 = put { p; reached = (ctxt1.reached) } in
                     Obj.magic
-                      (FStarC_Class_Monad.op_let_Bang st_monad () () uu___1
-                         (fun uu___2 ->
-                            (fun uu___2 ->
-                               let uu___2 = Obj.magic uu___2 in
+                      (FStarC_Class_Monad.op_let_Bang st_monad () ()
+                         (put { p; reached = (ctxt1.reached) })
+                         (fun uu___1 ->
+                            (fun uu___1 ->
+                               let uu___1 = Obj.magic uu___1 in
                                Obj.magic
                                  (FStarC_Class_Monad.return st_monad ()
                                     (Obj.magic (eligible, already_triggered))))
-                              uu___2))) uu___))) uu___1 uu___
+                              uu___1))) uu___))) uu___1 uu___
 let already_reached (uu___ : Prims.string) : Prims.bool st=
   (fun aname ->
      Obj.magic
@@ -1056,13 +1050,12 @@ let rec scan (ds : FStarC_SMTEncoding_Term.assumption Prims.list) : unit st=
           let mk_sym assumption_name1 l =
             { sym_name = l; sym_provenance = assumption_name1 } in
           let macro_expand s =
-            let uu___ =
-              FStarC_PSMap.try_find (ctxt1.p).macro_freenames s.sym_name in
-            match uu___ with
+            match FStarC_PSMap.try_find (ctxt1.p).macro_freenames s.sym_name
+            with
             | FStar_Pervasives_Native.None -> [s]
             | FStar_Pervasives_Native.Some l ->
-                let uu___1 = FStarC_List.map (mk_sym s.sym_provenance) l in s
-                  :: uu___1 in
+                let uu___ = FStarC_List.map (mk_sym s.sym_provenance) l in s
+                  :: uu___ in
           let new_syms =
             FStarC_List.collect
               (fun a ->
@@ -1119,25 +1112,40 @@ let rec scan (ds : FStarC_SMTEncoding_Term.assumption Prims.list) : unit st=
                                                           (Obj.magic acc))
                                                    else
                                                      (let uu___6 =
-                                                        reached_assumption
-                                                          assumption.FStarC_SMTEncoding_Term.assumption_name in
-                                                      Obj.magic
-                                                        (FStarC_Class_Monad.op_let_Bang
-                                                           st_monad () ()
-                                                           uu___6
-                                                           (fun uu___7 ->
-                                                              (fun uu___7 ->
-                                                                 let uu___7 =
-                                                                   Obj.magic
-                                                                    uu___7 in
-                                                                 Obj.magic
-                                                                   (FStarC_Class_Monad.return
+                                                        let uu___7 =
+                                                          should_retain_assumption
+                                                            assumption in
+                                                        Prims.op_Negation
+                                                          uu___7 in
+                                                      if uu___6
+                                                      then
+                                                        Obj.magic
+                                                          (FStarC_Class_Monad.return
+                                                             st_monad ()
+                                                             (Obj.magic acc))
+                                                      else
+                                                        (let uu___8 =
+                                                           reached_assumption
+                                                             assumption.FStarC_SMTEncoding_Term.assumption_name in
+                                                         Obj.magic
+                                                           (FStarC_Class_Monad.op_let_Bang
+                                                              st_monad () ()
+                                                              uu___8
+                                                              (fun uu___9 ->
+                                                                 (fun uu___9
+                                                                    ->
+                                                                    let uu___9
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___9 in
+                                                                    Obj.magic
+                                                                    (FStarC_Class_Monad.return
                                                                     st_monad
                                                                     ()
                                                                     (Obj.magic
                                                                     (assumption
                                                                     :: acc))))
-                                                                uu___7))))
+                                                                   uu___9)))))
                                                   uu___4))) uu___4 uu___3)
                                 (Obj.magic []) (Obj.magic triggered)) in
                          Obj.magic
@@ -1151,15 +1159,14 @@ let rec scan (ds : FStarC_SMTEncoding_Term.assumption Prims.list) : unit st=
 let print_reached_names_and_reasons (ctxt1 : ctxt)
   (names : Prims.string Prims.list) : Prims.string=
   let print_one name =
-    let uu___ = FStarC_PSMap.try_find (ctxt1.p).assumption_to_triggers name in
-    match uu___ with
+    match FStarC_PSMap.try_find (ctxt1.p).assumption_to_triggers name with
     | FStar_Pervasives_Native.None ->
         FStarC_Format.fmt1 "%s (included but not found in map)" name
     | FStar_Pervasives_Native.Some l ->
-        let uu___1 =
+        let uu___ =
           FStarC_Class_Show.show (FStarC_Class_Show.show_list showable_sym)
             l.already_triggered in
-        FStarC_Format.fmt2 "%s {triggered by %s}" name uu___1 in
+        FStarC_Format.fmt2 "%s {triggered by %s}" name uu___ in
   let uu___ = FStarC_List.map print_one names in
   FStarC_String.concat "\n\t" uu___
 let name_of_decl (d : FStarC_SMTEncoding_Term.decl) : Prims.string=
@@ -1237,9 +1244,8 @@ let prune (p : pruning_state)
        (let reached_assumptions =
           FStarC_List.collect
             (fun name ->
-               let uu___3 =
-                 FStarC_PSMap.try_find (ctxt1.p).assumption_name_map name in
-               match uu___3 with
+               match FStarC_PSMap.try_find (ctxt1.p).assumption_name_map name
+               with
                | FStar_Pervasives_Native.None -> []
                | FStar_Pervasives_Native.Some a -> [a])
             (FStar_List_Tot_Base.op_At reached_names p.ambients) in
@@ -1300,15 +1306,14 @@ let prune (p : pruning_state)
                                          (included_decl_names1,
                                            defs_and_decls1)
                                        else
-                                         (let uu___13 =
-                                            FStarC_PSMap.try_find
-                                              p.defs_and_decls_map name in
-                                          match uu___13 with
+                                         (match FStarC_PSMap.try_find
+                                                  p.defs_and_decls_map name
+                                          with
                                           | FStar_Pervasives_Native.None ->
                                               (included_decl_names1,
                                                 defs_and_decls1)
                                           | FStar_Pervasives_Native.Some d ->
-                                              let uu___14 =
+                                              let uu___13 =
                                                 Obj.magic
                                                   (FStarC_Class_Setlike.add
                                                      ()
@@ -1318,7 +1323,7 @@ let prune (p : pruning_state)
                                                      name
                                                      (Obj.magic
                                                         included_decl_names1)) in
-                                              (uu___14, (d ::
+                                              (uu___13, (d ::
                                                 defs_and_decls1))))
                                 (included_decl_names, defs_and_decls) uu___9
                           | uu___9 -> (included_decl_names, defs_and_decls)))

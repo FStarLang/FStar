@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V1.Embeddings
+open FStarC.Effect
 
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
@@ -23,47 +24,45 @@ open FStarC.Reflection.V1.Data
 module RD = FStarC.Reflection.V1.Data
 
 (* Embeddings. We mark the ones proper to this module as instances *)
+(* Ordered to match definition order in .fst *)
 val e_bv            : embedding bv
 val e_binder        : embedding binder
-instance val e_binder_view   : embedding binder_view
-val e_binders       : embedding binders
+val e_term_aq       : antiquotations -> embedding term
 val e_term          : embedding term
-instance val e_term_view     : embedding term_view
+val e_binders       : embedding binders
 val e_fv            : embedding fv
 val e_comp          : embedding comp
-instance val e_comp_view     : embedding comp_view
-instance val e_const         : embedding vconst
+val e_universe      : embedding universe
+instance val e_aqualv        : embedding aqualv
+instance val e_ident         : embedding RD.ident (* NOT FStarC.Ident.ident *)
+instance val e_universe_view : embedding universe_view
 val e_env           : embedding FStarC.TypeChecker.Env.env
+instance val e_const         : embedding vconst
 instance val e_pattern       : embedding pattern
 instance val e_branch        : embedding Data.branch
-instance val e_aqualv        : embedding aqualv
 instance val e_argv          : embedding argv
-val e_sigelt        : embedding sigelt
-val e_letbinding    : embedding letbinding
-val e_lb_view       : embedding lb_view
-instance val e_sigelt_view   : embedding sigelt_view
+val e_term_view_aq  : antiquotations -> embedding term_view
+instance val e_term_view     : embedding term_view
 instance val e_bv_view       : embedding bv_view
 val e_attribute     : embedding attribute
 val e_attributes    : embedding (list attribute) (* This seems rather silly, but `attributes` is a keyword *)
-instance val e_qualifier     : embedding RD.qualifier
-val e_qualifiers    : embedding (list RD.qualifier)
-val e_ident         : embedding RD.ident (* NOT FStarC.Ident.ident *)
+instance val e_binder_view   : embedding binder_view
+instance val e_comp_view     : embedding comp_view
+instance val e_sigelt        : embedding sigelt
 val e_univ_name     : embedding RD.univ_name (* NOT Syntax.univ_name *)
-val e_universe      : embedding universe
-instance val e_universe_view : embedding universe_view
-
-(* Useful for embedding antiquoted terms. They are only used for the embedding part,
- * so this is a bit hackish. *)
-val e_term_aq       : antiquotations -> embedding term
-val e_term_view_aq  : antiquotations -> embedding term_view
+val e_lb_view       : embedding lb_view
+val e_letbinding    : embedding letbinding
+instance val e_sigelt_view   : embedding sigelt_view
+val e_qualifier     : embedding RD.qualifier
+val e_qualifiers    : embedding (list RD.qualifier)
 
 (* Lazy unfoldings *)
-val unfold_lazy_bv     : lazyinfo -> term
-val unfold_lazy_fvar   : lazyinfo -> term
-val unfold_lazy_binder : lazyinfo -> term
-val unfold_lazy_optionstate : lazyinfo -> term
-val unfold_lazy_comp   : lazyinfo -> term
-val unfold_lazy_env    : lazyinfo -> term
-val unfold_lazy_sigelt : lazyinfo -> term
-val unfold_lazy_letbinding : lazyinfo -> term
-val unfold_lazy_universe   : lazyinfo -> term
+val unfold_lazy_bv          : lazyinfo -> ML term
+val unfold_lazy_binder      : lazyinfo -> ML term
+val unfold_lazy_letbinding  : lazyinfo -> ML term
+val unfold_lazy_fvar        : lazyinfo -> ML term
+val unfold_lazy_comp        : lazyinfo -> ML term
+val unfold_lazy_env         : lazyinfo -> ML term
+val unfold_lazy_optionstate : lazyinfo -> ML term
+val unfold_lazy_sigelt      : lazyinfo -> ML term
+val unfold_lazy_universe    : lazyinfo -> ML term

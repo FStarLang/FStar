@@ -21,6 +21,17 @@ open FStarC.Syntax.Syntax
 open FStarC.Class.Show
 open FStarC.Class.PP
 
+(* These versions take in a DsEnv to abbreviate names. *)
+val term_to_string'       : DsEnv.env -> term -> ML string
+val comp_to_string'       : DsEnv.env -> comp -> ML string
+val sigelt_to_string'     : DsEnv.env -> sigelt -> ML string
+val term_to_doc'          : DsEnv.env -> term -> ML Pprint.document
+val comp_to_doc'          : DsEnv.env -> comp -> ML Pprint.document
+val sigelt_to_doc'        : DsEnv.env -> sigelt -> ML Pprint.document
+
+(* Prints sugar, 'Implicit _' prints as '#', etc *)
+val bqual_to_string       : bqual -> ML string
+
 (* Use the instances if possible! *)
 
 instance val showable_term      : showable term
@@ -34,58 +45,50 @@ instance val showable_ctxu      : showable ctx_uvar
 instance val showable_binding   : showable binding
 instance val showable_subst_elt : showable subst_elt
 instance val showable_branch    : showable branch
-instance val showable_bqual     : showable binder_qualifier
-instance val showable_aqual     : showable aqual
 instance val showable_qualifier : showable qualifier
 instance val showable_pat       : showable pat
 instance val showable_const     : showable sconst
 instance val showable_letbinding : showable letbinding
 instance val showable_modul      : showable modul
-instance val showable_ctx_uvar_meta : showable ctx_uvar_meta_t
 instance val showable_metadata  : showable metadata
-instance val showable_decreases_order : showable decreases_order
-instance val showable_cflag     : showable cflag
+instance val showable_ctx_uvar_meta : showable ctx_uvar_meta_t
+instance val showable_bqual     : showable binder_qualifier
+instance val showable_aqual     : showable aqual
+
+(* Prints as <u1,..,un>ty instead of a pair. *)
+val tscheme_to_string : tscheme -> ML string
+val tscheme_to_doc    : tscheme -> ML Pprint.document
+
 instance val showable_sub_eff   : showable sub_eff
-instance val showable_eff_decl  : showable eff_decl
 
 instance val pretty_term        : pretty term
 instance val pretty_univ        : pretty universe
-instance val pretty_comp        : pretty comp
 instance val pretty_sigelt      : pretty sigelt
-instance val pretty_uvar        : pretty uvar
+instance val pretty_comp        : pretty comp
 instance val pretty_ctxu        : pretty ctx_uvar
+instance val pretty_uvar        : pretty uvar
 instance val pretty_binder      : pretty binder
 instance val pretty_bv          : pretty bv
-instance val pretty_binding     : pretty binding
 instance val pretty_qualifier   : pretty qualifier
 instance val pretty_aqual       : pretty aqual
+instance val pretty_binding     : pretty binding
 
 (* A "short" version of printing a sigelt. Meant to (usually) be a small string
 suitable to embed in an error message. No need to be fully faithful to
 printing universes, etc, it should just make it clear enough to which
 sigelt it refers to. *)
-val sigelt_to_string_short: sigelt -> string
+val sigelt_to_string_short: sigelt -> ML string
 
-(* These versions take in a DsEnv to abbreviate names. *)
-val term_to_string'       : DsEnv.env -> term -> string
-val comp_to_string'       : DsEnv.env -> comp -> string
-val sigelt_to_string'     : DsEnv.env -> sigelt -> string
-val term_to_doc'          : DsEnv.env -> term -> Pprint.document
-val comp_to_doc'          : DsEnv.env -> comp -> Pprint.document
-val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
+(* This should really go elsewhere. *)
+val binders_to_json       : DsEnv.env -> binders -> ML Json.json
 
-(* Prints as <u1,..,un>ty instead of a pair. *)
-val tscheme_to_string : tscheme -> string
-val tscheme_to_doc    : tscheme -> Pprint.document
-
-(* Prints sugar, 'Implicit _' prints as '#', etc *)
-val bqual_to_string       : bqual -> string
+instance val showable_eff_decl  : showable eff_decl
 
 (* Prints arguments as they show up in the source, useful
 for error messages. *)
-val args_to_string : args -> string
+val args_to_string : args -> ML string
 
-(* This should really go elsewhere. *)
-val binders_to_json       : DsEnv.env -> binders -> Json.json
+instance val showable_decreases_order : showable decreases_order
+instance val showable_cflag     : showable cflag
 
-val binder_to_string_with_type : binder -> string
+val binder_to_string_with_type : binder -> ML string

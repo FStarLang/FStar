@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -108,12 +108,13 @@ otherwise since reduction is blocked.)
 let id_norm_cb : norm_cb = function
     | Inr x -> x
     | Inl l -> S.fv_to_tm (S.lid_as_fv l None)
+
+let map_shadow (s:shadow_term) (f:term -> ML term) : ML shadow_term =
+    Option.map (Thunk.map f) s
+let force_shadow (s:shadow_term) : ML (option term) = Option.map Thunk.force s
+
 exception Embedding_failure
 exception Unembedding_failure
-
-let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
-    Option.map (Thunk.map f) s
-let force_shadow (s:shadow_term) = Option.map Thunk.force s
 
 class embedding (a:Type0) = {
   em      : a -> embed_t;
@@ -121,13 +122,13 @@ class embedding (a:Type0) = {
   print   : printer a;
 
   (* These are thunked so we can create Tot instances. *)
-  typ     : unit -> typ;
-  e_typ : unit -> emb_typ;
+  typ     : unit -> ML typ;
+  e_typ : unit -> ML emb_typ;
 }
 
 let emb_typ_of a #e () = e.e_typ ()
 
-let unknown_printer (typ : term) (_ : 'a) : string =
+let unknown_printer (typ : term) (_ : 'a) : ML string =
     Format.fmt1 "unknown %s" (show typ)
 
 let term_as_fv t =
@@ -218,9 +219,9 @@ let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option S.typ) 
                 ea.e_typ
 
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
-let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
-  let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
-  let uu (t:term) _norm : option a =
+let e_lazy #a (k:lazy_kind) (ty : S.typ) : ML (embedding a) =
+  let ee (x:a) rng _topt _norm : ML term = U.mk_lazy x ty k (Some rng) in
+  let uu (t:term) _norm : ML (option a) =
     let t0 = t in
     match (SS.compress t).n with
     | Tm_lazy {blob=b; lkind=lkind} when lkind =? k -> Some (Dyn.undyn b)
@@ -237,7 +238,7 @@ let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
   in
   mk_emb ee uu (term_as_fv ty)
 
-let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> ML term) : ML term =
     if !Options.debug_embedding
     then Format.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (show ta)
@@ -248,12 +249,13 @@ let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term
     else let thunk = Thunk.mk f in
          U.mk_lazy x S.tun (Lazy_embedding (et, thunk)) (Some rng)
 
-let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> option 'a) : option 'a =
+let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> ML (option 'a)) : ML (option 'a) =
     let x = SS.compress x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
+      let eager = !Options.eager_embedding in
       if et <> et'
-      || !Options.eager_embedding
+      || eager
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
                    then Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
@@ -278,8 +280,8 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
 
 let (let?) o f = Option.bind o f
 
-let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> term) : embedding 'a =
-  let uu (t:term) _norm : option 'a =
+let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> ML term) : ML (embedding 'a) =
+  let uu (t:term) _norm : ML (option 'a) =
     let hd, args = U.head_and_args t in
     let? hd_lid =
       match (SS.compress (U.un_uinst hd)).n with
@@ -288,11 +290,11 @@ let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (
     in
     u (Ident.string_of_lid hd_lid, List.map fst args)
   in
-  let ee (x:'a) rng _topt _norm : term = e x in
+  let ee (x:'a) rng _topt _norm : ML term = e x in
   mk_emb ee uu (S.lid_as_fv (Ident.lid_of_str name) None)
 
-let extracted_embed (e: embedding 'a) (x: 'a) : term =
+let extracted_embed (e: embedding 'a) (x: 'a) : ML term =
   embed x Range.dummyRange None id_norm_cb
 
-let extracted_unembed (e: embedding 'a) (t: term) : option 'a =
+let extracted_unembed (e: embedding 'a) (t: term) : ML (option 'a) =
   try_unembed t id_norm_cb

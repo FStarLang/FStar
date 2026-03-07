@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,7 @@ let use_hints () = Options.use_hints ()
 
 (* fresh: true iff we are recording hints for the whole file, and hence should
 not merge hints with old ones. *)
-let initialize_hints_db filename (refresh:bool) : unit =
+let initialize_hints_db filename (refresh:bool) : ML unit =
     recorded_hints := [];
     refreshing_hints := refresh;
 
@@ -137,7 +137,7 @@ let merge_hints_db (prev next : hints_db) : hints_db =
 (* This is called after we check every single top-level in the interactive mode, so
 we can record hints before "finishing" a module (which is never triggered in
 interactive mode, currently). *)
-let flush_hints () : unit =
+let flush_hints () : ML unit =
   let hints = !recorded_hints in
   let src_filename = !src_filename in
   (* If empty, don't do anything. *)
@@ -162,7 +162,7 @@ let flush_hints () : unit =
   recorded_hints := [];
   replaying_hints := None
 
-let finalize_hints_db () : unit =
+let finalize_hints_db () : ML unit =
   flush_hints ()
 
 let with_hints_db fname f =
@@ -240,7 +240,7 @@ corresponded to 5 seconds in some "blessed" setting. But rlimit units
 are only very roughly correlated to time, and having this very non-round
 number makes reading SMT query dumps pretty confusing. So, for new
 solvers, we now just make it 500k. *)
-let convert_rlimit (r : int) : int =
+let convert_rlimit (r : int) : ML int =
   let open FStar.Mul in
   if Misc.version_ge (Options.z3_version ()) "4.12.3" then
     500000 * r
@@ -313,7 +313,7 @@ let query_errors settings z3result =
 
 let detail_hint_replay settings z3result =
     if used_hint settings
-    && Options.detail_hint_replay ()
+    then (if Options.detail_hint_replay ()
     then match z3result.z3result_status with
          | UNSAT _ -> ()
          | _failed ->
@@ -328,15 +328,15 @@ let detail_hint_replay settings z3result =
                       None
                       // settings.query_hint
            in
-           detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3
+           detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3)
 
-let find_localized_errors (errs : list errors) : option errors =
+let find_localized_errors (errs : list errors) : ML (option errors) =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let errors_to_report (tried_recovery : bool) (settings : query_settings) : list Errors.error =
+let errors_to_report (tried_recovery : bool) (settings : query_settings) : ML (list Errors.error) =
     let open FStarC.Pprint in
     let open FStarC.Errors in
-    let format_smt_error (msg:list document) : list document =
+    let format_smt_error (msg:list document) : ML (list document) =
       (* This creates an error component with the answers from Z3. Only used
       for --query_stats. *)
       let d =
@@ -511,15 +511,15 @@ let report_errors tried_recovery qry_settings =
 
 
 type unique_string_accumulator = {
-  add: string -> unit;
-  get: unit -> list string;
-  clear: unit -> unit
+  add: string -> ML unit;
+  get: unit -> ML (list string);
+  clear: unit -> ML unit
 }
 
 (* A generic accumulator of unique strings,
    extracted in sorted order *)
 let mk_unique_string_accumulator ()
-: unique_string_accumulator
+: ML unique_string_accumulator
 = let strings = mk_ref [] in
   let add m =
     let ms = !strings in
@@ -532,7 +532,7 @@ let mk_unique_string_accumulator ()
   let clear () = strings := [] in
   { add ; get; clear }
 
-let div_with_decimals (ndec : nat) (x y : int) : string =
+let div_with_decimals (ndec : nat) (x y : int) : ML string =
   // Format.print2 "div_with_decimals: %s / %s\n" (show x) (show y);
   let open FStar.Mul in
   let mul =
@@ -640,7 +640,7 @@ let query_info settings z3result =
                 else [ components |> String.concat "."]
         in
         let should_log = Options.hint_info () || Options.query_stats () in
-        let maybe_log (f:unit -> unit) = if should_log then f () in
+        let maybe_log (f:unit -> ML unit) = if should_log then f () in
         match core with
         | None ->
            maybe_log <| (fun _ -> Format.print_string "no unsat core\n")
@@ -746,7 +746,7 @@ let record_hint settings z3result =
       | _ ->  () //the query failed, so nothing to do
     end
 
-let process_result settings result : option errors =
+let process_result settings result : ML (option errors) =
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -762,10 +762,10 @@ let process_result settings result : option errors =
 // without a success, where errs is the list of errors each query
 // returned.
 let fold_queries (qs:list query_settings)
-                 (ask:query_settings -> z3result)
-                 (f:query_settings -> z3result -> option errors)
-                 : either (list errors) query_settings =
-    let rec aux (acc : list errors) qs : either (list errors) query_settings =
+                 (ask:query_settings -> ML z3result)
+                 (f:query_settings -> z3result -> ML (option errors))
+                 : ML (either (list errors) query_settings) =
+    let rec aux (acc : list errors) qs : ML (either (list errors) query_settings) =
         match qs with
         | [] -> Inl acc
         | q::qs ->
@@ -781,7 +781,7 @@ let fold_queries (qs:list query_settings)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (show settings.query_index) ^ ")"
 
-let collect_dups (l : list 'a) : list ('a & int) =
+let collect_dups (l : list 'a) : ML (list ('a & int)) =
     let acc : list ('a & int) = [] in
     let rec add_one acc x =
         match acc with
@@ -857,7 +857,7 @@ let make_solver_configs
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
- : (list query_settings & option hint)
+ : ML (list query_settings & option hint)
  =
     (* Fetch the settings. *)
     let qname, index =
@@ -955,9 +955,9 @@ let make_solver_configs
 Not to be used directly, see ask_solver below. *)
 let __ask_solver
     (configs : list query_settings)
- : either (list errors) query_settings
+ : ML (either (list errors) query_settings)
  =
-    let check_one_config config : z3result =
+    let check_one_config config : ML z3result =
           if Options.z3_refresh()
           then (
             Z3.refresh (Some config.query_env.tcenv.proof_ns)
@@ -979,7 +979,7 @@ if --quake is specified. This function is always called, but when
 creating an [answer] record). *)
 let ask_solver_quake
     (configs : list query_settings)
- : answer
+ : ML answer
  =
     let lo   = Options.quake_lo () in
     let hi   = Options.quake_hi () in
@@ -995,7 +995,7 @@ let ask_solver_quake
         else if lo > hi then hi
         else lo
     in
-    let run_one (seed:int) : either (list errors) query_settings =
+    let run_one (seed:int) : ML (either (list errors) query_settings) =
         (* Here's something annoying regarding --quake:
          *
          * In normal circumstances, we can just run the query again and get
@@ -1021,14 +1021,14 @@ let ask_solver_quake
                __ask_solver configs)
         else __ask_solver configs
     in
-    let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
+    let rec fold_nat' (f : 'a -> int -> ML 'a) (acc : 'a) (lo : int) (hi : int) : ML 'a =
         if lo > hi
         then acc
         else fold_nat' f (f acc lo) (lo + 1) hi
     in
     let best_fuel = mk_ref None in
     let best_ifuel = mk_ref None in
-    let maybe_improve (r:ref (option int)) (n:int) : unit =
+    let maybe_improve (r:ref (option int)) (n:int) : ML unit =
         match !r with
         | None -> r := Some n
         | Some m -> if n < m then r := Some n
@@ -1114,7 +1114,7 @@ type recovery_hammer =
   | IncreaseRLimit of (*factor : *)int
   | RestartAnd of recovery_hammer
 
-let rec pp_hammer (h : recovery_hammer) : Pprint.document =
+let rec pp_hammer (h : recovery_hammer) : ML Pprint.document =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   match h with
@@ -1128,7 +1128,7 @@ times, increasing rlimits, until we get a success. If not, we just
 call ask_solver_quake. *)
 let ask_solver_recover
     (configs : list query_settings)
- : answer
+ : ML answer
  =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
@@ -1143,14 +1143,14 @@ let ask_solver_recover
         text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
       ];
 
-      let try_factor (n:int) : answer =
+      let try_factor (n:int) : ML answer =
         let open FStar.Mul in
         Errors.diag cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
         let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
         ask_solver_quake [cfg]
       in
 
-      let rec try_hammer (h : recovery_hammer) : answer =
+      let rec try_hammer (h : recovery_hammer) : ML answer =
         match h with
         | IncreaseRLimit factor -> try_factor factor
         | RestartAnd h ->
@@ -1159,7 +1159,7 @@ let ask_solver_recover
           try_hammer h
       in
 
-      let rec aux (hammers : list recovery_hammer) : answer =
+      let rec aux (hammers : list recovery_hammer) : ML answer =
         match hammers with
         | [] -> { r with tried_recovery = true }
         | h::hs ->
@@ -1186,7 +1186,7 @@ let ask_solver_recover
 
 let failing_query_ctr : ref int = mk_ref 0
 
-let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
+let maybe_save_failing_query (env:env_t) (qs:query_settings) : ML unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
   if Options.log_failing_queries () then (
     let mod = show (Env.current_module env.tcenv) in
@@ -1225,7 +1225,7 @@ let ask_solver
     // (prefix : list decl)
     (configs: list query_settings)
     (next_hint : option hint)
- : list query_settings & answer
+ : ML (list query_settings & answer)
  =  (* The default config is at the head. We distinguish this one since
     it includes some metadata that we need, such as the query name, etc.
     (Though all other configs also contain it.) *)
@@ -1263,7 +1263,7 @@ let ask_solver
     configs, ans
 
 (* Reports query errors to the user. The errors are logged, not raised. *)
-let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit =
+let report (env:Env.env) (default_settings : query_settings) (a : answer) : ML unit =
     let nsuccess = a.nsuccess in
     let name = full_query_id default_settings in
     let lo = a.lo in
@@ -1344,7 +1344,7 @@ type solver_cfg = {
 
 let _last_cfg : ref (option solver_cfg) = mk_ref None
 
-let get_cfg env : solver_cfg =
+let get_cfg env : ML solver_cfg =
     { seed             = Options.z3_seed ()
     ; cliopt           = Options.z3_cliopt ()
     ; smtopt           = Options.z3_smtopt ()
@@ -1371,8 +1371,8 @@ let maybe_refresh_solver env =
         )
 
 (* The query_settings list is non-empty unless the query was trivial. *)
-let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
-  let do () : list query_settings & answer =
+let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML (list query_settings & answer) =
+  let do () : ML (list query_settings & answer) =
     maybe_refresh_solver tcenv;
     let msg =  (Format.fmt1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
@@ -1427,7 +1427,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
   )
 
 (* Asks the solver and reports errors. Does quake if needed. *)
-let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
+let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML unit =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   let open FStarC.Class.PP in
@@ -1451,7 +1451,7 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
   | [], ans when not ans.ok ->
     failwith "impossible: bad answer from encode_and_ask"
 
-let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
+let split_and_solve (retrying:bool) use_env_msg tcenv q : ML unit =
   if retrying && (!dbg_SMTQuery || Options.query_stats ()) then begin
     Format.print1 "(%s)\tQuery-stats splitting query because retrying failed query\n"
                    (show (Env.get_range tcenv))
@@ -1480,14 +1480,14 @@ let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
         please use the '--split_queries always' option rather than relying on it implicitly."])
    )
 
-let disable_quake_for (f : unit -> 'a) : 'a =
+let disable_quake_for (f : unit -> ML 'a) : ML 'a =
   Options.with_saved_options (fun () ->
     Options.set_option "quake_hi" (Options.Int 1);
     f ())
 
 (* Split queries if needed according to --split_queries option. Note:
 sync SMT queries do not pass via this function. *)
-let do_solve_maybe_split use_env_msg tcenv q : unit =
+let do_solve_maybe_split use_env_msg tcenv q : ML unit =
   (* If we are admiting queries, don't do anything, and bail out
   right now to save time/memory *)
   if tcenv.admit then () else begin
@@ -1514,7 +1514,7 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
 _log_ (not raise) an error if the VC could not be proven. *)
-let solve use_env_msg tcenv q : unit =
+let solve use_env_msg tcenv q : ML unit =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   if Options.no_smt () then
@@ -1539,7 +1539,7 @@ It will NOT do quake testing.
 It WILL raise fuel incrementally to attempt to solve the query
 
 *)
-let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
+let solve_sync use_env_msg tcenv (q:Syntax.term) : ML answer =
     if Options.no_smt () then ans_fail
     else
     let go () =
@@ -1559,7 +1559,7 @@ let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
       "FStarC.SMTEncoding.solve_sync_top_level"
 
 (* The version actually exported, and used by tactics. *)
-let solve_sync_bool use_env_msg tcenv q : bool =
+let solve_sync_bool use_env_msg tcenv q : ML bool =
     let ans = solve_sync use_env_msg tcenv q in
     ans.ok
 

@@ -89,11 +89,10 @@ let profile (f : unit -> 'a)
   else f ()
 let report_json (tag : Prims.string) (c : counter) : unit=
   let counter1 = json_of_counter c in
-  let uu___ =
-    FStarC_Json.string_of_json
-      (FStarC_Json.JsonAssoc
-         [("tag", (FStarC_Json.JsonStr tag)); ("counter", counter1)]) in
-  FStarC_Format.print1_error "%s\n" uu___
+  FStarC_Format.print1_error "%s\n"
+    (FStarC_Json.string_of_json
+       (FStarC_Json.JsonAssoc
+          [("tag", (FStarC_Json.JsonStr tag)); ("counter", counter1)]))
 let report_human (tag : Prims.string) (c : counter) : unit=
   let warn =
     let uu___ = FStarC_Effect.op_Bang c.running in

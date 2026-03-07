@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,42 +56,42 @@ let dbg_dep = Debug.get_toggle "Dep"
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a & TcEnv.env =
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : ML ('a & TcEnv.env) =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})
 
-let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a & TcEnv.env) : 'a & uenv =
+let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> ML ('a & TcEnv.env)) : ML ('a & uenv) =
      let a, t' = f (tcenv_of_uenv e) in
      a, (set_tcenv e t')
 
-let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a & uenv =
+let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : ML ('a & uenv) =
      let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
      a, (set_tcenv e tcenv)
 
-let push_env (env:uenv) =
+let push_env (env:uenv) : ML _ =
     snd (with_tcenv_of_env env (fun tcenv ->
             (), FStarC.TypeChecker.Env.push (tcenv_of_uenv env) "top-level: push_env"))
 
-let pop_env (env:uenv) =
+let pop_env (env:uenv) : ML _ =
     snd (with_tcenv_of_env env (fun tcenv ->
             (), FStarC.TypeChecker.Env.pop tcenv "top-level: pop_env"))
 
-let with_env env (f:uenv -> 'a) : 'a =
+let with_env env (f:uenv -> ML 'a) : ML 'a =
     let env = push_env env in
     let res = f env in
     let _ = pop_env env in
     res
 
-let env_of_tcenv (env:TcEnv.env) =
+let env_of_tcenv (env:TcEnv.env) : ML _ =
     FStarC.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
 (* Parse and maybe interleave & desugar a file with its interface      *)
 (***********************************************************************)
 let parse (fly_deps:bool) (env:uenv) (interface_fn: option string) (fn:string)
-  : lident
+  : ML (lident
   & either FStarC.Parser.AST.modul FStarC.Syntax.Syntax.modul
-  & uenv =
+  & uenv) =
   let ast, _ = Parser.Driver.parse_file fn in
   let ast, env = match interface_fn with
     | None ->
@@ -142,7 +142,7 @@ let core_check : TcEnv.core_check_t =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 module Ast = FStarC.Parser.AST
-let parse_frag frag lang_decls =
+let parse_frag frag lang_decls : ML _ =
   let open FStarC.Parser.AST in
   let use_lang_decl (ds:lang_decls_t) =
     List.tryFind (fun d -> UseLangDecls? d.d) ds
@@ -153,7 +153,8 @@ let parse_frag frag lang_decls =
     Parser.Driver.parse_fragment (Some lang) frag
 
 //This is the main driver of the typechecker, checking one declaration at a time    
-let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
+let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
+  : ML _ =
   let open FStarC.Parser.AST in
   let fname env = List.hd (Options.file_list ()) in
   let acceptable_mod_name ast_modul =
@@ -178,8 +179,9 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
          Actually, this is an abuse, and just means that we're type-checking the
          first chunk. *)
       let ast_modul, env =
-        if Options.interactive () && not <| Dep.fly_deps_enabled()
+        if Options.interactive () then (if not (Dep.fly_deps_enabled())
         then with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
+        else ast_modul, env)
         else ast_modul, env
       in
       if not (acceptable_mod_name ast_modul) then
@@ -218,7 +220,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
       Errors.raise_error rng Errors.Fatal_ModuleFirstStatement "First statement must be a module declaration"
     | Some modul ->
       let env, ast_decls_l =
-        if Options.interactive () && not (Dep.fly_deps_enabled())
+        if Options.interactive () then (if not (Dep.fly_deps_enabled())
         then 
           BU.fold_map
                 (fun env a_decl ->
@@ -229,6 +231,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
                     env, decls)
                 env
                 ast_decls 
+        else env, [ast_decls])
         else env, [ast_decls]
       in
       let ast_decls = List.flatten ast_decls_l in
@@ -280,7 +283,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag =
       check_decls ast_decls
   )
     
-let load_interface_decls env interface_file_name : TcEnv.env_t =
+let load_interface_decls env interface_file_name : ML TcEnv.env_t =
   let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
   | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface {mname=l; decls}), _) ->
@@ -299,9 +302,9 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
+let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
   let opt = Options.codegen () in
-  let fail #a () : a = failwith ("Unrecognized extraction backend: " ^ show opt) in
+  let fail #a () : ML a = failwith ("Unrecognized extraction backend: " ^ show opt) in
   if opt <> None then
     let ext = match opt with
       | Some Options.FSharp -> ".fs"
@@ -324,7 +327,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
 
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
-      let printer =
+      let printer : MLSyntax.mlmodule -> ML string =
         if opt = Some Options.FSharp
         then FStarC.Extraction.ML.PrintFS.print_fs
         else FStarC.Extraction.ML.PrintML.print_ml
@@ -391,7 +394,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) =
 
     | _ -> fail ()
 
-let needs_interleaving intf impl =
+let needs_interleaving intf impl : ML bool =
   let m1 = Parser.Dep.lowercase_module_name intf in
   let m2 = Parser.Dep.lowercase_module_name impl in
   m1 = m2 &&
@@ -403,19 +406,19 @@ let rec tc_one_file_internal
         (env:uenv)
         (interface_fn:option string) //interface file name
         (fn:string) //file name
-    : tc_result
+    : ML (tc_result
     & option MLSyntax.mlmodule
-    & uenv =
+    & uenv) =
   Stats.record "tc_one_file" fun () ->
   GenSym.reset_gensym();
 
   (*
    * AR: this is common smt postprocessing for fresh module and module read from cache
    *)
-  let restore_opts () : unit =
+  let restore_opts () : ML unit =
     Options.restore_cmd_line_options true |> ignore
   in
-  let maybe_extract_mldefs tcmod env =
+  let maybe_extract_mldefs tcmod env : ML _ =
     match Options.codegen() with
     | None -> None, 0
     | Some tgt ->
@@ -427,7 +430,7 @@ let rec tc_one_file_internal
               defs)
           )
   in
-  let maybe_extract_ml_iface tcmod env =
+  let maybe_extract_ml_iface tcmod env : ML _ =
       if Options.codegen() = None
       then env, 0
       else
@@ -500,9 +503,10 @@ let rec tc_one_file_internal
   in
   if not (Options.cache_off()) then
       let r = 
-        if fly_deps && Options.should_check_file fn
+        if fly_deps then (if Options.should_check_file fn
         then None //if we reach here with fly_deps, then checked files are invalid
-        else Ch.load_module_from_cache (tcenv_of_uenv env) fn 
+        else Ch.load_module_from_cache (tcenv_of_uenv env) fn)
+        else Ch.load_module_from_cache (tcenv_of_uenv env) fn
       in
       let r =
         (* If --force and this file was given in the command line,
@@ -588,8 +592,8 @@ let rec tc_one_file_internal
           match Options.codegen() with
           | None -> None
           | Some tgt ->
-            if Options.should_extract (string_of_lid tcmod.name) tgt
-            && (not tcmod.is_interface || tgt=Options.Krml)
+            if (let se = Options.should_extract (string_of_lid tcmod.name) tgt in
+                se && (not tcmod.is_interface || tgt=Options.Krml))
             then let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
                  extracted_defs
             else None
@@ -603,7 +607,7 @@ let rec tc_one_file_internal
   else let _, tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
 
-and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exists:bool) : Syntax.modul & uenv =
+and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exists:bool) : ML (Syntax.modul & uenv) =
   let decls = Ast.decls_of_modul ast_mod in
   let mname = match decls with
     | {d=Ast.TopLevelModule lid} :: rest -> lid
@@ -639,7 +643,7 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
       Tc.finish_partial_modul false false iface_exists tcenv mod) in
   mod, env
 
-and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: uenv & list string =
+and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv & list string) =
   let load_fly_deps (env:uenv) filenames =
     match filenames with
     | [] -> env //if nothing to load, just return to avoid resetting solver, etc.
@@ -710,7 +714,7 @@ and tc_one_file_from_remaining
       (fly_deps:bool)
       (remaining:list string) 
       (env:uenv)
-: list string & tc_result & option MLSyntax.mlmodule & uenv =
+: ML (list string & tc_result & option MLSyntax.mlmodule & uenv) =
   let remaining, (nmods, mllib, env) =
     match remaining with
         | intf :: impl :: remaining when needs_interleaving intf impl ->
@@ -729,7 +733,7 @@ and tc_fold_interleave
            list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
            uenv)
       (remaining:list string)
-: (list Ch.tc_result & list (uenv & MLSyntax.mlmodule) & uenv) =
+: ML (list Ch.tc_result & list (uenv & MLSyntax.mlmodule) & uenv) =
   let as_list env mllib =
     match mllib with
     | None -> []
@@ -748,7 +752,7 @@ let load_file
         (env:TcEnv.env_t)
         (interface_fn:option string) //interface file name
         (fn:string) //file name
-: TcEnv.env_t
+: ML TcEnv.env_t
 = let env = env_of_tcenv env in
   let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
   tcenv_of_uenv env
@@ -757,7 +761,7 @@ let scan_and_load_fly_deps
     (filename:string)
     (env:TcEnv.env_t)
     (input:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
-= let uenv, files = scan_and_load_fly_deps_internal filename (new_uenv env) input in
+  : ML _ = let uenv, files = scan_and_load_fly_deps_internal filename (new_uenv env) input in
   tcenv_of_uenv uenv, files
 
 let load_fly_deps_and_tc_one_fragment
@@ -766,14 +770,14 @@ let load_fly_deps_and_tc_one_fragment
     (mod:option Syntax.modul)
     (tcenv:TcEnv.env_t)
     (frag_or_decl:either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl)
-: option Syntax.modul &
+: ML (option Syntax.modul &
   TcEnv.env &
   lang_decls_t &
-  list string //filenames that were loaded
+  list string) //filenames that were loaded
 = let tcenv =
     if Options.interactive()
-    && not (iface_interleaving_init tcenv.dsenv) // dsenv is not yet initialized for interleaving
-    && FStarC.Parser.Dep.is_implementation filename
+    then (if not (iface_interleaving_init tcenv.dsenv) // dsenv is not yet initialized for interleaving
+    then (if FStarC.Parser.Dep.is_implementation filename
     then ( //initialize DsEnv for interface interleaving
       let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
       let m = FStarC.Parser.Dep.lowercase_module_name filename in
@@ -783,6 +787,8 @@ let load_fly_deps_and_tc_one_fragment
       | Some fn ->
         load_interface_decls tcenv fn
     )
+    else tcenv)
+    else tcenv)
     else (
       tcenv
     )
@@ -832,7 +838,7 @@ let load_fly_deps_and_tc_one_fragment
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
 (***********************************************************************)
-let init_env deps : TcEnv.env =
+let init_env deps : ML TcEnv.env =
   let solver =
     if Options.lax()
     then SMT.dummy
@@ -869,7 +875,8 @@ let init_env deps : TcEnv.env =
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
-let batch_mode_tc fly_deps filenames dep_graph =
+let batch_mode_tc fly_deps filenames dep_graph
+  : ML _ =
   if !dbg_dep then begin
     Format.print_string "Auto-deps kicked in; here's some info.\n";
     Format.print1 "Here's the list of filenames we will process: %s\n"

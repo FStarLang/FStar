@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
 
 let dbg = Debug.get_toggle "CheckedFiles"
-let debug (f:unit -> unit) = if !dbg then f () else ()
+let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
 
 (*
  * We write this version number to the cache files, and
@@ -122,7 +122,7 @@ let dump_cache_keys tag =
  *
  * See above for the two steps of loading the checked files
  *)
-let load_checked_file (fn:string) (checked_fn:string) :cache_t =
+let load_checked_file (fn:string) (checked_fn:string) : ML cache_t =
   debug (fun _ ->
       Format.print1
         "Trying to load checked file result %s\n"
@@ -162,7 +162,7 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either string (list (string & string)) =
+let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (either string (list (string & string))) =
   Stats.record "hash_dependences" fun () ->
   let fn =
     match Find.find_file fn with
@@ -173,8 +173,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
   let source_hash = BU.digest_of_file fn in
   let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_checked_file_name =
-    if Dep.is_implementation fn
-    && has_interface
+    let is_impl = Dep.is_implementation fn in
+    if is_impl && has_interface
     then module_name
       |> Dep.interface_of deps
       |> Option.must
@@ -184,8 +184,9 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
   in
   let binary_deps = deps_of_fn
     |> List.filter (fun fn ->
-         not (Dep.is_interface fn &&
-              Dep.lowercase_module_name fn = module_name)) in
+         let b1 = Dep.is_interface fn in
+         let b2 = Dep.lowercase_module_name fn = module_name in
+         not (b1 && b2)) in
   let binary_deps =
     FStarC.List.sortWith
       (fun fn1 fn2 ->
@@ -213,7 +214,7 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
            iface))
   in
 
-  let rec hash_deps out = function
+  let rec hash_deps out (l:list string) : ML (either string (list (string & string))) = match l with
   | [] -> maybe_add_iface_hash out
   | fn::deps ->
     let cache_fn = Dep.cache_file_name fn in
@@ -237,12 +238,13 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string):either
     match digest with
     | Inl msg -> Inl msg
     | Inr dig ->
-      hash_deps ((Dep.lowercase_module_name fn, dig) :: out) deps
+      let mn = Dep.lowercase_module_name fn in
+      hash_deps ((mn, dig) :: out) deps
   in
   hash_deps [] binary_deps
 
 
-let load_tc_result (checked_fn:string) : option (list (string & string) & tc_result) =
+let load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result)) =
   let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) =
     BU.load_2values_from_file checked_fn
   in
@@ -259,11 +261,11 @@ let load_checked_file_with_tc_result
   (deps:Dep.deps)
   (fn:string)
   (checked_fn:string)
-  : either string tc_result
+  : ML (either string tc_result)
 =
   debug (fun _ -> Format.print1 "Trying to load checked file with tc result %s\n" checked_fn);
 
-  let load_tc_result' (fn:string) :list (string & string) & tc_result =
+  let load_tc_result' (fn:string) : ML (list (string & string) & tc_result) =
     match load_tc_result fn with
     | Some x -> x
     | None -> failwith "Impossible! if first phase of loading was unknown, it should have succeeded"
@@ -350,7 +352,7 @@ let load_checked_file_with_tc_result
       end
 
 
-let load_parsing_data_from_cache file_name =
+let load_parsing_data_from_cache file_name : ML (option Parser.Dep.parsing_data) =
   (*
    * the code below suppresses the already_cached assertion failure
    * following is the reason for it:
@@ -403,8 +405,11 @@ let load_module_from_cache_internal =
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
-        let suppress_warning = try_load || Options.should_check_file fn || !already_failed in
-        if not suppress_warning || !dbg then begin
+        let scf = Options.should_check_file fn in
+        let af = !already_failed in
+        let suppress_warning = try_load || scf || af in
+        let d = !dbg in
+        if not suppress_warning || d then begin
           already_failed := true;
           FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             Errors.Warning_CachedFile [Errors.text (Format.fmt3
@@ -444,7 +449,8 @@ let load_module_from_cache_internal =
       deps
       (Dep.lowercase_module_name fn) in
 
-    if Dep.is_implementation fn
+    let is_impl = Dep.is_implementation fn in
+    if is_impl
     && (i_fn_opt |> Some?)
     then let i_fn = i_fn_opt |> Option.must in
          let i_tc = load_with_profiling i_fn in
@@ -461,7 +467,7 @@ let load_module_from_cache_internal =
 //It is used in fly_deps mode when starting up the batch mode
 //compiler---if the checked files are all valid, no need to
 //check anything again, just load them and go.
-let scan_deps_and_check_cache_validity fn =
+let scan_deps_and_check_cache_validity fn : ML (option (list string & Dep.deps)) =
   Dep.with_fly_deps_disabled fun _ ->
   //do it with fly deps disabled so that we compute the full dep graph at once
   let checked_fn = Dep.cache_file_name fn in
@@ -473,7 +479,7 @@ let scan_deps_and_check_cache_validity fn =
         (fun _ ->
           FStarC.Dependencies.find_deps_if_needed [fn] load_parsing_data_from_cache)
     in
-    let rec try_load_all fns =
+    let rec try_load_all fns : ML (option (list string & Dep.deps)) =
       match fns with
       | [] ->
         Some (filenames, dep_graph)
@@ -484,7 +490,7 @@ let scan_deps_and_check_cache_validity fn =
     in
     try_load_all filenames
  
-let load_module_from_cache env fn =
+let load_module_from_cache env fn : ML (option tc_result) =
   load_module_from_cache_internal false (TcEnv.dep_graph env) fn
 (*
  * Just to make sure data has the right type
@@ -493,7 +499,7 @@ let store_values_to_cache
     (cache_file:string)
     (stage1:checked_file_entry_stage1)
     (stage2:checked_file_entry_stage2)
-    :unit =
+    :ML unit =
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
     BU.save_2values_to_file cache_file stage1 stage2)
 
@@ -501,9 +507,11 @@ instance _ : showable Dep.parsing_data = {
   show = Dep.str_of_parsing_data
 }
 
-let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
-  if Options.cache_checked_modules()
-  && not (Options.cache_off())
+let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML unit =
+  let ccm = Options.cache_checked_modules() in
+  let co = Options.cache_off() in
+  if ccm
+  && not co
   then begin
     debug (fun () -> 
       Format.print2 "Storing checked file for %s with %s dependences\n"
@@ -557,8 +565,8 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result =
       ]
   end
 
-let unsafe_raw_load_checked_file (checked_fn:string)
-  = let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
+let unsafe_raw_load_checked_file (checked_fn:string) : ML (option (FStarC.Parser.Dep.parsing_data & list string & tc_result))
+  = let entry = BU.load_2values_from_file checked_fn in
     match entry with
      | Some ((s1,s2)) -> Some (s1.parsing_data, List.map fst s2.deps_dig, s2.tc_res)
      | _ -> None

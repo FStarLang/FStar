@@ -71,11 +71,11 @@ type atom
        // 1. the scrutinee
        t &
        // 2. reconstruct the returns annotation
-       (unit -> option match_returns_ascription) &
+       (unit -> ML (option match_returns_ascription)) &
        // 3. reconstructs the pattern matching, if it needs to be readback
-       (unit -> list branch) &
+       (unit -> ML (list branch)) &
        // 4. reconstruct the residual comp if set
-       (unit -> option S.residual_comp)
+       (unit -> ML (option S.residual_comp))
   | UnreducedLet of
      // Especially when extracting, we do not always want to reduce let bindings
      // since that can lead to exponential code size blowup. This node represents
@@ -115,7 +115,7 @@ and lam_shape =
 
 and t' =
   | Lam {
-    interp : list (t & aqual) -> t;
+    interp : list (t & aqual) -> ML t;
     //these expect their arguments in binder order (optimized for convenience beta reduction)
     //we also maintain aquals so as to reconstruct the application properly for implicits
 
@@ -131,7 +131,7 @@ and t' =
   | Univ of universe
   | Unknown
   | Arrow of either (Thunk.t S.term) (list arg & comp)
-  | Refinement of (t -> t) & (unit -> arg)
+  | Refinement of (t -> ML t) & (unit -> ML arg)
   | Reflect of t
   | Quote of S.term & S.quoteinfo
   | Lazy of (either S.lazyinfo (Dyn.dyn & emb_typ)) & Thunk.t t
@@ -208,148 +208,154 @@ and cflag =
 and arg = t & aqual
 and args = list (arg)
 
-instance val showable_t    : showable t
-instance val showable_args : showable args
-
 val isAccu : t -> bool
 val isNotAccu : t -> bool
-
-val mkConstruct : fv -> list universe -> args -> t
-val mkFV : fv -> list universe -> args -> t
-
-val mkAccuVar : var -> t
-val mkAccuMatch : t -> (unit -> option match_returns_ascription) -> (unit -> list branch) -> (unit -> option S.residual_comp) -> t
-
-type head = t
-type annot = option t
-
-type nbe_cbs = {
-   iapp : t -> args -> t;
-   translate : term -> t;
-}
-
-class embedding (a:Type0) = {
-  em  : nbe_cbs -> a -> t;
-  un  : nbe_cbs -> t -> option a;
-  (* thunking to allow total instances *)
-  typ : unit -> t;
-  e_typ : unit -> emb_typ;
-}
-
-(* Syntatic equality. *)
-val term_eq : t -> t -> bool
-
-(* Implementation for decidable equality, aka (=). *)
-val eq_t : Env.env_t -> t -> t -> TEQ.eq_result
-
-// Printing functions
-
-val constant_to_string : constant -> string
-val t_to_string : t -> string
-val atom_to_string : atom -> string
-val arg_to_string : arg -> string
-val args_to_string : args -> string
 
 // NBE term manipulation
 val mk_t : t' -> t
 val nbe_t_of_t : t -> t'
 
-val as_arg : t -> arg
-val as_iarg : t -> arg
+val mkConstruct : fv -> list universe -> args -> t
+val mkFV : fv -> list universe -> args -> t
 
-val iapp_cb      : nbe_cbs -> t -> args -> t
-val translate_cb : nbe_cbs -> term -> t
+val mkAccuVar : var -> t
+val mkAccuMatch : t -> (unit -> ML (option match_returns_ascription)) -> (unit -> ML (list branch)) -> (unit -> ML (option S.residual_comp)) -> t
 
-val mk_emb : (nbe_cbs -> 'a -> t) ->
-             (nbe_cbs -> t -> option 'a) ->
-             (unit -> t) ->
-             (unit -> emb_typ) ->
+type head = t
+type annot = option t
+
+type nbe_cbs = {
+   iapp : t -> args -> ML t;
+   translate : term -> ML t;
+}
+
+class embedding (a:Type0) = {
+  em  : nbe_cbs -> a -> ML t;
+  un  : nbe_cbs -> t -> ML (option a);
+  (* thunking to allow total instances *)
+  typ : unit -> ML t;
+  e_typ : unit -> ML emb_typ;
+}
+
+(* Syntatic equality. *)
+val term_eq : t -> t -> ML bool
+
+(* Implementation for decidable equality, aka (=). *)
+val eq_t : Env.env_t -> t -> t -> ML TEQ.eq_result
+
+// Printing functions
+
+val constant_to_string : constant -> ML string
+val t_to_string : t -> ML string
+val atom_to_string : atom -> ML string
+val arg_to_string : arg -> ML string
+val args_to_string : args -> ML string
+
+instance val showable_t    : showable t
+instance val showable_args : showable args
+
+// Embedding and de-embedding
+
+val iapp_cb      : nbe_cbs -> t -> args -> ML t
+val translate_cb : nbe_cbs -> term -> ML t
+
+val embed   : embedding 'a -> nbe_cbs -> 'a -> ML t
+val unembed : embedding 'a -> nbe_cbs -> t -> ML (option 'a)
+val type_of : embedding 'a -> ML t
+val set_type : t -> embedding 'a -> embedding 'a
+
+val mk_emb : (nbe_cbs -> 'a -> ML t) ->
+             (nbe_cbs -> t -> ML (option 'a)) ->
+             (unit -> ML t) ->
+             (unit -> ML emb_typ) ->
              Prims.Tot (embedding 'a)
 
 val embed_as : embedding 'a -> ('a -> 'b) -> ('b -> 'a) -> option t -> embedding 'b
 
-val embed   : embedding 'a -> nbe_cbs -> 'a -> t
-val unembed : embedding 'a -> nbe_cbs -> t -> option 'a
-val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : option a
-val type_of : embedding 'a -> t
-val set_type : t -> embedding 'a -> embedding 'a
+val as_iarg : t -> arg
+val as_arg : t -> arg
+
+val lazy_unembed_lazy_kind (#a:Type) (k:lazy_kind) (x:t) : ML (option a)
+
+val mk_any_emb : t -> embedding t
 
 type abstract_nbe_term = | AbstractNBE : t:t -> abstract_nbe_term
 
+val e_any    : embedding t
+instance val e_unit   : embedding unit
 instance val e_bool   : embedding bool
-instance val e_string : embedding string
 instance val e_char   : embedding char
+instance val e_string : embedding string
 instance val e_int    : embedding int
 instance val e_real   : embedding Real.real
-instance val e_unit   : embedding unit
-val e_any    : embedding t
-val mk_any_emb : t -> embedding t
-val e___range  : embedding Range.t (* unsealed *)
-instance val e_range  : embedding Range.t (* sealed *)
-instance val e_issue  : embedding FStarC.Errors.issue
-instance val e_document : embedding FStarC.Pprint.document
-instance val e_vconfig  : embedding vconfig
-instance val e_norm_step : embedding NormSteps.norm_step
-instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
 instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
 instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a & 'b))
 instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a & 'b & 'c))
 instance val e_tuple4 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> Prims.Tot (embedding ('a & 'b & 'c & 'd))
 instance val e_tuple5 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> embedding 'e -> Prims.Tot (embedding ('a & 'b & 'c & 'd & 'e))
 instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
+val e___range  : embedding Range.t (* unsealed *)
 instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStarC.Sealed.sealed 'a))
+instance val e_range  : embedding Range.t (* sealed *)
+instance val e_issue  : embedding FStarC.Errors.issue
+instance val e_document : embedding FStarC.Pprint.document
+instance val e_vconfig  : embedding vconfig
+instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
 instance val e_string_list : embedding (list string)
-val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
+val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> ML 'b)
 
 instance val e_abstract_nbe_term : embedding abstract_nbe_term
-instance val e_order : embedding FStarC.Order.order
 
 (* Unconditionally fails raising an exception when called *)
 val e_unsupported : #a:Type -> embedding a
+
+instance val e_norm_step : embedding NormSteps.norm_step
+
+// Interface for NBE interpretations
+
+val arg_as_int : arg -> ML (option int)
+val arg_as_list : embedding 'a -> arg -> ML (option (list 'a))
+
+val mixed_binary_op : (arg -> ML (option 'a)) -> (arg -> ML (option 'b)) -> ('c -> ML t) ->
+                      (universes -> 'a -> 'b -> ML (option 'c)) -> universes -> args -> ML (option t)
+
+val mixed_ternary_op (as_a : arg -> ML (option 'a))
+                     (as_b : arg -> ML (option 'b))
+                     (as_c : arg -> ML (option 'c))
+                     (embed_d : 'd -> ML t)
+                     (f : universes -> 'a -> 'b -> 'c -> ML (option 'd))
+                     (us:universes)
+                     (args : args) : ML (option t)
+
+val dummy_interp : Ident.lid -> args -> ML (option t)
+
+val and_op : args -> ML (option t)
+val or_op : args -> ML (option t)
 
 (* Arity specific raw_embeddings of arrows; used to generate top-level
    registrations of compiled functions in FStarC.Extraction.ML.Util *)
 val arrow_as_prim_step_1:  embedding 'a
                         -> embedding 'b
-                        -> ('a -> 'b)
+                        -> ('a -> ML 'b)
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (universes -> args -> option t)
+                        -> (universes -> args -> ML (option t))
 
 val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
                         -> embedding 'c
-                        -> ('a -> 'b -> 'c)
+                        -> ('a -> ML ('b -> ML 'c))
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (universes -> args -> option t)
+                        -> (universes -> args -> ML (option t))
 
 val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'b
                         -> embedding 'c
                         -> embedding 'd
-                        -> ('a -> 'b -> 'c -> 'd)
+                        -> ('a -> ML ('b -> ML ('c -> ML 'd)))
                         -> repr_f:Ident.lid
                         -> nbe_cbs
-                        -> (universes -> args -> option t)
+                        -> (universes -> args -> ML (option t))
 
-// Interface for NBE interpretations
-
-val arg_as_int : arg -> option int
-val arg_as_list : embedding 'a -> arg -> option (list 'a)
-
-val mixed_binary_op : (arg -> option 'a) -> (arg -> option 'b) -> ('c -> t) ->
-                      (universes -> 'a -> 'b -> option 'c) -> universes -> args -> option t
-
-val mixed_ternary_op (as_a : arg -> option 'a)
-                     (as_b : arg -> option 'b)
-                     (as_c : arg -> option 'c)                     
-                     (embed_d : 'd -> t) 
-                     (f : universes -> 'a -> 'b -> 'c -> option 'd)
-                     (us:universes)
-                     (args : args) : option t
-
-val dummy_interp : Ident.lid -> args -> option t
-
-val and_op : args -> option t
-val or_op : args -> option t
+instance val e_order : embedding FStarC.Order.order

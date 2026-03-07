@@ -27,6 +27,9 @@ open FStarC.Sealed
 module Range = FStarC.Range
 open FStarC.Ident
 
+type ppname_t = sealed string
+val as_ppname (s:string) : Tot ppname_t
+
 type name = list string
 type typ  = term
 type binders = list binder
@@ -59,9 +62,6 @@ type aqualv =
     | Q_Meta of term
 
 type argv = term & aqualv
-
-type ppname_t = sealed string
-val as_ppname (s:string) : Tot ppname_t
 
 type bv_view = {
     bv_ppname : ppname_t;

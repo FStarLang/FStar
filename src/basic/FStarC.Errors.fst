@@ -36,12 +36,12 @@ let fallback_range : ref (option range) = mk_ref None
 
 let error_range_bound : ref (option range) = mk_ref None
 
-let with_error_bound (r:range) (f : unit -> 'a) : 'a =
+let with_error_bound (r:range) (f : unit -> ML 'a) : ML 'a =
   let old = !error_range_bound in
   error_range_bound := Some r;
   finally (fun () -> error_range_bound := old) f
 
-let maybe_bound_range (r : Range.t) : Range.t =
+let maybe_bound_range (r : Range.t) : ML Range.t =
   match !error_range_bound with
   | Some r' -> Range.bound_range r r'
   | None -> r
@@ -71,7 +71,7 @@ let lookup_error_range settings (l, h) =
   matches
 
 let error_number (_, _, i) = i
-let errno (e:error_code) : int = error_number (lookup_error default_settings e)
+let errno (e:error_code) : ML int = error_number (lookup_error default_settings e)
 
 (* Exported *)
 let warn_on_use_errno    = errno Warning_WarnOnUse
@@ -79,7 +79,7 @@ let defensive_errno      = errno Warning_Defensive
 let call_to_erased_errno = errno Error_CallToErased
 
 let update_flags (l:list (error_flag & (int & int)))
-  : list error_setting
+  : ML (list error_setting)
   = let set_one_flag i flag default_flag =
       match flag, default_flag with
       | (CWarning, CAlwaysError)
@@ -126,12 +126,12 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  Option.dflt JsonNull (json_of_range <$> Option.map Range.refind_range issue.issue_range);
+        "range",  (match Option.map Range.refind_range issue.issue_range with None -> JsonNull | Some r -> json_of_range r);
         "number", Option.dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
 
-let ctx_doc (ctx : list string) : PP.document =
+let ctx_doc (ctx : list string) : ML PP.document =
   let open FStarC.Pprint in
   if Options.error_contexts ()
   then
@@ -142,7 +142,7 @@ let ctx_doc (ctx : list string) : PP.document =
 
 (* No newline at the end *)
 (* Only used externally *)
-let issue_message (i:issue) : list PP.document =
+let issue_message (i:issue) : ML (list PP.document) =
   let open FStarC.Pprint in
   i.issue_msg @ [ctx_doc i.issue_ctx]
 
@@ -159,12 +159,12 @@ let issue_level_of_string =
   | "Error" -> EError
   | _ -> ENotImplemented
 
-let optional_def (f : 'a -> PP.document) (def : PP.document) (o : option 'a) : PP.document =
+let optional_def (f : 'a -> ML PP.document) (def : PP.document) (o : option 'a) : ML PP.document =
   match o with
   | Some x -> f x
   | None -> def
 
-let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
+let issue_to_doc' (print_hdr:bool) (issue:issue) : ML PP.document =
   let open FStarC.Pprint in
   let r = Option.map Range.refind_range issue.issue_range in
   let hdr : document =
@@ -212,10 +212,10 @@ let issue_to_doc' (print_hdr:bool) (issue:issue) : PP.document =
   subdoc seealso ^^
   subdoc ctx
 
-let format_issue' (print_hdr:bool) (issue:issue) : string =
+let format_issue' (print_hdr:bool) (issue:issue) : ML string =
   issue_to_doc' print_hdr issue |> renderdoc
 
-let format_issue issue : string = format_issue' true issue
+let format_issue issue : ML string = format_issue' true issue
 
 let print_issue_json issue =
     json_of_issue issue |> string_of_json |> Format.print1_error "%s\n"
@@ -253,13 +253,12 @@ let print_issue_github issue =
         msg
 
 let print_issue_rendered issue =
-    let printer =
-        match issue.issue_level with
-        | EInfo -> (fun s -> Format.print_string (Format.colorize_cyan s))
-        | EWarning -> Format.print_warning
-        | EError -> Format.print_error
-        | ENotImplemented -> Format.print_error in
-    printer (format_issue issue ^ "\n")
+    let msg = format_issue issue ^ "\n" in
+    match issue.issue_level with
+    | EInfo -> Format.print_string (Format.colorize_cyan msg)
+    | EWarning -> Format.print_warning msg
+    | EError -> Format.print_error msg
+    | ENotImplemented -> Format.print_error msg
 
 let print_issue issue =
     match FStarC.Options.message_format () with
@@ -276,7 +275,7 @@ let compare_issues i1 i2 =
 
 (* Attempts to set a decent range (no dummy, no dummy ide) relying
 on the fallback_range reference. *)
-let fixup_issue_range (rng:option Range.t) : option Range.t =
+let fixup_issue_range (rng:option Range.t) : ML (option Range.t) =
   let rng =
     match rng with
     | None ->
@@ -318,8 +317,9 @@ let mk_default_handler () =
         if !Options.abort_counter = 0 then
           failwith "Aborting due to --abort_on"
       end;
-      if Options.defensive_abort () && e.issue_number = Some defensive_errno then
-        failwith "Aborting due to --defensive abort";
+      if Options.defensive_abort () then
+        if e.issue_number = Some defensive_errno then
+          failwith "Aborting due to --defensive abort";
       ()
   in
   let count_errors () = !err_count in
@@ -368,7 +368,7 @@ let mk_issue level range msg n ctx = {
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
-let wrapped_eh_add_one (h : error_handler) (issue : issue) : unit =
+let wrapped_eh_add_one (h : error_handler) (issue : issue) : ML unit =
     (* Try to set a good use range if we got an empty/dummy one *)
     let issue = { issue with issue_range = fixup_issue_range issue.issue_range } in
     h.eh_add_one issue
@@ -392,11 +392,11 @@ let set_handler handler =
     clear (); current_handler := handler; add_many issues
 
 type error_context_t = {
-    push  : string -> unit;
-    pop   : unit -> string;
-    clear : unit -> unit;
-    get   : unit -> list string;
-    set   : list string -> unit;
+    push  : string -> ML unit;
+    pop   : unit -> ML string;
+    clear : unit -> ML unit;
+    get   : unit -> ML (list string);
+    set   : list string -> ML unit;
 }
 
 let error_context : error_context_t =
@@ -417,10 +417,10 @@ let error_context : error_context_t =
     ; set   = set
     }
 
-let get_ctx () : list string =
+let get_ctx () : ML (list string) =
   error_context.get ()
 
-let maybe_add_backtrace (msg : error_message) : error_message =
+let maybe_add_backtrace (msg : error_message) : ML error_message =
   if Options.trace_error () then
     msg @ [backtrace_doc ()]
   else
@@ -440,7 +440,7 @@ let set_option_warning_callback_range (ropt:option FStarC.Range.t) =
 let t_set_parse_warn_error,
     error_flags =
     (* To parse a warn_error string we expect a callback to be set in FStarC.Main.setup_hooks *)
-    let parser_callback : ref (option (string -> option (list error_setting))) = mk_ref None in
+    let parser_callback : ref (option (string -> ML (option (list error_setting)))) = mk_ref None in
     (* The reporting of errors, particularly errors in the warn_error string itself
        is delicate.
        We keep a map from warn_error strings to their parsed results,
@@ -490,7 +490,7 @@ let t_set_parse_warn_error,
        and installing, in turn, callbacks in Options for
        parsing warn_error settings and also for warning on the use of
        unsafe options. *)
-    let set_callbacks (f:string -> option (list error_setting)) =
+    let set_callbacks (f:string -> ML (option (list error_setting))) : ML unit =
         parser_callback := Some f;
         Options.set_error_flags_callback set_error_flags;
         Options.set_option_warning_callback (warn_unsafe_options None)
@@ -580,10 +580,10 @@ let raise_error0 e msg = raise_error dummyRange e msg
 let log_issue0 e msg = log_issue dummyRange e msg
 let diag0 msg = diag dummyRange msg
 
-let add_errors (errs : list error) : unit =
+let add_errors (errs : list error) : ML unit =
     atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)
 
-let issue_of_exn (e:exn) : option issue =
+let issue_of_exn (e:exn) : ML (option issue) =
   match e with
   | Error(e, msg, r, ctx) ->
     let errno = error_number (lookup e) in
@@ -607,7 +607,7 @@ let stop_if_err () =
     if get_err_count () > 0
     then raise Stop
 
-let with_ctx (s:string) (f : unit -> 'a) : 'a =
+let with_ctx (s:string) (f : unit -> ML 'a) : ML 'a =
   error_context.push s;
   let r =
     (* If we're debugging the failure, don't do anything,
@@ -631,7 +631,7 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
   | Inr r -> r
   | Inl e -> raise e
 
-let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
+let with_ctx_if (b:bool) (s:string) (f : unit -> ML 'a) : ML 'a =
   if b then
     with_ctx s f
   else
@@ -641,7 +641,7 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
 // returns errors, other issues, result if any
 // restores handler back
 //
-let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
+let catch_errors_aux (f : unit -> ML 'a) : ML (list issue & list issue & option 'a) =
   let newh = mk_catch_handler () in
   let old = !current_handler in
   current_handler := newh;
@@ -663,14 +663,14 @@ let catch_errors_aux (f : unit -> 'a) : list issue & list issue & option 'a =
   let errs, rest = finally_restore() in
   errs, rest, r
  
-let no_ctx (f : unit -> 'a) : 'a =
+let no_ctx (f : unit -> ML 'a) : ML 'a =
   let save = error_context.get () in
   error_context.clear ();
   let res = f () in
   error_context.set save;
   res
 
-let catch_errors (f : unit -> 'a) : list issue & option 'a =
+let catch_errors (f : unit -> ML 'a) : ML (list issue & option 'a) =
   let errs, rest, r = catch_errors_aux f in
   List.iter (!current_handler).eh_add_one rest;
   errs, r
@@ -678,7 +678,7 @@ let catch_errors (f : unit -> 'a) : list issue & option 'a =
 //
 // Similar to catch_errors, except the warnings are not added to the old handler
 //
-let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
+let catch_errors_and_ignore_rest (f:unit -> ML 'a) : ML (list issue & option 'a) =
   let errs, rest, r = catch_errors_aux f in
   List.iter (!current_handler).eh_add_one <| List.filter (fun i -> i.issue_level = EInfo) rest;
   (* ^ We print diagnostics anyway, which are usually debugging messages to be rendered
@@ -688,7 +688,7 @@ let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
-let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int & int & int) =
+let find_multiset_discrepancy (l1 : list int) (l2 : list int) : ML (option (int & int & int)) =
     let sort = List.sortWith (fun x y -> x - y) in
     let rec collect (l : list 'a) : list ('a & int) =
         match l with
@@ -738,7 +738,7 @@ let _ = Options.check_include_dir := (fun s ->
             ]
 )
 
-let print_expected_failures (issues : list issue) : unit =
+let print_expected_failures (issues : list issue) : ML unit =
   (* Add them as diagnostics so we see them in the IDE. *)
   let issues = issues |> List.map (fun i -> { i with
     issue_level = EInfo;

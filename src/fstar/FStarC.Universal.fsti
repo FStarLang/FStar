@@ -16,6 +16,7 @@
 
 //Top-level invocations into the universal type-checker FStarC.TypeChecker
 module FStarC.Universal
+open FStarC.Effect
 
 open FStarC.Ident
 open FStarC.CheckedFiles
@@ -32,7 +33,7 @@ and an lid for its name. *)
 val module_or_interface_name : Syntax.modul -> bool & lid
 
 (* Uses the dsenv inside the TcEnv.env to run the computation. *)
-val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a & TcEnv.env
+val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> ML ('a & TcEnv.env)
 
 val core_check: TcEnv.core_check_t
 
@@ -44,20 +45,27 @@ val tc_one_fragment :
     option Syntax.modul ->
     TcEnv.env_t ->
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
-    option Syntax.modul & TcEnv.env & lang_decls_t
+    ML (option Syntax.modul & TcEnv.env & lang_decls_t)
 
 (* Load an interface file into the dsenv. sed in interactive mode when fly_deps is off *)
 val load_interface_decls :
     TcEnv.env ->
     string ->
-    TcEnv.env_t
+    ML TcEnv.env_t
+
+(* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
+for the interface and implementation of a (single) module. *)
+val needs_interleaving :
+    string ->
+    string ->
+    ML bool
 
 (* Loads one file as a dependence. Used in interactive mode when fly_deps is off *)
 val load_file :
     TcEnv.env_t ->
     iface_fn:option string ->
     filename:string ->
-    TcEnv.env_t
+    ML TcEnv.env_t
 
 
 (* This is used by interactive mode (PushHelper). 
@@ -72,25 +80,18 @@ val load_fly_deps_and_tc_one_fragment :
     option Syntax.modul ->
     TcEnv.env_t ->
     either (FStarC.Parser.ParseIt.input_frag & lang_decls_t) FStarC.Parser.AST.decl ->
-    option Syntax.modul &
+    ML (option Syntax.modul &
     TcEnv.env &
     lang_decls_t &
-    list string //filenames that were loaded
+    list string) //filenames that were loaded
 
 (* Initialize a clean environment, built from a dependency graph. The
 graph is used to populate the internal dsenv of the tcenv. *)
-val init_env : Dep.deps -> TcEnv.env
-
-(* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
-for the interface and implementation of a (single) module. *)
-val needs_interleaving :
-    string ->
-    string ->
-    bool
+val init_env : Dep.deps -> ML TcEnv.env
 
 (* Batch mode: check multiple files. *)
 val batch_mode_tc :
     fly_deps:bool ->
     list string ->
     FStarC.Parser.Dep.deps ->
-    list tc_result & uenv & (uenv -> uenv)
+    ML (list tc_result & uenv & (uenv -> ML uenv))

@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V1.Builtins
-
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V1.Data
 open FStarC.Syntax.Syntax
 open FStarC.Errors
+open FStarC.List
 
 module S = FStarC.Syntax.Syntax // TODO: remove, it's open
 
@@ -72,7 +72,7 @@ the case if we remove the `env` in some, like `lookup_attr`.
 In the case of `inspect_sigelt`, however, I think it won't be
 noticeable since one obtain a concrete sigelt without running an impure
 metaprogram. *)
-let get_env () : Env.env =
+let get_env () : ML Env.env =
   match !N.reflection_env_hook with
   | None -> failwith "impossible: env_hook unset in reflection"
   | Some e -> e
@@ -97,15 +97,15 @@ let pack_bqual (aqv : aqualv) : bqual =
     | Data.Q_Implicit -> Some (Implicit false)
     | Data.Q_Meta t   -> Some (Meta t)
 
-let pack_aqual (aqv : aqualv) : aqual =
+let pack_aqual (aqv : aqualv) : ML aqual =
     match aqv with
     | Data.Q_Implicit -> S.as_aqual_implicit true
     | _ -> None
 
-let inspect_fv (fv:fv) : list string =
+let inspect_fv (fv:fv) : ML (list string) =
     Ident.path_of_lid (lid_of_fv fv)
 
-let pack_fv (ns:list string) : fv =
+let pack_fv (ns:list string) : ML fv =
     let lid = PC.p2l ns in
     let fallback () =
         let quals =
@@ -129,20 +129,7 @@ let pack_fv (ns:list string) : fv =
      | _ ->
          fallback ()
 
-// TODO: move to library?
-let rec last (l:list 'a) : 'a =
-    match l with
-    | [] -> failwith "last: empty list"
-    | [x] -> x
-    | _::xs -> last xs
-
-let rec init (l:list 'a) : list 'a =
-    match l with
-    | [] -> failwith "init: empty list"
-    | [x] -> []
-    | x::xs -> x :: init xs
-
-let inspect_const (c:sconst) : vconst =
+let inspect_const (c:sconst) : ML vconst =
     match c with
     | FStarC.Const.Const_unit -> C_Unit
     | FStarC.Const.Const_int (s, _) -> C_Int (BU.int_of_string s)
@@ -174,7 +161,7 @@ let pack_universe uv =
   | Uv_Unif u -> U_unif u
   | Uv_Unk -> U_unknown
 
-let rec inspect_ln (t:term) : term_view =
+let rec inspect_ln (t:term) : ML term_view =
     //
     // Only pushes delayed substitutions,
     //   doesn't compress uvars
@@ -267,7 +254,7 @@ let rec inspect_ln (t:term) : term_view =
         end
 
     | Tm_match {scrutinee=t; ret_opt; brs} ->
-        let rec inspect_pat p =
+        let rec inspect_pat p : ML _ =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
@@ -289,8 +276,8 @@ let rec inspect_ln (t:term) : term_view =
           (Format.fmt2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
-let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list cflag) : list term =
+let inspect_comp (c : comp) : ML comp_view =
+    let get_dec (flags : list cflag) : ML (list term) =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
         | None -> []
         | Some (DECREASES (Decreases_lex ts)) -> ts
@@ -325,7 +312,7 @@ let inspect_comp (c : comp) : comp_view =
                    get_dec ct.flags)
       end
 
-let pack_comp (cv : comp_view) : comp =
+let pack_comp (cv : comp_view) : ML comp =
     let urefl_to_univs u =
       if u = U_unknown
       then []
@@ -358,7 +345,7 @@ let pack_comp (cv : comp_view) : comp =
                  ; flags       = flags } in
         S.mk_Comp ct
 
-let pack_const (c:vconst) : sconst =
+let pack_const (c:vconst) : ML sconst =
     match c with
     | C_Unit         -> C.Const_unit
     | C_Int i        -> C.Const_int (show i, None)
@@ -370,7 +357,7 @@ let pack_const (c:vconst) : sconst =
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
 
 // TODO: pass in range?
-let pack_ln (tv:term_view) : term =
+let pack_ln (tv:term_view) : ML term =
     match tv with
     | Tv_Var bv ->
         S.bv_to_name bv
@@ -418,7 +405,7 @@ let pack_ln (tv:term_view) : term =
 
     | Tv_Match (t, ret_opt, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
-        let rec pack_pat p : S.pat =
+        let rec pack_pat p : ML S.pat =
             match p with
             | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
             | Pat_Cons (fv, us_opt, ps) -> wrap <| Pat_cons (fv, us_opt, List.map (fun (p, b) -> pack_pat p, b) ps)
@@ -442,13 +429,13 @@ let pack_ln (tv:term_view) : term =
             Err.Warning_CantInspect "packing a Tv_Unsupp into Tm_unknown";
         S.mk Tm_unknown Range.dummyRange
 
-let compare_bv (x:bv) (y:bv) : order =
+let compare_bv (x:bv) (y:bv) : ML order =
     let n = S.order_bv x y in
     if n < 0 then Lt
     else if n = 0 then Eq
     else Gt
 
-let lookup_attr (attr:term) (env:Env.env) : list fv =
+let lookup_attr (attr:term) (env:Env.env) : ML (list fv) =
     match (SS.compress_subst attr).n with
     | Tm_fvar fv ->
         let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
@@ -457,10 +444,10 @@ let lookup_attr (attr:term) (env:Env.env) : list fv =
                                   | Some l -> [S.lid_as_fv l None]) ses
     | _ -> []
 
-let all_defs_in_env (env:Env.env) : list fv =
+let all_defs_in_env (env:Env.env) : ML (list fv) =
     List.map (fun l -> S.lid_as_fv l None) (Env.lidents env) // |> take 10
 
-let defs_in_module (env:Env.env) (modul:name) : list fv =
+let defs_in_module (env:Env.env) (modul:name) : ML (list fv) =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
@@ -470,7 +457,7 @@ let defs_in_module (env:Env.env) (modul:name) : list fv =
                 else [])
         (Env.lidents env)
 
-let lookup_typ (env:Env.env) (ns:list string) : option sigelt =
+let lookup_typ (env:Env.env) (ns:list string) : ML (option sigelt) =
     let lid = PC.p2l ns in
     Env.lookup_sigelt env lid
 
@@ -484,7 +471,7 @@ let inspect_ident (i:Ident.ident) : ident = Reflection.V2.Builtins.inspect_ident
 let pack_ident (i:ident) : Ident.ident = Reflection.V2.Builtins.pack_ident i
 
 (* PRIVATE, and hacky :-( *)
-let rd_to_syntax_qual : RD.qualifier -> qualifier = function
+let rd_to_syntax_qual : RD.qualifier -> ML qualifier = function
   | RD.Assumption -> Assumption
   | RD.New -> New
   | RD.Private -> Private
@@ -509,7 +496,7 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Effect -> S.Effect
   | RD.OnlyName -> OnlyName
 
-let syntax_to_rd_qual = function
+let syntax_to_rd_qual : S.qualifier -> ML RD.qualifier = function
   | Assumption -> RD.Assumption
   | New -> RD.New
   | Private -> RD.Private
@@ -535,18 +522,18 @@ let syntax_to_rd_qual = function
   | OnlyName -> RD.OnlyName
 
 
-let sigelt_quals (se : sigelt) : list RD.qualifier =
+let sigelt_quals (se : sigelt) : ML (list RD.qualifier) =
     se.sigquals |> List.map syntax_to_rd_qual
 
-let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : sigelt =
+let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : ML sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
 let sigelt_opts (se : sigelt) : option vconfig = se.sigopts
 
-let embed_vconfig (vcfg : vconfig) : term =
+let embed_vconfig (vcfg : vconfig) : ML term =
   EMB.embed vcfg Range.dummyRange None EMB.id_norm_cb
 
-let inspect_sigelt (se : sigelt) : sigelt_view =
+let inspect_sigelt (se : sigelt) : ML sigelt_view =
     match se.sigel with
     | Sig_let {lbs=(r, lbs)} ->
         let inspect_letbinding (lb:letbinding) =
@@ -566,7 +553,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
         let param_bs, ty = SS.open_term param_bs ty in
 
-        let inspect_ctor (c_lid:Ident.lid) : ctor =
+        let inspect_ctor (c_lid:Ident.lid) : ML ctor =
           match Env.lookup_sigelt (get_env ()) c_lid with
           | Some ({sigel = Sig_datacon {lid; us; t=cty; num_ty_params=nparam}}) ->
             let cty = SS.subst s cty in // open universes from above
@@ -604,7 +591,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | _ ->
         Unk
 
-let pack_sigelt (sv:sigelt_view) : sigelt =
+let pack_sigelt (sv:sigelt_view) : ML sigelt =
     let check_lid lid =
         if List.length (Ident.path_of_lid lid) <= 1
     then failwith ("pack_sigelt: invalid long identifier \""
@@ -640,7 +627,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let nparam = List.length param_bs in
       //We can't tust the value of injective_type_params; set it to false here and let the typechecker recompute
       let injective_type_params = false in
-      let pack_ctor (c:ctor) : sigelt =
+      let pack_ctor (c:ctor) : ML sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
         let ty = U.arrow param_bs (S.mk_Total ty) in
@@ -682,7 +669,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
     | Unk ->
         failwith "packing Unk, sorry"
 
-let inspect_lb (lb:letbinding) : lb_view =
+let inspect_lb (lb:letbinding) : ML lb_view =
     let {lbname=nm;lbunivs=us;lbtyp=typ;lbeff=eff;lbdef=def;lbattrs=attrs;lbpos=pos}
         = lb in
     let s, us = SS.univ_var_opening us in
@@ -693,7 +680,7 @@ let inspect_lb (lb:letbinding) : lb_view =
     | Inr fv -> {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def}
     | _ -> failwith "Impossible: bv in top-level let binding"
 
-let pack_lb (lbv:lb_view) : letbinding =
+let pack_lb (lbv:lb_view) : ML letbinding =
     let {lb_fv = fv; lb_us = us; lb_typ = typ; lb_def = def} = lbv in
     let us = List.map pack_ident us in
     let s = SS.univ_var_closing us in
@@ -701,7 +688,7 @@ let pack_lb (lbv:lb_view) : letbinding =
     let def = SS.subst s def in
     U.mk_letbinding (Inr fv) us typ PC.effect_Tot_lid def [] Range.dummyRange
 
-let inspect_bv (bv:bv) : bv_view =
+let inspect_bv (bv:bv) : ML bv_view =
     if bv.index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
           (Format.fmt3 "inspect_bv: index is negative (%s : %s), index = %s"
@@ -714,7 +701,7 @@ let inspect_bv (bv:bv) : bv_view =
       bv_index = bv.index;
     }
 
-let pack_bv (bvv:bv_view) : bv =
+let pack_bv (bvv:bv_view) : ML bv =
     if bvv.bv_index < 0 then (
         Err.log_issue0 Err.Warning_CantInspect
           (Format.fmt2 "pack_bv: index is negative (%s), index = %s"
@@ -727,7 +714,7 @@ let pack_bv (bvv:bv_view) : bv =
       sort = S.tun;
     }
 
-let inspect_binder (b:binder) : binder_view =
+let inspect_binder (b:binder) : ML binder_view =
   let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
   {
     binder_bv = b.binder_bv;
@@ -736,7 +723,7 @@ let inspect_binder (b:binder) : binder_view =
     binder_sort = b.binder_bv.sort;
   }
 
-let pack_binder (bview:binder_view) : binder =
+let pack_binder (bview:binder_view) : ML binder =
   let pqual, attrs = U.parse_positivity_attributes bview.binder_attrs in
   {
     binder_bv= { bview.binder_bv with sort = bview.binder_sort };
@@ -746,19 +733,22 @@ let pack_binder (bview:binder_view) : binder =
   }
 
 open FStarC.TypeChecker.Env
-let moduleof (e : Env.env) : list string =
+let moduleof (e : Env.env) : ML (list string) =
     Ident.path_of_lid e.curmodule
 
-let env_open_modules (e : Env.env) : list name =
+let env_open_modules (e : Env.env) : ML (list name) =
     List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 
-let binders_of_env e = FStarC.TypeChecker.Env.all_binders e
+let binders_of_env e : ML binders = FStarC.TypeChecker.Env.all_binders e
 
 (* Generic combinators, safe *)
 let eqopt  = Syntax.Util.eqopt
 let eqlist = Syntax.Util.eqlist
 let eqprod = Syntax.Util.eqprod
+
+(* ML-compatible short-circuit && for use in term_eq and friends *)
+private let (&&.) (b1: bool) (b2: bool) : bool = b1 && b2
 
 (*
  * Why doesn't this call into Syntax.Util.term_eq? Because that function
@@ -781,7 +771,7 @@ let eqprod = Syntax.Util.eqprod
  * as abstract, but have a lemma stating that the view is complete
  * (or appear inside a view of one such type).
  *)
-let rec term_eq (t1:term) (t2:term) : bool =
+let rec term_eq (t1:term) (t2:term) : ML bool =
   match inspect_ln t1, inspect_ln t2 with
   | Tv_Var bv1, Tv_Var bv2 ->
     bv_eq bv1 bv2
@@ -794,23 +784,23 @@ let rec term_eq (t1:term) (t2:term) : bool =
     S.fv_eq fv1 fv2
 
   | Tv_UInst (fv1, us1), Tv_UInst (fv2, us2) ->
-    S.fv_eq fv1 fv2 && univs_eq us1 us2
+    S.fv_eq fv1 fv2 &&. univs_eq us1 us2
 
   | Tv_App (h1, arg1), Tv_App (h2, arg2) ->
-    term_eq h1 h2 && arg_eq arg1 arg2
+    term_eq h1 h2 &&. arg_eq arg1 arg2
 
   | Tv_Abs (b1, t1), Tv_Abs (b2, t2) ->
-    binder_eq b1 b2 && term_eq t1 t2
+    binder_eq b1 b2 &&. term_eq t1 t2
 
   | Tv_Arrow (b1, c1), Tv_Arrow (b2, c2) ->
-    binder_eq b1 b2 && comp_eq c1 c2
+    binder_eq b1 b2 &&. comp_eq c1 c2
 
   | Tv_Type u1, Tv_Type u2 ->
     univ_eq u1 u2
 
   | Tv_Refine (b1, sort1, t1), Tv_Refine (b2, sort2, t2) ->
     (* No need to compare bvs *)
-    term_eq sort1 sort2 && term_eq t1 t2
+    term_eq sort1 sort2 &&. term_eq t1 t2
 
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
@@ -831,52 +821,52 @@ let rec term_eq (t1:term) (t2:term) : bool =
 
   | Tv_Let (r1, ats1, bv1, ty1, m1, n1), Tv_Let (r2, ats2, bv2, ty2, m2, n2) ->
     (* no need to compare bvs *)
-    r1 = r2 &&
-     eqlist term_eq ats1 ats2 &&
-     term_eq ty1 ty2 &&
-     term_eq m1 m2 &&
+    r1 = r2 &&.
+     eqlist term_eq ats1 ats2 &&.
+     term_eq ty1 ty2 &&.
+     term_eq m1 m2 &&.
      term_eq n1 n2
 
   | Tv_Match (h1, an1, brs1), Tv_Match (h2, an2, brs2) ->
-    term_eq h1 h2 &&
-      eqopt match_ret_asc_eq an1 an2 &&
+    term_eq h1 h2 &&.
+      eqopt match_ret_asc_eq an1 an2 &&.
       eqlist branch_eq brs1 brs2
 
   | Tv_AscribedT (e1, t1, topt1, eq1), Tv_AscribedT (e2, t2, topt2, eq2) ->
-    term_eq e1 e2 &&
-      term_eq t1 t2 &&
-      eqopt term_eq topt1 topt2 &&
+    term_eq e1 e2 &&.
+      term_eq t1 t2 &&.
+      eqopt term_eq topt1 topt2 &&.
       eq1 = eq2
 
   | Tv_AscribedC (e1, c1, topt1, eq1), Tv_AscribedC (e2, c2, topt2, eq2) ->
-    term_eq e1 e2 &&
-      comp_eq c1 c2 &&
-      eqopt term_eq topt1 topt2 &&
+    term_eq e1 e2 &&.
+      comp_eq c1 c2 &&.
+      eqopt term_eq topt1 topt2 &&.
       eq1 = eq2
 
   | Tv_Unknown, Tv_Unknown -> true
   | _ -> false
 
-and arg_eq (arg1 : argv) (arg2 : argv) : bool =
+and arg_eq (arg1 : argv) (arg2 : argv) : ML bool =
   let (a1, aq1) = arg1 in
   let (a2, aq2) = arg2 in
-  term_eq a1 a2 && aqual_eq aq1 aq2
+  term_eq a1 a2 &&. aqual_eq aq1 aq2
 
-and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : bool =
+and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : ML bool =
   match aq1, aq2 with
   | Q_Implicit, Q_Implicit -> true
   | Q_Explicit, Q_Explicit -> true
   | Q_Meta t1, Q_Meta t2 -> term_eq t1 t2
   | _ -> false
 
-and binder_eq (b1 : binder) (b2 : binder) : bool =
+and binder_eq (b1 : binder) (b2 : binder) : ML bool =
   let bview1 = inspect_binder b1 in
   let bview2 = inspect_binder b2 in
-  binding_bv_eq bview1.binder_bv bview2.binder_bv &&
-    aqual_eq bview1.binder_qual bview2.binder_qual &&
+  binding_bv_eq bview1.binder_bv bview2.binder_bv &&.
+    aqual_eq bview1.binder_qual bview2.binder_qual &&.
     eqlist term_eq bview1.binder_attrs bview2.binder_attrs
 
-and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
+and binding_bv_eq (bv1 : bv) (bv2 : bv) : ML bool =
   (*
    * In binding ocurrences, we compare the sorts of variables. Not so
    * in normal ocurrences, as term_eq does. Note we can access the sort
@@ -887,7 +877,7 @@ and binding_bv_eq (bv1 : bv) (bv2 : bv) : bool =
    *)
   term_eq bv1.sort bv2.sort
 
-and bv_eq (bv1 : bv) (bv2 : bv) : bool =
+and bv_eq (bv1 : bv) (bv2 : bv) : ML bool =
   (*
    * Just compare the index. Note: this is safe since inspect_bv
    * exposes it. We do _not_ compare the sorts. This is already
@@ -896,47 +886,47 @@ and bv_eq (bv1 : bv) (bv2 : bv) : bool =
    *)
   bv1.index = bv2.index
 
-and comp_eq (c1 : comp) (c2 : comp) : bool =
+and comp_eq (c1 : comp) (c2 : comp) : ML bool =
   match inspect_comp c1, inspect_comp c2 with
   | C_Total t1, C_Total t2
   | C_GTotal t1, C_GTotal t2 ->
     term_eq t1 t2
 
   | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
-    term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
+    term_eq pre1 pre2 &&. term_eq post1 post2 &&. term_eq pats1 pats2
 
   | C_Eff (us1, name1, t1, args1, decrs1), C_Eff (us2, name2, t2, args2, decrs2) ->
-    univs_eq us1 us2 &&
-    name1 = name2 &&
-    term_eq t1 t2 &&
-    eqlist arg_eq args1 args2 &&
+    univs_eq us1 us2 &&.
+    name1 = name2 &&.
+    term_eq t1 t2 &&.
+    eqlist arg_eq args1 args2 &&.
     eqlist term_eq decrs1 decrs2
 
   | _ ->
     false
 
-and match_ret_asc_eq (a1 : match_returns_ascription) (a2 : match_returns_ascription) : bool =
+and match_ret_asc_eq (a1 : match_returns_ascription) (a2 : match_returns_ascription) : ML bool =
   eqprod binder_eq ascription_eq a1 a2
 
-and ascription_eq (asc1 : ascription) (asc2 : ascription) : bool =
+and ascription_eq (asc1 : ascription) (asc2 : ascription) : ML bool =
   let (a1, topt1, eq1) = asc1 in
   let (a2, topt2, eq2) = asc2 in
   (match a1, a2 with
    | Inl t1, Inl t2 -> term_eq t1 t2
-   | Inr c1, Inr c2 -> comp_eq c1 c2) &&
-     eqopt term_eq topt1 topt2 &&
+   | Inr c1, Inr c2 -> comp_eq c1 c2) &&.
+     eqopt term_eq topt1 topt2 &&.
      eq1 = eq2
 
-and branch_eq (c1 : Data.branch) (c2 : Data.branch) : bool =
+and branch_eq (c1 : Data.branch) (c2 : Data.branch) : ML bool =
   eqprod pattern_eq term_eq c1 c2
 
-and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
+and pattern_eq (p1 : pattern) (p2 : pattern) : ML bool =
   match p1, p2 with
   | Pat_Constant c1, Pat_Constant c2 ->
     const_eq c1 c2
   | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) ->
-    S.fv_eq fv1 fv2 &&
-      eqopt (eqlist univ_eq) us1 us2 &&
+    S.fv_eq fv1 fv2 &&.
+      eqopt (eqlist univ_eq) us1 us2 &&.
       eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2
 
   | Pat_Var (bv1, _), Pat_Var (bv2, _) ->
@@ -947,25 +937,25 @@ and pattern_eq (p1 : pattern) (p2 : pattern) : bool =
 
   | _ -> false
 
-and const_eq (c1 : vconst) (c2 : vconst) : bool =
+and const_eq (c1 : vconst) (c2 : vconst) : ML bool =
   c1 = c2
 
-and univ_eq (u1 : universe) (u2 : universe) : bool =
+and univ_eq (u1 : universe) (u2 : universe) : ML bool =
   Syntax.Util.eq_univs u1 u2 // FIXME!
 
-and univs_eq (us1 : list universe) (us2 : list universe) : bool =
+and univs_eq (us1 : list universe) (us2 : list universe) : ML bool =
   eqlist univ_eq us1 us2
 
 let implode_qn ns = String.concat "." ns
 let explode_qn s = String.split ['.'] s
 let compare_string s1 s2 = String.compare s1 s2
 
-let push_binder e b = Env.push_binders e [b]
+let push_binder (e:Env.env) (b:binder) : ML Env.env = Env.push_binders e [b]
 
-let subst (x:bv) (n:term) (m:term) : term =
+let subst (x:bv) (n:term) (m:term) : ML term =
   SS.subst [NT(x,n)] m
 
-let close_term (b:binder) (t:term) : term = SS.close [b] t
+let close_term (b:binder) (t:term) : ML term = SS.close [b] t
 
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng

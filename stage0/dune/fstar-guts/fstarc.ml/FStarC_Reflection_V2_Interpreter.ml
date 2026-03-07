@@ -567,5 +567,5 @@ let reflection_primops :
     uu___2 :: uu___3 in
   uu___ :: uu___1
 let uu___0 : unit=
-  FStar_List.iter FStarC_TypeChecker_Cfg.register_extra_step
+  FStarC_List.iter FStarC_TypeChecker_Cfg.register_extra_step
     reflection_primops
