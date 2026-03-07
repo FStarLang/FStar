@@ -164,6 +164,9 @@ let tm_forward_jump_label (body:st_term) (lbl:ident) (post:comp) r : st_term =
 let tm_goto (lbl:term) (arg:term) r : st_term =
   PSB.(with_range (tm_goto lbl arg) r)
 
+let tm_defer (handler_pre:term) (handler:st_term) (body:st_term) r : st_term =
+  PSB.(with_range (tm_defer handler_pre handler body) r)
+
 let is_tm_intro_exists (s:st_term) : bool =
   match s.term1 with
   | Tm_IntroExists _ -> true

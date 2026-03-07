@@ -44,6 +44,7 @@ module Admit = Pulse.Checker.Admit
 module Return = Pulse.Checker.Return
 module Rewrite = Pulse.Checker.Rewrite
 module ForwardJumpLabel = Pulse.Checker.ForwardJumpLabel
+module Defer = Pulse.Checker.Defer
 module Goto = Pulse.Checker.Goto
 module PCP = Pulse.Checker.Pure
 
@@ -455,6 +456,9 @@ let rec check
 
       | Tm_Goto _ ->
         Goto.check g pre post_hint res_ppname t
+
+      | Tm_Defer _ ->
+        Defer.check g pre post_hint res_ppname t check
     in
 
     let (| x, g1, t, pre', k |) = r in

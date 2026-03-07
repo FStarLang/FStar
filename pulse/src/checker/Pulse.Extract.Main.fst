@@ -174,6 +174,9 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Goto _
   | Tm_ProofHintWithBinders _ -> e
 
+  | Tm_Defer { handler_pre; handler; body } ->
+    ret (Tm_Defer { handler_pre; handler = simplify_st_term g handler; body = simplify_st_term g body })
+
   | Tm_Abs { b; q; ascription; body } ->
     ret (Tm_Abs { b; q; ascription; body = with_open b body })
 
@@ -335,6 +338,9 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
       ret (Tm_ForwardJumpLabel { lbl; body = e; post })
 
     | Tm_Goto _ -> p
+
+    | Tm_Defer { handler_pre; handler; body } ->
+      ret (Tm_Defer { handler_pre; handler = erase_ghost_subterms g handler; body = erase_ghost_subterms g body })
       
   end
 
@@ -551,6 +557,12 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
             ppname = lbl.name;
           }) (close_term body x)), R.Q_Explicit;
         ]
+
+    | Tm_Defer { handler_pre; handler; body } ->
+      let body = extract_dv g body in
+      let handler = extract_dv g handler in
+      let b = R.pack_binder { sort = ECL.unit_ty; ppname = T.seal "_"; attrs = []; qual = R.Q_Explicit } in
+      ECL.mk_let b body handler
 
   end
 

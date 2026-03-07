@@ -54,6 +54,7 @@ let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let tm_pragma_with_options o b = Tm_PragmaWithOptions { options=o; body=b }
 let tm_forward_jump_label body lbl post = Tm_ForwardJumpLabel { body; lbl; post }
 let tm_goto lbl arg = Tm_Goto { lbl; arg }
+let tm_defer handler_pre handler body = Tm_Defer { handler_pre; handler; body }
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=Sealed.seal true; seq_lhs=Sealed.seal false; }
 let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p; elaborated=false }; binders=bs; t }
 let mk_assert_hint_type p = ASSERT { p; elaborated=false }

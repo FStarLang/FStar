@@ -312,6 +312,11 @@ type st_term' =
       lbl: term; // either var or named
       arg: term;
     }
+  | Tm_Defer {
+      handler_pre: slprop;
+      handler: st_term;
+      body: st_term;
+    }
 and st_term = {
     term : st_term';
     range : range;

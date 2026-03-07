@@ -302,6 +302,16 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
       | None -> body)
     | _ -> None
   )
+  | Tm_Defer { handler_pre; handler; body } -> (
+    match conditionalize g body cond, conditionalize g handler cond with
+    | None, None -> None
+    | Some body, None ->
+      Some { t with term = Tm_Defer { handler_pre; handler = add_write_if_necessary g handler cond; body } }
+    | None, Some handler ->
+      Some { t with term = Tm_Defer { handler_pre; handler; body = add_write_if_necessary g body cond } }
+    | Some body, Some handler ->
+      Some { t with term = Tm_Defer { handler_pre; handler; body } }
+  )
 
 let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   match t.term with
@@ -372,6 +382,10 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
     { t with term = Tm_WithLocalArray { binder; initializer; length; body } }
   | Tm_ProofHintWithBinders { hint_type; binders; t } ->
     T.fail "elim_gotos: Unexpected constructor: ProofHintWithBinders should have been desugared away"
+  | Tm_Defer { handler_pre; handler; body } ->
+    let handler = elim_gotos g handler in
+    let body = elim_gotos g body in
+    { t with term = Tm_Defer { handler_pre; handler; body } }
   | Tm_ForwardJumpLabel { lbl; body; post } ->
     let cond_var = fresh g in
     let g' = push_goto g cond_var lbl (goto_comp_of_block_comp post) in

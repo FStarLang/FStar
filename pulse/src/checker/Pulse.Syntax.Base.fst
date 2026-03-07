@@ -282,6 +282,10 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_Goto { lbl=l1; arg=a1 },
       Tm_Goto { lbl=l2; arg=a2 } ->
       eq_tm l1 l2 && eq_tm a1 a2
+
+    | Tm_Defer { handler_pre=p1; handler=h1; body=b1 },
+      Tm_Defer { handler_pre=p2; handler=h2; body=b2 } ->
+      eq_tm p1 p2 && eq_st_term h1 h2 && eq_st_term b1 b2
       
     | _ -> false
 
