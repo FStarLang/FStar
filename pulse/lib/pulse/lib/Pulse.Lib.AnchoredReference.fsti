@@ -119,10 +119,7 @@ fn recall_anchor (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a) (
   preserves anchored r va
   ensures pure (anc va v)
 
-ghost
-fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
-  preserves snapshot r v
-  ensures snapshot r v
+instance val duplicable_snapshot #t #pre #anc r v : duplicable (snapshot #t #pre #anc r v)
 
 ghost
 fn take_snapshot (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
@@ -137,5 +134,5 @@ fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
 ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
   preserves pts_to r #f v
-  preserves snapshot r v0
+  requires snapshot r v0
   ensures pure (p v0 v /\ True)

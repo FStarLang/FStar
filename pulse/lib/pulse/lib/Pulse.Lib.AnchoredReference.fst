@@ -277,6 +277,9 @@ fn dup_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) (#v:a)
   fold_snapshot r #v k
 }
 
+instance duplicable_snapshot #t #pre #anc r v : duplicable (snapshot #t #pre #anc r v) =
+  { dup_f = fun _ -> dup_snapshot r }
+
 ghost
 fn take_snapshot_core (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a p anc) (#b:bool) (#v:a)
   preserves core_pts_to r #f v b
@@ -313,7 +316,7 @@ fn take_snapshot_full (#a:Type) (#p:_) (#f:perm) (#anc:anchor_rel p) (r : ref a 
 ghost
 fn recall_snapshot (#a:Type) (#p:_) (#anc:anchor_rel p) (r : ref a p anc) #f (#v0 #v:a)
   preserves pts_to r #f v
-  preserves snapshot r v0
+  requires snapshot r v0
   ensures pure (p v0 v /\ True)
 {
   unfold (pts_to r #f v);

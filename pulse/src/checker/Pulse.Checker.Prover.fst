@@ -47,8 +47,35 @@ noeq type slprop_view =
   | WithPure : term -> ppname -> body: term -> slprop_view // body is opened with ()
   | IsUnreachable
   | Exists : u: universe -> b: binder -> body: term -> slprop_view
-  | Atom : head: head_id -> mkeys: option (list term) -> t: slprop -> slprop_view
+  | Atom : head: head_id -> duplicable: bool -> mkeys: option (list term) -> t: slprop -> slprop_view
   | Unknown : slprop -> slprop_view
+
+type plem_kind_t =
+  | EagerElim
+  | EagerIntro
+  | Intro
+
+type plem = {
+  plem_lid: R.name;
+  plem_kind: plem_kind_t;
+  plem_prop_head: head_id;
+  plem_prop_idx: nat;
+}
+type plems = list plem
+
+noeq type penv = {
+  penv_env: env;
+  penv_plems: plems;
+  penv_plems_enabled: bool;
+  penv_allow_amb: bool;
+
+  // for loop detection when applying intro lemmas
+  penv_stack: list (R.name & list term);
+
+  penv_steps: nat;
+
+  penv_duplicable_fvs: list R.name;
+}
 
 instance showable_slprop_view : tac_showable slprop_view = {
   show = (function
@@ -56,7 +83,7 @@ instance showable_slprop_view : tac_showable slprop_view = {
   | WithPure t x b -> Printf.sprintf "(WithPure %s %s %s)" (show t) (show x) (show b)
   | IsUnreachable -> "IsUnreachable"
   | Exists u x b -> Printf.sprintf "(exists* (%s). %s)" (Pulse.Syntax.Printer.binder_to_string x) (show b)
-  | Atom head keys t -> Printf.sprintf "(Atom {head=%s; keys=%s} %s)" (show head) (show keys) (show t)
+  | Atom head dup keys t -> Printf.sprintf "(Atom {head=%s; duplicable=%s; keys=%s} %s)" (show head) (show dup) (show keys) (show t)
   | Unknown p -> Printf.sprintf "(Unknown %s)" (show p)
   );
 }
@@ -66,7 +93,7 @@ let elab_slprop (p: slprop_view) : slprop =
   | Pure p -> tm_pure p
   | Exists u b body -> tm_exists_sl u b body
   | IsUnreachable -> tm_is_unreachable
-  | Atom _ _ t -> t
+  | Atom _ _ _ t -> t
   | WithPure p n b -> tm_with_pure p n b
   | Unknown p -> p
 
@@ -87,7 +114,7 @@ let elab_slprops_append ps qs : squash (elab_slprops (ps@qs) `slprop_eqv` (elab_
 
 #push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 #restart-solver
-let rec inspect_slprop (g: env) (p: slprop) : T.Tac (v:list slprop_view { elab_slprops v `slprop_eqv` p }) =
+let rec inspect_slprop (g: penv) (p: slprop) : T.Tac (v:list slprop_view { elab_slprops v `slprop_eqv` p }) =
   slprop_eqv_refl p;
   match inspect_term p with
   | Tm_Pure p -> [Pure p]
@@ -108,38 +135,26 @@ let rec inspect_slprop (g: env) (p: slprop) : T.Tac (v:list slprop_view { elab_s
     match T.hua p with
     | Some (h, _, _) ->
       let h = R.inspect_fv h in
-      let mkeys = Pulse.Checker.Prover.Match.MKeys.get_mkeys g p in
-      [Atom (FVarHead h) mkeys p]
+      let mkeys = Pulse.Checker.Prover.Match.MKeys.get_mkeys g.penv_env p in
+      let dup = List.existsb (fun fv -> fv = h) g.penv_duplicable_fvs in
+      [Atom (FVarHead h) dup mkeys p]
     | None ->
       let hd, _ = R.collect_app_ln p in
       match R.inspect_ln hd with
       | R.Tv_Var x ->
         let x = R.inspect_namedv x in
-        [Atom (VarHead x.uniq) None p]
+        [Atom (VarHead x.uniq) false None p]
       | _ ->
         match R.inspect_ln p with
         | R.Tv_Match sc _ _ ->
           let sc = RU.deep_compress_safe sc in
           if RU.no_uvars_in_term sc then
-            [Atom MatchHead (Some [sc]) p]
+            [Atom MatchHead false (Some [sc]) p]
           else
             [Unknown p]
         | _ ->
           [Unknown p]
 #pop-options
-
-type plem_kind_t =
-  | EagerElim
-  | EagerIntro
-  | Intro
-
-type plem = {
-  plem_lid: R.name;
-  plem_kind: plem_kind_t;
-  plem_prop_head: head_id;
-  plem_prop_idx: nat;
-}
-type plems = list plem
 
 let mk_attr lid = R.pack_ln <| R.Tv_FVar <| R.pack_fv lid
 let mk_pulse_core_attr n = mk_attr (Pulse.Reflection.Util.mk_pulse_lib_core_lid n)
@@ -162,7 +177,7 @@ let get_fvs g (se: R.sigelt) : T.Tac (list (R.fv & list R.univ_name & R.term)) =
       []
   | R.Unk | R.Sg_Inductive .. -> []
 
-let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
+let build_plems_from_lemma (g: penv) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (list plem) =
   T.concatMap (fun (fv, uvs, typ) ->
     let args, ty = R.collect_arr_ln_bs typ in
     match R.inspect_comp ty with
@@ -176,8 +191,8 @@ let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (
           T.concatMap
             (fun (i, p) ->
               match p with
-              | Atom (FVarHead h) mkeys p ->
-                debug_prover g (fun _ -> Printf.sprintf "using prover lemma %s (%s) for %s: %s\n" (show (R.inspect_fv fv)) (string_of_int (i <: nat)) (show h) (show p));
+              | Atom (FVarHead h) dup mkeys p ->
+                debug_prover g.penv_env (fun _ -> Printf.sprintf "using prover lemma %s (%s) for %s: %s\n" (show (R.inspect_fv fv)) (string_of_int (i <: nat)) (show h) (show p));
                 [{
                   plem_lid = R.inspect_fv fv;
                   plem_kind = kind;
@@ -192,12 +207,12 @@ let build_plems_from_lemma (g: env) (kind: plem_kind_t) (se: R.sigelt) : T.Tac (
       | _ -> []
     )
     | _ -> [])
-  (get_fvs g se)
+  (get_fvs g.penv_env se)
 
-let build_plems (g: env) : T.Tac plems =
-  debug_prover g (fun _ -> "build_plems\n");
+let build_plems (g: penv) : T.Tac plems =
+  debug_prover g.penv_env (fun _ -> "build_plems\n");
   T.concatMap
-    (fun (kind, attr) -> T.concatMap (build_plems_from_lemma g kind) (T.lookup_attr_ses attr (fstar_env g)))
+    (fun (kind, attr) -> T.concatMap (build_plems_from_lemma g kind) (T.lookup_attr_ses attr (fstar_env g.penv_env)))
     [EagerElim, eager_elim_attr;
      EagerIntro, eager_intro_attr;
      Intro, intro_attr]
@@ -450,15 +465,15 @@ let prove_exists (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
       <: T.Tac _ |)
   | _ -> None
 
-let unpack_and_norm_goal (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
-    T.Tac (option (prover_result g ctxt [goal])) =
+let unpack_and_norm_goal (g: penv) (ctxt: list slprop_view) (goal: slprop_view) :
+    T.Tac (option (prover_result g.penv_env ctxt [goal])) =
   match goal with
   | Unknown goal ->
-    let goal' = normalize_slprop g goal false in
+    let goal' = normalize_slprop g.penv_env goal false in
     let goal'' = inspect_slprop g goal' in
     (match goal'' with
     | [Unknown _] -> None
-    | _ -> Some (| g, ctxt, goal'', [], fun g' ->
+    | _ -> Some (| g.penv_env, ctxt, goal'', [], fun g' ->
 
       cont_elab_refl _ _ _, cont_elab_refl _ _ _
       <: T.Tac _ |))
@@ -538,15 +553,15 @@ let elim_is_unreachable' (g: env) (ctxt goals: list slprop_view) :
       cont_elab_equiv (unreachable_elim g'' goals)
       <: T.Tac _)|)
 
-let unpack_and_norm_ctxt (g: env) (ctxt: slprop_view) :
-    T.Tac (option (prover_result_nogoals g [ctxt])) =
+let unpack_and_norm_ctxt (g: penv) (ctxt: slprop_view) :
+    T.Tac (option (prover_result_nogoals g.penv_env [ctxt])) =
   match ctxt with
   | Unknown ctxt ->
-    let ctxt' = normalize_slprop g ctxt false in
+    let ctxt' = normalize_slprop g.penv_env ctxt false in
     let ctxt'' = inspect_slprop g ctxt' in
     (match ctxt'' with
     | [Unknown _] -> None
-    | _ -> Some (| g, ctxt'', [], [], fun g' ->
+    | _ -> Some (| g.penv_env, ctxt'', [], [], fun g' ->
 
       cont_elab_refl _ _ _, cont_elab_refl _ _ _
       <: T.Tac _ |))
@@ -869,6 +884,24 @@ let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
       teq_slprop g teq_cfg_unamb x y in
     forallb (fun (_, y) -> unifies (elab_slprop x) (elab_slprop y)) cands
 
+let dup_lid = ["Pulse"; "Class"; "Duplicable"; "dup"]
+
+let prove_atom_result (g: env)
+    (ctxt: slprop_view { Atom? ctxt }) (rest_ctxt: list slprop_view)
+    (#ctxt0: list slprop_view) // ctxt0 == ctxt ** rest_ctxt
+    (goal: slprop_view) :
+    T.Tac (prover_result g ctxt0 [goal]) =
+  let Atom _ dup _ _ = ctxt in
+  let goal = elab_slprop goal in
+  (| g, (if dup then rest_ctxt@[ctxt] else rest_ctxt), [], [ctxt], fun g' ->
+    let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop ctxt) goal in
+    (if dup then
+      // Check that we can indeed synthesize a duplicable instance
+      ignore (compute_term_type g
+        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
+          [elab_slprop ctxt, R.Q_Explicit; unit_const, R.Q_Explicit])));
+    cont_elab_refl _ _ _, cont_elab_refl _ _ _ <: T.Tac _ |)
+
 // this matches atoms when they're the only unifiable pair
 // necessary for various gather like functions where you don't specify all arguments
 // needed for pcm_pts_to gather, where we need to specify the order of the ambiguous arguments
@@ -876,10 +909,10 @@ let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
 let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
-  | Atom hd _ goal ->
+  | Atom hd _ _ goal ->
     let matches_mkeys (ctxt: slprop_view) : T.Tac bool =
       match ctxt with
-      | Atom hd' mkeys' ctxt ->
+      | Atom hd' _ mkeys' ctxt ->
         if hd <> hd' then false else
         with_uf_transaction fun _ ->
           teq_slprop g teq_cfg_unamb goal ctxt
@@ -903,20 +936,17 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
     let ok = teq_slprop g teq_cfg_full goal (elab_slprop cand) in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
-    Some (| g, rest_ctxt, [], [cand], fun g' ->
-      let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop cand) goal in
-      cont_elab_refl _ _ _,
-      cont_elab_refl _ _ _
-      <: T.Tac _ |)
+    assume Atom? cand;
+    Some (prove_atom_result g cand rest_ctxt _) 
   | _ -> None
 
 let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
   match goal with
-  | Atom hd mkeys goal ->
+  | Atom hd _ mkeys goal ->
     let matches_mkeys (ctxt: slprop_view) : T.Tac bool =
       match ctxt with
-      | Atom hd' mkeys' ctxt ->
+      | Atom hd' _ mkeys' ctxt ->
         if hd <> hd' then false else
         with_uf_transaction fun _ ->
           teq_slprop g teq_cfg_first_mkeys_pass goal ctxt
@@ -930,25 +960,35 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     let ok = teq_slprop g teq_cfg_full goal (elab_slprop cand) in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
-    Some (| g, rest_ctxt, [], [cand], fun g' ->
-      let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop cand) goal in
-      cont_elab_refl _ _ _,
-      cont_elab_refl _ _ _
-      <: T.Tac _
-    |)
+    assume Atom? cand;
+    Some (prove_atom_result g cand rest_ctxt _) 
   | _ -> None
 
-noeq type penv = {
-  penv_env: env;
-  penv_plems: plems;
-  penv_plems_enabled: bool;
-  penv_allow_amb: bool;
+let duplicable_lid = ["Pulse"; "Class"; "Duplicable"; "duplicable"]
 
-  // for loop detection when applying intro lemmas
-  penv_stack: list (R.name & list term);
-
-  penv_steps: nat;
-}
+let build_duplicable_fvs (g: env) : T.Tac (list R.name) =
+  let insts = T.lookup_attr_ses (`Tactics.Typeclasses.tcinstance) (fstar_env g) in
+  let insts = T.concatMap (get_fvs g) insts in
+  let insts = T.concatMap (fun (_, us, ty) ->
+    let params, ty = R.collect_arr_ln ty in
+    let ty = match R.inspect_comp ty with
+      | R.C_Total ty | R.C_GTotal ty -> ty
+      | _ -> tm_unknown in
+    match T.hua ty with
+    | Some (h, _, [pred, _]) ->
+      if R.inspect_fv h = duplicable_lid then (
+        match T.hua pred with
+        | Some (h, _, args) -> (
+          if List.length args <> List.length params then [] else
+          if List.existsb (fun (arg, _) -> not (R.Tv_BVar? (R.inspect_ln arg))) args then [] else
+          [R.inspect_fv h]
+        )
+        | _ -> []
+      ) else []
+    | _ -> [])
+    insts in
+  debug_prover g (fun _ -> Printf.sprintf "build_duplicable_fvs: %s" (show insts));
+  insts 
 
 let penv_depth pg = List.length pg.penv_stack
 
@@ -957,14 +997,23 @@ let prover_lemmas_enabled () : T.Tac bool =
   | "" | "true" -> true
   | _ -> false
 
-let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) = {
-  penv_env = g;
-  penv_plems_enabled = prover_lemmas_enabled ();
-  penv_allow_amb = allow_amb;
-  penv_plems = build_plems g;
-  penv_stack = [];
-  penv_steps = 0;
-}
+let prover_dup_enabled () : T.Tac bool =
+  match T.ext_getv "pulse:prover_dup" with
+  | "" | "true" -> true
+  | _ -> false
+
+let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) =
+  let pg = {
+    penv_env = g;
+    penv_plems_enabled = prover_lemmas_enabled ();
+    penv_allow_amb = allow_amb;
+    penv_plems = [];
+    penv_stack = [];
+    penv_steps = 0;
+    penv_duplicable_fvs = if prover_dup_enabled () then build_duplicable_fvs g else [];
+  } in
+  let pg = if pg.penv_plems_enabled then { pg with penv_plems = build_plems pg } else pg in
+  pg
 
 let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
   match R.inspect_ln_unascribe t with
@@ -981,11 +1030,12 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
   | _ -> t, v
 
 #push-options "--split_queries always --z3rlimit 10"
-let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
-    T.Tac (option (prover_result_nogoals g [ctxt])) =
+let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
+    T.Tac (option (prover_result_nogoals pg.penv_env [ctxt])) =
+  let g = pg.penv_env in
   let do_match a b =
     match a, b with
-    | Atom a_hd a_mkeys a, Atom b_hd b_mkeys b ->
+    | Atom a_hd _ a_mkeys a, Atom b_hd _ b_mkeys b ->
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
     | _ -> false in
@@ -995,7 +1045,7 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
   | Some (C_STGhost inames { pre; post; res; u }) ->
     let c = C_STGhost inames { pre; post; res; u } in
     assume res == tm_unit;
-    (match inspect_slprop g pre, i with
+    (match inspect_slprop pg pre, i with
     | [pre'], 0 -> // only support elimination rules with single pre
       // debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_elim_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
       if do_match pre' ctxt then (
@@ -1021,11 +1071,12 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
 #pop-options
 
 #push-options "--split_queries always"
-let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
-    T.Tac (option (prover_result g ctxt [goal])) =
+let try_apply_eager_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
+    T.Tac (option (prover_result pg.penv_env ctxt [goal])) =
+  let g = pg.penv_env in
   let do_match a b =
     match a, b with
-    | Atom a_hd a_mkeys a, Atom b_hd b_mkeys b ->
+    | Atom a_hd _ a_mkeys a, Atom b_hd _ b_mkeys b ->
       // debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show a_mkeys) (show b_mkeys));
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
@@ -1037,7 +1088,7 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
     let c = C_STGhost inames { pre; post; res; u } in
     assume res == tm_unit;
     let post' = open_term' post unit_const 0 in
-    (match inspect_slprop g post', i with
+    (match inspect_slprop pg post', i with
     | [post''], 0 -> // only support introduction rules with single post
       // debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
       if do_match post'' goal then (
@@ -1067,11 +1118,11 @@ let eager_elim_lemma_step (g:penv) (ctxt: slprop_view) :
     T.Tac (option (prover_result_nogoals g.penv_env [ctxt])) =
   if not g.penv_plems_enabled then None else
   match ctxt with
-  | Atom hd mkeys _ ->
+  | Atom hd _ mkeys _ ->
     T.tryPick (fun plem ->
       if plem.plem_kind <> EagerElim then None else
       if plem.plem_prop_head <> hd then None else
-      try_apply_elim_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt
+      try_apply_elim_lemma g plem.plem_lid plem.plem_prop_idx ctxt
     ) g.penv_plems
   | _ -> None
 
@@ -1079,11 +1130,11 @@ let eager_intro_lemma_step (g:penv) (ctxt: list slprop_view) (goal: slprop_view)
     T.Tac (option (prover_result g.penv_env ctxt [goal])) =
   if not g.penv_plems_enabled then None else
   match goal with
-  | Atom hd mkeys _ ->
+  | Atom hd _ mkeys _ ->
     T.tryPick (fun plem ->
       if plem.plem_kind <> EagerIntro then None else
       if plem.plem_prop_head <> hd then None else
-      try_apply_eager_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal
+      try_apply_eager_intro_lemma g plem.plem_lid plem.plem_prop_idx ctxt goal
     ) g.penv_plems
   | _ -> None
 
@@ -1113,16 +1164,17 @@ let prover_result_solved_unpack #g #ctxt #goals (res: prover_result_solved g ctx
 
 #restart-solver
 #push-options "--split_queries always --z3rlimit 15"
-let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
+let try_apply_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_view) :
     T.Tac (option (
       g': env &
       subgoals: list slprop_view &
       (res:prover_result_solved g' ctxt subgoals ->
-        T.Tac (prover_result g ctxt [goal]))
+        T.Tac (prover_result pg.penv_env ctxt [goal]))
     )) =
+  let g = pg.penv_env in
   let do_match a b =
     match a, b with
-    | Atom a_hd a_mkeys a, Atom b_hd b_mkeys b ->
+    | Atom a_hd _ a_mkeys a, Atom b_hd _ b_mkeys b ->
       debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show a_mkeys) (show b_mkeys));
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
@@ -1133,7 +1185,7 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
   | Some (C_STGhost inames { pre; post; res; u }) ->
     assume res == tm_unit;
     let post' = open_term' post unit_const 0 in
-    let post'' = inspect_slprop g post' in
+    let post'' = inspect_slprop pg post' in
     // debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: %s %s %s\n" (show lid) (string_of_int i) (show post''));
     if i >= List.length post'' then None else
     let post''_before, post''_i, post''_after = List.split3 post'' i in
@@ -1189,7 +1241,7 @@ let intro_lemma_step
     (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g.penv_env ctxt [goal])) =
   match goal with
-  | Atom (FVarHead fv) mkeys p ->
+  | Atom (FVarHead fv) _ mkeys p ->
     let hd = FVarHead fv in
     let breadcrumb = (fv, (match mkeys with Some mkeys -> mkeys | _ -> [p])) in
     try_pick_and_rollback_uf_if_none (fun plem ->
@@ -1197,7 +1249,7 @@ let intro_lemma_step
       if plem.plem_prop_head <> hd then None else
       if already_in_stack g breadcrumb then None else
       (debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: trying to apply %s to %s\n" (string_of_int (penv_depth g)) (show plem.plem_lid) (show p));
-      match try_apply_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal with
+      match try_apply_intro_lemma g plem.plem_lid plem.plem_prop_idx ctxt goal with
       | Some (| g', subgoals, k |) ->
         let pg' = { g with penv_env = g'; penv_stack = breadcrumb :: g.penv_stack } in
         debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: proving generated subproblem\n" (string_of_int (penv_depth g)));
@@ -1247,7 +1299,7 @@ let elim_step (pg: penv) (ctxt goals: list slprop_view) :
     T.Tac (option (prover_result_samegoals pg.penv_env ctxt goals)) =
   let g = pg.penv_env in
   first_some [
-    (fun _ -> elim_first' g ctxt goals (unpack_and_norm_ctxt g));
+    (fun _ -> elim_first' g ctxt goals (unpack_and_norm_ctxt pg));
     (fun _ -> elim_first' g ctxt goals (elim_pure_step g));
     (fun _ -> elim_first' g ctxt goals (elim_with_pure_step g));
     (fun _ -> elim_first' g ctxt goals (elim_exists_step g));
@@ -1265,7 +1317,7 @@ let prove_step (pg: penv) (ctxt goals: list slprop_view)
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
     (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
     (fun _ -> prove_first g ctxt goals (prove_exists g ctxt));
-    (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal g ctxt));
+    (fun _ -> prove_first g ctxt goals (unpack_and_norm_goal pg ctxt));
     (fun _ -> prove_first g ctxt goals (prove_atom_unamb g ctxt));
     (fun _ -> prove_first g ctxt goals (prove_atom g ctxt pg.penv_allow_amb));
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
@@ -1430,12 +1482,14 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           prove rng g2 ctxt' post_hint_opened false in
         assume lookup g3 x == lookup g2 x;
 
-        let tv = inspect_term remaining_ctxt in
-        if not (Tm_Emp? tv || remaining_ctxt `eq_tm` tm_is_unreachable) then
+        let remaining_ctxt = inspect_slprop (mk_penv g true) remaining_ctxt in
+        let remaining_ctxt = T.filter (function | Atom _ dup _ _ -> not dup | _ -> true) remaining_ctxt in
+        let no_left_over = Nil? remaining_ctxt || List.existsb IsUnreachable? remaining_ctxt in
+        if not no_left_over then
           fail_doc g (Some rng) [
             prefix 2 1 (text "Leftover resources:")
-                      (align (pp remaining_ctxt));
-            (if Tm_Star? tv
+                      (align (pp_slprops remaining_ctxt));
+            (if Cons? remaining_ctxt
             then text "Did you forget to free these resources?"
             else text "Did you forget to free this resource?");
           ]

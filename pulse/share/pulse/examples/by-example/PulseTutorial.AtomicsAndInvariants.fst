@@ -80,7 +80,6 @@ fn double_open_bad (r:ref U32.t) (i:iname)
 requires inv i (owns r)
 ensures pure False
 {
-  dup (inv i (owns r)) ();
   later_credit_buy 1;
   with_invariants unit emp_inames i (owns r) (inv i (owns r) ** later_credit 1) (fun _ -> pure False) fn _ {
     with_invariants_a unit emp_inames i (owns r) (owns r) (fun _ -> pure False) fn _ {
@@ -92,7 +91,6 @@ ensures pure False
     };
     rewrite inv i (owns r) as owns r;
   };
-  drop_ (inv i (owns r));
 }
 //end double_open_bad$
 

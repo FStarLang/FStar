@@ -445,7 +445,6 @@ ensures pts_to x ('i + 2)
 
     C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
-    dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
     par
       #(requires pts_to left #0.5R 0 **
@@ -464,7 +463,6 @@ ensures pts_to x ('i + 2)
       fn _ { atomic_increment_f6 x c (step right false) };
 
     C.gather c;
-    drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     later_credit_buy 1;
     C.cancel c;
     GR.gather left;

@@ -109,7 +109,7 @@ ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -
 fn mask_alloc_with_vis u#a (elt: Type u#a) {| small_type u#a |} 
       (n: SZ.t) (#l:loc_id)
       (vis:visibility)
-  preserves loc l
+  requires loc l
   returns a: array elt
   ensures exists* (s : Seq.seq (option elt)).
     pure (Seq.length s == SZ.v n) **

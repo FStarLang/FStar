@@ -118,14 +118,13 @@ let visibility_of_array #a (x:array a) : visibility = x.vis
 ghost fn is_send_across_pts_to_mask' u#a (#t: Type u#a) a f v mask : is_send_across (visibility_of_array a) (pts_to_mask #t a #f v mask) = l1 l2 {
   ghost_impersonate l1 (on l1 (pts_to_mask a #f v mask)) (on l2 (pts_to_mask a #f v mask)) fn _ {
     on_elim _;
-    unfold pts_to_mask;
-    loc_gather l1;
+    unfold pts_to_mask; with l'. _;
+    loc_gather l1 #l';
     ghost_impersonate l2
       (pcm_pts_to (lptr_of a) (mk_carrier' a f v mask (a.vis l1)) **
         pure (Seq.length v == reveal a.length /\ (mask_nonempty mask a.length ==> f <=. 1.0R)))
       (on l2 (pts_to_mask a #f v mask))
       fn _ {
-        loc_dup l2;
         fold pts_to_mask a #f v mask;
         on_intro (pts_to_mask a #f v mask)
       }
@@ -219,7 +218,7 @@ ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -
 fn mask_alloc_with_vis u#a (elt: Type u#a) {| small_type u#a |} 
       (n: SZ.t) (#l:loc_id)
       (vis:visibility)
-  preserves loc l
+  requires loc l
   returns a: array elt
   ensures exists* (s : Seq.seq (option elt)).
     pure (Seq.length s == SZ.v n) **
@@ -230,7 +229,6 @@ fn mask_alloc_with_vis u#a (elt: Type u#a) {| small_type u#a |}
     visibility_of_array a == vis /\
     loc_id_of_array a == l)
 {
-  loc_dup l;
   let v = mk_carrier #elt 0 (SZ.v n) 1.0R (Seq.create (SZ.v n) None) (fun _ -> true) (vis l);
   FStar.PCM.compatible_refl (pcm elt (SZ.v n)) v;
   let b = alloc #_ #(pcm elt (SZ.v n)) v;
@@ -253,7 +251,6 @@ fn mask_alloc u#a (elt: Type u#a) {| small_type u#a |} (n: SZ.t)
 {
   let l = loc_get ();
   let arr = mask_alloc_with_vis elt n process_of;
-  drop_ (loc l);
   arr
 }
 
@@ -299,7 +296,7 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
     (a: array t) p s m
     (a1: array t) p1 s1 m1
     (a2: array t) p2 s2 m2
-  preserves loc l
+  requires loc l
   requires pts_to_mask a #p s m
   requires pure (Seq.length s1 == a1.length)
   requires pure (Seq.length s2 == a2.length)
@@ -315,8 +312,8 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
   ensures pts_to_mask a1 #p1 s1 m1
   ensures pts_to_mask a2 #p2 s2 m2
 {
-  unfold pts_to_mask a #p s m;
-  loc_gather l;
+  unfold pts_to_mask a #p s m; with l'. _;
+  loc_gather l #l';
   share (lptr_of a) (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l));
   rewrite
     pcm_pts_to (lptr_of a) (mk_carrier' a1 p1 s1 m1 (a1.vis l)) as
@@ -328,11 +325,9 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
   let i2 = get_mask_idx m2 (length a2);
   assert pure (mask_nonempty m1 (length a1) ==>
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i1 + a1.offset)));
-  loc_dup l;
   fold pts_to_mask a1 #p1 s1 m1;
   assert pure (mask_nonempty m2 (length a2) ==>
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i2 + a2.offset)));
-  loc_dup l;
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
@@ -340,7 +335,7 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
     (a: array t) p s m
     (a1: array t) p1 s1 m1
     (a2: array t) p2 s2 m2
-  preserves loc l
+  requires loc l
   requires pure (Seq.length s == a.length)
   requires pure (
     a1.base_len == a.base_len /\ a2.base_len == a.base_len /\
@@ -360,10 +355,10 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
       `Map.equal` mk_carrier' a p s m (a.vis l)
   )
 {
-  unfold pts_to_mask a1 #p1 s1 m1;
-  loc_gather l;
-  unfold pts_to_mask a2 #p2 s2 m2;
-  loc_gather l;
+  unfold pts_to_mask a1 #p1 s1 m1; with l'. _;
+  loc_gather l #l'; rewrite each l' as l;
+  unfold pts_to_mask a2 #p2 s2 m2; with l'. _;
+  loc_gather l #l'; rewrite each l' as l;
   rewrite
     pcm_pts_to (lptr_of a1) (mk_carrier' a1 p1 s1 m1 (a1.vis l)) as
     pcm_pts_to (lptr_of a) (mk_carrier' a1 p1 s1 m1 (a1.vis l));
@@ -374,7 +369,6 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
   let i = get_mask_idx m (length a);
   assert pure (mask_nonempty m a.length ==>
     Map.sel (mk_carrier' a p s m (a.vis l)) (i + a.offset) == Some ((Seq.index s i, a.vis l), p));
-  loc_dup l;
   fold pts_to_mask a #p s m;
 }
 
@@ -391,7 +385,6 @@ fn mask_share_gen u#a (#a: Type u#a) (arr:array a) #s #p (p1: perm) (p2: perm) #
     arr p s mask
     arr p1 s mask
     arr p2 s mask;
-  drop_ (loc _);
 }
 
 ghost
@@ -423,7 +416,6 @@ ghost fn mask_gather u#a (#t: Type u#a) (arr: array t) #p1 #p2 #s1 #s2 #mask1 #m
   assert pure (forall (i: nat). (i < Seq.length s1 /\ mask1 i) ==>
     Map.sel (mk_carrier' arr p1 s1 mask1 (process_of l)) (i + arr.offset) ==
       Some ((Seq.index s1 i, process_of l), p1));
-  drop_ (loc l);
 }
 
 ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> prop)
@@ -437,7 +429,6 @@ ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> 
     arr f v mask
     arr f v (mask_isect mask pred)
     arr f v (mask_diff mask pred);
-  drop_ (loc _);
 }
 
 let mix #t (v1: Seq.seq t) (v2: Seq.seq t { Seq.length v1 == Seq.length v2 }) (mask: nat -> prop) :
@@ -469,7 +460,6 @@ ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
     arr f v mask
     arr f v1 mask1
     arr f v2 mask2;
-  drop_ (loc _);
 }
 
 [@@allow_ambiguous]
@@ -492,15 +482,13 @@ fn pts_to_mask_injective_eq u#a (#a: Type u#a) #p0 #p1 #s0 #s1 #mask0 #mask1 (ar
     (forall (i: nat). i < Seq.length s0 /\ mask0 i /\ mask1 i ==>
       Seq.index s0 i == Seq.index s1 i))
 {
-  unfold pts_to_mask arr #p0 s0 mask0;
-  with l. assert loc l;
-  unfold pts_to_mask arr #p1 s1 mask1;
-  loc_gather l;
+  unfold pts_to_mask arr #p0 s0 mask0; with l. _;
+  unfold pts_to_mask arr #p1 s1 mask1; with l'. _;
+  loc_gather l #l';
   gather (lptr_of arr) (mk_carrier' arr p0 s0 mask0 (arr.vis l)) (mk_carrier' arr p1 s1 mask1 (arr.vis l));
   share (lptr_of arr) (mk_carrier' arr p0 s0 mask0 (arr.vis l)) (mk_carrier' arr p1 s1 mask1 (arr.vis l));
   assert pure (forall (i: nat). i < Seq.length s0 /\ mask0 i ==>
     Map.sel (mk_carrier' arr p0 s0 mask0 (arr.vis l)) (i + arr.offset) == Some ((Seq.index s0 i, arr.vis l), p0));
-  loc_dup l;
   fold pts_to_mask arr #p0 s0 mask0;
   fold pts_to_mask arr #p1 s1 mask1;
 }

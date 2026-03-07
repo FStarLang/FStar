@@ -22,6 +22,9 @@ open Pulse.Main
 module T = FStar.Tactics.V2
 #lang-pulse
 
+instance duplicable_loc l : duplicable (loc l) =
+  { dup_f = fun _ -> loc_dup l }
+
 [@@Tactics.Typeclasses.tcclass; erasable]
 type is_send_across (#b:Type0) (g: loc_id -> b) (p: slprop) =
   l:loc_id -> l':loc_id { g l == g l' } -> stt_ghost unit emp_inames (on l p) (fun _ -> on l' p)
@@ -186,12 +189,12 @@ ghost fn is_send_intro_on p {| is_send p |} l
   ensures on l p
 
 ghost fn is_send_elim_on' p {| is_send p |} #l
-  preserves loc l
+  requires loc l
   requires on (process_of l) p
   ensures p
 
 ghost fn is_send_intro_on' p {| is_send p |} l
-  preserves loc l
+  requires loc l
   requires p
   ensures on (process_of l) p
 

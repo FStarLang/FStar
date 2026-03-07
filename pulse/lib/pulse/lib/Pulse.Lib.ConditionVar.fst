@@ -97,7 +97,6 @@ ghost fn rec is_send_on_range' p (i j: nat) (l: loc_id) {| (k:nat -> is_send (p 
 ghost fn is_send_on_range p i j {| (k:nat -> is_send (p k)) |} : is_send (OR.on_range p i j) = l1 l2 {
   ghost_impersonate l1 (on l1 (OR.on_range p i j)) (on l2 (OR.on_range p i j)) fn _ {
     on_elim _;
-    loc_dup l1;
     fold in_same_process l2;
     is_send_on_range' p i j l2 #_;
   }
@@ -182,7 +181,6 @@ fn create (p:slprop) {| is_send p |}
   let cv = { core; i };
   rewrite each core as cv.core;
   rewrite each i as cv.i;
-  dup (inv cv.i (cvar_inv cv.core p)) ();
   fold (cvar cv p);
   fold (send cv p);
   fold (cvar cv p);
@@ -214,7 +212,6 @@ ensures
      fold (cvar_inv b.core p);
      drop_ (Box.pts_to b.core.r #0.5R _)
   };
-  drop_ (inv _ _)
 }
 
 fn signal (c:cvar_t) (#p:slprop)
@@ -333,7 +330,7 @@ ensures
         true
       }
     };
-  if res { drop_ (inv b.i _); elim_cond_true _ _ _; } 
+  if res { elim_cond_true _ _ _; } 
   else { 
     elim_cond_false _ _ _;
     fold (cvar b q);
@@ -430,7 +427,6 @@ opens
         drop_ (SLT.pts_to b.core.tab i #0.5R emp);
       }
     };
-  dup (inv b.i (cvar_inv b.core q)) ();
   fold (cvar b q);
   fold (recv b p1);
   fold (cvar b q);

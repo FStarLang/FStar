@@ -87,6 +87,21 @@ fn gather (#t:Type0) (#p:preorder t) (r:mref p) (#v:t) (#f #g:perm)
 }
 
 ghost
+fn dup_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#u:t)
+  preserves snapshot r u
+  ensures snapshot r u
+{
+  unfold snapshot;
+  with h. assert (GR.pts_to r (None, h));
+  GR.share r (None, h) (None, h);
+  fold (snapshot r u);
+  fold (snapshot r u);
+}
+
+instance duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u) =
+  { dup_f = fun _ -> dup_snapshot r #u }
+
+ghost
 fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
   preserves pts_to r #f v
   ensures snapshot r v
@@ -99,11 +114,11 @@ fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
   fold (pts_to r #f v);
   fold (snapshot r v);
 }
- 
+
 ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   preserves pts_to r #f v
-  preserves snapshot r u
+  requires snapshot r u
   ensures pure (as_prop (p u v))
 {
   unfold pts_to;
@@ -114,18 +129,6 @@ fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   GR.share r (Some f, h) (None, h');
   fold (snapshot r u);
   fold (pts_to r #f v);
-}
-
-ghost
-fn dup_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#u:t)
-  preserves snapshot r u
-  ensures snapshot r u
-{
-  unfold snapshot;
-  with h. assert (GR.pts_to r (None, h));
-  GR.share r (None, h) (None, h);
-  fold (snapshot r u);
-  fold (snapshot r u);
 }
 
 ghost

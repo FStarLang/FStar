@@ -427,7 +427,6 @@ ghost fn gather (#p: slprop) (#p1 #p2: perm) (s: sem p)
   unfold (sem_alive s #p1);
   unfold (sem_alive s #p2);
   CInv.gather s.i;
-  drop_ (inv (CInv.iname_of s.i) (CInv.cinv_vp s.i (sem_inv p s.counter s.ptank)));
   fold (sem_alive s #(p1 +. p2))
 }
 

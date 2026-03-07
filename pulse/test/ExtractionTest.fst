@@ -28,7 +28,6 @@ fn test_invariants_and_later ()
   with_invariants unit emp_inames i emp emp (fun _ -> emp) fn _ {
     ()
   };
-  drop_ (inv i emp);
 }
 
 fn test_read_write (x:ref U32.t)

@@ -67,13 +67,10 @@ fn take_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (v:t)
 ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   preserves pts_to r #f v
-  preserves snapshot r u
+  requires snapshot r u
   ensures pure (as_prop (p u v))
 
-ghost
-fn dup_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#u:t)
-  preserves snapshot r u
-  ensures snapshot r u
+instance val duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u)
 
 ghost
 fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)

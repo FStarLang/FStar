@@ -401,7 +401,6 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   fold (inv_p' is f v1 v2 r1 r2 false false);
   fold inv_p;
   let i = fresh_invariant is (inv_p is f v1 v2 r1 r2);
-  dup (inv i (inv_p is f v1 v2 r1 r2)) ();
 
   let is' = add_inv is i;
   GhostSet.lemma_equal_intro (GhostSet.union is (single i)) is';
@@ -415,7 +414,6 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     #((r1 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_l1 #is #f i v1 v2 r1 r2 ();
-    drop_ (inv i (inv_p is f v1 v2 r1 r2));
     (* I couldn't make this work with an (annotated) with_invariants and
     then a drop, so I used an auxiliary _l1 function. *)
   };
@@ -424,7 +422,6 @@ fn ghost_split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
     #((r2 |-> Frac 0.5R false) ** later_credit 1 ** inv i (inv_p is f v1 v2 r1 r2) ** pure (not (mem_inv is i))) fn _
   {
     elim_body_r1 #is #f i v1 v2 r1 r2 ();
-    drop_ (inv i (inv_p is f v1 v2 r1 r2));
   };
 
   i

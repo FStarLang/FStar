@@ -111,7 +111,6 @@ fn test2 ()
   with_invariants unit emp_inames i (exists* v. Box.pts_to r v) emp (fun _ -> emp) fn _ {
     atomic_write_int r 1;
   };
-  drop_ (inv i _)
 }
 
 
@@ -125,7 +124,6 @@ fn test3 ()
   with_invariants unit emp_inames i (exists* v. pts_to r v) emp (fun _ -> emp) fn _ {
     r := 1;
   };
-  drop_ (inv i _)
 }
 
 
@@ -205,7 +203,6 @@ fn t2 ()
   with_invariants unit emp_inames j emp emp (fun _ -> emp) fn _ {
     ()
   };
-  drop_ (inv j _);
   123
 }
 

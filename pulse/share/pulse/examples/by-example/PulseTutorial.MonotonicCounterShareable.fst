@@ -63,10 +63,7 @@ ensures c.inv 0
         }
     };
     ghost
-    fn dup (#_:unit) : dup_f inv = i {
-        MR.dup_snapshot mr;
-        dup_inv ii _;
-    };
+    fn dup (#_:unit) : dup_f inv = i { };
     let c = { inv; next; dup; is_send_inv = (fun i -> Tactics.Typeclasses.solve) };
     rewrite inv 0 as (c.inv 0);
     c
