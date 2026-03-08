@@ -884,24 +884,24 @@ let prove_atom_unamb (g: env) (ctxt: list slprop_view) (goal: slprop_view) :
         with_uf_transaction fun _ ->
           teq_slprop g teq_cfg_unamb goal ctxt
       | _ -> false in
-    debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: searching for match for goal %s in ctxt %s\n" (show goal) (show ctxt));
+    // debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: searching for match for goal %s in ctxt %s\n" (show goal) (show ctxt));
     let ictxt = List.Tot.mapi (fun i ctxt -> i, ctxt) ctxt in
     let cands = T.filter (fun (i, ctxt) -> matches_mkeys ctxt) ictxt in
-    debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: found candidates %s\n" (show cands));
+    // debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: found candidates %s\n" (show cands));
     if Nil? cands then (
-      debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no matches for %s in context %s\n"  (show goal) (show ctxt));
+      // debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no matches for %s in context %s\n"  (show goal) (show ctxt));
       None
     )
     else if not (is_unamb g cands) 
     then (
-      debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no unambiguous matches for %s in context %s\n"  (show goal) (show ctxt));
+      // debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: no unambiguous matches for %s in context %s\n"  (show goal) (show ctxt));
       None
     )
     else
     let (i, cand) :: _ = cands in
-    debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
+    // debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: commiting to unify %s and %s\n" (show (elab_slprop cand)) (show goal));
     let ok = teq_slprop g teq_cfg_full goal (elab_slprop cand) in
-    debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: result of unify %s and %s is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
+    debug_prover g (fun _ -> Printf.sprintf "prove_atom_unamb: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
     Some (| g, rest_ctxt, [], [cand], fun g' ->
       let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop cand) goal in
@@ -926,7 +926,7 @@ let prove_atom (g: env) (ctxt: list slprop_view) (allow_amb: bool) (goal: slprop
     if Nil? cands then None else
     if (if allow_amb then false else not (is_unamb g cands)) then None else
     let (i, cand)::_ = cands in
-    debug_prover g (fun _ -> Printf.sprintf "prove_atom: committed to unifying %s and %s\n" (show (elab_slprop cand)) (show goal));
+    // debug_prover g (fun _ -> Printf.sprintf "prove_atom: committed to unifying %s and %s\n" (show (elab_slprop cand)) (show goal));
     let ok = teq_slprop g teq_cfg_full goal (elab_slprop cand) in
     debug_prover g (fun _ -> Printf.sprintf "prove_atom: unified %s and %s, result is %s\n" (show (elab_slprop cand)) (show goal) (show ok));
     let rest_ctxt = List.Tot.filter (fun (j, _) -> j <> i) ictxt |> List.Tot.map snd in
@@ -949,6 +949,8 @@ noeq type penv = {
 
   penv_steps: nat;
 }
+
+let penv_depth pg = List.length pg.penv_stack
 
 let prover_lemmas_enabled () : T.Tac bool =
   match T.ext_getv "pulse:prover_lemmas" with
@@ -995,9 +997,9 @@ let try_apply_elim_lemma (g: env) (lid: R.name) (i: nat) (ctxt: slprop_view) :
     assume res == tm_unit;
     (match inspect_slprop g pre, i with
     | [pre'], 0 -> // only support elimination rules with single pre
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_elim_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
+      // debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_elim_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
       if do_match pre' ctxt then (
-        debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
+        // debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop ctxt)) (show pre));
         let ok = teq_slprop g teq_cfg_full pre (elab_slprop ctxt) in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_elim_lemma: unified %s and %s, result is %s\n" (show (elab_slprop ctxt)) (show pre) (show ok));
         let post' = open_term' post unit_const 0 in
@@ -1024,7 +1026,7 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
   let do_match a b =
     match a, b with
     | Atom a_hd a_mkeys a, Atom b_hd b_mkeys b ->
-      debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show a_mkeys) (show b_mkeys));
+      // debug_prover g (fun _ -> Printf.sprintf "do_match:\n%s and\n%s\n" (show a_mkeys) (show b_mkeys));
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
     | _ -> false in
@@ -1037,9 +1039,9 @@ let try_apply_eager_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slpr
     let post' = open_term' post unit_const 0 in
     (match inspect_slprop g post', i with
     | [post''], 0 -> // only support introduction rules with single post
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
+      // debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: ATTEMPTING %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
       if do_match post'' goal then (
-        debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
+        // debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show post) (show (elab_slprop goal)));
         let ok = teq_slprop g teq_cfg_full post' (elab_slprop goal) in
         debug_prover g (fun _ -> Printf.sprintf "try_apply_eager_intro_lemma: unified %s and %s, result is %s\n" (show post) (show (elab_slprop goal)) (show ok));
         Some (| g, ctxt, [Unknown pre], [], fun g'' ->
@@ -1132,19 +1134,19 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
     assume res == tm_unit;
     let post' = open_term' post unit_const 0 in
     let post'' = inspect_slprop g post' in
-    debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: %s %s %s\n" (show lid) (string_of_int i) (show post''));
+    // debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: %s %s %s\n" (show lid) (string_of_int i) (show post''));
     if i >= List.length post'' then None else
     let post''_before, post''_i, post''_after = List.split3 post'' i in
     let post''_rest = post''_before @ post''_after in
     if do_match post''_i goal then (
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop post''_i)) (show (elab_slprop goal)));
+      // debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: applying %s by unifying %s and %s\n" (show lid) (show (elab_slprop post''_i)) (show (elab_slprop goal)));
       // Do not unify non-mkeys until after we run the prover on the subproblem.
       let ok = teq_slprop g teq_cfg_first_mkeys_pass (elab_slprop post''_i) (elab_slprop goal) in
-      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified(1) %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
+      debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
       Some (| g, [Unknown pre], fun subresult ->
         let (| g', ctxt', k |) = prover_result_solved_unpack subresult in
         let ok = teq_slprop g teq_cfg_full (elab_slprop post''_i) (elab_slprop goal) in
-        debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified(2) %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
+        // debug_prover g (fun _ -> Printf.sprintf "try_apply_intro_lemma: unified(2) %s and %s, result is %s\n" (show (elab_slprop post''_i)) (show (elab_slprop goal)) (show ok));
         (| g', ctxt' @ post''_rest, [], [goal], fun (g'': env { env_extends g'' g' }) ->
           let c = C_STGhost inames { pre; post; res; u } in
           let typing = core_check_term g' t T.E_Ghost ty in
@@ -1170,46 +1172,47 @@ let try_apply_intro_lemma (g: env) (lid: R.name) (i: nat) ctxt (goal: slprop_vie
     None
 #pop-options
 
-let intro_lemma_main (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
-    T.Tac (option (
-      pg': penv &
-      subgoals: list slprop_view &
-      (res:prover_result_solved pg'.penv_env ctxt subgoals ->
-        T.Tac (prover_result g.penv_env ctxt [goal]))
-    )) =
-  match goal with
-  | Atom (FVarHead fv) mkeys p ->
-    let hd = FVarHead fv in
-    let breadcrumb = (fv, (match mkeys with Some mkeys -> mkeys | _ -> [p])) in
-    T.tryPick (fun plem ->
-      if plem.plem_kind <> Intro then None else
-      if plem.plem_prop_head <> hd then None else
-      if already_in_stack g breadcrumb then None else
-      (debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma_main: trying to apply %s to %s\n" (show plem.plem_lid) (show p));
-      match try_apply_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal with
-      | Some (| g', subgoals, k |) ->
-        let g' = { g with penv_env = g'; penv_stack = breadcrumb :: g.penv_stack } in
-        Some ((| g', subgoals, k |)
-        <: (pg': penv &
-          subgoals: list slprop_view &
-          (res:prover_result_solved pg'.penv_env ctxt subgoals ->
-            T.Tac (prover_result g.penv_env ctxt [goal]))))
-      | None -> None)
-    ) g.penv_plems
-  | _ -> None
+let try_pick_and_rollback_uf_if_none #a #b (f: a -> T.Tac (option b)) (xs: list a) : T.Tac (option b) =
+  T.tryPick (fun x ->
+    T.try_with (fun _ ->
+        match f x with
+        | None -> T.raise (AbortUFTransaction true)
+        | y -> y)
+      (function
+        | AbortUFTransaction _ -> None
+        | ex -> T.raise ex)
+    ) xs
 
 let intro_lemma_step
     (subprover : (pg: penv -> ctxt: list slprop_view -> goals: list slprop_view ->
       T.Tac (prover_result pg.penv_env ctxt goals)))
     (g:penv) (ctxt: list slprop_view) (goal: slprop_view) :
     T.Tac (option (prover_result g.penv_env ctxt [goal])) =
-  if not g.penv_plems_enabled then None else
-  match intro_lemma_main g ctxt goal with
-  | None -> None
-  | Some (| pg', subgoals, k |) ->
-    let subresult = subprover pg' ctxt subgoals in
-    if not (prover_result_is_solved subresult) then None else
-    Some (k subresult)
+  match goal with
+  | Atom (FVarHead fv) mkeys p ->
+    let hd = FVarHead fv in
+    let breadcrumb = (fv, (match mkeys with Some mkeys -> mkeys | _ -> [p])) in
+    try_pick_and_rollback_uf_if_none (fun plem ->
+      if plem.plem_kind <> Intro then None else
+      if plem.plem_prop_head <> hd then None else
+      if already_in_stack g breadcrumb then None else
+      (debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: trying to apply %s to %s\n" (string_of_int (penv_depth g)) (show plem.plem_lid) (show p));
+      match try_apply_intro_lemma g.penv_env plem.plem_lid plem.plem_prop_idx ctxt goal with
+      | Some (| g', subgoals, k |) ->
+        let pg' = { g with penv_env = g'; penv_stack = breadcrumb :: g.penv_stack } in
+        debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: proving generated subproblem\n" (string_of_int (penv_depth g)));
+        let subresult = subprover pg' ctxt subgoals in
+        if not (prover_result_is_solved subresult) then (
+          debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: subproblem failed for %s\n" (string_of_int (penv_depth g)) (show plem.plem_lid));
+          None
+        ) else (
+          debug_prover g.penv_env (fun _ -> Printf.sprintf "intro_lemma[%s]: subproblem succeeded for %s\n" (string_of_int (penv_depth g)) (show plem.plem_lid));
+          Some (k subresult)
+        )
+      | None -> None)
+    ) g.penv_plems
+  | _ -> None
+
 
 let rec first_some #a (ks: list (unit -> T.Tac (option a))) : T.Tac (option a) =
   match ks with
