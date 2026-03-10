@@ -146,10 +146,12 @@ phase_verify() {
 # Phase 4: Compare .smt2 files
 # ──────────────────────────────────────────────────
 #
-# We strip lines that are expected to differ:
-#   - ; F* version:  (version string)
-#   - ; commit=      (git commit hash)
-#   - ;              (comment-only lines: captions, timestamps, etc.)
+# We strip / normalise patterns that are expected to differ:
+#   - ; ...          comment-only lines (version, commit hash, captions)
+#   - uu___NNN       gensym-generated universe variable names
+#   - Non_total_Tm_arrow_HEX  MD5-hash–based arrow-type names
+#   - Tm_refine_HEX  MD5-hash–based refinement-type names
+#   - Tm_arrow_HEX   MD5-hash–based arrow-type names
 #
 # Everything else — (push), (pop), (assert ...), (check-sat), (declare-fun ...),
 # etc. — must be identical between base and head.
@@ -157,6 +159,10 @@ phase_verify() {
 strip_metadata() {
   sed -E \
     -e '/^;/d' \
+    -e 's/uu___[0-9]+/uu___NNN/g' \
+    -e 's/Non_total_Tm_arrow_[a-f0-9]+/Non_total_Tm_arrow_HASH/g' \
+    -e 's/Tm_refine_[a-f0-9]+/Tm_refine_HASH/g' \
+    -e 's/Tm_arrow_[a-f0-9]+/Tm_arrow_HASH/g' \
     "$1"
 }
 
