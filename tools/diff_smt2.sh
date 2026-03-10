@@ -121,6 +121,24 @@ phase_verify() {
     make -C "$dir" _doc \
       FSTAR_EXE="$fstar_exe" -skj"$NPROC" 2>&1 | tail -3 || true
 
+  # ── Fixup: re-run interpreted mode for native-plugin tests ──
+  # Some tests (e.g. tests/semiring) run both interpreted and native-plugin
+  # modes. The native plugin is compiled from extracted OCaml, which may differ
+  # between branches even when the F* source is identical, causing spurious
+  # SMT2 diffs. Re-running in interpreted mode produces deterministic output.
+  for rerun_dir in "$dir/tests/semiring"; do
+    if [ -d "$rerun_dir" ]; then
+      info "[$label] Re-verifying $(basename "$rerun_dir") in interpreted mode ..."
+      find "$rerun_dir" -name 'queries-*.Test.smt2' -delete 2>/dev/null || true
+      for testfile in "$rerun_dir"/*.Test.fst; do
+        [ -f "$testfile" ] || continue
+        info "[$label]   $(basename "$testfile")"
+        OTHERFLAGS="--log_queries" \
+          "$fstar_exe" --cache_dir "$rerun_dir/_cache" "$testfile" 2>&1 | tail -2 || true
+      done
+    fi
+  done
+
   # ── Collect .smt2 files ──
   # We find all queries-*.smt2 files in the tree and copy them into
   # the output directory, preserving relative paths as keys so that
