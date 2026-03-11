@@ -32,7 +32,7 @@ let rec insert (n:int) {| setlike int 'set |} (s : 'set) : ML 'set =
 
 let rec all_mem (n:int) {| setlike int 'set |} (s : 'set) : ML bool =
   if n = 0 then true
-  else let b = mem n s in let r = all_mem (n-1) s in b && r
+  else mem n s && all_mem (n-1) s
 
 let rec all_remove (n:int) {| setlike int 'set |} (s : 'set) : ML 'set =
   if n = 0 then s

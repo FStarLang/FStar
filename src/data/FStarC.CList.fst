@@ -77,14 +77,14 @@ let rec map (#a #b : Type0) (f : a -> ML b) (l : clist a) : ML (clist b) =
 let rec existsb (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool =
   match l with
   | CNil -> false
-  | CCons x xs -> let r = p x in let r2 = existsb p xs in r || r2
-  | CCat xs ys -> let r = existsb p xs in let r2 = existsb p ys in r || r2
+  | CCons x xs -> p x || existsb p xs
+  | CCat xs ys -> existsb p xs || existsb p ys
 
 let rec for_all (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool =
   match l with
   | CNil -> true
-  | CCons x xs -> let r = p x in let r2 = for_all p xs in r && r2
-  | CCat xs ys -> let r = for_all p xs in let r2 = for_all p ys in r && r2
+  | CCons x xs -> p x && for_all p xs
+  | CCat xs ys -> for_all p xs && for_all p ys
 
 let rec partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a * clist a) =
   match l with

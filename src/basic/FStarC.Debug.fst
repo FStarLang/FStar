@@ -66,7 +66,7 @@ let restore (snapshot : saved_state) =
 let list_all_toggles () =
   PSMap.keys !toggle_list
 
-let any () = let a = !anyref in let b = !_debug_all in a || b
+let any () = !anyref || !_debug_all
 
 let tag (s:string) =
   if any () then
@@ -74,10 +74,10 @@ let tag (s:string) =
 
 let enable () = anyref := true
 
-let low     () = let a = !dbg_level >= 1 in let b = !_debug_all in a || b
-let medium  () = let a = !dbg_level >= 2 in let b = !_debug_all in a || b
-let high    () = let a = !dbg_level >= 3 in let b = !_debug_all in a || b
-let extreme () = let a = !dbg_level >= 4 in let b = !_debug_all in a || b
+let low     () = !dbg_level >= 1 || !_debug_all
+let medium  () = !dbg_level >= 2 || !_debug_all
+let high    () = !dbg_level >= 3 || !_debug_all
+let extreme () = !dbg_level >= 4 || !_debug_all
 
 let set_level_low     () = dbg_level := 1
 let set_level_medium  () = dbg_level := 2

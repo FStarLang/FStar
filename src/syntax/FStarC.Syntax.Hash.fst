@@ -380,15 +380,11 @@ and hash_quoteinfo qi
     (hash_list hash_term (snd qi.antiquotations))
 
 ////////////////////////////////////////////////////////////////////////////////
-(* ML-compatible boolean conjunction. Unlike &&, this does not require
-   its arguments to be pure/ghost. Both arguments are eagerly evaluated. *)
-private let ml_and (a:bool) (b:bool) : bool = if a then b else false
-
 let rec equal_list (f:'a -> 'a -> ML bool) (l1 l2:list 'a)
   : ML bool
   = match l1, l2 with
     | [], [] -> true
-    | h1::t1, h2::t2 -> ml_and (f h1 h2) (equal_list f t1 t2)
+    | h1::t1, h2::t2 -> f h1 h2 && equal_list f t1 t2
     | _ -> false
 
 let equal_opt (f:'a -> 'a -> ML bool) (o1 o2:option 'a)
@@ -400,7 +396,7 @@ let equal_opt (f:'a -> 'a -> ML bool) (o1 o2:option 'a)
 
 let equal_pair (f:'a -> 'a -> ML bool) (g:'b -> 'b -> ML bool) (x1:('a & 'b)) (x2:('a & 'b))
   : ML bool
-  = ml_and (f (fst x1) (fst x2)) (g (snd x1) (snd x2))
+  = f (fst x1) (fst x2) && g (snd x1) (snd x2)
 
 let equal_poly x y = x=y
 
@@ -425,50 +421,50 @@ let rec equal_term (t1 t2:term)
     | Tm_name x, Tm_name y -> x.index = y.index
     | Tm_fvar f, Tm_fvar g -> equal_fv f g
     | Tm_uinst (t1, u1), Tm_uinst (t2, u2) ->
-      ml_and (equal_term t1 t2)
-             (equal_list equal_universe u1 u2)
+      equal_term t1 t2 &&
+      equal_list equal_universe u1 u2
     | Tm_constant c1, Tm_constant c2 -> equal_constant c1 c2
     | Tm_type u1, Tm_type u2 -> equal_universe u1 u2
     | Tm_abs {bs=bs1; body=t1; rc_opt=rc1}, Tm_abs {bs=bs2; body=t2; rc_opt=rc2} ->
-      ml_and (equal_list equal_binder bs1 bs2)
-      (ml_and (equal_term t1 t2)
-              (equal_opt equal_rc rc1 rc2))
+      equal_list equal_binder bs1 bs2 &&
+      equal_term t1 t2 &&
+      equal_opt equal_rc rc1 rc2
     | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
-      ml_and (equal_list equal_binder bs1 bs2)
-             (equal_comp c1 c2)
+      equal_list equal_binder bs1 bs2 &&
+      equal_comp c1 c2
     | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->
-      ml_and (equal_bv b1 b2)
-             (equal_term t1 t2)
+      equal_bv b1 b2 &&
+      equal_term t1 t2
     | Tm_app _, Tm_app _ ->
       let hd1, args1 = FStarC.Syntax.Util.head_and_args_full t1 in
       let hd2, args2 = FStarC.Syntax.Util.head_and_args_full t2 in
-      ml_and (equal_term hd1 hd2)
-             (equal_list equal_arg args1 args2)
+      equal_term hd1 hd2 &&
+      equal_list equal_arg args1 args2
     | Tm_match {scrutinee=t1; ret_opt=asc_opt1; brs=bs1; rc_opt=ropt1},
       Tm_match {scrutinee=t2; ret_opt=asc_opt2; brs=bs2; rc_opt=ropt2} ->
-      ml_and (equal_term t1 t2)
-      (ml_and (equal_opt equal_match_returns asc_opt1 asc_opt2)
-      (ml_and (equal_list equal_branch bs1 bs2)
-              (equal_opt equal_rc ropt1 ropt2)))
+      equal_term t1 t2 &&
+      equal_opt equal_match_returns asc_opt1 asc_opt2 &&
+      equal_list equal_branch bs1 bs2 &&
+      equal_opt equal_rc ropt1 ropt2
     | Tm_ascribed {tm=t1; asc=a1; eff_opt=l1},
       Tm_ascribed {tm=t2; asc=a2; eff_opt=l2} ->
-      ml_and (equal_term t1 t2)
-      (ml_and (equal_ascription a1 a2)
-              (equal_opt Ident.lid_equals l1 l2))
+      equal_term t1 t2 &&
+      equal_ascription a1 a2 &&
+      equal_opt Ident.lid_equals l1 l2
     | Tm_let {lbs=(r1, lbs1); body=t1}, Tm_let {lbs=(r2, lbs2); body=t2} ->
-      ml_and (r1 = r2)
-      (ml_and (equal_list equal_letbinding lbs1 lbs2)
-              (equal_term t1 t2))
+      r1 = r2 &&
+      equal_list equal_letbinding lbs1 lbs2 &&
+      equal_term t1 t2
     | Tm_uvar u1, Tm_uvar u2 ->
       equal_uvar u1 u2
     | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
-      ml_and (equal_term t1 t2)
-             (equal_meta m1 m2)
+      equal_term t1 t2 &&
+      equal_meta m1 m2
     | Tm_lazy l1, Tm_lazy l2 ->
       equal_lazyinfo l1 l2
     | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      ml_and (equal_term t1 t2)
-             (equal_quoteinfo q1 q2)
+      equal_term t1 t2 &&
+      equal_quoteinfo q1 q2
     | Tm_unknown, Tm_unknown ->
       true
     | _ -> false
@@ -482,28 +478,28 @@ and equal_comp c1 c2
   | GTotal t1, GTotal t2 ->
     equal_term t1 t2
   | Comp ct1, Comp ct2 ->
-    ml_and (Ident.lid_equals ct1.effect_name ct2.effect_name)
-    (ml_and (equal_list equal_universe ct1.comp_univs ct2.comp_univs)
-    (ml_and (equal_term ct1.result_typ ct2.result_typ)
-    (ml_and (equal_list equal_arg ct1.effect_args ct2.effect_args)
-            (equal_list equal_flag ct1.flags ct2.flags))))
+    Ident.lid_equals ct1.effect_name ct2.effect_name &&
+    equal_list equal_universe ct1.comp_univs ct2.comp_univs &&
+    equal_term ct1.result_typ ct2.result_typ &&
+    equal_list equal_arg ct1.effect_args ct2.effect_args &&
+    equal_list equal_flag ct1.flags ct2.flags
   | _ -> false
 
 and equal_binder b1 b2
   : ML bool
   =
   if physical_equality b1 b2 then true else
-  ml_and (equal_bv b1.binder_bv b2.binder_bv)
-  (ml_and (equal_bqual b1.binder_qual b2.binder_qual)
-          (equal_list equal_term b1.binder_attrs b2.binder_attrs))
+  equal_bv b1.binder_bv b2.binder_bv &&
+  equal_bqual b1.binder_qual b2.binder_qual &&
+  equal_list equal_term b1.binder_attrs b2.binder_attrs
 
 and equal_match_returns x1 x2
   : ML bool
   =
   let (b1, asc1) = x1 in
   let (b2, asc2) = x2 in
-  ml_and (equal_binder b1 b2)
-         (equal_ascription asc1 asc2)
+  equal_binder b1 b2 &&
+  equal_ascription asc1 asc2
 
 and equal_ascription x1 x2
   : ML bool
@@ -511,38 +507,38 @@ and equal_ascription x1 x2
   if physical_equality x1 x2 then true else
   let a1, t1, b1 = x1 in
   let a2, t2, b2 = x2 in
-  ml_and (match a1, a2 with
-          | Inl t1, Inl t2 -> equal_term t1 t2
-          | Inr c1, Inr c2 -> equal_comp c1 c2
-          | _ -> false)
-  (ml_and (equal_opt equal_term t1 t2)
-          (b1 = b2))
+  (match a1, a2 with
+   | Inl t1, Inl t2 -> equal_term t1 t2
+   | Inr c1, Inr c2 -> equal_comp c1 c2
+   | _ -> false) &&
+  equal_opt equal_term t1 t2 &&
+  b1 = b2
 
 and equal_letbinding l1 l2
   : ML bool
   =
   if physical_equality l1 l2 then true else
-  ml_and (equal_lbname l1.lbname l2.lbname)
-  (ml_and (equal_list Ident.ident_equals l1.lbunivs l2.lbunivs)
-  (ml_and (equal_term l1.lbtyp l2.lbtyp)
-  (ml_and (Ident.lid_equals l1.lbeff l2.lbeff)
-  (ml_and (equal_term l1.lbdef l2.lbdef)
-          (equal_list equal_term l1.lbattrs l2.lbattrs)))))
+  equal_lbname l1.lbname l2.lbname &&
+  equal_list Ident.ident_equals l1.lbunivs l2.lbunivs &&
+  equal_term l1.lbtyp l2.lbtyp &&
+  Ident.lid_equals l1.lbeff l2.lbeff &&
+  equal_term l1.lbdef l2.lbdef &&
+  equal_list equal_term l1.lbattrs l2.lbattrs
 
 and equal_uvar x1 x2
   : ML bool
   =
   let (u1, (s1, _)) = x1 in
   let (u2, (s2, _)) = x2 in
-  ml_and (UU.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
-         (equal_list (equal_list equal_subst_elt) s1 s2)
+  UU.equiv u1.ctx_uvar_head u2.ctx_uvar_head &&
+  equal_list (equal_list equal_subst_elt) s1 s2
 
 and equal_bv b1 b2
   : ML bool
   =
   if physical_equality b1 b2 then true else
-  ml_and (Ident.ident_equals b1.ppname b2.ppname)
-         (equal_term b1.sort b2.sort)
+  Ident.ident_equals b1.ppname b2.ppname &&
+  equal_term b1.sort b2.sort
 
 and equal_fv f1 f2
   : ML bool
@@ -572,7 +568,7 @@ and equal_constant c1 c2
   | Const_effect, Const_effect
   | Const_unit, Const_unit -> true
   | Const_bool b1, Const_bool b2 -> b1 = b2
-  | Const_int (s1, o1), Const_int(s2, o2) -> ml_and (s1=s2) (o1=o2)
+  | Const_int (s1, o1), Const_int(s2, o2) -> s1=s2 && o1=o2
   | Const_char c1, Const_char c2 -> c1=c2
   | Const_real s1, Const_real s2 -> s1=s2
   | Const_string (s1, _), Const_string (s2, _) -> s1=s2
@@ -589,8 +585,8 @@ and equal_arg arg1 arg2
   if physical_equality arg1 arg2 then true else
   let t1, a1 = arg1 in
   let t2, a2 = arg2 in
-  ml_and (equal_term t1 t2)
-         (equal_opt equal_arg_qualifier a1 a2)
+  equal_term t1 t2 &&
+  equal_opt equal_arg_qualifier a1 a2
 
 and equal_bqual b1 b2
   : ML bool
@@ -611,9 +607,9 @@ and equal_branch x1 x2
   =
   let (p1, w1, t1) = x1 in
   let (p2, w2, t2) = x2 in
-  ml_and (equal_pat p1 p2)
-  (ml_and (equal_opt equal_term w1 w2)
-          (equal_term t1 t2))
+  equal_pat p1 p2 &&
+  equal_opt equal_term w1 w2 &&
+  equal_term t1 t2
 
 and equal_pat p1 p2
   : ML bool
@@ -623,9 +619,9 @@ and equal_pat p1 p2
   | Pat_constant c1, Pat_constant c2 ->
     equal_constant c1 c2
   | Pat_cons(fv1, us1, args1), Pat_cons(fv2, us2, args2) ->
-    ml_and (equal_fv fv1 fv2)
-    (ml_and (equal_opt (equal_list equal_universe) us1 us2)
-            (equal_list (equal_pair equal_pat equal_poly) args1 args2))
+    equal_fv fv1 fv2 &&
+    equal_opt (equal_list equal_universe) us1 us2 &&
+    equal_list (equal_pair equal_pat equal_poly) args1 args2
   | Pat_var bv1, Pat_var bv2 ->
     equal_bv bv1 bv2
   | Pat_dot_term t1, Pat_dot_term t2 ->
@@ -637,22 +633,22 @@ and equal_meta m1 m2
   =
   match m1, m2 with
   | Meta_pattern (ts1, args1), Meta_pattern (ts2, args2) ->
-    ml_and (equal_list equal_term ts1 ts2)
-           (equal_list (equal_list equal_arg) args1 args2)
+    equal_list equal_term ts1 ts2 &&
+    equal_list (equal_list equal_arg) args1 args2
   | Meta_named l1, Meta_named l2  ->
     Ident.lid_equals l1 l2
   | Meta_labeled (s1, r1, _), Meta_labeled (s2, r2, _) ->
-    ml_and (s1 = s2)
-           (Range.compare r1 r2 = 0)
+    s1 = s2 &&
+    Range.compare r1 r2 = 0
   | Meta_desugared msi1, Meta_desugared msi2 ->
     msi1 = msi2
   | Meta_monadic(m1, t1), Meta_monadic(m2, t2) ->
-    ml_and (Ident.lid_equals m1 m2)
-           (equal_term t1 t2)
+    Ident.lid_equals m1 m2 &&
+    equal_term t1 t2
   | Meta_monadic_lift (m1, n1, t1), Meta_monadic_lift (m2, n2, t2) ->
-    ml_and (Ident.lid_equals m1 m2)
-    (ml_and (Ident.lid_equals n1 n2)
-            (equal_term t1 t2))
+    Ident.lid_equals m1 m2 &&
+    Ident.lid_equals n1 n2 &&
+    equal_term t1 t2
   | _ -> false
 
 and equal_lazyinfo l1 l2
@@ -660,21 +656,21 @@ and equal_lazyinfo l1 l2
   =
   (* We cannot really compare the blobs. Just try physical
   equality (first matching kinds). *)
-  ml_and (l1.lkind = l1.lkind) (BU.physical_equality l1.blob l2.blob)
+  l1.lkind = l1.lkind && BU.physical_equality l1.blob l2.blob
 
 and equal_quoteinfo q1 q2
   : ML bool
   =
-  ml_and (q1.qkind = q2.qkind)
-  (ml_and ((fst q1.antiquotations) = (fst q2.antiquotations))
-          (equal_list equal_term (snd q1.antiquotations) (snd q2.antiquotations)))
+  q1.qkind = q2.qkind &&
+  (fst q1.antiquotations) = (fst q2.antiquotations) &&
+  equal_list equal_term (snd q1.antiquotations) (snd q2.antiquotations)
 
 and equal_rc r1 r2
   : ML bool
   =
-  ml_and (Ident.lid_equals r1.residual_effect r2.residual_effect)
-  (ml_and (equal_opt equal_term r1.residual_typ r2.residual_typ)
-          (equal_list equal_flag r1.residual_flags r2.residual_flags))
+  Ident.lid_equals r1.residual_effect r2.residual_effect &&
+  equal_opt equal_term r1.residual_typ r2.residual_typ &&
+  equal_list equal_flag r1.residual_flags r2.residual_flags
 
 and equal_flag f1 f2
   : ML bool
@@ -693,15 +689,15 @@ and equal_decreases_order d1 d2
     equal_list equal_term ts1 ts2
 
   | Decreases_wf (t1, t1'), Decreases_wf (t2, t2') ->
-    ml_and (equal_term t1 t2)
-           (equal_term t1' t2')
+    equal_term t1 t2 &&
+    equal_term t1' t2'
   | _ -> false
 
 and equal_arg_qualifier a1 a2
   : ML bool
   =
-  ml_and (a1.aqual_implicit = a2.aqual_implicit)
-         (equal_list equal_term a1.aqual_attributes a2.aqual_attributes)
+  a1.aqual_implicit = a2.aqual_implicit &&
+  equal_list equal_term a1.aqual_attributes a2.aqual_attributes
 
 and equal_lbname l1 l2
   : ML bool
@@ -717,19 +713,19 @@ and equal_subst_elt s1 s2
   match s1, s2 with
   | DB (i1, bv1), DB(i2, bv2)
   | NM (bv1, i1), NM (bv2, i2) ->
-    ml_and (i1=i2) (equal_bv bv1 bv2)
+    i1=i2 && equal_bv bv1 bv2
   | NT (bv1, t1), NT (bv2, t2) ->
-    ml_and (equal_bv bv1 bv2)
-           (equal_term t1 t2)
+    equal_bv bv1 bv2 &&
+    equal_term t1 t2
   | UN (i1, u1), UN (i2, u2) ->
-    ml_and (i1 = i2)
-           (equal_universe u1 u2)
+    i1 = i2 &&
+    equal_universe u1 u2
   | UD (un1, i1), UD (un2, i2) ->
-    ml_and (i1 = i2)
-           (Ident.ident_equals un1 un2)
+    i1 = i2 &&
+    Ident.ident_equals un1 un2
   | DT (i1, t1), DT (i2, t2) ->
-    ml_and (i1 = i2)
-           (equal_term t1 t2)
+    i1 = i2 &&
+    equal_term t1 t2
   | _ -> false
 
 instance hashable_term : hashable term = {

@@ -239,7 +239,7 @@ let go_normal () =
       report_errors []
 
     (* --print: Emit files in canonical source syntax *)
-    | Success when (let p = Options.print () in let pp = Options.print_in_place () in p || pp) ->
+    | Success when (Options.print () || Options.print_in_place ()) ->
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout

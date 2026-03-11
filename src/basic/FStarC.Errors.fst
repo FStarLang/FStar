@@ -126,7 +126,7 @@ let json_of_issue issue =
     JsonAssoc [
         "msg",    json_of_error_message issue.issue_msg;
         "level",  json_of_issue_level issue.issue_level;
-        "range",  (match Option.map Range.refind_range issue.issue_range with None -> JsonNull | Some r -> json_of_range r);
+        "range",  Option.dflt JsonNull (json_of_range <$> Option.map Range.refind_range issue.issue_range);
         "number", Option.dflt JsonNull (JsonInt <$> issue.issue_number);
         "ctx",    JsonList (JsonStr <$> issue.issue_ctx);
     ]
@@ -317,9 +317,8 @@ let mk_default_handler () =
         if !Options.abort_counter = 0 then
           failwith "Aborting due to --abort_on"
       end;
-      if Options.defensive_abort () then
-        if e.issue_number = Some defensive_errno then
-          failwith "Aborting due to --defensive abort";
+      if Options.defensive_abort () && e.issue_number = Some defensive_errno then
+        failwith "Aborting due to --defensive abort";
       ()
   in
   let count_errors () = !err_count in

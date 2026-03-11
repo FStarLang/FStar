@@ -55,7 +55,7 @@ let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> ML b) (x : a) (y : a) : ML
     let rec blist_leq (l1 : list bool) (l2 : list bool) : ML bool =
         match l1, l2 with
         | h1::t1, h2::t2 ->
-            let v1 = (not h1 || h2) in let v2 = blist_leq t1 t2 in v1 && v2
+            (not h1 || h2) && blist_leq t1 t2
         | [], [] ->
             true
         | _ ->

@@ -1638,7 +1638,7 @@ let longest_prefix (f : 'a -> 'a -> ML bool) (l1 : list 'a) (l2 : list 'a)  : ML
 let eq_binding b1 b2 =
     match b1, b2 with
     | _ -> false
-    | S.Binding_var bv1, Binding_var bv2 -> let b = bv_eq bv1 bv2 in let c = U.term_eq bv1.sort bv2.sort in b && c
+    | S.Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && U.term_eq bv1.sort bv2.sort
     | S.Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
     | S.Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
     | _ -> false

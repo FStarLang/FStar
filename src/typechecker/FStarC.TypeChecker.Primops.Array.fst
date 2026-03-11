@@ -95,6 +95,8 @@ let ops : list primitive_step =
            | None -> None
            | Some lst -> Some (l, lst))
          (fun (universes, elt_t, (l, blob)) ->
+           //The embedding is similar to the non-NBE case
+           //But, this time the thunk is the NBE.t representation of `of_list l`
            NBETerm.mk_t <|
            NBETerm.Lazy (Inr (blob, emb_typ EMB.(emb_typ_of _ #e_any ())),
                          Thunk.mk (fun _ ->
@@ -114,11 +116,19 @@ let ops : list primitive_step =
             | Some lst -> Some (l, lst)
             | _ -> None)
           (fun r (universes, elt_t, (l, blob)) ->
+            //embed the result back as a Tm_lazy with the `ImmutableArray.t term` as the blob
+            //The kind records the type of the blob as IA.t "any"
+            //and the interesting thing here is that the thunk represents the blob back as pure F* term
+            //IA.of_list u#universes elt_t l.
+            //This unreduced representation can be used in a context where the blob doesn't make sense,
+            //e.g., in the SMT encoding, we represent the blob computed by of_list l
+            //just as the unreduced term `of_list l`
             S.mk (Tm_lazy { blob;
                             lkind=Lazy_embedding (emb_typ EMB.(emb_typ_of _ #e_any ()), Thunk.mk (fun _ -> un_lazy universes elt_t l r));
                             ltyp=S.mk_Tm_app (S.mk_Tm_uinst (U.fvar_const PC.immutable_array_t_lid) universes) [S.as_arg elt_t] r;
                             rng=r }) r)
           (fun r universes elt_t (l, lst) ->
+            //The actual primitive step computing the IA.t blob
              let blob = FStar.ImmutableArray.Base.of_list #term lst in
              Some (universes, elt_t, (l, FStarC.Dyn.mkdyn blob))),
        nbe_of_list)

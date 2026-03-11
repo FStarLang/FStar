@@ -60,7 +60,7 @@ let rec term_eq' t1 t2 : ML bool =
         len_eq && fv2_eq in
     let args_eq xs ys =
          let len_eq = List.length xs = List.length ys in
-         let fv2_eq = List.forall2 (fun (a, imp) (b, imp') -> let r = term_eq' a b in let q = U.eq_aqual imp imp' in r && q) xs ys in
+         let fv2_eq = List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp') xs ys in
          len_eq && fv2_eq in
     let comp_eq (c:S.comp) (d:S.comp) =
         match c.n, d.n with

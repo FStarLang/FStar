@@ -99,7 +99,7 @@ let read_fstar_include (fn : string) : ML (option (list string)) =
       // separator above and just get a few more empty lines.
       List.map BU.trim_string |>
       // And keep the non-empty lines that don't begin with '#'
-      List.filter (fun s -> let ne = s <> "" in let nc = not (String.get s 0 = '#') in ne && nc)
+      List.filter (fun s -> s <> "" && not (String.get s 0 = '#'))
     in
     Some subdirs
   with

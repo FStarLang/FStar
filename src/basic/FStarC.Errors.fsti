@@ -106,6 +106,9 @@ val default_handler : error_handler
 val mk_catch_handler () : ML error_handler
 
 val get_err_count : unit -> ML int
+
+(* Log an issue directly, rather than converting it from a error_code etc.
+   This does not raise an exception. Do not use this for any CFatal error. *)
 val add_issues : list issue -> ML unit
 val report_all : unit -> ML (list issue)
 val clear : unit -> ML unit
@@ -117,28 +120,31 @@ val set_parse_warn_error : (string -> ML (option (list error_setting))) -> ML un
 
 val lookup : error_code -> ML error_setting
 
+(* Log an error/warning/etc. This does not raise an exception. Do not
+use this for any CFatal error. *)
+
 (* An info message. Calling this function triggers the printing immediately. *)
 val info
-  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t)
-  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t)
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
   : ML unit
 
 (* A "diagnostic" message. It is the same as info, but only printed some kind of debugging is enabled. *)
 val diag
-  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t)
-  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t)
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
   : ML unit
 
 val raise_error
-  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t)
-  (code : error_code)
-  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t)
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (code : error_code) // An error code
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
   : ML 'a
 
 val log_issue
-  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t)
-  (code : error_code)
-  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t)
+  (#pos_t:Type) {| hasRange pos_t |} (pos : pos_t) // A "position", of any type with a range
+  (code : error_code) // An error code
+  (#msg_t:_) {| is_error_message msg_t |} (msg : msg_t) // A "message", currently can be a 'string' or 'list document'
   : ML unit
 
 val raise_error0 : error_code -> #t:_ -> {| is_error_message t |} -> t -> ML 'a

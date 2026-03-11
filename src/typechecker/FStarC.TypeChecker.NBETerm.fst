@@ -116,20 +116,18 @@ match c1, c2 with
 let rec term_eq (t1 t2 : t) : ML bool =
   match t1.nbe_t, t2.nbe_t with
   | Lam {interp=interp1; arity=arity1}, Lam {interp=interp2; arity=arity2} ->
-    if interp1 = interp2 then arity1 = arity2 else false
+    interp1 = interp2 && arity1 = arity2
   | Accu(a1, as1), Accu(a2, as2) -> atom_eq a1 a2 // && eq_args as1 as2
   | Construct(fv1, us1, args1), Construct(fv2, us2, args2) ->
-    if fv1 = fv2 then (if U.eq_univs_list us1 us2 then args_eq args1 args2 else false) else false
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
   | FV(fv1, us1, args1), FV(fv2, us2, args2) ->
-    if fv1 = fv2 then (if U.eq_univs_list us1 us2 then args_eq args1 args2 else false) else false
+    fv1 = fv2 && U.eq_univs_list us1 us2 && args_eq args1 args2
   | Constant c1, Constant c2 -> c1 = c2
   | Type_t u1, Type_t u2
   | Univ u1, Univ u2 -> u1 = u2
   | Refinement(r1, t1), Refinement(r2, t2) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
-    if term_eq (fst (t1 ())) (fst (t2 ()))
-    then term_eq (r1 (mkAccuVar x)) (r2 (mkAccuVar x))
-    else false
+    term_eq (fst (t1 ())) (fst (t2 ())) && term_eq (r1 (mkAccuVar x)) (r2 (mkAccuVar x))
   | Unknown, Unknown -> true
   | _, _ -> false
 and atom_eq (a1 : atom) (a2 : atom) : ML bool =
@@ -139,7 +137,7 @@ and atom_eq (a1 : atom) (a2 : atom) : ML bool =
 and args_eq (as1 : args) (as2 : args) : ML bool =
   match as1, as2 with
   | [], [] -> true
-  | (x, qx) :: xs, (y, qy) :: ys -> if term_eq x y then (if qx = qy then args_eq xs ys else false) else false
+  | (x, qx) :: xs, (y, qy) :: ys -> term_eq x y && qx = qy && args_eq xs ys
   | _, _ -> false
 
 let rec eq_t env (t1 : t) (t2 : t) : ML TEQ.eq_result =

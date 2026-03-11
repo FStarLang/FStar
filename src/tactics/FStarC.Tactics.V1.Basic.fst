@@ -1080,7 +1080,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                       |> Some)
                      deps
                      (rangeof goal) in
-                   let dbg = let d = Debug.medium () in let d2 = !dbg_2635 in d || d2 in
+                   let dbg = Debug.medium () || !dbg_2635 in
                    if dbg
                    then
                      Format.print2 "Apply lemma created a new uvar %s while applying %s\n"
@@ -1541,7 +1541,7 @@ let longest_prefix (f : 'a -> 'a -> ML bool) (l1 : list 'a) (l2 : list 'a) : ML 
 // NOTE: duplicated from V2.Basic. Should remove this whole module eventually.
 let eq_binding b1 b2 =
     match b1, b2 with
-    | S.Binding_var bv1, Binding_var bv2 -> let eq = bv_eq bv1 bv2 in let teq = U.term_eq bv1.sort bv2.sort in eq && teq
+    | S.Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && U.term_eq bv1.sort bv2.sort
     | S.Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
     | S.Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
     | _ -> false

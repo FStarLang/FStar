@@ -121,7 +121,7 @@ let rec eq_list (f: 'a -> 'a -> ML bool) (l1 l2 : list 'a)
   = match l1, l2 with
     | [], [] -> true
     | [], _ | _, [] -> false
-    | x1::t1, x2::t2 -> if f x1 x2 then eq_list f t1 t2 else false
+    | x1::t1, x2::t2 -> f x1 x2 && eq_list f t1 t2
 
 let psmap_to_list m =
   psmap_fold m (fun k v a -> (k,v)::a) []

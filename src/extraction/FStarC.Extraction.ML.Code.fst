@@ -452,12 +452,12 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : ML
             })
         | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
-        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (let b = is_bin_op p in b && unitVal=ml_unit) ->
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
                      doc_of_binop currentModule p e1 e2
 
         | (MLE_Name p, [e1]) when is_uni_op p -> doc_of_uniop currentModule p e1
 
-        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (let b = is_uni_op p in b && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (is_uni_op p && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
 
         | _ ->
             let e    = doc_of_expr  currentModule (e_app_prio, ILeft) e in
@@ -618,8 +618,7 @@ and doc_of_lets (currentModule : mlsymbol) (arg : (mlletflavor & bool & list mll
         let ty_annot =
             if (not pt) then text ""
             else
-            let fsharp = Util.codegen_fsharp () in
-            if fsharp && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            if Util.codegen_fsharp () && (rec_ = Rec || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
                     | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
@@ -654,9 +653,7 @@ and doc_of_lets (currentModule : mlsymbol) (arg : (mlletflavor & bool & list mll
 
 and doc_of_loc (arg : (int & string)) : ML doc =
     let (lineno, file) = arg in
-    let no_loc = Options.no_location_info() in
-    let fsharp = Util.codegen_fsharp () in
-    if no_loc || fsharp || file=" dummy" then
+    if Options.no_location_info() || Util.codegen_fsharp () || file=" dummy" then
         empty
     else
         let file = Filepath.basename file in

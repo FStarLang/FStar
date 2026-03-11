@@ -135,17 +135,17 @@ let rec diff {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML (rbset 'a) =
 let rec subset {| ord 'a |} (s1:rbset 'a) (s2:rbset 'a) : ML bool =
   match s1 with
   | L -> true
-  | N (_, a, x, b) -> let r1 = mem x s2 in let r2 = subset a s2 in let r3 = subset b s2 in r1 && r2 && r3
+  | N (_, a, x, b) -> mem x s2 && subset a s2 && subset b s2
 
 let rec for_all (p:'a -> ML bool) (s:rbset 'a) : ML bool =
   match s with
   | L -> true
-  | N (_, a, x, b) -> let r1 = p x in let r2 = for_all p a in let r3 = for_all p b in r1 && r2 && r3
+  | N (_, a, x, b) -> p x && for_all p a && for_all p b
 
 let rec for_any (p:'a -> ML bool) (s:rbset 'a) : ML bool =
   match s with
   | L -> false
-  | N (_, a, x, b) -> let r1 = p x in let r2 = for_any p a in let r3 = for_any p b in r1 || r2 || r3
+  | N (_, a, x, b) -> p x || for_any p a || for_any p b
 
 // Make this faster
 let from_list {| ord 'a |} (xs : list 'a) : ML (rbset 'a) =

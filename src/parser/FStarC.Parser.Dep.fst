@@ -364,21 +364,17 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
       let cache_fn =
-        let lax = Options.lax () in
-        if lax then fn ^".checked.lax"
+        if Options.lax () then fn ^".checked.lax"
         else fn ^".checked"
       in
       let mname = fn |> module_name_of_file in
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
         let expected_cache_file = Find.prepend_cache_dir cache_fn in
-        if (if Some? (Options.dep()) //if we're in the dependence analysis
-            then (if not (Options.should_be_already_cached mname) //and checked file is in the
-                  then (if not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
-                        then true
-                        else not (Filepath.paths_to_same_file path expected_cache_file))
-                  else false)
-            else false)
+        if Some? (Options.dep()) //if we're in the dependence analysis
+            && not (Options.should_be_already_cached mname) //and checked file is in the
+            && (not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
+                || not (Filepath.paths_to_same_file path expected_cache_file))
         then (
           let open FStarC.Pprint in
           let open FStarC.Errors.Msg in
@@ -396,7 +392,7 @@ let cache_file_name =
          * preference to relative filenames. This is mostly since
          * GNU make doesn't resolve paths in targets, so we try
          * to keep target paths relative. See issue #1978. *)
-        if (if Filepath.file_exists expected_cache_file then Filepath.paths_to_same_file path expected_cache_file else false)
+        if Filepath.file_exists expected_cache_file && Filepath.paths_to_same_file path expected_cache_file
         then expected_cache_file
         else path
       | None ->
@@ -432,9 +428,7 @@ let file_of_dep_aux
     let cmd_line_has_impl key =
         all_cmd_line_files
         |> BU.for_some (fun fn ->
-           let is_impl = is_implementation fn in
-           let mn = lowercase_module_name fn in
-           is_impl && key = mn)
+           is_implementation fn && key = lowercase_module_name fn)
     in
 
     let maybe_use_cache_of f = if use_checked_file then cache_file_name f else f in
@@ -668,9 +662,7 @@ let enter_namespace
       begin
         let suffix_filename = SMap.try_find original_map suffix in
         if implicit_open then (
-           let se = suffix_exists suffix_filename in
-           let not_warned = not (List.mem suffix_filename !warned_about) in
-           if se && not_warned
+           if suffix_exists suffix_filename && not (List.mem suffix_filename !warned_about)
            then let str = suffix_filename |> Option.must |> intf_and_impl_to_string in
                 warned_about := suffix_filename :: !warned_about;
                 let open FStarC.Pprint in
@@ -2226,9 +2218,8 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
                         (fun df ->
                            let mn_df = lowercase_module_name df in
                            let mn_fn = lowercase_module_name file_name in
-                           let se = Options.should_extract mn_df Options.OCaml in
                            mn_df <> mn_fn //avoid circular deps on f's own cmx
-                           && se)
+                           && Options.should_extract mn_df Options.OCaml)
                   in
                   extracted_fst_files |> List.map output_cmx_file
               in
