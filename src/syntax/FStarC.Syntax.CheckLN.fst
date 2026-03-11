@@ -27,47 +27,37 @@ let rec is_ln' (n:int) (t:term) : ML bool =
 
   (* Should really be an fvar, but being conservative here *)
   | Tm_uinst (t, us) ->
-    let r1 = is_ln' n t in
-    let r2 = is_ln'_univs n us in
-    r1 && r2
+    is_ln' n t &&
+    is_ln'_univs n us
 
   | Tm_abs {bs;body;rc_opt} ->
-    let r1 = is_ln'_binders n bs in
-    let nbs = L.length bs in
-    let r2 = is_ln' (n + nbs) body in
-    r1 && r2
+    is_ln'_binders n bs &&
+    is_ln' (n + L.length bs) body
 
   | Tm_arrow {bs;comp} ->
-    let r1 = is_ln'_binders n bs in
-    let nbs = L.length bs in
-    let r2 = is_ln'_comp (n + nbs) comp in
-    r1 && r2
+    is_ln'_binders n bs &&
+    is_ln'_comp (n + L.length bs) comp
 
   | Tm_refine {b;phi} ->
-    let r1 = is_ln'_bv n b in
-    let r2 = is_ln' (n+1) phi in
-    r1 && r2
+    is_ln'_bv n b &&
+    is_ln' (n+1) phi
 
   | Tm_app {hd; args} ->
-    let r1 = is_ln' n hd in
-    let r2 = L.for_all (fun (t, aq) -> is_ln' n t) args in
-    r1 && r2
+    is_ln' n hd &&
+    L.for_all (fun (t, aq) -> is_ln' n t) args
 
   | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
-    let r1 = is_ln' n scrutinee in
+    is_ln' n scrutinee &&
     // TODO: check pats
-    let r2 = L.for_all (fun (p, _, t) -> let d = pat_depth p in is_ln' (n + d) t) brs in
-    r1 && r2
+    L.for_all (fun (p, _, t) -> is_ln' (n + pat_depth p) t) brs
 
   | Tm_ascribed {tm; asc; eff_opt} ->
-    let r1 = is_ln' n tm in
-    r1 && true // is_ln' n asc
+    is_ln' n tm &&
+    true // is_ln' n asc
 
   | Tm_let {lbs; body} ->
-    let r1 = is_ln'_letbindings n lbs in
-    let nlbs = L.length (snd lbs) in
-    let r2 = is_ln' (n + nlbs) body in
-    r1 && r2
+    is_ln'_letbindings n lbs &&
+    is_ln' (n + L.length (snd lbs)) body
 
   | _ -> true
 
@@ -78,17 +68,14 @@ and is_ln'_letbindings (n:int) (lbs : letbindings) : ML bool =
 and is_ln'_letbinding (n:int) (lb : letbinding) : ML bool =
   let {lbunivs; lbtyp; lbdef} = lb in
   let nu = List.length lbunivs in
-  let r1 = is_ln' (n+nu) lbtyp in
-  let r2 = is_ln' (n+nu) lbdef in
-  r1 && r2
+  is_ln' (n+nu) lbtyp &&
+  is_ln' (n+nu) lbdef
 
 and is_ln'_binders (n:int) (bs : list binder) : ML bool =
   match bs with
   | [] -> true
   | b::bs ->
-    let r1 = is_ln'_binder n b in
-    let r2 = is_ln'_binders (n+1) bs in
-    r1 && r2
+    is_ln'_binder n b && is_ln'_binders (n+1) bs
 
 and is_ln'_binder (n:int) (b:binder) : ML bool =
   is_ln'_bv n b.binder_bv
@@ -103,9 +90,8 @@ and is_ln'_comp (n:int) (c:comp) : ML bool =
   | Comp ct -> is_ln'_comp_typ n ct
 
 and is_ln'_comp_typ (n:nat) (ct:comp_typ) : ML bool =
-  let r1 = is_ln' n ct.result_typ in
-  let r2 = L.for_all (fun (t,aq) -> is_ln' n t) ct.effect_args in
-  r1 && r2 &&
+  is_ln' n ct.result_typ &&
+  L.for_all (fun (t,aq) -> is_ln' n t) ct.effect_args &&
 //   L.for_all (is_ln' n) ct.flags
   true
 

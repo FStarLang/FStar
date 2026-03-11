@@ -84,8 +84,6 @@ instance showable_implicit_checking_status : showable implicit_checking_status =
           | Implicit_has_typing_guard (tm, typ) -> "Implicit_has_typing_guard");
 }
 
-let ( &. ) (x:bool) (y:bool) : bool = if x then y else false
-let ( |. ) (x:bool) (y:bool) : bool = if x then true else y
 
 let is_base_type env typ : ML _
   =
@@ -617,7 +615,7 @@ let guard_on_element wl problem x phi : ML term =
 
 let explain wl d (s : lstring) : ML _
   =
-    if !dbg_ExplainRel |. !dbg_Rel
+    if !dbg_ExplainRel || !dbg_Rel
     then Format.fmt4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n"
                        (Range.string_of_range <| p_loc d)
                        (prob_to_string' wl d)
@@ -1050,7 +1048,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
                            (tag_of head)
                            (tag_of (SS.compress head)))
 
-let no_free_uvars t  = Setlike.is_empty (Free.uvars t) &. Setlike.is_empty (Free.univs t)
+let no_free_uvars t  = Setlike.is_empty (Free.uvars t) && Setlike.is_empty (Free.univs t)
 
 (* Deciding when it's okay to issue an SMT query for
  * equating a term whose head symbol is `head` with another term
@@ -1255,7 +1253,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
     wl in
 
     let bs = bs |> List.filter (fun ({binder_bv=bv1}) ->
-    (src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)) &.  //binder exists in G_t
+    (src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)) &&  //binder exists in G_t
     (not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)))) in  //but not in the maximal prefix
 
   if List.length bs = 0 then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
@@ -1325,7 +1323,7 @@ let pat_vars env ctx args : ML (option binders) =
         match hd.n with
         | Tm_name a ->
           if name_exists_in_binders a seen
-          |. name_exists_in_binders a ctx
+          || name_exists_in_binders a ctx
           then None
           else let bq, attrs = U.bqual_and_attrs_of_aqual i in
                let pq, attrs = U.parse_positivity_attributes attrs in
@@ -1518,14 +1516,14 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : ML (match_result & opti
           | Some d ->
             let t1' = normalize_refinement (Env.UnfoldUntil d :: base_steps) env t1 in
             let t2' = normalize_refinement (Env.UnfoldUntil d :: base_steps) env t2 in
-            if made_progress t1 t1' &.
+            if made_progress t1 t1' &&
                made_progress t2 t2'
             then aux retry (n_delta + 1) t1' t2'
             else fail n_delta r t1 t2
         in
 
         match r with
-            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 0 |. j > 0) &. i <> j ->
+            | MisMatch (Some (Delta_equational_at_level i), Some (Delta_equational_at_level j)) when (i > 0 || j > 0) && i <> j ->
               reduce_one_and_try_again (Delta_equational_at_level i) (Delta_equational_at_level j)
 
             | MisMatch(Some (Delta_equational_at_level _), _)
@@ -1573,7 +1571,7 @@ let rank_t_num  = function
 let rank_leq r1 r2  = rank_t_num r1 <= rank_t_num r2
 let rank_less_than r1 r2 : ML _
   =
-    r1 <> r2 &.
+    r1 <> r2 &&
     rank_t_num r1 <= rank_t_num r2
 let compress_tprob wl p : ML _
   =
@@ -1699,9 +1697,9 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) : ML _
         flex_will_be_closed p.rhs
       | Flex_flex ->
         p.relation=EQ
-        &.
+        &&
         (flex_will_be_closed p.lhs
-        |. flex_will_be_closed p.rhs)
+        || flex_will_be_closed p.rhs)
 
 (* ----------------------------------------------------- *)
 (* Solving universe equalities                           *)
@@ -1918,7 +1916,7 @@ let quasi_pattern env (f:flex_t) : ML (option (binders & typ)) =
             match (SS.compress a).n with
             | Tm_name x ->
                 if name_exists_in x ctx
-                |.  name_exists_in x pat_binders
+                ||  name_exists_in x pat_binders
                 then //we already have x
                      //so don't include it in the quasi-pattern
                      aux (fml :: pat_binders) formals t_res args
@@ -2286,7 +2284,7 @@ let rec solve (probs :worklist) : ML solution =
           | _ -> false
         in
         let maybe_expand (tp:tprob) : ML tprob =
-          if Options.Ext.enabled "__unrefine" &. tp.relation = SUB &. is_expand_uvar tp.rhs
+          if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
           then
             let lhs = tp.lhs in
             let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
@@ -2305,7 +2303,7 @@ let rec solve (probs :worklist) : ML solution =
         let tp = maybe_expand tp in
 
         if rank=Rigid_rigid
-        |. (tp.relation = EQ &. rank <> Flex_flex)
+        || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t' tp probs
         else if probs.defer_ok = DeferAny
         then maybe_defer_to_user_tac tp "deferring flex_rigid or flex_flex subtyping" probs
@@ -2420,7 +2418,7 @@ and maybe_defer_to_user_tac prob reason wl : ML solution =
     in
     let l1, r1 = should_defer_tac prob.lhs in
     let l2, r2 = should_defer_tac prob.rhs in
-    if l1 |. l2
+    if l1 || l2
     then defer_to_user_tac (TProb prob) (r1 ^ ", " ^ r2) wl
     else solve (defer_lit Deferred_flex reason (TProb prob) wl)
   | _ -> solve (defer_lit Deferred_flex reason (TProb prob) wl)
@@ -2662,7 +2660,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
       begin
         let widen, (meet_or_join_op : option (term -> term -> ML term)) = 
           if has_typeclass_constraint ctx_uvar wl
-          &. not flip //we are widening; so widen all the way
+          && not flip //we are widening; so widen all the way
           then true, None
           else false, Some (if flip then U.mk_conj_simp else U.mk_disj_simp)
         in
@@ -2686,7 +2684,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
               match (SS.compress bound).n with
               | Tm_refine {b=x; phi}
                 when tp.relation=SUB
-                  &. snd (occurs flex_u x.sort) ->
+                  && snd (occurs flex_u x.sort) ->
                 x.sort
               | _ ->
                 bound
@@ -2879,7 +2877,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
           Inl ([rhs_prob], formula), wl
 
         | x::xs, y::ys 
-          when (eq_bqual x.binder_qual y.binder_qual &.
+          when (eq_bqual x.binder_qual y.binder_qual &&
                 compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
@@ -3015,7 +3013,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
             match b.binder_qual, aq with
             | None, None -> true
             | Some (Implicit _), Some a ->
-              a.aqual_implicit &.
+              a.aqual_implicit &&
               U.eqlist (fun x y -> TEQ.eq_tm env x y = TEQ.Equal)
                        b.binder_attrs
                        a.aqual_attributes
@@ -3030,8 +3028,8 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
               match (SS.compress t).n with
               | Tm_name x
                 when bv_eq b.binder_bv x
-                  &. binder_matches_aqual b aq
-                  &. bv_not_free_in_args b.binder_bv rhs_tl ->
+                  && binder_matches_aqual b aq
+                  && bv_not_free_in_args b.binder_bv rhs_tl ->
                 remove_matching_prefix lhs_tl rhs_tl
               | _ ->
                 lhs_binders, rhs_args
@@ -3457,8 +3455,8 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
       (* If this flex has a meta-arg, and the problem is fully
       defined (no uvars in env/typ), then we can run it now. *)
       let uv = flex_uvar flex in
-      flex_uvar_has_meta_tac uv &.
-      not (has_free_uvars (U.ctx_uvar_typ uv)) &.
+      flex_uvar_has_meta_tac uv &&
+      not (has_free_uvars (U.ctx_uvar_typ uv)) &&
       not (gamma_has_free_uvars uv.ctx_uvar_gamma)
     in
 
@@ -3478,12 +3476,12 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
       else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      if should_defer_flex_to_user_tac wl lhs |. should_defer_flex_to_user_tac wl rhs
+      if should_defer_flex_to_user_tac wl lhs || should_defer_flex_to_user_tac wl rhs
       then defer_to_user_tac orig (flex_reason lhs ^", "^flex_reason rhs)wl
       else
 
-      if (wl.defer_ok = DeferAny |. wl.defer_ok = DeferFlexFlexOnly)
-      &. (not (is_flex_pat lhs)|. not (is_flex_pat rhs))
+      if (wl.defer_ok = DeferAny || wl.defer_ok = DeferFlexFlexOnly)
+      && (not (is_flex_pat lhs)|| not (is_flex_pat rhs))
       then giveup_or_defer_flex_flex orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex non-pattern")
 
       else if should_run_meta_arg_tac lhs
@@ -3496,7 +3494,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
           let rec occurs_bs u bs : ML _ =
             match bs with
             | [] -> false
-            | b::bs -> snd (occurs u b.binder_bv.sort) |. occurs_bs u bs
+            | b::bs -> snd (occurs u b.binder_bv.sort) || occurs_bs u bs
           in
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
@@ -3508,7 +3506,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
             else
             let (Flex (_, u_rhs, _)) = rhs in
             if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
-            &. binders_eq binders_lhs binders_rhs
+            && binders_eq binders_lhs binders_rhs
             then solve (solve_prob orig None [] wl)
             else (* Given a flex-flex instance:
                     (x1..xn ..X  |- ?u : ts  -> tres) [y1  ... ym ]
@@ -3534,7 +3532,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
                  let zs = intersect_binders gamma_w (ctx_l @ binders_lhs) (ctx_r @ binders_rhs) in
                  let new_uvar_typ = U.arrow zs (S.mk_Total t_res_lhs) in
                  if snd (occurs u_lhs new_uvar_typ)
-                 |.  (not (Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head) &.
+                 ||  (not (Unionfind.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head) &&
                      snd (occurs u_rhs new_uvar_typ))
                  then giveup_or_defer_flex_flex orig wl Deferred_flex_flex_nonpattern
                          (Thunk.mkv (Format.fmt1 "flex-flex: occurs\n defer_ok=%s\n"
@@ -3610,7 +3608,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
           match (head1.n, args1), (head2.n, args2) with
           | (Tm_uinst(_, us1), _::_), (Tm_uinst(_, us2), _::_) ->
             if List.for_all (fun u -> not (universe_has_max env u)) us1
-            &. List.for_all (fun u -> not (universe_has_max env u)) us2
+            && List.for_all (fun u -> not (universe_has_max env u)) us2
             then need_unif //if no umaxes then go ahead as usual
             else true //else, decompose the problem and potentially defer
           | _ -> need_unif
@@ -3630,7 +3628,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                                      (show head1) (show args1) (show head2) (show args2)))
                     orig
         else
-        if nargs=0 |. TEQ.eq_args env args1 args2=TEQ.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+        if nargs=0 || TEQ.eq_args env args1 args2=TEQ.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
         then if need_unif
              then solve_t ({problem with lhs=head1; rhs=head2}) wl
              else solve_head_then wl (fun ok wl ->
@@ -4026,8 +4024,8 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
 
               | None ->
                 if (may_relate wl.tcenv problem.relation head1
-                    |. may_relate wl.tcenv problem.relation head2)
-                &. wl.smt_ok
+                    || may_relate wl.tcenv problem.relation head2)
+                && wl.smt_ok
                 then let guard, wl = guard_of_prob wl problem t1 t2 in
                     solve (solve_prob orig (Some guard) [] wl)
                 else giveup wl (mklstr (fun () -> Format.fmt4 "head mismatch (%s (%s) vs %s (%s))"
@@ -4186,10 +4184,10 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
         in
         let has_uvars =
             not (Setlike.is_empty (FStarC.Syntax.Free.uvars phi1))
-            |. not (Setlike.is_empty (FStarC.Syntax.Free.uvars phi2))
+            || not (Setlike.is_empty (FStarC.Syntax.Free.uvars phi2))
         in
         if problem.relation = EQ
-        |. (not env.uvar_subtyping &. has_uvars)
+        || (not env.uvar_subtyping && has_uvars)
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
@@ -4205,9 +4203,9 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                                    wl_deferred=empty}) with
              | Failed (prob, msg) ->
                UF.rollback tx;
-               if ((not env.uvar_subtyping &. has_uvars)
-                   |. not wl.smt_ok)
-                   &. not env.unif_allow_ref_guards // if unif_allow_ref_guards is on, we don't give up
+               if ((not env.uvar_subtyping && has_uvars)
+                   || not wl.smt_ok)
+                   && not env.unif_allow_ref_guards // if unif_allow_ref_guards is on, we don't give up
                then giveup wl msg prob
                else fallback()
 
@@ -4289,7 +4287,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
             | Inl t_abs, Inr not_abs
             | Inr not_abs, Inl t_abs ->
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
-              &. p_rel orig = EQ
+              && p_rel orig = EQ
               then let flex, wl = destruct_flex_t not_abs wl in
                     solve_t_flex_rigid_eq orig wl flex t_abs
               else begin
@@ -4300,7 +4298,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                 | _ ->
                   let head, _ = U.head_and_args not_abs in
                   if wl.smt_ok
-                  &. may_relate wl.tcenv (p_rel orig) head
+                  && may_relate wl.tcenv (p_rel orig) head
                   then let g, wl = mk_eq2 wl orig t_abs not_abs in
                        solve (solve_prob orig (Some g) [] wl)
                   else giveup wl (Thunk.mkv "head tag mismatch: RHS is an abstraction") orig
@@ -4431,8 +4429,8 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
              let t2 = norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
              TEQ.eq_tm env t1 t2 = TEQ.Equal
          in
-         if (Env.is_interpreted wl.tcenv head1 |. Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
-           &. problem.relation = EQ
+         if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
+           && problem.relation = EQ
          then (
            let solve_with_smt () =
              let guard, wl =
@@ -4444,7 +4442,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
              solve (solve_prob orig guard [] wl)
            in
            if no_free_uvars t1 // and neither term has any free variables
-           &. no_free_uvars t2
+           && no_free_uvars t2
            then
              if not wl.smt_ok
              then if equal t1 t2
@@ -4482,7 +4480,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                             (tag_of t1) (tag_of t2) (show t1) (show t2))
 
       | Tm_lazy li1, Tm_lazy li2 when li1.lkind =? li2.lkind
-                                   &. lazy_complete_repr li1.lkind ->
+                                   && lazy_complete_repr li1.lkind ->
         solve_t' ({problem with lhs = U.unfold_lazy li1; rhs = U.unfold_lazy li2}) wl
 
       | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ tag_of t1 ^ " vs " ^ tag_of t2)) orig
@@ -4549,8 +4547,8 @@ and solve_c (problem:problem comp) (wl:worklist) : ML solution =
       (c1 c2:lid) : ML bool
       = let c1, c2 = Env.norm_eff_name wl.tcenv c1, Env.norm_eff_name wl.tcenv c2 in
         not wl.repr_subcomp_allowed
-        &. not (lid_equals c1 c2)
-        &. Env.is_reifiable_effect wl.tcenv c2 in
+        && not (lid_equals c1 c2)
+        && Env.is_reifiable_effect wl.tcenv c2 in
                   // GM: What I would like to write instead of these two
                   // last conjuncts is something like
                   // [Some? edge.mlift.mlift_term],
@@ -4625,9 +4623,9 @@ and solve_c (problem:problem comp) (wl:worklist) : ML solution =
             // we will account for g_lift logical guard later
             let wl = extend_wl wl g_lift.deferred g_lift.deferred_to_tac g_lift.implicits in
 
-            if is_polymonadic &.
-               Env.is_erasable_effect env c1.effect_name &.
-               not (Env.is_erasable_effect env c2.effect_name) &.
+            if is_polymonadic &&
+               Env.is_erasable_effect env c1.effect_name &&
+               not (Env.is_erasable_effect env c2.effect_name) &&
                not (N.non_info_norm env c1.result_typ)
             then Errors.raise_error r Errors.Error_TypeError
                                      (Format.fmt3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
@@ -4832,9 +4830,9 @@ and solve_c (problem:problem comp) (wl:worklist) : ML solution =
            solve_c ({problem with rhs=mk_Comp <| Env.comp_to_comp_typ env c2}) wl
 
          | Comp _, Comp _ ->
-            if (U.is_ml_comp c1 &. U.is_ml_comp c2)
-            |. (U.is_total_comp c1 &. U.is_total_comp c2)
-            |. (U.is_total_comp c1 &. U.is_ml_comp c2 &. problem.relation=SUB)
+            if (U.is_ml_comp c1 && U.is_ml_comp c2)
+            || (U.is_total_comp c1 && U.is_total_comp c2)
+            || (U.is_total_comp c1 && U.is_ml_comp c2 && problem.relation=SUB)
             then solve_t (problem_using_guard orig (U.comp_result c1) problem.relation (U.comp_result c2) None "result type") wl
             else let c1_comp = Env.comp_to_comp_typ env c1 in
                  let c2_comp = Env.comp_to_comp_typ env c2 in
@@ -4877,14 +4875,14 @@ let ineqs_to_string (ineqs : clist universe & clist (universe & universe)) : ML 
 let guard_to_string (env:env) g : ML _
   =
   match g.guard_f, view g.deferred with
-  | Trivial, VNil when not (Options.print_implicits ()) &. is_empty (snd g.univ_ineqs) -> "{}"
+  | Trivial, VNil when not (Options.print_implicits ()) && is_empty (snd g.univ_ineqs) -> "{}"
   | _ ->
     let form = match g.guard_f with
         | Trivial -> "trivial"
         | NonTrivial f ->
             if !dbg_Rel
-            |. Debug.extreme ()
-            |. Options.print_implicits ()
+            || Debug.extreme ()
+            || Options.print_implicits ()
             then N.term_to_string env f
             else "non-trivial"
     in
@@ -4897,7 +4895,7 @@ let guard_to_string (env:env) g : ML _
 let new_t_problem wl env lhs rel rhs elt loc : ML _
   =
  let reason = if !dbg_ExplainRel
-              |.  !dbg_Rel
+              ||  !dbg_Rel
               then Format.fmt3 "Top-level:\n%s\n\t%s\n%s"
                         (N.term_to_string env lhs) (rel_to_string rel)
                         (N.term_to_string env rhs)
@@ -4931,7 +4929,7 @@ let solve_and_commit wl (err: (prob & lstring) -> ML (option (deferred & deferre
       Some (deferred, defer_to_tac, implicits)
     | Failed (d,s) ->
       if !dbg_ExplainRel
-      |.  !dbg_Rel
+      ||  !dbg_Rel
       then Format.print_string <| explain wl d s;
       let result = err (d,s) in
       UF.rollback tx;
@@ -5134,7 +5132,7 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
               (show (List.length imps_l));
    let g =
      match solve_and_commit wl fail with
-     | Some (deferred, _, _) when VCons? (view deferred) &. defer_ok = NoDefer ->
+     | Some (deferred, _, _) when VCons? (view deferred) && defer_ok = NoDefer ->
        failwith "Impossible: Unexpected deferred constraints remain"
 
      | Some (deferred, defer_to_tac, imps) ->
@@ -5184,7 +5182,7 @@ let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in
-  let debug : bool = !dbg_Rel |. !dbg_SMTQuery |. !dbg_Discharge in
+  let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
   let diag = Errors.diag (Env.get_range env) #(list document) in // FIXME: without the implicit, batch mode fails during generalization
 
   (* Tactic preprocessing *)
@@ -5272,7 +5270,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : ML (opti
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in
-  let debug : bool = !dbg_Rel |. !dbg_SMTQuery |. !dbg_Discharge in
+  let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
   let diag = Errors.diag (Env.get_range env) #(list document) in
   let ret_g = {g with guard_f = Trivial} in
   if env.admit then (
@@ -5321,7 +5319,7 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : ML (option guard_t) =
 
 let subtype_nosmt env t1 t2 : ML _
   =
-    if !dbg_Rel |. !dbg_RelTop
+    if !dbg_Rel || !dbg_RelTop
     then Format.print2 "try_subtype_no_smt of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let g = with_guard env prob <| solve_and_commit (singleton wl prob false) (fun _ -> None) in
@@ -5335,7 +5333,7 @@ let subtype_nosmt env t1 t2 : ML _
 let check_subtyping env t1 t2 : ML _
   =
   Profiling.profile (fun () ->
-    if !dbg_Rel |. !dbg_RelTop
+    if !dbg_Rel || !dbg_RelTop
     then Format.print2 "check_subtyping of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
     let prob, x, wl = new_t_prob (empty_worklist env) env t1 SUB t2 in
     let env_x = Env.push_bv env x in
@@ -5424,7 +5422,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : ML (Env.
       | _ -> None in
 
     let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
-      if UF.find imp.imp_uvar.ctx_uvar_head |> None? &.
+      if UF.find imp.imp_uvar.ctx_uvar_head |> None? &&
          U.ctx_uvar_should_check imp.imp_uvar = Strict
       then match imp_value imp with
            | Some tm -> commit env ([TERM (imp.imp_uvar, tm)]); true
@@ -5477,13 +5475,13 @@ let check_implicit_solution_and_discharge_guard env
       "While checking implicit solution"
       (fun () ->
        let skip_core =
-         env.phase1 |.
-         env.admit |.
-         Allow_untyped? uvar_should_check |.
+         env.phase1 ||
+         env.admit ||
+         Allow_untyped? uvar_should_check ||
          Already_checked? uvar_should_check in
 
-       let must_tot = not (env.phase1 |.
-                           env.admit |.
+       let must_tot = not (env.phase1 ||
+                           env.admit ||
                            Allow_ghost? uvar_should_check) in
 
        if skip_core
@@ -5526,7 +5524,7 @@ let check_implicit_solution_and_discharge_guard env
                   (show imp_uvar) (show is_tac) imp_reason (show imp_tm) (show uvar_ty))
        end) in
 
-  if (not force_univ_constraints) &.
+  if (not force_univ_constraints) &&
      (CList.existsb (fun (reason, _, _) -> reason = Deferred_univ_constraint) g.deferred)
   then None
   else let g' =
@@ -5606,11 +5604,11 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   let cacheable tac =
     (* Detect either an unapplied tcresolve or an eta expanded variant. This is
     mostly in support of solve, which has to be written eta expanded. *)
-    (U.is_fvar PC.tcresolve_lid tac) |. (
+    (U.is_fvar PC.tcresolve_lid tac) || (
       match (SS.compress tac).n with
       | Tm_abs ({bs=[_]; body}) ->
         let hd, args = U.head_and_args body in
-        U.is_fvar PC.tcresolve_lid hd &. List.length args = 1
+        U.is_fvar PC.tcresolve_lid hd && List.length args = 1
       | _ -> false
     )
   in
@@ -5626,8 +5624,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
       | [] -> None
       | (tac', e', ty', res') :: l' ->
         if U.term_eq tac tac'
-           &. FStarC.Common.eq_list U.eq_binding e.gamma e'.gamma
-           &. U.term_eq ty ty'
+           && FStarC.Common.eq_list U.eq_binding e.gamma e'.gamma
+           && U.term_eq ty ty'
         then Some res'
         else aux l'
     in
@@ -5688,19 +5686,19 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
       | _ when Allow_unresolved? uvar_decoration_should_check ->
         until_fixpoint (out, true, defer_open_metas) tl
 
-      | _ when unresolved ctx_u &. flex_uvar_has_meta_tac ctx_u ->
+      | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
         let Some (Ctx_uvar_meta_tac tac) = ctx_u.ctx_uvar_meta in
         let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
         let typ = U.ctx_uvar_typ ctx_u in
-        let is_open = has_free_uvars typ |. gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
-        if defer_open_metas &. is_open then (
+        let is_open = has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
+        if defer_open_metas && is_open then (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
           if !dbg_Rel || !dbg_Imps then
             Format.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
-        ) else if is_open &. not (meta_tac_allowed_for_open_problem tac)
-            &. not (Options.Ext.enabled "compat:open_metas") then ( // i.e. compat option unset
+        ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
+            && not (Options.Ext.enabled "compat:open_metas") then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
@@ -5728,8 +5726,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
       | _ when unresolved ctx_u ->
         until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
 
-      | _ when Allow_untyped? uvar_decoration_should_check |.
-               Already_checked? uvar_decoration_should_check |.
+      | _ when Allow_untyped? uvar_decoration_should_check ||
+               Already_checked? uvar_decoration_should_check ||
                is_gen ->
         until_fixpoint (out, true, defer_open_metas) tl
       | _ ->

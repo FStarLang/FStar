@@ -450,13 +450,12 @@ let rec eq_pat (p1 : pat) (p2 : pat) : ML bool =
     | Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2) ->
         if fv_eq fv1 fv2
         && List.length as1 = List.length as2
-        then if List.forall2 (fun (p1, b1) (p2, b2) -> if b1 = b2 then eq_pat p1 p2 else false) as1 as2
-             then (match us1, us2 with
-                   | None, None -> true
-                   | Some us1, Some us2 -> 
-                     List.length us1 = List.length us2
-                   | _ -> false)
-             else false
+        then List.forall2 (fun (p1, b1) (p2, b2) -> b1 = b2 && eq_pat p1 p2) as1 as2
+          && (match us1, us2 with
+              | None, None -> true
+              | Some us1, Some us2 -> 
+                List.length us1 = List.length us2
+              | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
     | Pat_dot_term _, Pat_dot_term _ -> true

@@ -2207,8 +2207,6 @@ and desugar_args env args : ML _ =
 
 and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
     let fail #a code msg : ML a = raise_error r code msg in
-    (* Use mland to avoid short-circuit purity requirement for ML-effect conditions *)
-    let mland (a:bool) (b:bool) : bool = a && b in
     let is_requires (t, _) = match (unparen t).tm with
       | Requires _ -> true
       | _ -> false
@@ -2290,44 +2288,44 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
 
           | [req;ens]
                 when is_requires req
-                  `mland` is_ensures ens ->
+                  && is_ensures ens ->
             [unit_tm;req;thunk_ens ens;nil_pat]
 
           | [ens;smtpat] //either Lemma p [SMTPat ...]; or Lemma (ensures p) [SMTPat ...]
                 when not (is_requires ens)
-                  `mland` not (is_smt_pat ens)
-                  `mland` not (is_decreases ens)
-                  `mland` is_smt_pat smtpat ->
+                  && not (is_smt_pat ens)
+                  && not (is_decreases ens)
+                  && is_smt_pat smtpat ->
             [unit_tm;req_true;thunk_ens ens;smtpat]
 
           | [ens;dec]
                 when is_ensures ens
-                  `mland` is_decreases dec ->
+                  && is_decreases dec ->
             [unit_tm;req_true;thunk_ens ens;nil_pat;dec]
 
           | [ens;dec;smtpat]
                 when is_ensures ens
-                  `mland` is_decreases dec
-                  `mland` is_smt_pat smtpat ->
+                  && is_decreases dec
+                  && is_smt_pat smtpat ->
             [unit_tm;req_true;thunk_ens ens;smtpat;dec]
 
           | [req;ens;dec]
                 when is_requires req
-                  `mland` is_ensures ens
-                  `mland` is_decreases dec ->
+                  && is_ensures ens
+                  && is_decreases dec ->
             [unit_tm;req;thunk_ens ens;nil_pat;dec]
 
           | [req;ens;smtpat]
                 when is_requires req
-                  `mland` is_ensures ens
-                  `mland` is_smt_pat smtpat ->
+                  && is_ensures ens
+                  && is_smt_pat smtpat ->
             [unit_tm;req;thunk_ens ens;smtpat]
 
           | [req;ens;dec;smtpat]
                 when is_requires req
-                  `mland` is_ensures ens
-                  `mland` is_smt_pat smtpat
-                  `mland` is_decreases dec ->
+                  && is_ensures ens
+                  && is_smt_pat smtpat
+                  && is_decreases dec ->
             [unit_tm;req;thunk_ens ens;dec;smtpat]
 
           | _other ->

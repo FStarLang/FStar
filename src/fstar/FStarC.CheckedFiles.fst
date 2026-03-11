@@ -173,8 +173,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   let source_hash = BU.digest_of_file fn in
   let has_interface = Some? (Dep.interface_of deps module_name) in
   let interface_checked_file_name =
-    let is_impl = Dep.is_implementation fn in
-    if is_impl && has_interface
+    if Dep.is_implementation fn
+    && has_interface
     then module_name
       |> Dep.interface_of deps
       |> Option.must
@@ -184,9 +184,8 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   in
   let binary_deps = deps_of_fn
     |> List.filter (fun fn ->
-         let b1 = Dep.is_interface fn in
-         let b2 = Dep.lowercase_module_name fn = module_name in
-         not (b1 && b2)) in
+         not (Dep.is_interface fn &&
+              Dep.lowercase_module_name fn = module_name)) in
   let binary_deps =
     FStarC.List.sortWith
       (fun fn1 fn2 ->
@@ -405,11 +404,8 @@ let load_module_from_cache_internal =
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
         //Also suppress the warning if already given to avoid a deluge
-        let scf = Options.should_check_file fn in
-        let af = !already_failed in
-        let suppress_warning = try_load || scf || af in
-        let d = !dbg in
-        if not suppress_warning || d then begin
+        let suppress_warning = try_load || Options.should_check_file fn || !already_failed in
+        if not suppress_warning || !dbg then begin
           already_failed := true;
           FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             Errors.Warning_CachedFile [Errors.text (Format.fmt3
@@ -449,8 +445,7 @@ let load_module_from_cache_internal =
       deps
       (Dep.lowercase_module_name fn) in
 
-    let is_impl = Dep.is_implementation fn in
-    if is_impl
+    if Dep.is_implementation fn
     && (i_fn_opt |> Some?)
     then let i_fn = i_fn_opt |> Option.must in
          let i_tc = load_with_profiling i_fn in
@@ -508,10 +503,8 @@ instance _ : showable Dep.parsing_data = {
 }
 
 let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML unit =
-  let ccm = Options.cache_checked_modules() in
-  let co = Options.cache_off() in
-  if ccm
-  && not co
+  if Options.cache_checked_modules()
+  && not (Options.cache_off())
   then begin
     debug (fun () -> 
       Format.print2 "Storing checked file for %s with %s dependences\n"

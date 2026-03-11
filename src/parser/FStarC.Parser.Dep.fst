@@ -53,11 +53,10 @@ let fly_deps_enabled () =
       let res = 
         if Options.Ext.enabled "fly_deps"
         then (
-          if (if Some? (Options.dep()) //if we're doing dep, then we want a full scan now
-              then true
-              //dump_module: it's a debug feature, but Vale also depends on its output
-              //so don't change that yet
-              else Options.any_dump_module())
+          if Some? <| Options.dep() //if we're doing dep, then we want a full scan now
+          //dump_module: it's a debug feature, but Vale also depends on its output
+          //so don't change that yet
+          || Options.any_dump_module()
           then (
             if debug_fly_deps ()
             then (
@@ -156,12 +155,8 @@ let check_and_strip_suffix (f: string): ML (option string) =
   let matches = List.map (fun ext ->
     let lext = String.length ext in
     let l = String.length f in
-    if l > lext then
-      let sfx = String.substring f (l - lext) lext in
-      if sfx = ext then
-        Some (String.substring f 0 (l - lext))
-      else
-        None
+    if l > lext && String.substring f (l - lext) lext = ext then
+      Some (String.substring f 0 (l - lext))
     else
       None
   ) (all_file_suffixes ()) in
@@ -364,7 +359,8 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
       let cache_fn =
-        if Options.lax () then fn ^".checked.lax"
+        let lax = Options.lax () in
+        if lax then fn ^".checked.lax"
         else fn ^".checked"
       in
       let mname = fn |> module_name_of_file in
@@ -445,9 +441,8 @@ let file_of_dep_aux
 
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
-      let no_dep = None? (Options.dep()) in // unless we're not just doing a dependency scan using `--dep _`
-      let has_impl = cmd_line_has_impl key in // and the cmd line contains 'a.fst'
-      if no_dep && has_impl
+      if None? (Options.dep()) // unless we're not just doing a dependency scan using `--dep _`
+      && cmd_line_has_impl key // and the cmd line contains 'a.fst'
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.must (implementation_of_internal file_system_map key))
            else raise_error0 Errors.Fatal_MissingExposeInterfacesOption [
@@ -661,23 +656,23 @@ let enter_namespace
 
       begin
         let suffix_filename = SMap.try_find original_map suffix in
-        if implicit_open then (
-           if suffix_exists suffix_filename && not (List.mem suffix_filename !warned_about)
-           then let str = suffix_filename |> Option.must |> intf_and_impl_to_string in
-                warned_about := suffix_filename :: !warned_about;
-                let open FStarC.Pprint in
-                log_issue0 Errors.Warning_UnexpectedFile [
-                   flow (break_ 1) [
-                     text "Implicitly opening namespace";
-                     squotes (doc_of_string sprefix);
-                     text "shadows module";
-                     squotes (doc_of_string suffix);
-                     text "in file";
-                     dquotes (doc_of_string str) ^^ dot;
-                   ];
-                   text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
-                ]
-        )
+        if implicit_open &&
+           suffix_exists suffix_filename &&
+           not (List.mem suffix_filename !warned_about)
+        then let str = suffix_filename |> Option.must |> intf_and_impl_to_string in
+             warned_about := suffix_filename :: !warned_about;
+             let open FStarC.Pprint in
+             log_issue0 Errors.Warning_UnexpectedFile [
+                flow (break_ 1) [
+                  text "Implicitly opening namespace";
+                  squotes (doc_of_string sprefix);
+                  text "shadows module";
+                  squotes (doc_of_string suffix);
+                  text "in file";
+                  dquotes (doc_of_string str) ^^ dot;
+                ];
+                text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
+             ]
       end;
 
       let filename = Option.must (SMap.try_find original_map k) in
@@ -695,9 +690,7 @@ let prelude : list (open_kind & lid) = [
 //For --ide mode, we stop dependence analysis at interface boundaries
 //and do not check for dependence cycles across interface boundaries
 let peek_past_interfaces () =
-  let dm = Options.Ext.enabled "dep_minimal" in
-  let fd = fly_deps_enabled() in
-  if dm || fd
+  if Options.Ext.enabled "dep_minimal"|| fly_deps_enabled()
   then false
   else not (Options.ide ())
 
@@ -1134,9 +1127,8 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML 
 
 let maybe_use_interface file_system_map file_name =
    let module_name = lowercase_module_name file_name in
-    let is_impl = is_implementation file_name in
-    let has_intf = has_interface file_system_map module_name in
-    if is_impl && has_intf
+    if is_implementation file_name
+    && has_interface file_system_map module_name
     then [UseInterface module_name]
     else []
 
@@ -1155,10 +1147,9 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 
   let mname = lowercase_module_name filename in
   let mo_roots =
-    let is_intf = is_interface filename in
-    let has_impl = has_implementation original_map mname in
-    let peek = peek_past_interfaces() in
-    if is_intf && has_impl && peek
+    if is_interface filename
+    && has_implementation original_map mname
+    && peek_past_interfaces()
     then [ UseImplementation mname ]
     else []
   in
@@ -1199,8 +1190,8 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     if !dbg then Format.print1 "Resolving %s ..\n" key;
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
-      let fly = fly_deps_enabled() in
-      if is_friend && fly
+      if is_friend
+      && fly_deps_enabled()
       then (
         let already_depends_on_iface =
           !deps 
@@ -1232,9 +1223,8 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     //           where UInt64 must resolve to either
     //           a module or a namespace for F# compatibility
     //           So, use the original map, disregarding opened namespaces
-    let r1 = if let_open then add_dependence_edge working_map lid false else false in
-    let r2 = if not let_open then add_dependence_edge original_map lid false else false in
-    if r1 || r2
+    if (let_open     && add_dependence_edge working_map lid false)
+    || (not let_open && add_dependence_edge original_map lid false)
     then true
     else begin
       if let_open then
@@ -1312,8 +1302,8 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   * Iterate over the parsing data elements
   *)
   let elts =
-    let fly = fly_deps_enabled () in
-    if fly && pd.no_prelude
+    if fly_deps_enabled ()
+    && pd.no_prelude
     then
       match pd.elts with
       | P_open (false, fstar_lid)::P_open(false, prelude_lid')::rest 
@@ -1409,13 +1399,11 @@ let widen_deps friends dep_graph file_system_map widened =
     let widen_one deps =
       deps |> List.map (fun d ->
         match d with
-        | PreferInterface m ->
-          let is_friend = List.contains m friends in
-          let has_impl = has_implementation file_system_map m in
-          if is_friend && has_impl then (
-            widened := true;
-            FriendImplementation m
-          ) else d
+        | PreferInterface m
+            when (List.contains m friends &&
+                 has_implementation file_system_map m) ->
+          widened := true;
+          FriendImplementation m
         | _ -> d)
     in
     SMap.fold
@@ -1583,8 +1571,8 @@ let phase1
     if !dbg
     then Format.print_string "==============Phase1==================\n";
     let widened = false in
-    let cmi = Options.cmi() in
-    if cmi && for_extraction
+    if Options.cmi()
+    && for_extraction
     then widen_deps interfaces_needing_inlining dep_graph file_system_map widened
     else widened, dep_graph
 
@@ -1676,12 +1664,11 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
             (show l)
             (show attrs);
       let no_prelude =
-        let np = Options.no_prelude () in (* only affects current module *)
-        let has_attr = attrs |> List.existsb (function t ->
+        Options.no_prelude () || (* only affects current module *)
+        attrs |> List.existsb (function t ->
           match t.tm with
           | Const (FStarC.Const.Const_string ("no_prelude", _)) -> true
-          | _ -> false) in
-        np || has_attr
+          | _ -> false)
       in
       Inl <| Parser.AST.Module { mname = l; decls = ds; no_prelude }
    | _ -> Inr ds
@@ -1839,9 +1826,8 @@ let collect (all_cmd_line_files: list file_name)
              * If the file is an interface, and its implementation exists, and the implementation
              *   is not on the command line, add it to mo_files
              *)
-            let is_intf = is_interface filename in
-            let peek = peek_past_interfaces() in
-            if is_intf && peek
+            if is_interface filename
+            && peek_past_interfaces()
             then Option.iter
                   (fun impl -> if not (List.contains impl all_command_line_files)
                                then mo_files := impl::!mo_files
@@ -1904,10 +1890,8 @@ let deps_of =
               let bf = Filepath.basename f in
               List.existsb (fun cli -> Filepath.basename cli = bf) deps.cmd_line_files
             in
-            let on_cli_f = on_cli f in
-            let is_intf = is_interface f in
-            let on_cli_impl = if is_intf then (implementation_of_file f |> on_cli) else false in
-            if on_cli_f || on_cli_impl
+            if on_cli f
+            || (is_interface f && implementation_of_file f |> on_cli)
             then (
               snd (parsing_data_of_modul deps f None)
             )
@@ -1993,9 +1977,8 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
         let remaining_output_files = SMap.copy orig_output_file_map in
         let visited_other_modules = SMap.create 41 in
         let should_visit lc_module_name =
-            let r1 = Some? (SMap.try_find remaining_output_files lc_module_name) in
-            let r2 = None? (SMap.try_find visited_other_modules lc_module_name) in
-            r1 || r2
+            Some? (SMap.try_find remaining_output_files lc_module_name)
+            || None? (SMap.try_find visited_other_modules lc_module_name)
         in
         let mark_visiting lc_module_name =
             let ml_file_opt = SMap.try_find remaining_output_files lc_module_name in
@@ -2177,8 +2160,8 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
           let _ =
             if is_implementation file_name
             then begin
-              let cmi_ = Options.cmi() in
-              if cmi_ && widened
+              if Options.cmi()
+              && widened
               then begin
                      let mname = lowercase_module_name file_name in
 
@@ -2230,14 +2213,12 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
                     (output_ml_file file_name :: cmx_files)
 
             end
-            else
-            let no_impl = not(has_implementation deps.file_system_map (lowercase_module_name file_name)) in
-            let is_intf = is_interface file_name in
-            if no_impl && is_intf
+            else if not(has_implementation deps.file_system_map (lowercase_module_name file_name))
+                 && is_interface file_name
             then begin
                 // .krml files can be produced using just an interface, unlike .ml files
-                let cmi__ = Options.cmi() in
-                if cmi__ && (widened || true)
+                if Options.cmi()
+                && (widened || true)
                 then
                     print_entry
                         (output_krml_file file_name)
@@ -2359,8 +2340,7 @@ let module_has_interface deps module_name =
 let deps_has_implementation deps module_name =
     let m = String.lowercase (Ident.string_of_lid module_name) in
     RBSet.elems !deps.all_files |> BU.for_some (fun f ->
-        let is_impl = is_implementation f in
-        let mn = String.lowercase (module_name_of_file f) in
-        is_impl && mn = m)
+        is_implementation f
+        && String.lowercase (module_name_of_file f) = m)
 
 let all_files deps = RBSet.elems !deps.all_files

@@ -132,9 +132,7 @@ let tacprint2 (s:string) x y   = Format.print1 "TAC>> %s\n" (Format.fmt2 s x y)
 let tacprint3 (s:string) x y z = Format.print1 "TAC>> %s\n" (Format.fmt3 s x y z)
 
 let print (msg:string)  : ML (tac unit) =
-    let b = not (Options.silent ()) in
-    let c = Options.interactive () in
-    if b || c then
+    if not (Options.silent ()) || Options.interactive () then
       tacprint msg;
     return ()
 
@@ -193,9 +191,8 @@ let destruct_eq' (typ : typ)  : ML (option (term & term)) =
     let typ = U.unmeta typ in
     match destruct_typ_as_formula typ with
     | Some (BaseConn(l, [_; (e1, None); (e2, None)]))
-      when (let b1 = Ident.lid_equals l PC.eq2_lid in
-            let b2 = Ident.lid_equals l PC.c_eq2_lid in
-            b1 || b2)
+      when Ident.lid_equals l PC.eq2_lid
+      ||   Ident.lid_equals l PC.c_eq2_lid
       ->
         Some (e1, e2)
     | _ ->
@@ -361,8 +358,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
         | Inl (Some (g, guard_tok)) ->
           let guard = { Env.trivial_guard with guard_f = NonTrivial g } in
           let guard = Rel.simplify_guard env guard in
-          let b = Options.disallow_unification_guards () in
-          if b
+          if Options.disallow_unification_guards ()
           && not allow_guards
           && NonTrivial? guard.guard_f
           then (
@@ -1046,8 +1042,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
                         (Rel.guard_to_string e guard)) ;!
     // Focus helps keep the goal order
     let typ = bnorm e typ in
-    let b = not (is_empty (Free.uvars_uncached typ)) in
-    if only_match && b then
+    if only_match && not (is_empty (Free.uvars_uncached typ)) then
       fail "t_apply: only_match is on, but the type of the term to apply is not a uvar"
     else return ();!
     let! uvs = try_unify_by_application (Some should_check) only_match e typ (goal_type goal) (rangeof goal) in
@@ -1077,8 +1072,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
                   |> List.filter (fun g ->
                                   //if uopt is on, we don't keep uvars that
                                   //  appear in some other goals
-                                  let b = free_in_some_goal g.goal_ctx_uvar in
-                                  not (uopt && b))
+                                  not (uopt && free_in_some_goal g.goal_ctx_uvar))
                    |> List.map bnorm_goal
                    |> List.rev in
     add_goals sub_goals ;!
@@ -1096,9 +1090,8 @@ let lemma_or_sq (c : comp)  : ML (option (term & term)) =
         // Lemma post is thunked
         let post = U.mk_app post [S.as_arg U.exp_unit] in
         Some (pre, post)
-    else let b1 = U.is_pure_effect eff_name in
-         let b2 = U.is_ghost_effect eff_name in
-         if b1 || b2 then
+    else if U.is_pure_effect eff_name
+         || U.is_ghost_effect eff_name then
         Option.map (fun post -> (U.t_true, post)) (U.un_squash res)
     else
         None
@@ -1515,9 +1508,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term)  : ML (tac unit) =
         match (SS.compress (U.un_uinst head)).n, args with
         | Tm_fvar fv, [(ty, _); (t1, _); (t2, _)]
           when S.fv_eq_lid fv PC.eq2_lid ->
-          let b1 = is_allow_untyped_uvar t1 in
-          let b2 = is_allow_untyped_uvar t2 in
-          if b1 || b2
+          if is_allow_untyped_uvar t1 || is_allow_untyped_uvar t2
           then skip_register //if we have ?u=t or t=?u and ?u is allow_untyped, then skip
           else if Tactics.Monad.is_goal_safe_as_well_typed g //o.w., if the goal is well typed
           then (
@@ -1906,8 +1897,7 @@ let t_destruct (s_tm : term) : ML (tac (list (fv & int))) = wrap_err "destruct" 
        * for the type's parameters.
        *)
       let erasable = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
-      let not_irr = not (is_irrelevant g) in
-      failwhen (erasable && not_irr) "cannot destruct erasable type to solve proof-relevant goal" ;!
+      failwhen (erasable && not (is_irrelevant g)) "cannot destruct erasable type to solve proof-relevant goal" ;!
 
       (* Instantiate formal universes to the actuals,
        * and substitute accordingly in binders and types *)
@@ -2381,9 +2371,8 @@ let refl_typing_builtin_wrapper (label:string) (f:unit -> ML ('a & list refl_gua
   return (o, errs)
 
 let no_uvars_in_term (t:term)  : ML (bool) =
-  let b1 = t |> Free.uvars |> is_empty in
-  let b2 = t |> Free.univs |> is_empty in
-  b1 && b2
+  t |> Free.uvars |> is_empty &&
+  t |> Free.univs |> is_empty
 
 let no_univ_uvars_in_term (t:term)  : ML (bool) =
   t |> Free.univs |> is_empty
@@ -2409,10 +2398,8 @@ let unexpected_uvars_issue r =
   i
 
 let refl_is_non_informative (g:env) (t:typ)  : ML (tac (option unit & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term t in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term t
   then refl_typing_builtin_wrapper "refl_is_non_informative" (fun _ ->
          let g = Env.set_range g t.pos in
          dbg_refl g (fun _ ->
@@ -2431,12 +2418,9 @@ let refl_is_non_informative (g:env) (t:typ)  : ML (tac (option unit & issues)) =
 let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : ML (tac (option unit & issues)) =
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term t0 in
-  let _b3 = no_uvars_in_term t1 in
-  if _b1 &&
-     _b2 &&
-     _b3
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1
   then refl_typing_builtin_wrapper "refl_check_relation" (fun _ ->
          let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
@@ -2481,10 +2465,8 @@ let refl_norm_type (g:env) (t:typ)  : ML (typ) =
   N.normalize [Env.Beta; Env.Exclude Zeta] g t
 
 let refl_core_compute_term_type (g:env) (e:term)  : ML (tac (option (Core.tot_or_ghost & typ) & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_core_compute_term_type" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
@@ -2511,12 +2493,9 @@ let refl_core_compute_term_type (g:env) (e:term)  : ML (tac (option (Core.tot_or
 let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
   : ML (tac (option unit & issues)) =
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  let _b3 = no_uvars_in_term t in
-  if _b1 &&
-     _b2 &&
-     _b3
+  if no_uvars_in_g g &&
+     no_uvars_in_term e &&
+     no_uvars_in_term t
   then refl_typing_builtin_wrapper "refl_core_check_term" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
@@ -2539,12 +2518,9 @@ let refl_core_check_term (g:env) (e:term) (t:typ) (eff:Core.tot_or_ghost)
 let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
   : ML (tac (option Core.tot_or_ghost & issues)) =
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  let _b3 = no_uvars_in_term t in
-  if _b1 &&
-     _b2 &&
-     _b3
+  if no_uvars_in_g g &&
+     no_uvars_in_term e &&
+     no_uvars_in_term t
   then refl_typing_builtin_wrapper "refl_core_check_term_at_type" (fun _ ->
          let g = Env.set_range g e.pos in
          dbg_refl g (fun _ ->
@@ -2568,10 +2544,8 @@ let refl_core_check_term_at_type (g:env) (e:term) (t:typ)
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_tc_term (g:env) (e:term)  : ML (tac (option (term & (Core.tot_or_ghost & typ)) & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_tc_term" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
@@ -2645,10 +2619,8 @@ let refl_universe_of (g:env) (e:term)  : ML (tac (option universe & issues)) =
     | S.U_unif _ -> Errors.raise_error g Errors.Fatal_IllTyped "Unresolved variable in universe_of callback"
     | u -> u in
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_universe_of" (fun _ ->
          let g = Env.set_range g e.pos in
          let t, u = U.type_u () in
@@ -2663,10 +2635,8 @@ let refl_universe_of (g:env) (e:term)  : ML (tac (option universe & issues)) =
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_check_prop_validity (g:env) (e:term)  : ML (tac (option unit & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_check_prop_validity" (fun _ ->
          let g = Env.set_range g e.pos in
          ((), [(g, (e, Core.empty_token))])
@@ -2708,10 +2678,8 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
 let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
   (inst_extra:bool)
   : ML (tac (option (list (bv & typ) & term & typ) & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_instantiate_implicits" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->
@@ -2788,14 +2756,10 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
 let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
   : ML (tac (option (list (bv & term)) & issues)) =
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term t0 in
-  let _b3 = no_uvars_in_term t1 in
-  let _b4 = List.for_all no_uvars_in_term (List.map snd uvs) in
-  if _b1 &&
-     _b2 &&
-     _b3 &&
-     _b4
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1 &&
+     List.for_all no_uvars_in_term (List.map snd uvs)
   then refl_typing_builtin_wrapper "refl_try_unify" (fun _ ->
     dbg_refl g (fun _ -> Format.fmt3 "refl_try_unify %s and %s, with uvs: %s {\n"
                            (show t0)
@@ -2864,12 +2828,9 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
 let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
   : ML (tac (option Core.side & issues)) =
 
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term t0 in
-  let _b3 = no_uvars_in_term t1 in
-  if _b1 &&
-     _b2 &&
-     _b3
+  if no_uvars_in_g g &&
+     no_uvars_in_term t0 &&
+     no_uvars_in_term t1
   then refl_typing_builtin_wrapper "refl_maybe_relate_after_unfolding" (fun _ ->
         let g = Env.set_range g t0.pos in
          dbg_refl g (fun _ ->
@@ -2883,10 +2844,8 @@ let refl_maybe_relate_after_unfolding (g:env) (t0 t1:typ)
   else return (None, [unexpected_uvars_issue (Env.get_range g)])
 
 let refl_maybe_unfold_head (g:env) (e:term)  : ML (tac (option term & issues)) =
-  let _b1 = no_uvars_in_g g in
-  let _b2 = no_uvars_in_term e in
-  if _b1 &&
-     _b2
+  if no_uvars_in_g g &&
+     no_uvars_in_term e
   then refl_typing_builtin_wrapper "refl_maybe_unfold_head" (fun _ ->
     let g = Env.set_range g e.pos in
     dbg_refl g (fun _ ->

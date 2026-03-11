@@ -96,45 +96,38 @@ let steps_to_string f : ML string =
 
 instance deq_fsteps : deq fsteps = {
   (=?) = (fun f1 f2 ->
-            let b_beta = f1.beta =? f2.beta in
-            let b_iota = f1.iota =? f2.iota in
-            let b_zeta = f1.zeta =? f2.zeta in
-            let b_zeta_full = f1.zeta_full =? f2.zeta_full in
-            let b_weak = f1.weak =? f2.weak in
-            let b_hnf = f1.hnf =? f2.hnf in
-            let b_primops = f1.primops =? f2.primops in
-            let b_dunfold = f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets in
-            let b_until = f1.unfold_until =? f2.unfold_until in
-            let b_only = f1.unfold_only =? f2.unfold_only in
-            let b_fully = f1.unfold_fully =? f2.unfold_fully in
-            let b_attr = f1.unfold_attr =? f2.unfold_attr in
-            let b_qual = f1.unfold_qual =? f2.unfold_qual in
-            let b_ns = f1.unfold_namespace =? f2.unfold_namespace in
-            let b_dattr = f1.dont_unfold_attr =? f2.dont_unfold_attr in
-            let b_pure = f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations in
-            let b_simp = f1.simplify =? f2.simplify in
-            let b_erase = f1.erase_universes =? f2.erase_universes in
-            let b_unbound = f1.allow_unbound_universes =? f2.allow_unbound_universes in
-            let b_reify = f1.reify_ =? f2.reify_ in
-            let b_compress = f1.compress_uvars =? f2.compress_uvars in
-            let b_nofull = f1.no_full_norm =? f2.no_full_norm in
-            let b_nouvars = f1.check_no_uvars =? f2.check_no_uvars in
-            let b_unmeta = f1.unmeta =? f2.unmeta in
-            let b_unasc = f1.unascribe =? f2.unascribe in
-            let b_fullnorm = f1.in_full_norm_request =? f2.in_full_norm_request in
-            let b_weak_scrut = f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee in
-            let b_nbe = f1.nbe_step =? f2.nbe_step in
-            let b_extract = f1.for_extraction =? f2.for_extraction in
-            let b_unref = f1.unrefine =? f2.unrefine in
-            let b_defunivs = f1.default_univs_to_zero =? f2.default_univs_to_zero in
-            let b_tactics = f1.tactics =? f2.tactics in
-            b_beta && b_iota && b_zeta && b_zeta_full && b_weak && b_hnf &&
-            b_primops && b_dunfold && b_until && b_only && b_fully &&
-            b_attr && b_qual && b_ns && b_dattr && b_pure &&
-            b_simp && b_erase && b_unbound && b_reify && b_compress &&
-            b_nofull && b_nouvars && b_unmeta && b_unasc && b_fullnorm &&
-            b_weak_scrut && b_nbe && b_extract && b_unref && b_defunivs &&
-            b_tactics
+            f1.beta =? f2.beta &&
+            f1.iota =? f2.iota &&
+            f1.zeta =? f2.zeta &&
+            f1.zeta_full =? f2.zeta_full &&
+            f1.weak =? f2.weak &&
+            f1.hnf =? f2.hnf &&
+            f1.primops =? f2.primops &&
+            f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets &&
+            f1.unfold_until =? f2.unfold_until &&
+            f1.unfold_only =? f2.unfold_only &&
+            f1.unfold_fully =? f2.unfold_fully &&
+            f1.unfold_attr =? f2.unfold_attr &&
+            f1.unfold_qual =? f2.unfold_qual &&
+            f1.unfold_namespace =? f2.unfold_namespace &&
+            f1.dont_unfold_attr =? f2.dont_unfold_attr &&
+            f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
+            f1.simplify =? f2.simplify &&
+            f1.erase_universes =? f2.erase_universes &&
+            f1.allow_unbound_universes =? f2.allow_unbound_universes &&
+            f1.reify_ =? f2.reify_ &&
+            f1.compress_uvars =? f2.compress_uvars &&
+            f1.no_full_norm =? f2.no_full_norm &&
+            f1.check_no_uvars =? f2.check_no_uvars &&
+            f1.unmeta =? f2.unmeta &&
+            f1.unascribe =? f2.unascribe &&
+            f1.in_full_norm_request =? f2.in_full_norm_request &&
+            f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee &&
+            f1.nbe_step =? f2.nbe_step &&
+            f1.for_extraction =? f2.for_extraction &&
+            f1.unrefine =? f2.unrefine &&
+            f1.default_univs_to_zero =? f2.default_univs_to_zero &&
+            f1.tactics =? f2.tactics
             );
 }
 
@@ -450,23 +443,19 @@ let config s e : ML cfg = config' [] s e
 let should_reduce_local_let cfg lb : ML bool =
   if cfg.steps.do_not_unfold_pure_lets
   then false //we're not allowed to do any local delta steps
+  else if cfg.steps.pure_subterms_within_computations &&
+          U.has_attribute lb.lbattrs PC.inline_let_attr
+  then true //1. we're extracting, and it's marked @inline_let
+  else if U.has_attribute lb.lbattrs PC.no_inline_let_attr
+  then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
   else
-    let has_inline = U.has_attribute lb.lbattrs PC.inline_let_attr in
-    let has_no_inline = U.has_attribute lb.lbattrs PC.no_inline_let_attr in
-    if cfg.steps.pure_subterms_within_computations &&
-       has_inline
-    then true //1. we're extracting, and it's marked @inline_let
-    else if has_no_inline
-    then false //Or, 2. do not unfold as it's explicitly marked as @no_inline_let
-    else
-      let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
-      let is_pure = U.is_pure_effect n in
-      let is_ghost = U.is_ghost_effect n in
-      if is_pure &&
-         (cfg.normalize_pure_lets || has_inline)
-      then true //Or, 3. it's pure and we are either not extracting, or it's marked @inline_let
-      else is_ghost && //Or, 4. it's ghost and we're not extracting
-           not (cfg.steps.pure_subterms_within_computations)
+    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+    if U.is_pure_effect n &&
+       (cfg.normalize_pure_lets
+        || U.has_attribute lb.lbattrs PC.inline_let_attr)
+    then true //Or, 3. it's pure and we are either not extracting, or it's marked @inline_let
+    else U.is_ghost_effect n && //Or, 4. it's ghost and we're not extracting
+         not (cfg.steps.pure_subterms_within_computations)
 
 let translate_norm_step s : ML (list Env.step) = match s with
     | NormSteps.Zeta ->    [Zeta]

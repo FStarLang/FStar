@@ -144,9 +144,8 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : ML (option sigelt) =
                  match (U.un_uinst head).n, args with
                  | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
                  | Tm_fvar fv, [(a', _); (overrides, _)]                 
-                   when (let b1 = fv_eq_lid fv FStarC.Parser.Const.override_resolve_implicits_handler_lid in
-                        let b2 = TEQ.eq_tm_bool env a a' in
-                        b1 && b2) ->
+                   when fv_eq_lid fv FStarC.Parser.Const.override_resolve_implicits_handler_lid
+                     && TEQ.eq_tm_bool env a a' ->
                    //other has an attribute [@@override_resolve_implicits_handler a overrides]
                    begin
                    match attr_list_elements overrides with

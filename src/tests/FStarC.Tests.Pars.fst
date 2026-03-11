@@ -235,9 +235,7 @@ let parse_incremental_decls () =
     IncrementalFragment (decls1, _, parse_err1) -> (
       let check_range r l c =
           let p = start_of_range r in
-          let lp = line_of_pos p in
-          let cp = col_of_pos p in
-          if lp = l && cp = c
+          if line_of_pos p = l && col_of_pos p = c
           then ()
           else failwith (Format.fmt4 "Incremental parsing failed: Expected syntax error at (%s, %s), got error at (%s, %s)"
                                  (show l)

@@ -179,9 +179,8 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
          Actually, this is an abuse, and just means that we're type-checking the
          first chunk. *)
       let ast_modul, env =
-        if Options.interactive () then (if not (Dep.fly_deps_enabled())
+        if Options.interactive () && not <| Dep.fly_deps_enabled()
         then with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
-        else ast_modul, env)
         else ast_modul, env
       in
       if not (acceptable_mod_name ast_modul) then
@@ -220,7 +219,7 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
       Errors.raise_error rng Errors.Fatal_ModuleFirstStatement "First statement must be a module declaration"
     | Some modul ->
       let env, ast_decls_l =
-        if Options.interactive () then (if not (Dep.fly_deps_enabled())
+        if Options.interactive () && not (Dep.fly_deps_enabled())
         then 
           BU.fold_map
                 (fun env a_decl ->
@@ -231,7 +230,6 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
                     env, decls)
                 env
                 ast_decls 
-        else env, [ast_decls])
         else env, [ast_decls]
       in
       let ast_decls = List.flatten ast_decls_l in
@@ -503,9 +501,8 @@ let rec tc_one_file_internal
   in
   if not (Options.cache_off()) then
       let r = 
-        if fly_deps then (if Options.should_check_file fn
+        if fly_deps && Options.should_check_file fn
         then None //if we reach here with fly_deps, then checked files are invalid
-        else Ch.load_module_from_cache (tcenv_of_uenv env) fn)
         else Ch.load_module_from_cache (tcenv_of_uenv env) fn
       in
       let r =
@@ -592,8 +589,8 @@ let rec tc_one_file_internal
           match Options.codegen() with
           | None -> None
           | Some tgt ->
-            if (let se = Options.should_extract (string_of_lid tcmod.name) tgt in
-                se && (not tcmod.is_interface || tgt=Options.Krml))
+            if Options.should_extract (string_of_lid tcmod.name) tgt
+            && (not tcmod.is_interface || tgt=Options.Krml)
             then let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in
                  extracted_defs
             else None
@@ -776,8 +773,8 @@ let load_fly_deps_and_tc_one_fragment
   list string) //filenames that were loaded
 = let tcenv =
     if Options.interactive()
-    then (if not (iface_interleaving_init tcenv.dsenv) // dsenv is not yet initialized for interleaving
-    then (if FStarC.Parser.Dep.is_implementation filename
+    && not (iface_interleaving_init tcenv.dsenv) // dsenv is not yet initialized for interleaving
+    && FStarC.Parser.Dep.is_implementation filename
     then ( //initialize DsEnv for interface interleaving
       let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
       let m = FStarC.Parser.Dep.lowercase_module_name filename in
@@ -787,8 +784,6 @@ let load_fly_deps_and_tc_one_fragment
       | Some fn ->
         load_interface_decls tcenv fn
     )
-    else tcenv)
-    else tcenv)
     else (
       tcenv
     )

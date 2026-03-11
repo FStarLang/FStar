@@ -32,14 +32,13 @@ module Env = FStarC.Syntax.DsEnv
 
 let ident_is_ticked (id: ident) : ML bool =
   let nm   = string_of_id id in
-  let len = String.length nm in
-  if len > 0 then String.get nm 0 = '\'' else false
+  String.length nm > 0 && String.get nm 0 = '\''
 
 (* Empty namespace (so a local variable) and its name component starts with a tick *)
 let lident_is_ticked (id: lident) : ML bool =
   let ns = ns_of_lid id in
   let id = ident_of_lid id in
-  if Nil? ns then ident_is_ticked id else false
+  Nil? ns && ident_is_ticked id
 
 instance _ : Class.Monoid.monoid (RBSet.t ident) = {
   mzero = RBSet.empty ();
@@ -63,9 +62,7 @@ let rec go_term (env : DsEnv.env) (t: term) : ML (m unit) =
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Var a ->
-    let ticked = lident_is_ticked a in
-    let not_in_env = None? (Env.try_lookup_id env (Ident.ident_of_lid a)) in
-    if ticked && not_in_env then
+    if lident_is_ticked a && None? (Env.try_lookup_id env (Ident.ident_of_lid a)) then
       emit1 (Ident.ident_of_lid a)
     else
       return ()
@@ -198,9 +195,7 @@ and go_binder (env : DsEnv.env) (b: binder) : ML (m DsEnv.env) =
   | Variable x ->
     (* This handles ticks in declarations like `type foo 'a`. The 'a
     is used in a binding position. *)
-    let ticked = ident_is_ticked x in
-    let not_in_env = None? (Env.try_lookup_id env x) in
-    if ticked && not_in_env then
+    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
       emit1 x
     else
       return ();!
@@ -208,9 +203,7 @@ and go_binder (env : DsEnv.env) (b: binder) : ML (m DsEnv.env) =
     return env'
 
   | Annotated (x, t) ->
-    let ticked = ident_is_ticked x in
-    let not_in_env = None? (Env.try_lookup_id env x) in
-    if ticked && not_in_env then
+    if ident_is_ticked x && None? (Env.try_lookup_id env x) then
       emit1 x
     else
       return ();!

@@ -538,8 +538,7 @@ The force flag overrides the check, it's convenient in the checking for
 haseq in inductives. *)
 let try_add_sigelt force env se l : ML _ =
   let s = string_of_lid l in
-  if force then ()
-  else if Some? (SMap.try_find (sigtab env) s) then (
+  if not force && Some? (SMap.try_find (sigtab env) s) then (
     let old_se = Some?.v (SMap.try_find (sigtab env) s) in
     if Sig_declare_typ? old_se.sigel &&
         (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)

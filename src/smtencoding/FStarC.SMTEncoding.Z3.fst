@@ -167,7 +167,7 @@ let check_z3version (p:proc) : ML unit =
     )
   in
   let name = getinfo "name" in
-  if (if name <> "Z3" then not (!_already_warned_solver_mismatch) else false) then (
+  if name <> "Z3" && not (!_already_warned_solver_mismatch) then (
     let open FStarC.Errors.Msg in
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
       text <| Format.fmt1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name;
@@ -182,7 +182,7 @@ let check_z3version (p:proc) : ML unit =
      more details. *)
   let ver_found : string = BU.trim_string (List.hd (BU.split (getinfo "version") "-")) in
   let ver_conf  : string = BU.trim_string (Options.z3_version ()) in
-  if (if ver_conf <> ver_found then not (!_already_warned_version_mismatch) else false) then (
+  if ver_conf <> ver_found && not (!_already_warned_version_mismatch) then (
     let open FStarC.Errors in
     let open FStarC.Pprint in
     let open FStarC.Errors.Msg in
@@ -485,13 +485,12 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
         let whitelist = ["BoxInt"; "BoxBool"; "BoxString"; "BoxReal"; "Tm_unit"; "FString_const"] in
         let missing =
           core |> List.filter (fun name ->
-            if not (BU.for_some (fun wl -> BU.contains name wl) whitelist) then
-            if not (BU.starts_with name "binder_") then
-            if not (BU.starts_with name "@query") then
-            if not (BU.starts_with name "@MaxFuel") then
-            if not (BU.starts_with name "@MaxIFuel") then
-            not (BU.for_some (fun name' -> name=name') names)
-            else false else false else false else false else false)
+            not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
+            not (BU.starts_with name "binder_") &&
+            not (BU.starts_with name "@query") &&
+            not (BU.starts_with name "@MaxFuel") &&
+            not (BU.starts_with name "@MaxIFuel") &&
+            not (BU.for_some (fun name' -> name=name') names))
         in
         // Format.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);
         match missing with
@@ -596,9 +595,8 @@ let mk_input (fresh : bool) (theory : list decl) : ML (string & option string & 
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
     let r, hash =
-        if (if Options.record_hints()
-            then true
-            else (if Options.use_hints() then Options.use_hint_hashes() else false)) then
+        if Options.record_hints()
+        || (Options.use_hints() && Options.use_hint_hashes()) then
             //the suffix of a "theory" that follows the "CheckSat" call
             //contains semantically irrelevant things
             //(e.g., get-model, get-statistics etc.)
@@ -647,7 +645,7 @@ let cache_hit
     (log_file:option string)
     (cache:option string)
     (qhash:option string) : ML (option z3result) =
-    if (if Options.use_hints() then Options.use_hint_hashes() else false) then
+    if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
             let stats : z3statistics = SMap.create 0 in

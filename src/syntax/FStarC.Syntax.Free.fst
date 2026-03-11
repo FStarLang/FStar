@@ -293,16 +293,15 @@ and free_names_and_uvars_dec_order dec_order use_cache : ML _ =
     free_names_and_uvars e use_cache
 
 and should_invalidate_cache n use_cache : ML _ =
-    let b1 = (use_cache <> Def) in
-    let b2 = (n.free_uvars |> for_any (fun u ->
+    (use_cache <> Def) ||
+    (n.free_uvars |> for_any (fun u ->
          match UF.find u.ctx_uvar_head with
          | Some _ -> true
-         | _ -> false)) in
-    let b3 = (n.free_univs |> for_any (fun u ->
+         | _ -> false)) ||
+    (n.free_univs |> for_any (fun u ->
            match UF.univ_find u with
            | Some _ -> true
-           | None -> false)) in
-    b1 || b2 || b3
+           | None -> false))
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above

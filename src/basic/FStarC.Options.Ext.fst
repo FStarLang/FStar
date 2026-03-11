@@ -61,8 +61,7 @@ let is_prefix (s1 s2 : string) : ML bool =
   let open FStarC.String in
   let l1 = length s1 in
   let l2 = length s2 in
-  if l2 >= l1 then substring s2 0 l1 = s1
-  else false
+  l2 >= l1 && substring s2 0 l1 = s1
 
 (* Get a list of all KV pairs that "begin" with k, considered
 as a namespace. *)

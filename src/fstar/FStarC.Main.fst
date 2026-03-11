@@ -152,10 +152,8 @@ let print_help_for (o : string) : ML unit =
 let go_normal () =
   let res, filenames0 = process_args () in
 
-  let has_output_to = Some? (Options.output_to()) in
-  let has_dep = Some? (Options.dep ()) in
-  if has_output_to &&
-     not has_dep &&
+  if Some? (Options.output_to()) &&
+     not (Some? (Options.dep ())) &&
      List.length filenames0 > 1
   then
     Errors.raise_error0 Errors.Fatal_OptionsNotCompatible [

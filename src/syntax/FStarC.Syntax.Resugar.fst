@@ -411,10 +411,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
         | U_unknown -> "Type", false
         | _ -> "Type", true in
       let typ = mk (name nm t.pos) in
-      if needs_app then
-        if Options.print_universes ()
-        then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
-        else typ
+      if needs_app && Options.print_universes ()
+      then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
       else typ
 
     | Tm_abs {bs=xs; body} -> //fun x1 .. xn -> body
@@ -924,10 +922,9 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 (fun a -> is_inline_let_attr a || is_inline_let_vc_attr a)
                 attrs
             in
-            if List.existsb is_inline_let_attr inline_attrs then
-              if List.existsb is_inline_let_vc_attr inline_attrs
-              then LocalUnfold, rest
-              else LocalNoLetQualifier, attrs
+            if List.existsb is_inline_let_attr inline_attrs
+            && List.existsb is_inline_let_vc_attr inline_attrs
+            then LocalUnfold, rest
             else LocalNoLetQualifier, attrs
           in
           let attrs =
@@ -1047,9 +1044,8 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
         | Tm_app {hd=e; args} when List.length args >= 2 ->
           begin match List.rev args with
           | (a1, None)::(a2, None)::rest ->
-            if bv_eq_tm b1.binder_bv a2 then (if bv_eq_tm b2.binder_bv a1 // mind the flip
+            if bv_eq_tm b1.binder_bv a2 && bv_eq_tm b2.binder_bv a1 // mind the flip
             then Some <| U.mk_app e (List.rev rest)
-            else Some rel)
             else Some rel
           | _ ->
             Some rel
@@ -1421,8 +1417,7 @@ let resugar_typ env datacon_ses se : ML (sigelts & A.tycon) =
       let bs = filter_imp_bs bs in
       let bs = bs |> map (fun b -> resugar_binder' env b t.pos) in
       let tyc =
-        if (se.sigquals |> BU.for_some RecordType?) then
-          if List.length current_datacons = 1 then begin
+        if se.sigquals |> BU.for_some RecordType? && List.length current_datacons = 1 then
           (* Resugar as a record. There must be a single constructor *)
           let [dc] = current_datacons in
           match dc.sigel with
@@ -1438,20 +1433,6 @@ let resugar_typ env datacon_ses se : ML (sigelts & A.tycon) =
             in
             A.TyconRecord (ident_of_lid tylid, bs, None, map (resugar_term' env) se.sigattrs, fields)
           | _ -> failwith "ggg1"
-          end
-          else begin
-          (* Resugar as a variant *)
-          let resugar_datacon constructors se = match se.sigel with
-            | Sig_datacon {lid=l; us=univs; t=typ; num_ty_params=num} ->
-              let typ = drop_n_bs num typ in
-              (* Todo: resugar univs *)
-              let c = (ident_of_lid l, Some (VpArbitrary (resugar_term' env typ)), map (resugar_term' env) se.sigattrs)  in
-              c::constructors
-            | _ -> failwith "unexpected"
-          in
-          let constructors =  List.fold_left resugar_datacon [] current_datacons in
-          A.TyconVariant (ident_of_lid tylid, bs, None, constructors)
-          end
         else
           (* Resugar as a variant *)
           let resugar_datacon constructors se = match se.sigel with
@@ -1663,8 +1644,7 @@ let resugar_sigelt' env se : ML (option A.decl) =
       None
     else
       let t' =
-        if not (Options.print_universes ()) then resugar_term' env t
-        else if isEmpty uvs then resugar_term' env t
+        if not (Options.print_universes ()) || isEmpty uvs then resugar_term' env t
         else
           let uvs, t = SS.open_univ_vars uvs t in
           let universes = universe_to_string uvs in

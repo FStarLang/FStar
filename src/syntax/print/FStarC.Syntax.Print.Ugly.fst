@@ -200,15 +200,13 @@ let rec term_to_string x : ML string =
         in
         pref ^ fv_to_string f
       | Tm_uvar (u, ([], _)) ->
-        let print_bvt = Options.print_bound_var_types() in
-        let print_eff = Options.print_effect_args() in
-        if print_bvt && print_eff
+        if Options.print_bound_var_types()
+        && Options.print_effect_args()
         then ctx_uvar_to_string_aux true u
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_uvar (u, s) ->
-        let print_bvt = Options.print_bound_var_types() in
-        let print_eff = Options.print_effect_args() in
-        if print_bvt && print_eff
+        if Options.print_bound_var_types()
+        && Options.print_effect_args()
         then Format.fmt2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
@@ -378,8 +376,7 @@ and binder_to_string' is_arrow b : ML string =
     let attrs = binder_attrs_to_string b.binder_attrs in
     if is_null_binder b
     then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
-    else let print_bvt = Options.print_bound_var_types() in
-         if not is_arrow && not print_bvt
+    else if not is_arrow && not (Options.print_bound_var_types())
          then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
          else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
 
@@ -428,18 +425,17 @@ and comp_to_string c : ML string =
                             (term_to_string c.result_typ)
                             (c.effect_args |> List.map arg_to_string |> String.concat ", ")
                             (cflags_to_string c.flags)
-          else let print_eff = Options.print_effect_args() in
-               let is_total = c.flags |> U.for_some (function TOTAL -> true | _ -> false) in
-               if is_total && not print_eff
-               then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
-               else let print_imp = Options.print_implicits() in
-                    let is_ml = lid_equals c.effect_name (C.effect_ML_lid()) in
-                    if not print_eff && not print_imp && is_ml
-                    then term_to_string c.result_typ
-                    else let is_mleffect = c.flags |> U.for_some (function MLEFFECT -> true | _ -> false) in
-                         if not print_eff && is_mleffect
-                         then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
-                         else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+          else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
+          && not (Options.print_effect_args())
+          then Format.fmt1 "Tot %s" (term_to_string c.result_typ)
+          else if not (Options.print_effect_args())
+                  && not (Options.print_implicits())
+                  && lid_equals c.effect_name (C.effect_ML_lid())
+          then term_to_string c.result_typ
+          else if not (Options.print_effect_args())
+               && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
+          then Format.fmt1 "ALL %s" (term_to_string c.result_typ)
+          else Format.fmt2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags
         |> List.collect (function DECREASES dec_order ->
             (match dec_order with

@@ -156,9 +156,8 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : ML (option (list 
             u1 |> BU.for_all (fun u ->
             u2 |> BU.for_some (fun u' -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head))
         in
-        let fwd = uvars_subseteq u1 u2 in
-        let bwd = uvars_subseteq u2 u1 in
-        if fwd && bwd
+        if uvars_subseteq u1 u2
+        && uvars_subseteq u2 u1
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in

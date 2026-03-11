@@ -127,8 +127,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
     in
 
     let check_no_subtyping_attribute se =
-      let has_attr = U.has_attribute se.sigattrs C.no_subtping_attr_lid in
-      if has_attr &&
+      if U.has_attribute se.sigattrs C.no_subtping_attr_lid &&
          (match se.sigel with
           | Sig_let _ -> false
           | _ -> true)
@@ -181,9 +180,8 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
               || visibility x
               || has_eq x))
         then err [];
-        let has_unopteq = quals |> List.existsb (function Unopteq -> true | _ -> false) in
-        let has_erasable = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
-        if has_unopteq && has_erasable
+        if quals |> List.existsb (function Unopteq -> true | _ -> false) &&
+           U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr
         then err [text "The `unopteq` qualifier is not allowed on erasable inductives since they don't have decidable equality."]
       | Sig_declare_typ _ ->
         if quals |> BU.for_some has_eq

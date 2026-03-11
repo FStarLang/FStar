@@ -858,7 +858,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
     fail_str "not in cache"
   | Some he ->
      if he.he_gamma `context_included` g.tcenv.gamma
-     then (if not !dbg_DisableCoreCache
+     && not !dbg_DisableCoreCache
      then (
        record_cache_hit();
        if !dbg then
@@ -875,10 +875,6 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
        let ty = replace_all_use_ranges (pos e) he.he_typ in
        return (he.he_eff, ty)
      )
-     else (
-       // record_cache_miss();
-       fail_str "not in cache"
-     ))
      else (
        // record_cache_miss();
        fail_str "not in cache"
@@ -2179,11 +2175,10 @@ let check_term_top' g e topt (must_tot:bool)
       // check expected effect
       if must_tot
       then let eff, t = eff_te in 
-          if eff = E_Ghost then
-              if not (non_informative g t)
-              then fail_str "expected total effect, found ghost"
-              else return (E_Total, t)
-           else return (E_Total, t)
+          if eff = E_Ghost &&
+              not (non_informative g t)
+          then fail_str "expected total effect, found ghost"
+          else return (E_Total, t)
       else return eff_te
     | Some t ->
       let target_comp, eff =

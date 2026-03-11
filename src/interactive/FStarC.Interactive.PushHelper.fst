@@ -40,10 +40,8 @@ module CTable = FStarC.Interactive.CompletionTable
 let repl_stack : ref repl_stack_t = mk_ref []
 
 let set_check_kind env check_kind : ML env_t =
-  let lax = Options.lax() in
-  let dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck) in
-  { env with admit = (check_kind = LaxCheck || lax);
-             dsenv = dsenv }
+  { env with admit = (check_kind = LaxCheck || Options.lax());
+             dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
 let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) : ML (list repl_task) =
@@ -51,12 +49,8 @@ let repl_ld_tasks_of_deps (deps: list string) (final_tasks: list repl_task) : ML
   let rec aux (deps:list string) (final_tasks:list repl_task)
     : ML (list repl_task) =
     match deps with
-    | intf :: impl :: deps' ->
-      let ni = needs_interleaving intf impl in
-      if ni then
-        LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
-      else
-        LDSingle (wrap intf) :: aux (impl :: deps') final_tasks
+    | intf :: impl :: deps' when needs_interleaving intf impl ->
+      LDInterleaved (wrap intf, wrap impl) :: aux deps' final_tasks
     | intf_or_impl :: deps' ->
       LDSingle (wrap intf_or_impl) :: aux deps' final_tasks
     | [] -> final_tasks in
@@ -121,8 +115,7 @@ let push_repl msg push_kind_opt task st : ML repl_state =
 
 (* Record the issues that were raised by the last push *)
 let adjust_topmost_push_frag (f:repl_task -> repl_task) : ML unit =
-  let stk = !repl_stack in
-  match stk with
+  match !repl_stack with
   | (depth, (PushFragment x, st))::rest -> (
     let pf = f (PushFragment x) in
     repl_stack := (depth, (pf, st)) :: rest
@@ -183,8 +176,7 @@ let should_reset (task:repl_task) =
   | _ -> false
 
 let pop_repl msg st : ML repl_state =
-  let stk = !repl_stack in
-  match stk with
+  match !repl_stack with
   | [] -> failwith "(pop_repl) Too many pops"
   | (depth, (p, st')) :: stack_tl ->
     // Format.print1 "(pop_repl) popping %s\n" (string_of_repl_task p);

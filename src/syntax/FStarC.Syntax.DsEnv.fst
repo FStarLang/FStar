@@ -702,9 +702,8 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : ML (option foundna
             Some (Term_name (S.fvar_with_dd source_lid fv.fv_qual, se.sigattrs))
           | Sig_declare_typ {lid} ->
             let quals = se.sigquals in
-            let is_assumption = quals |> BU.for_some (function Assumption -> true | _ -> false) in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
-            || is_assumption
+            || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
@@ -1741,8 +1740,7 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
     | None ->
         prep env, false
     | Some (_, m) ->
-        if not (Options.interactive ()) then
-          if (not m.is_interface || intf)
+        if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise_error mname Errors.Fatal_DuplicateModuleOrInterface
                (Format.fmt1 "Duplicate module or interface name: %s" (string_of_lid mname));
         //we have an interface for this module already; if we're not interactive then do not export any symbols from this module

@@ -197,15 +197,12 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : M
             with_ty (mk_ty_fun xs body.mlty) e in
         begin match e with
         | Some ({expr=MLE_Fun(x::xs, body)}) ->
-            let tl1 = type_leq unfold_ty t1' t1 in
-            if tl1
+            if type_leq unfold_ty t1' t1
             && eff_leq f f'
             then if f=E_PURE
                 && f'=E_ERASABLE
-                then let tl2 = type_leq unfold_ty t2 t2' in
-                     if tl2
-                     then let tl3 = type_leq unfold_ty t2 ml_unit_ty in
-                          let body = if tl3
+                then if type_leq unfold_ty t2 t2'
+                     then let body = if type_leq unfold_ty t2 ml_unit_ty
                                     then ml_unit
                                     else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
                             true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
@@ -218,11 +215,9 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : M
             else false, None
 
         | _ ->
-            let tl1 = type_leq unfold_ty t1' t1 in
-            let tl2 = type_leq unfold_ty t2 t2' in
-            if tl1
+            if type_leq unfold_ty t1' t1
             && eff_leq f f'
-            && tl2
+            && type_leq unfold_ty t2 t2'
             then true, e
             else false, None
         end
@@ -263,7 +258,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : M
 
     | _ -> false, None
 
-and type_leq g t1 t2 : ML bool = let r = type_leq_c g None t1 t2 in fst r
+and type_leq g t1 t2 : ML bool = type_leq_c g None t1 t2 |> fst
 
 let rec erase_effect_annotations (t:mlty) =
     match t with

@@ -103,7 +103,7 @@ let run_repl_transaction st push_kind must_rollback task =
   let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking …
 
   let check_success () : ML bool =
-    if get_err_count () = 0 then not must_rollback else false in
+    get_err_count () = 0 && not must_rollback in
 
   // Run the task (and capture errors)
   let curmod, env, success, lds =
@@ -782,9 +782,7 @@ let run_push_with_deps st query =
     run_push_without_deps ({ st with repl_names = names }) query
 
 let run_push st query =
-  let fly_deps = FStarC.Parser.Dep.fly_deps_enabled() in
-  let nltp = nothing_left_to_pop st in
-  if not fly_deps && nltp then
+  if not (FStarC.Parser.Dep.fly_deps_enabled()) && nothing_left_to_pop st then
     run_push_with_deps st query
   else
     run_push_without_deps st query

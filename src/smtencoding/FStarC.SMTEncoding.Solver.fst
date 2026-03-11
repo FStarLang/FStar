@@ -313,7 +313,7 @@ let query_errors settings z3result =
 
 let detail_hint_replay settings z3result =
     if used_hint settings
-    then (if Options.detail_hint_replay ()
+    && Options.detail_hint_replay ()
     then match z3result.z3result_status with
          | UNSAT _ -> ()
          | _failed ->
@@ -328,7 +328,7 @@ let detail_hint_replay settings z3result =
                       None
                       // settings.query_hint
            in
-           detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3)
+           detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3
 
 let find_localized_errors (errs : list errors) : ML (option errors) =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)

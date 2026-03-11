@@ -31,9 +31,7 @@ let query_cache_ref : ref (RBSet.t hash_code) =
   mk_ref (empty ())
 
 let on () : ML bool =
-  let qc = Options.query_cache () in
-  let ide = Options.ide () in
-  qc && ide
+  Options.query_cache () && Options.ide ()
 
 let query_cache_add (g:env) (q:term) : ML unit =
   if on () then (

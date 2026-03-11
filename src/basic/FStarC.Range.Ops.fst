@@ -43,9 +43,8 @@ let rng_included r1 r2 =
   if r1.file_name <> r2.file_name
   then false
   else
-    let a = r2.start_pos <=? r1.start_pos in
-    let b = r2.end_pos >=? r1.end_pos in
-    a && b
+    r2.start_pos <=? r1.start_pos &&
+    r2.end_pos >=? r1.end_pos
 
 let string_of_pos pos =
     Format.fmt2 "%s,%s" (show pos.line) (show pos.col)

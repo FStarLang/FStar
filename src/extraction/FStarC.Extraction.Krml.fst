@@ -1386,13 +1386,11 @@ let translate_let' env flavor lb: ML (option decl) =
         in
         let name = env.module_name, name in
         let i, eff, t = find_return_type E_PURE (List.length args) t0 in
-        if i > 0 then begin
-          if not (Options.silent ()) then begin
-            let msg = "function type annotation has less arrows than the \
-              number of arguments; please mark the return type abbreviation as \
-              inline_for_extraction" in
-            Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
-          end
+        if i > 0 && not (Options.silent ()) then begin
+          let msg = "function type annotation has less arrows than the \
+            number of arguments; please mark the return type abbreviation as \
+            inline_for_extraction" in
+          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
         end;
         let t = translate_type env t in
         let binders = translate_binders env args in

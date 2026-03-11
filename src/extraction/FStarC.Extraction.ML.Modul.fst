@@ -743,10 +743,8 @@ let sigelt_has_noextract (se:sigelt) : ML bool =
 // karamel pipeline which will later drop the body. It checks for the
 // NoExtract qualifier to decide that, so we add it here.
 let karamel_fixup_qual (se:sigelt) : ML sigelt =
- let is_krml = Options.codegen () = Some Options.Krml in
- let has_ne = get_noextract_to se (Some Options.Krml) in
- if is_krml
-    && has_ne
+ if Options.codegen () = Some Options.Krml
+    && get_noextract_to se (Some Options.Krml)
     && not (List.contains S.NoExtract se.sigquals)
  then { se with sigquals = S.NoExtract :: se.sigquals }
  else se
@@ -820,12 +818,10 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
 
     | Sig_declare_typ {lid; t} ->
       let quals = se.sigquals in
-      if quals |> List.contains Assumption then
-        let must_erase = TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t in
-        if not must_erase
-        then let g, bindings = Term.extract_lb_iface g (false, [always_fail lid t]) in
-             g, iface_of_bindings bindings
-        else g, empty_iface
+      if quals |> List.contains Assumption
+      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
+      then let g, bindings = Term.extract_lb_iface g (false, [always_fail lid t]) in
+           g, iface_of_bindings bindings
       else g, empty_iface //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
 
@@ -873,8 +869,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
       failwith "impossible: trying to extract Sig_fail"
 
     | Sig_new_effect ed ->
-      let is_reify = TcUtil.effect_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify in
-      if is_reify
+      if TcUtil.effect_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
       && List.isEmpty ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface
@@ -1001,10 +996,9 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
     | _ -> failwith "Unexpected signature element"
 
 let lb_is_irrelevant (g:env_t) (lb:letbinding) : ML bool =
-  let ni = Env.non_informative (tcenv_of_uenv g) lb.lbtyp in // result type is non informative
-  let not_arity = not (Term.is_arity g lb.lbtyp) in  // but not a type definition
-  let pure_or_ghost = U.is_pure_or_ghost_effect lb.lbeff in // and not top-level effectful
-  ni && not_arity && pure_or_ghost
+  Env.non_informative (tcenv_of_uenv g) lb.lbtyp && // result type is non informative
+  not (Term.is_arity g lb.lbtyp) &&  // but not a type definition
+  U.is_pure_or_ghost_effect lb.lbeff // and not top-level effectful
 
 let lb_is_tactic (g:env_t) (lb:letbinding) : ML bool =
   if U.is_pure_effect lb.lbeff then // not top-level effectful
@@ -1055,9 +1049,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     (* Ignore tactics whenever we're not extracting plugins *)
     | Sig_let {lbs=(_, lbs)}
-        when (let is_plugin = List.mem (Options.codegen ()) [Some Options.Plugin; Some Options.PluginNoLib] in
-              let all_tactics = List.for_all (lb_is_tactic g) lbs in
-              not is_plugin && all_tactics) ->
+        when not <| List.mem (Options.codegen ()) [Some Options.Plugin; Some Options.PluginNoLib] &&
+             List.for_all (lb_is_tactic g) lbs ->
       g, []
 
     | Sig_declare_typ {lid; us=univs; t}  when Term.is_arity g t -> //lid is a type
@@ -1132,26 +1125,24 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     | Sig_declare_typ {lid; t} ->
       let quals = se.sigquals in
-      if quals |> List.contains Assumption then
-        let must_erase = TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t in
-        if not must_erase
-        then let always_fail =
-               { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
-             let g, mlm = extract_sig g always_fail in //extend the scope with the new name
-             match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-             | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
-               g, [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
-                   Term.ind_discriminator_body g lid l]
+      if quals |> List.contains Assumption
+      && not (TcUtil.must_erase_for_extraction (tcenv_of_uenv g) t)
+      then let always_fail =
+             { se with sigel = Sig_let {lbs=(false, [always_fail lid t]); lids=[]} } in
+           let g, mlm = extract_sig g always_fail in //extend the scope with the new name
+           match BU.find_map quals (function Discriminator l -> Some l |  _ -> None) with
+           | Some l -> //if it's a discriminator, generate real code for it, rather than mlm
+             g, [mk_mlmodule1 (MLM_Loc (Util.mlloc_of_range se.sigrng));
+                 Term.ind_discriminator_body g lid l]
 
-             | _ ->
-               begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                     (* TODO : this could fail, it happens that projectors for variants are assumed *)
-                     | Some _ -> //it must be a record projector, since other projectors are not assumed
-                       g, [] //records are extracted as ML records; no projectors for them
-                     | _ ->
-                       g, mlm //in all other cases, generate mlm, a stub that always fails
-               end
-        else g, []
+           | _ ->
+             begin match BU.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
+                   (* TODO : this could fail, it happens that projectors for variants are assumed *)
+                   | Some _ -> //it must be a record projector, since other projectors are not assumed
+                     g, [] //records are extracted as ML records; no projectors for them
+                   | _ ->
+                     g, mlm //in all other cases, generate mlm, a stub that always fails
+             end
       else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                      //or, it must be erased
 

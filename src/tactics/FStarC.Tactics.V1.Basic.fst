@@ -150,9 +150,7 @@ let tacprint2 (s:string) x y   = Format.print1 "TAC>> %s\n" (Format.fmt2 s x y)
 let tacprint3 (s:string) x y z = Format.print1 "TAC>> %s\n" (Format.fmt3 s x y z)
 
 let print (msg:string)  : ML (tac unit) =
-    let silent = Options.silent () in
-    let interactive = Options.interactive () in
-    if not silent || interactive then
+    if not (Options.silent ()) || Options.interactive () then
       tacprint msg;
     ret ()
 
@@ -1013,8 +1011,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
                   |> List.filter (fun g ->
                                   //if uopt is on, we don't keep uvars that
                                   //  appear in some other goals
-                                  let free = free_in_some_goal g.goal_ctx_uvar in
-                                  not (uopt && free))
+                                  not (uopt && free_in_some_goal g.goal_ctx_uvar))
                    |> List.map bnorm_goal
                    |> List.rev in
     add_goals sub_goals ;!
@@ -1032,11 +1029,8 @@ let lemma_or_sq (c : comp) : ML (option (term & term)) =
         // Lemma post is thunked
         let post = U.mk_app post [S.as_arg U.exp_unit] in
         Some (pre, post)
-    else
-        let is_pure = U.is_pure_effect eff_name in
-        let is_ghost = U.is_ghost_effect eff_name in
-        if is_pure
-         || is_ghost then
+    else if U.is_pure_effect eff_name
+         || U.is_ghost_effect eff_name then
         Option.map (fun post -> (U.t_true, post)) (U.un_squash res)
     else
         None
@@ -1080,8 +1074,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                       |> Some)
                      deps
                      (rangeof goal) in
-                   let dbg = Debug.medium () || !dbg_2635 in
-                   if dbg
+                   if Debug.medium () || !dbg_2635
                    then
                      Format.print2 "Apply lemma created a new uvar %s while applying %s\n"
                        (show u)
@@ -1420,9 +1413,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term)  : ML (tac unit) =
         match (SS.compress (U.un_uinst head)).n, args with
         | Tm_fvar fv, [(ty, _); (t1, _); (t2, _)]
           when S.fv_eq_lid fv PC.eq2_lid ->
-          let au1 = is_allow_untyped_uvar t1 in
-          let au2 = is_allow_untyped_uvar t2 in
-          if au1 || au2
+          if is_allow_untyped_uvar t1 || is_allow_untyped_uvar t2
           then skip_register //if we have ?u=t or t=?u and ?u is allow_untyped, then skip
           else if Tactics.Monad.is_goal_safe_as_well_typed g //o.w., if the goal is well typed
           then (
@@ -1613,8 +1604,7 @@ let top_env     () : ML (tac env) = bind get (fun ps -> ret <| ps.main_context)
 
 let lax_on ()  : ML (tac bool) =
     let! g = cur_goal in
-    let lax = Options.lax () in
-    ret (lax || (goal_env g).admit)
+    ret (Options.lax () || (goal_env g).admit)
 
 let unquote (ty : term) (tm : term) : ML (tac term) = wrap_err "unquote" <| (
     if_verbose (fun () -> Format.print1 "unquote: tm = %s\n" (show tm)) ;!
@@ -1805,8 +1795,7 @@ let t_destruct (s_tm : term) : ML (tac (list (fv & int))) = wrap_err "destruct" 
        * for the type's parameters.
        *)
       let erasable = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
-      let irr = is_irrelevant g in
-      failwhen (erasable && not irr) "cannot destruct erasable type to solve proof-relevant goal" ;!
+      failwhen (erasable && not (is_irrelevant g)) "cannot destruct erasable type to solve proof-relevant goal" ;!
 
       (* Instantiate formal universes to the actuals,
        * and substitute accordingly in binders and types *)

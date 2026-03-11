@@ -310,10 +310,8 @@ let lazy_unembed (et:unit -> ML emb_typ) (x:t) (f:t -> ML (option 'a)) : ML (opt
       f (Thunk.force thunk)
 
     | Lazy (Inr (b, et'), thunk) ->
-      let et_val = et () in
-      let eager = !Options.eager_embedding in
-      if et_val <> et'
-      || eager
+      if et () <> et'
+      || !Options.eager_embedding
       then let res = f (Thunk.force thunk) in
            let _ = if !Options.debug_embedding
                    then Format.print2 "Unembed cancellation failed\n\t%s <> %s\n"

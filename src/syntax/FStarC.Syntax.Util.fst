@@ -226,9 +226,8 @@ let rec compare_univs (u1:universe) (u2:universe) : ML int =
 let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
 let eq_univs_list (us:universes) (vs:universes) : ML bool =
-    if List.length us = List.length vs
-    then List.forall2 eq_univs us vs
-    else false
+    List.length us = List.length vs
+    && List.forall2 eq_univs us vs
 
 (********************************************************************************)
 (*********************** Utilities for computation types ************************)
@@ -296,14 +295,14 @@ let is_named_tot c =
         | GTotal _ -> false
 
 let is_total_comp c =
-    if lid_equals (comp_effect_name c) PC.effect_Tot_lid then true
-    else comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
+    lid_equals (comp_effect_name c) PC.effect_Tot_lid
+    || comp_flags c |> U.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_partial_return c = comp_flags c |> U.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_tot_or_gtot_comp c =
-    if is_total_comp c then true
-    else lid_equals PC.effect_GTot_lid (comp_effect_name c)
+    is_total_comp c
+    || lid_equals PC.effect_GTot_lid (comp_effect_name c)
 
 let is_pure_effect l =
      lid_equals l PC.effect_Tot_lid
@@ -313,9 +312,9 @@ let is_pure_effect l =
 let is_pure_comp c = match c.n with
     | Total _ -> true
     | GTotal _ -> false
-    | Comp ct -> if is_total_comp c then true
-                 else if is_pure_effect ct.effect_name then true
-                 else ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
+    | Comp ct -> is_total_comp c
+                 || is_pure_effect ct.effect_name
+                 || ct.flags |> U.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
        lid_equals PC.effect_GTot_lid l
@@ -327,7 +326,7 @@ let is_div_effect l =
      || lid_equals l PC.effect_Div_lid
      || lid_equals l PC.effect_Dv_lid
 
-let is_pure_or_ghost_comp c = if is_pure_comp c then true else is_ghost_effect (comp_effect_name c)
+let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
 
@@ -397,9 +396,8 @@ let un_uinst t =
         | _ -> t
 
 let is_ml_comp c = match c.n with
-  | Comp c -> if lid_equals c.effect_name (PC.effect_ML_lid())
-              then true
-              else c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
+  | Comp c -> lid_equals c.effect_name (PC.effect_ML_lid())
+              || c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false
 
@@ -663,15 +661,11 @@ let set_uvar uv t =
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
-  | Projector (l1a, l1b), Projector (l2a, l2b) -> if lid_equals l1a l2a then (string_of_id l1b = string_of_id l2b) else false
+  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && (string_of_id l1b = string_of_id l2b)
   | RecordType (ns1, f1), RecordType (ns2, f2)
   | RecordConstructor (ns1, f1), RecordConstructor (ns2, f2) ->
-      if List.length ns1 = List.length ns2
-         && List.length f1 = List.length f2
-      then if List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) ns1 ns2
-           then List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) f1 f2
-           else false
-      else false
+      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) f1 f2 &&
+      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) f1 f2
   | _ -> q1=q2
 
 
@@ -749,11 +743,9 @@ let rec arrow_formals_comp_ln (k:term) =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow {bs; comp=c} ->
-            if is_total_comp c then
-              if not (has_decreases c)
-              then let bs', k = arrow_formals_comp_ln (comp_result c) in
-                   bs@bs', k
-              else bs, c
+            if is_total_comp c && not (has_decreases c)
+            then let bs', k = arrow_formals_comp_ln (comp_result c) in
+                 bs@bs', k
             else bs, c
         | Tm_refine {b={ sort = s }} ->
           (*
@@ -1301,7 +1293,7 @@ let mk_list (typ:term) (rng:range) (l:list term) : ML term =
 let rec eqlist (eq : 'a -> 'a -> ML bool) (xs : list 'a) (ys : list 'a) : ML bool =
     match xs, ys with
     | [], [] -> true
-    | x::xs, y::ys -> if eq x y then eqlist eq xs ys else false
+    | x::xs, y::ys -> eq x y && eqlist eq xs ys
     | _ -> false
 
 let eqsum (e1 : 'a -> 'a -> ML bool) (e2 : 'b -> 'b -> ML bool) (x : either 'a 'b) (y : either 'a 'b) : ML bool =
@@ -1312,7 +1304,7 @@ let eqsum (e1 : 'a -> 'a -> ML bool) (e2 : 'b -> 'b -> ML bool) (x : either 'a '
 
 let eqprod (e1 : 'a -> 'a -> ML bool) (e2 : 'b -> 'b -> ML bool) (x : 'a & 'b) (y : 'a & 'b) : ML bool =
     match x, y with
-    | (x1,x2), (y1,y2) -> if e1 x1 y1 then e2 x2 y2 else false
+    | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
 
 let eqopt (e : 'a -> 'a -> ML bool) (x : option 'a) (y : option 'a) : ML bool =
     match x, y with
@@ -1356,7 +1348,7 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
     failwith "term_eq: impossible, should have been removed"
 
   | Tm_uinst(t1, us1), Tm_uinst(t2, us2) ->
-    if eqlist eq_univs us1 us2 then term_eq_dbg dbg t1 t2 else false
+    eqlist eq_univs us1 us2 && term_eq_dbg dbg t1 t2
 
   | Tm_bvar x      , Tm_bvar y      -> check "bvar"  (x.index = y.index)
   | Tm_name x      , Tm_name y      -> check "name"  (x.index = y.index)
@@ -1365,42 +1357,35 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
   | Tm_type _, Tm_type _ -> true // x = y
 
   | Tm_abs {bs=b1;body=t1;rc_opt=k1}, Tm_abs {bs=b2;body=t2;rc_opt=k2} ->
-    if (check "abs binders"  (eqlist (binder_eq_dbg dbg) b1 b2)) then
+    (check "abs binders"  (eqlist (binder_eq_dbg dbg) b1 b2)) &&
     (check "abs bodies"   (term_eq_dbg dbg t1 t2))
     //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
-    else false
 
   | Tm_arrow {bs=b1;comp=c1}, Tm_arrow {bs=b2;comp=c2} ->
-    if (check "arrow binders" (eqlist (binder_eq_dbg dbg) b1 b2)) then
+    (check "arrow binders" (eqlist (binder_eq_dbg dbg) b1 b2)) &&
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
-    else false
 
   | Tm_refine {b=b1;phi=t1}, Tm_refine {b=b2;phi=t2} ->
-    if (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) then
+    (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
-    else false
 
   | Tm_app {hd=f1; args=a1}, Tm_app {hd=f2; args=a2} ->
-    if (check "app head"  (term_eq_dbg dbg f1 f2)) then
+    (check "app head"  (term_eq_dbg dbg f1 f2)) &&
     (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
-    else false
 
   | Tm_match {scrutinee=t1;brs=bs1},
     Tm_match {scrutinee=t2;brs=bs2} ->
     (* NB: ignoring ret_opt *)
-    if (check "match head"     (term_eq_dbg dbg t1 t2)) then
+    (check "match head"     (term_eq_dbg dbg t1 t2)) &&
     (check "match branches" (eqlist (branch_eq_dbg dbg) bs1 bs2))
-    else false
 
   | Tm_lazy _, _ -> check "lazy_l" (term_eq_dbg dbg (unlazy t1) t2)
   | _, Tm_lazy _ -> check "lazy_r" (term_eq_dbg dbg t1 (unlazy t2))
 
   | Tm_let {lbs=(b1, lbs1); body=t1}, Tm_let {lbs=(b2, lbs2); body=t2} ->
-    if (check "let flag"  (b1 = b2)) then
-    if (check "let lbs"   (eqlist (letbinding_eq_dbg dbg) lbs1 lbs2)) then
+    (check "let flag"  (b1 = b2)) &&
+    (check "let lbs"   (eqlist (letbinding_eq_dbg dbg) lbs1 lbs2)) &&
     (check "let body"  (term_eq_dbg dbg t1 t2))
-    else false
-    else false
 
   | Tm_uvar (u1, _), Tm_uvar (u2, _) ->
     (* These must have alreade been resolved, so we check that
@@ -1408,23 +1393,19 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
     check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
 
   | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
-    if (check "tm_quoted qi"      (quote_info_eq_dbg dbg qi1 qi2)) then
+    (check "tm_quoted qi"      (quote_info_eq_dbg dbg qi1 qi2)) &&
     (check "tm_quoted payload" (term_eq_dbg dbg qt1 qt2))
-    else false
 
   | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
     begin match m1, m2 with
     | Meta_monadic (n1, ty1), Meta_monadic (n2, ty2) ->
-        if (check "meta_monadic lid"   (lid_equals n1 n2)) then
+        (check "meta_monadic lid"   (lid_equals n1 n2)) &&
         (check "meta_monadic type"  (term_eq_dbg dbg ty1 ty2))
-        else false
 
     | Meta_monadic_lift (s1, t1, ty1), Meta_monadic_lift (s2, t2, ty2) ->
-        if (check "meta_monadic_lift src"   (lid_equals s1 s2)) then
-        if (check "meta_monadic_lift tgt"   (lid_equals t1 t2)) then
+        (check "meta_monadic_lift src"   (lid_equals s1 s2)) &&
+        (check "meta_monadic_lift tgt"   (lid_equals t1 t2)) &&
         (check "meta_monadic_lift type"  (term_eq_dbg dbg ty1 ty2))
-        else false
-        else false
 
     | _ -> fail "metas"
     end
@@ -1465,44 +1446,36 @@ and arg_eq_dbg (dbg : bool) (a1 a2 : arg) : ML bool =
            (fun q1 q2 -> check_term_eq dbg "arg qual"  (aqual_eq_dbg dbg q1 q2))
            a1 a2
 and binder_eq_dbg (dbg : bool) (b1 b2 : binder) : ML bool =
-    if (check_term_eq dbg "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) then
-    if (check_term_eq dbg "binder qual" (bqual_eq_dbg dbg b1.binder_qual b2.binder_qual)) then  //AR: not checking attributes, should we?
+    (check_term_eq dbg "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
+    (check_term_eq dbg "binder qual" (bqual_eq_dbg dbg b1.binder_qual b2.binder_qual)) &&  //AR: not checking attributes, should we?
     (check_term_eq dbg "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
-    else false
-    else false
 
 and comp_eq_dbg (dbg : bool) (c1 c2 : comp) : ML bool =
     let eff1, res1, args1 = comp_eff_name_res_and_args c1 in
     let eff2, res2, args2 = comp_eff_name_res_and_args c2 in
-    if (check_term_eq dbg "comp eff"  (lid_equals eff1 eff2)) then
+    (check_term_eq dbg "comp eff"  (lid_equals eff1 eff2)) &&
     //(check "comp univs"  (c1.comp_univs = c2.comp_univs)) &&
-    if (check_term_eq dbg "comp result typ"  (term_eq_dbg dbg res1 res2)) then
+    (check_term_eq dbg "comp result typ"  (term_eq_dbg dbg res1 res2)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-    else false
-    else false
 and branch_eq_dbg (dbg : bool) (br1 : pat & option term & term) (br2 : pat & option term & term) : ML bool =
     let (p1,w1,t1) = br1 in
     let (p2,w2,t2) = br2 in
-    if (check_term_eq dbg "branch pat"  (eq_pat p1 p2)) then
-    if (check_term_eq dbg "branch body"  (term_eq_dbg dbg t1 t2)) then
-    (check_term_eq dbg "branch when" (
+    (check_term_eq dbg "branch pat"  (eq_pat p1 p2)) &&
+    (check_term_eq dbg "branch body"  (term_eq_dbg dbg t1 t2))
+    && (check_term_eq dbg "branch when" (
         match w1, w2 with
         | Some x, Some y -> term_eq_dbg dbg x y
         | None, None -> true
         | _ -> false))
-    else false
-    else false
 
 and letbinding_eq_dbg (dbg : bool) (lb1 : letbinding) (lb2 : letbinding) : ML bool =
     // bvars have no meaning here, so we just check they have the same name
-    if (check_term_eq dbg "lb bv"   (eqsum (fun bv1 bv2 -> true) fv_eq lb1.lbname lb2.lbname)) then
+    (check_term_eq dbg "lb bv"   (eqsum (fun bv1 bv2 -> true) fv_eq lb1.lbname lb2.lbname)) &&
     (* (check "lb univs"  (lb1.lbunivs = lb2.lbunivs)) *)
-    if (check_term_eq dbg "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) then
+    (check_term_eq dbg "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) &&
     (check_term_eq dbg "lb def"  (term_eq_dbg dbg lb1.lbdef lb2.lbdef))
     // Ignoring eff and attrs..
-    else false
-    else false
 
 and quote_info_eq_dbg (dbg:bool) (q1 q2 : quoteinfo) : ML bool =
     if q1.qkind <> q2.qkind
@@ -2175,7 +2148,7 @@ let deduplicate_terms (l:list term) =
 
 let eq_binding b1 b2 =
     match b1, b2 with
-    | Binding_var bv1, Binding_var bv2 -> if bv_eq bv1 bv2 then term_eq bv1.sort bv2.sort else false
+    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2 && term_eq bv1.sort bv2.sort
     | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
     | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
     | _ -> false

@@ -170,9 +170,7 @@ let ps_to_json p : ML FStarC.Json.json =
                  else []))
 
 let do_dump_proofstate ps msg : ML unit =
-    let silent = Options.silent () in
-    let interactive = Options.interactive () in
-    if not silent || interactive then
+    if not (Options.silent ()) || Options.interactive () then
         Options.with_saved_options (fun () ->
             Options.set_option "print_effect_args" (Options.Bool true);
             Format.print_generic "proof-state" ps_to_string ps_to_json (msg, ps);

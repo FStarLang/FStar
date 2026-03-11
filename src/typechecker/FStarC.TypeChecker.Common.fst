@@ -250,14 +250,12 @@ let rec check_trivial (t:term) : ML guard_formula =
       when S.fv_eq_lid tc PC.true_lid ->
       Trivial
       
-    | Tm_fvar sq, [v, _] ->
-      let is_squash = S.fv_eq_lid sq PC.squash_lid in
-      let is_auto_squash = S.fv_eq_lid sq PC.auto_squash_lid in
-      if is_squash || is_auto_squash
-      then (match check_trivial v with
-            | Trivial -> Trivial
-            | _ -> NonTrivial t)
-      else NonTrivial t
+    | Tm_fvar sq, [v, _]
+      when S.fv_eq_lid sq PC.squash_lid 
+         || S.fv_eq_lid sq PC.auto_squash_lid ->         
+      (match check_trivial v with
+       | Trivial -> Trivial
+       | _ -> NonTrivial t)
 
     | _ -> NonTrivial t
 
@@ -327,29 +325,21 @@ let lcomp_set_flags lc fs
              fs
              (fun () -> lc |> lcomp_comp |> (fun (c, g) -> comp_typ_set_flags c, g))
 
-let is_total_lcomp c : ML bool =
-  let name_eq = lid_equals c.eff_name PC.effect_Tot_lid in
-  let has_flag = c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false) in
-  name_eq || has_flag
+let is_total_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tot_or_gtot_lcomp c : ML bool =
-  let is_tot = lid_equals c.eff_name PC.effect_Tot_lid in
-  let is_gtot = lid_equals c.eff_name PC.effect_GTot_lid in
-  let has_flag = c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false) in
-  is_tot || is_gtot || has_flag
+let is_tot_or_gtot_lcomp c : ML bool = lid_equals c.eff_name PC.effect_Tot_lid
+                             || lid_equals c.eff_name PC.effect_GTot_lid
+                             || c.cflags |> BU.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_lcomp_partial_return c : ML bool = c.cflags |> BU.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_pure_lcomp lc : ML bool =
-    let is_tot = is_total_lcomp lc in
-    let is_pure = U.is_pure_effect lc.eff_name in
-    let is_lemma = lc.cflags |> BU.for_some (function LEMMA -> true | _ -> false) in
-    is_tot || is_pure || is_lemma
+    is_total_lcomp lc
+    || U.is_pure_effect lc.eff_name
+    || lc.cflags |> BU.for_some (function LEMMA -> true | _ -> false)
 
 let is_pure_or_ghost_lcomp lc : ML bool =
-    let is_pure = is_pure_lcomp lc in
-    let is_ghost = U.is_ghost_effect lc.eff_name in
-    is_pure || is_ghost
+    is_pure_lcomp lc || U.is_ghost_effect lc.eff_name
 
 let set_result_typ_lc lc t : ML lcomp =
   mk_lcomp lc.eff_name t lc.cflags (fun () -> lc |> lcomp_comp |> (fun (c, g) -> U.set_result_typ c t, g))

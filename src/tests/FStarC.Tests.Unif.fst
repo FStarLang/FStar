@@ -61,7 +61,7 @@ let guard_eq (i : int) g g' : ML unit =
     then fail <| Format.fmt3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
                         Got guard      %s\n" (show i) (guard_to_string g') (guard_to_string g);
-    success := (if !success then b else false)
+    success := !success && b
 
 let unify i bvs x y g' (check: unit -> ML unit) : ML unit =
     Format.print1 "%s ..." (show i);

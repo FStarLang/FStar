@@ -353,8 +353,7 @@ let is_goal_safe_as_well_typed (g:goal) : ML bool =
 let register_goal (g:goal) : ML unit =
   if not (Options.compat_pre_core_should_register()) then () else
   let env = goal_env g in
-  let lax = Options.lax () in
-  if env.phase1 || lax then () else
+  if env.phase1 || Options.lax () then () else
   let uv = g.goal_ctx_uvar in
   let i = Core.incr_goal_ctr () in
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
@@ -364,18 +363,14 @@ let register_goal (g:goal) : ML unit =
   let should_register = is_goal_safe_as_well_typed g in
   if not should_register
   then (
-    let dbg = !dbg_Core in
-    let dbg_rg = !dbg_RegisterGoal in
-    if dbg || dbg_rg
+    if !dbg_Core || !dbg_RegisterGoal
     then Format.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
                      (show i);
         
     ()
   )
   else (
-    let dbg = !dbg_Core in
-    let dbg_rg = !dbg_RegisterGoal in
-    if dbg || dbg_rg
+    if !dbg_Core || !dbg_RegisterGoal
     then Format.print2 "(%s) Registering goal for %s\n"
                      (show i)
                      (show uv);

@@ -748,7 +748,6 @@ let eqlist = Syntax.Util.eqlist
 let eqprod = Syntax.Util.eqprod
 
 (* ML-compatible short-circuit && for use in term_eq and friends *)
-private let (&&.) (b1: bool) (b2: bool) : bool = b1 && b2
 
 (*
  * Why doesn't this call into Syntax.Util.term_eq? Because that function
@@ -784,23 +783,23 @@ let rec term_eq (t1:term) (t2:term) : ML bool =
     S.fv_eq fv1 fv2
 
   | Tv_UInst (fv1, us1), Tv_UInst (fv2, us2) ->
-    S.fv_eq fv1 fv2 &&. univs_eq us1 us2
+    S.fv_eq fv1 fv2 && univs_eq us1 us2
 
   | Tv_App (h1, arg1), Tv_App (h2, arg2) ->
-    term_eq h1 h2 &&. arg_eq arg1 arg2
+    term_eq h1 h2 && arg_eq arg1 arg2
 
   | Tv_Abs (b1, t1), Tv_Abs (b2, t2) ->
-    binder_eq b1 b2 &&. term_eq t1 t2
+    binder_eq b1 b2 && term_eq t1 t2
 
   | Tv_Arrow (b1, c1), Tv_Arrow (b2, c2) ->
-    binder_eq b1 b2 &&. comp_eq c1 c2
+    binder_eq b1 b2 && comp_eq c1 c2
 
   | Tv_Type u1, Tv_Type u2 ->
     univ_eq u1 u2
 
   | Tv_Refine (b1, sort1, t1), Tv_Refine (b2, sort2, t2) ->
     (* No need to compare bvs *)
-    term_eq sort1 sort2 &&. term_eq t1 t2
+    term_eq sort1 sort2 && term_eq t1 t2
 
   | Tv_Const c1, Tv_Const c2 ->
     const_eq c1 c2
@@ -821,27 +820,27 @@ let rec term_eq (t1:term) (t2:term) : ML bool =
 
   | Tv_Let (r1, ats1, bv1, ty1, m1, n1), Tv_Let (r2, ats2, bv2, ty2, m2, n2) ->
     (* no need to compare bvs *)
-    r1 = r2 &&.
-     eqlist term_eq ats1 ats2 &&.
-     term_eq ty1 ty2 &&.
-     term_eq m1 m2 &&.
+    r1 = r2&&
+     eqlist term_eq ats1 ats2&&
+     term_eq ty1 ty2&&
+     term_eq m1 m2&&
      term_eq n1 n2
 
   | Tv_Match (h1, an1, brs1), Tv_Match (h2, an2, brs2) ->
-    term_eq h1 h2 &&.
-      eqopt match_ret_asc_eq an1 an2 &&.
+    term_eq h1 h2&&
+      eqopt match_ret_asc_eq an1 an2&&
       eqlist branch_eq brs1 brs2
 
   | Tv_AscribedT (e1, t1, topt1, eq1), Tv_AscribedT (e2, t2, topt2, eq2) ->
-    term_eq e1 e2 &&.
-      term_eq t1 t2 &&.
-      eqopt term_eq topt1 topt2 &&.
+    term_eq e1 e2&&
+      term_eq t1 t2&&
+      eqopt term_eq topt1 topt2&&
       eq1 = eq2
 
   | Tv_AscribedC (e1, c1, topt1, eq1), Tv_AscribedC (e2, c2, topt2, eq2) ->
-    term_eq e1 e2 &&.
-      comp_eq c1 c2 &&.
-      eqopt term_eq topt1 topt2 &&.
+    term_eq e1 e2&&
+      comp_eq c1 c2&&
+      eqopt term_eq topt1 topt2&&
       eq1 = eq2
 
   | Tv_Unknown, Tv_Unknown -> true
@@ -850,7 +849,7 @@ let rec term_eq (t1:term) (t2:term) : ML bool =
 and arg_eq (arg1 : argv) (arg2 : argv) : ML bool =
   let (a1, aq1) = arg1 in
   let (a2, aq2) = arg2 in
-  term_eq a1 a2 &&. aqual_eq aq1 aq2
+  term_eq a1 a2 && aqual_eq aq1 aq2
 
 and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : ML bool =
   match aq1, aq2 with
@@ -862,8 +861,8 @@ and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : ML bool =
 and binder_eq (b1 : binder) (b2 : binder) : ML bool =
   let bview1 = inspect_binder b1 in
   let bview2 = inspect_binder b2 in
-  binding_bv_eq bview1.binder_bv bview2.binder_bv &&.
-    aqual_eq bview1.binder_qual bview2.binder_qual &&.
+  binding_bv_eq bview1.binder_bv bview2.binder_bv&&
+    aqual_eq bview1.binder_qual bview2.binder_qual&&
     eqlist term_eq bview1.binder_attrs bview2.binder_attrs
 
 and binding_bv_eq (bv1 : bv) (bv2 : bv) : ML bool =
@@ -893,13 +892,13 @@ and comp_eq (c1 : comp) (c2 : comp) : ML bool =
     term_eq t1 t2
 
   | C_Lemma (pre1, post1, pats1), C_Lemma (pre2, post2, pats2) ->
-    term_eq pre1 pre2 &&. term_eq post1 post2 &&. term_eq pats1 pats2
+    term_eq pre1 pre2 && term_eq post1 post2 && term_eq pats1 pats2
 
   | C_Eff (us1, name1, t1, args1, decrs1), C_Eff (us2, name2, t2, args2, decrs2) ->
-    univs_eq us1 us2 &&.
-    name1 = name2 &&.
-    term_eq t1 t2 &&.
-    eqlist arg_eq args1 args2 &&.
+    univs_eq us1 us2&&
+    name1 = name2&&
+    term_eq t1 t2&&
+    eqlist arg_eq args1 args2&&
     eqlist term_eq decrs1 decrs2
 
   | _ ->
@@ -913,8 +912,8 @@ and ascription_eq (asc1 : ascription) (asc2 : ascription) : ML bool =
   let (a2, topt2, eq2) = asc2 in
   (match a1, a2 with
    | Inl t1, Inl t2 -> term_eq t1 t2
-   | Inr c1, Inr c2 -> comp_eq c1 c2) &&.
-     eqopt term_eq topt1 topt2 &&.
+   | Inr c1, Inr c2 -> comp_eq c1 c2)&&
+     eqopt term_eq topt1 topt2&&
      eq1 = eq2
 
 and branch_eq (c1 : Data.branch) (c2 : Data.branch) : ML bool =
@@ -925,8 +924,8 @@ and pattern_eq (p1 : pattern) (p2 : pattern) : ML bool =
   | Pat_Constant c1, Pat_Constant c2 ->
     const_eq c1 c2
   | Pat_Cons (fv1, us1, subpats1), Pat_Cons (fv2, us2, subpats2) ->
-    S.fv_eq fv1 fv2 &&.
-      eqopt (eqlist univ_eq) us1 us2 &&.
+    S.fv_eq fv1 fv2&&
+      eqopt (eqlist univ_eq) us1 us2&&
       eqlist (eqprod pattern_eq (fun b1 b2 -> b1 = b2)) subpats1 subpats2
 
   | Pat_Var (bv1, _), Pat_Var (bv2, _) ->

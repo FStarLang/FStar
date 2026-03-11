@@ -74,9 +74,8 @@ let equal_iff = function
 // in most cases.
 // The second comparison is thunked for efficiency.
 let eq_and r (s: unit -> ML eq_result) : ML eq_result =
-    if r = Equal then
-      if s () = Equal then Equal
-      else Unknown
+    if r = Equal && s () = Equal
+    then Equal
     else Unknown
 
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
@@ -140,8 +139,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
     | Tm_bvar bv1, Tm_bvar bv2 ->
       equal_if (bv1.index = bv2.index)
 
-    | Tm_lazy _, _ -> let t1 = unlazy t1 in eq_tm env t1 t2
-    | _, Tm_lazy _ -> let t2 = unlazy t2 in eq_tm env t1 t2
+    | Tm_lazy _, _ -> eq_tm env (unlazy t1) t2
+    | _, Tm_lazy _ -> eq_tm env t1 (unlazy t2)
 
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
@@ -268,9 +267,7 @@ and branch_matches env b1 b2 : ML eq_result =
     if eq_pat p1 p2
     then begin
          // We check the `when` branches too, even if unsupported for now
-         let eq1 = eq_tm env t1 t2 = Equal in
-         let eq2 = related_by (fun t1 t2 -> eq_tm env t1 t2 = Equal) w1 w2 in
-         if eq1 && eq2
+         if eq_tm env t1 t2 = Equal && related_by (fun t1 t2 -> eq_tm env t1 t2 = Equal) w1 w2
          then Equal
          else Unknown
          end
@@ -315,9 +312,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
         match args, bs with
         | (t, _)::args, b::bs ->
             begin match (SS.compress t).n with
-            | Tm_name bv' ->
-              let eq = S.bv_eq b.binder_bv bv' in
-              if eq then args_are_binders args bs else false
+            | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
             | _ -> false
             end
         | [], [] -> true

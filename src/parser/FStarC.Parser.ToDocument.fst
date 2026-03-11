@@ -395,12 +395,9 @@ let is_operatorInfix34 =
 
 let handleable_args_length (op:ident) =
   let op_s = Ident.string_of_id op in
-  let is_prefix = is_general_prefix_op op in
-  let is_infix0ad12 = is_operatorInfix0ad12 op in
-  let is_infix34 = is_operatorInfix34 op in
-  if is_prefix || List.mem op_s [ "-" ; "~" ] then 1
-  else if (is_infix0ad12 ||
-    is_infix34 ||
+  if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
+  else if (is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
     List.mem op_s ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"])
   then 2
   else if (List.mem op_s [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]) then 3
@@ -409,14 +406,10 @@ let handleable_args_length (op:ident) =
 let handleable_op op args =
   match List.length args with
   | 0 -> true
-  | 1 ->
-    let is_prefix = is_general_prefix_op op in
-    is_prefix || List.mem (Ident.string_of_id op) [ "-" ; "~" ]
+  | 1 -> is_general_prefix_op op || List.mem (Ident.string_of_id op) [ "-" ; "~" ]
   | 2 ->
-    let is_infix0ad12 = is_operatorInfix0ad12 op in
-    let is_infix34 = is_operatorInfix34 op in
-    is_infix0ad12 ||
-    is_infix34 ||
+    is_operatorInfix0ad12 op ||
+    is_operatorInfix34 op ||
     List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"; ".(||)"; ".[||]"]
   | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"; ".(||)<-"; ".[||]<-"]
   | _ -> false
@@ -700,14 +693,12 @@ let p_string_literal (s: string): ML document
 (* ****************************************************************************)
 
 let string_of_id_or_underscore lid =
-  let print_real = Options.print_real_names () in
-  if starts_with (string_of_id lid) reserved_prefix && not print_real
+  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (string_of_id lid)
 
 let text_of_lid_or_underscore lid =
-  let print_real = Options.print_real_names () in
-  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not print_real
+  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (string_of_lid lid)
 
@@ -1933,10 +1924,8 @@ and p_tmConjunction e : ML _ = match e.tm with
 and p_tmTuple e : ML _ = with_comment p_tmTuple' e e.range
 
 and p_tmTuple' e : ML _ = match e.tm with
-  | Construct (lid, args) when is_tuple_constructor lid ->
-      if all1_explicit args then
-        separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
-      else p_tmEq e
+  | Construct (lid, args) when is_tuple_constructor lid && all1_explicit args ->
+      separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args
   | _ -> p_tmEq e
 
 and paren_if_gt curr mine doc : ML _ =
@@ -1951,24 +1940,18 @@ and p_tmEqWith (p_X: _ -> ML _) e : ML _ =
   p_tmEqWith' p_X n e
 
 and p_tmEqWith' (p_X: _ -> ML _) curr e : ML _ = match e.tm with
-  (* := must be matched before the generic infix Op case below, which
-     would otherwise swallow it and fall through to p_tmNoEqWith, causing
-     an infinite pretty-printing loop. *)
-  | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
-      group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
   (* We don't have any information to print `infix` aplication *)
   | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
                            not (Ident.string_of_id op = "==>"
-                                || Ident.string_of_id op = "<==>") ->
-      let is_infix = is_operatorInfix0ad12 op in
-      if is_infix
+                                || Ident.string_of_id op = "<==>")
+                           && (is_operatorInfix0ad12 op
                                || Ident.string_of_id op = "="
-                               || Ident.string_of_id op = "|>"
-      then
-        let op = Ident.string_of_id op in
-        let left, mine, right = levels op in
-        paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
-      else p_tmNoEqWith p_X e
+                               || Ident.string_of_id op = "|>") ->
+      let op = Ident.string_of_id op in
+      let left, mine, right = levels op in
+      paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
+  | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
+      group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
   | Op(id, [e]) when string_of_id id = "-" ->
       let left, mine, right = levels "-" in
       minus ^/^ p_tmEqWith' p_X mine e
@@ -1993,13 +1976,10 @@ and p_tmNoEqWith' inside_tuple (p_X: _ -> ML _) curr e : ML _ = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op (op, [e1; e2]) ->
-      let is_infix34 = is_operatorInfix34 op in
-      if is_infix34 then
-        let op = Ident.string_of_id op in
-        let left, mine, right = levels op in
-        paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
-      else p_X e
+  | Op (op, [e1; e2]) when is_operatorInfix34 op ->
+      let op = Ident.string_of_id op in
+      let left, mine, right = levels op in
+      paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map_last (semi ^^ break1) p_simpleDef record_fields )
@@ -2137,16 +2117,12 @@ and p_atomicTermNotQUident e : ML _ = match e.tm with
     str (Ident.string_of_id op) ^^ p_atomicTermNotQUident e
   | Op(op, []) ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
-  | Construct (lid, args) when is_dtuple_constructor lid ->
-      if all1_explicit args then
-        surround 2 1 (lparen ^^ bar)
-          (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
-                     (bar ^^ rparen)
-      else p_projectionLHS e
-  | Construct (lid, args) when is_tuple_constructor lid ->
-      if all1_explicit args then
-        parens (p_tmTuple e)
-      else p_projectionLHS e
+  | Construct (lid, args) when is_dtuple_constructor lid && all1_explicit args ->
+      surround 2 1 (lparen ^^ bar)
+        (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
+                   (bar ^^ rparen)
+  | Construct (lid, args) when is_tuple_constructor lid && all1_explicit args ->
+      parens (p_tmTuple e)
   | Project (e, lid) ->
     group (prefix 2 0 (p_atomicTermNotQUident e)  (dot ^^ p_qlident lid))
   | _ ->

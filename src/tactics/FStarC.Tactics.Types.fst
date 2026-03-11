@@ -45,18 +45,14 @@ let incr_depth (ps:proofstate) : proofstate =
 let set_ps_psc psc ps = { ps with psc = psc }
 
 let tracepoint_with_psc psc ps : ML bool =
-    let do_trace = O.tactic_trace () in
-    let trace_depth = O.tactic_trace_d () in
-    if do_trace || (ps.depth <= trace_depth) then begin
+    if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
         let ps = set_ps_psc psc ps in
         ps.__dump ps "TRACE"
     end;
     true
 
 let tracepoint ps : ML bool =
-    let do_trace = O.tactic_trace () in
-    let trace_depth = O.tactic_trace_d () in
-    if do_trace || (ps.depth <= trace_depth) then begin
+    if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
         ps.__dump ps "TRACE"
     end;
     true

@@ -200,9 +200,7 @@ let inspect_repl_stack (s:repl_stack_t)
               let! pushes = push_decls (d::ds) in
               return (lookups @ pops @ pushes, accum)
             | PushFragment (Inr d', pk, issues, _) -> (
-              let eq = eq_decl (fst d) d' in
-              let geq = pk `push_kind_geq` push_kind in
-              if eq && geq
+              if eq_decl (fst d) d' && pk `push_kind_geq` push_kind
               then (
                 let d, s = d in
                 write_full_buffer_fragment_progress (FragmentSuccess (d, s, pk));
