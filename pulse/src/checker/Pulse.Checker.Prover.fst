@@ -1271,7 +1271,7 @@ let prove_step (pg: penv) (ctxt goals: list slprop_view)
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt false));
     (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt false));
     (fun _ -> prove_first g ctxt goals (eager_intro_lemma_step pg ctxt));
-    (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core { pg with penv_allow_amb = false } ctxt));
+    (fun _ -> prove_first g ctxt goals (intro_lemma_step try_prove_core pg ctxt));
   ]
 
 let rec try_prove_core (pg: penv) (ctxt goals: list slprop_view) : T.Tac (prover_result pg.penv_env ctxt goals) =
