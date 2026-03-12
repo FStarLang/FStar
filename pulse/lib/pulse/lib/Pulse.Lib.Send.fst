@@ -34,7 +34,6 @@ ghost fn placeless_on_intro (p: slprop) {| placeless p |} l
   let l0 = loc_get ();
   on_intro p;
   placeless_move p l0 l;
-  drop_ (loc l0)
 }
 
 ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
@@ -44,7 +43,6 @@ ghost fn placeless_on_elim (p: slprop) {| placeless p |} l
   let l0 = loc_get ();
   placeless_move p l l0;
   on_elim p;
-  drop_ (loc l0)
 }
 
 ghost fn placeless_on (l: loc_id) (p: slprop) : placeless (on l p) = l1 l2 {
@@ -66,11 +64,7 @@ fn impersonate
   on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
   placeless_on_intro pre l;
   on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
-  let x = impersonate_core l (loc l ** pre) post fn _ {
-    let x = f ();
-    drop_ (loc l);
-    x
-  };
+  let x = impersonate_core l (loc l ** pre) post fn _ { f () };
   placeless_on_elim (post x) l;
   x
 }
@@ -91,11 +85,7 @@ atomic fn atomic_impersonate
   on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
   placeless_on_intro pre l;
   on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
-  let x = atomic_impersonate_core #a #is #Observable l (loc l ** pre) post fn _ {
-    let x = f ();
-    drop_ (loc l);
-    x
-  };
+  let x = atomic_impersonate_core #a #is #Observable l (loc l ** pre) post fn _ { f () };
   placeless_on_elim (post x) l;
   x
 }
@@ -116,11 +106,7 @@ unobservable fn unobservable_impersonate
   on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
   placeless_on_intro pre l;
   on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
-  let x = atomic_impersonate_core #a #is #Neutral l (loc l ** pre) post fn _ {
-    let x = f ();
-    drop_ (loc l);
-    x
-  };
+  let x = atomic_impersonate_core #a #is #Neutral l (loc l ** pre) post fn _ { f () };
   placeless_on_elim (post x) l;
   x
 }
@@ -136,10 +122,7 @@ ghost fn ghost_impersonate
   on_loc_eq l l; rewrite pure (l == l) as on l (loc l);
   placeless_on_intro pre l;
   on_star_eq l (loc l) pre; rewrite on l (loc l) ** on l pre as on l (loc l ** pre);
-  ghost_impersonate_core #is l (loc l ** pre) post fn _ {
-    f ();
-    drop_ (loc l)
-  };
+  ghost_impersonate_core #is l (loc l ** pre) post fn _ { f () };
   placeless_on_elim post l;
 }
 
@@ -187,9 +170,8 @@ ghost fn on_loc_intro (l1 l2: loc_id)
   ensures on l1 (loc l2)
 {
   ghost_impersonate l1 (pure (l1 == l2)) (on l1 (loc l2)) fn _ {
-    loc_dup l1;
     rewrite loc l1 as loc l2;
-    on_intro (loc l2);
+    on_intro #l1 (loc l2);
   }
 }
 
@@ -317,7 +299,6 @@ ghost fn on_exists_elim u#a #l (#a: Type u#a) (p: a -> slprop)
 
 ghost fn dup_in_same_process p () : duplicable_f (in_same_process p) = {
   unfold in_same_process p;
-  loc_dup _;
   fold in_same_process p;
   fold in_same_process p;
 }
@@ -366,25 +347,21 @@ ghost fn is_send_intro_on p {| is_send p |} l
 }
 
 ghost fn is_send_elim_on' p {| is_send p |} #l
-  preserves loc l
+  requires loc l
   requires on (process_of l) p
   ensures p
 {
-  loc_dup l;
   fold in_same_process (process_of l);
   is_send_elim_on p #_;
-  drop_ (in_same_process (process_of l));
 }
 
 ghost fn is_send_intro_on' p {| is_send p |} l
-  preserves loc l
+  requires loc l
   requires p
   ensures on (process_of l) p
 {
-  loc_dup l;
   fold in_same_process (process_of l);
   is_send_intro_on p (process_of l);
-  drop_ (in_same_process (process_of l));
 }
 
 ghost fn is_send_across_placeless #b #g p {| placeless p |} : is_send_across #b g p = l l' {
@@ -411,10 +388,9 @@ ghost fn is_send_in_same_process p : is_send (in_same_process p) = l l' {
     (on l' (in_same_process p))
     fn _ {
       on_elim (in_same_process p);
-      unfold in_same_process p;
-      loc_gather l;
+      unfold in_same_process p; with l''. _;
+      loc_gather l #l'';
       ghost_impersonate l' emp (on l' (in_same_process p)) fn _ {
-        loc_dup l';
         fold in_same_process p;
         on_intro (in_same_process p);
       }
@@ -430,7 +406,6 @@ ghost fn on_same_process_elim p {| is_send p |}
 {
   unfold on_same_process p;
   is_send_elim_on p #_;
-  drop_ (in_same_process _);
 }
 
 ghost fn on_same_process_intro p
@@ -459,7 +434,7 @@ ghost fn is_send_on_same_process p : is_send (on_same_process p) = l1 l2 {
         (on l p)
         (on l2 (on_same_process p))
         fn _ {
-          loc_dup l2; fold in_same_process l;
+          fold in_same_process l;
           fold on_same_process p;
           on_intro (on_same_process p);
         }
@@ -512,6 +487,5 @@ inline_for_extraction noextract fn fork'
     fold in_same_process l;
     is_send_elim_on pre #_;
     f ();
-    drop_ (in_same_process l)
   }
 }

@@ -161,7 +161,6 @@ fn setup (_:unit)
       #(inv i inv_p ** pts_to claimed #0.5R false ** later_credit 1)
   fn _ {
     proof i ();
-    drop_ (inv i inv_p);
   };
 
   i

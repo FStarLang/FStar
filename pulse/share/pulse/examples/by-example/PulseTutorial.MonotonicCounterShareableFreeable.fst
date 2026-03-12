@@ -81,7 +81,6 @@ ensures c.inv 1.0R 0
             let res = incr_atomic_box x;
             MR.recall_snapshot mr;
             MR.update mr res;
-            drop_ (MR.snapshot mr i);
             MR.take_snapshot mr #1.0R res;
             fold (inv_core);
             pack_cinv_vp ii;
@@ -91,16 +90,12 @@ ensures c.inv 1.0R 0
 
     ghost
     fn share (#_: unit) : share_f inv = p i {
-        MR.dup_snapshot mr;
-        dup_inv (iname_of ii) _;
         CI.share ii;
     };
 
     ghost
     fn gather (#_: unit) : gather_f inv = p q i j {
         CI.gather #p #q ii;
-        drop_ (MR.snapshot mr j);
-        drop_ (Pulse.Lib.Inv.inv (iname_of ii) (cinv_vp ii (inv_core x mr)));
     };
 
     fn destroy (#_: unit) : destroy_f inv = i {
@@ -109,7 +104,6 @@ ensures c.inv 1.0R 0
         unfold inv_core;
         B.free x;
         drop_ (MR.pts_to mr _);
-        drop_ (MR.snapshot mr _);
     };
 
     let c = { inv; next; share; gather; destroy; is_send_inv = Tactics.Typeclasses.solve };

@@ -72,7 +72,6 @@ ghost fn move i p l1 l2
         fwd ();
       };
       fold move_tag l2 l' p f' g';
-      loc_dup l2;
       fold inv i p;
       on_intro (inv i p);
     }
@@ -88,7 +87,6 @@ ghost fn is_send_across_inv #b #g i p {| inst: is_send_across #b g p |} : is_sen
 ghost fn dup_inv' i p () : duplicable_f (inv i p) = {
   unfold inv i p; with l l' f g. _;
   C.dup_inv i (on l' p);
-  loc_dup _;
   fold move_tag l l' p f g;
   fold inv i p;
   fold inv i p;
@@ -127,7 +125,7 @@ unobservable fn with_inv_unobs u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Neutral is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -160,7 +158,7 @@ ghost fn with_invariants_g u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_ghost a is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -185,7 +183,7 @@ atomic fn with_invariants_a u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Observable is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -218,7 +216,7 @@ inline_for_extraction noextract
 fn with_invariants u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Observable is (pre ** p) (fun x -> post x ** p))
-  preserves inv i p
+  requires inv i p
   requires pre
   returns x:a
   ensures post x

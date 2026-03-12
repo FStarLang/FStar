@@ -227,7 +227,7 @@ ensures  shift #is p r
 {
   intro (shift #is p r) #(shift #is p q ** shift #is q r) fn _
   {
-    elim_shift #is p _;
-    elim_shift #is _ _;
+    elim_shift #is p q;
+    elim_shift #is q r;
   };
 }

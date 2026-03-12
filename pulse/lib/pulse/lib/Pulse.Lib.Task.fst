@@ -396,7 +396,6 @@ fn recall_handle_spotted
   unfold (handle_spotted p post h);
   with t. assert (task_spotted p t);
   recall_task_spotted p t #ts;
-  dup (shift (up t.post ** later_credit 1) post) ();
   fold (handle_spotted p post h);
   hide t
 }
@@ -506,7 +505,6 @@ ghost fn shift_up (x: slprop_ref) (y: slprop)
     slprop_ref_gather _ #_ #y;
     later_elim _;
     equiv_elim _ _;
-    drop_ (slprop_ref_pts_to _ _);
     drop_ (is_send_tag v inst);
   };
 }
@@ -547,8 +545,6 @@ fn spawn (p:pool)
   };
   rewrite each pre_ref as task.pre;
   rewrite each post_ref as task.post;
-  dup (slprop_ref_pts_to task.pre pre) ();
-  dup (slprop_ref_pts_to task.post post) ();
   fold is_send_tag post post_inst;
   fold task_thunk_typing_core task pre post;
   fold task_thunk_typing task;
@@ -781,19 +777,6 @@ fn fold_all_tasks_done_cons (t : task_t) (ts : list task_t)
   by (helper_tac())
 }
 
-instance dup_snapshot
-  (#t:Type u#0)
-  (#pre : preorder t)
-  (#anc : FRAP.anchor_rel pre)
-  (r : AR.ref t pre anc)
-  (v : t)
-: duplicable (AR.snapshot r v) = {
-  // TODO: implement in AR module, or tweak
-  // take_snapshot to provide a snapshot of a possibly
-  // "older" value. In that case this is easy to implement.
-  dup_f = (fun _ -> AR.dup_snapshot r);
-}
-
 ghost
 fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
   preserves all_tasks_done ts
@@ -810,7 +793,6 @@ fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
       if b {
         rewrite each t' as t;
         let st = unfold_all_tasks_done_cons t ts';
-        dup (AR.snapshot t.h.g_state st) ();
         fold (handle_done t.h);
         fold (task_done t);
         fold_all_tasks_done_cons t ts' st;
@@ -950,7 +932,6 @@ fn rec pool_done_task_done_aux
       if b {
         rewrite each t' as t;
         let st = unfold_all_tasks_done_cons t ts';
-        dup (AR.snapshot t.h.g_state st) ();
         fold (handle_done t.h);
         fold (task_done t);
         
@@ -1088,7 +1069,6 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
           AR.write t.h.g_state Running;
 
           B.share t.h.state;
-          dup (task_thunk_typing t) ();
 
           intro_state_pred_Running t.pre t.post t.h;
           add_one_state_pred t ts;
@@ -1186,7 +1166,7 @@ fn perf_work (t : task_t)
 
   fold up t.post; // ????
   with v vinst. assert is_send_tag v vinst;
-  drop_ (slprop_ref_pts_to _ _ ** is_send_tag v _);
+  drop_ (is_send_tag v _);
 }
 fn put_back_result (p:pool) #f (t : task_t)
   requires pool_alive #f p **

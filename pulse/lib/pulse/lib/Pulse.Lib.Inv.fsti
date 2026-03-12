@@ -37,9 +37,7 @@ instance val duplicable_inv i p : duplicable (inv i p)
 ghost fn dup_inv (i:iname) (p:slprop)
   preserves inv i p
   ensures inv i p
-{
-  dup (inv i p) ()
-}
+{}
 
 ghost fn fresh_invariant
     (ctx: inames { Pulse.Lib.GhostSet.is_finite ctx })
@@ -59,7 +57,7 @@ unobservable fn with_inv_unobs u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Neutral is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -69,7 +67,7 @@ ghost fn with_invariants_g u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_ghost a is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -80,7 +78,7 @@ atomic fn with_invariants_a u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Observable is (pre ** p) (fun x -> post x ** p))
   opens add_inv is i
-  preserves inv i p
+  requires inv i p
   requires later_credit 1
   requires pre
   returns x:a
@@ -90,7 +88,7 @@ inline_for_extraction noextract
 fn with_invariants u#a (a: Type u#a)
     is (i: iname { not (mem_inv is i) }) (p: slprop) pre (post: a->slprop)
     (k: unit -> stt_atomic a #Observable is (pre ** p) (fun x -> post x ** p))
-  preserves inv i p
+  requires inv i p
   requires pre
   returns x:a
   ensures post x

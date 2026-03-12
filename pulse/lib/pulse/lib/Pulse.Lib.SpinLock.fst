@@ -178,7 +178,6 @@ fn share (#v:slprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #p v);
   CInv.share l.i;
-  dup_inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
   fold (lock_alive l #(p /. 2.0R) v);
   fold (lock_alive l #(p /. 2.0R) v)
 } 
@@ -192,7 +191,6 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
   ensures lock_alive l #(p1 +. p2) v
 {
   unfold (lock_alive l #p1 v);
-  drop_ (inv (iname_of l.i) _);
   unfold (lock_alive l #p2 v);
   CInv.gather #p1 #p2 l.i;
   fold (lock_alive l #(p1 +. p2) v);
@@ -226,9 +224,7 @@ fn lock_alive_inj
   ensures lock_alive l #p2 v1
 {
   unfold (lock_alive l #p2 v2);
-  drop_ (inv _ _);
   unfold (lock_alive l #p1 v1);
-  dup_inv (CInv.iname_of l.i) (CInv.cinv_vp l.i (lock_inv l.r l.gr v1));
   fold (lock_alive l #p1 v1);
   fold (lock_alive l #p2 v1);
   // TODO: we could also prove from, but that requires a significant amount of congruence lemmas about equiv

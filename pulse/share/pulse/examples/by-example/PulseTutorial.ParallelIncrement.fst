@@ -436,7 +436,6 @@ ensures pts_to x ('i + 2)
     GR.gather right;
     GR.free left;
     GR.free right;
-    drop_ (inv _ _)
 }
 //end add2_v3$
 

@@ -185,6 +185,5 @@ fn cancel (#v:slprop) (c:cinv)
       (active c 1.0R) (fun _ -> v) fn _ {
     cancel_ c;
   };
-  drop_ (inv (iname_of c) _)
 }
 

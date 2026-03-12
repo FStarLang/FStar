@@ -1244,7 +1244,6 @@ fn share (#pred:perm -> slprop) {| fractional pred |} (#p:perm) (l:rwlock pred)
 {
   unfold (is_rwlock l #p);
   CInv.share l.cinv;
-  dup_inv (CInv.iname_of l.cinv) (cinv_vp l.cinv (rwlock_inv pred l.counter l.ghost_counter l.perm_table));
   fold (is_rwlock l #(p /. 2.0R));
   fold (is_rwlock l #(p /. 2.0R))
 }
@@ -1258,6 +1257,5 @@ fn gather (#pred:perm -> slprop) {| fractional pred |} (#p1 #p2:perm) (l:rwlock 
   unfold (is_rwlock l #p1);
   unfold (is_rwlock l #p2);
   CInv.gather l.cinv;
-  drop_ (inv (iname_of l.cinv) (cinv_vp l.cinv (rwlock_inv pred l.counter l.ghost_counter l.perm_table)));
   fold (is_rwlock l #(p1 +. p2))
 }

@@ -86,10 +86,7 @@ fn demo () returns r: (r: bool {r}) {
   borrow a (pts_to arr varr);
   fold array_bpts_to a arr varr;
 
-  dup (array_bpts_to a arr varr) ();
   let arr1 = array_slice arr 5sz 8sz;
-
-  dup (array_bpts_to a arr varr) ();
   let arr2 = array_slice arr 6sz 9sz;
 
   // Now we have read-only permission to arr1 and arr2, two overlapping slices of arr.
@@ -102,9 +99,6 @@ fn demo () returns r: (r: bool {r}) {
   // And now we have arr back.
 
   drop_ (lifetime_dead a);
-  drop_ (array_bpts_to a arr2 (slice varr 6 9));
-  drop_ (array_bpts_to a arr varr);
-  drop_ (array_bpts_to a arr1 (slice varr 5 8));
 
   r
 }

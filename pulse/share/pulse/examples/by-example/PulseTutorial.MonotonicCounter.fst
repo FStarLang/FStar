@@ -62,9 +62,7 @@ ensures c.inv 0
         MR.recall_snapshot mr;
     };
     ghost
-    fn dup (#_:unit) : dup_f snapshot = i {
-        MR.dup_snapshot mr;
-    };
+    fn dup (#_:unit) : dup_f snapshot = i {};
     let c = { inv; snapshot; next; destroy; snap; recall; dup };
     rewrite (inv 0) as (c.inv 0);
     c

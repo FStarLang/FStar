@@ -77,7 +77,6 @@ ghost fn rec dup_root_idx (x: ref blockchain_root) (i: unat) (y: ref blockchain_
     Succ j -> {
       assert rewrites_to i (Succ j);
       unfold root_idx x (Succ j) y; with z. _;
-      dup (fpts_to x z) ();
       dup_root_idx z.rt_next j y ();
       fold root_idx x (Succ j) y;
       fold root_idx x (Succ j) y;
@@ -110,8 +109,6 @@ ghost fn elim_root_idx'_succ x (n: unat) y
 
 ghost fn dup_root_idx' x i y () : duplicable_f (root_idx' x i y) = {
   unfold root_idx' x i y; with z. _;
-  dup (root_idx x i z) ();
-  dup (fpts_to z y) ();
   fold root_idx' x i y;
   fold root_idx' x i y;
 }
@@ -126,12 +123,6 @@ let valid_split (x a b: slprop_ref) =
 
 ghost fn dup_valid_split x a b () : duplicable_f (valid_split x a b) = {
   unfold valid_split x a b; with px pa pb. _;
-  dup (
-    slprop_ref_pts_to x px **
-    slprop_ref_pts_to a pa **
-    slprop_ref_pts_to b pb **
-    shift (later px) (later pa ** later pb ** trade (later pa ** later pb) (later px))
-  ) ();
   fold valid_split x a b;
   fold valid_split x a b;
 }
@@ -164,8 +155,6 @@ ghost fn rec dup_bc_idx x (is: list bool) y ()
       assert rewrites_to is (i::is');
       unfold bc_idx x (i::is') y; with a b. _;
       dup_bc_idx (if i then b else a) is' y ();
-      dup (fpts_to x.be_ref (Split a b)) ();
-      dup (valid_split x.be_prop a.be_prop b.be_prop) ();
       fold bc_idx x (i::is') y;
       fold bc_idx x (i::is') y;
     }
@@ -268,7 +257,6 @@ ghost fn rec bc_stored_elim x (d: stored_shape) y
   match d {
     Stored -> {
       unfold bc_stored x Stored y; with z. _;
-      drop_ (slprop_ref_pts_to x.be_prop z);
       elim_trade (later z) y;
     }
     StoredCheckedOut -> {
@@ -279,7 +267,6 @@ ghost fn rec bc_stored_elim x (d: stored_shape) y
       unfold bc_stored x (StoredBoth da db) y; with ya yb a b. _;
       bc_stored_elim a da ya;
       bc_stored_elim b db yb;
-      drop_ (fpts_to x.be_ref (Split a b));
       elim_trade _ _;
     }
   }
@@ -299,7 +286,6 @@ ghost fn rec rt_stored_elim a (n: unat) y
       unfold rt_stored a (Succ m) y; with r b1 b2. _;
       rt_stored_elim r.rt_next m b2;
       bc_stored_elim r.rt_tree _ b1;
-      drop_ (fpts_to a r);
       elim_trade _ _;
     }
   }
@@ -369,7 +355,6 @@ ghost fn rec set_end (a: lifetime) (n: unat) (y: blockchain_root)
       unfold root_idx a Zero; rewrite each a' as a;
       a := y;
       fold fpts_to a y;
-      dup (fpts_to a y) ();
       fold root_idx a Zero a;
       fold root_idx' a Zero y;
       fold root_idx y.rt_next Zero y.rt_next;
@@ -384,7 +369,6 @@ ghost fn rec set_end (a: lifetime) (n: unat) (y: blockchain_root)
       assert fpts_to a c ** root_idx c.rt_next m b;
       fold owns_end c.rt_next m;
       set_end c.rt_next m y;
-      dup (fpts_to a c) ();
       shift_owns_end a (Succ m);
       shift_root_idx' a m _;
     }
@@ -422,9 +406,13 @@ ghost fn rec push_rt_borrowed x (n: unat) (b: slprop) r #c #w
     Succ m -> {
       assert rewrites_to n (Succ m);
       unfold rt_borrowed x (Succ m) b; with z y c' b'. _;
-      assert fpts_to x z ** trade b (unless c' (later y) ** b') ** rt_borrowed z.rt_next m b';
-      elim_root_idx'_succ x m r; with z'. assert fpts_to x z ** fpts_to x z';
-      fpts_to_gather x z z'; rewrite each z' as z;
+      assert trade b (unless c' (later y) ** b') ** rt_borrowed z.rt_next m b';
+      elim_root_idx'_succ x m r;
+      #set-options "--ext pulse:prover_dup=false" {
+        with z'. assert fpts_to x z ** fpts_to x z';
+        fpts_to_gather x z z';
+        rewrite each z' as z;
+      };
       assert root_idx' z.rt_next m r;
       push_rt_borrowed z.rt_next m b' r;
       assert trade b (unless c' (later y) ** b');
@@ -489,15 +477,9 @@ ghost fn push_new_root (a: lifetime) (q: slprop) (c: bool) (#n: unat) (#y #z: sl
   assert rewrites_to be_ref e.rt_tree.be_ref;
   assert rewrites_to rt_returned e.rt_returned;
   assert rewrites_to rt_next e.rt_next;
-  dup (slprop_ref_pts_to be_prop q) ();
   set_end a n e;
-  dup (root_idx' a n e) ();
-  dup (slprop_ref_pts_to be_prop q) ();
   push_rt_borrowed a n y e;
-  dup (root_idx' a n e) ();
-  dup (slprop_ref_pts_to be_prop q) ();
   push_rt_stored a n _ e;
-  dup (root_idx' a n e) ();
   fold bc_idx e.rt_tree [] e.rt_tree;
   fold (a >:> q);
 }
@@ -569,15 +551,9 @@ ghost fn share_borrow' #a (p q1 q2: slprop)
   rewrite each rb as eb.be_prop;
   l.be_ref := Split ea eb;
   fold (fpts_to l.be_ref (Split ea eb));
-  dup (fpts_to l.be_ref (Split ea eb)) ();
-  dup (slprop_ref_pts_to ea.be_prop q1) ();
-  dup (slprop_ref_pts_to eb.be_prop q2) ();
   fold valid_split l.be_prop ea.be_prop eb.be_prop;
-  dup (bc_idx r.rt_tree is l) ();
-  dup (valid_split l.be_prop ea.be_prop eb.be_prop) ();
   push_bc_idx r.rt_tree is false l; 
   push_bc_idx r.rt_tree is true l; 
-  dup (root_idx' a n r) ();
   fold (a >:> q1);
   fold (a >:> q2);
 }
@@ -691,7 +667,6 @@ ghost fn fpts_to_of_root_idx' x j r
     }
     Succ j -> {
       elim_root_idx'_succ x j r;
-      drop_ (root_idx' _ _ r);
     }
   }
 }
@@ -741,14 +716,12 @@ ghost fn rec bc_stored_take x (d: stored_shape) y (is: list bool) p #l
             equiv_elim _ _;
             elim_trade _ _;
           };
-          drop_ (slprop_ref_pts_to x.be_prop z);
           fold bc_stored x StoredCheckedOut (trade (later p) y);
         }
         i::is' -> {
           unfold bc_idx x (i::is') l; with a b. _;
           unfold valid_split; with px pa pb. _;
           slprop_ref_gather x.be_prop #z #px;
-          drop_ (slprop_ref_pts_to x.be_prop z);
           later_equiv_commute z px;
           equiv_dup _ _;
           equiv_elim _ _;
@@ -813,7 +786,6 @@ ghost fn rec bc_stored_take x (d: stored_shape) y (is: list bool) p #l
         }
         i::is' -> {
           unfold bc_idx x (i::is') l; with a' b'. _;
-          drop_ (valid_split _ _ _);
           fpts_to_gather x.be_ref (Split a b) (Split a' b');
           rewrite each a' as a; rewrite each b' as b;
           match i {
@@ -857,7 +829,6 @@ ghost fn intro_owns_end_succ x #r m
   ensures owns_end x (Succ m)
 {
   unfold owns_end r.rt_next m;
-  dup (fpts_to x r) ();
   fold root_idx x (Succ m);
   fold owns_end x (Succ m);
 }
@@ -897,7 +868,6 @@ ghost fn rec rt_stored_take x (n: unat) b j is #r p #l
         Succ j -> {
           elim_root_idx'_succ x j r; with z. _;
           fpts_to_gather x y z; rewrite each z as y;
-          dup (fpts_to x y) ();
           elim_owns_end_succ x m;
           rt_stored_take y.rt_next m b2 j is p;
           intro (trade (b1 ** trade (later p) b2) (trade (later p) b))
@@ -907,7 +877,6 @@ ghost fn rec rt_stored_take x (n: unat) b j is #r p #l
           };
           fold rt_stored x (Succ m) (trade (later p) b);
           intro_owns_end_succ x m;
-          drop_ (fpts_to x y);
         }
       }
     }
@@ -925,11 +894,7 @@ ghost fn push_new_root_internal (a: lifetime) (q: slprop) (#n: unat) (#y #z: slp
   ensures owns_end a (Succ n)
 {
   push_new_root a q true; with e. _;
-  drop_ (
-    root_idx' a n e **
-    slprop_ref_pts_to e.rt_tree.be_prop q **
-    pts_to e.rt_returned #0.5R true
-  )
+  drop_ (pts_to e.rt_returned #0.5R true)
 }
 
 ghost fn use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
@@ -1064,7 +1029,6 @@ ghost fn rec rt_borrowed_take x (n: unat) j #r #p
           elim_owns_end_succ x m;
           rt_borrowed_take r'.rt_next m j; with b''. _;
           intro (trade (unless c (later y) ** b'') (unless c (later y) ** b'')) fn _ {};
-          dup (fpts_to x r') ();
           fold rt_borrowed x n (unless c (later y) ** b'');
           shift_owns_end x m;
         }

@@ -30,29 +30,31 @@ let inv_core (x:ref int) (mr:ghost_monotonic_ref)
 : timeless_slprop
 = exists* (j:int). (x |-> j) ** MR.pts_to mr #1.0R j
 
+// linear version of the duplicable MR.snapshot
+let snap (mr:ghost_monotonic_ref) v = MR.snapshot mr v
 
 fn increment (x:ref int) (#mr:ghost_monotonic_ref) (#i:iname) (#v0:erased int)
 requires inv i (inv_core x mr) //x and mr are related, i.e., their values are equal
-requires MR.snapshot mr v0     //and the value pf m,r
-ensures inv i (inv_core x mr)  //x and mr are still related
-ensures exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 1) //and value of mr is at least one more than it was before
+requires snap mr v0     //and the value pf m,r
+ensures exists* v1. snap mr v1 ** pure (v1 >= v0 + 1) //and value of mr is at least one more than it was before
 {
-    with_invariants unit emp_inames i (inv_core x mr) (MR.snapshot mr v0)
-        (fun _ -> exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 1))
+    with_invariants unit emp_inames i (inv_core x mr) (snap mr v0)
+        (fun _ -> exists* v1. snap mr v1 ** pure (v1 >= v0 + 1))
     fn _ { //open the invariant i, so we can use it 
+        unfold snap;
         MR.recall_snapshot mr; //Ghost step: this tells us that v0 <= current value of x
-        drop_ (MR.snapshot mr v0); //we don't need the snapshot of v0 anymore
         let res = incr_atomic x; //to the actual increment
         MR.update mr res; //Ghost step: update the ghost reference to the new value
         MR.take_snapshot mr #1.0R res; //Take a new snapshot of the ghost reference at the current value
-    }
+        fold snap mr res;
+    };
 }
 
 //And here's a double increment
 fn double_increment (x:ref int) (#mr:ghost_monotonic_ref) (#i:iname) (#v0:erased int)
 preserves inv i (inv_core x mr)
-requires MR.snapshot mr v0
-ensures exists* v1. MR.snapshot mr v1 ** pure (v1 >= v0 + 2) // value of mr is at least two more than it was before
+requires snap mr v0
+ensures exists* v1. snap mr v1 ** pure (v1 >= v0 + 2) // value of mr is at least two more than it was before
 {
     increment x;
     increment x;

@@ -43,7 +43,6 @@ ensures
   pts_to t i #1.0R p
 {
   unfold pts_to;
-  drop_ (slprop_ref_pts_to _ _);
   let r' = slprop_ref_alloc p;
   GT.update t r';
   fold pts_to

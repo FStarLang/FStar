@@ -318,7 +318,6 @@ ensures  R.pts_to r ('i + 2)
     (fun _ -> increment #2 r ci);
   later_credit_buy 1;
   CI.gather ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
-  drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
   // collect up the has_given predicates from each thread
   gather_has_given gs;
   // recover the postcondition by the main ghost state eliminator lemma
@@ -405,7 +404,6 @@ decreases remaining
     par_atomic_l
       (fun _ -> increment #capacity r ci) //call increment in one thread
       (fun _ -> incr_n_aux #capacity r (remaining - 1) ci); //recursively call to spawn more
-    drop_ (inv _ _);
     CI.gather ci;
     gather_has_given gs;
     rewrite has_given gs (1 + (remaining - 1)) as has_given gs remaining;
