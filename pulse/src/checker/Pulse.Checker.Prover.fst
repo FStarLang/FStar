@@ -532,6 +532,41 @@ let unreachable_elim (g: env) (goals: list slprop_view) : cont_elab g [IsUnreach
   k_elab_equiv (elab_slprops (frame @ [IsUnreachable])) (elab_slprops (frame @ goals)) (continuation_elaborator_with_bind_nondep frame_t c st)
     post t
 
+let slprop_is_dup (a b: slprop_view) =
+  match a, b with
+  | Atom a_hd true a_mkeys a, Atom b_hd true b_mkeys b ->
+    // true means duplicable
+    T.term_eq a b
+  | _ -> false
+
+let rec remove_dups_from_list (ctxt: list slprop_view) : T.Tac _ =
+  match ctxt with
+  | [] -> []
+  | a::ctxt ->
+    let ctxt =
+      match a with
+      | Atom _ true _ _ ->
+        List.Tot.filter (fun b -> not (slprop_is_dup a b)) ctxt
+      | _ -> ctxt
+    in
+    a :: remove_dups_from_list ctxt
+
+let remove_dups' (g: env) (ctxt goals: list slprop_view) :
+    T.Tac (option (prover_result_samegoals g ctxt goals)) =
+  let ctxt' = remove_dups_from_list ctxt in
+  if List.length ctxt' = List.length ctxt then
+    None
+  else
+    Some (| g, ctxt', goals, [], fun g'' ->
+      cont_elab_refl _ _ _,
+      cont_elab_refl _ _ _ <: T.Tac _ |)
+
+let remove_dups (g: env) (ctxt goals: list slprop_view) :
+    T.Tac (option (prover_result g ctxt goals)) =
+  match remove_dups' g ctxt goals with
+  | Some result -> Some result
+  | None -> None
+
 let elim_is_unreachable (g: env) (ctxt goals: list slprop_view) :
     T.Tac (option (prover_result g ctxt goals)) =
   if not (List.existsb IsUnreachable? ctxt) then None else
@@ -1299,6 +1334,7 @@ let elim_step (pg: penv) (ctxt goals: list slprop_view) :
     T.Tac (option (prover_result_samegoals pg.penv_env ctxt goals)) =
   let g = pg.penv_env in
   first_some [
+    (fun _ -> remove_dups' g ctxt goals);
     (fun _ -> elim_first' g ctxt goals (unpack_and_norm_ctxt pg));
     (fun _ -> elim_first' g ctxt goals (elim_pure_step g));
     (fun _ -> elim_first' g ctxt goals (elim_with_pure_step g));
@@ -1313,6 +1349,7 @@ let prove_step (pg: penv) (ctxt goals: list slprop_view)
     T.Tac (option (prover_result pg.penv_env ctxt goals)) =
   let g = pg.penv_env in
   first_some [
+    (fun _ -> remove_dups g ctxt goals);
     (fun _ -> elim_is_unreachable g ctxt goals);
     (fun _ -> prove_first g ctxt goals (prove_pure g ctxt true));
     (fun _ -> prove_first g ctxt goals (prove_with_pure g ctxt true));
