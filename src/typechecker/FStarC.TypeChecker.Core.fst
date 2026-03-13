@@ -1122,11 +1122,10 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     in
     let fallback t0 t1 =
       if guard_ok
-      then if equatable g t0
-            then emit_guard t0 t1
-            else if equatable g t1
-            then emit_guard t0 t1
-            else err "not equatable"
+      then if equatable g t0 
+            || equatable g t1
+           then emit_guard t0 t1
+           else err "not equatable"
       else err "guards not allowed"
     in
     let maybe_unfold_side_and_retry side t0 t1 =
@@ -1233,9 +1232,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
             let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in
-            let lhs = U.flatten_refinement lhs in
-            let rhs = U.flatten_refinement rhs in
-            check_relation g rel lhs rhs
+            check_relation g rel (U.flatten_refinement lhs) (U.flatten_refinement rhs)
         )
 
       | Tm_refine {b=x0; phi=f0}, _ ->
@@ -1264,8 +1261,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           | None -> fallback t0 t1
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
-            let lhs = U.flatten_refinement lhs in
-            check_relation g rel lhs t1
+            check_relation g rel (U.flatten_refinement lhs) t1
         )
 
       | _, Tm_refine {b=x1; phi=f1} ->
@@ -1298,8 +1294,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           | None -> fallback t0 t1
           | Some (t0, t1) ->
             let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in
-            let rhs = U.flatten_refinement rhs in
-            check_relation g rel t0 rhs
+            check_relation g rel t0 (U.flatten_refinement rhs)
         )
 
       | Tm_uinst _, _
@@ -1358,12 +1353,10 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           (check_relation g EQUALITY body0 body1)
 
       | Tm_arrow {bs=x0::x1::xs; comp=c0}, _ ->
-        let t0' = curry_arrow x0 (x1::xs) c0 in
-        check_relation g rel t0' t1
+        check_relation g rel (curry_arrow x0 (x1::xs) c0) t1
 
       | _, Tm_arrow {bs=x0::x1::xs; comp=c1} ->
-        let t1' = curry_arrow x0 (x1::xs) c1 in
-        check_relation g rel t0 t1'
+        check_relation g rel t0 (curry_arrow x0 (x1::xs) c1)
 
       | Tm_arrow {bs=[x0]; comp=c0}, Tm_arrow {bs=[x1]; comp=c1} ->
         with_context "subtype arrow" None (fun _ ->
@@ -1382,16 +1375,14 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               match rel with
               | EQUALITY -> EQUALITY
               | SUBTYPING e ->
-                let sub_e = 
-                  if U.is_pure_or_ghost_comp c0
-                  then (match e with
+                SUBTYPING
+                  (if U.is_pure_or_ghost_comp c0
+                   then match e with
                         | None -> None
                         | Some e ->
-                          let args = snd (U.args_of_binders [x1]) in
-                          Some (S.mk_Tm_app e args R.dummyRange))
-                  else None
-                in
-                SUBTYPING sub_e
+                          let r = S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange in
+                          Some r
+                   else None)
             in
             check_relation g rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->

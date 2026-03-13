@@ -86,8 +86,8 @@ let dbg_NBETop = Debug.get_toggle "NBETop"
 // VD: This seems necessary for the OCaml build
 let max a b = if a > b then a else b
 
-let map_rev (f : 'a -> 'b) (l : list 'a) : list 'b =
-  let rec aux (l:list 'a) (acc:list 'b) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
+let map_rev (f : 'a -> ML 'b) (l : list 'a) : ML (list 'b) =
+  let rec aux (l:list 'a) (acc:list 'b) : ML _ = //NS: weird, this needs an annotation to type-check in F*; cf issue #
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
@@ -658,23 +658,17 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     | Tm_let {lbs=(false, [lb]); body} -> // non-recursive let
       if Cfg.should_reduce_local_let cfg.core_cfg lb
       then if cfg.core_cfg.steps.for_extraction
-            then (if U.is_unit lb.lbtyp
-                  then (if U.is_pure_or_ghost_effect lb.lbeff
-                        then let bs = mk_rt (S.range_of_lbname lb.lbname) (Constant Unit) :: bs in
-                             translate cfg bs body
-                        else let bs = translate_letbinding cfg bs lb :: bs in
-                             translate cfg bs body)
-                  else let bs = translate_letbinding cfg bs lb :: bs in
-                       translate cfg bs body)
-            else let bs = translate_letbinding cfg bs lb :: bs in
-                 translate cfg bs body
+           && U.is_unit lb.lbtyp
+           && U.is_pure_or_ghost_effect lb.lbeff
+           then let bs = mk_rt (S.range_of_lbname lb.lbname) (Constant Unit) :: bs in
+                translate cfg bs body
+           else let bs = translate_letbinding cfg bs lb :: bs in
+                translate cfg bs body
       else let def () =
                if cfg.core_cfg.steps.for_extraction
-               then (if U.is_unit lb.lbtyp
-                     then (if U.is_pure_or_ghost_effect lb.lbeff
-                           then mk_t <| Constant Unit
-                           else translate cfg bs lb.lbdef)
-                     else translate cfg bs lb.lbdef)
+               && U.is_unit lb.lbtyp
+               && U.is_pure_or_ghost_effect lb.lbeff
+               then mk_t <| Constant Unit
                else translate cfg bs lb.lbdef
            in
            let typ () = translate cfg bs lb.lbtyp in
@@ -1234,7 +1228,7 @@ and translate_monadic_lift msmt cfg bs e : ML t =
 and readback (cfg:config) (x:t) : ML term =
     let debug = debug cfg in
     let readback_args cfg args =
-      List.rev (List.map (fun (x, q) -> (readback cfg x, q)) args)
+      map_rev (fun (x, q) -> (readback cfg x, q)) args
     in
     let with_range t = { t with pos = x.nbe_r } in
     let mk t = S.mk t x.nbe_r in
@@ -1342,13 +1336,13 @@ and readback (cfg:config) (x:t) : ML term =
       with_range (U.arrow binders c)
 
     | Construct (fv, us, args) ->
-      let args = List.rev (List.map (fun (x, q) -> (readback cfg x, q)) args) in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let fv = S.mk (Tm_fvar fv) (S.range_of_fv fv) in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       with_range (app)
 
     | FV (fv, us, args) ->
-      let args = List.rev (List.map (fun (x, q) -> (readback cfg x, q)) args) in
+      let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let fv = S.mk (Tm_fvar fv) Range.dummyRange in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       with_range (

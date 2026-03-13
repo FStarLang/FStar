@@ -396,46 +396,33 @@ let config' psteps s e : ML cfg =
     let steps = to_fsteps s |> add_nbe in
     let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
-    let v_Norm = !dbg_Norm in
-    let v_NormTop = !dbg_NormTop in
-    let v_NormCfg = !dbg_NormCfg in
-    let v_Primops = !dbg_Primops in
-    let v_Unfolding = !dbg_Unfolding in
-    let v_380 = !dbg_380 in
-    let v_WPE = !dbg_WPE in
-    let v_NormDelayed = !dbg_NormDelayed in
-    let v_print_normalized = !dbg_print_normalized in
-    let v_NBE = !dbg_NBE in
-    let v_EraseErasableArgs = !dbg_UNSOUND_EraseErasableArgs in
-    let v_normalize_pure = Options.normalize_pure_terms_for_extraction() in
-    let v_compat_memo = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg" in
     {
       tcenv = e;
       debug = {
-        gen = v_Norm || dbg_flag;
-        top = v_NormTop || dbg_flag;
-        cfg = v_NormCfg;
-        primop = v_Primops;
-        unfolding = v_Unfolding;
-        b380 = v_380;
-        wpe = v_WPE;
-        norm_delayed = v_NormDelayed;
-        print_normalized = v_print_normalized;
-        debug_nbe = v_NBE;
+        gen = !dbg_Norm || dbg_flag;
+        top = !dbg_NormTop || dbg_flag;
+        cfg = !dbg_NormCfg;
+        primop = !dbg_Primops;
+        unfolding = !dbg_Unfolding;
+        b380 = !dbg_380;
+        wpe = !dbg_WPE;
+        norm_delayed = !dbg_NormDelayed;
+        print_normalized = !dbg_print_normalized;
+        debug_nbe = !dbg_NBE;
         erase_erasable_args = (
-         if v_EraseErasableArgs then
+         if !dbg_UNSOUND_EraseErasableArgs then
            Errors.log_issue e Errors.Warning_WarnOnUse
              "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound";
-         v_EraseErasableArgs);
+         !dbg_UNSOUND_EraseErasableArgs);
       };
       steps = steps;
       delta_level = d;
       primitive_steps = psteps;
       strong = false;
       memoize_lazy = true;
-      normalize_pure_lets = (not steps.pure_subterms_within_computations) || v_normalize_pure;
+      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
       reifying = false;
-      compat_memo_ignore_cfg = v_compat_memo;
+      compat_memo_ignore_cfg = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg";
    }
 
 let config s e : ML cfg = config' [] s e

@@ -64,7 +64,7 @@ let division_modulus_op (f : int -> int -> int) (x y : int) : option int =
 over embeddable types. *)
 let simple_ops : list primitive_step = [
   (* Basic *)
-  mk1 0 PC.string_of_int_lid (fun z -> show #int z);
+  mk1' 0 PC.string_of_int_lid (fun z -> Some (show #int z)) (fun z -> Some (show #int z));
   mk1 0 PC.int_of_string_lid (fun s -> BU.safe_int_of_string s);
   mk1 0 PC.string_of_bool_lid string_of_bool;
   mk1 0 PC.bool_of_string_lid (function "true" -> Some true | "false" -> Some false | _ -> None);
@@ -96,13 +96,21 @@ let simple_ops : list primitive_step = [
   mk2 0 PC.prims_strcat_lid (^);
   mk2 0 PC.string_compare_lid (fun s1 s2 -> String.compare s1 s2);
   mk1 0 PC.string_string_of_list_lid string_of_list;
-  mk2 0 PC.string_make_lid (fun x y -> String.make x y);
+  mk2' 0 PC.string_make_lid
+    (fun x y -> Some (String.make x y))
+    (fun x y -> Some (String.make x y));
   mk1 0 PC.string_list_of_string_lid list_of_string;
   mk1 0 PC.string_lowercase_lid String.lowercase;
   mk1 0 PC.string_uppercase_lid String.uppercase;
-  mk2 0 PC.string_index_lid String.index;
-  mk2 0 PC.string_index_of_lid String.index_of;
-  mk3 0 PC.string_sub_lid (fun s o l -> String.substring s o l);
+  mk2' 0 PC.string_index_lid
+    (fun s i -> Some (String.index s i))
+    (fun s i -> Some (String.index s i));
+  mk2' 0 PC.string_index_of_lid
+    (fun s c -> Some (String.index_of s c))
+    (fun s c -> Some (String.index_of s c));
+  mk3' 0 PC.string_sub_lid
+    (fun s o l -> Some (String.substring s o l))
+    (fun s o l -> Some (String.substring s o l));
 ]
 
 let short_circuit_ops : list primitive_step =

@@ -1296,9 +1296,9 @@ let bound_vars_of_bindings bs =
         | Binding_lid _
         | Binding_univ _ -> [])
 
-let binders_of_bindings bs : ML _ = bound_vars_of_bindings bs |> FStarC.List.map Syntax.mk_binder |> List.rev
-let all_binders env : ML _ = binders_of_bindings env.gamma
-let bound_vars env : ML _ = bound_vars_of_bindings env.gamma
+let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
+let all_binders env = binders_of_bindings env.gamma
+let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
   boundNames = (fun e -> FlatSet.from_list (bound_vars e) );
@@ -1771,7 +1771,7 @@ let push_local_binding env b =
 let push_bv env x = push_local_binding env (Binding_var x)
 
 let push_bvs env bvs : ML _ =
-    FStarC.List.fold_left (fun env bv -> push_bv env bv) env bvs
+    List.fold_left (fun env bv -> push_bv env bv) env bvs
 
 let pop_bv env =
     match env.gamma with
@@ -1826,26 +1826,43 @@ let finish_module =
 ////////////////////////////////////////////////////////////
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
-let uvars_in_env env : ML _ =
+let uvars_in_env env =
   let no_uvs = empty () in
-  FStarC.List.fold_left (fun out b -> match b with
-    | Binding_univ _ -> out
-    | Binding_lid(_, (_, t)) -> union out (Free.uvars t)
-    | Binding_var({sort=t}) -> union out (Free.uvars t)) no_uvs env.gamma
+  let rec aux out g : ML _ = match g with
+    | [] -> out
+    | Binding_univ _ :: tl -> aux out tl
+    | Binding_lid(_, (_, t))::tl
+    | Binding_var({sort=t})::tl ->
+      let out = union out (Free.uvars t) in
+      aux out tl
+  in
+  aux no_uvs env.gamma
 
 let univ_vars env =
     let no_univs = empty () in
-    FStarC.List.fold_left (fun out b -> match b with
-      | Binding_univ _ -> out
-      | Binding_lid(_, (_, t)) -> union out (Free.univs t)
-      | Binding_var({sort=t}) -> union out (Free.univs t)) no_univs env.gamma
+    let rec aux out g : ML _ = match g with
+      | [] -> out
+      | Binding_univ _ :: tl -> aux out tl
+      | Binding_lid(_, (_, t))::tl
+      | Binding_var({sort=t})::tl ->
+        let out = union out (Free.univs t) in
+        aux out tl
+    in
+    aux no_univs env.gamma
 
-let univnames env : ML _ =
+let univnames env =
     let no_univ_names = empty () in
-    FStarC.List.fold_left (fun out b -> match b with
-        | Binding_univ uname -> add uname out
-        | Binding_lid(_, (_, t)) -> union out (Free.univnames t)
-        | Binding_var({sort=t}) -> union out (Free.univnames t)) no_univ_names env.gamma
+    let rec aux out g : ML _ = match g with
+        | [] -> out
+        | Binding_univ uname :: tl ->
+          let out = add uname out in
+          aux out tl
+        | Binding_lid(_, (_, t))::tl
+        | Binding_var({sort=t})::tl ->
+          let out = union out (Free.univnames t) in
+          aux out tl
+    in
+    aux no_univ_names env.gamma
 
 let lidents env : ML (list lident) =
   let keys = List.collect fst env.gamma_sig in
@@ -1884,14 +1901,14 @@ let closed (e : env) (t : term) : ML _ =
 let closed' (t : term) : ML _ =
     is_empty (Free.names t)
 
-let string_of_proof_ns env : ML _ =
+let string_of_proof_ns env =
     let aux (p,b) =
         if p = [] && b then "*"
         else (if b then "+" else "-")^Ident.text_of_path p
     in
-    let mapped = FStarC.List.map aux env.proof_ns in
-    let rev = List.rev mapped in
-    String.concat " " rev
+    List.map aux env.proof_ns
+    |> List.rev
+    |> String.concat " "
 
 
 (* ------------------------------------------------*)
@@ -2081,7 +2098,7 @@ let uvar_meta_for_binder (b:binder) : ML (option ctx_uvar_meta_t & bool) =
           Some a
         | _ -> None
       in
-      match b.binder_attrs |> FStarC.List.tryPick is_unification_tag with
+      match b.binder_attrs |> List.tryPick is_unification_tag with
       | Some tag -> Some (Ctx_uvar_meta_attr tag)
       | None -> None
   in

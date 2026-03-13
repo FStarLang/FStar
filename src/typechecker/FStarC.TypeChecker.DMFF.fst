@@ -152,10 +152,10 @@ let gen_wps_for_free
   let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_bqual_implicit true }) in
   let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name bv.binder_bv)) in
 
-  let _ctx_gctx =
+  let env, ctx_fv, gctx_fv =
     // Neither [ctx_def] or [gctx_def] take implicit arguments.
-    let _ctx_gctx =
-      let mk (f: term -> ML comp): ML term =
+    let ctx_def, gctx_def =
+      let mk (f: term -> ML comp) : ML term =
         let t = S.gen_bv "t" None U.ktype in
         let body = U.arrow gamma (f (S.bv_to_name t)) in
         U.abs (binders @ [ S.mk_binder a; S.mk_binder t ]) body None
@@ -163,8 +163,6 @@ let gen_wps_for_free
       mk mk_Total,
       mk mk_GTotal
     in
-    let ctx_def = fst _ctx_gctx in
-    let gctx_def = snd _ctx_gctx in
     // Register these two top-level bindings in the environment
     let ctx_lid = mk_lid "ctx" in
     let ctx_fv = register env ctx_lid ctx_def in
@@ -172,19 +170,18 @@ let gen_wps_for_free
     let gctx_lid = mk_lid "gctx" in
     let gctx_fv = register env gctx_lid gctx_def in
 
-    ctx_fv, gctx_fv
+    env, ctx_fv, gctx_fv
   in
-  let ctx_fv = fst _ctx_gctx in
-  let gctx_fv = snd _ctx_gctx in
-  let mk_ctx_gctx_app fv t =
+
+  let mk_ctx_or_gctx fv t =
     // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
     mk (Tm_app {hd=fv;
                 args=List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_aqual_implicit false) binders @
       [ S.bv_to_name a, S.as_aqual_implicit false;
         t, S.as_aqual_implicit false ]})
   in
-  let mk_ctx t = mk_ctx_gctx_app ctx_fv t in
-  let mk_gctx t = mk_ctx_gctx_app gctx_fv t in
+  let mk_ctx (t:term) : ML term = mk_ctx_or_gctx ctx_fv t in
+  let mk_gctx (t:term) : ML term = mk_ctx_or_gctx gctx_fv t in
 
   (* val st2_pure : #heap:Type -> #a:Type -> #t:Type -> x:t ->
        Tot (st2_ctx heap a t)
@@ -933,16 +930,12 @@ and infer (env: env) (e: term): ML (nm & term & term) =
                                 (Print.abs_ascription_to_string what) ;
       *)
 
-      let _csbu =
-        let _r = if is_monadic rc_opt then check_m env body else check_n env body in
-        let t = let (x, _, _) = _r in x in
-        let s_body = let (_, x, _) = _r in x in
-        let u_body = let (_, _, x) = _r in x in
+      let comp, s_body, u_body =
+        let t, s_body, u_body =
+          if is_monadic rc_opt then check_m env body else check_n env body
+        in
         comp_of_nm (if is_monadic rc_opt then M t else N t), s_body, u_body
       in
-      let comp = let (c, _, _) = _csbu in c in
-      let s_body = let (_, s, _) = _csbu in s in
-      let u_body = let (_, _, u) = _csbu in u in
 
       // From [comp], the inferred computation type for the (original), return
       // the inferred type for the original term.

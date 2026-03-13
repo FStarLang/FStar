@@ -60,7 +60,7 @@ val (<$>)
   (#m: Type -> Type)
   {| monad m |}
   (#a #b :Type)
-: (a -> ML b) -> m a -> ML (m b)
+: (a -> b) -> m a -> ML (m b)
 
 val (<*>) 
   (#m: Type -> Type)
@@ -72,5 +72,5 @@ val fmap
   (#m: Type -> Type)
   {| monad m |}
   (#a #b :Type)
-  (f : a -> ML b)
+  (f : a -> b)
 : m a -> ML (m b)

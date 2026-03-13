@@ -291,9 +291,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
     match copt with
     | Some _ -> copt, c, None  //setting gopt to None since expected comp is already set, so we will do sub_comp below
     | None  ->
-        if false
-        then Some (U.ml_comp ct e.pos), c, None
-        else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
+        if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None, tot_or_gtot c, None //but, force c to be exactly ((G)Tot t), since otherwise it may actually contain a return
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
@@ -2108,8 +2106,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
               | Some (Inl more_bs) ->  //more actual args
                 let c = SS.subst_comp subst c_expected in
                 (* the expected type is explicitly curried *)
-                let cond = U.is_named_tot c in
-                if cond then
+                if U.is_named_tot c then
                   let t = N.unfold_whnf env_bs (U.comp_result c) in
                   match t.n with
                   | Tm_arrow {bs=bs_expected; comp=c_expected} ->
@@ -2427,17 +2424,19 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & lcomp & guard_t)
           if Options.no_positivity()
           then ()
           else (
-           if U.is_binder_unused b then
-             if not (Positivity.name_unused_in_type envbody b.binder_bv body) then
-               raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
+           if U.is_binder_unused b
+           && not (Positivity.name_unused_in_type envbody b.binder_bv body)
+           then raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
                               (Format.fmt1 "Binder %s is marked unused, but its use in the definition is not"
-                                          (show b));
+                                          (show b))
+                               ;
 
-           if U.is_binder_strictly_positive b then
-             if not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body) then
-               raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
+           if U.is_binder_strictly_positive b
+           && not (Positivity.name_strictly_positive_in_type envbody b.binder_bv body)
+           then raise_error b Error_InductiveTypeNotSatisfyPositivityCondition
                               (Format.fmt1 "Binder %s is marked strictly positive, but its use in the definition is not"
                                              (show b))
+                                
           ))      
         bs 
     in
@@ -4842,16 +4841,10 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
     __typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_abs {bs; body; rc_opt=Some ({residual_effect=eff; residual_typ=tbody})} ->  //AR: maybe keep residual univ too?
-    let mk_comp : option (typ -> ML comp) =
-      let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
-      let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
-      if is_tot
-      then Some S.mk_Total
-      else if is_gtot
-      then Some S.mk_GTotal
-      else None
-    in
-    Option.bind mk_comp (fun f ->
+    let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
+    let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
+    if not (is_tot || is_gtot) then None
+    else
       let tbody =
         match tbody with
         | Some _ -> tbody
@@ -4862,7 +4855,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
       Option.bind tbody (fun tbody ->
         let bs, tbody = SS.open_term bs tbody in
         let u = universe_of (Env.push_binders env bs) tbody in
-        Some (U.arrow bs (f tbody))))
+        Some (U.arrow bs (if is_tot then S.mk_Total tbody else S.mk_GTotal tbody)))
 
   | Tm_abs _ -> None
 

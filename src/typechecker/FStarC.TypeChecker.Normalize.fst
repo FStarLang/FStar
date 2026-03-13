@@ -2517,8 +2517,8 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
             then closure_as_term cfg_exclude_zeta env t
             else norm cfg_exclude_zeta env [] t
           in
-          let rec norm_pat (e: list (option binder & closure & memo subst_t)) p : ML (pat & list (option binder & closure & memo subst_t)) = match p.v with
-            | Pat_constant _ -> p, e
+          let rec norm_pat (env: list (option binder & closure & memo subst_t)) p : ML (pat & list (option binder & closure & memo subst_t)) = match p.v with
+            | Pat_constant _ -> p, env
             | Pat_cons(fv, us_opt, pats) ->
               let us_opt =
                 if cfg.steps.erase_universes
@@ -2527,19 +2527,19 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
                   match us_opt with
                   | None -> None
                   | Some us ->
-                    Some (List.map (norm_universe cfg e) us)
+                    Some (List.map (norm_universe cfg env) us)
                 )
               in
-              let pats, e = pats |> List.fold_left (fun (pats, e) (p, b) ->
-                    let p, e = norm_pat e p in
-                    (p,b)::pats, e) ([], e) in
-              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, e
+              let pats, env = pats |> List.fold_left (fun (pats, env) (p, b) ->
+                    let p, env = norm_pat env p in
+                    (p,b)::pats, env) ([], env) in
+              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
-              let x = {x with sort=norm_or_whnf e x.sort} in
-              {p with v=Pat_var x}, dummy () :: e
+              let x = {x with sort=norm_or_whnf env x.sort} in
+              {p with v=Pat_var x}, dummy () ::env
             | Pat_dot_term eopt ->
-              let eopt = Option.map (norm_or_whnf e) eopt in
-              {p with v=Pat_dot_term eopt}, e
+              let eopt = Option.map (norm_or_whnf env) eopt in
+              {p with v=Pat_dot_term eopt}, env
           in
           let norm_branches () =
             match env with
@@ -2731,11 +2731,10 @@ and norm_match_returns cfg env ret_opt : ML (option (binder & ascription)) =
   | Some (b, asc) ->
     let b = norm_binder cfg env b in
     let subst, asc = SS.open_ascription [b] asc in
-    let env' = dummy()::env in
-    let asc = norm_ascription cfg env' asc in
+    let asc = norm_ascription cfg (dummy()::env) asc in
     Some (b, SS.close_ascription subst asc)
 
-and norm_ascription cfg env (asc:ascription) : ML ascription =
+and norm_ascription cfg env asc : ML ascription =
   let (tc, tacopt, use_eq) = asc in
   (match tc with
    | Inl t -> Inl (norm cfg env [] t)

@@ -1645,8 +1645,8 @@ let next_prob wl : ML (option (prob & list prob & rank_t)) =
                   //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
                   //all the other problems in wl
                   //the rank of the first problem, or the minimum rank in the wl
-        let rec aux state probs : ML _ =
-        let (min_rank, min, out) = state in
+        let rec aux acc probs : ML _ =
+        let (min_rank, min, out) = acc in
         match probs with
         | [] ->
           begin
@@ -1660,9 +1660,8 @@ let next_prob wl : ML (option (prob & list prob & rank_t)) =
           then match min with
                | None -> Some (hd, out@tl, rank)
                | Some m -> Some (hd, out@m::tl, rank)
-          else if (match min_rank with
-                   | None -> true
-                   | Some r -> rank_less_than rank r)
+          else if min_rank = None
+               || rank_less_than rank (Option.must min_rank)
           then match min with
                | None -> aux (Some rank, Some hd, out) tl
                | Some m -> aux (Some rank, Some hd, m::out) tl

@@ -46,61 +46,61 @@ val try_unembed_simple: {| EMB.embedding 'a |} -> term -> ML (option 'a)
 val mk_interp1 #a #r
   {| EMB.embedding a |}
   {| EMB.embedding r |}
-  (f : a -> ML r)
+  (f : a -> r)
   : interp_t
 
 val mk_nbe_interp1 #a #r
   {| NBE.embedding a |}
   {| NBE.embedding r |}
-  (f : a -> ML r)
+  (f : a -> r)
   : nbe_interp_t
 
 val mk_interp2 #a #b #r
   {| EMB.embedding a |} {| EMB.embedding b |}
   {| EMB.embedding r |}
-  (f : a -> ML (b -> ML r))
+  (f : a -> b -> r)
   : interp_t
 
 val mk_nbe_interp2 #a #b #r
   {| NBE.embedding a |} {| NBE.embedding b |}
   {| NBE.embedding r |}
-  (f : a -> ML (b -> ML r))
+  (f : a -> b -> r)
   : nbe_interp_t
 
 val mk_interp3 #a #b #c #r
   {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |}
   {| EMB.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML r)))
+  (f : a -> b -> c -> r)
   : interp_t
 
 val mk_nbe_interp3 #a #b #c #r
   {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |}
   {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML r)))
+  (f : a -> b -> c -> r)
   : nbe_interp_t
 
 val mk_interp4 #a #b #c #d #r
   {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |} {| EMB.embedding d |}
   {| EMB.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
+  (f : a -> b -> c -> d -> r)
   : interp_t
 
 val mk_nbe_interp4 #a #b #c #d #r
   {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |} {| NBE.embedding d |}
   {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
+  (f : a -> b -> c -> d -> r)
   : nbe_interp_t
 
 val mk_interp5 #a #b #c #d #e #r
   {| EMB.embedding a |} {| EMB.embedding b |} {| EMB.embedding c |} {| EMB.embedding d |} {| EMB.embedding e |}
   {| EMB.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
+  (f : a -> b -> c -> d -> e -> r)
   : interp_t
 
 val mk_nbe_interp5 #a #b #c #d #e #r
   {| NBE.embedding a |} {| NBE.embedding b |} {| NBE.embedding c |} {| NBE.embedding d |} {| NBE.embedding e |}
   {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
+  (f : a -> b -> c -> d -> e -> r)
   : nbe_interp_t
 
 val mk1 #a #r
@@ -108,7 +108,7 @@ val mk1 #a #r
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding a |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> ML r)
+  (f : a -> r)
   : primitive_step
 
 val mk2 #a #b #r
@@ -117,7 +117,7 @@ val mk2 #a #b #r
   {| EMB.embedding a |} {| NBE.embedding a |}
   {| EMB.embedding b |} {| NBE.embedding b |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> ML (b -> ML r))
+  (f : a -> b -> r)
   : primitive_step
 
 val mk3 #a #b #c #r
@@ -127,7 +127,7 @@ val mk3 #a #b #c #r
   {| EMB.embedding b |} {| NBE.embedding b |}
   {| EMB.embedding c |} {| NBE.embedding c |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML r)))
+  (f : a -> b -> c -> r)
   : primitive_step
 
 val mk4 #a #b #c #d #r
@@ -138,7 +138,7 @@ val mk4 #a #b #c #d #r
   {| EMB.embedding c |} {| NBE.embedding c |}
   {| EMB.embedding d |} {| NBE.embedding d |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML r))))
+  (f : a -> b -> c -> d -> r)
   : primitive_step
 
 val mk5 #a #b #c #d #e #r
@@ -150,7 +150,7 @@ val mk5 #a #b #c #d #e #r
   {| EMB.embedding d |} {| NBE.embedding d |}
   {| EMB.embedding e |} {| NBE.embedding e |}
   {| EMB.embedding r |} {| NBE.embedding r |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML r)))))
+  (f : a -> b -> c -> d -> e -> r)
   : primitive_step
 
 (* Duplication for op_Division / op_Modulus which can prevent reduction. The `f`
@@ -170,8 +170,8 @@ val mk1_psc' #a #r #na #nr
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : psc -> ML (a -> ML (option r)))
-  (f : psc -> ML (na -> ML (option nr)))
+  (f : psc -> a -> ML (option r))
+  (f : psc -> na -> ML (option nr))
   : primitive_step
 
 val mk2' #a #b #r #na #nb #nr
@@ -180,8 +180,8 @@ val mk2' #a #b #r #na #nb #nr
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> ML (b -> ML (option r)))
-  (f : na -> ML (nb -> ML (option nr)))
+  (f : a -> b -> ML (option r))
+  (f : na -> nb -> ML (option nr))
   : primitive_step
 
 val mk3' #a #b #c #r #na #nb #nc #nr
@@ -191,8 +191,8 @@ val mk3' #a #b #c #r #na #nb #nc #nr
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> ML (b -> ML (c -> ML (option r))))
-  (f : na -> ML (nb -> ML (nc -> ML (option nr))))
+  (f : a -> b -> c -> ML (option r))
+  (f : na -> nb -> nc -> ML (option nr))
   : primitive_step
 
 val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
@@ -203,8 +203,8 @@ val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (option r)))))
-  (f : na -> ML (nb -> ML (nc -> ML (nd -> ML (option nr)))))
+  (f : a -> b -> c -> d -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ML (option nr))
   : primitive_step
 
 
@@ -217,8 +217,8 @@ val mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML (option r))))))
-  (f : na -> ML (nb -> ML (nc -> ML (nd -> ML (ne -> ML (option nr))))))
+  (f : a -> b -> c -> d -> e -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ne -> ML (option nr))
   : primitive_step
 
 val mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
@@ -231,6 +231,6 @@ val mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding f |} {| NBE.embedding nf |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> ML (b -> ML (c -> ML (d -> ML (e -> ML (f -> ML (option r)))))))
-  (f : na -> ML (nb -> ML (nc -> ML (nd -> ML (ne -> ML (nf -> ML (option nr)))))))
+  (f : a -> b -> c -> d -> e -> f -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ne -> nf -> ML (option nr))
   : primitive_step
