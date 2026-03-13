@@ -58,6 +58,7 @@ let xt = transpose x
 let xtx = matrix_mul xt x
 
 let _ = assert (xtx (0,0) == 1)
+#restart-solver
 let _ = assert (xtx (0,1) == 0)
 let _ = assert (xtx (1,0) == 0)
 let _ = assert (xtx (1,1) == 1)

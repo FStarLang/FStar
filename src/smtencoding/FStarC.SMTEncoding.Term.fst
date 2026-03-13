@@ -262,6 +262,10 @@ let op_to_string = function
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvExtRol -> "ext_rotate_left"
+  | BvExtRor -> "ext_rotate_right"
+  | BvRol n -> Format.fmt1 "(_ rotate_left %s)" (show n)
+  | BvRor n -> Format.fmt1 "(_ rotate_right %s)" (show n)
   | BvToNat -> "bv2int"
   | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
   | BvNot -> "bvnot"
@@ -374,11 +378,29 @@ let mkBvAdd = mk_bin_op BvAdd
 let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvRol sz (t1, t2) r =
+  match t2.tm with
+  | Integer n ->
+    mkApp'(BvRol (FStarC.Util.int_of_string n), [t1]) r
+  | App(Var proj, [{tm=App(Var box, [{tm=Integer n}])}])
+    when proj = "BoxInt_proj_0" && box = "BoxInt" ->
+    mkApp'(BvRol (FStarC.Util.int_of_string n), [t1]) r
+  | _ -> mkApp'(BvExtRol, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvRor sz (t1, t2) r =
+  match t2.tm with
+  | Integer n ->
+    mkApp'(BvRor (FStarC.Util.int_of_string n), [t1]) r
+  | App(Var proj, [{tm=App(Var box, [{tm=Integer n}])}])
+    when proj = "BoxInt_proj_0" && box = "BoxInt" ->
+    mkApp'(BvRor (FStarC.Util.int_of_string n), [t1]) r
+  | _ -> mkApp'(BvExtRor, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShl' sz (t1, t2) r = mkApp'(BvShl, [t1;t2]) r
 let mkBvShr' sz (t1, t2) r = mkApp'(BvShr, [t1;t2]) r
+let mkBvRol' sz (t1, t2) r = mkApp'(BvExtRol, [t1;t2]) r
+let mkBvRor' sz (t1, t2) r = mkApp'(BvExtRor, [t1;t2]) r
 let mkBvMul' sz (t1, t2) r = mkApp' (BvMul, [t1;t2]) r
 let mkBvUdivUnsafe sz (t1, t2) r = mkApp'(BvUdiv, [t1;t2]) r
 let mkBvModUnsafe sz (t1, t2) r = mkApp'(BvMod, [t1;t2]) r
@@ -455,6 +477,10 @@ let check_pattern_ok (t:term) : option term =
                 | BvSub
                 | BvShl
                 | BvShr
+                | BvRol _
+                | BvRor _
+                | BvExtRol
+                | BvExtRor
                 | BvUdiv
                 | BvMod
                 | BvMul

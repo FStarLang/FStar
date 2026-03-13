@@ -33,7 +33,9 @@ assume UTF8_inj:
 
 type capRead (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canRead f)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let k_read = MAC.keygen capRead
+#pop-options
 
 val issue_read: f:string{ ACLs.canRead f } -> ML MAC.tag
 val redeem_read: f:string -> m:MAC.tag -> ML (u:unit{ ACLs.canRead f })
@@ -55,7 +57,9 @@ let redeem_read f t =
 // Begin: CapImplementation2
 type capWrite (msg:bytes) = (forall f. msg = utf8 f ==> ACLs.canWrite f)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let k_write = MAC.keygen capWrite
+#pop-options
 
 val issue_write: f:string{ ACLs.canWrite f } -> ML MAC.tag
 val redeem_write: f:string -> m:MAC.tag -> ML(u:unit{ ACLs.canWrite f })

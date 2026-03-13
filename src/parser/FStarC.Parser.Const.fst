@@ -233,6 +233,11 @@ let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
 let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
 let bv_mul'_lid        = bvconst "bvmul'"
 
+let bv_rotate_left_lid = bvconst "bvrol"
+let bv_rotate_right_lid= bvconst "bvror"
+let bv_rotate_left'_lid= bvconst "bvrol'"
+let bv_rotate_right'_lid=bvconst "bvror'"
+
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
 let bv_not_lid         = bvconst "bvnot"

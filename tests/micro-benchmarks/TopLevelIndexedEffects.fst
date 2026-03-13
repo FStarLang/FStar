@@ -28,8 +28,10 @@ assume val f (_:unit) : M int
 // If we try to use this effect at the top-level, F* complains
 //
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 [@@ expect_failure]
 let n : int = f ()
+#pop-options
 
 //
 // We define an identical effect N,
@@ -47,4 +49,6 @@ sub_effect PURE ~> N = lift_PURE_M
 
 assume val g (_:unit) : N int
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let n : int = g ()
+#pop-options

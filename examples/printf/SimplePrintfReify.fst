@@ -17,6 +17,7 @@ module SimplePrintfReify
 
 open FStar.Char
 open FStar.String
+open FStar.List.Tot
 module List = FStar.List.Tot
 
 // A variant of SimplePrintf that uses reify on the Ex implementation
@@ -45,6 +46,7 @@ let bind_ex a b f g = fun _ ->
 let raise_ex (_:exn) : Tot (ex False) = fun _ -> None
 
 (* Define the new effect using DM4F *)
+#push-options "--warn_error -337" //Warning_DeprecatedGeneric
 total reifiable reflectable new_effect {
   XEXN : (a:Type) -> Effect
   with repr     = ex
@@ -52,6 +54,7 @@ total reifiable reflectable new_effect {
      ; return   = return_ex
      ; raise   = raise_ex
 }
+#pop-options
 
 (* A lift from `Pure´ into the new effect *)
 (* unfold let lift_pure_ex_wp (a:Type) (wp:pure_wp a) (_:unit) (p:XEXN?.post a) = *)
@@ -137,7 +140,7 @@ reifiable let rec parse_format (s:list char) : Xex (list dir) =
 let parse_format_pure (s:list char) : option (list dir) =
   reify (parse_format s) ()
 
-let rec parse_format_string (s:string) : Tot (option (list dir)) =
+let parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
 let sprintf (s:string{normalize_term #bool (Some? (parse_format_string s))})

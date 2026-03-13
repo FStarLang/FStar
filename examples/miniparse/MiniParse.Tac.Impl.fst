@@ -307,3 +307,5 @@ let r' : parser_impl r = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
 let j : parser_spec TS.t = TS.package_parser TS.p
 
 let j32 : parser_impl j = T.synth_by_tactic (fun () -> gen_parser_impl T.Goal)
+
+#pop-options

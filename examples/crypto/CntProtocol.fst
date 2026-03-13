@@ -9,7 +9,9 @@ open FStar.String
 open FStar.IO
 open FStar.Ref
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let init_print = print_string "\ninitializing...\n\n"
+#pop-options
 
 open Platform.Bytes
 open SHA1
@@ -24,6 +26,7 @@ let max x y = if x > y then x else y
 type event =
   | Recv : m:uint32 -> c:uint16 -> event
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 val log_prot: ref (list event)
 let log_prot = ST.alloc []
 
@@ -32,6 +35,7 @@ let client_cnt = lemma_repr_bytes_values 1; ST.alloc 1
 
 val server_cnt: ref uint16
 let server_cnt = lemma_repr_bytes_values 0; ST.alloc 0
+#pop-options
 
 val server_max: l:list event -> Tot (uint16)
 let rec server_max l =
@@ -105,8 +109,10 @@ let log_and_update s c =
 
 (* some basic, untrusted network controlled by the adversary *)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 val msg_buffer: ref message
 let msg_buffer = ST.alloc (empty_bytes)
+#pop-options
 
 val send: message -> ST unit
 		       (requires (fun h -> True))
@@ -132,8 +138,10 @@ assume type signal : uint32 -> uint16 -> Type
 type req (msg:message) =
     (exists s c.   msg = CntFormat.signal s c /\ signal s c)
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 val k: k:key{key_prop k == req}
 let k = keygen req
+#pop-options
 
 let recall_all () :ST unit (requires (fun h0      -> True))
                            (ensures  (fun h0 _ h1 -> h0 == h1     /\
@@ -177,6 +185,7 @@ let server () =
 	) else Some "Counter already used"
     ) else Some "Wrong length")
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main =
   let x = 10 in
   lemma_repr_bytes_values x;
@@ -194,3 +203,4 @@ let main =
     | None -> print_string "Success!\n"
     | Some x -> print_string ("Failure : "^x^"\n")
   end
+#pop-options

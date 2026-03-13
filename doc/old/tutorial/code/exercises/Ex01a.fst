@@ -82,4 +82,6 @@ let dynamicChecking () =
   checkedWrite passwd "junk" (* this raises exception *)
 // END: DynamicChecking
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main = staticChecking (); dynamicChecking ()
+#pop-options

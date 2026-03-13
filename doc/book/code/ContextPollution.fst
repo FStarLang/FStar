@@ -28,3 +28,6 @@ let test2 (a:Type) (s0 s1 s2: seq a)
   = ()
 //SNIPPET_END: using_facts$  
 
+
+#pop-options
+#pop-options

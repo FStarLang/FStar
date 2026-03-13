@@ -13,6 +13,7 @@ endif
 
 RUN += ExtractAs.fst
 RUN += InlineLet.fst
+RUN += ParseTest.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 

@@ -782,22 +782,7 @@ let doc_of_modbody (currentModule : mlsymbol) (m : mlmodulebody) =
     reduce (List.flatten docs)
 (* -------------------------------------------------------------------- *)
 let doc_of_mlmodule_r (fsharp : bool) (mod : mlmodule) : doc =
-    let rec p_sig (mod : mlmodule) =
-        let x, sigmod = mod in
-        let x = Util.flatten_mlpath x in
-        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
-        let tail = reduce1 [text "end"] in
-        let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
-
-        reduce [
-            cat head hardline;
-            (match doc with
-             | None   -> empty
-             | Some s -> cat s hardline);
-            cat tail hardline;
-        ]
-
-    and p_mod istop mod =
+    let p_mod istop mod =
         let mod_name, sigmod = mod in
         let target_mod_name = Util.flatten_mlpath mod_name in
         let head = reduce1 (if fsharp

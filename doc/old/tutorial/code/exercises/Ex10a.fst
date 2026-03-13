@@ -36,7 +36,9 @@ let canRead db file =
 
 (* The acls reference stores the current access-control list, initially empty *)
 val acls: ref db
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let acls = ST.alloc []
+#pop-options
 
 (*
    Here are two stateful functions which alter the access control list.
@@ -110,4 +112,3 @@ let test_acls f =
   revoke (Readable f);
   //let _ = read f in       (* not ok any more *) 
   ()
-

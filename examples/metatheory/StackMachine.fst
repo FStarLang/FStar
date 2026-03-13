@@ -148,7 +148,7 @@ let rec vstack (ts : tstack) : Type0 =
     | [] -> unit
     | t :: ts' -> typeDenote t & vstack ts'
 
-let rec tinstrDenote (#ts:tstack) (#ts':tstack)
+let tinstrDenote (#ts:tstack) (#ts':tstack)
                      (i : tinstr ts ts') (s:vstack ts) : Tot (vstack ts') =
   match i with
     | TiNConst _ n -> (n, s)

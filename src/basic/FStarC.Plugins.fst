@@ -24,6 +24,7 @@ open FStarC.Plugins.Base
 module BU = FStarC.Util
 module E   = FStarC.Errors
 open FStarC.Class.Show
+open FStar.List.Tot
 
 let loaded : ref (list string) = mk_ref []
 let loaded_plugin_lib : ref bool = mk_ref false
