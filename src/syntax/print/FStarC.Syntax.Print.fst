@@ -15,6 +15,7 @@
 *)
 
 module FStarC.Syntax.Print
+
 open FStarC.Effect
 
 open FStarC
@@ -34,50 +35,50 @@ module SU         = FStarC.Syntax.Util
 module Pretty     = FStarC.Syntax.Print.Pretty
 module Ugly       = FStarC.Syntax.Print.Ugly
 
-let bv_to_string bv =
+let bv_to_string bv : ML string =
   if Options.print_real_names ()
   then show bv.ppname ^ "#" ^ show bv.index
   else show bv.ppname
 
-let nm_to_string bv =
+let nm_to_string bv : ML string =
     if Options.print_real_names()
     then bv_to_string bv
     else (string_of_id bv.ppname)
 
-let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ show bv.index
+let db_to_string bv : ML string = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 
-let filter_imp aq =
+let filter_imp aq : ML bool =
    (* keep typeclass args *)
    match aq with
    | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
    | Some (Implicit _)
    | Some (Meta _) -> false
    | _ -> true
-let filter_imp_args args =
+let filter_imp_args (args:Syntax.args) : ML Syntax.args =
   args |> List.filter (function (_, None) -> true | (_, Some a) -> not a.aqual_implicit)
-let filter_imp_binders bs =
+let filter_imp_binders bs : ML binders =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 
 let const_to_string = C.const_to_string
 
-let lbname_to_string : lbname -> string = function
+let lbname_to_string : lbname -> ML string = function
   | Inl l -> bv_to_string l
   | Inr l -> show l
 
-let uvar_to_string u = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
-let version_to_string v = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
-let univ_uvar_to_string u =
+let uvar_to_string u : ML string = if (Options.hide_uvar_nums()) then "?" else "?" ^ (Unionfind.uvar_id u |> show)
+let version_to_string v : ML string = Format.fmt2 "%s.%s" (show v.major) (show v.minor)
+let univ_uvar_to_string u : ML string =
     if (Options.hide_uvar_nums())
     then "?"
     else "?" ^ (Unionfind.univ_uvar_id u |> show)
             ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
-let rec int_of_univ n u = match Subst.compress_univ u with
+let rec int_of_univ n u : ML (int & option universe) = match Subst.compress_univ u with
     | U_zero -> n, None
     | U_succ u -> int_of_univ (n+1) u
     | _ -> n, Some u
 
-let rec univ_to_string u =
+let rec univ_to_string u : ML string =
 Errors.with_ctx "While printing universe" (fun () ->
   // VD: commented out for testing NBE
   // if not (Options.ugly()) then
@@ -97,9 +98,9 @@ Errors.with_ctx "While printing universe" (fun () ->
     | U_unknown -> "unknown"
 )
 
-let univs_to_string us = List.map univ_to_string us |> String.concat ", "
+let univs_to_string us : ML string = List.map univ_to_string us |> String.concat ", "
 
-let qual_to_string = function
+let qual_to_string : qualifier -> ML string = function
   | Assumption            -> "assume"
   | InternalAssumption    -> "internal_assume"
   | New                   -> "new"
@@ -125,19 +126,19 @@ let qual_to_string = function
   | Reflectable l         -> Format.fmt1 "(reflect %s)" (string_of_lid l)
   | OnlyName              -> "OnlyName"
 
-let quals_to_string quals =
+let quals_to_string quals : ML string =
     match quals with
     | [] -> ""
     | _ -> quals |> List.map qual_to_string |> String.concat " "
 
-let quals_to_string' quals =
+let quals_to_string' quals : ML string =
     match quals with
     | [] -> ""
     | _ -> quals_to_string quals ^ " "
 
 let paren s = "(" ^ s ^ ")"
 
-let lkind_to_string = function
+let lkind_to_string : lazy_kind -> ML string = function
   | BadLazy -> "BadLazy"
   | Lazy_bv -> "Lazy_bv"
   | Lazy_namedv -> "Lazy_namedv"
@@ -160,92 +161,92 @@ let lkind_to_string = function
   | Lazy_doc -> "Lazy_doc"
   | Lazy_extension s -> "Lazy_extension:" ^ s
 
-let term_to_string x =
+let term_to_string x : ML string =
   if Options.ugly ()
   then Ugly.term_to_string x
   else Pretty.term_to_string x
 
-let term_to_string' env x =
+let term_to_string' env x : ML string =
   if Options.ugly ()
   then Ugly.term_to_string x
   else Pretty.term_to_string' env x
 
-let comp_to_string c =
+let comp_to_string c : ML string =
   if Options.ugly ()
   then Ugly.comp_to_string c
   else Pretty.comp_to_string c
 
-let comp_to_string' env c =
+let comp_to_string' env c : ML string =
   if Options.ugly ()
   then Ugly.comp_to_string c
   else Pretty.comp_to_string' env c
 
-let sigelt_to_string x =
+let sigelt_to_string x : ML string =
   if Options.ugly ()
   then Ugly.sigelt_to_string x
   else Pretty.sigelt_to_string x
 
-let sigelt_to_string' env x =
+let sigelt_to_string' env x : ML string =
   if Options.ugly ()
   then Ugly.sigelt_to_string x
   else Pretty.sigelt_to_string' env x
 
-let pat_to_string x =
+let pat_to_string x : ML string =
   if Options.ugly ()
   then Ugly.pat_to_string x
   else Pretty.pat_to_string x
 
-let term_to_doc' dsenv t =
+let term_to_doc' dsenv t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.term_to_string t)
   else Pretty.term_to_doc' dsenv t
 
-let univ_to_doc' dsenv t =
+let univ_to_doc' dsenv t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.univ_to_string t)
   else Pretty.univ_to_doc' dsenv t
 
-let comp_to_doc' dsenv t =
+let comp_to_doc' dsenv t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.comp_to_string t)
   else Pretty.comp_to_doc' dsenv t
 
-let sigelt_to_doc' dsenv t =
+let sigelt_to_doc' dsenv t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.sigelt_to_string t)
   else Pretty.sigelt_to_doc' dsenv t
 
-let term_to_doc t =
+let term_to_doc t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.term_to_string t)
   else Pretty.term_to_doc t
 
-let univ_to_doc t =
+let univ_to_doc t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.univ_to_string t)
   else Pretty.univ_to_doc t
 
-let comp_to_doc t =
+let comp_to_doc t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.comp_to_string t)
   else Pretty.comp_to_doc t
 
-let sigelt_to_doc t =
+let sigelt_to_doc t : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
-let binder_to_string b =
+let binder_to_string b : ML string =
   if Options.ugly ()
   then Pretty.binder_to_string' false b
   else Ugly.binder_to_string b
 
-let aqual_to_string (q:aqual) : string =
+let aqual_to_string (q:aqual) : ML string =
   match q with
   | Some { aqual_implicit=true } -> "#"
   | _ -> ""
 
-let bqual_to_string' (s:string) (b:bqual) : string =
+let bqual_to_string' (s:string) (b:bqual) : ML string =
   match b with
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
@@ -254,10 +255,10 @@ let bqual_to_string' (s:string) (b:bqual) : string =
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-let bqual_to_string (q:bqual) : string =
+let bqual_to_string (q:bqual) : ML string =
   bqual_to_string' "" q
 
-let subst_elt_to_string = function
+let subst_elt_to_string : subst_elt -> ML string = function
    | DB(i, x) -> Format.fmt2 "DB (%s, %s)" (show i) (bv_to_string x)
    | DT(i, t) -> Format.fmt2 "DT (%s, %s)" (show i) (term_to_string t)
    | NM(x, i) -> Format.fmt2 "NM (%s, %s)" (bv_to_string x) (show i)
@@ -268,11 +269,11 @@ let subst_elt_to_string = function
 (*
  * AR: 07/19: exports is redundant, keeping it here until vale is fixed to not parse it
  *)
-let modul_to_string (m:modul) =
+let modul_to_string (m:modul) : ML string =
   Format.fmt2 "module %s\nDeclarations: [\n%s\n]\n"
     (show m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
-let metadata_to_string = function
+let metadata_to_string : metadata -> ML string = function
     | Meta_pattern (_, ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         Format.fmt1 "{Meta_pattern %s}" pats
@@ -300,7 +301,7 @@ instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_bv     = { show = bv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }
-let ctx_uvar_to_string ctx_uvar =
+let ctx_uvar_to_string ctx_uvar : ML string =
     let reason_string = Format.fmt1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason in
     Format.fmt5 "%s(%s |- %s : %s) %s"
             reason_string
@@ -337,17 +338,17 @@ instance showable_ctx_uvar_meta = {
 instance showable_bqual   = { show = (fun b -> bqual_to_string (Some b)); } // really silly but OK
 instance showable_aqual   = { show = aqual_to_string; }
 
-let tscheme_to_string ts =
+let tscheme_to_string ts : ML string =
   if Options.ugly ()
   then Ugly.tscheme_to_string ts
   else Pretty.tscheme_to_string ts
 
-let tscheme_to_doc ts =
+let tscheme_to_doc ts : ML Pprint.document =
   if Options.ugly ()
   then Pprint.arbitrary_string (Ugly.tscheme_to_string ts)
   else Pretty.tscheme_to_doc ts
 
-let sub_eff_to_string se =
+let sub_eff_to_string se : ML string =
   let tsopt_to_string ts_opt =
     if Some? ts_opt then ts_opt |> Some?.v |> tscheme_to_string
     else "<None>" in
@@ -376,7 +377,7 @@ instance pretty_binding : pretty binding = {
                | Binding_univ u -> pp u);
 }
 
-let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
+let rec sigelt_to_string_short (x: sigelt) : ML string = match x.sigel with
   | Sig_pragma p ->
     show p
 
@@ -438,22 +439,22 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_polymonadic_subcomp {m_lid=m; n_lid=n} ->
     Format.fmt2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
-let binder_to_json env b =
+let binder_to_json env b : ML Json.json =
     let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
     let t = JsonStr (term_to_string' env b.binder_bv.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
-let binders_to_json env bs =
+let binders_to_json env bs : ML Json.json =
     JsonList (List.map (binder_to_json env) bs)
 
-let eff_decl_to_string ed =
+let eff_decl_to_string ed : ML string =
   if Options.ugly ()
   then Ugly.eff_decl_to_string ed
   else Pretty.eff_decl_to_string ed
 
 instance showable_eff_decl = { show = eff_decl_to_string; }
 
-let args_to_string (args:Syntax.args) : string =
+let args_to_string (args:Syntax.args) : ML string =
   String.concat " " <|
     List.map (fun (a, q) ->
       aqual_to_string q ^ term_to_string a) args
@@ -464,7 +465,7 @@ instance showable_decreases_order = {
           | Decreases_wf l -> "Decreases_wf " ^ show l);
 }
 
-let cflag_to_string (c:cflag) : string =
+let cflag_to_string (c:cflag) : ML string =
   match c with
   | TOTAL -> "total"
   | MLEFFECT -> "ml"
@@ -479,7 +480,7 @@ let cflag_to_string (c:cflag) : string =
 
 instance showable_cflag  = { show = cflag_to_string; }
 
-let binder_to_string_with_type b =
+let binder_to_string_with_type b : ML string =
   if Options.ugly () then
     let attrs =
       match b.binder_attrs with

@@ -27,7 +27,7 @@ let __proj__Mksl_reponse__item__slr_def (projectee : sl_reponse) :
   Prims.string FStar_Pervasives_Native.option=
   match projectee with
   | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_def
-let with_printed_effect_args (k : unit -> 'uuuuu) : 'uuuuu=
+let with_printed_effect_args (k : unit -> 'a) : 'a=
   FStarC_Options.with_saved_options
     (fun uu___ ->
        FStarC_Options.set_option "print_effect_args"
@@ -41,11 +41,10 @@ let sigelt_to_string (tcenv : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : Prims.string=
   with_printed_effect_args
     (fun uu___ ->
-       let uu___1 =
-         FStarC_Syntax_DsEnv.set_current_module
-           tcenv.FStarC_TypeChecker_Env.dsenv
-           tcenv.FStarC_TypeChecker_Env.curmodule in
-       FStarC_Syntax_Print.sigelt_to_string' uu___1 se)
+       FStarC_Syntax_Print.sigelt_to_string'
+         (FStarC_Syntax_DsEnv.set_current_module
+            tcenv.FStarC_TypeChecker_Env.dsenv
+            tcenv.FStarC_TypeChecker_Env.curmodule) se)
 let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : Prims.string)
   (pos_opt : position FStar_Pervasives_Native.option)
   (requested_info : Prims.string Prims.list) :
@@ -141,22 +140,18 @@ let mod_filter
        FStarC_Interactive_CompletionTable.mod_loaded = true;_})
       -> FStar_Pervasives_Native.None
   | (pth, FStarC_Interactive_CompletionTable.Module md) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_Interactive_CompletionTable.mod_name md in
-              Prims.strcat uu___5 "." in
-            {
-              FStarC_Interactive_CompletionTable.mod_name = uu___4;
-              FStarC_Interactive_CompletionTable.mod_path =
-                (md.FStarC_Interactive_CompletionTable.mod_path);
-              FStarC_Interactive_CompletionTable.mod_loaded =
-                (md.FStarC_Interactive_CompletionTable.mod_loaded)
-            } in
-          FStarC_Interactive_CompletionTable.Module uu___3 in
-        (pth, uu___2) in
-      FStar_Pervasives_Native.Some uu___1
+      FStar_Pervasives_Native.Some
+        (pth,
+          (FStarC_Interactive_CompletionTable.Module
+             {
+               FStarC_Interactive_CompletionTable.mod_name =
+                 (Prims.strcat
+                    (FStarC_Interactive_CompletionTable.mod_name md) ".");
+               FStarC_Interactive_CompletionTable.mod_path =
+                 (md.FStarC_Interactive_CompletionTable.mod_path);
+               FStarC_Interactive_CompletionTable.mod_loaded =
+                 (md.FStarC_Interactive_CompletionTable.mod_loaded)
+             }))
 let ck_completion (st : FStarC_Interactive_Ide_Types.repl_state)
   (search_term : Prims.string) :
   FStarC_Interactive_CompletionTable.completion_result Prims.list=

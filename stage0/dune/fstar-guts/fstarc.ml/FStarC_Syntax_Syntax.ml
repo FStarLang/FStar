@@ -1155,60 +1155,6 @@ let uu___is_OnlyName (projectee : qualifier) : Prims.bool=
   match projectee with | OnlyName -> true | uu___ -> false
 let uu___is_InternalAssumption (projectee : qualifier) : Prims.bool=
   match projectee with | InternalAssumption -> true | uu___ -> false
-let rec emb_typ_to_string (uu___ : emb_typ) : Prims.string=
-  match uu___ with
-  | ET_abstract -> "abstract"
-  | ET_app (h, []) -> h
-  | ET_app (h, args1) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_List.map emb_typ_to_string args1 in
-              FStarC_String.concat " " uu___5 in
-            Prims.strcat uu___4 ")" in
-          Prims.strcat " " uu___3 in
-        Prims.strcat h uu___2 in
-      Prims.strcat "(" uu___1
-  | ET_fun (a, b) ->
-      let uu___1 =
-        let uu___2 = emb_typ_to_string a in
-        let uu___3 =
-          let uu___4 = emb_typ_to_string b in Prims.strcat ") -> " uu___4 in
-        Prims.strcat uu___2 uu___3 in
-      Prims.strcat "(" uu___1
-let showable_emb_typ : emb_typ FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = emb_typ_to_string }
-let rec delta_depth_to_string (uu___ : delta_depth) : Prims.string=
-  match uu___ with
-  | Delta_constant_at_level i ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      Prims.strcat "Delta_constant_at_level " uu___1
-  | Delta_equational_at_level i ->
-      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-      Prims.strcat "Delta_equational_at_level " uu___1
-  | Delta_abstract d ->
-      let uu___1 =
-        let uu___2 = delta_depth_to_string d in Prims.strcat uu___2 ")" in
-      Prims.strcat "Delta_abstract (" uu___1
-let showable_delta_depth : delta_depth FStarC_Class_Show.showable=
-  { FStarC_Class_Show.show = delta_depth_to_string }
-let showable_should_check_uvar :
-  should_check_uvar FStarC_Class_Show.showable=
-  {
-    FStarC_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | Allow_unresolved s -> Prims.strcat "Allow_unresolved " s
-         | Allow_untyped s -> Prims.strcat "Allow_untyped " s
-         | Allow_ghost s -> Prims.strcat "Allow_ghost " s
-         | Strict -> "Strict"
-         | Already_checked -> "Already_checked")
-  }
-let lazy_chooser :
-  (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
-    FStarC_Effect.ref=
-  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let cmp_qualifier (q1 : qualifier) (q2 : qualifier) : FStarC_Order.order=
   match (q1, q2) with
   | (Assumption, Assumption) -> FStarC_Order.Eq
@@ -2206,30 +2152,6 @@ let __proj__Mkmodul__item__declarations (projectee : modul) : sigelts=
 let __proj__Mkmodul__item__is_interface (projectee : modul) : Prims.bool=
   match projectee with
   | { name; declarations; is_interface;_} -> is_interface
-let mod_name (m : modul) : FStarC_Ident.lident= m.name
-let withinfo (v : 'a) (r : FStarC_Range_Type.range) : 'a withinfo_t=
-  { v; p = r }
-let order_bv (x : bv) (y : bv) : Prims.int= x.index - y.index
-let bv_eq (x : bv) (y : bv) : Prims.bool=
-  let uu___ = order_bv x y in uu___ = Prims.int_zero
-let order_ident (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) :
-  Prims.int=
-  let uu___ = FStarC_Ident.string_of_id x in
-  let uu___1 = FStarC_Ident.string_of_id y in
-  FStarC_String.compare uu___ uu___1
-let order_fv (x : FStarC_Ident.lident) (y : FStarC_Ident.lident) : Prims.int=
-  let uu___ = FStarC_Ident.string_of_lid x in
-  let uu___1 = FStarC_Ident.string_of_lid y in
-  FStarC_String.compare uu___ uu___1
-let range_of_lbname (l : lbname) : FStarC_Range_Type.range=
-  match l with
-  | FStar_Pervasives.Inl x -> FStarC_Ident.range_of_id x.ppname
-  | FStar_Pervasives.Inr fv1 -> FStarC_Ident.range_of_lid fv1.fv_name
-let range_of_bv (x : bv) : FStarC_Range_Type.range=
-  FStarC_Ident.range_of_id x.ppname
-let set_range_of_bv (x : bv) (r : FStarC_Range_Type.range) : bv=
-  let uu___ = FStarC_Ident.set_id_range r x.ppname in
-  { ppname = uu___; index = (x.index); sort = (x.sort) }
 let on_antiquoted (f : term -> term) (qi : quoteinfo) : quoteinfo=
   let uu___ = qi.antiquotations in
   match uu___ with
@@ -2246,90 +2168,20 @@ let lookup_aq (bv1 : bv) (aq : antiquotations) : term=
                   Prims.int_one)
                  - bv1.index)
                 + (FStar_Pervasives_Native.fst aq))) ()
-  with | uu___ -> failwith "antiquotation out of bounds"
+  with | uu___ -> FStarC_Effect.failwith "antiquotation out of bounds"
+let lazy_chooser :
+  (lazy_kind -> lazyinfo -> term) FStar_Pervasives_Native.option
+    FStarC_Effect.ref=
+  FStarC_Effect.mk_ref FStar_Pervasives_Native.None
+let mod_name (m : modul) : FStarC_Ident.lident= m.name
 type path = Prims.string Prims.list
 type subst_t = subst_elt Prims.list
-let deq_instance_from_cmp (f : 'uuuuu -> 'uuuuu -> FStarC_Order.order) :
-  'uuuuu FStarC_Class_Deq.deq=
-  {
-    FStarC_Class_Deq.op_Equals_Question =
-      (fun x y -> let uu___ = f x y in FStarC_Order.eq uu___)
-  }
-let ord_instance_from_cmp (f : 'uuuuu -> 'uuuuu -> FStarC_Order.order) :
-  'uuuuu FStarC_Class_Ord.ord=
-  {
-    FStarC_Class_Ord.super = (deq_instance_from_cmp f);
-    FStarC_Class_Ord.cmp = f
-  }
-let order_univ_name (x : univ_name) (y : univ_name) : Prims.int=
-  let uu___ = FStarC_Ident.string_of_id x in
-  let uu___1 = FStarC_Ident.string_of_id y in
-  FStarC_String.compare uu___ uu___1
-let deq_bv : bv FStarC_Class_Deq.deq=
-  deq_instance_from_cmp
-    (fun x y -> let uu___ = order_bv x y in FStarC_Order.order_from_int uu___)
-let deq_ident : FStarC_Ident.ident FStarC_Class_Deq.deq=
-  deq_instance_from_cmp
-    (fun x y ->
-       let uu___ = order_ident x y in FStarC_Order.order_from_int uu___)
-let deq_fv : FStarC_Ident.lident FStarC_Class_Deq.deq=
-  deq_instance_from_cmp
-    (fun x y -> let uu___ = order_fv x y in FStarC_Order.order_from_int uu___)
-let deq_univ_name : univ_name FStarC_Class_Deq.deq=
-  deq_instance_from_cmp
-    (fun x y ->
-       let uu___ = order_univ_name x y in FStarC_Order.order_from_int uu___)
-let deq_delta_depth : delta_depth FStarC_Class_Deq.deq=
-  { FStarC_Class_Deq.op_Equals_Question = (fun x y -> x = y) }
-let ord_bv : bv FStarC_Class_Ord.ord=
-  ord_instance_from_cmp
-    (fun x y -> let uu___ = order_bv x y in FStarC_Order.order_from_int uu___)
-let ord_ident : FStarC_Ident.ident FStarC_Class_Ord.ord=
-  ord_instance_from_cmp
-    (fun x y ->
-       let uu___ = order_ident x y in FStarC_Order.order_from_int uu___)
-let ord_fv : FStarC_Ident.lident FStarC_Class_Ord.ord=
-  ord_instance_from_cmp
-    (fun x y -> let uu___ = order_fv x y in FStarC_Order.order_from_int uu___)
+let withinfo (v : 'a) (r : FStarC_Range_Type.range) : 'a withinfo_t=
+  { v; p = r }
 let mk (t : 'a) (r : FStarC_Range_Type.range) : 'a syntax=
   let uu___ = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   let uu___1 = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
   { n = t; pos = r; vars = uu___; hash_code = uu___1 }
-let bv_to_tm (bv1 : bv) : term=
-  let uu___ = range_of_bv bv1 in mk (Tm_bvar bv1) uu___
-let bv_to_name (bv1 : bv) : term=
-  let uu___ = range_of_bv bv1 in mk (Tm_name bv1) uu___
-let binders_to_names (bs : binders) : term Prims.list=
-  FStarC_List.map (fun b -> bv_to_name b.binder_bv) bs
-let mk_Tm_app (t1 : typ) (args1 : arg Prims.list)
-  (p : FStarC_Range_Type.range) : term=
-  match args1 with
-  | [] -> t1
-  | uu___ -> mk (Tm_app { hd = t1; args = args1 }) p
-let mk_Tm_uinst (t : term) (us : universes) : term=
-  match t.n with
-  | Tm_fvar uu___ ->
-      (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
-  | uu___ -> failwith "Unexpected universe instantiation"
-let extend_app_n (t : term) (args' : args) (r : FStarC_Range_Type.range) :
-  term=
-  match t.n with
-  | Tm_app { hd; args = args1;_} ->
-      mk_Tm_app hd (FStarC_List.op_At args1 args') r
-  | uu___ -> mk_Tm_app t args' r
-let extend_app (t : term) (arg1 : arg) (r : FStarC_Range_Type.range) : 
-  term= extend_app_n t [arg1] r
-let mk_Tm_delayed (lr : (term * subst_ts)) (pos : FStarC_Range_Type.range) :
-  term=
-  mk
-    (Tm_delayed
-       {
-         tm1 = (FStar_Pervasives_Native.fst lr);
-         substs = (FStar_Pervasives_Native.snd lr)
-       }) pos
-let mk_Total (t : typ) : comp= mk (Total t) t.pos
-let mk_GTotal (t : typ) : comp= mk (GTotal t) t.pos
-let mk_Comp (ct : comp_typ) : comp= mk (Comp ct) (ct.result_typ).pos
 let mk_lb
   (uu___ :
     (lbname * univ_name Prims.list * FStarC_Ident.lident * typ * term *
@@ -2346,15 +2198,6 @@ let mk_lb
         lbattrs = attrs;
         lbpos = pos
       }
-let mk_Tac (t : typ) : comp=
-  mk_Comp
-    {
-      comp_univs = [U_zero];
-      effect_name = FStarC_Parser_Const.effect_Tac_lid;
-      result_typ = t;
-      effect_args = [];
-      flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
-    }
 let default_sigmeta : sig_metadata=
   {
     sigmeta_active = true;
@@ -2374,10 +2217,72 @@ let mk_sigelt (e : sigelt') : sigelt=
     sigopens_and_abbrevs = [];
     sigopts = FStar_Pervasives_Native.None
   }
-let mk_subst (s : subst_t) : subst_t= s
-let extend_subst (x : subst_elt) (s : subst_elt Prims.list) : subst_t= x :: s
-let argpos (x : arg) : FStarC_Range_Type.range=
-  (FStar_Pervasives_Native.fst x).pos
+let mk_Tm_app (t1 : typ) (args1 : arg Prims.list)
+  (p : FStarC_Range_Type.range) : term=
+  match args1 with
+  | [] -> t1
+  | uu___ -> mk (Tm_app { hd = t1; args = args1 }) p
+let mk_Tm_uinst (t : term) (us : universes) : term=
+  match t.n with
+  | Tm_fvar uu___ ->
+      (match us with | [] -> t | us1 -> mk (Tm_uinst (t, us1)) t.pos)
+  | uu___ -> FStarC_Effect.failwith "Unexpected universe instantiation"
+let extend_app_n (t : term) (args' : args) (r : FStarC_Range_Type.range) :
+  term=
+  match t.n with
+  | Tm_app { hd; args = args1;_} ->
+      mk_Tm_app hd (FStarC_List.op_At args1 args') r
+  | uu___ -> mk_Tm_app t args' r
+let extend_app (t : term) (arg1 : arg) (r : FStarC_Range_Type.range) : 
+  term= extend_app_n t [arg1] r
+let mk_Tm_delayed (lr : (term * subst_ts)) (pos : FStarC_Range_Type.range) :
+  term=
+  mk
+    (Tm_delayed
+       {
+         tm1 = (FStar_Pervasives_Native.fst lr);
+         substs = (FStar_Pervasives_Native.snd lr)
+       }) pos
+let mk_Total (t : typ) : comp= mk (Total t) t.pos
+let mk_GTotal (t : typ) : comp= mk (GTotal t) t.pos
+let mk_Comp (ct : comp_typ) : comp= mk (Comp ct) (ct.result_typ).pos
+let mk_Tac (t : typ) : comp=
+  mk_Comp
+    {
+      comp_univs = [U_zero];
+      effect_name = FStarC_Parser_Const.effect_Tac_lid;
+      result_typ = t;
+      effect_args = [];
+      flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION]
+    }
+let order_bv (x : bv) (y : bv) : Prims.int= x.index - y.index
+let bv_eq (x : bv) (y : bv) : Prims.bool= (order_bv x y) = Prims.int_zero
+let order_ident (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) :
+  Prims.int=
+  FStarC_String.compare (FStarC_Ident.string_of_id x)
+    (FStarC_Ident.string_of_id y)
+let order_fv (x : FStarC_Ident.lident) (y : FStarC_Ident.lident) : Prims.int=
+  FStarC_String.compare (FStarC_Ident.string_of_lid x)
+    (FStarC_Ident.string_of_lid y)
+let range_of_lbname (l : lbname) : FStarC_Range_Type.range=
+  match l with
+  | FStar_Pervasives.Inl x -> FStarC_Ident.range_of_id x.ppname
+  | FStar_Pervasives.Inr fv1 -> FStarC_Ident.range_of_lid fv1.fv_name
+let range_of_bv (x : bv) : FStarC_Range_Type.range=
+  FStarC_Ident.range_of_id x.ppname
+let set_range_of_bv (x : bv) (r : FStarC_Range_Type.range) : bv=
+  {
+    ppname = (FStarC_Ident.set_id_range r x.ppname);
+    index = (x.index);
+    sort = (x.sort)
+  }
+let order_univ_name (x : univ_name) (y : univ_name) : Prims.int=
+  FStarC_String.compare (FStarC_Ident.string_of_id x)
+    (FStarC_Ident.string_of_id y)
+let bv_to_tm (bv1 : bv) : term= mk (Tm_bvar bv1) (range_of_bv bv1)
+let bv_to_name (bv1 : bv) : term= mk (Tm_name bv1) (range_of_bv bv1)
+let binders_to_names (bs : binders) : term Prims.list=
+  FStarC_List.map (fun b -> bv_to_name b.binder_bv) bs
 let tun : term= mk Tm_unknown FStarC_Range_Type.dummyRange
 let teff : term=
   mk (Tm_constant FStarC_Const.Const_effect) FStarC_Range_Type.dummyRange
@@ -2387,66 +2292,43 @@ let is_teff (t : term) : Prims.bool=
   | uu___ -> false
 let is_type (t : term) : Prims.bool=
   match t.n with | Tm_type uu___ -> true | uu___ -> false
-let null_id : FStarC_Ident.ident=
-  FStarC_Ident.mk_ident ("_", FStarC_Range_Type.dummyRange)
-let null_bv (k : term) : bv=
-  let uu___ = FStarC_GenSym.next_id () in
-  { ppname = null_id; index = uu___; sort = k }
-let is_null_bv (b : bv) : Prims.bool=
-  let uu___ = FStarC_Ident.string_of_id b.ppname in
-  let uu___1 = FStarC_Ident.string_of_id null_id in uu___ = uu___1
-let is_null_binder (b : binder) : Prims.bool= is_null_bv b.binder_bv
-let range_of_ropt
-  (uu___ : FStarC_Range_Type.range FStar_Pervasives_Native.option) :
-  FStarC_Range_Type.range=
-  match uu___ with
-  | FStar_Pervasives_Native.None -> FStarC_Range_Type.dummyRange
-  | FStar_Pervasives_Native.Some r -> r
-let gen_bv' (id : FStarC_Ident.ident)
-  (r : FStarC_Range_Type.t FStar_Pervasives_Native.option) (t : typ) : 
-  bv=
-  let uu___ = FStarC_GenSym.next_id () in
-  { ppname = id; index = uu___; sort = t }
-let gen_bv (s : Prims.string)
-  (r : FStarC_Range_Type.t FStar_Pervasives_Native.option) (t : typ) : 
-  bv= let id = FStarC_Ident.mk_ident (s, (range_of_ropt r)) in gen_bv' id r t
-let new_bv (ropt : FStarC_Range_Type.range FStar_Pervasives_Native.option)
-  (t : typ) : bv= gen_bv FStarC_Ident.reserved_prefix ropt t
-let freshen_bv (bv1 : bv) : bv=
-  let uu___ = is_null_bv bv1 in
-  if uu___
-  then
-    let uu___1 =
-      let uu___2 = range_of_bv bv1 in FStar_Pervasives_Native.Some uu___2 in
-    new_bv uu___1 bv1.sort
-  else
-    (let uu___2 = FStarC_GenSym.next_id () in
-     { ppname = (bv1.ppname); index = uu___2; sort = (bv1.sort) })
-let mk_binder_with_attrs (bv1 : bv) (aqual1 : bqual)
-  (pqual : positivity_qualifier FStar_Pervasives_Native.option)
-  (attrs : attribute Prims.list) : binder=
+let mk_subst (s : subst_t) : subst_t= s
+let extend_subst (x : subst_elt) (s : subst_elt Prims.list) : subst_t= x :: s
+let deq_instance_from_cmp (f : 'uuuuu -> 'uuuuu -> FStarC_Order.order) :
+  'uuuuu FStarC_Class_Deq.deq=
   {
-    binder_bv = bv1;
-    binder_qual = aqual1;
-    binder_positivity = pqual;
-    binder_attrs = attrs
+    FStarC_Class_Deq.op_Equals_Question =
+      (fun x y -> FStarC_Order.eq (f x y))
   }
-let mk_binder (a : bv) : binder=
-  mk_binder_with_attrs a FStar_Pervasives_Native.None
-    FStar_Pervasives_Native.None []
-let null_binder (t : term) : binder= let uu___ = null_bv t in mk_binder uu___
-let imp_tag : binder_qualifier= Implicit false
-let iarg (t : term) : arg=
-  (t,
-    (FStar_Pervasives_Native.Some
-       { aqual_implicit = true; aqual_attributes = [] }))
-let as_arg (t : term) : arg= (t, FStar_Pervasives_Native.None)
-let is_top_level (uu___ : letbinding Prims.list) : Prims.bool=
-  match uu___ with
-  | { lbname = FStar_Pervasives.Inr uu___1; lbunivs = uu___2; lbtyp = uu___3;
-      lbeff = uu___4; lbdef = uu___5; lbattrs = uu___6; lbpos = uu___7;_}::uu___8
-      -> true
-  | uu___1 -> false
+let ord_instance_from_cmp (f : 'uuuuu -> 'uuuuu -> FStarC_Order.order) :
+  'uuuuu FStarC_Class_Ord.ord=
+  {
+    FStarC_Class_Ord.super = (deq_instance_from_cmp f);
+    FStarC_Class_Ord.cmp = f
+  }
+let deq_bv : bv FStarC_Class_Deq.deq=
+  deq_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_bv x y))
+let deq_ident : FStarC_Ident.ident FStarC_Class_Deq.deq=
+  deq_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_ident x y))
+let deq_fv : FStarC_Ident.lident FStarC_Class_Deq.deq=
+  deq_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_fv x y))
+let deq_univ_name : univ_name FStarC_Class_Deq.deq=
+  deq_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_univ_name x y))
+let deq_delta_depth : delta_depth FStarC_Class_Deq.deq=
+  { FStarC_Class_Deq.op_Equals_Question = (fun x y -> x = y) }
+let ord_bv : bv FStarC_Class_Ord.ord=
+  ord_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_bv x y))
+let ord_ident : FStarC_Ident.ident FStarC_Class_Ord.ord=
+  ord_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_ident x y))
+let ord_fv : FStarC_Ident.lident FStarC_Class_Ord.ord=
+  ord_instance_from_cmp
+    (fun x y -> FStarC_Order.order_from_int (order_fv x y))
 let freenames_of_binders (bs : binders) : freenames=
   let uu___ =
     Obj.magic
@@ -2459,6 +2341,23 @@ let freenames_of_binders (bs : binders) : freenames=
             (FStarC_Class_Setlike.add ()
                (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv))
                b.binder_bv (Obj.magic out))) uu___2 uu___1) bs uu___
+let null_id : FStarC_Ident.ident=
+  FStarC_Ident.mk_ident ("_", FStarC_Range_Type.dummyRange)
+let null_bv (k : term) : bv=
+  let uu___ = FStarC_GenSym.next_id () in
+  { ppname = null_id; index = uu___; sort = k }
+let mk_binder_with_attrs (bv1 : bv) (aqual1 : bqual)
+  (pqual : positivity_qualifier FStar_Pervasives_Native.option)
+  (attrs : attribute Prims.list) : binder=
+  {
+    binder_bv = bv1;
+    binder_qual = aqual1;
+    binder_positivity = pqual;
+    binder_attrs = attrs
+  }
+let mk_binder (a : bv) : binder=
+  mk_binder_with_attrs a FStar_Pervasives_Native.None
+    FStar_Pervasives_Native.None []
 let binders_of_list (fvs : bv Prims.list) : binders=
   FStarC_List.map (fun t -> mk_binder t) fvs
 let binders_of_freenames (fvs : freenames) : binders=
@@ -2466,6 +2365,29 @@ let binders_of_freenames (fvs : freenames) : binders=
     FStarC_Class_Setlike.elems ()
       (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_bv)) (Obj.magic fvs) in
   binders_of_list uu___
+let null_binder (t : term) : binder= let uu___ = null_bv t in mk_binder uu___
+let as_arg (t : term) : arg= (t, FStar_Pervasives_Native.None)
+let imp_tag : binder_qualifier= Implicit false
+let iarg (t : term) : arg=
+  (t,
+    (FStar_Pervasives_Native.Some
+       { aqual_implicit = true; aqual_attributes = [] }))
+let is_null_bv (b : bv) : Prims.bool=
+  (FStarC_Ident.string_of_id b.ppname) = (FStarC_Ident.string_of_id null_id)
+let is_null_binder (b : binder) : Prims.bool= is_null_bv b.binder_bv
+let argpos (x : arg) : FStarC_Range_Type.range=
+  (FStar_Pervasives_Native.fst x).pos
+let pat_bvs (p : pat) : bv Prims.list=
+  let rec aux b p1 =
+    match p1.v with
+    | Pat_dot_term uu___ -> b
+    | Pat_constant uu___ -> b
+    | Pat_var x -> x :: b
+    | Pat_cons (uu___, uu___1, pats) ->
+        FStarC_List.fold_left
+          (fun b1 uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
+          pats in
+  let uu___ = aux [] p in FStarC_List.rev uu___
 let is_bqual_implicit (uu___ : bqual) : Prims.bool=
   match uu___ with
   | FStar_Pervasives_Native.Some (Implicit uu___1) -> true
@@ -2490,17 +2412,34 @@ let as_aqual_implicit (uu___ : Prims.bool) : aqual=
     FStar_Pervasives_Native.Some
       { aqual_implicit = true; aqual_attributes = [] }
   else FStar_Pervasives_Native.None
-let pat_bvs (p : pat) : bv Prims.list=
-  let rec aux b p1 =
-    match p1.v with
-    | Pat_dot_term uu___ -> b
-    | Pat_constant uu___ -> b
-    | Pat_var x -> x :: b
-    | Pat_cons (uu___, uu___1, pats) ->
-        FStarC_List.fold_left
-          (fun b1 uu___2 -> match uu___2 with | (p2, uu___3) -> aux b1 p2) b
-          pats in
-  let uu___ = aux [] p in FStarC_List.rev uu___
+let is_top_level (uu___ : letbinding Prims.list) : Prims.bool=
+  match uu___ with
+  | { lbname = FStar_Pervasives.Inr uu___1; lbunivs = uu___2; lbtyp = uu___3;
+      lbeff = uu___4; lbdef = uu___5; lbattrs = uu___6; lbpos = uu___7;_}::uu___8
+      -> true
+  | uu___1 -> false
+let range_of_ropt
+  (uu___ : FStarC_Range_Type.range FStar_Pervasives_Native.option) :
+  FStarC_Range_Type.range=
+  match uu___ with
+  | FStar_Pervasives_Native.None -> FStarC_Range_Type.dummyRange
+  | FStar_Pervasives_Native.Some r -> r
+let gen_bv' (id : FStarC_Ident.ident)
+  (r : FStarC_Range_Type.t FStar_Pervasives_Native.option) (t : typ) : 
+  bv=
+  let uu___ = FStarC_GenSym.next_id () in
+  { ppname = id; index = uu___; sort = t }
+let gen_bv (s : Prims.string)
+  (r : FStarC_Range_Type.t FStar_Pervasives_Native.option) (t : typ) : 
+  bv= let id = FStarC_Ident.mk_ident (s, (range_of_ropt r)) in gen_bv' id r t
+let new_bv (ropt : FStarC_Range_Type.range FStar_Pervasives_Native.option)
+  (t : typ) : bv= gen_bv FStarC_Ident.reserved_prefix ropt t
+let freshen_bv (bv1 : bv) : bv=
+  if is_null_bv bv1
+  then new_bv (FStar_Pervasives_Native.Some (range_of_bv bv1)) bv1.sort
+  else
+    (let uu___1 = FStarC_GenSym.next_id () in
+     { ppname = (bv1.ppname); index = uu___1; sort = (bv1.sort) })
 let freshen_binder (b : binder) : binder=
   let uu___ = freshen_bv b.binder_bv in
   {
@@ -2526,13 +2465,6 @@ let lbname_eq (l1 : (bv, FStarC_Ident.lident) FStar_Pervasives.either)
   | (FStar_Pervasives.Inr l, FStar_Pervasives.Inr m) ->
       FStarC_Ident.lid_equals l m
   | uu___ -> false
-let fv_eq (fv1 : fv) (fv2 : fv) : Prims.bool=
-  FStarC_Ident.lid_equals fv1.fv_name fv2.fv_name
-let fv_eq_lid (fv1 : fv) (lid : FStarC_Ident.lident) : Prims.bool=
-  FStarC_Ident.lid_equals fv1.fv_name lid
-let set_bv_range (bv1 : bv) (r : FStarC_Range_Type.range) : bv=
-  let uu___ = FStarC_Ident.set_id_range r bv1.ppname in
-  { ppname = uu___; index = (bv1.index); sort = (bv1.sort) }
 let lid_and_dd_as_fv (l : FStarC_Ident.lident)
   (dq : fv_qual FStar_Pervasives_Native.option) : fv=
   { fv_name = l; fv_qual = dq }
@@ -2540,19 +2472,31 @@ let lid_as_fv (l : FStarC_Ident.lident)
   (dq : fv_qual FStar_Pervasives_Native.option) : fv=
   { fv_name = l; fv_qual = dq }
 let fv_to_tm (fv1 : fv) : term=
-  let uu___ = FStarC_Ident.range_of_lid fv1.fv_name in mk (Tm_fvar fv1) uu___
+  mk (Tm_fvar fv1) (FStarC_Ident.range_of_lid fv1.fv_name)
 let fvar_with_dd (l : FStarC_Ident.lident)
   (dq : fv_qual FStar_Pervasives_Native.option) : term=
-  let uu___ = lid_and_dd_as_fv l dq in fv_to_tm uu___
+  fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar (l : FStarC_Ident.lident)
   (dq : fv_qual FStar_Pervasives_Native.option) : term=
-  let uu___ = lid_as_fv l dq in fv_to_tm uu___
+  fv_to_tm (lid_as_fv l dq)
+let fv_eq (fv1 : fv) (fv2 : fv) : Prims.bool=
+  FStarC_Ident.lid_equals fv1.fv_name fv2.fv_name
+let fv_eq_lid (fv1 : fv) (lid : FStarC_Ident.lident) : Prims.bool=
+  FStarC_Ident.lid_equals fv1.fv_name lid
+let set_bv_range (bv1 : bv) (r : FStarC_Range_Type.range) : bv=
+  {
+    ppname = (FStarC_Ident.set_id_range r bv1.ppname);
+    index = (bv1.index);
+    sort = (bv1.sort)
+  }
 let lid_of_fv (fv1 : fv) : FStarC_Ident.lid= fv1.fv_name
 let range_of_fv (fv1 : fv) : FStarC_Range_Type.range=
-  let uu___ = lid_of_fv fv1 in FStarC_Ident.range_of_lid uu___
+  FStarC_Ident.range_of_lid (lid_of_fv fv1)
 let set_range_of_fv (fv1 : fv) (r : FStarC_Range_Type.t) : fv=
-  let uu___ = FStarC_Ident.set_lid_range fv1.fv_name r in
-  { fv_name = uu___; fv_qual = (fv1.fv_qual) }
+  {
+    fv_name = (FStarC_Ident.set_lid_range fv1.fv_name r);
+    fv_qual = (fv1.fv_qual)
+  }
 let has_simple_attribute (l : term Prims.list) (s : Prims.string) :
   Prims.bool=
   FStarC_List.existsb
@@ -2566,24 +2510,26 @@ let rec eq_pat (p1 : pat) (p2 : pat) : Prims.bool=
   match ((p1.v), (p2.v)) with
   | (Pat_constant c1, Pat_constant c2) -> FStarC_Const.eq_const c1 c2
   | (Pat_cons (fv1, us1, as1), Pat_cons (fv2, us2, as2)) ->
-      let uu___ =
-        (fv_eq fv1 fv2) &&
-          ((FStarC_List.length as1) = (FStarC_List.length as2)) in
-      if uu___
+      if
+        (if fv_eq fv1 fv2
+         then (FStarC_List.length as1) = (FStarC_List.length as2)
+         else false)
       then
-        (FStarC_List.forall2
-           (fun uu___1 uu___2 ->
-              match (uu___1, uu___2) with
-              | ((p11, b1), (p21, b2)) -> (b1 = b2) && (eq_pat p11 p21)) as1
-           as2)
-          &&
-          ((match (us1, us2) with
-            | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-                true
-            | (FStar_Pervasives_Native.Some us11,
-               FStar_Pervasives_Native.Some us21) ->
-                (FStarC_List.length us11) = (FStarC_List.length us21)
-            | uu___1 -> false))
+        let uu___ =
+          FStarC_List.forall2
+            (fun uu___1 uu___2 ->
+               match (uu___1, uu___2) with
+               | ((p11, b1), (p21, b2)) ->
+                   if b1 = b2 then eq_pat p11 p21 else false) as1 as2 in
+        (if uu___
+         then
+           match (us1, us2) with
+           | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+               true
+           | (FStar_Pervasives_Native.Some us11, FStar_Pervasives_Native.Some
+              us21) -> (FStarC_List.length us11) = (FStarC_List.length us21)
+           | uu___1 -> false
+         else false)
       else false
   | (Pat_var uu___, Pat_var uu___1) -> true
   | (Pat_dot_term uu___, Pat_dot_term uu___1) -> true
@@ -2593,16 +2539,12 @@ let delta_equational : delta_depth= Delta_equational_at_level Prims.int_zero
 let fvconst (l : FStarC_Ident.lident) : fv=
   lid_and_dd_as_fv l FStar_Pervasives_Native.None
 let tconst (l : FStarC_Ident.lident) : term=
-  let uu___ = let uu___1 = fvconst l in Tm_fvar uu___1 in
-  mk uu___ FStarC_Range_Type.dummyRange
+  mk (Tm_fvar (fvconst l)) FStarC_Range_Type.dummyRange
 let tabbrev (l : FStarC_Ident.lident) : term=
-  let uu___ =
-    let uu___1 = lid_and_dd_as_fv l FStar_Pervasives_Native.None in
-    Tm_fvar uu___1 in
-  mk uu___ FStarC_Range_Type.dummyRange
+  mk (Tm_fvar (lid_and_dd_as_fv l FStar_Pervasives_Native.None))
+    FStarC_Range_Type.dummyRange
 let tdataconstr (l : FStarC_Ident.lident) : term=
-  let uu___ = lid_and_dd_as_fv l (FStar_Pervasives_Native.Some Data_ctor) in
-  fv_to_tm uu___
+  fv_to_tm (lid_and_dd_as_fv l (FStar_Pervasives_Native.Some Data_ctor))
 let t_unit : term= tconst FStarC_Parser_Const.unit_lid
 let t_bool : term= tconst FStarC_Parser_Const.bool_lid
 let t_int : term= tconst FStarC_Parser_Const.int_lid
@@ -2614,114 +2556,75 @@ let t_char : term= tabbrev FStarC_Parser_Const.char_lid
 let t_range : term= tconst FStarC_Parser_Const.range_lid
 let t___range : term= tconst FStarC_Parser_Const.__range_lid
 let t_vconfig : term= tconst FStarC_Parser_Const.vconfig_lid
+let t_norm_step : term= tconst FStarC_Parser_Const.norm_step_lid
 let t_term : term= tconst FStarC_Parser_Const.term_lid
 let t_term_view : term= tabbrev FStarC_Parser_Const.term_view_lid
 let t_order : term= tconst FStarC_Parser_Const.order_lid
 let t_decls : term= tabbrev FStarC_Parser_Const.decls_lid
 let t_binder : term= tconst FStarC_Parser_Const.binder_lid
-let t_binders : term= tconst FStarC_Parser_Const.binders_lid
 let t_bv : term= tconst FStarC_Parser_Const.bv_lid
+let t_binders : term= tconst FStarC_Parser_Const.binders_lid
 let t_fv : term= tconst FStarC_Parser_Const.fv_lid
-let t_norm_step : term= tconst FStarC_Parser_Const.norm_step_lid
 let t_tac_of (a : term) (b : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.tac_lid in
     mk_Tm_uinst uu___1 [U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg a in
-    let uu___3 = let uu___4 = as_arg b in [uu___4] in uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg a; as_arg b] FStarC_Range_Type.dummyRange
 let t_tactic_of (t : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.tactic_lid in
     mk_Tm_uinst uu___1 [U_zero] in
-  let uu___1 = let uu___2 = as_arg t in [uu___2] in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t] FStarC_Range_Type.dummyRange
 let t_tactic_unit : term= t_tactic_of t_unit
 let t_list_of (t : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.list_lid in
     mk_Tm_uinst uu___1 [U_zero] in
-  let uu___1 = let uu___2 = as_arg t in [uu___2] in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t] FStarC_Range_Type.dummyRange
 let t_option_of (t : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.option_lid in
     mk_Tm_uinst uu___1 [U_zero] in
-  let uu___1 = let uu___2 = as_arg t in [uu___2] in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t] FStarC_Range_Type.dummyRange
 let t_tuple2_of (t1 : term) (t2 : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const_Tuples.lid_tuple2 in
     mk_Tm_uinst uu___1 [U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg t1 in
-    let uu___3 = let uu___4 = as_arg t2 in [uu___4] in uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t1; as_arg t2] FStarC_Range_Type.dummyRange
 let t_tuple3_of (t1 : term) (t2 : term) (t3 : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const_Tuples.lid_tuple3 in
     mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg t1 in
-    let uu___3 =
-      let uu___4 = as_arg t2 in
-      let uu___5 = let uu___6 = as_arg t3 in [uu___6] in uu___4 :: uu___5 in
-    uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t1; as_arg t2; as_arg t3]
+    FStarC_Range_Type.dummyRange
 let t_tuple4_of (t1 : term) (t2 : term) (t3 : term) (t4 : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const_Tuples.lid_tuple4 in
     mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg t1 in
-    let uu___3 =
-      let uu___4 = as_arg t2 in
-      let uu___5 =
-        let uu___6 = as_arg t3 in
-        let uu___7 = let uu___8 = as_arg t4 in [uu___8] in uu___6 :: uu___7 in
-      uu___4 :: uu___5 in
-    uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t1; as_arg t2; as_arg t3; as_arg t4]
+    FStarC_Range_Type.dummyRange
 let t_tuple5_of (t1 : term) (t2 : term) (t3 : term) (t4 : term) (t5 : term) :
   term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const_Tuples.lid_tuple5 in
     mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero; U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg t1 in
-    let uu___3 =
-      let uu___4 = as_arg t2 in
-      let uu___5 =
-        let uu___6 = as_arg t3 in
-        let uu___7 =
-          let uu___8 = as_arg t4 in
-          let uu___9 = let uu___10 = as_arg t5 in [uu___10] in uu___8 ::
-            uu___9 in
-        uu___6 :: uu___7 in
-      uu___4 :: uu___5 in
-    uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t1; as_arg t2; as_arg t3; as_arg t4; as_arg t5]
+    FStarC_Range_Type.dummyRange
 let t_either_of (t1 : term) (t2 : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.either_lid in
     mk_Tm_uinst uu___1 [U_zero; U_zero] in
-  let uu___1 =
-    let uu___2 = as_arg t1 in
-    let uu___3 = let uu___4 = as_arg t2 in [uu___4] in uu___2 :: uu___3 in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t1; as_arg t2] FStarC_Range_Type.dummyRange
 let t_sealed_of (t : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.sealed_lid in
     mk_Tm_uinst uu___1 [U_zero] in
-  let uu___1 = let uu___2 = as_arg t in [uu___2] in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t] FStarC_Range_Type.dummyRange
 let t_erased_of (t : term) : term=
   let uu___ =
     let uu___1 = tabbrev FStarC_Parser_Const.erased_lid in
     mk_Tm_uinst uu___1 [U_zero] in
-  let uu___1 = let uu___2 = as_arg t in [uu___2] in
-  mk_Tm_app uu___ uu___1 FStarC_Range_Type.dummyRange
+  mk_Tm_app uu___ [as_arg t] FStarC_Range_Type.dummyRange
 let unit_const_with_range (r : FStarC_Range_Type.range) : term=
   mk (Tm_constant FStarC_Const.Const_unit) r
 let unit_const : term= unit_const_with_range FStarC_Range_Type.dummyRange
@@ -2858,11 +2761,59 @@ let sli (l : FStarC_Ident.lident) : Prims.string=
   let uu___ = FStarC_Options.print_real_names () in
   if uu___
   then FStarC_Ident.string_of_lid l
-  else
-    (let uu___2 = FStarC_Ident.ident_of_lid l in
-     FStarC_Ident.string_of_id uu___2)
+  else FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)
 let showable_fv : fv FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = (fun fv1 -> sli fv1.fv_name) }
+let rec emb_typ_to_string (e : emb_typ) : Prims.string=
+  match e with
+  | ET_abstract -> "abstract"
+  | ET_app (h, []) -> h
+  | ET_app (h, args1) ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStarC_List.map emb_typ_to_string args1 in
+              FStarC_String.concat " " uu___4 in
+            Prims.strcat uu___3 ")" in
+          Prims.strcat " " uu___2 in
+        Prims.strcat h uu___1 in
+      Prims.strcat "(" uu___
+  | ET_fun (a, b) ->
+      let uu___ =
+        let uu___1 = emb_typ_to_string a in
+        let uu___2 =
+          let uu___3 = emb_typ_to_string b in Prims.strcat ") -> " uu___3 in
+        Prims.strcat uu___1 uu___2 in
+      Prims.strcat "(" uu___
+let showable_emb_typ : emb_typ FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = emb_typ_to_string }
+let rec delta_depth_to_string (d : delta_depth) : Prims.string=
+  match d with
+  | Delta_constant_at_level i ->
+      let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+      Prims.strcat "Delta_constant_at_level " uu___
+  | Delta_equational_at_level i ->
+      let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+      Prims.strcat "Delta_equational_at_level " uu___
+  | Delta_abstract d1 ->
+      let uu___ =
+        let uu___1 = delta_depth_to_string d1 in Prims.strcat uu___1 ")" in
+      Prims.strcat "Delta_abstract (" uu___
+let showable_delta_depth : delta_depth FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = delta_depth_to_string }
+let showable_should_check_uvar :
+  should_check_uvar FStarC_Class_Show.showable=
+  {
+    FStarC_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Allow_unresolved s -> Prims.strcat "Allow_unresolved " s
+         | Allow_untyped s -> Prims.strcat "Allow_untyped " s
+         | Allow_ghost s -> Prims.strcat "Allow_ghost " s
+         | Strict -> "Strict"
+         | Already_checked -> "Already_checked")
+  }
 let showable_lazy_kind : lazy_kind FStarC_Class_Show.showable=
   {
     FStarC_Class_Show.show =
@@ -2890,7 +2841,9 @@ let showable_lazy_kind : lazy_kind FStarC_Class_Show.showable=
          | Lazy_tref -> "Lazy_tref"
          | Lazy_embedding uu___1 -> "Lazy_embedding _"
          | Lazy_extension s -> Prims.strcat "Lazy_extension " s
-         | uu___1 -> failwith "FIXME! lazy_kind_to_string must be complete")
+         | uu___1 ->
+             FStarC_Effect.failwith
+               "FIXME! lazy_kind_to_string must be complete")
   }
 let showable_restriction : restriction FStarC_Class_Show.showable=
   {

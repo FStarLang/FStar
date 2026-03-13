@@ -184,6 +184,10 @@ let bv_shift_right'_lid : FStarC_Ident.lident= bvconst "bvshr'"
 let bv_udiv_unsafe_lid : FStarC_Ident.lident= bvconst "bvdiv_unsafe"
 let bv_mod_unsafe_lid : FStarC_Ident.lident= bvconst "bvmod_unsafe"
 let bv_mul'_lid : FStarC_Ident.lident= bvconst "bvmul'"
+let bv_rotate_left_lid : FStarC_Ident.lident= bvconst "bvrol"
+let bv_rotate_right_lid : FStarC_Ident.lident= bvconst "bvror"
+let bv_rotate_left'_lid : FStarC_Ident.lident= bvconst "bvrol'"
+let bv_rotate_right'_lid : FStarC_Ident.lident= bvconst "bvror'"
 let bv_ult_lid : FStarC_Ident.lident= bvconst "bvult"
 let bv_uext_lid : FStarC_Ident.lident= bvconst "bv_uext"
 let bv_not_lid : FStarC_Ident.lident= bvconst "bvnot"
@@ -213,27 +217,15 @@ let effect_Ghost_lid : FStarC_Ident.lident= pconst "Ghost"
 let effect_DIV_lid : FStarC_Ident.lident= psconst "DIV"
 let effect_Div_lid : FStarC_Ident.lident= psconst "Div"
 let effect_Dv_lid : FStarC_Ident.lident= psconst "Dv"
-let ef_base (uu___ : unit) : Prims.string Prims.list=
-  let uu___1 = FStarC_Options.ml_ish () in
-  if uu___1
-  then
-    let uu___2 = FStarC_Options.ml_ish_effect () in
-    FStarC_String.split [46] uu___2
-  else ["FStar"; "All"]
+let ef_base (uu___ : unit) : Prims.string Prims.list= ["FStar"; "All"]
 let effect_ALL_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 = let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["ALL"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["ALL"])
 let effect_ML_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 = let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["ML"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["ML"])
 let failwith_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 =
-    let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["failwith"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["failwith"])
 let try_with_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 =
-    let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["try_with"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["try_with"])
 let as_requires : FStarC_Ident.lident= pconst "as_requires"
 let as_ensures : FStarC_Ident.lident= pconst "as_ensures"
 let decreases_lid : FStarC_Ident.lident= pconst "decreases"
@@ -352,9 +344,7 @@ let sli (l : FStarC_Ident.lident) : Prims.string=
   let uu___ = FStarC_Options.print_real_names () in
   if uu___
   then FStarC_Ident.string_of_lid l
-  else
-    (let uu___2 = FStarC_Ident.ident_of_lid l in
-     FStarC_Ident.string_of_id uu___2)
+  else FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)
 let const_to_string (x : FStarC_Const.sconst) : Prims.string=
   match x with
   | FStarC_Const.Const_effect -> "Effect"
@@ -369,21 +359,18 @@ let const_to_string (x : FStarC_Const.sconst) : Prims.string=
   | FStarC_Const.Const_range_of -> "range_of"
   | FStarC_Const.Const_set_range_of -> "set_range_of"
   | FStarC_Const.Const_reify lopt ->
-      let uu___ =
-        match lopt with
-        | FStar_Pervasives_Native.None -> ""
-        | FStar_Pervasives_Native.Some l ->
-            let uu___1 = FStarC_Ident.string_of_lid l in
-            FStarC_Format.fmt1 "<%s>" uu___1 in
-      FStarC_Format.fmt1 "reify%s" uu___
+      FStarC_Format.fmt1 "reify%s"
+        (match lopt with
+         | FStar_Pervasives_Native.None -> ""
+         | FStar_Pervasives_Native.Some l ->
+             FStarC_Format.fmt1 "<%s>" (FStarC_Ident.string_of_lid l))
   | FStarC_Const.Const_reflect l ->
       let uu___ = sli l in FStarC_Format.fmt1 "[[%s.reflect]]" uu___
 let is_name (lid : FStarC_Ident.lident) : Prims.bool=
   let c =
-    let uu___ =
-      let uu___1 = FStarC_Ident.ident_of_lid lid in
-      FStarC_Ident.string_of_id uu___1 in
-    FStarC_Util.char_at uu___ Prims.int_zero in
+    FStarC_Util.char_at
+      (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid))
+      Prims.int_zero in
   FStarC_Util.is_upper c
 let term_view_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]

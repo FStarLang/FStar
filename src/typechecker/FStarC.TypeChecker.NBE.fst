@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2017-2019 Microsoft Research
 
    Authors: Zoe Paraskevopoulou, Guido Martinez, Nikhil Swamy
@@ -86,8 +86,8 @@ let dbg_NBETop = Debug.get_toggle "NBETop"
 // VD: This seems necessary for the OCaml build
 let max a b = if a > b then a else b
 
-let map_rev (f : 'a -> 'b) (l : list 'a) : list 'b =
-  let rec aux (l:list 'a) (acc:list 'b) = //NS: weird, this needs an annotation to type-check in F*; cf issue #
+let map_rev (f : 'a -> ML 'b) (l : list 'a) : ML (list 'b) =
+  let rec aux (l:list 'a) (acc:list 'b) : ML _ = //NS: weird, this needs an annotation to type-check in F*; cf issue #
     match l with
     | [] -> acc
     | x :: xs -> aux xs (f x :: acc)
@@ -111,7 +111,9 @@ let rec drop (p: 'a -> bool) (l: list 'a): list 'a =
   | x::xs -> if p x then x::xs else drop p xs
 
 let fmap_opt (f : 'a -> 'b) (x : option 'a) : option 'b =
-  Option.bind x (fun x -> Some (f x))
+  match x with
+  | None -> None
+  | Some x -> Some (f x)
 
 let drop_until (f : 'a -> bool) (l : list 'a) : list 'a =
   let rec aux l =
@@ -129,7 +131,7 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
-let let_rec_arity (b:letbinding) : int & list bool =
+let let_rec_arity (b:letbinding) : ML (int & list bool) =
   let (ar, maybe_lst) = U.let_rec_arity b in
   match maybe_lst with
   | None ->
@@ -178,7 +180,7 @@ let zeta_false (cfg:config) =
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name in
   SMap.add cfg.fv_cache (string_of_lid lid) v
-let try_in_cache (cfg:config) (fv:fv) : option t =
+let try_in_cache (cfg:config) (fv:fv) : ML (option t) =
   let lid = fv.fv_name in
   SMap.try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f = log_nbe cfg.core_cfg f
@@ -190,7 +192,7 @@ let debug cfg f = log_nbe cfg.core_cfg f
  * (Lazy i') (probably with i=i'). An example, from Meta-F*, is
  * (pack_binder (pack_bv .., Q_Explicit)).
  *)
-let rec unlazy_unmeta t =
+let rec unlazy_unmeta t : ML _ =
     match t.nbe_t with
     | Lazy (_, t) -> unlazy_unmeta (Thunk.force t)
     | Meta(t0, m) ->
@@ -202,12 +204,12 @@ let rec unlazy_unmeta t =
       end
     | _ -> t
 
-let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term & list t) =
+let pickBranch (cfg:config) (scrut : t) (branches : list branch) : ML (option (term & list t)) =
   let all_branches = branches in
-  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term & list t) =
+  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : ML (option (term & list t)) =
     //NS: adapted from FStarC.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
-        : either (list t) bool =
+        : ML (either (list t) bool) =
         (* Inl ts: p matches t and ts are bindings for the branch *)
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
@@ -238,7 +240,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
 
         | Pat_cons(fv, _us_opt, arg_pats) ->
             let rec matches_args out (a:list (t & aqual)) (p:list (pat & bool))
-                : either (list t) bool =
+                : ML (either (list t) bool) =
                 match a, p with
                 | [], [] -> Inl out
                 | (t, _)::rest_a, (p, _)::rest_p ->
@@ -290,9 +292,9 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
 let should_reduce_recursive_definition
        (arguments:args)
        (formals_in_decreases:list bool)
-  : (bool & args & args) (* can unfold x full arg list x residual args *)
+  : ML (bool & args & args) (* can unfold x full arg list x residual args *)
   =
-  let rec aux ts ar_list acc =
+  let rec aux ts ar_list acc : ML _ =
     match ts, ar_list with
     | _, [] ->
       true, acc, ts
@@ -306,7 +308,7 @@ let should_reduce_recursive_definition
   in
   aux arguments formals_in_decreases []
 
-let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option sigelt =
+let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): ML (option sigelt) =
   let mapper (lr, rng) =
     match lr with
     | Inr (elt, None) -> Some elt
@@ -321,7 +323,7 @@ let is_univ (tm : t) =
   | Univ _ -> true
   | _ -> false
 
-let un_univ (tm:t) : universe =
+let un_univ (tm:t) : ML universe =
   match tm.nbe_t with
   | Univ u -> u
   | _ -> failwith ("Not a universe: " ^ t_to_string tm)
@@ -334,8 +336,8 @@ let is_constr (q : qninfo) : bool =
   | Some (Inr ({ sigel = Sig_datacon _ }, _), _) -> true
   | _ -> false
 
-let translate_univ (cfg:config) (bs:list t) (u:universe) : universe =
-  let rec aux u =
+let translate_univ (cfg:config) (bs:list t) (u:universe) : ML universe =
+  let rec aux u : ML _ =
     let u = SS.compress_univ u in
       match u with
       | U_bvar i ->
@@ -386,7 +388,7 @@ let mk_t t = { nbe_t = t; nbe_r = Range.dummyRange }
 /// applications. As such, the process of translation triggers
 /// call-by-value reduction of the syntax, relying on the reduction
 /// strategy of the host.
-let rec translate (cfg:config) (bs:list t) (e:term) : t =
+let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     let debug = debug cfg in
     let mk_t t = mk_rt e.pos t in
     debug (fun () -> Format.print2 "Term: %s - %s\n" (tag_of (SS.compress e)) (show (SS.compress e)));
@@ -534,7 +536,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
 
     | Tm_match {scrutinee=scrut; ret_opt; brs=branches; rc_opt=rc} ->
       (* Thunked computation to reconstrct the returns annotation *)
-      let make_returns () : option match_returns_ascription =
+      let make_returns () : ML (option match_returns_ascription) =
         match ret_opt with
         | None -> None
         | Some (b, asc) ->
@@ -550,15 +552,15 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
           Some (b, asc) in
 
       (* Thunked computation to reconstruct residual comp *)
-      let make_rc () : option S.residual_comp =
+      let make_rc () : ML (option S.residual_comp) =
         match rc with
         | None -> None
         | Some rc -> Some (readback_residual_comp cfg (translate_residual_comp cfg bs rc)) in
 
       (* Thunked computation that reconstructs the patterns *)
-      let make_branches () : list branch =
+      let make_branches () : ML (list branch) =
         let cfg = zeta_false cfg in
-        let rec process_pattern bs (p:pat) : list t & pat = (* returns new environment and pattern *)
+        let rec process_pattern bs (p:pat) : ML (list t & pat) = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
@@ -711,14 +713,14 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       in
       mk_t <| Lazy (Inl li, Thunk.mk f)
 
-and translate_comp cfg bs (c:S.comp) : comp =
+and translate_comp cfg bs (c:S.comp) : ML comp =
   match c.n with
   | S.Total  typ -> Tot (translate cfg bs typ)
   | S.GTotal typ -> GTot (translate cfg bs typ)
   | S.Comp   ctyp -> Comp (translate_comp_typ cfg bs ctyp)
 
 (* uncurried application *)
-and iapp (cfg : config) (f:t) (args:args) : t =
+and iapp (cfg : config) (f:t) (args:args) : ML t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
   match (unlazy_unmeta f).nbe_t with
@@ -881,7 +883,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 
 
-and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
+and translate_fv (cfg: config) (bs:list t) (fvar:fv): ML t =
    let debug = debug cfg in
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg.core_cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
@@ -957,7 +959,7 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
        t
 
 (* translate a let-binding - local or global *)
-and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : t =
+and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : ML t =
   let debug = debug cfg in
   let us = lb.lbunivs in
   let formals, _ = U.arrow_formals lb.lbtyp in
@@ -973,16 +975,16 @@ and translate_letbinding (cfg:config) (bs:list t) (lb:letbinding) : t =
   // rather than top-level pure computation
 
 
-and mkRec i (b:letbinding) (bs:list letbinding) (env:list t) =
+and mkRec i (b:letbinding) (bs:list letbinding) (env:list t) : ML _ =
   let (ar, ar_lst) = let_rec_arity b in
   mk_t <| LocalLetRec(i, b, bs, env, [], ar, ar_lst)
 
 (* Creates the environment of mutually recursive function definitions *)
-and make_rec_env (all_lbs:list letbinding) (all_outer_bs:list t) : list t =
+and make_rec_env (all_lbs:list letbinding) (all_outer_bs:list t) : ML (list t) =
   let rec_bindings = List.mapi (fun i lb -> mkRec i lb all_lbs all_outer_bs) all_lbs in
   List.rev_append rec_bindings all_outer_bs
 
-and translate_constant (c : sconst) : constant =
+and translate_constant (c : sconst) : ML constant =
     match c with
     | C.Const_unit -> Unit
     | C.Const_bool b -> Bool b
@@ -993,7 +995,7 @@ and translate_constant (c : sconst) : constant =
     | C.Const_real r -> Real r
     | _ -> SConst c
 
-and readback_comp cfg (c: comp) : S.comp =
+and readback_comp cfg (c: comp) : ML S.comp =
   let c' =
     match c with
     | Tot  typ -> S.Total (readback cfg typ)
@@ -1001,7 +1003,7 @@ and readback_comp cfg (c: comp) : S.comp =
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
    in S.mk c' Range.dummyRange
 
-and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
+and translate_comp_typ cfg bs (c:S.comp_typ) : ML comp_typ =
   let { S.comp_univs  = comp_univs
       ; S.effect_name = effect_name
       ; S.result_typ  = result_typ
@@ -1013,14 +1015,14 @@ and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
     effect_args = List.map (fun x -> translate cfg bs (fst x), snd x) effect_args;
     flags = List.map (translate_flag cfg bs) flags }
 
-and readback_comp_typ cfg (c:comp_typ) : S.comp_typ =
+and readback_comp_typ cfg (c:comp_typ) : ML S.comp_typ =
   { S.comp_univs = c.comp_univs;
     S.effect_name = c.effect_name;
     S.result_typ = readback cfg c.result_typ;
     S.effect_args = List.map (fun x -> readback cfg (fst x), snd x) c.effect_args;
     S.flags = List.map (readback_flag cfg) c.flags }
 
-and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
+and translate_residual_comp cfg bs (c:S.residual_comp) : ML residual_comp =
     let { S.residual_effect  = residual_effect
         ; S.residual_typ     = residual_typ
         ; S.residual_flags   = residual_flags } = c in
@@ -1031,12 +1033,12 @@ and translate_residual_comp cfg bs (c:S.residual_comp) : residual_comp =
          else Option.map (translate cfg bs) residual_typ);
       residual_flags = List.map (translate_flag cfg bs) residual_flags }
 
-and readback_residual_comp cfg (c:residual_comp) : S.residual_comp =
+and readback_residual_comp cfg (c:residual_comp) : ML S.residual_comp =
     { S.residual_effect = c.residual_effect;
       S.residual_typ    = c.residual_typ |> Option.map (fun x -> debug cfg (fun () -> Format.print1 "Reading back residualtype %s\n" (t_to_string x)); readback cfg x);
       S.residual_flags = List.map (readback_flag cfg) c.residual_flags }
 
-and translate_flag cfg bs (f : S.cflag) : cflag =
+and translate_flag cfg bs (f : S.cflag) : ML cflag =
     match f with
     | S.TOTAL -> TOTAL
     | S.MLEFFECT -> MLEFFECT
@@ -1051,7 +1053,7 @@ and translate_flag cfg bs (f : S.cflag) : cflag =
     | S.DECREASES (S.Decreases_wf (rel, e)) ->
       DECREASES_wf (translate cfg bs rel, translate cfg bs e)
 
-and readback_flag cfg (f : cflag) : S.cflag =
+and readback_flag cfg (f : cflag) : ML S.cflag =
     match f with
     | TOTAL -> S.TOTAL
     | MLEFFECT -> S.MLEFFECT
@@ -1066,7 +1068,8 @@ and readback_flag cfg (f : cflag) : S.cflag =
     | DECREASES_wf (rel, e) ->
       S.DECREASES (S.Decreases_wf (readback cfg rel, readback cfg e))
 
-and translate_monadic (m, ty) cfg bs e : t =
+and translate_monadic mty cfg bs e : ML t =
+   let (m, ty) = mty in
    let e = U.unascribe e in
    match e.n with
    | Tm_let {lbs=(false, [lb]); body} -> //elaborate this to M.bind
@@ -1162,7 +1165,8 @@ and translate_monadic (m, ty) cfg bs e : t =
 
    | _ -> failwith (Format.fmt1 "Unexpected case in translate_monadic: %s" (tag_of e))
 
-and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
+and translate_monadic_lift msmt cfg bs e : ML t =
+   let (msrc, mtgt, ty) = msmt in
    let e = U.unascribe e in
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
@@ -1221,7 +1225,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
 /// In each of these cases, readback descends under the binder, and
 /// recursively normalizes the term (i.e., translates and reads back)
 /// in an extended context with a fresh name in scope.
-and readback (cfg:config) (x:t) : term =
+and readback (cfg:config) (x:t) : ML term =
     let debug = debug cfg in
     let readback_args cfg args =
       map_rev (fun (x, q) -> (readback cfg x, q)) args
@@ -1514,7 +1518,7 @@ let reduce_application cfg t args =
   iapp (new_config cfg) t args
 
 let normalize psteps (steps:list Env.step)
-                (env : Env.env) (e:term) : term =
+                (env : Env.env) (e:term) : ML term =
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
@@ -1527,7 +1531,7 @@ let normalize psteps (steps:list Env.step)
   r
 
 (* ONLY FOR UNIT TESTS! *)
-let normalize_for_unit_test (steps:list Env.step) (env : Env.env) (e:term) : term =
+let normalize_for_unit_test (steps:list Env.step) (env : Env.env) (e:term) : ML term =
   let cfg = Cfg.config steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in

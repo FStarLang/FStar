@@ -18,8 +18,7 @@ let __proj__UnexpectedJsonType__item__uu___ (projectee : Prims.exn) :
   (Prims.string * FStarC_Json.json)=
   match projectee with | UnexpectedJsonType uu___ -> uu___
 let write_json (js : FStarC_Json.json) : unit=
-  (let uu___1 = FStarC_Json.string_of_json js in
-   FStarC_Format.print_raw uu___1);
+  FStarC_Format.print_raw (FStarC_Json.string_of_json js);
   FStarC_Format.print_raw "\n"
 let js_fail (expected : Prims.string) (got : FStarC_Json.json) : 'a=
   FStarC_Effect.raise (UnexpectedJsonType (expected, got))

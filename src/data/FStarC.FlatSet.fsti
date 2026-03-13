@@ -18,6 +18,7 @@
 
 module FStarC.FlatSet
 
+open FStarC.Effect
 open FStarC.Class.Ord
 open FStarC.Class.Show
 open FStarC.Class.Setlike

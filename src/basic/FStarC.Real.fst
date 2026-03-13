@@ -38,13 +38,13 @@ let int_frac (r : real): option (string & string) =
 let max x y =
   if x > y then x else y
 
-let zeropad_match (f1 : string) (f2 : string): string & string =
+let zeropad_match (f1 : string) (f2 : string) =
   let len = max (String.length f1) (String.length f2) in
   let f1 = f1 ^ String.make (len - String.length f1) '0' in
   let f2 = f2 ^ String.make (len - String.length f2) '0' in
   f1, f2
 
-let cmp (r1 r2 : real) : option order =
+let cmp (r1 r2 : real) =
   match int_frac r1, int_frac r2 with
   | Some (i1, f1), Some (i2, f2) ->
     let f1, f2 = zeropad_match f1 f2 in

@@ -1,12 +1,4 @@
 open Prims
-let id_norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb=
-  fun uu___ ->
-    match uu___ with
-    | FStar_Pervasives.Inr x -> x
-    | FStar_Pervasives.Inl l ->
-        let uu___1 =
-          FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-        FStarC_Syntax_Syntax.fv_to_tm uu___1
 exception Embedding_failure 
 let uu___is_Embedding_failure (projectee : Prims.exn) : Prims.bool=
   match projectee with | Embedding_failure -> true | uu___ -> false
@@ -25,18 +17,6 @@ let unknown_printer (typ : FStarC_Syntax_Syntax.typ) (uu___ : 'uuuuu) :
   Prims.string=
   let uu___1 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term typ in
   FStarC_Format.fmt1 "unknown %s" uu___1
-let term_as_fv (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.fv=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Subst.compress t in
-    uu___1.FStarC_Syntax_Syntax.n in
-  match uu___ with
-  | FStarC_Syntax_Syntax.Tm_fvar fv -> fv
-  | uu___1 ->
-      let uu___2 =
-        let uu___3 =
-          FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
-        FStarC_Format.fmt1 "Embeddings not defined for type %s" uu___3 in
-      failwith uu___2
 let lazy_embed (pa : 'a printer) (et : unit -> FStarC_Syntax_Syntax.emb_typ)
   (rng : FStarC_Range_Type.range) (ta : unit -> FStarC_Syntax_Syntax.term)
   (x : 'a) (f : unit -> FStarC_Syntax_Syntax.term) :
@@ -80,8 +60,9 @@ let lazy_unembed (pa : 'a printer)
         FStarC_Syntax_Syntax.rng = uu___1;_}
       ->
       let uu___2 =
-        (et1 <> et') ||
-          (FStarC_Effect.op_Bang FStarC_Options.eager_embedding) in
+        if et1 <> et'
+        then true
+        else FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
       if uu___2
       then
         let res = let uu___3 = FStarC_Thunk.force t in f uu___3 in
@@ -170,10 +151,8 @@ let e_any :
     (fun uu___ -> FStarC_Syntax_Syntax.t_term)
     (FStarC_Class_Show.show FStarC_Syntax_Print.showable_term)
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.term_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.term_lid), []))
 let e_unit : unit FStarC_Syntax_Embeddings_Base.embedding=
   let em u rng _shadow _norm =
     {
@@ -194,10 +173,8 @@ let e_unit : unit FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStarC_Syntax_Syntax.t_unit) (fun uu___ -> "()")
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.unit_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.unit_lid), []))
 let e_bool : Prims.bool FStarC_Syntax_Embeddings_Base.embedding=
   let em b rng _shadow _norm =
     let t =
@@ -221,10 +198,8 @@ let e_bool : Prims.bool FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStarC_Syntax_Syntax.t_bool) Prims.string_of_bool
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.bool_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.bool_lid), []))
 let e_char : FStar_Char.char FStarC_Syntax_Embeddings_Base.embedding=
   let em c rng _shadow _norm =
     let t = FStarC_Syntax_Util.exp_char c in
@@ -245,17 +220,13 @@ let e_char : FStar_Char.char FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStarC_Syntax_Syntax.t_char) FStarC_Util.string_of_char
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), []))
 let e_int : Prims.int FStarC_Syntax_Embeddings_Base.embedding=
   let ty = FStarC_Syntax_Syntax.t_int in
   let emb_t_int =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_lid FStarC_Parser_Const.int_lid in
-      (uu___1, []) in
-    FStarC_Syntax_Syntax.ET_app uu___ in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.int_lid), []) in
   let em i rng _shadow _norm =
     lazy_embed Prims.string_of_int (fun uu___ -> emb_t_int) rng
       (fun uu___ -> ty) i
@@ -277,10 +248,8 @@ let e_int : Prims.int FStarC_Syntax_Embeddings_Base.embedding=
     (fun uu___ -> emb_t_int)
 let e_string : Prims.string FStarC_Syntax_Embeddings_Base.embedding=
   let emb_t_string =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_lid FStarC_Parser_Const.string_lid in
-      (uu___1, []) in
-    FStarC_Syntax_Syntax.ET_app uu___ in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.string_lid), []) in
   let em s rng _shadow _norm =
     FStarC_Syntax_Syntax.mk
       (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_string (s, rng)))
@@ -300,10 +269,8 @@ let e_string : Prims.string FStarC_Syntax_Embeddings_Base.embedding=
 let e_real : FStarC_Real.real FStarC_Syntax_Embeddings_Base.embedding=
   let ty = FStarC_Syntax_Syntax.t_real in
   let emb_t_real =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_lid FStarC_Parser_Const.real_lid in
-      (uu___1, []) in
-    FStarC_Syntax_Syntax.ET_app uu___ in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.real_lid), []) in
   let em r rng _shadow _norm =
     let uu___ = r in
     match uu___ with
@@ -327,15 +294,14 @@ let e_option (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
     FStarC_Syntax_Syntax.t_option_of uu___1 in
   let emb_t_option_a uu___ =
     let uu___1 =
-      let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.option_lid in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        [uu___4] in
-      (uu___2, uu___3) in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        [uu___3] in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.option_lid), uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 x =
-    let uu___ = FStarC_Syntax_Embeddings_Base.printer_of ea in
-    FStarC_Common.string_of_option uu___ x in
+    FStarC_Common.string_of_option
+      (FStarC_Syntax_Embeddings_Base.printer_of ea) x in
   let em o rng shadow norm =
     lazy_embed printer1 emb_t_option_a rng
       (fun uu___ ->
@@ -365,10 +331,9 @@ let e_option (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                       FStarC_Syntax_Util.mk_field_projector_name_from_ident
                         FStarC_Parser_Const.some_lid v in
                     let some_v_tm =
-                      let uu___1 =
-                        FStarC_Syntax_Syntax.lid_as_fv some_v
-                          FStar_Pervasives_Native.None in
-                      FStarC_Syntax_Syntax.fv_to_tm uu___1 in
+                      FStarC_Syntax_Syntax.fv_to_tm
+                        (FStarC_Syntax_Syntax.lid_as_fv some_v
+                           FStar_Pervasives_Native.None) in
                     let uu___1 =
                       FStarC_Syntax_Syntax.mk_Tm_uinst some_v_tm
                         [FStarC_Syntax_Syntax.U_zero] in
@@ -376,10 +341,7 @@ let e_option (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                       let uu___3 =
                         let uu___4 = FStarC_Syntax_Embeddings_Base.type_of ea in
                         FStarC_Syntax_Syntax.iarg uu___4 in
-                      let uu___4 =
-                        let uu___5 = FStarC_Syntax_Syntax.as_arg t in
-                        [uu___5] in
-                      uu___3 :: uu___4 in
+                      [uu___3; FStarC_Syntax_Syntax.as_arg t] in
                     FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
              let uu___1 =
                let uu___2 =
@@ -394,8 +356,8 @@ let e_option (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                let uu___4 =
                  let uu___5 =
                    let uu___6 =
-                     let uu___7 = FStarC_Syntax_Embeddings_Base.embed ea a1 in
-                     uu___7 rng shadow_a norm in
+                     FStarC_Syntax_Embeddings_Base.embed ea a1 rng shadow_a
+                       norm in
                    FStarC_Syntax_Syntax.as_arg uu___6 in
                  [uu___5] in
                uu___3 :: uu___4 in
@@ -443,24 +405,19 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
   let emb_t_pair uu___ =
     let uu___1 =
       let uu___2 =
-        FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple2 in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
-          [uu___6] in
-        uu___4 :: uu___5 in
-      (uu___2, uu___3) in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        let uu___4 =
+          let uu___5 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple2),
+        uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 uu___ =
     match uu___ with
     | (x, y) ->
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          uu___2 x in
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of eb in
-          uu___3 y in
+        let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of ea x in
+        let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of eb y in
         FStarC_Format.fmt2 "(%s, %s)" uu___1 uu___2 in
   let em x rng shadow norm =
     lazy_embed printer1 emb_t_pair rng typ x
@@ -474,10 +431,9 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
              FStarC_Syntax_Util.mk_field_projector_name uu___1 uu___2 i in
            let proj_1_tm =
-             let uu___1 =
-               FStarC_Syntax_Syntax.lid_as_fv proj_1
-                 FStar_Pervasives_Native.None in
-             FStarC_Syntax_Syntax.fv_to_tm uu___1 in
+             FStarC_Syntax_Syntax.fv_to_tm
+               (FStarC_Syntax_Syntax.lid_as_fv proj_1
+                  FStar_Pervasives_Native.None) in
            let uu___1 =
              FStarC_Syntax_Syntax.mk_Tm_uinst proj_1_tm
                [FStarC_Syntax_Syntax.U_zero] in
@@ -489,9 +445,7 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                let uu___5 =
                  let uu___6 = FStarC_Syntax_Embeddings_Base.type_of eb in
                  FStarC_Syntax_Syntax.iarg uu___6 in
-               let uu___6 =
-                 let uu___7 = FStarC_Syntax_Syntax.as_arg ab in [uu___7] in
-               uu___5 :: uu___6 in
+               [uu___5; FStarC_Syntax_Syntax.as_arg ab] in
              uu___3 :: uu___4 in
            FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng in
          let shadow_a = map_shadow shadow (proj Prims.int_one) in
@@ -513,18 +467,14 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
              let uu___6 =
                let uu___7 =
                  let uu___8 =
-                   let uu___9 =
-                     FStarC_Syntax_Embeddings_Base.embed ea
-                       (FStar_Pervasives_Native.fst x) in
-                   uu___9 rng shadow_a norm in
+                   FStarC_Syntax_Embeddings_Base.embed ea
+                     (FStar_Pervasives_Native.fst x) rng shadow_a norm in
                  FStarC_Syntax_Syntax.as_arg uu___8 in
                let uu___8 =
                  let uu___9 =
                    let uu___10 =
-                     let uu___11 =
-                       FStarC_Syntax_Embeddings_Base.embed eb
-                         (FStar_Pervasives_Native.snd x) in
-                     uu___11 rng shadow_b norm in
+                     FStarC_Syntax_Embeddings_Base.embed eb
+                       (FStar_Pervasives_Native.snd x) rng shadow_b norm in
                    FStarC_Syntax_Syntax.as_arg uu___10 in
                  [uu___9] in
                uu___7 :: uu___8 in
@@ -590,32 +540,26 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
   let emb_t_pair uu___ =
     let uu___1 =
       let uu___2 =
-        FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple3 in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
-          let uu___7 =
-            let uu___8 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
-            [uu___8] in
-          uu___6 :: uu___7 in
-        uu___4 :: uu___5 in
-      (uu___2, uu___3) in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        let uu___4 =
+          let uu___5 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
+          let uu___6 =
+            let uu___7 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
+            [uu___7] in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple3),
+        uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 uu___ =
     match uu___ with
     | (x, y, z) ->
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          uu___2 x in
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of eb in
-          uu___3 y in
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Embeddings_Base.printer_of ec in
-          uu___4 z in
+        let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of ea x in
+        let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of eb y in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of ec z in
         FStarC_Format.fmt3 "(%s, %s, %s)" uu___1 uu___2 uu___3 in
-  let em uu___ rng shadow norm =
+  let em tup rng shadow norm =
+    let uu___ = tup in
     match uu___ with
     | (x1, x2, x3) ->
         lazy_embed printer1 emb_t_pair rng typ (x1, x2, x3)
@@ -629,10 +573,9 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
                let proj_i_tm =
-                 let uu___2 =
-                   FStarC_Syntax_Syntax.lid_as_fv proj_i
-                     FStar_Pervasives_Native.None in
-                 FStarC_Syntax_Syntax.fv_to_tm uu___2 in
+                 FStarC_Syntax_Syntax.fv_to_tm
+                   (FStarC_Syntax_Syntax.lid_as_fv proj_i
+                      FStar_Pervasives_Native.None) in
                let uu___2 =
                  FStarC_Syntax_Syntax.mk_Tm_uinst proj_i_tm
                    [FStarC_Syntax_Syntax.U_zero] in
@@ -648,10 +591,7 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                      let uu___8 =
                        let uu___9 = FStarC_Syntax_Embeddings_Base.type_of ec in
                        FStarC_Syntax_Syntax.iarg uu___9 in
-                     let uu___9 =
-                       let uu___10 = FStarC_Syntax_Syntax.as_arg abc in
-                       [uu___10] in
-                     uu___8 :: uu___9 in
+                     [uu___8; FStarC_Syntax_Syntax.as_arg abc] in
                    uu___6 :: uu___7 in
                  uu___4 :: uu___5 in
                FStarC_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
@@ -681,23 +621,20 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                    let uu___9 =
                      let uu___10 =
                        let uu___11 =
-                         let uu___12 =
-                           FStarC_Syntax_Embeddings_Base.embed ea x1 in
-                         uu___12 rng shadow_a norm in
+                         FStarC_Syntax_Embeddings_Base.embed ea x1 rng
+                           shadow_a norm in
                        FStarC_Syntax_Syntax.as_arg uu___11 in
                      let uu___11 =
                        let uu___12 =
                          let uu___13 =
-                           let uu___14 =
-                             FStarC_Syntax_Embeddings_Base.embed eb x2 in
-                           uu___14 rng shadow_b norm in
+                           FStarC_Syntax_Embeddings_Base.embed eb x2 rng
+                             shadow_b norm in
                          FStarC_Syntax_Syntax.as_arg uu___13 in
                        let uu___13 =
                          let uu___14 =
                            let uu___15 =
-                             let uu___16 =
-                               FStarC_Syntax_Embeddings_Base.embed ec x3 in
-                             uu___16 rng shadow_c norm in
+                             FStarC_Syntax_Embeddings_Base.embed ec x3 rng
+                               shadow_c norm in
                            FStarC_Syntax_Syntax.as_arg uu___15 in
                          [uu___14] in
                        uu___12 :: uu___13 in
@@ -780,38 +717,30 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
   let emb_t_pair uu___ =
     let uu___1 =
       let uu___2 =
-        FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple4 in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
-          let uu___7 =
-            let uu___8 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
-            let uu___9 =
-              let uu___10 = FStarC_Syntax_Embeddings_Base.emb_typ_of ed () in
-              [uu___10] in
-            uu___8 :: uu___9 in
-          uu___6 :: uu___7 in
-        uu___4 :: uu___5 in
-      (uu___2, uu___3) in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        let uu___4 =
+          let uu___5 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
+          let uu___6 =
+            let uu___7 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
+            let uu___8 =
+              let uu___9 = FStarC_Syntax_Embeddings_Base.emb_typ_of ed () in
+              [uu___9] in
+            uu___7 :: uu___8 in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple4),
+        uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 uu___ =
     match uu___ with
     | (x, y, z, w) ->
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          uu___2 x in
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of eb in
-          uu___3 y in
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Embeddings_Base.printer_of ec in
-          uu___4 z in
-        let uu___4 =
-          let uu___5 = FStarC_Syntax_Embeddings_Base.printer_of ed in
-          uu___5 w in
+        let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of ea x in
+        let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of eb y in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of ec z in
+        let uu___4 = FStarC_Syntax_Embeddings_Base.printer_of ed w in
         FStarC_Format.fmt4 "(%s, %s, %s, %s)" uu___1 uu___2 uu___3 uu___4 in
-  let em uu___ rng shadow norm =
+  let em tup rng shadow norm =
+    let uu___ = tup in
     match uu___ with
     | (x1, x2, x3, x4) ->
         lazy_embed printer1 emb_t_pair rng typ (x1, x2, x3, x4)
@@ -825,10 +754,9 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
                let proj_i_tm =
-                 let uu___2 =
-                   FStarC_Syntax_Syntax.lid_as_fv proj_i
-                     FStar_Pervasives_Native.None in
-                 FStarC_Syntax_Syntax.fv_to_tm uu___2 in
+                 FStarC_Syntax_Syntax.fv_to_tm
+                   (FStarC_Syntax_Syntax.lid_as_fv proj_i
+                      FStar_Pervasives_Native.None) in
                let uu___2 =
                  FStarC_Syntax_Syntax.mk_Tm_uinst proj_i_tm
                    [FStarC_Syntax_Syntax.U_zero] in
@@ -849,10 +777,7 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                          let uu___11 =
                            FStarC_Syntax_Embeddings_Base.type_of ed in
                          FStarC_Syntax_Syntax.iarg uu___11 in
-                       let uu___11 =
-                         let uu___12 = FStarC_Syntax_Syntax.as_arg abcd in
-                         [uu___12] in
-                       uu___10 :: uu___11 in
+                       [uu___10; FStarC_Syntax_Syntax.as_arg abcd] in
                      uu___8 :: uu___9 in
                    uu___6 :: uu___7 in
                  uu___4 :: uu___5 in
@@ -889,30 +814,26 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                      let uu___11 =
                        let uu___12 =
                          let uu___13 =
-                           let uu___14 =
-                             FStarC_Syntax_Embeddings_Base.embed ea x1 in
-                           uu___14 rng shadow_a norm in
+                           FStarC_Syntax_Embeddings_Base.embed ea x1 rng
+                             shadow_a norm in
                          FStarC_Syntax_Syntax.as_arg uu___13 in
                        let uu___13 =
                          let uu___14 =
                            let uu___15 =
-                             let uu___16 =
-                               FStarC_Syntax_Embeddings_Base.embed eb x2 in
-                             uu___16 rng shadow_b norm in
+                             FStarC_Syntax_Embeddings_Base.embed eb x2 rng
+                               shadow_b norm in
                            FStarC_Syntax_Syntax.as_arg uu___15 in
                          let uu___15 =
                            let uu___16 =
                              let uu___17 =
-                               let uu___18 =
-                                 FStarC_Syntax_Embeddings_Base.embed ec x3 in
-                               uu___18 rng shadow_c norm in
+                               FStarC_Syntax_Embeddings_Base.embed ec x3 rng
+                                 shadow_c norm in
                              FStarC_Syntax_Syntax.as_arg uu___17 in
                            let uu___17 =
                              let uu___18 =
                                let uu___19 =
-                                 let uu___20 =
-                                   FStarC_Syntax_Embeddings_Base.embed ed x4 in
-                                 uu___20 rng shadow_d norm in
+                                 FStarC_Syntax_Embeddings_Base.embed ed x4
+                                   rng shadow_d norm in
                                FStarC_Syntax_Syntax.as_arg uu___19 in
                              [uu___18] in
                            uu___16 :: uu___17 in
@@ -1016,45 +937,35 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
   let emb_t_pair uu___ =
     let uu___1 =
       let uu___2 =
-        FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple5 in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
-          let uu___7 =
-            let uu___8 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
-            let uu___9 =
-              let uu___10 = FStarC_Syntax_Embeddings_Base.emb_typ_of ed () in
-              let uu___11 =
-                let uu___12 = FStarC_Syntax_Embeddings_Base.emb_typ_of ee () in
-                [uu___12] in
-              uu___10 :: uu___11 in
-            uu___8 :: uu___9 in
-          uu___6 :: uu___7 in
-        uu___4 :: uu___5 in
-      (uu___2, uu___3) in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        let uu___4 =
+          let uu___5 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
+          let uu___6 =
+            let uu___7 = FStarC_Syntax_Embeddings_Base.emb_typ_of ec () in
+            let uu___8 =
+              let uu___9 = FStarC_Syntax_Embeddings_Base.emb_typ_of ed () in
+              let uu___10 =
+                let uu___11 = FStarC_Syntax_Embeddings_Base.emb_typ_of ee () in
+                [uu___11] in
+              uu___9 :: uu___10 in
+            uu___7 :: uu___8 in
+          uu___5 :: uu___6 in
+        uu___3 :: uu___4 in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const_Tuples.lid_tuple5),
+        uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 uu___ =
     match uu___ with
     | (x, y, z, w, v) ->
-        let uu___1 =
-          let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          uu___2 x in
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of eb in
-          uu___3 y in
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Embeddings_Base.printer_of ec in
-          uu___4 z in
-        let uu___4 =
-          let uu___5 = FStarC_Syntax_Embeddings_Base.printer_of ed in
-          uu___5 w in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.printer_of ee in
-          uu___6 v in
+        let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of ea x in
+        let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of eb y in
+        let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of ec z in
+        let uu___4 = FStarC_Syntax_Embeddings_Base.printer_of ed w in
+        let uu___5 = FStarC_Syntax_Embeddings_Base.printer_of ee v in
         FStarC_Format.fmt5 "(%s, %s, %s, %s, %s)" uu___1 uu___2 uu___3 uu___4
           uu___5 in
-  let em uu___ rng shadow norm =
+  let em tup rng shadow norm =
+    let uu___ = tup in
     match uu___ with
     | (x1, x2, x3, x4, x5) ->
         lazy_embed printer1 emb_t_pair rng typ (x1, x2, x3, x4, x5)
@@ -1068,10 +979,9 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
                let proj_i_tm =
-                 let uu___2 =
-                   FStarC_Syntax_Syntax.lid_as_fv proj_i
-                     FStar_Pervasives_Native.None in
-                 FStarC_Syntax_Syntax.fv_to_tm uu___2 in
+                 FStarC_Syntax_Syntax.fv_to_tm
+                   (FStarC_Syntax_Syntax.lid_as_fv proj_i
+                      FStar_Pervasives_Native.None) in
                let uu___2 =
                  FStarC_Syntax_Syntax.mk_Tm_uinst proj_i_tm
                    [FStarC_Syntax_Syntax.U_zero] in
@@ -1097,10 +1007,7 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                            let uu___13 =
                              FStarC_Syntax_Embeddings_Base.type_of ee in
                            FStarC_Syntax_Syntax.iarg uu___13 in
-                         let uu___13 =
-                           let uu___14 = FStarC_Syntax_Syntax.as_arg abcde in
-                           [uu___14] in
-                         uu___12 :: uu___13 in
+                         [uu___12; FStarC_Syntax_Syntax.as_arg abcde] in
                        uu___10 :: uu___11 in
                      uu___8 :: uu___9 in
                    uu___6 :: uu___7 in
@@ -1145,39 +1052,32 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                        let uu___13 =
                          let uu___14 =
                            let uu___15 =
-                             let uu___16 =
-                               FStarC_Syntax_Embeddings_Base.embed ea x1 in
-                             uu___16 rng shadow_a norm in
+                             FStarC_Syntax_Embeddings_Base.embed ea x1 rng
+                               shadow_a norm in
                            FStarC_Syntax_Syntax.as_arg uu___15 in
                          let uu___15 =
                            let uu___16 =
                              let uu___17 =
-                               let uu___18 =
-                                 FStarC_Syntax_Embeddings_Base.embed eb x2 in
-                               uu___18 rng shadow_b norm in
+                               FStarC_Syntax_Embeddings_Base.embed eb x2 rng
+                                 shadow_b norm in
                              FStarC_Syntax_Syntax.as_arg uu___17 in
                            let uu___17 =
                              let uu___18 =
                                let uu___19 =
-                                 let uu___20 =
-                                   FStarC_Syntax_Embeddings_Base.embed ec x3 in
-                                 uu___20 rng shadow_c norm in
+                                 FStarC_Syntax_Embeddings_Base.embed ec x3
+                                   rng shadow_c norm in
                                FStarC_Syntax_Syntax.as_arg uu___19 in
                              let uu___19 =
                                let uu___20 =
                                  let uu___21 =
-                                   let uu___22 =
-                                     FStarC_Syntax_Embeddings_Base.embed ed
-                                       x4 in
-                                   uu___22 rng shadow_d norm in
+                                   FStarC_Syntax_Embeddings_Base.embed ed x4
+                                     rng shadow_d norm in
                                  FStarC_Syntax_Syntax.as_arg uu___21 in
                                let uu___21 =
                                  let uu___22 =
                                    let uu___23 =
-                                     let uu___24 =
-                                       FStarC_Syntax_Embeddings_Base.embed ee
-                                         x5 in
-                                     uu___24 rng shadow_e norm in
+                                     FStarC_Syntax_Embeddings_Base.embed ee
+                                       x5 rng shadow_e norm in
                                    FStarC_Syntax_Syntax.as_arg uu___23 in
                                  [uu___22] in
                                uu___20 :: uu___21 in
@@ -1297,26 +1197,21 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
     FStarC_Syntax_Syntax.t_either_of uu___1 uu___2 in
   let emb_t_sum_a_b uu___ =
     let uu___1 =
-      let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.either_lid in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        let uu___5 =
-          let uu___6 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
-          [uu___6] in
-        uu___4 :: uu___5 in
-      (uu___2, uu___3) in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        let uu___4 =
+          let uu___5 = FStarC_Syntax_Embeddings_Base.emb_typ_of eb () in
+          [uu___5] in
+        uu___3 :: uu___4 in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.either_lid), uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 s =
     match s with
     | FStar_Pervasives.Inl a1 ->
-        let uu___ =
-          let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          uu___1 a1 in
+        let uu___ = FStarC_Syntax_Embeddings_Base.printer_of ea a1 in
         FStarC_Format.fmt1 "Inl %s" uu___
     | FStar_Pervasives.Inr b1 ->
-        let uu___ =
-          let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of eb in
-          uu___1 b1 in
+        let uu___ = FStarC_Syntax_Embeddings_Base.printer_of eb b1 in
         FStarC_Format.fmt1 "Inr %s" uu___ in
   let em s rng shadow norm =
     lazy_embed printer1 emb_t_sum_a_b rng typ s
@@ -1331,10 +1226,9 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                        FStarC_Syntax_Util.mk_field_projector_name_from_ident
                          FStarC_Parser_Const.inl_lid v in
                      let some_v_tm =
-                       let uu___1 =
-                         FStarC_Syntax_Syntax.lid_as_fv some_v
-                           FStar_Pervasives_Native.None in
-                       FStarC_Syntax_Syntax.fv_to_tm uu___1 in
+                       FStarC_Syntax_Syntax.fv_to_tm
+                         (FStarC_Syntax_Syntax.lid_as_fv some_v
+                            FStar_Pervasives_Native.None) in
                      let uu___1 =
                        FStarC_Syntax_Syntax.mk_Tm_uinst some_v_tm
                          [FStarC_Syntax_Syntax.U_zero] in
@@ -1348,10 +1242,7 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                            let uu___6 =
                              FStarC_Syntax_Embeddings_Base.type_of eb in
                            FStarC_Syntax_Syntax.iarg uu___6 in
-                         let uu___6 =
-                           let uu___7 = FStarC_Syntax_Syntax.as_arg t in
-                           [uu___7] in
-                         uu___5 :: uu___6 in
+                         [uu___5; FStarC_Syntax_Syntax.as_arg t] in
                        uu___3 :: uu___4 in
                      FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
               let uu___1 =
@@ -1371,9 +1262,8 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                   let uu___6 =
                     let uu___7 =
                       let uu___8 =
-                        let uu___9 =
-                          FStarC_Syntax_Embeddings_Base.embed ea a1 in
-                        uu___9 rng shadow_a norm in
+                        FStarC_Syntax_Embeddings_Base.embed ea a1 rng
+                          shadow_a norm in
                       FStarC_Syntax_Syntax.as_arg uu___8 in
                     [uu___7] in
                   uu___5 :: uu___6 in
@@ -1389,10 +1279,9 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                        FStarC_Syntax_Util.mk_field_projector_name_from_ident
                          FStarC_Parser_Const.inr_lid v in
                      let some_v_tm =
-                       let uu___1 =
-                         FStarC_Syntax_Syntax.lid_as_fv some_v
-                           FStar_Pervasives_Native.None in
-                       FStarC_Syntax_Syntax.fv_to_tm uu___1 in
+                       FStarC_Syntax_Syntax.fv_to_tm
+                         (FStarC_Syntax_Syntax.lid_as_fv some_v
+                            FStar_Pervasives_Native.None) in
                      let uu___1 =
                        FStarC_Syntax_Syntax.mk_Tm_uinst some_v_tm
                          [FStarC_Syntax_Syntax.U_zero] in
@@ -1406,10 +1295,7 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                            let uu___6 =
                              FStarC_Syntax_Embeddings_Base.type_of eb in
                            FStarC_Syntax_Syntax.iarg uu___6 in
-                         let uu___6 =
-                           let uu___7 = FStarC_Syntax_Syntax.as_arg t in
-                           [uu___7] in
-                         uu___5 :: uu___6 in
+                         [uu___5; FStarC_Syntax_Syntax.as_arg t] in
                        uu___3 :: uu___4 in
                      FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng) in
               let uu___1 =
@@ -1429,9 +1315,8 @@ let e_either (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                   let uu___6 =
                     let uu___7 =
                       let uu___8 =
-                        let uu___9 =
-                          FStarC_Syntax_Embeddings_Base.embed eb b1 in
-                        uu___9 rng shadow_b norm in
+                        FStarC_Syntax_Embeddings_Base.embed eb b1 rng
+                          shadow_b norm in
                       FStarC_Syntax_Syntax.as_arg uu___8 in
                     [uu___7] in
                   uu___5 :: uu___6 in
@@ -1478,18 +1363,16 @@ let e_list (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
     FStarC_Syntax_Syntax.t_list_of uu___1 in
   let emb_t_list_a uu___ =
     let uu___1 =
-      let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.list_lid in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        [uu___4] in
-      (uu___2, uu___3) in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        [uu___3] in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.list_lid), uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 l =
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-          FStarC_List.map uu___3 l in
+          FStarC_List.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l in
         FStarC_String.concat "; " uu___2 in
       Prims.strcat uu___1 "]" in
     Prims.strcat "[" uu___ in
@@ -1520,10 +1403,9 @@ let e_list (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                  FStarC_Syntax_Util.mk_field_projector_name_from_ident
                    FStarC_Parser_Const.cons_lid fid in
                let proj_tm =
-                 let uu___1 =
-                   FStarC_Syntax_Syntax.lid_as_fv proj1
-                     FStar_Pervasives_Native.None in
-                 FStarC_Syntax_Syntax.fv_to_tm uu___1 in
+                 FStarC_Syntax_Syntax.fv_to_tm
+                   (FStarC_Syntax_Syntax.lid_as_fv proj1
+                      FStar_Pervasives_Native.None) in
                let uu___1 =
                  FStarC_Syntax_Syntax.mk_Tm_uinst proj_tm
                    [FStarC_Syntax_Syntax.U_zero] in
@@ -1531,10 +1413,7 @@ let e_list (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                  let uu___3 =
                    let uu___4 = FStarC_Syntax_Embeddings_Base.type_of ea in
                    FStarC_Syntax_Syntax.iarg uu___4 in
-                 let uu___4 =
-                   let uu___5 = FStarC_Syntax_Syntax.as_arg cons_tm in
-                   [uu___5] in
-                 uu___3 :: uu___4 in
+                 [uu___3; FStarC_Syntax_Syntax.as_arg cons_tm] in
                FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng in
              let shadow_hd = map_shadow shadow_l (proj "hd") in
              let shadow_tl = map_shadow shadow_l (proj "tl") in
@@ -1542,8 +1421,8 @@ let e_list (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                let uu___2 =
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 = FStarC_Syntax_Embeddings_Base.embed ea hd in
-                     uu___5 rng shadow_hd norm in
+                     FStarC_Syntax_Embeddings_Base.embed ea hd rng shadow_hd
+                       norm in
                    FStarC_Syntax_Syntax.as_arg uu___4 in
                  let uu___4 =
                    let uu___5 =
@@ -1649,11 +1528,8 @@ let e_norm_step :
   FStarC_NormSteps.norm_step FStarC_Syntax_Embeddings_Base.embedding=
   let typ uu___ = FStarC_Syntax_Syntax.t_norm_step in
   let emb_t_norm_step uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStarC_Ident.string_of_lid FStarC_Parser_Const.norm_step_lid in
-      (uu___2, []) in
-    FStarC_Syntax_Syntax.ET_app uu___1 in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.norm_step_lid), []) in
   let printer1 uu___ = "norm_step" in
   let em n rng _shadow norm =
     lazy_embed printer1 emb_t_norm_step rng typ n
@@ -1676,9 +1552,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldOnly uu___1 rng
@@ -1686,9 +1561,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldOnce uu___1 rng
@@ -1696,9 +1570,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldFully uu___1 rng
@@ -1706,9 +1579,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu___1 rng
@@ -1716,9 +1588,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldQual uu___1 rng
@@ -1726,9 +1597,8 @@ let e_norm_step :
              let uu___1 =
                let uu___2 =
                  let uu___3 =
-                   let uu___4 =
-                     FStarC_Syntax_Embeddings_Base.embed e_string_list l in
-                   uu___4 rng FStar_Pervasives_Native.None norm in
+                   FStarC_Syntax_Embeddings_Base.embed e_string_list l rng
+                     FStar_Pervasives_Native.None norm in
                  FStarC_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
              FStarC_Syntax_Syntax.mk_Tm_app steps_UnfoldNamespace uu___1 rng) in
@@ -1873,168 +1743,145 @@ let e_vconfig :
     let uu___1 =
       let uu___2 =
         let uu___3 =
-          let uu___4 =
-            FStarC_Syntax_Embeddings_Base.embed e_int
-              vcfg.FStarC_VConfig.initial_fuel in
-          uu___4 rng FStar_Pervasives_Native.None norm in
+          FStarC_Syntax_Embeddings_Base.embed e_int
+            vcfg.FStarC_VConfig.initial_fuel rng FStar_Pervasives_Native.None
+            norm in
         FStarC_Syntax_Syntax.as_arg uu___3 in
       let uu___3 =
         let uu___4 =
           let uu___5 =
-            let uu___6 =
-              FStarC_Syntax_Embeddings_Base.embed e_int
-                vcfg.FStarC_VConfig.max_fuel in
-            uu___6 rng FStar_Pervasives_Native.None norm in
+            FStarC_Syntax_Embeddings_Base.embed e_int
+              vcfg.FStarC_VConfig.max_fuel rng FStar_Pervasives_Native.None
+              norm in
           FStarC_Syntax_Syntax.as_arg uu___5 in
         let uu___5 =
           let uu___6 =
             let uu___7 =
-              let uu___8 =
-                FStarC_Syntax_Embeddings_Base.embed e_int
-                  vcfg.FStarC_VConfig.initial_ifuel in
-              uu___8 rng FStar_Pervasives_Native.None norm in
+              FStarC_Syntax_Embeddings_Base.embed e_int
+                vcfg.FStarC_VConfig.initial_ifuel rng
+                FStar_Pervasives_Native.None norm in
             FStarC_Syntax_Syntax.as_arg uu___7 in
           let uu___7 =
             let uu___8 =
               let uu___9 =
-                let uu___10 =
-                  FStarC_Syntax_Embeddings_Base.embed e_int
-                    vcfg.FStarC_VConfig.max_ifuel in
-                uu___10 rng FStar_Pervasives_Native.None norm in
+                FStarC_Syntax_Embeddings_Base.embed e_int
+                  vcfg.FStarC_VConfig.max_ifuel rng
+                  FStar_Pervasives_Native.None norm in
               FStarC_Syntax_Syntax.as_arg uu___9 in
             let uu___9 =
               let uu___10 =
                 let uu___11 =
-                  let uu___12 =
-                    FStarC_Syntax_Embeddings_Base.embed e_bool
-                      vcfg.FStarC_VConfig.detail_errors in
-                  uu___12 rng FStar_Pervasives_Native.None norm in
+                  FStarC_Syntax_Embeddings_Base.embed e_bool
+                    vcfg.FStarC_VConfig.detail_errors rng
+                    FStar_Pervasives_Native.None norm in
                 FStarC_Syntax_Syntax.as_arg uu___11 in
               let uu___11 =
                 let uu___12 =
                   let uu___13 =
-                    let uu___14 =
-                      FStarC_Syntax_Embeddings_Base.embed e_bool
-                        vcfg.FStarC_VConfig.detail_hint_replay in
-                    uu___14 rng FStar_Pervasives_Native.None norm in
+                    FStarC_Syntax_Embeddings_Base.embed e_bool
+                      vcfg.FStarC_VConfig.detail_hint_replay rng
+                      FStar_Pervasives_Native.None norm in
                   FStarC_Syntax_Syntax.as_arg uu___13 in
                 let uu___13 =
                   let uu___14 =
                     let uu___15 =
-                      let uu___16 =
-                        FStarC_Syntax_Embeddings_Base.embed e_bool
-                          vcfg.FStarC_VConfig.no_smt in
-                      uu___16 rng FStar_Pervasives_Native.None norm in
+                      FStarC_Syntax_Embeddings_Base.embed e_bool
+                        vcfg.FStarC_VConfig.no_smt rng
+                        FStar_Pervasives_Native.None norm in
                     FStarC_Syntax_Syntax.as_arg uu___15 in
                   let uu___15 =
                     let uu___16 =
                       let uu___17 =
-                        let uu___18 =
-                          FStarC_Syntax_Embeddings_Base.embed e_int
-                            vcfg.FStarC_VConfig.quake_lo in
-                        uu___18 rng FStar_Pervasives_Native.None norm in
+                        FStarC_Syntax_Embeddings_Base.embed e_int
+                          vcfg.FStarC_VConfig.quake_lo rng
+                          FStar_Pervasives_Native.None norm in
                       FStarC_Syntax_Syntax.as_arg uu___17 in
                     let uu___17 =
                       let uu___18 =
                         let uu___19 =
-                          let uu___20 =
-                            FStarC_Syntax_Embeddings_Base.embed e_int
-                              vcfg.FStarC_VConfig.quake_hi in
-                          uu___20 rng FStar_Pervasives_Native.None norm in
+                          FStarC_Syntax_Embeddings_Base.embed e_int
+                            vcfg.FStarC_VConfig.quake_hi rng
+                            FStar_Pervasives_Native.None norm in
                         FStarC_Syntax_Syntax.as_arg uu___19 in
                       let uu___19 =
                         let uu___20 =
                           let uu___21 =
-                            let uu___22 =
-                              FStarC_Syntax_Embeddings_Base.embed e_bool
-                                vcfg.FStarC_VConfig.quake_keep in
-                            uu___22 rng FStar_Pervasives_Native.None norm in
+                            FStarC_Syntax_Embeddings_Base.embed e_bool
+                              vcfg.FStarC_VConfig.quake_keep rng
+                              FStar_Pervasives_Native.None norm in
                           FStarC_Syntax_Syntax.as_arg uu___21 in
                         let uu___21 =
                           let uu___22 =
                             let uu___23 =
-                              let uu___24 =
-                                FStarC_Syntax_Embeddings_Base.embed e_bool
-                                  vcfg.FStarC_VConfig.retry in
-                              uu___24 rng FStar_Pervasives_Native.None norm in
+                              FStarC_Syntax_Embeddings_Base.embed e_bool
+                                vcfg.FStarC_VConfig.retry rng
+                                FStar_Pervasives_Native.None norm in
                             FStarC_Syntax_Syntax.as_arg uu___23 in
                           let uu___23 =
                             let uu___24 =
                               let uu___25 =
-                                let uu___26 =
-                                  FStarC_Syntax_Embeddings_Base.embed e_bool
-                                    vcfg.FStarC_VConfig.smtencoding_elim_box in
-                                uu___26 rng FStar_Pervasives_Native.None norm in
+                                FStarC_Syntax_Embeddings_Base.embed e_bool
+                                  vcfg.FStarC_VConfig.smtencoding_elim_box
+                                  rng FStar_Pervasives_Native.None norm in
                               FStarC_Syntax_Syntax.as_arg uu___25 in
                             let uu___25 =
                               let uu___26 =
                                 let uu___27 =
-                                  let uu___28 =
-                                    FStarC_Syntax_Embeddings_Base.embed
-                                      e_string
-                                      vcfg.FStarC_VConfig.smtencoding_nl_arith_repr in
-                                  uu___28 rng FStar_Pervasives_Native.None
-                                    norm in
+                                  FStarC_Syntax_Embeddings_Base.embed
+                                    e_string
+                                    vcfg.FStarC_VConfig.smtencoding_nl_arith_repr
+                                    rng FStar_Pervasives_Native.None norm in
                                 FStarC_Syntax_Syntax.as_arg uu___27 in
                               let uu___27 =
                                 let uu___28 =
                                   let uu___29 =
-                                    let uu___30 =
-                                      FStarC_Syntax_Embeddings_Base.embed
-                                        e_string
-                                        vcfg.FStarC_VConfig.smtencoding_l_arith_repr in
-                                    uu___30 rng FStar_Pervasives_Native.None
-                                      norm in
+                                    FStarC_Syntax_Embeddings_Base.embed
+                                      e_string
+                                      vcfg.FStarC_VConfig.smtencoding_l_arith_repr
+                                      rng FStar_Pervasives_Native.None norm in
                                   FStarC_Syntax_Syntax.as_arg uu___29 in
                                 let uu___29 =
                                   let uu___30 =
                                     let uu___31 =
-                                      let uu___32 =
-                                        FStarC_Syntax_Embeddings_Base.embed
-                                          e_bool
-                                          vcfg.FStarC_VConfig.smtencoding_valid_intro in
-                                      uu___32 rng
-                                        FStar_Pervasives_Native.None norm in
+                                      FStarC_Syntax_Embeddings_Base.embed
+                                        e_bool
+                                        vcfg.FStarC_VConfig.smtencoding_valid_intro
+                                        rng FStar_Pervasives_Native.None norm in
                                     FStarC_Syntax_Syntax.as_arg uu___31 in
                                   let uu___31 =
                                     let uu___32 =
                                       let uu___33 =
-                                        let uu___34 =
-                                          FStarC_Syntax_Embeddings_Base.embed
-                                            e_bool
-                                            vcfg.FStarC_VConfig.smtencoding_valid_elim in
-                                        uu___34 rng
-                                          FStar_Pervasives_Native.None norm in
+                                        FStarC_Syntax_Embeddings_Base.embed
+                                          e_bool
+                                          vcfg.FStarC_VConfig.smtencoding_valid_elim
+                                          rng FStar_Pervasives_Native.None
+                                          norm in
                                       FStarC_Syntax_Syntax.as_arg uu___33 in
                                     let uu___33 =
                                       let uu___34 =
                                         let uu___35 =
-                                          let uu___36 =
-                                            FStarC_Syntax_Embeddings_Base.embed
-                                              e_bool
-                                              vcfg.FStarC_VConfig.tcnorm in
-                                          uu___36 rng
-                                            FStar_Pervasives_Native.None norm in
+                                          FStarC_Syntax_Embeddings_Base.embed
+                                            e_bool vcfg.FStarC_VConfig.tcnorm
+                                            rng FStar_Pervasives_Native.None
+                                            norm in
                                         FStarC_Syntax_Syntax.as_arg uu___35 in
                                       let uu___35 =
                                         let uu___36 =
                                           let uu___37 =
-                                            let uu___38 =
-                                              FStarC_Syntax_Embeddings_Base.embed
-                                                e_bool
-                                                vcfg.FStarC_VConfig.no_plugins in
-                                            uu___38 rng
+                                            FStarC_Syntax_Embeddings_Base.embed
+                                              e_bool
+                                              vcfg.FStarC_VConfig.no_plugins
+                                              rng
                                               FStar_Pervasives_Native.None
                                               norm in
                                           FStarC_Syntax_Syntax.as_arg uu___37 in
                                         let uu___37 =
                                           let uu___38 =
                                             let uu___39 =
-                                              let uu___40 =
-                                                FStarC_Syntax_Embeddings_Base.embed
-                                                  e_bool
-                                                  vcfg.FStarC_VConfig.no_tactics in
-                                              uu___40 rng
+                                              FStarC_Syntax_Embeddings_Base.embed
+                                                e_bool
+                                                vcfg.FStarC_VConfig.no_tactics
+                                                rng
                                                 FStar_Pervasives_Native.None
                                                 norm in
                                             FStarC_Syntax_Syntax.as_arg
@@ -2042,11 +1889,10 @@ let e_vconfig :
                                           let uu___39 =
                                             let uu___40 =
                                               let uu___41 =
-                                                let uu___42 =
-                                                  FStarC_Syntax_Embeddings_Base.embed
-                                                    e_string_list
-                                                    vcfg.FStarC_VConfig.z3cliopt in
-                                                uu___42 rng
+                                                FStarC_Syntax_Embeddings_Base.embed
+                                                  e_string_list
+                                                  vcfg.FStarC_VConfig.z3cliopt
+                                                  rng
                                                   FStar_Pervasives_Native.None
                                                   norm in
                                               FStarC_Syntax_Syntax.as_arg
@@ -2054,11 +1900,10 @@ let e_vconfig :
                                             let uu___41 =
                                               let uu___42 =
                                                 let uu___43 =
-                                                  let uu___44 =
-                                                    FStarC_Syntax_Embeddings_Base.embed
-                                                      e_string_list
-                                                      vcfg.FStarC_VConfig.z3smtopt in
-                                                  uu___44 rng
+                                                  FStarC_Syntax_Embeddings_Base.embed
+                                                    e_string_list
+                                                    vcfg.FStarC_VConfig.z3smtopt
+                                                    rng
                                                     FStar_Pervasives_Native.None
                                                     norm in
                                                 FStarC_Syntax_Syntax.as_arg
@@ -2066,11 +1911,10 @@ let e_vconfig :
                                               let uu___43 =
                                                 let uu___44 =
                                                   let uu___45 =
-                                                    let uu___46 =
-                                                      FStarC_Syntax_Embeddings_Base.embed
-                                                        e_bool
-                                                        vcfg.FStarC_VConfig.z3refresh in
-                                                    uu___46 rng
+                                                    FStarC_Syntax_Embeddings_Base.embed
+                                                      e_bool
+                                                      vcfg.FStarC_VConfig.z3refresh
+                                                      rng
                                                       FStar_Pervasives_Native.None
                                                       norm in
                                                   FStarC_Syntax_Syntax.as_arg
@@ -2078,11 +1922,10 @@ let e_vconfig :
                                                 let uu___45 =
                                                   let uu___46 =
                                                     let uu___47 =
-                                                      let uu___48 =
-                                                        FStarC_Syntax_Embeddings_Base.embed
-                                                          e_int
-                                                          vcfg.FStarC_VConfig.z3rlimit in
-                                                      uu___48 rng
+                                                      FStarC_Syntax_Embeddings_Base.embed
+                                                        e_int
+                                                        vcfg.FStarC_VConfig.z3rlimit
+                                                        rng
                                                         FStar_Pervasives_Native.None
                                                         norm in
                                                     FStarC_Syntax_Syntax.as_arg
@@ -2090,11 +1933,10 @@ let e_vconfig :
                                                   let uu___47 =
                                                     let uu___48 =
                                                       let uu___49 =
-                                                        let uu___50 =
-                                                          FStarC_Syntax_Embeddings_Base.embed
-                                                            e_int
-                                                            vcfg.FStarC_VConfig.z3rlimit_factor in
-                                                        uu___50 rng
+                                                        FStarC_Syntax_Embeddings_Base.embed
+                                                          e_int
+                                                          vcfg.FStarC_VConfig.z3rlimit_factor
+                                                          rng
                                                           FStar_Pervasives_Native.None
                                                           norm in
                                                       FStarC_Syntax_Syntax.as_arg
@@ -2102,11 +1944,10 @@ let e_vconfig :
                                                     let uu___49 =
                                                       let uu___50 =
                                                         let uu___51 =
-                                                          let uu___52 =
-                                                            FStarC_Syntax_Embeddings_Base.embed
-                                                              e_int
-                                                              vcfg.FStarC_VConfig.z3seed in
-                                                          uu___52 rng
+                                                          FStarC_Syntax_Embeddings_Base.embed
+                                                            e_int
+                                                            vcfg.FStarC_VConfig.z3seed
+                                                            rng
                                                             FStar_Pervasives_Native.None
                                                             norm in
                                                         FStarC_Syntax_Syntax.as_arg
@@ -2114,11 +1955,10 @@ let e_vconfig :
                                                       let uu___51 =
                                                         let uu___52 =
                                                           let uu___53 =
-                                                            let uu___54 =
-                                                              FStarC_Syntax_Embeddings_Base.embed
-                                                                e_string
-                                                                vcfg.FStarC_VConfig.z3version in
-                                                            uu___54 rng
+                                                            FStarC_Syntax_Embeddings_Base.embed
+                                                              e_string
+                                                              vcfg.FStarC_VConfig.z3version
+                                                              rng
                                                               FStar_Pervasives_Native.None
                                                               norm in
                                                           FStarC_Syntax_Syntax.as_arg
@@ -2126,11 +1966,10 @@ let e_vconfig :
                                                         let uu___53 =
                                                           let uu___54 =
                                                             let uu___55 =
-                                                              let uu___56 =
-                                                                FStarC_Syntax_Embeddings_Base.embed
-                                                                  e_bool
-                                                                  vcfg.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns in
-                                                              uu___56 rng
+                                                              FStarC_Syntax_Embeddings_Base.embed
+                                                                e_bool
+                                                                vcfg.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns
+                                                                rng
                                                                 FStar_Pervasives_Native.None
                                                                 norm in
                                                             FStarC_Syntax_Syntax.as_arg
@@ -2138,13 +1977,11 @@ let e_vconfig :
                                                           let uu___55 =
                                                             let uu___56 =
                                                               let uu___57 =
-                                                                let uu___58 =
-                                                                  FStarC_Syntax_Embeddings_Base.embed
-                                                                    (
-                                                                    e_option
+                                                                FStarC_Syntax_Embeddings_Base.embed
+                                                                  (e_option
                                                                     e_string)
-                                                                    vcfg.FStarC_VConfig.reuse_hint_for in
-                                                                uu___58 rng
+                                                                  vcfg.FStarC_VConfig.reuse_hint_for
+                                                                  rng
                                                                   FStar_Pervasives_Native.None
                                                                   norm in
                                                               FStarC_Syntax_Syntax.as_arg
@@ -2547,11 +2384,8 @@ let e_vconfig :
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStarC_Syntax_Syntax.t_vconfig) (fun uu___ -> "vconfig")
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 =
-           FStarC_Ident.string_of_lid FStarC_Parser_Const.vconfig_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.vconfig_lid), []))
 let e_order : FStarC_Order.order FStarC_Syntax_Embeddings_Base.embedding=
   let ord_Lt_lid =
     FStarC_Ident.lid_of_path ["FStar"; "Order"; "Lt"]
@@ -2607,10 +2441,9 @@ let e_order : FStarC_Order.order FStarC_Syntax_Embeddings_Base.embedding=
              FStarC_Syntax_Syntax.fv_eq_lid fv ord_Gt_lid ->
              FStar_Pervasives_Native.Some FStarC_Order.Gt
          | uu___2 -> FStar_Pervasives_Native.None) in
-  let uu___ =
-    FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.order_lid
-      FStar_Pervasives_Native.None in
-  FStarC_Syntax_Embeddings_Base.mk_emb embed_order unembed_order uu___
+  FStarC_Syntax_Embeddings_Base.mk_emb embed_order unembed_order
+    (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.order_lid
+       FStar_Pervasives_Native.None)
 let or_else (f : 'a FStar_Pervasives_Native.option) (g : unit -> 'a) : 
   'a=
   match f with
@@ -2696,15 +2529,13 @@ let e_arrow (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                 "Calling back into normalizer for %s\n%s\n" uu___2 uu___3
             else ());
            (let a_tm =
-              let uu___1 = FStarC_Syntax_Embeddings_Base.embed ea a1 in
-              uu___1 f1.FStarC_Syntax_Syntax.pos FStar_Pervasives_Native.None
-                norm in
+              FStarC_Syntax_Embeddings_Base.embed ea a1
+                f1.FStarC_Syntax_Syntax.pos FStar_Pervasives_Native.None norm in
             let b_tm =
               let uu___1 =
                 let uu___2 =
-                  let uu___3 =
-                    let uu___4 = FStarC_Syntax_Syntax.as_arg a_tm in [uu___4] in
-                  FStarC_Syntax_Syntax.mk_Tm_app f1 uu___3
+                  FStarC_Syntax_Syntax.mk_Tm_app f1
+                    [FStarC_Syntax_Syntax.as_arg a_tm]
                     f1.FStarC_Syntax_Syntax.pos in
                 FStar_Pervasives.Inr uu___2 in
               norm uu___1 in
@@ -2713,7 +2544,8 @@ let e_arrow (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
             | FStar_Pervasives_Native.None ->
                 FStarC_Effect.raise Unembedding_failure
             | FStar_Pervasives_Native.Some b1 -> b1) in
-         FStar_Pervasives_Native.Some f_wrapped) in
+         FStar_Pervasives_Native.Some
+           (FStar_Pervasives.coerce_eq () f_wrapped)) in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer1 emb_t_arr_a_b
 let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
   'a FStarC_Sealed.sealed FStarC_Syntax_Embeddings_Base.embedding=
@@ -2722,17 +2554,15 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
     FStarC_Syntax_Syntax.t_sealed_of uu___1 in
   let emb_ty_a uu___ =
     let uu___1 =
-      let uu___2 = FStarC_Ident.string_of_lid FStarC_Parser_Const.sealed_lid in
-      let uu___3 =
-        let uu___4 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
-        [uu___4] in
-      (uu___2, uu___3) in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Embeddings_Base.emb_typ_of ea () in
+        [uu___3] in
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.sealed_lid), uu___2) in
     FStarC_Syntax_Syntax.ET_app uu___1 in
   let printer1 x =
     let uu___ =
       let uu___1 =
-        let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of ea in
-        uu___2 (FStarC_Sealed.unseal x) in
+        FStarC_Syntax_Embeddings_Base.printer_of ea (FStarC_Sealed.unseal x) in
       Prims.strcat uu___1 ")" in
     Prims.strcat "(seal " uu___ in
   let em a1 rng shadow norm =
@@ -2748,9 +2578,7 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
              let uu___2 =
                let uu___3 = FStarC_Syntax_Embeddings_Base.type_of ea in
                FStarC_Syntax_Syntax.iarg uu___3 in
-             let uu___3 =
-               let uu___4 = FStarC_Syntax_Syntax.as_arg t in [uu___4] in
-             uu___2 :: uu___3 in
+             [uu___2; FStarC_Syntax_Syntax.as_arg t] in
            FStarC_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng) in
     let uu___ =
       let uu___1 = FStarC_Syntax_Util.fvar_const FStarC_Parser_Const.seal_lid in
@@ -2762,10 +2590,8 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
       let uu___3 =
         let uu___4 =
           let uu___5 =
-            let uu___6 =
-              FStarC_Syntax_Embeddings_Base.embed ea
-                (FStarC_Sealed.unseal a1) in
-            uu___6 rng shadow_a norm in
+            FStarC_Syntax_Embeddings_Base.embed ea (FStarC_Sealed.unseal a1)
+              rng shadow_a norm in
           FStarC_Syntax_Syntax.as_arg uu___5 in
         [uu___4] in
       uu___2 :: uu___3 in
@@ -2813,11 +2639,8 @@ let e___range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
     (fun uu___ -> FStarC_Syntax_Syntax.t___range)
     (FStarC_Class_Show.show FStarC_Range_Ops.showable_range)
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 =
-           FStarC_Ident.string_of_lid FStarC_Parser_Const.range_lid in
-         (uu___2, []) in
-       FStarC_Syntax_Syntax.ET_app uu___1)
+       FStarC_Syntax_Syntax.ET_app
+         ((FStarC_Ident.string_of_lid FStarC_Parser_Const.range_lid), []))
 let e_range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.embed_as (e_sealed e___range)
     FStarC_Sealed.unseal FStarC_Sealed.seal FStar_Pervasives_Native.None
@@ -2832,11 +2655,6 @@ let e_document :
     FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.document_lid
       FStar_Pervasives_Native.None in
   FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_doc uu___
-type abstract_term =
-  | Abstract of FStarC_Syntax_Syntax.term 
-let uu___is_Abstract (projectee : abstract_term) : Prims.bool= true
-let __proj__Abstract__item__t (projectee : abstract_term) :
-  FStarC_Syntax_Syntax.term= match projectee with | Abstract t -> t
 let arrow_as_prim_step_1 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (eb : 'b FStarC_Syntax_Embeddings_Base.embedding) (f : 'a -> 'b)
   (fv_lid : FStarC_Ident.lid) (norm : FStarC_Syntax_Embeddings_Base.norm_cb)
@@ -2860,10 +2678,8 @@ let arrow_as_prim_step_1 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
           let uu___3 = FStarC_Syntax_Embeddings_Base.try_unembed ea x norm in
           FStarC_Option.map
             (fun x1 ->
-               let uu___4 =
-                 let uu___5 = f x1 in
-                 FStarC_Syntax_Embeddings_Base.embed eb uu___5 in
-               uu___4 rng shadow_app norm) uu___3 in
+               FStarC_Syntax_Embeddings_Base.embed eb (f x1) rng shadow_app
+                 norm) uu___3 in
         (match uu___2 with
          | FStar_Pervasives_Native.Some x1 -> FStar_Pervasives_Native.Some x1
          | FStar_Pervasives_Native.None -> force_shadow shadow_app) in
@@ -2897,10 +2713,8 @@ let arrow_as_prim_step_2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                FStarC_Option.bind uu___5
                  (fun y1 ->
                     let uu___6 =
-                      let uu___7 =
-                        let uu___8 = f x1 y1 in
-                        FStarC_Syntax_Embeddings_Base.embed ec uu___8 in
-                      uu___7 rng shadow_app norm in
+                      FStarC_Syntax_Embeddings_Base.embed ec (f x1 y1) rng
+                        shadow_app norm in
                     FStar_Pervasives_Native.Some uu___6)) in
         (match uu___3 with
          | FStar_Pervasives_Native.Some x1 -> FStar_Pervasives_Native.Some x1
@@ -2940,10 +2754,8 @@ let arrow_as_prim_step_3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                     FStarC_Option.bind uu___7
                       (fun z1 ->
                          let uu___8 =
-                           let uu___9 =
-                             let uu___10 = f x1 y1 z1 in
-                             FStarC_Syntax_Embeddings_Base.embed ed uu___10 in
-                           uu___9 rng shadow_app norm in
+                           FStarC_Syntax_Embeddings_Base.embed ed
+                             (f x1 y1 z1) rng shadow_app norm in
                          FStar_Pervasives_Native.Some uu___8))) in
         (match uu___4 with
          | FStar_Pervasives_Native.Some x1 -> FStar_Pervasives_Native.Some x1
@@ -2956,6 +2768,11 @@ let debug_wrap (s : Prims.string) (f : unit -> 'a) : 'a=
    (let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
     if uu___2 then FStarC_Format.print1 "------ending %s\n" s else ());
    res)
+type abstract_term =
+  | Abstract of FStarC_Syntax_Syntax.term 
+let uu___is_Abstract (projectee : abstract_term) : Prims.bool= true
+let __proj__Abstract__item__t (projectee : abstract_term) :
+  FStarC_Syntax_Syntax.term= match projectee with | Abstract t -> t
 let e_abstract_term : abstract_term FStarC_Syntax_Embeddings_Base.embedding=
   FStarC_Syntax_Embeddings_Base.embed_as e_any (fun x -> Abstract x)
     (fun x -> match x with | Abstract x1 -> x1) FStar_Pervasives_Native.None

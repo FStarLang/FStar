@@ -3,8 +3,7 @@ let solve (ev : 'a) : 'a= ev
 let embed (e : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (rng : FStarC_Range_Type.t) (t : 'a)
   (n : FStarC_Syntax_Embeddings_Base.norm_cb) : FStarC_Syntax_Syntax.term=
-  let uu___ = FStarC_Syntax_Embeddings_Base.embed e t in
-  uu___ rng FStar_Pervasives_Native.None n
+  FStarC_Syntax_Embeddings_Base.embed e t rng FStar_Pervasives_Native.None n
 let unembed (e : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (t : FStarC_Syntax_Syntax.term) (n : FStarC_Syntax_Embeddings_Base.norm_cb)
   : 'a FStar_Pervasives_Native.option=
@@ -87,17 +86,16 @@ let mk_tac_step_1 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  let uu___4 =
-    FStarC_TypeChecker_Primops_Base.mk2' univ_arity lid uu___ uu___2
-      FStarC_Tactics_Embedding.e_ref_proofstate
-      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___1 uu___3
-      (fun a ps ->
-         let uu___5 = let uu___6 = f a in run_wrap nm uu___6 ps in
-         FStar_Pervasives_Native.Some uu___5)
-      (fun a ps ->
-         let uu___5 = let uu___6 = nbe_f a in run_wrap nm uu___6 ps in
-         FStar_Pervasives_Native.Some uu___5) in
-  set_auto_reflect Prims.int_one uu___4
+  set_auto_reflect Prims.int_one
+    (FStarC_TypeChecker_Primops_Base.mk2' univ_arity lid uu___ uu___2
+       FStarC_Tactics_Embedding.e_ref_proofstate
+       FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___1 uu___3
+       (fun a ps ->
+          let uu___4 = let uu___5 = f a in run_wrap nm uu___5 ps in
+          FStar_Pervasives_Native.Some uu___4)
+       (fun a ps ->
+          let uu___4 = let uu___5 = nbe_f a in run_wrap nm uu___5 ps in
+          FStar_Pervasives_Native.Some uu___4))
 let mk_tac_step_2 (univ_arity : Prims.int) (nm : Prims.string)
   (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
@@ -109,17 +107,16 @@ let mk_tac_step_2 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  let uu___6 =
-    FStarC_TypeChecker_Primops_Base.mk3' univ_arity lid uu___ uu___3 uu___1
-      uu___4 FStarC_Tactics_Embedding.e_ref_proofstate
-      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___2 uu___5
-      (fun a b ps ->
-         let uu___7 = let uu___8 = f a b in run_wrap nm uu___8 ps in
-         FStar_Pervasives_Native.Some uu___7)
-      (fun a b ps ->
-         let uu___7 = let uu___8 = nbe_f a b in run_wrap nm uu___8 ps in
-         FStar_Pervasives_Native.Some uu___7) in
-  set_auto_reflect (Prims.of_int (2)) uu___6
+  set_auto_reflect (Prims.of_int (2))
+    (FStarC_TypeChecker_Primops_Base.mk3' univ_arity lid uu___ uu___3 uu___1
+       uu___4 FStarC_Tactics_Embedding.e_ref_proofstate
+       FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___2 uu___5
+       (fun a b ps ->
+          let uu___6 = let uu___7 = f a b in run_wrap nm uu___7 ps in
+          FStar_Pervasives_Native.Some uu___6)
+       (fun a b ps ->
+          let uu___6 = let uu___7 = nbe_f a b in run_wrap nm uu___7 ps in
+          FStar_Pervasives_Native.Some uu___6))
 let mk_tac_step_3 (univ_arity : Prims.int) (nm : Prims.string)
   (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
@@ -133,17 +130,16 @@ let mk_tac_step_3 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nt3 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  let uu___8 =
-    FStarC_TypeChecker_Primops_Base.mk4' univ_arity lid uu___ uu___4 uu___1
-      uu___5 uu___2 uu___6 FStarC_Tactics_Embedding.e_ref_proofstate
-      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___3 uu___7
-      (fun a b c ps ->
-         let uu___9 = let uu___10 = f a b c in run_wrap nm uu___10 ps in
-         FStar_Pervasives_Native.Some uu___9)
-      (fun a b c ps ->
-         let uu___9 = let uu___10 = nbe_f a b c in run_wrap nm uu___10 ps in
-         FStar_Pervasives_Native.Some uu___9) in
-  set_auto_reflect (Prims.of_int (3)) uu___8
+  set_auto_reflect (Prims.of_int (3))
+    (FStarC_TypeChecker_Primops_Base.mk4' univ_arity lid uu___ uu___4 uu___1
+       uu___5 uu___2 uu___6 FStarC_Tactics_Embedding.e_ref_proofstate
+       FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___3 uu___7
+       (fun a b c ps ->
+          let uu___8 = let uu___9 = f a b c in run_wrap nm uu___9 ps in
+          FStar_Pervasives_Native.Some uu___8)
+       (fun a b c ps ->
+          let uu___8 = let uu___9 = nbe_f a b c in run_wrap nm uu___9 ps in
+          FStar_Pervasives_Native.Some uu___8))
 let mk_tac_step_4 (univ_arity : Prims.int) (nm : Prims.string)
   (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
@@ -159,18 +155,17 @@ let mk_tac_step_4 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  let uu___10 =
-    FStarC_TypeChecker_Primops_Base.mk5' univ_arity lid uu___ uu___5 uu___1
-      uu___6 uu___2 uu___7 uu___3 uu___8
-      FStarC_Tactics_Embedding.e_ref_proofstate
-      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___4 uu___9
-      (fun a b c d ps ->
-         let uu___11 = let uu___12 = f a b c d in run_wrap nm uu___12 ps in
-         FStar_Pervasives_Native.Some uu___11)
-      (fun a b c d ps ->
-         let uu___11 = let uu___12 = nbe_f a b c d in run_wrap nm uu___12 ps in
-         FStar_Pervasives_Native.Some uu___11) in
-  set_auto_reflect (Prims.of_int (4)) uu___10
+  set_auto_reflect (Prims.of_int (4))
+    (FStarC_TypeChecker_Primops_Base.mk5' univ_arity lid uu___ uu___5 uu___1
+       uu___6 uu___2 uu___7 uu___3 uu___8
+       FStarC_Tactics_Embedding.e_ref_proofstate
+       FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___4 uu___9
+       (fun a b c d ps ->
+          let uu___10 = let uu___11 = f a b c d in run_wrap nm uu___11 ps in
+          FStar_Pervasives_Native.Some uu___10)
+       (fun a b c d ps ->
+          let uu___10 = let uu___11 = nbe_f a b c d in run_wrap nm uu___11 ps in
+          FStar_Pervasives_Native.Some uu___10))
 let mk_tac_step_5 (univ_arity : Prims.int) (nm : Prims.string)
   (uu___ : 't1 FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 't2 FStarC_Syntax_Embeddings_Base.embedding)
@@ -189,19 +184,18 @@ let mk_tac_step_5 (univ_arity : Prims.int) (nm : Prims.string)
     'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nres FStarC_Tactics_Monad.tac)
   : FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  let uu___12 =
-    FStarC_TypeChecker_Primops_Base.mk6' univ_arity lid uu___ uu___6 uu___1
-      uu___7 uu___2 uu___8 uu___3 uu___9 uu___4 uu___10
-      FStarC_Tactics_Embedding.e_ref_proofstate
-      FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___5 uu___11
-      (fun a b c d e ps ->
-         let uu___13 = let uu___14 = f a b c d e in run_wrap nm uu___14 ps in
-         FStar_Pervasives_Native.Some uu___13)
-      (fun a b c d e ps ->
-         let uu___13 =
-           let uu___14 = nbe_f a b c d e in run_wrap nm uu___14 ps in
-         FStar_Pervasives_Native.Some uu___13) in
-  set_auto_reflect (Prims.of_int (5)) uu___12
+  set_auto_reflect (Prims.of_int (5))
+    (FStarC_TypeChecker_Primops_Base.mk6' univ_arity lid uu___ uu___6 uu___1
+       uu___7 uu___2 uu___8 uu___3 uu___9 uu___4 uu___10
+       FStarC_Tactics_Embedding.e_ref_proofstate
+       FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___5 uu___11
+       (fun a b c d e ps ->
+          let uu___12 = let uu___13 = f a b c d e in run_wrap nm uu___13 ps in
+          FStar_Pervasives_Native.Some uu___12)
+       (fun a b c d e ps ->
+          let uu___12 =
+            let uu___13 = nbe_f a b c d e in run_wrap nm uu___13 ps in
+          FStar_Pervasives_Native.Some uu___12))
 let max_tac_arity : Prims.int= (Prims.of_int (20))
 let mk_tactic_interpretation_1 (name : Prims.string)
   (t : 't1 -> 'r FStarC_Tactics_Monad.tac)
@@ -224,12 +218,10 @@ let mk_tactic_interpretation_1 (name : Prims.string)
                    let uu___6 = FStarC_Effect.op_Bang ps in
                    FStarC_Tactics_Types.set_ps_psc psc uu___6 in
                  FStarC_Effect.op_Colon_Equals ps uu___5);
-                (let r1 =
-                   interp_ctx name
-                     (fun uu___5 -> let uu___6 = t a11 in uu___6 ps) in
+                (let r1 = interp_ctx name (fun uu___5 -> t a11 ps) in
                  let uu___5 =
-                   let uu___6 = FStarC_TypeChecker_Primops_Base.psc_range psc in
-                   embed er uu___6 r1 ncb in
+                   embed er (FStarC_TypeChecker_Primops_Base.psc_range psc)
+                     r1 ncb in
                  FStar_Pervasives_Native.Some uu___5)))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_2 (name : Prims.string)
@@ -257,13 +249,11 @@ let mk_tactic_interpretation_2 (name : Prims.string)
                         let uu___8 = FStarC_Effect.op_Bang ps in
                         FStarC_Tactics_Types.set_ps_psc psc uu___8 in
                       FStarC_Effect.op_Colon_Equals ps uu___7);
-                     (let r1 =
-                        interp_ctx name
-                          (fun uu___7 -> let uu___8 = t a11 a21 in uu___8 ps) in
+                     (let r1 = interp_ctx name (fun uu___7 -> t a11 a21 ps) in
                       let uu___7 =
-                        let uu___8 =
-                          FStarC_TypeChecker_Primops_Base.psc_range psc in
-                        embed er uu___8 r1 ncb in
+                        embed er
+                          (FStarC_TypeChecker_Primops_Base.psc_range psc) r1
+                          ncb in
                       FStar_Pervasives_Native.Some uu___7))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_3 (name : Prims.string)
@@ -297,13 +287,11 @@ let mk_tactic_interpretation_3 (name : Prims.string)
                              FStarC_Tactics_Types.set_ps_psc psc uu___10 in
                            FStarC_Effect.op_Colon_Equals ps uu___9);
                           (let r1 =
-                             interp_ctx name
-                               (fun uu___9 ->
-                                  let uu___10 = t a11 a21 a31 in uu___10 ps) in
+                             interp_ctx name (fun uu___9 -> t a11 a21 a31 ps) in
                            let uu___9 =
-                             let uu___10 =
-                               FStarC_TypeChecker_Primops_Base.psc_range psc in
-                             embed er uu___10 r1 ncb in
+                             embed er
+                               (FStarC_TypeChecker_Primops_Base.psc_range psc)
+                               r1 ncb in
                            FStar_Pervasives_Native.Some uu___9)))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_4 (name : Prims.string)
@@ -343,14 +331,11 @@ let mk_tactic_interpretation_4 (name : Prims.string)
                                 FStarC_Effect.op_Colon_Equals ps uu___11);
                                (let r1 =
                                   interp_ctx name
-                                    (fun uu___11 ->
-                                       let uu___12 = t a11 a21 a31 a41 in
-                                       uu___12 ps) in
+                                    (fun uu___11 -> t a11 a21 a31 a41 ps) in
                                 let uu___11 =
-                                  let uu___12 =
-                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                      psc in
-                                  embed er uu___12 r1 ncb in
+                                  embed er
+                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                       psc) r1 ncb in
                                 FStar_Pervasives_Native.Some uu___11))))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_5 (name : Prims.string)
@@ -397,14 +382,11 @@ let mk_tactic_interpretation_5 (name : Prims.string)
                                     (let r1 =
                                        interp_ctx name
                                          (fun uu___13 ->
-                                            let uu___14 =
-                                              t a11 a21 a31 a41 a51 in
-                                            uu___14 ps) in
+                                            t a11 a21 a31 a41 a51 ps) in
                                      let uu___13 =
-                                       let uu___14 =
-                                         FStarC_TypeChecker_Primops_Base.psc_range
-                                           psc in
-                                       embed er uu___14 r1 ncb in
+                                       embed er
+                                         (FStarC_TypeChecker_Primops_Base.psc_range
+                                            psc) r1 ncb in
                                      FStar_Pervasives_Native.Some uu___13)))))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_tactic_interpretation_6 (name : Prims.string)
@@ -457,14 +439,11 @@ let mk_tactic_interpretation_6 (name : Prims.string)
                                          (let r1 =
                                             interp_ctx name
                                               (fun uu___15 ->
-                                                 let uu___16 =
-                                                   t a11 a21 a31 a41 a51 a61 in
-                                                 uu___16 ps) in
+                                                 t a11 a21 a31 a41 a51 a61 ps) in
                                           let uu___15 =
-                                            let uu___16 =
-                                              FStarC_TypeChecker_Primops_Base.psc_range
-                                                psc in
-                                            embed er uu___16 r1 ncb in
+                                            embed er
+                                              (FStarC_TypeChecker_Primops_Base.psc_range
+                                                 psc) r1 ncb in
                                           FStar_Pervasives_Native.Some
                                             uu___15))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -524,15 +503,12 @@ let mk_tactic_interpretation_7 (name : Prims.string)
                                               (let r1 =
                                                  interp_ctx name
                                                    (fun uu___17 ->
-                                                      let uu___18 =
-                                                        t a11 a21 a31 a41 a51
-                                                          a61 a71 in
-                                                      uu___18 ps) in
+                                                      t a11 a21 a31 a41 a51
+                                                        a61 a71 ps) in
                                                let uu___17 =
-                                                 let uu___18 =
-                                                   FStarC_TypeChecker_Primops_Base.psc_range
-                                                     psc in
-                                                 embed er uu___18 r1 ncb in
+                                                 embed er
+                                                   (FStarC_TypeChecker_Primops_Base.psc_range
+                                                      psc) r1 ncb in
                                                FStar_Pervasives_Native.Some
                                                  uu___17)))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -598,16 +574,13 @@ let mk_tactic_interpretation_8 (name : Prims.string)
                                                    (let r1 =
                                                       interp_ctx name
                                                         (fun uu___19 ->
-                                                           let uu___20 =
-                                                             t a11 a21 a31
-                                                               a41 a51 a61
-                                                               a71 a81 in
-                                                           uu___20 ps) in
+                                                           t a11 a21 a31 a41
+                                                             a51 a61 a71 a81
+                                                             ps) in
                                                     let uu___19 =
-                                                      let uu___20 =
-                                                        FStarC_TypeChecker_Primops_Base.psc_range
-                                                          psc in
-                                                      embed er uu___20 r1 ncb in
+                                                      embed er
+                                                        (FStarC_TypeChecker_Primops_Base.psc_range
+                                                           psc) r1 ncb in
                                                     FStar_Pervasives_Native.Some
                                                       uu___19))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -680,19 +653,14 @@ let mk_tactic_interpretation_9 (name : Prims.string)
                                                         (let r1 =
                                                            interp_ctx name
                                                              (fun uu___21 ->
-                                                                let uu___22 =
-                                                                  t a11 a21
-                                                                    a31 a41
-                                                                    a51 a61
-                                                                    a71 a81
-                                                                    a91 in
-                                                                uu___22 ps) in
+                                                                t a11 a21 a31
+                                                                  a41 a51 a61
+                                                                  a71 a81 a91
+                                                                  ps) in
                                                          let uu___21 =
-                                                           let uu___22 =
-                                                             FStarC_TypeChecker_Primops_Base.psc_range
-                                                               psc in
-                                                           embed er uu___22
-                                                             r1 ncb in
+                                                           embed er
+                                                             (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                psc) r1 ncb in
                                                          FStar_Pervasives_Native.Some
                                                            uu___21)))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -775,21 +743,16 @@ let mk_tactic_interpretation_10 (name : Prims.string)
                                                                   (fun
                                                                     uu___23
                                                                     ->
-                                                                    let uu___24
-                                                                    =
                                                                     t a12 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
-                                                                    a91 a101 in
-                                                                    uu___24
+                                                                    a91 a101
                                                                     ps) in
                                                               let uu___23 =
-                                                                let uu___24 =
-                                                                  FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                 embed er
-                                                                  uu___24 r1
+                                                                  (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
                                                                   ncb in
                                                               FStar_Pervasives_Native.Some
                                                                 uu___23))))))))))))
@@ -885,25 +848,18 @@ let mk_tactic_interpretation_11 (name : Prims.string)
                                                                     (fun
                                                                     uu___25
                                                                     ->
-                                                                    let uu___26
-                                                                    =
                                                                     t a13 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
-                                                                    a111 in
-                                                                    uu___26
-                                                                    ps) in
+                                                                    a111 ps) in
                                                                    let uu___25
                                                                     =
-                                                                    let uu___26
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___26
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                    FStar_Pervasives_Native.Some
                                                                     uu___25)))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1011,25 +967,19 @@ let mk_tactic_interpretation_12 (name : Prims.string)
                                                                     (fun
                                                                     uu___27
                                                                     ->
-                                                                    let uu___28
-                                                                    =
                                                                     t a14 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
-                                                                    a111 a121 in
-                                                                    uu___28
+                                                                    a111 a121
                                                                     ps) in
                                                                     let uu___27
                                                                     =
-                                                                    let uu___28
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___28
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___27))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1149,26 +1099,19 @@ let mk_tactic_interpretation_13 (name : Prims.string)
                                                                     (fun
                                                                     uu___29
                                                                     ->
-                                                                    let uu___30
-                                                                    =
                                                                     t a15 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121
-                                                                    a131 in
-                                                                    uu___30
-                                                                    ps) in
+                                                                    a131 ps) in
                                                                     let uu___29
                                                                     =
-                                                                    let uu___30
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___30
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___29)))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1300,26 +1243,20 @@ let mk_tactic_interpretation_14 (name : Prims.string)
                                                                     (fun
                                                                     uu___31
                                                                     ->
-                                                                    let uu___32
-                                                                    =
                                                                     t a16 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121
-                                                                    a131 a141 in
-                                                                    uu___32
+                                                                    a131 a141
                                                                     ps) in
                                                                     let uu___31
                                                                     =
-                                                                    let uu___32
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___32
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___31))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1463,8 +1400,6 @@ let mk_tactic_interpretation_15 (name : Prims.string)
                                                                     (fun
                                                                     uu___33
                                                                     ->
-                                                                    let uu___34
-                                                                    =
                                                                     t a17 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -1472,18 +1407,13 @@ let mk_tactic_interpretation_15 (name : Prims.string)
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141
-                                                                    a151 in
-                                                                    uu___34
-                                                                    ps) in
+                                                                    a151 ps) in
                                                                     let uu___33
                                                                     =
-                                                                    let uu___34
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___34
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___33)))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1638,8 +1568,6 @@ let mk_tactic_interpretation_16 (name : Prims.string)
                                                                     (fun
                                                                     uu___35
                                                                     ->
-                                                                    let uu___36
-                                                                    =
                                                                     t a18 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -1647,18 +1575,14 @@ let mk_tactic_interpretation_16 (name : Prims.string)
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141
-                                                                    a151 a161 in
-                                                                    uu___36
+                                                                    a151 a161
                                                                     ps) in
                                                                     let uu___35
                                                                     =
-                                                                    let uu___36
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___36
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___35))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -1824,8 +1748,6 @@ let mk_tactic_interpretation_17 (name : Prims.string)
                                                                     (fun
                                                                     uu___37
                                                                     ->
-                                                                    let uu___38
-                                                                    =
                                                                     t a19 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -1834,18 +1756,13 @@ let mk_tactic_interpretation_17 (name : Prims.string)
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 a161
-                                                                    a171 in
-                                                                    uu___38
-                                                                    ps) in
+                                                                    a171 ps) in
                                                                     let uu___37
                                                                     =
-                                                                    let uu___38
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___38
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___37)))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2024,8 +1941,6 @@ let mk_tactic_interpretation_18 (name : Prims.string)
                                                                     (fun
                                                                     uu___39
                                                                     ->
-                                                                    let uu___40
-                                                                    =
                                                                     t a110
                                                                     a21 a31
                                                                     a41 a51
@@ -2035,18 +1950,13 @@ let mk_tactic_interpretation_18 (name : Prims.string)
                                                                     a121 a131
                                                                     a141 a151
                                                                     a161 a171
-                                                                    a181 in
-                                                                    uu___40
-                                                                    ps) in
+                                                                    a181 ps) in
                                                                     let uu___39
                                                                     =
-                                                                    let uu___40
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___40
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___39))))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2236,8 +2146,6 @@ let mk_tactic_interpretation_19 (name : Prims.string)
                                                                     (fun
                                                                     uu___41
                                                                     ->
-                                                                    let uu___42
-                                                                    =
                                                                     t a110
                                                                     a21 a31
                                                                     a41 a51
@@ -2247,18 +2155,14 @@ let mk_tactic_interpretation_19 (name : Prims.string)
                                                                     a121 a131
                                                                     a141 a151
                                                                     a161 a171
-                                                                    a181 a191 in
-                                                                    uu___42
+                                                                    a181 a191
                                                                     ps) in
                                                                     let uu___41
                                                                     =
-                                                                    let uu___42
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___42
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___41)))))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2459,8 +2363,6 @@ let mk_tactic_interpretation_20 (name : Prims.string)
                                                                     (fun
                                                                     uu___43
                                                                     ->
-                                                                    let uu___44
-                                                                    =
                                                                     t a110
                                                                     a22 a31
                                                                     a41 a51
@@ -2471,18 +2373,13 @@ let mk_tactic_interpretation_20 (name : Prims.string)
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 a191
-                                                                    a201 in
-                                                                    uu___44
-                                                                    ps) in
+                                                                    a201 ps) in
                                                                     let uu___43
                                                                     =
-                                                                    let uu___44
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___44
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___43))))))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2504,9 +2401,7 @@ let mk_tactic_nbe_interpretation_1 (name : Prims.string)
                FStarC_Tactics_Embedding.e_ref_proofstate_nbe cb a2 in
            FStarC_Option.bind uu___3
              (fun ps ->
-                let r1 =
-                  interp_ctx name
-                    (fun uu___4 -> let uu___5 = t a11 in uu___5 ps) in
+                let r1 = interp_ctx name (fun uu___4 -> t a11 ps) in
                 let uu___4 = FStarC_TypeChecker_NBETerm.embed er cb r1 in
                 FStar_Pervasives_Native.Some uu___4))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2532,9 +2427,7 @@ let mk_tactic_nbe_interpretation_2 (name : Prims.string)
                     FStarC_Tactics_Embedding.e_ref_proofstate_nbe cb a3 in
                 FStarC_Option.bind uu___5
                   (fun ps ->
-                     let r1 =
-                       interp_ctx name
-                         (fun uu___6 -> let uu___7 = t a11 a21 in uu___7 ps) in
+                     let r1 = interp_ctx name (fun uu___6 -> t a11 a21 ps) in
                      let uu___6 = FStarC_TypeChecker_NBETerm.embed er cb r1 in
                      FStar_Pervasives_Native.Some uu___6)))
   | uu___ -> FStar_Pervasives_Native.None
@@ -2565,9 +2458,7 @@ let mk_tactic_nbe_interpretation_3 (name : Prims.string)
                      FStarC_Option.bind uu___7
                        (fun ps ->
                           let r1 =
-                            interp_ctx name
-                              (fun uu___8 ->
-                                 let uu___9 = t a11 a21 a31 in uu___9 ps) in
+                            interp_ctx name (fun uu___8 -> t a11 a21 a31 ps) in
                           let uu___8 =
                             FStarC_TypeChecker_NBETerm.embed er cb r1 in
                           FStar_Pervasives_Native.Some uu___8))))
@@ -2606,9 +2497,7 @@ let mk_tactic_nbe_interpretation_4 (name : Prims.string)
                             (fun ps ->
                                let r1 =
                                  interp_ctx name
-                                   (fun uu___10 ->
-                                      let uu___11 = t a11 a21 a31 a41 in
-                                      uu___11 ps) in
+                                   (fun uu___10 -> t a11 a21 a31 a41 ps) in
                                let uu___10 =
                                  FStarC_TypeChecker_NBETerm.embed er cb r1 in
                                FStar_Pervasives_Native.Some uu___10)))))
@@ -2653,9 +2542,7 @@ let mk_tactic_nbe_interpretation_5 (name : Prims.string)
                                     let r1 =
                                       interp_ctx name
                                         (fun uu___12 ->
-                                           let uu___13 =
-                                             t a11 a21 a31 a41 a51 in
-                                           uu___13 ps) in
+                                           t a11 a21 a31 a41 a51 ps) in
                                     let uu___12 =
                                       FStarC_TypeChecker_NBETerm.embed er cb
                                         r1 in
@@ -2707,9 +2594,7 @@ let mk_tactic_nbe_interpretation_6 (name : Prims.string)
                                          let r1 =
                                            interp_ctx name
                                              (fun uu___14 ->
-                                                let uu___15 =
-                                                  t a11 a21 a31 a41 a51 a61 in
-                                                uu___15 ps) in
+                                                t a11 a21 a31 a41 a51 a61 ps) in
                                          let uu___14 =
                                            FStarC_TypeChecker_NBETerm.embed
                                              er cb r1 in
@@ -2769,10 +2654,8 @@ let mk_tactic_nbe_interpretation_7 (name : Prims.string)
                                               let r1 =
                                                 interp_ctx name
                                                   (fun uu___16 ->
-                                                     let uu___17 =
-                                                       t a11 a21 a31 a41 a51
-                                                         a61 a71 in
-                                                     uu___17 ps) in
+                                                     t a11 a21 a31 a41 a51
+                                                       a61 a71 ps) in
                                               let uu___16 =
                                                 FStarC_TypeChecker_NBETerm.embed
                                                   er cb r1 in
@@ -2840,10 +2723,9 @@ let mk_tactic_nbe_interpretation_8 (name : Prims.string)
                                                    let r1 =
                                                      interp_ctx name
                                                        (fun uu___18 ->
-                                                          let uu___19 =
-                                                            t a11 a21 a31 a41
-                                                              a51 a61 a71 a81 in
-                                                          uu___19 ps) in
+                                                          t a11 a21 a31 a41
+                                                            a51 a61 a71 a81
+                                                            ps) in
                                                    let uu___18 =
                                                      FStarC_TypeChecker_NBETerm.embed
                                                        er cb r1 in
@@ -2920,13 +2802,10 @@ let mk_tactic_nbe_interpretation_9 (name : Prims.string)
                                                         let r1 =
                                                           interp_ctx name
                                                             (fun uu___20 ->
-                                                               let uu___21 =
-                                                                 t a11 a21
-                                                                   a31 a41
-                                                                   a51 a61
-                                                                   a71 a81
-                                                                   a91 in
-                                                               uu___21 ps) in
+                                                               t a11 a21 a31
+                                                                 a41 a51 a61
+                                                                 a71 a81 a91
+                                                                 ps) in
                                                         let uu___20 =
                                                           FStarC_TypeChecker_NBETerm.embed
                                                             er cb r1 in
@@ -3013,14 +2892,11 @@ let mk_tactic_nbe_interpretation_10 (name : Prims.string)
                                                                  name
                                                                  (fun uu___22
                                                                     ->
-                                                                    let uu___23
-                                                                    =
                                                                     t a12 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
-                                                                    a91 a101 in
-                                                                    uu___23
+                                                                    a91 a101
                                                                     ps) in
                                                              let uu___22 =
                                                                FStarC_TypeChecker_NBETerm.embed
@@ -3118,16 +2994,12 @@ let mk_tactic_nbe_interpretation_11 (name : Prims.string)
                                                                     (fun
                                                                     uu___24
                                                                     ->
-                                                                    let uu___25
-                                                                    =
                                                                     t a13 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
-                                                                    a111 in
-                                                                    uu___25
-                                                                    ps) in
+                                                                    a111 ps) in
                                                                   let uu___24
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -3236,15 +3108,12 @@ let mk_tactic_nbe_interpretation_12 (name : Prims.string)
                                                                     (fun
                                                                     uu___26
                                                                     ->
-                                                                    let uu___27
-                                                                    =
                                                                     t a14 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
-                                                                    a111 a121 in
-                                                                    uu___27
+                                                                    a111 a121
                                                                     ps) in
                                                                     let uu___26
                                                                     =
@@ -3366,17 +3235,13 @@ let mk_tactic_nbe_interpretation_13 (name : Prims.string)
                                                                     (fun
                                                                     uu___28
                                                                     ->
-                                                                    let uu___29
-                                                                    =
                                                                     t a15 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121
-                                                                    a131 in
-                                                                    uu___29
-                                                                    ps) in
+                                                                    a131 ps) in
                                                                     let uu___28
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -3509,16 +3374,13 @@ let mk_tactic_nbe_interpretation_14 (name : Prims.string)
                                                                     (fun
                                                                     uu___30
                                                                     ->
-                                                                    let uu___31
-                                                                    =
                                                                     t a16 a21
                                                                     a31 a41
                                                                     a51 a61
                                                                     a71 a81
                                                                     a91 a101
                                                                     a111 a121
-                                                                    a131 a141 in
-                                                                    uu___31
+                                                                    a131 a141
                                                                     ps) in
                                                                     let uu___30
                                                                     =
@@ -3664,8 +3526,6 @@ let mk_tactic_nbe_interpretation_15 (name : Prims.string)
                                                                     (fun
                                                                     uu___32
                                                                     ->
-                                                                    let uu___33
-                                                                    =
                                                                     t a17 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -3673,9 +3533,7 @@ let mk_tactic_nbe_interpretation_15 (name : Prims.string)
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141
-                                                                    a151 in
-                                                                    uu___33
-                                                                    ps) in
+                                                                    a151 ps) in
                                                                     let uu___32
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -3831,8 +3689,6 @@ let mk_tactic_nbe_interpretation_16 (name : Prims.string)
                                                                     (fun
                                                                     uu___34
                                                                     ->
-                                                                    let uu___35
-                                                                    =
                                                                     t a18 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -3840,8 +3696,7 @@ let mk_tactic_nbe_interpretation_16 (name : Prims.string)
                                                                     a91 a101
                                                                     a111 a121
                                                                     a131 a141
-                                                                    a151 a161 in
-                                                                    uu___35
+                                                                    a151 a161
                                                                     ps) in
                                                                     let uu___34
                                                                     =
@@ -4009,8 +3864,6 @@ let mk_tactic_nbe_interpretation_17 (name : Prims.string)
                                                                     (fun
                                                                     uu___36
                                                                     ->
-                                                                    let uu___37
-                                                                    =
                                                                     t a19 a21
                                                                     a31 a41
                                                                     a51 a61
@@ -4019,9 +3872,7 @@ let mk_tactic_nbe_interpretation_17 (name : Prims.string)
                                                                     a111 a121
                                                                     a131 a141
                                                                     a151 a161
-                                                                    a171 in
-                                                                    uu___37
-                                                                    ps) in
+                                                                    a171 ps) in
                                                                     let uu___36
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -4201,8 +4052,6 @@ let mk_tactic_nbe_interpretation_18 (name : Prims.string)
                                                                     (fun
                                                                     uu___38
                                                                     ->
-                                                                    let uu___39
-                                                                    =
                                                                     t a110
                                                                     a21 a31
                                                                     a41 a51
@@ -4212,9 +4061,7 @@ let mk_tactic_nbe_interpretation_18 (name : Prims.string)
                                                                     a121 a131
                                                                     a141 a151
                                                                     a161 a171
-                                                                    a181 in
-                                                                    uu___39
-                                                                    ps) in
+                                                                    a181 ps) in
                                                                     let uu___38
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -4405,8 +4252,6 @@ let mk_tactic_nbe_interpretation_19 (name : Prims.string)
                                                                     (fun
                                                                     uu___40
                                                                     ->
-                                                                    let uu___41
-                                                                    =
                                                                     t a110
                                                                     a21 a31
                                                                     a41 a51
@@ -4416,8 +4261,7 @@ let mk_tactic_nbe_interpretation_19 (name : Prims.string)
                                                                     a121 a131
                                                                     a141 a151
                                                                     a161 a171
-                                                                    a181 a191 in
-                                                                    uu___41
+                                                                    a181 a191
                                                                     ps) in
                                                                     let uu___40
                                                                     =
@@ -4620,8 +4464,6 @@ let mk_tactic_nbe_interpretation_20 (name : Prims.string)
                                                                     (fun
                                                                     uu___42
                                                                     ->
-                                                                    let uu___43
-                                                                    =
                                                                     t a110
                                                                     a22 a31
                                                                     a41 a51
@@ -4632,9 +4474,7 @@ let mk_tactic_nbe_interpretation_20 (name : Prims.string)
                                                                     a141 a151
                                                                     a161 a171
                                                                     a181 a191
-                                                                    a201 in
-                                                                    uu___43
-                                                                    ps) in
+                                                                    a201 ps) in
                                                                     let uu___42
                                                                     =
                                                                     FStarC_TypeChecker_NBETerm.embed
@@ -4656,8 +4496,7 @@ let mk_total_interpretation_1 (name : Prims.string) (f : 't1 -> 'r)
         (fun a11 ->
            let r1 = interp_ctx name (fun uu___2 -> f a11) in
            let uu___2 =
-             let uu___3 = FStarC_TypeChecker_Primops_Base.psc_range psc in
-             embed er uu___3 r1 ncb in
+             embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r1 ncb in
            FStar_Pervasives_Native.Some uu___2)
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_2 (name : Prims.string) (f : 't1 -> 't2 -> 'r)
@@ -4678,8 +4517,8 @@ let mk_total_interpretation_2 (name : Prims.string) (f : 't1 -> 't2 -> 'r)
              (fun a21 ->
                 let r1 = interp_ctx name (fun uu___4 -> f a11 a21) in
                 let uu___4 =
-                  let uu___5 = FStarC_TypeChecker_Primops_Base.psc_range psc in
-                  embed er uu___5 r1 ncb in
+                  embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r1
+                    ncb in
                 FStar_Pervasives_Native.Some uu___4))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_3 (name : Prims.string)
@@ -4705,9 +4544,9 @@ let mk_total_interpretation_3 (name : Prims.string)
                   (fun a31 ->
                      let r1 = interp_ctx name (fun uu___6 -> f a11 a21 a31) in
                      let uu___6 =
-                       let uu___7 =
-                         FStarC_TypeChecker_Primops_Base.psc_range psc in
-                       embed er uu___7 r1 ncb in
+                       embed er
+                         (FStarC_TypeChecker_Primops_Base.psc_range psc) r1
+                         ncb in
                      FStar_Pervasives_Native.Some uu___6)))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_4 (name : Prims.string)
@@ -4738,9 +4577,9 @@ let mk_total_interpretation_4 (name : Prims.string)
                           let r1 =
                             interp_ctx name (fun uu___8 -> f a11 a21 a31 a41) in
                           let uu___8 =
-                            let uu___9 =
-                              FStarC_TypeChecker_Primops_Base.psc_range psc in
-                            embed er uu___9 r1 ncb in
+                            embed er
+                              (FStarC_TypeChecker_Primops_Base.psc_range psc)
+                              r1 ncb in
                           FStar_Pervasives_Native.Some uu___8))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_5 (name : Prims.string)
@@ -4777,10 +4616,9 @@ let mk_total_interpretation_5 (name : Prims.string)
                                  interp_ctx name
                                    (fun uu___10 -> f a11 a21 a31 a41 a51) in
                                let uu___10 =
-                                 let uu___11 =
-                                   FStarC_TypeChecker_Primops_Base.psc_range
-                                     psc in
-                                 embed er uu___11 r1 ncb in
+                                 embed er
+                                   (FStarC_TypeChecker_Primops_Base.psc_range
+                                      psc) r1 ncb in
                                FStar_Pervasives_Native.Some uu___10)))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_6 (name : Prims.string)
@@ -4822,10 +4660,9 @@ let mk_total_interpretation_6 (name : Prims.string)
                                         (fun uu___12 ->
                                            f a11 a21 a31 a41 a51 a61) in
                                     let uu___12 =
-                                      let uu___13 =
-                                        FStarC_TypeChecker_Primops_Base.psc_range
-                                          psc in
-                                      embed er uu___13 r1 ncb in
+                                      embed er
+                                        (FStarC_TypeChecker_Primops_Base.psc_range
+                                           psc) r1 ncb in
                                     FStar_Pervasives_Native.Some uu___12))))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_7 (name : Prims.string)
@@ -4871,10 +4708,9 @@ let mk_total_interpretation_7 (name : Prims.string)
                                              (fun uu___14 ->
                                                 f a11 a21 a31 a41 a51 a61 a71) in
                                          let uu___14 =
-                                           let uu___15 =
-                                             FStarC_TypeChecker_Primops_Base.psc_range
-                                               psc in
-                                           embed er uu___15 r1 ncb in
+                                           embed er
+                                             (FStarC_TypeChecker_Primops_Base.psc_range
+                                                psc) r1 ncb in
                                          FStar_Pervasives_Native.Some uu___14)))))))
   | uu___ -> FStar_Pervasives_Native.None
 let mk_total_interpretation_8 (name : Prims.string)
@@ -4925,10 +4761,9 @@ let mk_total_interpretation_8 (name : Prims.string)
                                                      f a11 a21 a31 a41 a51
                                                        a61 a71 a81) in
                                               let uu___16 =
-                                                let uu___17 =
-                                                  FStarC_TypeChecker_Primops_Base.psc_range
-                                                    psc in
-                                                embed er uu___17 r1 ncb in
+                                                embed er
+                                                  (FStarC_TypeChecker_Primops_Base.psc_range
+                                                     psc) r1 ncb in
                                               FStar_Pervasives_Native.Some
                                                 uu___16))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -4985,10 +4820,9 @@ let mk_total_interpretation_9 (name : Prims.string)
                                                             a51 a61 a71 a81
                                                             a91) in
                                                    let uu___18 =
-                                                     let uu___19 =
-                                                       FStarC_TypeChecker_Primops_Base.psc_range
-                                                         psc in
-                                                     embed er uu___19 r1 ncb in
+                                                     embed er
+                                                       (FStarC_TypeChecker_Primops_Base.psc_range
+                                                          psc) r1 ncb in
                                                    FStar_Pervasives_Native.Some
                                                      uu___18)))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5053,11 +4887,9 @@ let mk_total_interpretation_10 (name : Prims.string)
                                                                  a71 a81 a91
                                                                  a101) in
                                                         let uu___20 =
-                                                          let uu___21 =
-                                                            FStarC_TypeChecker_Primops_Base.psc_range
-                                                              psc in
-                                                          embed er uu___21 r1
-                                                            ncb in
+                                                          embed er
+                                                            (FStarC_TypeChecker_Primops_Base.psc_range
+                                                               psc) r1 ncb in
                                                         FStar_Pervasives_Native.Some
                                                           uu___20))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5134,11 +4966,9 @@ let mk_total_interpretation_11 (name : Prims.string)
                                                                     a91 a101
                                                                     a111) in
                                                              let uu___22 =
-                                                               let uu___23 =
-                                                                 FStarC_TypeChecker_Primops_Base.psc_range
-                                                                   psc in
                                                                embed er
-                                                                 uu___23 r1
+                                                                 (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
                                                                  ncb in
                                                              FStar_Pervasives_Native.Some
                                                                uu___22)))))))))))
@@ -5227,13 +5057,10 @@ let mk_total_interpretation_12 (name : Prims.string)
                                                                     a111 a121) in
                                                                   let uu___24
                                                                     =
-                                                                    let uu___25
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___25
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                   FStar_Pervasives_Native.Some
                                                                     uu___24))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5334,13 +5161,10 @@ let mk_total_interpretation_13 (name : Prims.string)
                                                                     a131) in
                                                                     let uu___26
                                                                     =
-                                                                    let uu___27
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___27
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___26)))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5453,13 +5277,10 @@ let mk_total_interpretation_14 (name : Prims.string)
                                                                     a131 a141) in
                                                                     let uu___28
                                                                     =
-                                                                    let uu___29
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___29
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___28))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5585,13 +5406,10 @@ let mk_total_interpretation_15 (name : Prims.string)
                                                                     a151) in
                                                                     let uu___30
                                                                     =
-                                                                    let uu___31
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___31
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___30)))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5729,13 +5547,10 @@ let mk_total_interpretation_16 (name : Prims.string)
                                                                     a151 a161) in
                                                                     let uu___32
                                                                     =
-                                                                    let uu___33
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___33
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___32))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -5885,13 +5700,10 @@ let mk_total_interpretation_17 (name : Prims.string)
                                                                     a171) in
                                                                     let uu___34
                                                                     =
-                                                                    let uu___35
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___35
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___34)))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -6053,13 +5865,10 @@ let mk_total_interpretation_18 (name : Prims.string)
                                                                     a171 a181) in
                                                                     let uu___36
                                                                     =
-                                                                    let uu___37
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___37
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___36))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -6234,13 +6043,10 @@ let mk_total_interpretation_19 (name : Prims.string)
                                                                     a181 a191) in
                                                                     let uu___38
                                                                     =
-                                                                    let uu___39
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___39
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___38)))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None
@@ -6427,13 +6233,10 @@ let mk_total_interpretation_20 (name : Prims.string)
                                                                     a201) in
                                                                     let uu___40
                                                                     =
-                                                                    let uu___41
-                                                                    =
-                                                                    FStarC_TypeChecker_Primops_Base.psc_range
-                                                                    psc in
                                                                     embed er
-                                                                    uu___41
-                                                                    r1 ncb in
+                                                                    (FStarC_TypeChecker_Primops_Base.psc_range
+                                                                    psc) r1
+                                                                    ncb in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___40))))))))))))))))))))
   | uu___ -> FStar_Pervasives_Native.None

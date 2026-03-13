@@ -115,8 +115,7 @@ let lookup_arity_lid
             (fun uu___1 ->
                match uu___1 with
                | (lid, out_lid) ->
-                   let uu___2 = FStarC_Ident.lid_equals target_lid lid in
-                   if uu___2
+                   if FStarC_Ident.lid_equals target_lid lid
                    then
                      FStar_Pervasives_Native.Some (BaseConn (out_lid, args))
                    else FStar_Pervasives_Native.None)
@@ -160,9 +159,8 @@ let destruct_sq_base_conn (uu___ : FStarC_Syntax_Syntax.term) :
                      | uu___3 -> Obj.magic FStar_Pervasives_Native.None))
                uu___1))) uu___
 let patterns (t : FStarC_Syntax_Syntax.term) :
-  ((FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax *
-    FStarC_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
-    Prims.list Prims.list * FStarC_Syntax_Syntax.term)=
+  (FStarC_Syntax_Syntax.arg Prims.list Prims.list *
+    FStarC_Syntax_Syntax.term)=
   let t1 = FStarC_Syntax_Subst.compress t in
   match t1.FStarC_Syntax_Syntax.n with
   | FStarC_Syntax_Syntax.Tm_meta
@@ -238,11 +236,10 @@ let destruct_q_conn (t : FStarC_Syntax_Syntax.term) :
            FStarC_Syntax_Syntax.hash_code = uu___7;_},
          uu___8)::[]))
         when FStarC_Syntax_Util.is_qlid tc.FStarC_Syntax_Syntax.fv_name ->
-        let uu___9 =
-          let uu___10 =
-            FStarC_Syntax_Util.is_forall tc.FStarC_Syntax_Syntax.fv_name in
-          FStar_Pervasives_Native.Some uu___10 in
-        aux uu___9 (b :: out) t2
+        aux
+          (FStar_Pervasives_Native.Some
+             (FStarC_Syntax_Util.is_forall tc.FStarC_Syntax_Syntax.fv_name))
+          (b :: out) t2
     | (FStar_Pervasives_Native.None,
        ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar tc;
           FStarC_Syntax_Syntax.pos = uu___1;
@@ -258,11 +255,10 @@ let destruct_q_conn (t : FStarC_Syntax_Syntax.term) :
                    FStarC_Syntax_Syntax.hash_code = uu___8;_},
                  uu___9)::[]))
         when FStarC_Syntax_Util.is_qlid tc.FStarC_Syntax_Syntax.fv_name ->
-        let uu___10 =
-          let uu___11 =
-            FStarC_Syntax_Util.is_forall tc.FStarC_Syntax_Syntax.fv_name in
-          FStar_Pervasives_Native.Some uu___11 in
-        aux uu___10 (b :: out) t2
+        aux
+          (FStar_Pervasives_Native.Some
+             (FStarC_Syntax_Util.is_forall tc.FStarC_Syntax_Syntax.fv_name))
+          (b :: out) t2
     | (FStar_Pervasives_Native.Some b, uu___1) ->
         let bs = FStarC_List.rev out in
         let uu___2 = FStarC_Syntax_Subst.open_term bs t1 in
@@ -310,19 +306,13 @@ let rec destruct_sq_forall (uu___ : FStarC_Syntax_Syntax.term) :
                                   (FStar_Pervasives_Native.Some
                                      (QAll ([b], pats, q1))))
                        else
-                         (let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
-                                let uu___9 =
-                                  FStarC_Syntax_Syntax.as_arg
-                                    (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                let uu___10 =
-                                  let uu___11 = FStarC_Syntax_Syntax.as_arg q in
-                                  [uu___11] in
-                                uu___9 :: uu___10 in
-                              (FStarC_Parser_Const.imp_lid, uu___8) in
-                            BaseConn uu___7 in
-                          Obj.magic (FStar_Pervasives_Native.Some uu___6)))
+                         Obj.magic
+                           (FStar_Pervasives_Native.Some
+                              (BaseConn
+                                 (FStarC_Parser_Const.imp_lid,
+                                   [FStarC_Syntax_Syntax.as_arg
+                                      (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort;
+                                   FStarC_Syntax_Syntax.as_arg q]))))
                 | uu___2 -> Obj.magic FStar_Pervasives_Native.None) uu___1)))
     uu___
 and destruct_sq_exists (uu___ : FStarC_Syntax_Syntax.term) :
@@ -366,7 +356,8 @@ and destruct_sq_exists (uu___ : FStarC_Syntax_Syntax.term) :
                                    let b1 =
                                      match bs with
                                      | b2::[] -> b2
-                                     | uu___8 -> failwith "impossible" in
+                                     | uu___8 ->
+                                         FStarC_Effect.failwith "impossible" in
                                    let uu___8 = patterns q1 in
                                    (match uu___8 with
                                     | (pats, q2) ->

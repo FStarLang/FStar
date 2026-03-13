@@ -18,7 +18,7 @@ module PC  = FStarC.Parser.Const
 module U   = FStarC.Syntax.Util
 module I   = FStarC.Ident
 
-let steps_to_string f =
+let steps_to_string f : ML string =
   let format_opt (f:'a -> string) (o:option 'a) =
     match o with
     | None -> "None"
@@ -167,7 +167,7 @@ let default_steps : fsteps = {
     tactics = false;
 }
 
-let fstep_add_one s fs =
+let fstep_add_one s fs : ML fsteps =
   let optlist = function None -> [] | Some xs -> xs in
     match s with
     | Beta -> { fs with beta = true }
@@ -215,7 +215,7 @@ let fstep_add_one s fs =
     | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
     | Tactics -> { fs with tactics = true }
 
-let to_fsteps (s : list step) : fsteps =
+let to_fsteps (s : list step) : ML fsteps =
     List.fold_right fstep_add_one s default_steps
 
 let no_debug_switches = {
@@ -235,26 +235,26 @@ let no_debug_switches = {
 (* Primitive step sets. They are represented as a persistent string map *)
 type prim_step_set = PSMap.t primitive_step
 
-let empty_prim_steps () : prim_step_set =
+let empty_prim_steps () : ML prim_step_set =
     PSMap.empty ()
 
-let add_step (s : primitive_step) (ss : prim_step_set) =
+let add_step (s : primitive_step) (ss : prim_step_set) : ML prim_step_set =
     PSMap.add ss (I.string_of_lid s.name) s
 
-let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
+let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : ML prim_step_set =
     PSMap.merge s1 s2
 
-let add_steps (m : prim_step_set) (l : list primitive_step) : prim_step_set =
+let add_steps (m : prim_step_set) (l : list primitive_step) : ML prim_step_set =
     List.fold_right add_step l m
 
-let prim_from_list (l : list primitive_step) : prim_step_set =
+let prim_from_list (l : list primitive_step) : ML prim_step_set =
     add_steps (empty_prim_steps ()) l
 (* / Primitive step sets *)
 
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
-let env_dependent_ops env = prim_from_list (env_dependent_ops env)
-let simplification_steps env = prim_from_list (simplification_ops_list env)
+let env_dependent_ops env : ML prim_step_set = prim_from_list (env_dependent_ops env)
+let simplification_steps env : ML (PSMap.t primitive_step) = prim_from_list (simplification_ops_list env)
 
 instance showable_cfg : showable cfg = {
   show = (fun cfg ->
@@ -267,59 +267,59 @@ instance showable_cfg : showable cfg = {
 
 let cfg_env cfg = cfg.tcenv
 
-let find_prim_step cfg fv =
+let find_prim_step cfg fv : ML (option primitive_step) =
     PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name)
 
-let is_prim_step cfg fv =
+let is_prim_step cfg fv : ML bool =
     Some? (PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name))
 
-let log cfg f =
+let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
 
-let log_top cfg f =
+let log_top cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.top then f () else ()
 
-let log_cfg cfg f =
+let log_cfg cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.cfg then f () else ()
 
-let log_primops cfg f =
+let log_primops cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.primop then f () else ()
 
 let dbg_unfolding = Debug.get_toggle "Unfolding"
-let log_unfolding cfg f =
+let log_unfolding cfg (f: unit -> ML unit) : ML unit =
   if !dbg_unfolding then f () else ()
 
-let log_nbe cfg f =
+let log_nbe cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
 let primop_time_map : SMap.t int = SMap.create 50
 
-let primop_time_reset () =
+let primop_time_reset () : ML unit =
     SMap.clear primop_time_map
 
-let primop_time_count (nm : string) (ns : int) : unit =
+let primop_time_count (nm : string) (ns : int) : ML unit =
     match SMap.try_find primop_time_map nm with
     | None     -> SMap.add primop_time_map nm ns
     | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
 
-let fixto n s =
+let fixto n s : ML string =
     if String.length s < n
     then (make (n - String.length s) ' ') ^ s
     else s
 
-let primop_time_report () : string =
+let primop_time_report () : ML string =
     let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (Format.fmt2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 
 let extendable_primops_dirty : ref bool = mk_ref true
 
-type register_prim_step_t = primitive_step -> unit
-type retrieve_prim_step_t = unit -> prim_step_set
+type register_prim_step_t = primitive_step -> ML unit
+type retrieve_prim_step_t = unit -> ML prim_step_set
 let mk_extendable_primop_set ()
-  : register_prim_step_t
-  & retrieve_prim_step_t =
+  : ML (register_prim_step_t
+      & retrieve_prim_step_t) =
   let steps = mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
@@ -332,22 +332,22 @@ let mk_extendable_primop_set ()
 let plugins = mk_extendable_primop_set ()
 let extra_steps = mk_extendable_primop_set ()
 
-let register_plugin (p:primitive_step) = fst plugins p
-let retrieve_plugins () =
+let register_plugin (p:primitive_step) : ML unit = fst plugins p
+let retrieve_plugins () : ML prim_step_set =
     if Options.no_plugins ()
     then empty_prim_steps ()
     else snd plugins ()
 
-let register_extra_step  p  = fst extra_steps p
-let retrieve_extra_steps () = snd extra_steps ()
+let register_extra_step  p : ML unit = fst extra_steps p
+let retrieve_extra_steps () : ML prim_step_set = snd extra_steps ()
 
-let list_plugins () : list primitive_step =
+let list_plugins () : ML (list primitive_step) =
     FStarC.Common.psmap_values (retrieve_plugins ())
 
-let list_extra_steps () : list primitive_step =
+let list_extra_steps () : ML (list primitive_step) =
     FStarC.Common.psmap_values (retrieve_extra_steps ())
 
-let cached_steps : unit -> prim_step_set =
+let cached_steps : unit -> ML prim_step_set =
     let memo : ref prim_step_set = mk_ref (empty_prim_steps ()) in
     fun () ->
       if !extendable_primops_dirty
@@ -363,7 +363,7 @@ let cached_steps : unit -> prim_step_set =
       else
       !memo
 
-let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strategy
+let add_nbe s : ML fsteps = // ZP : Turns nbe flag on, to be used as the default norm strategy
     if Options.use_nbe ()
     then { s with nbe_step = true }
     else s
@@ -380,7 +380,7 @@ let dbg_print_normalized = Debug.get_toggle "print_normalized_terms"
 let dbg_NBE = Debug.get_toggle "NBE"
 let dbg_UNSOUND_EraseErasableArgs = Debug.get_toggle "UNSOUND_EraseErasableArgs"
 
-let config' psteps s e =
+let config' psteps s e : ML cfg =
     let d = s |> List.collect (function
         | UnfoldUntil k -> [Env.Unfold k]
         | Eager_unfolding -> [Env.Eager_unfolding_only]
@@ -425,9 +425,9 @@ let config' psteps s e =
       compat_memo_ignore_cfg = Options.Ext.enabled "compat:normalizer_memo_ignore_cfg";
    }
 
-let config s e = config' [] s e
+let config s e : ML cfg = config' [] s e
 
-let should_reduce_local_let cfg lb =
+let should_reduce_local_let cfg lb : ML bool =
   if cfg.steps.do_not_unfold_pure_lets
   then false //we're not allowed to do any local delta steps
   else if cfg.steps.pure_subterms_within_computations &&
@@ -444,7 +444,7 @@ let should_reduce_local_let cfg lb =
     else U.is_ghost_effect n && //Or, 4. it's ghost and we're not extracting
          not (cfg.steps.pure_subterms_within_computations)
 
-let translate_norm_step = function
+let translate_norm_step s : ML (list Env.step) = match s with
     | NormSteps.Zeta ->    [Zeta]
     | NormSteps.ZetaFull -> [ZetaFull]
     | NormSteps.Iota ->    [Iota]
@@ -471,7 +471,7 @@ let translate_norm_step = function
     | NormSteps.NBE -> [NBE]
     | NormSteps.Unmeta -> [Unmeta]
 
-let translate_norm_steps s =
+let translate_norm_steps s : ML (list Env.step) =
     let s = List.concatMap translate_norm_step s in
     let add_exclude s z = if BU.for_some ((=?) z) s then s else Exclude z :: s in
     let s = Beta::s in

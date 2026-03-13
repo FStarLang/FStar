@@ -3,13 +3,13 @@ module FStarC.Class.Show
 open FStarC.Effect
 
 class showable (a:Type) = {
-  show : a -> string;
+  show : a -> ML string;
 }
 
 instance val showable_unit : showable unit
 instance val showable_bool : showable bool
-instance val showable_nat : showable nat
 instance val showable_int : showable int
+instance val showable_nat : showable nat
 instance val showable_string : showable string
 
 instance val show_list (a:Type) (_ : showable a) : Tot (showable (list a))

@@ -16,7 +16,9 @@ let ops : list primitive_step =
     mk1 0 (mk_lid "number_of_issue") (fun i -> i.issue_number);
     mk1 0 (mk_lid "range_of_issue") Mkissue?.issue_range;
     mk1 0 (mk_lid "context_of_issue") Mkissue?.issue_ctx;
-    mk1 0 (mk_lid "render_issue") Errors.format_issue;
+    mk1' 0 (mk_lid "render_issue")
+      (fun i -> Some (Errors.format_issue i))
+      (fun i -> Some (Errors.format_issue i));
     mk5 0 (mk_lid "mk_issue_doc") (fun level msg range number context ->
           { issue_level = Errors.issue_level_of_string level;
             issue_range = range;

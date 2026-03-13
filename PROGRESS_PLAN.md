@@ -1,0 +1,295 @@
+# Removing `--MLish` from the F* Build System
+
+**Branch:** `fstar2_nomlish` (based on `fstar2`)
+**Commit:** `03f22c268d` — "Replace CLI --MLish with per-file #push-options pragmas" (396 files changed, 646 insertions, 64 deletions)
+**Goal:** Eliminate the `--MLish` compiler flag from the command-line build pipeline, replacing it with per-file `#push-options "--MLish --MLish_effect FStarC.Effect"` pragmas in each compiler source file.
+
+---
+
+## Background
+
+The F* compiler sources are written in a dialect that uses `--MLish` mode: all function arrows default to an ML-like effect, and interface/implementation interleaving is more lax. Previously, `--MLish` was passed on the command line via hacks in the Makefile (`mk/generic-1.mk` detected `FStarC.` in the filename and injected `--MLish`). This approach was fragile and prevented clean separation of concerns.
+
+The new approach: each compiler `.fst`/`.fsti` file declares its own `#push-options "--MLish --MLish_effect FStarC.Effect"` pragma. The build system no longer needs to inject `--MLish`.
+
+---
+
+## What Has Been Accomplished
+
+### Phase 1: Per-file Pragmas ✅
+- [x] Added `#push-options "--MLish --MLish_effect FStarC.Effect"` to all 384 compiler source files (179 `.fst` + 205 `.fsti`, including GenSym.fst)
+- [x] Made `"MLish"` and `"MLish_effect"` settable via `#push-options` (`src/basic/FStarC.Options.fst`)
+- [x] Stripped UTF-8 BOM from files that had it (Defensive.fst, Ident.fst, etc.)
+
+### Phase 2: Interleaving Fixes ✅
+The interleaver (`src/tosyntax/FStarC.ToSyntax.Interleave.fst`) needed significant changes to work with per-file pragmas instead of a global CLI flag:
+
+- [x] Added `iface_has_mlish_pragma` — detects `#push-options "--MLish"` in the `.fsti`
+- [x] Added `is_ml_mode` — returns `true` if CLI `--MLish` OR `.fsti` has MLish pragma
+- [x] Changed `prefix_one_decl` to accept `ml_mode:bool` parameter
+- [x] Extended span pattern from `Tycon` only to `Tycon | Pragma | Exception | TopLevelLet`
+- [x] Added `is_val_or_let` helper (matches both `Val` and `TopLevelLet` in interface)
+- [x] Added `prefix_filtered` for `TopLevelLet` case — filters matching lets from `iface_prefix_tycons` to avoid E47 duplicates
+- [x] Added `Exception` case in `prefix_one_decl` — filters matching exceptions from both `iface_prefix_tycons` AND main `iface` to avoid duplicates
+- [x] Updated `interleave_module` and `prefix_with_interface_decls` to pass `ml_mode`
+
+### Phase 3: Supporting Infrastructure ✅
+- [x] `src/fstar/FStarC.Universal.fst`: Save/restore `ml_ish` flag in `fly_deps_check` (prevents pragma leaking between files)
+- [x] `src/syntax/FStarC.Syntax.DsEnv.fst`: Namespace filter on `check_admits` (only report missing admits for the current module, not transitive deps)
+- [x] `src/typechecker/FStarC.TypeChecker.Tc.fst`: Namespace filter on `missing_definition_list` (same rationale)
+
+### Phase 4: Source File Fixes ✅
+- [x] `src/interactive/FStarC.Interactive.Ide.fst`: Changed `open FStarC.Interactive.JsonHelper { ... }` to plain `open` (exception projectors not available)
+- [x] `src/basic/FStarC.Defensive.fst`: Added `open FStarC.Range` and `open FStarC.Class.PP` (not brought by interleaver because `.fsti` Pragma blocks the Open span)
+- [x] Kept duplicate `exception`/`let` declarations in `.fst` files (required for stage0's old interleaver during bootstrap). The new interleaver's `prefix_filtered` deduplicates them.
+
+### Phase 5: Parser Fix ✅
+- [x] `src/parser/FStarC.Parser.AST.fst`: Added `PatOp` case to `head_id_of_pat` so operator lets (`let (let!)`, `let (>>=)`, `let (let?)`) are recognized by `definition_lids` — critical for interleaver matching
+
+### Phase 6: Build System ✅
+- [x] `mk/generic-1.mk`: Removed `--MLish` hack from both `.checked` and `.extracted` rules
+- [x] `mk/generic-0.mk`: Broken from symlink to `generic-1.mk`; now a separate file keeping `--MLish` CLI hack for stage0→stage1 bootstrap
+- [x] `mk/fstar-01.mk`, `mk/fstar-12.mk`, `mk/tests-1.mk`, `mk/tests-2.mk`: Added `--warn_error '-361'` (suppresses unpopped push-options warning)
+- [x] `src/FStarCompiler.fst.config.json`: Added `-361` to warn_error
+
+### Phase 7: Stage0→Stage1 Build ✅
+- [x] Patched `stage0/dune/fstar-guts/fstarc.ml/FStarC_Options.ml` to accept MLish as settable (uncommitted, required because stage0 binary rejects `#push-options "--MLish"` with CFatal Error 65)
+- [x] Stage0→stage1 build succeeds (`make .bare1.src.touch`)
+
+### Phase 8: Testing ✅
+- [x] All 179 `.fst` compiler files pass `--lax` checking with stage2 binary
+- [x] All 204 `.fsti` compiler files pass `--lax` checking with stage2 binary
+
+---
+
+## Commit Summary
+
+**Commit `03f22c268d`** on `fstar2_nomlish` (396 files changed, 646 insertions, 64 deletions):
+
+| Category | Files | Nature of Change |
+|----------|-------|-----------------|
+| Pragma additions | 384 | `#push-options "--MLish --MLish_effect FStarC.Effect"` after `module` line |
+| Interleaving | 1 | `FStarC.ToSyntax.Interleave.fst` — core MLish interleaving via pragma |
+| Parser | 1 | `FStarC.Parser.AST.fst` — PatOp case in `head_id_of_pat` |
+| Infrastructure | 3 | Options.fst, Universal.fst, DsEnv.fst |
+| Source fixes | 3 | Tc.fst, Ide.fst, Defensive.fst |
+| Build system | 6 | generic-0.mk, generic-1.mk, fstar-01.mk, fstar-12.mk, tests-1.mk, tests-2.mk |
+| Config | 1 | `FStarCompiler.fst.config.json` — `-361` in warn_error |
+| OCaml ML fixes | 2 | `FStarC_Extraction_ML_PrintML.ml` — try_with desugaring for both effect modules; `FStarC_Effect.ml` — uncommented try_with fallback |
+
+**Commit 2: `37a3ef43f8`** — "Temporary stage0 patch: make MLish/MLish_effect settable" (1 file)
+- `stage0/dune/fstar-guts/fstarc.ml/FStarC_Options.ml` — patched `settable` to accept MLish (temporary, revert after stage0 rebase)
+
+---
+
+## What Remains
+
+### Bootstrap Verification ✅
+- [x] **stage0→stage1 build**: `make .bare1.src.touch` succeeds (uses `generic-0.mk` with CLI `--MLish` + per-file pragmas)
+- [x] **stage1→stage2 build**: Full stage1 binary built, stage2 extracted+built+installed successfully
+- [x] **stage2→stage3 fixpoint**: `diff -r stage2/fstarc.ml stage3/fstarc.ml` — **0 differences** ✅
+- [ ] **Run CI tests**: Pushed to remote, CI run [#22535980366](https://github.com/FStarLang/FStar/actions/runs/22535980366) in progress
+
+### Bug Found and Fixed: try_with Desugaring
+The `emit` function in `FStarC.Universal.fst` prints all ML modules AFTER all files are processed, at which point `restore_opts()` has reset `--MLish` to CLI value (false). The `try_with_ident()` function in `PrintML.ml` used runtime options to determine the effect module, producing `FStar_All.try_with` at print time while the ML AST contained `FStarC_Effect.try_with`. Fixed by matching both known paths statically.
+
+### Phase 9: Progressive MLish Removal — COMPLETE ✅
+
+All `#push-options "--MLish --MLish_effect FStarC.Effect"` pragmas have been removed from every compiler source file. Zero remain.
+
+**Progress: 389/389 files processed (0 remaining)**
+
+**Key class/library changes made to support removal:**
+- `Deq.fsti`: `(=?) : a -> a -> ML bool`
+- `Ord.fsti`: `cmp : a -> a -> ML order`, all comparison operators ML
+- `Show.fsti`: `show : a -> ML string`
+- `Setlike.fsti`: ALL class fields → ML (implementations use ML =?/cmp)
+- `HasRange.fsti`: `pos`/`setPos` → ML
+- `Monoid.fsti`: `mplus` → ML, `(++)` → ML
+- `Monad.fsti`: `return` → ML, `<$>` accepts ML callbacks, `<*>` Tot inner arrows
+- `AppEmb.fsti`: `<$>`, `<$$>`, `<*>`, `<**>` accept ML function arguments
+- `Common.fsti`: `eq_list`, `max_suffix` accept ML callbacks
+- `Binders.fsti`: `boundNames` → ML
+- `List.fsti`: ALL higher-order functions (map, fold, filter, etc.) accept ML callbacks
+- `Util.fsti`: ALL I/O, higher-order functions → ML
+- `Format.fsti`: printer callbacks → ML
+- `Order.fsti`: `lex`, `compare_list`, `compare_option` → ML callbacks
+- `Primops.Base.fsti`: ALL mk* functions accept ML callbacks, psc_subst → ML
+- `Tactics.Monad.fsti`: `mlog` continuation → ML, `bind` already ML
+- `Tactics.Interpreter.fsti`: `run_unembedded_tactic_on_ps` tau → ML
+- `NBETerm.fsti`: `embedding` class fields → ML, `nbe_cbs` fields → ML
+- `Options.fsti`: callback refs → ML (set_option_warning_callback etc.)
+- `DsEnv.fsti`: `ugly_sigelt_to_string_hook` → ML, `withenv` → ML
+- `Syntax.Util.fsti`: `tts_f`/`ttd_f` → ML, `universe_of_binders` callback → ML
+
+**Short-circuit operator pattern**: `&&` and `||` require pure operands. ML operands must use `if-then-else` to preserve short-circuit semantics:
+```fstar
+(* Before -- fstar2 with --MLish *) x =? y && f z
+(* WRONG -- changes evaluation order *) let r1 = x =? y in let r2 = f z in r1 && r2
+(* CORRECT -- preserves short-circuit *) if x =? y then f z else false
+```
+
+**FStarC.Effect.ML vs FStar.All.ML**: These are different effects (`unit` vs `heap` state). All compiler code must use `FStarC.List.*` (not `FStar.List.*`) when passing ML callbacks.
+
+**Checklist:**
+- [x] **Phase 9a**: Remove pragma from 33 fsti-only files + small fst-only files
+- [x] **Phase 9b**: Remove pragma from 37 more files via sub-agent
+- [x] **Phase 9c**: Fix all cascading downstream failures from class/library changes
+- [x] **Phase 9d**: Remove pragma from 27 more fsti files
+- [x] **Phase 9e**: Remove pragma from 32 more files
+- [x] **Phase 9f**: Remove pragma from 22 fst+fsti pairs (JsonHelper, Const, HashMap, etc.)
+- [x] **Phase 9g**: Remove pragma from 9 fst-only files (Hooks, Prettyprint, Primops.Docs, etc.)
+- [x] **Phase 9h**: Fix Primops.Base mk* to accept ML callbacks, psc_subst → ML
+- [x] **Phase 9i**: Remove pragma from 9 more pairs (Embeddings, Errors, Universal, Builtins, etc.)
+- [x] **Phase 9j**: Remove pragma from NBETerm, Normalize, InterpFuns, Krml, ML.Modul, V1/V2.Basic
+- [x] **Phase 9k**: Remove pragma from all remaining large files (Syntax.Syntax, Options, Env, Rel, TcTerm, ToSyntax, etc.)
+- [x] **Phase 9l**: Fix final cascading failures (tts_f, erase_univs, universe_of_binders, etc.)
+
+### Phase 9.5: Fix Runtime Crashes from Eager Evaluation — COMPLETE ✅
+
+Without `--MLish`, `&&`/`||` extract to OCaml with eager argument evaluation instead of short-circuit. Custom `mland`/`mlor`/`&.`/`|.` operators also evaluate arguments eagerly since they're normal function calls. This causes crashes when the second argument assumes the first is true/false.
+
+**Commit `71f4673982`** — "Fix runtime crashes from eager evaluation after --MLish removal"
+
+**Fixes applied (23 files):**
+- [x] Replace `mland`/`mlor` with `if-then-else` at call sites in TcTerm, TcEffect, Util, Rel
+- [x] Fix `binders_eq`: guard `forall2` with length check via `if-then-else`
+- [x] Fix `next_prob`: replace `|.` with pattern match to avoid `Option.must` crash on `None`
+- [x] Fix `is_smt_reifiable_effect`: use `if-then-else` instead of `let+&&`
+- [x] Add missing `| _ -> None` fallthrough in `MachineInts.e_machint`
+- [x] Remove `instance` from `e_tref`/`e_tref_nbe` (typeclass resolution fix)
+- [x] Restore exception declarations in `Errors.fst`
+- [x] Restore operator declarations (`>>=`, `let!`, `let?`) in `.fst` files
+- [x] Handle `Exception` and `TopLevelLet` in non-MLish interleaver
+- [x] Replace `BU.for_all` with `List.Tot.for_all`, `mland`/`mlor` with native `&&` in `ToSyntax.fst`
+- [x] Fix `EncodeTerm` helper signatures for non-MLish extraction
+
+### Phase 9.6: Fix Bootstrap Chain (stage2/stage3) — COMPLETE ✅
+
+**Commit `001afbae1a`** — "Fix bootstrap without --MLish: interleaver, extraction, and type shadowing"
+
+After Phase 9.5, the stage1 binary was able to extract stage2, but stage2 failed to compile due to several issues:
+
+**Fixes applied:**
+- [x] **Effect abbreviation resolution** (FStarC.Extraction.ML.Term.fst): `Env.norm_eff_name` before `effect_decl_opt` lookup — resolves ML→ALL abbreviation chain
+- [x] **Anonymous instance dedup** (FStarC.ToSyntax.Interleave.fst): `Nil? fst_lids` guard prevents filtering `instance _ : T = { ... }` declarations (PatWild → empty lids_of_let)
+- [x] **Exception dedup** (FStarC.ToSyntax.Interleave.fst): Extended dedup logic for `Exception` declarations (not just `TopLevelLet`)
+- [x] **Short-circuit purity** (ToSyntax.fst, TcTerm.fst, Interleave.fst): Replace `&&`/`||` with `mland`/if-then-else for ML-effect operands
+- [x] **FStarC_Effect.failwith** (FStarC_Effect.ml): Add `failwith` function for extraction without `--MLish`
+- [x] **Type shadowing in V1 Reflection** (FStarC.Reflection.V1.Data.fsti): Reorder `ppname_t`/`val as_ppname` before type abbreviations that shadow `FStarC.Syntax.Syntax`
+- [x] **DsEnv.fsti**: `set_iface_decls` returns `ML env` (required without `--MLish`)
+
+**Type shadowing root cause**: The non-MLish interleaver emits `.fsti` type declarations as prefix before `.fst` opens. In V1.Data, `type branch = pattern & term` was emitted BEFORE `.fst`'s `open FStarC.Syntax.Syntax`, which then re-introduced `FStarC.Syntax.Syntax.branch` (a different type: triple vs pair). Moving `val as_ppname` earlier ensures `.fst` opens come BEFORE the shadowing types.
+
+**Bootstrap verification:**
+- [x] stage0→stage1 ✅
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
+
+### Phase 9.7: Preserve Short-Circuit Evaluation in SMT Encoding — COMPLETE ✅
+
+**Commit `a64e97f07f`** — "Preserve short-circuit evaluation in SMT encoding after --MLish removal"
+
+The Phase 9 pragma removal inadvertently changed evaluation order in SMT encoding code. Without `--MLish`, F* enforces pure operands for `&&`/`||`, so previous automatic rewrites eagerly let-bound ML operands. This changed evaluation order from short-circuit to eager, producing different SMT output and breaking context pruning for `FStar.FiniteMap.Base`.
+
+**Root cause**: Eager let-binding like `let a = f() in let b = g() in a && b` evaluates both `f()` and `g()` upfront, while original `f() && g()` short-circuits (skips `g()` when `f()` is false). This affected SMT term generation in encoding functions that use `Options.*`, `BU.for_some`, `List.existsb`, and `Syntax.Util.*`.
+
+**Fix pattern**: Convert `a && b` (ML operands) to `if a then b else false` and `a || b` to `if a then true else b`. This satisfies F*'s purity requirement while preserving identical short-circuit semantics.
+
+**Files changed:**
+- [x] `Encode.fst`: 11 eager let-binding patterns → if-then-else (encode_free_var, should_thunk, has_masked/has_impure, when guards, lax&&ml_ish, Options.Ext.enabled, etc.)
+- [x] `EncodeTerm.fst`: squash/formula `when` guard, Tm_arrow encoding, is_impure/is_reifiable
+- [x] `SolverState.fst`: keep_assumption/already_given `||` filters
+- [x] `Z3.fst`: solver version mismatch, hint recording/use checks
+- [x] `FiniteMap.Base.fst`: Removed `context_pruning=false` workaround (no longer needed)
+
+**Bootstrap verification:**
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] FiniteMap.Base verifies with context pruning enabled ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
+
+### Phase 9.8: Fix Crash Bugs from Eager Evaluation — COMPLETE ✅
+
+**Commit `737207cdfd`** — "Fix crashes from eager evaluation of short-circuit operators"
+
+Additional crash bugs found from eager let-binding of `&&`/`||` operands. These crashed the dep scanner and caused both the CI `build/tests2` and `opam/smoke test` failures.
+
+**Crashes fixed:**
+- [x] `FStarC.Parser.Dep.fst`: `paths_to_same_file` calls `Unix.stat` which crashes on non-existent files. Original short-circuited with `file_exists && paths_to_same_file`. Two instances fixed.
+- [x] `FStarC.Debug.fst`: `String.get k 0` crashes on empty strings. Original short-circuited with `String.length k > 0 && ...`.
+- [x] `FStarC.Common.fst`: `eq_list` eagerly recursed full list even on first mismatch.
+- [x] `FStarC.Parser.Dep.fst`: `fly_deps_enabled` — `Options.dep() || Options.any_dump_module()` converted to if-then-else.
+
+**Bootstrap verification:**
+- [x] stage1→stage2 extraction + compilation ✅
+- [x] tests2 extraction passes ✅
+- [x] stage2→stage3 fixpoint: **0 differences** ✅
+
+### Phase 10: Remove --MLish Compiler Support — COMPLETE ✅
+
+**Commit `be57cbbd60`** — "Remove --MLish compiler flag entirely"
+
+The `--MLish` and `--MLish_effect` compiler options have been completely removed from the codebase. No code path in the compiler checks `Options.ml_ish()` anymore.
+
+**Source changes (19 files, -305/+52 lines):**
+- [x] `Options.fst/fsti`: Removed option definitions, getters, setters, settable entries
+- [x] `Rel.fst`: Removed 8 `ml_ish()` checks (SMT gating, smt_ok guards)
+- [x] `TcTerm.fst`: Removed 6 `ml_ish()` conditionals (short-circuit, effect defaults, constructor marking)
+- [x] `Util.fst`: Removed 7 `ml_ish()` optimization-disabling guards
+- [x] `TcInductive.fst`: Simplified constructor totality check
+- [x] `Encode.fst`: Removed 2 lax+ml_ish early-return guards
+- [x] `ToSyntax.fst`: Removed 4 `ml_ish()` checks
+- [x] `Universal.fst`: Removed ml_ish save/restore in fly_deps_check
+- [x] `Interleave.fst`: Removed `ml_mode_prefix_with_iface_decls` (90 lines), `ml_mode_check_initial_interface`, `iface_has_mlish_pragma`, `is_ml_mode`; simplified `prefix_one_decl` and `interleave_module`
+- [x] `Parser.Const.fst`: Simplified `ef_base()` to always return `FStar.All`
+- [x] `config.json`: Removed `--MLish`, `--MLish_effect`, `-361`
+- [x] Build system: Removed `--MLish`/`--MLish_effect` from `generic-0.mk`, `fstar-01.mk`, `fstar-12.mk`, `tests-1.mk`, `tests-2.mk`
+- [x] Stage0: Updated 148 ML files + uncommented `failwith` in `FStarC_Effect.ml`
+- [x] Full bootstrap verified: stage2=stage3 (0 differences)
+
+### Documentation
+- [ ] **Update CONTRIBUTING.md or relevant docs**: Document the migration process and any conventions for effect annotations in compiler sources
+
+---
+
+## Architecture Notes
+
+### Bootstrap Chain
+```
+stage0 (old binary, locally patched for settable MLish)
+  + --MLish from generic-0.mk CLI hack (AND per-file pragmas)
+  + --warn_error '-361' from fstar-01.mk
+  → stage1 (.checked + .ml extraction) ✅
+
+stage1 (has interleaving fixes + PatOp fix in extracted OCaml)
+  + per-file #push-options "--MLish" (NO CLI --MLish)
+  + --warn_error '-361' from fstar-12.mk
+  → stage2 (.checked + .ml extraction) [pending]
+
+stage2
+  + per-file #push-options "--MLish"
+  → stage3 (should be identical to stage2) [pending]
+```
+
+### Key Design Decisions
+
+1. **`generic-0.mk` is separate from `generic-1.mk`**: Originally a symlink. Had to break it because stage0 needs `--MLish` on CLI (old binary without interleaving fixes), while stage1+ uses per-file pragmas only.
+
+2. **`FStarCompiler.fst.config.json` keeps `--MLish`**: Stage0 doesn't have the interleaving fixes needed to process per-file MLish pragmas correctly. This is a bootstrapping constraint that resolves once stage0 is rebased.
+
+3. **Stage0 binary must be patched**: Error 65 (`OptionNotSettable`) is `CFatal` — cannot be suppressed with `--warn_error`. The stage0 binary's `settable` function must be patched to accept `"MLish"` and `"MLish_effect"`. This is an uncommitted local change.
+
+4. **Duplicate declarations kept in .fst files**: Stage0's old interleaver cannot handle missing declarations (e.g., Monad.fst without `let (let!) = bind` fails). The new interleaver's `prefix_filtered` deduplicates them automatically.
+
+### Interleaving: How Per-File Pragma Works
+1. **Detection**: `iface_has_mlish_pragma` scans `.fsti` decls for `PushOptions` containing `"--MLish"`
+2. **Mode selection**: `is_ml_mode` returns `Options.ml_ish() || iface_has_mlish_pragma iface`
+3. **Lax rules**: In `ml_mode`, interface interleaving allows `TopLevelLet`, `Exception`, `Pragma` in addition to `Tycon` and `Val`
+4. **Span/Split/Defer**: Span grabs contiguous `Tycon|Pragma|Exception|TopLevelLet` from iface start. Only `Tycon`/`Pragma` emitted immediately; `Exception`/`TopLevelLet` deferred back to main iface to be matched when their `.fst` counterparts appear.
+5. **Duplicate prevention**: `prefix_filtered` removes matching `TopLevelLet`/`Exception` from interface prefix to avoid E47
+
+### Known Subtlety: Stranded Exceptions
+When an `.fsti` has an `exception` between `Val` entries (e.g., ML.Term.fsti), the span `(Tycon|Pragma|Exception|TopLevelLet)` can't reach it because it starts with `Val`. The exception stays in the iface and gets appended at module end. The fix: the `.fst` keeps its own `exception` declaration, and the `Exception` case in `prefix_one_decl` filters the matching exception from the main `iface` to prevent duplicates.
+
+### PatOp Fix
+`head_id_of_pat` in `FStarC.Parser.AST.fst` was missing the `PatOp` case. Operator lets (`let (let!) = bind`, `let (>>=) = bind`, `let (let?) o f = ...`) parsed as `PatOp` patterns, causing `lids_of_let`/`definition_lids` to return `[]`. This meant `maybe_get_iface_vals` could never match these declarations, leaving `.fsti` copies stranded → E47 duplicates.

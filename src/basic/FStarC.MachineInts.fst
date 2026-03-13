@@ -67,19 +67,19 @@ let mask (k:machint_kind) : int =
   | 64  -> 0xffffffffffffffff
   | 128 -> 0xffffffffffffffffffffffffffffffff
 
-let int_to_t_lid_for (k:machint_kind) : Ident.lid =
+let int_to_t_lid_for (k:machint_kind) : ML Ident.lid =
   let path = "FStar" :: module_name_for k :: (if is_unsigned k then "uint_to_t" else "int_to_t") :: [] in
   Ident.lid_of_path path Range.dummyRange
 
-let int_to_t_for (k:machint_kind) : S.term =
+let int_to_t_for (k:machint_kind) : ML S.term =
   let lid = int_to_t_lid_for k in
   S.fvar lid None
 
-let __int_to_t_lid_for (k:machint_kind) : Ident.lid =
+let __int_to_t_lid_for (k:machint_kind) : ML Ident.lid =
   let path = "FStar" :: module_name_for k :: (if is_unsigned k then "__uint_to_t" else "__int_to_t") :: [] in
   Ident.lid_of_path path Range.dummyRange
 
-let __int_to_t_for (k:machint_kind) : S.term =
+let __int_to_t_for (k:machint_kind) : ML S.term =
   let lid = __int_to_t_lid_for k in
   S.fvar lid None
 
@@ -112,7 +112,7 @@ instance e_machint (k : machint_kind) : Tot (EMB.embedding (machint k)) =
     let t = S.mk_Tm_app int_to_t [S.as_arg it] rng in
     with_meta_ds rng t m
   in
-  let un (t:term) cb : option (machint k) =
+  let un (t:term) cb : ML (option (machint k)) =
     let (t, m) =
         (match (SS.compress t).n with
         | Tm_meta {tm=t; meta=Meta_desugared m} -> (t, Some m)
@@ -147,7 +147,7 @@ instance nbe_machint (k : machint_kind) : Tot (NBE.embedding (machint k)) =
     let t = int_to_t [as_arg it] in
     with_meta_ds t m
   in
-  let un cbs a : option (machint k) =
+  let un cbs a : ML (option (machint k)) =
     let (a, m) =
       (match a.nbe_t with
        | Meta(t, tm) ->

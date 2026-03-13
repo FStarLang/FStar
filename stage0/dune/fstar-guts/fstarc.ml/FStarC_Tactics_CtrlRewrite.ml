@@ -213,102 +213,100 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                           let uu___5 = Obj.magic uu___5 in
                           match uu___5 with
                           | (ut, uvar_t) ->
-                              let uu___6 =
-                                FStarC_Tactics_Monad.if_verbose
-                                  (fun uu___7 ->
-                                     let uu___8 =
-                                       FStarC_Class_Show.show
-                                         FStarC_Syntax_Print.showable_term tm in
-                                     let uu___9 =
-                                       FStarC_Class_Show.show
-                                         FStarC_Syntax_Print.showable_term ut in
-                                     FStarC_Format.print2
-                                       "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                                       uu___8 uu___9) in
                               Obj.magic
                                 (FStarC_Class_Monad.op_let_Bang
                                    FStarC_Tactics_Monad.monad_tac () ()
-                                   uu___6
-                                   (fun uu___7 ->
-                                      (fun uu___7 ->
-                                         let uu___7 = Obj.magic uu___7 in
+                                   (FStarC_Tactics_Monad.if_verbose
+                                      (fun uu___6 ->
+                                         let uu___7 =
+                                           FStarC_Class_Show.show
+                                             FStarC_Syntax_Print.showable_term
+                                             tm in
                                          let uu___8 =
-                                           let uu___9 =
-                                             let uu___10 =
+                                           FStarC_Class_Show.show
+                                             FStarC_Syntax_Print.showable_term
+                                             ut in
+                                         FStarC_Format.print2
+                                           "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                                           uu___7 uu___8))
+                                   (fun uu___6 ->
+                                      (fun uu___6 ->
+                                         let uu___6 = Obj.magic uu___6 in
+                                         let uu___7 =
+                                           let uu___8 =
+                                             let uu___9 =
                                                env.FStarC_TypeChecker_Env.universe_of
                                                  env typ1 in
-                                             FStarC_Syntax_Util.mk_eq2
-                                               uu___10 typ1 tm ut in
+                                             FStarC_Syntax_Util.mk_eq2 uu___9
+                                               typ1 tm ut in
                                            FStarC_Tactics_Monad.add_irrelevant_goal
-                                             g0 "do_rewrite.eq" env uu___9
+                                             g0 "do_rewrite.eq" env uu___8
                                              FStar_Pervasives_Native.None in
                                          Obj.magic
                                            (FStarC_Class_Monad.op_let_Bang
                                               FStarC_Tactics_Monad.monad_tac
-                                              () () uu___8
-                                              (fun uu___9 ->
-                                                 (fun uu___9 ->
-                                                    let uu___9 =
-                                                      Obj.magic uu___9 in
-                                                    let uu___10 =
-                                                      FStarC_Tactics_Monad.focus
-                                                        rewriter in
+                                              () () uu___7
+                                              (fun uu___8 ->
+                                                 (fun uu___8 ->
+                                                    let uu___8 =
+                                                      Obj.magic uu___8 in
                                                     Obj.magic
                                                       (FStarC_Class_Monad.op_let_Bang
                                                          FStarC_Tactics_Monad.monad_tac
-                                                         () () uu___10
-                                                         (fun uu___11 ->
-                                                            (fun uu___11 ->
-                                                               let uu___11 =
+                                                         () ()
+                                                         (FStarC_Tactics_Monad.focus
+                                                            rewriter)
+                                                         (fun uu___9 ->
+                                                            (fun uu___9 ->
+                                                               let uu___9 =
                                                                  Obj.magic
-                                                                   uu___11 in
+                                                                   uu___9 in
                                                                let ut1 =
                                                                  FStarC_TypeChecker_Normalize.reduce_uvar_solutions
                                                                    env ut in
-                                                               let uu___12 =
-                                                                 FStarC_Tactics_Monad.if_verbose
-                                                                   (fun
-                                                                    uu___13
+                                                               Obj.magic
+                                                                 (FStarC_Class_Monad.op_let_Bang
+                                                                    FStarC_Tactics_Monad.monad_tac
+                                                                    () ()
+                                                                    (
+                                                                    FStarC_Tactics_Monad.if_verbose
+                                                                    (fun
+                                                                    uu___10
                                                                     ->
-                                                                    let uu___14
+                                                                    let uu___11
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_term
                                                                     tm in
-                                                                    let uu___15
+                                                                    let uu___12
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_term
                                                                     ut1 in
                                                                     FStarC_Format.print2
                                                                     "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
-                                                                    uu___14
-                                                                    uu___15) in
-                                                               Obj.magic
-                                                                 (FStarC_Class_Monad.op_let_Bang
-                                                                    FStarC_Tactics_Monad.monad_tac
-                                                                    () ()
-                                                                    uu___12
+                                                                    uu___11
+                                                                    uu___12))
                                                                     (
                                                                     fun
-                                                                    uu___13
+                                                                    uu___10
                                                                     ->
                                                                     (fun
-                                                                    uu___13
+                                                                    uu___10
                                                                     ->
-                                                                    let uu___13
+                                                                    let uu___10
                                                                     =
                                                                     Obj.magic
-                                                                    uu___13 in
+                                                                    uu___10 in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     ()
                                                                     (Obj.magic
                                                                     ut1)))
-                                                                    uu___13)))
-                                                              uu___11)))
-                                                   uu___9))) uu___7))) uu___5)))))
+                                                                    uu___10)))
+                                                              uu___9)))
+                                                   uu___8))) uu___6))) uu___5)))))
     uu___3 uu___2 uu___1 uu___
 let do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
   (uu___1 : FStarC_TypeChecker_Env.env) (uu___ : FStarC_Syntax_Syntax.term) :
@@ -435,9 +433,7 @@ let rec map_ctac : 'a . 'a ctac -> 'a Prims.list ctac =
              (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
                 (Obj.magic ([], FStarC_Tactics_Types.Continue)))
        | x::xs1 ->
-           let uu___ =
-             let uu___1 = let uu___2 = map_ctac c in par_ctac c uu___2 in
-             uu___1 (x, xs1) in
+           let uu___ = par_ctac c (map_ctac c) (x, xs1) in
            Obj.magic
              (FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac
                 () () (Obj.magic uu___)
@@ -457,8 +453,7 @@ let ctac_id : 'a ctac=
       (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
          (Obj.magic (x, FStarC_Tactics_Types.Continue)))
 let ctac_args (c : FStarC_Syntax_Syntax.term ctac) :
-  FStarC_Syntax_Syntax.args ctac=
-  let uu___ = let uu___1 = ctac_id in par_ctac c uu___1 in map_ctac uu___
+  FStarC_Syntax_Syntax.args ctac= map_ctac (par_ctac c ctac_id)
 let maybe_rewrite (uu___4 : FStarC_Tactics_Types.goal)
   (uu___3 : controller_ty) (uu___2 : rewriter_ty)
   (uu___1 : FStarC_TypeChecker_Env.env) (uu___ : FStarC_Syntax_Syntax.term) :
@@ -505,15 +500,11 @@ let rec ctrl_fold_env (g0 : FStarC_Tactics_Types.goal)
   let recurse tm1 = ctrl_fold_env g0 d controller rewriter env tm1 in
   match d with
   | FStarC_Tactics_Types.TopDown ->
-      let uu___ =
-        seq_ctac (maybe_rewrite g0 controller rewriter env)
-          (on_subterms g0 d controller rewriter env) in
-      uu___ tm
+      seq_ctac (maybe_rewrite g0 controller rewriter env)
+        (on_subterms g0 d controller rewriter env) tm
   | FStarC_Tactics_Types.BottomUp ->
-      let uu___ =
-        seq_ctac (on_subterms g0 d controller rewriter env)
-          (maybe_rewrite g0 controller rewriter env) in
-      uu___ tm
+      seq_ctac (on_subterms g0 d controller rewriter env)
+        (maybe_rewrite g0 controller rewriter env) tm
 and recurse_option_residual_comp (uu___3 : FStarC_TypeChecker_Env.env)
   (uu___2 : FStarC_Syntax_Syntax.subst_elt Prims.list)
   (uu___1 :
@@ -521,8 +512,8 @@ and recurse_option_residual_comp (uu___3 : FStarC_TypeChecker_Env.env)
   (uu___ :
     FStarC_TypeChecker_Env.env ->
       FStarC_Syntax_Syntax.term ->
-        (FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax *
-          FStarC_Tactics_Types.ctrl_flag) FStarC_Tactics_Monad.tac)
+        (FStarC_Syntax_Syntax.term * FStarC_Tactics_Types.ctrl_flag)
+          FStarC_Tactics_Monad.tac)
   :
   (FStarC_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option *
     FStarC_Tactics_Types.ctrl_flag) FStarC_Tactics_Monad.tac=
@@ -721,10 +712,7 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
               ->
               Obj.magic
                 (Obj.repr
-                   (let uu___1 =
-                      let uu___2 =
-                        let uu___3 = ctac_args rr in par_ctac rr uu___3 in
-                      uu___2 (hd, args) in
+                   (let uu___1 = par_ctac rr (ctac_args rr) (hd, args) in
                     FStarC_Class_Monad.op_let_Bang
                       FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___1)
                       (fun uu___2 ->
@@ -769,10 +757,8 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
               Obj.magic
                 (Obj.repr
                    (let uu___1 =
-                      let uu___2 =
-                        let uu___3 = FStarC_Syntax_Syntax.mk_binder x in
-                        [uu___3] in
-                      FStarC_Syntax_Subst.open_term uu___2 phi in
+                      FStarC_Syntax_Subst.open_term
+                        [FStarC_Syntax_Syntax.mk_binder x] phi in
                     match uu___1 with
                     | (bs, phi1) ->
                         descend_binders tm1 [] []
@@ -782,7 +768,8 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                              let x1 =
                                match bs1 with
                                | x2::[] -> x2.FStarC_Syntax_Syntax.binder_bv
-                               | uu___3 -> failwith "Impossible" in
+                               | uu___3 ->
+                                   FStarC_Effect.failwith "Impossible" in
                              FStarC_Syntax_Syntax.Tm_refine
                                {
                                  FStarC_Syntax_Syntax.b = x1;
@@ -885,10 +872,7 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                                  FStarC_Tactics_Monad.monad_tac
                                                  () (Obj.magic (br1, flag))))
                                        uu___3))) uu___1 in
-                    let uu___1 =
-                      let uu___2 =
-                        let uu___3 = map_ctac c_branch in par_ctac rr uu___3 in
-                      uu___2 (hd, brs) in
+                    let uu___1 = par_ctac rr (map_ctac c_branch) (hd, brs) in
                     FStarC_Class_Monad.op_let_Bang
                       FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___1)
                       (fun uu___2 ->
@@ -934,18 +918,14 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                           { FStarC_Syntax_Syntax.lbs = (false, lb1::[]);
                             FStarC_Syntax_Syntax.body1 = uu___7;_}
                           -> lb1
-                      | uu___7 -> failwith "impossible" in
+                      | uu___7 -> FStarC_Effect.failwith "impossible" in
                     let uu___6 = FStarC_Syntax_Subst.open_term_bv bv e in
                     match uu___6 with
                     | (bv1, e1) ->
                         let uu___7 =
-                          let uu___8 =
-                            let uu___9 =
-                              let uu___10 =
-                                FStarC_TypeChecker_Env.push_bv env bv1 in
-                              recurse uu___10 in
-                            par_ctac rr uu___9 in
-                          uu___8 ((lb.FStarC_Syntax_Syntax.lbdef), e1) in
+                          par_ctac rr
+                            (recurse (FStarC_TypeChecker_Env.push_bv env bv1))
+                            ((lb.FStarC_Syntax_Syntax.lbdef), e1) in
                         FStarC_Class_Monad.op_let_Bang
                           FStarC_Tactics_Monad.monad_tac () ()
                           (Obj.magic uu___7)
@@ -971,11 +951,9 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                                           (lb.FStarC_Syntax_Syntax.lbpos)
                                       } in
                                     let e3 =
-                                      let uu___9 =
-                                        let uu___10 =
-                                          FStarC_Syntax_Syntax.mk_binder bv1 in
-                                        [uu___10] in
-                                      FStarC_Syntax_Subst.close uu___9 e2 in
+                                      FStarC_Syntax_Subst.close
+                                        [FStarC_Syntax_Syntax.mk_binder bv1]
+                                        e2 in
                                     Obj.magic
                                       (FStarC_Class_Monad.return
                                          FStarC_Tactics_Monad.monad_tac ()
@@ -1035,10 +1013,7 @@ and on_subterms (uu___5 : FStarC_Tactics_Types.goal)
                     let uu___1 = FStarC_Syntax_Subst.open_let_rec lbs e in
                     match uu___1 with
                     | (lbs1, e1) ->
-                        let uu___2 =
-                          let uu___3 =
-                            let uu___4 = map_ctac c_lb in par_ctac uu___4 rr in
-                          uu___3 (lbs1, e1) in
+                        let uu___2 = par_ctac (map_ctac c_lb) rr (lbs1, e1) in
                         FStarC_Class_Monad.op_let_Bang
                           FStarC_Tactics_Monad.monad_tac () ()
                           (Obj.magic uu___2)
@@ -1174,7 +1149,7 @@ let ctrl_rewrite (dir : FStarC_Tactics_Types.direction)
             let uu___1 =
               match ps.FStarC_Tactics_Types.goals with
               | g::gs -> (g, gs)
-              | [] -> failwith "no goals" in
+              | [] -> FStarC_Effect.failwith "no goals" in
             match uu___1 with
             | (g, gs) ->
                 Obj.magic
@@ -1185,73 +1160,72 @@ let ctrl_rewrite (dir : FStarC_Tactics_Types.direction)
                         (fun uu___2 ->
                            let uu___2 = Obj.magic uu___2 in
                            let gt = FStarC_Tactics_Types.goal_type g in
-                           let uu___3 =
-                             FStarC_Tactics_Monad.if_verbose
-                               (fun uu___4 ->
-                                  let uu___5 =
-                                    FStarC_Class_Show.show
-                                      FStarC_Syntax_Print.showable_term gt in
-                                  FStarC_Format.print1
-                                    "ctrl_rewrite starting with %s\n" uu___5) in
                            Obj.magic
                              (FStarC_Class_Monad.op_let_Bang
-                                FStarC_Tactics_Monad.monad_tac () () uu___3
-                                (fun uu___4 ->
-                                   (fun uu___4 ->
-                                      let uu___4 = Obj.magic uu___4 in
-                                      let uu___5 =
-                                        let uu___6 =
-                                          FStarC_Tactics_Types.goal_env g in
+                                FStarC_Tactics_Monad.monad_tac () ()
+                                (FStarC_Tactics_Monad.if_verbose
+                                   (fun uu___3 ->
+                                      let uu___4 =
+                                        FStarC_Class_Show.show
+                                          FStarC_Syntax_Print.showable_term
+                                          gt in
+                                      FStarC_Format.print1
+                                        "ctrl_rewrite starting with %s\n"
+                                        uu___4))
+                                (fun uu___3 ->
+                                   (fun uu___3 ->
+                                      let uu___3 = Obj.magic uu___3 in
+                                      let uu___4 =
                                         do_ctrl_rewrite g dir controller
-                                          rewriter uu___6 gt in
+                                          rewriter
+                                          (FStarC_Tactics_Types.goal_env g)
+                                          gt in
                                       Obj.magic
                                         (FStarC_Class_Monad.op_let_Bang
                                            FStarC_Tactics_Monad.monad_tac ()
-                                           () (Obj.magic uu___5)
-                                           (fun uu___6 ->
+                                           () (Obj.magic uu___4)
+                                           (fun uu___5 ->
                                               (fun gt' ->
                                                  let gt' = Obj.magic gt' in
-                                                 let uu___6 =
-                                                   FStarC_Tactics_Monad.if_verbose
-                                                     (fun uu___7 ->
-                                                        let uu___8 =
-                                                          FStarC_Class_Show.show
-                                                            FStarC_Syntax_Print.showable_term
-                                                            gt' in
-                                                        FStarC_Format.print1
-                                                          "ctrl_rewrite seems to have succeded with %s\n"
-                                                          uu___8) in
                                                  Obj.magic
                                                    (FStarC_Class_Monad.op_let_Bang
                                                       FStarC_Tactics_Monad.monad_tac
-                                                      () () uu___6
-                                                      (fun uu___7 ->
-                                                         (fun uu___7 ->
-                                                            let uu___7 =
+                                                      () ()
+                                                      (FStarC_Tactics_Monad.if_verbose
+                                                         (fun uu___5 ->
+                                                            let uu___6 =
+                                                              FStarC_Class_Show.show
+                                                                FStarC_Syntax_Print.showable_term
+                                                                gt' in
+                                                            FStarC_Format.print1
+                                                              "ctrl_rewrite seems to have succeded with %s\n"
+                                                              uu___6))
+                                                      (fun uu___5 ->
+                                                         (fun uu___5 ->
+                                                            let uu___5 =
                                                               Obj.magic
-                                                                uu___7 in
-                                                            let uu___8 =
-                                                              FStarC_Tactics_Monad.push_goals
-                                                                gs in
+                                                                uu___5 in
                                                             Obj.magic
                                                               (FStarC_Class_Monad.op_let_Bang
                                                                  FStarC_Tactics_Monad.monad_tac
-                                                                 () () uu___8
-                                                                 (fun uu___9
+                                                                 () ()
+                                                                 (FStarC_Tactics_Monad.push_goals
+                                                                    gs)
+                                                                 (fun uu___6
                                                                     ->
                                                                     (fun
-                                                                    uu___9 ->
-                                                                    let uu___9
+                                                                    uu___6 ->
+                                                                    let uu___6
                                                                     =
                                                                     Obj.magic
-                                                                    uu___9 in
+                                                                    uu___6 in
                                                                     let g1 =
                                                                     FStarC_Tactics_Monad.goal_with_type
                                                                     g gt' in
                                                                     Obj.magic
                                                                     (FStarC_Tactics_Monad.add_goals
                                                                     [g1]))
-                                                                    uu___9)))
-                                                           uu___7))) uu___6)))
-                                     uu___4))) uu___2))) uu___1) in
+                                                                    uu___6)))
+                                                           uu___5))) uu___5)))
+                                     uu___3))) uu___2))) uu___1) in
   FStarC_Tactics_Monad.wrap_err "ctrl_rewrite" uu___

@@ -2,8 +2,8 @@ open Prims
 let concat_map (uu___ : unit) :
   ('uuuuu -> 'uuuuu1 Prims.list) -> 'uuuuu Prims.list -> 'uuuuu1 Prims.list=
   FStarC_List.collect
-let opt_map (f : 'a -> 'uuuuu Prims.list)
-  (x : 'a FStar_Pervasives_Native.option) : 'uuuuu Prims.list=
+let opt_map (f : 'a -> 'b Prims.list) (x : 'a FStar_Pervasives_Native.option)
+  : 'b Prims.list=
   match x with
   | FStar_Pervasives_Native.None -> []
   | FStar_Pervasives_Native.Some x1 -> f x1
@@ -206,23 +206,24 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
   | FStarC_Parser_AST.ListLiteral ts -> (concat_map ()) lidents_of_term ts
   | FStarC_Parser_AST.SeqLiteral ts -> (concat_map ()) lidents_of_term ts
 and lidents_of_branch
-  (uu___ :
+  (b :
     (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term
       FStar_Pervasives_Native.option * FStarC_Parser_AST.term))
   : FStarC_Ident.lident Prims.list=
+  let uu___ = b in
   match uu___ with
   | (p, uu___1, t) ->
       let uu___2 = lidents_of_pattern p in
       let uu___3 = lidents_of_term t in FStarC_List.op_At uu___2 uu___3
-and lidents_of_calc_step (uu___ : FStarC_Parser_AST.calc_step) :
+and lidents_of_calc_step (x : FStarC_Parser_AST.calc_step) :
   FStarC_Ident.lident Prims.list=
-  match uu___ with
+  match x with
   | FStarC_Parser_AST.CalcStep (t1, t2, t3) ->
-      let uu___1 = lidents_of_term t1 in
-      let uu___2 =
-        let uu___3 = lidents_of_term t2 in
-        let uu___4 = lidents_of_term t3 in FStarC_List.op_At uu___3 uu___4 in
-      FStarC_List.op_At uu___1 uu___2
+      let uu___ = lidents_of_term t1 in
+      let uu___1 =
+        let uu___2 = lidents_of_term t2 in
+        let uu___3 = lidents_of_term t3 in FStarC_List.op_At uu___2 uu___3 in
+      FStarC_List.op_At uu___ uu___1
 and lidents_of_pattern (p : FStarC_Parser_AST.pattern) :
   FStarC_Ident.lident Prims.list=
   match p.FStarC_Parser_AST.pat with
@@ -260,8 +261,9 @@ and lidents_of_binder (b : FStarC_Parser_AST.binder) :
   | FStarC_Parser_AST.NoName t -> lidents_of_term t
   | uu___ -> []
 let lidents_of_tycon_record
-  (uu___ : ('uuuuu * 'uuuuu1 * 'uuuuu2 * FStarC_Parser_AST.term)) :
+  (r : ('uuuuu * 'uuuuu1 * 'uuuuu2 * FStarC_Parser_AST.term)) :
   FStarC_Ident.lident Prims.list=
+  let uu___ = r in
   match uu___ with | (uu___1, uu___2, uu___3, t) -> lidents_of_term t
 let lidents_of_constructor_payload
   (t : FStarC_Parser_AST.constructor_payload) :
@@ -429,12 +431,12 @@ let register_extension_parser (ext : Prims.string)
 let lookup_extension_parser (ext : Prims.string) :
   extension_parser FStar_Pervasives_Native.option=
   let do1 uu___ = FStarC_SMap.try_find extension_parser_table ext in
-  let uu___ = do1 () in
-  match uu___ with
+  let r = do1 () in
+  match r with
   | FStar_Pervasives_Native.None ->
-      let uu___1 = FStarC_Plugins.autoload_plugin ext in
-      if uu___1 then do1 () else FStar_Pervasives_Native.None
-  | r -> r
+      let uu___ = FStarC_Plugins.autoload_plugin ext in
+      if uu___ then do1 () else FStar_Pervasives_Native.None
+  | r1 -> r1
 type extension_lang_parser =
   {
   parse_decls:
@@ -487,15 +489,13 @@ let parse_extension_lang (lang_name : Prims.string) (raw_text : Prims.string)
   let extension_parser1 = lookup_extension_lang_parser lang_name in
   match extension_parser1 with
   | FStar_Pervasives_Native.None ->
-      let uu___ =
-        FStarC_Format.fmt1 "Unknown language extension %s" lang_name in
       FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
         raw_text_pos FStarC_Errors_Codes.Fatal_SyntaxError ()
         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-        (Obj.magic uu___)
+        (Obj.magic
+           (FStarC_Format.fmt1 "Unknown language extension %s" lang_name))
   | FStar_Pervasives_Native.Some parser ->
-      let uu___ = parser.parse_decls raw_text raw_text_pos in
-      (match uu___ with
+      (match parser.parse_decls raw_text raw_text_pos with
        | FStar_Pervasives.Inl error ->
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
              error.range FStarC_Errors_Codes.Fatal_SyntaxError ()

@@ -31,26 +31,26 @@ type saved_state = {
   level   : int;
 }
 
-let snapshot () : saved_state = {
+let snapshot () = {
   toggles = PSMap.fold !toggle_list (fun k r acc -> (k, !r) :: acc) [];
   any     = !anyref;
   all     = !_debug_all;
   level   = !dbg_level;
 }
 
-let register_toggle (k : string) : ref bool =
+let register_toggle (k : string) =
   let r = mk_ref false in
   if !_debug_all then
     r := true;
   toggle_list := PSMap.add !toggle_list k r;
   r
 
-let get_toggle (k : string) : ref bool =
+let get_toggle (k : string) =
   match PSMap.try_find !toggle_list k with
   | Some r -> r
   | None -> register_toggle k
 
-let restore (snapshot : saved_state) : unit =
+let restore (snapshot : saved_state) =
   (* Set everything to false, then set all the saved ones
   to true. *)
   PSMap.iter !toggle_list (fun k r -> r := false);
@@ -63,7 +63,7 @@ let restore (snapshot : saved_state) : unit =
   dbg_level := snapshot.level;
   ()
 
-let list_all_toggles () : list string =
+let list_all_toggles () =
   PSMap.keys !toggle_list
 
 let any () = !anyref || !_debug_all
@@ -84,7 +84,7 @@ let set_level_medium  () = dbg_level := 2
 let set_level_high    () = dbg_level := 3
 let set_level_extreme () = dbg_level := 4
 
-let enable_toggles (keys : list string) : unit =
+let enable_toggles (keys : list string) =
   if Cons? keys then
     enable ();
   keys |> List.iter (fun k ->
@@ -103,12 +103,12 @@ let enable_toggles (keys : list string) : unit =
         t := true
   )
 
-let disable_all () : unit =
+let disable_all () =
   anyref := false;
   dbg_level := 0;
   PSMap.iter !toggle_list (fun k r -> r := false)
 
-let set_debug_all () : unit =
+let set_debug_all () =
   _debug_all := true;
   dbg_level := 4;
   PSMap.iter !toggle_list (fun k r -> r := true)

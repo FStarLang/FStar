@@ -29,6 +29,14 @@ let bvshr' (n : Prims.pos) (a : Obj.t bv_t) (s : Obj.t bv_t) : Obj.t bv_t=
   FStar_BitVector.shift_right_vec n a (bv2int n s)
 let bvshr (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) : Obj.t bv_t=
   bvshr' n a (int2bv_nat n s)
+let bvrol' (n : Prims.pos) (a : Obj.t bv_t) (s : Obj.t bv_t) : Obj.t bv_t=
+  FStar_BitVector.rotate_left_vec n a (bv2int n s)
+let bvrol (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) : Obj.t bv_t=
+  bvrol' n a (int2bv_nat n s)
+let bvror' (n : Prims.pos) (a : Obj.t bv_t) (s : Obj.t bv_t) : Obj.t bv_t=
+  FStar_BitVector.rotate_right_vec n a (bv2int n s)
+let bvror (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) : Obj.t bv_t=
+  bvror' n a (int2bv_nat n s)
 let bv_zero (n : Prims.pos) : Obj.t bv_t= int2bv n Prims.int_zero
 let bvult (n : Prims.pos) (a : Obj.t bv_t) (b : Obj.t bv_t) : Prims.bool=
   (bv2int n a) < (bv2int n b)

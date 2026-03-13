@@ -9,10 +9,8 @@ let uu___is_F (projectee : tf) : Prims.bool=
 let e_tf : tf FStarC_Syntax_Embeddings_Base.embedding=
   let ty = FStarC_Syntax_Util.fvar_const FStarC_Parser_Const.prop_lid in
   let emb_t_prop =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_lid FStarC_Parser_Const.prop_lid in
-      (uu___1, []) in
-    FStarC_Syntax_Syntax.ET_app uu___ in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.prop_lid), []) in
   let em p rng _shadow _norm =
     match p with
     | T -> FStarC_Syntax_Util.t_true
@@ -34,8 +32,8 @@ let e_tf : tf FStarC_Syntax_Embeddings_Base.embedding=
     (fun uu___ -> emb_t_prop)
 let nbe_e_tf : tf FStarC_TypeChecker_NBETerm.embedding=
   let lid_as_typ l us args =
-    let uu___ = FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-    FStarC_TypeChecker_NBETerm.mkFV uu___ us args in
+    FStarC_TypeChecker_NBETerm.mkFV
+      (FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None) us args in
   let em _cb a =
     match a with
     | T -> lid_as_typ FStarC_Parser_Const.true_lid [] []
@@ -119,7 +117,7 @@ let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs=
   {
     FStarC_TypeChecker_NBETerm.iapp = (fun h _args -> h);
     FStarC_TypeChecker_NBETerm.translate =
-      (fun uu___ -> failwith "bogus_cbs translate")
+      (fun uu___ -> FStarC_Effect.failwith "bogus_cbs translate")
   }
 let is_nbe_lit (s : Prims.string) (t : FStarC_TypeChecker_NBETerm.t) :
   Prims.bool=
@@ -168,94 +166,70 @@ let mul_op (psc : FStarC_TypeChecker_Primops_Base.psc)
          then FStar_Pervasives_Native.Some a1
          else FStar_Pervasives_Native.None)
   | uu___ -> FStar_Pervasives_Native.None
-let add_op_nbe (univs : 'uuuuu)
-  (args :
-    (FStarC_TypeChecker_NBETerm.t * 'uuuuu1 FStar_Pervasives_Native.option)
-      Prims.list)
-  : FStarC_TypeChecker_NBETerm.t FStar_Pervasives_Native.option=
-  match args with
-  | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
-      ->
-      let uu___ = is_nbe_zero l in
-      if uu___
-      then FStar_Pervasives_Native.Some r
-      else
-        (let uu___2 = is_nbe_zero r in
-         if uu___2
-         then FStar_Pervasives_Native.Some l
-         else FStar_Pervasives_Native.None)
-  | uu___ -> FStar_Pervasives_Native.None
-let mul_op_nbe (univs : 'uuuuu)
-  (args :
-    (FStarC_TypeChecker_NBETerm.t * 'uuuuu1 FStar_Pervasives_Native.option)
-      Prims.list)
-  : FStarC_TypeChecker_NBETerm.t FStar_Pervasives_Native.option=
-  match args with
-  | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
-      ->
-      let uu___ = is_nbe_one l in
-      if uu___
-      then FStar_Pervasives_Native.Some r
-      else
-        (let uu___2 = is_nbe_one r in
-         if uu___2
-         then FStar_Pervasives_Native.Some l
-         else FStar_Pervasives_Native.None)
-  | uu___ -> FStar_Pervasives_Native.None
+let add_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
+  fun _cbs univs args ->
+    match args with
+    | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
+        ->
+        let uu___ = is_nbe_zero l in
+        if uu___
+        then FStar_Pervasives_Native.Some r
+        else
+          (let uu___2 = is_nbe_zero r in
+           if uu___2
+           then FStar_Pervasives_Native.Some l
+           else FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
+let mul_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
+  fun _cbs univs args ->
+    match args with
+    | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
+        ->
+        let uu___ = is_nbe_one l in
+        if uu___
+        then FStar_Pervasives_Native.Some r
+        else
+          (let uu___2 = is_nbe_one r in
+           if uu___2
+           then FStar_Pervasives_Native.Some l
+           else FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
 let of_int (i : Prims.int) : FStarC_Real.real=
   FStarC_Real.Real (Prims.strcat (Prims.string_of_int i) ".0")
-let as_primitive_step (is_strong : Prims.bool)
-  (uu___ :
-    (FStarC_Ident.lident * Prims.int * Prims.int *
-      FStarC_TypeChecker_Primops_Base.interp_t *
-      (FStarC_Syntax_Syntax.universes ->
-         FStarC_TypeChecker_NBETerm.args ->
-           FStarC_TypeChecker_NBETerm.t FStar_Pervasives_Native.option)))
-  : FStarC_TypeChecker_Primops_Base.primitive_step=
-  match uu___ with
-  | (l, arity, u_arity, f, f_nbe) ->
-      FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs is_strong
-        (l, arity, u_arity, f, (fun cb univs args -> f_nbe univs args))
+let as_primitive_step (is_strong : Prims.bool) (l : FStarC_Ident.lident)
+  (arity : Prims.int) (u_arity : Prims.int)
+  (f : FStarC_TypeChecker_Primops_Base.interp_t)
+  (f_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs is_strong
+    (l, arity, u_arity, f, f_nbe)
 let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  let uu___ =
-    let uu___1 =
-      FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
-        FStarC_Parser_Const.real_of_int FStarC_Syntax_Embeddings.e_int
-        FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_real
-        FStarC_TypeChecker_NBETerm.e_real of_int in
-    [uu___1] in
-  let uu___1 =
-    FStarC_List.map (as_primitive_step true)
-      [(FStarC_Parser_Const.real_op_Addition, (Prims.of_int (2)),
-         Prims.int_zero, add_op, add_op_nbe);
-      (FStarC_Parser_Const.real_op_Multiply, (Prims.of_int (2)),
-        Prims.int_zero, mul_op, mul_op_nbe)] in
-  FStarC_List.op_At uu___ uu___1
+  let s1 =
+    FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
+      FStarC_Parser_Const.real_of_int FStarC_Syntax_Embeddings.e_int
+      FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_real
+      FStarC_TypeChecker_NBETerm.e_real of_int in
+  let s2 =
+    as_primitive_step true FStarC_Parser_Const.real_op_Addition
+      (Prims.of_int (2)) Prims.int_zero add_op add_op_nbe in
+  let s3 =
+    as_primitive_step true FStarC_Parser_Const.real_op_Multiply
+      (Prims.of_int (2)) Prims.int_zero mul_op mul_op_nbe in
+  [s1; s2; s3]
 let simplify_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  let uu___ =
-    FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-      FStarC_Parser_Const.real_op_LT FStarC_Syntax_Embeddings.e_real
-      FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-      FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf lt lt in
-  let uu___1 =
-    let uu___2 =
-      FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-        FStarC_Parser_Const.real_op_LTE FStarC_Syntax_Embeddings.e_real
-        FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-        FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf le le in
-    let uu___3 =
-      let uu___4 =
-        FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-          FStarC_Parser_Const.real_op_GT FStarC_Syntax_Embeddings.e_real
-          FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-          FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf gt gt in
-      let uu___5 =
-        let uu___6 =
-          FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-            FStarC_Parser_Const.real_op_GTE FStarC_Syntax_Embeddings.e_real
-            FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-            FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf ge ge in
-        [uu___6] in
-      uu___4 :: uu___5 in
-    uu___2 :: uu___3 in
-  uu___ :: uu___1
+  [FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+     FStarC_Parser_Const.real_op_LT FStarC_Syntax_Embeddings.e_real
+     FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+     FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf lt lt;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_LTE FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf le le;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_GT FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf gt gt;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_GTE FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf ge ge]

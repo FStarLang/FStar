@@ -1,28 +1,56 @@
 open Prims
 let mkAssume
-  (uu___ :
+  (x :
     (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.caption *
       Prims.string))
   : FStarC_SMTEncoding_Term.decl=
+  let uu___ = x in
   match uu___ with
   | (tm, cap, nm) ->
       let uu___1 =
-        let uu___2 = FStarC_SMTEncoding_Term.escape nm in
-        let uu___3 = FStarC_SMTEncoding_Term.free_top_level_names tm in
+        let uu___2 = FStarC_SMTEncoding_Term.free_top_level_names tm in
         {
           FStarC_SMTEncoding_Term.assumption_term = tm;
           FStarC_SMTEncoding_Term.assumption_caption = cap;
-          FStarC_SMTEncoding_Term.assumption_name = uu___2;
+          FStarC_SMTEncoding_Term.assumption_name =
+            (FStarC_SMTEncoding_Term.escape nm);
           FStarC_SMTEncoding_Term.assumption_fact_ids = [];
-          FStarC_SMTEncoding_Term.assumption_free_names = uu___3
+          FStarC_SMTEncoding_Term.assumption_free_names = uu___2
         } in
       FStarC_SMTEncoding_Term.Assume uu___1
 let norng (f : 'a -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
   (x : 'a) : FStarC_SMTEncoding_Term.term= f x FStarC_Range_Type.dummyRange
+let norng2
+  (f : 'a -> 'b -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
+  (x : 'a) (y : 'b) : FStarC_SMTEncoding_Term.term=
+  f x y FStarC_Range_Type.dummyRange
+let norng3
+  (f : 'a -> 'b -> 'c -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
+  (x : 'a) (y : 'b) (z : 'c) : FStarC_SMTEncoding_Term.term=
+  f x y z FStarC_Range_Type.dummyRange
+let norng4
+  (f :
+    'a ->
+      'b -> 'c -> 'd -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
+  (x : 'a) (y : 'b) (z : 'c) (w : 'd) : FStarC_SMTEncoding_Term.term=
+  f x y z w FStarC_Range_Type.dummyRange
+let _fv_empty : FStarC_SMTEncoding_Term.fvs FStarC_Syntax_Syntax.memo=
+  FStarC_Effect.alloc FStar_Pervasives_Native.None
 let mkTrue : FStarC_SMTEncoding_Term.term=
-  FStarC_SMTEncoding_Term.mkTrue FStarC_Range_Type.dummyRange
+  {
+    FStarC_SMTEncoding_Term.tm =
+      (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.TrueOp, []));
+    FStarC_SMTEncoding_Term.freevars = _fv_empty;
+    FStarC_SMTEncoding_Term.rng = FStarC_Range_Type.dummyRange
+  }
 let mkFalse : FStarC_SMTEncoding_Term.term=
-  FStarC_SMTEncoding_Term.mkFalse FStarC_Range_Type.dummyRange
+  let uu___ = FStarC_Effect.alloc FStar_Pervasives_Native.None in
+  {
+    FStarC_SMTEncoding_Term.tm =
+      (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.FalseOp, []));
+    FStarC_SMTEncoding_Term.freevars = uu___;
+    FStarC_SMTEncoding_Term.rng = FStarC_Range_Type.dummyRange
+  }
 let mkInteger : Prims.string -> FStarC_SMTEncoding_Term.term=
   norng FStarC_SMTEncoding_Term.mkInteger
 let mkInteger' : Prims.int -> FStarC_SMTEncoding_Term.term=
@@ -136,6 +164,14 @@ let mkBvShr (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
   norng (FStarC_SMTEncoding_Term.mkBvShr sz)
+let mkBvRol (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRol sz)
+let mkBvRor (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRor sz)
 let mkBvUdiv (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
@@ -156,6 +192,14 @@ let mkBvShr' (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
   norng (FStarC_SMTEncoding_Term.mkBvShr' sz)
+let mkBvRol' (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRol' sz)
+let mkBvRor' (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRor' sz)
 let mkBvUdivUnsafe (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
@@ -186,20 +230,6 @@ let mkITE :
 let mkCases :
   FStarC_SMTEncoding_Term.term Prims.list -> FStarC_SMTEncoding_Term.term=
   norng FStarC_SMTEncoding_Term.mkCases
-let norng2
-  (f : 'a -> 'b -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
-  (x : 'a) (y : 'b) : FStarC_SMTEncoding_Term.term=
-  f x y FStarC_Range_Type.dummyRange
-let norng3
-  (f : 'a -> 'b -> 'c -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
-  (x : 'a) (y : 'b) (z : 'c) : FStarC_SMTEncoding_Term.term=
-  f x y z FStarC_Range_Type.dummyRange
-let norng4
-  (f :
-    'a ->
-      'b -> 'c -> 'd -> FStarC_Range_Type.t -> FStarC_SMTEncoding_Term.term)
-  (x : 'a) (y : 'b) (z : 'c) (w : 'd) : FStarC_SMTEncoding_Term.term=
-  f x y z w FStarC_Range_Type.dummyRange
 let mk_Term_app :
   FStarC_SMTEncoding_Term.term ->
     FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term=
@@ -229,17 +259,34 @@ let mk_LexCons :
       FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term=
   norng3 FStarC_SMTEncoding_Term.mk_LexCons
 let mk_lex_t : FStarC_SMTEncoding_Term.term=
-  FStarC_SMTEncoding_Term.mk_lex_t FStarC_Range_Type.dummyRange
+  let uu___ = FStarC_Effect.alloc FStar_Pervasives_Native.None in
+  {
+    FStarC_SMTEncoding_Term.tm =
+      (FStarC_SMTEncoding_Term.App
+         ((FStarC_SMTEncoding_Term.Var "Prims.lex_t"), []));
+    FStarC_SMTEncoding_Term.freevars = uu___;
+    FStarC_SMTEncoding_Term.rng = FStarC_Range_Type.dummyRange
+  }
 let mk_LexTop : FStarC_SMTEncoding_Term.term=
-  FStarC_SMTEncoding_Term.mk_LexTop FStarC_Range_Type.dummyRange
+  let uu___ = FStarC_Effect.alloc FStar_Pervasives_Native.None in
+  {
+    FStarC_SMTEncoding_Term.tm =
+      (FStarC_SMTEncoding_Term.App
+         ((FStarC_SMTEncoding_Term.Var "LexTop"), []));
+    FStarC_SMTEncoding_Term.freevars = uu___;
+    FStarC_SMTEncoding_Term.rng = FStarC_Range_Type.dummyRange
+  }
 let is_smt_reifiable_effect (en : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
   let l1 = FStarC_TypeChecker_Env.norm_eff_name en l in
-  (FStarC_TypeChecker_Env.is_reifiable_effect en l1) &&
-    (let uu___ =
-       let uu___1 = FStarC_TypeChecker_Env.get_effect_decl en l1 in
-       FStarC_Syntax_Util.is_layered uu___1 in
-     Prims.op_Negation uu___)
+  let uu___ = FStarC_TypeChecker_Env.is_reifiable_effect en l1 in
+  if uu___
+  then
+    let uu___1 =
+      let uu___2 = FStarC_TypeChecker_Env.get_effect_decl en l1 in
+      FStarC_Syntax_Util.is_layered uu___2 in
+    Prims.op_Negation uu___1
+  else false
 let is_smt_reifiable_comp (en : FStarC_TypeChecker_Env.env)
   (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   match c.FStarC_Syntax_Syntax.n with
@@ -257,7 +304,5 @@ let is_smt_reifiable_function (en : FStarC_TypeChecker_Env.env)
   match uu___ with
   | FStarC_Syntax_Syntax.Tm_arrow
       { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
-      ->
-      let uu___2 = FStarC_Syntax_Util.comp_effect_name c in
-      is_smt_reifiable_effect en uu___2
+      -> is_smt_reifiable_effect en (FStarC_Syntax_Util.comp_effect_name c)
   | uu___1 -> false

@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,20 +36,20 @@ open FStarC.Tests.Util
 
 open FStarC.Class.Show
 
-let tcenv () = Pars.init()
+let tcenv () : ML _ = Pars.init()
 
-let guard_to_string g = match g with
+let guard_to_string g : ML _ = match g with
     | Trivial -> "trivial"
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
 let success = mk_ref true
 
-let fail msg =
+let fail msg : ML unit =
     Format.print_string msg;
     success := false
 
-let guard_eq (i : int) g g' =
+let guard_eq (i : int) g g' : ML unit =
     let b, g, g' = match g, g' with
         | Trivial, Trivial -> true, g, g'
         | NonTrivial f, NonTrivial f' ->
@@ -63,7 +63,7 @@ let guard_eq (i : int) g g' =
                         Got guard      %s\n" (show i) (guard_to_string g') (guard_to_string g);
     success := !success && b
 
-let unify i bvs x y g' check =
+let unify i bvs x y g' (check: unit -> ML unit) : ML unit =
     Format.print1 "%s ..." (show i);
     Options.parse_cmd_line () |> ignore; //set options
     Format.print2 "Unify %s\nand %s\n" (show x) (show y);
@@ -74,7 +74,7 @@ let unify i bvs x y g' check =
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
 
-let should_fail x y =
+let should_fail x y : ML unit =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
@@ -82,15 +82,15 @@ let should_fail x y =
             | NonTrivial f -> Format.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
     with Error(e, msg, r, _ctx) -> Format.print1 "Expected failure OK: %s\n" (Errors.rendermsg msg) // FIXME?
 
-let unify' x y =
+let unify' x y : ML unit =
     let x = pars x in
     let y = pars y in
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
     Format.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
 
-let norm t = N.normalize [] (tcenv()) t
+let norm t : ML _ = N.normalize [] (tcenv()) t
 
-let check_core (i : int) subtyping guard_ok x y =
+let check_core (i : int) subtyping guard_ok x y : ML unit =
   Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
   let res =
@@ -112,7 +112,7 @@ let check_core (i : int) subtyping guard_ok x y =
   in
   Options.init()
 
-let check_core_typing (i : int) e t =
+let check_core_typing (i : int) e t : ML unit =
   Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
   let _ =
@@ -128,8 +128,8 @@ let check_core_typing (i : int) e t =
   in
   Options.init()
 
-let inst n tm =
-   let rec aux out n =
+let inst n tm : ML _ =
+   let rec aux out n : ML _ =
     if n=0 then out
     else let t, _, _ = FStarC.TypeChecker.Util.new_implicit_var "" dummyRange (init()) U.ktype0 false in
          let u, _, _ = FStarC.TypeChecker.Util.new_implicit_var "" dummyRange (init()) t false in
@@ -137,7 +137,7 @@ let inst n tm =
    let us = aux [] n in
    norm (app tm us), us
 
-let run_all () =
+let run_all () : ML bool =
     Format.print_string "Testing the unifier\n";
 
     let unify_check n bvs x y g f = unify n bvs x y g f in
@@ -198,8 +198,7 @@ let run_all () =
     unify_check 9 [] tm
             sol
             Trivial
-            (fun () ->
-                always 9 (term_eq (norm (List.hd us))
+            (fun () -> always 9 (term_eq (norm (List.hd us))
                                   (norm sol)));
 
     //imitation: unifies u to a lambda
@@ -208,7 +207,7 @@ let run_all () =
     unify_check 10 [] tm
             sol
             Trivial
-            (fun () ->always 10 (term_eq (norm (List.hd us))
+            (fun () -> always 10 (term_eq (norm (List.hd us))
                                 (norm sol)));
 
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in

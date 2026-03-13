@@ -103,6 +103,11 @@ let shift_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_left_vec n (to_vec n a) s)
 let shift_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_right_vec n (to_vec n a) s)
+let rotate_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t= from_vec n (FStar_BitVector.rotate_left_vec n (to_vec n a) s)
+let rotate_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t=
+  from_vec n (FStar_BitVector.rotate_right_vec n (to_vec n a) s)
 let msb (n : Prims.pos) (a : Obj.t uint_t) : Prims.bool=
   nth n a Prims.int_zero
 let zero_extend_vec (n : Prims.pos) (a : Obj.t FStar_BitVector.bv_t) :

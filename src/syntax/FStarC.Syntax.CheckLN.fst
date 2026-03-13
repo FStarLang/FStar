@@ -1,12 +1,13 @@
 module FStarC.Syntax.CheckLN
 
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 module SS = FStarC.Syntax.Subst
 module L = FStarC.List
 
 (* Computes the binding amount of a pattern.
 Anywhere where this is defined already? *)
-let rec pat_depth (p:pat) : int =
+let rec pat_depth (p:pat) : ML int =
   match p.v with
   | Pat_constant _ -> 0
   | Pat_cons (p, _us_opt, ps) ->
@@ -15,7 +16,7 @@ let rec pat_depth (p:pat) : int =
   | Pat_dot_term _ -> 0
 
 (* Checks if, at most, n indices escape from a term *)
-let rec is_ln' (n:int) (t:term) : bool =
+let rec is_ln' (n:int) (t:term) : ML bool =
   match (SS.compress t).n with
   | Tm_bvar bv -> bv.index < n
 
@@ -60,41 +61,41 @@ let rec is_ln' (n:int) (t:term) : bool =
 
   | _ -> true
 
-and is_ln'_letbindings (n:int) (lbs : letbindings) : bool =
+and is_ln'_letbindings (n:int) (lbs : letbindings) : ML bool =
   let isrec, lbs = lbs in
   L.for_all (fun lb -> is_ln'_letbinding n lb) lbs
 
-and is_ln'_letbinding (n:int) (lb : letbinding) : bool =
+and is_ln'_letbinding (n:int) (lb : letbinding) : ML bool =
   let {lbunivs; lbtyp; lbdef} = lb in
   let nu = List.length lbunivs in
   is_ln' (n+nu) lbtyp &&
   is_ln' (n+nu) lbdef
 
-and is_ln'_binders (n:int) (bs : list binder) : bool =
+and is_ln'_binders (n:int) (bs : list binder) : ML bool =
   match bs with
   | [] -> true
   | b::bs ->
     is_ln'_binder n b && is_ln'_binders (n+1) bs
 
-and is_ln'_binder (n:int) (b:binder) : bool =
+and is_ln'_binder (n:int) (b:binder) : ML bool =
   is_ln'_bv n b.binder_bv
 
-and is_ln'_bv (n:int) (bv:bv) : bool =
+and is_ln'_bv (n:int) (bv:bv) : ML bool =
   is_ln' n bv.sort
 
-and is_ln'_comp (n:int) (c:comp) : bool =
+and is_ln'_comp (n:int) (c:comp) : ML bool =
   match c.n with
   | Total t -> is_ln' n t
   | GTotal t -> is_ln' n t
   | Comp ct -> is_ln'_comp_typ n ct
 
-and is_ln'_comp_typ (n:nat) (ct:comp_typ) : bool =
+and is_ln'_comp_typ (n:nat) (ct:comp_typ) : ML bool =
   is_ln' n ct.result_typ &&
   L.for_all (fun (t,aq) -> is_ln' n t) ct.effect_args &&
 //   L.for_all (is_ln' n) ct.flags
   true
 
-and is_ln'_univ (n:nat) (u : universe) : bool =
+and is_ln'_univ (n:nat) (u : universe) : ML bool =
   match SS.compress_univ u with
   | U_zero -> true
   | U_succ u -> is_ln'_univ n u
@@ -104,9 +105,9 @@ and is_ln'_univ (n:nat) (u : universe) : bool =
   | U_name _ -> true
   | U_unknown -> true
 
-and is_ln'_univs (n:nat) (us : list universe) : bool =
+and is_ln'_univs (n:nat) (us : list universe) : ML bool =
   L.for_all (is_ln'_univ n) us
 
 (* Checks if a term is locally nameless *)
-let is_ln (t:term) : bool =
+let is_ln (t:term) : ML bool =
   is_ln' 0 t

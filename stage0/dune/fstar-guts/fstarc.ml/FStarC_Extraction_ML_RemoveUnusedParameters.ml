@@ -18,8 +18,7 @@ let __proj__Mkenv_t__item__tydef_map (projectee : env_t) :
   entry FStarC_PSMap.t=
   match projectee with | { current_module; tydef_map;_} -> tydef_map
 let initial_env : env_t=
-  let uu___ = FStarC_PSMap.empty () in
-  { current_module = []; tydef_map = uu___ }
+  { current_module = []; tydef_map = (FStarC_PSMap.empty ()) }
 type tydef =
   (FStarC_Extraction_ML_Syntax.mlsymbol *
     FStarC_Extraction_ML_Syntax.metadata *
@@ -27,15 +26,17 @@ type tydef =
     FStar_Pervasives.either)
 let extend_env (env : env_t) (i : FStarC_Extraction_ML_Syntax.mlsymbol)
   (e : entry) : env_t=
-  let uu___ =
-    let uu___1 =
-      FStarC_Extraction_ML_Syntax.string_of_mlpath ((env.current_module), i) in
-    FStarC_PSMap.add env.tydef_map uu___1 e in
-  { current_module = (env.current_module); tydef_map = uu___ }
+  {
+    current_module = (env.current_module);
+    tydef_map =
+      (FStarC_PSMap.add env.tydef_map
+         (FStarC_Extraction_ML_Syntax.string_of_mlpath
+            ((env.current_module), i)) e)
+  }
 let lookup_tyname (env : env_t) (name : FStarC_Extraction_ML_Syntax.mlpath) :
   entry FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Extraction_ML_Syntax.string_of_mlpath name in
-  FStarC_PSMap.try_find env.tydef_map uu___
+  FStarC_PSMap.try_find env.tydef_map
+    (FStarC_Extraction_ML_Syntax.string_of_mlpath name)
 type var_set = FStarC_Extraction_ML_Syntax.mlident FStarC_RBSet.t
 let empty_var_set : Prims.string FStarC_RBSet.t=
   Obj.magic
@@ -67,10 +68,10 @@ let rec freevars_of_mlty' (uu___1 : var_set)
      | uu___ -> Obj.magic (Obj.repr vars)) uu___1 uu___
 let freevars_of_mlty : FStarC_Extraction_ML_Syntax.mlty -> var_set=
   freevars_of_mlty' empty_var_set
-let rec elim_mlty (env : env_t) (mlty : FStarC_Extraction_ML_Syntax.mlty) :
+let rec elim_mlty (env : env_t) (t : FStarC_Extraction_ML_Syntax.mlty) :
   FStarC_Extraction_ML_Syntax.mlty=
-  match mlty with
-  | FStarC_Extraction_ML_Syntax.MLTY_Var uu___ -> mlty
+  match t with
+  | FStarC_Extraction_ML_Syntax.MLTY_Var uu___ -> t
   | FStarC_Extraction_ML_Syntax.MLTY_Fun (t0, e, t1) ->
       let uu___ =
         let uu___1 = elim_mlty env t0 in
@@ -85,7 +86,7 @@ let rec elim_mlty (env : env_t) (mlty : FStarC_Extraction_ML_Syntax.mlty) :
        | FStar_Pervasives_Native.Some entry1 ->
            (if (FStarC_List.length entry1) <> (FStarC_List.length args1)
             then
-              failwith
+              FStarC_Effect.failwith
                 "Impossible: arity mismatch between definition and use"
             else ();
             (let args2 =
@@ -97,8 +98,8 @@ let rec elim_mlty (env : env_t) (mlty : FStarC_Extraction_ML_Syntax.mlty) :
   | FStarC_Extraction_ML_Syntax.MLTY_Tuple tys ->
       let uu___ = FStarC_List.map (elim_mlty env) tys in
       FStarC_Extraction_ML_Syntax.MLTY_Tuple uu___
-  | FStarC_Extraction_ML_Syntax.MLTY_Top -> mlty
-  | FStarC_Extraction_ML_Syntax.MLTY_Erased -> mlty
+  | FStarC_Extraction_ML_Syntax.MLTY_Top -> t
+  | FStarC_Extraction_ML_Syntax.MLTY_Erased -> t
 let rec elim_mlexpr' (env : env_t) (e : FStarC_Extraction_ML_Syntax.mlexpr')
   : FStarC_Extraction_ML_Syntax.mlexpr'=
   match e with
@@ -190,45 +191,37 @@ let rec elim_mlexpr' (env : env_t) (e : FStarC_Extraction_ML_Syntax.mlexpr')
         (uu___1, uu___2) in
       FStarC_Extraction_ML_Syntax.MLE_Try uu___
 and elim_letbinding (env : env_t)
-  (uu___ :
-    (FStarC_Extraction_ML_Syntax.mlletflavor *
-      FStarC_Extraction_ML_Syntax.mllb Prims.list))
-  :
-  (FStarC_Extraction_ML_Syntax.mlletflavor * FStarC_Extraction_ML_Syntax.mllb
-    Prims.list)=
+  (lb : FStarC_Extraction_ML_Syntax.mlletbinding) :
+  FStarC_Extraction_ML_Syntax.mlletbinding=
+  let uu___ = lb in
   match uu___ with
   | (flavor, lbs) ->
-      let elim_one_lb lb =
+      let elim_one_lb lb1 =
         let ts =
           FStarC_Option.map
             (fun uu___1 ->
                match uu___1 with
                | (vars, t) -> let uu___2 = elim_mlty env t in (vars, uu___2))
-            lb.FStarC_Extraction_ML_Syntax.mllb_tysc in
-        let expr = elim_mlexpr env lb.FStarC_Extraction_ML_Syntax.mllb_def in
+            lb1.FStarC_Extraction_ML_Syntax.mllb_tysc in
+        let expr = elim_mlexpr env lb1.FStarC_Extraction_ML_Syntax.mllb_def in
         {
           FStarC_Extraction_ML_Syntax.mllb_name =
-            (lb.FStarC_Extraction_ML_Syntax.mllb_name);
+            (lb1.FStarC_Extraction_ML_Syntax.mllb_name);
           FStarC_Extraction_ML_Syntax.mllb_tysc = ts;
           FStarC_Extraction_ML_Syntax.mllb_add_unit =
-            (lb.FStarC_Extraction_ML_Syntax.mllb_add_unit);
+            (lb1.FStarC_Extraction_ML_Syntax.mllb_add_unit);
           FStarC_Extraction_ML_Syntax.mllb_def = expr;
           FStarC_Extraction_ML_Syntax.mllb_attrs =
-            (lb.FStarC_Extraction_ML_Syntax.mllb_attrs);
+            (lb1.FStarC_Extraction_ML_Syntax.mllb_attrs);
           FStarC_Extraction_ML_Syntax.mllb_meta =
-            (lb.FStarC_Extraction_ML_Syntax.mllb_meta);
+            (lb1.FStarC_Extraction_ML_Syntax.mllb_meta);
           FStarC_Extraction_ML_Syntax.print_typ =
-            (lb.FStarC_Extraction_ML_Syntax.print_typ)
+            (lb1.FStarC_Extraction_ML_Syntax.print_typ)
         } in
       let uu___1 = FStarC_List.map elim_one_lb lbs in (flavor, uu___1)
-and elim_branch (env : env_t)
-  (uu___ :
-    (FStarC_Extraction_ML_Syntax.mlpattern *
-      FStarC_Extraction_ML_Syntax.mlexpr FStar_Pervasives_Native.option *
-      FStarC_Extraction_ML_Syntax.mlexpr))
-  :
-  (FStarC_Extraction_ML_Syntax.mlpattern * FStarC_Extraction_ML_Syntax.mlexpr
-    FStar_Pervasives_Native.option * FStarC_Extraction_ML_Syntax.mlexpr)=
+and elim_branch (env : env_t) (b : FStarC_Extraction_ML_Syntax.mlbranch) :
+  FStarC_Extraction_ML_Syntax.mlbranch=
+  let uu___ = b in
   match uu___ with
   | (pat, wopt, e) ->
       let uu___1 = FStarC_Option.map (elim_mlexpr env) wopt in
@@ -299,19 +292,18 @@ let elim_tydef (env : env_t) (name : Prims.string)
              then
                (if must_eliminate i
                 then
-                  (let uu___4 =
-                     FStarC_Format.fmt2
-                       "Expected parameter %s of %s to be unused in its definition and eliminated"
-                       p name in
-                   FStarC_Errors.log_issue
-                     FStarC_Class_HasRange.hasRange_range range_of_tydef
-                     FStarC_Errors_Codes.Error_RemoveUnusedTypeParameter ()
-                     (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                     (Obj.magic uu___4))
+                  FStarC_Errors.log_issue
+                    FStarC_Class_HasRange.hasRange_range range_of_tydef
+                    FStarC_Errors_Codes.Error_RemoveUnusedTypeParameter ()
+                    (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                    (Obj.magic
+                       (FStarC_Format.fmt2
+                          "Expected parameter %s of %s to be unused in its definition and eliminated"
+                          p name))
                 else ();
                 ((i + Prims.int_one), (param :: params), (Retain :: entry1)))
              else
-               if (can_eliminate i) || (must_eliminate i)
+               if (if can_eliminate i then true else must_eliminate i)
                then ((i + Prims.int_one), params, (Omit :: entry1))
                else
                  (let uu___5 =
@@ -337,12 +329,9 @@ let elim_tydef (env : env_t) (name : Prims.string)
                               "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature."
                               uu___10 name uu___11 in
                           FStarC_Errors_Msg.text uu___9 in
-                        let uu___9 =
-                          let uu___10 =
-                            FStarC_Errors_Msg.text
-                              "This type definition is being dropped" in
-                          [uu___10] in
-                        uu___8 :: uu___9 in
+                        [uu___8;
+                        FStarC_Errors_Msg.text
+                          "This type definition is being dropped"] in
                       FStarC_Errors.log_issue
                         FStarC_Class_HasRange.hasRange_range range
                         FStarC_Errors_Codes.Error_RemoveUnusedTypeParameter
@@ -378,9 +367,8 @@ let elim_tydef_or_decl (env : env_t) (td : tydef) : (env_t * tydef)=
              then []
              else
                if must_eliminate i
-               then (let uu___1 = aux (i + Prims.int_one) in Omit :: uu___1)
-               else
-                 (let uu___2 = aux (i + Prims.int_one) in Retain :: uu___2) in
+               then Omit :: (aux (i + Prims.int_one))
+               else Retain :: (aux (i + Prims.int_one)) in
            let entries = aux Prims.int_zero in
            let uu___ = extend_env env name entries in (uu___, td))
   | (name, metadata, FStar_Pervasives.Inl (parameters, mlty)) ->

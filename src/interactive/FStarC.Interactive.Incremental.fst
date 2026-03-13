@@ -39,20 +39,20 @@ open FStarC.Parser.AST.Diff { eq_decl }
 open FStarC.Class.Show
 let dbg = Debug.get_toggle "IDE"
 let qid = string & int
-let qst a = qid & repl_state -> a & qid
+let qst a = qid & repl_state -> ML (a & qid)
 let return (x:'a) : qst 'a = fun (q, _) -> x, q
-let (let!) (f:qst 'a) (g: 'a -> qst 'b)
+let (let!) (f:qst 'a) (g: 'a -> ML (qst 'b))
   : qst 'b
   = fun (q,s) -> let x, q' = f (q,s) in
           g x (q',s)
 
 let run_qst (f:qst 'a) (q:string) (st:repl_state)
-  : 'a
+  : ML 'a
   = fst (f ((q, 0), st))
 
 
-let rec map (f:'a -> qst 'b) (l:list 'a)
-  : qst (list 'b)
+let rec map (f:'a -> ML (qst 'b)) (l:list 'a)
+  : ML (qst (list 'b))
   = match l with
     | [] -> return []
     | hd::tl ->
@@ -103,7 +103,7 @@ let dump_symbols_for_lid (l:lident)
                                     ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
 
 let dump_symbols (d:decl)
-: qst (list query)
+: ML (qst (list query))
 = let open FStarC.Parser.AST in
   let ls = lidents_of_decl d in
   map dump_symbols_for_lid ls
@@ -114,9 +114,9 @@ let dump_symbols (d:decl)
    for the decl that is about to run *)
 let push_decl (push_kind:push_kind)
               (with_symbols:bool)
-              (write_full_buffer_fragment_progress: fragment_progress -> unit)
+              (write_full_buffer_fragment_progress: fragment_progress -> ML unit)
               (ds:decl & code_fragment)              
-  : qst (list query)
+  : ML (qst (list query))
   = let open FStarC.Range in
     let d, s = ds in
     let pq = {
@@ -143,16 +143,16 @@ let push_decl (push_kind:push_kind)
     
 let push_decls (push_kind:push_kind)
                (with_symbols:bool)
-               (write_full_buffer_fragment_progress : fragment_progress -> unit)
+               (write_full_buffer_fragment_progress : fragment_progress -> ML unit)
                (ds:list (decl & code_fragment))
-  : qst (list query)
+  : ML (qst (list query))
   = let! qs = map (push_decl push_kind with_symbols write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
 
 let repl_task_of_entry (_, (p, _)) = p
 
 let pop_entries (e:list repl_stack_entry_t)
-  : qst (list query)
+  : ML (qst (list query))
   = map (fun _ -> as_query Pop) e
 
 let push_kind_geq pk1 pk2 =
@@ -171,8 +171,8 @@ let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
                        (push_kind : push_kind)
                        (with_symbols:bool)
-                       (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
-  : qst (list query & list json)
+                       (write_full_buffer_fragment_progress: fragment_progress -> ML unit)                       
+  : ML (qst (list query & list json))
   = let entries = List.rev s in
     let push_decls = push_decls push_kind with_symbols write_full_buffer_fragment_progress in
     match BU.prefix_until 
@@ -186,7 +186,7 @@ let inspect_repl_stack (s:repl_stack_t)
     | Some (_prefix, first_push, rest) ->
       let entries = first_push :: rest in
       let rec matching_prefix (accum:list json) (lookups:list query) entries (ds:list (decl & code_fragment))
-        : qst (list query & list json)
+        : ML (qst (list query & list json))
         = match entries, ds with
           | [], [] ->
             return (lookups, accum)
@@ -232,7 +232,7 @@ let inspect_repl_stack (s:repl_stack_t)
    We also push on just the `module A` declaration after popping. That's done below. *)
 let reload_deps repl_stack =
   let pop_until_deps entries
-  : qst (list query)
+  : ML (qst (list query))
   = match BU.prefix_until
             (fun e -> match repl_task_of_entry e with
                       | PushFragment _ | Noop -> false
@@ -274,8 +274,8 @@ let run_full_buffer (st:repl_state)
                     (code:string)
                     (request_type:full_buffer_request_kind)
                     (with_symbols:bool)
-                    (write_full_buffer_fragment_progress: fragment_progress -> unit)
-  : list query & list json
+                    (write_full_buffer_fragment_progress: fragment_progress -> ML unit)
+  : ML (list query & list json)
   = // updating the vfs entry allows dependence scanning on the file to
     // to use the latest snapshot of the file, rather than what was present
     // in the buffer when the IDE was started. This is especially useful when

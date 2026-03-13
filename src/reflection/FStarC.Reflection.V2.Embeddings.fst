@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V2.Embeddings
-
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
@@ -40,12 +39,12 @@ open FStarC.Syntax.Embeddings.AppEmb
 open FStarC.Class.Monad
 
 (* We only use simple embeddings here *)
-let mk_emb f g t =
+let mk_emb (f : Range.t -> 'a -> ML term) (g : term -> ML (option 'a)) fv =
     mk_emb (fun x r _topt _norm -> f r x)
            (fun x _norm -> g x)
-           (term_as_fv t)
+           fv
 let embed {|embedding 'a|} r (x:'a) = embed x r None id_norm_cb
-let try_unembed {|embedding 'a|} x : option 'a = try_unembed x id_norm_cb
+let try_unembed {|embedding 'a|} x : ML (option 'a) = try_unembed x id_norm_cb
 
 open FStarC.Reflection.V2.Constants
 
@@ -54,7 +53,7 @@ let curry3 f x y z = f (x,y,z)
 let curry4 f x y z w = f (x,y,z,w)
 let curry5 f x y z w v = f (x,y,z,w,v)
 
-let head_fv_and_args (t : term) : option (fv & args) =
+let head_fv_and_args (t : term) : ML (option (fv & args)) =
   let t = U.unascribe t in
   let hd, args = U.head_and_args t in
   match (U.un_uinst hd).n with
@@ -82,7 +81,7 @@ let e_letbinding         : embedding letbinding         = EMB.e_lazy Lazy_letbin
 instance e_ctx_uvar_and_subst : embedding ctx_uvar_and_subst = EMB.e_lazy Lazy_uvar fstar_refl_ctx_uvar_and_subst
 instance e_universe_uvar      : embedding universe_uvar      = EMB.e_lazy Lazy_universe_uvar fstar_refl_universe_uvar
 
-let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
+let rec mapM_opt (f : ('a -> ML (option 'b))) (l : list 'a) : ML (option (list 'b)) =
     match l with
     | [] -> Some []
     | x::xs ->
@@ -91,12 +90,12 @@ let rec mapM_opt (f : ('a -> option 'b)) (l : list 'a) : option (list 'b) =
         Some (x :: xs)))
 
 let e_term_aq aq =
-    let embed_term (rng:Range.t) (t:term) : term =
+    let embed_term (rng:Range.t) (t:term) : ML term =
         let qi = { qkind = Quote_static; antiquotations = aq } in
         S.mk (Tm_quoted (t, qi)) rng
     in
-    let rec unembed_term (t:term) : option term =
-        let apply_antiquotations (t:term) (aq:antiquotations) : option term =
+    let rec unembed_term (t:term) : ML (option term) =
+        let apply_antiquotations (t:term) (aq:antiquotations) : ML (option term) =
             let shift, aqs = aq in
             let aqs = List.rev aqs in
             // Try to unembed all antiquotations
@@ -120,7 +119,7 @@ let e_term_aq aq =
             apply_antiquotations tm qi.antiquotations
         | _ -> None
     in
-    mk_emb embed_term unembed_term S.t_term
+    mk_emb embed_term unembed_term fstar_refl_term_fv
 
 let e_term = e_term_aq noaqs
 
@@ -128,7 +127,7 @@ let e_sort   : embedding (Sealed.sealed term)   = e_sealed e_term
 let e_ppname : embedding ppname_t = e_sealed e_string
 
 let e_aqualv =
-    let embed_aqualv (rng:Range.t) (q : aqualv) : term =
+    let embed_aqualv (rng:Range.t) (q : aqualv) : ML term =
       let r =
       match q with
       | Data.Q_Explicit -> ref_Q_Explicit.t
@@ -139,7 +138,7 @@ let e_aqualv =
                       Range.dummyRange
       in { r with pos = rng }
     in
-    let unembed_aqualv (t : term) : option aqualv =
+    let unembed_aqualv (t : term) : ML (option aqualv) =
       let? fv, args = head_fv_and_args t in
       match () with
       | _ when S.fv_eq_lid fv ref_Q_Explicit.lid -> run args (pure Data.Q_Explicit)
@@ -148,12 +147,12 @@ let e_aqualv =
       | _ when S.fv_eq_lid fv ref_Q_Meta.lid -> run args (Data.Q_Meta <$$> e_term)
       | _ -> None
     in
-    mk_emb embed_aqualv unembed_aqualv fstar_refl_aqualv
+    mk_emb embed_aqualv unembed_aqualv fstar_refl_aqualv_fv
 
 let e_binders = e_list e_binder
 
 let e_universe_view =
-  let embed_universe_view (rng:Range.t) (uv:universe_view) : term =
+  let embed_universe_view (rng:Range.t) (uv:universe_view) : ML term =
     match uv with
     | Uv_Zero -> ref_Uv_Zero.t
     | Uv_Succ u ->
@@ -184,7 +183,7 @@ let e_universe_view =
     | Uv_Unk ->
       ref_Uv_Unk.t in
 
-  let unembed_universe_view (t:term) : option universe_view =
+  let unembed_universe_view (t:term) : ML (option universe_view) =
     let? fv, args = head_fv_and_args t in
     match () with
     | _ when S.fv_eq_lid fv ref_Uv_Zero.lid  -> run args (pure Uv_Zero)
@@ -197,10 +196,10 @@ let e_universe_view =
     | _ -> None
   in
 
-  mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view
+  mk_emb embed_universe_view unembed_universe_view fstar_refl_universe_view_fv
 
 let e_vconst =
-    let embed_const (rng:Range.t) (c:vconst) : term =
+    let embed_const (rng:Range.t) (c:vconst) : ML term =
         let r =
         match c with
         | C_Unit    -> ref_C_Unit.t
@@ -234,7 +233,7 @@ let e_vconst =
 
         in { r with pos = rng }
     in
-    let unembed_const (t:term) : option vconst =
+    let unembed_const (t:term) : ML (option vconst) =
       let? fv, args = head_fv_and_args t in
       match () with
       | _ when S.fv_eq_lid fv ref_C_Unit.lid -> run args (pure C_Unit)
@@ -249,10 +248,10 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Char.lid -> run args (C_Char <$$> e_char)
       | _ -> None
     in
-    mk_emb embed_const unembed_const fstar_refl_vconst
+    mk_emb embed_const unembed_const fstar_refl_vconst_fv
 
 let rec e_pattern_aq aq =
-    let rec embed_pattern (rng:Range.t) (p : pattern) : term =
+    let rec embed_pattern (rng:Range.t) (p : pattern) : ML term =
         match p with
         | Pat_Constant c ->
             S.mk_Tm_app ref_Pat_Constant.t [S.as_arg (embed rng c)] rng
@@ -270,7 +269,7 @@ let rec e_pattern_aq aq =
             S.mk_Tm_app ref_Pat_Dot_Term.t [S.as_arg (embed #_ #(e_option e_term) rng eopt)]
                         rng
     in
-    let rec unembed_pattern (t : term) : option pattern =
+    let rec unembed_pattern (t : term) : ML (option pattern) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Pat_Constant.lid ->
@@ -287,7 +286,7 @@ let rec e_pattern_aq aq =
 
         | _ -> None
     in
-    mk_emb embed_pattern unembed_pattern fstar_refl_pattern
+    mk_emb embed_pattern unembed_pattern fstar_refl_pattern_fv
 
 let e_pattern = e_pattern_aq noaqs
 
@@ -305,7 +304,7 @@ instance e_match_returns_annotation =
 
 let e_term_view_aq aq =
     let push (s, aq) = (s+1, aq) in
-    let embed_term_view (rng:Range.t) (t:term_view) : term =
+    let embed_term_view (rng:Range.t) (t:term_view) : ML term =
         match t with
         | Tv_FVar fv ->
             S.mk_Tm_app ref_Tv_FVar.t [S.as_arg (embed rng fv)]
@@ -393,7 +392,7 @@ let e_term_view_aq aq =
         | Tv_Unsupp ->
             { ref_Tv_Unsupp.t with pos = rng }
     in
-    let unembed_term_view (t:term) : option term_view =
+    let unembed_term_view (t:term) : ML (option term_view) =
         let? fv, args = head_fv_and_args t in
         let xTv_Let a b c d e = Tv_Let (a,b,c,d,e) in
         match () with
@@ -416,7 +415,7 @@ let e_term_view_aq aq =
         | _ when S.fv_eq_lid fv ref_Tv_Unsupp.lid -> run args (pure Tv_Unsupp)
         | _ -> None
     in
-    mk_emb embed_term_view unembed_term_view fstar_refl_term_view
+    mk_emb embed_term_view unembed_term_view fstar_refl_term_view_fv
 
 let e_term_view = e_term_view_aq noaqs
 
@@ -438,7 +437,7 @@ let e_name = e_list e_string
 
 
 instance e_namedv_view =
-    let embed_namedv_view (rng:Range.t) (namedvv:namedv_view) : term =
+    let embed_namedv_view (rng:Range.t) (namedvv:namedv_view) : ML term =
         S.mk_Tm_app ref_Mk_namedv_view.t [
           S.as_arg (embed rng namedvv.uniq);
           S.as_arg (embed #_ #e_sort   rng namedvv.sort);
@@ -446,17 +445,17 @@ instance e_namedv_view =
         ]
                     rng
     in
-    let unembed_namedv_view (t : term) : option namedv_view =
+    let unembed_namedv_view (t : term) : ML (option namedv_view) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_namedv_view.lid ->
           run args (Mknamedv_view <$$> e_int <**> e_sort <**> e_ppname)
         | _ -> None
     in
-    mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view
+    mk_emb embed_namedv_view unembed_namedv_view fstar_refl_namedv_view_fv
 
 instance e_bv_view =
-    let embed_bv_view (rng:Range.t) (bvv:bv_view) : term =
+    let embed_bv_view (rng:Range.t) (bvv:bv_view) : ML term =
         S.mk_Tm_app ref_Mk_bv_view.t [
           S.as_arg (embed rng bvv.index);
           S.as_arg (embed #_ #e_sort   rng bvv.sort);
@@ -464,17 +463,17 @@ instance e_bv_view =
         ]
                     rng
     in
-    let unembed_bv_view (t : term) : option bv_view =
+    let unembed_bv_view (t : term) : ML (option bv_view) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_bv_view.lid ->
           run args (Mkbv_view <$$> e_int <**> e_sort <**> e_ppname)
         | _ -> None
     in
-    mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view
+    mk_emb embed_bv_view unembed_bv_view fstar_refl_bv_view_fv
 
 instance e_binding =
-    let embed (rng:Range.t) (bindingv:RD.binding) : term =
+    let embed (rng:Range.t) (bindingv:RD.binding) : ML term =
         S.mk_Tm_app ref_Mk_binding.t [
           S.as_arg (embed rng bindingv.uniq);
           S.as_arg (embed #_ #e_term   rng bindingv.sort);
@@ -482,20 +481,20 @@ instance e_binding =
         ]
                     rng
     in
-    let unembed (t : term) : option RD.binding =
+    let unembed (t : term) : ML (option RD.binding) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_binding.lid ->
           run args (Mkbinding <$$> e_int <**> e_term <**> e_ppname)
         | _ -> None
     in
-    mk_emb embed unembed fstar_refl_binding
+    mk_emb embed unembed fstar_refl_binding_fv
 
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
 let e_binder_view =
-  let embed_binder_view (rng:Range.t) (bview:binder_view) : term =
+  let embed_binder_view (rng:Range.t) (bview:binder_view) : ML term =
     S.mk_Tm_app ref_Mk_binder_view.t [
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
@@ -504,17 +503,17 @@ let e_binder_view =
     ]
                 rng in
 
-  let unembed_binder_view (t:term) : option binder_view =
+  let unembed_binder_view (t:term) : ML (option binder_view) =
     let? fv, args = head_fv_and_args t in
     match () with
     | _ when S.fv_eq_lid fv ref_Mk_binder_view.lid ->
       run args (Mkbinder_view <$$> e_term <**> e_aqualv <**> e_list e_term <**> e_ppname)
     | _ -> None
   in
-  mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view
+  mk_emb embed_binder_view unembed_binder_view fstar_refl_binder_view_fv
 
 let e_comp_view =
-    let embed_comp_view (rng:Range.t) (cv : comp_view) : term =
+    let embed_comp_view (rng:Range.t) (cv : comp_view) : ML term =
         match cv with
         | C_Total t ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed #_ #e_term rng t)]
@@ -540,7 +539,7 @@ let e_comp_view =
 
 
     in
-    let unembed_comp_view (t : term) : option comp_view =
+    let unembed_comp_view (t : term) : ML (option comp_view) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_C_Total.lid -> run args (C_Total <$$> e_term)
@@ -551,13 +550,13 @@ let e_comp_view =
           run args (curry5 C_Eff <$$> e_list e_universe <**> e_string_list <**> e_term <**> e_list e_argv <**> e_list e_term)
         | _ -> None
     in
-    mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view
+    mk_emb embed_comp_view unembed_comp_view fstar_refl_comp_view_fv
 
 let e_univ_name = e_ident
 let e_univ_names = e_list e_univ_name
 
 let e_subst_elt =
-    let ee (rng:Range.t) (e:subst_elt) : term =
+    let ee (rng:Range.t) (e:subst_elt) : ML term =
         match e with
         | DB (i, x) ->
             S.mk_Tm_app ref_DB.t [
@@ -601,7 +600,7 @@ let e_subst_elt =
                ]
                rng
     in
-    let uu (t:term) : option subst_elt =
+    let uu (t:term) : ML (option subst_elt) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_DB.lid ->
@@ -618,30 +617,30 @@ let e_subst_elt =
             run args (curry UD <$$> e_ident <**> e_int)
         | _ -> None
     in
-    mk_emb ee uu fstar_refl_subst_elt
+    mk_emb ee uu fstar_refl_subst_elt_fv
 
 let e_subst = e_list e_subst_elt
 let e_ctor = e_tuple2 (e_string_list) e_term
 
 let e_lb_view =
-    let embed_lb_view (rng:Range.t) (lbv:lb_view) : term =
+    let embed_lb_view (rng:Range.t) (lbv:lb_view) : ML term =
         S.mk_Tm_app ref_Mk_lb.t [S.as_arg (embed rng lbv.lb_fv);
                                  S.as_arg (embed rng lbv.lb_us);
                                  S.as_arg (embed #_ #e_term       rng lbv.lb_typ);
                                  S.as_arg (embed #_ #e_term       rng lbv.lb_def)]
                     rng
     in
-    let unembed_lb_view (t : term) : option lb_view =
+    let unembed_lb_view (t : term) : ML (option lb_view) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Mk_lb.lid ->
           run args (Mklb_view <$$> e_fv <**> e_univ_names <**> e_term <**> e_term)
         | _ -> None
     in
-    mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view
+    mk_emb embed_lb_view unembed_lb_view fstar_refl_lb_view_fv
 
 let e_sigelt_view =
-    let embed_sigelt_view (rng:Range.t) (sev:sigelt_view) : term =
+    let embed_sigelt_view (rng:Range.t) (sev:sigelt_view) : ML term =
         match sev with
         | Sg_Let (r, lbs) ->
             S.mk_Tm_app ref_Sg_Let.t
@@ -668,7 +667,7 @@ let e_sigelt_view =
         | Unk ->
             { ref_Unk.t with pos = rng }
     in
-    let unembed_sigelt_view (t:term) : option sigelt_view =
+    let unembed_sigelt_view (t:term) : ML (option sigelt_view) =
         let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_Sg_Inductive.lid ->
@@ -681,10 +680,10 @@ let e_sigelt_view =
             run args (pure Unk)
         | _ -> None
     in
-    mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view
+    mk_emb embed_sigelt_view unembed_sigelt_view fstar_refl_sigelt_view_fv
 
 let e_qualifier =
-    let embed (rng:Range.t) (q:RD.qualifier) : term =
+    let embed (rng:Range.t) (q:RD.qualifier) : ML term =
         let r =
         match q with
         | RD.Assumption                       -> ref_qual_Assumption.t
@@ -731,7 +730,7 @@ let e_qualifier =
 
         in { r with pos = rng }
     in
-    let unembed (t: term) : option RD.qualifier =
+    let unembed (t: term) : ML (option RD.qualifier) =
       let? fv, args = head_fv_and_args t in
         match () with
         | _ when S.fv_eq_lid fv ref_qual_Assumption.lid                       -> run args (pure RD.Assumption)
@@ -766,7 +765,7 @@ let e_qualifier =
             run args (RD.RecordConstructor <$$> e_tuple2 (e_list e_ident) (e_list e_ident))
         | _ -> None
     in
-    mk_emb embed unembed fstar_refl_qualifier
+    mk_emb embed unembed fstar_refl_qualifier_fv
 
 let e_qualifiers = e_list e_qualifier
 
@@ -779,22 +778,22 @@ let e_qualifiers = e_list e_qualifier
  * the types are abstract.
  *)
 
-let unfold_lazy_bv (i : lazyinfo) : term =
+let unfold_lazy_bv (i : lazyinfo) : ML term =
     let bv : bv = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_bv.t [S.as_arg (embed i.rng (inspect_bv bv))]
                 i.rng
 
-let unfold_lazy_namedv (i : lazyinfo) : term =
+let unfold_lazy_namedv (i : lazyinfo) : ML term =
     let namedv : namedv = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_namedv.t [S.as_arg (embed i.rng (inspect_namedv namedv))]
                 i.rng
 
-let unfold_lazy_binder (i : lazyinfo) : term =
+let unfold_lazy_binder (i : lazyinfo) : ML term =
     let binder : binder = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed i.rng (inspect_binder binder))]
                 i.rng
 
-let unfold_lazy_letbinding (i : lazyinfo) : term =
+let unfold_lazy_letbinding (i : lazyinfo) : ML term =
     let lb : letbinding = undyn i.blob in
     let lbv = inspect_lb lb in
     S.mk_Tm_app fstar_refl_pack_lb.t
@@ -806,35 +805,35 @@ let unfold_lazy_letbinding (i : lazyinfo) : term =
         ]
         i.rng
 
-let unfold_lazy_fvar (i : lazyinfo) : term =
+let unfold_lazy_fvar (i : lazyinfo) : ML term =
     let fv : fv = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_fv.t [S.as_arg (embed i.rng (inspect_fv fv))]
                 i.rng
 
-let unfold_lazy_comp (i : lazyinfo) : term =
+let unfold_lazy_comp (i : lazyinfo) : ML term =
     let comp : comp = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_comp.t [S.as_arg (embed i.rng (inspect_comp comp))]
                 i.rng
 
-let unfold_lazy_env (i : lazyinfo) : term =
+let unfold_lazy_env (i : lazyinfo) : ML term =
     (* Not needed, metaprograms never see concrete environments. *)
     U.exp_unit
 
-let unfold_lazy_optionstate (i : lazyinfo) : term =
+let unfold_lazy_optionstate (i : lazyinfo) : ML term =
     (* Not needed, metaprograms never see concrete optionstates . *)
     U.exp_unit
 
-let unfold_lazy_sigelt (i : lazyinfo) : term =
+let unfold_lazy_sigelt (i : lazyinfo) : ML term =
     let sigelt : sigelt = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_sigelt.t [S.as_arg (embed i.rng (inspect_sigelt sigelt))]
                 i.rng
 
-let unfold_lazy_universe (i : lazyinfo) : term =
+let unfold_lazy_universe (i : lazyinfo) : ML term =
     let u : universe = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed i.rng (inspect_universe u))]
                 i.rng
 
-let unfold_lazy_doc (i : lazyinfo) : term =
+let unfold_lazy_doc (i : lazyinfo) : ML term =
   let open FStarC.Pprint in
   let d : Pprint.document = undyn i.blob in
   let lid = Ident.lid_of_str "FStar.Pprint.arbitrary_string" in

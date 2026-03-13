@@ -22,25 +22,25 @@ val shellescape (s:string) : string
 
 (* Compute a value for OCAMLPATH taken from the current env + extended with our own library.
 This is NOT escaped. *)
-val new_ocamlpath () : string
+val new_ocamlpath () : ML string
 
 (* Run a command with the new OCAMLPATH set. This calls execvp, so it
 will not return if successful. Raises a Failure if the execvp fails. It
 also tries to find the command in the PATH, absolute path is not needed.
 *)
-val exec_in_ocamlenv (#a:Type) (cmd : string) (args : list string) : a
+val exec_in_ocamlenv (#a:Type) (cmd : string) (args : list string) : ML a
 
 (* Run ocamlc (i.e. bytecode compiler) passing appropriate flags to
 generate a bytecode executable. Expects the source file and further
 options as arguments. *)
-val exec_ocamlc #a (args : list string) : a
+val exec_ocamlc #a (args : list string) : ML a
 
 (* Run ocamlopt (i.e. native compiler) passing appropriate flags to
 generate an executable. Expects the source file and further options as
 arguments. *)
-val exec_ocamlopt #a (args : list string) : a
+val exec_ocamlopt #a (args : list string) : ML a
 
 (* Run ocamlc passing appropriate flags to generate an F* plugin,
 using fstar.pluginlib. Expects the source file and further options as
 arguments. *)
-val exec_ocamlopt_plugin #a (args : list string) : a
+val exec_ocamlopt_plugin #a (args : list string) : ML a

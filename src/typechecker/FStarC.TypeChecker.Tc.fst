@@ -99,7 +99,8 @@ let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current
 
 (*****************Type-checking the signature of a module*****************************)
 
-let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.t) :tscheme =
+let tc_type_common (env:env) (ts:tscheme) (expected_typ:typ) (r:Range.t) : ML tscheme =
+  let (uvs, t) = ts in
   let uvs, t = SS.open_univ_vars uvs t in
   let env = Env.push_univ_vars env uvs in
   let t = tc_check_trivial_guard env t expected_typ in
@@ -110,10 +111,10 @@ let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.t) :
     uvs, t
   else uvs, t |> N.remove_uvar_solutions env |> SS.close_univ_vars uvs
 
-let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) :tscheme =
+let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
   tc_type_common env ts (U.type_u () |> fst) r
 
-let tc_assume (env:env) (ts:tscheme) (r:Range.t) :tscheme =
+let tc_assume (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
   //AR: this might seem same as tc_declare_typ but come prop, this will change
   tc_type_common env ts (U.type_u () |> fst) r
 
@@ -191,7 +192,7 @@ let tc_inductive' env ses quals attrs lids =
 
     let skip_haseq =
       //skip logical connectives types in prims, tcs is bound to the inductive type, caller ensures its length is > 0
-      let skip_prims_type (_:unit) :bool =
+      let skip_prims_type (_:unit) : ML bool =
         let lid =
           let ty = List.hd tcs in
           match ty.sigel with
@@ -237,7 +238,7 @@ let tc_inductive env ses quals attrs lids =
     try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
     with e -> pop (); raise e
 
-let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
+let proc_check_with (attrs:list attribute) (kont : unit -> ML 'a) : ML 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
@@ -249,22 +250,22 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "ill-formed `check_with`"
 
-let store_sigopts (se:sigelt) : sigelt =
+let store_sigopts (se:sigelt) : ML sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
-let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
+let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env.env))) =
   mk_ref None
 
-let do_two_phases env : bool = not (Options.lax ())
-let run_phase1 (f:unit -> 'a) =
+let do_two_phases env : ML bool = not (Options.lax ())
+let run_phase1 (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in
   FStarC.TypeChecker.Core.clear_memo_table();
   r
 
 let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list attribute)
-    : list attribute & option term & bool
+    : ML (list attribute & option term & bool)
       (* returns:
          - remaining attrs
          - postprocess tactic
@@ -291,13 +292,13 @@ let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list a
   in
   ats, pt, on_type
 
-let run_postprocess (for_extraction : bool) env (se : sigelt) : sigelt =
+let run_postprocess (for_extraction : bool) env (se : sigelt) : ML sigelt =
   let attrs, pt, on_type = read_postprocess_with_attr for_extraction env se.sigattrs in
 
   (* remove the postprocess_with, if any *)
   let se = { se with sigattrs = attrs } in
 
-  let postprocess_lb (tau:term) (on_type : bool) (lb:letbinding) : letbinding =
+  let postprocess_lb (tau:term) (on_type : bool) (lb:letbinding) : ML letbinding =
       let s, univnames = SS.univ_var_opening lb.lbunivs in
       let lbdef = SS.subst s lb.lbdef in
       let lbtyp = SS.subst s lb.lbtyp in
@@ -329,7 +330,7 @@ let run_postprocess (for_extraction : bool) env (se : sigelt) : sigelt =
 (* qopt: qualifiers in the definition for l
    val_q: qualifiers in the val decl for l.
    This returns a new list of qualifiers from combining both, but they must match. *)
-let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list qualifier) : list qualifier =
+let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list qualifier) : ML (list qualifier) =
   match qopt with
   | [] -> val_q
   | q' ->
@@ -359,7 +360,7 @@ let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list 
         ]
 
 (* The type checking rule for Sig_let (lbs, lids) *)
-let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
+let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let env0 = env in
     let env = Env.set_range env r in
     let rename_parameters lb =
@@ -441,7 +442,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     in
     let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
 
-    let preprocess_lb (tau:term) (lb:letbinding) : letbinding =
+    let preprocess_lb (tau:term) (lb:letbinding) : ML letbinding =
         let lbdef = Env.preprocess env tau lb.lbdef in
         if Debug.medium () || !dbg_TwoPhases then
           Format.print1 "lb preprocessed into: %s\n" (show lbdef);
@@ -461,7 +462,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e =
       if do_two_phases env' then run_phase1 (fun _ ->
-        let drop_lbtyp (e_lax:term) :term =
+        let drop_lbtyp (e_lax:term) : ML term =
           match (SS.compress e_lax).n with
           | Tm_let {lbs=(false, [ lb ]); body=e2} ->
             let lb_unannotated =
@@ -581,7 +582,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
 
     [se], [], env0
 
-let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
+let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
   let env = env0 in
   let se = match se.sigel with
          // Disable typechecking attributes for [Sig_fail] bundles, so
@@ -924,7 +925,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 let snapshot_context env msg = BU.atomically (fun () ->
     TypeChecker.Env.snapshot env msg)
 
-let rollback_context solver msg depth : env = BU.atomically (fun () ->
+let rollback_context solver msg depth : ML env = BU.atomically (fun () ->
     let env = TypeChecker.Env.rollback solver msg depth in
     env)
 
@@ -936,7 +937,7 @@ let pop_context env msg = rollback_context env.solver msg None
  * during typechecking but not yet typechecked. This may also be called
  * on ALREADY CHECKED declarations coming out of a splice_t. See the
  * check for sigmeta_already_checked below. *)
-let tc_decl env se: list sigelt & list sigelt & Env.env =
+let tc_decl env se: ML (list sigelt & list sigelt & Env.env) =
   FStarC.GenSym.reset_gensym();
   let env0 = env in
   let env = set_hint_correlator env se in
@@ -979,7 +980,7 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
 
 (* adds the typechecked sigelt to the env, also performs any processing required in the env (such as reset options) *)
 (* AR: we now call this function when loading checked modules as well to be more consistent *)
-let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
+let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
   if Debug.low ()
   then Format.print2
     ">>>>>>>>>>>>>>Adding top-level decl to environment: %s (from_cache:%s)\n"
@@ -1077,8 +1078,9 @@ let compress_and_norm env t =
               t
       )
 
-let tc_decls env ses =
-  let rec process_one_decl (ses, env) se =
+let tc_decls env ses : ML (list sigelt & Env.env) =
+  let rec process_one_decl ses_env se : ML _ =
+    let (ses, env) = ses_env in
     Errors.fallback_range := Some se.sigrng;
 
     (* If emacs is peeking, and debugging is on, don't do anything,
@@ -1222,12 +1224,15 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, ses, env
 
-let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
+let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : ML (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let env = Env.finish_module en m in
 
   if not loading_from_cache then (
     let missing = missing_definition_list env in
+    // Filter to only report missing definitions belonging to THIS module
+    let mname_ids = ids_of_lid m.name in
+    let missing = List.filter (fun l -> ns_of_lid l = mname_ids) missing in
     if Cons? missing then
       log_issue env Errors.Error_AdmitWithoutDefinition [
           Pprint.prefix 2 1 (text <| Format.fmt1 "Missing definitions in module %s:" (string_of_lid m.name))
@@ -1251,10 +1256,10 @@ let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool
 
   m, env
 
-let deep_compress_modul (m:modul) : modul =
+let deep_compress_modul (m:modul) : ML modul =
   { m with declarations = List.map (Compress.deep_compress_se false false) m.declarations }
 
-let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
+let tc_modul (env0:env) (m:modul) (iface_exists:bool) : ML (modul & env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
@@ -1263,7 +1268,7 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
   // by Syntax.compress.deep_compress, so they are safe to output.
   finish_partial_modul true false iface_exists env modul
 
-let load_checked_module_sigelts (en:env) (m:modul) : env =
+let load_checked_module_sigelts (en:env) (m:modul) : ML env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
   let env = Env.set_current_module en m.name in
@@ -1284,7 +1289,7 @@ let load_checked_module_sigelts (en:env) (m:modul) : env =
              m.declarations in
   env
 
-let load_checked_module (en:env) (m:modul) :env =
+let load_checked_module (en:env) (m:modul) : ML env =
   (* Reset debug flags *)
   let dsnap = Debug.snapshot () in
   if not (Options.should_check (string_of_lid m.name)) && not (Options.debug_all_modules ())
@@ -1298,10 +1303,10 @@ let load_checked_module (en:env) (m:modul) :env =
   Debug.restore dsnap;
   env
 
-let load_partial_checked_module (en:env) (m:modul) : env =
+let load_partial_checked_module (en:env) (m:modul) : ML env =
   load_checked_module_sigelts en m
 
-let check_module env0 m b =
+let check_module env0 m b : ML _ =
   if Debug.any()
   then Format.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (show m.name);
   if Options.dump_module (string_of_lid m.name)

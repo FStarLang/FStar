@@ -4,8 +4,7 @@ type using_facts_from_setting =
 type decl_name_set = Prims.bool FStarC_PSMap.t
 let empty_decl_names : Prims.bool FStarC_PSMap.t= FStarC_PSMap.empty ()
 let decl_names_contains (x : Prims.string) (s : decl_name_set) : Prims.bool=
-  let uu___ = FStarC_PSMap.try_find s x in
-  FStar_Pervasives_Native.uu___is_Some uu___
+  FStar_Pervasives_Native.uu___is_Some (FStarC_PSMap.try_find s x)
 let add_name (x : Prims.string) (s : decl_name_set) :
   Prims.bool FStarC_PSMap.t= FStarC_PSMap.add s x true
 type decls_at_level =
@@ -64,14 +63,13 @@ let __proj__Mkdecls_at_level__item__pruning_roots
       given_some_decls; to_flush_rev; named_assumptions; pruning_roots;_} ->
       pruning_roots
 let init_given_decls_at_level : decls_at_level=
-  let uu___ = FStarC_PSMap.empty () in
   {
     pruning_state = FStarC_SMTEncoding_Pruning.init;
     given_decl_names = empty_decl_names;
     all_decls_at_level_rev = [];
     given_some_decls = false;
     to_flush_rev = [];
-    named_assumptions = uu___;
+    named_assumptions = (FStarC_PSMap.empty ());
     pruning_roots = FStar_Pervasives_Native.None
   }
 type solver_state =
@@ -139,12 +137,11 @@ let debug (msg : Prims.string) (s0 : solver_state) (s1 : solver_state) :
   else ()
 let peek (s : solver_state) : (decls_at_level * decls_at_level Prims.list)=
   match s.levels with
-  | [] -> failwith "Solver state cannot have an empty stack"
+  | [] -> FStarC_Effect.failwith "Solver state cannot have an empty stack"
   | hd::tl -> (hd, tl)
 let replace_head (hd : decls_at_level) (s : solver_state) : solver_state=
-  let uu___ = let uu___1 = FStarC_List.tl s.levels in hd :: uu___1 in
   {
-    levels = uu___;
+    levels = (hd :: (FStarC_List.tl s.levels));
     pending_flushes_rev = (s.pending_flushes_rev);
     using_facts_from = (s.using_facts_from);
     retain_assumptions = (s.retain_assumptions)
@@ -185,7 +182,7 @@ let pop (s : solver_state) : solver_state=
   match uu___ with
   | (hd, tl) ->
       (if Prims.uu___is_Nil tl
-       then failwith "Solver state cannot have an empty stack"
+       then FStarC_Effect.failwith "Solver state cannot have an empty stack"
        else ();
        (let s1 =
           if Prims.op_Negation hd.given_some_decls
@@ -222,33 +219,40 @@ let filter_using_facts_from
         match a.FStarC_SMTEncoding_Term.assumption_fact_ids with
         | [] -> true
         | uu___ ->
-            (decl_names_contains a.FStarC_SMTEncoding_Term.assumption_name
-               retain_assumptions)
-              ||
-              (FStarC_Util.for_some
-                 (fun uu___1 ->
-                    match uu___1 with
-                    | FStarC_SMTEncoding_Term.Name lid ->
-                        FStarC_TypeChecker_Env.should_enc_lid
-                          using_facts_from1 lid
-                    | uu___2 -> false)
-                 a.FStarC_SMTEncoding_Term.assumption_fact_ids) in
+            if
+              decl_names_contains a.FStarC_SMTEncoding_Term.assumption_name
+                retain_assumptions
+            then true
+            else
+              FStarC_Util.for_some
+                (fun uu___1 ->
+                   match uu___1 with
+                   | FStarC_SMTEncoding_Term.Name lid ->
+                       FStarC_TypeChecker_Env.should_enc_lid
+                         using_facts_from1 lid
+                   | uu___2 -> false)
+                a.FStarC_SMTEncoding_Term.assumption_fact_ids in
       let already_given_map = FStarC_SMap.create (Prims.of_int (1000)) in
       let add_assumption a =
         FStarC_SMap.add already_given_map
           a.FStarC_SMTEncoding_Term.assumption_name true in
       let already_given a =
-        (let uu___ =
-           FStarC_SMap.try_find already_given_map
-             a.FStarC_SMTEncoding_Term.assumption_name in
-         FStar_Pervasives_Native.uu___is_Some uu___) ||
-          (already_given_decl a.FStarC_SMTEncoding_Term.assumption_name) in
+        let uu___ =
+          let uu___1 =
+            FStarC_SMap.try_find already_given_map
+              a.FStarC_SMTEncoding_Term.assumption_name in
+          FStar_Pervasives_Native.uu___is_Some uu___1 in
+        if uu___
+        then true
+        else already_given_decl a.FStarC_SMTEncoding_Term.assumption_name in
       let map_decl d =
         match d with
         | FStarC_SMTEncoding_Term.Assume a ->
             let uu___ =
-              (keep_assumption a) &&
-                (let uu___1 = already_given a in Prims.op_Negation uu___1) in
+              let uu___1 = keep_assumption a in
+              if uu___1
+              then let uu___2 = already_given a in Prims.op_Negation uu___2
+              else false in
             if uu___ then (add_assumption a; [d]) else []
         | uu___ -> [d] in
       let ds' = FStarC_List.collect map_decl ds in
@@ -337,19 +341,23 @@ let give_delay_assumptions (resetting : Prims.bool)
           let uu___3 =
             FStarC_List.partition
               (fun d ->
-                 (FStarC_SMTEncoding_Term.uu___is_DeclFun d) ||
-                   (FStarC_SMTEncoding_Term.uu___is_DefineFun d)) rest in
+                 if FStarC_SMTEncoding_Term.uu___is_DeclFun d
+                 then true
+                 else FStarC_SMTEncoding_Term.uu___is_DefineFun d) rest in
           match uu___3 with
           | (decls_and_defs, rest1) ->
               let uu___4 =
                 FStarC_List.filter
                   (fun d ->
                      Prims.op_Negation
-                       (((FStarC_SMTEncoding_Term.uu___is_Caption d) ||
-                           (FStarC_SMTEncoding_Term.uu___is_EmptyLine d))
-                          ||
-                          (FStarC_SMTEncoding_Term.uu___is_RetainAssumptions
-                             d))) rest1 in
+                       (if
+                          (if FStarC_SMTEncoding_Term.uu___is_Caption d
+                           then true
+                           else FStarC_SMTEncoding_Term.uu___is_EmptyLine d)
+                        then true
+                        else
+                          FStarC_SMTEncoding_Term.uu___is_RetainAssumptions d))
+                  rest1 in
               (decls_and_defs, uu___4)
         else ([], rest) in
       (match uu___1 with
@@ -549,7 +557,7 @@ let name_of_decl (d : FStarC_SMTEncoding_Term.decl) : Prims.string=
       a.FStarC_SMTEncoding_Term.assumption_name
   | FStarC_SMTEncoding_Term.DeclFun (a, uu___, uu___1, uu___2) -> a
   | FStarC_SMTEncoding_Term.DefineFun (a, uu___, uu___1, uu___2, uu___3) -> a
-  | uu___ -> failwith "Expected an assumption"
+  | uu___ -> FStarC_Effect.failwith "Expected an assumption"
 let compare_decls (d0 : FStarC_SMTEncoding_Term.decl)
   (d1 : FStarC_SMTEncoding_Term.decl) : Prims.int=
   match (d0, d1) with
@@ -574,7 +582,7 @@ let compare_decls (d0 : FStarC_SMTEncoding_Term.decl)
       -> FStarC_Util.compare a0 a1
   | (FStarC_SMTEncoding_Term.DeclFun uu___, uu___1) -> (Prims.of_int (-1))
   | (FStarC_SMTEncoding_Term.DefineFun uu___, uu___1) -> (Prims.of_int (-1))
-  | uu___ -> failwith "Unexpected decl in compare decls"
+  | uu___ -> FStarC_Effect.failwith "Unexpected decl in compare decls"
 let prune_level (roots : FStarC_SMTEncoding_Term.decl Prims.list)
   (hd : decls_at_level) (s : solver_state) : decls_at_level=
   let to_give = FStarC_SMTEncoding_Pruning.prune hd.pruning_state roots in
@@ -584,13 +592,8 @@ let prune_level (roots : FStarC_SMTEncoding_Term.decl Prims.list)
          match uu___1 with
          | (decl_name_set1, can_give) ->
              let name = name_of_decl to_give1 in
-             let uu___2 =
-               let uu___3 = decl_names_contains name decl_name_set1 in
-               Prims.op_Negation uu___3 in
-             if uu___2
-             then
-               let uu___3 = add_name name decl_name_set1 in
-               (uu___3, (to_give1 :: can_give))
+             if Prims.op_Negation (decl_names_contains name decl_name_set1)
+             then ((add_name name decl_name_set1), (to_give1 :: can_give))
              else (decl_name_set1, can_give)) ((hd.given_decl_names), [])
       to_give in
   match uu___ with
@@ -678,11 +681,9 @@ let filter_with_unsat_core (queryid : Prims.string)
     match levels with
     | last::[] -> last.all_decls_at_level_rev
     | level::levels1 ->
-        let uu___ =
-          let uu___1 = all_decls levels1 in
-          [FStarC_SMTEncoding_Term.Push (FStarC_List.length levels1)] ::
-            uu___1 in
-        FStar_List_Tot_Base.op_At level.all_decls_at_level_rev uu___ in
+        FStar_List_Tot_Base.op_At level.all_decls_at_level_rev
+          ([FStarC_SMTEncoding_Term.Push (FStarC_List.length levels1)] ::
+          (all_decls levels1)) in
   let all_decls1 = all_decls s.levels in
   let all_decls2 = FStarC_List.flatten (FStarC_List.rev all_decls1) in
   FStarC_SMTEncoding_UnsatCore.filter core all_decls2
@@ -741,8 +742,9 @@ let flush (s : solver_state) :
            given_decl_names = (level.given_decl_names);
            all_decls_at_level_rev = (level.all_decls_at_level_rev);
            given_some_decls =
-             (level.given_some_decls ||
-                (Prims.uu___is_Cons level.to_flush_rev));
+             (if level.given_some_decls
+              then true
+              else Prims.uu___is_Cons level.to_flush_rev);
            to_flush_rev = [];
            named_assumptions = (level.named_assumptions);
            pruning_roots = (level.pruning_roots)

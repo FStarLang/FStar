@@ -4,6 +4,7 @@ type typ = FStarC_Syntax_Syntax.term
 type binders = FStarC_Syntax_Syntax.binder Prims.list
 type ppname_t = Prims.string FStarC_Sealed.sealed
 let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
+type 'b binder_is_simple = unit
 type simple_binder = FStarC_Syntax_Syntax.binder
 type ident_view = (Prims.string * FStarC_Range_Type.t)
 type namedv = FStarC_Syntax_Syntax.bv
@@ -106,34 +107,35 @@ type argv = (FStarC_Syntax_Syntax.term * aqualv)
 type namedv_view =
   {
   uniq: Prims.int ;
-  sort: typ FStarC_Sealed.sealed ;
+  sort: FStarC_Syntax_Syntax.typ FStarC_Sealed.sealed ;
   ppname: ppname_t }
 let __proj__Mknamedv_view__item__uniq (projectee : namedv_view) : Prims.int=
   match projectee with | { uniq; sort; ppname;_} -> uniq
 let __proj__Mknamedv_view__item__sort (projectee : namedv_view) :
-  typ FStarC_Sealed.sealed=
+  FStarC_Syntax_Syntax.typ FStarC_Sealed.sealed=
   match projectee with | { uniq; sort; ppname;_} -> sort
 let __proj__Mknamedv_view__item__ppname (projectee : namedv_view) : ppname_t=
   match projectee with | { uniq; sort; ppname;_} -> ppname
 type bv_view =
   {
   index: Prims.int ;
-  sort1: typ FStarC_Sealed.sealed ;
+  sort1: FStarC_Syntax_Syntax.typ FStarC_Sealed.sealed ;
   ppname1: ppname_t }
 let __proj__Mkbv_view__item__index (projectee : bv_view) : Prims.int=
   match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> index
 let __proj__Mkbv_view__item__sort (projectee : bv_view) :
-  typ FStarC_Sealed.sealed=
+  FStarC_Syntax_Syntax.typ FStarC_Sealed.sealed=
   match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> sort
 let __proj__Mkbv_view__item__ppname (projectee : bv_view) : ppname_t=
   match projectee with | { index; sort1 = sort; ppname1 = ppname;_} -> ppname
 type binder_view =
   {
-  sort2: typ ;
+  sort2: FStarC_Syntax_Syntax.typ ;
   qual: aqualv ;
   attrs: FStarC_Syntax_Syntax.term Prims.list ;
   ppname2: ppname_t }
-let __proj__Mkbinder_view__item__sort (projectee : binder_view) : typ=
+let __proj__Mkbinder_view__item__sort (projectee : binder_view) :
+  FStarC_Syntax_Syntax.typ=
   match projectee with
   | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> sort
 let __proj__Mkbinder_view__item__qual (projectee : binder_view) : aqualv=
@@ -146,14 +148,16 @@ let __proj__Mkbinder_view__item__attrs (projectee : binder_view) :
 let __proj__Mkbinder_view__item__ppname (projectee : binder_view) : ppname_t=
   match projectee with
   | { sort2 = sort; qual; attrs; ppname2 = ppname;_} -> ppname
-type binding = {
+type binding =
+  {
   uniq1: Prims.int ;
-  sort3: typ ;
+  sort3: FStarC_Syntax_Syntax.typ ;
   ppname3: ppname_t }
 let __proj__Mkbinding__item__uniq (projectee : binding) : Prims.int=
   match projectee with
   | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> uniq
-let __proj__Mkbinding__item__sort (projectee : binding) : typ=
+let __proj__Mkbinding__item__sort (projectee : binding) :
+  FStarC_Syntax_Syntax.typ=
   match projectee with
   | { uniq1 = uniq; sort3 = sort; ppname3 = ppname;_} -> sort
 let __proj__Mkbinding__item__ppname (projectee : binding) : ppname_t=
@@ -295,23 +299,24 @@ let uu___is_Tv_Unknown (projectee : term_view) : Prims.bool=
 let uu___is_Tv_Unsupp (projectee : term_view) : Prims.bool=
   match projectee with | Tv_Unsupp -> true | uu___ -> false
 let notAscription (tv : term_view) : Prims.bool=
-  (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
-    (Prims.op_Negation (uu___is_Tv_AscribedC tv))
+  if Prims.op_Negation (uu___is_Tv_AscribedT tv)
+  then Prims.op_Negation (uu___is_Tv_AscribedC tv)
+  else false
 type comp_view =
-  | C_Total of typ 
-  | C_GTotal of typ 
+  | C_Total of FStarC_Syntax_Syntax.typ 
+  | C_GTotal of FStarC_Syntax_Syntax.typ 
   | C_Lemma of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.term *
   FStarC_Syntax_Syntax.term) 
   | C_Eff of (universes * name * FStarC_Syntax_Syntax.term * argv Prims.list
   * FStarC_Syntax_Syntax.term Prims.list) 
 let uu___is_C_Total (projectee : comp_view) : Prims.bool=
   match projectee with | C_Total _0 -> true | uu___ -> false
-let __proj__C_Total__item___0 (projectee : comp_view) : typ=
-  match projectee with | C_Total _0 -> _0
+let __proj__C_Total__item___0 (projectee : comp_view) :
+  FStarC_Syntax_Syntax.typ= match projectee with | C_Total _0 -> _0
 let uu___is_C_GTotal (projectee : comp_view) : Prims.bool=
   match projectee with | C_GTotal _0 -> true | uu___ -> false
-let __proj__C_GTotal__item___0 (projectee : comp_view) : typ=
-  match projectee with | C_GTotal _0 -> _0
+let __proj__C_GTotal__item___0 (projectee : comp_view) :
+  FStarC_Syntax_Syntax.typ= match projectee with | C_GTotal _0 -> _0
 let uu___is_C_Lemma (projectee : comp_view) : Prims.bool=
   match projectee with | C_Lemma _0 -> true | uu___ -> false
 let __proj__C_Lemma__item___0 (projectee : comp_view) :
@@ -324,12 +329,12 @@ let __proj__C_Eff__item___0 (projectee : comp_view) :
   (universes * name * FStarC_Syntax_Syntax.term * argv Prims.list *
     FStarC_Syntax_Syntax.term Prims.list)=
   match projectee with | C_Eff _0 -> _0
-type ctor = (name * typ)
+type ctor = (name * FStarC_Syntax_Syntax.typ)
 type lb_view =
   {
   lb_fv: FStarC_Syntax_Syntax.fv ;
   lb_us: FStarC_Syntax_Syntax.univ_name Prims.list ;
-  lb_typ: typ ;
+  lb_typ: FStarC_Syntax_Syntax.typ ;
   lb_def: FStarC_Syntax_Syntax.term }
 let __proj__Mklb_view__item__lb_fv (projectee : lb_view) :
   FStarC_Syntax_Syntax.fv=
@@ -337,7 +342,8 @@ let __proj__Mklb_view__item__lb_fv (projectee : lb_view) :
 let __proj__Mklb_view__item__lb_us (projectee : lb_view) :
   FStarC_Syntax_Syntax.univ_name Prims.list=
   match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_us
-let __proj__Mklb_view__item__lb_typ (projectee : lb_view) : typ=
+let __proj__Mklb_view__item__lb_typ (projectee : lb_view) :
+  FStarC_Syntax_Syntax.typ=
   match projectee with | { lb_fv; lb_us; lb_typ; lb_def;_} -> lb_typ
 let __proj__Mklb_view__item__lb_def (projectee : lb_view) :
   FStarC_Syntax_Syntax.term=
@@ -345,8 +351,10 @@ let __proj__Mklb_view__item__lb_def (projectee : lb_view) :
 type sigelt_view =
   | Sg_Let of (Prims.bool * FStarC_Syntax_Syntax.letbinding Prims.list) 
   | Sg_Inductive of (name * FStarC_Syntax_Syntax.univ_name Prims.list *
-  FStarC_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
-  | Sg_Val of (name * FStarC_Syntax_Syntax.univ_name Prims.list * typ) 
+  FStarC_Syntax_Syntax.binder Prims.list * FStarC_Syntax_Syntax.typ * ctor
+  Prims.list) 
+  | Sg_Val of (name * FStarC_Syntax_Syntax.univ_name Prims.list *
+  FStarC_Syntax_Syntax.typ) 
   | Unk 
 let uu___is_Sg_Let (projectee : sigelt_view) : Prims.bool=
   match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -357,12 +365,14 @@ let uu___is_Sg_Inductive (projectee : sigelt_view) : Prims.bool=
   match projectee with | Sg_Inductive _0 -> true | uu___ -> false
 let __proj__Sg_Inductive__item___0 (projectee : sigelt_view) :
   (name * FStarC_Syntax_Syntax.univ_name Prims.list *
-    FStarC_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list)=
+    FStarC_Syntax_Syntax.binder Prims.list * FStarC_Syntax_Syntax.typ * ctor
+    Prims.list)=
   match projectee with | Sg_Inductive _0 -> _0
 let uu___is_Sg_Val (projectee : sigelt_view) : Prims.bool=
   match projectee with | Sg_Val _0 -> true | uu___ -> false
 let __proj__Sg_Val__item___0 (projectee : sigelt_view) :
-  (name * FStarC_Syntax_Syntax.univ_name Prims.list * typ)=
+  (name * FStarC_Syntax_Syntax.univ_name Prims.list *
+    FStarC_Syntax_Syntax.typ)=
   match projectee with | Sg_Val _0 -> _0
 let uu___is_Unk (projectee : sigelt_view) : Prims.bool=
   match projectee with | Unk -> true | uu___ -> false

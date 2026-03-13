@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,14 +35,14 @@ let _already_warned_version_mismatch : ref bool = mk_ref false
 
 type label = string
 
-let status_tag = function
+let status_tag (s:z3status) : ML string = match s with
     | SAT  _ -> "sat"
     | UNSAT _ -> "unsat"
     | UNKNOWN _ -> "unknown"
     | TIMEOUT _ -> "timeout"
     | KILLED -> "killed"
 
-let status_string_and_errors s =
+let status_string_and_errors (s:z3status) : ML (string & error_labels) =
     match s with
     | KILLED
     | UNSAT _ -> status_tag s, []
@@ -52,7 +52,7 @@ let status_string_and_errors s =
                              //(match msg with None -> "unknown" | Some msg -> msg), errs
 
 
-let query_logging =
+let query_logging : query_log =
     let query_number = mk_ref 0 in
     let log_file_opt : ref (option (out_channel & string)) = mk_ref None in
     let used_file_names : ref (list (string & int)) = mk_ref [] in
@@ -123,7 +123,7 @@ let query_logging =
      }
 
 (*  Z3 background process handling *)
-let z3_cmd_and_args () =
+let z3_cmd_and_args () : ML (string & list string) =
   let ver = Options.z3_version () in
   let cmd =
     match Find.Z3.locate_z3 ver with
@@ -142,7 +142,7 @@ let z3_cmd_and_args () =
                 (Options.z3_cliopt ()) in
   (cmd, cmd_args)
 
-let warn_handler (suf:Errors.error_message) (s:string) : unit =
+let warn_handler (suf:Errors.error_message) (s:string) : ML unit =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   Errors.log_issue0 Errors.Warning_UnexpectedZ3Output ([
@@ -155,8 +155,8 @@ let warn_handler (suf:Errors.error_message) (s:string) : unit =
 default, each of these generates an error, but they can be downgraded
 into warnings. The warnings are anyway printed only once per F*
 invocation. *)
-let check_z3version (p:proc) : unit =
-  let getinfo (arg:string) : string =
+let check_z3version (p:proc) : ML unit =
+  let getinfo (arg:string) : ML string =
     let s = BU.ask_process p (Format.fmt1 "(get-info :%s)\n(echo \"Done!\")\n" arg) (fun _ -> "Killed") (warn_handler []) in
     if BU.starts_with s ("(:" ^ arg) then
       let ss = String.split ['"'] s in
@@ -196,7 +196,7 @@ let check_z3version (p:proc) : unit =
   );
   ()
 
-let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
+let new_z3proc (id:string) (cmd_and_args : string & list string) : ML BU.proc =
     let proc =
       try
         BU.start_process id (fst cmd_and_args) (snd cmd_and_args) (fun s -> s = "Done!")
@@ -215,17 +215,17 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : BU.proc =
     check_z3version proc;
     proc
 
-let new_z3proc_with_id =
+let new_z3proc_with_id : (string & list string) -> ML BU.proc =
     let ctr = mk_ref (-1) in
     (fun cmd_and_args ->
       let p = new_z3proc (Format.fmt1 "z3-bg-%s" (incr ctr; !ctr |> show)) cmd_and_args in
       p)
 
 type bgproc = {
-    ask:      string -> string;
-    refresh:  unit -> unit;
-    restart:  unit -> unit;
-    version:  unit -> string;
+    ask:      string -> ML string;
+    refresh:  unit -> ML unit;
+    restart:  unit -> ML unit;
+    version:  unit -> ML string;
     ctxt:     SolverState.solver_state;
 }
 
@@ -234,7 +234,7 @@ type bgproc = {
    refresh will kill and restart the process if the params changed or
    we have asked the z3 process something
  *)
-let bg_z3_proc =
+let bg_z3_proc : ref bgproc =
     let the_z3proc = mk_ref None in
     let the_z3proc_params = mk_ref (Some ("", [""])) in
     let the_z3proc_ask_count = mk_ref 0 in
@@ -303,7 +303,7 @@ type smt_output = {
   smt_labels:         option smt_output_section;
 }
 
-let parse_stats (smt_stats : option smt_output_section) : z3statistics =
+let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
     (* Parse the statistics section, if it exists *)
     let statistics : z3statistics = SMap.create 0 in
     match smt_stats with
@@ -325,8 +325,8 @@ let parse_stats (smt_stats : option smt_output_section) : z3statistics =
       statistics
 
 
-let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string) : smt_output =
-    let rec until tag lines =
+let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string) : ML smt_output =
+    let rec until tag lines : ML (option (list string & list string)) =
         match lines with
         | [] -> None
         | l::lines ->
@@ -336,7 +336,7 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
     in
     let start_tag tag = "<" ^ tag ^ ">" in
     let end_tag tag = "</" ^ tag ^ ">" in
-    let find_section tag lines : option (list string) & list string =
+    let find_section tag lines : ML (option (list string) & list string) =
        match until (start_tag tag) lines with
        | None -> None, lines
        | Some (prefix, suffix) ->
@@ -382,62 +382,27 @@ let smt_output_sections (log_file:option string) (r:Range.t) (lines:list string)
      smt_statistics = statistics;
      smt_labels = labels}
 
-let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_state)
-: 'a
+let with_solver_state (f: SolverState.solver_state -> ML ('a & SolverState.solver_state))
+: ML 'a
 = let ss = !bg_z3_proc in
   let res, ctxt = f ss.ctxt in
   bg_z3_proc := { ss with ctxt };
   res
-let with_solver_state_unit (f:SolverState.solver_state -> SolverState.solver_state)
-: unit
+let with_solver_state_unit (f:SolverState.solver_state -> ML SolverState.solver_state)
+: ML unit
 = with_solver_state (fun x -> (), f x)
-let reading_solver_state (f:SolverState.solver_state -> 'a) : 'a
+let reading_solver_state (f:SolverState.solver_state -> ML 'a) : ML 'a
 = let ss = !bg_z3_proc in
   f ss.ctxt
-let push msg = 
-  with_solver_state_unit SolverState.push;
-  with_solver_state_unit (SolverState.give [Caption msg])
-let pop msg =
-  with_solver_state_unit (SolverState.give [Caption msg]);
-  with_solver_state_unit SolverState.pop
-let snapshot msg =
-  let d = reading_solver_state SolverState.depth in
-  push msg;
-  // let d' = reading_solver_state SolverState.depth in
-  // Format.print2 "Snapshot moving from %s to %s\n" (show d) (show d');
-  d
-let rollback msg depth = 
-  let rec rollback_aux msg depth =
-    let d = reading_solver_state SolverState.depth in
-    match depth with
-    | None -> pop msg
-    | Some n ->
-      if d = n then () else (
-        pop msg;
-        rollback_aux msg depth
-      )
-  in
-  // let init = reading_solver_state SolverState.depth in
-  rollback_aux msg depth
-  // let final = reading_solver_state SolverState.depth in
-  // Format.print3 "Rollback(%s) from %s to %s\n" 
-  //   (show depth)
-  //   (show init)
-  //   (show final)
-let start_query msg roots_to_push qry = 
-  with_solver_state_unit (SolverState.start_query msg roots_to_push qry)
-let finish_query msg =
-  with_solver_state_unit (SolverState.finish_query msg)
-let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
-let refresh using_facts_from =
+let giveZ3 (decls:list decl) : ML unit = with_solver_state_unit (SolverState.give decls)
+
+let do_refresh (using_facts_from:option SolverState.using_facts_from_setting) : ML unit =
     (!bg_z3_proc).refresh();
     with_solver_state_unit (SolverState.reset using_facts_from)
-let stop () =
-    (!bg_z3_proc).refresh()
 
 let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string)
   (* returns initial and final statistics *)
-  : z3status & z3statistics & z3statistics
+  : ML (z3status & z3statistics & z3statistics)
 =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
@@ -490,7 +455,8 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
     in
     status, initial_statistics, statistics
   in
-  let log_result fwrite (res, _initial_stats, _stats) =
+  let log_result (fwrite: string -> string -> ML unit) (r: z3status & z3statistics & z3statistics) : ML unit =
+    let (res, _initial_stats, _stats) = r in
     (* If we are logging, write some more information to the
     smt2 file, such as the result of the query and the new unsat
     core generated. We take a call back to do so, since for the
@@ -554,7 +520,7 @@ let doZ3Exe (log_file:_) (r:Range.t) (fresh:bool) (input:string) (label_messages
     log_result (fun _fname s -> ignore (query_logging.append_to_log s)) r;
     r
 
-let z3_options (ver:string) =
+let z3_options (ver:string) : ML string =
  (* Common z3 prefix for all supported versions (at minimum 4.8.5). *)
   let opts = [
     "(set-option :global-decls false)";
@@ -583,7 +549,7 @@ let z3_options (ver:string) =
   in
   String.concat "\n" opts ^ "\n"
  
-let context_profile (theory:list decl) =
+let context_profile (theory:list decl) : ML unit =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
             match d with
@@ -610,7 +576,7 @@ let context_profile (theory:list decl) =
                         (show n))
                modules
 
-let mk_input (fresh : bool) (theory : list decl) : string & option string & option string =
+let mk_input (fresh : bool) (theory : list decl) : ML (string & option string & option string) =
     let ver = Options.z3_version () in
     let theory =
       (* Add a caption with some version info. *)
@@ -678,7 +644,7 @@ let mk_input (fresh : bool) (theory : list decl) : string & option string & opti
 let cache_hit
     (log_file:option string)
     (cache:option string)
-    (qhash:option string) : option z3result =
+    (qhash:option string) : ML (option z3result) =
     if Options.use_hints() && Options.use_hint_hashes() then
         match qhash with
         | Some (x) when qhash = cache ->
@@ -707,7 +673,7 @@ let z3_job
        input
        qhash
        queryid
-: z3result
+: ML z3result
 = //This code is a little ugly:
   //We insert a profiling call to accumulate total time spent in Z3
   //But, we also record the time of this particular call so that we can
@@ -721,7 +687,7 @@ let z3_job
         try
           Timing.record_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
-          refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
+          do_refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e
           )
       (Some (query_logging.get_module_name()))
@@ -741,7 +707,7 @@ let ask_text
     (qry:list decl)
     (queryid:string)
     (core:option U.unsat_core)
-  : string
+  : ML string
   = (* Mimics a fresh ask, and just returns the string that would
     be sent to the solver. *)
     let theory = 
@@ -762,7 +728,7 @@ let ask
     (queryid:string)
     (fresh:bool)
     (core:option U.unsat_core)
-: z3result
+: ML z3result
 = 
   // push "query";
   // giveZ3 qry;
@@ -787,3 +753,42 @@ let ask
   in
   // pop "query";
   result
+
+let refresh (using_facts_from:option SolverState.using_facts_from_setting) : ML unit =
+    do_refresh using_facts_from
+let stop () : ML unit =
+    (!bg_z3_proc).refresh()
+let push (msg:string) : ML unit = 
+  with_solver_state_unit SolverState.push;
+  with_solver_state_unit (SolverState.give [Caption msg])
+let pop (msg:string) : ML unit =
+  with_solver_state_unit (SolverState.give [Caption msg]);
+  with_solver_state_unit SolverState.pop
+let snapshot (msg:string) : ML int =
+  let d = reading_solver_state SolverState.depth in
+  push msg;
+  // let d' = reading_solver_state SolverState.depth in
+  // Format.print2 "Snapshot moving from %s to %s\n" (show d) (show d');
+  d
+let rollback (msg:string) (depth:option int) : ML unit = 
+  let rec rollback_aux msg depth : ML unit =
+    let d = reading_solver_state SolverState.depth in
+    match depth with
+    | None -> pop msg
+    | Some n ->
+      if d = n then () else (
+        pop msg;
+        rollback_aux msg depth
+      )
+  in
+  // let init = reading_solver_state SolverState.depth in
+  rollback_aux msg depth
+  // let final = reading_solver_state SolverState.depth in
+  // Format.print3 "Rollback(%s) from %s to %s\n" 
+  //   (show depth)
+  //   (show init)
+  //   (show final)
+let start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit = 
+  with_solver_state_unit (SolverState.start_query msg prefix_to_push query)
+let finish_query (msg:string) : ML unit =
+  with_solver_state_unit (SolverState.finish_query msg)

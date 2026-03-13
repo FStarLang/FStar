@@ -283,31 +283,3 @@ val hex_of_string: string -> Tot string
 val hex_of_bytes: bytes -> Tot string
 val print_bytes: bytes -> Tot string
 val bytes_of_string: string -> bytes //abytes
-
-(** A better implementation of BufferBytes, formerly found in miTLS *)
-
-module B = LowStar.Buffer
-module M = LowStar.Modifies
-
-open FStar.HyperStack.ST
-
-type lbuffer (l:UInt32.t) = b:B.buffer UInt8.t {B.length b == U32.v l}
-
-val of_buffer (l:UInt32.t) (#p #q:_) (buf:B.mbuffer UInt8.t p q{B.length buf == U32.v l})
-  : Stack (b:bytes{length b = UInt32.v l})
-  (requires fun h0 ->
-    B.live h0 buf)
-  (ensures  fun h0 b h1 ->
-    B.(modifies loc_none h0 h1) /\
-    b = hide (B.as_seq h0 buf))
-
-val store_bytes: src:bytes { length src <> 0 } ->
-  dst:lbuffer (len src) ->
-  Stack unit
-    (requires (fun h0 -> B.live h0 dst))
-    (ensures  (fun h0 r h1 ->
-      M.(modifies (loc_buffer dst) h0 h1) /\
-      Seq.equal (reveal src) (B.as_seq h1 dst)))
-
-(* JP: let's not add from_bytes here because we want to leave it up to the
-caller to allocate on the stack or on the heap *)

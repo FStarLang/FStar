@@ -52,7 +52,7 @@ let dbg_Injectivity   = Debug.get_toggle "Injectivity"
 let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
 let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
-  : sigelt
+  : ML sigelt
   = if tcenv.phase1 then se else 
     let Sig_inductive_typ dd = se.sigel in
     let { lid=t; us=universe_names; params=tps; t=k } = dd in
@@ -76,7 +76,7 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
         k
     in
     //Format.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (show u_k);
-    let rec universe_leq u v =
+    let rec universe_leq u v : ML _ =
         match u, v with
         | U_zero, _ -> true
         | U_succ u0, U_succ v0 -> universe_leq u0 v0
@@ -138,10 +138,10 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
 
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
-       : env_t          (* environment extended with a refined type for the type-constructor *)
+       : ML (env_t          (* environment extended with a refined type for the type-constructor *)
        & sigelt         (* the typed version of s, with universe variables still TBD *)
        & universe       (* universe of the constructed type *)
-       & guard_t        (* constraints on implicit variables *)
+       & guard_t)        (* constraints on implicit variables *)
  = match s.sigel with
    | Sig_inductive_typ {lid=tc; us=uvs; params=tps; num_uniform_params=n_uniform;
                         t=k; mutuals; ds=data} -> //the only valid qual is Private
@@ -211,7 +211,7 @@ let mk_implicit : bqual -> bqual = function
 
 (* 2. Checking each datacon *)
 let tc_data (env:env_t) (tcs : list (sigelt & universe))
-  : sigelt -> sigelt & guard_t =
+  : sigelt -> ML (sigelt & guard_t) =
     fun se -> match se.sigel with
     | Sig_datacon {lid=c; us=_uvs; t; ty_lid=tc_lid; num_ty_params=ntps; mutuals=mutual_tcs; proj_disc_lids} ->
          //assert (_uvs = []);
@@ -246,9 +246,8 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                   let t = mk (Tm_arrow {bs=bs'; comp=res}) t.pos in
                   let subst = tps |> List.mapi (fun i ({binder_bv=x}) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
-                  (* check that c is a Tot computation, reject it otherwise
-                   * (unless --MLish, which will mark all of them with ML effect) *)
-                  if Options.ml_ish () || is_total_comp c
+                  (* check that c is a Tot computation, reject it otherwise *)
+                  if is_total_comp c
                   then bs, comp_result c
                   else raise_error (U.comp_effect_name c) Errors.Fatal_UnexpectedConstructorType
                          "Constructors cannot have effects"
@@ -335,7 +334,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
 
 (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
 let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas:list sigelt)
-    : list sigelt & list sigelt
+    : ML (list sigelt & list sigelt)
     =   //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
         //for each type constructor tc_i
@@ -412,7 +411,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas
         tcs, datas
 
 
-let datacon_typ (data:sigelt) :term =
+let datacon_typ (data:sigelt) : ML term =
   match data.sigel with
   | Sig_datacon {t} -> t
   | _                              -> failwith "Impossible!"
@@ -420,7 +419,7 @@ let datacon_typ (data:sigelt) :term =
 (* private *)
 let haseq_suffix = "__uu___haseq"
 
-let is_haseq_lid lid =
+let is_haseq_lid lid : ML _ =
   let str = (string_of_lid lid) in
   let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
@@ -437,7 +436,7 @@ let get_haseq_axiom_lid lid =
 //        -- opened parameter binders
 //        -- opened index binders
 //        -- conjunction of hasEq of the binders
-let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:univ_names) :(lident & term & binders & binders & term) =
+let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:univ_names) : ML (lident & term & binders & binders & term) =
   let lid, bs, t =
     match ty.sigel with
     | Sig_inductive_typ {lid; params=bs; t} -> lid, bs, t
@@ -490,7 +489,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
 
 //soundness condition for this data constructor
 //usubst is the universe substitution, and bs are the opened inductive type parameters
-let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:list subst_elt) (bs:binders) :term =
+let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:list subst_elt) (bs:binders) : ML term =
   let dt = datacon_typ data in
   //apply the universes substitution to dt
   let dt = SS.subst usubst dt in
@@ -535,7 +534,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
     //env is the environment in which the next two terms are well-formed (e.g. data constructors are dependent function types, so they may refer to their arguments)
     //term is the lhs of the implication for soundness formula
     //term is the soundness condition derived from all the data constructors of this type
-let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list subst_elt) (us:list univ_name) acc ty =
+let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list subst_elt) (us:list univ_name) acc ty : ML _ =
   let lid =
     match ty.sigel with
     | Sig_inductive_typ {lid} -> lid
@@ -575,7 +574,7 @@ let optimized_haseq_ty (all_datas_in_the_bundle:sigelts) (usubst:list subst_elt)
   l_axioms @ [axiom_lid, fml], env, U.mk_conj guard' guard, U.mk_conj cond' cond
 
 
-let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sigelt) (env0:env_t) :list sigelt =
+let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sigelt) (env0:env_t) : ML (list sigelt) =
   let us, t =
     let ty = List.hd tcs in
     match ty.sigel with
@@ -624,11 +623,11 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
 //folding function for t_datas
 //usubst is the universe substitution, bs are the opened inductive type parameters
 //haseq_ind is the inductive applied to all its bs and ibs
-let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term) (mutuals:list lident) (acc:term) (data:sigelt) =
+let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term) (mutuals:list lident) (acc:term) (data:sigelt) : ML _ =
 
   //identify if the type t is a mutually defined type
   //TODO: we now have a get_free_names in Syntax.Free, use that
-  let rec is_mutual (t:term) =  //TODO: this should handle more cases
+  let rec is_mutual (t:term) : ML _ =  //TODO: this should handle more cases
     match (SS.compress t).n with
     | Tm_fvar fv         -> List.existsb (fun lid -> lid_equals lid fv.fv_name) mutuals
     | Tm_uinst (t', _)   -> is_mutual t'
@@ -637,7 +636,8 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
     | Tm_meta {tm=t'}    -> is_mutual t'
     | _                  -> false
 
-   and exists_mutual = function
+   and exists_mutual tl : ML _ =
+     match tl with
      | [] -> false
      | hd::tl -> is_mutual hd || exists_mutual tl
   in
@@ -675,7 +675,7 @@ let unoptimized_haseq_data (usubst:list subst_elt) (bs:binders) (haseq_ind:term)
 //this is the folding function for tcs
 //usubst and us are the universe variables substitution and universe names, we open each type constructor type, and data constructor type with these
 //the accumulator is the formula that we are building, for each type constructor, we add a conjunct to it
-let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lident) (usubst:list subst_elt) (us:list univ_name) (acc:term) (ty:sigelt) =
+let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lident) (usubst:list subst_elt) (us:list univ_name) (acc:term) (ty:sigelt) : ML _ =
   let lid, bs, t, d_lids =
     match ty.sigel with
     | Sig_inductive_typ {lid; params=bs; t; ds=d_lids} -> lid, bs, t, d_lids
@@ -733,7 +733,7 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list sigelt) (mutuals:list lid
   //new accumulator is old accumulator /\ fml
   U.mk_conj acc fml
 
-let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sigelt) (env0:env_t) :list sigelt =
+let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sigelt) (env0:env_t) : ML (list sigelt) =
   //TODO: perhaps make it a map ?
   let mutuals = List.map (fun ty ->
     match ty.sigel with
@@ -767,7 +767,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list si
 
 
 //returns: sig bundle, list of type constructors, list of data constructors
-let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qualifier) (lids:list lident) :(sigelt & list sigelt & list sigelt) =
+let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qualifier) (lids:list lident) : ML (sigelt & list sigelt & list sigelt) =
     (*  Consider this illustrative example:
 
          type T (a:Type) : (b:Type) -> Type =
@@ -1014,7 +1014,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                             (indices:binders)        (* Implicit type parameters                *)
                                             (fields:binders)         (* Fields of the constructor               *)
                                             (erasable:bool)          (* Generate ghost discriminators and projectors *)
-                                            : list sigelt =
+                                            : ML (list sigelt) =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
@@ -1246,8 +1246,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     (* We remove the plugin attribute from these generated definitions.
     We do not want to pay an embedding/unembedding to use them, and we don't
     want warning about unfolding something that is a plugin *)
-    let no_plugin (se:sigelt) : sigelt =
-      let not_plugin_attr (t:term) : bool =
+    let no_plugin (se:sigelt) : ML sigelt =
+      let not_plugin_attr (t:term) : ML bool =
         let h = U.head_of t in
         not (U.is_fvar C.plugin_attr h)
       in
@@ -1255,7 +1255,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
     List.map no_plugin (discriminator_ses @ projectors_ses)
 
-let mk_data_operations iquals attrs env tcs se =
+let mk_data_operations iquals attrs env tcs se : ML _ =
   match se.sigel with
   | Sig_datacon {lid=constr_lid; us=uvs; t; ty_lid=typ_lid; num_ty_params=n_typars} ->
 

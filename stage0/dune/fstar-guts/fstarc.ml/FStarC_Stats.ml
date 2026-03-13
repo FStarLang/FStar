@@ -116,8 +116,8 @@ let do_record (key : Prims.string) (f : unit -> 'a) : 'a=
              };
            FStarC_Effect.raise e)))))
 let record (key : Prims.string) (f : unit -> 'a) : 'a=
-  let uu___ = FStarC_Effect.op_Bang enabled in
-  if uu___ then do_record key f else f ()
+  let e = FStarC_Effect.op_Bang enabled in
+  if e then do_record key f else f ()
 let lpad (len : Prims.int) (s : Prims.string) : Prims.string=
   let l = FStarC_String.length s in
   if l >= len

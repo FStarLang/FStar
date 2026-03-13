@@ -7,13 +7,15 @@ let uu___is_E (projectee : ext_state) : Prims.bool= true
 let __proj__E__item__map (projectee : ext_state) :
   Prims.string FStarC_PSMap.t= match projectee with | E map -> map
 let defaults : (Prims.string * Prims.string) Prims.list=
-  [("context_pruning", "true"); ("prune_decls", "true")]
+  [("context_pruning", "true");
+  ("prune_decls", "true");
+  ("fly_deps", "true");
+  ("optimize_let_vc", "true")]
 let init : ext_state=
   let uu___ =
-    let uu___1 = FStarC_PSMap.empty () in
     FStarC_List.fold_right
-      (fun uu___2 m -> match uu___2 with | (k, v) -> FStarC_PSMap.add m k v)
-      defaults uu___1 in
+      (fun uu___1 m -> match uu___1 with | (k, v) -> FStarC_PSMap.add m k v)
+      defaults (FStarC_PSMap.empty ()) in
   E uu___
 let cur_state : ext_state FStarC_Effect.ref= FStarC_Effect.alloc init
 let set (k : key) (v : value) : unit=
@@ -39,13 +41,17 @@ let get (k : key) : value=
 let enabled (k : key) : Prims.bool=
   let v = get k in
   let v1 = FStarC_String.lowercase v in
-  (v1 <> "") &&
-    (Prims.op_Negation (((v1 = "off") || (v1 = "false")) || (v1 = "0")))
+  if v1 <> ""
+  then
+    Prims.op_Negation
+      (if (if v1 = "off" then true else v1 = "false") then true else v1 = "0")
+  else false
 let is_prefix (s1 : Prims.string) (s2 : Prims.string) : Prims.bool=
   let l1 = FStarC_String.length s1 in
   let l2 = FStarC_String.length s2 in
-  (l2 >= l1) &&
-    (let uu___ = FStarC_String.substring s2 Prims.int_zero l1 in uu___ = s1)
+  if l2 >= l1
+  then let uu___ = FStarC_String.substring s2 Prims.int_zero l1 in uu___ = s1
+  else false
 let getns (ns : Prims.string) : (key * value) Prims.list=
   let f k v acc =
     let uu___ = is_prefix (Prims.strcat ns ":") k in

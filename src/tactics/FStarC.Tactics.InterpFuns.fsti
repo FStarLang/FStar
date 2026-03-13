@@ -26,9 +26,7 @@ open FStarC.Tactics.Monad
 module NBET  = FStarC.TypeChecker.NBETerm
 module PO    = FStarC.TypeChecker.Primops
 
-val max_tac_arity : int // = 20
-
-val interp_ctx : string -> (unit -> 'a) -> 'a
+val interp_ctx : string -> (unit -> ML 'a) -> ML 'a
 
 // The mk_tot_step functions use lids in FStar.Stubs.Tactics.Types,
 // while mk_tac_step ones go to FStar.Stubs.Tactics.V2.Builtins.
@@ -41,9 +39,9 @@ val mk_tot_step_1 :
   {| embedding 'res |} ->
   {| NBET.embedding 'nt1 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 'res) ->
-  ('nt1 -> 'nres) ->
-  PO.primitive_step
+  ('t1 -> ML 'res) ->
+  ('nt1 -> ML 'nres) ->
+  ML PO.primitive_step
 
 val mk_tot_step_2 :
   univ_arity:int ->
@@ -54,9 +52,9 @@ val mk_tot_step_2 :
   {| NBET.embedding 'nt1 |} ->
   {| NBET.embedding 'nt2 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 't2 -> 'res) ->
-  ('nt1 -> 'nt2 -> 'nres) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> ML 'res) ->
+  ('nt1 -> 'nt2 -> ML 'nres) ->
+  ML PO.primitive_step
 
 // Step with access to normalizer PSC
 val mk_tot_step_1_psc :
@@ -66,9 +64,9 @@ val mk_tot_step_1_psc :
   {| embedding 'res |} ->
   {| NBET.embedding 'nt1 |} ->
   {| NBET.embedding 'nres |} ->
-  (PO.psc -> 't1 -> 'res) ->
-  (PO.psc -> 'nt1 -> 'nres) ->
-  PO.primitive_step
+  (PO.psc -> 't1 -> ML 'res) ->
+  (PO.psc -> 'nt1 -> ML 'nres) ->
+  ML PO.primitive_step
 
 val mk_tac_step_1 :
   univ_arity:int ->
@@ -77,9 +75,9 @@ val mk_tac_step_1 :
   {| embedding 'res |} ->
   {| NBET.embedding 'nt1 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> tac 'res) ->
-  ('nt1 -> tac 'nres) ->
-  PO.primitive_step
+  ('t1 -> ML (tac 'res)) ->
+  ('nt1 -> ML (tac 'nres)) ->
+  ML PO.primitive_step
 
 val mk_tac_step_2 :
   univ_arity:int ->
@@ -90,9 +88,9 @@ val mk_tac_step_2 :
   {| NBET.embedding 'nt1 |} ->
   {| NBET.embedding 'nt2 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 't2 -> tac 'res) ->
-  ('nt1 -> 'nt2 -> tac 'nres) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> ML (tac 'res)) ->
+  ('nt1 -> 'nt2 -> ML (tac 'nres)) ->
+  ML PO.primitive_step
 
 val mk_tac_step_3 :
   univ_arity:int ->
@@ -105,9 +103,9 @@ val mk_tac_step_3 :
   {| NBET.embedding 'nt2 |} ->
   {| NBET.embedding 'nt3 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 't2 -> 't3 -> tac 'res) ->
-  ('nt1 -> 'nt2 -> 'nt3 -> tac 'nres) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> 't3 -> ML (tac 'res)) ->
+  ('nt1 -> 'nt2 -> 'nt3 -> ML (tac 'nres)) ->
+  ML PO.primitive_step
 
 val mk_tac_step_4 :
   univ_arity:int ->
@@ -122,9 +120,9 @@ val mk_tac_step_4 :
   {| NBET.embedding 'nt3 |} ->
   {| NBET.embedding 'nt4 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 't2 -> 't3 -> 't4 -> tac 'res) ->
-  ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> tac 'nres) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> 't3 -> 't4 -> ML (tac 'res)) ->
+  ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> ML (tac 'nres)) ->
+  ML PO.primitive_step
 
 val mk_tac_step_5 :
   univ_arity:int ->
@@ -141,6 +139,8 @@ val mk_tac_step_5 :
   {| NBET.embedding 'nt4 |} ->
   {| NBET.embedding 'nt5 |} ->
   {| NBET.embedding 'nres |} ->
-  ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac 'res) ->
-  ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> tac 'nres) ->
-  PO.primitive_step
+  ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> ML (tac 'res)) ->
+  ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> ML (tac 'nres)) ->
+  ML PO.primitive_step
+
+val max_tac_arity : int // = 20

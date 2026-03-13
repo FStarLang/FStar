@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2025 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,8 @@ module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
 module TcEnv = FStarC.TypeChecker.Env
 
-let mkAssume (tm, cap, nm) =
+let mkAssume x : ML decl =
+    let (tm, cap, nm) = x in
     Assume ({
         assumption_name=escape nm;
         assumption_caption=cap;
@@ -36,8 +37,12 @@ let mkAssume (tm, cap, nm) =
         assumption_free_names=free_top_level_names tm;
     })
 let norng f = fun x -> f x Range.dummyRange
-let mkTrue   = mkTrue Range.dummyRange
-let mkFalse  = mkFalse Range.dummyRange
+let norng2 f = fun x y -> f x y Range.dummyRange
+let norng3 f = fun x y z -> f x y z Range.dummyRange
+let norng4 f = fun x y z w -> f x y z w Range.dummyRange
+let _fv_empty : S.memo fvs = alloc None
+let mkTrue : term  = {tm=App(TrueOp, []); freevars=_fv_empty; rng=Range.dummyRange}
+let mkFalse : term = {tm=App(FalseOp, []); freevars=alloc None; rng=Range.dummyRange}
 let mkInteger  = norng mkInteger
 let mkInteger' = norng mkInteger'
 let mkReal     = norng mkReal
@@ -90,9 +95,6 @@ let mkBvToNat = norng mkBvToNat
 let mkITE = norng mkITE
 let mkCases = norng mkCases
 
-let norng2 f = fun x y -> f x y Range.dummyRange
-let norng3 f = fun x y z -> f x y z Range.dummyRange
-let norng4 f = fun x y z w -> f x y z w Range.dummyRange
 let mk_Term_app  = norng2 mk_Term_app
 let mk_and_l = norng mk_and_l
 let mk_or_l = norng mk_or_l
@@ -100,8 +102,8 @@ let mk_ApplyTT = norng2 mk_ApplyTT
 let mk_String_const = norng mk_String_const
 let mk_Precedes u0 u1 = norng4 (mk_Precedes u0 u1)
 let mk_LexCons = norng3 mk_LexCons
-let mk_lex_t = mk_lex_t Range.dummyRange
-let mk_LexTop = mk_LexTop Range.dummyRange
+let mk_lex_t : term = {tm=App(Var "Prims.lex_t", []); freevars=alloc None; rng=Range.dummyRange}
+let mk_LexTop : term = {tm=App(Var "LexTop", []); freevars=alloc None; rng=Range.dummyRange}
 
 
 (*
@@ -118,12 +120,12 @@ let mk_LexTop = mk_LexTop Range.dummyRange
  *     07/02: reverting, until we preserve the indices, no smt reification
  *)
 
-let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
+let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : ML bool =
   let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
   not (l |> TcEnv.get_effect_decl en |> U.is_layered)
 
-let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
+let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : ML bool =
   match c.n with
   | Comp ct -> is_smt_reifiable_effect en ct.effect_name
   | _ -> false
@@ -132,10 +134,10 @@ let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
 // TAC rc are not smt reifiable
 //
 
-let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
+let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : ML bool =
   rc.residual_effect |> is_smt_reifiable_effect en
 
-let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
+let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : ML bool =
   match (SS.compress t).n with
   | Tm_arrow {comp=c} ->
     c |> U.comp_effect_name |> is_smt_reifiable_effect en

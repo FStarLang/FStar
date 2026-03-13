@@ -234,20 +234,20 @@ type pragma =
   | Check of term
 
 type dep_scan_callbacks = {
-   scan_term: term -> unit;
-   scan_binder: binder -> unit;
-   scan_pattern: pattern -> unit;
-   add_lident: lident -> unit;
-   add_open: lident -> unit;
+   scan_term: term -> ML unit;
+   scan_binder: binder -> ML unit;
+   scan_pattern: pattern -> ML unit;
+   add_lident: lident -> ML unit;
+   add_open: lident -> ML unit;
 }
 
 type to_be_desugared = {
   lang_name: string;
   blob: FStarC.Dyn.dyn;
   idents: list ident;
-  to_string: FStarC.Dyn.dyn -> string;
-  eq: FStarC.Dyn.dyn -> FStarC.Dyn.dyn -> bool;
-  dep_scan: dep_scan_callbacks -> FStarC.Dyn.dyn -> unit
+  to_string: FStarC.Dyn.dyn -> ML string;
+  eq: FStarC.Dyn.dyn -> FStarC.Dyn.dyn -> ML bool;
+  dep_scan: dep_scan_callbacks -> FStarC.Dyn.dyn -> ML unit
 }
 
 type decl' =
@@ -310,8 +310,6 @@ val lid_of_modul : modul -> lid
 val decls_of_modul : modul -> list decl
 
 (* Smart constructors *)
-val mk_decl : decl' -> range -> list decoration -> decl
-val add_decorations: decl -> list decoration -> decl
 val mk_binder_with_attrs : binder' -> range -> level -> aqual -> list term -> binder
 val mk_binder : binder' -> range -> level -> aqual -> binder
 val mk_term : term' -> range -> level -> term
@@ -327,54 +325,54 @@ val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
 
 val unit_const : range -> term
-val ml_comp : term -> term
+val ml_comp : term -> ML term
 val tot_comp : term -> term
 
-val mkApp : term -> list (term & imp) -> range -> term
-val mkExplicitApp : term -> list term -> range -> term
+val mkApp : term -> list (term & imp) -> range -> ML term
+val mkExplicitApp : term -> list term -> range -> ML term
 
-val mkRefSet : range -> list term -> term
+val mkRefSet : range -> list term -> ML term
 
-val focusLetBindings : list (bool & (pattern & term)) -> range -> list (pattern & term)
-val focusAttrLetBindings : list (option attributes_ & (bool & (pattern & term))) -> range -> list (option attributes_ & (pattern & term))
+val focusLetBindings : list (bool & (pattern & term)) -> range -> ML (list (pattern & term))
+val focusAttrLetBindings : list (option attributes_ & (bool & (pattern & term))) -> range -> ML (list (option attributes_ & (pattern & term)))
 
-val mkTuple : list term -> range -> term
-val mkDTuple : list term -> range -> term
-val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> binder
-val mkRefinedPattern : pattern -> term -> (*should_bind_pat:*)bool -> option term -> range -> range -> pattern
+val mkTuple : list term -> range -> ML term
+val mkDTuple : list term -> range -> ML term
+val mkRefinedBinder : ident -> term -> bool -> option term -> range -> aqual -> list term -> ML binder
+val mkRefinedPattern : pattern -> term -> (*should_bind_pat:*)bool -> option term -> range -> range -> ML pattern
 val extract_named_refinement : bool -> term -> option (ident & term & option term)
 
-val as_frag : list decl -> inputFragment
+val as_frag : list decl -> ML inputFragment
 
 // TODO: Move to something like FStarC.Util
-val strip_prefix : string -> string -> option string
+val strip_prefix : string -> string -> ML (option string)
 
-val compile_op : int -> string -> range -> string
-val compile_op' : string -> range -> string
-val string_to_op : string -> option (string & option int) // returns operator symbol and optional arity
+val compile_op : int -> string -> range -> ML string
+val compile_op' : string -> range -> ML string
+val string_to_op : string -> ML (option (string & option int)) // returns operator symbol and optional arity
 
-val string_of_fsdoc : string & list (string & string) -> string
+val string_of_fsdoc : string & list (string & string) -> ML string
 val string_of_let_qualifier : let_qualifier -> string
 
-val term_to_string : term -> string
+val term_to_string : term -> ML string
+val binder_to_string : binder -> ML string
+val pat_to_string : pattern -> ML string
 
-val lids_of_let : list (pattern & term) -> list lident
+val lids_of_let : list (pattern & term) -> ML (list lident)
 val id_of_tycon : tycon -> string
 
-val string_of_pragma : pragma -> string
-val pat_to_string : pattern -> string
-val binder_to_string : binder -> string
-val modul_to_string : modul -> string
-val decl_to_string : decl -> string
+val string_of_pragma : pragma -> ML string
+val decl_to_string : decl -> ML string
+val modul_to_string : modul -> ML string
 
 val decl_is_val : ident -> decl -> bool
 
 val thunk : term -> term
 
-val check_id : ident -> unit
+val check_id : ident -> ML unit
 
-val ident_of_binder : range -> binder -> ident
-val idents_of_binders : list binder -> range -> list ident
+val ident_of_binder : range -> binder -> ML ident
+val idents_of_binders : list binder -> range -> ML (list ident)
 
 val as_interface (m:modul) : modul
 
@@ -389,10 +387,13 @@ instance val showable_binder  : showable binder
 instance val showable_modul   : showable modul
 instance val showable_pragma  : showable pragma
 
+val add_decorations: decl -> list decoration -> ML decl
+val mk_decl : decl' -> range -> list decoration -> ML decl
+
 instance val pretty_quote_kind   : pretty quote_kind
-instance val pretty_decl    : pretty decl
 instance val pretty_term    : pretty term
-instance val pretty_pattern : pretty pattern
 instance val pretty_binder  : pretty binder
-instance val pretty_modul   : pretty modul
+instance val pretty_pattern : pretty pattern
 instance val pretty_pragma  : pretty pragma
+instance val pretty_decl    : pretty decl
+instance val pretty_modul   : pretty modul

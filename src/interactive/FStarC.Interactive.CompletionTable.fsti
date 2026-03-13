@@ -41,9 +41,9 @@ val table : Type0
 
 val empty : table
 val insert : tbl:table -> host_query:query -> id:string -> c:lid_symbol -> table
-val register_alias : tbl:table -> key:string -> host_query:query -> included_query:query -> table
-val register_open : tbl:table -> is_module:bool -> host_query:query -> included_query:query -> table
-val register_include : tbl:table -> host_query:query -> included_query:query -> table
+val register_alias : tbl:table -> key:string -> host_query:query -> included_query:query -> ML table
+val register_include : tbl:table -> host_query:query -> included_query:query -> ML table
+val register_open : tbl:table -> is_module:bool -> host_query:query -> included_query:query -> ML table
 val register_module_path : tbl:table -> loaded:bool -> mod_path:string -> mod_query:query -> table
 
 val alist_of_ns_info : ns_info -> list (string & FStarC.Json.json)
@@ -56,8 +56,8 @@ type completion_result =
 val json_of_completion_result : completion_result -> FStarC.Json.json
 
 val find_module_or_ns :
-  tbl:table -> query:query -> option mod_symbol
+  tbl:table -> query:query -> ML (option mod_symbol)
 val autocomplete_lid :
-  tbl:table -> query:query -> list completion_result
+  tbl:table -> query:query -> ML (list completion_result)
 val autocomplete_mod_or_ns :
-  tbl:table -> query:query -> filter:((path & mod_symbol) -> option (path & mod_symbol)) -> list completion_result
+  tbl:table -> query:query -> filter:((path & mod_symbol) -> option (path & mod_symbol)) -> ML (list completion_result)

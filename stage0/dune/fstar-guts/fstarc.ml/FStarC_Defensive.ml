@@ -44,33 +44,26 @@ let __def_check_scoped (uu___ : 'envut FStarC_Class_Binders.hasBinders)
     let uu___4 =
       let uu___5 =
         let uu___6 =
-          FStarC_Errors_Msg.text "Internal: term is not well-scoped " in
-        FStar_Pprint.op_Hat_Slash_Hat uu___6
-          (FStar_Pprint.parens (FStar_Pprint.doc_of_string msg)) in
-      let uu___6 =
+          let uu___7 = FStarC_Class_PP.pp uu___2 thing in
+          FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "t =") uu___7 in
         let uu___7 =
-          let uu___8 = FStarC_Errors_Msg.text "t =" in
-          let uu___9 = FStarC_Class_PP.pp uu___2 thing in
-          FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
-        let uu___8 =
-          let uu___9 =
-            let uu___10 = FStarC_Errors_Msg.text "FVs =" in
-            let uu___11 =
+          let uu___8 =
+            let uu___9 =
               FStarC_Class_PP.pp (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv)
                 free in
-            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-          let uu___10 =
-            let uu___11 =
-              let uu___12 = FStarC_Errors_Msg.text "Scope =" in
-              let uu___13 =
+            FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "FVs =")
+              uu___9 in
+          let uu___9 =
+            let uu___10 =
+              let uu___11 =
                 FStarC_Class_PP.pp (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv)
                   scope in
-              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-            let uu___12 =
-              let uu___13 =
-                let uu___14 = FStarC_Errors_Msg.text "Diff =" in
-                let uu___15 =
-                  let uu___16 =
+              FStar_Pprint.op_Hat_Slash_Hat
+                (FStarC_Errors_Msg.text "Scope =") uu___11 in
+            let uu___11 =
+              let uu___12 =
+                let uu___13 =
+                  let uu___14 =
                     Obj.magic
                       (FStarC_Class_Setlike.diff ()
                          (Obj.magic
@@ -78,13 +71,17 @@ let __def_check_scoped (uu___ : 'envut FStarC_Class_Binders.hasBinders)
                                FStarC_Syntax_Syntax.ord_bv)) (Obj.magic free)
                          (Obj.magic scope)) in
                   FStarC_Class_PP.pp
-                    (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv) uu___16 in
-                FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-              [uu___13] in
-            uu___11 :: uu___12 in
-          uu___9 :: uu___10 in
-        uu___7 :: uu___8 in
-      uu___5 :: uu___6 in
+                    (pp_set FStarC_Syntax_Syntax.ord_bv pp_bv) uu___14 in
+                FStar_Pprint.op_Hat_Slash_Hat
+                  (FStarC_Errors_Msg.text "Diff =") uu___13 in
+              [uu___12] in
+            uu___10 :: uu___11 in
+          uu___8 :: uu___9 in
+        uu___6 :: uu___7 in
+      (FStar_Pprint.op_Hat_Slash_Hat
+         (FStarC_Errors_Msg.text "Internal: term is not well-scoped ")
+         (FStar_Pprint.parens (FStar_Pprint.doc_of_string msg)))
+        :: uu___5 in
     FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range rng
       FStarC_Errors_Codes.Warning_Defensive ()
       (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)

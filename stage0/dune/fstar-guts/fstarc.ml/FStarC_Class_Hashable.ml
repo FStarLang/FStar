@@ -13,9 +13,7 @@ let ord_hash_code : FStarC_Hash.hash_code FStarC_Class_Ord.ord=
   {
     FStarC_Class_Ord.super = eq_hash_code;
     FStarC_Class_Ord.cmp =
-      (fun x y ->
-         let uu___ = FStarC_Hash.cmp_hash x y in
-         FStarC_Order.order_from_int uu___)
+      (fun x y -> FStarC_Order.order_from_int (FStarC_Hash.cmp_hash x y))
   }
 let hashable_int : Prims.int hashable= { hash = FStarC_Hash.of_int }
 let hashable_string : Prims.string hashable= { hash = FStarC_Hash.of_string }
@@ -31,10 +29,9 @@ let hashable_list (uu___ : 'a hashable) : 'a Prims.list hashable=
   {
     hash =
       (fun xs ->
-         let uu___1 = FStarC_Hash.of_int Prims.int_zero in
          FStarC_List.fold_left
-           (fun h x -> let uu___2 = hash uu___ x in FStarC_Hash.mix h uu___2)
-           uu___1 xs)
+           (fun h x -> let uu___1 = hash uu___ x in FStarC_Hash.mix h uu___1)
+           (FStarC_Hash.of_int Prims.int_zero) xs)
   }
 let hashable_option (uu___ : 'a hashable) :
   'a FStar_Pervasives_Native.option hashable=
@@ -44,8 +41,8 @@ let hashable_option (uu___ : 'a hashable) :
          match x with
          | FStar_Pervasives_Native.None -> FStarC_Hash.of_int Prims.int_zero
          | FStar_Pervasives_Native.Some x1 ->
-             let uu___1 = FStarC_Hash.of_int Prims.int_one in
-             let uu___2 = hash uu___ x1 in FStarC_Hash.mix uu___1 uu___2)
+             let uu___1 = hash uu___ x1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_one) uu___1)
   }
 let hashable_either (uu___ : 'a hashable) (uu___1 : 'b hashable) :
   ('a, 'b) FStar_Pervasives.either hashable=
@@ -54,11 +51,11 @@ let hashable_either (uu___ : 'a hashable) (uu___1 : 'b hashable) :
       (fun x ->
          match x with
          | FStar_Pervasives.Inl a1 ->
-             let uu___2 = FStarC_Hash.of_int Prims.int_zero in
-             let uu___3 = hash uu___ a1 in FStarC_Hash.mix uu___2 uu___3
+             let uu___2 = hash uu___ a1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_zero) uu___2
          | FStar_Pervasives.Inr b1 ->
-             let uu___2 = FStarC_Hash.of_int Prims.int_one in
-             let uu___3 = hash uu___1 b1 in FStarC_Hash.mix uu___2 uu___3)
+             let uu___2 = hash uu___1 b1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_one) uu___2)
   }
 let hashable_tuple2 (uu___ : 'a hashable) (uu___1 : 'b hashable) :
   ('a * 'b) hashable=
