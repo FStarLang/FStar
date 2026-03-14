@@ -73,11 +73,11 @@ type env_t = {
 
 let name = list string
 
-let push_bv env x =
+let push_bv env x : ML _ =
   let dsenv, bv = D.push_bv env.dsenv x in
   { env with dsenv }, bv
 
-let rec push_bvs env xs =
+let rec push_bvs env xs : ML _ =
   match xs with
   | [] -> env, []
   | x::xs ->
@@ -85,13 +85,13 @@ let rec push_bvs env xs =
     let env, bvs = push_bvs env xs in
     env, bv::bvs
 
-let push_namespace env lid =
+let push_namespace env lid : ML _ =
   let dsenv = D.push_namespace env.dsenv lid S.Unrestricted in
   {env with dsenv}
 
 
 let resolve_lid (env:env_t) (lid:lident)
-  : err lident
+  : ML (err lident)
   = match D.try_lookup_lid env.dsenv lid with
     | None -> 
       fail (Format.fmt1 "Name %s not found" (show lid)) (pos lid)
@@ -103,14 +103,14 @@ let resolve_lid (env:env_t) (lid:lident)
              (pos lid)
 
 let resolve_names (env:env_t) (ns:option (list lident)) 
-  : err (option (list lident))
+  : ML (err (option (list lident)))
   = match ns with
     | None -> return None
     | Some ns -> let! ns = mapM (resolve_lid env) ns in return (Some ns)
 
 // the list A.term is the binder attributes
 let destruct_binder (b:A.binder)
-: A.aqual & ident & A.term & list A.term
+: ML (A.aqual & ident & A.term & list A.term)
 = let attrs = b.battributes in
   match b.b with
   | A.Annotated (x, t) ->
@@ -120,16 +120,16 @@ let destruct_binder (b:A.binder)
   | A.Variable x ->
     b.aqual, x, A.mk_term A.Wild (Ident.range_of_id x) A.Un, attrs
 
-let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : list a) : list ident =
+let free_vars_list (#a:Type0) (f : env_t -> a -> ML (list ident)) (env:env_t) (xs : list a) : ML (list ident) =
   L.collect (f env) xs
 
 (* These functions return only the free "ticked" variables, i.e.
    those that we implicitly quantify over. *)
-let rec free_vars_term (env:env_t) (t:A.term) =
+let rec free_vars_term (env:env_t) (t:A.term) : ML _ =
   ToSyntax.TickedVars.free_ticked_vars env.dsenv t
 
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
-  : env_t & list ident
+  : ML (env_t & list ident)
   = match bs with
     | [] -> env, []
     | b::bs ->
@@ -139,11 +139,11 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
       let env', res = free_vars_binders (fst (push_bv env x)) bs in
       env', fvs@fvs_attrs@res
 
-let free_vars_slprop (env:env_t) (t:Sugar.slprop) =
+let free_vars_slprop (env:env_t) (t:Sugar.slprop) : ML _ =
   let open PulseSyntaxExtension.Sugar in
   free_vars_term env t
 
-let free_vars_annot (env:env_t) (a:Sugar.computation_annot) =
+let free_vars_annot (env:env_t) (a:Sugar.computation_annot) : ML _ =
   let open PulseSyntaxExtension.Sugar in
   match fst a with
   | Requires t -> free_vars_slprop env t
@@ -153,7 +153,7 @@ let free_vars_annot (env:env_t) (a:Sugar.computation_annot) =
   | Opens t -> free_vars_term env t
 
 let free_vars_comp (env:env_t) (c:Sugar.parsed_annots)
-  : list ident
+  : ML (list ident)
   = let ids =
         free_vars_slprop env c.precondition @
         free_vars_term env c.return_type @
@@ -172,7 +172,7 @@ let free_vars_comp (env:env_t) (c:Sugar.parsed_annots)
     FStarC.Class.Ord.dedup ids
 
 let pat_vars (p:A.pattern)
-  : err (list ident)
+  : ML (err (list ident))
   = let r = p.prange in
     match p.pat with
     | A.PatVar (id, _, _) ->

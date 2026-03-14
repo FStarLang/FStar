@@ -33,7 +33,7 @@ open FStarC.Class.PP
 open PulseSyntaxExtension.Env
 open FStarC.Pprint
 
-let hua (t:term) : option (S.fv & list S.universe & S.args) =
+let hua (t:term) : ML (option (S.fv & list S.universe & S.args)) =
   let t = U.unmeta t in
   let hd, args = U.head_and_args_full t in
   let hd = U.unmeta hd in
@@ -44,7 +44,7 @@ let hua (t:term) : option (S.fv & list S.universe & S.args) =
 
 let p = FStarC.Parser.ToDocument.term_to_document
 
-let vconcat (ds:list document) : document =
+let vconcat (ds:list document) : ML document =
   match ds with
   | h::t ->
     List.fold_left (fun l r -> if r = empty then l else l ^^ hardline ^^ r) h t
@@ -56,7 +56,7 @@ let print_pulse_computation_type
   (e : DsEnv.env)
   (tag : string)
   (a opens pre post : term)
-  : A.term
+  : ML A.term
   =
   let retname_opt, post =
     match U.abs_formals post with
@@ -94,7 +94,7 @@ let print_pulse_computation_type
   in
   A.mk_term (A.LitDoc d) rng A.Expr
 
-let resugar_pulse_type (e:DsEnv.env) (t:S.term) : A.term =
+let resugar_pulse_type (e:DsEnv.env) (t:S.term) : ML A.term =
   let r = hua t in
   if None? r then raise SkipResugar;
   let Some (fv, us, args) = r in

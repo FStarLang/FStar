@@ -34,9 +34,9 @@ instance hasRange_lident : hasRange lident = {
 // errors were already logged via the error API.
 type error = option (list Pprint.document & R.range)
 
-let err a = nat -> either a error & nat
+let err a = nat -> ML (either a error & nat)
 
-let bind_err (f:err 'a) (g: 'a -> ML (err 'b)) =
+let bind_err (f:err 'a) (g: 'a -> ML (err 'b)) : ML (err 'b) =
   fun ctr ->
     match f ctr with
     | Inl a, ctr -> g a ctr
@@ -61,12 +61,12 @@ let just_fail (#a:Type) () : err a =
 
 let next_ctr : err nat = fun ctr -> Inl (ctr + 1), ctr + 1
 
-let map_err_opt (f : 'a -> err 'b) (o:option 'a) : err (option 'b) =
+let map_err_opt (f : 'a -> ML (err 'b)) (o:option 'a) : ML (err (option 'b)) =
   match o with
   | None -> return None
   | Some v -> let! v' = f v in return (Some v')
 
-let rec map2 (f : 'a -> 'b -> 'c) (xs : list 'a) (ys : list 'b) : err (list 'c) =
+let rec map2 (f : 'a -> 'b -> ML 'c) (xs : list 'a) (ys : list 'b) : ML (err (list 'c)) =
   match xs, ys with
   | [], [] ->
     return []

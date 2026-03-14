@@ -74,7 +74,7 @@ let with_goto_env_update #a (f: goto_env_t -> goto_env_t) (k: unit -> ML a) : ML
 let with_goto_env_elem #a (id: mlident) (e: goto_env_elem) (k: unit -> ML a) : ML a =
   with_goto_env_update (Cons (id, e)) k
 
-let lookup_goto (id: mlident) : option goto_env_elem =
+let lookup_goto (id: mlident) : ML (option goto_env_elem) =
   let rec go (env: goto_env_t) =
     match env with
     | [] -> None

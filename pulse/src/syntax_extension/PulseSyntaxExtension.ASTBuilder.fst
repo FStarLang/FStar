@@ -38,7 +38,7 @@ let tm t r = { tm=t; range=r; level=Un}
 let parse_decl_name
   : contents:string ->
     FStarC.Range.range ->
-    either AU.error_message FStarC.Ident.ident
+    ML (either AU.error_message FStarC.Ident.ident)
   = fun contents r ->
     match Parser.parse_peek_id contents r with
     | Inl s -> Inr (Ident.id_of_text s)
@@ -49,12 +49,12 @@ let parse_decl_name
 
 let i s r = tm (Const (Const_int(string_of_int s, None))) r
 let str s r = tm (Const (Const_string (s, r))) r
-let lid_as_term ns r = str (Ident.string_of_lid ns) r
+let lid_as_term ns r : ML _ = str (Ident.string_of_lid ns) r
 
 let encode_open_namespaces_and_abbreviations
     (ctx:open_namespaces_and_abbreviations)
     (r:FStarC.Range.range)
-: term & term
+: ML (term & term)
 = let tm t = tm t r in
   let str s = str s r in
   let lid_as_term ns = lid_as_term ns r in
@@ -72,7 +72,7 @@ let encode_open_namespaces_and_abbreviations
   namespaces, abbrevs
 
 let encode_range (r:FStarC.Range.range)
-: term & term & term
+: ML (term & term & term)
 = let open FStarC.Range in
   let line = line_of_pos (start_of_range r) in
   let col = col_of_pos (start_of_range r) in
@@ -82,7 +82,7 @@ let parse_decl
   : open_namespaces_and_abbreviations ->
     contents:string ->
     FStarC.Range.range ->
-    either AU.error_message decl
+    ML (either AU.error_message decl)
   = fun ctx contents r ->
       let tm t = tm t r in
       let str s = str s r in
@@ -110,7 +110,7 @@ let parse_decl
         let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]; interleaved = false  } in
         Inr d
 
-let maybe_report_error first_error decls =
+let maybe_report_error first_error decls : ML _ =
   match first_error with
   | None -> Inr decls
   | Some (raw_error, msg, r) ->
@@ -135,7 +135,7 @@ let maybe_report_error first_error decls =
     )
 open FStarC.Class.Show
 let parse_extension_lang (contents:string) (r:FStarC.Range.range)
-: either AU.error_message (list decl)
+: ML (either AU.error_message (list decl))
 = match Parser.parse_lang contents r with
   | Inr None ->
     Inl { message = [Errors.text "#lang-pulse: Parsing failed"]; range = r }
@@ -160,7 +160,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
       in
       let splice_decl
           (d:PulseSyntaxExtension.Sugar.decl)
-      : decl
+      : ML decl
       = let id, r = id_and_range_of_decl d in  
         let id_txt = Ident.string_of_id id in
         let decors =
@@ -218,7 +218,7 @@ let desugar_pulse (env:TcEnv.env)
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
-: either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range))
+: ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
 = let namespaces = L.map Ident.path_of_text namespaces in
   let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
   let env = D.reinitialize_env env.dsenv (TcEnv.current_module env) namespaces module_abbrevs in
@@ -230,7 +230,7 @@ let desugar_pulse_decl_callback
       (blob:FStarC.Dyn.dyn)
       (lids:list lident)
       (rng:R.range)
-: list FStarC.Syntax.Syntax.sigelt'
+: ML (list FStarC.Syntax.Syntax.sigelt')
 = let d = D.desugar_decl (D.mk_env env) (FStarC.Dyn.undyn blob) 0 in
   match fst d with
   | Inr None ->
@@ -259,7 +259,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range))
+  : ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
   = let range = 
       let p = R.mk_pos line col in
       R.mk_range file_name p p

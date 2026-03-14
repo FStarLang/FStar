@@ -14,10 +14,10 @@ open FStarC.Extraction.Krml
 module BU = FStarC.Util
 
 (* JL: TODO: in stdlib somewhere? *)
-let opt_bind (m: option 'a) (k: 'a -> option 'b): option 'b =
+let opt_bind (m: option 'a) (k: 'a -> ML (option 'b)): ML (option 'b) =
   match m with Some x -> k x | None -> None
 
-let char_of_typechar (t: mlty): option char =
+let char_of_typechar (t: mlty): ML (option char) =
   match t with
   | MLTY_Named ([], p) ->
     let p = Syntax.string_of_mlpath p in
@@ -30,8 +30,8 @@ let char_of_typechar (t: mlty): option char =
 
   | _ -> None
 
-let string_of_typestring (t: mlty): option string =
-  let rec go t: option (list string) =
+let string_of_typestring (t: mlty): ML (option string) =
+  let rec go t: ML (option (list string)) =
     match t with
     | MLTY_Named ([], p)
       when Syntax.string_of_mlpath p = "Pulse.C.Typestring.string_nil"
@@ -49,9 +49,9 @@ let string_of_typestring (t: mlty): option string =
   in
   opt_bind (go t) (fun ss -> Some (FStar.String.concat "" ss))
 
-let lident_of_string (s: string): option lident =
+let lident_of_string (s: string): ML (option lident) =
   let path = FStar.String.split ['.'] s in
-  let rec go p =
+  let rec go p : ML (option lident) =
     match p with
     | [] -> None
     | [s] -> Some ([], s)
@@ -60,11 +60,11 @@ let lident_of_string (s: string): option lident =
       Some (s :: names, name))
   in go path
 
-let lident_of_typestring (t: mlty): option lident =
+let lident_of_typestring (t: mlty): ML (option lident) =
   opt_bind (string_of_typestring t) lident_of_string
 
-let int_of_typenat (t: mlty): option int =
-  let rec go t =
+let int_of_typenat (t: mlty): ML (option int) =
+  let rec go t : ML (option int) =
     match t with
     | MLTY_Named ([], p)
       when Syntax.string_of_mlpath p = "Pulse.C.Typenat.z"
@@ -81,7 +81,7 @@ let int_of_typenat (t: mlty): option int =
   in
   go t
 
-let my_types_without_decay () = 
+let my_types_without_decay () : ML unit = 
   register_pre_translate_type_without_decay begin fun env t ->
   match t with
   
@@ -124,7 +124,7 @@ let my_types_without_decay () =
   | _ -> raise NotSupportedByKrmlExtension
 end
 
-let my_types () = register_pre_translate_type begin fun env t ->
+let my_types () : ML unit = register_pre_translate_type begin fun env t ->
   match t with
   | MLTY_Named ([t; _; _], p)
     when false
@@ -135,7 +135,7 @@ let my_types () = register_pre_translate_type begin fun env t ->
   | _ -> raise NotSupportedByKrmlExtension
 end
 
-let my_exprs () = register_pre_translate_expr begin fun env e ->
+let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
   match e.expr with
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
     when (
@@ -302,8 +302,8 @@ let my_exprs () = register_pre_translate_expr begin fun env e ->
   | _ -> raise NotSupportedByKrmlExtension
 end
 
-let parse_steel_c_fields env (fields: mlty): option (list _) =
-      let rec go fields =
+let parse_steel_c_fields env (fields: mlty): ML (option (list _)) =
+      let rec go fields : ML _ =
         match fields with
         | MLTY_Named ([], p)
           when false
@@ -347,6 +347,7 @@ let parse_steel_c_fields env (fields: mlty): option (list _) =
 
 let define_struct_gen
   env p args fields
+: ML (option _)
 =
     let env = List.fold_left (fun env name -> extend_t env name) env args in
     let fields = Option.must (parse_steel_c_fields env fields) in
@@ -355,6 +356,7 @@ let define_struct_gen
 
 let define_struct
   env tag fields
+: ML (option _)
 =
   (* JL: TODO remove/improve these print commands *)
   print_endline "Parsing struct definition.";
@@ -368,6 +370,7 @@ let define_struct
 
 let define_union_gen
   env p args fields
+: ML (option _)
 =
     let env = List.fold_left (fun env name -> extend_t env name) env args in
     let fields = Option.must (parse_steel_c_fields env fields) in
@@ -375,6 +378,7 @@ let define_union_gen
 
 let define_union
   env tag fields
+: ML (option _)
 =
   (* JL: TODO remove/improve these print commands *)
   print_endline "Parsing union definition.";
@@ -386,7 +390,7 @@ let define_union
   | Some p ->
     define_union_gen env p [] fields
 
-let my_type_decls () = register_pre_translate_type_decl begin fun env ty ->
+let my_type_decls () : ML unit = register_pre_translate_type_decl begin fun env ty ->
     match ty with
     | {tydecl_defn=Some (MLTD_Abbrev (MLTY_Named ([tag; fields; _; _], p)))}
       when Syntax.string_of_mlpath p = "Pulse.C.Types.Struct.define_struct0"

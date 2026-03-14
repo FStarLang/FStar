@@ -32,7 +32,7 @@ module Ident = FStarC.Ident
 
 let dbg = Debug.get_toggle "extraction"
 
-let hua (t:term) : option (S.fv & list S.universe & S.args) =
+let hua (t:term) : ML (option (S.fv & list S.universe & S.args)) =
   let t = U.unmeta t in
   let hd, args = U.head_and_args_full t in
   let hd = U.unmeta hd in
@@ -41,7 +41,7 @@ let hua (t:term) : option (S.fv & list S.universe & S.args) =
   | Tm_uinst ({ n = Tm_fvar fv }, us) -> Some (fv, us, args)
   | _ -> None
 
-let tr_typ (g:uenv) (t:term) : mlty =
+let tr_typ (g:uenv) (t:term) : ML mlty =
   (* Only enabled with an extension flag *)
   if Options.Ext.get "pulse:extract_ocaml_bare" = "" then
     raise NotSupportedByExtension;
@@ -74,7 +74,7 @@ let tr_typ (g:uenv) (t:term) : mlty =
   | _ -> 
     raise NotSupportedByExtension
 
-let tr_expr (g:uenv) (t:term) : mlexpr & e_tag & mlty =
+let tr_expr (g:uenv) (t:term) : ML (mlexpr & e_tag & mlty) =
   (* Only enabled with an extension flag *)
   if Options.Ext.get "pulse:extract_ocaml_bare" = "" then
     raise NotSupportedByExtension;

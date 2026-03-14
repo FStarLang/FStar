@@ -16,6 +16,7 @@
 
 module PulseSyntaxExtension.Sugar
 open FStarC
+open FStarC.Effect
 open FStarC.Ident
 module A = FStarC.Parser.AST
 module AD = FStarC.Parser.AST.Diff
@@ -308,7 +309,7 @@ instance showable_while_invariant1 : showable while_invariant1 = {
     );
 }
 
-let rec stmt_to_string (s:stmt) : string =
+let rec stmt_to_string (s:stmt) : ML string =
   match s.s with
   | Open l -> "Open " ^ show l
   | Expr {e} -> "Expr " ^ show e
@@ -378,7 +379,7 @@ let rec stmt_to_string (s:stmt) : string =
       "handler", stmt_to_string defer_handler;
     ]
 
-and branch_to_string (b:bool & A.pattern & stmt) : string =
+and branch_to_string (b:bool & A.pattern & stmt) : ML string =
   let (norw, p, s) = b in
   show p ^ (if norw then "(norw)" else "") ^ " -> " ^ stmt_to_string s
 
@@ -391,14 +392,14 @@ type decl =
   | FnDecl of fn_decl
   | SlpropDefn of slprop_defn
 open FStarC.Class.Deq
-let eq_ident (i1 i2:Ident.ident) = i1 =? i2
-let eq_lident (i1 i2:Ident.lident) = i1 =? i2
-let rec forall2 (f:'a -> 'a -> bool) (l1 l2:list 'a) : bool =
+let eq_ident (i1 i2:Ident.ident) : ML bool = i1 =? i2
+let eq_lident (i1 i2:Ident.lident) : ML bool = i1 =? i2
+let rec forall2 (f:'a -> 'a -> ML bool) (l1 l2:list 'a) : ML bool =
   match l1, l2 with
   | [], [] -> true
   | x::xs, y::ys -> f x y && forall2 f xs ys
   | _, _ -> false
-let eq_opt (eq:'a -> 'a -> bool) (o1:option 'a) (o2:option 'a) =
+let eq_opt (eq:'a -> 'a -> ML bool) (o1:option 'a) (o2:option 'a) : ML bool =
   match o1, o2 with
   | Some x, Some y -> eq x y
   | None, None -> true
@@ -414,18 +415,18 @@ let eq_while_invariant1 (i1 i2:while_invariant1) =
   | Decreases t1, Decreases t2 -> AD.eq_term t1 t2
   | _, _ -> false
 
-let rec eq_decl (d1 d2:decl) =
+let rec eq_decl (d1 d2:decl) : ML bool =
   match d1, d2 with
   | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
   | FnDecl d1, FnDecl d2 -> eq_fn_decl d1 d2
   | SlpropDefn d1, SlpropDefn d2 -> eq_slprop_defn d1 d2
   | _ -> false
-and eq_fn_decl (f1 f2:fn_decl) =
+and eq_fn_decl (f1 f2:fn_decl) : ML bool =
   eq_ident f1.id f2.id &&
   forall2 eq_ident f1.us f2.us &&
   forall2 AD.eq_binder f1.binders f2.binders &&
   eq_ascription f1.ascription f2.ascription
-and eq_fn_defn (f1 f2:fn_defn) =
+and eq_fn_defn (f1 f2:fn_defn) : ML bool =
   eq_ident f1.id f2.id &&
   f1.is_rec = f2.is_rec &&
   forall2 eq_ident f1.us f2.us &&
@@ -433,23 +434,23 @@ and eq_fn_defn (f1 f2:fn_defn) =
   eq_ascription f1.ascription f2.ascription &&
   eq_opt AD.eq_term f1.measure f2.measure &&
   eq_body f1.body f2.body
-and eq_slprop_defn (f1 f2:slprop_defn) =
+and eq_slprop_defn (f1 f2:slprop_defn) : ML bool =
   eq_ident f1.id f2.id &&
   // f1.is_rec = f2.is_rec &&
   // forall2 eq_ident f1.us f2.us &&
   forall2 AD.eq_binder f1.binders f2.binders &&
   // eq_opt AD.eq_term f1.measure f2.measure &&
   AD.eq_term f1.body f2.body
-and eq_ascription (a1 a2:either computation_type (option A.term)) =
+and eq_ascription (a1 a2:either computation_type (option A.term)) : ML bool =
   match a1, a2 with
   | Inl c1, Inl c2 -> eq_computation_type c1 c2
   | Inr t1, Inr t2 -> eq_opt AD.eq_term t1 t2
   | _, _ -> false
-and eq_computation_type (c1 c2:computation_type) =
+and eq_computation_type (c1 c2:computation_type) : ML bool =
   c1.tag = c2.tag &&
   forall2 eq_annot c1.annots c2.annots &&
   c1.literally = c2.literally
-and eq_annot (a1 a2:computation_annot) =
+and eq_annot (a1 a2:computation_annot) : ML bool =
   match fst a1, fst a2 with
   | Preserves s1, Preserves s2 -> eq_slprop s1 s2
   | Requires s1, Requires s2 -> eq_slprop s1 s2
@@ -457,14 +458,14 @@ and eq_annot (a1 a2:computation_annot) =
   | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
   | Opens t1, Opens t2 -> AD.eq_term t1 t2
   | _, _ -> false
-and eq_body (b1 b2:either stmt lambda) =
+and eq_body (b1 b2:either stmt lambda) : ML bool =
   match b1, b2 with
   | Inl s1, Inl s2 -> eq_stmt s1 s2
   | Inr l1, Inr l2 -> eq_lambda l1 l2
   | _, _ -> false
-and eq_stmt (s1 s2:stmt) =
+and eq_stmt (s1 s2:stmt) : ML bool =
   eq_stmt' s1.s s2.s
-and eq_stmt' (s1 s2:stmt') =
+and eq_stmt' (s1 s2:stmt') : ML bool =
   match s1, s2 with
   | Open l1, Open l2 -> eq_lident l1 l2
   | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
@@ -514,16 +515,16 @@ and eq_stmt' (s1 s2:stmt') =
   | Break, Break ->
     true
   | _ -> false
-and eq_let_init (i1 i2:let_init) =
+and eq_let_init (i1 i2:let_init) : ML bool =
   match i1, i2 with
   | Array_initializer a1, Array_initializer a2 -> eq_array_init a1 a2
   | Default_initializer (t1, a1), Default_initializer (t2, a2) -> eq_opt AD.eq_term t1 t2 && forall2 eq_lambda a1 a2
   | Lambda_initializer l1, Lambda_initializer l2 -> eq_fn_defn l1 l2
   | Stmt_initializer s1, Stmt_initializer s2 -> eq_stmt s1 s2
   | _, _ -> false
-and eq_array_init (a1 a2:array_init) =
+and eq_array_init (a1 a2:array_init) : ML bool =
   eq_opt AD.eq_term a1.init a2.init && AD.eq_term a1.len a2.len
-and eq_hint_type (h1 h2:hint_type) =
+and eq_hint_type (h1 h2:hint_type) : ML bool =
   match h1, h2 with
   | ASSERT s1, ASSERT s2 -> eq_slprop s1 s2
   | ASSUME s1, ASSUME s2 -> eq_slprop s1 s2
@@ -544,77 +545,77 @@ and eq_hint_type (h1 h2:hint_type) =
   | WILD, WILD -> true
   | SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2 -> true
   | _, _ -> false
-and eq_ensures_slprop (e1 e2:ensures_slprop) =
+and eq_ensures_slprop (e1 e2:ensures_slprop) : ML bool =
   let h1, s1, t1 = e1 in
   let h2, s2, t2 = e2 in
   eq_opt (fun (i1, t1) (i2, t2) -> eq_ident i1 i2 && AD.eq_term t1 t2) h1 h2 &&
   eq_slprop s1 s2 &&
   eq_opt AD.eq_term t1 t2
-and eq_lambda (l1 l2:lambda) =
+and eq_lambda (l1 l2:lambda) : ML bool =
   forall2 AD.eq_binder l1.binders l2.binders &&
   eq_opt eq_computation_type l1.ascription l2.ascription &&
   eq_stmt l1.body l2.body
-and eq_mut_or_ref (m1 m2:mut_or_ref) =
+and eq_mut_or_ref (m1 m2:mut_or_ref) : ML bool =
   match m1, m2 with
   | MUT, MUT -> true
   | REF, REF -> true
   | _, _ -> false
 
-let rec iter (f:'a -> unit) (l:list 'a) =
+let rec iter (f:'a -> ML unit) (l:list 'a) : ML unit =
   match l with
   | [] -> ()
   | x::xs -> f x; iter f xs
-let iopt (f:'a -> unit) (o:option 'a) =
+let iopt (f:'a -> ML unit) (o:option 'a) : ML unit =
   match o with
   | Some x -> f x
   | None -> ()
-let ieither (f:'a -> unit) (g:'b -> unit) (e:either 'a 'b) =
+let ieither (f:'a -> ML unit) (g:'b -> ML unit) (e:either 'a 'b) : ML unit =
   match e with
   | Inl x -> f x
   | Inr x -> g x
-let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : unit =
+let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : ML unit =
   match d with
   | FnDefn f -> scan_fn_defn cbs f
   | FnDecl d -> scan_fn_decl cbs d
   | SlpropDefn d -> scan_slprop_defn cbs d
-and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) =
+and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) : ML unit =
   iter (scan_binder cbs) f.binders;
   scan_ascription cbs f.ascription
-and scan_fn_defn (cbs:A.dep_scan_callbacks) (f:fn_defn) =
+and scan_fn_defn (cbs:A.dep_scan_callbacks) (f:fn_defn) : ML unit =
   iter (scan_binder cbs) f.binders;
   ieither (scan_computation_type cbs) (iopt cbs.scan_term) f.ascription;
   iopt cbs.scan_term f.measure;
   ieither (scan_stmt cbs) (scan_lambda cbs) f.body
-and scan_slprop_defn (cbs:A.dep_scan_callbacks) (f:slprop_defn) =
+and scan_slprop_defn (cbs:A.dep_scan_callbacks) (f:slprop_defn) : ML unit =
   iter (scan_binder cbs) f.binders;
   // iopt cbs.scan_term f.measure;
   cbs.scan_term f.body
-and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) =
+and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) : ML unit =
   cbs.scan_binder b
-and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) =
+and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) : ML unit =
   ieither (scan_computation_type cbs) (iopt cbs.scan_term) a
-and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) =
+and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) : ML unit =
   iter (scan_annot cbs) c.annots
-and scan_annot cbs (a : computation_annot) =
+and scan_annot cbs (a : computation_annot) : ML unit =
   match fst a with
   | Preserves s -> scan_slprop cbs s
   | Requires s -> scan_slprop cbs s
   | Ensures s -> scan_slprop cbs s
   | Returns (i, t) -> cbs.scan_term t
   | Opens t -> cbs.scan_term t
-and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) =
+and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) : ML unit =
   cbs.scan_term s
-and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) =
+and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) : ML unit =
   iter (scan_binder cbs) l.binders;
   iopt (scan_computation_type cbs) l.ascription;
   scan_stmt cbs l.body
-and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) =
+and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) : ML unit =
   match i with
   | LoopInvariant t -> cbs.scan_term t
   | LoopEnsures t -> cbs.scan_term t
   | LoopRequires t -> cbs.scan_term t
   | Decreases t -> cbs.scan_term t
-and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
+and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
   match s.s with
   | Open l -> cbs.add_open l
   | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
@@ -660,18 +661,18 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
     ()
   | Break ->
     ()
-and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
+and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) : ML unit =
   match i with
   | Array_initializer a -> iopt cbs.scan_term a.init; cbs.scan_term a.len
   | Default_initializer (t, a) -> iopt cbs.scan_term t; iter (scan_lambda cbs) a
   | Lambda_initializer l -> scan_fn_defn cbs l
   | Stmt_initializer s -> scan_stmt cbs s
-and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) =
+and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) : ML unit =
   let h, s, t = e in
   iopt (fun (i, t) -> cbs.scan_term t) h;
   scan_slprop cbs s;
   iopt cbs.scan_term t
-and scan_hint_type (cbs:A.dep_scan_callbacks) (h:hint_type) =
+and scan_hint_type (cbs:A.dep_scan_callbacks) (h:hint_type) : ML unit =
   match h with
   | ASSERT s -> scan_slprop cbs s
   | ASSUME s -> scan_slprop cbs s
