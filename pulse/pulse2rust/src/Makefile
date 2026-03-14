@@ -7,7 +7,7 @@ CODEGEN := PluginNoLib
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 FSTAR_OPTIONS += --with_fstarc
 EXTRACT += --extract '-*,+Pulse2Rust'
-FSTAR_OPTIONS += --lax --MLish --MLish_effect FStarC.Effect
+FSTAR_OPTIONS += --lax
 
 DEPFLAGS += --already_cached 'FStarC'
 

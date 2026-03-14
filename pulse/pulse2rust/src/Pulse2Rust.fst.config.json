@@ -3,8 +3,6 @@
   "options": [
     "--query_cache",
     "--lax",
-    "--MLish",
-    "--MLish_effect", "FStarC.Effect",
     "--with_fstarc",
     "--ext",
     "optimize_let_vc",
