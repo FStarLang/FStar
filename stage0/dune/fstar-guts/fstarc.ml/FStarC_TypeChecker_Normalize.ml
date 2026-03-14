@@ -2833,7 +2833,7 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
          FStarC_List.fold_right
            (fun lb uu___3 ->
               match uu___3 with
-              | (env_elts, memos, i) ->
+              | (rec_env, memos, i) ->
                   let bv =
                     let uu___4 =
                       FStar_Pervasives.__proj__Inl__item__v
@@ -2854,17 +2854,16 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
                            FStarC_Syntax_Syntax.body1 = f_i
                          }) t1.FStarC_Syntax_Syntax.pos in
                   let memo = fresh_memo () in
-                  let env_elts1 =
+                  let rec_env1 =
                     let uu___4 =
                       let uu___5 = fresh_memo () in
                       (FStar_Pervasives_Native.None,
                         (Clos (env1, fix_f_i, memo, true)), uu___5) in
-                    uu___4 :: env_elts in
-                  (env_elts1, (memo :: memos), (i + Prims.int_one)))
-           (FStar_Pervasives_Native.snd lbs) ([], [], Prims.int_zero) in
+                    uu___4 :: rec_env in
+                  (rec_env1, (memo :: memos), (i + Prims.int_one)))
+           (FStar_Pervasives_Native.snd lbs) (env1, [], Prims.int_zero) in
        (match uu___2 with
-        | (env_elts, memos, uu___3) ->
-            let rec_env = FStarC_List.op_At (FStarC_List.rev env_elts) env1 in
+        | (rec_env, memos, uu___3) ->
             let uu___4 =
               FStarC_List.map2
                 (fun lb memo ->

@@ -63,3 +63,44 @@ let file_exists = Sys.file_exists
 (* Sys.is_directory raises Sys_error if the path does not exist *)
 let is_directory f = Sys.file_exists f && Sys.is_directory f
 
+(* Compute a relative path from base_dir to target_path.
+   Both paths should be absolute. Returns a relative path if they share
+   a common prefix; otherwise returns the target unchanged. *)
+let make_relative_to (base_dir:string) (target_path:string) : string =
+  (* Normalize paths to use forward slashes *)
+  let normalize_sep s = 
+    if FStarC_Platform.windows 
+    then BatString.nreplace ~str:s ~sub:"\\" ~by:"/"
+    else s
+  in
+  let base_dir = normalize_sep base_dir in
+  let target_path = normalize_sep target_path in
+  
+  (* Split paths into components *)
+  let split_path s = 
+    BatString.nsplit s "/" 
+    |> List.filter (fun x -> x <> "") 
+  in
+  let base_parts = split_path base_dir in
+  let target_parts = split_path target_path in
+  
+  (* Find common prefix length *)
+  let rec common_prefix_len acc b t =
+    match b, t with
+    | bh :: bt, th :: tt when String.lowercase_ascii bh = String.lowercase_ascii th ->
+        common_prefix_len (acc + 1) bt tt
+    | _ -> acc
+  in
+  let prefix_len = common_prefix_len 0 base_parts target_parts in
+  
+  (* If no common prefix, return target as-is *)
+  if prefix_len = 0 then target_path
+  else
+    (* Compute relative path *)
+    let base_remaining = List.length base_parts - prefix_len in
+    let target_remaining = BatList.drop prefix_len target_parts in
+    let ups = List.init base_remaining (fun _ -> "..") in
+    let rel_parts = ups @ target_remaining in
+    if rel_parts = [] then "."
+    else String.concat "/" rel_parts
+
