@@ -327,6 +327,7 @@ val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
 
 val unit_const : range -> term
+val unit_type  : range -> term
 val ml_comp : term -> term
 val tot_comp : term -> term
 
