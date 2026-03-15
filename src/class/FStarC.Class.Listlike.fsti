@@ -17,6 +17,6 @@ val is_empty (#e #s : Type) {| listlike e s |} (l : s) : bool
 
 val singleton (#e #s : Type) {| listlike e s |} (x : e) : s
 
-val to_list (#e #s : Type) {| listlike e s |} (l : s) : list e
+val to_list (#e #s : Type) {| listlike e s |} (l : s) : ML (list e)
 
-val from_list (#e #s : Type) {| listlike e s |} (l : list e) : s
+val from_list (#e #s : Type) {| listlike e s |} (l : list e) : ML s

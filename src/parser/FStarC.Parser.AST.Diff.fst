@@ -23,16 +23,18 @@ open FStarC.Ident
 open FStarC.Const
 open FStarC.Parser.AST
 
-let eq_ident (i1 i2:ident) =
+let eq_ident (i1 i2:ident) : ML bool =
   Ident.ident_equals i1 i2
 
-let eq_list (f: 'a -> 'a -> bool) (t1 t2:list 'a)
-  : bool
-  = List.length t1 = List.length t2 &&
-    List.forall2 f t1 t2
+let rec eq_list (f: 'a -> 'a -> ML bool) (t1 t2:list 'a)
+  : ML bool
+  = match t1, t2 with
+    | [], [] -> true
+    | x1::xs1, x2::xs2 -> if f x1 x2 then eq_list f xs1 xs2 else false
+    | _ -> false
 
-let eq_option (f: 'a -> 'a -> bool) (t1 t2:option 'a)
-  : bool
+let eq_option (f: 'a -> 'a -> ML bool) (t1 t2:option 'a)
+  : ML bool
   = match t1, t2 with
     | None, None -> true
     | Some t1, Some t2 -> f t1 t2
@@ -41,7 +43,7 @@ let eq_option (f: 'a -> 'a -> bool) (t1 t2:option 'a)
 //
 // TODO: There is an eq_const in FStarC.Const.fst, can we use that?
 //
-let eq_sconst (c1 c2: sconst) : bool =
+let eq_sconst (c1 c2: sconst) : ML bool =
     match c1, c2 with
     | Const_effect, Const_effect -> true
     | Const_unit, Const_unit -> true
@@ -56,20 +58,22 @@ let eq_sconst (c1 c2: sconst) : bool =
     | _ -> false
 
 let rec eq_term (t1 t2:term)
-  : bool
+  : ML bool
   = eq_term' t1.tm t2.tm
 
 and eq_terms (t1 t2:list term)
-  : bool
+  : ML bool
   = eq_list eq_term t1 t2
 
 and eq_arg (t1 t2 : (term & imp))
+  : ML bool
   = let t1, a1 = t1 in
     let t2, a2 = t2 in
     eq_term t1 t2 &&
     eq_imp a1 a2
 
 and eq_imp (i1 i2: imp)
+  : ML bool
   = match i1, i2 with
     | Hash, Hash
     | UnivApp, UnivApp
@@ -80,10 +84,10 @@ and eq_imp (i1 i2: imp)
     | _ -> false
 
 and eq_args (t1 t2: list (term & imp))
-  : bool
+  : ML bool
   = eq_list eq_arg t1 t2
 
-and eq_arg_qualifier (arg_qualifier1:arg_qualifier) (arg_qualifier2:arg_qualifier) : bool =
+and eq_arg_qualifier (arg_qualifier1:arg_qualifier) (arg_qualifier2:arg_qualifier) : ML bool =
   match arg_qualifier1, arg_qualifier2 with
   | Implicit, Implicit -> true
   | Equality, Equality -> true
@@ -92,13 +96,13 @@ and eq_arg_qualifier (arg_qualifier1:arg_qualifier) (arg_qualifier2:arg_qualifie
   | _ -> false
 
 and eq_pattern (p1 p2:pattern)
-  : bool
+  : ML bool
   = eq_pattern' p1.pat p2.pat
 
-and eq_aqual a1 a2 = eq_option eq_arg_qualifier a1 a2
+and eq_aqual a1 a2 : ML bool = eq_option eq_arg_qualifier a1 a2
 
 and eq_pattern' (p1 p2:pattern')
-  : bool
+  : ML bool
   = match p1, p2 with
     | PatWild(q1, a1), PatWild(q2, a2) ->
       eq_aqual q1 q2 &&
@@ -138,7 +142,7 @@ and eq_pattern' (p1 p2:pattern')
     | _ -> false
 
 and eq_term' (t1 t2:term')
-  : bool
+  : ML bool
   = match t1, t2 with
     | Wild, Wild -> true
     | Const s1, Const s2 -> eq_const s1 s2
@@ -357,17 +361,19 @@ and eq_term' (t1 t2:term')
       eq_list eq_term ts1 ts2
     | _ -> false
 
-and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
+and eq_calc_step (s1 s2: calc_step) : ML bool =
+    let CalcStep (t1, t2, t3) = s1 in
+    let CalcStep (t4, t5, t6) = s2 in
     eq_term t1 t4 &&
     eq_term t2 t5 &&
     eq_term t3 t6
 
-and eq_binder (b1 b2:binder) =
+and eq_binder (b1 b2:binder) : ML bool =
   eq_binder' b1.b b2.b &&
   eq_aqual b1.aqual b2.aqual &&
   eq_list eq_term b1.battributes b2.battributes
 
-and eq_binder' (b1 b2:binder') =
+and eq_binder' (b1 b2:binder') : ML bool =
   match b1, b2 with
   | Variable i1, Variable i2 -> eq_ident i1 i2
   | Annotated (i1, t1), Annotated (i2, t2) ->
@@ -377,25 +383,29 @@ and eq_binder' (b1 b2:binder') =
       eq_term t1 t2
   | _ -> false
 
-and eq_match_returns_annotation (i1, t1, b1) (i2, t2, b2) =
+and eq_match_returns_annotation (a1 a2: (option ident & term & bool)) : ML bool =
+    let (i1, t1, b1) = a1 in
+    let (i2, t2, b2) = a2 in
     eq_option eq_ident i1 i2 &&
     eq_term t1 t2 &&
     b1 = b2
 
-and eq_branch (p1, o1, t1) (p2, o2, t2) =
+and eq_branch (br1 br2: (pattern & option term & term)) : ML bool =
+    let (p1, o1, t1) = br1 in
+    let (p2, o2, t2) = br2 in
     eq_pattern p1 p2 &&
     eq_option eq_term o1 o2 &&
     eq_term t1 t2
 
 
-let eq_tycon_record (t1 t2: tycon_record) =
+let eq_tycon_record (t1 t2: tycon_record) : ML bool =
   eq_list (fun (i1, a1, a2, t1) (i2, a3, a4, t2) ->
     eq_ident i1 i2 &&
     eq_aqual a1 a3 &&
     eq_list eq_term a2 a4 &&
     eq_term t1 t2) t1 t2
 
-let eq_constructor_payload (t1 t2: constructor_payload) =
+let eq_constructor_payload (t1 t2: constructor_payload) : ML bool =
   match t1, t2 with
   | VpOfNotation t1, VpOfNotation t2 -> eq_term t1 t2
   | VpArbitrary t1, VpArbitrary t2 -> eq_term t1 t2
@@ -404,7 +414,7 @@ let eq_constructor_payload (t1 t2: constructor_payload) =
     eq_option eq_term k1 k2
   | _ -> false
 
-let eq_tycon (t1 t2: tycon) =
+let eq_tycon (t1 t2: tycon) : ML bool =
   match t1, t2 with
   | TyconAbstract (i1, bs1, k1), TyconAbstract (i2, bs2, k2) ->
     eq_ident i1 i2 &&
@@ -433,7 +443,7 @@ let eq_tycon (t1 t2: tycon) =
 
 let eq_lid = Ident.lid_equals
 
-let eq_lift (t1 t2: lift) =
+let eq_lift (t1 t2: lift) : ML bool =
   eq_lid t1.msource t2.msource &&
   eq_lid t1.mdest t2.mdest &&
   (match t1.lift_op, t2.lift_op with
@@ -445,7 +455,7 @@ let eq_lift (t1 t2: lift) =
   | _ -> false)
 
 
-let eq_pragma (t1 t2: pragma) =
+let eq_pragma (t1 t2: pragma) : ML bool =
   match t1, t2 with
   | ShowOptions, ShowOptions -> true
   | SetOptions s1, SetOptions s2 -> s1 = s2
@@ -458,7 +468,7 @@ let eq_pragma (t1 t2: pragma) =
   | _ -> false
 
 
-let eq_qualifier (t1 t2: qualifier) =
+let eq_qualifier (t1 t2: qualifier) : ML bool =
   match t1, t2 with
   | Private, Private -> true
   | Noeq, Noeq -> true
@@ -479,19 +489,21 @@ let eq_qualifier (t1 t2: qualifier) =
   | Logic, Logic -> true
   | _ -> false
 
-let eq_qualifiers (t1 t2: qualifiers) =
+let eq_qualifiers (t1 t2: qualifiers) : ML bool =
   eq_list eq_qualifier t1 t2
 
-let eq_restriction (restriction1 restriction2: FStarC.Syntax.Syntax.restriction) =
+let eq_restriction (restriction1 restriction2: FStarC.Syntax.Syntax.restriction) : ML bool =
   let open FStarC.Syntax.Syntax in
   match restriction1, restriction2 with
   | (Unrestricted, Unrestricted) -> true
   | (AllowList l1, AllowList l2) ->
-    let eq_tuple eq_fst eq_snd (a, b) (c, d) = eq_fst a c && eq_snd b d in
-    eq_list (eq_tuple eq_ident (eq_option eq_ident)) l1 l2
+    eq_list (fun p1 p2 ->
+               let (a, b) = p1 in
+               let (c, d) = p2 in
+               eq_ident a c && eq_option eq_ident b d) l1 l2
   | _ -> false
 
-let rec eq_decl' (d1 d2:decl') : bool =
+let rec eq_decl' (d1 d2:decl') : ML bool =
   //generate the cases of this comparison starting with TopLevelModule
   match d1, d2 with
   | TopLevelModule lid1, TopLevelModule lid2 ->
@@ -553,7 +565,7 @@ let rec eq_decl' (d1 d2:decl') : bool =
     tbs1.eq tbs1.blob tbs2.blob
   | _ -> false
 
-and eq_effect_decl (t1 t2: effect_decl) =
+and eq_effect_decl (t1 t2: effect_decl) : ML bool =
   match t1, t2 with
   | DefineEffect (i1, bs1, t1, ds1), DefineEffect (i2, bs2, t2, ds2) ->
     eq_ident i1 i2 &&
@@ -566,7 +578,7 @@ and eq_effect_decl (t1 t2: effect_decl) =
     eq_term t1 t2
   | _ -> false
 
-and eq_decl (d1 d2:decl) : bool =
+and eq_decl (d1 d2:decl) : ML bool =
   eq_decl' d1.d d2.d &&
   eq_list eq_qualifier d1.quals d2.quals &&
   eq_list eq_term d1.attrs d2.attrs

@@ -37,7 +37,7 @@ let lookup_tuple (n : Prims.int) : (Prims.int * Prims.string * Prims.string)=
       let uu___1 =
         let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
         Prims.strcat "Tuple too large: " uu___2 in
-      failwith uu___1
+      FStarC_Effect.failwith uu___1
 let mk_tuple_lid (n : Prims.int) (r : FStarC_Range_Type.range) :
   FStarC_Ident.lid=
   let uu___ = lookup_tuple n in
@@ -52,39 +52,36 @@ let mk_tuple_data_lid (n : Prims.int) (r : FStarC_Range_Type.range) :
       let l = FStarC_Ident.lid_of_str s in FStarC_Ident.set_lid_range l r
 let get_tuple_datacon_arity (s : Prims.string) :
   Prims.int FStar_Pervasives_Native.option=
-  let uu___ =
-    FStarC_List.tryFind
-      (fun uu___1 -> match uu___1 with | (uu___2, uu___3, s') -> s = s')
-      tuple_table in
-  match uu___ with
-  | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+  match FStar_List_Tot_Base.find
+          (fun uu___ -> match uu___ with | (uu___1, uu___2, s') -> s = s')
+          tuple_table
+  with
+  | FStar_Pervasives_Native.Some (n, uu___, uu___1) ->
       FStar_Pervasives_Native.Some n
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let get_tuple_tycon_arity (s : Prims.string) :
   Prims.int FStar_Pervasives_Native.option=
-  let uu___ =
-    FStarC_List.tryFind
-      (fun uu___1 -> match uu___1 with | (uu___2, s', uu___3) -> s = s')
-      tuple_table in
-  match uu___ with
-  | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+  match FStar_List_Tot_Base.find
+          (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
+          tuple_table
+  with
+  | FStar_Pervasives_Native.Some (n, uu___, uu___1) ->
       FStar_Pervasives_Native.Some n
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let is_tuple_constructor_string (s : Prims.string) : Prims.bool=
-  FStarC_List.existsb
+  FStar_List_Tot_Base.existsb
     (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
     tuple_table
 let is_tuple_datacon_string (s : Prims.string) : Prims.bool=
-  FStarC_List.existsb
+  FStar_List_Tot_Base.existsb
     (fun uu___ -> match uu___ with | (n, uu___1, s') -> s = s') tuple_table
 let is_tuple_constructor_lid (lid : FStarC_Ident.lident) : Prims.bool=
-  let uu___ = FStarC_Ident.string_of_lid lid in
-  is_tuple_constructor_string uu___
-let is_tuple_datacon_lid (lid : FStarC_Ident.lident) : Prims.bool=
-  let uu___ = FStarC_Ident.string_of_lid lid in is_tuple_datacon_string uu___
+  is_tuple_constructor_string (FStarC_Ident.string_of_lid lid)
 let is_tuple_data_lid (f : FStarC_Ident.lident) (n : Prims.int) : Prims.bool=
   let uu___ = mk_tuple_data_lid n FStarC_Range_Type.dummyRange in
   FStarC_Ident.lid_equals f uu___
+let is_tuple_datacon_lid (lid : FStarC_Ident.lident) : Prims.bool=
+  is_tuple_datacon_string (FStarC_Ident.string_of_lid lid)
 let dtuple_table : (Prims.int * Prims.string * Prims.string) Prims.list=
   [((Prims.of_int (2)), "Prims.dtuple2", "Prims.Mkdtuple2");
   ((Prims.of_int (3)), "FStar.Pervasives.dtuple3",
@@ -105,7 +102,7 @@ let lookup_dtuple (n : Prims.int) :
       let uu___1 =
         let uu___2 = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
         Prims.strcat "DTuple too large: " uu___2 in
-      failwith uu___1
+      FStarC_Effect.failwith uu___1
 let mk_dtuple_lid (n : Prims.int) (r : FStarC_Range_Type.range) :
   FStarC_Ident.lid=
   let uu___ = lookup_dtuple n in
@@ -120,41 +117,38 @@ let mk_dtuple_data_lid (n : Prims.int) (r : FStarC_Range_Type.range) :
       let l = FStarC_Ident.lid_of_str s in FStarC_Ident.set_lid_range l r
 let get_dtuple_datacon_arity (s : Prims.string) :
   Prims.int FStar_Pervasives_Native.option=
-  let uu___ =
-    FStarC_List.tryFind
-      (fun uu___1 -> match uu___1 with | (uu___2, uu___3, s') -> s = s')
-      dtuple_table in
-  match uu___ with
-  | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+  match FStar_List_Tot_Base.find
+          (fun uu___ -> match uu___ with | (uu___1, uu___2, s') -> s = s')
+          dtuple_table
+  with
+  | FStar_Pervasives_Native.Some (n, uu___, uu___1) ->
       FStar_Pervasives_Native.Some n
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let get_dtuple_tycon_arity (s : Prims.string) :
   Prims.int FStar_Pervasives_Native.option=
-  let uu___ =
-    FStarC_List.tryFind
-      (fun uu___1 -> match uu___1 with | (uu___2, s', uu___3) -> s = s')
-      dtuple_table in
-  match uu___ with
-  | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+  match FStar_List_Tot_Base.find
+          (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
+          dtuple_table
+  with
+  | FStar_Pervasives_Native.Some (n, uu___, uu___1) ->
       FStar_Pervasives_Native.Some n
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let is_dtuple_constructor_string (s : Prims.string) : Prims.bool=
-  FStarC_List.existsb
+  FStar_List_Tot_Base.existsb
     (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
     dtuple_table
 let is_dtuple_datacon_string (s : Prims.string) : Prims.bool=
-  FStarC_List.existsb
+  FStar_List_Tot_Base.existsb
     (fun uu___ -> match uu___ with | (uu___1, uu___2, s') -> s = s')
     dtuple_table
 let is_dtuple_constructor_lid (lid : FStarC_Ident.lident) : Prims.bool=
-  let uu___ = FStarC_Ident.string_of_lid lid in
-  is_dtuple_constructor_string uu___
+  is_dtuple_constructor_string (FStarC_Ident.string_of_lid lid)
 let is_dtuple_data_lid (f : FStarC_Ident.lident) (n : Prims.int) :
   Prims.bool=
   let uu___ = mk_dtuple_data_lid n FStarC_Range_Type.dummyRange in
   FStarC_Ident.lid_equals f uu___
 let is_dtuple_datacon_lid (f : FStarC_Ident.lident) : Prims.bool=
-  let uu___ = FStarC_Ident.string_of_lid f in is_dtuple_datacon_string uu___
+  is_dtuple_datacon_string (FStarC_Ident.string_of_lid f)
 let lid_tuple2 : FStarC_Ident.lident=
   mk_tuple_lid (Prims.of_int (2)) FStarC_Range_Type.dummyRange
 let lid_tuple3 : FStarC_Ident.lident=

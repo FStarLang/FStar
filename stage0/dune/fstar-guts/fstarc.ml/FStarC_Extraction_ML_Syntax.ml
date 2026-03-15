@@ -705,8 +705,11 @@ let pop_unit (ts : mltyscheme) : (e_tag * mltyscheme)=
        | MLTY_Fun (l, eff, t) ->
            if l = ml_unit_ty
            then (eff, (vs, t))
-           else failwith "unexpected: pop_unit: domain was not unit"
-       | uu___1 -> failwith "unexpected: pop_unit: not a function type")
+           else
+             FStarC_Effect.failwith
+               "unexpected: pop_unit: domain was not unit"
+       | uu___1 ->
+           FStarC_Effect.failwith "unexpected: pop_unit: not a function type")
 let ctor' (n : Prims.string) (args : FStar_Pprint.document Prims.list) :
   FStar_Pprint.document=
   FStar_Pprint.nest (Prims.of_int (2))
@@ -734,12 +737,8 @@ let rec mlty_to_doc (t : mlty) : FStar_Pprint.document=
   | MLTY_Named (ts, p) ->
       let uu___ =
         let uu___1 = FStarC_List.map mlty_to_doc ts in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = string_of_mlpath p in
-            FStar_Pprint.doc_of_string uu___4 in
-          [uu___3] in
-        FStarC_List.op_At uu___1 uu___2 in
+        FStarC_List.op_At uu___1
+          [FStar_Pprint.doc_of_string (string_of_mlpath p)] in
       ctor' "<MLTY_Named>" uu___
   | MLTY_Tuple ts ->
       let uu___ =
@@ -859,10 +858,9 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
         let uu___3 = mlty_to_doc t2 in triple uu___1 uu___2 uu___3 in
       ctor "MLE_Coerce" uu___
   | MLE_CTor (p, es) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc es mlexpr_to_doc in
-      ctor2 "MLE_CTor" uu___ uu___1
+      let uu___ = list_to_doc es mlexpr_to_doc in
+      ctor2 "MLE_CTor" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLE_Seq es ->
       let uu___ = list_to_doc es mlexpr_to_doc in ctor "MLE_Seq" uu___
   | MLE_Tuple es ->
@@ -880,9 +878,8 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
       ctor2 "MLE_Record" uu___ uu___1
   | MLE_Proj (e1, p) ->
       let uu___ = mlexpr_to_doc e1 in
-      let uu___1 =
-        let uu___2 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___2 in
-      ctor2 "MLE_Proj" uu___ uu___1
+      ctor2 "MLE_Proj" uu___
+        (FStar_Pprint.doc_of_string (string_of_mlpath p))
   | MLE_If (e1, e2, e3) ->
       let uu___ =
         let uu___1 = mlexpr_to_doc e1 in
@@ -891,17 +888,15 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
         triple uu___1 uu___2 uu___3 in
       ctor "MLE_If" uu___
   | MLE_Raise (p, es) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc es mlexpr_to_doc in
-      ctor2 "MLE_Raise" uu___ uu___1
+      let uu___ = list_to_doc es mlexpr_to_doc in
+      ctor2 "MLE_Raise" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLE_Try (e1, bs) ->
       let uu___ = mlexpr_to_doc e1 in
       let uu___1 = list_to_doc bs mlbranch_to_doc in
       ctor2 "MLE_Try" uu___ uu___1
-and mlbranch_to_doc
-  (uu___ : (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr)) :
-  FStar_Pprint.document=
+and mlbranch_to_doc (b : mlbranch) : FStar_Pprint.document=
+  let uu___ = b in
   match uu___ with
   | (p, e1, e2) ->
       let uu___1 = mlpattern_to_doc p in
@@ -968,10 +963,9 @@ and mlpattern_to_doc (mlp : mlpattern) : FStar_Pprint.document=
   | MLP_Const c -> let uu___ = mlconstant_to_doc c in ctor "MLP_Const" uu___
   | MLP_Var x -> ctor "MLP_Var" (FStar_Pprint.doc_of_string x)
   | MLP_CTor (p, ps) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc ps mlpattern_to_doc in
-      ctor2 "MLP_CTor" uu___ uu___1
+      let uu___ = list_to_doc ps mlpattern_to_doc in
+      ctor2 "MLP_CTor" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLP_Branch ps ->
       let uu___ = list_to_doc ps mlpattern_to_doc in ctor "MLP_Branch" uu___
   | MLP_Record (path, fields) ->

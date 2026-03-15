@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -184,7 +184,7 @@ let test_hashes () =
               (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in
-  let rec aux (n:int) =
+  let rec aux (n:int) : ML unit =
     if n = 0 then ()
     else (test_one_hash n; aux (n - 1))
   in

@@ -31,8 +31,8 @@ let unshadow (bs : FStarC_Syntax_Syntax.binders)
             FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
           Prims.strcat "'" uu___1 in
         Prims.strcat b uu___ in
-      let uu___ = f t1 in if uu___ then t1 else aux (i + Prims.int_one) in
-    let uu___ = f b in if uu___ then b else aux Prims.int_zero in
+      if f t1 then t1 else aux (i + Prims.int_one) in
+    if f b then b else aux Prims.int_zero in
   let rec go seen subst bs1 bs' t1 =
     match bs1 with
     | [] ->
@@ -43,7 +43,8 @@ let unshadow (bs : FStarC_Syntax_Syntax.binders)
           let uu___ = FStarC_Syntax_Subst.subst_binders subst [b] in
           match uu___ with
           | b2::[] -> b2
-          | uu___1 -> failwith "impossible: unshadow subst_binders" in
+          | uu___1 ->
+              FStarC_Effect.failwith "impossible: unshadow subst_binders" in
         let uu___ =
           ((b1.FStarC_Syntax_Syntax.binder_bv),
             (b1.FStarC_Syntax_Syntax.binder_qual)) in
@@ -106,7 +107,7 @@ let maybe_rename_binders (ps : FStarC_Tactics_Types.proofstate)
                FStarC_Syntax_Syntax.binder_attrs =
                  (uu___.FStarC_Syntax_Syntax.binder_attrs)
              }
-         | uu___2 -> failwith "Not a renaming") bs1 in
+         | uu___2 -> FStarC_Effect.failwith "Not a renaming") bs1 in
   let uu___ = FStarC_Options.tactic_raw_binders () in
   if uu___
   then (bs, t)
@@ -123,17 +124,15 @@ let goal_to_doc (kind : Prims.string)
     let uu___ = FStarC_Options.print_implicits () in
     if uu___
     then
-      let uu___1 = FStarC_Tactics_Types.goal_env g in
-      let uu___2 = FStarC_Tactics_Types.goal_witness g in
-      term_to_doc uu___1 uu___2
+      let uu___1 = FStarC_Tactics_Types.goal_witness g in
+      term_to_doc (FStarC_Tactics_Types.goal_env g) uu___1
     else
       (let uu___2 = FStarC_Tactics_Types.check_goal_solved' g in
        match uu___2 with
        | FStar_Pervasives_Native.None -> FStar_Pprint.doc_of_string "_"
        | FStar_Pervasives_Native.Some t ->
-           let uu___3 = FStarC_Tactics_Types.goal_env g in
-           let uu___4 = FStarC_Tactics_Types.goal_witness g in
-           term_to_doc uu___3 uu___4) in
+           let uu___3 = FStarC_Tactics_Types.goal_witness g in
+           term_to_doc (FStarC_Tactics_Types.goal_env g) uu___3) in
   let num =
     match maybe_num with
     | FStar_Pervasives_Native.None -> FStar_Pprint.empty
@@ -195,8 +194,8 @@ let goal_to_doc (kind : Prims.string)
                           let uu___9 =
                             let uu___10 =
                               let uu___11 =
-                                let uu___12 = FStarC_Tactics_Types.goal_env g in
-                                term_to_doc uu___12 goal_ty2 in
+                                term_to_doc (FStarC_Tactics_Types.goal_env g)
+                                  goal_ty2 in
                               FStar_Pprint.op_Hat_Slash_Hat
                                 FStar_Pprint.colon uu___11 in
                             FStar_Pprint.op_Hat_Slash_Hat w uu___10 in
@@ -225,8 +224,9 @@ let goal_to_string_verbose (g : FStarC_Tactics_Types.goal) : Prims.string=
         (g.FStarC_Tactics_Types.goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
     FStar_Pprint.render uu___1 in
   Prims.strcat uu___ "\n"
-let ps_to_doc (uu___ : (Prims.string * FStarC_Tactics_Types.proofstate)) :
+let ps_to_doc (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
   FStar_Pprint.document=
+  let uu___ = p in
   match uu___ with
   | (msg, ps) ->
       let p_imp imp =
@@ -298,8 +298,9 @@ let ps_to_doc (uu___ : (Prims.string * FStarC_Tactics_Types.proofstate)) :
           FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
         FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___3 in
       FStar_Pprint.op_Hat_Hat uu___1 uu___2
-let ps_to_string (uu___ : (Prims.string * FStarC_Tactics_Types.proofstate)) :
+let ps_to_string (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
   Prims.string=
+  let uu___ = p in
   match uu___ with
   | (msg, ps) ->
       let uu___1 =
@@ -313,10 +314,9 @@ let goal_to_json (g : FStarC_Tactics_Types.goal) : FStarC_Json.json=
   match uu___ with
   | (g_binders1, g_type1) ->
       let j_binders =
-        let uu___1 =
-          let uu___2 = FStarC_Tactics_Types.goal_env g in
-          FStarC_TypeChecker_Env.dsenv uu___2 in
-        FStarC_Syntax_Print.binders_to_json uu___1 g_binders1 in
+        FStarC_Syntax_Print.binders_to_json
+          (FStarC_TypeChecker_Env.dsenv (FStarC_Tactics_Types.goal_env g))
+          g_binders1 in
       let uu___1 =
         let uu___2 =
           let uu___3 =
@@ -325,17 +325,16 @@ let goal_to_json (g : FStarC_Tactics_Types.goal) : FStarC_Json.json=
                 let uu___6 =
                   let uu___7 =
                     let uu___8 =
-                      let uu___9 = FStarC_Tactics_Types.goal_env g in
-                      let uu___10 = FStarC_Tactics_Types.goal_witness g in
-                      term_to_string uu___9 uu___10 in
+                      let uu___9 = FStarC_Tactics_Types.goal_witness g in
+                      term_to_string (FStarC_Tactics_Types.goal_env g) uu___9 in
                     FStarC_Json.JsonStr uu___8 in
                   ("witness", uu___7) in
                 let uu___7 =
                   let uu___8 =
                     let uu___9 =
                       let uu___10 =
-                        let uu___11 = FStarC_Tactics_Types.goal_env g in
-                        term_to_string uu___11 g_type1 in
+                        term_to_string (FStarC_Tactics_Types.goal_env g)
+                          g_type1 in
                       FStarC_Json.JsonStr uu___10 in
                     ("type", uu___9) in
                   [uu___8;
@@ -347,8 +346,9 @@ let goal_to_json (g : FStarC_Tactics_Types.goal) : FStarC_Json.json=
           [uu___3] in
         ("hyps", j_binders) :: uu___2 in
       FStarC_Json.JsonAssoc uu___1
-let ps_to_json (uu___ : (Prims.string * FStarC_Tactics_Types.proofstate)) :
+let ps_to_json (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
   FStarC_Json.json=
+  let uu___ = p in
   match uu___ with
   | (msg, ps) ->
       let uu___1 =
@@ -397,13 +397,12 @@ let ps_to_json (uu___ : (Prims.string * FStarC_Tactics_Types.proofstate)) :
       FStarC_Json.JsonAssoc uu___1
 let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate)
   (msg : Prims.string) : unit=
-  let uu___ =
-    (let uu___1 = FStarC_Options.silent () in Prims.op_Negation uu___1) ||
-      (FStarC_Options.interactive ()) in
-  if uu___
+  let silent = FStarC_Options.silent () in
+  let interactive = FStarC_Options.interactive () in
+  if (if Prims.op_Negation silent then true else interactive)
   then
     FStarC_Options.with_saved_options
-      (fun uu___1 ->
+      (fun uu___ ->
          FStarC_Options.set_option "print_effect_args"
            (FStarC_Options.Bool true);
          FStarC_Format.print_generic "proof-state" ps_to_string ps_to_json

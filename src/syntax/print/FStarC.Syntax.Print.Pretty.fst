@@ -28,43 +28,43 @@ let rfrac = float_of_string "1.0"
 let width = 100
 let pp d = Pp.pretty_string rfrac width d
 
-let term_to_doc' env (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let term_to_doc' env (tm:term) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term' env tm in
   ToDocument.term_to_document e
 )
 
-let univ_to_doc' env (u:universe) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let univ_to_doc' env (u:universe) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_universe' env u Range.dummyRange in
   ToDocument.term_to_document e
 )
 
-let term_to_string' env (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+let term_to_string' env (tm:term) = GenSym.with_frozen_gensym (fun () ->
   let d = term_to_doc' env tm in
   pp d
 )
 
-let univ_to_string' env (u:universe) : string = GenSym.with_frozen_gensym (fun () ->
+let univ_to_string' env (u:universe) = GenSym.with_frozen_gensym (fun () ->
   let d = univ_to_doc' env u in
   pp d
 )
 
-let comp_to_doc' env (c:comp) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let comp_to_doc' env (c:comp) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_comp' env c in
   ToDocument.term_to_document e
 )
 
-let comp_to_string' env (c:comp) : string = GenSym.with_frozen_gensym (fun () ->
+let comp_to_string' env (c:comp) = GenSym.with_frozen_gensym (fun () ->
   let d = comp_to_doc' env c in
   pp d
 )
 
-let sigelt_to_doc' env (se:sigelt) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let sigelt_to_doc' env (se:sigelt) = GenSym.with_frozen_gensym (fun () ->
   match Resugar.resugar_sigelt' env se with
   | None -> Pprint.empty
   | Some d -> ToDocument.decl_to_document d
 )
 
-let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun () ->
+let sigelt_to_string' env (se:sigelt) = GenSym.with_frozen_gensym (fun () ->
   let d = sigelt_to_doc' env se in
   pp d
 )
@@ -73,39 +73,39 @@ let sigelt_to_string' env (se:sigelt) : string = GenSym.with_frozen_gensym (fun 
 of the above so we can reuse the empty_env created at module
 load time for DsEnv. Otherwise we need to create another empty
 DsEnv.env here. *)
-let term_to_doc (tm:term) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let term_to_doc (tm:term) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_term tm in
   ToDocument.term_to_document e
 )
 
-let univ_to_doc (u:universe) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let univ_to_doc (u:universe) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_universe u Range.dummyRange in
   ToDocument.term_to_document e
 )
 
-let comp_to_doc (c:comp) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let comp_to_doc (c:comp) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_comp c in
   ToDocument.term_to_document e
 )
 
-let sigelt_to_doc (se:sigelt) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let sigelt_to_doc (se:sigelt) = GenSym.with_frozen_gensym (fun () ->
   match Resugar.resugar_sigelt se with
   | None -> Pprint.empty
   | Some d -> ToDocument.decl_to_document d
 )
 
-let term_to_string (tm:term) : string = GenSym.with_frozen_gensym (fun () ->
+let term_to_string (tm:term) = GenSym.with_frozen_gensym (fun () ->
   let d = term_to_doc tm in
   pp d
 )
 
-let comp_to_string (c:comp) : string = GenSym.with_frozen_gensym (fun () ->
+let comp_to_string (c:comp) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_comp c in
   let d = ToDocument.term_to_document e in
   pp d
 )
 
-let sigelt_to_string (se:sigelt) : string = GenSym.with_frozen_gensym (fun () ->
+let sigelt_to_string (se:sigelt) = GenSym.with_frozen_gensym (fun () ->
   match Resugar.resugar_sigelt se with
   | None -> ""
   | Some d ->
@@ -113,27 +113,27 @@ let sigelt_to_string (se:sigelt) : string = GenSym.with_frozen_gensym (fun () ->
     pp d
 )
 
-let univ_to_string (u:universe) : string = GenSym.with_frozen_gensym (fun () ->
+let univ_to_string (u:universe) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_universe u Range.dummyRange in
   let d = ToDocument.term_to_document e in
   pp d
 )
 
-let tscheme_to_doc (ts:tscheme) : Pprint.document = GenSym.with_frozen_gensym (fun () ->
+let tscheme_to_doc (ts:tscheme) = GenSym.with_frozen_gensym (fun () ->
   let d = Resugar.resugar_tscheme ts in
   ToDocument.decl_to_document d
 )
 
-let tscheme_to_string (ts:tscheme) : string =
+let tscheme_to_string (ts:tscheme) =
   tscheme_to_doc ts |> pp
 
-let pat_to_string (p:pat) : string = GenSym.with_frozen_gensym (fun () ->
+let pat_to_string (p:pat) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_pat p (Class.Setlike.empty ()) in
   let d = ToDocument.pat_to_document e in
   pp d
 )
 
-let binder_to_string' is_arrow (b:binder) : string = GenSym.with_frozen_gensym (fun () ->
+let binder_to_string' is_arrow (b:binder) = GenSym.with_frozen_gensym (fun () ->
   let e = Resugar.resugar_binder b Range.dummyRange in
   let d = ToDocument.binder_to_document e in
   pp d

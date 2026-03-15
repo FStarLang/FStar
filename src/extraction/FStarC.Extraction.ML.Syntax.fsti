@@ -17,7 +17,6 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Syntax
-
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -232,25 +231,24 @@ val ml_string_ty : mlty
 
 val ml_unit      : mlexpr
 
-val apply_obj_repr :  mlexpr -> mlty -> mlexpr
+val apply_obj_repr :  mlexpr -> mlty -> ML mlexpr
 
-val ty_param_names (tys:list ty_param) : list string
+val ty_param_names (tys:list ty_param) : ML (list string)
 
 val push_unit (eff:e_tag) (ts : mltyscheme) : mltyscheme
-val pop_unit (ts : mltyscheme) : e_tag & mltyscheme
+val pop_unit (ts : mltyscheme) : ML (e_tag & mltyscheme)
 
-val mltyscheme_to_string (tsc:mltyscheme) : string
-val mlbranch_to_string (b:mlbranch) : string
-val mlletbinding_to_string (lb:mlletbinding) : string
-val mllb_to_string (lb:mllb) : string
-val mlpattern_to_string (p:mlpattern) : string
-
-val mlconstant_to_string   (c:mlconstant)   : string
-val mlty_to_string         (t:mlty)         : string
-val mlexpr_to_string       (e:mlexpr)       : string
-val mltybody_to_string     (d:mltybody)     : string
-val one_mltydecl_to_string (d:one_mltydecl) : string
-val mlmodule1_to_string    (d:mlmodule1)    : string
+val mlty_to_string         (t:mlty)         : ML string
+val mltyscheme_to_string   (tsc:mltyscheme) : ML string
+val mlbranch_to_string     (b:mlbranch)     : ML string
+val mlletbinding_to_string (lb:mlletbinding) : ML string
+val mllb_to_string         (lb:mllb)        : ML string
+val mlpattern_to_string    (p:mlpattern)    : ML string
+val mlconstant_to_string   (c:mlconstant)   : ML string
+val mlexpr_to_string       (e:mlexpr)       : ML string
+val mltybody_to_string     (d:mltybody)     : ML string
+val one_mltydecl_to_string (d:one_mltydecl) : ML string
+val mlmodule1_to_string    (d:mlmodule1)    : ML string
 
 instance val showable_mlty         : showable mlty
 instance val showable_mlconstant   : showable mlconstant

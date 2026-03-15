@@ -53,7 +53,7 @@ let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) 
   in
   go [] xs
 
-let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
+let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
     (* If this is a splice, the attributes don't mean anything, they will
     just be passed through to the tactic to decide what to do. So just
     accept them. *)
@@ -310,7 +310,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.tcinstance_lid
           | _ -> false)
   in
-  let check_instance_typ (ty:typ) : unit =
+  let check_instance_typ (ty:typ) : ML unit =
     let _, res = U.arrow_formals_comp ty in
     if not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
@@ -352,7 +352,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 
-let check_sigelt_quals_post env se =
+let check_sigelt_quals_post env se : ML unit =
   let quals = se.sigquals in
   let r = se.sigrng in
   check_erasable env quals r se;

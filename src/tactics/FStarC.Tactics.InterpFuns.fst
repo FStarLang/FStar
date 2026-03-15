@@ -37,12 +37,12 @@ module PO    = FStarC.TypeChecker.Primops
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 (* This module does not use typeclasses *)
-let embed (e:embedding 'a) rng (t:'a) n = FStarC.Syntax.Embeddings.embed #_ #e t rng None n
-let unembed (e:embedding 'a) t n : option 'a = FStarC.Syntax.Embeddings.unembed #_ #e t n
+let embed (e:embedding 'a) rng (t:'a) n : ML term = FStarC.Syntax.Embeddings.embed #_ #e t rng None n
+let unembed (e:embedding 'a) t n : ML (option 'a) = FStarC.Syntax.Embeddings.unembed #_ #e t n
 
-let interp_ctx s f = Errors.with_ctx ("While running primitive " ^ s) f
+let interp_ctx (s:string) (f:unit -> ML 'a) : ML 'a = Errors.with_ctx ("While running primitive " ^ s) f
 
-let run_wrap (label : string) (t : tac 'a) ps : 'a =
+let run_wrap (label : string) (t : tac 'a) ps : ML 'a =
   interp_ctx label (fun () -> t ps)
 
 let builtin_lid nm = PC.fstar_stubs_tactics_lid' ["V2"; "Builtins"; nm]
@@ -51,53 +51,53 @@ let types_lid   nm = PC.fstar_stubs_tactics_lid' ["Types"; nm]
 let set_auto_reflect arity (p:PO.primitive_step) : PO.primitive_step =
   { p with auto_reflect = Some arity }
 
-let mk_tot_step_1 uarity nm f nbe_f =
+let mk_tot_step_1 uarity nm f nbe_f : ML PO.primitive_step =
   let lid = types_lid nm in
   PO.mk1' uarity lid
     (fun x -> f x |> Some)
     (fun x -> nbe_f x |> Some)
 
-let mk_tot_step_2 uarity nm f nbe_f =
+let mk_tot_step_2 uarity nm f nbe_f : ML PO.primitive_step =
   let lid = types_lid nm in
   PO.mk2' uarity lid
     (fun x y -> f x y |> Some)
     (fun x y -> nbe_f x y |> Some)
 
-let mk_tot_step_1_psc us nm f nbe_f =
+let mk_tot_step_1_psc us nm f nbe_f : ML PO.primitive_step =
   let lid = types_lid nm in
   PO.mk1_psc' us lid
     (fun psc x -> f psc x |> Some)
     (fun psc x -> nbe_f psc x |> Some)
 
-let mk_tac_step_1 univ_arity nm f nbe_f : PO.primitive_step =
+let mk_tac_step_1 univ_arity nm f nbe_f : ML PO.primitive_step =
   let lid = builtin_lid nm in
   set_auto_reflect 1 <|
     PO.mk2' univ_arity lid
       (fun a ps -> Some (run_wrap nm (f a) ps))
       (fun a ps -> Some (run_wrap nm (nbe_f a) ps))
 
-let mk_tac_step_2 univ_arity nm f nbe_f : PO.primitive_step =
+let mk_tac_step_2 univ_arity nm f nbe_f : ML PO.primitive_step =
   let lid = builtin_lid nm in
   set_auto_reflect 2 <|
     PO.mk3' univ_arity lid
       (fun a b ps -> Some (run_wrap nm (f a b) ps))
       (fun a b ps -> Some (run_wrap nm (nbe_f a b) ps))
 
-let mk_tac_step_3 univ_arity nm f nbe_f : PO.primitive_step =
+let mk_tac_step_3 univ_arity nm f nbe_f : ML PO.primitive_step =
   let lid = builtin_lid nm in
   set_auto_reflect 3 <|
     PO.mk4' univ_arity lid
       (fun a b c ps -> Some (run_wrap nm (f a b c) ps))
       (fun a b c ps -> Some (run_wrap nm (nbe_f a b c) ps))
 
-let mk_tac_step_4 univ_arity nm f nbe_f : PO.primitive_step =
+let mk_tac_step_4 univ_arity nm f nbe_f : ML PO.primitive_step =
   let lid = builtin_lid nm in
   set_auto_reflect 4 <|
     PO.mk5' univ_arity lid
       (fun a b c d ps -> Some (run_wrap nm (f a b c d) ps))
       (fun a b c d ps -> Some (run_wrap nm (nbe_f a b c d) ps))
 
-let mk_tac_step_5 univ_arity nm f nbe_f : PO.primitive_step =
+let mk_tac_step_5 univ_arity nm f nbe_f : ML PO.primitive_step =
   let lid = builtin_lid nm in
   set_auto_reflect 5 <|
     PO.mk6' univ_arity lid
@@ -120,7 +120,7 @@ let mk_tactic_interpretation_1
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _)] ->
@@ -142,7 +142,7 @@ let mk_tactic_interpretation_2
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _)] ->
@@ -166,7 +166,7 @@ let mk_tactic_interpretation_3
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
@@ -192,7 +192,7 @@ let mk_tactic_interpretation_4
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
@@ -220,7 +220,7 @@ let mk_tactic_interpretation_5
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
@@ -250,7 +250,7 @@ let mk_tactic_interpretation_6
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
@@ -282,7 +282,7 @@ let mk_tactic_interpretation_7
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
@@ -316,7 +316,7 @@ let mk_tactic_interpretation_8
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
@@ -352,7 +352,7 @@ let mk_tactic_interpretation_9
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
@@ -390,7 +390,7 @@ let mk_tactic_interpretation_10
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
@@ -430,7 +430,7 @@ let mk_tactic_interpretation_11
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
@@ -472,7 +472,7 @@ let mk_tactic_interpretation_12
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
@@ -516,7 +516,7 @@ let mk_tactic_interpretation_13
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
@@ -562,7 +562,7 @@ let mk_tactic_interpretation_14
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
@@ -610,7 +610,7 @@ let mk_tactic_interpretation_15
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
@@ -660,7 +660,7 @@ let mk_tactic_interpretation_16
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
@@ -712,7 +712,7 @@ let mk_tactic_interpretation_17
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
@@ -766,7 +766,7 @@ let mk_tactic_interpretation_18
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
@@ -822,7 +822,7 @@ let mk_tactic_interpretation_19
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
@@ -880,7 +880,7 @@ let mk_tactic_interpretation_20
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _); (a21, _)] ->
@@ -919,7 +919,7 @@ let mk_tactic_nbe_interpretation_1
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _)] ->
@@ -939,7 +939,7 @@ let mk_tactic_nbe_interpretation_2
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _)] ->
@@ -961,7 +961,7 @@ let mk_tactic_nbe_interpretation_3
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
@@ -985,7 +985,7 @@ let mk_tactic_nbe_interpretation_4
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
@@ -1011,7 +1011,7 @@ let mk_tactic_nbe_interpretation_5
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
@@ -1039,7 +1039,7 @@ let mk_tactic_nbe_interpretation_6
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
@@ -1069,7 +1069,7 @@ let mk_tactic_nbe_interpretation_7
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
@@ -1101,7 +1101,7 @@ let mk_tactic_nbe_interpretation_8
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
@@ -1135,7 +1135,7 @@ let mk_tactic_nbe_interpretation_9
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
@@ -1171,7 +1171,7 @@ let mk_tactic_nbe_interpretation_10
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
@@ -1209,7 +1209,7 @@ let mk_tactic_nbe_interpretation_11
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
@@ -1249,7 +1249,7 @@ let mk_tactic_nbe_interpretation_12
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
@@ -1291,7 +1291,7 @@ let mk_tactic_nbe_interpretation_13
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
@@ -1335,7 +1335,7 @@ let mk_tactic_nbe_interpretation_14
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
@@ -1381,7 +1381,7 @@ let mk_tactic_nbe_interpretation_15
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
@@ -1429,7 +1429,7 @@ let mk_tactic_nbe_interpretation_16
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
@@ -1479,7 +1479,7 @@ let mk_tactic_nbe_interpretation_17
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
@@ -1531,7 +1531,7 @@ let mk_tactic_nbe_interpretation_18
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
@@ -1585,7 +1585,7 @@ let mk_tactic_nbe_interpretation_19
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
@@ -1641,7 +1641,7 @@ let mk_tactic_nbe_interpretation_20
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _); (a21, _)] ->
@@ -1680,7 +1680,7 @@ let mk_total_interpretation_1
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _)] ->
@@ -1700,7 +1700,7 @@ let mk_total_interpretation_2
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _)] ->
@@ -1722,7 +1722,7 @@ let mk_total_interpretation_3
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _)] ->
@@ -1746,7 +1746,7 @@ let mk_total_interpretation_4
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
@@ -1772,7 +1772,7 @@ let mk_total_interpretation_5
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
@@ -1800,7 +1800,7 @@ let mk_total_interpretation_6
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
@@ -1830,7 +1830,7 @@ let mk_total_interpretation_7
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
@@ -1862,7 +1862,7 @@ let mk_total_interpretation_8
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
@@ -1896,7 +1896,7 @@ let mk_total_interpretation_9
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
@@ -1932,7 +1932,7 @@ let mk_total_interpretation_10
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
@@ -1970,7 +1970,7 @@ let mk_total_interpretation_11
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
@@ -2010,7 +2010,7 @@ let mk_total_interpretation_12
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
@@ -2052,7 +2052,7 @@ let mk_total_interpretation_13
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
@@ -2096,7 +2096,7 @@ let mk_total_interpretation_14
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
@@ -2142,7 +2142,7 @@ let mk_total_interpretation_15
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
@@ -2190,7 +2190,7 @@ let mk_total_interpretation_16
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
@@ -2240,7 +2240,7 @@ let mk_total_interpretation_17
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
@@ -2292,7 +2292,7 @@ let mk_total_interpretation_18
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
@@ -2346,7 +2346,7 @@ let mk_total_interpretation_19
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
@@ -2402,7 +2402,7 @@ let mk_total_interpretation_20
     (ncb:norm_cb)
     (us:universes)
     (args:args)
-  : option term
+  : ML (option term)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
@@ -2439,7 +2439,7 @@ let mk_total_nbe_interpretation_1
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _)] ->
@@ -2458,7 +2458,7 @@ let mk_total_nbe_interpretation_2
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _)] ->
@@ -2479,7 +2479,7 @@ let mk_total_nbe_interpretation_3
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _)] ->
@@ -2502,7 +2502,7 @@ let mk_total_nbe_interpretation_4
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
@@ -2527,7 +2527,7 @@ let mk_total_nbe_interpretation_5
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
@@ -2554,7 +2554,7 @@ let mk_total_nbe_interpretation_6
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
@@ -2583,7 +2583,7 @@ let mk_total_nbe_interpretation_7
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
@@ -2614,7 +2614,7 @@ let mk_total_nbe_interpretation_8
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
@@ -2647,7 +2647,7 @@ let mk_total_nbe_interpretation_9
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
@@ -2682,7 +2682,7 @@ let mk_total_nbe_interpretation_10
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
@@ -2719,7 +2719,7 @@ let mk_total_nbe_interpretation_11
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
@@ -2758,7 +2758,7 @@ let mk_total_nbe_interpretation_12
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
@@ -2799,7 +2799,7 @@ let mk_total_nbe_interpretation_13
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
@@ -2842,7 +2842,7 @@ let mk_total_nbe_interpretation_14
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
@@ -2887,7 +2887,7 @@ let mk_total_nbe_interpretation_15
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
@@ -2934,7 +2934,7 @@ let mk_total_nbe_interpretation_16
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
@@ -2983,7 +2983,7 @@ let mk_total_nbe_interpretation_17
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
@@ -3034,7 +3034,7 @@ let mk_total_nbe_interpretation_18
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
@@ -3087,7 +3087,7 @@ let mk_total_nbe_interpretation_19
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
@@ -3142,7 +3142,7 @@ let mk_total_nbe_interpretation_20
     (er:NBET.embedding 'r)
     (us:universes)
     (args:NBET.args)
-  : option NBET.t
+  : ML (option NBET.t)
   =
   match args with
   | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->

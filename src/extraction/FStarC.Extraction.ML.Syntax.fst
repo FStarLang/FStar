@@ -86,21 +86,21 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 
 let ml_unit       = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 
-let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
+let apply_obj_repr :  mlexpr -> mlty -> ML mlexpr = fun x t ->
     let repr_name = if Options.codegen() = Some Options.FSharp
                     then MLE_Name([], "box")
                     else MLE_Name(["Obj"], "repr") in
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) repr_name in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
-let ty_param_names (tys:list ty_param) : list string =
+let ty_param_names (tys:list ty_param) : ML (list string) =
   tys |> List.map (fun {ty_param_name} -> ty_param_name)
 
 let push_unit eff (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in
     vs, MLTY_Fun(ml_unit_ty, eff, ty)
 
-let pop_unit (ts : mltyscheme) : e_tag & mltyscheme =
+let pop_unit (ts : mltyscheme) : ML (e_tag & mltyscheme) =
     let vs, ty = ts in
     match ty with
     | MLTY_Fun (l, eff, t) ->
@@ -110,12 +110,12 @@ let pop_unit (ts : mltyscheme) : e_tag & mltyscheme =
     | _ ->
         failwith "unexpected: pop_unit: not a function type"
 
-let ctor' (n: string) (args: list document) =
+let ctor' (n: string) (args: list document) : ML document =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 let ctor (n: string) (arg: document) =
   nest 2 (group (parens (doc_of_string n ^/^ arg)))
 
-let rec mlty_to_doc (t:mlty) =
+let rec mlty_to_doc (t:mlty) : ML document =
   match t with
   | MLTY_Var v -> doc_of_string v
   | MLTY_Fun (t1, _, t2) ->
@@ -126,29 +126,29 @@ let rec mlty_to_doc (t:mlty) =
     ctor "<MLTY_Tuple>" <| flow_map (doc_of_string " *" ^^ break_ 1) mlty_to_doc ts
   | MLTY_Top -> doc_of_string "MLTY_Top"
   | MLTY_Erased -> doc_of_string "MLTY_Erased"
-let mlty_to_string (t:mlty) = render (mlty_to_doc t)
+let mlty_to_string (t:mlty) : ML string = render (mlty_to_doc t)
 
-let mltyscheme_to_doc (tsc:mltyscheme) =
+let mltyscheme_to_doc (tsc:mltyscheme) : ML document =
   ctor "<MLTY_Scheme>"
     (brackets (flow_map (comma ^^ break_ 1) doc_of_string (ty_param_names (fst tsc)))
       ^^ doc_of_string "," ^/^ mlty_to_doc (snd tsc))
-let mltyscheme_to_string (tsc:mltyscheme) = render (mltyscheme_to_doc tsc)
+let mltyscheme_to_string (tsc:mltyscheme) : ML string = render (mltyscheme_to_doc tsc)
 
 let pair a b = group (parens (a ^^ comma ^/^ b))
 let triple a b c = group (parens (a ^^ comma ^/^ b ^^ comma ^/^ c))
 let ctor2 n a b = ctor n (pair a b)
-let list_to_doc #t (xs: list t) (f: t -> document) : document =
+let list_to_doc #t (xs: list t) (f: t -> ML document) : ML document =
   nest 2 (group (brackets (flow_map (semi ^^ break_ 1) f xs)))
-let option_to_doc #t (x: option t) (f: t -> document) : document =
+let option_to_doc #t (x: option t) (f: t -> ML document) : ML document =
   match x with
   | Some x -> group (doc_of_string "Some" ^/^ f x)
   | None -> doc_of_string "None"
 let spaced a = break_ 1 ^^ a ^^ break_ 1
-let record fs =
+let record fs : ML document =
   group <| nest 2 <| braces <| spaced <| separate (semi ^^ break_ 1) fs
 let fld n v = group <| nest 2 <| doc_of_string (n ^ " =") ^/^ v
 
-let rec mlexpr_to_doc (e:mlexpr) =
+let rec mlexpr_to_doc (e:mlexpr) : ML document =
   match e.expr with
   | MLE_Const c ->
     ctor "MLE_Const" (mlconstant_to_doc c)
@@ -188,16 +188,17 @@ let rec mlexpr_to_doc (e:mlexpr) =
   | MLE_Try (e, bs) ->
     ctor2 "MLE_Try" (mlexpr_to_doc e) (list_to_doc bs mlbranch_to_doc)
 
-and mlbranch_to_doc (p, e1, e2) =
+and mlbranch_to_doc (b:mlbranch) : ML document =
+  let (p, e1, e2) = b in
   triple (mlpattern_to_doc p) (option_to_doc e1 mlexpr_to_doc) (mlexpr_to_doc e2)
 
-and mlletbinding_to_doc (lbs) =
+and mlletbinding_to_doc (lbs) : ML document =
   parens <|
     doc_of_string (match lbs._1 with | Rec -> "Rec" | NonRec -> "NonRec")
     ^^ doc_of_string ", " ^^
     list_to_doc lbs._2 mllb_to_doc
 
-and mllb_to_doc (lb) =
+and mllb_to_doc (lb) : ML document =
   record [
     fld "mllb_name" (doc_of_string lb.mllb_name);
     fld "mllb_attrs" (list_to_doc lb.mllb_attrs mlexpr_to_doc);
@@ -206,7 +207,7 @@ and mllb_to_doc (lb) =
     fld "mllb_def" (mlexpr_to_doc lb.mllb_def);
   ]
 
-and mlconstant_to_doc mlc =
+and mlconstant_to_doc mlc : ML document =
   match mlc with
   | MLC_Unit -> doc_of_string "MLC_Unit"
   | MLC_Bool b -> ctor "MLC_Bool" (pp b)
@@ -217,7 +218,7 @@ and mlconstant_to_doc mlc =
   | MLC_Char c -> ctor "MLC_Char" underscore
   | MLC_String s -> ctor "MLC_String" (doc_of_string s)
 
-and mlpattern_to_doc mlp =
+and mlpattern_to_doc mlp : ML document =
   match mlp with
   | MLP_Wild -> doc_of_string "MLP_Wild"
   | MLP_Const c -> ctor "MLP_Const" (mlconstant_to_doc c)
@@ -233,14 +234,14 @@ and mlpattern_to_doc mlp =
   | MLP_Tuple ps ->
     ctor "MLP_Tuple" (list_to_doc ps mlpattern_to_doc)
 
-let mlbranch_to_string b = render (mlbranch_to_doc b)
-let mlletbinding_to_string lb = render (mlletbinding_to_doc lb)
-let mllb_to_string lb = render (mllb_to_doc lb)
-let mlpattern_to_string p = render (mlpattern_to_doc p)
-let mlconstant_to_string c = render (mlconstant_to_doc c)
-let mlexpr_to_string e = render (mlexpr_to_doc e)
+let mlbranch_to_string b : ML string = render (mlbranch_to_doc b)
+let mlletbinding_to_string lb : ML string = render (mlletbinding_to_doc lb)
+let mllb_to_string lb : ML string = render (mllb_to_doc lb)
+let mlpattern_to_string p : ML string = render (mlpattern_to_doc p)
+let mlconstant_to_string c : ML string = render (mlconstant_to_doc c)
+let mlexpr_to_string e : ML string = render (mlexpr_to_doc e)
 
-let mltybody_to_doc (d:mltybody) : document =
+let mltybody_to_doc (d:mltybody) : ML document =
   match d with
   | MLTD_Abbrev mlty -> ctor "MLTD_Abbrev" (mlty_to_doc mlty)
   | MLTD_Record l ->
@@ -250,17 +251,17 @@ let mltybody_to_doc (d:mltybody) : document =
     ctor "MLTD_DType" <| group <| nest 2 <| brackets <| spaced <|
       flow_map (semi ^^ break_ 1) (fun (x, l) -> pair (doc_of_string x)
         (list_to_doc l fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t))) l
-let mltybody_to_string (d:mltybody) : string = render (mltybody_to_doc d)
+let mltybody_to_string (d:mltybody) : ML string = render (mltybody_to_doc d)
 
-let one_mltydecl_to_doc (d:one_mltydecl) : document =
+let one_mltydecl_to_doc (d:one_mltydecl) : ML document =
   record [
     fld "tydecl_name" (doc_of_string d.tydecl_name);
     fld "tydecl_parameters" (doc_of_string (String.concat "," (d.tydecl_parameters |> ty_param_names)));
     fld "tydecl_defn" (option_to_doc d.tydecl_defn mltybody_to_doc);
   ]
-let one_mltydecl_to_string (d:one_mltydecl) : string = render (one_mltydecl_to_doc d)
+let one_mltydecl_to_string (d:one_mltydecl) : ML string = render (one_mltydecl_to_doc d)
 
-let mlmodule1_to_doc (m:mlmodule1) : document =
+let mlmodule1_to_doc (m:mlmodule1) : ML document =
   group (match m.mlmodule1_m with
   | MLM_Ty d -> doc_of_string "MLM_Ty " ^^ list_to_doc d one_mltydecl_to_doc
   | MLM_Let l -> doc_of_string "MLM_Let " ^^ mlletbinding_to_doc l
@@ -270,11 +271,11 @@ let mlmodule1_to_doc (m:mlmodule1) : document =
       (list_to_doc l (fun (x, t) -> pair (doc_of_string x) (mlty_to_doc t)))
   | MLM_Top e -> doc_of_string "MLM_Top" ^/^ mlexpr_to_doc e
   | MLM_Loc _mlloc -> doc_of_string "MLM_Loc")
-let mlmodule1_to_string (m:mlmodule1) : string = render (mlmodule1_to_doc m)
+let mlmodule1_to_string (m:mlmodule1) : ML string = render (mlmodule1_to_doc m)
 
-let mlmodulebody_to_doc (m:mlmodulebody) : document =
+let mlmodulebody_to_doc (m:mlmodulebody) : ML document =
   group <| brackets <| spaced <| separate_map (semi ^^ break_ 1) mlmodule1_to_doc m
-let mlmodulebody_to_string (m:mlmodulebody) : string = render (mlmodulebody_to_doc m)
+let mlmodulebody_to_string (m:mlmodulebody) : ML string = render (mlmodulebody_to_doc m)
 
 instance showable_mlty         : showable mlty         = { show = mlty_to_string }
 instance showable_mlconstant   : showable mlconstant   = { show = mlconstant_to_string }

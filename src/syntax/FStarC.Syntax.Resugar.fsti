@@ -30,24 +30,25 @@ module DsEnv = FStarC.Syntax.DsEnv
 exception SkipResugar
 
 (* May raise SkipResugar exn *)
-type resugar_pass_t = env:DsEnv.env -> S.term -> A.term
+type resugar_pass_t = env:DsEnv.env -> S.term -> ML A.term
 
-val register_pass (_ : resugar_pass_t) : unit
+val resugar_universe: S.universe -> Range.t -> ML A.term
+val resugar_universe': DsEnv.env -> S.universe -> Range.t -> ML A.term
 
-val resugar_term: S.term -> A.term
-val resugar_sigelt: S.sigelt -> option A.decl
-val resugar_comp: S.comp -> A.term
-val resugar_pat: S.pat -> FlatSet.t S.bv -> A.pattern
-val resugar_universe: S.universe -> Range.t -> A.term
-val resugar_binder: S.binder -> Range.t -> A.binder
-val resugar_tscheme: S.tscheme -> A.decl
-val resugar_eff_decl: eff_decl -> A.decl
+val register_pass (_ : resugar_pass_t) : ML unit
 
-val resugar_term': DsEnv.env -> S.term -> A.term
-val resugar_sigelt': DsEnv.env -> S.sigelt -> option A.decl
-val resugar_comp': DsEnv.env -> S.comp -> A.term
-val resugar_pat': DsEnv.env -> S.pat -> FlatSet.t S.bv -> A.pattern
-val resugar_universe': DsEnv.env -> S.universe -> Range.t -> A.term
-val resugar_binder': DsEnv.env -> S.binder -> Range.t -> A.binder
-val resugar_tscheme': DsEnv.env -> S.tscheme -> A.decl
-val resugar_eff_decl': DsEnv.env -> eff_decl -> A.decl
+val resugar_term': DsEnv.env -> S.term -> ML A.term
+val resugar_comp': DsEnv.env -> S.comp -> ML A.term
+val resugar_binder': DsEnv.env -> S.binder -> Range.t -> ML A.binder
+val resugar_pat': DsEnv.env -> S.pat -> FlatSet.t S.bv -> ML A.pattern
+val resugar_tscheme': DsEnv.env -> S.tscheme -> ML A.decl
+val resugar_eff_decl': DsEnv.env -> eff_decl -> ML A.decl
+val resugar_sigelt': DsEnv.env -> S.sigelt -> ML (option A.decl)
+
+val resugar_term: S.term -> ML A.term
+val resugar_sigelt: S.sigelt -> ML (option A.decl)
+val resugar_comp: S.comp -> ML A.term
+val resugar_pat: S.pat -> FlatSet.t S.bv -> ML A.pattern
+val resugar_binder: S.binder -> Range.t -> ML A.binder
+val resugar_tscheme: S.tscheme -> ML A.decl
+val resugar_eff_decl: eff_decl -> ML A.decl

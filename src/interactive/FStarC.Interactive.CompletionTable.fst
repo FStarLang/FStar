@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Interactive.CompletionTable
-
 open FStarC
 open FStarC
 open FStarC.Effect
@@ -29,17 +28,18 @@ type heap 'a =
 | EmptyHeap
 | Heap of 'a & list (heap 'a)
 
-let heap_merge cmp h1 h2 =
+let heap_merge (cmp: 'a -> 'a -> ML int) (h1: heap 'a) (h2: heap 'a) : ML (heap 'a) =
   match h1, h2 with
   | EmptyHeap, h
   | h, EmptyHeap -> h
   | Heap (v1, hh1), Heap (v2, hh2) ->
     if cmp v1 v2 < 0 then Heap (v1, h2 :: hh1) else Heap (v2, h1 :: hh2)
 
-let heap_insert cmp h v =
+let heap_insert (cmp: 'a -> 'a -> ML int) (h: heap 'a) (v: 'a) : ML (heap 'a) =
   heap_merge cmp (Heap (v, [])) h
 
-let rec heap_merge_pairs cmp = function
+let rec heap_merge_pairs (cmp: 'a -> 'a -> ML int) (l: list (heap 'a)) : ML (heap 'a) =
+  match l with
   | [] -> EmptyHeap
   | [h] -> h
   | h1 :: h2 :: hh ->
@@ -49,11 +49,12 @@ let heap_peek = function
   | EmptyHeap -> None
   | Heap (v, _) -> Some v
 
-let heap_pop cmp = function
+let heap_pop (cmp: 'a -> 'a -> ML int) (h: heap 'a) : ML (option ('a & heap 'a)) =
+  match h with
   | EmptyHeap -> None
   | Heap (v, hh) -> Some (v, heap_merge_pairs cmp hh)
 
-let heap_from_list cmp values =
+let heap_from_list (cmp: 'a -> 'a -> ML int) (values: list 'a) : ML (heap 'a) =
   List.fold_left (heap_insert cmp) EmptyHeap values
 
 (** * List functions * **)
@@ -69,14 +70,14 @@ let rec add_priorities n acc = function
 (** Merge ‘lists’, a list of increasing (according to ‘key_fn’) lists.
     Keeps a single copy of each key that appears in more than one list (earlier
     lists take precedence when chosing which value to keep). *)
-let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list (list 'a)) =
-  let cmp v1 v2 =
+let merge_increasing_lists_rev (key_fn: 'a -> string) (lists: list (list 'a)) : ML (list 'a) =
+  let cmp v1 v2 : ML int =
     match v1, v2 with
     | (_, []), _ | _, (_, []) -> failwith "impossible"
     | (pr1, h1 :: _), (pr2, h2 :: _) ->
       let cmp_h = string_compare (key_fn h1) (key_fn h2) in
       if cmp_h <> 0 then cmp_h else pr1 - pr2 in
-  let rec aux (lists: heap (int & list 'a)) (acc: list 'a) =
+  let rec aux (lists: heap (int & list 'a)) (acc: list 'a) : ML (list 'a) =
     match heap_pop cmp lists with
     | None -> acc
     | Some ((pr, []), _) -> failwith "impossible"
@@ -104,7 +105,7 @@ let rec btree_to_list_rev (btree:btree 'a) (acc:list (string & 'a))
     btree_to_list_rev rbt ((key, value) :: btree_to_list_rev lbt acc)
 
 let rec btree_from_list (nodes:list (string & 'a)) (size:int)
- : btree 'a & list (string & 'a) =
+ : ML (btree 'a & list (string & 'a)) =
   if size = 0 then (StrEmpty, nodes)
   else
     let lbt_size = size / 2 in
@@ -208,6 +209,8 @@ let rec btree_fold (bt: btree 'a) (f: string -> 'a -> 'b -> 'b) (acc: 'b) =
 
 let query_to_string q = String.concat "." q
 
+let mod_name md = md.mod_name
+
 type name_collection 'a =
 | Names of btree 'a
 | ImportedNames of string & names 'a
@@ -231,14 +234,14 @@ let rec names_find_exact (names: names 'a) (ns: string) : option 'a =
   | None, Some scopes -> names_find_exact scopes ns
   | _ -> result
 
-let rec trie_descend_exact (tr: trie 'a) (query: query) : option (trie 'a) =
+let rec trie_descend_exact (tr: trie 'a) (query: query) : ML (option (trie 'a)) =
   match query with
   | [] -> Some tr
   | ns :: query ->
     Option.bind (names_find_exact tr.namespaces ns)
       (fun scope -> trie_descend_exact scope query)
 
-let rec trie_find_exact (tr: trie 'a) (query: query) : option 'a =
+let rec trie_find_exact (tr: trie 'a) (query: query) : ML (option 'a) =
   match query with
   | [] -> failwith "Empty query in trie_find_exact"
   | [name] -> names_find_exact tr.bindings name
@@ -277,23 +280,23 @@ let trie_insert (tr: trie 'a) (ns_query: query) (id: string) (v: 'a) : trie 'a =
   trie_mutate_leaf tr ns_query (fun tr _ -> { tr with bindings = names_insert tr.bindings id v })
 
 let trie_import (tr: trie 'a) (host_query: query) (included_query: query)
-                (mutator: trie 'a -> trie 'a -> string -> trie 'a) =
+                (mutator: trie 'a -> trie 'a -> string -> trie 'a) : ML (trie 'a) =
   let label = query_to_string included_query in
   let included_trie = Option.dflt trie_empty (trie_descend_exact tr included_query) in
   trie_mutate_leaf tr host_query (fun tr _ -> mutator tr included_trie label)
 
 let trie_include (tr: trie 'a) (host_query: query) (included_query: query)
-    : trie 'a =
+    : ML (trie 'a) =
   trie_import tr host_query included_query (fun tr inc label ->
       { tr with bindings = ImportedNames (label, inc.bindings) :: tr.bindings })
 
 let trie_open_namespace (tr: trie 'a) (host_query: query) (included_query: query)
-    : trie 'a =
+    : ML (trie 'a) =
   trie_import tr host_query included_query (fun tr inc label ->
       { tr with namespaces = ImportedNames (label, inc.namespaces) :: tr.namespaces })
 
 let trie_add_alias (tr: trie 'a) (key: string)
-                   (host_query: query) (included_query: query) : trie 'a =
+                   (host_query: query) (included_query: query) : ML (trie 'a) =
   trie_import tr host_query included_query (fun tr inc label ->
       // Very similar to an include, but aliasing A.B as M in A.C entirely
       // overrides A.B.M, should that also exists.  Doing this makes sense
@@ -302,10 +305,10 @@ let trie_add_alias (tr: trie 'a) (key: string)
           { bindings = [ImportedNames (label, inc.bindings)]; namespaces = [] }))
 
 let names_revmap (fn: btree 'a -> 'b) (name_collections: names 'a (* ↓ priority *))
-    : list (list string (* imports *) & 'b) (* ↑ priority *) =
+    : ML (list (list string (* imports *) & 'b)) (* ↑ priority *) =
   let rec aux (acc: list (list string & 'b))
               (imports: list string) (name_collections: names 'a)
-      : list (list string & 'b) (* #1158 *) =
+      : ML (list (list string & 'b)) (* #1158 *) =
     List.fold_left (fun acc -> function
         | Names bt -> (imports, fn bt) :: acc
         | ImportedNames (nm, name_collections) ->
@@ -323,7 +326,7 @@ type name_search_term =
 | NSTNone
 | NSTPrefix of string
 
-let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem & 'a) =
+let names_find_rev (names: names 'a) (id: name_search_term) : ML (list (path_elem & 'a)) =
   let matching_values_per_collection_with_imports =
     match id with
     | NSTNone -> []
@@ -339,7 +342,7 @@ let names_find_rev (names: names 'a) (id: name_search_term) : list (path_elem & 
 
 let rec trie_find_prefix' (tr: trie 'a) (path_acc: path)
                           (query: query) (acc: list (path & 'a))
-    : list (path & 'a) =
+    : ML (list (path & 'a)) =
   let ns_search_term, bindings_search_term, query =
     match query with
     | [] -> NSTAll, NSTAll, []
@@ -356,12 +359,10 @@ let rec trie_find_prefix' (tr: trie 'a) (path_acc: path)
   List.rev_map_onto (fun (path_el, v) -> (List.rev (path_el :: path_acc), v))
     matching_bindings_rev acc_with_recursive_bindings
 
-let trie_find_prefix (tr: trie 'a) (query: query) : list (path & 'a) =
+let trie_find_prefix (tr: trie 'a) (query: query) : ML (list (path & 'a)) =
   trie_find_prefix' tr [] query []
 
 (** * High level interface * **)
-
-let mod_name md = md.mod_name
 
 type symbol =
 | ModOrNs of mod_symbol
@@ -381,16 +382,16 @@ let empty : table =
 // complete partial names of unloaded (e.g. [open FStar // let x = List._] when
 // FStarC.List isn't loaded).
 
-let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) : table =
+let insert (tbl: table) (host_query: query) (id: string) (c: lid_symbol) =
   { tbl with tbl_lids = trie_insert tbl.tbl_lids host_query id c }
 
-let register_alias (tbl: table) (key: string) (host_query: query) (included_query: query) : table =
+let register_alias (tbl: table) (key: string) (host_query: query) (included_query: query) : ML table =
   { tbl with tbl_lids = trie_add_alias tbl.tbl_lids key host_query included_query }
 
-let register_include (tbl: table) (host_query: query) (included_query: query) : table =
+let register_include (tbl: table) (host_query: query) (included_query: query) : ML table =
   { tbl with tbl_lids = trie_include tbl.tbl_lids host_query included_query }
 
-let register_open (tbl: table) (is_module: bool) (host_query: query) (included_query: query) : table =
+let register_open (tbl: table) (is_module: bool) (host_query: query) (included_query: query) : ML table =
   if is_module then
     // We only process module opens for the current module, where they are just like includes
     register_include tbl host_query included_query
@@ -422,10 +423,10 @@ let register_module_path (tbl: table) (loaded: bool) (path: string) (mod_query: 
                   bindings = ins id q revq tr.bindings loaded })
       (fun tr _ -> tr) }
 
-let string_of_path (path: path) : string =
+let string_of_path (path: path) : ML string =
   String.concat "." (List.map (fun el -> el.segment.completion) path)
 
-let match_length_of_path (path: path) : int =
+let match_length_of_path (path: path) : ML int =
   let length, (last_prefix, last_completion_length) =
     List.fold_left
       (fun acc elem ->
@@ -441,7 +442,7 @@ let match_length_of_path (path: path) : int =
   - last_completion_length
   + (String.length last_prefix) (* match stops after last prefix *)
 
-let first_import_of_path (path: path) : option string =
+let first_import_of_path (path: path) =
   match path with
   | [] -> None
   | { imports = imports } :: _ -> List.last_opt imports
@@ -460,28 +461,30 @@ let json_of_completion_result (result: completion_result) =
                  Json.JsonStr result.completion_annotation;
                  Json.JsonStr result.completion_candidate]
 
-let completion_result_of_lid (path, _lid) =
+let completion_result_of_lid (x: (path & lid_symbol)) : ML completion_result =
+  let (path, _lid) = x in
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
     completion_annotation = Option.dflt "" (first_import_of_path path) }
 
-let completion_result_of_mod annot loaded path =
+let completion_result_of_mod annot loaded path : ML completion_result =
   { completion_match_length = match_length_of_path path;
     completion_candidate = string_of_path path;
     completion_annotation = Format.fmt1 (if loaded then " %s " else "(%s)") annot }
 
-let completion_result_of_ns_or_mod (path, symb) =
+let completion_result_of_ns_or_mod (x: (path & mod_symbol)) : ML completion_result =
+  let (path, symb) = x in
   match symb with
   | Module { mod_loaded = loaded } -> completion_result_of_mod "mod" loaded path
   | Namespace { ns_loaded = loaded } -> completion_result_of_mod "ns" loaded path
 
-let find_module_or_ns (tbl:table) (query:query) =
+let find_module_or_ns (tbl:table) (query:query) : ML (option mod_symbol) =
   trie_find_exact tbl.tbl_mods query
 
-let autocomplete_lid (tbl: table) (query: query) =
+let autocomplete_lid (tbl: table) (query: query) : ML (list completion_result) =
   List.map completion_result_of_lid (trie_find_prefix tbl.tbl_lids query)
 
-let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path & mod_symbol) -> option (path & mod_symbol)) =
+let autocomplete_mod_or_ns (tbl: table) (query: query) (filter: (path & mod_symbol) -> option (path & mod_symbol)) : ML (list completion_result) =
   trie_find_prefix tbl.tbl_mods query
   |> List.filter_map filter
   |> List.map completion_result_of_ns_or_mod

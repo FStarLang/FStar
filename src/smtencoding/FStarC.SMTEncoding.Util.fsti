@@ -25,77 +25,77 @@ open FStarC.Ident
 module S = FStarC.Syntax.Syntax
 module TcEnv = FStarC.TypeChecker.Env
 
-val mkAssume : term & caption & string -> decl
+val mkAssume : term & caption & string -> ML decl
 
-val norng  (f : 'a -> Range.t -> term) : 'a -> term
-val norng2 (f : 'a -> 'b -> Range.t -> term) : 'a -> 'b -> term
-val norng3 (f : 'a -> 'b -> 'c -> Range.t -> term) : 'a -> 'b -> 'c -> term
-val norng4 (f : 'a -> 'b -> 'c -> 'd -> Range.t -> term) : 'a -> 'b -> 'c -> 'd -> term
+val norng  (f : 'a -> Range.t -> ML term) : 'a -> ML term
+val norng2 (f : 'a -> 'b -> Range.t -> ML term) : 'a -> 'b -> ML term
+val norng3 (f : 'a -> 'b -> 'c -> Range.t -> ML term) : 'a -> 'b -> 'c -> ML term
+val norng4 (f : 'a -> 'b -> 'c -> 'd -> Range.t -> ML term) : 'a -> 'b -> 'c -> 'd -> ML term
 
 val mkTrue : term
 val mkFalse : term
-val mkInteger : string -> term
-val mkInteger' : int -> term
-val mkReal : string -> term
-val mkBoundV : int -> term
-val mkFreeV : fv -> term
+val mkInteger : string -> ML term
+val mkInteger' : int -> ML term
+val mkReal : string -> ML term
+val mkBoundV : int -> ML term
+val mkFreeV : fv -> ML term
 
-val mkApp' : op & list term -> term
-val mkApp : string & list term -> term
-val mkNot : term -> term
-val mkMinus : term -> term
-val mkAnd : term & term -> term
-val mkOr : term & term -> term
-val mkImp : term & term -> term
-val mkIff : term & term -> term
-val mkEq : term & term -> term
-val mkLT : term & term -> term
-val mkLTE : term & term -> term
-val mkGT : term & term -> term
-val mkGTE : term & term -> term
-val mkAdd : term & term -> term
-val mkSub : term & term -> term
-val mkDiv : term & term -> term
-val mkRealDiv : term & term -> term
-val mkMul : term & term -> term
-val mkMod : term & term -> term
+val mkApp' : op & list term -> ML term
+val mkApp : string & list term -> ML term
+val mkNot : term -> ML term
+val mkMinus : term -> ML term
+val mkAnd : term & term -> ML term
+val mkOr : term & term -> ML term
+val mkImp : term & term -> ML term
+val mkIff : term & term -> ML term
+val mkEq : term & term -> ML term
+val mkLT : term & term -> ML term
+val mkLTE : term & term -> ML term
+val mkGT : term & term -> ML term
+val mkGTE : term & term -> ML term
+val mkAdd : term & term -> ML term
+val mkSub : term & term -> ML term
+val mkDiv : term & term -> ML term
+val mkRealDiv : term & term -> ML term
+val mkMul : term & term -> ML term
+val mkMod : term & term -> ML term
 
 (* bitvector ops, some indexed by bitvector size *)
-val mkNatToBv : int -> term -> term
-val mkBvAnd   : term & term -> term
-val mkBvXor   : term & term -> term
-val mkBvOr    : term & term -> term
-val mkBvAdd   : term & term -> term
-val mkBvSub   : term & term -> term
-val mkBvShl   : int -> term & term -> term
-val mkBvShr   : int -> term & term -> term
-val mkBvRol   : int -> term & term -> term
-val mkBvRor   : int -> term & term -> term
-val mkBvUdiv  : int -> term & term -> term
-val mkBvMod   : int -> term & term -> term
-val mkBvMul   : int -> term & term -> term
-val mkBvShl'  : int -> term & term -> term
-val mkBvShr'  : int -> term & term -> term
-val mkBvRol'  : int -> term & term -> term
-val mkBvRor'  : int -> term & term -> term
-val mkBvUdivUnsafe : int -> term & term -> term
-val mkBvModUnsafe  : int -> term & term -> term
-val mkBvMul'   : int -> term & term -> term
-val mkBvUlt    : term & term -> term
-val mkBvUext   : int -> term -> term
-val mkBvNot    : term -> term
-val mkBvToNat  : term -> term
+val mkNatToBv : int -> term -> ML term
+val mkBvAnd   : term & term -> ML term
+val mkBvXor   : term & term -> ML term
+val mkBvOr    : term & term -> ML term
+val mkBvAdd   : term & term -> ML term
+val mkBvSub   : term & term -> ML term
+val mkBvShl   : int -> term & term -> ML term
+val mkBvShr   : int -> term & term -> ML term
+val mkBvRol   : int -> term & term -> ML term
+val mkBvRor   : int -> term & term -> ML term
+val mkBvUdiv  : int -> term & term -> ML term
+val mkBvMod   : int -> term & term -> ML term
+val mkBvMul   : int -> term & term -> ML term
+val mkBvShl'  : int -> term & term -> ML term
+val mkBvShr'  : int -> term & term -> ML term
+val mkBvRol'  : int -> term & term -> ML term
+val mkBvRor'  : int -> term & term -> ML term
+val mkBvUdivUnsafe : int -> term & term -> ML term
+val mkBvModUnsafe  : int -> term & term -> ML term
+val mkBvMul'   : int -> term & term -> ML term
+val mkBvUlt    : term & term -> ML term
+val mkBvUext   : int -> term -> ML term
+val mkBvNot    : term -> ML term
+val mkBvToNat  : term -> ML term
 
-val mkITE : term & term & term -> term
-val mkCases : list term -> term
+val mkITE : term & term & term -> ML term
+val mkCases : list term -> ML term
 
-val mk_Term_app : term -> term -> term
-val mk_and_l : list term -> term
-val mk_or_l : list term -> term
-val mk_ApplyTT : term -> term -> term
-val mk_String_const : string -> term
-val mk_Precedes : term -> term -> term -> term -> term -> term -> term
-val mk_LexCons : term -> term -> term -> term
+val mk_Term_app : term -> term -> ML term
+val mk_and_l : list term -> ML term
+val mk_or_l : list term -> ML term
+val mk_ApplyTT : term -> term -> ML term
+val mk_String_const : string -> ML term
+val mk_Precedes : term -> term -> term -> term -> term -> term -> ML term
+val mk_LexCons : term -> term -> term -> ML term
 val mk_lex_t : term
 val mk_LexTop : term
 
@@ -114,14 +114,14 @@ val mk_LexTop : term
  *     07/02: reverting, until we preserve the indices, no smt reification
  *)
 
-val is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool
+val is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : ML bool
 
-val is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool
+val is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : ML bool
 
 //
 // TAC rc are not smt reifiable
 //
 
-val is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool
+val is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : ML bool
 
-val is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool
+val is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : ML bool

@@ -28,41 +28,41 @@ open FStarC.SMTEncoding
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
 
-val isTotFun_axioms: Range.t -> head:term -> extra_vars:fvs -> vars:fvs -> guards:list term -> bool -> term
-val mk_Apply : e:term -> vars:fvs -> term
-val maybe_curry_app : rng:Range.t -> head:either op term -> arity:int -> args:list term -> term
-val maybe_curry_fvb : rng:Range.t -> head:fvar_binding -> args:list term -> term
-val mkForall_fuel : string -> Range.t -> (list (list pat) & fvs & term -> term)  //first arg is the module name
+val mkForall_fuel : string -> Range.t -> (list (list pat) & fvs & term -> ML term)  //first arg is the module name
 
-val head_normal : env_t -> Syntax.term -> bool
+val head_normal : env_t -> Syntax.term -> ML bool
 
-val whnf: env_t -> Syntax.term -> Syntax.term
-val norm: env_t -> Syntax.term -> Syntax.term
+val whnf: env_t -> Syntax.term -> ML Syntax.term
+val norm: env_t -> Syntax.term -> ML Syntax.term
 
-val curried_arrow_formals_comp : k:Syntax.term -> Syntax.binders & comp
+val mk_Apply : e:term -> vars:fvs -> ML term
+val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.t -> ML 'a
+val isTotFun_axioms: Range.t -> head:term -> extra_vars:fvs -> vars:fvs -> guards:list term -> bool -> ML term
+val maybe_curry_app : rng:Range.t -> head:either op term -> arity:int -> args:list term -> ML term
+val maybe_curry_fvb : rng:Range.t -> head:fvar_binding -> args:list term -> ML term
 
-val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.t -> 'a
+val curried_arrow_formals_comp : k:Syntax.term -> ML (Syntax.binders & comp)
 
-val encode_univ_name : Syntax.univ_name -> fv * term
-val encode_universe : Syntax.universe -> term
+val encode_univ_name : Syntax.univ_name -> ML (fv * term)
+val encode_universe : Syntax.universe -> ML term
 
-val encode_term : t:typ       (* expects t to be in normal form already *)
-               -> env:env_t
-               -> term & decls_t
+val encode_binders : fuel_opt:option term
+                  -> bs:Syntax.binders
+                  -> env:env_t
+                  -> ML (list fv & list term & env_t & decls_t & list bv)
 
 val encode_term_pred: fuel_opt:option term
                     -> t:typ
                     -> env:env_t
                     -> e:term
-                    -> term & decls_t
+                    -> ML (term & decls_t)
 
-val encode_args : l:args -> env:env_t -> list term & decls_t
+val encode_term : t:typ       (* expects t to be in normal form already *)
+               -> env:env_t
+               -> ML (term & decls_t)
 
-val encode_formula : phi:typ -> env:env_t -> term & decls_t
+val encode_args : l:args -> env:env_t -> ML (list term & decls_t)
 
-val encode_function_type_as_formula : t:typ -> env:env_t -> term & decls_t
+val encode_formula : phi:typ -> env:env_t -> ML (term & decls_t)
 
-val encode_binders : fuel_opt:option term
-                  -> bs:Syntax.binders
-                  -> env:env_t
-                  -> list fv & list term & env_t & decls_t & list bv
+val encode_function_type_as_formula : t:typ -> env:env_t -> ML (term & decls_t)

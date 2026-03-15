@@ -28,7 +28,7 @@ let rollback (msg : Prims.string) (pop : unit -> 'a)
    else ());
   (let rec aux n =
      if n <= Prims.int_zero
-     then failwith "(rollback) Too many pops"
+     then FStarC_Effect.failwith "(rollback) Too many pops"
      else
        if n = Prims.int_one
        then pop ()
@@ -51,7 +51,7 @@ let rollback (msg : Prims.string) (pop : unit -> 'a)
     else ());
    FStarC_Util.atomically (fun uu___2 -> aux n))
 let raise_failed_assertion (msg : Prims.string) : 'uuuuu=
-  let uu___ = FStarC_Format.fmt1 "Assertion failed: %s" msg in failwith uu___
+  FStarC_Effect.failwith (FStarC_Format.fmt1 "Assertion failed: %s" msg)
 let runtime_assert (b : Prims.bool) (msg : Prims.string) : unit=
   if Prims.op_Negation b then raise_failed_assertion msg else ()
 let __string_of_list (delim : Prims.string) (f : 'a -> Prims.string)
@@ -111,8 +111,9 @@ let max_suffix (f : 'a -> Prims.bool) (xs : 'a Prims.list) :
   let rec aux acc xs1 =
     match xs1 with
     | [] -> (acc, [])
-    | x::xs2 when f x -> aux (x :: acc) xs2
-    | x::xs2 -> (acc, (x :: xs2)) in
+    | x::xs2 ->
+        let uu___ = f x in
+        if uu___ then aux (x :: acc) xs2 else (acc, (x :: xs2)) in
   let uu___ = aux [] (FStarC_List.rev xs) in
   match uu___ with | (xs1, ys) -> ((FStarC_List.rev ys), xs1)
 let rec eq_list :
@@ -124,7 +125,8 @@ let rec eq_list :
     | ([], []) -> true
     | ([], uu___) -> false
     | (uu___, []) -> false
-    | (x1::t1, x2::t2) -> (f x1 x2) && (eq_list f t1 t2)
+    | (x1::t1, x2::t2) ->
+        let uu___ = f x1 x2 in if uu___ then eq_list f t1 t2 else false
 let psmap_to_list (m : 'a FStarC_PSMap.t) : (Prims.string * 'a) Prims.list=
   FStarC_PSMap.fold m (fun k v a1 -> (k, v) :: a1) []
 let psmap_keys (m : 'a FStarC_PSMap.t) : Prims.string Prims.list=

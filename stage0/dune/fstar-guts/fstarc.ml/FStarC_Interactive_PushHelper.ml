@@ -38,10 +38,8 @@ let repl_stack : FStarC_Interactive_Ide_Types.repl_stack_t FStarC_Effect.ref=
 let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
   (check_kind : FStarC_Interactive_Ide_Types.push_kind) :
   FStarC_TypeChecker_Env.env_t=
-  let uu___ =
-    (check_kind = FStarC_Interactive_Ide_Types.LaxCheck) ||
-      (FStarC_Options.lax ()) in
-  let uu___1 =
+  let lax = FStarC_Options.lax () in
+  let dsenv =
     FStarC_Syntax_DsEnv.set_syntax_only env.FStarC_TypeChecker_Env.dsenv
       (check_kind = FStarC_Interactive_Ide_Types.SyntaxCheck) in
   {
@@ -69,7 +67,10 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
     FStarC_TypeChecker_Env.use_eq_strict =
       (env.FStarC_TypeChecker_Env.use_eq_strict);
     FStarC_TypeChecker_Env.is_iface = (env.FStarC_TypeChecker_Env.is_iface);
-    FStarC_TypeChecker_Env.admit = uu___;
+    FStarC_TypeChecker_Env.admit =
+      (if check_kind = FStarC_Interactive_Ide_Types.LaxCheck
+       then true
+       else lax);
     FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
     FStarC_TypeChecker_Env.failhard = (env.FStarC_TypeChecker_Env.failhard);
     FStarC_TypeChecker_Env.flychecking =
@@ -108,7 +109,7 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
     FStarC_TypeChecker_Env.identifier_info =
       (env.FStarC_TypeChecker_Env.identifier_info);
     FStarC_TypeChecker_Env.tc_hooks = (env.FStarC_TypeChecker_Env.tc_hooks);
-    FStarC_TypeChecker_Env.dsenv = uu___1;
+    FStarC_TypeChecker_Env.dsenv = dsenv;
     FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
     FStarC_TypeChecker_Env.strict_args_tab =
       (env.FStarC_TypeChecker_Env.strict_args_tab);
@@ -136,13 +137,21 @@ let repl_ld_tasks_of_deps (deps : Prims.string Prims.list)
     } in
   let rec aux deps1 final_tasks1 =
     match deps1 with
-    | intf::impl::deps' when FStarC_Universal.needs_interleaving intf impl ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = wrap intf in
-            let uu___3 = wrap impl in (uu___2, uu___3) in
-          FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
-        let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
+    | intf::impl::deps' ->
+        let ni = FStarC_Universal.needs_interleaving intf impl in
+        if ni
+        then
+          let uu___ =
+            let uu___1 =
+              let uu___2 = wrap intf in
+              let uu___3 = wrap impl in (uu___2, uu___3) in
+            FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
+          let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
+        else
+          (let uu___1 =
+             let uu___2 = wrap intf in
+             FStarC_Interactive_Ide_Types.LDSingle uu___2 in
+           let uu___2 = aux (impl :: deps') final_tasks1 in uu___1 :: uu___2)
     | intf_or_impl::deps' ->
         let uu___ =
           let uu___1 = wrap intf_or_impl in
@@ -172,26 +181,24 @@ let deps_and_repl_ld_tasks_of_our_file (filename : Prims.string) :
                      Prims.op_Negation uu___4 in
                    if uu___3
                    then
-                     let uu___4 =
-                       FStarC_Format.fmt1 "Expecting an interface, got %s"
-                         intf in
                      FStarC_Errors.raise_error0
                        FStarC_Errors_Codes.Fatal_MissingInterface ()
                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                       (Obj.magic uu___4)
+                       (Obj.magic
+                          (FStarC_Format.fmt1
+                             "Expecting an interface, got %s" intf))
                    else ());
                   (let uu___4 =
                      let uu___5 = FStarC_Parser_Dep.is_implementation impl in
                      Prims.op_Negation uu___5 in
                    if uu___4
                    then
-                     let uu___5 =
-                       FStarC_Format.fmt1
-                         "Expecting an implementation, got %s" impl in
                      FStarC_Errors.raise_error0
                        FStarC_Errors_Codes.Fatal_MissingImplementation ()
                        (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                       (Obj.magic uu___5)
+                       (Obj.magic
+                          (FStarC_Format.fmt1
+                             "Expecting an implementation, got %s" impl))
                    else ());
                   (let uu___4 =
                      let uu___5 =
@@ -207,12 +214,11 @@ let deps_and_repl_ld_tasks_of_our_file (filename : Prims.string) :
              | uu___2 ->
                  let mods_str = FStarC_String.concat " " same_name in
                  let message = "Too many or too few files matching %s: %s" in
-                 ((let uu___4 =
-                     FStarC_Format.fmt message [our_mod_name; mods_str] in
-                   FStarC_Errors.raise_error0
-                     FStarC_Errors_Codes.Fatal_TooManyOrTooFewFileMatch ()
-                     (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                     (Obj.magic uu___4));
+                 (FStarC_Errors.raise_error0
+                    FStarC_Errors_Codes.Fatal_TooManyOrTooFewFileMatch ()
+                    (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+                    (Obj.magic
+                       (FStarC_Format.fmt message [our_mod_name; mods_str]));
                   []) in
            let tasks = repl_ld_tasks_of_deps real_deps intf_tasks in
            (real_deps, tasks, dep_graph))
@@ -289,35 +295,38 @@ let adjust_topmost_push_frag
     FStarC_Interactive_Ide_Types.repl_task ->
       FStarC_Interactive_Ide_Types.repl_task)
   : unit=
-  let uu___ = FStarC_Effect.op_Bang repl_stack in
-  match uu___ with
+  let stk = FStarC_Effect.op_Bang repl_stack in
+  match stk with
   | (depth, (FStarC_Interactive_Ide_Types.PushFragment x, st))::rest ->
       let pf = f (FStarC_Interactive_Ide_Types.PushFragment x) in
       FStarC_Effect.op_Colon_Equals repl_stack ((depth, (pf, st)) :: rest)
-  | uu___1 -> ()
+  | uu___ -> ()
 let add_issues_to_push_fragment (issues : FStarC_Json.json Prims.list) :
   unit=
-  let adjust uu___ =
-    match uu___ with
+  let adjust t =
+    match t with
     | FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps) ->
         FStarC_Interactive_Ide_Types.PushFragment
-          (frag, push_kind, (FStarC_List.op_At issues i), deps) in
+          (frag, push_kind, (FStarC_List.op_At issues i), deps)
+    | x -> x in
   adjust_topmost_push_frag adjust
 let add_filenames_to_push_fragment (deps : Prims.string Prims.list) : 
   unit=
-  let adjust uu___ =
-    match uu___ with
+  let adjust t =
+    match t with
     | FStarC_Interactive_Ide_Types.PushFragment (frag, push_kind, i, deps')
         ->
         FStarC_Interactive_Ide_Types.PushFragment
-          (frag, push_kind, i, (FStarC_List.op_At deps deps')) in
+          (frag, push_kind, i, (FStarC_List.op_At deps deps'))
+    | x -> x in
   adjust_topmost_push_frag adjust
 let rollback_env (solver : FStarC_TypeChecker_Env.solver_t)
   (msg : Prims.string)
-  (uu___ :
+  (depth :
     ((Prims.int * Prims.int * FStarC_TypeChecker_Env.solver_depth_t *
       Prims.int) * Prims.int))
-  : FStarC_TypeChecker_Env.env=
+  : FStarC_TypeChecker_Env.env_t=
+  let uu___ = depth in
   match uu___ with
   | (ctx_depth, opt_depth) ->
       let env =
@@ -333,19 +342,19 @@ let should_reset (task : FStarC_Interactive_Ide_Types.repl_task) :
 let pop_repl (msg : Prims.string)
   (st : FStarC_Interactive_Ide_Types.repl_state) :
   FStarC_Interactive_Ide_Types.repl_state=
-  let uu___ = FStarC_Effect.op_Bang repl_stack in
-  match uu___ with
-  | [] -> failwith "(pop_repl) Too many pops"
+  let stk = FStarC_Effect.op_Bang repl_stack in
+  match stk with
+  | [] -> FStarC_Effect.failwith "(pop_repl) Too many pops"
   | (depth, (p, st'))::stack_tl ->
       let env =
         rollback_env
           (st.FStarC_Interactive_Ide_Types.repl_env).FStarC_TypeChecker_Env.solver
           msg depth in
       (FStarC_Effect.op_Colon_Equals repl_stack stack_tl;
-       (let uu___3 =
-          FStarC_Util.physical_equality env
-            st'.FStarC_Interactive_Ide_Types.repl_env in
-        FStarC_Common.runtime_assert uu___3 "Inconsistent stack state");
+       FStarC_Common.runtime_assert
+         (FStarC_Util.physical_equality env
+            st'.FStarC_Interactive_Ide_Types.repl_env)
+         "Inconsistent stack state";
        if should_reset p
        then
          ((st'.FStarC_Interactive_Ide_Types.repl_env).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh
@@ -424,38 +433,30 @@ let query_of_ids (ids : FStarC_Ident.ident Prims.list) :
   FStarC_List.map FStarC_Ident.string_of_id ids
 let query_of_lid (lid : FStarC_Ident.lident) :
   FStarC_Interactive_CompletionTable.query=
-  let uu___ =
-    let uu___1 = FStarC_Ident.ns_of_lid lid in
-    let uu___2 = let uu___3 = FStarC_Ident.ident_of_lid lid in [uu___3] in
-    FStarC_List.op_At uu___1 uu___2 in
-  query_of_ids uu___
+  query_of_ids
+    (FStarC_List.op_At (FStarC_Ident.ns_of_lid lid)
+       [FStarC_Ident.ident_of_lid lid])
 let update_names_from_event (cur_mod_str : Prims.string)
   (table : FStarC_Interactive_CompletionTable.table)
   (evt : name_tracking_event) : FStarC_Interactive_CompletionTable.table=
-  let is_cur_mod lid =
-    let uu___ = FStarC_Ident.string_of_lid lid in uu___ = cur_mod_str in
+  let is_cur_mod lid = (FStarC_Ident.string_of_lid lid) = cur_mod_str in
   match evt with
   | NTAlias (host, id, included) ->
-      let uu___ = is_cur_mod host in
-      if uu___
+      if is_cur_mod host
       then
-        let uu___1 = FStarC_Ident.string_of_id id in
-        let uu___2 = query_of_lid included in
-        FStarC_Interactive_CompletionTable.register_alias table uu___1 []
-          uu___2
+        let uu___ = query_of_lid included in
+        FStarC_Interactive_CompletionTable.register_alias table
+          (FStarC_Ident.string_of_id id) [] uu___
       else table
   | NTOpen (host, (included, kind, uu___)) ->
-      let uu___1 = is_cur_mod host in
-      if uu___1
+      if is_cur_mod host
       then
-        let uu___2 = query_of_lid included in
+        let uu___1 = query_of_lid included in
         FStarC_Interactive_CompletionTable.register_open table
-          (kind = FStarC_Syntax_Syntax.Open_module) [] uu___2
+          (kind = FStarC_Syntax_Syntax.Open_module) [] uu___1
       else table
   | NTInclude (host, included) ->
-      let uu___ =
-        let uu___1 = is_cur_mod host in
-        if uu___1 then [] else query_of_lid host in
+      let uu___ = if is_cur_mod host then [] else query_of_lid host in
       let uu___1 = query_of_lid included in
       FStarC_Interactive_CompletionTable.register_include table uu___ uu___1
   | NTBinding binding ->
@@ -468,17 +469,11 @@ let update_names_from_event (cur_mod_str : Prims.string)
       FStarC_List.fold_left
         (fun tbl lid ->
            let ns_query =
-             let uu___ =
-               let uu___1 = FStarC_Ident.nsstr lid in uu___1 = cur_mod_str in
-             if uu___
+             if (FStarC_Ident.nsstr lid) = cur_mod_str
              then []
-             else
-               (let uu___2 = FStarC_Ident.ns_of_lid lid in
-                query_of_ids uu___2) in
-           let uu___ =
-             let uu___1 = FStarC_Ident.ident_of_lid lid in
-             FStarC_Ident.string_of_id uu___1 in
-           FStarC_Interactive_CompletionTable.insert tbl ns_query uu___ lid)
+             else query_of_ids (FStarC_Ident.ns_of_lid lid) in
+           FStarC_Interactive_CompletionTable.insert tbl ns_query
+             (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) lid)
         table lids
 let commit_name_tracking'
   (cur_mod : FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option)
@@ -489,8 +484,7 @@ let commit_name_tracking'
     match cur_mod with
     | FStar_Pervasives_Native.None -> ""
     | FStar_Pervasives_Native.Some md ->
-        let uu___ = FStarC_Syntax_Syntax.mod_name md in
-        FStarC_Ident.string_of_lid uu___ in
+        FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.mod_name md) in
   let updater = update_names_from_event cur_mod_str in
   FStarC_List.fold_left updater names name_events
 let commit_name_tracking (st : FStarC_Interactive_Ide_Types.repl_state)
@@ -527,33 +521,32 @@ let fresh_name_tracking_hooks (uu___ : unit) :
   let push_event evt =
     let uu___1 = let uu___2 = FStarC_Effect.op_Bang events in evt :: uu___2 in
     FStarC_Effect.op_Colon_Equals events uu___1 in
-  let uu___1 =
-    FStarC_Syntax_DsEnv.mk_dsenv_hooks
-      (fun dsenv op ->
-         let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Syntax_DsEnv.current_module dsenv in
-             (uu___4, op) in
-           NTOpen uu___3 in
-         push_event uu___2)
-      (fun dsenv ns ->
-         let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Syntax_DsEnv.current_module dsenv in
-             (uu___4, ns) in
-           NTInclude uu___3 in
-         push_event uu___2)
-      (fun dsenv x l ->
-         let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Syntax_DsEnv.current_module dsenv in
-             (uu___4, x, l) in
-           NTAlias uu___3 in
-         push_event uu___2) in
-  (events, uu___1,
+  (events,
+    (FStarC_Syntax_DsEnv.mk_dsenv_hooks
+       (fun dsenv op ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStarC_Syntax_DsEnv.current_module dsenv in
+              (uu___3, op) in
+            NTOpen uu___2 in
+          push_event uu___1)
+       (fun dsenv ns ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStarC_Syntax_DsEnv.current_module dsenv in
+              (uu___3, ns) in
+            NTInclude uu___2 in
+          push_event uu___1)
+       (fun dsenv x l ->
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStarC_Syntax_DsEnv.current_module dsenv in
+              (uu___3, x, l) in
+            NTAlias uu___2 in
+          push_event uu___1)),
     {
       FStarC_TypeChecker_Env.tc_push_in_gamma_hook =
-        (fun uu___2 s -> push_event (NTBinding s))
+        (fun uu___1 s -> push_event (NTBinding s))
     })
 let track_name_changes (env : FStarC_TypeChecker_Env.env_t) :
   (FStarC_TypeChecker_Env.env_t *
@@ -562,15 +555,12 @@ let track_name_changes (env : FStarC_TypeChecker_Env.env_t) :
   let set_hooks dshooks tchooks env1 =
     let uu___ =
       FStarC_Universal.with_dsenv_of_tcenv env1
-        (fun dsenv ->
-           let uu___1 = FStarC_Syntax_DsEnv.set_ds_hooks dsenv dshooks in
-           ((), uu___1)) in
+        (fun dsenv -> ((), (FStarC_Syntax_DsEnv.set_ds_hooks dsenv dshooks))) in
     match uu___ with
     | ((), tcenv') -> FStarC_TypeChecker_Env.set_tc_hooks tcenv' tchooks in
   let uu___ =
-    let uu___1 =
-      FStarC_Syntax_DsEnv.ds_hooks env.FStarC_TypeChecker_Env.dsenv in
-    let uu___2 = FStarC_TypeChecker_Env.tc_hooks env in (uu___1, uu___2) in
+    ((FStarC_Syntax_DsEnv.ds_hooks env.FStarC_TypeChecker_Env.dsenv),
+      (FStarC_TypeChecker_Env.tc_hooks env)) in
   match uu___ with
   | (old_dshooks, old_tchooks) ->
       let uu___1 = fresh_name_tracking_hooks () in
@@ -591,22 +581,22 @@ let tf_of_fname (fname : Prims.string) :
     FStarC_Interactive_Ide_Types.tf_fname = fname;
     FStarC_Interactive_Ide_Types.tf_modtime = uu___
   }
-let update_task_timestamps (uu___ : FStarC_Interactive_Ide_Types.repl_task) :
+let update_task_timestamps (task : FStarC_Interactive_Ide_Types.repl_task) :
   FStarC_Interactive_Ide_Types.repl_task=
-  match uu___ with
+  match task with
   | FStarC_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
-      let uu___1 =
-        let uu___2 = tf_of_fname intf.FStarC_Interactive_Ide_Types.tf_fname in
-        let uu___3 = tf_of_fname impl.FStarC_Interactive_Ide_Types.tf_fname in
-        (uu___2, uu___3) in
-      FStarC_Interactive_Ide_Types.LDInterleaved uu___1
+      let uu___ =
+        let uu___1 = tf_of_fname intf.FStarC_Interactive_Ide_Types.tf_fname in
+        let uu___2 = tf_of_fname impl.FStarC_Interactive_Ide_Types.tf_fname in
+        (uu___1, uu___2) in
+      FStarC_Interactive_Ide_Types.LDInterleaved uu___
   | FStarC_Interactive_Ide_Types.LDSingle intf_or_impl ->
-      let uu___1 =
+      let uu___ =
         tf_of_fname intf_or_impl.FStarC_Interactive_Ide_Types.tf_fname in
-      FStarC_Interactive_Ide_Types.LDSingle uu___1
+      FStarC_Interactive_Ide_Types.LDSingle uu___
   | FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile intf ->
-      let uu___1 = tf_of_fname intf.FStarC_Interactive_Ide_Types.tf_fname in
-      FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile uu___1
+      let uu___ = tf_of_fname intf.FStarC_Interactive_Ide_Types.tf_fname in
+      FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile uu___
   | other -> other
 let add_module_completions (this_fname : Prims.string)
   (deps : Prims.string Prims.list)
@@ -623,11 +613,10 @@ let add_module_completions (this_fname : Prims.string)
        Prims.strcat (FStarC_String.uppercase first) uu___1) in
   let mods = FStarC_Parser_Dep.build_inclusion_candidates_list () in
   let loaded_mods_set =
-    let uu___ = FStarC_PSMap.empty () in
     FStarC_List.fold_left
       (fun acc dep ->
-         let uu___1 = FStarC_Parser_Dep.lowercase_module_name dep in
-         FStarC_PSMap.add acc uu___1 true) uu___ deps in
+         let uu___ = FStarC_Parser_Dep.lowercase_module_name dep in
+         FStarC_PSMap.add acc uu___ true) (FStarC_PSMap.empty ()) deps in
   let loaded modname =
     FStarC_PSMap.find_default loaded_mods_set modname false in
   let this_mod_key = FStarC_Parser_Dep.lowercase_module_name this_fname in
@@ -642,6 +631,6 @@ let add_module_completions (this_fname : Prims.string)
              (let ns_query =
                 let uu___2 = capitalize modname in
                 FStarC_Util.split uu___2 "." in
-              let uu___2 = loaded mod_key in
               FStarC_Interactive_CompletionTable.register_module_path table1
-                uu___2 mod_path ns_query)) table (FStarC_List.rev mods)
+                (loaded mod_key) mod_path ns_query)) table
+    (FStarC_List.rev mods)

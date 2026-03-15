@@ -776,13 +776,13 @@ type modul = {
   is_interface:bool;
 }
 
-val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
+val on_antiquoted : (term -> ML term) -> quoteinfo -> ML quoteinfo
 
 (* Requires that bv.index is in scope for the antiquotation list. *)
-val lookup_aq : bv -> antiquotations -> term
+val lookup_aq : bv -> antiquotations -> ML term
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
-val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
+val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term))
 
 val mod_name: modul -> lident
 
@@ -792,59 +792,70 @@ type subst_t = list subst_elt
 val withinfo: 'a -> range -> withinfo_t 'a
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> range -> syntax 'a
+val mk: 'a -> range -> ML (syntax 'a)
 
 val mk_lb :         (lbname & list univ_name & lident & typ & term & list attribute & range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
-val mk_Tm_app:      term -> args -> range -> term
+val mk_Tm_app:      term -> args -> range -> ML term
 
 (* This raises an exception if the term is not a Tm_fvar,
  * use with care. It has to be an Tm_fvar *immediately*,
  * there is no solving of Tm_delayed nor Tm_uvar. If it's
  * possible that it is not a Tm_fvar, which can be the case
  * for non-typechecked terms, just use `mk`. *)
-val mk_Tm_uinst:    term -> universes -> term
+val mk_Tm_uinst:    term -> universes -> ML term
 
-val extend_app:     term -> arg -> range -> term
-val extend_app_n:   term -> args -> range -> term
-val mk_Tm_delayed:  (term & subst_ts) -> range -> term
-val mk_Total:       typ -> comp
-val mk_GTotal:      typ -> comp
-val mk_Tac :        typ -> comp
-val mk_Comp:        comp_typ -> comp
-val bv_to_tm:       bv -> term
-val bv_to_name:     bv -> term
-val binders_to_names: binders -> list term
+val extend_app_n:   term -> args -> range -> ML term
+val extend_app:     term -> arg -> range -> ML term
+val mk_Tm_delayed:  (term & subst_ts) -> range -> ML term
+val mk_Total:       typ -> ML comp
+val mk_GTotal:      typ -> ML comp
+val mk_Comp:        comp_typ -> ML comp
+val mk_Tac :        typ -> ML comp
 
-val bv_eq:           bv -> bv -> bool
 val order_bv:        bv -> bv -> int
+val bv_eq:           bv -> bv -> bool
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
 val order_univ_name: univ_name -> univ_name -> int
+
+val bv_to_tm:       bv -> ML term
+val bv_to_name:     bv -> ML term
+val binders_to_names: binders -> ML (list term)
 
 val tun:      term
 val teff:     term
 val is_teff:  term -> bool
 val is_type:  term -> bool
 
-val freenames_of_binders: binders -> freenames
-val binders_of_freenames: freenames -> binders
-val binders_of_list:      list bv -> binders
+instance val deq_bv          : deq bv
+instance val deq_ident       : deq ident
+instance val deq_fv          : deq lident
+instance val deq_univ_name   : deq univ_name
+instance val deq_delta_depth : deq delta_depth
 
-val null_bv:        term -> bv
+instance val ord_bv         : ord bv
+instance val ord_ident      : ord ident
+instance val ord_fv         : ord lident
+
+val freenames_of_binders: binders -> ML freenames
+
+val null_bv:        term -> ML bv
 val mk_binder_with_attrs
            :        bv -> bqual -> option positivity_qualifier -> list attribute -> binder
 val mk_binder:      bv -> binder
-val null_binder:    term -> binder
+val binders_of_list:      list bv -> ML binders
+val binders_of_freenames: freenames -> ML binders
+val null_binder:    term -> ML binder
 val as_arg:         term -> arg
 val imp_tag:        binder_qualifier
 val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
 val argpos:         arg -> range
-val pat_bvs:        pat -> list bv
+val pat_bvs:        pat -> ML (list bv)
 val is_bqual_implicit:    bqual -> bool
 val is_aqual_implicit:    aqual -> bool
 val is_bqual_implicit_or_meta: bqual -> bool
@@ -853,27 +864,27 @@ val as_aqual_implicit:    bool -> aqual
 val is_top_level:   list letbinding -> bool
 
 (* gensym *)
-val freshen_bv       : bv -> bv
-val freshen_binder   : binder -> binder
-val gen_bv           : string -> option range -> typ -> bv
-val gen_bv'          : ident -> option range -> typ -> bv
-val new_bv           : option range -> typ -> bv
-val new_univ_name    : option range -> univ_name
+val gen_bv'          : ident -> option range -> typ -> ML bv
+val gen_bv           : string -> option range -> typ -> ML bv
+val new_bv           : option range -> typ -> ML bv
+val freshen_bv       : bv -> ML bv
+val freshen_binder   : binder -> ML binder
+val new_univ_name    : option range -> ML univ_name
 val lid_and_dd_as_fv : lident -> option fv_qual -> fv
 val lid_as_fv        : lident -> option fv_qual -> fv
-val fv_to_tm         : fv -> term
-val fvar_with_dd     : lident -> option fv_qual -> term
-val fvar             : lident -> option fv_qual -> term
+val fv_to_tm         : fv -> ML term
+val fvar_with_dd     : lident -> option fv_qual -> ML term
+val fvar             : lident -> option fv_qual -> ML term
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool
-val range_of_fv      : fv -> range
 val lid_of_fv        : fv -> lid
+val range_of_fv      : fv -> range
 val set_range_of_fv  : fv -> range -> fv
 
 (* attributes *)
-val has_simple_attribute: list term -> string -> bool
+val has_simple_attribute: list term -> string -> ML bool
 
-val eq_pat : pat -> pat -> bool
+val eq_pat : pat -> pat -> ML bool
 
 ///////////////////////////////////////////////////////////////////////
 //Some common constants
@@ -881,9 +892,9 @@ val eq_pat : pat -> pat -> bool
 val delta_constant  : delta_depth
 val delta_equational: delta_depth
 val fvconst         : lident -> fv
-val tconst          : lident -> term
-val tabbrev         : lident -> term
-val tdataconstr     : lident -> term
+val tconst          : lident -> ML term
+val tabbrev         : lident -> ML term
+val tdataconstr     : lident -> ML term
 val t_unit          : term
 val t_bool          : term
 val t_int           : term
@@ -902,20 +913,20 @@ val t_order         : term
 val t_decls         : term
 val t_binder        : term
 val t_bv            : term
-val t_tac_of        : term -> term -> term
-val t_tactic_of     : term -> term
+val t_tac_of        : term -> term -> ML term
+val t_tactic_of     : term -> ML term
 val t_tactic_unit   : term
-val t_list_of       : term -> term
-val t_option_of     : term -> term
-val t_tuple2_of     : term -> term -> term
-val t_tuple3_of     : term -> term -> term -> term
-val t_tuple4_of     : term -> term -> term -> term -> term
-val t_tuple5_of     : term -> term -> term -> term -> term -> term
-val t_either_of     : term -> term -> term
-val t_sealed_of     : term -> term
-val t_erased_of     : term -> term
+val t_list_of       : term -> ML term
+val t_option_of     : term -> ML term
+val t_tuple2_of     : term -> term -> ML term
+val t_tuple3_of     : term -> term -> term -> ML term
+val t_tuple4_of     : term -> term -> term -> term -> ML term
+val t_tuple5_of     : term -> term -> term -> term -> term -> ML term
+val t_either_of     : term -> term -> ML term
+val t_sealed_of     : term -> ML term
+val t_erased_of     : term -> ML term
 
-val unit_const_with_range : range -> term
+val unit_const_with_range : range -> ML term
 val unit_const            : term
 
 (** Checks wether an identity `id` is allowed by a include/open
@@ -929,7 +940,7 @@ For example, if we have `open Foo { my_type as the_type }`,
 `is_ident_allowed_by_restriction <the_type> <{ my_type as the_type }>`
 will return `Some <my_type>`.
 *)
-val is_ident_allowed_by_restriction: ident -> restriction -> option ident
+val is_ident_allowed_by_restriction: ident -> restriction -> ML (option ident)
 
 instance val has_range_syntax #a : unit -> Tot (hasRange (syntax a))
 instance val has_range_withinfo #a : unit -> Tot (hasRange (withinfo_t a))
@@ -951,15 +962,6 @@ instance val showable_unresolved_constructor : showable unresolved_constructor
 instance val showable_fv_qual : showable fv_qual
 
 instance val deq_lazy_kind   : deq lazy_kind
-instance val deq_bv          : deq bv
-instance val deq_ident       : deq ident
-instance val deq_fv          : deq lident
-instance val deq_univ_name   : deq univ_name
-instance val deq_delta_depth : deq delta_depth
-
-instance val ord_bv         : ord bv
-instance val ord_ident      : ord ident
-instance val ord_fv         : ord lident
 
 instance val tagged_term : tagged term
 instance val tagged_sigelt : tagged sigelt

@@ -50,6 +50,18 @@ let get_with_fstarc (uu___ : unit) : Prims.bool=
 let set_with_fstarc (b : Prims.bool) : unit=
   clear (); FStarC_Effect.op_Colon_Equals _with_fstarc b
 let fstar_bin_directory : Prims.string= FStarC_Util.get_exec_dir ()
+let lib_root (uu___ : unit) : Prims.string FStar_Pervasives_Native.option=
+  let uu___1 = FStarC_Effect.op_Bang _no_default_includes in
+  if uu___1
+  then FStar_Pervasives_Native.None
+  else
+    (let uu___3 = FStarC_Util.expand_environment_variable "FSTAR_LIB" in
+     match uu___3 with
+     | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
+     | FStar_Pervasives_Native.None ->
+         FStar_Pervasives_Native.Some
+           (FStarC_Filepath.canonicalize
+              (Prims.strcat fstar_bin_directory "/../lib/fstar")))
 let read_fstar_include (fn : Prims.string) :
   Prims.string Prims.list FStar_Pervasives_Native.option=
   try
@@ -63,15 +75,17 @@ let read_fstar_include (fn : Prims.string) :
                  (FStarC_String.split [13; 10] s) in
              FStarC_List.filter
                (fun s1 ->
-                  (s1 <> "") &&
-                    (let uu___2 =
-                       let uu___3 = FStarC_String.get s1 Prims.int_zero in
-                       uu___3 = 35 in
-                     Prims.op_Negation uu___2)) uu___1 in
+                  let ne = s1 <> "" in
+                  let nc =
+                    let uu___2 =
+                      let uu___3 = FStarC_String.get s1 Prims.int_zero in
+                      uu___3 = 35 in
+                    Prims.op_Negation uu___2 in
+                  if ne then nc else false) uu___1 in
            FStar_Pervasives_Native.Some subdirs) ()
   with
   | uu___ ->
-      (failwith (Prims.strcat "Could not read " fn);
+      (FStarC_Effect.failwith (Prims.strcat "Could not read " fn);
        FStar_Pervasives_Native.None)
 let rec expand_include_d (dirname : Prims.string) : Prims.string Prims.list=
   let dot_inc_path = Prims.strcat dirname "/fstar.include" in
@@ -89,27 +103,13 @@ let rec expand_include_d (dirname : Prims.string) : Prims.string Prims.list=
   else [dirname]
 let expand_include_ds (dirnames : Prims.string Prims.list) :
   Prims.string Prims.list= FStarC_List.collect expand_include_d dirnames
-let lib_root (uu___ : unit) : Prims.string FStar_Pervasives_Native.option=
-  let uu___1 = FStarC_Effect.op_Bang _no_default_includes in
-  if uu___1
-  then FStar_Pervasives_Native.None
-  else
-    (let uu___3 = FStarC_Util.expand_environment_variable "FSTAR_LIB" in
-     match uu___3 with
-     | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
-     | FStar_Pervasives_Native.None ->
-         let uu___4 =
-           FStarC_Filepath.canonicalize
-             (Prims.strcat fstar_bin_directory "/../lib/fstar") in
-         FStar_Pervasives_Native.Some uu___4)
 let fstarc_paths (uu___ : unit) : Prims.string Prims.list=
   let uu___1 = FStarC_Effect.op_Bang _with_fstarc in
   if uu___1
   then
-    let uu___2 =
-      FStarC_Filepath.canonicalize
-        (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc") in
-    expand_include_d uu___2
+    expand_include_d
+      (FStarC_Filepath.canonicalize
+         (Prims.strcat fstar_bin_directory "/../lib/fstar/fstarc"))
   else []
 let lib_paths (uu___ : unit) : Prims.string Prims.list=
   let uu___1 =
@@ -143,15 +143,14 @@ let full_include_path (uu___ : unit) : Prims.string Prims.list=
        res)
 let do_find (paths : Prims.string Prims.list) (filename : Prims.string) :
   Prims.string FStar_Pervasives_Native.option=
-  let uu___ = FStarC_Filepath.is_path_absolute filename in
-  if uu___
+  if FStarC_Filepath.is_path_absolute filename
   then
     (if FStarC_Filepath.file_exists filename
      then FStar_Pervasives_Native.Some filename
      else FStar_Pervasives_Native.None)
   else
     (try
-       (fun uu___2 ->
+       (fun uu___1 ->
           match () with
           | () ->
               FStarC_Util.find_map (FStarC_List.rev paths)
@@ -163,7 +162,7 @@ let do_find (paths : Prims.string Prims.list) (filename : Prims.string) :
                    if FStarC_Filepath.file_exists path
                    then FStar_Pervasives_Native.Some path
                    else FStar_Pervasives_Native.None)) ()
-     with | uu___2 -> FStar_Pervasives_Native.None)
+     with | uu___1 -> FStar_Pervasives_Native.None)
 let find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option=
   cached_fun find_file_cache
     (fun s -> let uu___ = full_include_path () in do_find uu___ s)
@@ -178,18 +177,17 @@ let find_file_odir (s : Prims.string) :
     let uu___1 = full_include_path () in
     FStar_List_Tot_Base.op_At uu___1 odir in
   do_find uu___ s
-let prepend_output_dir (fname : Prims.string) : Prims.string=
-  let uu___ = FStarC_Effect.op_Bang _odir in
-  match uu___ with
-  | FStar_Pervasives_Native.None -> fname
-  | FStar_Pervasives_Native.Some x -> FStarC_Filepath.join_paths x fname
 let prepend_cache_dir (fpath : Prims.string) : Prims.string=
   let uu___ = FStarC_Effect.op_Bang _cache_dir in
   match uu___ with
   | FStar_Pervasives_Native.None -> fpath
   | FStar_Pervasives_Native.Some x ->
-      let uu___1 = FStarC_Filepath.basename fpath in
-      FStarC_Filepath.join_paths x uu___1
+      FStarC_Filepath.join_paths x (FStarC_Filepath.basename fpath)
+let prepend_output_dir (fname : Prims.string) : Prims.string=
+  let uu___ = FStarC_Effect.op_Bang _odir in
+  match uu___ with
+  | FStar_Pervasives_Native.None -> fname
+  | FStar_Pervasives_Native.Some x -> FStarC_Filepath.join_paths x fname
 let locate (uu___ : unit) : Prims.string=
   let uu___1 = FStarC_Util.get_exec_dir () in
   FStarC_Filepath.normalize_file_path uu___1
@@ -205,8 +203,7 @@ let refind_file (f : Prims.string) : Prims.string=
     (fun uu___ ->
        match () with
        | () ->
-           let uu___1 =
-             let uu___2 = FStarC_Filepath.basename f in find_file uu___2 in
+           let uu___1 = find_file (FStarC_Filepath.basename f) in
            (match uu___1 with
             | FStar_Pervasives_Native.None -> f
             | FStar_Pervasives_Native.Some abs -> abs)) ()

@@ -32,7 +32,7 @@ let disentangle_abbrevs_from_bundle
                FStarC_Syntax_Syntax.lids1 = uu___7;_}
              -> [x]
          | FStarC_Syntax_Syntax.Sig_let uu___ ->
-             failwith
+             FStarC_Effect.failwith
                "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible"
          | uu___ -> []) sigelts in
   match type_abbrev_sigelts with
@@ -71,7 +71,7 @@ let disentangle_abbrevs_from_bundle
                    FStarC_Syntax_Syntax.lids1 = uu___8;_}
                  -> fv.FStarC_Syntax_Syntax.fv_name
              | uu___1 ->
-                 failwith
+                 FStarC_Effect.failwith
                    "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
           type_abbrev_sigelts in
       let unfolded_type_abbrevs =
@@ -99,10 +99,9 @@ let disentangle_abbrevs_from_bundle
                             FStarC_Syntax_Syntax.lbpos = uu___9;_}::[]);
                        FStarC_Syntax_Syntax.lids1 = uu___10;_}
                      ->
-                     let uu___11 =
-                       FStarC_Ident.lid_equals lid
-                         fv.FStarC_Syntax_Syntax.fv_name in
-                     Prims.op_Negation uu___11
+                     Prims.op_Negation
+                       (FStarC_Ident.lid_equals lid
+                          fv.FStarC_Syntax_Syntax.fv_name)
                  | uu___3 -> true) uu___2 in
           FStarC_Effect.op_Colon_Equals not_unfolded_yet uu___1 in
         let rec unfold_abbrev_fv t fv =
@@ -168,12 +167,10 @@ let disentangle_abbrevs_from_bundle
                    if uu___3
                    then
                      let msg =
-                       let uu___4 =
-                         FStarC_Ident.string_of_lid
-                           fv.FStarC_Syntax_Syntax.fv_name in
                        FStarC_Format.fmt1
                          "Cycle on %s in mutually recursive type abbreviations"
-                         uu___4 in
+                         (FStarC_Ident.string_of_lid
+                            fv.FStarC_Syntax_Syntax.fv_name) in
                      FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
                        fv.FStarC_Syntax_Syntax.fv_name
                        FStarC_Errors_Codes.Fatal_CycleInRecTypeAbbreviation
@@ -198,7 +195,7 @@ let disentangle_abbrevs_from_bundle
                 match lb.FStarC_Syntax_Syntax.lbname with
                 | FStar_Pervasives.Inr fv -> fv.FStarC_Syntax_Syntax.fv_name
                 | uu___2 ->
-                    failwith
+                    FStarC_Effect.failwith
                       "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible" in
               ((let uu___3 =
                   let uu___4 = FStarC_Effect.op_Bang in_progress in lid ::
@@ -266,7 +263,7 @@ let disentangle_abbrevs_from_bundle
                                     uu___6);
                                  (match () with | () -> tm'))))))))
           | uu___1 ->
-              failwith
+              FStarC_Effect.failwith
                 "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible" in
         let rec aux uu___1 =
           let uu___2 = FStarC_Effect.op_Bang not_unfolded_yet in
@@ -281,8 +278,8 @@ let disentangle_abbrevs_from_bundle
           (fun lid ->
              FStarC_List.for_all
                (fun lid' ->
-                  let uu___1 = FStarC_Ident.lid_equals lid lid' in
-                  Prims.op_Negation uu___1) type_abbrevs) l in
+                  Prims.op_Negation (FStarC_Ident.lid_equals lid lid'))
+               type_abbrevs) l in
       let inductives_with_abbrevs_unfolded =
         let find_in_unfolded fv =
           FStarC_Util.find_map unfolded_type_abbrevs
@@ -397,7 +394,7 @@ let disentangle_abbrevs_from_bundle
                }]
           | FStarC_Syntax_Syntax.Sig_let uu___1 -> []
           | uu___1 ->
-              failwith
+              FStarC_Effect.failwith
                 "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible" in
         FStarC_List.collect unfold_in_sig sigelts in
       let new_members = filter_out_type_abbrevs members in

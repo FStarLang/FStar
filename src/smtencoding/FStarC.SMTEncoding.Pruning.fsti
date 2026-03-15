@@ -55,7 +55,7 @@ val pruning_state  : Type0
 val init : pruning_state
 
 (* Adding assumptions to the pruning state *)
-val add_decls (ds:list decl) (p:pruning_state) : pruning_state
+val add_decls (ds:list decl) (p:pruning_state) : ML pruning_state
 
 (* Pruning the state to only include the assumptions that are reachable from the roots *)
-val prune (p:pruning_state) (roots:list decl) : list decl
+val prune (p:pruning_state) (roots:list decl) : ML (list decl)

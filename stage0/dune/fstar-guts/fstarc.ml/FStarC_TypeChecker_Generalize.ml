@@ -43,8 +43,7 @@ let gen_univs (env : FStarC_TypeChecker_Env.env)
         FStarC_Format.print1 "univ_vars in env: %s\n" uu___4
       else ());
      (let r =
-        let uu___3 = FStarC_TypeChecker_Env.get_range env in
-        FStar_Pervasives_Native.Some uu___3 in
+        FStar_Pervasives_Native.Some (FStarC_TypeChecker_Env.get_range env) in
       let u_names =
         FStarC_List.map
           (fun u ->
@@ -269,8 +268,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                   "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n" uu___6 uu___7
               else ());
              (univs1, uvs, (lbname, e, c1)))) in
-     let uu___2 =
-       let uu___3 = FStarC_List.hd lecs in univs_and_uvars_of_lec uu___3 in
+     let uu___2 = univs_and_uvars_of_lec (FStarC_List.hd lecs) in
      match uu___2 with
      | (univs, uvs, lec_hd) ->
          let force_univs_eq lec2 u1 u2 =
@@ -328,30 +326,31 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                        FStarC_Syntax_Unionfind.equiv
                          u.FStarC_Syntax_Syntax.ctx_uvar_head
                          u'.FStarC_Syntax_Syntax.ctx_uvar_head) u21) u11 in
-           let uu___3 = (uvars_subseteq u1 u2) && (uvars_subseteq u2 u1) in
-           if uu___3
+           let fwd = uvars_subseteq u1 u2 in
+           let bwd = uvars_subseteq u2 u1 in
+           if (if fwd then bwd else false)
            then ()
            else
-             (let uu___5 = lec_hd in
-              match uu___5 with
-              | (lb1, uu___6, uu___7) ->
-                  let uu___8 = lec2 in
-                  (match uu___8 with
-                   | (lb2, uu___9, uu___10) ->
+             (let uu___4 = lec_hd in
+              match uu___4 with
+              | (lb1, uu___5, uu___6) ->
+                  let uu___7 = lec2 in
+                  (match uu___7 with
+                   | (lb2, uu___8, uu___9) ->
                        let msg =
-                         let uu___11 =
+                         let uu___10 =
                            FStarC_Class_Show.show
                              (FStarC_Class_Show.show_either
                                 FStarC_Syntax_Print.showable_bv
                                 FStarC_Syntax_Syntax.showable_fv) lb1 in
-                         let uu___12 =
+                         let uu___11 =
                            FStarC_Class_Show.show
                              (FStarC_Class_Show.show_either
                                 FStarC_Syntax_Print.showable_bv
                                 FStarC_Syntax_Syntax.showable_fv) lb2 in
                          FStarC_Format.fmt2
                            "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s"
-                           uu___11 uu___12 in
+                           uu___10 uu___11 in
                        FStarC_Errors.raise_error
                          FStarC_TypeChecker_Env.hasRange_env env
                          FStarC_Errors_Codes.Fatal_IncompatibleNumberOfTypes
@@ -359,17 +358,16 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                          (Obj.magic msg))) in
          let lecs1 =
-           let uu___3 = FStarC_List.tl lecs in
            FStarC_List.fold_right
              (fun this_lec lecs2 ->
-                let uu___4 = univs_and_uvars_of_lec this_lec in
-                match uu___4 with
+                let uu___3 = univs_and_uvars_of_lec this_lec in
+                match uu___3 with
                 | (this_univs, this_uvs, this_lec1) ->
                     (force_univs_eq this_lec1 univs this_univs;
                      force_uvars_eq this_lec1 uvs this_uvs;
                      this_lec1
                      ::
-                     lecs2)) uu___3 [] in
+                     lecs2)) (FStarC_List.tl lecs) [] in
          let lecs2 = lec_hd :: lecs1 in
          let gen_types uvs1 =
            FStarC_List.concatMap
@@ -384,7 +382,7 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                        u.FStarC_Syntax_Syntax.ctx_uvar_head in
                    match uu___4 with
                    | FStar_Pervasives_Native.Some uu___5 ->
-                       failwith
+                       FStarC_Effect.failwith
                          "Unexpected instantiation of mutually recursive uvar"
                    | uu___5 ->
                        let k =
@@ -418,13 +416,10 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                  then []
                                  else
                                    (let a =
-                                      let uu___11 =
-                                        let uu___12 =
-                                          FStarC_TypeChecker_Env.get_range
-                                            env in
-                                        FStar_Pervasives_Native.Some uu___12 in
-                                      FStarC_Syntax_Syntax.new_bv uu___11
-                                        kres in
+                                      FStarC_Syntax_Syntax.new_bv
+                                        (FStar_Pervasives_Native.Some
+                                           (FStarC_TypeChecker_Env.get_range
+                                              env)) kres in
                                     let t =
                                       match bs with
                                       | [] ->
@@ -432,22 +427,15 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                       | uu___11 ->
                                           let uu___12 =
                                             FStarC_Syntax_Syntax.bv_to_name a in
-                                          let uu___13 =
-                                            let uu___14 =
-                                              FStarC_Syntax_Util.residual_tot
-                                                kres in
-                                            FStar_Pervasives_Native.Some
-                                              uu___14 in
                                           FStarC_Syntax_Util.abs bs uu___12
-                                            uu___13 in
+                                            (FStar_Pervasives_Native.Some
+                                               (FStarC_Syntax_Util.residual_tot
+                                                  kres)) in
                                     FStarC_Syntax_Util.set_uvar
                                       u.FStarC_Syntax_Syntax.ctx_uvar_head t;
-                                    (let uu___12 =
-                                       let uu___13 =
-                                         FStarC_Syntax_Syntax.as_bqual_implicit
-                                           true in
-                                       (a, uu___13) in
-                                     [uu___12]))
+                                    [(a,
+                                       (FStarC_Syntax_Syntax.as_bqual_implicit
+                                          true))])
                              | uu___8 -> [])))) uvs1 in
          let gen_univs1 = gen_univs env univs in
          let gen_tvars = gen_types uvs in
@@ -488,11 +476,10 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                               FStarC_Syntax_Syntax.iarg
                                                 uu___9) gen_tvars in
                                    let instantiate_lbname_with_app tm fv =
-                                     let uu___7 =
+                                     if
                                        FStarC_Syntax_Syntax.fv_eq fv
                                          (FStar_Pervasives.__proj__Inr__item__v
-                                            lbname) in
-                                     if uu___7
+                                            lbname)
                                      then
                                        FStarC_Syntax_Syntax.mk_Tm_app tm
                                          tvar_args
@@ -512,9 +499,8 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                                let t =
                                  let uu___7 =
                                    let uu___8 =
-                                     let uu___9 =
-                                       FStarC_Syntax_Util.comp_result c1 in
-                                     FStarC_Syntax_Subst.compress uu___9 in
+                                     FStarC_Syntax_Subst.compress
+                                       (FStarC_Syntax_Util.comp_result c1) in
                                    uu___8.FStarC_Syntax_Syntax.n in
                                  match uu___7 with
                                  | FStarC_Syntax_Syntax.Tm_arrow
@@ -618,9 +604,9 @@ let generalize' (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                              FStarC_Syntax_Print.showable_bv
                              FStarC_Syntax_Syntax.showable_fv) l in
                       let uu___8 =
-                        let uu___9 = FStarC_Syntax_Util.comp_result c in
                         FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term uu___9 in
+                          FStarC_Syntax_Print.showable_term
+                          (FStarC_Syntax_Util.comp_result c) in
                       let uu___9 =
                         FStarC_Class_Show.show
                           FStarC_Syntax_Print.showable_term e in
@@ -651,10 +637,8 @@ let generalize (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
     FStarC_Syntax_Syntax.binder Prims.list) Prims.list=
   FStarC_Errors.with_ctx "While generalizing"
     (fun uu___ ->
-       let uu___1 =
-         let uu___2 =
-           let uu___3 = FStarC_TypeChecker_Env.current_module env in
-           FStarC_Ident.string_of_lid uu___3 in
-         FStar_Pervasives_Native.Some uu___2 in
-       FStarC_Profiling.profile (fun uu___2 -> generalize' env is_rec lecs)
-         uu___1 "FStarC.TypeChecker.Util.generalize")
+       FStarC_Profiling.profile (fun uu___1 -> generalize' env is_rec lecs)
+         (FStar_Pervasives_Native.Some
+            (FStarC_Ident.string_of_lid
+               (FStarC_TypeChecker_Env.current_module env)))
+         "FStarC.TypeChecker.Util.generalize")

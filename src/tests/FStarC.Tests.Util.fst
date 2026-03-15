@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ open FStarC.Class.Show
 open FStarC.Syntax.Print {}
 open FStarC.Class.Show
 
-let always (id : int) b =
+let always (id : int) b : ML unit =
     if b
     then ()
     else raise_error0 Errors.Fatal_AssertionFailure (Format.fmt1 "Assertion failed: test %s" (show id))
@@ -51,7 +51,7 @@ let tm t = mk t dummyRange
 let nm x = bv_to_name x
 let app x ts = mk (Tm_app {hd=x; args=List.map as_arg ts}) dummyRange
 
-let rec term_eq' t1 t2 =
+let rec term_eq' t1 t2 : ML bool =
     let t1 = SS.compress t1 in
     let t2 = SS.compress t2 in
     let binders_eq xs ys =
@@ -120,7 +120,7 @@ let rec term_eq' t1 t2 =
       | Tm_unknown, Tm_unknown -> true
       | _ -> false
 
-let term_eq t1 t2 =
+let term_eq t1 t2 : ML bool =
 //    Format.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
     let b = term_eq' t1 t2 in
     if not b then (

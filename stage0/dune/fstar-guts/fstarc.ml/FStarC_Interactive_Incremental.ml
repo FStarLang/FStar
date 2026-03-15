@@ -97,25 +97,23 @@ let dump_symbols_for_lid (l : FStarC_Ident.lident) :
   op_let_Bang get_filename
     (fun filename ->
        let position = (filename, start_line, start_col) in
-       let uu___ =
-         let uu___1 =
-           let uu___2 = FStarC_Ident.string_of_lid l in
-           (uu___2, FStarC_Interactive_Ide_Types.LKCode,
-             (FStar_Pervasives_Native.Some position),
-             ["type"; "documentation"; "defined-at"],
-             (FStar_Pervasives_Native.Some
-                (FStarC_Json.JsonAssoc
-                   [("fname", (FStarC_Json.JsonStr filename));
-                   ("beg",
-                     (FStarC_Json.JsonList
-                        [FStarC_Json.JsonInt start_line;
-                        FStarC_Json.JsonInt start_col]));
-                   ("end",
-                     (FStarC_Json.JsonList
-                        [FStarC_Json.JsonInt end_line;
-                        FStarC_Json.JsonInt end_col]))]))) in
-         FStarC_Interactive_Ide_Types.Lookup uu___1 in
-       as_query uu___)
+       as_query
+         (FStarC_Interactive_Ide_Types.Lookup
+            ((FStarC_Ident.string_of_lid l),
+              FStarC_Interactive_Ide_Types.LKCode,
+              (FStar_Pervasives_Native.Some position),
+              ["type"; "documentation"; "defined-at"],
+              (FStar_Pervasives_Native.Some
+                 (FStarC_Json.JsonAssoc
+                    [("fname", (FStarC_Json.JsonStr filename));
+                    ("beg",
+                      (FStarC_Json.JsonList
+                         [FStarC_Json.JsonInt start_line;
+                         FStarC_Json.JsonInt start_col]));
+                    ("end",
+                      (FStarC_Json.JsonList
+                         [FStarC_Json.JsonInt end_line;
+                         FStarC_Json.JsonInt end_col]))])))))
 let dump_symbols (d : FStarC_Parser_AST.decl) :
   FStarC_Interactive_Ide_Types.query Prims.list qst=
   let ls = FStarC_Parser_AST_Util.lidents_of_decl d in
@@ -129,18 +127,14 @@ let push_decl (push_kind : FStarC_Interactive_Ide_Types.push_kind)
   match uu___ with
   | (d, s) ->
       let pq =
-        let uu___1 =
-          let uu___2 =
-            FStarC_Range_Ops.start_of_range d.FStarC_Parser_AST.drange in
-          FStarC_Range_Ops.line_of_pos uu___2 in
-        let uu___2 =
-          let uu___3 =
-            FStarC_Range_Ops.start_of_range d.FStarC_Parser_AST.drange in
-          FStarC_Range_Ops.col_of_pos uu___3 in
         {
           FStarC_Interactive_Ide_Types.push_kind = push_kind;
-          FStarC_Interactive_Ide_Types.push_line = uu___1;
-          FStarC_Interactive_Ide_Types.push_column = uu___2;
+          FStarC_Interactive_Ide_Types.push_line =
+            (FStarC_Range_Ops.line_of_pos
+               (FStarC_Range_Ops.start_of_range d.FStarC_Parser_AST.drange));
+          FStarC_Interactive_Ide_Types.push_column =
+            (FStarC_Range_Ops.col_of_pos
+               (FStarC_Range_Ops.start_of_range d.FStarC_Parser_AST.drange));
           FStarC_Interactive_Ide_Types.push_peek_only = false;
           FStarC_Interactive_Ide_Types.push_code_or_decl =
             (FStar_Pervasives.Inr ds)
@@ -149,16 +143,14 @@ let push_decl (push_kind : FStarC_Interactive_Ide_Types.push_kind)
         write_full_buffer_fragment_progress (FragmentStarted d);
         ((FStarC_Interactive_Ide_Types.QueryOK, []),
           (FStar_Pervasives.Inl st)) in
-      let uu___1 = as_query (FStarC_Interactive_Ide_Types.Callback progress) in
-      op_let_Bang uu___1
+      op_let_Bang (as_query (FStarC_Interactive_Ide_Types.Callback progress))
         (fun cb ->
-           let uu___2 = as_query (FStarC_Interactive_Ide_Types.Push pq) in
-           op_let_Bang uu___2
+           op_let_Bang (as_query (FStarC_Interactive_Ide_Types.Push pq))
              (fun push ->
                 if with_symbols
                 then
-                  let uu___3 = dump_symbols d in
-                  op_let_Bang uu___3
+                  let uu___1 = dump_symbols d in
+                  op_let_Bang uu___1
                     (fun lookups ->
                        return (FStarC_List.op_At [cb; push] lookups))
                 else return [cb; push]))
@@ -181,7 +173,9 @@ let pop_entries
   map (fun uu___ -> as_query FStarC_Interactive_Ide_Types.Pop) e
 let push_kind_geq (pk1 : FStarC_Interactive_Ide_Types.push_kind)
   (pk2 : FStarC_Interactive_Ide_Types.push_kind) : Prims.bool=
-  (pk1 = pk2) ||
+  if pk1 = pk2
+  then true
+  else
     (match (pk1, pk2) with
      | (FStarC_Interactive_Ide_Types.FullCheck,
         FStarC_Interactive_Ide_Types.LaxCheck) -> true
@@ -233,21 +227,21 @@ let inspect_repl_stack (s : FStarC_Interactive_Ide_Types.repl_stack_t)
                                  (FStarC_List.op_At pops pushes)), accum)))
              | FStarC_Interactive_Ide_Types.PushFragment
                  (FStar_Pervasives.Inr d', pk, issues, uu___1) ->
-                 let uu___2 =
-                   (FStarC_Parser_AST_Diff.eq_decl
-                      (FStar_Pervasives_Native.fst d) d')
-                     && (push_kind_geq pk push_kind) in
-                 if uu___2
+                 let eq =
+                   FStarC_Parser_AST_Diff.eq_decl
+                     (FStar_Pervasives_Native.fst d) d' in
+                 let geq = push_kind_geq pk push_kind in
+                 if (if eq then geq else false)
                  then
-                   let uu___3 = d in
-                   (match uu___3 with
+                   let uu___2 = d in
+                   (match uu___2 with
                     | (d1, s1) ->
                         (write_full_buffer_fragment_progress
                            (FragmentSuccess (d1, s1, pk));
                          if with_symbols
                          then
-                           (let uu___5 = dump_symbols d1 in
-                            op_let_Bang uu___5
+                           (let uu___4 = dump_symbols d1 in
+                            op_let_Bang uu___4
                               (fun lookups' ->
                                  matching_prefix
                                    (FStarC_List.op_At issues accum)
@@ -257,18 +251,18 @@ let inspect_repl_stack (s : FStarC_Interactive_Ide_Types.repl_stack_t)
                            matching_prefix (FStarC_List.op_At issues accum)
                              lookups entries3 ds2))
                  else
-                   (let uu___4 = pop_entries (e :: entries3) in
-                    op_let_Bang uu___4
+                   (let uu___3 = pop_entries (e :: entries3) in
+                    op_let_Bang uu___3
                       (fun pops ->
-                         let uu___5 = push_decls1 (d :: ds2) in
-                         op_let_Bang uu___5
+                         let uu___4 = push_decls1 (d :: ds2) in
+                         op_let_Bang uu___4
                            (fun pushes ->
                               return
                                 ((FStarC_List.op_At pops
                                     (FStarC_List.op_At lookups pushes)),
                                   accum))))
              | uu___1 ->
-                 failwith
+                 FStarC_Effect.failwith
                    "Impossible: non-push fragment in repl stack during incremental check")
         | ([], ds2) ->
             let uu___1 = push_decls1 ds2 in
@@ -298,11 +292,10 @@ let reload_deps
     match uu___ with
     | FStar_Pervasives_Native.None -> return []
     | FStar_Pervasives_Native.Some (prefix, uu___1, uu___2) ->
-        let uu___3 = as_query FStarC_Interactive_Ide_Types.Pop in
-        op_let_Bang uu___3
+        op_let_Bang (as_query FStarC_Interactive_Ide_Types.Pop)
           (fun pop ->
-             let uu___4 = FStarC_List.map (fun uu___5 -> pop) prefix in
-             return uu___4) in
+             let uu___3 = FStarC_List.map (fun uu___4 -> pop) prefix in
+             return uu___3) in
   pop_until_deps repl_stack
 let parse_code (st : FStarC_Interactive_Ide_Types.repl_state)
   (lang : FStarC_Parser_ParseIt.lang_opts) (code : Prims.string) :
@@ -310,23 +303,18 @@ let parse_code (st : FStarC_Interactive_Ide_Types.repl_state)
   let rng =
     FStarC_Interactive_Ide_Types.initial_range
       st.FStarC_Interactive_Ide_Types.repl_fname in
-  let uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_Range_Ops.file_of_range rng in
-      let uu___3 =
-        let uu___4 = FStarC_Range_Ops.start_of_range rng in
-        FStarC_Range_Ops.line_of_pos uu___4 in
-      let uu___4 =
-        let uu___5 = FStarC_Range_Ops.start_of_range rng in
-        FStarC_Range_Ops.col_of_pos uu___5 in
-      {
-        FStarC_Parser_ParseIt.frag_fname = uu___2;
-        FStarC_Parser_ParseIt.frag_text = code;
-        FStarC_Parser_ParseIt.frag_line = uu___3;
-        FStarC_Parser_ParseIt.frag_col = uu___4
-      } in
-    FStarC_Parser_ParseIt.Incremental uu___1 in
-  FStarC_Parser_ParseIt.parse lang uu___
+  FStarC_Parser_ParseIt.parse lang
+    (FStarC_Parser_ParseIt.Incremental
+       {
+         FStarC_Parser_ParseIt.frag_fname =
+           (FStarC_Range_Ops.file_of_range rng);
+         FStarC_Parser_ParseIt.frag_text = code;
+         FStarC_Parser_ParseIt.frag_line =
+           (FStarC_Range_Ops.line_of_pos
+              (FStarC_Range_Ops.start_of_range rng));
+         FStarC_Parser_ParseIt.frag_col =
+           (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.start_of_range rng))
+       })
 let syntax_issue
   (uu___ :
     (FStarC_Errors_Codes.error_code * FStarC_Errors_Msg.error_message *
@@ -469,7 +457,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state)
           then log_syntax_issues (FStar_Pervasives_Native.Some err)
           else ();
           ([], []))
-     | uu___2 -> failwith "Unexpected parse result" in
+     | uu___2 -> FStarC_Effect.failwith "Unexpected parse result" in
    qs)
 let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
   (code : Prims.string) :
@@ -499,10 +487,8 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
                      comments1 in
                  (match uu___4 with
                   | (doc, comments2) ->
-                      let uu___5 =
-                        let uu___6 = doc_to_string doc in uu___6 :: out in
-                      (uu___5, comments2))) ([], (FStarC_List.rev comments))
-          decls in
+                      (((doc_to_string doc) :: out), comments2)))
+          ([], (FStarC_List.rev comments)) decls in
       (match uu___ with
        | (formatted_code_rev, leftover_comments) ->
            let code1 =
@@ -514,10 +500,7 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
                  let doc =
                    FStarC_Parser_ToDocument.comments_to_document
                      leftover_comments in
-                 let uu___2 =
-                   let uu___3 = doc_to_string doc in
-                   Prims.strcat "\n\n" uu___3 in
-                 Prims.strcat code1 uu___2 in
+                 Prims.strcat code1 (Prims.strcat "\n\n" (doc_to_string doc)) in
            FStar_Pervasives.Inl formatted_code)
   | FStarC_Parser_ParseIt.IncrementalFragment
       (uu___, uu___1, FStar_Pervasives_Native.Some err) ->
@@ -526,4 +509,4 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
   | FStarC_Parser_ParseIt.ParseError err ->
       let uu___ = let uu___1 = syntax_issue err in [uu___1] in
       FStar_Pervasives.Inr uu___
-  | uu___ -> failwith "Unexpected parse result"
+  | uu___ -> FStarC_Effect.failwith "Unexpected parse result"

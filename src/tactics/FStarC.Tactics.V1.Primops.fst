@@ -1,4 +1,4 @@
-﻿module FStarC.Tactics.V1.Primops
+module FStarC.Tactics.V1.Primops
 
 open FStarC
 open FStarC.Effect
@@ -35,7 +35,7 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 instance _ : embedding term = RE.e_term (* REMOVE ME *)
 
-let fix_module (ps : PO.primitive_step) : PO.primitive_step =
+let fix_module (ps : PO.primitive_step) : ML PO.primitive_step =
   let p : Path.path string = Ident.path_of_lid ps.name in
   if p `Path.is_under` ["FStar"; "Stubs"; "Tactics"; "V2"; "Builtins"] then
     let p' = ["FStar"; "Stubs"; "Tactics"; "V1"; "Builtins"] @ (p |> List.tl |> List.tl |> List.tl |> List.tl |> List.tl) in

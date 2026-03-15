@@ -131,12 +131,6 @@ let decls_of_modul (m:modul) : list decl =
   | Module {decls}
   | Interface {decls} -> decls
   
-let check_id id =
-    let first_char = String.substring (string_of_id id) 0 1 in
-    if not (String.lowercase first_char = first_char) then
-      raise_error id Fatal_InvalidIdentifier
-        (Format.fmt1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
-
 let at_most_one s (r:range) l = match l with
   | [ x ] -> Some x
   | [] -> None
@@ -168,24 +162,12 @@ let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
     | _ -> None
 
-let mkApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
-
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
-let mkListLit r elts =
-  mk_term (ListLiteral elts) r Expr
-
-let mkSeqLit r elts =
-  mk_term (SeqLiteral elts) r Expr
-
 let unit_const r = mk_term(Const Const_unit) r Expr
 
-let ml_comp t =
+let ml_comp t : ML term =
     let lid = C.effect_ML_lid () in
     let ml = mk_term (Name lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
@@ -196,7 +178,19 @@ let tot_comp t =
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
 
-let mkRefSet r elts =
+let mkApp t args r : ML term = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+
+let mkExplicitApp t args r : ML term = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
+      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
+
+let mkRefSet r elts : ML term =
   let empty_lid, singleton_lid, union_lid, addr_of_lid =
       C.set_empty, C.set_singleton, C.set_union, C.heap_addr_of_lid in
   let empty = mk_term (Var(set_lid_range empty_lid r)) r Expr in
@@ -208,13 +202,13 @@ let mkRefSet r elts =
     let single_e = mkApp singleton [(e, Nothing)] r in
     mkApp union [(single_e, Nothing); (tl, Nothing)] r) elts empty
 
-let mkExplicitApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
-      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
+let mkListLit r elts =
+  mk_term (ListLiteral elts) r Expr
 
-let mkAdmitMagic r =
+let mkSeqLit r elts =
+  mk_term (SeqLiteral elts) r Expr
+
+let mkAdmitMagic r : ML term =
     let admit =
         let admit_name = mk_term(Var(set_lid_range C.admit_lid r)) r Expr in
         mkExplicitApp admit_name [unit_const r] r in
@@ -224,9 +218,9 @@ let mkAdmitMagic r =
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
     admit_magic
 
-let mkWildAdmitMagic r = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic r)
+let mkWildAdmitMagic r : ML branch = (mk_pattern (PatWild (None, [])) r, None, mkAdmitMagic r)
 
-let focusBranches branches r =
+let focusBranches branches r : ML (list branch) =
     let should_filter = Util.for_some fst branches in
         if should_filter
         then
@@ -235,7 +229,7 @@ let focusBranches branches r =
                  focussed@[mkWildAdmitMagic r]
         else branches |> List.map snd
 
-let focusLetBindings lbs r =
+let focusLetBindings lbs r : ML (list (pattern & term)) =
     let should_filter = Util.for_some fst lbs in
         if should_filter
         then 
@@ -245,7 +239,7 @@ let focusLetBindings lbs r =
               else (fst lb, mkAdmitMagic r)) lbs
         else lbs |> List.map snd
 
-let focusAttrLetBindings lbs r =
+let focusAttrLetBindings lbs r : ML (list (option attributes_ & (pattern & term))) =
     let should_filter = Util.for_some (fun (attr, (focus, _)) -> focus) lbs in
     if should_filter
     then
@@ -256,15 +250,15 @@ let focusAttrLetBindings lbs r =
     else lbs |> List.map (fun (attr, (_, lb)) -> (attr, lb))
 
   (* TODO : is this valid or should it use Construct ? *)
-let mkTuple args r =
+let mkTuple args r : ML term =
   let cons = C.mk_tuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkDTuple args r =
+let mkDTuple args r : ML term =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit attrs : binder =
+let mkRefinedBinder id t should_bind_var refopt m implicit attrs : ML binder =
   let b = mk_binder_with_attrs (Annotated(id, t)) m Type_level implicit attrs in
   match refopt with
     | None -> b
@@ -276,7 +270,7 @@ let mkRefinedBinder id t should_bind_var refopt m implicit attrs : binder =
             let b = mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs in
             mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
 
-let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
+let mkRefinedPattern pat t should_bind_pat phi_opt t_range range : ML pattern =
     let t = match phi_opt with
         | None     -> t
         | Some phi ->
@@ -328,7 +322,7 @@ let rec extract_named_refinement (remove_parens:bool) (t1:term) : option (ident 
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (cur: (lid & decl & bool) & list decl) (ds:list decl) : modul =
+let rec as_mlist (cur: (lid & decl & bool) & list decl) (ds:list decl) : ML modul =
     let ((m_name, m_decl, no_prelude), cur) = cur in
     match ds with
     | [] -> Module { no_prelude; mname = m_name; decls = m_decl :: List.rev cur }
@@ -340,7 +334,7 @@ let rec as_mlist (cur: (lid & decl & bool) & list decl) (ds:list decl) : modul =
             as_mlist ((m_name, m_decl, no_prelude), d::cur) ds
         end
 
-let as_frag (ds:list decl) : inputFragment =
+let as_frag (ds:list decl) : ML inputFragment =
   let d, ds = match ds with
     | d :: ds -> d, ds
     | [] -> raise Empty_frag
@@ -365,12 +359,12 @@ let as_frag (ds:list decl) : inputFragment =
       Inr ds
 
 // TODO: Move to something like FStarC.Util
-let strip_prefix (prefix s: string): option string
+let strip_prefix (prefix s: string): ML (option string)
   = if starts_with s prefix
     then Some (substring_from s (String.length prefix))
     else None
 
-let compile_op arity s r =
+let compile_op arity s r : ML string =
     let name_of_char = function
       |'&' -> "Amp"
       |'@'  -> "At"
@@ -413,10 +407,10 @@ let compile_op arity s r =
             else "", s in
           "op_" ^ prefix ^ String.concat "_" (List.map name_of_char (String.list_of_string s))
 
-let compile_op' s r =
+let compile_op' s r : ML string =
   compile_op (-1) s r
 
-let string_to_op s =
+let string_to_op s : ML (option (string & option int)) =
   let name_of_op s =
     match s with
     | "Amp" ->  Some ("&", None)
@@ -480,7 +474,9 @@ let string_to_op s =
 // Printing ASTs, mostly for debugging
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-let string_of_fsdoc (comment,keywords) =
+let string_of_fsdoc (ck : string & list (string & string)) : ML string =
+    let comment = fst ck in
+    let keywords = snd ck in
     comment ^ (String.concat "," (List.map (fun (k,v) -> k ^ "->" ^ v) keywords))
 
 let string_of_let_qualifier = function
@@ -499,12 +495,12 @@ instance showable_string_of_local_let_qualifier : showable local_let_qualifier =
   show = string_of_local_let_qualifier
 }
 
-let to_string_l sep f l =
+let to_string_l sep f l : ML string =
   String.concat sep (List.map f l)
 let imp_to_string = function
     | Hash -> "#"
     | _ -> ""
-let rec term_to_string (x:term) = match x.tm with
+let rec term_to_string (x:term) : ML string = match x.tm with
   | Wild -> "_"
   | LexList l -> Format.fmt1 "%[%s]"
     (match l with
@@ -769,10 +765,10 @@ let rec term_to_string (x:term) = match x.tm with
 
   | _ -> failwith ("AST.term_to_string missing case: " ^ tag_of x)
 
-and binders_to_string sep bs =
+and binders_to_string sep bs : ML string =
     List.map binder_to_string bs |> String.concat sep
 
-and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
+and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt : ML string =
   let s =
     match x.tm with
     | Match _ -> "match"
@@ -796,10 +792,11 @@ and try_or_match_to_string (x:term) scrutinee branches op_opt ret_opt =
       (match w with | None -> "" | Some e -> Format.fmt1 "when %s" (term_to_string e))
       (e |> term_to_string)) branches)
 
-and calc_step_to_string (CalcStep (rel, just, next)) =
+and calc_step_to_string (cs:calc_step) : ML string =
+    let CalcStep (rel, just, next) = cs in
     Format.fmt3 "%s{ %s } %s" (term_to_string rel) (term_to_string just) (term_to_string next)
 
-and binder_to_string x =
+and binder_to_string x : ML string =
   let pr x =
     let s = match x.b with
     | Variable i -> (string_of_id i)
@@ -815,18 +812,18 @@ and binder_to_string x =
   | Some TypeClassArg -> "{| " ^ pr x ^ " |}"
   | _ -> pr x
 
-and aqual_to_string = function
+and aqual_to_string (q:aqual) : ML string = match q with
   | Some Equality -> "$"
   | Some Implicit -> "#"
   | None -> ""
   | Some (Meta _)
   | Some TypeClassArg -> "{||}"
 
-and attr_list_to_string = function
+and attr_list_to_string (l:attributes_) : ML string = match l with
   | [] -> ""
   | l -> attrs_opt_to_string (Some l)
 
-and pat_to_string x = match x.pat with
+and pat_to_string x : ML string = match x.pat with
   | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
@@ -847,18 +844,19 @@ and pat_to_string x = match x.pat with
   | PatAscribed(p,(t, Some tac)) -> Format.fmt3 "(%s:%s by %s)" (p |> pat_to_string) (t |> term_to_string) (tac |> term_to_string)
   | PatRest -> ".."
 
-and attrs_opt_to_string = function
+and attrs_opt_to_string (o:option attributes_) : ML string = match o with
   | None -> ""
   | Some attrs -> Format.fmt1 "[@ %s]" (List.map term_to_string attrs |> String.concat "; ")
 
-let rec head_id_of_pat p = match p.pat with
+let rec head_id_of_pat p : ML (list lident) = match p.pat with
   | PatName l -> [l]
   | PatVar (i, _, _) -> [FStarC.Ident.lid_of_ids [i]]
+  | PatOp i -> [FStarC.Ident.lid_of_ids [i]]
   | PatApp(p, _) -> head_id_of_pat p
   | PatAscribed(p, _) -> head_id_of_pat p
   | _ -> []
 
-let lids_of_let defs =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
+let lids_of_let defs : ML (list lident) =  defs |> List.collect (fun (p, _) -> head_id_of_pat p)
 
 let id_of_tycon = function
   | TyconAbstract(i, _, _)
@@ -866,7 +864,7 @@ let id_of_tycon = function
   | TyconRecord(i, _, _, _, _)
   | TyconVariant(i, _, _, _) -> (string_of_id i)
 
-let string_of_pragma = function
+let string_of_pragma (p:pragma) : ML string = match p with
   | ShowOptions  ->   "show-options"
   | SetOptions s ->   Format.fmt1 "set-options \"%s\""   s
   | ResetOptions s -> Format.fmt1 "reset-options \"%s\"" (Option.dflt "" s)
@@ -876,12 +874,12 @@ let string_of_pragma = function
   | PrintEffectsGraph -> "print-effects-graph"
   | Check t -> "check " ^ term_to_string t
 
-let restriction_to_string: FStarC.Syntax.Syntax.restriction -> string =
+let restriction_to_string (r:FStarC.Syntax.Syntax.restriction) : ML string =
   let open FStarC.Syntax.Syntax in
-  function | Unrestricted -> ""
+  match r with | Unrestricted -> ""
            | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ Option.dflt "" (Option.map (fun renamed -> " as " ^ string_of_id renamed) renamed)) allow_list)  ^ "}"
 
-let decl_to_string (d:decl) = match d.d with
+let decl_to_string (d:decl) : ML string = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open (l, r) -> "open " ^ string_of_lid l ^ restriction_to_string r
   | Friend l -> "friend " ^ (string_of_lid l)
@@ -917,7 +915,7 @@ let decl_to_string (d:decl) = match d.d with
   | Unparseable ->
     "unparseable"
 
-let modul_to_string (m:modul) =
+let modul_to_string (m:modul) : ML string =
   match m with
   | Module {decls}
   | Interface {decls} ->
@@ -933,14 +931,39 @@ let thunk (ens : term) : term =
     let wildpat = mk_pattern (PatWild (None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 
-let ident_of_binder r b =
+let check_id id : ML unit =
+    let first_char = String.substring (string_of_id id) 0 1 in
+    if not (String.lowercase first_char = first_char) then
+      raise_error id Fatal_InvalidIdentifier
+        (Format.fmt1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
+
+let ident_of_binder r b : ML ident =
   match b.b with
   | Variable i
   | Annotated (i, _) -> i
   | NoName _ ->
     raise_error r Fatal_MissingQuantifierBinder "Wildcard binders in quantifiers are not allowed"
 
-let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
+let idents_of_binders bs r : ML (list ident) = bs |> List.map (ident_of_binder r)
+
+let as_interface (m:modul) : modul =
+    match m with
+    | Module {no_prelude; mname; decls} -> Interface { no_prelude; mname; decls; admitted = true }
+    | i -> i
+
+let inline_let_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_attr) Range.dummyRange Expr
+
+let inline_let_vc_attribute 
+: term
+= mk_term (Var FStarC.Parser.Const.inline_let_vc_attr) Range.dummyRange Expr
+
+instance showable_quote_kind : showable quote_kind = {
+  show = function
+    | Static -> "Static"
+    | Dynamic -> "Dynamic"
+}
 
 instance showable_decl    : showable decl    = { show = decl_to_string; }
 instance showable_term    : showable term    = { show = term_to_string; }
@@ -950,7 +973,7 @@ instance showable_modul   : showable modul   = { show = modul_to_string; }
 instance showable_pragma  : showable pragma  = { show = string_of_pragma; }
 instance showable_imp     : showable imp     = { show = imp_to_string; }
 
-let add_decorations d decorations =
+let add_decorations d decorations : ML decl =
   let decorations = 
     let attrs, quals = List.partition DeclAttributes? decorations in
     let attrs =
@@ -976,28 +999,9 @@ let add_decorations d decorations =
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d with quals=qualifiers; attrs=attributes_ }
 
-let mk_decl d r decorations =
+let mk_decl d r decorations : ML decl =
   let d = { d=d; drange=r; quals=[]; attrs=[]; interleaved=false } in
   add_decorations d decorations
-
-let as_interface (m:modul) : modul =
-    match m with
-    | Module {no_prelude; mname; decls} -> Interface { no_prelude; mname; decls; admitted = true }
-    | i -> i
-
-let inline_let_attribute 
-: term
-= mk_term (Var FStarC.Parser.Const.inline_let_attr) Range.dummyRange Expr
-
-let inline_let_vc_attribute 
-: term
-= mk_term (Var FStarC.Parser.Const.inline_let_vc_attr) Range.dummyRange Expr
-
-instance showable_quote_kind : showable quote_kind = {
-  show = function
-    | Static -> "Static"
-    | Dynamic -> "Dynamic"
-}
 
 instance pretty_quote_kind : pretty quote_kind = {
   pp = function
@@ -1005,10 +1009,10 @@ instance pretty_quote_kind : pretty quote_kind = {
     | Dynamic -> doc_of_string "Dynamic"
 }
 
-let ctor (n: string) (args: list document) =
+let ctor (n: string) (args: list document) : ML document =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 
-let pp_list' (#a:Type) (f: a -> document) (xs: list a) : document =
+let pp_list' (#a:Type) (f: a -> ML document) (xs: list a) : ML document =
   (pp_list a { pp = f }).pp xs // hack
 
 instance showable_arg_qualifier : showable arg_qualifier = {
@@ -1022,7 +1026,7 @@ instance showable_arg_qualifier : showable arg_qualifier = {
 instance pretty_imp           : pretty imp      = pretty_from_showable
 instance pretty_arg_qualifier : pretty arg_qualifier    = pretty_from_showable
 
-let rec pp_term (t:term) : document =
+let rec pp_term (t:term) : ML document =
   match t.tm with
   | Wild -> ctor "Wild" []
   | Const c -> ctor "Const" [doc_of_string (C.const_to_string c)]
@@ -1168,7 +1172,7 @@ let rec pp_term (t:term) : document =
   | LitDoc d ->
       ctor "LitDoc" [d]
 
-and pp_binder (b:binder) : document =
+and pp_binder (b:binder) : ML document =
   match b.b with
   | Variable i ->
       ctor "Variable" [pp i]
@@ -1176,10 +1180,11 @@ and pp_binder (b:binder) : document =
       ctor "Annotated" [pp i; pp_term t]
   | NoName t ->
       ctor "NoName" [pp_term t]
-and pp_calc_step (CalcStep (rel, just, next)) : document =
+and pp_calc_step (cs:calc_step) : ML document =
+  let CalcStep (rel, just, next) = cs in
   ctor "CalcStep" [pp_term rel; pp_term just; pp_term next]
 
-and pp_pattern (p:pattern) : document =
+and pp_pattern (p:pattern) : ML document =
   match p.pat with
   | PatWild (i_opt, attrs) ->
       let pp_opt_id = function None -> doc_of_string "None" | Some i -> pp i in
@@ -1219,7 +1224,7 @@ instance pretty_pattern : pretty pattern   = { pp = pp_pattern; }
 
 instance pretty_pragma  : pretty pragma   = pretty_from_showable
 
-let pp_constructor_payload (cp:constructor_payload) : document =
+let pp_constructor_payload (cp:constructor_payload) : ML document =
   match cp with
   | VpOfNotation t ->
       ctor "VpOfNotation" [pp_term t]
@@ -1232,7 +1237,7 @@ let pp_constructor_payload (cp:constructor_payload) : document =
 
 instance pretty_constructor_payload : pretty constructor_payload = { pp = pp_constructor_payload; }
 
-let pp_tycon (tc : tycon) : document =
+let pp_tycon (tc : tycon) : ML document =
   match tc with
   | TyconAbstract (i, bs, knd) ->
     ctor "TyconAbstract" [pp i; pp bs; pp knd]
@@ -1248,7 +1253,7 @@ let pp_tycon (tc : tycon) : document =
     ctor "TyconVariant" [pp i; pp bs; pp knd; pp_list' pp_ctor ctors]
 instance pretty_tycon   : pretty tycon    = { pp = pp_tycon; }
 
-let pp_decl (d:decl) : document =
+let pp_decl (d:decl) : ML document =
   match d.d with
   | TopLevelModule l ->
       ctor "TopLevelModule" [pp l]
@@ -1299,7 +1304,7 @@ let pp_decl (d:decl) : document =
 
 instance pretty_decl    : pretty decl     = { pp = pp_decl; }
 
-let pp_modul (m:modul) : document =
+let pp_modul (m:modul) : ML document =
   match m with
   | Module {decls} ->
     ctor "Module" [pp decls]

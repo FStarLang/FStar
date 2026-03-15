@@ -126,7 +126,7 @@ type env = {
 }
 
 
-let debug g f =
+let debug g (f: unit -> ML unit) : ML unit =
   if !dbg
   then f ()
 
@@ -137,7 +137,7 @@ let push_binder g b = { g with max_binder_index=max g.max_binder_index b.binder_
 let push_binders = List.fold_left push_binder
 
 let fresh_binder (g:env) (old:binder)
-  : env & binder
+  : ML (env & binder)
   = let ctr = g.max_binder_index + 1 in
     let bv = { old.binder_bv with index = ctr } in
     let b = S.mk_binder_with_attrs bv old.binder_qual old.binder_positivity old.binder_attrs in
@@ -147,7 +147,7 @@ let wild_bv (t:typ) (r:Range.t) : bv =
   { ppname=Ident.mk_ident (Ident.reserved_prefix, r); index=0; sort=t }
 
 let new_binder (g:env) (t:typ) (r:Range.t)
-: env & binder
+: ML (env & binder)
 = let bv = wild_bv t r in
   let b = S.mk_binder bv in
   fresh_binder g b
@@ -169,8 +169,8 @@ let open_binders (g:env) (bs:binders)
     g, List.rev bs_rev, subst
 
 let open_pat (g:env) (p:pat)
-  : env & pat & subst_t
-  = let rec open_pat_aux g p sub =
+  : ML (env & pat & subst_t)
+  = let rec open_pat_aux g p sub : ML _ =
         match p.v with
         | Pat_constant _ -> g, p, sub
 
@@ -199,24 +199,24 @@ let open_pat (g:env) (p:pat)
 
 
 let open_term (g:env) (b:binder) (t:term)
-  : env & binder & term
+  : ML (env & binder & term)
   = let g, b' = fresh_binder g b in
     let t = FStarC.Syntax.Subst.subst [DB(0, b'.binder_bv)] t in
     g, b', t
 
 let open_term_binders (g:env) (bs:binders) (t:term)
-  : env & binders & term
+  : ML (env & binders & term)
   = let g, bs, subst = open_binders g bs in
     g, bs, Subst.subst subst t
 
 let open_comp (g:env) (b:binder) (c:comp)
-  : env & binder & comp
+  : ML (env & binder & comp)
   = let g, bx = fresh_binder g b in
     let c = FStarC.Syntax.Subst.subst_comp [DB(0, bx.binder_bv)] c in
     g, bx, c
 
 let open_comp_binders (g:env) (bs:binders) (c:comp)
-  : env & binders & comp
+  : ML (env & binders & comp)
   = let g, bs, s = open_binders g bs in
     let c = FStarC.Syntax.Subst.subst_comp s c in
     g, bs, c
@@ -227,7 +227,7 @@ let arrow_formals_comp g c =
     g, bs, Subst.subst_comp subst c
 
 let open_branch (g:env) (br:S.branch)
-  : env & branch
+  : ML (env & branch)
   = let (p, wopt, e) = br in
     let g, p, s = open_pat g p in
     g, (p, Option.map (Subst.subst s) wopt, Subst.subst s e)
@@ -288,8 +288,8 @@ let print_ctx_head (ctx:context) =
 
 
 let print_context (ctx:context)
-  : string =
-  let rec aux (depth:string) (ctx:_) =
+  : ML string =
+  let rec aux (depth:string) (ctx:_) : ML _ =
     match ctx with
     | [] -> ""
     | (msg, ctx_term)::tl ->
@@ -355,7 +355,7 @@ instance showable_result #a (_ : showable a) : Tot (showable (__result a)) = {
 }
 
 
-let result a = context -> cache_t -> __result (success a)
+let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
@@ -389,11 +389,11 @@ type guard_commit_token = {
 
 let my_guard_and_tok_t = typ & (unit -> unit)
 let empty_token () = ()
-let mk_token (cache:cache_t) : guard_commit_token =
+let mk_token (cache:cache_t) : ML guard_commit_token =
   { guard_cache = mk_ref (Some cache);
     guard_counter = !table.counter }
 
-let commit_guard_core (g:guard_commit_token) : unit =
+let commit_guard_core (g:guard_commit_token) : ML unit =
   if g.guard_counter <> !table.counter
   then (//table has been cleared since the token was issued; drop the cache
       ()
@@ -413,8 +413,8 @@ let commit_guard_core (g:guard_commit_token) : unit =
         cache.guard_map
         ()
   )
-let commit_cache_cb cache = fun _ -> commit_guard_core (mk_token cache)
-let commit_guard (cb:unit->unit) = cb()
+let commit_cache_cb cache : guard_commit_token_cb = fun _ -> commit_guard_core (mk_token cache)
+let commit_guard (cb:guard_commit_token_cb) : ML unit = cb()
 let commit_guard_and_tok_opt (t:option guard_and_tok_t) =
   match t with
   | None -> ()
@@ -433,7 +433,7 @@ let and_pre (p1 p2:precondition) =
   | Some p1, Some p2 -> Some (U.mk_conj p1 p2)
 
 inline_for_extraction
-let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
+let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> ML (result b))
   : result b
   = fun ctx0 cache0 ->
       match x ctx0 cache0 with
@@ -451,7 +451,7 @@ let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
     return (v, u)
 
 inline_for_extraction
-let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> result b)
+let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> ML (result b))
 : result b
 = fun ctx cache ->
     match x ctx cache with
@@ -477,7 +477,7 @@ let dump_context
       return () ctx cache
 
 inline_for_extraction
-let handle_with (#a:Type) (x:result a) (h: unit -> result a)
+let handle_with (#a:Type) (x:result a) (h: unit -> ML (result a))
   : result a
   = fun ctx cache ->
       match x ctx cache with
@@ -485,7 +485,7 @@ let handle_with (#a:Type) (x:result a) (h: unit -> result a)
       | res -> res
 
 inline_for_extraction
-let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> result a)
+let with_context (#a:Type) (msg:string) (t:option context_term) (x:unit -> ML (result a))
   : result a
   = fun ctx cache ->
      let ctx = { ctx with error_context=((msg,t)::ctx.error_context) } in
@@ -513,7 +513,7 @@ let is_type (g:env) (t:term)
 
 let rec is_arrow (g:env) (t:term)
   : result (binder & tot_or_ghost & typ)
-  = let rec aux t =
+  = let rec aux t : ML _ =
         match (Subst.compress t).n with
         | Tm_arrow {bs=[x]; comp=c} ->
           if U.is_tot_or_gtot_comp c
@@ -612,7 +612,7 @@ let check_arg_qual (a:aqual) (b:bqual)
       end
 
 let check_bqual (b0 b1:bqual)
-  : result unit
+  : ML (result unit)
   = match b0, b1 with
     | None, None -> return ()
     | Some (Implicit b0), Some (Implicit b1) ->
@@ -623,13 +623,15 @@ let check_bqual (b0 b1:bqual)
     | None, Some Equality // The equality qualifier is metadata, ignore it
     | Some Equality, Some Equality ->
       return ()
-    | Some (Meta t1), Some (Meta t2) when equal_term t1 t2 ->
-      return ()
+    | Some (Meta t1), Some (Meta t2) ->
+      if equal_term t1 t2
+      then return ()
+      else fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
     | _ ->
       fail_str (Format.fmt2 "Binder qualifier mismatch, %s vs %s" (show b0) (show b1))
 
 let check_aqual (a0 a1:aqual)
-  : result unit
+  : ML (result unit)
   = match a0, a1 with
     | None, None -> return ()
     | Some ({aqual_implicit=b0}), Some ({aqual_implicit=b1}) ->
@@ -656,7 +658,7 @@ let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
     else fail_str "Unequal positivity qualifiers"
 
 let mk_forall_l (us:universes) (xs:binders) (t:term)
-  : term
+  : ML term
   = FStarC.List.fold_right2
         (fun u x t -> U.mk_forall u x.binder_bv t)
         us
@@ -664,18 +666,18 @@ let mk_forall_l (us:universes) (xs:binders) (t:term)
         t
 
 let close_guard (xs:binders) (us:universes) (g:precondition)
-  : precondition
+  : ML precondition
   = match g with
     | None -> None
     | Some t -> Some (mk_forall_l us xs t)
 
 let close_with_definition (x:binder) (u:universe) (t:term) (g:typ)
-: typ
+: ML typ
 = let g' = U.mk_imp (U.mk_eq2 u x.binder_bv.sort (S.bv_to_name x.binder_bv) t) g in
   U.mk_forall u x.binder_bv g'
 
 let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition)
-  : precondition
+  : ML precondition
   = match g with
     | None -> None
     | Some t' ->
@@ -684,15 +686,15 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
        U.mk_forall u x.binder_bv t'
       )
 
-let abs (g:env) (a:typ) (f: binder -> term) : term =
+let abs (g:env) (a:typ) (f: binder -> term) : ML term =
   let g, xb = new_binder g a a.pos in
   U.abs [xb] (f xb) None
 
 let weaken_subtyping (p:term) (g:term)
-: term
+: ML term
 = U.mk_imp p g
 
-let push_hypothesis (g:env) (h:term) =
+let push_hypothesis (g:env) (h:term) : ML env =
   let g, h = new_binder g h h.pos in
   g
 
@@ -718,7 +720,7 @@ let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option res
 
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
-let rec context_included (g0 g1: list binding) =
+let rec context_included (g0 g1: list binding) : ML bool =
   if BU.physical_equality g0 g1 then true else
   match g0, g1 with
   | [], _ -> true
@@ -748,7 +750,7 @@ let curry_application hd arg args p =
     t
 
 (* Replace all the *use* ranges in [t] by the use range in [r]. *)
-let replace_all_use_ranges (r:Range.t) (t:term) : term =
+let replace_all_use_ranges (r:Range.t) (t:term) : ML term =
   let ur = Range.use_range r in
   t |> Syntax.Visit.visit_term false (fun t ->
     { t with pos = Range.set_use_range t.pos ur })
@@ -884,7 +886,7 @@ let check_no_escape (bs:binders) t =
     then return ()
     else fail_str "Name escapes its scope"
 
-let rec map (#a #b:Type) (f:a -> result b) (l:list a) : result (list b) =
+let rec map (#a #b:Type) (f:a -> ML (result b)) (l:list a) : ML (result (list b)) =
   match l with
   | [] -> return []
   | hd::tl ->
@@ -892,8 +894,8 @@ let rec map (#a #b:Type) (f:a -> result b) (l:list a) : result (list b) =
     let! tl = map f tl in
     return (hd::tl)
 
-let mapi (#a #b:Type) (f:int -> a -> result b) (l:list a) : result (list b) =
-  let rec aux i l =
+let mapi (#a #b:Type) (f:int -> a -> ML (result b)) (l:list a) : ML (result (list b)) =
+  let rec aux i l : ML _ =
     match l with
     | [] -> return []
     | hd::tl ->
@@ -903,7 +905,7 @@ let mapi (#a #b:Type) (f:int -> a -> result b) (l:list a) : result (list b) =
   in
   aux 0 l
 
-let rec map2 (#a #b #c:Type) (f:a -> b -> result c) (l1:list a) (l2:list b) : result (list c) =
+let rec map2 (#a #b #c:Type) (f:a -> b -> ML (result c)) (l1:list a) (l2:list b) : ML (result (list c)) =
   match l1, l2 with
   | [], [] -> return []
   | hd1::tl1, hd2::tl2 ->
@@ -911,22 +913,22 @@ let rec map2 (#a #b #c:Type) (f:a -> b -> result c) (l1:list a) (l2:list b) : re
     let! tl = map2 f tl1 tl2 in
     return (hd::tl)
 
-let rec fold (#a #b:Type) (f:a -> b -> result a) (x:a) (l:list b) : result a =
+let rec fold (#a #b:Type) (f:a -> b -> ML (result a)) (x:a) (l:list b) : ML (result a) =
   match l with
   | [] -> return x
   | hd::tl ->
     let! x = f x hd in
     fold f x tl
 
-let rec fold2 (#a #b #c:Type) (f:a -> b -> c -> result a) (x:a) (l1:list b) (l2:list c) : result a =
+let rec fold2 (#a #b #c:Type) (f:a -> b -> c -> ML (result a)) (x:a) (l1:list b) (l2:list c) : ML (result a) =
   match l1, l2 with
   | [], [] -> return x
   | hd1::tl1, hd2::tl2 ->
     let! x = f x hd1 hd2 in
     fold2 f x tl1 tl2
 
-let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
-  : result 'b
+let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> ML (result 'b)) (b:'b)
+  : ML (result 'b)
   = match xs, ys with
     | [], [] -> return b
     | x::xs, y::ys ->
@@ -937,11 +939,11 @@ let rec iter2 (xs ys:list 'a) (f: 'a -> 'a -> 'b -> result 'b) (b:'b)
 let is_non_informative g t = N.non_info_norm g t
 
 let non_informative g t
-  : bool
+  : ML bool
   = is_non_informative g.tcenv t
 
 let as_comp (g:env) (et: (tot_or_ghost & typ))
-  : comp
+  : ML comp
   = match et with
     | E_Total, t -> S.mk_Total t
     | E_Ghost, t ->
@@ -950,7 +952,7 @@ let as_comp (g:env) (et: (tot_or_ghost & typ))
       else S.mk_GTotal t
 
 let comp_as_tot_or_ghost_and_type (c:comp)
-  : option (tot_or_ghost & typ)
+  : ML (option (tot_or_ghost & typ))
   = if U.is_total_comp c
     then Some (E_Total, U.comp_result c)
     else if U.is_tot_or_gtot_comp c
@@ -999,7 +1001,7 @@ let boolean_negation_simp b =
 let combine_path_and_branch_condition (path_condition:term)
                                       (branch_condition:option term)
                                       (branch_equality:term)
-  : term & term
+  : ML (term & term)
   = let this_path_condition =
         let bc =
             match branch_condition with
@@ -1019,7 +1021,7 @@ let combine_path_and_branch_condition (path_condition:term)
     this_path_condition, //:Type
     next_path_condition  //:bool
 
-let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
+let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
   let dd0 = Env.delta_depth_of_term g t0 in
   let dd1 = Env.delta_depth_of_term g t1 in
 
@@ -1044,7 +1046,7 @@ or   G |- t0 <: t1 | p
 
  *)
 let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
-  : result unit
+  : ML (result unit)
   = let err (lbl:string) =
         match rel with
         | EQUALITY ->
@@ -1066,7 +1068,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
     let head_matches t0 t1
-      : bool
+      : ML bool
       = let head0 = U.leftmost_head t0 in
         let head1 = U.leftmost_head t1 in
         match (U.un_uinst head0).n, (U.un_uinst head1).n with
@@ -1081,7 +1083,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     let which_side_to_unfold t0 t1 =
       maybe_relate_after_unfolding g.tcenv t0 t1 in
     let maybe_unfold_side side t0 t1
-      : option (term & term)
+      : ML (option (term & term))
       = Profiling.profile (fun _ ->
         match side with
         | Neither -> None
@@ -1120,7 +1122,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     in
     let fallback t0 t1 =
       if guard_ok
-      then if equatable g t0
+      then if equatable g t0 
             || equatable g t1
            then emit_guard t0 t1
            else err "not equatable"
@@ -1375,7 +1377,11 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               | SUBTYPING e ->
                 SUBTYPING
                   (if U.is_pure_or_ghost_comp c0
-                   then let? e in Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange)
+                   then match e with
+                        | None -> None
+                        | Some e ->
+                          let r = S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange in
+                          Some r
                    else None)
             in
             check_relation g rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
@@ -1387,7 +1393,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
 
       | Tm_match {scrutinee=e0;brs=brs0}, Tm_match {scrutinee=e1;brs=brs1} ->
         let relate_branch br0 br1 (_:unit)
-          : result unit
+          : ML (result unit)
           = match br0, br1 with
             | (p0, None, body0), (p1, None, body1) ->
               if not (S.eq_pat p0 p1)
@@ -1412,7 +1418,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       | _ -> fallback t0 t1
 
 and check_relation (g:env) (rel:relation) (t0 t1:typ)
-  : result unit
+  : ML (result unit)
   = if !dbg
     then (
       fun ctx cache ->
@@ -1436,7 +1442,7 @@ and check_relation (g:env) (rel:relation) (t0 t1:typ)
     )
 
 and check_relation_args (g:env) rel (a0 a1:args)
-  : result unit
+  : ML (result unit)
   = if List.length a0 = List.length a1
     then iter2 a0 a1
          (fun (t0, q0) (t1, q1) _ ->
@@ -1446,7 +1452,7 @@ and check_relation_args (g:env) rel (a0 a1:args)
     else fail_str "Unequal number of arguments"
 
 and check_relation_comp (g:env) rel (c0 c1:comp)
-  : result unit
+  : ML (result unit)
   = let destruct_comp c =
         if U.is_total_comp c
         then Some (E_Total, U.comp_result c)
@@ -1492,7 +1498,7 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
 
 
 and check_subtype (g:env) (e:option term) (t0 t1:typ)
-: result _
+: ML (result _)
   = fun ctx cache ->
     Profiling.profile
       (fun () ->
@@ -1505,7 +1511,7 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
       "FStarC.TypeChecker.Core.check_subtype"
 
 and memo_check (g:env) (e:term)
-  : result (tot_or_ghost & typ)
+  : ML (result (tot_or_ghost & typ))
   = let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
@@ -1531,11 +1537,11 @@ and memo_check (g:env) (e:term)
     ))
 
 and check' (msg:string) (g:env) (e:term)
-  : result (tot_or_ghost & typ)
+  : ML (result (tot_or_ghost & typ))
   = with_context msg (Some (CtxTerm e)) (fun _ -> memo_check g e)
 
 and check (msg:string) (g:env) (e:term)
-  : result (tot_or_ghost & typ)
+  : ML (result (tot_or_ghost & typ))
   = if !dbg
     then (
       fun ctx cache -> 
@@ -1553,7 +1559,7 @@ and check (msg:string) (g:env) (e:term)
     else check' msg g e
 
 and do_check_and_promote (g:env) (e:term)
-  : result (tot_or_ghost & typ)
+  : ML (result (tot_or_ghost & typ))
   = let! (eff, t) = do_check g e in
     let eff =
       match eff with
@@ -1563,7 +1569,7 @@ and do_check_and_promote (g:env) (e:term)
 
 (*  G |- e : Tot t | pre *)
 and do_check (g:env) (e:term)
-  : result (tot_or_ghost & typ) =
+  : ML (result (tot_or_ghost & typ)) =
   let e = Subst.compress e in
   match e.n with
   | Tm_lazy ({lkind=Lazy_embedding _}) ->
@@ -1729,7 +1735,7 @@ and do_check (g:env) (e:term)
     let rec check_branches path_condition
                            branch_typ_opt
                            branches
-      : result (tot_or_ghost & typ)
+      : ML (result (tot_or_ghost & typ))
       = match branches with
         | [] ->
           (match branch_typ_opt with
@@ -1813,7 +1819,7 @@ and do_check (g:env) (e:term)
     let rec check_branches (path_condition: S.term)
                            (branches: list S.branch)
                            (acc_eff: tot_or_ghost)
-      : result tot_or_ghost
+      : ML (result tot_or_ghost)
       = match branches with
         | [] ->
           (match boolean_negation_simp path_condition with
@@ -1870,8 +1876,8 @@ and do_check (g:env) (e:term)
     fail_str (Format.fmt1 "Unexpected term: %s" (tag_of e))
 
 and check_binders (g_initial:env) (xs:binders)
-  : result (list universe)
-  = let rec aux g xs =
+  : ML (result (list universe))
+  = let rec aux g xs : ML _ =
       match xs with
       | [] ->
         return []
@@ -1880,7 +1886,8 @@ and check_binders (g_initial:env) (xs:binders)
         let! _, t = check "binder sort" g x.binder_bv.sort in
         let! u = is_type g t in
         with_binders g [x] [u] (
-          let! us = aux (push_binder g x) xs in
+          let g' = push_binder g x in
+          let! us = aux g' xs in
           return (u::us)
         )
     in
@@ -1891,7 +1898,7 @@ and check_binders (g_initial:env) (xs:binders)
 // Caller should enforce Tot/GTot if needed
 //
 and check_comp (g:env) (c:comp)
-  : result universe
+  : ML (result universe)
   = match c.n with
     | Total t
     | GTotal t ->
@@ -1928,19 +1935,19 @@ and check_comp (g:env) (c:comp)
            )
 
 and universe_of (g:env) (t:typ)
-  : result universe
+  : ML (result universe)
   = let! _, t = check "universe of" g t in
     is_type g t
 
 and universe_of_well_typed_term (g:env) (t:typ)
-  : result universe
+  : ML (result universe)
   = try
       let u = FStarC.TypeChecker.TcTerm.universe_of g.tcenv t in
       return u
     with
     | _ -> universe_of g t
 
-and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
+and check_pat (g:env) (p:pat) (t_sc:typ) : ML (result (binders & universes)) =
   let unrefine_tsc t_sc =
     t_sc |> N.normalize_refinement N.whnf_steps g.tcenv
          |> U.unrefine in
@@ -2010,7 +2017,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
   | _ -> fail_str "check_pat called with a dot pattern"
 
 and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
-  : result precondition
+  : ML (result precondition)
   = let open Env in
     let err (s:string) =
       fail [
@@ -2065,7 +2072,7 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 and pattern_branch_condition (g:env)
                              (scrutinee:term)
                              (pat:pat)
-  : result (option term)
+  : ML (result (option term))
   = match pat.v with
     | Pat_var _ ->
       return None
@@ -2131,7 +2138,7 @@ and pattern_branch_condition (g:env)
       | [] -> return None
       | guards -> return (Some (U.mk_and_l guards))
 
-let initial_env g : env =
+let initial_env g : ML env =
   let max_index =
       List.fold_left
          (fun index b ->
@@ -2151,7 +2158,7 @@ let initial_env g : env =
 //   they are returned as is
 //
 let check_term_top' g e topt (must_tot:bool)
-  : result (tot_or_ghost & typ)
+  : ML (result (tot_or_ghost & typ))
   = let g = initial_env g in
     let! eff_te = check "top" g e in
     match topt with
@@ -2193,7 +2200,7 @@ let initial_cache : cache_t = {
 }
 
 let check_term_top g e topt (must_tot:bool)
-  : __result ((tot_or_ghost & S.typ) & precondition)
+  : ML (__result ((tot_or_ghost & S.typ) & precondition))
   = if !dbg_Eq
     then Format.print1 "(%s) Entering core ... \n"
                    (show (get_goal_ctr()));
@@ -2264,7 +2271,7 @@ let check_term_top g e topt (must_tot:bool)
     res
     )
 
-let return_my_guard_and_tok_t (g:precondition) (cache:cache_t) : option (typ & (unit -> unit)) =
+let return_my_guard_and_tok_t (g:precondition) (cache:cache_t) : ML (option (typ & (unit -> ML unit))) =
     let tok = mk_token cache in
     match g with
     | None -> 

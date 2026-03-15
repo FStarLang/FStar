@@ -19,7 +19,7 @@ let flex_uvar_head (t : FStarC_Syntax_Syntax.term) :
         uu___2.FStarC_Syntax_Syntax.n in
       (match uu___1 with
        | FStarC_Syntax_Syntax.Tm_uvar (u, uu___2) -> u
-       | uu___2 -> failwith "Not a flex-uvar")
+       | uu___2 -> FStarC_Effect.failwith "Not a flex-uvar")
 type goal_type =
   | FlexRigid of (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Syntax_Syntax.term)
   
@@ -99,10 +99,9 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
   | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Ctx_uvar_meta_attr a)
       ->
       let hooks =
-        let uu___ =
-          FStarC_Ident.string_of_lid
-            FStarC_Parser_Const.resolve_implicits_attr_string in
-        FStarC_TypeChecker_Env.lookup_attr env uu___ in
+        FStarC_TypeChecker_Env.lookup_attr env
+          (FStarC_Ident.string_of_lid
+             FStarC_Parser_Const.resolve_implicits_attr_string) in
       let candidates =
         FStarC_List.filter
           (fun hook ->
@@ -136,12 +135,13 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                       (match uu___1 with
                        | (FStarC_Syntax_Syntax.Tm_fvar fv,
                           uu___2::(a', uu___3)::(overrides, uu___4)::[]) when
-                           (FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.override_resolve_implicits_handler_lid)
-                             &&
-                             (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                env a a')
-                           ->
+                           let b1 =
+                             FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.override_resolve_implicits_handler_lid in
+                           let b2 =
+                             FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                               env a a' in
+                           if b1 then b2 else false ->
                            let uu___5 = attr_list_elements overrides in
                            (match uu___5 with
                             | FStar_Pervasives_Native.None -> false
@@ -150,17 +150,17 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                                   (fun n ->
                                      FStarC_Util.for_some
                                        (fun l ->
-                                          let uu___6 =
-                                            FStarC_Ident.string_of_lid l in
-                                          uu___6 = n) candidate_lids) names)
+                                          (FStarC_Ident.string_of_lid l) = n)
+                                       candidate_lids) names)
                        | (FStarC_Syntax_Syntax.Tm_fvar fv,
                           (a', uu___2)::(overrides, uu___3)::[]) when
-                           (FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.override_resolve_implicits_handler_lid)
-                             &&
-                             (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                env a a')
-                           ->
+                           let b1 =
+                             FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.override_resolve_implicits_handler_lid in
+                           let b2 =
+                             FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                               env a a' in
+                           if b1 then b2 else false ->
                            let uu___4 = attr_list_elements overrides in
                            (match uu___4 with
                             | FStar_Pervasives_Native.None -> false
@@ -169,9 +169,8 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                                   (fun n ->
                                      FStarC_Util.for_some
                                        (fun l ->
-                                          let uu___5 =
-                                            FStarC_Ident.string_of_lid l in
-                                          uu___5 = n) candidate_lids) names)
+                                          (FStarC_Ident.string_of_lid l) = n)
+                                       candidate_lids) names)
                        | uu___2 -> false))
                other.FStarC_Syntax_Syntax.sigattrs) candidates1 in
       let candidates2 =
@@ -191,22 +190,20 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
            ((let uu___2 =
                let uu___3 =
                  let uu___4 =
-                   FStarC_Errors_Msg.text
-                     "Multiple resolve_implicits hooks are eligible for attribute" in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___4
-                   (FStar_Pprint.doc_of_string attr) in
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 =
-                     FStarC_Errors_Msg.text
-                       "Please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates" in
-                   let uu___7 =
+                   let uu___5 =
                      FStarC_Class_PP.pp
                        (FStarC_Class_PP.pp_list FStarC_Ident.pretty_lident)
                        candidates3 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-                 [uu___5] in
-               uu___3 :: uu___4 in
+                   FStar_Pprint.op_Hat_Slash_Hat
+                     (FStarC_Errors_Msg.text
+                        "Please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates")
+                     uu___5 in
+                 [uu___4] in
+               (FStar_Pprint.op_Hat_Slash_Hat
+                  (FStarC_Errors_Msg.text
+                     "Multiple resolve_implicits hooks are eligible for attribute")
+                  (FStar_Pprint.doc_of_string attr))
+                 :: uu___3 in
              FStarC_Errors.raise_error FStarC_Syntax_Syntax.hasRange_ctx_uvar
                u FStarC_Errors_Codes.Warning_AmbiguousResolveImplicitsHook ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
@@ -223,17 +220,12 @@ let should_defer_uvar_to_user_tac (env : FStarC_TypeChecker_Env.env)
 let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
   (deferred_goals : FStarC_TypeChecker_Common.implicits)
   (tac : FStarC_Syntax_Syntax.sigelt) : unit=
-  let uu___ =
-    let uu___1 =
-      let uu___2 = FStarC_TypeChecker_Env.current_module env in
-      FStarC_Ident.string_of_lid uu___2 in
-    FStar_Pervasives_Native.Some uu___1 in
   FStarC_Profiling.profile
-    (fun uu___1 ->
+    (fun uu___ ->
        let resolve_tac =
          match tac.FStarC_Syntax_Syntax.sigel with
          | FStarC_Syntax_Syntax.Sig_let
-             { FStarC_Syntax_Syntax.lbs1 = uu___2;
+             { FStarC_Syntax_Syntax.lbs1 = uu___1;
                FStarC_Syntax_Syntax.lids1 = lid::[];_}
              ->
              let qn = FStarC_TypeChecker_Env.lookup_qname env lid in
@@ -241,12 +233,11 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
                FStarC_Syntax_Syntax.lid_as_fv lid
                  FStar_Pervasives_Native.None in
              let term =
-               let uu___3 =
-                 FStarC_Syntax_Syntax.lid_as_fv lid
-                   FStar_Pervasives_Native.None in
-               FStarC_Syntax_Syntax.fv_to_tm uu___3 in
+               FStarC_Syntax_Syntax.fv_to_tm
+                 (FStarC_Syntax_Syntax.lid_as_fv lid
+                    FStar_Pervasives_Native.None) in
              term
-         | uu___2 -> failwith "Resolve_tac not found" in
+         | uu___1 -> FStarC_Effect.failwith "Resolve_tac not found" in
        let env1 =
          {
            FStarC_TypeChecker_Env.solver =
@@ -347,7 +338,10 @@ let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
              (env.FStarC_TypeChecker_Env.missing_decl)
          } in
        env1.FStarC_TypeChecker_Env.try_solve_implicits_hook env1 resolve_tac
-         deferred_goals) uu___
+         deferred_goals)
+    (FStar_Pervasives_Native.Some
+       (FStarC_Ident.string_of_lid
+          (FStarC_TypeChecker_Env.current_module env)))
     "FStarC.TypeChecker.DeferredImplicits.solve_goals_with_tac"
 let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
   (g : FStarC_TypeChecker_Common.guard_t) :
@@ -356,7 +350,8 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
   then g
   else
     (let deferred = g.FStarC_TypeChecker_Common.deferred_to_tac in
-     let prob_as_implicit uu___1 =
+     let prob_as_implicit x =
+       let uu___1 = x in
        match uu___1 with
        | (uu___2, reason, prob) ->
            (match prob with
@@ -648,11 +643,13 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                                     else FStar_Pervasives_Native.None) in
                                (match sigelt with
                                 | FStar_Pervasives_Native.None ->
-                                    failwith
+                                    FStarC_Effect.failwith
                                       "Impossible: No tactic associated with deferred problem"
                                 | FStar_Pervasives_Native.Some se ->
                                     (imp, se)))))
-            | uu___3 -> failwith "Unexpected problem deferred to tactic") in
+            | uu___3 ->
+                FStarC_Effect.failwith
+                  "Unexpected problem deferred to tactic") in
      let eqs =
        let uu___1 =
          FStarC_Class_Listlike.to_list (FStarC_CList.listlike_clist ())
@@ -688,14 +685,14 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
              (fun uu___3 ->
                 match uu___3 with
                 | (i, s) ->
-                    let uu___4 = FStarC_Syntax_Util.lid_of_sigelt s in
-                    (match uu___4 with
+                    (match FStarC_Syntax_Util.lid_of_sigelt s with
                      | FStar_Pervasives_Native.None ->
-                         failwith "Unexpected: tactic without a name"
+                         FStarC_Effect.failwith
+                           "Unexpected: tactic without a name"
                      | FStar_Pervasives_Native.Some l ->
                          let lstr = FStarC_Ident.string_of_lid l in
-                         let uu___5 = FStarC_SMap.try_find map lstr in
-                         (match uu___5 with
+                         let uu___4 = FStarC_SMap.try_find map lstr in
+                         (match uu___4 with
                           | FStar_Pervasives_Native.None ->
                               FStarC_SMap.add map lstr ([i], s)
                           | FStar_Pervasives_Native.Some (is1, s1) ->

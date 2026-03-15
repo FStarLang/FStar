@@ -78,10 +78,10 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                   FStarC_Syntax_Embeddings.e_issue
                   FStarC_TypeChecker_NBETerm.e_issue
                   (fun level msg range number context ->
-                     let uu___14 = FStarC_Errors.issue_level_of_string level in
                      {
                        FStarC_Errors.issue_msg = msg;
-                       FStarC_Errors.issue_level = uu___14;
+                       FStarC_Errors.issue_level =
+                         (FStarC_Errors.issue_level_of_string level);
                        FStarC_Errors.issue_range = range;
                        FStarC_Errors.issue_number = number;
                        FStarC_Errors.issue_ctx = context

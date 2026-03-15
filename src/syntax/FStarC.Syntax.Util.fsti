@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Util
-
 open FStarC.Effect
 open FStarC.List
 
@@ -37,37 +36,37 @@ open FStarC.Class.Setlike
 
 (* A hook into FStarC.Syntax.Print, only for debugging and error messages.
  * The reference is set in FStarC.Main *)
-val tts_f : ref (option (term -> string))
-val tts (t:term) : string
-val ttd_f : ref (option (term -> Pprint.document))
-val ttd (t:term) : Pprint.document
+val tts_f : ref (option (term -> ML string))
+val tts (t:term) : ML string
+val ttd_f : ref (option (term -> ML Pprint.document))
+val ttd (t:term) : ML Pprint.document
 
-val mk_discriminator (lid:lident) : lident
+val mk_discriminator (lid:lident) : ML lident
 
 (* is uppercase name like Cons *)
-val is_name (lid:lident) : bool
+val is_name (lid:lident) : ML bool
 
 val aqual_of_binder (b:binder) : aqual
 
 val bqual_and_attrs_of_aqual (a:aqual) : bqual & list attribute
 
-val arg_of_non_null_binder (b:binder) : arg
+val arg_of_non_null_binder (b:binder) : ML arg
 
-val args_of_non_null_binders (binders:binders) : args
+val args_of_non_null_binders (binders:binders) : ML args
 
-val args_of_binders (binders:Syntax.binders) : (Syntax.binders & args)
+val args_of_binders (binders:Syntax.binders) : ML (Syntax.binders & args)
 
-val name_binders (bs:binders) : binders
+val name_binders (bs:binders) : ML binders
 
-val name_function_binders (t:term) : term
+val name_function_binders (t:term) : ML term
 
-val subst_of_list (formals:binders) (actuals:args) : subst_t
+val subst_of_list (formals:binders) (actuals:args) : ML subst_t
 
-val rename_binders (replace_xs:binders) (with_ys:binders) : subst_t
+val rename_binders (replace_xs:binders) (with_ys:binders) : ML subst_t
 
-val unmeta : term -> term
-val unmeta_safe : term -> term
-val unmeta_lift : term -> term
+val unmeta : term -> ML term
+val unmeta_safe : term -> ML term
+val unmeta_lift : term -> ML term
 
 (********************************************************************************)
 (*************************** Utilities for universes ****************************)
@@ -75,7 +74,7 @@ val unmeta_lift : term -> term
 (* kernel u = (k_u, n)
         where u is of the form S^n k_u
         i.e., k_u is the "kernel" and n is the offset *)
-val univ_kernel : universe -> universe & int
+val univ_kernel : universe -> ML (universe & int)
 
 //ordering on universes:
 //    constants come first, in order of their size
@@ -83,17 +82,17 @@ val univ_kernel : universe -> universe & int
 //    unification variables next, in lexical order of their kernels and their offsets
 //    max terms come last
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
-val compare_univs (u1 u2 : universe) : int
+val compare_univs (u1 u2 : universe) : ML int
 
-val eq_univs (u1 u2 : universe) : bool
+val eq_univs (u1 u2 : universe) : ML bool
 
-val eq_univs_list (us vs : universes) : bool
+val eq_univs_list (us vs : universes) : ML bool
 
 (********************************************************************************)
 (*********************** Utilities for computation types ************************)
 (********************************************************************************)
 
-val ml_comp (t:term) (r:range) : comp
+val ml_comp (t:term) (r:range) : ML comp
 
 val comp_effect_name (c:comp) : lident
 
@@ -112,84 +111,82 @@ val comp_eff_name_res_and_args (c:comp) : lident & typ & args
  *   have this exact shape
  *)
 val effect_indices_from_repr (repr:term) (is_layered:bool) (r:range) (err:string)
-: list term
+: ML (list term)
 
-val destruct_comp (c:comp_typ) : (universe & typ & typ)
+val destruct_comp (c:comp_typ) : ML (universe & typ & typ)
 
 val is_named_tot (c:comp) : bool
 
-val is_total_comp (c:comp) : bool
+val is_total_comp (c:comp) : ML bool
 
-val is_partial_return (c:comp) : bool
+val is_partial_return (c:comp) : ML bool
 
-val is_tot_or_gtot_comp (c:comp) : bool
+val is_tot_or_gtot_comp (c:comp) : ML bool
 
 val is_pure_effect (l:lident) : bool
 
-val is_pure_comp (c:comp) : bool
+val is_pure_comp (c:comp) : ML bool
 
 val is_ghost_effect (l:lident) : bool
 val is_div_effect (l:lident) : bool
-val is_pure_or_ghost_comp (c:comp) : bool
+val is_pure_or_ghost_comp (c:comp) : ML bool
 val is_pure_or_ghost_effect (l:lident) : bool
-val is_pure_or_ghost_function (t:typ) : bool
-val is_lemma_comp (c:comp) : bool
-val is_lemma (t:typ) : bool
+val is_pure_or_ghost_function (t:typ) : ML bool
 
-val head_of (t : term) : term
-val head_and_args (t : term) : term & args  // Destructs a single Tm_app
-val head_and_args_full (t : term) : term & args // Collects all Tm_app nodes
-val head_and_args_full_unmeta (t : term) : term & args
+val head_of (t : term) : ML term
+val head_and_args (t : term) : ML (term & args)  // Destructs a single Tm_app
+val head_and_args_full (t : term) : ML (term & args) // Collects all Tm_app nodes
+val head_and_args_full_unmeta (t : term) : ML (term & args)
 
-val leftmost_head (t : term) : term
+val leftmost_head (t : term) : ML term
 
-val leftmost_head_and_args (t : term) : term & args
+val leftmost_head_and_args (t : term) : ML (term & args)
 
-val un_uinst (t:term) : term
+val un_uinst (t:term) : ML term
 
-val is_ml_comp (c:comp) : bool
+val is_ml_comp (c:comp) : ML bool
 
 val comp_result (c:comp) : typ
 
-val set_result_typ (c:comp) (t:typ) : comp
+val set_result_typ (c:comp) (t:typ) : ML comp
 
-val is_trivial_wp (c:comp) : bool
+val is_trivial_wp (c:comp) : ML bool
 
 val comp_effect_args (c:comp) : args
 
 (********************************************************************************)
 (*               Simple utils on the structure of a term                        *)
 (********************************************************************************)
-val is_primop_lid : lident -> bool
-val is_primop : term -> bool
+val is_primop_lid : lident -> ML bool
+val is_primop : term -> ML bool
 
-val unascribe : term -> term
+val unascribe : term -> ML term
 
-val ascribe : term -> ascription -> term
+val ascribe : term -> ascription -> ML term
 
-val unfold_lazy : lazyinfo -> term
-val unlazy : term -> term
-val unlazy_emb : term -> term
-val unlazy_as_t : lazy_kind -> term -> 'a
-val mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term
+val unfold_lazy : lazyinfo -> ML term
+val unlazy : term -> ML term
+val unlazy_emb : term -> ML term
+val unlazy_as_t : lazy_kind -> term -> ML 'a
+val mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : ML term
 
-val canon_app : term -> term
+val canon_app : term -> ML term
 
-val unrefine : term -> term
+val unrefine : term -> ML term
 
-val is_uvar : term -> bool
+val is_uvar : term -> ML bool
 
-val is_unit : term -> bool
+val is_unit : term -> ML bool
 
-val is_eqtype_no_unrefine : term -> bool
+val is_eqtype_no_unrefine : term -> ML bool
 
-val is_fun : term -> bool
+val is_fun : term -> ML bool
 
-val is_function_typ : typ -> bool
+val is_function_typ : typ -> ML bool
 
-val pre_typ : typ -> typ
+val pre_typ : typ -> ML typ
 
-val destruct : typ -> lident -> option args
+val destruct : typ -> lident -> ML (option args)
 
 val lids_of_sigelt (se: sigelt) : list lident
 
@@ -201,11 +198,11 @@ val range_of_sigelt (x: sigelt) : range
 
 val range_of_arg : arg -> range
 
-val range_of_args : args -> range -> range
+val range_of_args : args -> range -> ML range
 
-val mk_app : term -> args -> term
+val mk_app : term -> args -> ML term
 
-val mk_app_binders : term -> binders -> term
+val mk_app_binders : term -> binders -> ML term
 
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
@@ -244,43 +241,43 @@ val field_projector_contains_constructor : string -> bool
 
 val mk_field_projector_name_from_string : string -> string -> string
 
-val mk_field_projector_name_from_ident : lident -> ident -> lident
+val mk_field_projector_name_from_ident : lident -> ident -> ML lident
 
-val mk_field_projector_name : lident -> bv -> int -> lident
+val mk_field_projector_name : lident -> bv -> int -> ML lident
 
-val ses_of_sigbundle (se:sigelt) :list sigelt
+val ses_of_sigbundle (se:sigelt) : ML (list sigelt)
 
-val set_uvar : uvar -> term -> unit
+val set_uvar : uvar -> term -> ML unit
 
-val qualifier_equal (q1 q2 : qualifier) : bool
+val qualifier_equal (q1 q2 : qualifier) : ML bool
 
 
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-val abs (bs:binders) (t:term) (lopt:option residual_comp) : term
+val abs (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
-val arrow_ln (bs:binders) (c:comp) : term
-val arrow (bs:binders) (c:comp) : term
-val flat_arrow (bs:binders) (c:comp) : term
+val arrow_ln (bs:binders) (c:comp) : ML term
+val arrow (bs:binders) (c:comp) : ML term
+val flat_arrow (bs:binders) (c:comp) : ML term
 
-val canon_arrow (t:term) : term
+val canon_arrow (t:term) : ML term
 
-val refine (b:bv) (t:term) : term
-val branch (b:branch) : branch // awful name
+val refine (b:bv) (t:term) : ML term
+val branch (b:branch) : ML branch // awful name
 
-val has_decreases (c:comp) : bool
+val has_decreases (c:comp) : ML bool
 
 (*
  * AR: this function returns the binders and comp result type of an arrow type,
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-val arrow_formals_comp_ln (k:term) : binders & comp
+val arrow_formals_comp_ln (k:term) : ML (binders & comp)
 
-val arrow_formals_comp (k:term) : binders & comp
-val arrow_formals_ln (k:term) : binders & typ
-val arrow_formals (k:term) : binders & typ
+val arrow_formals_comp (k:term) : ML (binders & comp)
+val arrow_formals_ln (k:term) : ML (binders & typ)
+val arrow_formals (k:term) : ML (binders & typ)
 
 (* let_rec_arity e f:
     if `f` is a let-rec bound name in e
@@ -290,13 +287,13 @@ val arrow_formals (k:term) : binders & typ
         3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
     This is used by NBE for detecting potential non-terminating loops
 *)
-val let_rec_arity (lb:letbinding) : int & option (list bool)
+val let_rec_arity (lb:letbinding) : ML (int & option (list bool))
 
-val abs_formals_maybe_unascribe_body : bool -> term -> binders & term & option residual_comp 
+val abs_formals_maybe_unascribe_body : bool -> term -> ML (binders & term & option residual_comp)
 
-val abs_formals (t:term) : binders & term & option residual_comp
+val abs_formals (t:term) : ML (binders & term & option residual_comp)
 
-val remove_inacc (t:term) : term
+val remove_inacc (t:term) : ML term
 
 val mk_letbinding
   (lbname : either bv fv)
@@ -317,9 +314,9 @@ val close_univs_and_mk_letbinding
   (def : term)
   (attrs : list term)
   (pos : range)
-  : letbinding
+  : ML letbinding
 
-val open_univ_vars_binders_and_comp (uvs:univ_names) (bs:binders) (c:comp) : univ_names & binders & comp
+val open_univ_vars_binders_and_comp (uvs:univ_names) (bs:binders) (c:comp) : ML (univ_names & binders & comp)
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
@@ -333,15 +330,15 @@ val is_forall    : lident -> bool
 val is_exists    : lident -> bool
 val is_qlid      : lident -> bool
 
-val lid_is_connective : lident -> bool
+val lid_is_connective : lident -> ML bool
 
-val is_constructor (t:term) (lid : lident) : bool
+val is_constructor (t:term) (lid : lident) : ML bool
 
-val is_constructed_typ (t:term) (lid : lident) : bool
+val is_constructed_typ (t:term) (lid : lident) : ML bool
 
-val get_tycon : term -> option term
+val get_tycon : term -> ML (option term)
 
-val is_fstar_tactics_by_tactic : term -> bool
+val is_fstar_tactics_by_tactic : term -> ML bool
 
 (********************************************************************************)
 (*********************** Constructors of common terms  **************************)
@@ -351,22 +348,22 @@ val ktype  : term
 val ktype0 : term
 
 //Type(u), where u is a new universe unification variable
-val type_u () : typ & universe
+val type_u () : ML (typ & universe)
 
-val type_with_u (u:universe) : typ
+val type_with_u (u:universe) : ML typ
 
 val attr_substitute : term
 
-val exp_bool (b:bool) : term
+val exp_bool (b:bool) : ML term
 val exp_true_bool : term
 val exp_false_bool : term
 val exp_unit : term
 (* Makes an (unbounded) integer from its string repr. *)
-val exp_int (s:string) : term
-val exp_char (c:FStar.Char.char) : term
-val exp_string (s:string) : term
+val exp_int (s:string) : ML term
+val exp_char (c:FStar.Char.char) : ML term
+val exp_string (s:string) : ML term
 
-val fvar_const (l:lid) : term
+val fvar_const (l:lid) : ML term
 val tand : term
 val tor : term
 val timp : term
@@ -387,104 +384,110 @@ val t_ctx_uvar_and_sust : term
 val t_universe_uvar : term
 val t_dsl_tac_typ : term
 
-val mk_conj_opt (phi1 : option term) (phi2 : term) : option term
-val mk_binop (op_t phi1 phi2 : term) : term
+val mk_conj_opt (phi1 : option term) (phi2 : term) : ML (option term)
+val mk_binop (op_t phi1 phi2 : term) : ML term
 
-val mk_neg : term -> term
-val mk_conj (phi1 phi2 : term) : term
-val mk_conj_l (phi : list term) : term
-val mk_disj (phi1 phi2 : term) : term
-val mk_disj_l (phi : list term) : term
-val mk_imp (phi1 phi2 : term) : term
-val mk_iff (phi1 phi2 : term) : term
+val mk_neg : term -> ML term
+val mk_conj (phi1 phi2 : term) : ML term
+val mk_conj_l (phi : list term) : ML term
+val mk_disj (phi1 phi2 : term) : ML term
+val mk_disj_l (phi : list term) : ML term
+val mk_imp (phi1 phi2 : term) : ML term
+val mk_iff (phi1 phi2 : term) : ML term
 
-val b2t (e:term) : term
-val unb2t (e:term) : option term
+val b2t (e:term) : ML term
+val unb2t (e:term) : ML (option term)
 
-val is_t_true (t:term) : bool
-val mk_conj_simp (t1 t2 : term) : term
-val mk_disj_simp (t1 t2 : term) : term
+val is_t_true (t:term) : ML bool
+val mk_conj_simp (t1 t2 : term) : ML term
+val mk_disj_simp (t1 t2 : term) : ML term
 
 val teq : term
-val mk_untyped_eq2 (e1 e2 : term) : term
-val mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term
+val mk_untyped_eq2 (e1 e2 : term) : ML term
+val mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : ML term
 
-val mk_eq3_no_univ (t1 t2 e1 e2 : term) : term
+val mk_eq3_no_univ (t1 t2 e1 e2 : term) : ML term
 
-val mk_has_type (t x t' : term) : term
+val mk_has_type (t x t' : term) : ML term
 
 val tforall : term 
 val texists : term 
 val t_haseq : term 
 
 val decidable_eq : term
-val mk_decidable_eq (t e1 e2 : term) : term
+val mk_decidable_eq (t e1 e2 : term) : ML term
 
 val b_and : term
 
-val mk_and (e1 e2 : term) : term
-val mk_and_l (es : list term) : term
-val mk_boolean_negation (b:term) : term
+val mk_and (e1 e2 : term) : ML term
+val mk_and_l (es : list term) : ML term
+val mk_boolean_negation (b:term) : ML term
 
 val mk_residual_comp (l:lident) (t: option typ) (f:list cflag) : residual_comp
 val residual_tot (t:typ) : residual_comp
 val residual_gtot (t:typ) : residual_comp
-val residual_comp_of_comp (c:comp) : residual_comp
+val residual_comp_of_comp (c:comp) : ML residual_comp
 
-val mk_forall_no_univ (x:bv) (body:typ) : typ
-val mk_forall (u:universe) (x:bv) (body:typ) : typ
+val mk_forall_no_univ (x:bv) (body:typ) : ML typ
+val mk_forall (u:universe) (x:bv) (body:typ) : ML typ
 
-val close_forall_no_univs (bs : list binder) (f : typ) : typ
+val close_forall_no_univs (bs : list binder) (f : typ) : ML typ
 
-val mk_exists_no_univ (x:bv) (body:typ) : typ
-val mk_exists (u:universe) (x:bv) (body:typ) : typ
+val mk_exists_no_univ (x:bv) (body:typ) : ML typ
+val mk_exists (u:universe) (x:bv) (body:typ) : ML typ
 
-val close_exists_no_univs (bs : list binder) (f : typ) : typ
+val close_exists_no_univs (bs : list binder) (f : typ) : ML typ
 
-val if_then_else (b t1 t2 : term) : term
+val if_then_else (b t1 t2 : term) : ML term
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
-val mk_squash (u:universe) (p:term) : term
+val mk_squash (u:universe) (p:term) : ML term
 
-val mk_auto_squash (u:universe) (p:term) : term
+val mk_auto_squash (u:universe) (p:term) : ML term
 
-val un_squash (t:term) : option term
+val un_squash (t:term) : ML (option term)
 
-val is_squash (t:term) : option (universe & term)
+val is_squash (t:term) : ML (option (universe & term))
 
-val is_auto_squash (t:term) : option (universe & term)
+val is_auto_squash (t:term) : ML (option (universe & term))
 
-val is_sub_singleton (t:term) : bool
+val is_sub_singleton (t:term) : ML bool
 
-val arrow_one_ln (t:typ) : option (binder & comp)
-val arrow_one (t:typ) : option (binder & comp)
+val arrow_one_ln (t:typ) : ML (option (binder & comp))
+val arrow_one (t:typ) : ML (option (binder & comp))
 
-val abs_one_ln (t:typ) : option (binder & term)
+val abs_one_ln (t:typ) : ML (option (binder & term))
 
-val is_free_in (bv:bv) (t:term) : bool
+val is_free_in (bv:bv) (t:term) : ML bool
 
-val action_as_lb (eff_lid:lident) (a:action) (pos:range) : sigelt
+val action_as_lb (eff_lid:lident) (a:action) (pos:range) : ML sigelt
 
 (* Some reification utilities *)
-val mk_reify (t:term) (lopt:option Ident.lident) : term
-val mk_reflect (t:term) : term
+val mk_reify (t:term) (lopt:option Ident.lident) : ML term
+val mk_reflect (t:term) : ML term
 
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct (e.g. dmff). *)
 
 val incr_delta_depth : delta_depth -> delta_depth
 
-val is_unknown (t:term) : bool
+val is_unknown (t:term) : ML bool
 
-val dm4f_lid (ed:eff_decl) (name:string) : lident
+val dm4f_lid (ed:eff_decl) (name:string) : ML lident
 
-val mk_list (typ:term) (rng:range) (l:list term) : term
+val mk_list (typ:term) (rng:range) (l:list term) : ML term
 
 // Checks for syntactic equality. A returned false doesn't guarantee anything.
 // We DO NOT OPEN TERMS as we descend on them, and just compare their bound variable
 // indices. We also ignore some parts of the syntax such universes and most annotations.
+
+(* generic *)
+val eqlist (eq : 'a -> 'a -> ML bool) (xs : list 'a) (ys : list 'a) : ML bool
+val eqsum (e1 : 'a -> 'a -> ML bool) (e2 : 'b -> 'b -> ML bool) (x : either 'a 'b) (y : either 'a 'b) : ML bool
+val eqprod (e1 : 'a -> 'a -> ML bool) (e2 : 'b -> 'b -> ML bool) (x : 'a & 'b) (y : 'a & 'b) : ML bool
+val eqopt (e : 'a -> 'a -> ML bool) (x : option 'a) (y : option 'a) : ML bool
 
 // Setting this ref to `true` causes messages to appear when
 // some discrepancy was found. This is useful when trying to debug
@@ -496,67 +499,64 @@ val mk_list (typ:term) (rng:range) (l:list term) : term
 // reason against it, so I don't have to go crazy again.
 val debug_term_eq : ref bool
 
-(* generic *)
-val eqlist (eq : 'a -> 'a -> bool) (xs : list 'a) (ys : list 'a) : bool
-val eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either 'a 'b) (y : either 'a 'b) : bool
-val eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a & 'b) (y : 'a & 'b) : bool
-val eqopt (e : 'a -> 'a -> bool) (x : option 'a) (y : option 'a) : bool
-
-val term_eq_dbg (dbg : bool) (t1 t2 : term) : bool
-val eq_aqual (a1 a2 : aqual) : bool
-val eq_bqual (b1 b2 : bqual) : bool
-val term_eq (t1 t2 : term) : bool
+val term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool
+val eq_aqual (a1 a2 : aqual) : ML bool
+val eq_bqual (b1 b2 : bqual) : ML bool
+val term_eq (t1 t2 : term) : ML bool
 
 // An estimation of the size of a term, only for debugging
-val sizeof (t:term) : int
+val sizeof (t:term) : ML int
 
-val is_fvar (lid:lident) (t:term) : bool
+val is_fvar (lid:lident) (t:term) : ML bool
 
-val is_synth_by_tactic (t:term) : bool
+val is_synth_by_tactic (t:term) : ML bool
 
-val has_attribute (attrs:list Syntax.attribute) (attr:lident) : bool
+val has_attribute (attrs:list Syntax.attribute) (attr:lident) : ML bool
 
 (* Checks whether the list of attrs contains an application of `attr`, and
  * returns the arguments if so. If there's more than one, the first one
  * takes precedence. *)
-val get_attribute (attr : lident) (attrs:list Syntax.attribute) : option args
+val get_attribute (attr : lident) (attrs:list Syntax.attribute) : ML (option args)
 
-val remove_attr (attr : lident) (attrs:list attribute) : list attribute
+val remove_attr (attr : lident) (attrs:list attribute) : ML (list attribute)
 
 ///////////////////////////////////////////
 // Setting pragmas
 ///////////////////////////////////////////
-val process_pragma (p:pragma) (r:range) : unit
+val process_pragma (p:pragma) (r:range) : ML unit
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-val unbound_variables (tm:term) : list bv
-val extract_attr' (attr_lid:lid) (attrs:list term) : option (list term & args)
+val unbound_variables (tm:term) : ML (list bv)
+val extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & args))
 
-val extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt & args)
+val extract_attr (attr_lid:lid) (se:sigelt) : ML (option (sigelt & args))
+
+val is_lemma_comp (c:comp) : bool
+val is_lemma (t:typ) : ML bool
 
 (* Utilities for working with Lemma's decorated with SMTPat *)
-val is_smt_lemma (t:term) : bool
+val is_smt_lemma (t:term) : ML bool
 
-val list_elements (e:term) : option (list term)
+val list_elements (e:term) : ML (option (list term))
 
 val destruct_lemma_with_smt_patterns (t:term)
-: option (binders & term & term & list (list arg))
+: ML (option (binders & term & term & list (list arg)))
 //binders, pre, post, patterns
 
 val triggers_of_smt_lemma (t:term)
-:  list (list lident) //for each disjunctive pattern
+: ML (list (list lident)) //for each disjunctive pattern
                             //for each conjunct
                             //triggers in a conjunt
 
 (* Takes a term of shape `fun x -> e` and returns `e` when
 `x` is not free in it. If it is free or the term
 has some other shape just apply it to `()`. *)
-val unthunk (t:term) : term
+val unthunk (t:term) : ML term
 
-val unthunk_lemma_post (t:term) : term
+val unthunk_lemma_post (t:term) : ML term
 
-val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
-: term
+val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> ML (list universe))
+: ML term
 
 (* End SMT Lemma utilities *)
 
@@ -573,16 +573,16 @@ val smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
 
 val effect_sig_ts (sig:effect_signature) : tscheme
 
-val apply_eff_sig (f:tscheme -> tscheme) : effect_signature -> effect_signature
+val apply_eff_sig (f:tscheme -> ML tscheme) : effect_signature -> ML effect_signature
 
-val eff_decl_of_new_effect (se:sigelt) :eff_decl
+val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 
 val is_layered (ed:eff_decl) : bool
 val is_dm4f (ed:eff_decl) : bool
 
-val apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators) : wp_eff_combinators
-val apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators) : layered_eff_combinators
-val apply_eff_combinators (f:tscheme -> tscheme) (combs:eff_combinators) : eff_combinators
+val apply_wp_eff_combinators (f:tscheme -> ML tscheme) (combs:wp_eff_combinators) : ML wp_eff_combinators
+val apply_layered_eff_combinators (f:tscheme -> ML tscheme) (combs:layered_eff_combinators) : ML layered_eff_combinators
+val apply_eff_combinators (f:tscheme -> ML tscheme) (combs:eff_combinators) : ML eff_combinators
 
 val get_layered_close_combinator (ed:eff_decl) : option tscheme
 val get_wp_close_combinator (ed:eff_decl) : option tscheme
@@ -599,23 +599,23 @@ val get_wp_ite_combinator (ed:eff_decl) : option tscheme
 val get_stronger_vc_combinator (ed:eff_decl) : tscheme & option indexed_effect_combinator_kind
 val get_stronger_repr (ed:eff_decl) : option tscheme
 
-val aqual_is_erasable (aq:aqual) : bool
+val aqual_is_erasable (aq:aqual) : ML bool
 
-val is_erased_head (t:term) : option (universe & term) 
+val is_erased_head (t:term) : ML (option (universe & term))
 
-val apply_reveal (u:universe) (ty:term) (v:term) : term
+val apply_reveal (u:universe) (ty:term) (v:term) : ML term
 
-val check_mutual_universes (lbs:list letbinding) : unit
+val check_mutual_universes (lbs:list letbinding) : ML unit
 
-val ctx_uvar_should_check (u:ctx_uvar) : should_check_uvar
-val ctx_uvar_typ (u:ctx_uvar) : term
-val ctx_uvar_typedness_deps (u:ctx_uvar) : list ctx_uvar
+val ctx_uvar_should_check (u:ctx_uvar) : ML should_check_uvar
+val ctx_uvar_typ (u:ctx_uvar) : ML term
+val ctx_uvar_typedness_deps (u:ctx_uvar) : ML (list ctx_uvar)
 
-val flatten_refinement : term -> term
+val flatten_refinement : term -> ML term
 
-val contains_strictly_positive_attribute (attrs:list attribute) : bool
+val contains_strictly_positive_attribute (attrs:list attribute) : ML bool
 
-val contains_unused_attribute (attrs:list attribute) : bool
+val contains_unused_attribute (attrs:list attribute) : ML bool
 
 //retains the original attributes as is, while deciding if they contains
 //the "strictly_positive" attribute
@@ -623,14 +623,14 @@ val contains_unused_attribute (attrs:list attribute) : bool
 //that are applied to the corresponding binder, which is used in embeddings
 //and Rel to construct binders from arguments alone
 val parse_positivity_attributes (attrs:list attribute)
-: option positivity_qualifier & list attribute
+: ML (option positivity_qualifier & list attribute)
 
 val encode_positivity_attributes (pqual:option positivity_qualifier) (attrs:list attribute)
-: list attribute
+: ML (list attribute)
 
 val is_binder_strictly_positive (b:binder) : bool
 val is_binder_unused (b:binder) : bool
 
-val deduplicate_terms (l:list term) : list term 
+val deduplicate_terms (l:list term) : ML (list term)
 
-val eq_binding (b1 b2 : binding) : bool
+val eq_binding (b1 b2 : binding) : ML bool

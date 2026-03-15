@@ -15,7 +15,7 @@ module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
-let should_unfold cfg should_reify fv qninfo : should_unfold_res =
+let should_unfold cfg should_reify fv qninfo : ML should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
       | None -> []

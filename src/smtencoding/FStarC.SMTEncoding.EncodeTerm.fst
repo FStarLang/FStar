@@ -139,7 +139,7 @@ let maybe_whnf env t =
   then None
   else Some t'
 
-let trivial_post t : Syntax.term =
+let trivial_post t : ML Syntax.term =
     U.abs [null_binder t]
              (Syntax.fvar Const.true_lid None)
              None
@@ -166,7 +166,7 @@ let isTotFun_axioms pos head extra_vars vars guards is_pure =
         | [] -> body
         | vs -> mkForall pos (pat, vs, body)
     in
-    let rec is_tot_fun_axioms ctx ctx_guard head vars guards =
+    let rec is_tot_fun_axioms ctx ctx_guard head vars guards : ML term =
         match vars, guards with
         | [], [] ->
           mkTrue
@@ -194,7 +194,7 @@ let isTotFun_axioms pos head extra_vars vars guards is_pure =
     in
     is_tot_fun_axioms [] mkTrue head vars guards
 
-let maybe_curry_app rng (head:either op term) (arity:int) (args:list term) : term =
+let maybe_curry_app rng (head:either op term) (arity:int) (args:list term) : ML term =
     let n_args = List.length args in
     match head with
     | Inr head -> //must curry
@@ -261,13 +261,13 @@ type label = (fv & string & Range.t)
 type labels = list label
 type pattern = {
   pat_vars: list (bv & fv);
-  pat_term: unit -> (term & decls_t);                   (* the pattern as a term(exp) *)
-  guard: term -> term;                                  (* the guard condition of the pattern, as applied to a particular scrutinee term(exp) *)
-  projections: term -> list (bv & term)                (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
+  pat_term: unit -> ML (term & decls_t);                   (* the pattern as a term(exp) *)
+  guard: term -> ML term;                                  (* the guard condition of the pattern, as applied to a particular scrutinee term(exp) *)
+  projections: term -> ML (list (bv & term))                (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
  }
 
 let as_function_typ env t0 =
-    let rec aux norm t =
+    let rec aux norm t : ML _ =
         let t = SS.compress t in
         match t.n with
             | Tm_arrow _ -> t
@@ -379,7 +379,7 @@ let rec encode_universe u =
   | U_unknown ->
     mk_U_unknown
 
-let rec encode_const c env =
+let rec encode_const c env : ML _ =
   Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
     | Const_unit -> mk_Term_unit, []
@@ -396,7 +396,7 @@ let rec encode_const c env =
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (Format.fmt1 "Unhandled constant: %s" (show c))
   )
-and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
+and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) : ML
                             (list fv                       (* translated bound variables *)
                             & list term                    (* guards *)
                             & env_t                         (* extended context *)
@@ -429,21 +429,21 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
     decls,
     List.rev names
 
-and encode_term_pred (fuel_opt:option term) (t:typ) (env:env_t) (e:term) : term & decls_t =
+and encode_term_pred (fuel_opt:option term) (t:typ) (env:env_t) (e:term) : ML (term & decls_t) =
     let t, decls = encode_term t env in
     mk_HasTypeWithFuel fuel_opt e t, decls
 
-and encode_arith_term env head args_e =
+and encode_arith_term env head args_e : ML _ =
     let arg_tms, decls = encode_args args_e env in
     let head_fv =
         match head.n with
         | Tm_fvar fv -> fv
         | _ -> failwith "Impossible"
     in
-    let unary unbox arg_tms =
+    let unary (unbox: _ -> ML _) arg_tms =
         unbox (List.hd arg_tms)
     in
-    let binary unbox arg_tms =
+    let binary (unbox: _ -> ML _) arg_tms =
         unbox (List.hd arg_tms),
         unbox (List.hd (List.tl arg_tms))
     in
@@ -452,13 +452,13 @@ and encode_arith_term env head args_e =
         let args = fuel_args@arg_tms in
         maybe_curry_app head.pos fname arity args
     in
-    let mk_l : (term -> term) -> ('a -> term) -> (list term -> 'a) -> list term -> term =
+    let mk_l : (term -> ML term) -> ('a -> ML term) -> (list term -> ML 'a) -> list term -> ML term =
       fun box op mk_args ts ->
           if Options.smtencoding_l_arith_native () then
              op (mk_args ts) |> box
           else mk_default ()
     in
-    let mk_nl box unbox nm op ts =
+    let mk_nl (box: _ -> ML term) unbox nm (op: _ -> ML term) ts : ML term =
       if Options.smtencoding_nl_arith_wrapped () then
           let t1, t2 = binary unbox ts in
           Util.mkApp(nm, [t1;t2]) |> box
@@ -466,13 +466,13 @@ and encode_arith_term env head args_e =
           op (binary unbox ts) |> box
       else mk_default ()
     in
-    let add box unbox = mk_l box Util.mkAdd (binary unbox)  in
-    let sub box unbox = mk_l box Util.mkSub (binary unbox) in
-    let minus box unbox = mk_l box Util.mkMinus (unary unbox) in
-    let mul box unbox nm = mk_nl box unbox nm Util.mkMul in
-    let div box unbox nm = mk_nl box unbox nm Util.mkDiv in
-    let modulus box unbox = mk_nl box unbox "_mod" Util.mkMod in
-    let ops =
+    let add (box: _ -> ML _) (unbox: _ -> ML _) = mk_l box Util.mkAdd (binary unbox)  in
+    let sub (box: _ -> ML _) (unbox: _ -> ML _) = mk_l box Util.mkSub (binary unbox) in
+    let minus (box: _ -> ML _) (unbox: _ -> ML _) = mk_l box Util.mkMinus (unary unbox) in
+    let mul (box: _ -> ML _) (unbox: _ -> ML _) nm = mk_nl box unbox nm Util.mkMul in
+    let div (box: _ -> ML _) (unbox: _ -> ML _) nm = mk_nl box unbox nm Util.mkDiv in
+    let modulus (box: _ -> ML _) (unbox: _ -> ML _) = mk_nl box unbox "_mod" Util.mkMod in
+    let ops : list (Ident.lident & (list term -> ML term)) =
         [(Const.op_Addition,    add Term.boxInt Term.unboxInt);
          (Const.op_Subtraction, sub Term.boxInt Term.unboxInt);
          (Const.op_Multiply,    mul Term.boxInt Term.unboxInt "_mul");
@@ -494,7 +494,7 @@ and encode_arith_term env head args_e =
     in
     op arg_tms, decls
 
- and encode_BitVector_term env head args_e =
+ and encode_BitVector_term env head args_e : ML _ =
     (*first argument should be the implicit vector size
       we do not want to encode this*)
     let (tm_sz, _) : arg = List.hd args_e in
@@ -556,7 +556,7 @@ and encode_arith_term env head args_e =
         Term.unboxBitVec sz (List.hd arg_tms),
         Term.unboxInt (List.hd (List.tl arg_tms))
     in
-    let mk_bv : ('a -> term) -> (list term -> 'a) -> (term -> term) -> list term -> term =
+    let mk_bv : ('a -> ML term) -> (list term -> ML 'a) -> (term -> ML term) -> list term -> ML term =
       fun op mk_args resBox ts ->
              op (mk_args ts) |> resBox
     in
@@ -589,7 +589,7 @@ and encode_arith_term env head args_e =
     let bv_not  = mk_bv Util.mkBvNot unary (Term.boxBitVec sz) in
     let to_int  = mk_bv Util.mkBvToNat unary Term.boxInt in
     let bv_to   = mk_bv (Util.mkNatToBv sz) unary_arith (Term.boxBitVec sz) in
-    let ops =
+    let ops : list (Ident.lident & (list term -> ML term)) =
         [(Const.bv_and_lid, bv_and);
          (Const.bv_xor_lid, bv_xor);
          (Const.bv_or_lid, bv_or);
@@ -621,7 +621,7 @@ and encode_arith_term env head args_e =
     in
     op arg_tms, sz_decls @ decls
 
-and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
+and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : ML (term & decls_t) =
     let env = {env with encoding_quantifier=true} in
     let tm, decls = encode_term t env in
     let vars = Term.free_variables tm in
@@ -653,7 +653,7 @@ and encode_deeply_embedded_quantifier (t:S.term) (env:env_t) : term & decls_t =
  *     deduplication of these happens in Encode.fs
  *       just before giving the decls to Z3 (see Encode.fs.recover_caching_and_update_env)
  *)
-and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
+and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects t to be in normal form already *)
                                      & decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
 
     def_check_scoped t.pos "encode_term" env.tcenv t;
@@ -857,7 +857,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               // universe parameters appear in a stable order.
               // The first occurrence (left-to-right) counts, so we start with the universes of the binders
               // and add the function universe at the end (which is a max, with sometimes unpredictable argument order).
-              let rec add_bv_sorts bvs acc =
+              let rec add_bv_sorts bvs acc : ML _ =
                 match bvs with
                 | bv::bvs ->
                   add_bv_sorts bvs (mkAnd (acc, mk_Term_type (encode_universe (env'.tcenv.universe_of env'.tcenv bv.sort))))
@@ -961,7 +961,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fstar_fvs, (env, fv_decls, fv_vars, fv_tms, fv_guards) =
                let fvs = Free.names t0 |> elems in
 
-               let getfreeV (t:term) : fv =
+               let getfreeV (t:term) : ML fv =
                  match t.tm with
                  | FreeV fv -> fv
                  | _ -> failwith "Impossible: getfreeV: gen_term_var should always returns a FreeV"
@@ -1502,8 +1502,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         encode_match e pats mk_Term_unit env encode_term
 
 and encode_let
-    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> term & decls_t)
-    -> term & decls_t
+    : bv -> typ -> S.term -> S.term -> env_t -> (S.term -> env_t -> ML (term & decls_t))
+    -> ML (term & decls_t)
     =
     fun x t1 e1 e2 env encode_body ->
         //setting the use_eq ascription flag to false,
@@ -1516,7 +1516,7 @@ and encode_let
         ee2, decls1@decls2
 
 and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
-                 (encode_br:S.term -> env_t -> (term & decls_t)) : term & decls_t =
+                 (encode_br:S.term -> env_t -> ML (term & decls_t)) : ML (term & decls_t) =
     let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
@@ -1540,7 +1540,7 @@ and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
     in
     mkLet' ([mk_fv (scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
-and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
+and encode_pat (env:env_t) (pat:S.pat) : ML (env_t & pattern) =
     if Debug.medium () then Format.print1 "Encoding pattern %s\n" (show pat);
     let vars, pat_term = FStarC.TypeChecker.Util.decorated_pattern_as_term pat in
 
@@ -1548,7 +1548,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
             let xx, _, env = gen_term_var env v in
             env, (v, mk_fv (xx, Term_sort))::vars) (env, []) in
 
-    let rec mk_guard pat (scrutinee:term) : term =
+    let rec mk_guard pat (scrutinee:term) : ML term =
         match pat.v with
         | Pat_var _
         | Pat_dot_term _ -> mkTrue
@@ -1569,7 +1569,7 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
             mk_and_l (is_f::sub_term_guards)
     in
 
-    let rec mk_projections pat (scrutinee:term) =
+    let rec mk_projections pat (scrutinee:term) : ML (list (bv & term)) =
         match pat.v with
         | Pat_dot_term _ -> []
         | Pat_var x -> [x, scrutinee]
@@ -1595,13 +1595,13 @@ and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
 
     env, pattern
 
-and encode_args (l:args) (env:env_t) : (list term & decls_t)  =
+and encode_args (l:args) (env:env_t) : ML (list term & decls_t)  =
     let l, decls = l |> List.fold_left
         (fun (tms, decls) (t, _) -> let t, decls' = encode_term t env in t::tms, decls@decls')
         ([], []) in
     List.rev l, decls
 
-and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decls_t =
+and encode_smt_patterns (pats_l:list (list S.arg)) env : ML (list (list term) & decls_t) =
     let env = {env with use_zfuel_name=true} in
     let encode_smt_pattern t =
         let head, args = U.head_and_args t in
@@ -1635,23 +1635,23 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
         pats::pats_l, decls)
     pats_l ([], [])
 
-and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
+and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
        if !dbg_SMTEncoding
        then Format.print2 "Formula (%s)  %s\n"
                      (tag_of phi)
                      (show phi) in
-    let enc (f:list term -> term) : Range.t -> args -> (term & decls_t) = fun r l ->
+    let enc (f:list term -> ML term) r l : ML (term & decls_t) =
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in
 
-    let const_op f r _ = (f r, []) in
-    let un_op f l = f <| List.hd l in
-    let bin_op : ((term & term) -> term) -> list term -> term = fun f -> function
+    let const_op (f: Range.range -> ML term) r _ : ML (term & decls_t) = (f r, []) in
+    let un_op (f: term -> ML term) l : ML term = f <| List.hd l in
+    let bin_op : ((term & term) -> ML term) -> list term -> ML term = fun f -> function
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
 
-    let enc_prop_c f : Range.t -> args -> (term & decls_t) = fun r l ->
+    let enc_prop_c (f: list term -> ML term) r l : ML (term & decls_t) =
         let decls, phis =
             BU.fold_map (fun decls (t, _) ->
                 let phi, decls' = encode_formula t env in
@@ -1662,14 +1662,14 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
     // This gets called for
     // eq2 : #a:Type -> a -> a -> Type
     // equals: #a:Type -> a -> a -> Type
-    let eq_op r args : (term & decls_t) =
+    let eq_op r args : ML (term & decls_t) =
         let rf = List.filter (fun (a,q) -> match q with | Some ({ aqual_implicit = true }) -> false | _ -> true) args in
         if List.length rf <> 2
         then failwith (Format.fmt1 "eq_op: got %s non-implicit arguments instead of 2?" (show (List.length rf)))
         else enc (bin_op mkEq) r rf
     in
 
-    let mk_imp r : Tot (args -> (term & decls_t)) = function
+    let mk_imp r = function
         | [(lhs, _); (rhs, _)] ->
           let l1, decls1 = encode_formula rhs env in
           begin match l1.tm with
@@ -1680,7 +1680,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite r: Tot (args -> (term & decls_t)) = function
+    let mk_ite r = function
         | [(guard, _); (_then, _); (_else, _)] ->
           let (g, decls1) = encode_formula guard env in
           let (t, decls2) = encode_formula _then env in
@@ -1691,8 +1691,8 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
         | _ -> failwith "impossible" in
 
 
-    let unboxInt_l : (list term -> term) -> list term -> term = fun f l -> f (List.map Term.unboxInt l) in
-    let connectives = [
+    let unboxInt_l (f: list term -> ML term) l : ML term = f (List.map Term.unboxInt l) in
+    let connectives : list (Ident.lident & (Range.range -> args -> ML (term & decls_t))) = [
         (Const.and_lid,   enc_prop_c (bin_op mkAnd));
         (Const.or_lid,    enc_prop_c (bin_op mkOr));
         (Const.imp_lid,   mk_imp);
@@ -1705,7 +1705,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
         (Const.false_lid, const_op Term.mkFalse);
     ] in
 
-    let rec fallback phi =  match phi.n with
+    let rec fallback phi : ML (term & decls_t) =  match phi.n with
         | Tm_meta {tm=phi'; meta=Meta_labeled(msg, r, b)} ->
           let phi, decls = encode_formula phi' env in
           mk (Term.Labeled(phi, msg, r)) r, decls
@@ -1821,7 +1821,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
           mkExists phi.pos (pats, vars, mkAnd(guard, body)), decls
 
 (* this assumes t is a Lemma *)
-let encode_function_type_as_formula (t:typ) (env:env_t) : term & decls_t =
+let encode_function_type_as_formula (t:typ) (env:env_t) : ML (term & decls_t) =
     let universe_of_binders binders = List.map (fun _ -> U_zero) binders in
     let quant = U.smt_lemma_as_forall t universe_of_binders in
     let env = {env with use_zfuel_name=true} in //see #1028; SMT lemmas should not violate the fuel instrumentation

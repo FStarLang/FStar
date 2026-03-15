@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,11 +39,11 @@ let init : ext_state =
 let cur_state = alloc init
 
 (* Set a key-value pair in the map *)
-let set (k:key) (v:value) : unit =
+let set (k:key) (v:value) : ML unit =
   cur_state := E (psmap_add (!cur_state).map k v)
 
 (* Get the value from the map, or return "" if not there *)
-let get (k:key) : value =
+let get (k:key) : ML value =
   let r = 
     match psmap_try_find (!cur_state).map k with
     | None -> ""
@@ -51,7 +51,7 @@ let get (k:key) : value =
   in
   r
 
-let enabled (k:key) : bool =
+let enabled (k:key) : ML bool =
   let v = get k in
   let v = String.lowercase v in
   v <> "" && not (v = "off" || v = "false" || v = "0")
@@ -65,7 +65,7 @@ let is_prefix (s1 s2 : string) : ML bool =
 
 (* Get a list of all KV pairs that "begin" with k, considered
 as a namespace. *)
-let getns (ns:string) : list (key & value) =
+let getns (ns:string) : ML (list (key & value)) =
   let f k v acc =
     if (ns^":") `is_prefix` k
     then (k, v) :: acc
@@ -73,16 +73,16 @@ let getns (ns:string) : list (key & value) =
   in
   psmap_fold (!cur_state).map f []
 
-let all () : list (key & value) =
+let all () : ML (list (key & value)) =
   let f k v acc = (k, v) :: acc in
   psmap_fold (!cur_state).map f []
 
-let save () : ext_state =
+let save () : ML ext_state =
   !cur_state
 
-let restore (s:ext_state) : unit =
+let restore (s:ext_state) : ML unit =
   cur_state := s;
   ()
 
-let reset () : unit =
+let reset () : ML unit =
   cur_state := init

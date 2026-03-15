@@ -25,7 +25,7 @@ open FStarC.Syntax.Print {}
 module RE = FStarC.Reflection.V2.Embeddings
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
-let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax.Syntax.term
+let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : ML Syntax.Syntax.term
   = match k with
     (* TODO: explain *)
     | Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
@@ -55,7 +55,7 @@ let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax
     | Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
     | Syntax.Syntax.Lazy_extension s      -> FStarC.Syntax.Util.exp_string (Format.fmt1 "((extension %s))" s)
 
-let () =
+let _ =
   Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
   Errors.set_parse_warn_error Parser.ParseIt.parse_warn_error;
   Syntax.Syntax.lazy_chooser := Some lazy_chooser;
