@@ -1695,6 +1695,47 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
  * get_parsing_data_from_cache is a callback passed by caller
  *   to read the parsing data from checked files
  *)
+
+(** Recursively find all F* files in a directory *)
+let rec all_fstar_files_in_dir (dir:string) : ML (list file_name) =
+  let files = safe_readdir_for_include dir in
+  List.collect (fun f ->
+    let full_path = Filepath.join_paths dir f in
+    if Filepath.is_directory full_path then
+      all_fstar_files_in_dir full_path
+    else if List.existsb (fun ext -> Util.ends_with f ext) (all_file_suffixes ()) then
+      [full_path]
+    else
+      []
+  ) files
+
+(** Expand any directories in the command line file list to their contained F* files.
+    When a module has both .fst and .fsti, only include the .fsti to avoid 
+    "breaking abstraction" errors. *)
+let expand_directories (files: list file_name) : ML (list file_name) =
+  let all_files = List.collect (fun f ->
+    if Filepath.is_directory f then
+      all_fstar_files_in_dir f
+    else
+      [f]
+  ) files in
+  (* Filter out .fst files when corresponding .fsti exists *)
+  let fsti_set : RBSet.t string = 
+    List.fold_left (fun acc f ->
+      if Util.ends_with f ".fsti" then
+        let base = String.substring f 0 (String.length f - 1) in (* remove trailing 'i' to get .fst *)
+        RBSet.add base acc
+      else acc
+    ) (RBSet.empty ()) all_files
+  in
+  List.filter (fun f ->
+    if Util.ends_with f ".fst" && not (Util.ends_with f ".fsti") then
+      (* Only keep .fst if there's no corresponding .fsti *)
+      not (RBSet.mem f fsti_set)
+    else
+      true
+  ) all_files
+
 (* In public interface *)
 let collect (all_cmd_line_files: list file_name)
             (get_parsing_data_from_cache:string -> ML (option parsing_data))
@@ -1702,6 +1743,8 @@ let collect (all_cmd_line_files: list file_name)
     & deps) //topologically sorted transitive dependences of all_cmd_line_files
     =
   Stats.record "Parser.Dep.collect" fun () ->
+  (* Expand any directories to their contained F* files *)
+  let all_cmd_line_files = expand_directories all_cmd_line_files in
   let all_cmd_line_files =
     match all_cmd_line_files with
     | [] -> all_files_in_include_paths ()
@@ -2289,6 +2332,250 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
 
     FStarC.StringBuffer.output_channel outc sb
 
+(** Print the dependencies in dune format.
+    When --output_ext is set, controls what targets are emitted:
+    - Extensions ending in "checked": build/check rules (.fst → .fst.checked)
+    - Other extensions (ml, krml): extraction rules (.fst.checked → .ml)
+    When --output_ext is not set: mixed rules (backward compat).
+  *)
+let print_dune (outc : out_channel) (deps:deps) : ML unit =
+    let sb = FStarC.StringBuffer.create 10000 in
+    let pr str = ignore <| FStarC.StringBuffer.add str sb in
+    
+    let output_ext = Options.output_ext () in
+    
+    (* Is this an extraction phase? (output-ext is ml, krml, etc.) *)
+    let is_extract_phase =
+        match output_ext with
+        | Some ext -> not (BU.ends_with ext "checked" || BU.ends_with ext "checked.lax")
+        | None -> false
+    in
+    
+    (* Replace the F* source suffix (.fst/.fsti) with a new extension *)
+    let replace_suffix (f:string) (new_ext:string) : ML string =
+        let base = Filepath.basename f in
+        match check_and_strip_suffix base with
+        | Some stem -> stem ^ "." ^ new_ext
+        | None -> base ^ "." ^ new_ext
+    in
+    
+    (* Collect flags to forward into generated rules.
+       We take all argv flags except --dep/--already_cached/--output_ext and
+       positional file/directory arguments. *)
+    let forwarded_flags =
+        let args = BU.get_cmd_args () in
+        (* Drop the executable name *)
+        let args = match args with | _::tl -> tl | [] -> [] in
+        let rec collect acc = function
+          | [] -> List.rev acc
+          (* Skip --dep and its argument *)
+          | "--dep"::_::rest -> collect acc rest
+          (* Skip --already_cached and its argument *)
+          | "--already_cached"::_::rest -> collect acc rest
+          (* Skip --output_ext and its argument (both dash and underscore forms) *)
+          | "--output_ext"::_::rest -> collect acc rest
+          | "--output-ext"::_::rest -> collect acc rest
+          (* Keep flags and their arguments *)
+          | flag::rest when BU.starts_with flag "-" ->
+            begin match rest with
+            | arg::rest' when not (BU.starts_with arg "-") && arg <> "" ->
+              collect ((" " ^ arg)::(" " ^ flag)::acc) rest'
+            | _ ->
+              collect ((" " ^ flag)::acc) rest
+            end
+          (* Skip positional arguments (file/directory paths) *)
+          | _::rest -> collect acc rest
+        in
+        String.concat "" (collect [] args)
+    in
+    
+    let keys = deps_keys deps.dep_graph in
+    (* For dune: put checked files in current directory, not next to source *)
+    let local_cache_file (f:string) : ML string =
+        let base = Filepath.basename f in
+        if Options.lax() then base ^ ".checked.lax" else base ^ ".checked"
+    in
+    
+    (* Format a dep: all files become local basename *)
+    let format_dep (f:string) : ML string =
+        Filepath.basename f
+    in
+    
+    (* Compute the extraction target for a source file, if codegen is set.
+       Used only in default mixed mode (no --output_ext). *)
+    let extraction_target (source : string) : ML (option string) =
+        match Options.codegen () with
+        | Some Options.OCaml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".ml")
+            else None
+        | Some Options.Krml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".krml")
+            else None
+        | _ -> None
+    in
+    
+    (* Print a rule for default mixed mode: checking and optionally extracting *)
+    let print_mixed_rule (target : string) (source : string) (all_deps : list string) : ML unit =
+        let extra_target = extraction_target source in
+        pr "(rule\n";
+        pr " (targets "; pr target;
+        (match extra_target with | Some t -> pr " "; pr t | None -> ());
+        pr ")\n";
+        pr " (deps"; 
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    (* Print a rule for the build phase: source → checked *)
+    let print_build_rule (source : string) (all_deps : list string) : ML unit =
+        let ext = Option.must output_ext in
+        let target = replace_suffix source ext in
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps";
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    (* Print a rule for the extraction phase: checked → ml/krml *)
+    let print_extract_rule (source : string) (all_deps : list string) : ML unit =
+        let ext = Option.must output_ext in
+        let target = replace_suffix source ext in
+        (* Convert all source deps to their checked versions *)
+        let checked_deps =
+            (source :: all_deps) |> List.map (fun f ->
+                let base = Filepath.basename f in
+                if BU.ends_with base ".checked" || BU.ends_with base ".checked.lax"
+                then base
+                else local_cache_file f
+            )
+        in
+        (* Deps: source file + checked source + checked transitive deps *)
+        let all_dep_strs = format_dep source :: checked_deps in
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps";
+        (remove_dups_fast all_dep_strs) |> List.iter (fun f -> pr " "; pr f);
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
+    
+    (* Collect all target files *)
+    let all_target_files =
+        keys |>
+        List.fold_left
+        (fun all_target_files file_name ->
+          let process_one_key () =
+            (* In extract phase, skip non-implementation files *)
+            if is_extract_phase && not (is_implementation file_name) then
+              all_target_files
+            else begin
+            let dep_node = deps_try_find deps.dep_graph file_name |> Option.must in
+            let iface_fn, iface_deps =
+                if is_interface file_name
+                then None, None
+                else match interface_of deps (lowercase_module_name file_name) with
+                     | None ->
+                       None, None
+                     | Some iface ->
+                       Some iface,
+                       Some ((Option.must (deps_try_find deps.dep_graph iface)).edges)
+            in
+            let iface_deps =
+                Option.map (List.filter
+                             (fun iface_dep ->
+                                not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
+                           iface_deps
+            in
+            let files =
+              List.map
+                (file_of_dep_aux true deps.file_system_map deps.cmd_line_files)
+                dep_node.edges
+            in
+            let files =
+                match iface_deps with
+                | None -> files
+                | Some iface_deps ->
+                  let iface_files =
+                      List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
+                  in
+                  remove_dups_fast (files @ iface_files)
+            in
+            let files =
+              if iface_fn |> Some? then
+                let iface_fn = iface_fn |> Option.must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (local_cache_file iface_fn)::files)
+              else files in
+
+            (* Filter out deps on already-cached modules; fstar resolves them
+               at runtime via --already_cached, so dune need not track them. *)
+            let files =
+              files |> List.filter (fun f ->
+                let base = Filepath.basename f in
+                (* Strip .checked / .checked.lax suffix to recover source name *)
+                let src =
+                  if BU.ends_with base ".checked.lax" then String.substring base 0 (String.length base - 12)
+                  else if BU.ends_with base ".checked" then String.substring base 0 (String.length base - 8)
+                  else base
+                in
+                match check_and_strip_suffix src with
+                | Some mname -> not (Options.should_be_already_cached mname)
+                | None -> true (* keep non-module deps *)
+              )
+            in
+
+            let target_file =
+                match output_ext with
+                | Some ext -> replace_suffix file_name ext
+                | None -> local_cache_file file_name
+            in
+
+            let all_target_files =
+                if not (Options.should_be_already_cached (module_name_of_file file_name))
+                then begin
+                  if is_extract_phase then
+                    print_extract_rule file_name files
+                  else if Some? output_ext then
+                    print_build_rule file_name (file_name :: files)
+                  else
+                    print_mixed_rule (local_cache_file file_name) file_name (file_name :: files);
+                  target_file::all_target_files
+                end
+                else all_target_files
+            in
+
+            all_target_files
+            end
+          in
+          profile process_one_key "FStarC.Parser.Dep.print_dune.process_one_key")
+          []
+    in
+    
+    pr "; File lists (for reference)\n";
+    pr "; ALL_TARGET_FILES:";
+    all_target_files |> List.iter (fun f -> pr " "; pr f);
+    pr "\n";
+
+    FStarC.StringBuffer.output_channel outc sb
+
 let do_print (outc : out_channel) (fn : string) deps : ML unit =
   let pref () =
     BU.fprint outc "# This .depend was generated by F* %s\n" [!Options._version];
@@ -2299,6 +2586,15 @@ let do_print (outc : out_channel) (fn : string) deps : ML unit =
     BU.fprint outc "\n" [];
     ()
   in
+  let dune_pref () =
+    BU.fprint outc "; This dune file was generated by F* %s\n" [BU.trim_string !Options._version];
+    BU.fprint outc "; Executable: %s\n" [show BU.exec_name];
+    BU.fprint outc "; Hash: %s\n" [BU.trim_string !Options._commit];
+    BU.fprint outc "; Running in directory %s\n" [show (Filepath.normalize_file_path (BU.getcwd ()))];
+    BU.fprint outc "; Command line arguments: \"%s\"\n" [show (BU.get_cmd_args ())];
+    BU.fprint outc "\n" [];
+    ()
+  in
   match Options.dep() with
   | Some "make" ->
       pref ();
@@ -2306,6 +2602,9 @@ let do_print (outc : out_channel) (fn : string) deps : ML unit =
   | Some "full" ->
       pref ();
       profile (fun () -> print_full outc deps) "FStarC.Parser.Deps.print_full_deps"
+  | Some "dune" ->
+      dune_pref ();
+      profile (fun () -> print_dune outc deps) "FStarC.Parser.Deps.print_dune_deps"
   | Some "graph" ->
       print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->

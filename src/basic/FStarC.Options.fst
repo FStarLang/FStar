@@ -259,6 +259,7 @@ let defaults = [
   ("no_smt"                                    , Bool false);
   ("no_tactics"                                , Bool false);
   ("output_deps_to"                            , Unset);
+  ("output_ext"                                , Unset);
   ("output_to"                                 , Unset);
   ("pretype"                                   , Bool true);
   ("prims_ref"                                 , Unset);
@@ -516,6 +517,7 @@ let get_normalize_pure_terms_for_extraction
 let get_output_to               ()      = lookup_opt "output_to"                (as_option as_string)
 let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
+let get_output_ext              ()      = lookup_opt "output_ext"               (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -914,12 +916,13 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "dep",
-    EnumStr ["make"; "graph"; "full"; "raw"],
-    text "Output the transitive closure of the full dependency graph in three formats:"
+    EnumStr ["make"; "graph"; "full"; "raw"; "dune"],
+    text "Output the transitive closure of the full dependency graph in several formats:"
     ^^ bulleted [
          text "'graph': a format suitable the 'dot' tool from 'GraphViz'";
          text "'full': a format suitable for 'make', including dependences for producing .ml and .krml files";
          text "'make': (deprecated) a format suitable for 'make', including only dependences among source files";
+         text "'dune': a format suitable for 'dune', outputting (rule ...) stanzas";
        ]);
 
   ( noshort,
@@ -1211,6 +1214,13 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     "output_deps_to",
     PathStr "file",
     text "[Deprecated: use -o instead.] Output the result of --dep into this file instead of to standard output.");
+
+  ( noshort,
+    "output_ext",
+    SimpleStr "ext",
+    text "When used with --dep dune, controls the target file extension in generated rules. \
+         The source file's extension is replaced by this value. \
+         For example, --output-ext fst.checked turns Hello.fst into Hello.fst.checked.");
 
   ( noshort,
     "prims",
@@ -2141,6 +2151,7 @@ let ( ||| ) o x =
 let output_to                    () = get_output_to                   ()
 let krmloutput                   () = get_krmloutput                  () ||| output_to ()
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
+let output_ext                   () = get_output_ext                  ()
 
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
