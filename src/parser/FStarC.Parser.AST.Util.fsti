@@ -39,13 +39,13 @@ type extension_parser = {
   parse_decl_name:
     (contents:string ->
      FStarC.Range.t ->
-     either error_message FStarC.Ident.ident);
+     ML (either error_message FStarC.Ident.ident));
 
   parse_decl:
    (open_namespaces_and_abbreviations ->
     contents:string ->
     p:FStarC.Range.t ->
-    either error_message decl)
+    ML (either error_message decl))
 }
 
 val register_extension_parser (extension_name:string) (parser:extension_parser) : ML unit
@@ -56,7 +56,7 @@ type extension_lang_parser = {
   parse_decls:
    (contents:string ->
     p:FStarC.Range.t ->
-    either error_message (list decl))
+    ML (either error_message (list decl)))
 }
 
 val as_open_namespaces_and_abbrevs (ls:list decl) : ML open_namespaces_and_abbreviations
