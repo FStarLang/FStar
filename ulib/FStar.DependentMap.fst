@@ -48,7 +48,7 @@ let sel_upd_other
      = ()
 
 let equal (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value) =
-  forall k. sel m1 k == sel m2 k
+  forall k. {:nopattern} sel m1 k == sel m2 k
 
 let equal_intro (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value) = ()
 

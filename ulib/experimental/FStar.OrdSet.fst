@@ -21,15 +21,15 @@ type ordset a f = l:(list a){sorted f l}
 let hasEq_ordset _ _ = ()
     
 let rec simple_induction #t #f (p: ordset t f -> Type0) (x: ordset t f)
-  : Lemma (requires p [] /\ (forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l))
+  : Lemma (requires p [] /\ (forall (l: ordset t f{Cons? l}). {:nopattern} p (Cons?.tl l) ==> p l))
           (ensures p x) = match x with
   | [] -> ()
   | ph::pt -> simple_induction p pt;
             assert (p (Cons?.tl (ph::pt)))
   
 let rec base_induction #t #f (p: ordset t f -> Type0) (x: ordset t f)
-  : Lemma (requires (forall (l: ordset t f{List.Tot.Base.length l < 2}). p l) 
-                  /\ (forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l))
+  : Lemma (requires (forall (l: ordset t f{List.Tot.Base.length l < 2}). {:nopattern} p l) 
+                  /\ (forall (l: ordset t f{Cons? l}). {:nopattern} p (Cons?.tl l) ==> p l))
           (ensures p x) 
           (decreases List.Tot.Base.length x) = 
   if List.Tot.Base.length x < 2 then ()
@@ -48,7 +48,7 @@ let mem #_ #_ x s = List.Tot.mem x s
    but we additionally supply them with relevant postconditions that come 
    from s being an ordset. *)
 let rec last_direct #a #f (s: ordset a f{s <> empty}) 
-  : (x:a{mem x s /\ (forall (z:a{mem z s}). f z x)}) 
+  : (x:a{mem x s /\ (forall (z:a{mem z s}). {:nopattern} f z x)}) 
   = match s with
   | [x] -> x  
   | h::g::t -> last_direct (tail s)
@@ -63,7 +63,7 @@ let last_eq #a #f (s: ordset a f{s <> empty})
 let last #a #f s = last_eq s; last_lib s
 
 let rec liat_direct #a #f (s: ordset a f{s <> empty}) : (l:ordset a f{
-    (forall x. mem x l = (mem x s && (x <> last s))) /\
+    (forall x. {:nopattern} mem x l = (mem x s && (x <> last s))) /\
     (if tail s <> empty then head s = head l else true)
   }) =  
   match s with
@@ -113,7 +113,7 @@ let insert_sub (#a:eqtype) #f x (s:ordset a f) test
   simple_induction (fun p -> mem test (insert' x p) = (mem test p || test = x)) s
 
 let rec distinct_props #a (f:cmp a) (l: list a) 
-  : Lemma (forall x. (mem x (distinct' f l) = List.Tot.Base.mem x l)) = 
+  : Lemma (forall x. {:nopattern} (mem x (distinct' f l) = List.Tot.Base.mem x l)) = 
   match l with 
   | [] -> ()
   | x::t -> distinct_props f t;
@@ -218,9 +218,9 @@ let mem_implies_f #a #f (s: ordset a f) (x:a)
    upon inspecting the head of [3;4;5]. 
 *)
 let rec smart_intersect #a #f (s1 s2: ordset a f) : Tot (z:ordset a f{
-    (forall x. mem x z = (mem x s1 && mem x s2)) /\
-    (forall (x:a{sorted f (x::s1)}). sorted f (x::z)) /\
-    (forall (x:a{sorted f (x::s2)}). sorted f (x::z)) 
+    (forall x. {:nopattern} mem x z = (mem x s1 && mem x s2)) /\
+    (forall (x:a{sorted f (x::s1)}). {:nopattern} sorted f (x::z)) /\
+    (forall (x:a{sorted f (x::s2)}). {:nopattern} sorted f (x::z)) 
   }) (decreases size' s1 + size' s2) = 
   match s1 with 
   | [] -> []
@@ -268,12 +268,12 @@ let not_mem_of_tail #a #f (s: ordset a f{size s > 0}) (x:a)
   = simple_induction (fun s -> mem x s ==> f (head s) x) s
 
 let rec set_props #a #f (s:ordset a f) 
-  : Lemma (if size s > 0 then ((forall x. mem x (tail s) ==> f (head s) x /\ head s <> x)) 
-           else forall x. not (mem x s))
+  : Lemma (if size s > 0 then ((forall x. {:nopattern} mem x (tail s) ==> f (head s) x /\ head s <> x)) 
+           else forall x. {:nopattern} not (mem x s))
   = if (size s > 1) then set_props (tail s)
 
 let rec same_members_means_eq #a #f (s1 s2: ordset a f)
-  : Lemma (requires forall x. mem x s1 = mem x s2) (ensures s1 == s2) = 
+  : Lemma (requires forall x. {:nopattern} mem x s1 = mem x s2) (ensures s1 == s2) = 
   match s1 with
   | [] -> if size s2>0 then assert (mem (head s2) s2) 
   | h1::t1 -> set_props s1;
@@ -291,7 +291,7 @@ let remove_until_gt_exclusion #a #f (s:ordset a f) (x:a) (test:a)
   remove_until_gt_mem s x test 
       
 let rec mem_implies_subset #a #f (s1 s2: ordset a f)
-  : Lemma ((forall x. mem x s1 ==> mem x s2) ==> subset s1 s2)
+  : Lemma ((forall x. {:nopattern} mem x s1 ==> mem x s2) ==> subset s1 s2)
   = match s1 with 
   | [] -> ()
   | h1::(t1:ordset a f) -> set_props s1;
@@ -301,7 +301,7 @@ let rec mem_implies_subset #a #f (s1 s2: ordset a f)
                          then mem_implies_subset s1 (tail s2)
 
 let rec subset_implies_mem #a #f (p q: ordset a f)
-  : Lemma (subset p q ==> (forall x. mem x p ==> mem x q)) = 
+  : Lemma (subset p q ==> (forall x. {:nopattern} mem x p ==> mem x q)) = 
  if Cons? p && Cons? q then 
    if head p = head q
    then subset_implies_mem (tail p) (tail q)
@@ -318,7 +318,7 @@ let head_is_never_in_tail #a #f (s:ordset a f{size s > 0})
   : Lemma (not (mem (head s) (tail s))) = set_props s
 
 let rec smart_minus #a #f (p q: ordset a f) 
-  : z:ordset a f { ( forall x. mem x z = (mem x p && (not (mem x q)))) /\
+  : z:ordset a f { ( forall x. {:nopattern} mem x z = (mem x p && (not (mem x q)))) /\
                    (match p,z with 
                     | ph::pt, zh::zt -> f ph zh
                     | ph::pt, [] -> subset p q
@@ -434,7 +434,7 @@ let fold #a #acc #f g init s = List.Tot.fold_left g init s
 private
 let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
   : Pure (ordset b fb)
-    (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+    (requires (forall x y. {:nopattern} (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
     (ensures (fun sb -> Cons? sb ==> Cons? sa /\ Cons?.hd sb == g (Cons?.hd sa)))
 = match sa with
   | [] -> []
@@ -446,12 +446,12 @@ let rec map_internal (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordse
     else ys
 
 let rec map_size (#a #b:eqtype) (#fa:cmp a) (#fb: cmp b) (g: a->b) (sa:ordset a fa)
-  : Lemma (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+  : Lemma (requires (forall x y. {:nopattern} (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
           (ensures size (map_internal #a #b #fa #fb g sa) <= size sa) 
   = if size sa > 0 then map_size #a #b #fa #fb g (tail sa)
 
 let rec map_as_list (#a #b:eqtype) (#fa:cmp a) (#fb: cmp b) (g: a->b) (sa:ordset a fa)
-  : Lemma (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+  : Lemma (requires (forall x y. {:nopattern} (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
           (ensures as_list (map_internal #a #b #fa #fb g sa) == FStar.List.Tot.map g (as_list sa)) = 
   match sa with
   | [] -> ()
@@ -464,7 +464,7 @@ let map #a #b #fa #fb g sa =
 
 let lemma_strict_subset_size #a #f s1 s2 = 
   let eql (p q: ordset a f) 
-    : Lemma (requires forall x. mem x p = mem x q) 
+    : Lemma (requires forall x. {:nopattern} mem x p = mem x q) 
             (ensures p=q) 
     = eq_lemma p q in Classical.move_requires_2 eql s1 s2;
   eliminate exists x. mem x s2 && not (mem x s1) 
@@ -479,7 +479,7 @@ let lemma_minus_mem #a #f s1 s2 x = ()
  
 let rec strict_subset_implies_diff_element #a #f (s1 s2: ordset a f) 
   : Lemma (requires strict_subset s1 s2)
-          (ensures exists x. (mem x s2 /\ not (mem x s1))) = 
+          (ensures exists x. {:nopattern} (mem x s2 /\ not (mem x s1))) = 
   match s1,s2 with
   | [], h::t -> ()
   | h1::t1, h2::t2 -> Classical.move_requires (mem_implies_f s1) h2;
@@ -489,12 +489,12 @@ let rec strict_subset_implies_diff_element #a #f (s1 s2: ordset a f)
                    end
 
 let diff_element_implies_strict_subset #a #f (s1 s2: ordset a f)
-  : Lemma (requires subset s1 s2 /\ (exists x. (mem x s2 /\ not (mem x s1))))
+  : Lemma (requires subset s1 s2 /\ (exists x. {:nopattern} (mem x s2 /\ not (mem x s1))))
           (ensures strict_subset s1 s2) = ()
 
 let lemma_strict_subset_exists_diff #a #f (s1 s2: ordset a f)
   : Lemma (requires subset s1 s2)
-          (ensures (strict_subset s1 s2) <==> (exists x. (mem x s2 /\ not (mem x s1)))) 
+          (ensures (strict_subset s1 s2) <==> (exists x. {:nopattern} (mem x s2 /\ not (mem x s1)))) 
   = Classical.move_requires_2 strict_subset_implies_diff_element s1 s2
  
 let rec count #a #f s c : nat = 
@@ -561,7 +561,7 @@ let rec find_last' #a #f (s: ordset a f) (c: condition a) : Tot (option a) (decr
 let rec find_last_props #a #f (s:ordset a f) (c: condition a)
   : Lemma (ensures (match find_last' s c with
            | None -> not (any s c)
-           | Some v -> (any s c /\ (forall (x:a{mem x s && c x}). f x v))))
+           | Some v -> (any s c /\ (forall (x:a{mem x s && c x}). {:nopattern} f x v))))
           (decreases size s) =
   if size s > 0 then let liat,last = unsnoc s in
     liat_size s;     
@@ -606,7 +606,7 @@ let size_of_intersect #_ #_ s1 s2 =
   count_is_size_of_where s2 (mem_of s1)
     
 let union_mem_forall #a #f (s1 s2: ordset a f)
-  : Lemma (forall x. (mem x (union s1 s2)) = (mem x s1 || mem x s2)) =
+  : Lemma (forall x. {:nopattern} (mem x (union s1 s2)) = (mem x s1 || mem x s2)) =
   let aux x : Lemma (mem x (union s1 s2) = (mem x s1 || mem x s2)) =   
     mem_union s1 s2 x in Classical.forall_intro aux  
 

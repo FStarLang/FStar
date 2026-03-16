@@ -47,7 +47,7 @@ let disjoint (#a:eqtype) (s1: set a) (s2: set a) =
   equal (intersect s1 s2) empty
 
 let subset (#a:eqtype) (s1:set a) (s2:set a) =
-  forall x. mem x s1 ==> mem x s2
+  forall x. {:nopattern} mem x s1 ==> mem x s2
 
 let add (#a:eqtype) (x:a) (s:set a) : set a =
   union s (singleton x)
@@ -86,18 +86,18 @@ val mem_intension: #a:eqtype -> x:a -> f:(a -> Tot bool) -> Lemma
   (ensures (mem x (intension f) = f x))
 
 val mem_subset: #a:eqtype -> s1:set a -> s2:set a -> Lemma
-   (requires (forall x. mem x s1 ==> mem x s2))
+   (requires (forall x. {:nopattern} mem x s1 ==> mem x s2))
    (ensures (subset s1 s2))
    [SMTPat (subset s1 s2)]
 
 val subset_mem: #a:eqtype -> s1:set a -> s2:set a -> Lemma
    (requires (subset s1 s2))
-   (ensures (forall x. mem x s1 ==> mem x s2))
+   (ensures (forall x. {:nopattern} mem x s1 ==> mem x s2))
    [SMTPat (subset s1 s2)]
 
 (* extensionality *)
 val lemma_equal_intro: #a:eqtype -> s1:set a -> s2:set a -> Lemma
-    (requires  (forall x. mem x s1 = mem x s2))
+    (requires  (forall x. {:nopattern} mem x s1 = mem x s2))
     (ensures (equal s1 s2))
     [SMTPat (equal s1 s2)]
 

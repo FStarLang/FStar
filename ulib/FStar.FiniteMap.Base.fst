@@ -58,15 +58,15 @@ let rec key_list_to_item_list
   (#a: eqtype)
   (#b: Type u#b)
   (m: map a b)
-  (keys: list a{FSet.list_nonrepeating keys /\ (forall key. FLT.mem key keys ==> FSet.mem key (domain m))})
-: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. FLT.mem key keys <==> key_in_item_list key items)})
+  (keys: list a{FSet.list_nonrepeating keys /\ (forall key. {:nopattern} FLT.mem key keys ==> FSet.mem key (domain m))})
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} FLT.mem key keys <==> key_in_item_list key items)})
        (decreases keys) =
   match keys with
   | [] -> []
   | key :: remaining_keys -> (key, Some?.v ((elements m) key)) :: key_list_to_item_list m remaining_keys
 
 let map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)}) =
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} key_in_item_list key items <==> mem key m)}) =
   key_list_to_item_list m (FSet.set_as_list (domain m))
 
 /// We represent the Dafny function `Map#Card` with `cardinality`:
@@ -81,7 +81,7 @@ let cardinality (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot nat =
 /// function Map#Values<U,V>(Map U V) : Set V;
 
 let values (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot (b -> prop) =
-  fun value -> exists key. ((elements m) key == Some value)
+  fun value -> exists key. {:nopattern} ((elements m) key == Some value)
 
 /// We represent the Dafny function `Map#Items` with `items`:
 ///
@@ -149,7 +149,7 @@ let disjoint (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b) : prop =
 ///
 /// var x: T :| x in s;
 
-let choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. mem key m}) : GTot (key: a{mem key m}) =
+let choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. {:nopattern} mem key m}) : GTot (key: a{mem key m}) =
   FSet.choose (domain m)
 
 /// We now prove each of the facts that comprise `all_finite_map_facts`.
@@ -176,7 +176,11 @@ let empty_or_domain_occupied_lemma ()
       )
     else
       introduce m == emptymap \/ (exists k. mem k m)
-      with Right ()
+      with Right (
+        let xs = FSet.set_as_list (domain m) in
+        match xs with
+        | hd :: _ -> assert (mem hd m)
+      )
     )
     
 

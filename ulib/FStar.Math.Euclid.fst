@@ -146,7 +146,7 @@ val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
   (requires v3 >= 0 /\
             u1 * a + u2 * b = u3 /\
             v1 * a + v2 * b = v3 /\
-            (forall d. is_gcd u3 v3 d ==> is_gcd a b d))
+            (forall d. {:nopattern} is_gcd u3 v3 d ==> is_gcd a b d))
   (ensures (fun (u, v, d) -> u * a + v * b = d /\ is_gcd a b d))
   (decreases v3)
 

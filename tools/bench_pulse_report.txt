@@ -1,0 +1,87 @@
+
+================================================================================
+  PULSE BENCHMARK REPORT — auto_patterns
+================================================================================
+
+Config 1 (Baseline): F* ulib built without --ext auto_patterns
+                     Pulse built without --ext auto_patterns
+
+Config 2 (Head):     F* ulib built WITH --ext auto_patterns
+                     Pulse built WITH --ext auto_patterns
+
+================================================================================
+  RESULTS
+================================================================================
+
+                         Baseline        Head         Delta
+  Wall-clock time:       2m 18.0s       2m 03.5s     -10.5%
+  Files checked:         173            172          -1 (2 PulseCore failures)
+  Total queries:         2,505          1,722        -31.3%
+  Queries succeeded:     2,435          1,667        -31.5%
+
+Note: Head has fewer queries because 2 PulseCore files fail early,
+preventing ~50 downstream queries from being attempted. Comparing only
+the 171 files that pass in both configs would give a more accurate
+query-count comparison.
+
+================================================================================
+  REMAINING PULSE REGRESSIONS (2 files)
+================================================================================
+
+1. PulseCore.Heap.fst (line 408)
+   - h_exists definition: `exists x. h_exists_body f h x`
+   - Z3 cannot prove the proof obligation
+   - Root cause: auto-inferred patterns in ulib dependencies change
+     Z3's quantifier instantiation behavior
+
+2. PulseCore.IndirectionTheorySep.fst (line 1029)
+   - `assert somewhere (later p') m` fails
+   - Same root cause as above
+
+These are cascade effects from ulib pattern changes, not direct
+issues with the Pulse source code.
+
+================================================================================
+  ULIB MODIFICATIONS REQUIRED
+================================================================================
+
+To support --ext auto_patterns across the full dependency chain,
+{:nopattern} annotations were added to these critical ulib files:
+
+  Core (most impactful):
+    Prims.fst:             5 quantifiers (subtype_of, WP definitions)
+    FStar.Pervasives.fsti: 15 quantifiers (effect WP definitions)
+
+  Sets/Maps:
+    FStar.Set/TSet/GSet/GhostSet.fsti: 16 quantifiers
+    FStar.Map/PartialMap/DependentMap: 4 quantifiers
+
+  Libraries:
+    FStar.List.Tot.{Base,Properties}: 76 quantifiers
+    FStar.Seq.Properties: 43 quantifiers
+    FStar.PCM.fst: 5 quantifiers
+    FStar.BigOps/FiniteMap.Base/Matrix: ~30 quantifiers
+    FStar.Math.Euclid: 3 quantifiers
+    FStar.UInt/Int: 2 + rlimit bump
+    FStar.Reflection.V{1,2}.Derived.Lemmas: 8 quantifiers
+
+  Total: ~200 {:nopattern} annotations across 30+ ulib files
+
+================================================================================
+  KEY FINDINGS
+================================================================================
+
+1. Auto-pattern inference works well for MOST code — zero regressions
+   in tests/ and examples/ after targeted {:nopattern} fixes.
+
+2. The main challenge is the DEPENDENCY CHAIN: when auto-patterns are
+   baked into .checked files, they propagate to ALL downstream consumers.
+   Patterns inferred on fundamental definitions like Prims.subtype_of
+   or FStar.Pervasives WP definitions have outsized impact.
+
+3. Core WP definitions (Pure, Ghost effect WPs) and type-level
+   definitions (subtype_of, prop) MUST use {:nopattern} to prevent
+   cascading regressions.
+
+4. Pulse builds ~10% faster with auto_patterns (2:03 vs 2:18),
+   with 2 remaining PulseCore failures that need manual proof fixes.

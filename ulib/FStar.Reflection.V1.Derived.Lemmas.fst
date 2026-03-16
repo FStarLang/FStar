@@ -27,7 +27,7 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | x::xs -> p x /\ forall_list p xs
 
 let forallP (p: 'a -> Type) (l: list 'a): Type
-  = forall (x: 'a). memP x l ==> p x
+  = forall (x: 'a). {:nopattern} memP x l ==> p x
 // Precedence relation on the element of a list
 unfold let (<<:) (l: list 'a) (r: 'r)
   = forallP (fun x -> x << r) l
@@ -53,7 +53,7 @@ let rec collect_app_order' args tt t =
     | _ -> ()
 
 val collect_app_order : (t:term) ->
-            Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app_ln t ==>
+            Lemma (ensures (forall (f:term). {:nopattern} forall (s:list argv). {:nopattern} (f,s) == collect_app_ln t ==>
                               (f << t /\ s <<: t)
                             \/ (f == t /\ s == [])))
 let collect_app_order t =
@@ -78,7 +78,7 @@ let rec collect_abs_order' (bds: binders) (tt t: term)
     | _ -> ()
 
 val collect_abs_ln_order : (t:term) ->
-            Lemma (ensures forall bds body.
+            Lemma (ensures forall bds body. {:nopattern}
                            (bds, body) == collect_abs_ln t ==>
                                 (body << t /\ bds <<: t)
                               \/ (body == t /\ bds == [])
@@ -112,7 +112,7 @@ let rec collect_arr_order' (bds: binders) (tt: term) (c: comp)
     | _ -> ()
 
 val collect_arr_ln_bs_order : (t:term) ->
-            Lemma (ensures forall bds c.
+            Lemma (ensures forall bds c. {:nopattern}
                            (bds, c) == collect_arr_ln_bs t ==>
                                 (c << t /\ bds <<: t)
                               \/ (c == pack_comp (C_Total t) /\ bds == [])

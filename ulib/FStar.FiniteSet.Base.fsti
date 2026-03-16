@@ -60,7 +60,7 @@ let rec list_nonrepeating (#a: eqtype) (xs: list a) : bool =
   | hd :: tl -> not (FLT.mem hd tl) && list_nonrepeating tl
 
 val set_as_list (#a: eqtype) (s: set a)
-  : GTot (xs: list a{list_nonrepeating xs /\ (forall x. FLT.mem x xs = mem x s)})
+  : GTot (xs: list a{list_nonrepeating xs /\ (forall x. {:nopattern} FLT.mem x xs = mem x s)})
 
 /// We represent the Dafny function `Set#Card` with `cardinality`:
 ///
@@ -136,7 +136,7 @@ val disjoint (#a: eqtype) (s1: set a) (s2: set a)
 ///
 /// var x: T :| x in s;
 
-val choose (#a: eqtype) (s: set a{exists x. mem x s})
+val choose (#a: eqtype) (s: set a{exists x. {:nopattern} mem x s})
   : GTot (x: a{mem x s})
 
 /// We add the utility functions `remove` and `notin`:
@@ -174,7 +174,7 @@ let empty_set_contains_no_elements_fact =
 let length_zero_fact =
   forall (a: eqtype) (s: set a).{:pattern cardinality s}
       (cardinality s = 0 <==> s == emptyset)
-    /\ (cardinality s <> 0 <==> (exists x. mem x s))
+    /\ (cardinality s <> 0 <==> (exists x. {:nopattern} mem x s))
     
 /// We represent the following Dafny axiom with `singleton_contains_argument_fact`:
 ///

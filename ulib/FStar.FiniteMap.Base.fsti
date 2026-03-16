@@ -42,7 +42,7 @@ module FSet = FStar.FiniteSet.Base
 type setfun_t (a: eqtype)
               (b: Type u#b)
               (s: FSet.set a) =
-   f: (a ^-> option b){forall (key: a). FSet.mem key s == Some? (f key)}
+   f: (a ^-> option b){forall (key: a). {:nopattern} FSet.mem key s == Some? (f key)}
 
 val map (a: eqtype) ([@@@ strictly_positive] b: Type u#b)
   : Type u#b
@@ -84,7 +84,7 @@ let rec item_list_doesnt_repeat_keys (#a: eqtype) (#b: Type u#b) (items: list (a
   | (k, v) :: tl -> not (key_in_item_list k tl) && item_list_doesnt_repeat_keys tl
 
 val map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-  : GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)})
+  : GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} key_in_item_list key items <==> mem key m)})
 
 /// We represent the Dafny operator [] on maps with `lookup`:
 
@@ -166,7 +166,7 @@ val disjoint (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b)
 ///
 /// var x: T :| x in s;
 
-val choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. mem key m})
+val choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. {:nopattern} mem key m})
   : GTot (key: a{mem key m})
 
 /// We add the utility functions `remove` and `notin`:
@@ -407,8 +407,8 @@ let subtract_element_fact =
 
 let map_equal_fact =
   forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
-    equal m1 m2 <==>   (forall key. FSet.mem key (domain m1) = FSet.mem key (domain m2))
-                   /\ (forall key. FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
+    equal m1 m2 <==>   (forall key. {:nopattern} FSet.mem key (domain m1) = FSet.mem key (domain m2))
+                   /\ (forall key. {:nopattern} FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
 
 /// We represent the following Dafny axiom with `map_extensionality_fact`:
 ///

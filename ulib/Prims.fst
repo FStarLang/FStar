@@ -296,7 +296,7 @@ type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot
 #push-options "--warn_error -288" 
 (** [p1 `subtype_of` p2] when every element of [p1] is also an element
     of [p2]. *)
-let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
+let subtype_of (p1 p2: Type) = forall (x: p1). {:nopattern} has_type x p2
 #pop-options
 
 (** The type of squashed types.
@@ -339,7 +339,7 @@ let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
     directly, don't have the (quantified) definition in their solver context *)
 
 let pure_wp_monotonic0 (a:Type) (wp:pure_wp' a) =
-  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)
+  forall (p q:pure_post a). {:nopattern} (forall (x:a). {:nopattern} p x ==> q x) ==> (wp p ==> wp q)
 
 [@@ "opaque_to_smt"]
 let pure_wp_monotonic = pure_wp_monotonic0
@@ -446,7 +446,7 @@ new_effect {
     for the well-formedness of the postcondition. c.f. #57 *)
 effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   PURE a
-    (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). post pure_result ==> p pure_result))
+    (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). {:nopattern} post pure_result ==> p pure_result))
 
 (** [Admit] is an effect abbreviation for a computation that
     disregards the verification condition of its continuation *)
@@ -456,7 +456,7 @@ effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
 
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
 unfold
-let pure_null_wp0 (a: Type) : pure_wp a = fun (p: pure_post a) -> forall (any_result: a). p any_result
+let pure_null_wp0 (a: Type) : pure_wp a = fun (p: pure_post a) -> forall (any_result: a). {:nopattern} p any_result
 
 (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
 effect Tot (a: Type) = PURE a (pure_null_wp0 a)
@@ -490,7 +490,7 @@ sub_effect PURE ~> GHOST { lift_wp = purewp_id }
 (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
 effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
   GHOST a
-    (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
+    (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). {:nopattern} post ghost_result ==> p ghost_result)
     )
 
 (** As with [Tot], the primitive effect [GTot] is definitionally equal

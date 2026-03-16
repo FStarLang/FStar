@@ -93,7 +93,7 @@ let dual_indices (m n: pos) (ij: under (m*n)) : Lemma (
 val seq_of_matrix : (#c: Type) -> (#m:pos) -> (#n:pos) -> (mx: matrix c m n) -> 
   (s:SB.seq c {
     SB.length s=m*n /\
-    (forall (ij: under (m*n)). SB.index s ij == SB.index s (get_ij m n (get_i m n ij) (get_j m n ij)))
+    (forall (ij: under (m*n)). {:nopattern} SB.index s ij == SB.index s (get_ij m n (get_i m n ij) (get_j m n ij)))
   })
 
 (* Indexer for a matrix *)
@@ -109,8 +109,8 @@ val matrix_of_seq : (#c: Type) -> (m:pos) -> (n:pos) -> (s: SB.seq c{SB.length s
 
 (* A type for matrices constructed via concrete generator *)
 type matrix_of #c (#m #n: pos) (gen: matrix_generator c m n) = z:matrix c m n {
-  (forall (i: under m) (j: under n). ijth z i j == gen i j) /\ 
-  (forall (ij: under (m*n)). (SB.index (seq_of_matrix z) ij) == (gen (get_i m n ij) (get_j m n ij)))  
+  (forall (i: under m) (j: under n). {:nopattern} ijth z i j == gen i j) /\ 
+  (forall (ij: under (m*n)). {:nopattern} (SB.index (seq_of_matrix z) ij) == (gen (get_i m n ij) (get_j m n ij)))  
 }
 
 (* Monoid-based fold of a matrix  treated as a flat seq *)
@@ -149,7 +149,7 @@ val matrix_fold_equals_func_double_fold  : (#c:Type) -> (#eq: CE.equiv c) ->
            CF.fold cm 0 (m-1) (fun (i:under m) -> CF.fold cm 0 (n-1) (generator i)))
  
 val transposed_matrix_gen (#c:_) (#m:pos) (#n:pos) (generator: matrix_generator c m n) 
-  : (f: matrix_generator c n m { forall i j. f j i == generator i j }) 
+  : (f: matrix_generator c n m { forall i j. {:nopattern} f j i == generator i j }) 
 
 val matrix_transpose_is_permutation (#c:_) (#m #n: pos) 
                                     (generator: matrix_generator c m n)
@@ -178,7 +178,7 @@ val matrix_equiv_ijth (#c:_) (#m #n: pos) (eq: CE.equiv c)
 
 (* We can always establish matrix equivalence from element-wise equivalence *)
 val matrix_equiv_from_element_eq (#c:_) (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
-  : Lemma (requires (forall (i: under m) (j: under n). ijth ma i j `eq.eq` ijth mb i j))
+  : Lemma (requires (forall (i: under m) (j: under n). {:nopattern} ijth ma i j `eq.eq` ijth mb i j))
           (ensures (matrix_equiv eq m n).eq ma mb)
 
 (* 
@@ -267,10 +267,10 @@ val matrix_mul (#c:_) (#eq:_) (#m #n #p:pos) (add mul: CE.cm c eq) (mx: matrix c
 
 (* Both distributivity laws hold for matrices as shown below *)
 let is_left_distributive #c #eq (mul add: CE.cm c eq) = 
-  forall (x y z: c). mul.mult x (add.mult y z) `eq.eq` add.mult (mul.mult x y) (mul.mult x z)
+  forall (x y z: c). {:nopattern} mul.mult x (add.mult y z) `eq.eq` add.mult (mul.mult x y) (mul.mult x z)
 
 let is_right_distributive #c #eq (mul add: CE.cm c eq) = 
-  forall (x y z: c). mul.mult (add.mult x y) z `eq.eq` add.mult (mul.mult x z) (mul.mult y z)
+  forall (x y z: c). {:nopattern} mul.mult (add.mult x y) z `eq.eq` add.mult (mul.mult x z) (mul.mult y z)
 
 let is_fully_distributive #c #eq (mul add: CE.cm c eq) = is_left_distributive mul add /\ is_right_distributive mul add
 
@@ -286,7 +286,7 @@ let is_fully_distributive #c #eq (mul add: CE.cm c eq) = is_left_distributive mu
    issues.
 *)
 let is_absorber #c #eq (z:c) (op: CE.cm c eq) = 
-  forall (x:c). op.mult z x `eq.eq` z /\ op.mult x z `eq.eq` z
+  forall (x:c). {:nopattern} op.mult z x `eq.eq` z /\ op.mult x z `eq.eq` z
 
 (* 
    Similar lemmas to reason about matrix product elements 

@@ -20,7 +20,7 @@ open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 
 let map_t (k:eqtype) (v:Type) (f:cmp k) (d:ordset k f) =
-  g:F.restricted_t k (fun _ -> option v){forall x. mem x d == Some? (g x)}
+  g:F.restricted_t k (fun _ -> option v){forall x. {:nopattern} mem x d == Some? (g x)}
 
 noeq
 type ordmap (k:eqtype) (v:Type) (f:cmp k) =
@@ -61,7 +61,7 @@ let choose (#k:eqtype) (#v:Type) #f m =
 let size (#k:eqtype) (#v:Type) #f m = OrdSet.size (Mk_map?.d m)
 
 let equal (#k:eqtype) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
-  forall x. select #k #v #f x m1 == select #k #v #f x m2
+  forall x. {:nopattern} select #k #v #f x m1 == select #k #v #f x m2
 
 let eq_intro (#k:eqtype) (#v:Type) #f m1 m2 = ()
 

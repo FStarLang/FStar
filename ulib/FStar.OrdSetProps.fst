@@ -35,7 +35,7 @@ let union' (#a:eqtype) #f s1 s2 = fold (fun e (s:ordset a f) -> insert e s) s1 s
 
 val union_lemma: #a:eqtype -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                  -> Lemma (requires (True))
-                    (ensures (forall x. mem x (union s1 s2) = mem x (union' s1 s2)))
+                    (ensures (forall x. {:nopattern} mem x (union s1 s2) = mem x (union' s1 s2)))
                     (decreases (size s1))
 let rec union_lemma (#a:eqtype) #f s1 s2 =
   if s1 = empty then ()

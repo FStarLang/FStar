@@ -21,7 +21,7 @@ module FStar.PCM
 (**** Base definitions *)
 
 (** A symmetric relation *)
-let symrel (a: Type u#a) = c:(a -> a -> prop) { (forall x y. c x y <==> c y x) }
+let symrel (a: Type u#a) = c:(a -> a -> prop) { (forall x y. {:nopattern} c x y <==> c y x) }
 
 (** [pcm'] is a magma, the base for the partial commutative monoid *)
 noeq
@@ -89,7 +89,7 @@ let op (#a: Type u#a) (p:pcm a) (x:a) (y:a{composable p x y}) = p.p.op x y
   is well-defined, e.g. if there exists an element [frame] such that [x * z = y]
 *)
 let compatible (#a: Type u#a) (pcm:pcm a) (x y:a) =
-  (exists (frame:a).
+  (exists (frame:a). {:nopattern}
     composable pcm x frame /\ op pcm frame x == y
   )
 
@@ -135,7 +135,7 @@ let compatible_intro
 
 (** Two elements are joinable when they can evolve to a common point. *)
 let joinable #a (p:pcm a) (x y : a) : prop =
-  exists z. compatible p x z /\ compatible p y z
+  exists z. {:nopattern} compatible p x z /\ compatible p y z
 
 let frame_compatible #a (p:pcm a) (x:FStar.Ghost.erased a) (v y:a) =
   (forall (frame:a). {:pattern (composable p x frame)}
@@ -169,7 +169,7 @@ type frame_preserving_upd (#a:Type u#a) (p:pcm a) (x y:a) =
  * All the frames of x should compose with--and the composition should result in--y
  *)
 let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
-    (forall frame. composable pcm frame x ==> composable pcm frame y) /\
+    (forall frame. {:nopattern} composable pcm frame x ==> composable pcm frame y) /\
     (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
 
 (*
@@ -183,7 +183,7 @@ let frame_preserving_val_to_fp_upd (#a:Type u#a) (p:pcm a)
 
 (** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
 let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
-  forall (frame:a). composable p x frame ==> frame == p.p.one
+  forall (frame:a). {:nopattern} composable p x frame ==> frame == p.p.one
 
 (** A mutation from [x] to [p.one] is frame preserving if [p] is exclusive to [x] *)
 let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)

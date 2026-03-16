@@ -86,7 +86,7 @@ val equal (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value) : prop
 
 (** Introducing extensional equality by lifting equality on the map, pointwise *)
 val equal_intro (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value)
-    : Lemma (requires (forall k. sel m1 k == sel m2 k))
+    : Lemma (requires (forall k. {:nopattern} sel m1 k == sel m2 k))
       (ensures (equal m1 m2))
       [SMTPat (equal m1 m2)]
 

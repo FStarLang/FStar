@@ -78,7 +78,7 @@ let mem (#a:eqtype) (x:a) (l:seq a) : Tot bool = count x l > 0
 
 val mem_index (#a:eqtype) (x:a) (s:seq a)
     : Lemma (requires (mem x s))
-            (ensures (exists i. index s i == x))
+            (ensures (exists i. {:nopattern} index s i == x))
 
 (* index_mem:
    A utility function that finds the first index of
@@ -129,33 +129,33 @@ let rec sorted (#a:Type) (f:a -> a -> Tot bool) (s:seq a)
 
 val sorted_feq (#a:Type)
                (f g : (a -> a -> Tot bool))
-               (s:seq a{forall x y. f x y == g x y})
+               (s:seq a{forall x y. {:nopattern} f x y == g x y})
    : Lemma (ensures (sorted f s <==> sorted g s))
 
 
 val lemma_append_count: #a:eqtype -> lo:seq a -> hi:seq a -> Lemma
   (requires True)
-  (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
+  (ensures (forall x. {:nopattern} count x (append lo hi) = (count x lo + count x hi)))
 
 val lemma_append_count_aux: #a:eqtype -> x:a -> lo:seq a -> hi:seq a -> Lemma
   (requires True)
   (ensures (count x (append lo hi) = (count x lo + count x hi)))
 
 val lemma_mem_inversion: #a:eqtype -> s:seq a{length s > 0} -> Lemma
-  (ensures (forall x. mem x s = (x=head s || mem x (tail s))))
+  (ensures (forall x. {:nopattern} mem x s = (x=head s || mem x (tail s))))
 
 val lemma_mem_count: #a:eqtype -> s:seq a -> f:(a -> Tot bool) -> Lemma
-  (requires (forall (i:nat{i<length s}). f (index s i)))
-  (ensures (forall (x:a). mem x s ==> f x))
+  (requires (forall (i:nat{i<length s}). {:nopattern} f (index s i)))
+  (ensures (forall (x:a). {:nopattern} mem x s ==> f x))
 
 val lemma_count_slice: #a:eqtype -> s:seq a -> i:nat{i<=length s} -> Lemma
   (requires True)
-  (ensures (forall x. count x s = count x (slice s 0 i) + count x (slice s i (length s))))
+  (ensures (forall x. {:nopattern} count x s = count x (slice s 0 i) + count x (slice s i (length s))))
 
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+    (forall a. {:nopattern} f a a)                                           (* reflexivity   *)
+    /\ (forall a1 a2. {:nopattern} (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
+    /\ (forall a1 a2 a3. {:nopattern} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 type tot_ord (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
 val sorted_concat_lemma: #a:eqtype
@@ -163,7 +163,7 @@ val sorted_concat_lemma: #a:eqtype
                       -> lo:seq a{sorted f lo}
                       -> pivot:a
                       -> hi:seq a{sorted f hi}
-                      -> Lemma (requires (forall y. (mem y lo ==> f y pivot)
+                      -> Lemma (requires (forall y. {:nopattern} (mem y lo ==> f y pivot)
                                                  /\ (mem y hi ==> f pivot y)))
                                (ensures (sorted f (append lo (cons pivot hi))))
 
@@ -193,7 +193,7 @@ val lemma_swap_permutes_aux: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{
   (ensures (count x s = count x (swap s i j)))
 
 type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
-       (forall i. count i s1 = count i s2)
+       (forall i. {:nopattern} count i s1 = count i s2)
 
 val append_permutations: #a:eqtype -> s1:seq a -> s2:seq a -> s1':seq a -> s2':seq a -> Lemma
     (requires permutation a s1 s1' /\ permutation a s2 s2')
@@ -215,21 +215,21 @@ val cons_perm: #a:eqtype -> tl:seq a -> s:seq a{length s > 0} ->
                (ensures (permutation a (cons (head s) tl) s))
 
 val lemma_mem_append : #a:eqtype -> s1:seq a -> s2:seq a
-      -> Lemma (ensures (forall x. mem x (append s1 s2) <==> (mem x s1 || mem x s2)))
+      -> Lemma (ensures (forall x. {:nopattern} mem x (append s1 s2) <==> (mem x s1 || mem x s2)))
 
 val lemma_slice_cons: #a:eqtype -> s:seq a -> i:nat -> j:nat{i < j && j <= length s}
-  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
+  -> Lemma (ensures (forall x. {:nopattern} mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
 
 val lemma_slice_snoc: #a:eqtype -> s:seq a -> i:nat -> j:nat{i < j && j <= length s}
-  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s (j - 1) || mem x (slice s i (j - 1)))))
+  -> Lemma (ensures (forall x. {:nopattern} mem x (slice s i j) <==> (x = index s (j - 1) || mem x (slice s i (j - 1)))))
 
 val lemma_ordering_lo_snoc: #a:eqtype -> f:tot_ord a -> s:seq a -> i:nat -> j:nat{i <= j && j < length s} -> pv:a
-   -> Lemma (requires ((forall y. mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
-            (ensures ((forall y. mem y (slice s i (j + 1)) ==> f y pv)))
+   -> Lemma (requires ((forall y. {:nopattern} mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
+            (ensures ((forall y. {:nopattern} mem y (slice s i (j + 1)) ==> f y pv)))
 
 val lemma_ordering_hi_cons: #a:eqtype -> f:tot_ord a -> s:seq a -> back:nat -> len:nat{back < len && len <= length s} -> pv:a
-   -> Lemma (requires ((forall y. mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
-            (ensures ((forall y. mem y (slice s back len) ==> f pv y)))
+   -> Lemma (requires ((forall y. {:nopattern} mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
+            (ensures ((forall y. {:nopattern} mem y (slice s back len) ==> f pv y)))
 
 val swap_frame_lo : #a:Type -> s:seq a -> lo:nat -> i:nat{lo <= i} -> j:nat{i <= j && j < length s}
      -> Lemma (ensures (slice s lo i == slice (swap s i j) lo i))
@@ -328,7 +328,7 @@ val lemma_snoc_inj: #a:Type -> s1:seq a -> s2:seq a -> v1:a -> v2:a
           (ensures (v1 == v2 /\ equal s1 s2))
 
 val lemma_mem_snoc : #a:eqtype -> s:Seq.seq a -> x:a ->
-   Lemma (ensures (forall y. mem y (snoc s x) <==> mem y s \/ x=y))
+   Lemma (ensures (forall y. {:nopattern} mem y (snoc s x) <==> mem y s \/ x=y))
 
 let rec find_l (#a:Type) (f:a -> Tot bool) (l:seq a)
 : Tot (o:option a{Some? o ==> f (Some?.v o)})
@@ -381,10 +381,10 @@ type found (i:nat) = True
 
 let rec seq_find_aux (#a:Type) (f:a -> Tot bool) (l:seq a) (ctr:nat{ctr <= Seq.length l})
 : Pure (option a)
-  (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
+  (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}). {:nopattern}
                not (f (Seq.index l i) )))
   (ensures (function
-            | None -> forall (i:nat{i < Seq.length l}).  not (f (Seq.index l i))
+            | None -> forall (i:nat{i < Seq.length l}). {:nopattern}  not (f (Seq.index l i))
             | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). {:pattern (found i)}
                                  found i /\ x == Seq.index l i)))
 = match ctr with
@@ -400,7 +400,7 @@ let seq_find (#a:Type) (f:a -> Tot bool) (l:seq a)
 : Pure (option a)
   (requires True)
   (ensures (function
-            | None -> forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))
+            | None -> forall (i:nat{i < Seq.length l}). {:nopattern} not (f (Seq.index l i))
             | Some x -> f x /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
                                  found i /\ x == Seq.index l i)))
 = seq_find_aux f l (Seq.length l)
@@ -415,7 +415,7 @@ let for_all
   (l: seq a)
 : Pure bool
   (requires True)
-  (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . f (index l i) == true))))
+  (ensures (fun b -> (b == true <==> (forall (i: nat {i < Seq.length l} ) . {:nopattern} f (index l i) == true))))
 = None? (seq_find (fun i -> not (f i)) l)
 
 val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} ->
@@ -472,11 +472,11 @@ val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
 val contains_elim (#a:Type) (s:seq a) (x:a)
   : Lemma (s `contains` x
             ==>
-          (exists (k:nat). k < Seq.length s /\ Seq.index s k == x))
+          (exists (k:nat). {:nopattern} k < Seq.length s /\ Seq.index s k == x))
 
-val lemma_contains_empty (#a:Type) : Lemma (forall (x:a). ~ (contains Seq.empty x))
+val lemma_contains_empty (#a:Type) : Lemma (forall (x:a). {:nopattern} ~ (contains Seq.empty x))
 
-val lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). contains (create 1 x) y ==> y == x)
+val lemma_contains_singleton (#a:Type) (x:a) : Lemma (forall (y:a). {:nopattern} contains (create 1 x) y ==> y == x)
 
 val append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
   : Lemma ((append s1 s2) `contains` x
@@ -484,7 +484,7 @@ val append_contains_equiv (#a:Type) (s1:seq a) (s2:seq a) (x:a)
            (s1 `contains` x \/ s2 `contains` x))
 
 val contains_snoc : #a:Type -> s:Seq.seq a -> x:a ->
-   Lemma (ensures (forall y. (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
+   Lemma (ensures (forall y. {:nopattern} (snoc s x) `contains` y  <==> s `contains` y \/ x==y))
 
 val lemma_find_l_contains (#a:Type) (f:a -> Tot bool) (l:seq a)
   : Lemma (requires True) (ensures Some? (find_l f l) ==> l `contains` (Some?.v (find_l f l)))
@@ -501,7 +501,7 @@ val append_cons_snoc (#a:Type) (u: Seq.seq a) (x:a) (v:Seq.seq a)
 val append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
    : Lemma ( Seq.equal s1 (Seq.slice (Seq.append s1 s2) 0 (Seq.length s1)) /\
              Seq.equal s2 (Seq.slice (Seq.append s1 s2) (Seq.length s1) (Seq.length s1 + Seq.length s2)) /\
-             (forall (i:nat) (j:nat).
+             (forall (i:nat) (j:nat). {:nopattern}
                 i <= j /\ j <= Seq.length s2 ==>
                 Seq.equal (Seq.slice s2 i j)
                           (Seq.slice (Seq.append s1 s2) (Seq.length s1 + i) (Seq.length s1 + j))))
@@ -509,7 +509,7 @@ val append_slices (#a:Type) (s1:Seq.seq a) (s2:Seq.seq a)
 
 val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
   Lemma (requires (None? (find_l f s)))
-        (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
+        (ensures (forall (i:nat{i < Seq.length s}). {:nopattern} not (f (Seq.index s i))))
         (decreases (Seq.length s))
 
 (** More properties, with new naming conventions *)
@@ -517,7 +517,7 @@ val find_l_none_no_index (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
 let suffix_of
   (#a: Type)
   (s_suff s: seq a)
-= exists s_pref . (s == append s_pref s_suff)
+= exists s_pref . {:nopattern} (s == append s_pref s_suff)
 
 val cons_head_tail
   (#a: Type)
@@ -576,7 +576,7 @@ val mem_cons
   (x:a)
   (s:seq a)
 : Lemma
-  (ensures (forall y. mem y (cons x s) <==> mem y s \/ x=y))
+  (ensures (forall y. {:nopattern} mem y (cons x s) <==> mem y s \/ x=y))
 
 val snoc_slice_index
   (#a: Type)
@@ -712,10 +712,10 @@ let sortWith (#a:eqtype) (f:a -> a -> Tot int) (s:seq a) :Tot (seq a)
   = seq_of_list (List.Tot.Base.sortWith f (seq_to_list s))
 
 val lemma_seq_to_list_permutation (#a:eqtype) (s:seq a)
-  :Lemma (requires True) (ensures (forall x. count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
+  :Lemma (requires True) (ensures (forall x. {:nopattern} count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
 
 val lemma_seq_of_list_permutation (#a:eqtype) (l:list a)
-  :Lemma (forall x. List.Tot.Base.count x l == count x (seq_of_list l))
+  :Lemma (forall x. {:nopattern} List.Tot.Base.count x l == count x (seq_of_list l))
 
 val lemma_seq_of_list_sorted (#a:Type) (f:a -> a -> Tot bool) (l:list a)
   :Lemma (requires (List.Tot.Properties.sorted f l)) (ensures  (sorted f (seq_of_list l)))

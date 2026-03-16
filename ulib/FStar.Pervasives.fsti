@@ -260,7 +260,7 @@ private unfold let pure_wp_intro #a (wp: pure_wp' a { pure_wp_monotonic0 a wp })
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
 unfold
 let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : Tot (pure_wp a) =
-  pure_wp_intro fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
+  pure_wp_intro fun (p:pure_post a) -> pre /\ (forall a. {:nopattern} post a ==> p a)
 
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   DIV a (div_hoare_to_wp post)
@@ -329,22 +329,22 @@ let st_if_then_else
     [k] to avoid duplicating it. *)
 unfold
 let st_ite_wp (heap a: Type) (wp: st_wp_h heap a) (post: st_post_h heap a) (h0: heap) =
-  forall (k: st_post_h heap a).
+  forall (k: st_post_h heap a). {:nopattern}
     (forall (x: a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
 (** Subsumption for stateful WPs *)
 unfold
 let st_stronger (heap a: Type) (wp1 wp2: st_wp_h heap a) =
-  (forall (p: st_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
+  (forall (p: st_post_h heap a) (h: heap). {:nopattern} wp1 p h ==> wp2 p h)
 
 (** Closing the scope of a binder within a stateful WP *)
 unfold
 let st_close_wp (heap a b: Type) (wp: (b -> GTot (st_wp_h heap a))) (p: st_post_h heap a) (h: heap) =
-  (forall (b: b). wp b p h)
+  (forall (b: b). {:nopattern} wp b p h)
 
 (** Applying a stateful WP to a trivial postcondition *)
 unfold
-let st_trivial (heap a: Type) (wp: st_wp_h heap a) = (forall h0. wp (fun r h1 -> True) h0)
+let st_trivial (heap a: Type) (wp: st_wp_h heap a) = (forall h0. {:nopattern} wp (fun r h1 -> True) h0)
 
 (** Introducing a new effect template [STATE_h] *)
 new_effect {
@@ -396,7 +396,7 @@ let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
 unfold
 let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
     : GTot Type0 =
-  forall (k: ex_post b).
+  forall (k: ex_post b). {:nopattern}
     (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
     (wp1 (function
           | V ra1 -> wp2 ra1 k
@@ -412,16 +412,16 @@ let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
 (** Naming continuations for use with branching *)
 unfold
 let ex_ite_wp (a: Type) (wp: ex_wp a) (post: ex_post a) =
-  forall (k: ex_post a).
+  forall (k: ex_post a). {:nopattern}
     (forall (rb: result a). {:pattern (guard_free (k rb))} post rb ==> k rb) ==> wp k
 
 (** Subsumption for exceptional WPs *)
 unfold
-let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). wp1 p ==> wp2 p)
+let ex_stronger (a: Type) (wp1 wp2: ex_wp a) = (forall (p: ex_post a). {:nopattern} wp1 p ==> wp2 p)
 
 (** Closing the scope of a binder for exceptional WPs *)
 unfold
-let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). wp b p)
+let ex_close_wp (a b: Type) (wp: (b -> GTot (ex_wp a))) (p: ex_post a) = (forall (b: b). {:nopattern} wp b p)
 
 (** Applying a computation with a trivial postcondition *)
 unfold
@@ -442,7 +442,7 @@ new_effect {
 
 (** A Hoare-style abbreviation for EXN *)
 effect Exn (a: Type) (pre: ex_pre) (post: ex_post' a pre) =
-  EXN a (fun (p: ex_post a) -> pre /\ (forall (r: result a). post r ==> p r))
+  EXN a (fun (p: ex_post a) -> pre /\ (forall (r: result a). {:nopattern} post r ==> p r))
 
 (** We include divergence in exceptions.
 
@@ -517,13 +517,13 @@ let all_if_then_else
 (** Naming postcondition for better sharing in [ALL_h] *)
 unfold
 let all_ite_wp (heap a: Type) (wp: all_wp_h heap a) (post: all_post_h heap a) (h0: heap) =
-  forall (k: all_post_h heap a).
+  forall (k: all_post_h heap a). {:nopattern}
     (forall (x: result a) (h: heap). {:pattern (guard_free (k x h))} post x h ==> k x h) ==> wp k h0
 
 (** Subsumption in [ALL_h] *)
 unfold
 let all_stronger (heap a: Type) (wp1 wp2: all_wp_h heap a) =
-  (forall (p: all_post_h heap a) (h: heap). wp1 p h ==> wp2 p h)
+  (forall (p: all_post_h heap a) (h: heap). {:nopattern} wp1 p h ==> wp2 p h)
 
 (** Closing a binder in the scope of an [ALL_h] wp *)
 unfold
@@ -532,11 +532,11 @@ let all_close_wp
       (wp: (b -> GTot (all_wp_h heap a)))
       (p: all_post_h heap a)
       (h: heap)
-     = (forall (b: b). wp b p h)
+     = (forall (b: b). {:nopattern} wp b p h)
 
 (** Applying an [ALL_h] wp to a trivial postcondition *)
 unfold
-let all_trivial (heap a: Type) (wp: all_wp_h heap a) = (forall (h0: heap). wp (fun r h1 -> True) h0)
+let all_trivial (heap a: Type) (wp: all_wp_h heap a) = (forall (h0: heap). {:nopattern} wp (fun r h1 -> True) h0)
 
 (** Introducing the [ALL_h] effect template *)
 new_effect {
@@ -578,7 +578,7 @@ val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inv
 (** Since the [option] type is so common, we always allow inverting
     options, regardless of [ifuel] *)
 val invertOption (a: Type)
-    : Lemma (requires True) (ensures (forall (x: option a). None? x \/ Some? x)) [SMTPat (option a)]
+    : Lemma (requires True) (ensures (forall (x: option a). {:nopattern} None? x \/ Some? x)) [SMTPat (option a)]
 
 (** Values of type [a] or type [b] *)
 type either a b =

@@ -51,7 +51,7 @@ let lemma_split #_ s i =
 
 let rec mem_index' (#a:eqtype) (x:a) (s:seq a)
     : Lemma (requires (mem x s))
-            (ensures (exists i. index s i == x))
+            (ensures (exists i. {:nopattern} index s i == x))
             (decreases (length s))
     = if length s = 0 then ()
       else if head s = x then ()
@@ -83,7 +83,7 @@ let lemma_tl #_ _ _ = ()
 
 let rec sorted_feq' (#a:Type)
                (f g : (a -> a -> Tot bool))
-               (s:seq a{forall x y. f x y == g x y})
+               (s:seq a{forall x y. {:nopattern} f x y == g x y})
    : Lemma (ensures (sorted f s <==> sorted g s))
            (decreases (length s))
    = if length s <= 1 then ()
@@ -94,7 +94,7 @@ let sorted_feq = sorted_feq'
 let rec lemma_append_count' (#a:eqtype) (lo:seq a) (hi:seq a)
 : Lemma
   (requires True)
-  (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
+  (ensures (forall x. {:nopattern} count x (append lo hi) = (count x lo + count x hi)))
   (decreases (length lo))
 = if length lo = 0
   then cut (equal (append lo hi) hi)
@@ -113,8 +113,8 @@ let lemma_mem_inversion #_ _ = ()
 
 let rec lemma_mem_count' (#a:eqtype) (s:seq a) (f:a -> Tot bool)
 : Lemma
-  (requires (forall (i:nat{i<length s}). f (index s i)))
-  (ensures (forall (x:a). mem x s ==> f x))
+  (requires (forall (i:nat{i<length s}). {:nopattern} f (index s i)))
+  (ensures (forall (x:a). {:nopattern} mem x s ==> f x))
   (decreases (length s))
 = if length s = 0
   then ()
@@ -133,7 +133,7 @@ let rec sorted_concat_lemma': #a:eqtype
                       -> lo:seq a{sorted f lo}
                       -> pivot:a
                       -> hi:seq a{sorted f hi}
-                      -> Lemma (requires (forall y. (mem y lo ==> f y pivot)
+                      -> Lemma (requires (forall y. {:nopattern} (mem y lo ==> f y pivot)
                                                  /\ (mem y hi ==> f pivot y)))
                                (ensures (sorted f (append lo (cons pivot hi))))
                                (decreases (length lo))
@@ -434,7 +434,7 @@ let rec lemma_index_is_nth': #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 let lemma_index_is_nth = lemma_index_is_nth'
 
 let contains #a s x =
-  exists (k:nat). k < Seq.length s /\ Seq.index s k == x
+  exists (k:nat). {:nopattern} k < Seq.length s /\ Seq.index s k == x
 
 let contains_intro #_ _ _ _ = ()
 
@@ -479,7 +479,7 @@ let append_slices #_ _ _ = ()
 
 let rec find_l_none_no_index' (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
   Lemma (requires (None? (find_l f s)))
-        (ensures (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i))))
+        (ensures (forall (i:nat{i < Seq.length s}). {:nopattern} not (f (Seq.index s i))))
         (decreases (Seq.length s))
 = if Seq.length s = 0
   then ()
@@ -593,7 +593,7 @@ let elim_of_list' = elim_of_list''
 let elim_of_list #_ l = elim_of_list' 0 (seq_of_list l) l
 
 let rec lemma_seq_to_list_permutation' (#a:eqtype) (s:seq a)
-  :Lemma (requires True) (ensures (forall x. count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
+  :Lemma (requires True) (ensures (forall x. {:nopattern} count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
   = if length s > 0 then (
       assert (equal s (cons (head s) (tail s)));
       lemma_seq_to_list_permutation' (slice s 1 (length s))

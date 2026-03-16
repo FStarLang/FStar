@@ -291,7 +291,7 @@ let rec mem_filter (#a: Type) (f: (a -> Tot bool)) (l: list a) (x: a)
 [x] of [filter f l], [x] is a member of [l] and [f x] holds. Requires,
 at type-checking time, [f] to be a pure total function.*)
 let mem_filter_forall (#a: Type) (f: (a -> Tot bool)) (l: list a)
-    : Lemma (forall x. memP x (filter f l) <==> memP x l /\ f x)
+    : Lemma (forall x. {:nopattern} memP x (filter f l) <==> memP x l /\ f x)
             [SMTPat (filter f l)] =
   introduce forall x . memP x (filter f l) <==> memP x l /\ f x
   with mem_filter f l x
@@ -311,7 +311,7 @@ let rec for_all_mem
   (f: (a -> Tot bool))
   (l: list a)
 : Lemma
-  (for_all f l <==> (forall x . memP x l ==> f x))
+  (for_all f l <==> (forall x . {:nopattern} memP x l ==> f x))
 = match l with
   | [] -> ()
   | _ :: q -> for_all_mem f q
@@ -330,7 +330,7 @@ let rec for_allP #a pre l =
 val for_allP_eq:
   #a:Type ->
   pre:(a -> prop) -> l:list a ->
-  Lemma (for_allP pre l <==> (forall x. memP x l ==> pre x))
+  Lemma (for_allP pre l <==> (forall x. {:nopattern} memP x l ==> pre x))
 let rec for_allP_eq #a pre l =
   match l with
   | [] -> ()
@@ -533,7 +533,7 @@ let compare_of_bool #a rel x y =
     else 1
 
 let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
-  : Lemma (forall x y. bool_of_compare (compare_of_bool f) x y == f x y)
+  : Lemma (forall x y. {:nopattern} bool_of_compare (compare_of_bool f) x y == f x y)
   = ()
 
 (** [sortWith compare l] returns the list [l'] containing the elements

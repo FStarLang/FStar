@@ -9,7 +9,7 @@ open FStar.Mul
 /// When a <> 0, a `divides` b iff a % b = 0 (this is proved below)
 ///
 
-let divides (a b:int) : prop = exists q. b = q * a
+let divides (a b:int) : prop = exists q. {:nopattern} b = q * a
 
 val divides_reflexive (a:int) : Lemma (a `divides` a) [SMTPat (a `divides` a)]
 
@@ -55,7 +55,7 @@ val divides_mult_right (a b d:int) : Lemma
 let is_gcd (a b d:int) : prop =
   d `divides` a /\
   d `divides` b /\
-  (forall x. (x `divides` a /\ x `divides` b) ==> x `divides` d)
+  (forall x. {:nopattern} (x `divides` a /\ x `divides` b) ==> x `divides` d)
 
 val mod_divides (a:int) (b:nonzero) : Lemma (requires a % b = 0) (ensures b `divides` a)
 

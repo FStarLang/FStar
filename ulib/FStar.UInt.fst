@@ -151,7 +151,7 @@ let ones_from_vec_lemma #n =
   to_vec_lemma_2 (from_vec (ones_vec #n)) (ones n)
 
 let nth_lemma #n a b =
-  assert(forall (i:nat{i < n}). index (to_vec #n a) i = index (to_vec #n b) i);
+  assert(forall (i:nat{i < n}). {:nopattern} index (to_vec #n a) i = index (to_vec #n b) i);
   to_vec_lemma_2 a b
 
 let zero_nth_lemma #n i = ()
@@ -374,7 +374,9 @@ let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
 
 let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
 
+#push-options "--z3rlimit 10"
 let rotate_right_left_inverse #n a s = nth_lemma (rotate_left #n (rotate_right #n a s) s) a
+#pop-options
 
 
 let shift_left_value_aux_1 #n a s = pow2_multiplication_modulo_lemma_1 a n s
