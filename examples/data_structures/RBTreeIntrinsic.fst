@@ -191,10 +191,10 @@ let almostNode_mem #h x = function
   | V root -> mem x root
 
 val ins_mem : #h:nat -> #c:color -> x:int -> s:rbnode h c ->
-  Lemma (ensures forall y. (mem y s \/ y = x) <==> almostNode_mem y (ins x s)) (decreases s)
+  Lemma (ensures forall y. {:nopattern} (mem y s \/ y = x) <==> almostNode_mem y (ins x s)) (decreases s)
 
 val insB_mem : #h:nat -> x:int -> s:rbnode h Black ->
-  Lemma (ensures forall y. (mem y s \/ y = x) <==> hiddenTree_mem y (insB x s)) (decreases s)
+  Lemma (ensures forall y. {:nopattern} (mem y s \/ y = x) <==> hiddenTree_mem y (insB x s)) (decreases s)
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 4"
 let rec ins_mem #h #c x = function
@@ -263,7 +263,7 @@ let atMost x = function
 val global_upper_bound : #h:nat -> #c:color -> z:int -> s:rbnode h c ->
   Lemma 
   (requires atMost z (max s))
-  (ensures  forall y. mem y s ==> y <= z)
+  (ensures  forall y. {:nopattern} mem y s ==> y <= z)
   (decreases s)
 let rec global_upper_bound #h #c z = function
   | Leaf -> ()
@@ -275,7 +275,7 @@ let rec global_upper_bound #h #c z = function
 val global_lower_bound : #h:nat -> #c:color -> z:int -> s:rbnode h c {atLeast z (min s)} ->
   Lemma 
   (requires atLeast z (max s))
-  (ensures  forall y. mem y s ==> y >= z)
+  (ensures  forall y. {:nopattern} mem y s ==> y >= z)
   (decreases s)
 let rec global_lower_bound #h #c z = function
   | Leaf -> ()
@@ -286,7 +286,7 @@ let rec global_lower_bound #h #c z = function
 
 val mem_to_max : #h:nat -> #c:color -> z:int -> n:rbnode h c ->
   Lemma 
-  (requires forall y. mem y n ==> y <= z) 
+  (requires forall y. {:nopattern} mem y n ==> y <= z) 
   (ensures  atMost z (max n)) 
   (decreases n)
 let rec mem_to_max #h #c z = function
@@ -298,7 +298,7 @@ let rec mem_to_max #h #c z = function
 
 val mem_to_min : #h:nat -> #c:color -> z:int -> n:rbnode h c ->
   Lemma 
-  (requires forall y. mem y n ==> y >= z) 
+  (requires forall y. {:nopattern} mem y n ==> y >= z) 
   (ensures  atLeast z (min n))
   (decreases n)
 let rec mem_to_min #h #c z = function
@@ -310,7 +310,7 @@ let rec mem_to_min #h #c z = function
 
 val almostNode_mem_to_max : #h:nat -> z:int -> n:almostNode h ->
   Lemma 
-  (requires forall y. almostNode_mem y n ==> y <= z) 
+  (requires forall y. {:nopattern} almostNode_mem y n ==> y <= z) 
   (ensures  atMost z (almostNode_max n)) 
   (decreases n)
 let almostNode_mem_to_max #h z = function
@@ -320,7 +320,7 @@ let almostNode_mem_to_max #h z = function
 
 val almostNode_mem_to_min : #h:nat -> z:int -> n:almostNode h ->
   Lemma 
-  (requires forall y. almostNode_mem y n ==> y >= z)
+  (requires forall y. {:nopattern} almostNode_mem y n ==> y >= z)
   (ensures  atLeast z (almostNode_min n)) 
   (decreases n)
 let almostNode_mem_to_min #h z = function
@@ -330,7 +330,7 @@ let almostNode_mem_to_min #h z = function
 
 val hiddenTree_mem_to_max : #h:nat -> z:int -> n:hiddenTree h ->
   Lemma 
-  (requires forall y. hiddenTree_mem y n ==> y <= z)
+  (requires forall y. {:nopattern} hiddenTree_mem y n ==> y <= z)
   (ensures  atMost z (hiddenTree_max n))
   (decreases n)
 let hiddenTree_mem_to_max #h z = function
@@ -339,7 +339,7 @@ let hiddenTree_mem_to_max #h z = function
 
 val hiddenTree_mem_to_min : #h:nat -> z:int -> n:hiddenTree h ->
   Lemma 
-  (requires forall y. hiddenTree_mem y n ==> y >= z) 
+  (requires forall y. {:nopattern} hiddenTree_mem y n ==> y >= z) 
   (ensures  atLeast z (hiddenTree_min n)) 
   (decreases n)
 let hiddenTree_mem_to_min #h z = function
@@ -348,7 +348,7 @@ let hiddenTree_mem_to_min #h z = function
 
 val ins_max : #h:nat -> #c:color -> z:int -> x:int -> s:rbnode h c -> t:almostNode h ->
   Lemma 
-  (requires x <= z /\ atMost z (max s) /\ (forall y. mem y s \/ x = y <==> almostNode_mem y t)) 
+  (requires x <= z /\ atMost z (max s) /\ (forall y. {:nopattern} mem y s \/ x = y <==> almostNode_mem y t)) 
   (ensures atMost z (almostNode_max t))
 let ins_max #h #c z x s t =
   global_upper_bound z s;
@@ -356,7 +356,7 @@ let ins_max #h #c z x s t =
 
 val ins_min : #h:nat -> #c:color -> z:int -> x:int -> s:rbnode h c -> t:almostNode h ->
   Lemma 
-  (requires x >= z /\ atLeast z (min s) /\ (forall y. mem y s \/ x = y <==> almostNode_mem y t)) 
+  (requires x >= z /\ atLeast z (min s) /\ (forall y. {:nopattern} mem y s \/ x = y <==> almostNode_mem y t)) 
   (ensures atLeast z (almostNode_min t))
 let ins_min #h #c z x s t =
   global_lower_bound z s;
@@ -364,7 +364,7 @@ let ins_min #h #c z x s t =
 
 val insB_max : #h:nat -> #c:color -> z:int -> x:int -> s:rbnode h c -> t:hiddenTree h ->
   Lemma 
-  (requires x <= z /\ atMost z (max s) /\ (forall y. mem y s \/ x = y <==> hiddenTree_mem y t))
+  (requires x <= z /\ atMost z (max s) /\ (forall y. {:nopattern} mem y s \/ x = y <==> hiddenTree_mem y t))
   (ensures  atMost z (hiddenTree_max t))
 let insB_max #h #c z x s t =
   global_upper_bound z s;
@@ -372,7 +372,7 @@ let insB_max #h #c z x s t =
 
 val insB_min : #h:nat -> #c:color -> z:int -> x:int -> s:rbnode h c  -> t:hiddenTree h ->
   Lemma 
-  (requires x >= z /\ atLeast z (min s) /\ (forall y. mem y s \/ x = y <==> hiddenTree_mem y t)) 
+  (requires x >= z /\ atLeast z (min s) /\ (forall y. {:nopattern} mem y s \/ x = y <==> hiddenTree_mem y t)) 
   (ensures  atLeast z (hiddenTree_min t))
 let insB_min #h #c z x s t =
   global_lower_bound z s;
@@ -478,7 +478,7 @@ let insert x tree =
   | V (R a x b) -> RBTree (B a x b)
 
 val insert_mem : x:int -> s:rbtree ->
-  Lemma (forall y. mem y s.root \/ y = x <==> mem y (insert x s).root)
+  Lemma (forall y. {:nopattern} mem y s.root \/ y = x <==> mem y (insert x s).root)
 let insert_mem x s = ins_mem x s.root
 
 ///

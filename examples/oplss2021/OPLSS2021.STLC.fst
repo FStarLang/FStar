@@ -172,7 +172,7 @@ let rec appears_free_in (x:int) (e:exp)
 let rec free_in_context (e:exp) (g:env)
   : Lemma
       (requires Some? (typing g e))
-      (ensures forall x. appears_free_in x e ==> Some? (g x))
+      (ensures forall x. {:nopattern} appears_free_in x e ==> Some? (g x))
   = match e with
     | EVar _
     | EUnit -> ()
@@ -183,15 +183,15 @@ let rec free_in_context (e:exp) (g:env)
 /// then it has no free variables
 let typable_empty_closed (e:exp)
   : Lemma  (requires Some? (typing empty e))
-           (ensures forall x. not (appears_free_in x e))
+           (ensures forall x. {:nopattern} not (appears_free_in x e))
   = free_in_context e empty
 
 /// Pointwise equality of environments
-let equal (g1:env) (g2:env) = forall (x:int). g1 x=g2 x
+let equal (g1:env) (g2:env) = forall (x:int). {:nopattern} g1 x=g2 x
 
 /// Equality of environments on the free variables of `e`
 let equalE (e:exp) (g1:env) (g2:env) =
-    forall (x:int). appears_free_in x e ==> g1 x=g2 x
+    forall (x:int). {:nopattern} appears_free_in x e ==> g1 x=g2 x
 
 /// If two environments agree on the free variables of `e`
 /// then typing `e` in those two environments is equivalent

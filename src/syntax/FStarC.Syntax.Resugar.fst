@@ -714,9 +714,9 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list args)*)
           let rec uncurry xs pats (t:A.term) flavor_matches =
             match t.tm with
-            | A.QExists(xs', (_, pats'), body)
-            | A.QForall(xs', (_, pats'), body)
-            | A.QuantOp(_, xs', (_, pats'), body) when flavor_matches t ->
+            | A.QExists(xs', (_, pats', _), body)
+            | A.QForall(xs', (_, pats', _), body)
+            | A.QuantOp(_, xs', (_, pats', _), body) when flavor_matches t ->
                 uncurry (xs@xs') (pats@pats') body flavor_matches
             | _ ->
                 xs, pats, t
@@ -757,16 +757,16 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 let xs, pats, body = uncurry xs pats body flavor_matches in
                 let binders = A.idents_of_binders xs t.pos in
                 if op = "forall"
-                then mk (A.QForall(xs, (binders, pats), body))
+                then mk (A.QForall(xs, (binders, pats, false), body))
                 else if op = "exists"
-                then mk (A.QExists(xs, (binders, pats), body))
-                else mk (A.QuantOp(Ident.id_of_text op, xs, (binders, pats), body))
+                then mk (A.QExists(xs, (binders, pats, false), body))
+                else mk (A.QuantOp(Ident.id_of_text op, xs, (binders, pats, false), body))
                  
             | _ ->
               (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
               (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-              if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
-              else mk (A.QExists([], ([], []), resugar_term' env body))
+              if op = "forall" then mk (A.QForall([], ([], [], false), resugar_term' env body))
+              else mk (A.QExists([], ([], [], false), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)

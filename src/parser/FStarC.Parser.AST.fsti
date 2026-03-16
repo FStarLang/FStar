@@ -113,7 +113,7 @@ and term = {tm:term'; range:range; level:level}
 (* (as y)? returns t *)
 and match_returns_annotation = option ident & term & bool
 
-and patterns = list ident & list (list term)
+and patterns = list ident & list (list term) & bool (* nopattern flag *)
 
 and calc_step =
   | CalcStep of term & term & term (* Relation, justification and next expression *)

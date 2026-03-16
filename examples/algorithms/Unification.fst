@@ -310,7 +310,7 @@ let rec lemma_occurs_not_solveable_aux x t s = match t with
     else ()
 
 type not_solveable s =
-  forall l. lsubst_term l (fst s) <> lsubst_term l (snd s)
+  forall l. {:nopattern} lsubst_term l (fst s) <> lsubst_term l (snd s)
 
 val lemma_occurs_not_solveable: x:nat -> t:term -> Lemma
   (requires (occurs x t /\ not (V? t)))
@@ -335,7 +335,7 @@ let rec lemma_subst_eqns l x t = function
     lemma_subst_eqns l x t tl
 
 type not_solveable_eqns e =
-  forall l. not (solved (lsubst_eqns l e))
+  forall l. {:nopattern} not (solved (lsubst_eqns l e))
 
 val lemma_not_solveable_cons_aux: x:nat -> t:term -> tl:eqns -> l:list subst -> Lemma
   (requires (not_solveable_eqns (lsubst_eqns [x,t] tl)

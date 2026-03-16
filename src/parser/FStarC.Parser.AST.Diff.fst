@@ -244,9 +244,9 @@ and eq_term' (t1 t2:term')
       eq_term t1 t2
     | QForall (bs1, ps1, t1), QForall (bs2, ps2, t2)
     | QExists (bs1, ps1, t1), QExists (bs2, ps2, t2) ->
-      //ps1 and ps2 have type list ident * list (list term)
+      //ps1 and ps2 have type list ident * list (list term) * bool
       // generate equality on ps1 p2
-      let eq_ps (is1, ts1) (is2, ts2) =
+      let eq_ps (is1, ts1, _) (is2, ts2, _) =
         eq_list eq_ident is1 is2 &&
         eq_list (eq_list eq_term) ts1 ts2
       in
@@ -254,7 +254,7 @@ and eq_term' (t1 t2:term')
       eq_ps ps1 ps2 &&
       eq_term t1 t2
     | QuantOp (i1, bs1, ps1, t1), QuantOp (i2, bs2, ps2, t2) ->
-      let eq_ps (is1, ts1) (is2, ts2) =
+      let eq_ps (is1, ts1, _) (is2, ts2, _) =
         eq_list eq_ident is1 is2 &&
         eq_list (eq_list eq_term) ts1 ts2
       in

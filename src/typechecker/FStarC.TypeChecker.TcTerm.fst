@@ -50,6 +50,7 @@ module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module Print = FStarC.Syntax.Print
+module PatternInference = FStarC.TypeChecker.PatternInference
 
 let dbg_Exports        = Debug.get_toggle "Exports"
 let dbg_LayeredEffects = Debug.get_toggle "LayeredEffects"
@@ -858,6 +859,13 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     //analyzing `e` for the smallest terms that contain all the variables
     //in `names`.
     //If not pattern can be inferred, raise a warning
+    let pats =
+      if List.length pats = 0
+         && Options.Ext.enabled "auto_patterns"
+         && not env.phase1
+      then PatternInference.infer_patterns_for_meta env names e
+      else pats
+    in
     let pats, g' =
         let env, _ = Env.clear_expected_typ env in
         tc_smt_pats env pats in

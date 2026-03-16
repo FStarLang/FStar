@@ -120,12 +120,12 @@ val typable_empty_closed : x:var -> #e:exp -> #t:ty -> rtyping empty e t ->
 let typable_empty_closed x #e #t h = free_in_context x h
 
 val typable_empty_closed' : #e:exp -> #t:ty -> rtyping empty e t ->
-      Lemma (ensures (forall (x:var). (not(appears_free_in x e))))
+      Lemma (ensures (forall (x:var). {:nopattern} (not(appears_free_in x e))))
 let typable_empty_closed' #e #t h = admit() (* CH: need forall_intro for showing this *)
 
-type equal (g1:env) (g2:env) =  forall (x:var). g1 x = g2 x
+type equal (g1:env) (g2:env) =  forall (x:var). {:nopattern} g1 x = g2 x
 type equalE (e:exp) (g1:env) (g2:env) =
-       forall (x:var). appears_free_in x e ==> g1 x = g2 x
+       forall (x:var). {:nopattern} appears_free_in x e ==> g1 x = g2 x
 
 val context_invariance : #e:exp -> #g:env -> #t:ty ->
       h:(rtyping g e t) -> g':env{equalE e g g'} ->

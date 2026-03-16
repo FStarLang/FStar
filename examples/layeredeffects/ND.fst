@@ -25,7 +25,7 @@ val w (a : Type u#a) : Type u#(max 1 a)
 let w a = pure_wp a
 
 val w_ord (#a : Type) : w a -> w a -> Type0
-let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
+let w_ord wp1 wp2 = forall p. {:nopattern} wp1 p ==> wp2 p
 
 open FStar.Monotonic.Pure
 
@@ -43,7 +43,7 @@ let w_bind wp1 k =
   as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
-let interp #a (l:list a) = as_pure_wp (fun p -> forall x. memP x l ==> p x)
+let interp #a (l:list a) = as_pure_wp (fun p -> forall x. {:nopattern} memP x l ==> p x)
 
 val concatlemma (#a:Type) (l1 l2 :list a) (x:a) : Lemma (memP x (l1@l2) <==> memP x l1 \/ memP x l2)
 let rec concatlemma #a l1 l2 x =
@@ -52,7 +52,7 @@ let rec concatlemma #a l1 l2 x =
   | h::t -> concatlemma t l2 x
 
 val concatmaplemma : (#a:Type) -> (#b:Type) -> l:list a -> (f:(a -> list b)) -> x:b ->
-                               Lemma (memP x (concatMap f l) <==> (exists a. memP a l /\ memP x (f a)))
+                               Lemma (memP x (concatMap f l) <==> (exists a. {:nopattern} memP a l /\ memP x (f a)))
                                      [SMTPat (memP x (concatMap f l))]
 
 let rec concatmaplemma #a #b l f x =
@@ -63,7 +63,7 @@ let rec concatmaplemma #a #b l f x =
     concatmaplemma t f x
 
 let dm (a : Type) (wp : w a) : Type = 
-  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
+  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. {:nopattern} memP x l ==> p x}
   
 let irepr (a : Type) (wp: w a) = dm a wp
 
@@ -73,13 +73,13 @@ let rec pmap #a #b #pre (#post:b->Type0)
   (f : (x:a -> Pure b (requires (pre x)) (ensures post)))
   (l : list a)
   : Pure (list (v:b{post v}))
-         (requires (forall x. memP x l ==> pre x))
+         (requires (forall x. {:nopattern} memP x l ==> pre x))
          (ensures (fun _ -> True))
   = match l with
     | [] -> []
     | x::xs -> f x :: pmap #_ #_ #pre #post f xs
 
-let rec unref #a #p (l : list (v:a{p v})) : l:(list a){forall x. memP x l ==> p x} =
+let rec unref #a #p (l : list (v:a{p v})) : l:(list a){forall x. {:nopattern} memP x l ==> p x} =
   match l with
   | [] -> []
   | x :: xs -> x :: unref xs
@@ -102,7 +102,7 @@ let rec append_memP #t l1 l2 a = match l1 with
   | hd::tl -> append_memP tl l2 a
 
 let rec flatten_mem_lem #a (l : list (list a)) (x:a)
-  : Lemma (memP x (flatten l) <==> (exists l0. memP l0 l /\ memP x l0))
+  : Lemma (memP x (flatten l) <==> (exists l0. {:nopattern} memP l0 l /\ memP x l0))
           [SMTPat (memP x (flatten l))]
   = match l with
     | [] -> ()
@@ -110,7 +110,7 @@ let rec flatten_mem_lem #a (l : list (list a)) (x:a)
 
 let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v) (f : (x:a -> irepr b (wp_f x))) : irepr b (w_bind wp_v wp_f) =
   fun p _ -> let l1 = v (fun x -> wp_f x p) () in
-          let l2 = pmap #_ #(list b) #(fun x -> wp_f x p) #(fun l -> forall x. memP x l ==> p x) (fun x -> f x p ()) l1 in
+          let l2 = pmap #_ #(list b) #(fun x -> wp_f x p) #(fun l -> forall x. {:nopattern} memP x l ==> p x) (fun x -> f x p ()) l1 in
           let l2 = unref l2 in
           let l2f = List.Tot.flatten l2 in
           l2f
@@ -153,7 +153,7 @@ let test_f () =
 let l () : list int = reify (test_f ()) (fun _ -> True) ()
 
 effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ND a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result)))
+        ND a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). {:nopattern} post pure_result ==> p pure_result)))
 
 val choose : #a:Type0 -> x:a -> y:a -> ND a (as_pure_wp (fun p -> p x /\ p y))
 let choose #a x y =
@@ -166,14 +166,14 @@ let fail #a () =
 let flip () : ND bool (as_pure_wp (fun p -> p true /\ p false)) =
     choose true false
 
-let test () : ND int (as_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x))  by (compute ()) =
+let test () : ND int (as_pure_wp (fun p -> forall (x:int). {:nopattern} 0 <= x /\ x < 10 ==> p x))  by (compute ()) =
     let x = choose 0 1 in
     let y = choose 2 3 in
     let z = choose 4 5 in
     x + y + z
 
 [@expect_failure]
-let test_bad () : ND int (as_pure_wp (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x)) by (compute ()) =
+let test_bad () : ND int (as_pure_wp (fun p -> forall (x:int). {:nopattern} 0 <= x /\ x < 5 ==> p x)) by (compute ()) =
     let x = choose 0 1 in
     let y = choose 2 3 in
     let z = choose 4 5 in
@@ -184,7 +184,7 @@ let guard (b:bool) : ND unit (fun p -> b ==> p ()) by (compute ()) =
   then ()
   else fail ()
   
-let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. memP x l ==> p x)) by (compute ()) =
+let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. {:nopattern} memP x l ==> p x)) by (compute ()) =
     match l with
     | [] -> fail ()
     | x::xs ->
@@ -194,7 +194,7 @@ let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. memP x 
 
 let ( * ) = op_Multiply
 
-let pyths () : ND (int & int & int) (as_pure_wp (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
+let pyths () : ND (int & int & int) (as_pure_wp (fun p -> forall x y z. {:nopattern} x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
   let l = [1;2;3;4;5;6;7;8;9;10] in
   let x = pick_from l in
   let y = pick_from l in

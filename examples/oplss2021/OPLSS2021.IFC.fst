@@ -44,7 +44,7 @@ open FStar.Map
 let loc = int
 
 /// A store itself is a total map from locations to integers
-let store = m:Map.t loc int{forall l. contains m l}
+let store = m:Map.t loc int{forall l. {:nopattern} contains m l}
 
 /// Two functions to read and write the store
 let sel (s:store) (l:loc) : int = Map.sel s l
@@ -79,8 +79,8 @@ let havoc s l x = upd s l x
 /// `writes` is easy
 ///    -- all locations not in writes do not change
 let writes_ok #a (f:comp a) (writes:Set.set loc) =
-   forall (l:loc). ~(Set.mem l writes) ==>
-              (forall (s0:store).
+   forall (l:loc). {:nopattern} ~(Set.mem l writes) ==>
+              (forall (s0:store). {:nopattern}
                  let x1, s0' = f s0 in
                  sel s0 l == sel s0' l)
 
@@ -92,7 +92,7 @@ let does_not_read_loc_v #a (f:comp a) (l:loc) (s0:store) v =
     let x1, s1 = f s0 in
     let x1', s1' = f s0' in // run f twice, once on s0, once on s0'
     x1 == x1' /\                       //result does not depend on l
-    (forall l'. l' <> l ==>                 //for every location l' not equal to l
+    (forall l'. {:nopattern} l' <> l ==>                 //for every location l' not equal to l
            sel s1 l' == sel s1' l') /\ //its value in the two states is the same
     (sel s1 l == sel s1' l \/          //and l is itself may be written, in which case its value is the same in both final states
                                       //or its not, but then its values in the initial and final states are the same in both runs
@@ -102,12 +102,12 @@ let does_not_read_loc_v #a (f:comp a) (l:loc) (s0:store) v =
 /// does_not_read_loc: Lifting the prior property to all values for
 /// the havoc'd location l
 let does_not_read_loc #a (f:comp a) (l:loc) (s0:store) =
-  forall v.  does_not_read_loc_v f l s0 v
+  forall v. {:nopattern} does_not_read_loc_v f l s0 v
 
 /// A reads label is ok for `f` if it is a bound on the set of
 /// locations that `f` reads
 let reads_ok #a (f:comp a) (reads:label) =
-    forall (l:loc) (s:store). ~(Set.mem l reads) ==> does_not_read_loc f l s
+    forall (l:loc) (s:store). {:nopattern} ~(Set.mem l reads) ==> does_not_read_loc f l s
 
 /// Now for the flows index
 let flow = label & label //from, to
@@ -116,7 +116,7 @@ let flows = list flow
 /// `has_flow from to fs` defines when the edge `from -> to` is includes in
 ///  the flows `fs`
 let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
-let has_flow (from to:loc) (fs:flows) = exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs
+let has_flow (from to:loc) (fs:flows) = exists rs. {:nopattern} rs `List.Tot.memP` fs /\ has_flow_1 from to rs
 
 /// Now, as with reads and writes, we have to give an interpretation
 /// to flows tying it to the computational representation
@@ -126,7 +126,7 @@ let has_flow (from to:loc) (fs:flows) = exists rs. rs `List.Tot.memP` fs /\ has_
 let no_leakage_k #a (f:comp a) (from to:loc) (k:int) =
   forall s0.{:pattern (havoc s0 from k)}
        sel (snd (f s0)) to == sel (snd (f (havoc s0 from k))) to
-let no_leakage #a (f:comp a) (from to:loc) = forall k. no_leakage_k f from to k
+let no_leakage #a (f:comp a) (from to:loc) = forall k. {:nopattern} no_leakage_k f from to k
 /// A computation `f` respects all the flows in `fs`
 /// if it there is no leakage along any of the flow-edges in `f`
 let respects_flows #a (f:comp a) (fs:flows) =
@@ -157,8 +157,8 @@ let return (a:Type) (x:a) : ist a bot bot [] = fun s -> x,s
 let add_source (r:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> union r r0, w0) fs
 let add_sink (w:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> r0, union w w0) fs
 let flows_included_in (fs0 fs1:flows) =
-  forall f0. f0 `List.Tot.memP` fs0 ==>
-        (forall from to. has_flow_1 from to f0 /\ from <> to ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
+  forall f0. {:nopattern} f0 `List.Tot.memP` fs0 ==>
+        (forall from to. {:nopattern} has_flow_1 from to f0 /\ from <> to ==> (exists f1. {:nopattern} f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
 let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
 let flows_equiv_refl fs
   : Lemma (fs `flows_equiv` fs)
@@ -210,9 +210,9 @@ let bind_comp_reads_ok (#a #b:Type)
             assert (does_not_read_loc (y v) l s1);
             let u, s2 = y v s1 in
             let u', s2' = y v s1' in
-            assert (forall l'. l' <> l ==> sel s1 l' == sel s1' l');
+            assert (forall l'. {:nopattern} l' <> l ==> sel s1 l' == sel s1' l');
             if sel s1 l = sel s1' l
-            then (assert (forall l. sel s1 l == sel s1' l);
+            then (assert (forall l. {:nopattern} sel s1 l == sel s1' l);
                  assert (Map.equal s1 s1'))
             else (assert (sel s1 l == sel s0 l /\
                          sel (havoc s0 l k) l == sel s1' l);
@@ -342,7 +342,7 @@ let bind_comp_no_leakage (#a #b:Type)
         assert (does_not_read_loc x from s0);
         assert (does_not_read_loc_v x from s0 k);
         assert (v0 == v0');
-        assert (forall l. l <> from ==> sel s1 l == sel s1' l);
+        assert (forall l. {:nopattern} l <> from ==> sel s1 l == sel s1' l);
         assert (Map.equal s1' (havoc s1 from k) \/ Map.equal s1' s1);
         if (sel s1 from = sel s1' from)
         then begin
@@ -416,10 +416,10 @@ let flows_included_append (f0 f1 g0 g1:flows)
     : Lemma (requires List.Tot.memP f (f0@f1) /\
                       from <> to /\
                       has_flow_1 from to f)
-            (ensures (exists g. g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
+            (ensures (exists g. {:nopattern} g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
             [SMTPat (has_flow_1 from to f)]
     = memP_append_or f f0 f1;
-      assert (exists g. g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
+      assert (exists g. {:nopattern} g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
       FStar.Classical.forall_intro (fun g -> memP_append_or g g0 g1)
     in
     ()
@@ -451,7 +451,7 @@ let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
     comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((bot, w2)::fs2)));
     (==) { }
     (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((bot, union w1 w2) :: (fs1 @ add_source r1 ((bot, w2)::fs2)))));
-    (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
+    (==) { assert (forall w0 w1 w2. {:nopattern} Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
     (union (union w0 w1) w2,
      union (union r0 r1) r2,
      fs0 @ (add_source r0 ((bot, union w1 w2) :: (fs1 @ add_source r1 ((bot, w2)::fs2)))));
@@ -459,7 +459,7 @@ let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
     (union (union w0 w1) w2,
      union (union r0 r1) r2,
      (fs0 @ ((union r0 bot, union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((bot, w2)::fs2)))));
-    (==) { assert (forall s. Set.equal (union s bot) s) }
+    (==) { assert (forall s. {:nopattern} Set.equal (union s bot) s) }
     (union (union w0 w1) w2,
      union (union r0 r1) r2,
      (fs0 @ ((r0, union w1 w2) :: add_source r0 (fs1 @ (r1, w2) ::add_source r1 fs2))));
@@ -476,7 +476,7 @@ let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
     (union (union w0 w1) w2,
      union (union r0 r1) r2,
      ((fs0 @ ((union r0 bot, w1)::add_source r0 fs1)) @ ((union (union r0 r1) bot, w2) :: add_source (union r0 r1) fs2)));
-    (==) { assert (forall s. Set.equal (union s bot) s) }
+    (==) { assert (forall s. {:nopattern} Set.equal (union s bot) s) }
     (union (union w0 w1) w2,
      union (union r0 r1) r2,
      ((fs0 @ ((r0, w1)::add_source r0 fs1)) @ ((union r0 r1, w2) :: add_source (union r0 r1) fs2)));

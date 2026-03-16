@@ -627,22 +627,22 @@ let rec term_to_string (x:term) : ML string = match x.tm with
     List.map (function Inl b -> binder_to_string b
                      | Inr t -> term_to_string t) |>
     String.concat " & "
-  | QForall(bs, (_, pats), t) ->
+  | QForall(bs, (_, pats, _), t) ->
     Format.fmt3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
-  | QExists(bs, (_, pats), t) ->
+  | QExists(bs, (_, pats, _), t) ->
     Format.fmt3 "exists %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
       (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
-  | QuantOp(i, bs, (_, []), t) ->
+  | QuantOp(i, bs, (_, [], _), t) ->
     Format.fmt3 "%s %s. %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)
       (t|> term_to_string)
-  | QuantOp(i, bs, (_, pats), t) ->
+  | QuantOp(i, bs, (_, pats, _), t) ->
     Format.fmt4 "%s %s.{:pattern %s} %s"
       (string_of_id i)
       (to_string_l " " binder_to_string bs)
@@ -1104,15 +1104,15 @@ let rec pp_term (t:term) : ML document =
         | Inr t -> ctor "Inr" [pp_term t] in
       ctor "Sum" [pp_list' pp_either binders_or_terms; pp_term t]
   | QForall (binders, pats, t) ->
-      let pp_patterns (idents, patterns_list) =
+      let pp_patterns (idents, patterns_list, _) =
         ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
       ctor "QForall" [pp_list' pp_binder binders; pp_patterns pats; pp_term t]
   | QExists (binders, pats, t) ->
-      let pp_patterns (idents, patterns_list) =
+      let pp_patterns (idents, patterns_list, _) =
         ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
       ctor "QExists" [pp_list' pp_binder binders; pp_patterns pats; pp_term t]
   | QuantOp (i, binders, pats, t) ->
-      let pp_patterns (idents, patterns_list) =
+      let pp_patterns (idents, patterns_list, _) =
         ctor "Patterns" [pp_list' pp idents; pp_list' (pp_list' pp_term) patterns_list] in
       ctor "QuantOp" [pp i; pp_list' pp_binder binders; pp_patterns pats; pp_term t]
   | Refine (b, t) ->

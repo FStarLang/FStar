@@ -2451,7 +2451,7 @@ and desugar_formula env (f:term) : ML S.term =
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q_head:S.term) b pats should_wrap_with_pat body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
-    let with_pats env (names, pats) body =
+    let with_pats env (names, pats, nopattern) body =
       match names, pats with
       | [], [] -> body
       | [], _::_ ->
@@ -2469,7 +2469,7 @@ and desugar_formula env (f:term) : ML S.term =
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
         match pats with
-        | [] when not should_wrap_with_pat -> body
+        | [] when not should_wrap_with_pat || nopattern -> body
         | _ -> mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
     in
     match tk with
@@ -2492,7 +2492,7 @@ and desugar_formula env (f:term) : ML S.term =
     | b::(b'::_rest) ->
       let rest = b'::_rest in
       let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
-      mk_term (q([b], ([], []), body)) f.range Formula
+      mk_term (q([b], ([], [], false), body)) f.range Formula
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with

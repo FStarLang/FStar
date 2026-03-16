@@ -272,9 +272,9 @@ let on_sub_patterns
   #m {| monad m |} (d : dict m)
   (x : patterns) : ML (m patterns)
 =
-  let (ids, tss) = x in
+  let (ids, tss, nopat) = x in
   let! tss = mapM (mapM d.f_term) tss in
-  return (ids, tss)
+  return (ids, tss, nopat)
 
 let on_sub_calc_step
   #m {| monad m |} (d : dict m)

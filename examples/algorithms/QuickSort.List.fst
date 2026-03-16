@@ -27,10 +27,10 @@ let rec sorted f = function
 
 type total_order (a:eqtype) =
   f:(a -> a -> Tot bool) {
-      (forall a. f a a) // reflexive
-    /\ (forall a1 a2. f a1 a2 /\ f a2 a1 ==> a1 = a2) // anti-symmetric
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) // transitive
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1) // total
+      (forall a. {:nopattern} f a a) // reflexive
+    /\ (forall a1 a2. {:nopattern} f a1 a2 /\ f a2 a1 ==> a1 = a2) // anti-symmetric
+    /\ (forall a1 a2 a3. {:nopattern} f a1 a2 /\ f a2 a3 ==> f a1 a3) // transitive
+    /\ (forall a1 a2. {:nopattern} f a1 a2 \/ f a2 a1) // total
   }
 
 val count: #a:eqtype -> a -> list a -> Tot nat
@@ -71,7 +71,7 @@ let rec partition_lemma #a f l = match l with
 
 val sorted_app_lemma: #a:eqtype -> f:total_order a
   -> l1:list a{sorted f l1} -> l2:list a{sorted f l2} -> pivot:a
-  -> Lemma (requires (forall y. (mem y l1 ==> ~(f pivot y))
+  -> Lemma (requires (forall y. {:nopattern} (mem y l1 ==> ~(f pivot y))
 		        /\ (mem y l2 ==>   f pivot y)))
           (ensures (sorted f (l1 @ pivot :: l2)))
   [SMTPat (sorted f (l1 @ pivot::l2))]
@@ -81,7 +81,7 @@ let rec sorted_app_lemma #a f l1 l2 pivot =
   | _ -> ()
 
 type is_permutation (a:eqtype) (l:list a) (m:list a) =
-  forall x. count x l = count x m
+  forall x. {:nopattern} count x l = count x m
 
 val append_count: #a:eqtype -> l:list a -> m:list a -> x:a ->
   Lemma (requires True)
@@ -106,7 +106,7 @@ let permutation_app_lemma (#a:eqtype) (hd:a) (tl:list a)
      //By assertion the equality, we explicitly introduce `count x (hd::l2)`
      //which can then be unfolded as needed.
      //This is rather counterintuitive.
-    assert (forall x. count x (l1 @ (hd :: l2)) = count x l1 + count x (hd :: l2))
+    assert (forall x. {:nopattern} count x (l1 @ (hd :: l2)) = count x l1 + count x (hd :: l2))
 
 val quicksort: #a:eqtype -> f:total_order a -> l:list a ->
   Tot (m:list a{sorted f m /\ is_permutation a l m})
