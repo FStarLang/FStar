@@ -6,6 +6,7 @@ open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Class.Setlike
+open FStarC.Class.Show
 
 module S    = FStarC.Syntax.Syntax
 module SS   = FStarC.Syntax.Subst
@@ -13,6 +14,9 @@ module U    = FStarC.Syntax.Util
 module Free = FStarC.Syntax.Free
 module Env  = FStarC.TypeChecker.Env
 module PC   = FStarC.Parser.Const
+
+(* Import showable instances for terms *)
+open FStarC.Syntax.Print
 
 (* Check if a term is eligible to appear inside an SMT pattern.
    Must contain only function applications, constants, and variables.
@@ -184,12 +188,39 @@ let maybe_infer_patterns (env:Env.env) (t:term) : ML term =
 
     begin match full_coverage with
     | [] ->
-      (* Inference failed — emit warning *)
+      (* Inference failed — emit warning with reason *)
+      let qvar_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) qvars in
+      let qvar_str = String.concat ", " qvar_names in
+      let reason =
+        if List.length candidates = 0 then
+          "no eligible candidate terms found in the quantifier body"
+        else
+          let uncovered = List.filter (fun qv ->
+            not (List.existsb (fun (_, covered) ->
+              List.existsb (fun cv -> S.bv_eq qv cv) covered
+            ) candidates)
+          ) qvars in
+          if List.length uncovered > 0 then
+            let uncovered_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) uncovered in
+            Format.fmt1 "no candidate term mentions variable(s): %s"
+                   (String.concat ", " uncovered_names)
+          else
+            "no single candidate term covers all bound variables (would need a conjunctive pattern)"
+      in
       FStarC.Errors.log_issue t FStarC.Errors.Warning_SMTPatternIllFormed
-        "Could not automatically infer an SMT pattern for this quantifier; please supply {:pattern ...} or consider adding a pattern manually";
+        (Format.fmt2 "Could not automatically infer a pattern for quantifier over {%s}: %s" qvar_str reason);
       t
 
     | patterns ->
+      (* Success: optionally report under --ext auto_patterns_diag *)
+      if Options.Ext.enabled "auto_patterns_diag" then begin
+        let qvar_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) qvars in
+        let qvar_str = String.concat ", " qvar_names in
+        let pat_strs = List.map (fun (t, _) -> show t) patterns in
+        let pat_str = String.concat " \\/ " pat_strs in
+        FStarC.Errors.info t
+          (Format.fmt2 "Auto-pattern: for quantifier over {%s}, inferred {:pattern %s}" qvar_str pat_str)
+      end;
       (* Build disjunctive pattern: each candidate becomes one disjunct *)
       let names = List.map S.bv_to_name qvars in
       let pats = List.map (fun (pat_term, _) -> [(pat_term, None)]) patterns in
@@ -218,6 +249,8 @@ let infer_patterns_for_meta (env:Env.env) (names:list term) (body:term) : ML (li
   ) names in
   if List.length qvars = 0 then []
   else
+  let qvar_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) qvars in
+  let qvar_str = String.concat ", " qvar_names in
   (* Collect and filter candidates *)
   let candidates = collect_candidates env qvars body in
   let full_coverage = List.filter (fun (_, covered) ->
@@ -227,8 +260,43 @@ let infer_patterns_for_meta (env:Env.env) (names:list term) (body:term) : ML (li
   ) candidates in
   match full_coverage with
   | [] ->
+    (* Build a diagnostic message explaining WHY inference failed *)
+    let reason =
+      if List.length candidates = 0 then
+        "no eligible candidate terms found in the quantifier body. " ^
+        "Eligible terms must be function applications (f x) where f is a " ^
+        "top-level function without the [@@smt_theory_symbol] attribute. " ^
+        "The search does not descend into nested binders (let, fun, forall, exists)."
+      else
+        (* We have candidates but none cover all variables *)
+        let partial_coverage = List.map (fun (t, covered) ->
+          let covered_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) covered in
+          Format.fmt2 "%s covers {%s}" (show t) (String.concat ", " covered_names)
+        ) candidates in
+        let uncovered = List.filter (fun qv ->
+          not (List.existsb (fun (_, covered) ->
+            List.existsb (fun cv -> S.bv_eq qv cv) covered
+          ) candidates)
+        ) qvars in
+        let uncovered_names = List.map (fun (bv:bv) -> FStarC.Ident.string_of_id bv.ppname) uncovered in
+        if List.length uncovered > 0 then
+          Format.fmt2 "no candidate term mentions the bound variable(s): %s. Candidates found: %s"
+                 (String.concat ", " uncovered_names)
+                 (String.concat "; " partial_coverage)
+        else
+          Format.fmt2 "no single candidate term covers all bound variables (would need a conjunctive pattern across {%s}). Candidates found: %s"
+                 qvar_str
+                 (String.concat "; " partial_coverage)
+    in
     FStarC.Errors.log_issue body FStarC.Errors.Warning_SMTPatternIllFormed
-      "Could not automatically infer an SMT pattern for this quantifier; please supply {:pattern ...} or consider adding a pattern manually";
+      (Format.fmt2 "Could not automatically infer a pattern for quantifier over {%s}: %s" qvar_str reason);
     []
   | patterns ->
+    (* Success: optionally report under --ext auto_patterns_diag *)
+    if Options.Ext.enabled "auto_patterns_diag" then begin
+      let pat_strs = List.map (fun (t, _) -> show t) patterns in
+      let pat_str = String.concat " \\/ " pat_strs in
+      FStarC.Errors.info body
+        (Format.fmt2 "Auto-pattern: for quantifier over {%s}, inferred {:pattern %s}" qvar_str pat_str)
+    end;
     List.map (fun (pat_term, _) -> [(pat_term, None)]) patterns
