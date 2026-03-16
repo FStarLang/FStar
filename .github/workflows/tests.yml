@@ -10,10 +10,10 @@ defaults:
 
 
 jobs:
-  # This checks that the stage3 extracted fstarc matches exactly with
-  # stage2. Also, we build the F# library (it is not packaged, so not
-  # built by the job above)
-  stage3:
+  # This checks that the extracted fstarc (using stage2) matches exactly with
+  # stage2 (extracted with stage1). Also, we build the F# library (it is not
+  # packaged, so not built by the job above)
+  boot-diff:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base
     steps:
@@ -23,14 +23,14 @@ jobs:
       - uses: mtzguido/set-opam-env@master
 
       # We download the full repo state from the step below and start a
-      # stage3 check. This allows the rest of the workflow to go ahead
+      # boot-diff check. This allows the rest of the workflow to go ahead
       # while we do this.
       - uses: mtzguido/gci-download@master
         with:
           name: fstar-repo
 
-      - name: Check for a stage 3 diff and F# library build
-        run: make -skj$(nproc) stage3-diff lib-fsharp
+      - name: Check for a boot diff and F# library build
+        run: make -skj$(nproc) boot-diff lib-fsharp
         working-directory: FStar
 
   # Download the stage2 binary package from the previous job and run the

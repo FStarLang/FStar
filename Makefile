@@ -9,7 +9,7 @@ include mk/common.mk
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
-all: stage1 stage2 1.tests 2.tests stage3-bare lib-fsharp
+all: stage1 stage2 1.tests 2.tests boot-src-bare lib-fsharp
 all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
@@ -44,6 +44,9 @@ INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
 FSTAR2_BARE_EXE           := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
 FSTAR2_FULL_EXE           := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
+# Stage3 = Stage2 + Pulse
+FSTAR3_FULL_EXE           := stage3/dune/_build/default/fstarc-full/fstarc3_full.exe
+INSTALLED_FSTAR3_FULL_EXE := stage3/out/bin/fstar.exe
 TESTS1_EXE                := stage1/dune/_build/default/tests/fstarc1_tests.exe
 TESTS2_EXE                := stage2/dune/_build/default/tests/fstarc2_tests.exe
 
@@ -58,7 +61,7 @@ else
 MAYBEFORCE=
 endif
 
-build: 2
+build: 3
 
 0: $(FSTAR0_EXE)
 1.bare:  $(FSTAR1_BARE_EXE)
@@ -67,6 +70,9 @@ build: 2
 2.bare:  $(FSTAR2_BARE_EXE)
 2.tests: $(TESTS2_EXE)
 2.full:  $(FSTAR2_FULL_EXE)
+# No tests or bare for stage3
+3.full:  $(FSTAR3_FULL_EXE)
+
 
 # This file's timestamp is updated whenever anything in stage0/
 # (excluding some build directories)
@@ -311,29 +317,30 @@ lib-fsharp.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
 lib-fsharp: lib-fsharp.src
 	$(MAKE) -C fsharp/VS all
 
-# Stage 3 is different, we don't build it, we just check that the
+
+# Stage 2+1 is different, we don't build it, we just check that the
 # extracted OCaml files coincide exactly with stage2. We also do not
-# extract the plugins, as is stage2/fstarc and stage3/fstarc coincide,
+# extract the plugins, as if stage2/fstarc and boot-diff/fstarc coincide,
 # then they are exactly the same compiler and will extract the plugins
 # in the same way.
 
-stage3-bare: $(FSTAR2_FULL_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 3 FSTARC")
+boot-src-bare: $(FSTAR2_FULL_EXE) .force
+	$(call bold_msg, "EXTRACT", "STAGE 2+1 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  FSTAR_LIB=$(abspath ulib) \
-	  CACHE_DIR=stage3/fstarc.checked/ \
-	  OUTPUT_DIR=stage3/fstarc.ml/ \
+	  CACHE_DIR=boot-diff/fstarc.checked/ \
+	  OUTPUT_DIR=boot-diff/fstarc.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=fstarc \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
-stage3-diff: stage3-bare .force
-	$(call bold_msg, "DIFF", "STAGE 2 vs STAGE 3")
+boot-diff: boot-src-bare .force
+	$(call bold_msg, "DIFF", "STAGE 2 vs STAGE 2+1")
 	@# Ignore ramon files, if any
-	diff -r -x '*.ramon' stage2/fstarc.ml stage3/fstarc.ml
+	diff -r -x '*.ramon' stage2/fstarc.ml boot-diff/fstarc.ml
 
 ifeq ($(shell uname),Linux)
 LINK_OK=1
@@ -347,19 +354,54 @@ endif
 .stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
 	touch $@
 
-.install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
-	$(call bold_msg, "INSTALL", "STAGE 1")
-	$(MAKE) -C stage1 install PREFIX=$(CURDIR)/stage1/out
+.pulse-plugin.src.touch: stage2
+	env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
+	  $(MAKE) -C pulse plugin.src
+
+# F* executable with baked-in Pulse.
+.stage3.exe.touch: $(FSTAR3_FULL_EXE)
+$(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
+	$(call bold_msg, "BUILD", "STAGE 3 (PULSE)")
+	$(MAKE) -C stage3 fstarc-full FSTAR_DUNE_RELEASE=1
+	touch $@
+
+.pulse-lib.touch: $(FSTAR3_FULL_EXE)
+	$(call bold_msg, "CHECK", "PULSE CORE")
+	env \
+	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
+	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+	$(call bold_msg, "CHECK", "PULSE LIB")
+	env \
+	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/ -f mk/lib-pulse.mk
+
+.stage3.src.touch: .stage2.src.touch .pulse-plugin.src.touch .pulse-lib.touch
+	touch $@
+
+define install-stage
+	$(call bold_msg, "INSTALL", "STAGE $(1)")
+	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
 	touch $@
+endef
+
+.install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
+	$(call install-stage,1)
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 .install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
-	$(call bold_msg, "INSTALL", "STAGE 2")
-	$(MAKE) -C stage2 install PREFIX=$(CURDIR)/stage2/out FSTAR_DUNE_RELEASE=1
-	@# ^ pass PREFIX to make sure we don't get it from env
-	touch $@
+	$(call install-stage,2,FSTAR_DUNE_RELEASE=1)
+
+.install-stage3.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
+.install-stage3.touch: .stage3.src.touch $(MAYBEFORCE)
+	$(call install-stage,3,FSTAR_DUNE_RELEASE=1)
 
 setlink-%:
 	if [ -e out ] && ! [ -h out ]; then echo "ERROR: out/ exists and is not a symbolic link, please remove it"; false; fi
@@ -379,7 +421,9 @@ stage2: .install-stage2.touch
 2: stage2
 	$(MAKE) setlink-2
 
-3: stage3-diff
+stage3: .install-stage3.touch
+3: stage3
+	$(MAKE) setlink-3
 
 install: export PREFIX?=/usr/local
 install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
@@ -393,6 +437,9 @@ __do-install-stage1:
 __do-install-stage2:
 	$(call bold_msg, "INSTALL", "STAGE 2")
 	$(MAKE) -C stage2 install FSTAR_DUNE_RELEASE=1
+__do-install-stage3:
+	$(call bold_msg, "INSTALL", "STAGE 3")
+	$(MAKE) -C stage3 install FSTAR_DUNE_RELEASE=1
 
 __do-archive: .force
 	rm -rf $(PKGTMP)
@@ -407,6 +454,12 @@ __do-src-archive: .force
 	rm -rf $(PKGTMP) # change the name, this is safe (its overriden) but scary
 	$(call bold_msg, "SRC PACKAGE", $(ARCHIVE))
 	.scripts/src-install.sh "$(BROOT)" "$(PKGTMP)/fstar"
+ifeq ($(PULSE_EXTRA),1)
+	# Copy pulse library sources into the source package
+	mkdir -p $(PKGTMP)/fstar/pulse
+	cp -H -p -r pulse/lib/common               $(PKGTMP)/fstar/pulse/common
+	cp -H -p -r pulse/lib/pulse                $(PKGTMP)/fstar/pulse/pulse
+endif
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
 	rm -rf $(PKGTMP)
 
@@ -430,6 +483,14 @@ package-2: .stage2.src.touch .force
 	  INSTALL_RULE=__do-install-stage2 \
 	  $(MAKE) __do-archive
 
+package-3: .stage3.src.touch .force
+	env \
+	  PKGTMP=_pak3 \
+	  BROOT=stage3/ \
+	  ARCHIVE=fstar$(FSTAR_TAG) \
+	  INSTALL_RULE=__do-install-stage3 \
+	  $(MAKE) __do-archive
+
 package-src-1: .stage1.src.touch .tests1.src.touch .force
 	env \
 	  PKGTMP=_srcpak1 \
@@ -444,8 +505,17 @@ package-src-2: .stage2.src.touch .tests2.src.touch .force
 	  ARCHIVE=fstar$(FSTAR_TAG)-src \
 	  $(MAKE) __do-src-archive
 
-package: package-2
-package-src: package-src-2
+# tests2.src is good for stage3
+package-src-3: .stage3.src.touch .tests2.src.touch .force
+	env \
+	  PKGTMP=_srcpak3 \
+	  BROOT=stage3/ \
+	  ARCHIVE=fstar$(FSTAR_TAG)-src \
+	  PULSE_EXTRA=1 \
+	  $(MAKE) __do-src-archive
+
+package: package-3
+package-src: package-src-3
 
 test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
 test-1-bare: override FSTAR_LIB := $(abspath ulib)
@@ -457,7 +527,7 @@ test-2-bare: override FSTAR_LIB := $(abspath ulib)
 test-2-bare: $(FSTAR2_BARE_EXE)
 	$(MAKE) -C bare-tests
 
-test: test-2
+test: test-3
 
 test-1: override FSTAR_EXE := $(abspath stage1/out/bin/fstar.exe)
 test-1: stage1
@@ -471,8 +541,20 @@ test-2: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 test-2: stage2
 	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
 
+test-3: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+test-3: stage3
+	# Only test-3 calls test_pulse. The other compilers do not
+	# support Pulse.
+	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE)
+
 unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 unit-tests: _unit-tests
+
+_test_pulse:
+	env \
+	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR3_FULL_EXE)) \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/test/
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
@@ -500,7 +582,7 @@ _examples: need_fstar_exe .force
 
 ci: .force
 	+$(MAKE) 2
-	+$(MAKE) test lib-fsharp stage3-diff test-2-bare stage2-unit-tests
+	+$(MAKE) test lib-fsharp boot-diff test-2-bare stage2-unit-tests
 
 save: stage0_new
 
@@ -572,33 +654,35 @@ clean-0: .force
 	$(MAKE) -C stage0 clean
 	rm -rf stage0/ulib/.cache # created only to prevent warnings, always empty
 
+define clean-stage
+	$(call bold_msg, "CLEAN", "STAGE $(1)")
+	$(MAKE) -C stage$(1) clean
+	rm -rf stage$(1)/fstarc.checked
+	rm -rf stage$(1)/fstarc.ml
+	rm -rf stage$(1)/plugins.checked
+	rm -rf stage$(1)/plugins.ml
+	rm -rf stage$(1)/ulib.checked
+	rm -rf stage$(1)/ulib.ml
+	rm -rf stage$(1)/ulib.pluginml
+endef
+
 clean-1: .force
-	$(call bold_msg, "CLEAN", "STAGE 1")
-	$(MAKE) -C stage1 clean
-	rm -rf stage1/fstarc.checked
-	rm -rf stage1/fstarc.ml
-	rm -rf stage1/plugins.checked
-	rm -rf stage1/plugins.ml
-	rm -rf stage1/ulib.checked
-	rm -rf stage1/ulib.ml
-	rm -rf stage1/ulib.pluginml
+	$(call clean-stage,1)
 
 clean-2: .force
-	$(call bold_msg, "CLEAN", "STAGE 2")
-	$(MAKE) -C stage2 clean
-	rm -rf stage2/fstarc.checked
-	rm -rf stage2/fstarc.ml
-	rm -rf stage2/plugins.checked
-	rm -rf stage2/plugins.ml
-	rm -rf stage2/ulib.checked
-	rm -rf stage2/ulib.ml
-	rm -rf stage2/ulib.pluginml
+	$(call clean-stage,2)
 
 clean-3: .force
-	$(call bold_msg, "CLEAN", "STAGE 3")
-	rm -rf stage3/
+	$(call clean-stage,3)
+	rm -rf stage3/checker.ml
+	rm -rf stage3/extraction.ml
+	rm -rf stage3/syntax_extension.ml
 
-trim: clean-0 clean-1 clean-2 clean-3
+clean-boot-diff: .force
+	$(call bold_msg, "CLEAN", "STAGE 2+1")
+	rm -rf boot-diff/
+
+trim: clean-0 clean-1 clean-2 clean-3 clean-boot-diff
 
 clean: trim
 	$(call bold_msg, "CLEAN", "out/")
