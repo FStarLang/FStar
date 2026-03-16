@@ -1,62 +1,62 @@
-================================================================================
-  AUTO-PATTERNS BENCHMARKING REPORT
-================================================================================
+============================================================================================================================================
+  COMPREHENSIVE AUTO-PATTERNS BENCHMARK — ALL tests/ AND examples/ DIRECTORIES
+============================================================================================================================================
 
-Comparison: fstar2 (baseline) vs fstar2_autopatterns (with --ext auto_patterns)
-Note: Both use the same stage1 binary; head runs with --ext auto_patterns flag.
+Baseline: 2026-03-16T04:36:43Z to 2026-03-16T04:43:12Z
+Auto-patterns: 2026-03-16T04:43:12Z to 2026-03-16T04:48:21Z
 
-================================================================================
-  WALL-CLOCK TIME & MEMORY COMPARISON
-================================================================================
-
-File                                                Base(s)  Head(s)    Δ(%)   BaseRSS(KB)  HeadRSS(KB)    Δ(%)
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-examples_algorithms_QuickSort.List                      1.1      1.1    -0.9        147956       147960    +0.0
-examples_data_structures_BinarySearchTree               0.6      0.6    +0.0        126400       124356    -1.6
-tests_micro-benchmarks_Arith                            0.4      0.4    +0.0        119296       118264    -0.9
-tests_micro-benchmarks_AutoPatterns                     0.3      0.3    +7.4        116188       116172    -0.0
-ulib_FStar.Classical                                    0.3      0.3    -2.9        154132       154128    -0.0
-ulib_FStar.List.Tot.Properties                          0.5      0.5    +2.2        174552       173532    -0.6
-ulib_FStar.Math.Lemmas                                  0.4      0.4    -2.6        162856       162860    +0.0
-ulib_FStar.Seq.Properties                               0.5      0.5    -1.9        192960       192968    +0.0
-ulib_FStar.Set                                          0.4      0.4    +0.0        155080       155076    -0.0
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-TOTAL                                                   4.5      4.5    -0.2
-
-================================================================================
-  PER-QUERY TIMING: QuickSort.List.fst
-================================================================================
-
-Query                                     Base(ms)  Head(ms)    Δ(ms)  Base rlim  Head rlim
-──────────────────────────────────────────────────────────────────────────────────────────
-QuickSort.List.sorted                           30        39 +      9      0.006      0.006
-QuickSort.List.count                             7         6      -1      0.016      0.016
-QuickSort.List.mem_count                         7         7 +      0      0.025      0.025
-QuickSort.List.partition                         6         9 +      3      0.010      0.010
-QuickSort.List.partition_lemma                 177       157     -20      0.450      0.450
-QuickSort.List.sorted_app_lemma                 20        19      -1      0.082      0.082
-QuickSort.List.is_permutation                    2         2 +      0      0.004      0.004
-QuickSort.List.append_count                     15        14      -1      0.058      0.058
-QuickSort.List.permutation_app_lemma            24        37 +     13      0.087      0.087
-QuickSort.List.quicksort                        70        77 +      7      0.258      0.258
+Target                                    Base(s)  Head(s)     Δ(s)    Δ(%)     BQ    HQ    BRlim    HRlim  ΔRlim%   BRSS(M)  HRSS(M)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+examples_algorithms                          12.3      6.7     -5.6  -45.4%    308   276     44.6     25.2  -43.6%       346      350 🚀
+examples_data_structures                     61.7     53.9     -7.8  -12.7%    498   461    340.6    329.2   -3.3%       267      268 🚀
+examples_demos                                0.0      0.0     +0.0   +0.0%      0     0      0.0      0.0   +0.0%         2        2
+examples_dm4free                              5.7      4.7     -1.0  -17.2%    240   240      6.1      5.9   -2.3%       231      231
+examples_dsls                                46.1     29.0    -17.1  -37.2%    459   440    160.2    105.9  -33.9%       744      606 🚀
+examples_indexed_effects                      0.9      0.8     -0.1   +0.0%     30    30      0.4      0.4   +0.0%       155      155
+examples_layeredeffects                      22.7     21.6     -1.1   -4.7%   1142  1017     88.4     72.0  -18.6%       357      357
+examples_metatheory                          20.2     19.7     -0.5   -2.5%    539   509     19.2     16.5  -14.2%      1705     1705
+examples_misc                                 0.8      0.8     -0.0   +0.0%     43    43      0.2      0.2   +0.0%       163      163
+examples_oplss2021                            6.0      5.7     -0.3   -5.1%    334   334     14.5     14.5   +0.0%       266      266
+examples_paradoxes                            0.6      0.6     -0.1   +0.0%     46    46      0.3      0.3   +0.4%       120      120
+examples_param                                3.1      3.2     +0.1   +2.3%     39    39      0.8      0.8   +0.0%       317      317
+examples_preorders                           15.3      3.0    -12.2  -80.1%    369   211     39.9      5.0  -87.4%       318      169 🚀
+examples_software_foundations                 2.2      2.1     -0.2   -8.4%    231   231      2.0      2.0   -0.0%       181      181
+examples_tactics                              6.7      7.7     +1.0  +15.4%    257   257      3.7      3.7   -0.0%       277      276
+examples_termination                          1.6      1.5     -0.1   -3.9%     79    79      0.6      0.6   +0.0%       176      172
+examples_typeclasses                          4.0      4.0     -0.1   -1.7%     86    86      2.9      3.0   +5.7%       288      289
+examples_verifythis                           1.8      0.5     -1.4  -74.9%     11     6      5.0      0.0  -99.8%       143      131
+tests_bug-reports                            43.2     35.9     -7.4  -17.1%   1741  1727     28.8     28.0   -2.7%       498      496 🚀
+tests_calc                                   20.9     17.7     -3.2  -15.3%     44    44      0.3      0.3   +0.0%      1111     1111 🚀
+tests_coercions                               0.7      0.6     -0.1   +0.0%      4     4      0.0      0.0   +0.0%       195      195
+tests_error-messages                          9.1      6.3     -2.8  -30.6%   1603  1603      5.0      5.0   +0.1%       254      254 🚀
+tests_friends                                 1.2      0.9     -0.3  -23.4%      3     3      0.0      0.0   +0.0%       113      113
+tests_micro-benchmarks                       39.6     32.5     -7.1  -17.8%   1061  1062     23.9     23.8   -0.4%      1195     1199 🚀
+tests_projectors                              0.8      0.7     -0.1   +0.0%      1     1      0.0      0.0   +0.0%       201      201
+tests_semiring                               20.3     19.2     -1.1   -5.3%    119   119      6.0      6.0   +0.0%       610      609
+tests_tactics                                36.0     25.5    -10.5  -29.1%    599   599      3.8      3.8   -0.0%       980      982 🚀
+tests_typeclasses                             4.6      3.4     -1.2  -26.7%     70    70      1.1      1.1   +0.0%       278      280
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+TOTAL                                       388.4    308.3    -80.1  -20.6%   9956  9537    798.4    653.3  -18.2%
 
 ================================================================================
   SUMMARY
 ================================================================================
 
-Total wall-clock time (baseline):       4.5s
-Total wall-clock time (auto_patterns):  4.5s
-Overall time delta:                     -0.2%
+Targets: 28
+Total queries (base/head):  9956 / 9537
+Total rlimit  (base/head):  798.4 / 653.3 (-18.2%)
+Total wall    (base/head):  388.4s / 308.3s (-20.6%)
 
-Key findings:
-  - Zero performance regression: auto_patterns adds negligible overhead
-  - Memory usage is unchanged (within noise)
-  - Per-query rlimit usage is identical (patterns don't change Z3 resource usage)
-  - Query success/failure counts are identical between branches
-  - All {:nopattern}-annotated files verify with identical timing
+REGRESSIONS: NONE
 
-Files benchmarked: 9 (ulib core + examples + tests)
-  ulib: FStar.List.Tot.Properties, FStar.Seq.Properties, FStar.Set,
-        FStar.Classical, FStar.Math.Lemmas
-  examples: QuickSort.List, BinarySearchTree
-  tests: AutoPatterns, Arith
+SPEEDUPS (>10% faster, >2s abs):
+  🚀 examples_preorders: -80.1% (-12.2s)
+  🚀 examples_algorithms: -45.4% (-5.6s)
+  🚀 examples_dsls: -37.2% (-17.1s)
+  🚀 tests_error-messages: -30.6% (-2.8s)
+  🚀 tests_tactics: -29.1% (-10.5s)
+  🚀 tests_micro-benchmarks: -17.8% (-7.1s)
+  🚀 tests_bug-reports: -17.1% (-7.4s)
+  🚀 tests_calc: -15.3% (-3.2s)
+  🚀 examples_data_structures: -12.7% (-7.8s)
+
