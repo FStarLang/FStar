@@ -25,18 +25,20 @@ include $(PULSE_ROOT)/mk/locate.mk
 
 HINTS_ENABLED?=
 
-OTHERFLAGS += --cmi
 # This warning is really useless.
 OTHERFLAGS += --warn_error -321
 OTHERFLAGS += --warn_error @247 # couldn't write a checked file? FAIL RIGHT NOW
 OTHERFLAGS += --ext optimize_let_vc
 OTHERFLAGS += --ext fly_deps
+ifdef STAGE3 # If testing F* stage3, don't pass anything.
+else
 ifdef TESTNOLIB
 OTHERFLAGS += --include $(PULSE_ROOT)/lib/common
 OTHERFLAGS += --include $(PULSE_ROOT)/build/lib.common.checked
 OTHERFLAGS += --include $(PULSE_ROOT)/build/ocaml/installed/lib/pulse
 else
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
+endif
 endif
 
 # Set ADMIT=1 to admit queries

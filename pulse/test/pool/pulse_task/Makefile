@@ -1,8 +1,9 @@
 PULSE_ROOT ?= ../../..
+ifndef STAGE3 # Only if not testing F* stage3
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
+endif
 OTHERFLAGS += --include $(PULSE_ROOT)/share/pulse/examples
 OTHERFLAGS += --ext pulse:extract_ocaml_bare
-OTHERFLAGS += --cmi
 
 DEPFLAGS += --extract '-*'
 DEPFLAGS += --extract +Quicksort

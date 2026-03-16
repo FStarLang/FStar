@@ -26,7 +26,7 @@ OTHERFLAGS += --include $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_cache
 OTHERFLAGS += --include $(PULSE_ROOT)/test
 OTHERFLAGS += --include $(PULSE_ROOT)/test/_cache
 
-OTHERFLAGS += --warn_error -342 --cmi
+OTHERFLAGS += --warn_error -342
 OTHERFLAGS += --include $(PULSE_ROOT)/out/lib/pulse
 
 include $(PULSE_ROOT)/mk/boot.mk
