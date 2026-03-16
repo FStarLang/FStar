@@ -1,0 +1,98 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Checker.Admit
+
+module T = FStar.Tactics.V2
+
+open Pulse.Syntax
+open Pulse.Typing
+open Pulse.Checker.Pure
+open Pulse.Checker.Base
+
+module RU = Pulse.RuntimeUtils
+module P = Pulse.Syntax.Printer
+
+let check
+  (g:env)
+  (pre:term)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term { Tm_Admit? t.term })
+
+  : T.Tac (checker_result_t g pre post_hint) =
+
+  let t0 : st_term = t in
+  let g = Pulse.Typing.Env.push_context g "check_admit" t.range in
+
+  let Tm_Admit { ctag = c; typ=t; post } = t.term in
+
+  let x = fresh g in
+  let px = v_as_nv x in
+  let res
+    : c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint }
+    = match post, post_hint with
+      | None, NoHint
+      | None, TypeHint _ ->
+        fail g None "could not find a post annotation on admit, please add one"
+
+      | Some post1, PostHint post2 ->
+        fail g None
+          (Printf.sprintf "found two post annotations on admit: %s and %s, please remove one"
+             (P.term_to_string post1)
+             (P.term_to_string post2.post))
+      
+      | Some post, _ ->
+        let u = check_universe g t in    
+        let post_opened = open_term_nv post px in      
+        let post_opened = 
+          check_tot_term (push_binding g x (fst px) t) post_opened tm_slprop
+        in
+        let post = close_term post_opened x in
+        let s : st_comp = {u;res=t;pre;post} in
+        assume (open_term (close_term post_opened x) x == post_opened);
+
+        (match c with
+         | STT -> C_ST s
+         | STT_Ghost -> C_STGhost tm_emp_inames s
+         | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
+
+      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre post x
+  in
+  let c = res in
+  let admit_st = wtag (Some (ctag_of_comp_st c))
+                      (Tm_Admit { ctag=ctag_of_comp_st c;
+                                  u=comp_u c;
+                                  typ=comp_res c;
+                                  post=None }) in
+
+  FStar.Tactics.BreakVC.break_vc ();
+  // ^ This makes a big difference! Would be good to distill into
+  // a smaller F*-only example and file an issue.
+  let ide = T.ide () in
+  let admit_diag = T.ext_getv "pulse:admit_diag" = "1" in
+  let no_admit_diag = T.ext_getv "pulse:no_admit_diag" = "1" in
+  (if admit_diag || (ide && not no_admit_diag) then begin
+    (* If we're running interactively, print out the context and environment. *)
+    let open Pulse.PP in
+    let msg = [
+      text "Admitting continuation.";
+      text "Current context:" ^^
+        indent (pp <| canon_slprop_print pre)
+    ] in
+    info_doc_env g (Some t0.range) msg
+  end else ()) <: T.Tac unit;
+  checker_result_for_st_typing (| admit_st, c |) res_ppname
