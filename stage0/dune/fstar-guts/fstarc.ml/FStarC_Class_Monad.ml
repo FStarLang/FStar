@@ -128,7 +128,7 @@ let rec foldM_right :
         op_let_Bang uu___ () () uu___1 (fun e' -> f x e')
 let op_Less_Dollar_Greater (uu___ : 'm monad) (a : unit) (b : unit)
   (f : Obj.t -> Obj.t) (x : 'm) : 'm=
-  op_let_Bang uu___ () () x (fun v -> let r = f v in return uu___ () r)
+  op_let_Bang uu___ () () x (fun v -> return uu___ () (f v))
 let op_Less_Star_Greater (uu___ : 'm monad) (a : unit) (b : unit) (ff : 'm)
   (x : 'm) : 'm=
   op_let_Bang uu___ () () ff
@@ -139,5 +139,4 @@ let op_Less_Star_Greater (uu___ : 'm monad) (a : unit) (b : unit) (ff : 'm)
             (op_let_Bang uu___ () () x (fun v -> return uu___ () (f v))))
          uu___1)
 let fmap (uu___ : 'm monad) (a : unit) (b : unit) (f : Obj.t -> Obj.t)
-  (m1 : 'm) : 'm=
-  op_let_Bang uu___ () () m1 (fun v -> let r = f v in return uu___ () r)
+  (m1 : 'm) : 'm= op_let_Bang uu___ () () m1 (fun v -> return uu___ () (f v))

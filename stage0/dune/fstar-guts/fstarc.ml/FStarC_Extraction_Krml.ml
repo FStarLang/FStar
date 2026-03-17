@@ -3723,20 +3723,20 @@ let translate_let' (env1 : env)
              (FStarC_List.length args) t0 in
          match uu___6 with
          | (i, eff, t) ->
-             (if i > Prims.int_zero
-              then
-                (let uu___8 =
-                   let uu___9 = FStarC_Options.silent () in
-                   Prims.op_Negation uu___9 in
-                 if uu___8
+             ((let uu___8 =
+                 if i > Prims.int_zero
                  then
-                   let msg =
-                     "function type annotation has less arrows than the number of arguments; please mark the return type abbreviation as inline_for_extraction" in
-                   FStarC_Format.print2_warning
-                     "Not extracting %s to KaRaMeL (%s)\n"
-                     (FStarC_Extraction_ML_Syntax.string_of_mlpath name2) msg
-                 else ())
-              else ();
+                   let uu___9 = FStarC_Options.silent () in
+                   Prims.op_Negation uu___9
+                 else false in
+               if uu___8
+               then
+                 let msg =
+                   "function type annotation has less arrows than the number of arguments; please mark the return type abbreviation as inline_for_extraction" in
+                 FStarC_Format.print2_warning
+                   "Not extracting %s to KaRaMeL (%s)\n"
+                   (FStarC_Extraction_ML_Syntax.string_of_mlpath name2) msg
+               else ());
               (let t1 = translate_type env3 t in
                let binders = translate_binders env3 args in
                let env4 = add_binders env3 args in

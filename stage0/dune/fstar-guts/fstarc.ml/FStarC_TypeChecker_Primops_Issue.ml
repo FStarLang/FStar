@@ -49,12 +49,17 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
           let uu___9 =
             let uu___10 =
               let uu___11 = mk_lid "render_issue" in
-              FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___11
+              FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero uu___11
                 FStarC_Syntax_Embeddings.e_issue
                 FStarC_TypeChecker_NBETerm.e_issue
                 FStarC_Syntax_Embeddings.e_string
                 FStarC_TypeChecker_NBETerm.e_string
-                FStarC_Errors.format_issue in
+                (fun i ->
+                   let uu___12 = FStarC_Errors.format_issue i in
+                   FStar_Pervasives_Native.Some uu___12)
+                (fun i ->
+                   let uu___12 = FStarC_Errors.format_issue i in
+                   FStar_Pervasives_Native.Some uu___12) in
             let uu___11 =
               let uu___12 =
                 let uu___13 = mk_lid "mk_issue_doc" in

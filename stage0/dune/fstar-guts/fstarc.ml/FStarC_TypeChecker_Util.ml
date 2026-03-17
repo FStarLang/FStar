@@ -6405,7 +6405,7 @@ let get_field_projector_name (env : FStarC_TypeChecker_Env.env)
                       FStarC_Syntax_Syntax.binder_attrs = uu___7;_} ->
                       (match q with
                        | FStar_Pervasives_Native.Some
-                           (FStarC_Syntax_Syntax.Implicit (true)) -> false
+                           (FStarC_Syntax_Syntax.Implicit true) -> false
                        | uu___8 -> true)) bs in
            if (FStarC_List.length bs1) <= index
            then err (FStarC_List.length bs1)

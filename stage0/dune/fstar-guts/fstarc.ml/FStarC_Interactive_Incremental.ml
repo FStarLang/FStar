@@ -227,21 +227,22 @@ let inspect_repl_stack (s : FStarC_Interactive_Ide_Types.repl_stack_t)
                                  (FStarC_List.op_At pops pushes)), accum)))
              | FStarC_Interactive_Ide_Types.PushFragment
                  (FStar_Pervasives.Inr d', pk, issues, uu___1) ->
-                 let eq =
-                   FStarC_Parser_AST_Diff.eq_decl
-                     (FStar_Pervasives_Native.fst d) d' in
-                 let geq = push_kind_geq pk push_kind in
-                 if (if eq then geq else false)
+                 let uu___2 =
+                   let uu___3 =
+                     FStarC_Parser_AST_Diff.eq_decl
+                       (FStar_Pervasives_Native.fst d) d' in
+                   if uu___3 then push_kind_geq pk push_kind else false in
+                 if uu___2
                  then
-                   let uu___2 = d in
-                   (match uu___2 with
+                   let uu___3 = d in
+                   (match uu___3 with
                     | (d1, s1) ->
                         (write_full_buffer_fragment_progress
                            (FragmentSuccess (d1, s1, pk));
                          if with_symbols
                          then
-                           (let uu___4 = dump_symbols d1 in
-                            op_let_Bang uu___4
+                           (let uu___5 = dump_symbols d1 in
+                            op_let_Bang uu___5
                               (fun lookups' ->
                                  matching_prefix
                                    (FStarC_List.op_At issues accum)
@@ -251,11 +252,11 @@ let inspect_repl_stack (s : FStarC_Interactive_Ide_Types.repl_stack_t)
                            matching_prefix (FStarC_List.op_At issues accum)
                              lookups entries3 ds2))
                  else
-                   (let uu___3 = pop_entries (e :: entries3) in
-                    op_let_Bang uu___3
+                   (let uu___4 = pop_entries (e :: entries3) in
+                    op_let_Bang uu___4
                       (fun pops ->
-                         let uu___4 = push_decls1 (d :: ds2) in
-                         op_let_Bang uu___4
+                         let uu___5 = push_decls1 (d :: ds2) in
+                         op_let_Bang uu___5
                            (fun pushes ->
                               return
                                 ((FStarC_List.op_At pops

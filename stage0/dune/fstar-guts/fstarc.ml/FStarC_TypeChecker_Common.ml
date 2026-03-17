@@ -600,17 +600,16 @@ let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
        | (FStarC_Syntax_Syntax.Tm_fvar tc, []) when
            FStarC_Syntax_Syntax.fv_eq_lid tc FStarC_Parser_Const.true_lid ->
            Trivial
-       | (FStarC_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) ->
-           let is_squash =
-             FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid in
-           let is_auto_squash =
+       | (FStarC_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) when
+           if
+             FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid
+           then true
+           else
              FStarC_Syntax_Syntax.fv_eq_lid sq
-               FStarC_Parser_Const.auto_squash_lid in
-           if (if is_squash then true else is_auto_squash)
-           then
-             let uu___3 = check_trivial v in
-             (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
-           else NonTrivial t
+               FStarC_Parser_Const.auto_squash_lid
+           ->
+           let uu___3 = check_trivial v in
+           (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
        | uu___2 -> NonTrivial t)
 let imp_guard_f (g1 : guard_formula) (g2 : guard_formula) : guard_formula=
   match (g1, g2) with
@@ -743,29 +742,29 @@ let lcomp_set_flags (lc : lcomp) (fs : FStarC_Syntax_Syntax.cflag Prims.list)
        let uu___1 = lcomp_comp lc in
        match uu___1 with | (c, g) -> ((comp_typ_set_flags c), g))
 let is_total_lcomp (c : lcomp) : Prims.bool=
-  let name_eq =
-    FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid in
-  let has_flag =
+  if FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid
+  then true
+  else
     FStarC_Util.for_some
       (fun uu___ ->
          match uu___ with
          | FStarC_Syntax_Syntax.TOTAL -> true
          | FStarC_Syntax_Syntax.RETURN -> true
-         | uu___1 -> false) c.cflags in
-  if name_eq then true else has_flag
+         | uu___1 -> false) c.cflags
 let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
-  let is_tot =
-    FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid in
-  let is_gtot =
-    FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid in
-  let has_flag =
+  if
+    (if FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid
+     then true
+     else
+       FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid)
+  then true
+  else
     FStarC_Util.for_some
       (fun uu___ ->
          match uu___ with
          | FStarC_Syntax_Syntax.TOTAL -> true
          | FStarC_Syntax_Syntax.RETURN -> true
-         | uu___1 -> false) c.cflags in
-  if (if is_tot then true else is_gtot) then true else has_flag
+         | uu___1 -> false) c.cflags
 let is_lcomp_partial_return (c : lcomp) : Prims.bool=
   FStarC_Util.for_some
     (fun uu___ ->
@@ -774,19 +773,20 @@ let is_lcomp_partial_return (c : lcomp) : Prims.bool=
        | FStarC_Syntax_Syntax.PARTIAL_RETURN -> true
        | uu___1 -> false) c.cflags
 let is_pure_lcomp (lc : lcomp) : Prims.bool=
-  let is_tot = is_total_lcomp lc in
-  let is_pure = FStarC_Syntax_Util.is_pure_effect lc.eff_name in
-  let is_lemma =
+  let uu___ =
+    let uu___1 = is_total_lcomp lc in
+    if uu___1 then true else FStarC_Syntax_Util.is_pure_effect lc.eff_name in
+  if uu___
+  then true
+  else
     FStarC_Util.for_some
-      (fun uu___ ->
-         match uu___ with
+      (fun uu___1 ->
+         match uu___1 with
          | FStarC_Syntax_Syntax.LEMMA -> true
-         | uu___1 -> false) lc.cflags in
-  if (if is_tot then true else is_pure) then true else is_lemma
+         | uu___2 -> false) lc.cflags
 let is_pure_or_ghost_lcomp (lc : lcomp) : Prims.bool=
-  let is_pure = is_pure_lcomp lc in
-  let is_ghost = FStarC_Syntax_Util.is_ghost_effect lc.eff_name in
-  if is_pure then true else is_ghost
+  let uu___ = is_pure_lcomp lc in
+  if uu___ then true else FStarC_Syntax_Util.is_ghost_effect lc.eff_name
 let set_result_typ_lc (lc : lcomp) (t : FStarC_Syntax_Syntax.typ) : lcomp=
   mk_lcomp lc.eff_name t lc.cflags
     (fun uu___ ->

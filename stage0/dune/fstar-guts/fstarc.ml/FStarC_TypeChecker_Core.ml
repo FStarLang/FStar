@@ -1575,49 +1575,49 @@ let lookup (g : env) (e : FStarC_Syntax_Syntax.term) :
                 (record_cache_miss (); fail_str "not in cache")
             | FStar_Pervasives_Native.Some he ->
                 let uu___3 =
-                  context_included he.he_gamma
-                    (g.tcenv).FStarC_TypeChecker_Env.gamma in
+                  let uu___4 =
+                    context_included he.he_gamma
+                      (g.tcenv).FStarC_TypeChecker_Env.gamma in
+                  if uu___4
+                  then
+                    let uu___5 = FStarC_Effect.op_Bang dbg_DisableCoreCache in
+                    Prims.op_Negation uu___5
+                  else false in
                 if uu___3
                 then
-                  let uu___4 =
-                    let uu___5 = FStarC_Effect.op_Bang dbg_DisableCoreCache in
-                    Prims.op_Negation uu___5 in
-                  (if uu___4
-                   then
-                     (record_cache_hit ();
-                      (let uu___7 = FStarC_Effect.op_Bang dbg in
-                       if uu___7
-                       then
-                         let uu___8 =
-                           FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_term e in
-                         let uu___9 =
-                           FStarC_Class_Show.show
-                             FStarC_Syntax_Print.showable_term he.he_typ in
-                         let uu___10 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_list
-                                FStarC_Syntax_Print.showable_binding)
-                             (g.tcenv).FStarC_TypeChecker_Env.gamma in
-                         let uu___11 =
-                           FStarC_Class_Show.show
-                             (FStarC_Class_Show.show_list
-                                FStarC_Syntax_Print.showable_binding)
-                             he.he_gamma in
-                         FStarC_Format.print4
-                           "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
-                           uu___8 uu___9 uu___10 uu___11
-                       else ());
-                      (let ty =
-                         let uu___7 =
-                           FStarC_Class_HasRange.pos
-                             (FStarC_Syntax_Syntax.has_range_syntax ()) e in
-                         replace_all_use_ranges uu___7 he.he_typ in
-                       fun uu___7 cache ->
-                         Success
-                           ((((he.he_eff), ty), FStar_Pervasives_Native.None),
-                             cache)))
-                   else fail_str "not in cache")
+                  (record_cache_hit ();
+                   (let uu___6 = FStarC_Effect.op_Bang dbg in
+                    if uu___6
+                    then
+                      let uu___7 =
+                        FStarC_Class_Show.show
+                          FStarC_Syntax_Print.showable_term e in
+                      let uu___8 =
+                        FStarC_Class_Show.show
+                          FStarC_Syntax_Print.showable_term he.he_typ in
+                      let uu___9 =
+                        FStarC_Class_Show.show
+                          (FStarC_Class_Show.show_list
+                             FStarC_Syntax_Print.showable_binding)
+                          (g.tcenv).FStarC_TypeChecker_Env.gamma in
+                      let uu___10 =
+                        FStarC_Class_Show.show
+                          (FStarC_Class_Show.show_list
+                             FStarC_Syntax_Print.showable_binding)
+                          he.he_gamma in
+                      FStarC_Format.print4
+                        "cache hit\n %s : %s\nmatching\n\tenv0 %s\n\tenv1 %s\n"
+                        uu___7 uu___8 uu___9 uu___10
+                    else ());
+                   (let ty =
+                      let uu___6 =
+                        FStarC_Class_HasRange.pos
+                          (FStarC_Syntax_Syntax.has_range_syntax ()) e in
+                      replace_all_use_ranges uu___6 he.he_typ in
+                    fun uu___6 cache ->
+                      Success
+                        ((((he.he_eff), ty), FStar_Pervasives_Native.None),
+                          cache)))
                 else fail_str "not in cache" in
           uu___2 ctx0 cache1 in
         (match uu___1 with
@@ -2170,14 +2170,10 @@ let rec check_relation' (g : env) (rel : relation)
             let fallback t01 t11 =
               if guard_ok
               then
-                let uu___3 = equatable g t01 in
-                (if uu___3
-                 then emit_guard t01 t11
-                 else
-                   (let uu___5 = equatable g t11 in
-                    if uu___5
-                    then emit_guard t01 t11
-                    else err "not equatable"))
+                let uu___3 =
+                  let uu___4 = equatable g t01 in
+                  if uu___4 then true else equatable g t11 in
+                (if uu___3 then emit_guard t01 t11 else err "not equatable")
               else err "guards not allowed" in
             let maybe_unfold_side_and_retry side1 t01 t11 ctx01 cache01 =
               let uu___3 = unfolding_ok ctx01 cache01 in
@@ -2550,13 +2546,13 @@ let rec check_relation' (g : env) (rel : relation)
                                                };
                                              FStarC_Syntax_Syntax.phi = f1
                                            }) t12.FStarC_Syntax_Syntax.pos in
-                                    let lhs1 =
+                                    let uu___10 =
                                       FStarC_Syntax_Util.flatten_refinement
                                         lhs in
-                                    let rhs1 =
+                                    let uu___11 =
                                       FStarC_Syntax_Util.flatten_refinement
                                         rhs in
-                                    check_relation1 g rel lhs1 rhs1 in
+                                    check_relation1 g rel uu___10 uu___11 in
                               uu___9 ctx01 cache11 in
                             (match uu___8 with
                              | Success ((y, g2), cache2) ->
@@ -2700,10 +2696,10 @@ let rec check_relation' (g : env) (rel : relation)
                                                };
                                              FStarC_Syntax_Syntax.phi = f0
                                            }) t02.FStarC_Syntax_Syntax.pos in
-                                    let lhs1 =
+                                    let uu___11 =
                                       FStarC_Syntax_Util.flatten_refinement
                                         lhs in
-                                    check_relation1 g rel lhs1 t12 in
+                                    check_relation1 g rel uu___11 t12 in
                               uu___10 ctx01 cache11 in
                             (match uu___9 with
                              | Success ((y, g2), cache2) ->
@@ -2877,10 +2873,10 @@ let rec check_relation' (g : env) (rel : relation)
                                                };
                                              FStarC_Syntax_Syntax.phi = f1
                                            }) t12.FStarC_Syntax_Syntax.pos in
-                                    let rhs1 =
+                                    let uu___11 =
                                       FStarC_Syntax_Util.flatten_refinement
                                         rhs in
-                                    check_relation1 g rel t02 rhs1 in
+                                    check_relation1 g rel t02 uu___11 in
                               uu___10 ctx01 cache11 in
                             (match uu___9 with
                              | Success ((y, g2), cache2) ->
@@ -3451,14 +3447,14 @@ let rec check_relation' (g : env) (rel : relation)
                   { FStarC_Syntax_Syntax.bs1 = x0::x1::xs;
                     FStarC_Syntax_Syntax.comp = c0;_},
                   uu___5) ->
-                   let t0' = curry_arrow x0 (x1 :: xs) c0 in
-                   check_relation1 g rel t0' t11
+                   let uu___6 = curry_arrow x0 (x1 :: xs) c0 in
+                   check_relation1 g rel uu___6 t11
                | (uu___5, FStarC_Syntax_Syntax.Tm_arrow
                   { FStarC_Syntax_Syntax.bs1 = x0::x1::xs;
                     FStarC_Syntax_Syntax.comp = c1;_})
                    ->
-                   let t1' = curry_arrow x0 (x1 :: xs) c1 in
-                   check_relation1 g rel t01 t1'
+                   let uu___6 = curry_arrow x0 (x1 :: xs) c1 in
+                   check_relation1 g rel t01 uu___6
                | (FStarC_Syntax_Syntax.Tm_arrow
                   { FStarC_Syntax_Syntax.bs1 = x0::[];
                     FStarC_Syntax_Syntax.comp = c0;_},
@@ -3534,12 +3530,12 @@ let rec check_relation' (g : env) (rel : relation)
                                                             | EQUALITY ->
                                                                 EQUALITY
                                                             | SUBTYPING e ->
-                                                                let sub_e =
-                                                                  let uu___19
+                                                                let uu___19 =
+                                                                  let uu___20
                                                                     =
                                                                     FStarC_Syntax_Util.is_pure_or_ghost_comp
                                                                     c01 in
-                                                                  if uu___19
+                                                                  if uu___20
                                                                   then
                                                                     match e
                                                                     with
@@ -3550,25 +3546,25 @@ let rec check_relation' (g : env) (rel : relation)
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     e1 ->
-                                                                    let args
+                                                                    let r =
+                                                                    let uu___21
                                                                     =
-                                                                    let uu___20
+                                                                    let uu___22
                                                                     =
                                                                     FStarC_Syntax_Util.args_of_binders
                                                                     [x11] in
                                                                     FStar_Pervasives_Native.snd
-                                                                    uu___20 in
-                                                                    let uu___20
-                                                                    =
+                                                                    uu___22 in
                                                                     FStarC_Syntax_Syntax.mk_Tm_app
-                                                                    e1 args
+                                                                    e1
+                                                                    uu___21
                                                                     FStarC_Range_Type.dummyRange in
                                                                     FStar_Pervasives_Native.Some
-                                                                    uu___20
+                                                                    r
                                                                   else
                                                                     FStar_Pervasives_Native.None in
                                                                 SUBTYPING
-                                                                  sub_e in
+                                                                  uu___19 in
                                                           fun ctx04 cache04
                                                             ->
                                                             let uu___19 =
@@ -8103,20 +8099,16 @@ let check_term_top' (g : FStarC_TypeChecker_Env.env)
                   let uu___4 = x in
                   (match uu___4 with
                    | (eff, t) ->
-                       if eff = E_Ghost
-                       then
-                         let uu___5 =
+                       let uu___5 =
+                         if eff = E_Ghost
+                         then
                            let uu___6 = non_informative g1 t in
-                           Prims.op_Negation uu___6 in
-                         (if uu___5
-                          then fail_str "expected total effect, found ghost"
-                          else
-                            (fun uu___7 cache ->
-                               Success
-                                 (((E_Total, t),
-                                    FStar_Pervasives_Native.None), cache)))
+                           Prims.op_Negation uu___6
+                         else false in
+                       if uu___5
+                       then fail_str "expected total effect, found ghost"
                        else
-                         (fun uu___6 cache ->
+                         (fun uu___7 cache ->
                             Success
                               (((E_Total, t), FStar_Pervasives_Native.None),
                                 cache)))

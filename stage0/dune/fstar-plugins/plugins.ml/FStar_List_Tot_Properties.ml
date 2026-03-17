@@ -13,5 +13,5 @@ let rec sorted : 'a . ('a -> 'a -> Prims.bool) -> 'a Prims.list -> Prims.bool
     match uu___ with
     | [] -> true
     | uu___1::[] -> true
-    | x::y::tl -> (f x y) && (sorted f (y :: tl))
+    | x::y::tl -> if f x y then sorted f (y :: tl) else false
 type ('a, 'f) total_order = unit

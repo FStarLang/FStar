@@ -251,16 +251,17 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
        | FStarC_Syntax_Syntax.Private -> true
        | uu___1 -> true in
      let check_no_subtyping_attribute se1 =
-       let has_attr =
-         FStarC_Syntax_Util.has_attribute se1.FStarC_Syntax_Syntax.sigattrs
-           FStarC_Parser_Const.no_subtping_attr_lid in
-       if
-         (if has_attr
-          then
-            match se1.FStarC_Syntax_Syntax.sigel with
-            | FStarC_Syntax_Syntax.Sig_let uu___1 -> false
-            | uu___1 -> true
-          else false)
+       let uu___1 =
+         let uu___2 =
+           FStarC_Syntax_Util.has_attribute se1.FStarC_Syntax_Syntax.sigattrs
+             FStarC_Parser_Const.no_subtping_attr_lid in
+         if uu___2
+         then
+           match se1.FStarC_Syntax_Syntax.sigel with
+           | FStarC_Syntax_Syntax.Sig_let uu___3 -> false
+           | uu___3 -> true
+         else false in
+       if uu___1
        then
          FStarC_Errors.raise_error FStarC_Syntax_Syntax.has_range_sigelt se1
            FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation ()
@@ -388,17 +389,20 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                          else has_eq x) quals in
                   Prims.op_Negation uu___8 in
                 if uu___7 then err [] else ());
-               (let has_unopteq =
-                  FStarC_List.existsb
-                    (fun uu___7 ->
-                       match uu___7 with
-                       | FStarC_Syntax_Syntax.Unopteq -> true
-                       | uu___8 -> false) quals in
-                let has_erasable =
-                  FStarC_Syntax_Util.has_attribute
-                    se.FStarC_Syntax_Syntax.sigattrs
-                    FStarC_Parser_Const.erasable_attr in
-                if (if has_unopteq then has_erasable else false)
+               (let uu___7 =
+                  let uu___8 =
+                    FStarC_List.existsb
+                      (fun uu___9 ->
+                         match uu___9 with
+                         | FStarC_Syntax_Syntax.Unopteq -> true
+                         | uu___10 -> false) quals in
+                  if uu___8
+                  then
+                    FStarC_Syntax_Util.has_attribute
+                      se.FStarC_Syntax_Syntax.sigattrs
+                      FStarC_Parser_Const.erasable_attr
+                  else false in
+                if uu___7
                 then
                   err
                     [FStarC_Errors_Msg.text

@@ -498,14 +498,14 @@ let check_pats_for_ite
                with
                | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None,
                   FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_bool
-                  (true)), FStarC_Syntax_Syntax.Pat_constant
-                  (FStarC_Const.Const_bool (false))) ->
+                  true), FStarC_Syntax_Syntax.Pat_constant
+                  (FStarC_Const.Const_bool false)) ->
                    (true, (FStar_Pervasives_Native.Some e1),
                      (FStar_Pervasives_Native.Some e2))
                | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None,
                   FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_bool
-                  (false)), FStarC_Syntax_Syntax.Pat_constant
-                  (FStarC_Const.Const_bool (true))) ->
+                  false), FStarC_Syntax_Syntax.Pat_constant
+                  (FStarC_Const.Const_bool true)) ->
                    (true, (FStar_Pervasives_Native.Some e2),
                      (FStar_Pervasives_Native.Some e1))
                | uu___3 -> def)))

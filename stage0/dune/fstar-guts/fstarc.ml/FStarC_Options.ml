@@ -1998,8 +1998,8 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     match b
                                                                     with
                                                                     | 
-                                                                    Bool
-                                                                    (true) ->
+                                                                    Bool true
+                                                                    ->
                                                                     (FStarC_Effect.op_Colon_Equals
                                                                     FStarC_Stats.enabled
                                                                     true;
@@ -2008,8 +2008,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     true)
                                                                     | 
                                                                     Bool
-                                                                    (false)
-                                                                    ->
+                                                                    false ->
                                                                     FStarC_Effect.op_Colon_Equals
                                                                     FStarC_Stats.enabled
                                                                     false
@@ -2848,7 +2847,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                     (PostProcessed
                                        ((fun o ->
                                            match o with
-                                           | Bool (true) ->
+                                           | Bool true ->
                                                (FStarC_Debug.set_debug_all ();
                                                 o)
                                            | uu___18 ->

@@ -83,19 +83,17 @@ let rec existsb : 'a . ('a -> Prims.bool) -> 'a clist -> Prims.bool =
     match l with
     | CNil -> false
     | CCons (x, xs) ->
-        let r = p x in let r2 = existsb p xs in if r then true else r2
+        let uu___ = p x in if uu___ then true else existsb p xs
     | CCat (xs, ys) ->
-        let r = existsb p xs in
-        let r2 = existsb p ys in if r then true else r2
+        let uu___ = existsb p xs in if uu___ then true else existsb p ys
 let rec for_all : 'a . ('a -> Prims.bool) -> 'a clist -> Prims.bool =
   fun p l ->
     match l with
     | CNil -> true
     | CCons (x, xs) ->
-        let r = p x in let r2 = for_all p xs in if r then r2 else false
+        let uu___ = p x in if uu___ then for_all p xs else false
     | CCat (xs, ys) ->
-        let r = for_all p xs in
-        let r2 = for_all p ys in if r then r2 else false
+        let uu___ = for_all p xs in if uu___ then for_all p ys else false
 let rec partition :
   'a . ('a -> Prims.bool) -> 'a clist -> ('a clist * 'a clist) =
   fun p l ->

@@ -495,7 +495,8 @@ let parse_extension_lang (lang_name : Prims.string) (raw_text : Prims.string)
         (Obj.magic
            (FStarC_Format.fmt1 "Unknown language extension %s" lang_name))
   | FStar_Pervasives_Native.Some parser ->
-      (match parser.parse_decls raw_text raw_text_pos with
+      let uu___ = parser.parse_decls raw_text raw_text_pos in
+      (match uu___ with
        | FStar_Pervasives.Inl error ->
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
              error.range FStarC_Errors_Codes.Fatal_SyntaxError ()

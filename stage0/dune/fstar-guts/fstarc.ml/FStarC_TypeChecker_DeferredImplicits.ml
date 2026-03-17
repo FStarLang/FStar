@@ -135,13 +135,13 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                       (match uu___1 with
                        | (FStarC_Syntax_Syntax.Tm_fvar fv,
                           uu___2::(a', uu___3)::(overrides, uu___4)::[]) when
-                           let b1 =
+                           if
                              FStarC_Syntax_Syntax.fv_eq_lid fv
-                               FStarC_Parser_Const.override_resolve_implicits_handler_lid in
-                           let b2 =
+                               FStarC_Parser_Const.override_resolve_implicits_handler_lid
+                           then
                              FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                               env a a' in
-                           if b1 then b2 else false ->
+                               env a a'
+                           else false ->
                            let uu___5 = attr_list_elements overrides in
                            (match uu___5 with
                             | FStar_Pervasives_Native.None -> false
@@ -154,13 +154,13 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env_t)
                                        candidate_lids) names)
                        | (FStarC_Syntax_Syntax.Tm_fvar fv,
                           (a', uu___2)::(overrides, uu___3)::[]) when
-                           let b1 =
+                           if
                              FStarC_Syntax_Syntax.fv_eq_lid fv
-                               FStarC_Parser_Const.override_resolve_implicits_handler_lid in
-                           let b2 =
+                               FStarC_Parser_Const.override_resolve_implicits_handler_lid
+                           then
                              FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                               env a a' in
-                           if b1 then b2 else false ->
+                               env a a'
+                           else false ->
                            let uu___4 = attr_list_elements overrides in
                            (match uu___4 with
                             | FStar_Pervasives_Native.None -> false
