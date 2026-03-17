@@ -234,8 +234,8 @@ let lemma_eq_refl #_ s1 s2  = ()
 let lemma_eq_elim #_ s1 s2  =
   assert ( length s1 == List.length (MkSeq?.l s1) );
   assert ( length s2 == List.length (MkSeq?.l s2) );
-  assert ( forall (i: nat) . i < length s1 ==> index s1 i == List.index (MkSeq?.l s1) i);
-  assert ( forall (i: nat) . i < length s1 ==> index s2 i == List.index (MkSeq?.l s2) i);
+  assert ( forall (i: nat) . {:nopattern (* override: inferred pattern on index disrupts index_extensionality proof *)} i < length s1 ==> index s1 i == List.index (MkSeq?.l s1) i);
+  assert ( forall (i: nat) . {:nopattern (* override: same as above *)} i < length s1 ==> index s2 i == List.index (MkSeq?.l s2) i);
   List.index_extensionality (MkSeq?.l s1) (MkSeq?.l s2)
 
 (* Properties of [append] *)

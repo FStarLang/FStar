@@ -38,6 +38,7 @@ let rec is_pattern_eligible (env:Env.env) (t:term) : ML bool =
 
   | Tm_app {hd; args} ->
     is_head_fvar hd &&
+    is_head_non_recursive env hd &&
     is_pattern_eligible env hd &&
     List.for_all (fun (a, _) -> is_pattern_eligible env a) args
 
@@ -45,12 +46,24 @@ let rec is_pattern_eligible (env:Env.env) (t:term) : ML bool =
 
 (* Check that the head of an application is a top-level function (Tm_fvar),
    not a local variable (Tm_name). Applications of local variables like
-   (p x) where p is a function parameter create unstable SMT patterns. *)
+   (p x) where p is a function parameter create unstable SMT patterns.
+   Also rejects recursive functions — patterns on recursive calls
+   cause matching loops (e.g., calc_chain_related). *)
 and is_head_fvar (t:term) : ML bool =
   match (SS.compress t).n with
   | Tm_fvar _ -> true
   | Tm_uinst (t, _) -> is_head_fvar t
   | _ -> false
+
+and is_head_non_recursive (env:Env.env) (t:term) : ML bool =
+  match (SS.compress t).n with
+  | Tm_fvar fv ->
+    begin match Env.lookup_qname env fv.fv_name with
+    | Some (Inr ({sigel = Sig_let {lbs=(is_rec, _)}}, _), _) -> not is_rec
+    | _ -> true  (* not a let-binding, fine *)
+    end
+  | Tm_uinst (t, _) -> is_head_non_recursive env t
+  | _ -> true
 
 (* Collect candidate pattern terms from a quantifier body.
    Returns pairs of (candidate_term, list of covered quantifier bvs).
