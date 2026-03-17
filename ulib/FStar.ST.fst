@@ -34,8 +34,8 @@ unfold let lift_div_gst (a:Type) (wp:pure_wp a) (p:gst_post a) (h:heap) = wp (fu
 sub_effect DIV ~> GST = lift_div_gst
 
 let heap_rel (h1:heap) (h2:heap) =
-  forall (a:Type0) (rel:preorder a) (r:mref a rel). h1 `contains` r ==>
-                                               (h2 `contains` r /\ rel (sel h1 r) (sel h2 r))
+  forall (a:Type0) (rel:preorder a) (r:mref a rel). {:nopattern (* override *)} h1 `Heap.contains` r ==>
+                                               (h2 `Heap.contains` r /\ rel (sel h1 r) (sel h2 r))
 
 assume val gst_get: unit    -> GST heap (fun p h0 -> p h0 h0)
 assume val gst_put: h1:heap -> GST unit (fun p h0 -> heap_rel h0 h1 /\ p () h1)

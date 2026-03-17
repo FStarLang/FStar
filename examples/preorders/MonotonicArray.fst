@@ -157,17 +157,17 @@ private let initialized' (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :heap_pre
   = fun h -> h `contains_array` arr /\ init_at_arr arr i h
 
 (* a stable initialized predicate *)
-#push-options "--z3rlimit 20 --ext auto_patterns:off"
+#push-options "--z3rlimit 20"
 let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate{stable p})
   = let A #_ #_ #m s_ref off = arr in
     assert (forall (h:heap).
               let s, _ = sel h s_ref in
-	      init_at_arr arr i h <==> Some? (Seq.index s (off + i)));
+      init_at_arr arr i h <==> Some? (Seq.index s (off + i)));
     assert (forall (h1 h2:heap).
               let s1, _ = sel h1 s_ref in
-	      let s2, _ = sel h2 s_ref in
+      let s2, _ = sel h2 s_ref in
               (h1 `contains_array` arr /\ heap_rel h1 h2) ==> (forall (i:nat). i < m ==> (Some? (Seq.index s1 i) ==>
-	                                                                          Some? (Seq.index s2 i))));
+                                                                          Some? (Seq.index s2 i))));
     initialized' arr i
 #pop-options
 
