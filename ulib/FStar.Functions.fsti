@@ -4,23 +4,23 @@ module FStar.Functions
 about functions and sets. *)
 
 let is_inj (#a #b : _) (f : a -> GTot b) : prop =
-  forall (x1 x2 : a). f x1 == f x2 ==> x1 == x2
+  forall (x1 x2 : a). {:nopattern (* uninferrable *)} f x1 == f x2 ==> x1 == x2
 
 let is_surj (#a #b : _) (f : a -> GTot b) : prop =
-  forall (y:b). exists (x:a). f x == y
+  forall (y:b). {:nopattern (* uninferrable *)} exists (x:a). {:nopattern (* uninferrable *)} f x == y
 
 let is_bij (#a #b : _) (f : a -> GTot b) : prop =
   is_inj f /\ is_surj f
 
 let in_image (#a #b : _) (f : a -> GTot b) (y : b) : prop =
-  exists (x:a). f x == y
+  exists (x:a). {:nopattern (* uninferrable *)} f x == y
 
 let image_of (#a #b : _) (f : a -> GTot b) : Type =
   y:b{in_image f y}
 
 (* g inverses f *)
 let is_inverse_of (#a #b : _) (g : b -> GTot a) (f : a -> GTot b)  =
-  forall (x:a). g (f x) == x
+  forall (x:a). {:nopattern (* uninferrable *)} g (f x) == x
 
 let powerset (a:Type u#aa) : Type u#aa = a -> GTot bool
 

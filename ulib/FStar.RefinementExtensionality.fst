@@ -8,13 +8,13 @@ let refext0 (t:Type) (r1 : t -> prop) (r2 : t -> prop) :
         (ensures (x:t{r1 x} == x:t{r2 x})) = ()
 
 let refext_on_domain (t:Type) (r1 : t -> prop) (r2 : t -> prop) :
-  Lemma (requires (forall x. r1 x <==> r2 x))
+  Lemma (requires (forall x. {:nopattern (* uninferrable *)} r1 x <==> r2 x))
         (ensures (x:t{on t r1 x} == x:t{on t r2 x})) =
   PredicateExtensionality.predicateExtensionality _ r1 r2;
   refext0 t (on t r1) (on t r2)
 
 let refext (t:Type) (r1 : t -> prop) (r2 : t -> prop) :
-  Lemma (requires (forall x. r1 x <==> r2 x))
+  Lemma (requires (forall x. {:nopattern (* uninferrable *)} r1 x <==> r2 x))
         (ensures (x:t{r1 x} == x:t{r2 x})) =
   assert (x:t{on t r1 x} == x:t{r1 x});
   assert (x:t{on t r2 x} == x:t{r2 x});

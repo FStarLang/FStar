@@ -35,10 +35,10 @@ let binrel (a:Type) = a -> a -> Type
 let predicate (a:Type u#a) = a -> Type0
 
 let reflexive (#a:Type) (rel:binrel u#a u#r a) =
-  forall (x:a). squash (rel x x)
+  forall (x:a). {:nopattern (* uninferrable *)} squash (rel x x)
 
 let transitive (#a:Type) (rel:binrel u#a u#r a) =
-  forall (x:a) (y:a) (z:a). (squash (rel x y) /\ squash (rel y z)) ==> squash (rel x z)
+  forall (x:a) (y:a) (z:a). {:nopattern (* uninferrable *)} (squash (rel x y) /\ squash (rel y z)) ==> squash (rel x z)
 
 let preorder_rel (#a:Type) (rel:binrel u#a u#r a) =
   reflexive rel /\ transitive rel
@@ -46,7 +46,7 @@ let preorder_rel (#a:Type) (rel:binrel u#a u#r a) =
 type preorder (a:Type u#a) : Type u#(max a (1 + r)) = rel:binrel u#a u#r a{preorder_rel rel}
 
 let stable (#a:Type u#a) (p:a -> Type0) (rel:binrel u#a u#r a{preorder_rel rel}) =
-  forall (x:a) (y:a). (p x /\ squash (rel x y)) ==> p y
+  forall (x:a) (y:a). {:nopattern (* uninferrable *)} (p x /\ squash (rel x y)) ==> p y
 
 val closure (#a:Type u#a) (r:binrel u#a u#r a) : preorder u#a u#0 a
 
@@ -58,7 +58,7 @@ val closure_step: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a { r x y }
 (** `closure r` is the smallest preorder that includes `r` *)
 val closure_inversion: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a
   -> Lemma (requires closure r x y)
-          (ensures  x == y \/ (exists z. squash (r x z) /\ closure r z y))
+          (ensures  x == y \/ (exists z. {:nopattern (* uninferrable *)} squash (r x z) /\ closure r z y))
 
 (**
 * A predicate that is stable on `r` is stable on `closure r`

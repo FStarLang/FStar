@@ -120,7 +120,7 @@ let init_func_from_expr #c (#n0: int) (#nk: not_less_than n0)
 
 (* CommMonoid-induced pointwise sum of two functions *)
 let func_sum #a #c #eq (cm: CE.cm c eq) (f g: a -> c)
-  : t:(a -> c){ forall (x:a). t x == f x `cm.mult` g x }
+  : t:(a -> c){ forall (x:a). {:nopattern (* uninferrable *)} t x == f x `cm.mult` g x }
   = fun (x:a) -> cm.mult (f x) (g x)
 
 open FStar.Seq.Equiv
@@ -155,7 +155,7 @@ val foldm_snoc_split_seq (#c:_) (#eq:_) (add: CE.cm c eq)
            
 val foldm_snoc_of_equal_inits (#c:_) (#eq:_) (#m: pos) (cm: CE.cm c eq) 
                               (f: (under m) -> c) (g: (under m) -> c)
-  : Lemma (requires  (forall (i: under m). f i `eq.eq` g i))
+  : Lemma (requires  (forall (i: under m). {:nopattern (* uninferrable *)} f i `eq.eq` g i))
           (ensures foldm_snoc cm (init m f) `eq.eq` foldm_snoc cm (init m g))
 
 (* this one turns out to be quite useful to speed up big proofs *)

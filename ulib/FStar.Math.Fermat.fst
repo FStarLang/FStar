@@ -145,7 +145,7 @@ let rec sum a b f =
   if a = b then f a else f a + sum (a + 1) b f
 
 val sum_extensionality (a:nat) (b:nat{a <= b}) (f g:(i:nat{a <= i /\ i <= b}) -> int) : Lemma
-  (requires forall (i:nat{a <= i /\ i <= b}). f i == g i)
+  (requires forall (i:nat{a <= i /\ i <= b}). {:nopattern (* uninferrable *)} f i == g i)
   (ensures  sum a b f == sum a b g)
   (decreases (b - a))
 let rec sum_extensionality a b f g =

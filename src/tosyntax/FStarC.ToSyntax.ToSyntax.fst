@@ -2469,7 +2469,11 @@ and desugar_formula env (f:term) : ML S.term =
                   (fun e -> arg_withimp_t Nothing <| desugar_term env e))
         in
         match pats with
-        | [] when not should_wrap_with_pat || nopattern -> body
+        | [] when not should_wrap_with_pat -> body
+        | [] when nopattern ->
+          (* {:nopattern}: wrap with empty names to signal "don't infer" while
+             preserving the Meta_pattern wrapper for the SMT encoding *)
+          mk (Tm_meta {tm=body;meta=Meta_pattern ([], [])})
         | _ -> mk (Tm_meta {tm=body;meta=Meta_pattern (names, pats)})
     in
     match tk with

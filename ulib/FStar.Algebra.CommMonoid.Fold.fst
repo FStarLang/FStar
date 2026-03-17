@@ -46,7 +46,7 @@ let rec fold #c #eq
 let rec fold_equality #c #eq (cm: CE.cm c eq) 
   (a: int) (b: not_less_than a) 
   (expr1 expr2: (ifrom_ito a b) -> c)
-  : Lemma (requires (forall (i: ifrom_ito a b). expr1 i == expr2 i))
+  : Lemma (requires (forall (i: ifrom_ito a b). {:nopattern (* uninferrable *)} expr1 i == expr2 i))
           (ensures fold cm a b expr1 == fold cm a b expr2)
           (decreases b - a) = 
   if b > a then fold_equality cm a (b - 1) expr1 expr2 
@@ -93,12 +93,12 @@ let rec fold_equals_seq_foldm #c #eq (cm: CE.cm c eq)
     eq.transitivity lhs (subfold `op` last) rhs 
 
 (* I keep the argument types explicitly stated here because it makes
-   the lemma easier to read. *)
+   the lemma easier to read. {:nopattern (* uninferrable *)} *)
 let rec fold_offset_irrelevance_lemma #c #eq (cm: CE.cm c eq) 
   (m0: int) (mk: not_less_than m0) (expr1 : ifrom_ito m0 mk -> c)
   (n0: int) (nk: not_less_than n0) (expr2 : ifrom_ito n0 nk -> c)
   : Lemma (requires (((mk-m0) = (nk-n0)) /\ 
-                    (forall (i:under (closed_interval_size m0 mk)). 
+                    (forall (i:under (closed_interval_size m0 mk)). {:nopattern (* uninferrable *)} 
                         expr1 (i+m0) == expr2 (i+n0))))
           (ensures fold cm m0 mk expr1 == fold cm n0 nk expr2)
           (decreases (mk-m0)) = 
@@ -116,7 +116,7 @@ let fold_offset_elimination_lemma #c #eq (cm: CE.cm c eq)
                              (expr1 : ifrom_ito m0 mk -> c)
                              (expr2 : under (closed_interval_size m0 mk) -> c)
   : Lemma (requires ((forall (i:under (closed_interval_size m0 mk)). 
-                         expr2 i == expr1 (i+m0))))
+                         {:nopattern (* uninferrable *)} expr2 i == expr1 (i+m0))))
           (ensures fold cm m0 mk expr1 == fold cm 0 (mk-m0) expr2)
           (decreases (mk-m0)) 
   = fold_offset_irrelevance_lemma cm m0 mk expr1 0 (mk-m0) expr2

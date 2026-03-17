@@ -28,7 +28,7 @@ effect State (a:Type) (wp:st_wp a) =
        STATE a wp
 effect ST (a:Type) (pre:st_pre) (post: (h0:t -> Tot (st_post' a (pre h0)))) =
        STATE a
-             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. {:nopattern (* uninferrable *)} pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect

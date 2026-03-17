@@ -196,9 +196,9 @@ val impl_intro_gen (#p: Type0) (#q: (squash p -> Tot Type0)) (_: (squash p -> Le
 
 (** Turning an universally quantified precondition into returned
     squash proof, similar to [FStar.Squash.get_proof], but avoiding an
-    extra squash, since [forall] is already squashed. *)
+    extra squash, since [forall] is already squashed. {:nopattern (* uninferrable *)} *)
 val get_forall (#a: Type) (p: (a -> GTot Type0))
-    : Pure (forall (x: a). p x) (requires (forall (x: a). p x)) (ensures (fun _ -> True))
+    : Pure (forall (x: a). {:nopattern (* uninferrable *)} p x) (requires (forall (x: a). {:nopattern (* uninferrable *)} p x)) (ensures (fun _ -> True))
 
 (** This introduces a squash proof of a universal
     quantifier. [forall_intro_gtot f] is equivalent to [return_squash
@@ -206,12 +206,12 @@ val get_forall (#a: Type) (p: (a -> GTot Type0))
 
     TODO: Perhaps remove this? It seems redundant *)
 val forall_intro_gtot (#a: Type) (#p: (a -> GTot Type)) ($_: (x: a -> GTot (p x)))
-    : Tot (squash (forall (x: a). p x))
+    : Tot (squash (forall (x: a). {:nopattern (* uninferrable *)} p x))
 
 (** This turns a dependent arrow into a proof-irrelevant postcondition
     of a universal quantifier. *)
 val lemma_forall_intro_gtot (#a: Type) (#p: (a -> GTot Type)) ($_: (x: a -> GTot (p x)))
-    : Lemma (forall (x: a). p x)
+    : Lemma (forall (x: a). {:nopattern (* uninferrable *)} p x)
 
 (** This turns a dependent arrow producing a proof a [p] into a lemma
     ensuring [p], effectively squashing the proof of [p], while still
@@ -223,7 +223,7 @@ val gtot_to_lemma (#a: Type) (#p: (a -> GTot Type)) ($_: (x: a -> GTot (p x))) (
 
     TODO: perhaps remove this? *)
 val forall_intro_squash_gtot (#a: Type) (#p: (a -> GTot Type)) ($_: (x: a -> GTot (squash (p x))))
-    : Tot (squash (forall (x: a). p x))
+    : Tot (squash (forall (x: a). {:nopattern (* uninferrable *)} p x))
 
 (** This is the analog of [lemma_forall_intro_gtot] but with squashed
     proofs on both sides *)
@@ -231,14 +231,14 @@ val forall_intro_squash_gtot_join
       (#a: Type)
       (#p: (a -> GTot Type))
       ($_: (x: a -> GTot (squash (p x))))
-    : Tot (forall (x: a). p x)
+    : Tot (forall (x: a). {:nopattern (* uninferrable *)} p x)
 
 (** The main workhorse for introducing universally quantified postconditions, at arity 1.
 
     See the remark at the start of this section for guidelines on its
     use. You may prefer to use a local lemma with an SMT pattern. *)
 val forall_intro (#a: Type) (#p: (a -> GTot Type)) ($_: (x: a -> Lemma (p x)))
-    : Lemma (forall (x: a). p x)
+    : Lemma (forall (x: a). {:nopattern (* uninferrable *)} p x)
 
 (** The main workhorse for introducing universally quantified
     postconditions, at arity 1, including a provision for a single
@@ -266,7 +266,7 @@ val forall_intro_with_pat
     implicit arguments, notably [p], will have to be provided
     explicilty. *)
 val forall_intro_sub (#a: Type) (#p: (a -> GTot Type)) (_: (x: a -> Lemma (p x)))
-    : Lemma (forall (x: a). p x)
+    : Lemma (forall (x: a). {:nopattern (* uninferrable *)} p x)
 
 (** The arity 2 version of [forall_intro] *)
 val forall_intro_2
@@ -274,7 +274,7 @@ val forall_intro_2
       (#b: (a -> Type))
       (#p: (x: a -> b x -> GTot Type0))
       ($_: (x: a -> y: b x -> Lemma (p x y)))
-    : Lemma (forall (x: a) (y: b x). p x y)
+    : Lemma (forall (x: a) (y: b x). {:nopattern (* uninferrable *)} p x y)
 
 (** The arity 2 version of [forall_intro_with_pat] *)
 val forall_intro_2_with_pat
@@ -293,7 +293,7 @@ val forall_intro_3
       (#c: (x: a -> y: b x -> Type))
       (#p: (x: a -> y: b x -> z: c x y -> Type0))
       ($_: (x: a -> y: b x -> z: c x y -> Lemma (p x y z)))
-    : Lemma (forall (x: a) (y: b x) (z: c x y). p x y z)
+    : Lemma (forall (x: a) (y: b x) (z: c x y). {:nopattern (* uninferrable *)} p x y z)
 
 (** The arity 3 version of [forall_intro_with_pat] *)
 val forall_intro_3_with_pat
@@ -314,7 +314,7 @@ val forall_intro_4
       (#d: (x: a -> y: b x -> z: c x y -> Type))
       (#p: (x: a -> y: b x -> z: c x y -> w: d x y z -> Type0))
       ($_: (x: a -> y: b x -> z: c x y -> w: d x y z -> Lemma (p x y z w)))
-    : Lemma (forall (x: a) (y: b x) (z: c x y) (w: d x y z). p x y z w)
+    : Lemma (forall (x: a) (y: b x) (z: c x y) (w: d x y z). {:nopattern (* uninferrable *)} p x y z w)
 
 (** This combines th use of [arrow_to_impl] with [forall_intro].
 
@@ -323,7 +323,7 @@ val forall_impl_intro
       (#a: Type)
       (#p #q: (a -> GTot Type))
       ($_: (x: a -> squash (p x) -> Lemma (q x)))
-    : Lemma (forall x. p x ==> q x)
+    : Lemma (forall x. {:nopattern (* uninferrable *)} p x ==> q x)
 
 (** This is similar to [forall_intro], but with a lemma that has a precondition.
 
@@ -334,7 +334,7 @@ val ghost_lemma
       (#p: (a -> GTot Type0))
       (#q: (a -> unit -> GTot Type0))
       ($_: (x: a -> Lemma (requires p x) (ensures (q x ()))))
-    : Lemma (forall (x: a). p x ==> q x ())
+    : Lemma (forall (x: a). {:nopattern (* uninferrable *)} p x ==> q x ())
 
 
 (**** Existential quantification *)
@@ -352,19 +352,19 @@ val ghost_lemma
     [exists xy. p (fst xy) (snd xy)] and to allow the SMT solver to convert
     the latter to the former. *)
 val exists_intro (#a: Type) (p: (a -> Type)) (witness: a)
-    : Lemma (requires (p witness)) (ensures (exists (x: a). p x))
+    : Lemma (requires (p witness)) (ensures (exists (x: a). {:nopattern (* uninferrable *)} p x))
 
 (** Introducing an exists via its classical correspondence with a negated universal quantifier *)
 val exists_intro_not_all_not
       (#a: Type)
       (#p: (a -> Type))
       ($f: ((x: a -> Lemma (~(p x))) -> Lemma False))
-    : Lemma (exists x. p x)
+    : Lemma (exists x. {:nopattern (* uninferrable *)} p x)
 
 (** If [r] is true for all [x:a{p x}], then one can use
     [forall_to_exists] to establish [(exists x. p x) ==> r]. *)
 val forall_to_exists (#a: Type) (#p: (a -> Type)) (#r: Type) ($_: (x: a -> Lemma (p x ==> r)))
-    : Lemma ((exists (x: a). p x) ==> r)
+    : Lemma ((exists (x: a). {:nopattern (* uninferrable *)} p x) ==> r)
 
 (** The arity two variant of [forall_to_exists] for two separate
     existentially quantified hypotheses.
@@ -377,15 +377,15 @@ val forall_to_exists_2
       (#q: (b -> Type))
       (#r: Type)
       ($f: (x: a -> y: b -> Lemma ((p x /\ q y) ==> r)))
-    : Lemma (((exists (x: a). p x) /\ (exists (y: b). q y)) ==> r)
+    : Lemma (((exists (x: a). {:nopattern (* uninferrable *)} p x) /\ (exists (y: b). {:nopattern (* uninferrable *)} q y)) ==> r)
 
 (** An eliminator for squashed existentials: If every witness can be
     eliminated into a squashed proof of the [goal], then the [goal]
-    postcondition is valid. *)
+    postcondition is valid. {:nopattern (* uninferrable *)} *)
 val exists_elim
       (goal #a: Type)
       (#p: (a -> Type))
-      (_: squash (exists (x: a). p x))
+      (_: squash (exists (x: a). {:nopattern (* uninferrable *)} p x))
       (_: (x: a{p x} -> GTot (squash goal)))
     : Lemma goal
 

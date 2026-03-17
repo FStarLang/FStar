@@ -28,7 +28,7 @@ let st2_Post  (a:Type) = st_post_h heap2 a
 let st2_WP (a:Type) = st_wp_h heap2 a
 effect ST2 (a:Type) (pre:st2_Pre) (post: (h:heap2 -> Tot (st2_Post' a (pre h)))) =
     STATE2 a
-      (fun (p:st2_Post a) (h:heap2) -> pre h /\ (forall a h1. pre h /\ post h a h1 ==> p a h1)) (* WP *)
+      (fun (p:st2_Post a) (h:heap2) -> pre h /\ (forall a h1. {:nopattern (* uninferrable *)} pre h /\ post h a h1 ==> p a h1)) (* WP *)
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect
   DIV    ~> STATE2 = (fun (a:Type) (wp:pure_wp a) (p:st2_Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
@@ -42,8 +42,8 @@ let comp a b wp0 wp1 p h2 =
     (R?.l h2)
 
 //TODO: this should be conditional on the monotonicity of the wps
-assume Monotone_comp: forall a b wp1 wp2 p1 p2. (forall x h. p1 x h ==> p2 x h)
-			==> (forall h. comp a b wp1 wp2 p1 h
+assume Monotone_comp: forall a b wp1 wp2 p1 p2. {:nopattern (* uninferrable *)} (forall x h. {:nopattern (* uninferrable *)} p1 x h ==> p2 x h)
+			==> (forall h. {:nopattern (* uninferrable *)} comp a b wp1 wp2 p1 h
 			    ==> comp a b wp1 wp2 p2 h)
 
 
@@ -77,10 +77,10 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                                            (requires (fun h -> p' h))
                                            (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
-                                                             p (R (R?.l h) hr)
+                                                             {:nopattern (* uninferrable *)} p (R (R?.l h) hr)
                                                           /\ p' (R hl (R?.r h)))))
                                  (ensures (fun h1 r h2 -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b).
-                                                                  q h1 (R (R?.l r) rr) (R (R?.l h2) (h2r))
+                                                                  {:nopattern (* uninferrable *)} q h1 (R (R?.l r) rr) (R (R?.l h2) (h2r))
                                                                /\ q' h1 (R rl (R?.r r)) (R h2l (R?.r h2)))))
 
 
@@ -90,7 +90,7 @@ val decomp_l : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (al:a0) -> (w
 let decomp_l a0 a1 b0 b1 al wp =
   fun p hl ->
     (exists (ar:a1) (hr:heap).
-      wp (R al ar) (fun y2 h2 -> p (R?.l y2) (R?.l h2))
+      {:nopattern (* uninferrable *)} wp (R al ar) (fun y2 h2 -> p (R?.l y2) (R?.l h2))
          (R hl hr))
 
 val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (wp:(rel a0 a1 -> Tot (st2_WP (rel b0 b1))))
@@ -98,7 +98,7 @@ val decomp_r : (a0:Type) -> (a1:Type) -> (b0:Type) -> (b1:Type) -> (ar:a1) -> (w
 let decomp_r a0 a1 b0 b1 ar wp =
   fun p hr ->
     (exists (al:a0) (hl:heap).
-      wp (R al ar) (fun y2 h2 -> p (R?.r y2) (R?.r h2))
+      {:nopattern (* uninferrable *)} wp (R al ar) (fun y2 h2 -> p (R?.r y2) (R?.r h2))
          (R hl hr))
 
 assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type

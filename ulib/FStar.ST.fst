@@ -52,7 +52,7 @@ assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\
 assume val gst_recall:  p:heap_predicate -> GST unit (fun post h0 -> stable p /\ witnessed p /\ (p h0 ==> post () h0))
 
 val lemma_functoriality (p:heap_predicate{stable p /\ witnessed p}) 
-                        (q:heap_predicate{stable q /\ (forall (h:heap). p h ==> q h)})
+                        (q:heap_predicate{stable q /\ (forall (h:heap). {:nopattern (* uninferrable *)} p h ==> q h)})
   :Lemma (ensures (witnessed q))
 let lemma_functoriality p q =
   reveal_opaque (`%witnessed) witnessed;
@@ -73,7 +73,7 @@ sub_effect GST ~> STATE = lift_gst_state
 effect State (a:Type) (wp:st_wp a) = STATE a wp
 
 effect ST (a:Type) (pre:st_pre) (post: (h:heap -> Tot (st_post' a (pre h)))) =
-  STATE a (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. post h a h1 ==> p a h1))
+  STATE a (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. {:nopattern (* uninferrable *)} post h a h1 ==> p a h1))
 effect St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 
 let contains_pred (#a:Type0) (#rel:preorder a) (r:mref a rel) = fun h -> h `contains` r

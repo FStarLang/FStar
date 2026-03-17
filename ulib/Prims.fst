@@ -361,7 +361,7 @@ type guard_free : Type0 -> Type0
 unfold
 let pure_return0 (a: Type) (x: a) : pure_wp a =
   fun (p: pure_post a) ->
-  forall (return_val: a). return_val == x ==> p return_val
+  forall (return_val: a). {:nopattern (* uninferrable *)} return_val == x ==> p return_val
 
 (** Sequential composition for the PURE effect
 
@@ -407,18 +407,18 @@ let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) : pure_wp a =
 unfold
 let pure_ite_wp0 (a: Type) (wp: pure_wp a) : pure_wp a =
   fun (post: pure_post a) ->
-  forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
+  forall (k: pure_post a). {:nopattern (* uninferrable *)} (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
 
 (** Subsumption for the PURE effect *)
 unfold
-let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 p ==> wp2 p
+let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). {:nopattern (* uninferrable *)} wp1 p ==> wp2 p
 
 (** Closing a PURE WP under a binder for [b]
    
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_close_wp *)
 unfold
-let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
+let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). {:nopattern (* uninferrable *)} wp b p
 
 (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold

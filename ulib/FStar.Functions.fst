@@ -26,7 +26,7 @@ let inverse_of_bij #a #b f =
       (fun (x:a) -> f x == y)
   in
   (* Prove it's surjective *)
-  let aux (x:a) : Lemma (exists (y:b). g0 y == x) =
+  let aux (x:a) : Lemma (exists (y:b). {:nopattern (* uninferrable *)} g0 y == x) =
     assert (g0 (f x) == x)
   in
   Classical.forall_intro aux;

@@ -16,9 +16,9 @@
 module FStar.OrdSet
 
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-   (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
- /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
- /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                 (* totality      *)
+   (forall a1 a2. {:nopattern (* uninferrable *)} (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
+ /\ (forall a1 a2 a3. {:nopattern (* uninferrable *)} f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
+ /\ (forall a1 a2. {:nopattern (* uninferrable *)} f a1 a2 \/ f a2 a1)                 (* totality      *)
 
 type cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
@@ -45,7 +45,7 @@ val mem          : #a:eqtype -> #f:cmp a -> a -> s:ordset a f -> Tot bool
 unfold let mem_of #a #f (s:ordset a f) x = mem x s
 
 val last (#a:eqtype) (#f:cmp a) (s: ordset a f{s <> empty}) 
-  : Tot (x:a{(forall (z:a{mem z s}). f z x) /\ mem x s})
+  : Tot (x:a{(forall (z:a{mem z s}). {:nopattern (* uninferrable *)} f z x) /\ mem x s})
 
 (* 
   liat is the reverse of tail, i.e. a list of all but the last element.
@@ -180,7 +180,7 @@ val fold (#a:eqtype) (#acc:Type) (#f:cmp a) (g:acc -> a -> acc) (init:acc) (s:or
 
 val map (#a #b:eqtype) (#fa:cmp a) (#fb:cmp b) (g:a -> b) (sa:ordset a fa)
   : Pure (ordset b fb)
-    (requires (forall x y. (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
+    (requires (forall x y. {:nopattern (* uninferrable *)} (x `fa` y ==> g x `fb` g y) /\ (x = y <==> g x = g y)))
     (ensures (fun sb -> (size sb <= size sa) /\  
                      (as_list sb == FStar.List.Tot.map g (as_list sa)) /\
                      (let sa = as_list sa in
@@ -202,17 +202,17 @@ val lemma_strict_subset_exists_diff (#a:eqtype) (#f:cmp a) (s1:ordset a f) (s2:o
 
 type condition a = a -> bool
 
-let inv #a (c: condition a) : (z:condition a{forall x. c x = not (z x)}) = fun x -> not (c x)
+let inv #a (c: condition a) : (z:condition a{forall x. {:nopattern (* uninferrable *)} c x = not (z x)}) = fun x -> not (c x)
 
 val count (#a:eqtype) (#f: cmp a) (s: ordset a f) (c: condition a) : nat
 
 val count_of_empty (#a:eqtype) (#f: cmp a) (s: ordset a f{size s = 0}) (c: condition a)
   : Lemma (count s c = 0)
 
-val count_of_impossible (#a:eqtype) (#f: cmp a) (s: ordset a f) (c: condition a{forall p. not (c p)})
+val count_of_impossible (#a:eqtype) (#f: cmp a) (s: ordset a f) (c: condition a{forall p. {:nopattern (* uninferrable *)} not (c p)})
   : Lemma (count s c = 0)
 
-val count_all (#a:eqtype) (#f: cmp a) (s: ordset a f) (c: condition a{forall p. c p})
+val count_all (#a:eqtype) (#f: cmp a) (s: ordset a f) (c: condition a{forall p. {:nopattern (* uninferrable *)} c p})
   : Lemma (count s c = size s)
 
 val count_of_cons (#a:eqtype) (#f: cmp a) (s: ordset a f{size s > 0}) (c: condition a)
@@ -247,7 +247,7 @@ val any_liat (#a:eqtype) (#f:cmp a) (s:ordset a f{s<>empty}) (c:condition a)
 
 val find_last (#a:eqtype) (#f:cmp a) (s: ordset a f) (c: condition a) : (z:option a{ match z with
   | None -> not (any s c)
-  | Some v -> (any s c /\ (forall (x:a{mem x s && c x}). f x v))
+  | Some v -> (any s c /\ (forall (x:a{mem x s && c x}). {:nopattern (* uninferrable *)} f x v))
 })
 
 val find_last_is_some_iff_any (#a:eqtype) (#f:cmp a) (s:ordset a f) (c: condition a) 

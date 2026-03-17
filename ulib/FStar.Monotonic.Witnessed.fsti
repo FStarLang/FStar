@@ -40,7 +40,7 @@ val lemma_witnessed_weakening :#state:Type
                                -> rel:preorder state
                                -> p:(state -> Type0)
                                -> q:(state -> Type0)
-                               -> Lemma (requires (forall s. p s ==> q s))
+                               -> Lemma (requires (forall s. {:nopattern (* uninferrable *)} p s ==> q s))
                                        (ensures  (witnessed rel p ==> witnessed rel q))
 
 (* Some logical properties of the witnessed modality *)
@@ -77,10 +77,10 @@ val lemma_witnessed_forall :#state:Type
                             -> #t:Type
                             -> rel:preorder state
                             -> p:(t -> state -> Type0) 
-                            -> Lemma ((witnessed rel (fun s -> forall x. p x s)) <==> (forall x. witnessed rel (p x)))
+                            -> Lemma ((witnessed rel (fun s -> forall x. {:nopattern (* uninferrable *)} p x s)) <==> (forall x. {:nopattern (* uninferrable *)} witnessed rel (p x)))
 
 val lemma_witnessed_exists :#state:Type
                             -> #t:Type
                             -> rel:preorder state
                             -> p:(t -> state -> Type0) 
-                            -> Lemma ((exists x. witnessed rel (p x)) ==> witnessed rel (fun s -> exists x. p x s))
+                            -> Lemma ((exists x. {:nopattern (* uninferrable *)} witnessed rel (p x)) ==> witnessed rel (fun s -> exists x. {:nopattern (* uninferrable *)} p x s))

@@ -6,7 +6,7 @@ let s_predicate (state:Type u#a) = state -> Type0
 let stable (state:Type u#a)
            (rel:P.preorder state)
            (p:s_predicate state) =
-  forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
+  forall s0 s1. {:nopattern (* uninferrable *)} (p s0 /\ rel s0 s1) ==> p s1
 
 val witnessed (state:Type u#a)
               (rel:P.preorder state)

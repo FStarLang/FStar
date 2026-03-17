@@ -27,15 +27,15 @@ irreducible let elim_squash (#p:Type u#a) (s:squash p) : GTot p = admit ()
     (computationally irrelevant) a witness [x:erased a] validating
     [p x].  *)
 irreducible
-let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
+let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. {:nopattern (* uninferrable *)} p x })
   : GTot (x: a { p x })
-  = let h : squash (exists x. p x) = () in
-    let h : (exists x. p x) = elim_squash h in
+  = let h : squash (exists x. {:nopattern (* uninferrable *)} p x) = () in
+    let h : (exists x. {:nopattern (* uninferrable *)} p x) = elim_squash h in
     let (| x, h |) : x:a & p x = elim_squash h in
     x
 
 (** A version in ghost is easily derivable *)
-let indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
+let indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. {:nopattern (* uninferrable *)} p x })
   : Tot (w:Ghost.erased a{ p w })
   = Ghost.hide (indefinite_description_ghost a p)
 
@@ -55,13 +55,13 @@ let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
     a classical proof that [p] is not universally invalid.
 
     Note, F*+SMT can easily prove, since it is just classical logic:
-      [(~(forall n. ~(p n))) ==> (exists n. p n) ] *)
+      [(~(forall n. ~(p n))) ==> (exists n. {:nopattern (* uninferrable *)} p n) ] *)
 let stronger_markovs_principle (p: (nat -> GTot bool))
-    : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
+    : Ghost nat (requires (~(forall (n: nat). {:nopattern (* uninferrable *)} ~(p n)))) (ensures (fun n -> p n)) =
     indefinite_description_ghost _ (fun n -> p n==true)
 
 (** A variant of the previous lemma, but for a [prop] rather than a
     boolean predicate *)
 let stronger_markovs_principle_prop (p: (nat -> GTot prop))
-    : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
+    : Ghost nat (requires (~(forall (n: nat). {:nopattern (* uninferrable *)} ~(p n)))) (ensures (fun n -> p n)) =
     indefinite_description_ghost _ p

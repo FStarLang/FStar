@@ -19,7 +19,7 @@ open FStar.Tactics.Typeclasses
 module Raw = FStar.Class.Eq.Raw
 
 let decides_eq (#a:Type) (f : a -> a -> bool) : prop =
-  forall x y. f x y <==> x == y
+  forall x y. {:nopattern (* uninferrable *)} f x y <==> x == y
 
 class deq a = {
   raw : Raw.deq a;

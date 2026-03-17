@@ -70,16 +70,16 @@ let lem_p_imp_true #p = ()
 val lem_false_imp_p : #p:Type -> Lemma ((False ==> p) <==> True)
 let lem_false_imp_p #p = ()
 
-val lem_fa_true : #a:Type -> Lemma ((forall (x:a). True) <==> True)
+val lem_fa_true : #a:Type -> Lemma ((forall (x:a). {:nopattern (* uninferrable *)} True) <==> True)
 let lem_fa_true #a = ()
 
-val lem_fa_false : #a:Type -> (x:a) -> Lemma ((forall (x:a). False) <==> False)
+val lem_fa_false : #a:Type -> (x:a) -> Lemma ((forall (x:a). {:nopattern (* uninferrable *)} False) <==> False)
 let lem_fa_false #a x = ()
 
-val lem_ex_false : #a:Type -> Lemma ((exists (x:a). False) <==> False)
+val lem_ex_false : #a:Type -> Lemma ((exists (x:a). {:nopattern (* uninferrable *)} False) <==> False)
 let lem_ex_false #a = ()
 
-val lem_ex_true : #a:Type -> (x:a) -> Lemma ((exists (x:a). True) <==> True)
+val lem_ex_true : #a:Type -> (x:a) -> Lemma ((exists (x:a). {:nopattern (* uninferrable *)} True) <==> True)
 let lem_ex_true #a x = ()
 
 val lem_neg_false : unit -> Lemma (~False <==> True)
@@ -117,9 +117,9 @@ let imp_cong #p #q #p' #q' _ _ = ()
 
 val fa_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
-    Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
+    Lemma ((forall (x:a). {:nopattern (* uninferrable *)} p x) <==> (forall (x:a). {:nopattern (* uninferrable *)} q x))
 let fa_cong #a #p #q f =
-  assert ((forall (x:a). p x) <==> (forall (x:a). q x)) by (
+  assert ((forall (x:a). {:nopattern (* uninferrable *)} p x) <==> (forall (x:a). {:nopattern (* uninferrable *)} q x)) by (
     split();
     let do1 () : Tac unit =
       let _ = l_intros () in
@@ -133,9 +133,9 @@ let fa_cong #a #p #q f =
 
 val ex_cong (#a : Type) (#p #q : a -> Type) :
     (x:a -> squash (p x <==> q x)) ->
-    Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
+    Lemma ((exists (x:a). {:nopattern (* uninferrable *)} p x) <==> (exists (x:a). {:nopattern (* uninferrable *)} q x))
 let ex_cong #a #p #q f =
-  assert ((exists (x:a). p x) <==> (exists (x:a). q x)) by (assume_safe (fun () ->
+  assert ((exists (x:a). {:nopattern (* uninferrable *)} p x) <==> (exists (x:a). {:nopattern (* uninferrable *)} q x)) by (assume_safe (fun () ->
     split();
     let do1 () : Tac unit =
       let [ex] = l_intros () in

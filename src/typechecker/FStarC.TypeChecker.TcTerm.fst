@@ -861,6 +861,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     //If not pattern can be inferred, raise a warning
     let pats =
       if List.length pats = 0
+         && List.length names > 0  (* empty names = {:nopattern}, skip inference *)
          && Options.Ext.enabled "auto_patterns"
          && not env.phase1
       then PatternInference.infer_patterns_for_meta env names e

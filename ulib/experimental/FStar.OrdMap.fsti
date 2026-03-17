@@ -19,9 +19,9 @@ open FStar.OrdSet
 
 (* TODO (KM) : move me this should go in a common file on relations *)
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
-    (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
- /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
- /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                (* totality      *)
+    (forall a1 a2. {:nopattern (* uninferrable *)} (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
+ /\ (forall a1 a2 a3. {:nopattern (* uninferrable *)} f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
+ /\ (forall a1 a2. {:nopattern (* uninferrable *)} f a1 a2 \/ f a2 a1)                (* totality      *)
 
 let cmp (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 

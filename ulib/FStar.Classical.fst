@@ -74,16 +74,16 @@ let impl_intro_gen #p #q f =
 
 (*** Universal quantification *)
 let get_forall #a p =
-  let unfold t = (forall (x:a). p x) in
+  let unfold t = (forall (x:a). {:nopattern (* uninferrable *)} p x) in
   assert (norm [delta; delta_only [`%l_Forall]] t == (squash (x:a -> GTot (p x))));
   norm_spec [delta; delta_only [`%l_Forall]] t;
-  get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
+  get_squashed #(x: a -> GTot (p x)) (forall (x: a). {:nopattern (* uninferrable *)} p x)
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)
 let forall_intro_gtot #a #p f =
   let id (#a: Type) (x: a) = x in
   let h:(x: a -> GTot (id (p x))) = fun x -> f x in
-  return_squash #(forall (x: a). id (p x)) ()
+  return_squash #(forall (x: a). {:nopattern (* uninferrable *)} id (p x)) ()
 
 let lemma_forall_intro_gtot #a #p f = give_witness (forall_intro_gtot #a #p f)
 
@@ -91,13 +91,13 @@ let gtot_to_lemma #a #p f x = give_proof #(p x) (return_squash (f x))
 
 let forall_intro_squash_gtot #a #p f =
   bind_squash #(x: a -> GTot (p x))
-    #(forall (x: a). p x)
+    #(forall (x: a). {:nopattern (* uninferrable *)} p x)
     (squash_double_arrow #a #p (return_squash f))
     (fun f -> lemma_forall_intro_gtot #a #p f)
 
 let forall_intro_squash_gtot_join #a #p f =
   join_squash (bind_squash #(x: a -> GTot (p x))
-        #(forall (x: a). p x)
+        #(forall (x: a). {:nopattern (* uninferrable *)} p x)
         (squash_double_arrow #a #p (return_squash f))
         (fun f -> lemma_forall_intro_gtot #a #p f))
 
@@ -109,19 +109,19 @@ let forall_intro_sub #a #p f = forall_intro f
 
 (* Some basic stuff, should be moved to FStar.Squash, probably *)
 let forall_intro_2 #a #b #p f =
-  let g: x: a -> Lemma (forall (y: b x). p x y) = fun x -> forall_intro (f x) in
+  let g: x: a -> Lemma (forall (y: b x). {:nopattern (* uninferrable *)} p x y) = fun x -> forall_intro (f x) in
   forall_intro g
 
 let forall_intro_2_with_pat #a #b #c #p pat f = forall_intro_2 #a #b #p f
 
 let forall_intro_3 #a #b #c #p f =
-  let g: x: a -> Lemma (forall (y: b x) (z: c x y). p x y z) = fun x -> forall_intro_2 (f x) in
+  let g: x: a -> Lemma (forall (y: b x) (z: c x y). {:nopattern (* uninferrable *)} p x y z) = fun x -> forall_intro_2 (f x) in
   forall_intro g
 
 let forall_intro_3_with_pat #a #b #c #d #p pat f = forall_intro_3 #a #b #c #p f
 
 let forall_intro_4 #a #b #c #d #p f =
-  let g: x: a -> Lemma (forall (y: b x) (z: c x y) (w: d x y z). p x y z w) =
+  let g: x: a -> Lemma (forall (y: b x) (z: c x y) (w: d x y z). {:nopattern (* uninferrable *)} p x y z w) =
     fun x -> forall_intro_3 (f x)
   in
   forall_intro g

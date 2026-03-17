@@ -258,7 +258,7 @@ let rec init_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i
   else begin
     init_index_aux #a len (k+1) contents ;
     assert (forall (i:nat{i < len - k}).
-      if i = 0 then index (init_aux len k contents) 0 == contents k
+      {:nopattern (* uninferrable *)} if i = 0 then index (init_aux len k contents) 0 == contents k
       else index (init_aux len k contents) i == index (init_aux len (k+1) contents) (i-1))
   end
 
@@ -278,7 +278,7 @@ let rec init_ghost_index_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:n
   else begin
     init_ghost_index_aux #a len (k+1) contents ;
     assert (forall (i:nat{i < len - k}).
-      if i = 0 then index (init_aux_ghost len k contents) 0 == contents k
+      {:nopattern (* uninferrable *)} if i = 0 then index (init_aux_ghost len k contents) 0 == contents k
       else index (init_aux_ghost len k contents) i == index (init_aux_ghost len (k+1) contents) (i-1))
   end
 

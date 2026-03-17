@@ -31,7 +31,7 @@ let is_monotonic (#a:Type) (wp:pure_wp' a) =
    *   this would be written as: Prims.pure_wp_monotonic0,
    *   with a postprocessing tactic to norm it
    *)
-  forall (p q:pure_post a). (forall (x:a). p x ==> q x) ==> (wp p ==> wp q)  
+  forall (p q:pure_post a). {:nopattern (* uninferrable *)} (forall (x:a). {:nopattern (* uninferrable *)} p x ==> q x) ==> (wp p ==> wp q)  
 
 let elim_pure_wp_monotonicity (#a:Type u#a) (wp:pure_wp a)
   : Lemma (is_monotonic u#a wp)

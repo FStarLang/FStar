@@ -44,7 +44,7 @@ assume private type set : #world:Type -> Type0 -> world -> Type0
 assume val get_weakening :#world:Type
                           -> p:(world -> Type0)
                           -> q:(world -> Type0)
-                          -> Lemma (requires (forall w. p w ==> q w))
+                          -> Lemma (requires (forall w. {:nopattern (* uninferrable *)} p w ==> q w))
                                   (ensures  (get p ==> get q))
                                   [SMTPat (get p); SMTPat (get q)]
 
@@ -182,73 +182,73 @@ private val get_forall_1_aux :#world:Type
                               -> #t:Type
                               -> p:(t -> world -> Type0)
                               -> x:t
-                              -> Lemma (requires (get (fun w -> forall x. p x w)))
+                              -> Lemma (requires (get (fun w -> forall x. {:nopattern (* uninferrable *)} p x w)))
                                       (ensures  (get (fun w -> p x w)))
 let get_forall_1_aux #world #t p x = 
-  get_weakening (fun w -> forall x. p x w) (fun w -> p x w)
+  get_weakening (fun w -> forall x. {:nopattern (* uninferrable *)} p x w) (fun w -> p x w)
 
 private val get_forall_1 :#world:Type
                           -> #t:Type
                           -> p:(t -> world -> Type0)
-                          -> Lemma (requires (get (fun w -> forall x. p x w)))
-                                  (ensures  (forall x. get (fun w -> p x w)))
+                          -> Lemma (requires (get (fun w -> forall x. {:nopattern (* uninferrable *)} p x w)))
+                                  (ensures  (forall x. {:nopattern (* uninferrable *)} get (fun w -> p x w)))
 let get_forall_1 #world #t p = ()
 
 assume private val set_forall_1 :#world:Type
                                  -> #t:Type
                                  -> w:world
                                  -> p:(t -> Type0)
-                                 -> Lemma (requires (set (forall x. p x) w))
-                                         (ensures  (forall x. set (p x) w))
+                                 -> Lemma (requires (set (forall x. {:nopattern (* uninferrable *)} p x) w))
+                                         (ensures  (forall x. {:nopattern (* uninferrable *)} set (p x) w))
 
 assume private val get_forall_2 :#world:Type
                                  -> #t:Type
                                  -> p:(t -> world -> Type0)
-                                 -> Lemma (requires (forall x. get (fun w -> p x w)))
-                                         (ensures  (get (fun w -> forall x. p x w)))
+                                 -> Lemma (requires (forall x. {:nopattern (* uninferrable *)} get (fun w -> p x w)))
+                                         (ensures  (get (fun w -> forall x. {:nopattern (* uninferrable *)} p x w)))
 
 assume private val set_forall_2 :#world:Type
                                  -> #t:Type
                                  -> w:world 
                                  -> p:(t -> Type0)
-                                 -> Lemma (requires (forall x. set (p x) w))
-                                         (ensures  (set (forall x. p x) w))
+                                 -> Lemma (requires (forall x. {:nopattern (* uninferrable *)} set (p x) w))
+                                         (ensures  (set (forall x. {:nopattern (* uninferrable *)} p x) w))
 
 private val get_exists_1_aux :#world:Type
                               -> #t:Type
                               -> p:(t -> world -> Type0)
                               -> x:t
                               -> Lemma (requires (get (fun w -> p x w)))
-                                      (ensures  (get (fun w -> exists x. p x w)))
+                                      (ensures  (get (fun w -> exists x. {:nopattern (* uninferrable *)} p x w)))
 let get_exists_1_aux #world #t p x = 
-  get_weakening (fun w -> p x w) (fun w -> exists x . p x w)
+  get_weakening (fun w -> p x w) (fun w -> exists x . {:nopattern (* uninferrable *)} p x w)
 
 private val get_exists_1 :#world:Type
                           -> #t:Type
                           -> p:(t -> world -> Type0)
-                          -> Lemma (requires (exists x. get (fun w -> p x w)))
-                                  (ensures  (get (fun w -> exists x. p x w)))
+                          -> Lemma (requires (exists x. {:nopattern (* uninferrable *)} get (fun w -> p x w)))
+                                  (ensures  (get (fun w -> exists x. {:nopattern (* uninferrable *)} p x w)))
 let get_exists_1 #world #t p = ()
 
 assume private val set_exists_1 :#world:Type
                                  -> #t:Type
                                  -> w:world
                                  -> p:(t -> Type0)
-                                 -> Lemma (requires (exists x. set (p x) w)) 
-                                         (ensures  (set (exists x. p x) w))
+                                 -> Lemma (requires (exists x. {:nopattern (* uninferrable *)} set (p x) w)) 
+                                         (ensures  (set (exists x. {:nopattern (* uninferrable *)} p x) w))
 
 assume private val get_exists_2 :#world:Type
                                  -> #t:Type
                                  -> p:(t -> world -> Type0)
-                                 -> Lemma (requires (get (fun w -> exists x. p x w)))
-                                         (ensures  (exists x. get (fun w -> p x w)))
+                                 -> Lemma (requires (get (fun w -> exists x. {:nopattern (* uninferrable *)} p x w)))
+                                         (ensures  (exists x. {:nopattern (* uninferrable *)} get (fun w -> p x w)))
 
 assume private val set_exists_2 :#world:Type
                                  -> #t:Type
                                  -> w:world
                                  -> p:(t -> Type0)
-                                 -> Lemma (requires (set (exists x. p x) w)) 
-                                         (ensures  (exists x. set (p x) w))
+                                 -> Lemma (requires (set (exists x. {:nopattern (* uninferrable *)} p x) w)) 
+                                         (ensures  (exists x. {:nopattern (* uninferrable *)} set (p x) w))
 
 private val get_eq :#world:Type
                     -> #t:Type
@@ -272,7 +272,7 @@ assume private val set_eq :#world:Type
 
 (* Witnessed modality *)
 
-let witnessed #state rel p = get (fun s -> forall s'. rel s s' ==> p s')
+let witnessed #state rel p = get (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p s')
 
 (* Weakening for the witnessed modality *)
 
@@ -287,7 +287,7 @@ let lemma_witnessed_nested #state rel p = ()
 let lemma_witnessed_and #state rel p q =
   let aux () :Lemma (requires (witnessed rel p /\ witnessed rel q))
                     (ensures  (witnessed rel (fun s -> p s /\ q s)))
-    = get_and_2 (fun s -> forall s'. rel s s' ==> p s') (fun s -> forall s'. rel s s' ==> q s')
+    = get_and_2 (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p s') (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> q s')
   in
   FStar.Classical.move_requires aux ()
 
@@ -296,14 +296,14 @@ let lemma_witnessed_or #state rel p q = ()
 let lemma_witnessed_impl #state rel p q = 
   let aux () :Lemma (requires ((witnessed rel (fun s -> p s ==> q s) /\ witnessed rel p)))
                     (ensures  (witnessed rel q))
-    = get_and_2 (fun s -> forall s'. rel s s' ==> p s' ==> q s') (fun s -> forall s'. rel s s' ==> p s')
+    = get_and_2 (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p s' ==> q s') (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p s')
   in
   FStar.Classical.move_requires aux ()
 
 let lemma_witnessed_forall #state #t rel p =
-  let aux () :Lemma (requires (forall x. witnessed rel (fun s -> p x s)))
-                    (ensures  (witnessed rel (fun s -> forall x. p x s)))
-    = get_forall_2 #state #t (fun x s -> forall s'. rel s s' ==> p x s')
+  let aux () :Lemma (requires (forall x. {:nopattern (* uninferrable *)} witnessed rel (fun s -> p x s)))
+                    (ensures  (witnessed rel (fun s -> forall x. {:nopattern (* uninferrable *)} p x s)))
+    = get_forall_2 #state #t (fun x s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p x s')
   in
   FStar.Classical.move_requires aux ()
 
@@ -317,7 +317,7 @@ let lemma_witnessed_exists #state #t rel p = ()
 (* An equivalent past-view of the witnessed modality *)
 
 let witnessed_past (#state:Type) (rel:preorder state) (p:(state -> Type0)) = 
-  get (fun s -> exists s'. rel s' s /\ (forall s''. rel s' s'' ==> p s''))
+  get (fun s -> exists s'. {:nopattern (* uninferrable *)} rel s' s /\ (forall s''. {:nopattern (* uninferrable *)} rel s' s'' ==> p s''))
 
 val witnessed_defs_equiv_1 :#state:Type
                             -> rel:preorder state
@@ -332,7 +332,7 @@ val witnessed_defs_equiv_2 :#state:Type
                             -> Lemma (requires (witnessed #state rel p)) 
                                     (ensures  (witnessed #state rel p))
 let witnessed_defs_equiv_2 #state rel p = 
-  get_weakening #state (fun s -> exists s'. rel s' s /\ (forall s''. rel s' s'' ==> p s'')) 
-                       (fun s -> forall s'. rel s s' ==> p s')
+  get_weakening #state (fun s -> exists s'. {:nopattern (* uninferrable *)} rel s' s /\ (forall s''. {:nopattern (* uninferrable *)} rel s' s'' ==> p s'')) 
+                       (fun s -> forall s'. {:nopattern (* uninferrable *)} rel s s' ==> p s')
 
 (* NOT EXPOSED BY THE INTERFACE [end] *)

@@ -139,7 +139,7 @@ val empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation})
 ///
 /// `(acc_to_wfr r f).relation` is `acc_relation r` as defined below.
 
-let acc_relation (#a: Type u#a) (r: a -> a -> Type0) (x1: a) (x2: a) : Type0 = exists (p: r x1 x2). True
+let acc_relation (#a: Type u#a) (r: a -> a -> Type0) (x1: a) (x2: a) : Type0 = exists (p: r x1 x2). {:nopattern (* uninferrable *)} True
 
 val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: FStar.WellFounded.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r})
@@ -168,7 +168,7 @@ val inverse_image_to_wfr
   (#b: Type u#b)
   (r: a -> a -> Type0)
   (f: a -> b)
-  (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
+  (wfr: wfr_t b{forall x1 x2. {:nopattern (* uninferrable *)} r x1 x2 ==> wfr.relation (f x1) (f x2)})
   : (wfr': wfr_t a{wfr'.relation == r})
 
 /// `lex_nondep_wfr wfr_a wfr_b` is a `wfr_t` describing lexicographic

@@ -59,7 +59,7 @@ val fold (#c:_) (#eq:_) (cm: CE.cm c eq)
 val fold_equality (#c:_) (#eq:_) (cm: CE.cm c eq) 
                   (a: int) (b: not_less_than a) 
                   (expr1 expr2: (ifrom_ito a b) -> c)
-  : Lemma (requires (forall (i: ifrom_ito a b). expr1 i == expr2 i))
+  : Lemma (requires (forall (i: ifrom_ito a b). {:nopattern (* uninferrable *)} expr1 i == expr2 i))
           (ensures fold cm a b expr1 == fold cm a b expr2) 
 
 val fold_singleton_lemma (#c:_) (#eq:_) (cm:CE.cm c eq) 
@@ -100,7 +100,7 @@ val fold_offset_irrelevance_lemma (#c:_) (#eq:_) (cm: CE.cm c eq)
                                   (n0: int) (nk: not_less_than n0) 
                                   (expr2 : ifrom_ito n0 nk -> c)
   : Lemma (requires (((mk-m0) = (nk-n0)) /\ 
-                     (forall (i:under (closed_interval_size m0 mk)). 
+                     (forall (i:under (closed_interval_size m0 mk)). {:nopattern (* uninferrable *)} 
                         expr1 (i+m0) == expr2 (i+n0))))
           (ensures fold cm m0 mk expr1 == fold cm n0 nk expr2) 
 
@@ -110,5 +110,5 @@ val fold_offset_elimination_lemma (#c:_) (#eq:_) (cm: CE.cm c eq)
                                   (expr1 : ifrom_ito m0 mk -> c)
                                   (expr2 : under (closed_interval_size m0 mk) -> c)
   : Lemma (requires ((forall (i:under (closed_interval_size m0 mk)). 
-                         expr2 i == expr1 (i+m0))))
+                         {:nopattern (* uninferrable *)} expr2 i == expr1 (i+m0))))
           (ensures fold cm m0 mk expr1 == fold cm 0 (mk-m0) expr2)

@@ -186,16 +186,16 @@ let empty_or_domain_occupied_lemma ()
 
 let empty_or_values_occupied_lemma ()
 : Lemma (empty_or_values_occupied_fact u#b) =
-  introduce forall (a: eqtype) (b:Type u#b) (m: map a b). m == emptymap \/ (exists v. (values m) v)
+  introduce forall (a: eqtype) (b:Type u#b) (m: map a b). m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
   with
     if FSet.cardinality (domain m) = 0 then
-      introduce m == emptymap \/ (exists v. (values m) v)
+      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
       with Left (
         assert (cardinality m = 0);
         cardinality_zero_iff_empty_lemma u#b ()
       )
     else
-      introduce m == emptymap \/ (exists v. (values m) v)
+      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
       with Right (
         let k = choose m in
         let v = Some?.v ((elements m) k) in
@@ -204,16 +204,16 @@ let empty_or_values_occupied_lemma ()
 
 let empty_or_items_occupied_lemma ()
 : Lemma (empty_or_items_occupied_fact u#b) =
-  introduce forall (a: eqtype) (b: Type u#b) (m: map a b). m == emptymap \/ (exists item. (items m) item)
+  introduce forall (a: eqtype) (b: Type u#b) (m: map a b). m == emptymap \/ (exists item. {:nopattern (* uninferrable *)} (items m) item)
   with
     if FSet.cardinality (domain m) = 0 then
-      introduce m == emptymap \/ (exists v. (values m) v)
+      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
       with Left (
         assert (cardinality m = 0);
         cardinality_zero_iff_empty_lemma u#b ()
       )
     else
-      introduce m == emptymap \/ (exists item. (items m) item)
+      introduce m == emptymap \/ (exists item. {:nopattern (* uninferrable *)} (items m) item)
       with Right (
         let k = choose m in
         let v = Some?.v ((elements m) k) in

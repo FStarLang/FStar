@@ -26,7 +26,7 @@ private noeq type heap_rec = {
                       //type, preorder, mm flag, and value
 }
 
-let heap = h:heap_rec{(forall (n:nat). n >= h.next_addr ==> None? (h.memory n))}
+let heap = h:heap_rec{(forall (n:nat). {:nopattern (* uninferrable *)} n >= h.next_addr ==> None? (h.memory n))}
 
 let equal h1 h2 =
   let _ = () in
@@ -303,7 +303,7 @@ let gref_of a t rel =
   let l : (exists (h: heap) . aref_live_at h a t rel) =
     Squash.join_squash #(h: heap & aref_live_at h a t rel) m
   in
-  let k : (exists (h: heap { aref_live_at h a t rel} ) . squash True ) =
+  let k : (exists (h: heap { aref_live_at h a t rel} ) . {:nopattern (* uninferrable *)} squash True ) =
     FStar.Squash.bind_squash
       #(h: heap & aref_live_at h a t rel)
       #(h: (h: heap { aref_live_at h a t rel} ) & squash True)
