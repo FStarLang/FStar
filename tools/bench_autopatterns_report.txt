@@ -1,66 +1,69 @@
-======================================================================================================================================================
-  FULL F* REPO BENCHMARK: baseline (fstar2) vs auto_patterns (fstar2_autopatterns)
-  Both configs: clean ulib build + all tests/ and examples/ directories
-======================================================================================================================================================
+===========================================================================================================================================================
+  FULL F* REPO BENCHMARK: baseline vs auto_patterns (with all regression fixes)
+===========================================================================================================================================================
 
-Baseline:       2026-03-17T16:51:49Z to 2026-03-17T16:56:38Z
-Auto-patterns:  2026-03-17T16:57:52Z to 2026-03-17T17:01:45Z
+Baseline:       2026-03-17T18:03:23Z to 2026-03-17T18:08:10Z
+Auto-patterns:  2026-03-17T18:09:26Z to 2026-03-17T18:13:54Z
 
-======================================================================================================================================================
-  PER-TARGET COMPARISON
-======================================================================================================================================================
-
-Target                                    Base(s)  Head(s)     D(s)    D(%)      BQ     HQ     BRlim     HRlim  DRl(%)   BRSS(M)  HRSS(M)
-------------------------------------------------------------------------------------------------------------------------------------------------------
-examples_algorithms                           7.7      5.1     -2.6  -34.1%     308    308      44.6      30.3  -32.2%       348      347
-examples_data_structures                     50.9     50.8     -0.2   -0.3%     498    498     340.6     336.3   -1.3%       268      268
-examples_demos                                0.0      0.0     +0.0   +0.0%       0      0       0.0       0.0   +0.0%         2        2
-examples_dm4free                              3.0      3.1     +0.0   +0.7%     240    240       6.1       5.9   -2.3%       229      232
-examples_dsls                                43.1      4.6    -38.5  -89.3%     459    110     172.1      15.6  -91.0%       815      277
-examples_indexed_effects                      0.8      0.8     -0.0   +0.0%      30     30       0.4       0.4   +0.0%       155      155
-examples_layeredeffects                      16.6     13.0     -3.5  -21.4%    1142    603      88.4      27.4  -69.0%       356      353
-examples_metatheory                          18.6     18.6     -0.1   -0.3%     539    529      19.2      17.6   -8.4%      1704     1705
-examples_misc                                 0.8      0.8     +0.0   +0.0%      43     43       0.2       0.2   +0.0%       162      163
-examples_oplss2021                            4.5      4.5     -0.0   -0.2%     334    329      14.5      14.4   -0.7%       266      267
-examples_paradoxes                            0.5      0.5     +0.0   +0.0%      46     46       0.3       0.3   +0.4%       120      120
-examples_param                                3.0      3.0     -0.0   -0.3%      39     39       0.8       0.8   +0.0%       317      317
-examples_preorders                           14.2      2.6    -11.6  -81.4%     369    211      39.9       5.0  -87.4%       316      169
-examples_software_foundations                 2.3      2.3     +0.0   +1.8%     231    231       2.0       2.0   +0.0%       182      181
-examples_tactics                              6.5      6.5     +0.0   +0.5%     257    257       3.6       3.7   +2.6%       277      277
-examples_termination                          1.1      1.1     +0.0   +0.0%      79     79       0.6       0.6   +0.0%       174      176
-examples_typeclasses                          3.3      3.3     +0.0   +1.2%      86     86       2.9       3.0   +5.7%       289      288
-examples_verifythis                           3.2      3.2     +0.0   +0.0%      12     12       6.9       6.9   +0.0%       162      162
-tests_bug-reports                            20.4     20.3     -0.1   -0.6%    1732   1688      28.8      27.1   -6.0%       505      507
-tests_calc                                   16.8     17.0     +0.2   +1.1%      44     44       0.3       0.3   +0.0%      1120     1120
-tests_coercions                               0.6      0.6     +0.0   +0.0%       4      4       0.0       0.0   +0.0%       194      195
-tests_error-messages                          2.7      2.7     -0.0   -0.7%     977    976       3.3       3.3   -0.0%       254      255
-tests_friends                                 1.1      1.2     +0.0   +1.8%       3      3       0.0       0.0   +0.0%       146      147
-tests_micro-benchmarks                       24.7     24.7     +0.0   +0.1%    1052   1046      23.9      23.9   -0.1%      1193     1197
-tests_projectors                              0.7      0.7     +0.0   +0.0%       1      1       0.0       0.0   +0.0%       201      201
-tests_semiring                               18.7     18.6     -0.1   -0.4%     201    201       7.3       7.3   +0.0%       610      609
-tests_tactics                                19.8     19.4     -0.3   -1.6%     599    599       3.8       3.8   -0.0%       980      980
-tests_typeclasses                             3.0      3.1     +0.0   +0.7%      70     70       1.1       1.1   +0.0%       281      281
-------------------------------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                       288.7    232.0    -56.6  -19.6%    9395   8283     811.7     537.2  -33.8%
+Target                                    Base(s)  Head(s)     D(s)    D(%)      BQ     HQ     BRlim     HRlim  DRl(%)  BErr HErr
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+examples_algorithms                           7.6      5.0     -2.6  -34.0%     308    308      44.6      30.3  -32.2%     0    1 NEW-ERR
+examples_data_structures                     51.1     50.8     -0.3   -0.6%     498    498     340.6     336.3   -1.3%     0    0
+examples_demos                                0.0      0.0     +0.0   +0.0%       0      0       0.0       0.0   +0.0%     0    0
+examples_dm4free                              3.0      3.0     +0.0   +0.3%     240    240       6.1       5.9   -2.3%     0    0
+examples_dsls                                41.2     39.9     -1.3   -3.2%     459    459     160.2     148.8   -7.1%     0    0
+examples_indexed_effects                      0.8      0.8     +0.0   +0.0%      30     30       0.4       0.4   +0.0%     0    0
+examples_layeredeffects                      16.9     12.8     -4.1  -24.4%    1142    620      88.4      28.0  -68.4%     0   12 NEW-ERR
+examples_metatheory                          18.8     18.4     -0.4   -1.9%     539    529      19.2      17.6   -8.4%     0    1 NEW-ERR
+examples_misc                                 0.7      0.8     +0.0   +0.0%      43     43       0.2       0.2   +0.0%     0    0
+examples_oplss2021                            4.7      4.8     +0.1   +1.7%     334    329      14.5      14.4   -0.7%     0    1 NEW-ERR
+examples_paradoxes                            0.5      0.5     +0.0   +0.0%      46     46       0.3       0.3   +0.4%     0    0
+examples_param                                3.0      3.0     +0.0   +1.0%      39     39       0.8       0.8   +0.0%     0    0
+examples_preorders                           14.2      2.7    -11.5  -81.0%     369    211      39.9       5.0  -87.4%     0    1 NEW-ERR
+examples_software_foundations                 1.9      2.4     +0.5  +26.6%     231    231       2.0       2.0   +0.0%     0    0
+examples_tactics                              6.5      6.6     +0.1   +1.5%     257    257       3.7       3.7   +0.0%     0    0
+examples_termination                          1.1      1.1     +0.0   +0.9%      79     79       0.6       0.6   +0.0%     0    0
+examples_typeclasses                          3.3      3.3     -0.0   -1.2%      86     86       2.9       3.0   +5.7%     0    0
+examples_verifythis                           3.2      3.2     +0.1   +2.2%      12     12       6.9       6.9   +0.0%     0    0
+tests_bug-reports                            20.6     20.3     -0.3   -1.3%    1732   1688      28.8      27.1   -6.0%     0    4 NEW-ERR
+tests_calc                                   16.9     17.0     +0.1   +0.5%      44     44       0.3       0.3   +0.0%     0    0
+tests_coercions                               0.6      0.6     +0.0   +0.0%       4      4       0.0       0.0   +0.0%     0    0
+tests_error-messages                          2.6      2.6     -0.0   -0.4%     978    977       3.3       3.3   -0.1%     0    0
+tests_friends                                 1.2      1.2     +0.0   +0.0%       3      3       0.0       0.0   +0.0%     0    0
+tests_micro-benchmarks                       24.6     24.6     -0.0   -0.0%    1052   1046      23.9      23.9   -0.1%     0    2 NEW-ERR
+tests_projectors                              0.7      0.7     +0.0   +0.0%       1      1       0.0       0.0   +0.0%     0    0
+tests_semiring                               18.6     18.7     +0.1   +0.6%     201    201       7.3       7.3   +0.0%     0    0
+tests_tactics                                19.8     19.8     +0.0   +0.2%     599    599       3.8       3.8   +0.0%     1    1
+tests_typeclasses                             3.1      3.1     -0.0   -0.3%      70     70       1.1       1.1   +0.0%     0    0
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                       287.1    267.7    -19.4   -6.8%    9396   8650     799.9     671.1  -16.1%
 
 ================================================================================
   SUMMARY
 ================================================================================
 
-Targets benchmarked:  28
-Total wall time (baseline):       288.7s (4.8m)
-Total wall time (auto_patterns):  232.0s (3.9m)
-Overall time delta:               -56.6s (-19.6%)
+Targets: 28
+Wall time:  287.1s -> 267.7s  (-6.8%)
+Z3 time:    262.7s -> 224.0s  (-14.7%)
+Rlimit:     799.9 -> 671.1  (-16.1%)
+Queries:    9396 -> 8650  (-7.9%)
 
-Total queries  (base/head):  9395 / 8283 (-11.8%)
-Total Z3 time  (base/head):  263.4s / 193.4s (-26.6%)
-Total rlimit   (base/head):  811.7 / 537.2 (-33.8%)
+NEW ERRORS (regressions):
+  !! examples_algorithms: 0 base errors -> 1 head errors
+  !! examples_layeredeffects: 0 base errors -> 12 head errors
+  !! examples_metatheory: 0 base errors -> 1 head errors
+  !! examples_oplss2021: 0 base errors -> 1 head errors
+  !! examples_preorders: 0 base errors -> 1 head errors
+  !! tests_bug-reports: 0 base errors -> 4 head errors
+  !! tests_micro-benchmarks: 0 base errors -> 2 head errors
 
-REGRESSIONS (>15%% slower, >2s abs): NONE
+TIMING REGRESSIONS: NONE
 
-NOTABLE SPEEDUPS (>15%% faster, >2s abs):
-  >>  examples_dsls: -89.3% (-38.5s)
-  >>  examples_preorders: -81.4% (-11.6s)
-  >>  examples_algorithms: -34.1% (-2.6s)
-  >>  examples_layeredeffects: -21.4% (-3.5s)
-
+QUERY COUNT CHANGES:
+  examples_layeredeffects: 1142 -> 620 (-522)
+  examples_preorders: 369 -> 211 (-158)
+  tests_bug-reports: 1732 -> 1688 (-44)
+  examples_metatheory: 539 -> 529 (-10)
+  tests_micro-benchmarks: 1052 -> 1046 (-6)
+  examples_oplss2021: 334 -> 329 (-5)
+  tests_error-messages: 978 -> 977 (-1)
