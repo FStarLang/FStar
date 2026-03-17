@@ -69,9 +69,52 @@ src/, reaping the benefits. It's also a good test, of course.
 Note: when we're building a stage2, we are NOT using the stage1's libapp
 nor libplugin. In fact they are not even built.
 
-We also do a stage3: we extract all of src into stage3/fstarc.ml and
-compare with stage2/fstarc.ml. These outputs should be identical, or
-there is a bug somewhere.
+Boot diff: we extract all of src/ using the stage2 compiler into
+boot-diff/fstarc.ml and compare with stage2/fstarc.ml. These outputs
+should be identical, or there is a bug somewhere. (This was previously
+called "stage3" but that name is now used for the Pulse stage below.)
+
+Stage 3 (Pulse)
+===============
+
+Stage 3 builds on stage2 to produce a compiler with Pulse baked in. It
+reuses the stage2 extracted OCaml (stage2/fstarc.ml, stage2/plugins.ml)
+and adds Pulse as a natively-linked plugin, so the resulting fstar.exe
+understands Pulse natively without needing a dynamically-loaded cmxs.
+
+The steps are:
+
+1. Build the Pulse plugin sources: the stage2 compiler extracts the
+   Pulse plugin OCaml code (checker, extraction, syntax_extension)
+   via `make -C pulse plugin.src`. The results go into stage3/.
+
+2. Build the stage3 fstar.exe: stage3/dune/ links together the stage2
+   compiler core (fstar-guts, symlinked to stage2/fstarc.ml), the
+   stage2 F* plugins, and the Pulse plugin (stage3/dune/pulse-plugin/).
+   The Pulse plugin library includes a merged parser (Pulse_FStar_Parser)
+   that combines the Pulse and F* grammars via menhir. The main.ml
+   for stage3 sets `FStarC_Plugins.loaded_plugin_lib := true` so F*
+   knows the plugin library is already baked in and won't try to load
+   it again from a cmxs.
+
+   This bit is reusing some Makefiles from Pulse with only minor changes.
+   After committing to making Pulse an integral part of F* we could
+   probably simplify this, but that's not done yet (March 2026).
+
+3. Check the Pulse library: the stage3 compiler checks pulse/lib/common
+   and pulse/lib/pulse (reusing the stage2 ulib.checked files).
+
+4. Install: `make stage3` installs the stage3 compiler into stage3/out/
+   along with the ulib, fstarc source/checked files, and the Pulse
+   library (common + pulse sources and checked files). The Pulse library
+   is placed under lib/fstar/pulse/ and registered in fstar.include so
+   that Pulse modules are available out of the box.
+
+The default `build` target is now `3`, and `test` is `test-3`. Only
+test-3 runs the Pulse test suite (_test_pulse), since the stage1/stage2
+compilers do not support Pulse. Packages (`package` and `package-src`)
+also default to stage3, and source packages include the Pulse library
+sources when PULSE_EXTRA=1.
 
 Optimizations
 =============
