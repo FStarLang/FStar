@@ -178,7 +178,7 @@ let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
 let lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
-    (ensures exists elt. L.memP elt e /\ fst elt == x)
+    (ensures exists elt. {:nopattern (* override *)} L.memP elt e /\ fst elt == x)
   = let Some y = lookup e x in
     List.Tot.Properties.assoc_memP_some x y e
 
@@ -340,7 +340,7 @@ let extend_env_l (g:R.env) (sg:stlc_env) =
   
 let rec extend_env_l_lookup_bvar (g:R.env) (sg:stlc_env) (x:var)
   : Lemma 
-    (requires (forall x. RT.lookup_bvar g x == None))
+    (requires (forall x. {:nopattern (* override *)} RT.lookup_bvar g x == None))
     (ensures (
       match lookup sg x with
       | Some t -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_ty t)

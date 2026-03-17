@@ -267,7 +267,7 @@ let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
 let rec lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
-    (ensures exists elt. L.memP elt e /\ fst elt == x)
+    (ensures exists elt. {:nopattern (* override *)} L.memP elt e /\ fst elt == x)
   = match e with
     | [] -> ()
     | hd :: tl -> 
@@ -515,7 +515,7 @@ let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } 
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
 
-let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)) }
+let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. {:nopattern (* override *)} x `Set.mem` freevars e ==> Some? (lookup sg x)) }
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6"
 let rec check (f:RT.fstar_top_env)
@@ -594,7 +594,7 @@ and check_ty (f:RT.fstar_top_env)
   
 let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
   : Lemma 
-    (requires (forall x. RT.lookup_bvar g x == None))
+    (requires (forall x. {:nopattern (* override *)} RT.lookup_bvar g x == None))
     (ensures (
       match lookup sg x with
       | Some b -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_binding b)
@@ -752,7 +752,7 @@ let rec src_ty_ok_weakening (#f:RT.fstar_top_env)
     | OK_TRefine _ _ d -> OK_TRefine _ _ d
 
 let rec rename (e:src_exp) (x y:var) 
-  : e':src_exp { forall m. ln' e m ==> ln' e' m }
+  : e':src_exp { forall m. {:nopattern (* override *)} ln' e m ==> ln' e' m }
   = match e with
     | EBool _ -> e
     | EBVar _ -> e
@@ -1127,7 +1127,7 @@ let sub_typing_renaming (#f:RT.fstar_top_env)
 
 #push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let freevars_included_in (e:src_exp) (sg:src_env) =
-  forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)
+  forall x. {:nopattern (* override *)} x `Set.mem` freevars e ==> Some? (lookup sg x)
   
 let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f sg e t)
   : Lemma 
@@ -1413,7 +1413,7 @@ let rec src_typing_weakening #f (sg sg':src_env)
 let rec src_typing_weakening_l #f (sg:src_env) 
                                (sg':src_env { 
                                  (src_env_ok sg') /\
-                                 (forall x. Some? (lookup sg' x) ==> None? (lookup sg x))
+                                 (forall x. {:nopattern (* override *)} Some? (lookup sg' x) ==> None? (lookup sg x))
                                })
                            (e:src_exp)
                            (t:s_ty)                         
