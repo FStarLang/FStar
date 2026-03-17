@@ -153,24 +153,30 @@ let go_normal (uu___ : unit) : unit=
   let uu___1 = process_args () in
   match uu___1 with
   | (res, filenames0) ->
-      let has_output_to =
-        let uu___2 = FStarC_Options.output_to () in
-        FStar_Pervasives_Native.uu___is_Some uu___2 in
-      let has_dep =
-        let uu___2 = FStarC_Options.dep () in
-        FStar_Pervasives_Native.uu___is_Some uu___2 in
-      (if
-         (if (if has_output_to then Prims.op_Negation has_dep else false)
+      ((let uu___3 =
+          let uu___4 =
+            let uu___5 =
+              let uu___6 = FStarC_Options.output_to () in
+              FStar_Pervasives_Native.uu___is_Some uu___6 in
+            if uu___5
+            then
+              let uu___6 =
+                let uu___7 = FStarC_Options.dep () in
+                FStar_Pervasives_Native.uu___is_Some uu___7 in
+              Prims.op_Negation uu___6
+            else false in
+          if uu___4
           then (FStarC_List.length filenames0) > Prims.int_one
-          else false)
-       then
-         FStarC_Errors.raise_error0
-           FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
-           (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-           (Obj.magic
-              [FStarC_Errors_Msg.text
-                 "When using -o, you can only provide a single file in the\n        command line (except for dependency analysis)."])
-       else ();
+          else false in
+        if uu___3
+        then
+          FStarC_Errors.raise_error0
+            FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
+            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+            (Obj.magic
+               [FStarC_Errors_Msg.text
+                  "When using -o, you can only provide a single file in the\n        command line (except for dependency analysis)."])
+        else ());
        (let chopsuf suf s =
           if FStarC_Util.ends_with s suf
           then
@@ -273,9 +279,8 @@ let go_normal (uu___ : unit) : unit=
                   | (uu___9, deps) ->
                       (FStarC_Parser_Dep.print deps; report_errors [])))
             | FStarC_Getopt.Success when
-                let p = FStarC_Options.print () in
-                let pp = FStarC_Options.print_in_place () in
-                if p then true else pp ->
+                let uu___7 = FStarC_Options.print () in
+                if uu___7 then true else FStarC_Options.print_in_place () ->
                 let printing_mode =
                   let uu___7 = FStarC_Options.print () in
                   if uu___7

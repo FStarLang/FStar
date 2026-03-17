@@ -1,8 +1,7 @@
 open Prims
 let ident_is_ticked (id : FStarC_Ident.ident) : Prims.bool=
   let nm = FStarC_Ident.string_of_id id in
-  let len = FStarC_String.length nm in
-  if len > Prims.int_zero
+  if (FStarC_String.length nm) > Prims.int_zero
   then let uu___ = FStarC_String.get nm Prims.int_zero in uu___ = 39
   else false
 let lident_is_ticked (id : FStarC_Ident.lident) : Prims.bool=
@@ -41,12 +40,16 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
   | FStarC_Parser_AST.Labeled uu___ ->
       FStarC_Effect.failwith "Impossible --- labeled source term"
   | FStarC_Parser_AST.Var a ->
-      let ticked = lident_is_ticked a in
-      let not_in_env =
-        let uu___ =
-          FStarC_Syntax_DsEnv.try_lookup_id env (FStarC_Ident.ident_of_lid a) in
-        FStar_Pervasives_Native.uu___is_None uu___ in
-      if (if ticked then not_in_env else false)
+      let uu___ =
+        let uu___1 = lident_is_ticked a in
+        if uu___1
+        then
+          let uu___2 =
+            FStarC_Syntax_DsEnv.try_lookup_id env
+              (FStarC_Ident.ident_of_lid a) in
+          FStar_Pervasives_Native.uu___is_None uu___2
+        else false in
+      if uu___
       then emit1 (FStarC_Ident.ident_of_lid a)
       else
         FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
@@ -461,12 +464,15 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
   (fun env b ->
      match b.FStarC_Parser_AST.b with
      | FStarC_Parser_AST.Variable x ->
-         let ticked = ident_is_ticked x in
-         let not_in_env =
-           let uu___ = FStarC_Syntax_DsEnv.try_lookup_id env x in
-           FStar_Pervasives_Native.uu___is_None uu___ in
          let uu___ =
-           if (if ticked then not_in_env else false)
+           let uu___1 =
+             let uu___2 = ident_is_ticked x in
+             if uu___2
+             then
+               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
+               FStar_Pervasives_Native.uu___is_None uu___3
+             else false in
+           if uu___1
            then emit1 x
            else
              FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
@@ -485,12 +491,15 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
                              (FStarC_Writer.monad_writer uu___0) ()
                              (Obj.magic env'))) uu___1))
      | FStarC_Parser_AST.Annotated (x, t) ->
-         let ticked = ident_is_ticked x in
-         let not_in_env =
-           let uu___ = FStarC_Syntax_DsEnv.try_lookup_id env x in
-           FStar_Pervasives_Native.uu___is_None uu___ in
          let uu___ =
-           if (if ticked then not_in_env else false)
+           let uu___1 =
+             let uu___2 = ident_is_ticked x in
+             if uu___2
+             then
+               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
+               FStar_Pervasives_Native.uu___is_None uu___3
+             else false in
+           if uu___1
            then emit1 x
            else
              FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()

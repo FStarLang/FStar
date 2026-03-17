@@ -38,10 +38,10 @@ let repl_stack : FStarC_Interactive_Ide_Types.repl_stack_t FStarC_Effect.ref=
 let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
   (check_kind : FStarC_Interactive_Ide_Types.push_kind) :
   FStarC_TypeChecker_Env.env_t=
-  let lax = FStarC_Options.lax () in
-  let dsenv =
-    FStarC_Syntax_DsEnv.set_syntax_only env.FStarC_TypeChecker_Env.dsenv
-      (check_kind = FStarC_Interactive_Ide_Types.SyntaxCheck) in
+  let uu___ =
+    if check_kind = FStarC_Interactive_Ide_Types.LaxCheck
+    then true
+    else FStarC_Options.lax () in
   {
     FStarC_TypeChecker_Env.solver = (env.FStarC_TypeChecker_Env.solver);
     FStarC_TypeChecker_Env.range = (env.FStarC_TypeChecker_Env.range);
@@ -67,10 +67,7 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
     FStarC_TypeChecker_Env.use_eq_strict =
       (env.FStarC_TypeChecker_Env.use_eq_strict);
     FStarC_TypeChecker_Env.is_iface = (env.FStarC_TypeChecker_Env.is_iface);
-    FStarC_TypeChecker_Env.admit =
-      (if check_kind = FStarC_Interactive_Ide_Types.LaxCheck
-       then true
-       else lax);
+    FStarC_TypeChecker_Env.admit = uu___;
     FStarC_TypeChecker_Env.phase1 = (env.FStarC_TypeChecker_Env.phase1);
     FStarC_TypeChecker_Env.failhard = (env.FStarC_TypeChecker_Env.failhard);
     FStarC_TypeChecker_Env.flychecking =
@@ -109,7 +106,9 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
     FStarC_TypeChecker_Env.identifier_info =
       (env.FStarC_TypeChecker_Env.identifier_info);
     FStarC_TypeChecker_Env.tc_hooks = (env.FStarC_TypeChecker_Env.tc_hooks);
-    FStarC_TypeChecker_Env.dsenv = dsenv;
+    FStarC_TypeChecker_Env.dsenv =
+      (FStarC_Syntax_DsEnv.set_syntax_only env.FStarC_TypeChecker_Env.dsenv
+         (check_kind = FStarC_Interactive_Ide_Types.SyntaxCheck));
     FStarC_TypeChecker_Env.nbe = (env.FStarC_TypeChecker_Env.nbe);
     FStarC_TypeChecker_Env.strict_args_tab =
       (env.FStarC_TypeChecker_Env.strict_args_tab);
@@ -137,21 +136,13 @@ let repl_ld_tasks_of_deps (deps : Prims.string Prims.list)
     } in
   let rec aux deps1 final_tasks1 =
     match deps1 with
-    | intf::impl::deps' ->
-        let ni = FStarC_Universal.needs_interleaving intf impl in
-        if ni
-        then
-          let uu___ =
-            let uu___1 =
-              let uu___2 = wrap intf in
-              let uu___3 = wrap impl in (uu___2, uu___3) in
-            FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
-          let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
-        else
-          (let uu___1 =
-             let uu___2 = wrap intf in
-             FStarC_Interactive_Ide_Types.LDSingle uu___2 in
-           let uu___2 = aux (impl :: deps') final_tasks1 in uu___1 :: uu___2)
+    | intf::impl::deps' when FStarC_Universal.needs_interleaving intf impl ->
+        let uu___ =
+          let uu___1 =
+            let uu___2 = wrap intf in
+            let uu___3 = wrap impl in (uu___2, uu___3) in
+          FStarC_Interactive_Ide_Types.LDInterleaved uu___1 in
+        let uu___1 = aux deps' final_tasks1 in uu___ :: uu___1
     | intf_or_impl::deps' ->
         let uu___ =
           let uu___1 = wrap intf_or_impl in
@@ -295,12 +286,12 @@ let adjust_topmost_push_frag
     FStarC_Interactive_Ide_Types.repl_task ->
       FStarC_Interactive_Ide_Types.repl_task)
   : unit=
-  let stk = FStarC_Effect.op_Bang repl_stack in
-  match stk with
+  let uu___ = FStarC_Effect.op_Bang repl_stack in
+  match uu___ with
   | (depth, (FStarC_Interactive_Ide_Types.PushFragment x, st))::rest ->
       let pf = f (FStarC_Interactive_Ide_Types.PushFragment x) in
       FStarC_Effect.op_Colon_Equals repl_stack ((depth, (pf, st)) :: rest)
-  | uu___ -> ()
+  | uu___1 -> ()
 let add_issues_to_push_fragment (issues : FStarC_Json.json Prims.list) :
   unit=
   let adjust t =
@@ -342,8 +333,8 @@ let should_reset (task : FStarC_Interactive_Ide_Types.repl_task) :
 let pop_repl (msg : Prims.string)
   (st : FStarC_Interactive_Ide_Types.repl_state) :
   FStarC_Interactive_Ide_Types.repl_state=
-  let stk = FStarC_Effect.op_Bang repl_stack in
-  match stk with
+  let uu___ = FStarC_Effect.op_Bang repl_stack in
+  match uu___ with
   | [] -> FStarC_Effect.failwith "(pop_repl) Too many pops"
   | (depth, (p, st'))::stack_tl ->
       let env =

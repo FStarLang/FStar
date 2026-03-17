@@ -78,6 +78,7 @@ buildDunePackage {
   src = lib.sourceByRegex ./.. [
     "Makefile"
     "src.*"
+    "pulse.*"
     "mk.*"
     "stage..*"
     "ulib.*"
@@ -112,7 +113,7 @@ buildDunePackage {
   checkPhase = ''
     export PATH="${z3}/bin:$PATH"
     export CAML_LD_LIBRARY_PATH="${ocamlLibraryPath}"
-    make test stage3-diff test-2-bare stage2-unit-tests
+    make test boot-diff test-3-bare stage3-unit-tests
   '';
 
   installPhase = ''

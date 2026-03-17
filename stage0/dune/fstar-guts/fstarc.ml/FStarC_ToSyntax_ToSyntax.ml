@@ -4583,7 +4583,6 @@ and desugar_comp (r : FStarC_Range_Type.range)
   let fail code msg =
     FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r code ()
       (Obj.magic FStarC_Errors_Msg.is_error_message_string) (Obj.magic msg) in
-  let mland a b = if a then b else false in
   let is_requires uu___ =
     match uu___ with
     | (t1, uu___1) ->
@@ -4684,37 +4683,44 @@ and desugar_comp (r : FStarC_Range_Type.range)
                | smtpat::[] when is_smt_pat smtpat -> fail_lemma ()
                | dec::[] when is_decreases dec -> fail_lemma ()
                | ens::[] -> [unit_tm; req_true; thunk_ens ens; nil_pat]
-               | req::ens::[] when mland (is_requires req) (is_ensures ens)
-                   -> [unit_tm; req; thunk_ens ens; nil_pat]
+               | req::ens::[] when
+                   if is_requires req then is_ensures ens else false ->
+                   [unit_tm; req; thunk_ens ens; nil_pat]
                | ens::smtpat::[] when
                    let uu___1 =
                      let uu___2 =
-                       let uu___3 =
-                         let uu___4 = is_smt_pat ens in
-                         Prims.op_Negation uu___4 in
-                       mland (Prims.op_Negation (is_requires ens)) uu___3 in
-                     mland uu___2 (Prims.op_Negation (is_decreases ens)) in
-                   let uu___2 = is_smt_pat smtpat in mland uu___1 uu___2 ->
+                       if Prims.op_Negation (is_requires ens)
+                       then
+                         let uu___3 = is_smt_pat ens in
+                         Prims.op_Negation uu___3
+                       else false in
+                     if uu___2
+                     then Prims.op_Negation (is_decreases ens)
+                     else false in
+                   if uu___1 then is_smt_pat smtpat else false ->
                    [unit_tm; req_true; thunk_ens ens; smtpat]
-               | ens::dec::[] when mland (is_ensures ens) (is_decreases dec)
-                   -> [unit_tm; req_true; thunk_ens ens; nil_pat; dec]
+               | ens::dec::[] when
+                   if is_ensures ens then is_decreases dec else false ->
+                   [unit_tm; req_true; thunk_ens ens; nil_pat; dec]
                | ens::dec::smtpat::[] when
-                   let uu___1 = is_smt_pat smtpat in
-                   mland (mland (is_ensures ens) (is_decreases dec)) uu___1
-                   -> [unit_tm; req_true; thunk_ens ens; smtpat; dec]
+                   if (if is_ensures ens then is_decreases dec else false)
+                   then is_smt_pat smtpat
+                   else false ->
+                   [unit_tm; req_true; thunk_ens ens; smtpat; dec]
                | req::ens::dec::[] when
-                   mland (mland (is_requires req) (is_ensures ens))
-                     (is_decreases dec)
-                   -> [unit_tm; req; thunk_ens ens; nil_pat; dec]
+                   if (if is_requires req then is_ensures ens else false)
+                   then is_decreases dec
+                   else false -> [unit_tm; req; thunk_ens ens; nil_pat; dec]
                | req::ens::smtpat::[] when
-                   let uu___1 = is_smt_pat smtpat in
-                   mland (mland (is_requires req) (is_ensures ens)) uu___1 ->
-                   [unit_tm; req; thunk_ens ens; smtpat]
+                   if (if is_requires req then is_ensures ens else false)
+                   then is_smt_pat smtpat
+                   else false -> [unit_tm; req; thunk_ens ens; smtpat]
                | req::ens::dec::smtpat::[] when
                    let uu___1 =
-                     let uu___2 = is_smt_pat smtpat in
-                     mland (mland (is_requires req) (is_ensures ens)) uu___2 in
-                   mland uu___1 (is_decreases dec) ->
+                     if (if is_requires req then is_ensures ens else false)
+                     then is_smt_pat smtpat
+                     else false in
+                   if uu___1 then is_decreases dec else false ->
                    [unit_tm; req; thunk_ens ens; dec; smtpat]
                | _other -> fail_lemma () in
              let head_and_attributes =
@@ -8434,8 +8440,9 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
                FStarC_Parser_AST_Util.open_namespaces = uu___1;
                FStarC_Parser_AST_Util.module_abbreviations = uu___2
              } in
-           (match parser.FStarC_Parser_AST_Util.parse_decl opens code range
-            with
+           let uu___1 =
+             parser.FStarC_Parser_AST_Util.parse_decl opens code range in
+           (match uu___1 with
             | FStar_Pervasives.Inl error ->
                 FStarC_Errors.raise_error
                   FStarC_Class_HasRange.hasRange_range
@@ -8450,9 +8457,9 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
                 let attrs =
                   FStarC_List.op_At d'.FStarC_Parser_AST.attrs
                     d.FStarC_Parser_AST.attrs in
-                let uu___1 =
-                  let uu___2 = FStarC_List.map (desugar_term env) attrs in
-                  FStarC_Syntax_Util.deduplicate_terms uu___2 in
+                let uu___2 =
+                  let uu___3 = FStarC_List.map (desugar_term env) attrs in
+                  FStarC_Syntax_Util.deduplicate_terms uu___3 in
                 desugar_decl_maybe_fail_attr env
                   {
                     FStarC_Parser_AST.d = (d'.FStarC_Parser_AST.d);
@@ -8461,7 +8468,7 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
                     FStarC_Parser_AST.attrs = attrs;
                     FStarC_Parser_AST.interleaved =
                       (d.FStarC_Parser_AST.interleaved)
-                  } uu___1))
+                  } uu___2))
   | FStarC_Parser_AST.DeclToBeDesugared tbs ->
       let uu___ = lookup_extension_tosyntax tbs.FStarC_Parser_AST.lang_name in
       (match uu___ with

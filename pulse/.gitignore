@@ -1,0 +1,31 @@
+*~
+*.checked
+*.checked.lax
+*.check
+.depend*
+*.cm*
+lib/pulse/*.a
+lib/pulse/*.ml
+lib/pulse/*.mli
+lib/pulse/generated
+lib/pulse/runtime
+lib/pulse/META
+lib/pulse/dune-package
+*.krml
+*.o
+LICENSE-z3.txt
+
+# Created by CI
+BUILDLOG
+
+out
+_output
+_cache
+
+# For package building
+FStar
+_pak
+pulse.tar.gz
+
+# make touchfiles
+.*.touch

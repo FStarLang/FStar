@@ -397,12 +397,14 @@ let ps_to_json (p : (Prims.string * FStarC_Tactics_Types.proofstate)) :
       FStarC_Json.JsonAssoc uu___1
 let do_dump_proofstate (ps : FStarC_Tactics_Types.proofstate)
   (msg : Prims.string) : unit=
-  let silent = FStarC_Options.silent () in
-  let interactive = FStarC_Options.interactive () in
-  if (if Prims.op_Negation silent then true else interactive)
+  let uu___ =
+    let uu___1 =
+      let uu___2 = FStarC_Options.silent () in Prims.op_Negation uu___2 in
+    if uu___1 then true else FStarC_Options.interactive () in
+  if uu___
   then
     FStarC_Options.with_saved_options
-      (fun uu___ ->
+      (fun uu___1 ->
          FStarC_Options.set_option "print_effect_args"
            (FStarC_Options.Bool true);
          FStarC_Format.print_generic "proof-state" ps_to_string ps_to_json

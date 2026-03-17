@@ -1304,25 +1304,28 @@ let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
                FStarC_Syntax_Syntax.t2 = uu___4;_}
              ->
              let quals = se.FStarC_Syntax_Syntax.sigquals in
-             let is_assumption =
-               FStarC_Util.for_some
-                 (fun uu___5 ->
-                    match uu___5 with
-                    | FStarC_Syntax_Syntax.Assumption -> true
-                    | uu___6 -> false) quals in
-             if (if any_val then true else is_assumption)
+             let uu___5 =
+               if any_val
+               then true
+               else
+                 FStarC_Util.for_some
+                   (fun uu___6 ->
+                      match uu___6 with
+                      | FStarC_Syntax_Syntax.Assumption -> true
+                      | uu___7 -> false) quals in
+             if uu___5
              then
                let lid2 =
                  FStarC_Ident.set_lid_range lid1
                    (FStarC_Ident.range_of_lid source_lid) in
-               let uu___5 =
+               let uu___6 =
                  FStarC_Util.find_map quals
-                   (fun uu___6 ->
-                      match uu___6 with
+                   (fun uu___7 ->
+                      match uu___7 with
                       | FStarC_Syntax_Syntax.Reflectable refl_monad ->
                           FStar_Pervasives_Native.Some refl_monad
-                      | uu___7 -> FStar_Pervasives_Native.None) in
-               (match uu___5 with
+                      | uu___8 -> FStar_Pervasives_Native.None) in
+               (match uu___6 with
                 | FStar_Pervasives_Native.Some refl_monad ->
                     let refl_const =
                       FStarC_Syntax_Syntax.mk
@@ -1332,15 +1335,15 @@ let try_lookup_name (any_val : Prims.bool) (exclude_interf : Prims.bool)
                     FStar_Pervasives_Native.Some
                       (Term_name
                          (refl_const, (se.FStarC_Syntax_Syntax.sigattrs)))
-                | uu___6 ->
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 =
-                          let uu___10 = fv_qual_of_se se in
-                          FStarC_Syntax_Syntax.fvar_with_dd lid2 uu___10 in
-                        (uu___9, (se.FStarC_Syntax_Syntax.sigattrs)) in
-                      Term_name uu___8 in
-                    FStar_Pervasives_Native.Some uu___7)
+                | uu___7 ->
+                    let uu___8 =
+                      let uu___9 =
+                        let uu___10 =
+                          let uu___11 = fv_qual_of_se se in
+                          FStarC_Syntax_Syntax.fvar_with_dd lid2 uu___11 in
+                        (uu___10, (se.FStarC_Syntax_Syntax.sigattrs)) in
+                      Term_name uu___9 in
+                    FStar_Pervasives_Native.Some uu___8)
              else FStar_Pervasives_Native.None
          | FStarC_Syntax_Syntax.Sig_new_effect ne ->
              FStar_Pervasives_Native.Some
@@ -3785,23 +3788,23 @@ let prepare_module_or_interface (no_prelude : Prims.bool) (intf : Prims.bool)
   | FStar_Pervasives_Native.None -> let uu___2 = prep env1 in (uu___2, false)
   | FStar_Pervasives_Native.Some (uu___2, m) ->
       ((let uu___4 =
-          let uu___5 = FStarC_Options.interactive () in
-          Prims.op_Negation uu___5 in
+          let uu___5 =
+            let uu___6 = FStarC_Options.interactive () in
+            Prims.op_Negation uu___6 in
+          if uu___5
+          then
+            (if Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface
+             then true
+             else intf)
+          else false in
         if uu___4
         then
-          (if
-             (if Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface
-              then true
-              else intf)
-           then
-             FStarC_Errors.raise_error FStarC_Ident.hasrange_lident mname
-               FStarC_Errors_Codes.Fatal_DuplicateModuleOrInterface ()
-               (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-               (Obj.magic
-                  (FStarC_Format.fmt1
-                     "Duplicate module or interface name: %s"
-                     (FStarC_Ident.string_of_lid mname)))
-           else ())
+          FStarC_Errors.raise_error FStarC_Ident.hasrange_lident mname
+            FStarC_Errors_Codes.Fatal_DuplicateModuleOrInterface ()
+            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+            (Obj.magic
+               (FStarC_Format.fmt1 "Duplicate module or interface name: %s"
+                  (FStarC_Ident.string_of_lid mname)))
         else ());
        (let uu___4 = let uu___5 = push env1 in prep uu___5 in (uu___4, true)))
 let enter_monad_scope (env1 : env) (mname : FStarC_Ident.ident) : env=

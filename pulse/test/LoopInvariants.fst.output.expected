@@ -1,0 +1,20 @@
+* Info at LoopInvariants.fst(65,4-65,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to s 3
+  - Pulse.Lib.Reference.pts_to s 2
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also LoopInvariants.fst(65,4-65,10)
+
+* Info at LoopInvariants.fst(76,4-76,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to s 3
+  - Pulse.Lib.Reference.pts_to s 2
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also LoopInvariants.fst(76,4-76,10)
+

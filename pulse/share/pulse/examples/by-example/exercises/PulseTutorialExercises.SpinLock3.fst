@@ -1,0 +1,98 @@
+(* This exercise revises PulseTutorial.SpinLock
+   with an additional permission to track when a lock is live,
+   so that it can eventually be freed. *)
+module PulseTutorialExercises.SpinLock3
+#lang-pulse
+open Pulse.Lib.Pervasives
+module U32 = FStar.UInt32
+module GR = Pulse.Lib.GhostReference
+
+//lock$
+let maybe (b:bool) (p:slprop) =
+    if b then p else emp
+
+let lock_inv (r:ref U32.t) (live:GR.ref bool) (p:slprop) =
+  exists* b. 
+    GR.pts_to live #one_half b **
+    maybe b (
+        exists* v.
+            pts_to r v **
+            maybe (v = 0ul) p
+    )
+
+noeq
+type lock (p:slprop) = {
+  r:ref U32.t;
+  live:GR.ref bool;
+  i:inv (lock_inv r live p);
+}
+
+let lock_live #p (l:lock p) (#[default_arg (`full_perm)] perm:perm) =
+    GR.pts_to l.live #(half_perm perm) true
+//lock$
+
+
+fn new_lock ()
+requires p
+returns l:lock p
+ensures lock_live l
+{
+    admit()
+}
+
+
+
+
+fn free_lock #p (l:lock p)
+requires lock_live l 
+{
+    admit()
+}
+
+
+
+ghost
+fn share #p #q (l:lock p)
+requires lock_live l #q
+ensures lock_live l #(half_perm q)
+ensures lock_live l #(half_perm q)
+{
+    admit()
+}
+
+
+let sum_halves (x y:perm)
+ : Lemma (ensures sum_perm (half_perm x) (half_perm y) == half_perm (sum_perm x y))
+         [SMTPat (sum_perm (half_perm x) (half_perm y))]
+ = let open FStar.Real in
+   assert (forall (x y:FStar.Real.real). ( x /. 2.0R ) +. (y /. 2.0R) == ((x +. y) /. 2.0R))
+
+
+ghost
+fn gather #p #q1 #q2 (l:lock p)
+requires lock_live l #q1
+requires lock_live l #q2
+ensures lock_live l #(sum_perm q1 q2)
+{
+    admit()
+}
+
+
+
+fn acquire #p #q (l:lock p)
+preserves lock_live l #q
+ensures p
+{
+    admit()
+}
+
+
+
+fn release #p #q (l:lock p)
+requires p
+preserves lock_live l #q
+{
+    admit()
+}
+
+

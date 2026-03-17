@@ -1,0 +1,10 @@
+/* krml header omitted for test repeatability */
+
+
+#include "Bug166.h"
+
+krml_checked_int_t Bug166_h2(void)
+{
+  return (krml_checked_int_t)42;
+}
+

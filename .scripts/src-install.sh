@@ -72,5 +72,5 @@ fi
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
 # duplicates.
-rm -r "$PREFIX"/*.ml
-rm -r "$PREFIX"/*.pluginml
+rm -rf "$PREFIX"/*.ml
+rm -rf "$PREFIX"/*.pluginml

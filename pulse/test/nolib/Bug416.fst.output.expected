@@ -1,0 +1,9 @@
+* Info at Bug416.fst(14,19-14,22):
+  - Expected failure:
+  - Ill-typed term: foo 2
+  - Expected a term of type slprop
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Bug416.fst(8,23-8,28)
+

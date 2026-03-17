@@ -43,11 +43,9 @@ let equal_if (uu___ : Prims.bool) : eq_result=
 let equal_iff (uu___ : Prims.bool) : eq_result=
   if uu___ then Equal else NotEqual
 let eq_and (r : eq_result) (s : unit -> eq_result) : eq_result=
-  if r = Equal
-  then
-    let uu___ = let uu___1 = s () in uu___1 = Equal in
-    (if uu___ then Equal else Unknown)
-  else Unknown
+  let uu___ =
+    if r = Equal then let uu___1 = s () in uu___1 = Equal else false in
+  if uu___ then Equal else Unknown
 let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
   (t1 : FStarC_Syntax_Syntax.term) (t2 : FStarC_Syntax_Syntax.term) :
   eq_result=
@@ -122,9 +120,9 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
       equal_if
         (bv1.FStarC_Syntax_Syntax.index = bv2.FStarC_Syntax_Syntax.index)
   | (FStarC_Syntax_Syntax.Tm_lazy uu___, uu___1) ->
-      let t13 = FStarC_Syntax_Util.unlazy t12 in eq_tm env t13 t22
+      let uu___2 = FStarC_Syntax_Util.unlazy t12 in eq_tm env uu___2 t22
   | (uu___, FStarC_Syntax_Syntax.Tm_lazy uu___1) ->
-      let t23 = FStarC_Syntax_Util.unlazy t22 in eq_tm env t12 t23
+      let uu___2 = FStarC_Syntax_Util.unlazy t22 in eq_tm env t12 uu___2
   | (FStarC_Syntax_Syntax.Tm_name a, FStarC_Syntax_Syntax.Tm_name b) ->
       equal_if (FStarC_Syntax_Syntax.bv_eq a b)
   | uu___ when
@@ -289,12 +287,15 @@ and branch_matches (env : FStarC_TypeChecker_Env.env_t)
            let uu___2 = FStarC_Syntax_Syntax.eq_pat p1 p2 in
            if uu___2
            then
-             let eq1 = let uu___3 = eq_tm env t1 t2 in uu___3 = Equal in
-             let eq2 =
-               related_by
-                 (fun t11 t21 ->
-                    let uu___3 = eq_tm env t11 t21 in uu___3 = Equal) w1 w2 in
-             (if (if eq1 then eq2 else false) then Equal else Unknown)
+             let uu___3 =
+               let uu___4 = let uu___5 = eq_tm env t1 t2 in uu___5 = Equal in
+               if uu___4
+               then
+                 related_by
+                   (fun t11 t21 ->
+                      let uu___5 = eq_tm env t11 t21 in uu___5 = Equal) w1 w2
+               else false in
+             (if uu___3 then Equal else Unknown)
            else Unknown)
 and eq_args (env : FStarC_TypeChecker_Env.env_t)
   (a1 : FStarC_Syntax_Syntax.args) (a2 : FStarC_Syntax_Syntax.args) :
@@ -367,10 +368,11 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
           uu___2.FStarC_Syntax_Syntax.n in
         (match uu___1 with
          | FStarC_Syntax_Syntax.Tm_name bv' ->
-             let eq =
+             if
                FStarC_Syntax_Syntax.bv_eq b.FStarC_Syntax_Syntax.binder_bv
-                 bv' in
-             if eq then args_are_binders args1 bs1 else false
+                 bv'
+             then args_are_binders args1 bs1
+             else false
          | uu___2 -> false)
     | ([], []) -> true
     | (uu___, uu___1) -> false in
@@ -524,15 +526,15 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
         then
           (let uu___9 = FStarC_List.map simplify1 args in
            match uu___9 with
-           | (FStar_Pervasives_Native.Some (true), uu___10)::(uu___11,
-                                                              (arg, uu___12))::[]
+           | (FStar_Pervasives_Native.Some true, uu___10)::(uu___11,
+                                                            (arg, uu___12))::[]
                -> maybe_auto_squash arg
-           | (uu___10, (arg, uu___11))::(FStar_Pervasives_Native.Some (true),
+           | (uu___10, (arg, uu___11))::(FStar_Pervasives_Native.Some true,
                                          uu___12)::[]
                -> maybe_auto_squash arg
-           | (FStar_Pervasives_Native.Some (false), uu___10)::uu___11::[] ->
+           | (FStar_Pervasives_Native.Some false, uu___10)::uu___11::[] ->
                w FStarC_Syntax_Util.t_false
-           | uu___10::(FStar_Pervasives_Native.Some (false), uu___11)::[] ->
+           | uu___10::(FStar_Pervasives_Native.Some false, uu___11)::[] ->
                w FStarC_Syntax_Util.t_false
            | uu___10 -> squashed_head_un_auto_squash_args tm)
         else
@@ -540,16 +542,15 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
           then
             (let uu___10 = FStarC_List.map simplify1 args in
              match uu___10 with
-             | (FStar_Pervasives_Native.Some (true), uu___11)::uu___12::[] ->
+             | (FStar_Pervasives_Native.Some true, uu___11)::uu___12::[] ->
                  w FStarC_Syntax_Util.t_true
-             | uu___11::(FStar_Pervasives_Native.Some (true), uu___12)::[] ->
+             | uu___11::(FStar_Pervasives_Native.Some true, uu___12)::[] ->
                  w FStarC_Syntax_Util.t_true
-             | (FStar_Pervasives_Native.Some (false), uu___11)::(uu___12,
-                                                                 (arg,
-                                                                  uu___13))::[]
+             | (FStar_Pervasives_Native.Some false, uu___11)::(uu___12,
+                                                               (arg, uu___13))::[]
                  -> maybe_auto_squash arg
              | (uu___11, (arg, uu___12))::(FStar_Pervasives_Native.Some
-                                           (false), uu___13)::[]
+                                           false, uu___13)::[]
                  -> maybe_auto_squash arg
              | uu___11 -> squashed_head_un_auto_squash_args tm)
           else
@@ -557,13 +558,13 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
             then
               (let uu___11 = FStarC_List.map simplify1 args in
                match uu___11 with
-               | uu___12::(FStar_Pervasives_Native.Some (true), uu___13)::[]
+               | uu___12::(FStar_Pervasives_Native.Some true, uu___13)::[] ->
+                   w FStarC_Syntax_Util.t_true
+               | (FStar_Pervasives_Native.Some false, uu___12)::uu___13::[]
                    -> w FStarC_Syntax_Util.t_true
-               | (FStar_Pervasives_Native.Some (false), uu___12)::uu___13::[]
-                   -> w FStarC_Syntax_Util.t_true
-               | (FStar_Pervasives_Native.Some (true), uu___12)::(uu___13,
-                                                                  (arg,
-                                                                   uu___14))::[]
+               | (FStar_Pervasives_Native.Some true, uu___12)::(uu___13,
+                                                                (arg,
+                                                                 uu___14))::[]
                    -> maybe_auto_squash arg
                | (uu___12, (p, uu___13))::(uu___14, (q, uu___15))::[] ->
                    let uu___16 = FStarC_Syntax_Util.term_eq p q in
@@ -577,36 +578,36 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
               then
                 (let uu___12 = FStarC_List.map simplify1 args in
                  match uu___12 with
-                 | (FStar_Pervasives_Native.Some (true), uu___13)::(FStar_Pervasives_Native.Some
-                                                                    (true),
-                                                                    uu___14)::[]
+                 | (FStar_Pervasives_Native.Some true, uu___13)::(FStar_Pervasives_Native.Some
+                                                                  true,
+                                                                  uu___14)::[]
                      -> w FStarC_Syntax_Util.t_true
-                 | (FStar_Pervasives_Native.Some (false), uu___13)::(FStar_Pervasives_Native.Some
-                                                                    (false),
-                                                                    uu___14)::[]
+                 | (FStar_Pervasives_Native.Some false, uu___13)::(FStar_Pervasives_Native.Some
+                                                                   false,
+                                                                   uu___14)::[]
                      -> w FStarC_Syntax_Util.t_true
-                 | (FStar_Pervasives_Native.Some (true), uu___13)::(FStar_Pervasives_Native.Some
-                                                                    (false),
-                                                                    uu___14)::[]
+                 | (FStar_Pervasives_Native.Some true, uu___13)::(FStar_Pervasives_Native.Some
+                                                                  false,
+                                                                  uu___14)::[]
                      -> w FStarC_Syntax_Util.t_false
-                 | (FStar_Pervasives_Native.Some (false), uu___13)::(FStar_Pervasives_Native.Some
-                                                                    (true),
-                                                                    uu___14)::[]
+                 | (FStar_Pervasives_Native.Some false, uu___13)::(FStar_Pervasives_Native.Some
+                                                                   true,
+                                                                   uu___14)::[]
                      -> w FStarC_Syntax_Util.t_false
                  | (uu___13, (arg, uu___14))::(FStar_Pervasives_Native.Some
-                                               (true), uu___15)::[]
+                                               true, uu___15)::[]
                      -> maybe_auto_squash arg
-                 | (FStar_Pervasives_Native.Some (true), uu___13)::(uu___14,
-                                                                    (arg,
-                                                                    uu___15))::[]
+                 | (FStar_Pervasives_Native.Some true, uu___13)::(uu___14,
+                                                                  (arg,
+                                                                   uu___15))::[]
                      -> maybe_auto_squash arg
                  | (uu___13, (arg, uu___14))::(FStar_Pervasives_Native.Some
-                                               (false), uu___15)::[]
+                                               false, uu___15)::[]
                      ->
                      let uu___16 = FStarC_Syntax_Util.mk_neg arg in
                      maybe_auto_squash uu___16
-                 | (FStar_Pervasives_Native.Some (false), uu___13)::(uu___14,
-                                                                    (arg,
+                 | (FStar_Pervasives_Native.Some false, uu___13)::(uu___14,
+                                                                   (arg,
                                                                     uu___15))::[]
                      ->
                      let uu___16 = FStarC_Syntax_Util.mk_neg arg in
@@ -624,9 +625,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                 then
                   (let uu___13 = FStarC_List.map simplify1 args in
                    match uu___13 with
-                   | (FStar_Pervasives_Native.Some (true), uu___14)::[] ->
+                   | (FStar_Pervasives_Native.Some true, uu___14)::[] ->
                        w FStarC_Syntax_Util.t_false
-                   | (FStar_Pervasives_Native.Some (false), uu___14)::[] ->
+                   | (FStar_Pervasives_Native.Some false, uu___14)::[] ->
                        w FStarC_Syntax_Util.t_true
                    | uu___14 -> squashed_head_un_auto_squash_args tm)
                 else
@@ -647,7 +648,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                               ->
                               let uu___18 = simp_t body in
                               (match uu___18 with
-                               | FStar_Pervasives_Native.Some (true) ->
+                               | FStar_Pervasives_Native.Some true ->
                                    w FStarC_Syntax_Util.t_true
                                | uu___19 -> tm)
                           | uu___16 -> tm)
@@ -666,9 +667,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                               ->
                               let uu___19 = simp_t body in
                               (match uu___19 with
-                               | FStar_Pervasives_Native.Some (true) ->
+                               | FStar_Pervasives_Native.Some true ->
                                    w FStarC_Syntax_Util.t_true
-                               | FStar_Pervasives_Native.Some (false) when
+                               | FStar_Pervasives_Native.Some false when
                                    clearly_inhabited ty ->
                                    w FStarC_Syntax_Util.t_false
                                | uu___20 -> tm)
@@ -692,7 +693,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                 ->
                                 let uu___19 = simp_t body in
                                 (match uu___19 with
-                                 | FStar_Pervasives_Native.Some (false) ->
+                                 | FStar_Pervasives_Native.Some false ->
                                      w FStarC_Syntax_Util.t_false
                                  | uu___20 -> tm)
                             | uu___17 -> tm)
@@ -711,9 +712,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                 ->
                                 let uu___20 = simp_t body in
                                 (match uu___20 with
-                                 | FStar_Pervasives_Native.Some (false) ->
+                                 | FStar_Pervasives_Native.Some false ->
                                      w FStarC_Syntax_Util.t_false
-                                 | FStar_Pervasives_Native.Some (true) when
+                                 | FStar_Pervasives_Native.Some true when
                                      clearly_inhabited ty ->
                                      w FStarC_Syntax_Util.t_true
                                  | uu___21 -> tm)
@@ -728,7 +729,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                          | ({
                               FStarC_Syntax_Syntax.n =
                                 FStarC_Syntax_Syntax.Tm_constant
-                                (FStarC_Const.Const_bool (true));
+                                (FStarC_Const.Const_bool true);
                               FStarC_Syntax_Syntax.pos = uu___16;
                               FStarC_Syntax_Syntax.vars = uu___17;
                               FStarC_Syntax_Syntax.hash_code = uu___18;_},
@@ -736,7 +737,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                          | ({
                               FStarC_Syntax_Syntax.n =
                                 FStarC_Syntax_Syntax.Tm_constant
-                                (FStarC_Const.Const_bool (false));
+                                (FStarC_Const.Const_bool false);
                               FStarC_Syntax_Syntax.pos = uu___16;
                               FStarC_Syntax_Syntax.vars = uu___17;
                               FStarC_Syntax_Syntax.hash_code = uu___18;_},
@@ -840,15 +841,15 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
         then
           (let uu___5 = FStarC_List.map simplify1 args in
            match uu___5 with
-           | (FStar_Pervasives_Native.Some (true), uu___6)::(uu___7,
-                                                             (arg, uu___8))::[]
+           | (FStar_Pervasives_Native.Some true, uu___6)::(uu___7,
+                                                           (arg, uu___8))::[]
                -> maybe_auto_squash arg
-           | (uu___6, (arg, uu___7))::(FStar_Pervasives_Native.Some (true),
+           | (uu___6, (arg, uu___7))::(FStar_Pervasives_Native.Some true,
                                        uu___8)::[]
                -> maybe_auto_squash arg
-           | (FStar_Pervasives_Native.Some (false), uu___6)::uu___7::[] ->
+           | (FStar_Pervasives_Native.Some false, uu___6)::uu___7::[] ->
                w FStarC_Syntax_Util.t_false
-           | uu___6::(FStar_Pervasives_Native.Some (false), uu___7)::[] ->
+           | uu___6::(FStar_Pervasives_Native.Some false, uu___7)::[] ->
                w FStarC_Syntax_Util.t_false
            | uu___6 -> squashed_head_un_auto_squash_args tm)
         else
@@ -856,15 +857,15 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
           then
             (let uu___6 = FStarC_List.map simplify1 args in
              match uu___6 with
-             | (FStar_Pervasives_Native.Some (true), uu___7)::uu___8::[] ->
+             | (FStar_Pervasives_Native.Some true, uu___7)::uu___8::[] ->
                  w FStarC_Syntax_Util.t_true
-             | uu___7::(FStar_Pervasives_Native.Some (true), uu___8)::[] ->
+             | uu___7::(FStar_Pervasives_Native.Some true, uu___8)::[] ->
                  w FStarC_Syntax_Util.t_true
-             | (FStar_Pervasives_Native.Some (false), uu___7)::(uu___8,
-                                                                (arg, uu___9))::[]
+             | (FStar_Pervasives_Native.Some false, uu___7)::(uu___8,
+                                                              (arg, uu___9))::[]
                  -> maybe_auto_squash arg
-             | (uu___7, (arg, uu___8))::(FStar_Pervasives_Native.Some
-                                         (false), uu___9)::[]
+             | (uu___7, (arg, uu___8))::(FStar_Pervasives_Native.Some false,
+                                         uu___9)::[]
                  -> maybe_auto_squash arg
              | uu___7 -> squashed_head_un_auto_squash_args tm)
           else
@@ -872,13 +873,12 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
             then
               (let uu___7 = FStarC_List.map simplify1 args in
                match uu___7 with
-               | uu___8::(FStar_Pervasives_Native.Some (true), uu___9)::[] ->
+               | uu___8::(FStar_Pervasives_Native.Some true, uu___9)::[] ->
                    w FStarC_Syntax_Util.t_true
-               | (FStar_Pervasives_Native.Some (false), uu___8)::uu___9::[]
-                   -> w FStarC_Syntax_Util.t_true
-               | (FStar_Pervasives_Native.Some (true), uu___8)::(uu___9,
-                                                                 (arg,
-                                                                  uu___10))::[]
+               | (FStar_Pervasives_Native.Some false, uu___8)::uu___9::[] ->
+                   w FStarC_Syntax_Util.t_true
+               | (FStar_Pervasives_Native.Some true, uu___8)::(uu___9,
+                                                               (arg, uu___10))::[]
                    -> maybe_auto_squash arg
                | (uu___8, (p, uu___9))::(uu___10, (q, uu___11))::[] ->
                    let uu___12 = FStarC_Syntax_Util.term_eq p q in
@@ -892,37 +892,37 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
               then
                 (let uu___8 = FStarC_List.map simplify1 args in
                  match uu___8 with
-                 | (FStar_Pervasives_Native.Some (true), uu___9)::(FStar_Pervasives_Native.Some
-                                                                   (true),
-                                                                   uu___10)::[]
+                 | (FStar_Pervasives_Native.Some true, uu___9)::(FStar_Pervasives_Native.Some
+                                                                 true,
+                                                                 uu___10)::[]
                      -> w FStarC_Syntax_Util.t_true
-                 | (FStar_Pervasives_Native.Some (false), uu___9)::(FStar_Pervasives_Native.Some
-                                                                    (false),
-                                                                    uu___10)::[]
+                 | (FStar_Pervasives_Native.Some false, uu___9)::(FStar_Pervasives_Native.Some
+                                                                  false,
+                                                                  uu___10)::[]
                      -> w FStarC_Syntax_Util.t_true
-                 | (FStar_Pervasives_Native.Some (true), uu___9)::(FStar_Pervasives_Native.Some
-                                                                   (false),
-                                                                   uu___10)::[]
+                 | (FStar_Pervasives_Native.Some true, uu___9)::(FStar_Pervasives_Native.Some
+                                                                 false,
+                                                                 uu___10)::[]
                      -> w FStarC_Syntax_Util.t_false
-                 | (FStar_Pervasives_Native.Some (false), uu___9)::(FStar_Pervasives_Native.Some
-                                                                    (true),
-                                                                    uu___10)::[]
+                 | (FStar_Pervasives_Native.Some false, uu___9)::(FStar_Pervasives_Native.Some
+                                                                  true,
+                                                                  uu___10)::[]
                      -> w FStarC_Syntax_Util.t_false
                  | (uu___9, (arg, uu___10))::(FStar_Pervasives_Native.Some
-                                              (true), uu___11)::[]
+                                              true, uu___11)::[]
                      -> maybe_auto_squash arg
-                 | (FStar_Pervasives_Native.Some (true), uu___9)::(uu___10,
-                                                                   (arg,
-                                                                    uu___11))::[]
+                 | (FStar_Pervasives_Native.Some true, uu___9)::(uu___10,
+                                                                 (arg,
+                                                                  uu___11))::[]
                      -> maybe_auto_squash arg
                  | (uu___9, (arg, uu___10))::(FStar_Pervasives_Native.Some
-                                              (false), uu___11)::[]
+                                              false, uu___11)::[]
                      ->
                      let uu___12 = FStarC_Syntax_Util.mk_neg arg in
                      maybe_auto_squash uu___12
-                 | (FStar_Pervasives_Native.Some (false), uu___9)::(uu___10,
-                                                                    (arg,
-                                                                    uu___11))::[]
+                 | (FStar_Pervasives_Native.Some false, uu___9)::(uu___10,
+                                                                  (arg,
+                                                                   uu___11))::[]
                      ->
                      let uu___12 = FStarC_Syntax_Util.mk_neg arg in
                      maybe_auto_squash uu___12
@@ -939,9 +939,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                 then
                   (let uu___9 = FStarC_List.map simplify1 args in
                    match uu___9 with
-                   | (FStar_Pervasives_Native.Some (true), uu___10)::[] ->
+                   | (FStar_Pervasives_Native.Some true, uu___10)::[] ->
                        w FStarC_Syntax_Util.t_false
-                   | (FStar_Pervasives_Native.Some (false), uu___10)::[] ->
+                   | (FStar_Pervasives_Native.Some false, uu___10)::[] ->
                        w FStarC_Syntax_Util.t_true
                    | uu___10 -> squashed_head_un_auto_squash_args tm)
                 else
@@ -962,7 +962,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                               ->
                               let uu___14 = simp_t body in
                               (match uu___14 with
-                               | FStar_Pervasives_Native.Some (true) ->
+                               | FStar_Pervasives_Native.Some true ->
                                    w FStarC_Syntax_Util.t_true
                                | uu___15 -> tm)
                           | uu___12 -> tm)
@@ -981,9 +981,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                               ->
                               let uu___15 = simp_t body in
                               (match uu___15 with
-                               | FStar_Pervasives_Native.Some (true) ->
+                               | FStar_Pervasives_Native.Some true ->
                                    w FStarC_Syntax_Util.t_true
-                               | FStar_Pervasives_Native.Some (false) when
+                               | FStar_Pervasives_Native.Some false when
                                    clearly_inhabited ty ->
                                    w FStarC_Syntax_Util.t_false
                                | uu___16 -> tm)
@@ -1007,7 +1007,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                 ->
                                 let uu___15 = simp_t body in
                                 (match uu___15 with
-                                 | FStar_Pervasives_Native.Some (false) ->
+                                 | FStar_Pervasives_Native.Some false ->
                                      w FStarC_Syntax_Util.t_false
                                  | uu___16 -> tm)
                             | uu___13 -> tm)
@@ -1026,9 +1026,9 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                 ->
                                 let uu___16 = simp_t body in
                                 (match uu___16 with
-                                 | FStar_Pervasives_Native.Some (false) ->
+                                 | FStar_Pervasives_Native.Some false ->
                                      w FStarC_Syntax_Util.t_false
-                                 | FStar_Pervasives_Native.Some (true) when
+                                 | FStar_Pervasives_Native.Some true when
                                      clearly_inhabited ty ->
                                      w FStarC_Syntax_Util.t_true
                                  | uu___17 -> tm)
@@ -1043,7 +1043,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                          | ({
                               FStarC_Syntax_Syntax.n =
                                 FStarC_Syntax_Syntax.Tm_constant
-                                (FStarC_Const.Const_bool (true));
+                                (FStarC_Const.Const_bool true);
                               FStarC_Syntax_Syntax.pos = uu___12;
                               FStarC_Syntax_Syntax.vars = uu___13;
                               FStarC_Syntax_Syntax.hash_code = uu___14;_},
@@ -1051,7 +1051,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                          | ({
                               FStarC_Syntax_Syntax.n =
                                 FStarC_Syntax_Syntax.Tm_constant
-                                (FStarC_Const.Const_bool (false));
+                                (FStarC_Const.Const_bool false);
                               FStarC_Syntax_Syntax.pos = uu___12;
                               FStarC_Syntax_Syntax.vars = uu___13;
                               FStarC_Syntax_Syntax.hash_code = uu___14;_},
@@ -1143,13 +1143,13 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
       { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t;_} ->
       let uu___1 = simp_t t in
       (match uu___1 with
-       | FStar_Pervasives_Native.Some (true) -> bv.FStarC_Syntax_Syntax.sort
-       | FStar_Pervasives_Native.Some (false) -> tm
+       | FStar_Pervasives_Native.Some true -> bv.FStarC_Syntax_Syntax.sort
+       | FStar_Pervasives_Native.Some false -> tm
        | FStar_Pervasives_Native.None -> tm)
   | FStarC_Syntax_Syntax.Tm_match uu___1 ->
       let uu___2 = is_const_match tm in
       (match uu___2 with
-       | FStar_Pervasives_Native.Some (true) -> w FStarC_Syntax_Util.t_true
-       | FStar_Pervasives_Native.Some (false) -> w FStarC_Syntax_Util.t_false
+       | FStar_Pervasives_Native.Some true -> w FStarC_Syntax_Util.t_true
+       | FStar_Pervasives_Native.Some false -> w FStarC_Syntax_Util.t_false
        | FStar_Pervasives_Native.None -> tm)
   | uu___1 -> tm

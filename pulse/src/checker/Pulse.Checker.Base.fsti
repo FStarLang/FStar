@@ -1,0 +1,227 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Checker.Base
+
+module RT = FStar.Reflection.Typing
+module T = FStar.Tactics.V2
+open FStar.List.Tot
+open Pulse.Syntax
+open Pulse.Typing
+open Pulse.Typing.Combinators
+open Pulse.Typing.FV {} (* for smtpats, which some clients seem to need *)
+
+val debug (g:env) (f:unit -> T.Tac string) : T.Tac unit
+
+val format_failed_goal (g:env) (ctxt:list term) (goal:list term) : T.Tac string
+
+val intro_comp_typing (g:env) 
+                      (c:comp_st)
+                      (x:var { fresh_wrt x g (freevars (comp_post c)) })
+  : T.Tac unit
+
+val post_typing_as_abstraction
+  (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
+  : FStar.Ghost.erased (RT.tot_typing (elab_env g)
+                             (RT.mk_abs ty T.Q_Explicit t)
+                             (RT.mk_arrow ty T.Q_Explicit tm_slprop))
+
+let effect_annot_labels_match (a1 a2:effect_annot) =
+  match a1, a2 with
+  | EffectAnnotAtomic _, EffectAnnotAtomic _
+  | EffectAnnotGhost _, EffectAnnotGhost _
+  | EffectAnnotAtomicOrGhost _, EffectAnnotAtomicOrGhost _
+  | EffectAnnotSTT, EffectAnnotSTT -> True
+  | _ -> False
+
+val intro_post_hint
+  (g:env)
+  (effect_annot:effect_annot)
+  (ret_ty:option term)
+  (post:term)
+  : T.Tac (h:post_hint_for_env g {
+      h.g == g /\
+      effect_annot_labels_match h.effect_annot effect_annot
+    })
+
+val post_hint_from_comp_typing (g:env) (c:comp_st)
+  : post_hint_for_env g
+
+val comp_typing_from_post_hint
+    (#g: env)
+    (c: comp_st)
+    (p:post_hint_for_env g { comp_post_matches_hint c (PostHint p) })
+: T.Tac unit
+
+val extend_post_hint (g:env) (p:post_hint_for_env g)
+                     (x:var{freshv g x}) (tx:term)
+                     (conjunct:term)
+  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
+            q.post == tm_star p.post conjunct /\
+            q.ret_ty == p.ret_ty /\
+            q.u == p.u /\
+            q.effect_annot == p.effect_annot
+          })
+  
+
+type continuation_elaborator
+  (g:env)                         (ctxt:slprop)
+  (g':env { g' `env_extends` g }) (ctxt':slprop) =
+
+  post_hint:post_hint_opt g ->
+  st_typing_in_ctxt g' ctxt' post_hint ->
+  T.Tac (st_typing_in_ctxt g ctxt post_hint)
+
+val k_elab_unit (g:env) (ctxt:term)
+  : continuation_elaborator g ctxt g ctxt
+
+val k_elab_trans
+  (#g0:env) (#g1:env { g1 `env_extends` g0 }) (#g2:env { g2 `env_extends` g1 }) (#ctxt0 #ctxt1 #ctxt2:term)
+  (k0:continuation_elaborator g0 ctxt0 g1 ctxt1)
+  (k1:continuation_elaborator g1 ctxt1 g2 ctxt2)
+   : continuation_elaborator g0 ctxt0 g2 ctxt2
+
+val k_elab_equiv_continuation (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt #ctxt1:term) (ctxt2:term)
+  (k:continuation_elaborator g1 ctxt g2 ctxt1)
+  : continuation_elaborator g1 ctxt g2 ctxt2
+
+val k_elab_equiv
+  (#g1:env) (#g2:env { g2 `env_extends` g1 }) (#ctxt1 #ctxt2:term) (ctxt1' ctxt2':term)
+  (k:continuation_elaborator g1 ctxt1 g2 ctxt2)
+  : continuation_elaborator g1 ctxt1' g2 ctxt2'
+
+//
+// A canonical continuation elaborator for Bind
+//
+val continuation_elaborator_with_bind (#g:env) (ctxt:term)
+  (c1:comp{stateful_comp c1})
+  (e1:st_term)
+  (x:nvar { freshv g (snd x) })
+  : T.Tac (continuation_elaborator
+             g
+             (tm_star ctxt (comp_pre c1))
+             (push_binding g (snd x) (fst x) (comp_res c1))
+             (tm_star (open_term (comp_post c1) (snd x)) ctxt))
+
+val continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
+  (e1:st_term)
+  (c1:comp { C_Tot? c1 })
+  (b:binder{b.binder_ty == comp_res c1})
+  (x:nvar { freshv g (snd x) })
+: T.Tac (continuation_elaborator
+          g ctxt
+          (push_binding g (snd x) ppname_default (comp_res c1)) ctxt)
+
+val check_equiv_emp (g:env) (vp:term)
+  : option unit
+
+let checker_res_matches_post_hint
+  (g:env)
+  (post_hint:post_hint_opt g)
+  (x:var) (t:term) (ctxt':slprop) =
+
+  match post_hint with
+  | PostHint post_hint ->
+    t == post_hint.ret_ty /\
+    ctxt' == open_term post_hint.post x
+  | _ -> True
+  
+let checker_result_inv (g:env) (post_hint:post_hint_opt g)
+  (x:var)
+  (g1:env)
+  (u:universe)
+  (t:typ)
+  (ctxt':slprop) =
+
+  checker_res_matches_post_hint g post_hint x t ctxt' /\
+  lookup g1 x == Some t
+
+//
+// x is the variable in which the result of the checked computation is bound
+// t is the type of the checked computation
+//
+type checker_result_t (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
+  x:var &
+  g1:env { g1 `env_extends` g } &
+  t:(universe & typ) &
+  ctxt':slprop &
+  k:continuation_elaborator g ctxt g1 ctxt' {
+    checker_result_inv g post_hint x g1 (fst t) (snd t) ctxt'
+  }
+
+
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+  
+type check_t =
+  g:env ->
+  ctxt:slprop ->
+  post_hint:post_hint_opt g ->
+  res_ppname:ppname ->
+  t:st_term ->
+  T.Tac (checker_result_t g ctxt post_hint)
+  
+val match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
+  (post_hint:post_hint_opt g)
+  : T.Tac (c':comp_st { comp_pre c' == comp_pre c })
+
+val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint))
+
+val checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
+  (d:st_typing_in_ctxt g ctxt post_hint)
+  (ppname:ppname)
+  : T.Tac (checker_result_t g ctxt post_hint)
+
+val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
+  (post_hint:post_hint_opt g)
+  (r : checker_result_t g ctxt post_hint)
+: checker_result_t g ctxt' post_hint
+
+val is_stateful_application (g:env) (e:term) 
+: T.Tac (option st_term)
+
+val hoist
+  (g:env)
+  (tt:either term st_term)
+  (hoist_top_level_st:bool)
+  (context: (
+    x:either term st_term { 
+        (Inr? tt ==> Inr? x) /\
+        (hoist_top_level_st /\ Inl? tt ==> Inl? x)
+      } -> T.Tac st_term))
+: T.Tac (option st_term)
+
+let composable
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) 
+  (#ph1:post_hint_opt g { not (PostHint? ph1) }) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt ph1)
+  (r2:checker_result_t g' ctxt' post_hint) =
+  let (| x1, g1, t1, ctxt1, k1 |) = r1 in
+  g1 == g' /\
+  ctxt1 == ctxt'
+
+ 
+val compose_checker_result_t 
+  (#g:env) (#g':env { g' `env_extends` g }) (#ctxt #ctxt':slprop) (#post_hint:post_hint_opt g)
+  (r1:checker_result_t g ctxt NoHint)
+  (r2:checker_result_t g' ctxt' post_hint { composable r1 r2 })
+: T.Tac (checker_result_t g ctxt post_hint)

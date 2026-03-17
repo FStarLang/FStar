@@ -1707,9 +1707,12 @@ let run_push (st : FStarC_Interactive_Ide_Types.repl_state)
   ((FStarC_Interactive_Ide_Types.query_status * FStarC_Json.json) *
     (FStarC_Interactive_Ide_Types.repl_state, Prims.int)
     FStar_Pervasives.either)=
-  let fly_deps = FStarC_Parser_Dep.fly_deps_enabled () in
-  let nltp = nothing_left_to_pop st in
-  if (if Prims.op_Negation fly_deps then nltp else false)
+  let uu___ =
+    let uu___1 =
+      let uu___2 = FStarC_Parser_Dep.fly_deps_enabled () in
+      Prims.op_Negation uu___2 in
+    if uu___1 then nothing_left_to_pop st else false in
+  if uu___
   then run_push_with_deps st query
   else run_push_without_deps st query
 let run_symbol_lookup (st : FStarC_Interactive_Ide_Types.repl_state)

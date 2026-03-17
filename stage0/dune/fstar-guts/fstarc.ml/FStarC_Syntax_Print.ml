@@ -340,9 +340,9 @@ let aqual_to_string (q : FStarC_Syntax_Syntax.aqual) : Prims.string=
 let bqual_to_string' (s : Prims.string) (b : FStarC_Syntax_Syntax.bqual) :
   Prims.string=
   match b with
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit (false)) ->
+  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit false) ->
       Prims.strcat "#" s
-  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit (true)) ->
+  | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Implicit true) ->
       Prims.strcat "#." s
   | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.Equality) ->
       Prims.strcat "$" s
