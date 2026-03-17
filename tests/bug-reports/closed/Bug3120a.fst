@@ -81,7 +81,7 @@ let wp a = wpost a -> wpre
 
 unfold
 let _wle #a (w1 w2 : wp a) =
-  forall post hist. w2 post hist ==> w1 post hist
+  forall post hist. {:nopattern (* override *)} w2 post hist ==> w1 post hist
 
 let wle #a (w1 w2 : wp a) =
   _wle w1 w2
@@ -148,8 +148,8 @@ let elim_pure (#a:Type u#a) #w (f : unit -> PURE a w) :
   Pure
     a
     (requires w (fun _ -> True))
-    (ensures fun r -> forall post. w post ==> post r)
-= elim_pure_wp_monotonicity_forall u#a () ;
+    (ensures fun r -> forall post. {:nopattern (* override *)} w post ==> post r)
+= elim_pure_wp_monotonicity w ;
   f ()
 
 unfold
@@ -157,7 +157,7 @@ let wlift #a (w : pure_wp a) : wp a =
   fun post hist -> w (post [])
 
 let as_requires_wlift (#a:Type u#a) (w : pure_wp a) :
-  Lemma (forall post hist. wlift w post hist ==> as_requires w)
+  Lemma (forall post hist. {:nopattern (* override *)} wlift w post hist ==> as_requires w)
 = assert (forall post (x : a). post x ==> True) ;
   elim_pure_wp_monotonicity w ;
   assert (forall post. w post ==> w (fun _ -> True)) ;

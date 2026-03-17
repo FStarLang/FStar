@@ -26,8 +26,9 @@ let bind_wp (#a:Type u#a) (#b:Type u#b)
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = elim_pure_wp_monotonicity_forall u#a ();
-    elim_pure_wp_monotonicity_forall u#b ();
+  = elim_pure_wp_monotonicity wp_v;
+    introduce forall (x:a). is_monotonic (wp_f x)
+    with elim_pure_wp_monotonicity (wp_f x);
     as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
@@ -40,7 +41,7 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
 let subcomp (a:Type u#uu) (w1 w2:wp a)
     (f : repr a w1)
 : Pure (repr a w2)
-       (requires (forall p. w2 p ==> w1 p))
+       (requires (forall p. {:nopattern (* override *)} w2 p ==> w1 p))
        (ensures fun _ -> True)
 = f
 
@@ -54,7 +55,8 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 
 unfold
 let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity wp1;
+  elim_pure_wp_monotonicity wp2;
   (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -92,7 +94,7 @@ effect {
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
-        ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
+        ID a (as_pure_wp (fun p -> pre /\ (forall x. {:nopattern (* override *)} post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
@@ -129,7 +131,7 @@ let rec pmap #a #b pre
   (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
   (l : list a)
   : Id (list b)
-       (requires (forall x. memP x l ==> pre x))
+       (requires (forall x. {:nopattern (* override *)} memP x l ==> pre x))
        (ensures (fun _ -> True))
        (decreases l)
   = match l with

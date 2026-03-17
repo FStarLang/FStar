@@ -18,8 +18,9 @@ let wp (a:Type) = pure_wp a
 
 unfold
 let bind_wp (#a:Type u#a) (#b:Type u#b) (wc : wp a) (wf : a -> wp b) : wp b =
-  elim_pure_wp_monotonicity_forall u#a ();
-  elim_pure_wp_monotonicity_forall u#b ();
+  elim_pure_wp_monotonicity wc;
+  introduce forall (x:a). is_monotonic (wf x)
+  with elim_pure_wp_monotonicity (wf x);
   as_pure_wp (fun p -> wc (fun x -> wf x p))
 
 let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
@@ -44,13 +45,15 @@ let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
 // these two rely on monotonicity since the computed WP is not exactly bind_wp
 let t_bind (#a:Type u#a) (#b:Type u#b) #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x)))
 : m b T (bind_wp wc wf)
-= elim_pure_wp_monotonicity_forall u#a ();
-  elim_pure_wp_monotonicity_forall u#b ();
+= elim_pure_wp_monotonicity wc;
+  introduce forall (x:a). is_monotonic (wf x)
+  with elim_pure_wp_monotonicity (wf x);
   fun () -> f (c ()) ()
 let g_bind (#a:Type u#a) (#b:Type u#b) #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x)))
 : m b G (bind_wp wc wf)
-= elim_pure_wp_monotonicity_forall u#a ();
-  elim_pure_wp_monotonicity_forall u#b ();
+= elim_pure_wp_monotonicity wc;
+  introduce forall (x:a). is_monotonic (wf x)
+  with elim_pure_wp_monotonicity (wf x);
   fun () -> f (c ()) ()
 
 let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bind_wp wc wf) =
@@ -58,8 +61,9 @@ let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bin
                     downgrade_val (f y) ())
 
 let bind (a:Type u#a) (b : Type u#b) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
-  elim_pure_wp_monotonicity_forall u#a ();
-  elim_pure_wp_monotonicity_forall u#b ();
+  elim_pure_wp_monotonicity wc;
+  introduce forall (x:a). is_monotonic (wf x)
+  with elim_pure_wp_monotonicity (wf x);
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
@@ -71,7 +75,7 @@ let subcomp (a:Type u#aa) (i:idx)
             (wp2 : wp a)
             (f : m a i wp1)
    : Pure (m a i wp2)
-          (requires (forall p. wp2 p ==> wp1 p))
+          (requires (forall p. {:nopattern (* override *)} wp2 p ==> wp1 p))
           (ensures (fun _ -> True))
    = match i with
      | T ->
@@ -93,7 +97,8 @@ let subcomp (a:Type u#aa) (i:idx)
 
 unfold
 let ite_wp (#a:Type u#a) (w1 w2 : wp a) (b:bool) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity w1;
+  elim_pure_wp_monotonicity w2;
   as_pure_wp (fun p -> if b then w1 p else w2 p)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
@@ -121,7 +126,7 @@ let lift_pure_gtd (a:Type u#a) (w : wp a) (i : idx)
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
- = elim_pure_wp_monotonicity_forall u#a ();
+ = elim_pure_wp_monotonicity w;
    match i with
    | T -> f
    | G -> f
@@ -142,7 +147,7 @@ let rec map #a #b #i (f : a -> GTD b i) (xs : list a) : GTD (list b) i =
  | x::xs -> (f x)::(map f xs)
 
 unfold
-let null_wp (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. p x)
+let null_wp (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. {:nopattern (* override *)} p x)
 
 effect Gtd (a:Type) (i:idx) = GTD a i (null_wp a)
 

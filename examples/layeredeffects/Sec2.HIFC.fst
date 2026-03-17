@@ -2,7 +2,7 @@ module Sec2.HIFC
 open FStar.List.Tot
 open FStar.Map
 let loc = int
-type store = m:Map.t loc int{forall l. contains m l}
+type store = m:Map.t loc int{forall l. {:nopattern (* override *)} contains m l}
 let upd (s:store) (l:loc) (x:int) : store = Map.upd s l x
 let sel (s:store) (l:loc) : int = Map.sel s l
 open FStar.Set
@@ -17,13 +17,13 @@ let bind_hst (a b:Type)
              p q r s
              (x:hst a p q)
              (y: (x:a -> hst b (r x) (s x)))
-  : hst b (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
-           (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
+  : hst b (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1))
+           (fun s0 r s2 -> (exists x s1. {:nopattern (* override *)} q s0 x s1 /\ s x s1 r s2))
   = fun s0 -> let v, s1 = x s0 in y v s1
 let subcomp_hst (a:Type) p q r s (x:hst a p q)
   : Pure (hst a r s)
-         (requires (forall st. r st ==> p st) /\
-                   (forall st0 res st1. q st0 res st1 ==> s st0 res st1))
+         (requires (forall st. {:nopattern (* override *)} r st ==> p st) /\
+                   (forall st0 res st1. {:nopattern (* override *)} q st0 res st1 ==> s st0 res st1))
          (ensures fun _ -> True)
   = x
 let if_then_else_hst (a:Type) p q r s (x:hst a p q) (y:hst a r s) (b:bool) : Type =
@@ -50,33 +50,33 @@ let label_inclusion (l0 l1:label) = Set.subset l0 l1
 let bot : label = Set.empty
 let single (l:loc) : label = Set.singleton l
 let union (l0 l1:label) = Set.union l0 l1
-let is_empty #a (s:Set.set a) = forall (x:a). ~ (Set.mem x s)
+let is_empty #a (s:Set.set a) = forall (x:a). {:nopattern (* override *)} ~ (Set.mem x s)
 
 (* The write effect of a computation *)
 let modifies (w:label) (s0 s1:store) = (forall l.{:pattern (sel s1 l)} ~(Set.mem l w) ==> sel s0 l == sel s1 l)
 let writes #a #p #q (f:hst a p q) (writes:label) =
-    forall (s0:store{p s0}). let x1, s0' = f s0 in modifies writes s0 s0'
+    forall (s0:store{p s0}). {:nopattern (* override *)} let x1, s0' = f s0 in modifies writes s0 s0'
 
 (* The read effect of a computation *)
-let agree_on (reads:label) (s0 s1: store) = forall l. Set.mem l reads ==> sel s0 l == sel s1 l
+let agree_on (reads:label) (s0 s1: store) = forall l. {:nopattern (* override *)} Set.mem l reads ==> sel s0 l == sel s1 l
 let related_runs #a #p #q (f:hst a p q) (s0:store{p s0}) (s0':store{p s0'}) =
       (let x1, s1 = f s0 in
        let x1', s1' = f s0' in
        x1 == x1' /\
-       (forall (l:loc). (sel s1 l == sel s1' l \/ (sel s1 l == sel s0 l /\ sel s1' l == sel s0' l))))
+       (forall (l:loc). {:nopattern (* override *)} (sel s1 l == sel s1' l \/ (sel s1 l == sel s0 l /\ sel s1' l == sel s0' l))))
 let reads #a #p #q (f:hst a p q) (reads:label) =
-    forall (s0:store{p s0}) (s0':store{p s0'}). agree_on reads s0 s0' ==> related_runs f s0 s0'
+    forall (s0:store{p s0}) (s0':store{p s0'}). {:nopattern (* override *)} agree_on reads s0 s0' ==> related_runs f s0 s0'
 
 (* The respects flows refinement *)
 let flow = label & label //from, to
 let flows = list flow
 let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
-let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
+let has_flow (from to:loc) (fs:flows) = (exists rs. {:nopattern (* override *)} rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
 let no_leakage_k #a #p #q (f:hst a p q) (from to:loc) (k:int) =
   forall (s0:store{p s0}).{:pattern (upd s0 from k)}
     p (upd s0 from k) ==>
     sel (snd (f s0)) to == (sel (snd (f (upd s0 from k))) to)
-let no_leakage #a #p #q (f:hst a p q) (from to:loc) = forall k. no_leakage_k f from to k
+let no_leakage #a #p #q (f:hst a p q) (from to:loc) = forall k. {:nopattern (* override *)} no_leakage_k f from to k
 let respects #a #p #q (f:hst a p q) (fs:flows) =
     (forall from to. {:pattern (no_leakage f from to)} ~(has_flow from to fs) /\ from<>to ==> no_leakage f from to)
 
@@ -125,7 +125,7 @@ let does_not_read_loc_v #a #p #q (f:hst a p q)
      sel s1' l == sel s0' l)))
 
 let does_not_read_loc #a #p #q (f:hst a p q) (reads:label) (l:loc) (s0:store{p s0}) =
-  forall v. does_not_read_loc_v f reads l s0 v
+  forall v. {:nopattern (* override *)} does_not_read_loc_v f reads l s0 v
 
 let reads_ok_preserves_equal_locs #a #p #q (f:hst a p q) (rds:label) (s0:store{p s0}) (s0':store{p s0'})
   : Lemma (requires agree_on rds s0 s0' /\ reads f rds)
@@ -163,8 +163,8 @@ let add_source (r:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> unio
 let add_sink (w:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> r0, union w w0) fs
 
 let flows_included_in (fs0 fs1:flows) =
-  forall f0. f0 `List.Tot.memP` fs0 ==>
-        (forall from to. has_flow_1 from to f0 /\ from <> to ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
+  forall f0. {:nopattern (* override *)} f0 `List.Tot.memP` fs0 ==>
+        (forall from to. {:nopattern (* override *)} has_flow_1 from to f0 /\ from <> to ==> (exists f1. {:nopattern (* override *)} f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
 
 let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
 let flows_equiv_refl fs
@@ -194,8 +194,8 @@ let bind_ifc' (#a #b:Type)
               #p #q #r #s
               (x:hifc a r0 w0 fs0 p q)
               (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
-  : hst b (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
-          (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
+  : hst b (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1))
+          (fun s0 r s2 -> (exists x s1. {:nopattern (* override *)} q s0 x s1 /\ s x s1 r s2))
   = bind_hst _ _ _ _ _ _ x y
 
 (* bind_ifc' reads the union of the read labels *)
@@ -207,7 +207,7 @@ let bind_ifc_reads_ok (#a #b:Type)
                       (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
   : Lemma (reads (bind_ifc' x y) (union r0 r1))
   = let f = bind_ifc' x y in
-    let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
+    let p_f = (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1)) in
     let reads = union r0 r1 in
     let f_reads_ok (s0:store{p_f s0}) (s0':store{p_f s0'})
       : Lemma
@@ -318,7 +318,7 @@ let bind_hst_no_leakage (#a #b:Type)
                          (s0:store) (k:_)
     : Lemma
       (requires (
-        let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
+        let p_f = (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1)) in
         let s0' = upd s0 from k in
         p_f s0 /\
         p_f s0' /\
@@ -361,7 +361,7 @@ let bind_hst_no_leakage (#a #b:Type)
         assert (does_not_read_loc x r0 from s0);
         assert (does_not_read_loc_v x r0 from s0 k);
         assert (v0 == v0');
-        assert (forall l. l <> from ==> sel s1 l == sel s1' l);
+        assert (forall l. {:nopattern (* override *)} l <> from ==> sel s1 l == sel s1' l);
         assert (Map.equal s1' (upd s1 from k) \/ Map.equal s1' s1);
         if (sel s1 from = sel s1' from)
         then begin
@@ -398,7 +398,7 @@ let bind_ifc_flows_ok (#a #b:Type)
                        (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
   : Lemma (respects (bind_ifc' x y) (fs0 @ add_source r0 ((bot, w1)::fs1)))
   = let f = bind_ifc' x y in
-    let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
+    let p_f = (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1)) in
     let flows = (fs0 @ add_source r0 ((bot, w1)::fs1)) in
     let respects_flows_lemma (from to:loc)
       : Lemma (requires from <> to /\ ~(has_flow from to flows))
@@ -424,8 +424,8 @@ let pre_bind (a b:Type)
          (x:hifc a r0 w0 fs0 p q)
          (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
   : hifc b (union r0 r1) (union w0 w1) (fs0 @ add_source r0 ((bot, w1)::fs1))
-          (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
-          (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
+          (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 ==> r x s1))
+          (fun s0 r s2 -> (exists x s1. {:nopattern (* override *)} q s0 x s1 /\ s x s1 r s2))
   = let f = bind_ifc' x y in
     bind_ifc_reads_ok x y;
     bind_ifc_writes_ok x y;
@@ -459,7 +459,7 @@ let flows_included_append (f0 f1 g0 g1:flows)
     : Lemma (requires List.Tot.memP f (f0@f1) /\
                       from <> to /\
                       has_flow_1 from to f)
-            (ensures (exists g. g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
+            (ensures (exists g. {:nopattern (* override *)} g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
             [SMTPat (has_flow_1 from to f)]
     = memP_append_or f f0 f1;
       assert (exists g. g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
@@ -577,8 +577,8 @@ let bind (a b:Type)
          (x:hifc a r0 w0 fs0 p q)
          (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
   : hifc b (union r0 r1) (union w0 w1) (fs0 @ add_source r0 ((bot, w1)::fs1))
-          (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 /\ modifies w0 s0 s1 ==> r x s1))
-          (fun s0 r s2 -> (exists x s1. (q s0 x s1 /\ modifies w0 s0 s1) /\ (s x s1 r s2 /\ modifies w1 s1 s2)))
+          (fun s0 -> p s0 /\ (forall x s1. {:nopattern (* override *)} q s0 x s1 /\ modifies w0 s0 s1 ==> r x s1))
+          (fun s0 r s2 -> (exists x s1. {:nopattern (* override *)} (q s0 x s1 /\ modifies w0 s0 s1) /\ (s x s1 r s2 /\ modifies w1 s1 s2)))
   = (pre_bind _ _ _ _ _ _ _ _ (frame _ _ _ _ x) (fun a -> frame _ _ _ _ (y a)))
 
 
@@ -588,10 +588,10 @@ let refine_flow_hifc #a #w #r #f #fs #p #q
                 (c: hifc a r w (f::fs) p q)
   : Pure (hifc a r w fs p q)
          (requires
-           (forall from to v.
+           (forall from to v. {:nopattern (* override *)}
              has_flow_1 from to f /\
              from <> to ==>
-             (forall s0 x x' s1 s1'.
+             (forall s0 x x' s1 s1'. {:nopattern (* override *)}
                p s0 /\
                p (upd s0 from v) /\
                q s0 x s1 /\
@@ -605,8 +605,8 @@ let refine_flow_hifc #a #w #r #f #fs #p #q
 (** Classic Hoare rule of consequence *)
 let consequence (a:Type) (r0 w0:label) p q p' q' (fs0:flows) (f:hifc a r0 w0 fs0 p q)
   : Pure (hst a p' q')
-    (requires (forall s. p' s ==> p s) /\
-              (forall s0 x s1. p' s0 /\ q s0 x s1 ==> q' s0 x s1))
+    (requires (forall s. {:nopattern (* override *)} p' s ==> p s) /\
+              (forall s0 x s1. {:nopattern (* override *)} p' s0 /\ q s0 x s1 ==> q' s0 x s1))
     (fun _ -> True)
   = let g : hst a p' q' = fun s -> f s in
     g
@@ -629,8 +629,8 @@ let sub_hifc (a:Type) (r0 w0:label) (fs0:flows) p q (r1 w1:label) (fs1:flows) #p
                label_inclusion r0 r1 /\
                label_inclusion w0 w1 /\
                (norm [delta;iota;zeta] (fs0 `flows_included_in` fs1)) /\
-               (forall s. p' s ==> p s) /\
-               (forall s0 x s1. p' s0 /\ q s0 x s1 ==> q' s0 x s1))
+               (forall s. {:nopattern (* override *)} p' s ==> p s) /\
+               (forall s0 x s1. {:nopattern (* override *)} p' s0 /\ q s0 x s1 ==> q' s0 x s1))
          (ensures fun _ -> True)
   = let forig = f in
     norm_spec (fs0 `flows_included_in` fs1);
@@ -735,10 +735,10 @@ let refine_flow #a #w #r #f #fs #p #q
                 ($c: unit -> HIFC a r w (f::fs) p q)
   : Pure (unit -> HIFC a r w fs p q)
          (requires
-           (forall from to v.
+           (forall from to v. {:nopattern (* override *)}
              has_flow_1 from to f /\
              from <> to ==>
-             (forall s0 x x' s1 s1'.
+             (forall s0 x x' s1 s1'. {:nopattern (* override *)}
                p s0 /\
                p (upd s0 from v) /\
                q s0 x s1 /\

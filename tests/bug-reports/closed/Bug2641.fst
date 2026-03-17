@@ -23,7 +23,7 @@ let rec free_bind (#a:Type u#a) (#b:Type u#b) (l:free a) (k: a -> free b) : free
 let hist a = wp:(pure_wp' a){pure_wp_monotonic0 a wp}
 
 val hist_ord (#a : Type) : hist a -> hist a -> Type0
-let hist_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
+let hist_ord wp1 wp2 = forall p. {:nopattern (* override *)} wp1 p ==> wp2 p
 
 let hist_return (x:'a) : hist 'a =
   fun p -> p x
@@ -32,7 +32,7 @@ let hist_bind (#a #b:Type) (w : hist a) (kw : a -> hist b) : hist b =
   fun p -> w (fun r -> kw r p)
 
 let wp_lift_pure_hist (#a:Type u#a) (w : pure_wp a) : hist a =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity w;
   w
 
 let partial_call_wp (pre:pure_pre) : hist (squash pre) = 
@@ -108,7 +108,7 @@ val lift_pure_dm_free :
   f: (_: unit -> PURE a w) ->
   Tot (dm_free a (wp_lift_pure_hist w))
 let lift_pure_dm_free a w f =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity w;
   PartialCall (as_requires w) (fun proof -> Return (f proof))
 
 total
@@ -144,10 +144,10 @@ let test_assert_false
   (t1:Type)
   (t2:Type)
   {| d2:compilable t2 |} 
-  (f:(t1 -> FREEwp (option t2) (fun p -> (forall r. p r)))) 
+  (f:(t1 -> FREEwp (option t2) (fun p -> (forall r. {:nopattern (* override *)} p r)))) 
   (x:t1) : 
   Lemma False =
-  let _ : dm_free (option d2.comp_type) (hist_bind (fun p -> forall r . p r)
+  let _ : dm_free (option d2.comp_type) (hist_bind (fun p -> forall r . {:nopattern (* override *)} p r)
                                                    (fun (r:option t2) -> hist_return (compile #(option t2) #(compile_option t2 #d2) r))) =
        reify (compile #(option t2) #(compile_option t2 #d2) (f x)) in
   assert (False)
@@ -164,9 +164,9 @@ let compile_option2 : (option int -> option int) =
 
 [@@ expect_failure [19]]
 let test_assert_false
-  (f:(unit -> FREEwp (option int) (fun p -> (forall r. p r)))) : 
+  (f:(unit -> FREEwp (option int) (fun p -> (forall r. {:nopattern (* override *)} p r)))) : 
   Lemma False =
-  let _ : dm_free (option int) (hist_bind (fun p -> forall r . p r)
+  let _ : dm_free (option int) (hist_bind (fun p -> forall r . {:nopattern (* override *)} p r)
                                         (fun (r:option int) -> hist_return ((compile_option2 r)))) =
        reify (let eff_val = f () in
               compile_option2 eff_val) in

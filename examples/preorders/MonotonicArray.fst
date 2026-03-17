@@ -157,6 +157,7 @@ private let initialized' (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :heap_pre
   = fun h -> h `contains_array` arr /\ init_at_arr arr i h
 
 (* a stable initialized predicate *)
+#push-options "--z3rlimit 20 --ext auto_patterns:off"
 let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate{stable p})
   = let A #_ #_ #m s_ref off = arr in
     assert (forall (h:heap).
@@ -168,6 +169,7 @@ let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate
               (h1 `contains_array` arr /\ heap_rel h1 h2) ==> (forall (i:nat). i < m ==> (Some? (Seq.index s1 i) ==>
 	                                                                          Some? (Seq.index s2 i))));
     initialized' arr i
+#pop-options
 
 (* witnessed predicate for initialized *)
 let init_at (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :Type0
@@ -383,7 +385,7 @@ let recall_all_init (#a:Type0) (#n:nat) (arr:t a n{all_init arr})
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ init_arr_in_heap arr h0))
   = recall_all_init_i_j arr 0 n
 
-#set-options "--z3rlimit 20"
+#set-options "--z3rlimit 40 --fuel 4 --ifuel 4"
 let witness_all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n})
   :ST unit (requires (fun h0      -> init_arr_in_heap_i_j arr h0 i j))
            (ensures  (fun h0 _ h1 -> h0 == h1 /\ all_init_i_j arr i j))

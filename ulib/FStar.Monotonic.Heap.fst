@@ -129,10 +129,10 @@ private let lemma_upd_contains_test
   (#a:Type) (#rel:preorder a) (h0:heap) (r:mref a rel) (x:a)
   :Lemma (h0 `contains` r ==>
           (let h1 = upd h0 r x in
-	   (forall (b:Type) (rel:preorder b) (r':mref b rel). (h0 `contains` r' /\ addr_of r' = addr_of r) ==> sel h1 r' == x /\
-           (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')             /\
-	   (forall (b:Type) (rel:preorder b) (r':mref b rel). h0 `contains` r' <==> h1 `contains` r')                         /\
-	   (forall (b:Type) (rel:preorder b) (r':mref b rel). r' `unused_in` h0  <==> r' `unused_in` h1))))
+	   (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} (h0 `contains` r' /\ addr_of r' = addr_of r) ==> sel h1 r' == x /\
+           (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')             /\
+	   (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} h0 `contains` r' <==> h1 `contains` r')                         /\
+	   (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} r' `unused_in` h0  <==> r' `unused_in` h1))))
   = ()
 
 (*
@@ -147,9 +147,9 @@ private let lemma_upd_contains_not_necessarily_well_typed_test
   :Lemma ((~ (r `unused_in` h0)) ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
-           (forall (b:Type) (#rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')           /\
-	   (forall (b:Type) (#rel:preorder b) (r':mref b rel). (r'.addr <> r.addr /\ h0 `contains` r') ==> h1 `contains` r') /\
-	   (forall (b:Type) (#rel:preorder b) (r':mref b rel). r' `unused_in` h0 <==> r' `unused_in` h1)))
+           (forall (b:Type) (#rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r')           /\
+	   (forall (b:Type) (#rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} (r'.addr <> r.addr /\ h0 `contains` r') ==> h1 `contains` r') /\
+	   (forall (b:Type) (#rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} r' `unused_in` h0 <==> r' `unused_in` h1)))
   = ()
 
 (*
@@ -160,9 +160,9 @@ private let lemma_upd_unused_test
   :Lemma (r `unused_in` h0 ==>
           (let h1 = upd h0 r x in
 	   h1 `contains` r /\
-           (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
-	   (forall (b:Type) (rel:preorder b) (r':mref b rel). h0 `contains` r' ==> h1 `contains` r')             /\
-	   (forall (b:Type) (rel:preorder b) (r':mref b rel). ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1))))
+           (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
+	   (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} h0 `contains` r' ==> h1 `contains` r')             /\
+	   (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1))))
   = ()
 
 (*
@@ -173,15 +173,15 @@ private let lemma_alloc_test (#a:Type) (rel:preorder a) (h0:heap) (x:a) (mm:bool
           r `unused_in` h0 /\
 	  h1 `contains` r  /\
           is_mm r = mm     /\
-          (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
-          (forall (b:Type) (rel:preorder b) (r':mref b rel). h0 `contains` r' ==> h1 `contains` r')             /\
-	  (forall (b:Type) (rel:preorder b) (r':mref b rel). ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1)))
+          (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} addr_of r' <> addr_of r ==> sel h0 r' == sel h1 r') /\
+          (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} h0 `contains` r' ==> h1 `contains` r')             /\
+	  (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} ~ (r' `unused_in` h0) ==> ~ (r' `unused_in` h1)))
   = ()
 
 private let lemma_free_mm_test (#a:Type) (rel:preorder a) (h0:heap) (r:mref a rel{h0 `contains` r /\ is_mm r})
   :Lemma (let h1 = free_mm h0 r in
           r `unused_in` h1 /\
-	  (forall (b:Type) (rel:preorder b) (r':mref b rel). addr_of r' <> addr_of r ==>
+	  (forall (b:Type) (rel:preorder b) (r':mref b rel). {:nopattern (* uninferrable *)} addr_of r' <> addr_of r ==>
 	                          ((sel h0 r' == sel h1 r'                 /\
 				   (h0 `contains` r' <==> h1 `contains` r') /\
 				   (r' `unused_in` h0 <==> r' `unused_in` h1)))))

@@ -24,13 +24,13 @@ val w0 (a : Type u#a) : Type u#(max 1 a)
 let w0 a = (a -> Type0) -> Type0
 
 let monotonic (w:w0 'a) =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
+  forall p1 p2. {:nopattern (* override *)} (forall x. {:nopattern (* override *)} p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
 let w a = pure_wp a
 
 val w_ord (#a : Type) : w a -> w a -> Type0
-let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
+let w_ord wp1 wp2 = forall p. {:nopattern (* override *)} wp1 p ==> wp2 p
 
 unfold
 val w_return (#a : Type) : a -> w a
@@ -41,8 +41,9 @@ unfold
 val w_bind (#a:Type u#a) (#b : Type u#b) : w a -> (a -> w b) -> w b
 unfold
 let w_bind (#a:Type u#a) (#b : Type u#b) wp1 k =
-  elim_pure_wp_monotonicity_forall u#a ();
-  elim_pure_wp_monotonicity_forall u#b ();
+  elim_pure_wp_monotonicity wp1;
+  introduce forall (x:a). is_monotonic (k x)
+  with elim_pure_wp_monotonicity (k x);
   as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
@@ -61,7 +62,8 @@ let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v)
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord wp2 wp1) (ensures fun _ -> True) = f
 
 let wp_if_then_else (#a:Type u#a) (wp1 wp2:w a) (b:bool) : w a=
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity wp1;
+  elim_pure_wp_monotonicity wp2;
   as_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =

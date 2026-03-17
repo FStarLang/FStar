@@ -30,8 +30,9 @@ let bind_wp (#a:Type u#a) (#b:Type u#b)
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = elim_pure_wp_monotonicity_forall u#a ();
-    elim_pure_wp_monotonicity_forall u#b ();
+  = elim_pure_wp_monotonicity wp_v;
+    introduce forall (x:a). is_monotonic (wp_f x)
+    with elim_pure_wp_monotonicity (wp_f x);
     as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
@@ -60,7 +61,8 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 
 unfold
 let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity wp1;
+  elim_pure_wp_monotonicity wp2;
   (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
@@ -72,7 +74,7 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 
 unfold
 let strengthen_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity w;
   as_pure_wp (fun post -> p /\ w post)
 
 let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
@@ -80,7 +82,7 @@ let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_w
 
 unfold
 let weaken_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity w;
   as_pure_wp (fun post -> p ==> w post)
 
 let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
@@ -90,7 +92,7 @@ let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
 
 unfold
 let cut_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
-  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity w;
   as_pure_wp (fun post -> p /\ (p ==> w post))
 
 let cut #a #w (p:Type0) (f : repr a w) : repr a (cut_wp w p) =

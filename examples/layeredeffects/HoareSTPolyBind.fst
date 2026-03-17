@@ -38,7 +38,7 @@ type post_t (a:Type) = heap -> a -> heap -> Type0
 /// Its encoding in STATE is as expected
 
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
-  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
+  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). {:nopattern (* override *)} post h x h1 ==> p x h1))
 
 let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
@@ -51,8 +51,8 @@ let bind (a:Type) (b:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
 : repr b
-  (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
-  (fun h0 y h2 -> exists (x:a) (h1:heap). pre_f h0 /\ post_f h0 x h1 /\ post_g x h1 y h2)
+  (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). {:nopattern (* override *)} post_f h0 x h1 ==> pre_g x h1))
+  (fun h0 y h2 -> exists (x:a) (h1:heap). {:nopattern (* override *)} pre_f h0 /\ post_f h0 x h1 /\ post_g x h1 y h2)
 = fun _ ->
   let x = f () in
   g x ()
@@ -66,8 +66,8 @@ let subcomp (a:Type)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
   (requires
-    (forall (h:heap). pre_g h ==> pre_f h) /\
-    (forall (h0 h1:heap) (x:a). (pre_g h0 /\ post_f h0 x h1) ==> post_g h0 x h1))
+    (forall (h:heap). {:nopattern (* override *)} pre_g h ==> pre_f h) /\
+    (forall (h0 h1:heap) (x:a). {:nopattern (* override *)} (pre_g h0 /\ post_f h0 x h1) ==> post_g h0 x h1))
   (ensures fun _ -> True)
 = f
 
@@ -144,7 +144,7 @@ let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -
   (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
 : repr b
   (fun h -> wp (fun x -> req x h))
-  (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
+  (fun h0 r h1 -> exists x. {:nopattern (* override *)} (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
 = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ ->
   let x = f () in
@@ -157,12 +157,11 @@ polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 let bind_hoarest_pure (a:Type u#a) (b:Type u#b) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
   (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
 : repr b
-  (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
-  (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
-= FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#b ();
-  fun _ ->
+  (fun h -> req h /\ (forall x h1. {:nopattern (* override *)} ens h x h1 ==> (wp x) (fun _ -> True)))
+  (fun h0 r h1 -> exists x. {:nopattern (* override *)} ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
+= fun _ ->
   let x = f () in
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity (wp x);
   (g x) ()
 
 
@@ -176,8 +175,8 @@ let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
   (f:unit -> PURE a wp)
 : Pure (repr a req ens)
   (requires
-    (forall h. req h ==>  wp (fun _ -> True)) /\
-    (forall h0 r h1. (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
+    (forall h. {:nopattern (* override *)} req h ==>  wp (fun _ -> True)) /\
+    (forall h0 r h1. {:nopattern (* override *)} (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
   (ensures fun _ -> True)
 = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ -> f ()
@@ -201,7 +200,7 @@ let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
 
 open FStar.Monotonic.Pure
 
-assume val g : int -> int -> PURE int (as_pure_wp (fun p -> forall x. p x))
+assume val g : int -> int -> PURE int (as_pure_wp (fun p -> forall x. {:nopattern (* override *)} p x))
 
 let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
@@ -223,7 +222,7 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 
 assume type t_int (x:int) : Type0
 assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
-assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). x >= 2 ==> p x))
+assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). {:nopattern (* override *)} x >= 2 ==> p x))
 
 let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
   dep_f (pure_g ())
@@ -336,7 +335,7 @@ let rec copy_aux
     addr_of s =!= addr_of cpy /\
     Seq.length (sel h cpy) == Seq.length (sel h s) /\
     ctr <= Seq.length (sel h cpy) /\
-    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
+    (forall (i:nat). {:nopattern (* override *)} i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
   (fun h0 _ h1 ->
     modifies (only cpy) h0 h1 /\
     Seq.equal (sel h1 cpy) (sel h1 s))

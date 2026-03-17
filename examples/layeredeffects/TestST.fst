@@ -16,7 +16,7 @@ let bind_spec (a b:Type) (w0:spec a) (w1:(a -> spec b)) : spec b =
   fun post -> w0 (fun x -> w1 x post)
 
 (* Subsumption on specs *)
-let stronger (#a:Type) (w1 w2 : spec a) = forall s0 p. w1 s0 p ==> w2 s0 p
+let stronger (#a:Type) (w1 w2 : spec a) = forall s0 p. {:nopattern (* override *)} w1 s0 p ==> w2 s0 p
 
 (* The computation monad, indexed by spec *)
 let st (a:Type) (w:spec a) = p:post a -> s0:state_t{ w p s0 } -> x:(a & state_t) { p (fst x) (snd x) }
@@ -109,7 +109,7 @@ let lift_wp (#a:Type u#a) (w:pure_wp a) : spec a =
 
 let lift_pure_st (a:Type u#a) wp (f : unit -> PURE a wp)
   : st a (lift_wp wp)
-  = elim_pure_wp_monotonicity_forall u#a ();
+  = elim_pure_wp_monotonicity wp;
     fun p s0 -> (f (), s0)
 
 (* This bit tells F* to return pure computations into ST automatically *)

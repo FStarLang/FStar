@@ -64,7 +64,7 @@ val is_mutable (#a:Type0) (#n:nat) (arr:t a n) (h:heap) : Type0
 
 let fresh_arr (#a:Type0) (#n:nat) (arr:t a n) (h0 h1:heap)
   = h1 `contains_array` arr /\  //array is live in h1
-    (forall (n:nat). Set.mem n (array_footprint arr) ==> n `addr_unused_in` h0)  //the footprint of array was unused in h0, hopefully this enables the clients to maintain separation
+    (forall (n:nat). {:nopattern (* override *)} Set.mem n (array_footprint arr) ==> n `addr_unused_in` h0)  //the footprint of array was unused in h0, hopefully this enables the clients to maintain separation
 
 (*
  * create an array that you intend to freeze some time in future
@@ -129,7 +129,7 @@ val frozen_with (#a:Type0) (#n:nat) (arr:t a n) (s:erased (Seq.seq a)) :Type0
 val freeze (#a:Type0) (#n:nat) (arr:farray a n)
   :ST (erased (Seq.seq a))
       (requires (fun h0       -> is_full_array arr /\  //can only freeze full arrays
-                              (forall (i:nat). i < n ==> init_at_arr arr i h0)))  //all elements must be init_at
+                              (forall (i:nat). {:nopattern (* override *)} i < n ==> init_at_arr arr i h0)))  //all elements must be init_at
       (ensures  (fun h0 es h1 -> some_equivalent_seqs (as_seq arr h0) (reveal es) /\  //the returned ghost sequence is the current view of array in the heap
                               frozen_with arr es                          /\  //witnessing the stable predicate
                               (~ (is_mutable arr h1))                     /\  //the array is no longer mutable
@@ -252,13 +252,13 @@ val lemma_frozen_implies_init_at (#a:Type0) (#n:nat) (arr:t a n) (es:erased (Seq
 (***** some utility functions *****)
 
 let all_init_i_j (#a:Type0) (#n:nat) (arr:t a n) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
-  = forall (k:nat). k >= i /\ k < j ==> arr `init_at` k
+  = forall (k:nat). {:nopattern (* override *)} k >= i /\ k < j ==> arr `init_at` k
 
 let all_init (#a:Type0) (#n:nat) (arr:t a n) :Type0
   = all_init_i_j arr 0 n
 
 let init_arr_in_heap_i_j (#a:Type0) (#n:nat) (arr:t a n) (h:heap) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
-  = forall (k:nat). (k >= i /\ k < j) ==> init_at_seq (as_seq arr h) k
+  = forall (k:nat). {:nopattern (* override *)} (k >= i /\ k < j) ==> init_at_seq (as_seq arr h) k
 
 let init_arr_in_heap (#a:Type0) (#n:nat) (arr:t a n) (h:heap) :Type0
   = init_arr_in_heap_i_j arr h 0 n
@@ -325,7 +325,7 @@ val lemma_disjoint_sibling_suffix_prefix (#a:Type0) (#n:nat) (arr:t a n) (pos:na
           disjoint_sibling (suffix arr pos) (prefix arr pos))
 
 let disjoint_siblings_remain_same (#a:Type0) (#n:nat) (arr:t a n) (h0 h1:heap)
-  = forall (m:nat) (arr':t a m). disjoint_sibling arr arr' ==> (as_seq arr' h0 == as_seq arr' h1)
+  = forall (m:nat) (arr':t a m). {:nopattern (* override *)} disjoint_sibling arr arr' ==> (as_seq arr' h0 == as_seq arr' h1)
 
 val lemma_disjoint_sibling_remain_same_for_unrelated_mods
   (#a:Type0) (#n:nat) (arr:t a n) (r:Set.set nat{Set.disjoint r (array_footprint arr)}) (h0:heap) (h1:heap{modifies r h0 h1})
