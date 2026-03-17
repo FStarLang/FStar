@@ -60,7 +60,10 @@ and is_head_non_recursive (env:Env.env) (t:term) : ML bool =
   | Tm_fvar fv ->
     begin match Env.lookup_qname env fv.fv_name with
     | Some (Inr ({sigel = Sig_let {lbs=(is_rec, _)}}, _), _) -> not is_rec
-    | _ -> true  (* not a let-binding, fine *)
+    | Some (Inl _, _) ->
+      (* In-scope binding (e.g., letrec being defined) — conservative: treat as recursive *)
+      false
+    | _ -> true  (* not a let-binding (e.g., val, assume), fine *)
     end
   | Tm_uinst (t, _) -> is_head_non_recursive env t
   | _ -> true
