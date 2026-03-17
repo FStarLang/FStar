@@ -228,7 +228,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 
 $(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
-	$(MAKE) -C stage2 fstarc-bare FSTAR_DUNE_RELEASE=1
+	$(MAKE) -C stage2 fstarc-bare
 	touch -c $@
 	# ^ Note, even if we don't release fstar-bare itself,
 	# it is still part of the build of the full fstar, so
@@ -256,7 +256,7 @@ stage2-unit-tests: $(TESTS2_EXE)
 
 $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
-	$(MAKE) -C stage2 fstarc-full FSTAR_DUNE_RELEASE=1
+	$(MAKE) -C stage2 fstarc-full
 	touch -c $@
 
 .alib2.src.touch: $(FSTAR2_FULL_EXE) .force
@@ -397,7 +397,7 @@ endef
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 .install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
-	$(call install-stage,2,FSTAR_DUNE_RELEASE=1)
+	$(call install-stage,2)
 
 .install-stage3.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
 .install-stage3.touch: .stage3.src.touch $(MAYBEFORCE)
