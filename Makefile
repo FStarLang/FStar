@@ -648,6 +648,9 @@ clean-depend: .force
 	rm -f stage2/fstarc.checked/.*depend*
 	rm -f stage2/plugins.checked/.*depend*
 	rm -f stage2/ulib.checked/.*depend*
+	rm -f stage3/fstarc.checked/.*depend*
+	rm -f stage3/plugins.checked/.*depend*
+	rm -f stage3/ulib.checked/.*depend*
 
 clean-0: .force
 	$(call bold_msg, "CLEAN", "STAGE 0")
@@ -677,6 +680,7 @@ clean-3: .force
 	rm -rf stage3/checker.ml
 	rm -rf stage3/extraction.ml
 	rm -rf stage3/syntax_extension.ml
+	$(MAKE) -C pulse clean
 
 clean-boot-diff: .force
 	$(call bold_msg, "CLEAN", "STAGE 2+1")
