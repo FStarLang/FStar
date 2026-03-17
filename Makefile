@@ -9,7 +9,7 @@ include mk/common.mk
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
-all: stage1 stage2 1.tests 2.tests boot-src-bare lib-fsharp
+all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare lib-fsharp
 all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
@@ -710,7 +710,7 @@ help:
 	echo "  ADMIT=1            skip verification (pass '--admit_smt_queries true')"
 	echo
 	echo "Rules for F* hackers:"
-	echo "  all                build stages 1 and 2, run their tests, extract boot-diff sources, and lib-fsharp"
+	echo "  all                build all stages, run tests, extract boot-diff sources, and lib-fsharp"
 	echo "  0                  build the stage0 compiler (in stage0/)"
 	echo "  stage1             build a full stage 1 compiler and libraries"
 	echo "  1                  stage1 + set the out/ symlink"
