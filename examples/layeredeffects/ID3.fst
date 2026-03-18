@@ -6,13 +6,13 @@ let w0 a = (a -> Type0) -> Type0
 
 // We require monotonicity of them
 let monotonic (w:w0 'a) =
-  forall p1 p2. {:nopattern (* override *)} (forall x. {:nopattern (* override *)} p1 x ==> p2 x) ==> w p1 ==> w p2
+  forall p1 p2.  (forall x.  p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
 let w a = pure_wp a
 
 let repr (a : Type) (wp : w a) : Type =
-  v:a{forall p. {:nopattern (* override *)} wp p ==> p v}
+  v:a{forall p.  wp p ==> p v}
 
 open FStar.Monotonic.Pure
 
@@ -35,7 +35,7 @@ let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
 let subcomp (a:Type) (wp1 wp2: w a)
     (f : repr a wp1)
 : Pure (repr a wp2)
-       (requires (forall p. {:nopattern (* override *)} wp2 p ==> wp1 p))
+       (requires (forall p.  wp2 p ==> wp1 p))
        (ensures fun _ -> True)
 = f
 
@@ -79,7 +79,7 @@ let l () : int =
   reify (test_f ())
 
 effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). {:nopattern (* override *)} post pure_result ==> p pure_result)))
+        ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a).  post pure_result ==> p pure_result)))
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 

@@ -47,9 +47,9 @@ let wp0 (st:Type0) (a:Type) = st -> (a & st -> Type) -> Type
 /// Monotonicity of wp's
 let st_monotonic #st #a (w : wp0 st a) : prop =
   forall (s0:st)
-    (p1 p2: (a & st -> Type)). {:nopattern (* override *)}
+    (p1 p2: (a & st -> Type)). 
     //If p1 is stronger than p2
-    (forall x s1. {:nopattern (* override *)} p1 (x, s1) ==> p2 (x, s1)) ==>
+    (forall x s1.  p1 (x, s1) ==> p2 (x, s1)) ==>
     //Then wp s0 p1 is stronger then wp s0 p2
     w s0 p1 ==>
     w s0 p2
@@ -127,7 +127,7 @@ let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
   : Type0
-  = forall s0 p. {:nopattern (* override *)} w1 s0 p ==> w2 s0 p
+  = forall s0 p.  w1 s0 p ==> w2 s0 p
 
 let subcomp
   (a:Type)
@@ -190,7 +190,7 @@ let put #st (s:st)
 /// But, we want to write specifications with pre/postconditions
 let as_wp (a:Type) (st:Type) (pre: st -> prop) (post: st -> a -> st -> prop)
   : wp st a
-  = fun s0 k -> pre s0 /\ (forall x s1. {:nopattern (* override *)} post s0 x s1 ==> k (x, s1))
+  = fun s0 k -> pre s0 /\ (forall x s1.  post s0 x s1 ==> k (x, s1))
 
 effect HoareST (a:Type) (st:Type) (pre: st -> prop) (post: st -> a -> st -> prop) =
   ST a st (as_wp a st pre post)

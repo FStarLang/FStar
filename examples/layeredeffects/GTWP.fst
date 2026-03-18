@@ -75,7 +75,7 @@ let subcomp (a:Type u#aa) (i:idx)
             (wp2 : wp a)
             (f : m a i wp1)
    : Pure (m a i wp2)
-          (requires (forall p. {:nopattern (* override *)} wp2 p ==> wp1 p))
+          (requires (forall p.  wp2 p ==> wp1 p))
           (ensures (fun _ -> True))
    = match i with
      | T ->
@@ -147,7 +147,7 @@ let rec map #a #b #i (f : a -> GTD b i) (xs : list a) : GTD (list b) i =
  | x::xs -> (f x)::(map f xs)
 
 unfold
-let null_wp (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. {:nopattern (* override *)} p x)
+let null_wp (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x.  p x)
 
 effect Gtd (a:Type) (i:idx) = GTD a i (null_wp a)
 

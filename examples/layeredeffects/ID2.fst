@@ -6,7 +6,7 @@ let sat (w : pure_wp 'a) : Type0 = w (fun _ -> True)
 open FStar.Monotonic.Pure
 
 let repr (a : Type u#aa) (wp : pure_wp a) : Type u#aa =
-  squash (sat wp) -> v:a{forall p. {:nopattern (* override *)} wp p ==> p v}
+  squash (sat wp) -> v:a{forall p.  wp p ==> p v}
 
 let return (a : Type) (x : a) : repr a (pure_return a x) =
   fun () -> x
@@ -26,7 +26,7 @@ let subcomp (a:Type)
   (wp1 wp2: pure_wp a)
   (f : repr a wp1)
   : Pure (repr a wp2)
-      (requires (forall p. {:nopattern (* override *)} wp2 p ==> wp1 p))
+      (requires (forall p.  wp2 p ==> wp1 p))
       (ensures fun _ -> True)
   = f
 
@@ -64,7 +64,7 @@ let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 sub_effect PURE ~> ID = lift_pure_nd
 
 // this requires using a good if_then_else, but why?
-let rec count (n:nat) : ID int (as_pure_wp (fun p -> forall r. {:nopattern (* override *)} p r)) =
+let rec count (n:nat) : ID int (as_pure_wp (fun p -> forall r.  p r)) =
   if n = 0 then 0 else count (n-1)
 
 (* Checking that it's kind of usable *)
@@ -77,7 +77,7 @@ let test_2 () : ID int (as_pure_wp (fun p -> p 5)) = 5
 let l () : int = reify (test_f ()) ()
 
 effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-  ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). {:nopattern (* override *)} post pure_result ==> p pure_result)))
+  ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a).  post pure_result ==> p pure_result)))
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 

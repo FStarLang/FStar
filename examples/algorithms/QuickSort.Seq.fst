@@ -26,7 +26,7 @@ module Seq = FStar.Seq
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
        Pure (seq a & seq a)
-         (requires (forall (i:nat{i < length s}). {:nopattern (* override *)}
+         (requires (forall (i:nat{i < length s}).
                                  ((i <= pivot ==> f (index s i) (index s pivot))
                                   /\ (back < i  ==> f (index s pivot) (index s i)))))
          (ensures (fun res ->
@@ -34,7 +34,7 @@ val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
                          (length lo + length hi = length s)
                       /\ (length hi > 0)
                       /\ (index hi 0 = p)
-                      /\ (forall x. {:nopattern (* override *)} (mem x hi ==> f p x)
+                      /\ (forall x. {:nopattern (* auto pattern on mem/count causes quantifier matching failure *)} (mem x hi ==> f p x)
                                  /\ (mem x lo ==> f x p)
                                  /\ (count x s = count x hi + count x lo)))
                      (fst res)

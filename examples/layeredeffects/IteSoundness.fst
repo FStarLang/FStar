@@ -63,7 +63,7 @@ let bind (a:Type u#a) (b:Type u#b) (wp1:pure_wp a) (wp2:a -> pure_wp b)
 
 let subcomp (a:Type) (wp1 wp2:pure_wp a) (f:repr a wp1)
   : Pure (repr a wp2)
-      (requires forall p. {:nopattern (* override *)} wp2 p ==> wp1 p)
+      (requires forall p.  wp2 p ==> wp1 p)
       (ensures fun _ -> True)
   = f
 

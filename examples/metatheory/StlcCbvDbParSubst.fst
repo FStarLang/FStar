@@ -94,7 +94,7 @@ let rec appears_free_in x e =
   | EUnit -> false
 
 type envEqualE (e:exp) (g1:env) (g2:env) =
-                 (forall (x:var). {:nopattern (* override *)} appears_free_in x e ==> g1 x = g2 x)
+                 (forall (x:var).  appears_free_in x e ==> g1 x = g2 x)
 
 (* Context invariance (actually used in a single place within substitution,
    for in a specific form of weakening when typing variables) *)
@@ -140,7 +140,7 @@ let closed e = below 0 e
   forall_intro #var #(fun (x:var) -> not (appears_free_in x e))
     (fun (x:var) -> typable_empty_closed x h)
 *)
-type pclosed (e:exp) = (forall (x:var). {:nopattern (* override *)} not (appears_free_in x e))
+type pclosed (e:exp) = (forall (x:var).  not (appears_free_in x e))
 assume val closed_appears_free : e:exp{closed e} -> Lemma (ensures (pclosed e))
 assume val appears_free_closed : e:exp{pclosed e} -> Lemma (ensures (closed e))
 (*
@@ -151,7 +151,7 @@ let rec appears_free_closed e =
   | ELam _ e1 -> appears_free_closed e1
 *)
 
-type below_env (x:var) (g:env) = (forall (y:var). {:nopattern (* override *)} y >= x ==> g y = None)
+type below_env (x:var) (g:env) = (forall (y:var).  y >= x ==> g y = None)
 
 val typable_below : x:var -> #g:env -> #e:exp -> #t:typ
                           -> h:typing g e t{below_env x g} ->
@@ -189,7 +189,7 @@ val extend_twice : x:var -> g:env -> t_x:typ -> t_y:typ -> Lemma
                       (extend_gen (x+1) t_x (extend_gen 0 t_y g))))
 let extend_twice x g t_x t_y = ()
 
-type sub_below (x:var) (s:sub) = (forall (y:var). {:nopattern (* override *)} y<x ==> s y = EVar y)
+type sub_below (x:var) (s:sub) = (forall (y:var).  y<x ==> s y = EVar y)
 
 val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} ->
   Lemma (requires True) (ensures (v = subst s v)) (decreases v)

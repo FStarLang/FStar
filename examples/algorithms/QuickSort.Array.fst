@@ -29,7 +29,7 @@ module Seq   = FStar.Seq
 
 type partition_inv (a:eqtype) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
-           /\ (forall y. {:nopattern} (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
+           /\ (forall y. {:nopattern (* auto pattern on mem/f causes matching failure *)} (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
 
 type partition_pre  (a:eqtype) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})

@@ -8,7 +8,7 @@ let wp0 a = pure_wp a //(a -> Type0) -> Type0
 
 // We require monotonicity of them
 let monotonic (w:wp0 'a) =
-  forall p1 p2. {:nopattern (* override *)} (forall x. {:nopattern (* override *)} p1 x ==> p2 x) ==> w p1 ==> w p2
+  forall p1 p2.  (forall x.  p1 x ==> p2 x) ==> w p1 ==> w p2
 
 //val wp (a : Type u#a) : Type u#(max 1 a)
 //let wp a = w:(wp0 a){monotonic w}
@@ -59,7 +59,7 @@ let bind (a b : Type) (wp_v : wp0 a) (wp_f: a -> wp0 b)
 let subcomp (a:Type) (w1 w2: wp0 a)
     (f : repr a w1)
 : Pure (repr a w2)
-       (requires (forall p. {:nopattern (* override *)} w2 p ==> w1 p) /\ monotonic w2)
+       (requires (forall p.  w2 p ==> w1 p) /\ monotonic w2)
        (ensures fun _ -> True)
 = let (m, r) = f in
   (m, r)
@@ -122,7 +122,7 @@ let test_f () = 3
 let l () : int = snd (reify (test_f ())) (fun _ -> True) ()
 
 effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). {:nopattern (* override *)} post pure_result ==> p pure_result)))
+        ID a (as_pure_wp (fun (p:pure_post a) -> pre /\ (forall (pure_result:a).  post pure_result ==> p pure_result)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 

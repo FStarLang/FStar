@@ -172,7 +172,7 @@ let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate
       let s1, f1 = sel h1 s_ref in
       let s2, f2 = sel h2 s_ref in
       (* seq_rel gives us: forall j. j < m ==> init_at_seq s1 j ==> init_at_seq s2 j *)
-      assert (forall (j:nat). {:nopattern (* uninferrable *)} j < m ==> (init_at_seq s1 j ==> init_at_seq s2 j));
+      assert (forall (j:nat).  j < m ==> (init_at_seq s1 j ==> init_at_seq s2 j));
       (* init_at_arr unfolds to init_at_seq on as_seq, which is Seq.slice of sel *)
       assert (init_at_seq (fst (sel h1 s_ref)) (off + i));
       assert (off + i < m);

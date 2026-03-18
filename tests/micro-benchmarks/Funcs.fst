@@ -141,7 +141,7 @@ let rec concatlemma l1 l2 x =
   | h::t -> concatlemma t l2 x
 
 val concatmaplemma : (#a:Type) -> (#b:Type) -> l:list a -> (f:(a -> list b)) -> x:b ->
-                               Lemma (memP x (concatMap f l) <==> (exists a. {:nopattern (* uninferrable *)} memP a l /\ memP x (f a)))
+                               Lemma (memP x (concatMap f l) <==> (exists a.  memP a l /\ memP x (f a)))
                                      [SMTPat (memP x (concatMap f l))]
 
 let rec concatmaplemma l f x =

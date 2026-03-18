@@ -184,7 +184,7 @@ let rec fresh_not_mem (e:list (var & 'a)) (elt: (var & 'a))
 let rec lookup_mem (e:list (var & 'a)) (x:var)
   : Lemma
     (requires Some? (lookup e x))
-    (ensures exists elt. {:nopattern (* override *)} L.memP elt e /\ fst elt == x)
+    (ensures exists elt. {:nopattern (* auto pattern on L.memP causes existential witness failure *)} L.memP elt e /\ fst elt == x)
   = match e with
     | [] -> ()
     | hd :: tl -> 
@@ -330,7 +330,7 @@ let fstar_env =
 
 let fstar_top_env =
   g:fstar_env { 
-    forall x. {:nopattern (* override *)} None? (RT.lookup_bvar g x )
+    forall x. None? (RT.lookup_bvar g x )
   }
 
 [@@erasable]
@@ -450,8 +450,8 @@ let weaken (f:fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (
     then (| t0, S_Refl _ t0, S_Refl _ t1 |)
     else T.fail "weaken is very dumb"
 
-let ok (sg:src_env) (e:src_exp) = (forall x. {:nopattern (* override *)} x `Set.mem` freevars e ==> Some? (lookup sg x))
-let ok_ty (sg:src_env) (e:src_ty) = (forall x. {:nopattern (* override *)} x `Set.mem` freevars_ty e ==> Some? (lookup sg x))
+let ok (sg:src_env) (e:src_exp) = (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x))
+let ok_ty (sg:src_env) (e:src_ty) = (forall x. x `Set.mem` freevars_ty e ==> Some? (lookup sg x))
 
 let rec check_ok_ty (t:src_ty) (sg:src_env)
   : b:bool { b <==>  (ok_ty sg t) }
@@ -568,7 +568,7 @@ and check_ty (f:fstar_top_env)
   
 let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
   : Lemma 
-    (requires (forall x. {:nopattern (* override *)} RT.lookup_bvar g x == None))
+    (requires (forall x. RT.lookup_bvar g x == None))
     (ensures (
       match lookup sg x with
       | Some b -> RT.lookup_bvar (extend_env_l g sg) x == Some (elab_binding b)

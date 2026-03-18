@@ -12,7 +12,7 @@ type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
 let st_monotonic #st #a (w : wp0 st a) : Type0 =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
-  forall s0 p1 p2. {:nopattern (* override *)} (forall x s1. {:nopattern (* override *)} p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
+  forall s0 p1 p2.  (forall x s1.  p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
 
 type wp st a = w:(wp0 st a){st_monotonic w}
 
@@ -57,7 +57,7 @@ let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
   : Type0
-  = forall s0 p. {:nopattern (* override *)} w1 s0 p ==> w2 s0 p
+  = forall s0 p.  w1 s0 p ==> w2 s0 p
 
 let subcomp
   (a:Type)
@@ -90,7 +90,7 @@ let lift_pure_st (a:Type u#a) wp st (f : unit -> PURE a wp)
 sub_effect PURE ~> ST = lift_pure_st
 
 let null #st #a : wp st a =
-  fun s0 p -> forall r. {:nopattern (* override *)} p r
+  fun s0 p -> forall r.  p r
 
 let get #st () : ST st st (fun s0 p -> p (s0, s0)) =
   ST?.reflect (fun s0 -> (s0, s0))

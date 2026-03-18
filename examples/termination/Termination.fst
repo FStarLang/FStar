@@ -81,7 +81,7 @@ val list_subterm_ordering_coercion:
 			-> #b:Type
 			-> l:list a
                         -> bound:b{l << bound}
-                        -> Tot (m:list a{l==m /\ (forall (x:a). {:nopattern} mem x m ==> x << bound)})
+                        -> Tot (m:list a{l==m /\ (forall (x:a).  mem x m ==> x << bound)})
 let rec list_subterm_ordering_coercion #a #b l bound = match l with
   | [] -> []
   | hd::tl ->
@@ -104,7 +104,7 @@ let rec list_subterm_ordering_lemma #a #b l bound x = match l with
 
 val move_refinement:  #a:eqtype
                    -> #p:(a -> Type)
-                   -> l:list a{forall z. {:nopattern} mem z l ==> p z}
+                   -> l:list a{forall z.  mem z l ==> p z}
                    -> Tot (list (x:a{p x}))
 let rec move_refinement #a #p l = match l with
   | [] -> []

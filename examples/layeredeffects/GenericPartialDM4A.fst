@@ -23,7 +23,7 @@ assume val bind_is_monotonic
   (#a #b : Type)
   (w1 w2 : w a) 
   (f1 f2 : a -> w b)
-  : Lemma (requires (w1 `stronger` w2 /\ (forall x. {:nopattern (* override *)} f1 x `stronger` f2 x)))
+  : Lemma (requires (w1 `stronger` w2 /\ (forall x. f1 x `stronger` f2 x)))
           (ensures (w_bind w1 f1 `stronger` w_bind w2 f2))
 
 let (<<=) = stronger
@@ -48,15 +48,15 @@ let return (a:Type) (x:a) : repr a True (fun _ -> w_return x) =
     m_return x
 
 let and_elim_2 (s : squash ('p /\ 'q)) : squash 'q = ()
-let fa_elim #a #p (s : squash (forall x. {:nopattern (* override *)} p x)) (x:a) : squash (p x) =
-  Squash.bind_squash s (fun (f : (forall x. {:nopattern (* override *)} p x)) ->
+let fa_elim #a #p (s : squash (forall x. p x)) (x:a) : squash (p x) =
+  Squash.bind_squash s (fun (f : (forall x. p x)) ->
   Squash.bind_squash f (fun (f : (x:a -> GTot (p x))) ->
   Squash.return_squash (f x)))
 
 let iw_bind (#a : Type) (#b : Type)
   (pre_v : Type0) (pre_f : a -> Type0)
   (wp_v : squash pre_v -> w a) (wp_f: (x:a -> squash (pre_f x) -> w b))
-  : squash (pre_v /\ (forall x. {:nopattern (* override *)} pre_f x)) -> w b
+  : squash (pre_v /\ (forall x. pre_f x)) -> w b
   = fun pf -> w_bind (wp_v ()) (fun x -> let pf' = and_elim_2 pf in
                                    let pf'' = fa_elim pf' x in
                                    wp_f x ())
@@ -67,9 +67,9 @@ let bind (a : Type) (b : Type)
   (wp_f: (x:a -> (squash (pre_f x) -> w b)))
   (v : repr a pre_v wp_v)
   (f : (x:a -> repr b (pre_f x) (wp_f x)))
-  : repr b (pre_v /\ (forall x. {:nopattern (* override *)} pre_f x)) (iw_bind pre_v pre_f wp_v wp_f)
+  : repr b (pre_v /\ (forall x. pre_f x)) (iw_bind pre_v pre_f wp_v wp_f)
   =
-  fun (pf : squash (pre_v /\ (forall x. {:nopattern (* override *)} pre_f x))) ->
+  fun (pf : squash (pre_v /\ (forall x. pre_f x))) ->
     let v = v () in
     let _ = and_elim_2 pf in
     assert (forall (x:a). pre_f x) by (exact (binding_to_term (nth_var (-1)))); // what the hell? #1948?
@@ -100,7 +100,7 @@ let subcomp (a:Type)
   (w2 : squash p2 -> w a)
   (f : repr a p1 w1)
   : Pure (repr a p2 w2)
-         (requires (p2 ==> p1) /\ (forall (pf : squash p2). {:nopattern (* override *)} w2 pf `stronger` w1 (weaken p2 p1 pf)))
+         (requires (p2 ==> p1) /\ (forall (pf : squash p2). {:nopattern (* auto pattern on stronger/weaken causes subtyping failure *)} w2 pf `stronger` w1 (weaken p2 p1 pf)))
          (ensures fun _ -> True)
   = fun _ -> f ()
 

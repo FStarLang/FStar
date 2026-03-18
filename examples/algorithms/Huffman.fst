@@ -44,7 +44,7 @@ let rec sorted (ts:list trie) : Tot bool =
   | t1::t2::ts' -> leq_trie t1 t2 && sorted (t2::ts')
 
 type permutation (l1:list trie) (l2:list trie) =
-    length l1 = length l2 /\ (forall n. {:nopattern (* Z3 must choose its own pattern for permutation proofs *)} mem n l1 = mem n l2)
+    length l1 = length l2 /\ (forall n.  mem n l1 = mem n l2)
 
 val sorted_smaller: x:trie
                 ->  y:trie

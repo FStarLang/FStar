@@ -61,7 +61,7 @@ let pad (m:message) :network_message = append m (zeroes (fragment_size - (length
 assume val unpad (s:network_message)
   :(r:(nat & message){length (snd r) = fst r /\ s == pad (snd r)})
 
-assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message). {:nopattern (* override *)} snd (unpad (pad m)) == m))
+assume val lemma_pad_unpad (x:unit) :Lemma (ensures (forall (m:message).  snd (unpad (pad m)) == m))
 
 (* a MAC function, returning a tag *)
 assume val mac: cipher:network_message -> i:nat -> seq byte
@@ -72,11 +72,11 @@ noeq type entry (rand:randomness) =
        -> entry rand
 
 (* sequence of messages *)
-type entries (rand:randomness) = s:seq (entry rand){forall (i:nat). {:nopattern (* override *)} i < length s ==> E?.i (Seq.index s i) = i}
+type entries (rand:randomness) = s:seq (entry rand){forall (i:nat).  i < length s ==> E?.i (Seq.index s i) = i}
 
 let is_prefix_of (#a:Type) (s1:seq a) (s2:seq a) :Type0
   = length s1 <= length s2 /\
-    (forall (i:nat). {:nopattern (* override *)} i < length s1 ==> Seq.index s1 i == Seq.index s2 i)
+    (forall (i:nat).  i < length s1 ==> Seq.index s1 i == Seq.index s2 i)
 
 (* entries are only appended to *)
 let entries_rel (rand:randomness) :relation (entries rand) =
@@ -211,7 +211,7 @@ let send (#n:nat) (buf:iarray byte n) (c:connection{sender c})
 				  h1 `live_connection` c /\
 	                          sent <= min n fragment_size /\
 				  ctr c h1 = ctr c h0 + 1    /\
-				  (forall (i:nat). {:nopattern (* override *)} i < n ==> Some? (Seq.index (as_seq buf h0) i)) /\
+				  (forall (i:nat).  i < n ==> Some? (Seq.index (as_seq buf h0) i)) /\
                                   log c h1 == snoc (log c h0) (as_initialized_subseq buf h0 0 sent)))
   = let h0 = ST.get () in
 
@@ -275,7 +275,7 @@ let receive (#n:nat{fragment_size <= n}) (buf:array byte n) (c:connection{receiv
 					      ctr c h1 = ctr c h0 + 1      /\
 					      ctr c h0 < length (log c h0) /\
                                               log c h0 == log c h1 /\
-					      (forall (i:nat). {:nopattern (* override *)} i < r ==> Some? (Seq.index (as_seq buf h1) i)) /\
+					      (forall (i:nat).  i < r ==> Some? (Seq.index (as_seq buf h1) i)) /\
 					      Seq.index (log c h0) (ctr c h0) == as_initialized_subseq buf h1 0 r))
   = let h0 = ST.get () in
     let R rand es_ref ctr_ref = c in
@@ -343,21 +343,21 @@ let sent_bytes (file:seq byte) (c:connection) (from:nat) (to:nat{from <= to}) :(
   = sent_bytes' file c from to
 
 let sent (file:seq byte) (c:connection) =
-  exists (from:nat) (to:nat{from <= to}). {:nopattern (* override *)} witnessed (sent_bytes file c from to)
+  exists (from:nat) (to:nat{from <= to}).  witnessed (sent_bytes file c from to)
 
 #set-options "--z3rlimit 20"
 let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a) 
   (requires (fun h -> True))
   (ensures (fun h0 s h1 ->  
               h0==h1 /\
-              (forall (k:nat). {:nopattern (* override *)} k < n ==> Some? (Seq.index (as_seq x h0) k)) /\
+              (forall (k:nat).  k < n ==> Some? (Seq.index (as_seq x h0) k)) /\
               s == as_initialized_subseq x h0 0 n                    /\
 	      s == as_initialized_seq x h0))
   = read_subseq_i_j x 0 n           
 
 let fully_initialized_in #a #n (x:array a n) (h:heap) = 
   h `contains_array` x /\
-  (forall (k:nat). {:nopattern (* override *)} k < n ==> Some? (Seq.index (as_seq x h) k))
+  (forall (k:nat).  k < n ==> Some? (Seq.index (as_seq x h) k))
 
 let subseq_suffix #a #n (f:iarray a n) (pos:nat) (until:nat{pos+until <= n}) 
     (h:heap{f `fully_initialized_in` h})
@@ -425,7 +425,7 @@ val send_aux
                       modifies (connection_footprint c) h0 h1 /\
                       h1 `live_connection` c /\
                       from <= ctr c h1 /\
-                      (forall (k:nat). {:nopattern (* override *)} k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      (forall (k:nat).  k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
 #restart-solver
 let rec send_aux #n file c from pos
@@ -475,7 +475,7 @@ let send_file (#n:nat) (file:iarray byte n) (c:connection{sender c /\ Set.disjoi
        (ensures (fun h0 _ h1 ->
                       modifies (connection_footprint c) h0 h1 /\
                       h1 `live_connection` c /\
-                      (forall (k:nat). {:nopattern (* override *)} k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
+                      (forall (k:nat).  k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent (as_initialized_seq file h0) c))
   = let h0 = ST.get () in
     recall_all_init file;
@@ -665,10 +665,10 @@ let lemma_partial_length_hiding
 	              let f1 = as_initialized_seq file1 h in
 	              sent_bytes f0 c0 from to h /\
 	              sent_bytes f1 c1 from to h /\
-	              (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==>
+	              (forall (i:nat).  (i >= from /\ i < to) ==>
 		                 xor (pad (Seq.index (log c0 h) i)) (rand0 i) ==
 	                         xor (pad (Seq.index (log c1 h) i)) (rand1 i))))))
-	 (ensures  (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==> (Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i) /\
+	 (ensures  (forall (i:nat).  (i >= from /\ i < to) ==> (Seq.index (ciphers c0 h) i == Seq.index (ciphers c1 h) i) /\
 	                                              Seq.index (tags c0 h) i == Seq.index (tags c1 h) i))
   = let S rand0 _ = c0 in
     let S rand1 _ = c1 in
@@ -676,7 +676,7 @@ let lemma_partial_length_hiding
     let ciphers1 = ciphers c1 h in
     let tags0 = tags c0 h in
     let tags1 = tags c1 h in
-    assert (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==> Seq.index ciphers0 i == xor (pad (Seq.index (log c0 h) i)) (rand0 i));
-    assert (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==> Seq.index ciphers1 i == xor (pad (Seq.index (log c1 h) i)) (rand1 i));
-    assert (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==> Seq.index tags0 i == mac (Seq.index ciphers0 i) i);
-    assert (forall (i:nat). {:nopattern (* override *)} (i >= from /\ i < to) ==> Seq.index tags1 i == mac (Seq.index ciphers1 i) i)
+    assert (forall (i:nat).  (i >= from /\ i < to) ==> Seq.index ciphers0 i == xor (pad (Seq.index (log c0 h) i)) (rand0 i));
+    assert (forall (i:nat).  (i >= from /\ i < to) ==> Seq.index ciphers1 i == xor (pad (Seq.index (log c1 h) i)) (rand1 i));
+    assert (forall (i:nat).  (i >= from /\ i < to) ==> Seq.index tags0 i == mac (Seq.index ciphers0 i) i);
+    assert (forall (i:nat).  (i >= from /\ i < to) ==> Seq.index tags1 i == mac (Seq.index ciphers1 i) i)

@@ -26,7 +26,7 @@ let rec in_tree x t =
   | Node n t1 t2 -> x = n || in_tree x t1 || in_tree x t2
 
 val all : p:(int -> Tot bool) -> t:tree ->
-            Tot (r:bool{r <==> (forall x. {:nopattern} in_tree x t ==> p x)})
+            Tot (r:bool{r <==> (forall x.  in_tree x t ==> p x)})
 let rec all p t =
   match t with
   | Leaf -> true
@@ -64,7 +64,7 @@ let rec search x t =
 
 val insert : x:int -> t:tree{is_bst t} ->
              Tot (r:tree{is_bst r /\
-                  (forall y. {:nopattern} in_tree y r <==> (in_tree y t \/ x = y))})
+                  (forall y.  in_tree y r <==> (in_tree y t \/ x = y))})
 let rec insert x t =
   match t with
   | Leaf -> Node x Leaf Leaf
@@ -76,7 +76,7 @@ let rec insert x t =
 val insert' : x:int -> t:tree -> Pure tree
                (requires (b2t (is_bst t)))
                (ensures (fun r -> is_bst r /\
-                 (forall y. {:nopattern} in_tree y r <==> (in_tree y t \/ x = y))))
+                 (forall y.  in_tree y r <==> (in_tree y t \/ x = y))))
 let rec insert' x t =
   match t with
   | Leaf -> Node x Leaf Leaf
@@ -100,7 +100,7 @@ let rec insert'' x t =
 
 val insert_lemma : x:int -> t:tree{is_bst t} -> Lemma
       (is_bst (insert'' x t) /\
-      (forall y. {:nopattern} in_tree y (insert'' x t) <==> in_tree y t \/ x = y))
+      (forall y.  in_tree y (insert'' x t) <==> in_tree y t \/ x = y))
 //AR: tightening a bit here, since works locally but fails on CI
 #push-options "--fuel 1 --ifuel 1"
 let rec insert_lemma x t = match t with
@@ -129,7 +129,7 @@ let find_max_eq t = find_max_lemma t
 
 val delete : x:int -> t:tree{is_bst t} ->
   Tot (r:tree{is_bst r /\ not (in_tree x r)  /\
-              (forall y. {:nopattern} x <> y ==> (in_tree y t = in_tree y r))}) (decreases t)
+              (forall y.  x <> y ==> (in_tree y t = in_tree y r))}) (decreases t)
 #set-options "--z3rlimit 15"
 let rec delete x t = match t with
   | Leaf -> Leaf
@@ -159,7 +159,7 @@ let rec delete' x t = match t with
 #set-options "--z3rlimit 20"
 val delete_lemma : x:int -> t:tree{is_bst t} ->
       Lemma (ensures (is_bst (delete' x t) /\ not (in_tree x (delete' x t)) /\
-        (forall y. {:nopattern} x <> y ==> (in_tree y (delete' x t) = in_tree y t))))
+        (forall y.  x <> y ==> (in_tree y (delete' x t) = in_tree y t))))
       (decreases t)
 let rec delete_lemma x t = match t with
   | Leaf -> ()

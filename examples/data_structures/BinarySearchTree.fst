@@ -26,7 +26,7 @@ let rec in_tree x t =
   | Node n t1 t2 -> x = n || in_tree x t1 || in_tree x t2
 
 val all : p:(int -> Tot bool) -> t:tree ->
-            Tot (r:bool{r <==> (forall x. {:nopattern} in_tree x t ==> p x)})
+            Tot (r:bool{r <==> (forall x.  in_tree x t ==> p x)})
 let rec all p t =
   match t with
   | Leaf -> true
@@ -49,7 +49,7 @@ let rec search x t =
                     else               search x t2
 
 val insert : x:int -> t:tree{is_bst t} ->
-  Tot (r:tree{is_bst r /\ (forall y. {:nopattern} in_tree y r <==> (in_tree y t \/ x = y))})
+  Tot (r:tree{is_bst r /\ (forall y.  in_tree y r <==> (in_tree y t \/ x = y))})
 let rec insert x t =
   match t with
   | Leaf -> Node x Leaf Leaf

@@ -41,7 +41,7 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
 let subcomp (a:Type u#uu) (w1 w2:wp a)
     (f : repr a w1)
 : Pure (repr a w2)
-       (requires (forall p. {:nopattern (* override *)} w2 p ==> w1 p))
+       (requires (forall p.  w2 p ==> w1 p))
        (ensures fun _ -> True)
 = f
 
@@ -94,7 +94,7 @@ effect {
 }
 
 effect Id (a:Type) (pre:Type0) (post:a->Type0) =
-        ID a (as_pure_wp (fun p -> pre /\ (forall x. {:nopattern (* override *)} post x ==> p x)))
+        ID a (as_pure_wp (fun p -> pre /\ (forall x.  post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
@@ -131,7 +131,7 @@ let rec pmap #a #b pre
   (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
   (l : list a)
   : Id (list b)
-       (requires (forall x. {:nopattern (* override *)} memP x l ==> pre x))
+       (requires (forall x.  memP x l ==> pre x))
        (ensures (fun _ -> True))
        (decreases l)
   = match l with
