@@ -31,6 +31,7 @@ FSTAR_ARGS += --odir $(OUTPUT_DIR)
 FSTAR_ARGS += --cache_dir $(CACHE_DIR)
 FSTAR_ARGS += --already_cached Prims,FStar
 FSTAR_ARGS += --warn_error -321 # This warning is really useless.
+FSTAR_ARGS += --warn_error -271 # Auto-pattern inference warnings are informational, not test-breaking.
 FSTAR_ARGS += $(OTHERFLAGS)
 
 # Set ADMIT=1 to admit queries

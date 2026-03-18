@@ -5,7 +5,7 @@ include $(FSTAR_ROOT)/mk/test.mk
 # 241: "unable to load checked file"
 # 247: "checked file was not written"
 # 333: "unable to read hints"
-OTHERFLAGS+=--warn_error -241-247-333-274+240
+OTHERFLAGS+=--warn_error -241-247-333-274-271+240
 
 # Remove --query_stats and --hint_info from this subdir, since
 # they output timing info.

@@ -46,7 +46,7 @@ new_effect {
 }
 
 (* Specification-less version of the memoization effect *)
-effect Memo (a:Type) = MEMO a (fun _ p -> forall z. p z)
+effect Memo (a:Type) = MEMO a (fun _ p -> forall z. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p z)
 
 (* Access to the whole heap (for verification-debugging purpose) *)
 private
@@ -71,7 +71,7 @@ let rec for_all_prop_assoc_lemma (#a:eqtype) (#b:Type) (x:a) (p : (a & b) -> Tot
   | (x0, y0) :: xs -> if x0 = x then () else for_all_prop_assoc_lemma x p xs
 
 let forall_prop_assoc_lemma2 (#a:eqtype) (#b:Type) (x:a) (y:b) (p : (a & b) -> Tot Type0)
-  : Lemma (forall h. for_all_prop p h /\ List.assoc x h == Some y ==> p (x,y))
+  : Lemma (forall h. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} for_all_prop p h /\ List.assoc x h == Some y ==> p (x,y))
 = let aux h : Lemma (requires (for_all_prop p h /\ List.assoc x h == Some y)) (ensures (p (x,y))) =
     for_all_prop_assoc_lemma x p h
   in
@@ -119,7 +119,7 @@ let rec memo_heap_id (#f:dom -> Tot codom) (h0:memo_heap f)
 (* [f `computes` g] when the memoized function [f] computes the same total/pure *)
 (* function as [g] provided the heap contains only [g]-relevant elements *)
 let computes (#p:dom -> Tot Type0) ($f: (x:dom{p x} -> Memo codom)) (g:dom -> Tot codom) =
-      forall h0. valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (f x) h0 in y == g x /\ valid_memo h1 g))
+      forall h0. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} valid_memo h0 g ==> (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p x ==> (let y ,h1 = reify (f x) h0 in y == g x /\ valid_memo h1 g))
 
 
 noeq
@@ -150,7 +150,7 @@ let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom & mem
 
 (* Memoization of a pure function with a complete specification *)
 
-let memo_ (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> valid_memo h0 f /\ (forall h. valid_memo h f ==> p (f x, h)))
+let memo_ (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> valid_memo h0 f /\ (forall h. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} valid_memo h f ==> p (f x, h)))
 = match MEMO?.get x with
   | Some y ->
     forall_prop_assoc_lemma2 x y (fun (x,y) -> y == f x) ;
@@ -185,7 +185,7 @@ let memo_extr_computes (f:dom -> Tot codom) : Lemma ((memo_extr f) `computes` f)
     give_proof vm ; memo_extr_lemma f x h0
   in
   forall_impl_intro (fun (h0:heap) (vm:squash(valid_memo h0 f)) -> forall_intro (phi0 h0 vm) <:
-    Lemma (forall x. let y, h1 = reify (memo_extr f x) h0 in y == f x /\ valid_memo h1 f))
+    Lemma (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} let y, h1 = reify (memo_extr f x) h0 in y == f x /\ valid_memo h1 f))
 
 let to_memo_pack (f : dom -> Tot codom) : Tot (memo_pack f) =
   memo_extr_computes f ;
@@ -226,17 +226,17 @@ let memo_extr_p_computes (p:dom -> Type0) (f: (x:dom{p x} -> Memo codom)) (g:dom
     give_proof vm ;
     memo_extr_p_lemma p f g h0 x
   in
-  let phi1 (fcg:squash(f `computes` g)) (h0:heap) () : Lemma (requires (valid_memo h0 g)) (ensures (forall x. p x ==> (let (y, h1) = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g))) =
+  let phi1 (fcg:squash(f `computes` g)) (h0:heap) () : Lemma (requires (valid_memo h0 g)) (ensures (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p x ==> (let (y, h1) = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g))) =
     FStar.Classical.forall_intro (phi0 fcg h0 (get_proof (valid_memo h0 g)))
   in
   let phi2 fcg (h0:heap)
-    : Lemma (valid_memo h0 g ==> (forall x. p x ==> (let y ,h1 = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
+    : Lemma (valid_memo h0 g ==> (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p x ==> (let y ,h1 = reify (memo_extr_p p f x) h0 in y == g x /\ valid_memo h1 g)))
   = FStar.Classical.move_requires (phi1 fcg h0) () in
   FStar.Classical.forall_intro (phi2 (get_proof (f `computes` g)))
 
 
 (* (*  *) *)
-(* let memo_extr (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> (forall z. p z)) *)
+(* let memo_extr (f : dom -> Tot codom) (x:dom) : MEMO codom (fun h0 p -> (forall z. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p z)) *)
 (* = memo_extr_p (fun _ -> True) f x *)
 
 (* (\* Should work but does not... *\) *)
@@ -332,7 +332,7 @@ let valid_memo_rec (h:heap) (f: (x:dom -> Tot (partial_result x))) = for_all_pro
 
 unfold
 let memo_rec_wp (f: (x:dom -> Tot (partial_result x))) (x0:dom) (h0:heap) (p:(codom & heap) -> Type0) : Tot Type0=
-  valid_memo_rec h0 f /\ (forall h. valid_memo_rec h f ==> p (fixp f x0, h))
+  valid_memo_rec h0 f /\ (forall h. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} valid_memo_rec h f ==> p (fixp f x0, h))
 
 let valid_memo_rec_lemma
   (f: (x:dom -> Tot (partial_result x)))
@@ -436,7 +436,7 @@ let rec complete_memo_rec_extr_computes :
       memo_rec_extr_computes f x' h0
     in
     let compute_lemma1 (h0:heap) (vm:squash(valid_memo h0 (fixp f)))
-      : Lemma (forall x'. p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in y == fixp f x' /\ valid_memo h1 (fixp f)))
+      : Lemma (forall x'. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} p x px x' ==> (let y, h1 = reify (memo_rec_extr_temp f x px x') h0 in y == fixp f x' /\ valid_memo h1 (fixp f)))
     = forall_impl_intro (compute_lemma0 h0 vm)
     in
     forall_impl_intro compute_lemma1 ;
@@ -467,7 +467,7 @@ let memo_rec_lemma (f:(x:dom) -> partial_result x)
   = give_proof vm ; memo_rec_extr_computes f x h0
   in
   forall_impl_intro (fun (h0:heap) (vm:squash(valid_memo h0 (fixp f))) -> forall_intro (phi0 h0 vm) <:
-    Lemma (forall x. let y, h1 = reify (memo_rec_extr f x) h0 in y == fixp f x /\ valid_memo h1 (fixp f)))
+    Lemma (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} let y, h1 = reify (memo_rec_extr f x) h0 in y == fixp f x /\ valid_memo h1 (fixp f)))
 
 
 let to_memo_pack_rec (#g:dom -> Tot codom) 
@@ -499,7 +499,7 @@ let rec complete_fixp_eq_proof
     fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont (fixp f x1))
 
 unfold
-let fixp_eq_proof f g = forall x. complete_fixp_eq_proof f g x (f x)
+let fixp_eq_proof f g = forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} complete_fixp_eq_proof f g x (f x)
 
 
 let rec complete_fixp_eq
@@ -509,7 +509,7 @@ let rec complete_fixp_eq
   (px:partial_result x)
   : Lemma (requires (fpartial_result x f px /\
                     complete_fixp_eq_proof f g x px /\
-                    (forall x0. complete_fixp_eq_proof f g x0 (f x0))))
+                    (forall x0. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} complete_fixp_eq_proof f g x0 (f x0))))
                     (ensures (fixp f x == g x))
                     (decreases %[x ; 0 ; px])
 =
@@ -530,7 +530,7 @@ and fixp_eq'
 
 
 let fixp_eq (f: (x:dom -> Tot (partial_result x))) (g:dom -> Tot codom)
-  : Lemma (requires (fixp_eq_proof f g)) (ensures (forall x. fixp f x == g x))
+  : Lemma (requires (fixp_eq_proof f g)) (ensures (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} fixp f x == g x))
 =
   let h = get_proof (fixp_eq_proof f g) in
   let f x : Lemma (fixp f x = g x) = give_proof h ; fixp_eq' f g x in
@@ -581,14 +581,14 @@ let fibo_complete_fixp_eq_proof (x:dom)
     in
     move_requires f1 ()
 
-let fibonnacci_partial_induces_fibonnacci () : Lemma (forall x. fibonnacci_ x == fibonnacci x) =
+let fibonnacci_partial_induces_fibonnacci () : Lemma (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} fibonnacci_ x == fibonnacci x) =
   forall_intro fibo_complete_fixp_eq_proof ; fixp_eq fibonnacci_partial fibonnacci
 
 unfold
 let computes_body (f:dom -> Memo codom) (g:dom -> Tot codom) (h0:heap) (x:dom) =
   let (y, h1) = reify (f x) h0 in y == g x /\ valid_memo h1 g
 
-let rec valid_memo_extensionality g0 g1 h : Lemma (requires (forall x. g0 x == g1 x) /\ valid_memo h g0) (ensures (valid_memo h g1)) (decreases h)
+let rec valid_memo_extensionality g0 g1 h : Lemma (requires (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} g0 x == g1 x) /\ valid_memo h g0) (ensures (valid_memo h g1)) (decreases h)
 =
   match h with
   | [] -> ()
@@ -597,13 +597,13 @@ let rec valid_memo_extensionality g0 g1 h : Lemma (requires (forall x. g0 x == g
 
 let computes_extensionality (f : (x:dom -> Memo codom))
                             (g0 g1: dom -> Tot codom)
-  : Lemma (requires (f `computes` g0 /\ (forall x. g0 x == g1 x))) (ensures (f `computes`g1))
+  : Lemma (requires (f `computes` g0 /\ (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} g0 x == g1 x))) (ensures (f `computes`g1))
 =
   let phi (h0:heap) (vm:squash(valid_memo h0 g0)) (x:dom) : Lemma (computes_body f g1 h0 x) =
     give_proof vm ; assert (computes_body f g0 h0 x) ; assert (g0 x == g1 x) ;
     let (y, h1) = reify (f x) h0 in valid_memo_extensionality g0 g1 h1
   in
-  let phi' (h0:heap) (vm:squash(valid_memo h0 g1)) : Lemma (forall x. computes_body f g1 h0 x) =
+  let phi' (h0:heap) (vm:squash(valid_memo h0 g1)) : Lemma (forall x. {:nopattern (* memo proof needs Z3 auto-pattern choice *)} computes_body f g1 h0 x) =
     give_proof vm; valid_memo_extensionality g1 g0 h0 ;
     forall_intro (phi h0 (get_proof (valid_memo h0 g0)))
   in

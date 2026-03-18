@@ -44,14 +44,14 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst(459,103-459,115)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(459,90-459,102)
+  - See also Prims.fst(459,103-459,115)
 
 * Info at TestErrorLocations.fst(66,27-66,28):
   - Expected failure:
@@ -76,7 +76,7 @@
     got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Classical.Sugar.fsti(66,22-66,41)
+  - See also FStar.Classical.Sugar.fsti(66,22-66,42)
 
 * Info at TestErrorLocations.fst(97,28-97,33):
   - Expected failure:

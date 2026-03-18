@@ -455,7 +455,7 @@ val lemma_map_blocks_multi_vec_equiv_pre_k:
   -> f_v:(i:nat{i < n} -> lseq a (w * blocksize) -> lseq a (w * blocksize))
   -> i:nat{i < n}
   -> b_v:lseq a (w * blocksize)
-  -> pre:squash (forall (k:nat{k < w * blocksize}). map_blocks_multi_vec_equiv_pre_k w blocksize n (w * n) f f_v i b_v k)
+  -> pre:squash (forall (k:nat{k < w * blocksize}). {:nopattern (* inferred pattern disrupts calc proof *)} map_blocks_multi_vec_equiv_pre_k w blocksize n (w * n) f f_v i b_v k)
   -> acc_v:map_blocks_a a (w * blocksize) n i ->
   Lemma (map_blocks_multi_vec_equiv_pre #a w blocksize n hi_f f f_v i b_v acc_v)
 

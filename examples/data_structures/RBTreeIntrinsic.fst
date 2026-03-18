@@ -311,7 +311,7 @@ let rec mem_to_min #h #c z = function
 val almostNode_mem_to_max : #h:nat -> z:int -> n:almostNode h ->
   Lemma 
   //nopattern: without it, almostNode_mem/mem auto-pattern causes a matching loop
-  (requires forall y. {:nopattern} almostNode_mem y n ==> y <= z) 
+  (requires forall y. {:nopattern (* almostNode_mem pattern causes matching loop with recursive mem *)} almostNode_mem y n ==> y <= z) 
   (ensures  atMost z (almostNode_max n)) 
   (decreases n)
 let almostNode_mem_to_max #h z = function
@@ -322,7 +322,7 @@ let almostNode_mem_to_max #h z = function
 val almostNode_mem_to_min : #h:nat -> z:int -> n:almostNode h ->
   Lemma 
   //nopattern: without it, almostNode_mem/mem auto-pattern causes a matching loop
-  (requires forall y. {:nopattern} almostNode_mem y n ==> y >= z)
+  (requires forall y. {:nopattern (* almostNode_mem pattern causes matching loop *)} almostNode_mem y n ==> y >= z)
   (ensures  atLeast z (almostNode_min n)) 
   (decreases n)
 let almostNode_mem_to_min #h z = function
@@ -333,7 +333,7 @@ let almostNode_mem_to_min #h z = function
 val hiddenTree_mem_to_max : #h:nat -> z:int -> n:hiddenTree h ->
   Lemma 
   //nopattern: without it, hiddenTree_mem/mem auto-pattern causes a matching loop
-  (requires forall y. {:nopattern} hiddenTree_mem y n ==> y <= z)
+  (requires forall y. {:nopattern (* hiddenTree_mem pattern causes matching loop *)} hiddenTree_mem y n ==> y <= z)
   (ensures  atMost z (hiddenTree_max n))
   (decreases n)
 let hiddenTree_mem_to_max #h z = function
@@ -343,7 +343,7 @@ let hiddenTree_mem_to_max #h z = function
 val hiddenTree_mem_to_min : #h:nat -> z:int -> n:hiddenTree h ->
   Lemma 
   //nopattern: without it, hiddenTree_mem/mem auto-pattern causes a matching loop
-  (requires forall y. {:nopattern} hiddenTree_mem y n ==> y >= z) 
+  (requires forall y. {:nopattern (* hiddenTree_mem pattern causes matching loop *)} hiddenTree_mem y n ==> y >= z) 
   (ensures  atLeast z (hiddenTree_min n)) 
   (decreases n)
 let hiddenTree_mem_to_min #h z = function

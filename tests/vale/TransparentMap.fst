@@ -41,7 +41,7 @@ type equal (#key:eqtype) (#value:Type) (m1: map key value) (m2: map key value) =
   feq m1 m2
 
 val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:map key value -> m2:map key value ->
-                       Lemma (requires (forall k. sel m1 k == sel m2 k))
+                       Lemma (requires (forall k. {:nopattern (* inferred pattern on sel disrupts map extensionality *)} sel m1 k == sel m2 k))
                        (ensures (equal m1 m2))
                        [SMTPat (equal m1 m2)]
 
