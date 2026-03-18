@@ -2,7 +2,7 @@ module Sec2.IFC
 open FStar.List.Tot
 open FStar.Map
 let loc = int
-type store = m:Map.t loc int{forall l. {:nopattern (* override *)} contains m l}
+type store = m:Map.t loc int{forall l.  contains m l}
 let upd (s:store) (l:loc) (x:int) : store = Map.upd s l x
 let sel (s:store) (l:loc) : int = Map.sel s l
 open FStar.Set
@@ -11,7 +11,7 @@ let label_inclusion (l0 l1:label) = Set.subset l0 l1
 let bot : label = Set.empty
 let single (l:loc) : label = Set.singleton l
 let union (l0 l1:label) = Set.union l0 l1
-let is_empty #a (s:Set.set a) = forall (x:a). {:nopattern (* override *)} ~ (Set.mem x s)
+let is_empty #a (s:Set.set a) = forall (x:a).  ~ (Set.mem x s)
 let comp a = store -> a & store
 let havoc s l x = upd s l x
 let does_not_read_loc_v #a (f:comp a) (reads:label) (l:loc) (s0:store) v =
@@ -19,7 +19,7 @@ let does_not_read_loc_v #a (f:comp a) (reads:label) (l:loc) (s0:store) v =
     let x1, s1 = f s0 in
     let x1', s1' = f s0' in
     x1 == x1' /\ //result does not depend on l
-    (forall l'. {:nopattern (* override *)} l' <> l ==>                 //for every location l' not equal to l
+    (forall l'. {:nopattern (* override *)} l' <> l ==>                 //nopattern: prevents matching loop with sel
            sel s1 l' == sel s1' l') /\ //its value in the two states is the same
     (sel s1 l == sel s1' l \/          //and l is itself may be written, in which case its value is the same in both final states
                                       //or its not, but then its values in the initial and final states are the same on both sides
@@ -27,13 +27,14 @@ let does_not_read_loc_v #a (f:comp a) (reads:label) (l:loc) (s0:store) v =
      sel s1' l == sel s0' l))
 
 let does_not_read_loc #a (f:comp a) (reads:label) (l:loc) (s0:store) =
+  //nopattern: prevents matching loop with does_not_read_loc_v
   forall v. {:nopattern (* override *)}
     does_not_read_loc_v f reads l s0 v
 let reads_ok #a (f:comp a) (reads:label) =
-    (forall (l:loc) (s:store). {:nopattern (* override *)} ~(Set.mem l reads) ==> does_not_read_loc f reads l s)
+    (forall (l:loc) (s:store).  ~(Set.mem l reads) ==> does_not_read_loc f reads l s)
 let writes_ok #a (f:comp a) (writes:Set.set loc) =
-    (forall (l:loc). {:nopattern (* override *)} ~(Set.mem l writes) ==>
-               (forall (s0:store). {:nopattern (* override *)}
+    (forall (l:loc).  ~(Set.mem l writes) ==>
+               (forall (s0:store). 
                  let x1, s0' = f s0 in
                  sel s0 l == sel s0' l))
 let flow = label & label //from, to
@@ -41,9 +42,10 @@ let flows = list flow
 let add_source (r:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> union r r0, w0) fs
 let add_sink (w:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> r0, union w w0) fs
 let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
-let has_flow (from to:loc) (fs:flows) = (exists rs. {:nopattern (* override *)} rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
+let has_flow (from to:loc) (fs:flows) = (exists rs. {:nopattern (* override *)} rs `List.Tot.memP` fs /\ has_flow_1 from to rs) //nopattern: prevents memP matching loop
 let flows_included_in (fs0 fs1:flows) =
-  forall f0. {:nopattern (* override *)} f0 `List.Tot.memP` fs0 ==>
+  forall f0.  f0 `List.Tot.memP` fs0 ==>
+        //nopattern: prevents matching loops with has_flow_1 and memP
         (forall from to. {:nopattern (* override *)} has_flow_1 from to f0 /\ from <> to ==> (exists f1. {:nopattern (* override *)} f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
 let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
 let flows_equiv_refl fs
@@ -64,7 +66,7 @@ let flows_included_in_union (a b c:label)
   = ()
 let no_leakage_k #a (f:comp a) (from to:loc) (k:int) =
   forall s0.{:pattern (havoc s0 from k)} sel (snd (f s0)) to == (sel (snd (f (havoc s0 from k))) to)
-let no_leakage #a (f:comp a) (from to:loc) = forall k. {:nopattern (* override *)} no_leakage_k f from to k
+let no_leakage #a (f:comp a) (from to:loc) = forall k. {:nopattern (* override *)} no_leakage_k f from to k //nopattern: prevents matching loop with no_leakage_k
 let respects_flows #a (f:comp a) (fs:flows) =
     (forall from to. {:pattern (no_leakage f from to)} ~(has_flow from to fs) /\ from<>to ==> no_leakage f from to)
 let ist a (writes:label) (reads:label) (fs:flows) =
@@ -314,7 +316,7 @@ let flows_included_append (f0 f1 g0 g1:flows)
     : Lemma (requires List.Tot.memP f (f0@f1) /\
                       from <> to /\
                       has_flow_1 from to f)
-            (ensures (exists g. {:nopattern (* override *)} g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
+            (ensures (exists g.  g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
             [SMTPat (has_flow_1 from to f)]
     = memP_append_or f f0 f1;
       assert (exists g. g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
