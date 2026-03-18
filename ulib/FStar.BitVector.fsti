@@ -93,10 +93,10 @@ val lemma_xor_bounded (m: pos) (n: nat) (x y: bv_t m)
     : Lemma
       (requires
         (forall (i: nat).
-            {:nopattern (* uninferrable *)} (i < m /\ i >= n) ==>
+             (i < m /\ i >= n) ==>
             (index x (m - 1 - i) = false /\ index y (m - 1 - i) = false)))
       (ensures
-        (forall (i: nat). {:nopattern (* uninferrable *)} (i < m /\ i >= n) ==> (index (logxor_vec x y) (m - 1 - i) = false)))
+        (forall (i: nat).  (i < m /\ i >= n) ==> (index (logxor_vec x y) (m - 1 - i) = false)))
 
 (** The property that the zero bits of b are also zero in a.
     I.e. that a is a subset of b. *)

@@ -15,7 +15,7 @@
 *)
 module FStar.Tactics.Logic.Lemmas
 
-let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). {:nopattern (* uninferrable *)} p x) =
+let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a).  p x) =
   FStar.Classical.lemma_forall_intro_gtot
     ((fun x -> FStar.IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
 
@@ -43,25 +43,25 @@ let __and_elim' #p #q #phi p_and_q f = ()
 
 let __witness #a x #p _ = ()
 
-let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. {:nopattern (* uninferrable *)} pred x))
+let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x.  pred x))
                           (k : (x:t -> pred x -> squash goal)) : squash goal =
   FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
 
-let __forall_inst #t (#pred : t -> Type0) (h : (forall x. {:nopattern (* uninferrable *)} pred x)) (x : t) : squash (pred x) =
+let __forall_inst #t (#pred : t -> Type0) (h : (forall x.  pred x)) (x : t) : squash (pred x) =
     ()
 
-let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. {:nopattern (* uninferrable *)} pred x)) (x : t) : squash (pred x) =
+let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x.  pred x)) (x : t) : squash (pred x) =
     ()
 
-let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). {:nopattern (* uninferrable *)} p x)) (phi:Type0) :
-  Lemma (requires (forall x. {:nopattern (* uninferrable *)} p x ==> phi))
+let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a).  p x)) (phi:Type0) :
+  Lemma (requires (forall x.  p x ==> phi))
         (ensures phi) = ()
 
 let lemma_from_squash #a #b f x = let _ = f x in assert (b x)
 
 let lem1_fa #a #pre #post
   ($lem : (x:a -> Lemma (requires pre x) (ensures post x))) :
-  Lemma (forall (x:a). {:nopattern (* uninferrable *)} pre x ==> post x) =
+  Lemma (forall (x:a).  pre x ==> post x) =
   let l' x : Lemma (pre x ==> post x) =
     Classical.move_requires lem x
   in
@@ -69,7 +69,7 @@ let lem1_fa #a #pre #post
 
 let lem2_fa #a #b #pre #post
   ($lem : (x:a -> y:b -> Lemma (requires pre x y) (ensures post x y))) :
-  Lemma (forall (x:a) (y:b). {:nopattern (* uninferrable *)} pre x y ==> post x y) =
+  Lemma (forall (x:a) (y:b).  pre x y ==> post x y) =
   let l' x y : Lemma (pre x y ==> post x y) =
     Classical.move_requires (lem x) y
   in
@@ -77,10 +77,10 @@ let lem2_fa #a #b #pre #post
 
 let lem3_fa #a #b #c #pre #post
   ($lem : (x:a -> y:b -> z:c -> Lemma (requires pre x y z) (ensures post x y z))) :
-  Lemma (forall (x:a) (y:b) (z:c). {:nopattern (* uninferrable *)} pre x y z ==> post x y z) =
+  Lemma (forall (x:a) (y:b) (z:c).  pre x y z ==> post x y z) =
   let l' x y z : Lemma (pre x y z ==> post x y z) =
     Classical.move_requires (lem x y) z
   in
   Classical.forall_intro_3 l'
 
-let revert_squash #a #b s x = let x : (_:unit{forall x. {:nopattern (* uninferrable *)} b x}) = s in ()
+let revert_squash #a #b s x = let x : (_:unit{forall x.  b x}) = s in ()

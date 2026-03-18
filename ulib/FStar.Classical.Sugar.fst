@@ -22,7 +22,7 @@ let forall_elim
        (#a:Type)
        (#p:a -> Type)
        (v:a)
-       (f:squash (forall (x:a). {:nopattern (* uninferrable *)} p x))
+       (f:squash (forall (x:a).  p x))
   : Tot (squash (p v))
   = ()
 
@@ -80,7 +80,7 @@ let forall_intro
       (a:Type)
       (p:a -> Type)
       (f: (x:a -> Tot (squash (p x))))
-  : Tot (squash (forall x. {:nopattern (* uninferrable *)} p x))
+  : Tot (squash (forall x.  p x))
   = let open FStar.Squash in
     let f' (x:a)
       : GTot (squash (p x))
@@ -93,7 +93,7 @@ let exists_intro_simple
         (p:a -> Type)
         (v:a)
         (f: squash (p v))
-  : Tot (squash (exists x. {:nopattern (* uninferrable *)} p x))
+  : Tot (squash (exists x.  p x))
   = let open FStar.Squash in
     let p = (| v, f |) in
     squash_double_sum (return_squash p)
@@ -103,7 +103,7 @@ let exists_intro
         (p:a -> Type)
         (v:a)
         (f: unit -> Tot (squash (p v)))
-  : Tot (squash (exists x. {:nopattern (* uninferrable *)} p x))
+  : Tot (squash (exists x.  p x))
   = exists_intro_simple a p v (f())
 
 

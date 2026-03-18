@@ -35,7 +35,7 @@ module FStar.PropositionalExtensionality
 
 assume
 val axiom (_:unit)
-  : Lemma (forall (p1 p2:prop). {:nopattern (* uninferrable *)} (p1 <==> p2) <==> (p1 == p2))
+  : Lemma (forall (p1 p2:prop).  (p1 <==> p2) <==> (p1 == p2))
 
 let apply (p1 p2:prop)
   : Lemma (ensures  ((p1 <==> p2) <==> (p1 == p2)))

@@ -29,7 +29,7 @@ type tac_wp_t0 (a:Type) =
 unfold
 let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
   forall (p q:a -> Type0).
-    {:nopattern (* uninferrable *)} (forall x. {:nopattern (* uninferrable *)} p x ==> q x) ==> (wp p ==> wp q)
+     (forall x.  p x ==> q x) ==> (wp p ==> wp q)
 
 type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
 
@@ -53,7 +53,7 @@ let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t
 unfold
 let tac_wp_compact (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
   fun post ->
-  forall (k:a -> Type0). {:nopattern (* uninferrable *)} (forall (r:a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp k
+  forall (k:a -> Type0).  (forall (r:a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp k
 
 
 (* monadic bind *)
@@ -87,7 +87,7 @@ let tac_subcomp (a:Type)
   (wp_g:tac_wp_t a)
   (f:tac_repr a wp_f)
   : Pure (tac_repr a wp_g)
-         (requires forall p. {:nopattern (* uninferrable *)} wp_g p ==> wp_f p)
+         (requires forall p.  wp_g p ==> wp_f p)
          (ensures fun _ -> True)
   = f
 
@@ -95,7 +95,7 @@ let tac_close (a b:Type)
   (wp_f:b -> tac_wp_t a)
   (f:(x:b -> tac_repr a (wp_f x))) =
 
-  tac_repr a (fun post -> forall (x:b). {:nopattern (* uninferrable *)} wp_f x post)
+  tac_repr a (fun post -> forall (x:b).  wp_f x post)
 
 /// default effect is Tac : meaning, unannotated TAC functions will be
 ///                         typed as Tac a
@@ -114,7 +114,7 @@ effect {
 
 (* Hoare variant *)
 effect TacH (a:Type) (pre : Type0) (post : a -> Tot Type0) =
-    TAC a (fun post' -> pre /\ (forall r. {:nopattern (* uninferrable *)} post r ==> post' r))
+    TAC a (fun post' -> pre /\ (forall r.  post r ==> post' r))
 
 (* "Total" variant *)
 effect Tac (a:Type) = TacH a (requires True) (ensures fun _ -> True)

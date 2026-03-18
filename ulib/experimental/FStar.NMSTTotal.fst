@@ -53,8 +53,8 @@ let bind
       (f:repr a state rel req_f ens_f)
       (g:(x:a -> repr b state rel (req_g x) (ens_g x)))
     : repr b state rel
-      (fun s0 -> req_f s0 /\ (forall x s1. {:nopattern (* uninferrable *)} ens_f s0 x s1 ==> (req_g x) s1))
-      (fun s0 r s2 -> req_f s0 /\ (exists x s1. {:nopattern (* uninferrable *)} ens_f s0 x s1 /\ (req_g x) s1 /\ (ens_g x) s1 r s2))
+      (fun s0 -> req_f s0 /\ (forall x s1.  ens_f s0 x s1 ==> (req_g x) s1))
+      (fun s0 r s2 -> req_f s0 /\ (exists x s1.  ens_f s0 x s1 /\ (req_g x) s1 /\ (ens_g x) s1 r s2))
     =
   fun (t, n) ->
     let x, n1 = f (t, n) in
@@ -71,8 +71,8 @@ let subcomp
       (f:repr a state rel req_f ens_f)
     : Pure (repr a state rel req_g ens_g)
       (requires
-        (forall s. {:nopattern (* uninferrable *)} req_g s ==> req_f s) /\
-        (forall s0 x s1. {:nopattern (* uninferrable *)} (req_g s0 /\ ens_f s0 x s1) ==> ens_g s0 x s1))
+        (forall s.  req_g s ==> req_f s) /\
+        (forall s0 x s1.  (req_g s0 /\ ens_f s0 x s1) ==> ens_g s0 x s1))
       (ensures fun _ -> True)
     =
   f

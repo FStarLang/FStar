@@ -363,7 +363,7 @@ and pat_arg_cmp (p1, b1) (p2, b2) =
 
 let defined r = ~(Unknown? r)
 
-let def2 f l1 l2 =(forall x y. {:nopattern (* uninferrable *)} L.memP x l1 /\ L.memP y l2 ==> defined (f x y))
+let def2 f l1 l2 =(forall x y.  L.memP x l1 /\ L.memP y l2 ==> defined (f x y))
 
 let rec defined_list #a (f : comparator_for a) (l1 l2 : list a)
   : Lemma (requires (def2 f l1 l2)) (ensures defined (list_cmp f l1 l2))

@@ -40,10 +40,10 @@ module FLT = FStar.List.Tot
 open FStar.FunctionalExtensionality
 
 let has_elements (#a: eqtype) (f: a ^-> bool) (xs: list a): prop =
-  forall x. {:nopattern} f x == x `FLT.mem` xs
+  forall x.  f x == x `FLT.mem` xs
 
 // Finite sets
-type set (a: eqtype) = f:(a ^-> bool){exists xs. {:nopattern} f `has_elements` xs}
+type set (a: eqtype) = f:(a ^-> bool){exists xs.  f `has_elements` xs}
 
 /// We represent the Dafny function [] on sets with `mem`:
 
@@ -55,13 +55,13 @@ let mem (#a: eqtype) (x: a) (s: set a) : bool =
 /// function Set#Card<T>(Set T): int;
 
 let rec remove_repeats (#a: eqtype) (xs: list a)
-: (ys: list a{list_nonrepeating ys /\ (forall y. {:nopattern} FLT.mem y ys <==> FLT.mem y xs)}) =
+: (ys: list a{list_nonrepeating ys /\ (forall y.  FLT.mem y ys <==> FLT.mem y xs)}) =
   match xs with
   | [] -> []
   | hd :: tl -> let tl' = remove_repeats tl in if FLT.mem hd tl then tl' else hd :: tl'
 
-let set_as_list (#a: eqtype) (s: set a): GTot (xs: list a{list_nonrepeating xs /\ (forall x. {:nopattern} FLT.mem x xs = mem x s)}) =
-  remove_repeats (FStar.IndefiniteDescription.indefinite_description_ghost (list a) (fun xs -> forall x. {:nopattern} FLT.mem x xs = mem x s))
+let set_as_list (#a: eqtype) (s: set a): GTot (xs: list a{list_nonrepeating xs /\ (forall x.  FLT.mem x xs = mem x s)}) =
+  remove_repeats (FStar.IndefiniteDescription.indefinite_description_ghost (list a) (fun xs -> forall x.  FLT.mem x xs = mem x s))
 
 [@"opaque_to_smt"]
 let cardinality (#a: eqtype) (s: set a) : GTot nat =
@@ -96,7 +96,7 @@ let singleton (#a: eqtype) (x: a) : set a =
 ///
 /// function Set#Union<T>(Set T, Set T): Set T;
 
-let rec union_lists (#a: eqtype) (xs: list a) (ys: list a) : (zs: list a{forall z. {:nopattern} FLT.mem z zs <==> FLT.mem z xs \/ FLT.mem z ys}) =
+let rec union_lists (#a: eqtype) (xs: list a) (ys: list a) : (zs: list a{forall z.  FLT.mem z zs <==> FLT.mem z xs \/ FLT.mem z ys}) =
   match xs with
   | [] -> ys
   | hd :: tl -> hd :: union_lists tl ys
@@ -109,7 +109,7 @@ let union (#a: eqtype) (s1: set a) (s2: set a) : (set a) =
 /// function Set#Intersection<T>(Set T, Set T): Set T;
 
 let rec intersect_lists (#a: eqtype) (xs: list a) (ys: list a)
-: (zs: list a{forall z. {:nopattern} FLT.mem z zs <==> FLT.mem z xs /\ FLT.mem z ys}) =
+: (zs: list a{forall z.  FLT.mem z zs <==> FLT.mem z xs /\ FLT.mem z ys}) =
   match xs with
   | [] -> []
   | hd :: tl -> let zs' = intersect_lists tl ys in if FLT.mem hd ys then hd :: zs' else zs'
@@ -122,7 +122,7 @@ let intersection (#a: eqtype) (s1: set a) (s2: set a) : set a =
 /// function Set#Difference<T>(Set T, Set T): Set T;
 
 let rec difference_lists (#a: eqtype) (xs: list a) (ys: list a)
-: (zs: list a{forall z. {:nopattern} FLT.mem z zs <==> FLT.mem z xs /\ ~(FLT.mem z ys)}) =
+: (zs: list a{forall z.  FLT.mem z zs <==> FLT.mem z xs /\ ~(FLT.mem z ys)}) =
   match xs with
   | [] -> []
   | hd :: tl -> let zs' = difference_lists tl ys in if FLT.mem hd ys then zs' else hd :: zs'
@@ -135,7 +135,7 @@ let difference (#a: eqtype) (s1: set a) (s2: set a) : set a =
 /// function Set#Subset<T>(Set T, Set T): bool;
 
 let subset (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
-  forall x. {:nopattern} (s1 x = true) ==> (s2 x = true)
+  forall x.  (s1 x = true) ==> (s2 x = true)
 
 /// We represent the Dafny function `Set#Equal` with `equal`:
 ///
@@ -149,13 +149,13 @@ let equal (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
 /// function Set#Disjoint<T>(Set T, Set T): bool;
 
 let disjoint (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
-  forall x. {:nopattern} not (s1 x && s2 x)
+  forall x.  not (s1 x && s2 x)
 
 /// We represent the Dafny choice operator by `choose`:
 ///
 /// var x: T :| x in s;
 
-let choose (#a: eqtype) (s: set a{exists x. {:nopattern} mem x s}) : GTot (x: a{mem x s}) =
+let choose (#a: eqtype) (s: set a{exists x.  mem x s}) : GTot (x: a{mem x s}) =
   Cons?.hd (set_as_list s)
 
 /// We now prove each of the facts that comprise `all_finite_set_facts`.
@@ -168,7 +168,7 @@ let empty_set_contains_no_elements_lemma ()
 
 let length_zero_lemma ()
 : Lemma (length_zero_fact) =
-  introduce forall (a: eqtype) (s: set a). (cardinality s = 0 <==> s == emptyset) /\ (cardinality s <> 0 <==> (exists x. {:nopattern} mem x s))
+  introduce forall (a: eqtype) (s: set a). (cardinality s = 0 <==> s == emptyset) /\ (cardinality s <> 0 <==> (exists x.  mem x s))
   with (
     reveal_opaque (`%cardinality) (cardinality #a);
     introduce cardinality s = 0 ==> s == emptyset
@@ -189,7 +189,7 @@ let singleton_contains_lemma ()
   ()
 
 let rec singleton_cardinality_helper (#a: eqtype) (r: a) (xs: list a)
-: Lemma (requires FLT.mem r xs /\ (forall x. {:nopattern} FLT.mem x xs <==> x = r))
+: Lemma (requires FLT.mem r xs /\ (forall x.  FLT.mem x xs <==> x = r))
         (ensures  remove_repeats xs == [r]) =
   match xs with
   | [x] -> ()
@@ -220,12 +220,12 @@ let insert_contains_lemma ()
 let rec remove_from_nonrepeating_list (#a: eqtype) (x: a) (xs: list a{FLT.mem x xs /\ list_nonrepeating xs})
 : (xs': list a{  list_nonrepeating xs'
                /\ FLT.length xs' = FLT.length xs - 1
-               /\ (forall y. {:nopattern} FLT.mem y xs' <==> FLT.mem y xs /\ y <> x)}) =
+               /\ (forall y.  FLT.mem y xs' <==> FLT.mem y xs /\ y <> x)}) =
   match xs with
   | hd :: tl -> if x = hd then tl else hd :: (remove_from_nonrepeating_list x tl)
 
 let rec nonrepeating_lists_with_same_elements_have_same_length (#a: eqtype) (s1: list a) (s2: list a)
-: Lemma (requires list_nonrepeating s1 /\ list_nonrepeating s2 /\ (forall x. {:nopattern} FLT.mem x s1 <==> FLT.mem x s2))
+: Lemma (requires list_nonrepeating s1 /\ list_nonrepeating s2 /\ (forall x.  FLT.mem x s1 <==> FLT.mem x s2))
         (ensures  FLT.length s1 = FLT.length s2) =
   match s1 with
   | [] -> ()
@@ -301,8 +301,8 @@ let rec union_of_disjoint_nonrepeating_lists_length_lemma (#a: eqtype) (xs1: lis
 : Lemma (requires   list_nonrepeating xs1
                   /\ list_nonrepeating xs2
                   /\ list_nonrepeating xs3
-                  /\ (forall x. {:nopattern} ~(FLT.mem x xs1 /\ FLT.mem x xs2))
-                  /\ (forall x. {:nopattern} FLT.mem x xs3 <==> FLT.mem x xs1 \/ FLT.mem x xs2))
+                  /\ (forall x.  ~(FLT.mem x xs1 /\ FLT.mem x xs2))
+                  /\ (forall x.  FLT.mem x xs3 <==> FLT.mem x xs1 \/ FLT.mem x xs2))
         (ensures  FLT.length xs3 = FLT.length xs1 + FLT.length xs2) =
   match xs1 with
   | [] -> nonrepeating_lists_with_same_elements_have_same_length xs2 xs3

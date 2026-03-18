@@ -77,7 +77,7 @@ let rec memP_map_elim
   (l: list a)
 : Lemma
   (requires True)
-  (ensures (memP y (map f l) ==> (exists (x : a) . {:nopattern} memP x l /\ f x == y)))
+  (ensures (memP y (map f l) ==> (exists (x : a) .  memP x l /\ f x == y)))
   (decreases l)
 = match l with
   | [] -> ()
@@ -399,7 +399,7 @@ let rec partition_count_forall #a f l= match l with
 (** Properties about subset **)
 
 let rec mem_subset (#a: eqtype) (la lb: list a)
-    : Lemma (subset la lb <==> (forall x. {:nopattern} mem x la ==> mem x lb))
+    : Lemma (subset la lb <==> (forall x.  mem x la ==> mem x lb))
             [SMTPat (subset la lb)] =
   match la with
   | [] -> ()
@@ -415,7 +415,7 @@ let subset_reflexive (#a: eqtype) (l: list a)
 any [x] in [sortWith f l] is the same as the number of occurrences in
 [l]. *)
 let rec sortWith_permutation #a f l :
-  Lemma (ensures forall x. {:nopattern} count x l = count x (sortWith f l))
+  Lemma (ensures forall x.  count x l = count x (sortWith f l))
         (decreases length l)
 = match l with
     | [] -> ()
@@ -437,7 +437,7 @@ l] are sorted according to comparison function [f], and the elements
 of [sortWith f l] are the elements of [l]. *)
 let rec sortWith_sorted (#a:eqtype) (f:(a -> a -> Tot int)) (l:list a) :
   Lemma (requires (total_order #a (bool_of_compare f)))
-        (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. {:nopattern} mem x l = mem x (sortWith f l))))
+        (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x.  mem x l = mem x (sortWith f l))))
         (decreases length l)
 =
   match l with
@@ -473,7 +473,7 @@ let rec noRepeats_append_elim
   (l1 l2: list a)
 : Lemma
   (requires (noRepeats (l1 @ l2)))
-  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:nopattern} mem x l1 ==> ~ (mem x l2))))
+  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x .  mem x l1 ==> ~ (mem x l2))))
   (decreases l1)
 = match l1 with
   | [] -> ()
@@ -485,7 +485,7 @@ let rec noRepeats_append_intro
   (#a: eqtype)
   (l1 l2: list a)
 : Lemma
-  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:nopattern} mem x l1 ==> ~ (mem x l2))))
+  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x .  mem x l1 ==> ~ (mem x l2))))
   (ensures (noRepeats (l1 @ l2)))
   (decreases l1)
 = match l1 with
@@ -515,7 +515,7 @@ let rec no_repeats_p_append_elim
   (l1 l2: list a)
 : Lemma
   (requires (no_repeats_p (l1 `append` l2)))
-  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2))))
+  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x .  memP x l1 ==> ~ (memP x l2))))
   (decreases l1)
 = match l1 with
   | [] -> ()
@@ -527,7 +527,7 @@ let rec no_repeats_p_append_intro
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2))))
+  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x .  memP x l1 ==> ~ (memP x l2))))
   (ensures (no_repeats_p (l1 `append` l2)))
   (decreases l1)
 = match l1 with
@@ -541,7 +541,7 @@ let no_repeats_p_append
   (l1 l2: list a)
 : Lemma
   (no_repeats_p (l1 `append` l2) <==> (
-    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2)))
+    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x .  memP x l1 ==> ~ (memP x l2)))
   ))
 = FStar.Classical.move_requires (no_repeats_p_append_intro l1) l2;
   FStar.Classical.move_requires (no_repeats_p_append_elim l1) l2
@@ -665,7 +665,7 @@ let rec assoc_memP_none
   (l: list (a & b))
 : Lemma
   (requires (assoc x l == None))
-  (ensures (forall y . {:nopattern} ~ (memP (x, y) l)))
+  (ensures (forall y .  ~ (memP (x, y) l)))
   (decreases l)
 = match l with
   | [] -> ()
@@ -677,7 +677,7 @@ let assoc_mem
   (x: a)
   (l: list (a & b))
 : Lemma
-  (ensures (mem x (map fst l) <==> (exists y . {:nopattern} assoc x l == Some y)))
+  (ensures (mem x (map fst l) <==> (exists y .  assoc x l == Some y)))
 = match assoc x l with
   | None ->
     assoc_memP_none x l;
@@ -696,8 +696,8 @@ let rec fold_left_invar
   (l: list b)
   (p: (a -> Tot Type0))
   : Lemma
-  (requires forall (x: a) (y: b) . {:nopattern} p x ==> memP y l ==> p (f x y) )
-  (ensures forall (x: a) . {:nopattern} p x ==> p (fold_left f x l))
+  (requires forall (x: a) (y: b) .  p x ==> memP y l ==> p (f x y) )
+  (ensures forall (x: a) .  p x ==> p (fold_left f x l))
 =
   match l with
   | [] -> ()
@@ -710,8 +710,8 @@ let rec fold_left_map
   (f_aca: a -> c -> Tot a)
   (l: list b)
   : Lemma
-  (requires forall (x: a) (y: b) . {:nopattern} f_aba x y == f_aca x (f_bc y) )
-  (ensures forall (x : a) . {:nopattern} fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
+  (requires forall (x: a) (y: b) .  f_aba x y == f_aca x (f_bc y) )
+  (ensures forall (x : a) .  fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
   =
   match l with
   | [] -> ()
@@ -734,7 +734,7 @@ let rec fold_left_append
   (f: a -> b -> Tot a)
   (l1 l2: list b)
   : Lemma
-  (ensures forall x . {:nopattern} fold_left f x (l1 @ l2) == fold_left f (fold_left f x l1) l2)
+  (ensures forall x .  fold_left f x (l1 @ l2) == fold_left f (fold_left f x l1) l2)
 = match l1 with
   | [] -> ()
   | x :: q -> fold_left_append f q l2
@@ -746,11 +746,11 @@ let rec fold_left_monoid
   (l: list a)
 : Lemma
   (requires
-    (forall u v w . {:nopattern} (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
-    (forall x . {:nopattern} (x `opA` zeroA) == x) /\
-    (forall x . {:nopattern} (zeroA `opA` x) == x))
+    (forall u v w .  (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
+    (forall x .  (x `opA` zeroA) == x) /\
+    (forall x .  (zeroA `opA` x) == x))
   (ensures
-    forall x . {:nopattern}
+    forall x . 
     (fold_left opA x l) == (x `opA` (fold_left opA zeroA l)))
 = match l with
   | [] -> ()
@@ -763,9 +763,9 @@ let fold_left_append_monoid
   (l1 l2: list a)
 : Lemma
   (requires
-    (forall u v w . {:nopattern} f u (f v w) == f (f u v) w) /\
-    (forall x . {:nopattern} f x z == x) /\
-    (forall x . {:nopattern} f z x == x))
+    (forall u v w .  f u (f v w) == f (f u v) w) /\
+    (forall x .  f x z == x) /\
+    (forall x .  f z x == x))
   (ensures
     fold_left f z (l1 @ l2) == f (fold_left f z l1) (fold_left f z l2))
 = fold_left_append f l1 l2;
@@ -796,7 +796,7 @@ let index_extensionality
 : Lemma
   (requires
     (length l1 == length l2 /\
-    (forall (i: nat) . {:nopattern} i < length l1 ==> index l1 i == index l2 i)))
+    (forall (i: nat) .  i < length l1 ==> index l1 i == index l2 i)))
   (ensures (l1 == l2))
 = index_extensionality_aux l1 l2 () (fun i -> ())
 
@@ -866,19 +866,19 @@ let rec strict_suffix_of_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures (strict_suffix_of l1 l2 ==> (exists l3 . {:nopattern} l2 == append l3 l1)))
+  (ensures (strict_suffix_of l1 l2 ==> (exists l3 .  l2 == append l3 l1)))
 = match l2 with
   | [] -> ()
   | a :: q ->
     FStar.Classical.or_elim
       #(l1 == q)
       #(strict_suffix_of l1 q)
-      #(fun _ -> exists l3 . {:nopattern} l2 == append l3 l1)
+      #(fun _ -> exists l3 .  l2 == append l3 l1)
       (fun _ ->
         FStar.Classical.exists_intro (fun l3 -> l2 == append l3 l1) (a :: []))
       (fun _ ->
         FStar.Classical.exists_elim
-          (exists l3 . {:nopattern} l2 == append l3 l1)
+          (exists l3 .  l2 == append l3 l1)
           #_
           #(fun l3 -> q == append l3 l1)
           (strict_suffix_of_exists_append l1 q)
@@ -890,11 +890,11 @@ let strict_suffix_of_or_eq_exists_append
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (ensures ((strict_suffix_of l1 l2 \/ l1 == l2) ==> (exists l3 . {:nopattern} l2 == append l3 l1)))
+  (ensures ((strict_suffix_of l1 l2 \/ l1 == l2) ==> (exists l3 .  l2 == append l3 l1)))
 = FStar.Classical.or_elim
     #(strict_suffix_of l1 l2)
     #(l1 == l2)
-    #(fun _ -> exists l3 . {:nopattern} l2 == append l3 l1)
+    #(fun _ -> exists l3 .  l2 == append l3 l1)
     (fun _ ->
       strict_suffix_of_exists_append l1 l2)
     (fun _ ->

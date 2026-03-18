@@ -15,7 +15,7 @@
 *)
 module FStar.Tactics.Logic.Lemmas
 
-val fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). {:nopattern (* uninferrable *)} p x)
+val fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a).  p x)
 
 val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)
@@ -50,33 +50,33 @@ val __and_elim' : (#p:Type) -> (#q:Type) -> (#phi:Type) ->
                               squash (p ==> q ==> phi) ->
                               Lemma phi
 
-val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (exists (x:a). {:nopattern (* uninferrable *)} p x)
+val __witness : (#a:Type) -> (x:a) -> (#p:(a -> Type)) -> squash (p x) -> squash (exists (x:a).  p x)
 
-val __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. {:nopattern (* uninferrable *)} pred x))
+val __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x.  pred x))
                           (k : (x:t -> pred x -> squash goal)) : squash goal
 
-val __forall_inst #t (#pred : t -> Type0) (h : (forall x. {:nopattern (* uninferrable *)} pred x)) (x : t) : squash (pred x)
+val __forall_inst #t (#pred : t -> Type0) (h : (forall x.  pred x)) (x : t) : squash (pred x)
 
-val __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. {:nopattern (* uninferrable *)} pred x)) (x : t) : squash (pred x)
+val __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x.  pred x)) (x : t) : squash (pred x)
 
-val sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). {:nopattern (* uninferrable *)} p x)) (phi:Type0) :
-  Lemma (requires (forall x. {:nopattern (* uninferrable *)} p x ==> phi))
+val sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a).  p x)) (phi:Type0) :
+  Lemma (requires (forall x.  p x ==> phi))
         (ensures phi)
 
 val lemma_from_squash : #a:Type -> #b:(a -> Type) -> (x:a -> squash (b x)) -> x:a -> Lemma (b x)
 
 val lem1_fa #a #pre #post
   ($lem : (x:a -> Lemma (requires pre x) (ensures post x))) :
-  Lemma (forall (x:a). {:nopattern (* uninferrable *)} pre x ==> post x)
+  Lemma (forall (x:a).  pre x ==> post x)
 
 val lem2_fa #a #b #pre #post
   ($lem : (x:a -> y:b -> Lemma (requires pre x y) (ensures post x y))) :
-  Lemma (forall (x:a) (y:b). {:nopattern (* uninferrable *)} pre x y ==> post x y)
+  Lemma (forall (x:a) (y:b).  pre x y ==> post x y)
 
 val lem3_fa #a #b #c #pre #post
   ($lem : (x:a -> y:b -> z:c -> Lemma (requires pre x y z) (ensures post x y z))) :
-  Lemma (forall (x:a) (y:b) (z:c). {:nopattern (* uninferrable *)} pre x y z ==> post x y z)
+  Lemma (forall (x:a) (y:b) (z:c).  pre x y z ==> post x y z)
 
 val revert_squash : (#a:Type) -> (#b : (a -> Type)) ->
-                            (squash (forall (x:a). {:nopattern (* uninferrable *)} b x)) ->
+                            (squash (forall (x:a).  b x)) ->
                             x:a -> squash (b x)

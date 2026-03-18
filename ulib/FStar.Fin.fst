@@ -55,13 +55,13 @@ let rec pigeonhole (#n: pos) (s: S.seq (under n)) =
               in (i1+1, i2+1)
  
 [@@"opaque_to_smt"]
-let is_reflexive #a r  = forall (x:a). {:nopattern (* uninferrable *)}     x `r` x
+let is_reflexive #a r  = forall (x:a).      x `r` x
 
 [@@"opaque_to_smt"]
-let is_symmetric #a r  = forall (x y:a). {:nopattern (* uninferrable *)}   x `r` y == y `r` x
+let is_symmetric #a r  = forall (x y:a).    x `r` y == y `r` x
 
 [@@"opaque_to_smt"]
-let is_transitive #a r = forall (x y z:a). {:nopattern (* uninferrable *)} x `r` y /\ y `r` z ==> x `r` z 
+let is_transitive #a r = forall (x y z:a).  x `r` y /\ y `r` z ==> x `r` z 
 
 let is_reflexive_intro #a r = reveal_opaque (`%is_reflexive) (is_reflexive #a)
 

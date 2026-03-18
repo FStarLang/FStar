@@ -56,7 +56,7 @@ let empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation}) =
 let rec acc_decreaser
   (#a: Type u#a)
   (r: a -> a -> Type0)
-  (f: WF.well_founded r{forall x1 x2 (p: r x1 x2). {:nopattern (* uninferrable *)} (f x2).access_smaller x1 p == f x1})
+  (f: WF.well_founded r{forall x1 x2 (p: r x1 x2).  (f x2).access_smaller x1 p == f x1})
   (x: a)
   : Tot (acc_classical (acc_relation r) x) (decreases (f x)) =
   let smaller (y: a{(acc_relation r) y x}) : (acc_classical (acc_relation r) y) = (
@@ -104,7 +104,7 @@ let subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
   { relation = r; decreaser = subrelation_decreaser r wfr; proof = proof; }
 
 let rec inverse_image_decreaser (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: a -> b)
-                                (wfr: wfr_t b{forall x1 x2. {:nopattern (* uninferrable *)} r x1 x2 ==> wfr.relation (f x1) (f x2)})
+                                (wfr: wfr_t b{forall x1 x2.  r x1 x2 ==> wfr.relation (f x1) (f x2)})
                                 (x: a)
   : Tot (acc_classical r x) (decreases wfr.decreaser (f x)) =
   let smaller (y: a{r y x}) : (acc_classical r y) =
@@ -113,7 +113,7 @@ let rec inverse_image_decreaser (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type
   AccClassicalIntro smaller
 
 let inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: a -> b)
-                         (wfr: wfr_t b{forall x1 x2. {:nopattern (* uninferrable *)} r x1 x2 ==> wfr.relation (f x1) (f x2)})
+                         (wfr: wfr_t b{forall x1 x2.  r x1 x2 ==> wfr.relation (f x1) (f x2)})
   : (wfr': wfr_t a{wfr'.relation == r}) =
   let proof (x1: a) (x2: a)
     : Lemma (requires r x1 x2)
@@ -201,7 +201,7 @@ let option_wfr (#a: Type u#a) (wfr: wfr_t a)
 
   assert (forall (bx1: (b: bool & (if b then a else unit_a)))
             (bx2: (b: bool & (if b then a else unit_a))).
-            {:nopattern (* uninferrable *)} wfr_bool_a.relation bx1 bx2 <==>
+             wfr_bool_a.relation bx1 bx2 <==>
                (let (| b1, x1 |), (| b2, x2 |) = bx1, bx2 in
                 (not b1 && b2) \/ (b1 && b2 /\ wfr.relation x1 x2)));
 

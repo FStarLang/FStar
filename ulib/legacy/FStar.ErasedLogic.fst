@@ -22,18 +22,18 @@ open FStar.Ghost
 
 (*you can get the witness x, that the proof part is erased*)
 (*https://coq.inria.fr/library/Coq.Init.Specif.html#sig*)
-type sig_ (a:Type) (p: a->Type) = exists (x:a). {:nopattern (* uninferrable *)} (erased (p x))
+type sig_ (a:Type) (p: a->Type) = exists (x:a).  (erased (p x))
 
 
 (*you get nothing. Of course, in ghost contexts, or to build other erased date, you get everything*)
 (* https://coq.inria.fr/library/Coq.Init.Logic.html#ex *)
-type ex (a:Type) (p:a->Type) = erased (exists (x:a). {:nopattern (* uninferrable *)} (p x))
+type ex (a:Type) (p:a->Type) = erased (exists (x:a).  (p x))
 
 
 (*how to use the above:*)
-(*assuming that existentials in F* are constructive. {:nopattern (* uninferrable *)} If so, the following 2 assumes must be definable*)
-assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x. {:nopattern (* uninferrable *)} p x) -> GTot a
-assume val mkexists : #a:Type -> #p:(a->Type) -> x:a -> (p x) -> Tot (exists x. {:nopattern (* uninferrable *)} p x)
+(*assuming that existentials in F* are constructive.  If so, the following 2 assumes must be definable*)
+assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.  p x) -> GTot a
+assume val mkexists : #a:Type -> #p:(a->Type) -> x:a -> (p x) -> Tot (exists x.  p x)
 
 
 val ex_proj1 : #a:Type -> #p:(a->Type) -> ex a p -> Tot (erased a)

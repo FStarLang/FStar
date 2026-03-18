@@ -110,7 +110,7 @@ val big_and'_prop (#a: Type) (f: (a -> Type)) (l: list a) : Lemma ((big_and' f l
 (** Interpreting the finite conjunction [big_and f l]
     as an infinite conjunction [forall] *)
 val big_and'_forall (#a: Type) (f: (a -> Type)) (l: list a)
-    : Lemma (big_and' f l <==> (forall x. {:nopattern} L.memP x l ==> f x))
+    : Lemma (big_and' f l <==> (forall x.  L.memP x l ==> f x))
 
 (** [big_and f l] is an implicitly reducing variant of [big_and']
     It is defined in [prop] *)
@@ -141,7 +141,7 @@ val big_or'_prop (#a: Type) (f: (a -> Type)) (l: list a) : Lemma ((big_or' f l) 
 (** Interpreting the finite disjunction [big_or f l]
     as an infinite disjunction [exists] *)
 val big_or'_exists (#a: Type) (f: (a -> Type)) (l: list a)
-    : Lemma (big_or' f l <==> (exists x. {:nopattern} L.memP x l /\ f x))
+    : Lemma (big_or' f l <==> (exists x.  L.memP x l /\ f x))
 
 (** [big_or f l] is an implicitly reducing variant of [big_or']
      It is defined in [prop] *)
@@ -180,13 +180,13 @@ let rec pairwise_op' #a #b (op: (b -> b -> GTot b)) (f: (a -> a -> b)) (l: list 
   | hd :: tl -> (map_op' op (f hd) tl z) `op` (pairwise_op' op f tl z)
 
 (** [f] is a symmetric relation *)
-let symmetric (#a: Type) (f: (a -> a -> Type)) = forall x y. {:nopattern} f x y <==> f y x
+let symmetric (#a: Type) (f: (a -> a -> Type)) = forall x y.  f x y <==> f y x
 
 (** [f] is a reflexive relation *)
-let reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. {:nopattern} f x x
+let reflexive (#a: Type) (f: (a -> a -> Type)) = forall x.  f x x
 
 (** [f] is a anti-reflexive relation *)
-let anti_reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. {:nopattern} ~(f x x)
+let anti_reflexive (#a: Type) (f: (a -> a -> Type)) = forall x.  ~(f x x)
 
 (**** Pairwise conjunction *)
 
@@ -213,13 +213,13 @@ val pairwise_and'_prop (#a: Type) (f: (a -> a -> Type)) (l: list a)
     is interpreted as universal quantification over pairs of list elements **)
 val pairwise_and'_forall (#a: Type) (f: (a -> a -> Type)) (l: list a)
     : Lemma (requires symmetric f /\ reflexive f)
-      (ensures (pairwise_and' f l <==> (forall x y. {:nopattern} L.memP x l /\ L.memP y l ==> f x y)))
+      (ensures (pairwise_and' f l <==> (forall x y.  L.memP x l /\ L.memP y l ==> f x y)))
 
 (** [pairwise_and' f l] for symmetric relations [f] interpreted as
     universal quantification over pairs of list of unique elements *)
 val pairwise_and'_forall_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
     : Lemma (requires symmetric f /\ L.no_repeats_p l)
-      (ensures (pairwise_and' f l <==> (forall x y. {:nopattern} L.memP x l /\ L.memP y l /\ x =!= y ==> f x y)))
+      (ensures (pairwise_and' f l <==> (forall x y.  L.memP x l /\ L.memP y l /\ x =!= y ==> f x y)))
 
 (** [pairwise_and f l] is an implicitly reducing variant of [pairwise_and']
     It is defined in [prop] *)
@@ -254,14 +254,14 @@ val pairwise_or'_prop (#a: Type) (f: (a -> a -> Type)) (l: list a)
     pairs of list elements *)
 val pairwise_or'_exists (#a: Type) (f: (a -> a -> Type)) (l: list a)
     : Lemma (requires symmetric f /\ anti_reflexive f)
-      (ensures (pairwise_or' f l <==> (exists x y. {:nopattern} L.memP x l /\ L.memP y l /\ f x y)))
+      (ensures (pairwise_or' f l <==> (exists x y.  L.memP x l /\ L.memP y l /\ f x y)))
 
 (** [pairwise_or' f l] for symmetric, anti-reflexive relations [f]
     interpreted as existential quantification over
     pairs of list elements *)
 val pairwise_or'_exists_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
     : Lemma (requires symmetric f /\ L.no_repeats_p l)
-      (ensures (pairwise_or' f l <==> (exists x y. {:nopattern} L.memP x l /\ L.memP y l /\ x =!= y /\ f x y)))
+      (ensures (pairwise_or' f l <==> (exists x y.  L.memP x l /\ L.memP y l /\ x =!= y /\ f x y)))
 
 (** [pairwise_or f l] is an implicitly reducing variant of [pairwise_or']
     It is defined in [prop] *)

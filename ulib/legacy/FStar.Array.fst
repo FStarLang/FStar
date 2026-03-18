@@ -94,7 +94,7 @@ private val blit_aux:
 		/\ (Seq.length (sel h t) >= t_idx + len)
 		/\ (ctr <= len)
 		/\ (forall (i:nat).
-		    {:nopattern (* uninferrable *)} i < ctr ==> Seq.index (sel h s) (s_idx+i) == Seq.index (sel h t) (t_idx+i))))
+		     i < ctr ==> Seq.index (sel h s) (s_idx+i) == Seq.index (sel h t) (t_idx+i))))
      (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ addr_of s <> addr_of t)
 	       /\ (modifies (only t) h0 h1)
@@ -103,7 +103,7 @@ private val blit_aux:
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (forall (i:nat).
-		   {:nopattern (* uninferrable *)} i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
+		    i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i == Seq.index (sel h0 t) i) ))
@@ -133,7 +133,7 @@ private val blit:
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (modifies (only t) h0 h1)
 	       /\ (forall (i:nat).
-		   {:nopattern (* uninferrable *)} i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
+		    i < len ==> Seq.index (sel h1 s) (s_idx+i) == Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).{:pattern (Seq.index (sel h1 t) i)}
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     (Seq.index (sel h1 t) i == Seq.index (sel h0 t) i)) ))

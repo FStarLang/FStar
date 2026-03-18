@@ -25,7 +25,7 @@ module F = FStar.FunctionalExtensionality
 [@@erasable]
 let set a = F.restricted_t a (fun _ -> prop)
 
-let equal #_ s1 s2 = forall x. {:nopattern} s1 x <==> s2 x
+let equal #_ s1 s2 = forall x.  s1 x <==> s2 x
 
 let mem x s = s x
 
@@ -82,7 +82,7 @@ let filter #a f s = F.on_dom a #(fun _ -> prop) (fun (x:a) -> f x /\ s x)
 let lemma_mem_filter #a f s x = ()
 
 let exists_y_in_s (#a:Type) (#b:Type) (s:set a) (f:a -> Tot b) (x:b) : Tot prop =
-  exists (y:a). {:nopattern} mem y s /\ x == f y
+  exists (y:a).  mem y s /\ x == f y
 
 let map #_ #b f s = F.on_dom b (exists_y_in_s s f)
 

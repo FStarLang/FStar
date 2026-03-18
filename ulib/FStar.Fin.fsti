@@ -95,13 +95,13 @@ val is_symmetric (#a:Type) (r: binary_relation a) : Type0
 val is_transitive (#a:Type) (r: binary_relation a) : Type0
 
 val is_reflexive_intro (#a:Type) (r: binary_relation a)
-  : Lemma (requires forall (x:a). {:nopattern (* uninferrable *)} r x x) (ensures is_reflexive r)
+  : Lemma (requires forall (x:a).  r x x) (ensures is_reflexive r)
   
 val is_symmetric_intro (#a:Type) (r: binary_relation a)
-  : Lemma (requires forall (x:a). {:nopattern (* uninferrable *)} r x x) (ensures is_reflexive r)
+  : Lemma (requires forall (x:a).  r x x) (ensures is_reflexive r)
  
 val is_transitive_intro (#a:Type) (r: binary_relation a)
-  : Lemma (requires forall (x:a). {:nopattern (* uninferrable *)} r x x) (ensures is_reflexive r)
+  : Lemma (requires forall (x:a).  r x x) (ensures is_reflexive r)
    
 (** Textbook stuff on equivalence relations *)
 type equivalence_relation (a: Type) 

@@ -22,7 +22,7 @@ open FStar.Calc
 [@@"opaque_to_smt"]
 let is_permutation (#a:Type) (s0:seq a) (s1:seq a) (f:index_fun s0) =
   Seq.length s0 == Seq.length s1 /\
-  (forall x y. {:nopattern (* uninferrable *)} // {:pattern f x; f y}
+  (forall x y.  // {:pattern f x; f y}
   x <> y ==> f x <> f y) /\
   (forall (i:nat{i < Seq.length s0}). // {:pattern (Seq.index s1 (f i))}
       Seq.index s0 i == Seq.index s1 (f i))
@@ -35,7 +35,7 @@ let reveal_is_permutation_nopats (#a:Type) (s0 s1:seq a) (f:index_fun s0)
 
            Seq.length s0 == Seq.length s1 /\
 
-           (forall x y. {:nopattern (* uninferrable *)} x <> y ==> f x <> f y) /\
+           (forall x y.  x <> y ==> f x <> f y) /\
 
            (forall (i:nat{i < Seq.length s0}).
               Seq.index s0 i == Seq.index s1 (f i)))
@@ -77,7 +77,7 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
 let introduce_is_permutation (#a:Type) (s0:seq a) (s1:seq a)
                              (f:index_fun s0)
                              (_:squash (Seq.length s0 == Seq.length s1))
-                             (_:squash (forall x y. {:nopattern (* uninferrable *)} x <> y ==> f x <> f y))
+                             (_:squash (forall x y.  x <> y ==> f x <> f y))
                              (_:squash (forall (i:nat{i < Seq.length s0}). Seq.index s0 i == Seq.index s1 (f i)))
    : Lemma
      (ensures
@@ -194,7 +194,7 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
       let f : index_fun s0 = adapt_index_fun s0 f' n in
       assert (Seq.length s0 == Seq.length s1);
       let len_eq : squash (Seq.length s0 == Seq.length s1) = () in
-      assert (forall x y. {:nopattern (* uninferrable *)} x <> y ==> f' x <> f' y);
+      assert (forall x y.  x <> y ==> f' x <> f' y);
       let neq =
       introduce forall x y. x <> y ==> f x <> f y
         with (introduce _ ==> _
@@ -708,7 +708,7 @@ let foldm_snoc_split_seq #c #eq (add: CE.cm c eq)
 let rec foldm_snoc_of_equal_inits #c #eq #m (cm: CE.cm c eq) 
                                   (f: (under m) -> c) 
                                   (g: (under m) -> c)
-  : Lemma (requires  (forall (i: under m). {:nopattern (* uninferrable *)} f i `eq.eq` g i))
+  : Lemma (requires  (forall (i: under m).  f i `eq.eq` g i))
           (ensures foldm_snoc cm (init m f) `eq.eq` 
                    foldm_snoc cm (init m g)) = 
   if m=0 then begin

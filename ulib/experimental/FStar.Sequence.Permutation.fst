@@ -25,7 +25,7 @@ module S = FStar.Sequence
 [@@"opaque_to_smt"]
 let is_permutation (#a:Type) (s0:seq a) (s1:seq a) (f:index_fun s0) =
   S.length s0 == S.length s1 /\
-  (forall x y. {:nopattern (* uninferrable *)} // {:pattern f x; f y}
+  (forall x y.  // {:pattern f x; f y}
   x <> y ==> f x <> f y) /\
   (forall (i:nat{i < S.length s0}). // {:pattern (S.index s1 (f i))}
       S.index s0 i == S.index s1 (f i))
@@ -38,7 +38,7 @@ let reveal_is_permutation_nopats (#a:Type) (s0 s1:seq a) (f:index_fun s0)
 
            S.length s0 == S.length s1 /\
 
-           (forall x y. {:nopattern (* uninferrable *)} x <> y ==> f x <> f y) /\
+           (forall x y.  x <> y ==> f x <> f y) /\
 
            (forall (i:nat{i < S.length s0}).
               S.index s0 i == S.index s1 (f i)))
@@ -174,7 +174,7 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
                 else f' (i - 1) + 1
       in
       assert (S.length s0 == S.length s1);
-      assert (forall x y. {:nopattern (* uninferrable *)} x <> y ==> f' x <> f' y);
+      assert (forall x y.  x <> y ==> f' x <> f' y);
       introduce forall x y. x <> y ==> f x <> f y
       with (introduce _ ==> _
             with _. (

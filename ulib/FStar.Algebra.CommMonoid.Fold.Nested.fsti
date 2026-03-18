@@ -37,7 +37,7 @@ open FStar.IntegerIntervals
 let transpose_generator #c (#m0 #mk: int)
                           (#n0 #nk: int)
                           (gen: ifrom_ito m0 mk -> ifrom_ito n0 nk -> c)
-  : (f: (ifrom_ito n0 nk -> ifrom_ito m0 mk -> c) { forall i j. {:nopattern (* uninferrable *)} f j i == gen i j })
+  : (f: (ifrom_ito n0 nk -> ifrom_ito m0 mk -> c) { forall i j.  f j i == gen i j })
   = fun j i -> gen i j
   
 let double_fold #c #eq #a0 (#ak: not_less_than a0) #b0 (#bk:not_less_than b0)

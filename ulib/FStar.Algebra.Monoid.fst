@@ -27,13 +27,13 @@ module PropExt = FStar.PropositionalExtensionality
 (** Definition of a monoid *)
 
 let right_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
-  forall (x:m). {:nopattern (* uninferrable *)} x `mult` u == x
+  forall (x:m).  x `mult` u == x
 
 let left_unitality_lemma (m:Type) (u:m) (mult:m -> m -> m) =
-  forall (x:m). {:nopattern (* uninferrable *)} u `mult` x == x
+  forall (x:m).  u `mult` x == x
 
 let associativity_lemma (m:Type) (mult:m -> m -> m) =
-  forall (x y z:m). {:nopattern (* uninferrable *)} x `mult` y `mult` z == x `mult` (y `mult` z)
+  forall (x y z:m).  x `mult` y `mult` z == x `mult` (y `mult` z)
 
 unopteq
 type monoid (m:Type) =
@@ -189,10 +189,10 @@ let _ =
 (* Definition of a left action *)
 
 let mult_act_lemma (m a:Type) (mult:m -> m -> m) (act:m -> a -> a) =
-  forall (x x':m) (y:a). {:nopattern (* uninferrable *)} (x `mult` x') `act` y == x `act` (x' `act` y)
+  forall (x x':m) (y:a).  (x `mult` x') `act` y == x `act` (x' `act` y)
 
 let unit_act_lemma (m a:Type) (u:m) (act:m -> a -> a) =
-  forall (y:a). {:nopattern (* uninferrable *)} u `act` y == y
+  forall (y:a).  u `act` y == y
 
 unopteq
 type left_action (#m:Type) (mm:monoid m) (a:Type) =

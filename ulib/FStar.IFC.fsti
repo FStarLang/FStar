@@ -37,13 +37,13 @@ module FStar.IFC
 (**** Basic definitions for a join semilattice *)
 
 (** The [lub] is associative *)
-let associative #a (f: (a -> a -> a)) = forall x y z. {:nopattern (* uninferrable *)} f (f x y) z == f x (f y z)
+let associative #a (f: (a -> a -> a)) = forall x y z.  f (f x y) z == f x (f y z)
 
 (** The [lub] is commutative *)
-let commutative #a (f: (a -> a -> a)) = forall x y. {:nopattern (* uninferrable *)} f x y == f y x
+let commutative #a (f: (a -> a -> a)) = forall x y.  f x y == f y x
 
 (** The [lub] is idempotent *)
-let idempotent #a (f: (a -> a -> a)) = forall x. {:nopattern (* uninferrable *)} f x x == x
+let idempotent #a (f: (a -> a -> a)) = forall x.  f x x == x
 
 (** A semilattice has a top element and a
     associative-commutative-idempotent least upper bound operator.

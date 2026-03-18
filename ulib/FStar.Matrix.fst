@@ -93,8 +93,8 @@ let init #c (#m #n: pos) (generator: matrix_generator c m n)
   result
   
 private let matrix_seq #c #m #n (gen: matrix_generator c m n) : (t:SB.seq c{ (SB.length t = (m*n)) /\
-  (forall (i: under m) (j: under n). {:nopattern} SB.index t (get_ij m n i j) == gen i j) /\ 
-  (forall(ij: under (m*n)). {:nopattern} SB.index t ij == gen (get_i m n ij) (get_j m n ij))
+  (forall (i: under m) (j: under n).  SB.index t (get_ij m n i j) == gen i j) /\ 
+  (forall(ij: under (m*n)).  SB.index t ij == gen (get_i m n ij) (get_j m n ij))
 }) = init gen
 
 (* This auxiliary lemma establishes the decomposition of the seq-matrix 
@@ -171,7 +171,7 @@ let one_row_matrix_fold_aux #c #eq #m #n (cm:CE.cm c eq) (generator : matrix_gen
 
 let fold_of_subgen_aux #c #eq (#m:pos{m>1}) #n (cm: CE.cm c eq) (gen: matrix_generator c m n) (subgen: matrix_generator c (m-1) n) : Lemma
   (requires subgen == (fun (i: under (m-1)) (j: under n) -> gen i j))
-  (ensures forall (i: under (m-1)). {:nopattern} SP.foldm_snoc cm (SB.init n (subgen i)) ==
+  (ensures forall (i: under (m-1)).  SP.foldm_snoc cm (SB.init n (subgen i)) ==
                                SP.foldm_snoc cm (SB.init n (gen i))) =         
   let aux_pat (i: under (m-1)) : Lemma (SP.foldm_snoc cm (SB.init n (subgen i)) 
                                      == SP.foldm_snoc cm (SB.init n (gen i))) = 
@@ -375,7 +375,7 @@ let matrix_fold_equals_func_double_fold #c #eq #m #n cm generator
    Notice how the forall property of the result function is happily proved 
    automatically by z3 :) *)
 let transposed_matrix_gen #c #m #n (generator: matrix_generator c m n) 
-  : (f: matrix_generator c n m { forall i j. {:nopattern} f j i == generator i j }) 
+  : (f: matrix_generator c n m { forall i j.  f j i == generator i j }) 
   = fun j i -> generator i j
 
 (* This lemma shows that the transposed matrix is 
@@ -449,7 +449,7 @@ let matrix_equiv_ijth #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n) (i:
 
 (* Equivalence of all corresponding elements means equivalence of matrices *)
 let matrix_equiv_from_element_eq #c (#m #n: pos) (eq: CE.equiv c) (ma mb: matrix c m n)
-  : Lemma (requires (forall (i: under m) (j: under n). {:nopattern} ijth ma i j `eq.eq` ijth mb i j))
+  : Lemma (requires (forall (i: under m) (j: under n).  ijth ma i j `eq.eq` ijth mb i j))
           (ensures matrix_eq_fun eq ma mb) = 
   assert (SB.length (seq_of_matrix ma) = SB.length (seq_of_matrix mb));
   let s1 = seq_of_matrix ma in
@@ -483,7 +483,7 @@ let matrix_add_congruence #c #eq (#m #n: pos) (add: CE.cm c eq) (ma mb mc md: ma
                                                   (ijth mc i j) (ijth md i j)) 
  
 let matrix_add_zero #c #eq (add: CE.cm c eq) (m n: pos) 
-  : (z: matrix c m n { forall (i: under m) (j: under n). {:nopattern} ijth z i j == add.unit }) 
+  : (z: matrix c m n { forall (i: under m) (j: under n).  ijth z i j == add.unit }) 
   = matrix_of_seq m n (SB.create (m*n) add.unit)
 
 let matrix_add_identity #c #eq (add: CE.cm c eq) (#m #n: pos) (mx: matrix c m n)
@@ -651,7 +651,7 @@ let matrix_mul_ijth_eq_sum_of_seq_for_init #c #eq #m #n #p (add mul: CE.cm c eq)
 let double_foldm_snoc_of_equal_generators #c #eq (#m #n: pos) 
                                           (cm: CE.cm c eq) 
                                           (f g: under m -> under n -> c)
-  : Lemma (requires (forall (i: under m) (j: under n). {:nopattern} f i j `eq.eq` g i j))
+  : Lemma (requires (forall (i: under m) (j: under n).  f i j `eq.eq` g i j))
           (ensures SP.foldm_snoc cm (SB.init m (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> f i j))))
           `eq.eq`  SP.foldm_snoc cm (SB.init m (fun (i: under m) -> SP.foldm_snoc cm (SB.init n (fun (j: under n) -> g i j))))) = 
   let aux i : Lemma (SP.foldm_snoc cm (SB.init n (fun (j: under n) -> f i j)) `eq.eq`
@@ -759,7 +759,7 @@ let seq_of_products_zeroes_lemma #c #eq #m (mul: CE.cm c eq)
   = eq_of_seq_from_element_equality eq (seq_of_products mul (SB.create m z) s) (SB.create m z) 
 
 let rec foldm_snoc_zero_lemma #c #eq (add: CE.cm c eq) (zeroes: SB.seq c)
-  : Lemma (requires (forall (i: under (SB.length zeroes)). {:nopattern} SB.index zeroes i `eq.eq` add.unit))
+  : Lemma (requires (forall (i: under (SB.length zeroes)).  SB.index zeroes i `eq.eq` add.unit))
           (ensures eq.eq (SP.foldm_snoc add zeroes) add.unit) 
           (decreases SB.length zeroes) =
   if (SB.length zeroes < 1) then begin

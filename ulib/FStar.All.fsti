@@ -33,8 +33,8 @@ sub_effect EXN ~> ALL { lift_wp = lift_exn_all }
 
 effect All (a:Type) (pre:all_pre) (post:(h:heap -> Tot (all_post' a (pre h)))) =
   ALL a
-    (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1. {:nopattern (* uninferrable *)} post h ra h1 ==> p ra h1))
-effect ML (a:Type) = ALL a (fun (p:all_post a) (_:heap) -> forall (a:result a) (h:heap). {:nopattern (* uninferrable *)} p a h)
+    (fun (p : all_post a) (h : heap) -> pre h /\ (forall ra h1.  post h ra h1 ==> p ra h1))
+effect ML (a:Type) = ALL a (fun (p:all_post a) (_:heap) -> forall (a:result a) (h:heap).  p a h)
 
 val exit : int -> ML 'a
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a

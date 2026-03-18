@@ -59,10 +59,10 @@ let lemma_xor_bounded (m: pos) (n: nat) (x y: bv_t m)
     : Lemma
       (requires
         (forall (i: nat).
-            {:nopattern (* uninferrable *)} (i < m /\ i >= n) ==>
+             (i < m /\ i >= n) ==>
             (Seq.index x (m - 1 - i) = false /\ Seq.index y (m - 1 - i) = false)))
       (ensures
-        (forall (i: nat). {:nopattern (* uninferrable *)} (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m - 1 - i) = false))) =
+        (forall (i: nat).  (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m - 1 - i) = false))) =
   ()
 
 (** Proves that the subset property is conserved in subslices. *)

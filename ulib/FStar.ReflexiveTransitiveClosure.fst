@@ -111,7 +111,7 @@ let rec closure_one_aux #a r x y xy =
 
 let closure_one_aux' (#a:Type u#a) (r:binrel u#a u#r a) (x y:a)
                      (xy:_closure r x y)
-  : GTot (squash (x == y \/ (exists z. {:nopattern (* uninferrable *)} squash (r x z) /\ closure r z y)))
+  : GTot (squash (x == y \/ (exists z.  squash (r x z) /\ closure r z y)))
   = let p = closure_one_aux r x y xy in
     match p with
     | Inl _ -> ()
@@ -125,7 +125,7 @@ let closure_one_aux' (#a:Type u#a) (r:binrel u#a u#r a) (x y:a)
 
 val closure_one: #a:Type u#a -> r:binrel u#a u#r a -> x:a -> y:a
   -> xy:squash (closure r x y)
-  -> GTot (squash (x == y \/ (exists z. {:nopattern (* uninferrable *)} squash (r x z) /\ closure r z y)))
+  -> GTot (squash (x == y \/ (exists z.  squash (r x z) /\ closure r z y)))
 let closure_one #a r x y xy =
   let open FStar.Squash in
   bind_squash xy (fun xy ->
@@ -134,7 +134,7 @@ let closure_one #a r x y xy =
 let closure_inversion #a r x y = closure_one r x y ()
 
 val _stable_on_closure: #a:Type u#a -> r:binrel u#a u#r a -> p:(a -> Type0)
-  -> p_stable_on_r: squash (forall x y. {:nopattern (* uninferrable *)} p x /\ squash (r x y) ==> p y)
+  -> p_stable_on_r: squash (forall x y.  p x /\ squash (r x y) ==> p y)
   -> x: a
   -> y: a
   -> xy: _closure r x y
@@ -160,7 +160,7 @@ let squash_double_arrow (#a:Type u#a) (#p:Type0)
                      FStar.Squash.squash_double_arrow f
 
 let stable_on_closure #a r p hr =
-  assert (forall x y. {:nopattern (* uninferrable *)} p x ==> closure r x y ==> p y) by
+  assert (forall x y.  p x ==> closure r x y ==> p y) by
     (let x = forall_intro () in
      let y = forall_intro () in
      let x : a = unquote (binding_to_term x) in

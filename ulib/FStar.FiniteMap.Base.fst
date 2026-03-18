@@ -58,15 +58,15 @@ let rec key_list_to_item_list
   (#a: eqtype)
   (#b: Type u#b)
   (m: map a b)
-  (keys: list a{FSet.list_nonrepeating keys /\ (forall key. {:nopattern} FLT.mem key keys ==> FSet.mem key (domain m))})
-: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} FLT.mem key keys <==> key_in_item_list key items)})
+  (keys: list a{FSet.list_nonrepeating keys /\ (forall key.  FLT.mem key keys ==> FSet.mem key (domain m))})
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key.  FLT.mem key keys <==> key_in_item_list key items)})
        (decreases keys) =
   match keys with
   | [] -> []
   | key :: remaining_keys -> (key, Some?.v ((elements m) key)) :: key_list_to_item_list m remaining_keys
 
 let map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} key_in_item_list key items <==> mem key m)}) =
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key.  key_in_item_list key items <==> mem key m)}) =
   key_list_to_item_list m (FSet.set_as_list (domain m))
 
 /// We represent the Dafny function `Map#Card` with `cardinality`:
@@ -81,7 +81,7 @@ let cardinality (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot nat =
 /// function Map#Values<U,V>(Map U V) : Set V;
 
 let values (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot (b -> prop) =
-  fun value -> exists key. {:nopattern} ((elements m) key == Some value)
+  fun value -> exists key.  ((elements m) key == Some value)
 
 /// We represent the Dafny function `Map#Items` with `items`:
 ///
@@ -149,7 +149,7 @@ let disjoint (#a: eqtype) (#b: Type u#b) (m1: map a b) (m2: map a b) : prop =
 ///
 /// var x: T :| x in s;
 
-let choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key. {:nopattern} mem key m}) : GTot (key: a{mem key m}) =
+let choose (#a: eqtype) (#b: Type u#b) (m: map a b{exists key.  mem key m}) : GTot (key: a{mem key m}) =
   FSet.choose (domain m)
 
 /// We now prove each of the facts that comprise `all_finite_map_facts`.
@@ -186,16 +186,16 @@ let empty_or_domain_occupied_lemma ()
 
 let empty_or_values_occupied_lemma ()
 : Lemma (empty_or_values_occupied_fact u#b) =
-  introduce forall (a: eqtype) (b:Type u#b) (m: map a b). m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
+  introduce forall (a: eqtype) (b:Type u#b) (m: map a b). m == emptymap \/ (exists v.  (values m) v)
   with
     if FSet.cardinality (domain m) = 0 then
-      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
+      introduce m == emptymap \/ (exists v.  (values m) v)
       with Left (
         assert (cardinality m = 0);
         cardinality_zero_iff_empty_lemma u#b ()
       )
     else
-      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
+      introduce m == emptymap \/ (exists v.  (values m) v)
       with Right (
         let k = choose m in
         let v = Some?.v ((elements m) k) in
@@ -204,16 +204,16 @@ let empty_or_values_occupied_lemma ()
 
 let empty_or_items_occupied_lemma ()
 : Lemma (empty_or_items_occupied_fact u#b) =
-  introduce forall (a: eqtype) (b: Type u#b) (m: map a b). m == emptymap \/ (exists item. {:nopattern (* uninferrable *)} (items m) item)
+  introduce forall (a: eqtype) (b: Type u#b) (m: map a b). m == emptymap \/ (exists item.  (items m) item)
   with
     if FSet.cardinality (domain m) = 0 then
-      introduce m == emptymap \/ (exists v. {:nopattern (* uninferrable *)} (values m) v)
+      introduce m == emptymap \/ (exists v.  (values m) v)
       with Left (
         assert (cardinality m = 0);
         cardinality_zero_iff_empty_lemma u#b ()
       )
     else
-      introduce m == emptymap \/ (exists item. {:nopattern (* uninferrable *)} (items m) item)
+      introduce m == emptymap \/ (exists item.  (items m) item)
       with Right (
         let k = choose m in
         let v = Some?.v ((elements m) k) in

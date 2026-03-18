@@ -34,7 +34,7 @@ val recall_token: #a:Type -> #b:preorder a -> m:mref a b -> p:(a -> Type){stable
 let spred (#a:Type) (rel:preorder a) = p:(a -> Type){Preorder.stable p rel}
 
 val lemma_functoriality (#a:Type) (#rel:preorder a) (r:mref a rel) (p q:spred rel)
-  : Lemma (requires (token r p /\ (forall x. {:nopattern (* uninferrable *)} p x ==> q x)))
+  : Lemma (requires (token r p /\ (forall x.  p x ==> q x)))
     (ensures (token r q))
 
 (* KM : These don't have much to do here... *)

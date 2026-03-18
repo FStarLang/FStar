@@ -55,7 +55,7 @@ val forall_elim
        (#a:Type)
        (#p:a -> Type)
        (v:a)
-       (f:squash (forall (x:a). {:nopattern (* uninferrable *)} p x))
+       (f:squash (forall (x:a).  p x))
   : Tot (squash (p v))
 
 (** Eliminate an existential quantifier into a proof of a goal [q] *)
@@ -63,7 +63,7 @@ val exists_elim
      (#t:Type)
      (#p:t -> Type)
      (#q:Type)
-     ($s_ex_p: squash (exists (x:t). {:nopattern (* uninferrable *)} p x))
+     ($s_ex_p: squash (exists (x:t).  p x))
      (f: (x:t -> squash (p x) -> Tot (squash q)))
   : Tot (squash q)
 
@@ -106,7 +106,7 @@ val forall_intro
       (a:Type)
       (p:a -> Type)
       (f: (x:a -> Tot (squash (p x))))
-  : Tot (squash (forall x. {:nopattern (* uninferrable *)} p x))
+  : Tot (squash (forall x.  p x))
 
 (** Introduce an existential quantifier *)
 val exists_intro
@@ -114,7 +114,7 @@ val exists_intro
         (p:a -> Type)
         (v:a)
         (x: unit -> Tot (squash (p v)))
-  : Tot (squash (exists x. {:nopattern (* uninferrable *)} p x))
+  : Tot (squash (exists x.  p x))
 
 (** Introduce an implication
     - The type of q can depend on p
