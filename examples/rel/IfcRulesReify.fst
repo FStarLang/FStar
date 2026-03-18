@@ -60,7 +60,7 @@ let universal_property_meet l l1 l2
 type label_fun = id -> Tot label
 
 type low_equiv (env:label_fun) (h1:rel heap) =
-  (forall (x:id). (* {:pattern (env x)} *) env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
+  (forall (x:id). {:nopattern (* prevents index matching loop *)} env x = Low ==> index (R?.l h1) x = index (R?.r h1) x)
 
 (**************************** Typing Judgements ****************************)
 
@@ -70,9 +70,8 @@ type low_equiv (env:label_fun) (h1:rel heap) =
    - Low equivalent input heaps + Low label ==> same result
 *)
 let ni_exp (env:label_fun) (e:exp) (l:label) : Tot Type0 =
-  forall (h: rel heap). (* {:pattern (low_equiv env h)} *)
+  forall (h: rel heap).
    (low_equiv env h /\ Low? l) ==>
-     (* interpret_exp (R?.r h) e = interpret_exp (R?.l h) e *)
      begin
        let vr = reify (interpret_exp_st e) (R?.r h)in
        let vl = reify (interpret_exp_st e) (R?.l h) in
@@ -91,7 +90,7 @@ let inv_com' (env:label_fun) (c:com) (l:label) (h0:heap) : Tot Type0
   match interpret_com h0 c with
   | None -> True
   | Some h1 ->
-    forall (i:id). (* {:pattern (env i < l)} *) env i < l ==> index h0 i = index h1 i
+    forall (i:id). env i < l ==> index h0 i = index h1 i
 
 let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) : Tot Type0 =
   let R h0l h0r = h0 in
@@ -110,8 +109,8 @@ let ni_com' (env:label_fun) (c:com) (l:label) (h0:rel heap) : Tot Type0 =
   end
 
 let ni_com (env:label_fun) (c:com) (l:label) : Tot Type0 =
-  (forall (h0: rel heap). (* {:pattern (low_equiv env h0)} *) ni_com' env c l h0) /\
-  (forall (h0:heap). (* {:pattern (Some? (interpret_com h0 c))} *) inv_com' env c l h0)
+  (forall (h0: rel heap). {:nopattern (* prevents ni_com' matching loop *)} ni_com' env c l h0) /\
+  (forall (h0:heap). {:nopattern (* prevents inv_com' matching loop *)} inv_com' env c l h0)
 
 (*********************** Typing Rules for Expressions **********************)
 

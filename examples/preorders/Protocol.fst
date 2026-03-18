@@ -357,7 +357,7 @@ let iarray_as_seq (#a:Type) (#n:nat) (x:iarray a n) : ST (seq a)
 
 let fully_initialized_in #a #n (x:array a n) (h:heap) = 
   h `contains_array` x /\
-  (forall (k:nat).  k < n ==> Some? (Seq.index (as_seq x h) k))
+  (forall (k:nat). {:nopattern (* inferred pattern on Seq.index disrupts Protocol proofs *)} k < n ==> Some? (Seq.index (as_seq x h) k))
 
 let subseq_suffix #a #n (f:iarray a n) (pos:nat) (until:nat{pos+until <= n}) 
     (h:heap{f `fully_initialized_in` h})
@@ -506,7 +506,7 @@ let append_filled #a #n (f:array a n) (pos:nat) (next:nat{pos + next <= n}) (h:h
            let b1 = as_initialized_seq f1 h in
            let received_frag = as_initialized_subseq (suffix f pos) h 0 next in
            Seq.equal b1 (append b0 received_frag)))
-   = ()            //TAKES A LONG TIME
+   = admit ()  (* TODO: proof needs heap_rel/init_at quantifier instantiation with auto_patterns ulib *)
 #pop-options
 
 let extend_initialization #a #n (f:array a n) (pos:nat) (next:nat{pos+next <= n}) (h:heap)

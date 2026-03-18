@@ -90,7 +90,7 @@ let equiv_on_h (c_0:command) (c_1:command) (h:heap) =
 (** [equiv c_0 c_1] : c_0 and c_1 are equivalent if when run in identical initial heaps, 
                     result in equivalent final heaps, 
                     and do not allocate **)
-let equiv (c_0:command) (c_1:command) = forall h. equiv_on_h c_0 c_1 h
+let equiv (c_0:command) (c_1:command) = forall h. {:nopattern (* prevents equiv_on_h matching loop *)} equiv_on_h c_0 c_1 h
 
 (** A relational example. Consider two functions f1 and f2, who read
     (resp. write) disjoint sets of references in the heap. Then, calling 

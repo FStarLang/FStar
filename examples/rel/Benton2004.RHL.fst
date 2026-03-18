@@ -245,7 +245,7 @@ let r_ass
 let included_alt (p1 p2 : gexp bool) : Lemma
   (included p1 p2 <==> (forall s1 s2 . p1 s1 s2 == true ==> p2 s1 s2 == true))
   [SMTPat (included p1 p2)]
-= assert (forall s1 s2 . holds (interp p1) s1 s2 <==> p1 s1 s2 == true);
+= assert (forall s1 s2 . {:nopattern (* prevents holds/interp matching loop *)} holds (interp p1) s1 s2 <==> p1 s1 s2 == true);
   assert (forall s1 s2 . holds (interp p2) s1 s2 <==> p2 s1 s2 == true)
 
 let r_sub

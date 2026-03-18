@@ -189,7 +189,7 @@ val extend_twice : x:var -> g:env -> t_x:typ -> t_y:typ -> Lemma
                       (extend_gen (x+1) t_x (extend_gen 0 t_y g))))
 let extend_twice x g t_x t_y = ()
 
-type sub_below (x:var) (s:sub) = (forall (y:var).  y<x ==> s y = EVar y)
+type sub_below (x:var) (s:sub) = (forall (y:var). {:nopattern (* prevents substitution matching loop *)} y<x ==> s y = EVar y)
 
 val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} ->
   Lemma (requires True) (ensures (v = subst s v)) (decreases v)

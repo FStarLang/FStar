@@ -34,7 +34,7 @@ type prog (i:int) = vl:list id{List.length vl = i /\ List.noRepeats vl} -> ISNul
 
 let sel = index
 
-type low_equiv (h : rel heap) (env:env) = (forall (x:id). (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x))
+type low_equiv (h : rel heap) (env:env) = (forall (x:id). {:nopattern (* prevents env/sel matching loop *)} (Low? (env x) ==> sel (R?.l h) x = sel (R?.r h) x))
 
 let rel_eq (#a:Type) (#b:eqtype) (r:rel a) ($f:a -> Tot b) : Tot bool =
   match r with | R hl hr -> f hl = f hr

@@ -96,7 +96,7 @@ type ni_com' (env:label_fun) (c:com) (l:label) (h0: rel (option heap)) =
           ==> sel hr r = sel (Some?.v o_r) r)))
 
 type ni_com (env:label_fun) (c:com) (l:label) =
-    forall (h0: rel (option heap)). ni_com' env c l h0
+    forall (h0: rel (option heap)). {:nopattern (* prevents ni_com' matching loop *)} ni_com' env c l h0
 
 
 (*********************** Typing Rules for Expressions **********************)

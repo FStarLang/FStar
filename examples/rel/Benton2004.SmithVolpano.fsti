@@ -29,7 +29,7 @@ let rec interp_context
   (gamma: context)
 : Ghost sttype
   (requires True)
-  (ensures (fun phi -> forall x' . List.Tot.mem x' (List.Tot.map fst gamma) == false ==> x' `st_fresh_in` phi))
+  (ensures (fun phi -> forall x' . {:nopattern (* prevents mem/st_fresh_in matching loop *)} List.Tot.mem x' (List.Tot.map fst gamma) == false ==> x' `st_fresh_in` phi))
 =  match gamma with
   | [] -> st_nil
   | (x, s) :: gamma' -> st_cons (interp_context gamma') x (interp_seclevel int s)

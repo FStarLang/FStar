@@ -258,7 +258,7 @@ let all_init (#a:Type0) (#n:nat) (arr:t a n) :Type0
   = all_init_i_j arr 0 n
 
 let init_arr_in_heap_i_j (#a:Type0) (#n:nat) (arr:t a n) (h:heap) (i:nat) (j:nat{j >= i /\ j <= n}) :Type0
-  = forall (k:nat).  (k >= i /\ k < j) ==> init_at_seq (as_seq arr h) k
+  = forall (k:nat). {:nopattern (* prevents init_at_seq matching loop *)} (k >= i /\ k < j) ==> init_at_seq (as_seq arr h) k
 
 let init_arr_in_heap (#a:Type0) (#n:nat) (arr:t a n) (h:heap) :Type0
   = init_arr_in_heap_i_j arr h 0 n
