@@ -179,3 +179,9 @@ instance duplicable_slprop_ref_pts_to x y : duplicable (slprop_ref_pts_to x y) =
 
 ghost fn dup_emp () : duplicable_f emp = { }
 instance duplicable_emp : duplicable emp = { dup_f = dup_emp }
+
+// An index to be used as argument to `Pulse.Lib.Array.Core.mask_read` (and derivatives) so that
+// b[_zero_for_deref] is turned into *b
+// Special treatment: marked to not be emitted to C
+// in CStarToC11.builtin_names
+let _zero_for_deref : FStar.UInt32.t = 0ul

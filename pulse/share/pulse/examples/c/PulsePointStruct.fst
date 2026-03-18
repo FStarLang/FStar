@@ -20,7 +20,6 @@ open Pulse.Lib.Pervasives
 open Pulse.C.Types
 
 module U32 = FStar.UInt32
-// module C = C // for _zero_for_deref
 
 
 fn swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t))
