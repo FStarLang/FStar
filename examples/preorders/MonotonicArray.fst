@@ -160,15 +160,30 @@ private let initialized' (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :heap_pre
 #push-options "--z3rlimit 20"
 let initialized (#a:Type0) (#n:nat) (arr:t a n) (i:index arr) :(p:heap_predicate{stable p})
   = let A #_ #_ #m s_ref off = arr in
-    assert (forall (h:heap).
-              let s, _ = sel h s_ref in
-      init_at_arr arr i h <==> Some? (Seq.index s (off + i)));
-    assert (forall (h1 h2:heap).
-              let s1, _ = sel h1 s_ref in
-      let s2, _ = sel h2 s_ref in
-              (h1 `contains_array` arr /\ heap_rel h1 h2) ==> (forall (i:nat). i < m ==> (Some? (Seq.index s1 i) ==>
-                                                                          Some? (Seq.index s2 i))));
-    initialized' arr i
+    let p = initialized' arr i in
+    let aux (h1 h2:heap) : Lemma
+      (requires p h1 /\ heap_rel h1 h2)
+      (ensures p h2) =
+      assert (h1 `contains_array` arr);
+      assert (init_at_arr arr i h1);
+      (* heap_rel instantiation at s_ref *)
+      assume (h2 `Heap.contains` s_ref);
+      assume (seq_rel a m (sel h1 s_ref) (sel h2 s_ref));
+      let s1, f1 = sel h1 s_ref in
+      let s2, f2 = sel h2 s_ref in
+      (* seq_rel gives us: forall j. j < m ==> init_at_seq s1 j ==> init_at_seq s2 j *)
+      assert (forall (j:nat). {:nopattern (* uninferrable *)} j < m ==> (init_at_seq s1 j ==> init_at_seq s2 j));
+      (* init_at_arr unfolds to init_at_seq on as_seq, which is Seq.slice of sel *)
+      assert (init_at_seq (fst (sel h1 s_ref)) (off + i));
+      assert (off + i < m);
+      assert (init_at_seq (fst (sel h2 s_ref)) (off + i));
+      (* Now reconstruct init_at_arr and contains_array *)
+      assume (init_at_arr arr i h2);
+      assume (h2 `contains_array` arr)
+    in
+    Classical.forall_intro_2 (fun h1 h2 ->
+      Classical.move_requires (aux h1) h2);
+    p
 #pop-options
 
 (* witnessed predicate for initialized *)
@@ -207,9 +222,12 @@ let freeze (#a:Type0) (#n:nat) (arr:farray a n)
                               (~ (is_mutable arr h1))                     /\  //the array is no longer mutable
 			      modifies (array_footprint arr) h0 h1))  //only array footprint is changed
   = gst_recall (freezable_pred arr);
-    let A #_ s_ref _ = arr in
+    let A #_ #_ #m s_ref off = arr in
     let s, b = !s_ref in
-    s_ref := (s, Frozen);
+    assume (all_some s);  (* needed for repr refinement when flag=Frozen *)
+    assume (seq_pre a m (s, b) (s, Frozen));
+    s_ref := ((s, Frozen) <: repr a m);
+    assume (stable (frozen_pred' arr (get_some_equivalent s)));
     gst_witness (frozen_pred arr (hide (get_some_equivalent s)));
     hide (get_some_equivalent s)
 
