@@ -28,7 +28,8 @@ let defaults = [
   ("context_pruning", "true");
   ("prune_decls", "true");
   ("fly_deps", "true");
-  ("optimize_let_vc", "true")
+  ("optimize_let_vc", "true");
+  ("auto_patterns", "true")
 ]
 
 let init : ext_state =
