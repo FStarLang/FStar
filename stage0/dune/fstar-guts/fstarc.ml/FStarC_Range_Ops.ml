@@ -25,13 +25,14 @@ let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
   then false
   else
-    (let a =
+    (let uu___1 =
        FStarC_Class_Ord.op_Less_Equals_Question FStarC_Range_Type.ord_pos
          r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos in
-     let b =
+     if uu___1
+     then
        FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
-         r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos in
-     if a then b else false)
+         r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos
+     else false)
 let string_of_pos (pos : FStarC_Range_Type.pos) : Prims.string=
   let uu___ =
     FStarC_Class_Show.show FStarC_Class_Show.showable_int

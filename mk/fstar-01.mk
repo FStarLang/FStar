@@ -1,4 +1,5 @@
 FSTAR_OPTIONS += --lax
+FSTAR_OPTIONS += --warn_error -272 # top-level effects
 
 EXTRACT :=
 EXTRACT += --extract 'FStarC'

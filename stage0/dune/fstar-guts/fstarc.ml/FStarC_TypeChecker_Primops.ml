@@ -17,14 +17,13 @@ let and_op (psc : FStarC_TypeChecker_Primops_Base.psc)
         FStarC_TypeChecker_Primops_Base.try_unembed_simple
           FStarC_Syntax_Embeddings.e_bool a1 in
       (match uu___ with
-       | FStar_Pervasives_Native.Some (false) ->
+       | FStar_Pervasives_Native.Some false ->
            let uu___1 =
              FStarC_TypeChecker_Primops_Base.embed_simple
                FStarC_Syntax_Embeddings.e_bool
                psc.FStarC_TypeChecker_Primops_Base.psc_range false in
            FStar_Pervasives_Native.Some uu___1
-       | FStar_Pervasives_Native.Some (true) ->
-           FStar_Pervasives_Native.Some a2
+       | FStar_Pervasives_Native.Some true -> FStar_Pervasives_Native.Some a2
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___ -> FStarC_Effect.failwith "Unexpected number of arguments"
 let or_op (psc : FStarC_TypeChecker_Primops_Base.psc)
@@ -38,13 +37,13 @@ let or_op (psc : FStarC_TypeChecker_Primops_Base.psc)
         FStarC_TypeChecker_Primops_Base.try_unembed_simple
           FStarC_Syntax_Embeddings.e_bool a1 in
       (match uu___ with
-       | FStar_Pervasives_Native.Some (true) ->
+       | FStar_Pervasives_Native.Some true ->
            let uu___1 =
              FStarC_TypeChecker_Primops_Base.embed_simple
                FStarC_Syntax_Embeddings.e_bool
                psc.FStarC_TypeChecker_Primops_Base.psc_range true in
            FStar_Pervasives_Native.Some uu___1
-       | FStar_Pervasives_Native.Some (false) ->
+       | FStar_Pervasives_Native.Some false ->
            FStar_Pervasives_Native.Some a2
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___ -> FStarC_Effect.failwith "Unexpected number of arguments"
@@ -54,11 +53,16 @@ let division_modulus_op (f : Prims.int -> Prims.int -> Prims.int)
   then FStar_Pervasives_Native.Some (f x y)
   else FStar_Pervasives_Native.None
 let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  [FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
+  [FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero
      FStarC_Parser_Const.string_of_int_lid FStarC_Syntax_Embeddings.e_int
      FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_string
      FStarC_TypeChecker_NBETerm.e_string
-     (fun z -> FStarC_Class_Show.show FStarC_Class_Show.showable_int z);
+     (fun z ->
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int z in
+        FStar_Pervasives_Native.Some uu___)
+     (fun z ->
+        let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int z in
+        FStar_Pervasives_Native.Some uu___);
   FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
     FStarC_Parser_Const.int_of_string_lid FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string
@@ -165,11 +169,17 @@ let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
     (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_char)
     FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string
     FStar_String.string_of_list;
-  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
     FStarC_Parser_Const.string_make_lid FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_char
     FStarC_TypeChecker_NBETerm.e_char FStarC_Syntax_Embeddings.e_string
-    FStarC_TypeChecker_NBETerm.e_string (fun x y -> FStarC_String.make x y);
+    FStarC_TypeChecker_NBETerm.e_string
+    (fun x y ->
+       let uu___ = FStarC_String.make x y in
+       FStar_Pervasives_Native.Some uu___)
+    (fun x y ->
+       let uu___ = FStarC_String.make x y in
+       FStar_Pervasives_Native.Some uu___);
   FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
     FStarC_Parser_Const.string_list_of_string_lid
     FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string
@@ -186,23 +196,40 @@ let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
     FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string
     FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string
     FStarC_String.uppercase;
-  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
     FStarC_Parser_Const.string_index_lid FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_char
-    FStarC_TypeChecker_NBETerm.e_char FStarC_String.index;
-  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
+    FStarC_TypeChecker_NBETerm.e_char
+    (fun s i ->
+       let uu___ = FStarC_String.index s i in
+       FStar_Pervasives_Native.Some uu___)
+    (fun s i ->
+       let uu___ = FStarC_String.index s i in
+       FStar_Pervasives_Native.Some uu___);
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
     FStarC_Parser_Const.string_index_of_lid FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string FStarC_Syntax_Embeddings.e_char
     FStarC_TypeChecker_NBETerm.e_char FStarC_Syntax_Embeddings.e_int
-    FStarC_TypeChecker_NBETerm.e_int FStarC_String.index_of;
-  FStarC_TypeChecker_Primops_Base.mk3 Prims.int_zero
+    FStarC_TypeChecker_NBETerm.e_int
+    (fun s c ->
+       let uu___ = FStarC_String.index_of s c in
+       FStar_Pervasives_Native.Some uu___)
+    (fun s c ->
+       let uu___ = FStarC_String.index_of s c in
+       FStar_Pervasives_Native.Some uu___);
+  FStarC_TypeChecker_Primops_Base.mk3' Prims.int_zero
     FStarC_Parser_Const.string_sub_lid FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_string
     FStarC_TypeChecker_NBETerm.e_string
-    (fun s o l -> FStarC_String.substring s o l)]
+    (fun s o l ->
+       let uu___ = FStarC_String.substring s o l in
+       FStar_Pervasives_Native.Some uu___)
+    (fun s o l ->
+       let uu___ = FStarC_String.substring s o l in
+       FStar_Pervasives_Native.Some uu___)]
 let short_circuit_ops :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let nbe_and _cb _us args = FStarC_TypeChecker_NBETerm.and_op args in

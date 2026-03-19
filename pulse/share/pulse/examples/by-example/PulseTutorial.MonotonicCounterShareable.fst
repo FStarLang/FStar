@@ -1,0 +1,110 @@
+module PulseTutorial.MonotonicCounterShareable
+#lang-pulse
+open Pulse.Lib.Pervasives
+open Pulse.Lib.Par
+open FStar.Preorder
+module MR = Pulse.Lib.MonotonicGhostRef
+module B = Pulse.Lib.Box
+
+assume
+val incr_atomic_box (r:B.box int) (#n:erased int)
+  : stt_atomic int emp_inames
+        (B.pts_to r n) 
+        (fun i -> B.pts_to r i ** pure (i == n + 1))
+
+inline_for_extraction let next_f (inv: int -> slprop) =
+    i:erased int -> stt int (inv i) (fun j -> inv j ** pure (i < j))
+inline_for_extraction let dup_f (inv: int -> slprop) =
+    i:erased int -> stt_ghost unit emp_inames (inv i) (fun y -> inv i ** inv i)
+
+noeq
+type ctr = {
+    inv:  int -> slprop;
+    is_send_inv: (i:int -> is_send (inv i));
+    next: next_f inv;
+    dup: dup_f inv;
+}
+
+instance is_send_ctr_inv (c: ctr) i : is_send (c.inv i) =
+    c.is_send_inv i
+
+let next c #i = c.next i
+let dup c #i = c.dup i
+let increases : preorder int = fun x y -> b2t (x <= y)
+let mctr = MR.mref increases
+
+let inv_core (x:B.box int) (mr:MR.mref increases)
+: timeless_slprop
+= exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
+
+fn new_counter ()
+returns c:ctr
+ensures c.inv 0
+{
+    open Pulse.Lib.Box;
+    let x = alloc 0;
+    let mr : MR.mref increases = MR.alloc #int #increases 0;
+    MR.take_snapshot mr #1.0R 0;
+    fold (inv_core x mr);
+    let ii = new_invariant (inv_core x mr);
+    with inv. assert pure (inv == (fun (i: int) ->
+        Pulse.Lib.Inv.inv ii (inv_core x mr) ** MR.snapshot mr i));
+    fn next (#_:unit) : next_f inv = i {
+        with_invariants int emp_inames ii (inv_core x mr) (MR.snapshot mr i)
+            (fun j -> MR.snapshot mr j ** pure (i < j)) fn _ {
+            unfold inv_core;
+            let res = incr_atomic_box x;
+            MR.recall_snapshot mr;
+            MR.update mr res;
+            drop_ (MR.snapshot mr i);
+            MR.take_snapshot mr #1.0R res;
+            fold (inv_core);
+            res
+        }
+    };
+    ghost
+    fn dup (#_:unit) : dup_f inv = i { };
+    let c = { inv; next; dup; is_send_inv = (fun i -> Tactics.Typeclasses.solve) };
+    rewrite inv 0 as (c.inv 0);
+    c
+}
+
+fn do_something (c:ctr) (#i:erased int) (_:unit)
+requires c.inv i
+ensures exists* j. c.inv j
+{ 
+    let v1 = next c;
+    let v2 = next c;
+    assert pure (v1 < v2);
+}
+
+fn test_counter ()
+{
+    let c = new_counter ();
+    dup c;
+    par (do_something c #0) (do_something c #0);
+    // with j. assert (c.inv j);
+    // show_proof_state;
+    admit() //ambiguity with identical slprops in the context
+}
+
+let named (name:string) (p:slprop) = p
+
+fn do_something' (name:string) (c:ctr) (#i:erased int) (_:unit)
+requires c.inv i
+ensures named name (exists* j. c.inv j)
+{ 
+    let v1 = next c;
+    let v2 = next c;
+    assert pure (v1 < v2);
+    fold (named name (exists* j. c.inv j));
+}
+
+fn test_counter' ()
+{
+    let c = new_counter ();
+    dup c;
+    par (do_something' "left" c #0) (do_something' "right" c #0);
+    drop_ (named "left" _);
+    drop_ (named "right" _)
+}

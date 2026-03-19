@@ -1,0 +1,475 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module ParallelIncrement
+#lang-pulse
+open Pulse.Lib.Pervasives
+
+module L = Pulse.Lib.SpinLock
+module GR = Pulse.Lib.GhostReference
+module R = Pulse.Lib.Reference
+open Pulse.Lib.Par
+
+
+fn increment (#p:perm)
+             (x:ref nat)
+             (l:L.lock)
+preserves (L.lock_alive l #p (exists* v. pts_to x #0.5R v))
+requires R.pts_to x #0.5R 'i
+ensures R.pts_to x #0.5R ('i + 1)
+ {
+    let v = !x;
+    L.acquire l;
+    R.gather x;
+    with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x _v);
+    x := (v + 1);
+    R.share x;
+    with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
+    L.release l;
+    with p _v. rewrite (R.pts_to x #p _v) as (R.pts_to x #0.5R _v);
+}
+
+[@@erasable]
+let increment_f_f (x: ref nat) (pred qpred: nat -> slprop) =
+  v:nat -> stt_ghost unit emp_inames
+    (pred v ** qpred v ** R.pts_to x #0.5R (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (v + 1) ** R.pts_to x #0.5R (v + 1))
+
+fn increment_f (x: ref nat)
+               (#p:perm)
+               (#pred #qpred: nat -> slprop)
+               (l:L.lock)
+               (f: increment_f_f x pred qpred)
+preserves L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v)
+requires R.pts_to x #0.5R 'i
+requires qpred 'i
+ensures R.pts_to x #0.5R ('i + 1)
+ensures qpred ('i + 1)
+ {
+    let vx = !x;
+    L.acquire l;
+    with v. assert R.pts_to x #0.5R 'i ** R.pts_to x #0.5R v ** pred v;
+    R.gather x;
+    rewrite each v as 'i;
+    x := (!x + 1);
+    R.share x;
+    f vx;
+    L.release l;
+}
+
+
+[@@erasable]
+let increment_f2_f (x: ref int) (pred qpred: int -> slprop) =
+  v:int -> vq:int -> stt_ghost unit emp_inames
+    (pred v ** qpred vq ** pts_to x (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))
+
+fn increment_f2 (x: ref int)
+                (#p:perm)
+                (#pred #qpred: int -> slprop)
+                (l:L.lock)
+                (f: increment_f2_f x pred qpred)
+preserves L.lock_alive l #p (exists* v. pts_to x v ** pred v)
+requires qpred 'i
+ensures qpred ('i + 1)
+ {
+    L.acquire l;
+    let vx = !x;
+    x := vx + 1;
+    f vx 'i;
+    L.release l;
+}
+
+
+#push-options "--warn_error -249"
+
+fn parallel_increment
+        (x: ref int)
+requires pts_to x 'i
+ensures pts_to x ('i + 2)
+{
+    let left = GR.alloc #int 0;
+    let right = GR.alloc #int 0;
+    GR.share left;
+    GR.share right;
+    let lock = L.new_lock (
+      exists* (v:int).
+        pts_to x v **
+        (exists* (vl vr:int).
+          pts_to left #0.5R vl **
+          pts_to right #0.5R vr **
+          pure (v == 'i + vl + vr))
+    );
+    ghost
+    fn step
+        (lr:GR.ref int)
+        (b:bool { if b then lr == left else lr == right })
+        : increment_f2_f x
+          (fun v ->
+            exists* (vl vr:int).
+                pts_to left #0.5R vl **
+                pts_to right #0.5R vr **
+                pure (v == 'i + vl + vr))
+          (fun vq -> pts_to lr #0.5R vq)
+      = v vq
+    { 
+      if b
+      {
+        with _p _v. rewrite (pts_to lr #_p _v) as (pts_to left #_p _v);
+        GR.gather left;
+        with _p _v. rewrite (pts_to left #_p _v) as (pts_to left _v);
+        GR.( left := vq + 1 );
+        GR.share left;      
+        with _p _v. rewrite (pts_to left #_p _v) as (pts_to lr #_p _v);
+      }
+      else
+      {
+        with _p _v. rewrite (pts_to lr #_p _v) as (pts_to right #_p _v);
+        GR.gather right;
+        with _p _v. rewrite (pts_to right #_p _v) as (pts_to right _v);
+        GR.( right := vq + 1 );
+        GR.share right;      
+        with _p _v. rewrite (pts_to right #_p _v) as (pts_to lr #_p _v);
+      }
+    };
+
+    with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
+    L.share lock;
+    par
+      #(requires pts_to left #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(ensures  pts_to left #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(requires pts_to right #0.5R 0 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      #(ensures pts_to right #0.5R 1 **
+             L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
+      fn _ { increment_f2 x lock (step left true) }
+      fn _ { increment_f2 x lock (step right false) };
+
+    L.gather lock;
+    L.acquire lock;
+    GR.gather left;
+    GR.gather right;
+    with _p _v. rewrite (pts_to left #_p _v) as (pts_to left _v);
+    with _p _v. rewrite (pts_to right #_p _v) as (pts_to right _v);
+    GR.free left;
+    GR.free right;
+    L.free lock
+}
+
+
+assume
+val atomic_increment (r:ref int) (#i:erased int)
+  : stt_atomic unit emp_inames 
+    (pts_to r i)
+    (fun _ -> pts_to r (i + 1))
+     
+
+let test (l:iname) = assert (not (mem_inv emp_inames l))
+let pts_to_refine (#a: Type0) (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
+
+fn atomic_increment_f2
+        (x: ref int)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
+        (f: (v:int -> vq:int -> stt_ghost unit emp_inames
+                  (pred v ** qpred vq ** pts_to x (v + 1))
+                  (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+preserves inv l (pts_to_refine x pred)
+requires qpred 'i
+ensures qpred ('i + 1)
+{
+  with_invariants unit emp_inames l (pts_to_refine x pred) (qpred 'i) (fun _ -> qpred ('i + 1))
+  fn _ {
+    unfold pts_to_refine;
+    with v. _;
+    atomic_increment x;
+    f v 'i;
+    fold pts_to_refine x pred;
+  }
+}
+
+
+open Pulse.Lib.Trade.Util
+module FA = Pulse.Lib.Forall.Util
+module I = Pulse.Lib.Trade.Util
+
+fn atomic_increment_f3
+        (x: ref int)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
+requires
+  inv l (pts_to_refine x pred) **
+  qpred 'i **
+  (forall* v vq.
+     (pred v ** qpred vq ** pts_to x (v + 1)) @==>
+     (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1)))
+ensures inv l (pts_to_refine x pred)
+ensures qpred ('i + 1)
+{
+  with_invariants unit emp_inames l (pts_to_refine x pred)
+    (qpred 'i ** (forall* v vq.
+      (pred v ** qpred vq ** pts_to x (v + 1)) @==>
+      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+    (fun _ -> qpred ('i + 1))
+  fn _ {
+    unfold pts_to_refine;
+    with v. _;
+    atomic_increment x;
+    FA.elim #_ #(fun v -> forall* vq. (pred v ** qpred vq ** pts_to x (v + 1)) @==>
+                                      (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) v;
+
+    FA.elim #_ #(fun vq -> (pred v ** qpred vq ** pts_to x (v + 1)) @==>
+                           (pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))) 'i;
+    I.elim _ _;
+    fold pts_to_refine x pred;
+  }
+}
+
+#pop-options
+
+fn atomic_increment_f4
+        (x: ref int)
+        (#invp : slprop)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
+        (f: (v:int -> vq:int -> stt_ghost unit
+                  emp_inames
+                  (pred v ** qpred vq ** pts_to x (v + 1))
+                  (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+requires
+  inv l invp **
+  qpred 'i **
+  (invp @==> (exists* v. pts_to x v ** pred v)) ** 
+  ((exists* v. pts_to x v ** pred v) @==> invp)
+ensures inv l invp
+ensures qpred ('i + 1)
+{
+  with_invariants unit emp_inames l invp
+    (qpred 'i **
+      (invp @==> (exists* v. pts_to x v ** pred v)) ** 
+      ((exists* v. pts_to x v ** pred v) @==> invp))
+    (fun _ -> qpred ('i + 1))
+  fn _ {
+    I.elim invp _;
+    atomic_increment x;
+    f _ 'i;
+    I.elim (exists* v. pts_to x v ** pred v) invp;
+  }
+}
+
+
+
+assume
+val atomic_read (r:ref int) (#p:_) (#i:erased int)
+  : stt_atomic int emp_inames 
+    (pts_to r #p i)
+    (fun v -> pts_to r #p v ** pure (reveal i == v))
+
+assume
+val cas (r:ref int) (u v:int) (#i:erased int)
+  : stt_atomic bool emp_inames 
+    (pts_to r i)
+    (fun b ->
+      cond b (pts_to r v ** pure (reveal i == u)) 
+             (pts_to r i))
+
+
+
+fn atomic_increment_f5
+        (x: ref int)
+        (#invp #tok : slprop)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
+        (elim_inv: 
+          (_:unit -> stt_ghost unit emp_inames invp (fun _ ->
+                    ((exists* v. pts_to x v ** pred v) ** tok))))
+        (intro_inv:
+            (_:unit -> stt_ghost unit
+                        emp_inames
+                        ((exists* v. pts_to x v ** pred v) ** tok)
+                        (fun _ -> invp)))
+        (f: (v:int -> vq:int -> stt_ghost unit 
+                  emp_inames
+                  (pred v ** qpred vq ** pts_to x (v + 1))
+                  (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
+preserves inv l invp
+requires qpred 'i
+ensures qpred ('i + 1)
+{
+  fn read ()
+  preserves inv l invp
+  returns v:int
+  {
+    with_invariants int emp_inames l invp emp (fun _ -> emp) fn _ {
+        elim_inv ();
+        with i. _;
+        let v = atomic_read x;
+        rewrite (pts_to x v) as (pts_to x i);
+        intro_inv ();
+        v
+    }
+  };
+  while (true)
+    invariant exists* j. qpred j
+    requires (observe qpred == 'i)
+    ensures (observe qpred == 'i + 1)
+  {
+    with j. rewrite qpred j as qpred 'i;
+    let v = read ();
+    let next = 
+      with_invariants bool emp_inames l invp
+        (qpred 'i)
+        (fun b1 -> exists* j. qpred j ** pure (j == (if b1 then reveal 'i else 'i + 1)))
+      fn _ {
+        elim_inv ();
+        with vv. assert pure (vv == !x);
+        let b = cas x v (v + 1);
+        if b
+        {
+          unfold cond;
+          f vv 'i;
+          intro_inv ();
+          false
+        }
+        else
+        {
+          unfold cond;
+          intro_inv ();
+          true
+        }
+      };
+    if (not next) { break }
+  };
+  with j. rewrite qpred j as qpred ('i + 1);
+}
+ 
+
+
+module C = Pulse.Lib.CancellableInvariant
+
+[@@erasable]
+let atomic_increment_f6_f (x: ref int) (pred qpred: int -> slprop) =
+  v:int -> vq:int -> stt_ghost unit emp_inames
+    (pred v ** qpred vq ** pts_to x (v + 1))
+    (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))
+
+fn atomic_increment_f6
+        (x: ref int)
+        (#p:_)
+        (#pred #qpred: int -> slprop)
+        (c:C.cinv)
+        (f: atomic_increment_f6_f x pred qpred)
+preserves inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+requires qpred 'i
+preserves C.active c p
+ensures qpred ('i + 1)
+{
+  with_invariants unit emp_inames (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+    (qpred 'i ** C.active c p)
+    (fun _ -> qpred ('i + 1) ** C.active c p)
+  fn _ {
+    C.unpack_cinv_vp c;
+    atomic_increment x;
+    f _ 'i;
+    C.pack_cinv_vp #(exists* v. pts_to x v ** pred v) c;
+  }
+}
+
+
+
+
+fn parallel_increment_inv
+        (x: ref int)
+requires pts_to x 'i
+ensures pts_to x ('i + 2)
+{
+    let left = GR.alloc #int 0;
+    let right = GR.alloc #int 0;
+    GR.share left;
+    GR.share right;
+    let c = C.new_cancellable_invariant (
+      exists* (v:int).
+          pts_to x v **
+          (exists* (vl vr:int).
+            pts_to left #0.5R vl **
+            pts_to right #0.5R vr **
+            pure (v == 'i + vl + vr))
+
+    );
+    ghost
+    fn step
+        (lr:GR.ref int)
+        (b:bool { if b then lr == left else lr == right })
+      : atomic_increment_f6_f x
+        (fun v -> exists* (vl vr:int).
+            pts_to left #0.5R vl **
+            pts_to right #0.5R vr **
+            pure (v == 'i + vl + vr))
+        (fun vq -> pts_to lr #0.5R vq)
+      = v vq
+    { 
+      if b
+      {
+        with _p _v. rewrite (pts_to lr #_p _v) as (pts_to left #_p _v);
+        GR.gather left;
+        with _p _v. rewrite (pts_to left #_p _v) as (pts_to left _v);
+        GR.( left := vq + 1 );
+        GR.share left;      
+        with _p _v. rewrite (pts_to left #_p _v) as (pts_to lr #_p _v);
+      }
+      else
+      {
+        with _p _v. rewrite (pts_to lr #_p _v) as (pts_to right #_p _v);
+        GR.gather right;
+        with _p _v. rewrite (pts_to right #_p _v) as (pts_to right _v);
+        GR.( right := vq + 1 );
+        GR.share right;      
+        with _p _v. rewrite (pts_to right #_p _v) as (pts_to lr #_p _v);
+      }
+    };
+
+    C.share c;
+    with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+
+    par
+      #(requires pts_to left #0.5R 0 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(ensures  pts_to left #0.5R 1 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(requires pts_to right #0.5R 0 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      #(ensures pts_to right #0.5R 1 **
+            C.active c 0.5R **
+            inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)))
+      fn _ { atomic_increment_f6 x c (step left true) }
+      fn _ { atomic_increment_f6 x c (step right false) };
+
+    C.gather c;
+    later_credit_buy 1;
+    C.cancel c;
+    GR.gather left;
+    GR.gather right;
+    with _p _v. rewrite (pts_to left #_p _v) as (pts_to left _v);
+    with _p _v. rewrite (pts_to right #_p _v) as (pts_to right _v);
+    GR.free left;
+    GR.free right;
+}
+

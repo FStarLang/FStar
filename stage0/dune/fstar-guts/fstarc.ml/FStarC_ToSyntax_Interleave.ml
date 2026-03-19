@@ -61,8 +61,9 @@ let definition_lids (d : FStarC_Parser_AST.decl) :
                 (FStarC_Format.fmt1 "Unknown syntax extension %s"
                    extension_name))
        | FStar_Pervasives_Native.Some parser ->
-           (match parser.FStarC_Parser_AST_Util.parse_decl_name code range
-            with
+           let uu___1 =
+             parser.FStarC_Parser_AST_Util.parse_decl_name code range in
+           (match uu___1 with
             | FStar_Pervasives.Inl error ->
                 FStarC_Errors.raise_error
                   FStarC_Class_HasRange.hasRange_range
@@ -71,7 +72,7 @@ let definition_lids (d : FStarC_Parser_AST.decl) :
                   (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
                   (Obj.magic error.FStarC_Parser_AST_Util.message)
             | FStar_Pervasives.Inr id ->
-                let uu___1 = FStarC_Ident.lid_of_ids [id] in [uu___1]))
+                let uu___2 = FStarC_Ident.lid_of_ids [id] in [uu___2]))
   | uu___ -> []
 let is_definition_of (x : FStarC_Ident.ident) (d : FStarC_Parser_AST.decl) :
   Prims.bool=
@@ -284,7 +285,10 @@ let rec prefix_with_iface_decls (iface : FStarC_Parser_AST.decl Prims.list)
                  | FStarC_Parser_AST.DeclToBeDesugared uu___6 ->
                      (iface_tl, [impl])
                  | uu___6 -> (iface_tl, [iface_hd; impl]))
-              else (iface, [qualify_karamel_private impl])
+              else
+                (let uu___7 = prefix_with_iface_decls iface_tl impl in
+                 match uu___7 with
+                 | (iface1, ds) -> ((iface_hd :: iface1), ds))
           | FStarC_Parser_AST.Pragma uu___1 ->
               prefix_with_iface_decls iface_tl impl
           | FStarC_Parser_AST.Exception (id, uu___1) ->

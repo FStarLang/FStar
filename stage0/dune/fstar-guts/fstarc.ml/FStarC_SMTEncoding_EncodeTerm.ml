@@ -682,11 +682,11 @@ let rec encode_const (c : FStarC_Const.sconst)
        match c with
        | FStarC_Const.Const_unit ->
            (FStarC_SMTEncoding_Term.mk_Term_unit, [])
-       | FStarC_Const.Const_bool (true) ->
+       | FStarC_Const.Const_bool true ->
            let uu___1 =
              FStarC_SMTEncoding_Term.boxBool FStarC_SMTEncoding_Util.mkTrue in
            (uu___1, [])
-       | FStarC_Const.Const_bool (false) ->
+       | FStarC_Const.Const_bool false ->
            let uu___1 =
              FStarC_SMTEncoding_Term.boxBool FStarC_SMTEncoding_Util.mkFalse in
            (uu___1, [])

@@ -1,0 +1,18 @@
+* Info at Bug.DesugaringError.fst(9,4-9,5):
+  - Expected failure:
+  - Identifier not found: a
+  - Hint: Did you mean x or y?
+
+* Info at Bug.DesugaringError.fst(14,12-14,21):
+  - Expected failure:
+  - Identifier not found: something
+
+* Info at Bug.DesugaringError.fst(25,9-25,10):
+  - Expected failure:
+  - Expected expression of type Prims.nat got expression y of type Prims.bool
+
+* Info at Bug.DesugaringError.fst(36,4-36,8):
+  - Expected failure:
+  - Ill-typed term: f true
+  - Expected expression of type Prims.nat got expression true of type Prims.bool
+

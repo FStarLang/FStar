@@ -557,26 +557,30 @@ and free_names_and_uvars_dec_order
       op_Plus_Plus uu___ uu___1
 and should_invalidate_cache (n : FStarC_Syntax_Syntax.free_vars)
   (use_cache : use_cache_t) : Prims.bool=
-  let b1 = use_cache <> Def in
-  let b2 =
-    FStarC_Class_Setlike.for_any ()
-      (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_ctx_uvar))
-      (fun u ->
-         let uu___ =
-           FStarC_Syntax_Unionfind.find u.FStarC_Syntax_Syntax.ctx_uvar_head in
-         match uu___ with
-         | FStar_Pervasives_Native.Some uu___1 -> true
-         | uu___1 -> false) (Obj.magic n.FStarC_Syntax_Syntax.free_uvars) in
-  let b3 =
+  let uu___ =
+    if use_cache <> Def
+    then true
+    else
+      FStarC_Class_Setlike.for_any ()
+        (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_ctx_uvar))
+        (fun u ->
+           let uu___1 =
+             FStarC_Syntax_Unionfind.find
+               u.FStarC_Syntax_Syntax.ctx_uvar_head in
+           match uu___1 with
+           | FStar_Pervasives_Native.Some uu___2 -> true
+           | uu___2 -> false) (Obj.magic n.FStarC_Syntax_Syntax.free_uvars) in
+  if uu___
+  then true
+  else
     FStarC_Class_Setlike.for_any ()
       (Obj.magic (FStarC_FlatSet.setlike_flat_set ord_univ_uvar))
       (fun u ->
-         let uu___ = FStarC_Syntax_Unionfind.univ_find u in
-         match uu___ with
-         | FStar_Pervasives_Native.Some uu___1 -> true
+         let uu___1 = FStarC_Syntax_Unionfind.univ_find u in
+         match uu___1 with
+         | FStar_Pervasives_Native.Some uu___2 -> true
          | FStar_Pervasives_Native.None -> false)
-      (Obj.magic n.FStarC_Syntax_Syntax.free_univs) in
-  if (if b1 then true else b2) then true else b3
+      (Obj.magic n.FStarC_Syntax_Syntax.free_univs)
 let names (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.bv FStarC_FlatSet.t=
   let uu___ =

@@ -205,12 +205,16 @@ let json_of_issue (issue1 : issue) : FStarC_Json.json=
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              FStarC_Option.map FStarC_Range_Ops.refind_range
-                issue1.issue_range in
-            match uu___6 with
-            | FStar_Pervasives_Native.None -> FStarC_Json.JsonNull
-            | FStar_Pervasives_Native.Some r ->
-                FStarC_Range_Type.json_of_range r in
+              let uu___7 =
+                FStarC_Option.map FStarC_Range_Ops.refind_range
+                  issue1.issue_range in
+              Obj.magic
+                (FStarC_Class_Monad.op_Less_Dollar_Greater
+                   FStarC_Class_Monad.monad_option () ()
+                   (fun uu___8 ->
+                      (Obj.magic FStarC_Range_Type.json_of_range) uu___8)
+                   (Obj.magic uu___7)) in
+            FStarC_Option.dflt FStarC_Json.JsonNull uu___6 in
           ("range", uu___5) in
         let uu___5 =
           let uu___6 =
@@ -533,12 +537,13 @@ let mk_default_handler (uu___ : unit) : error_handler=
         then FStarC_Effect.failwith "Aborting due to --abort_on"
         else ()))
     else ();
-    (let uu___5 = FStarC_Options.defensive_abort () in
+    (let uu___5 =
+       let uu___6 = FStarC_Options.defensive_abort () in
+       if uu___6
+       then e.issue_number = (FStar_Pervasives_Native.Some defensive_errno)
+       else false in
      if uu___5
-     then
-       (if e.issue_number = (FStar_Pervasives_Native.Some defensive_errno)
-        then FStarC_Effect.failwith "Aborting due to --defensive abort"
-        else ())
+     then FStarC_Effect.failwith "Aborting due to --defensive abort"
      else ()) in
   let count_errors uu___1 = FStarC_Effect.op_Bang err_count in
   let report uu___1 = [] in

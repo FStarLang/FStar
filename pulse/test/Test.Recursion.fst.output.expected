@@ -1,0 +1,22 @@
+* Info at Test.Recursion.fst(84,2-84,20):
+  - Expected failure:
+  - Ill-typed term: test_ghost_loop ()
+  - Expected a term of type
+      ghost fn
+        requires emp
+        ensures emp
+  - Could not prove termination
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
+* Info at Test.Recursion.fst(127,4-127,22):
+  - Expected failure:
+  - Ill-typed term: test5' (z - 1) (y - 1)
+  - Expected a term of type
+      ghost fn
+        requires emp
+        ensures emp
+  - Could not prove termination
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+

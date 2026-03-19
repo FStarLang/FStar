@@ -833,36 +833,40 @@ let doZ3Exe (log_file : Prims.string FStar_Pervasives_Native.option)
                   (fun name ->
                      let uu___4 =
                        let uu___5 =
-                         FStarC_Util.for_some
-                           (fun wl -> FStarC_Util.contains name wl) whitelist in
-                       Prims.op_Negation uu___5 in
-                     if uu___4
-                     then
-                       (if
-                          Prims.op_Negation
-                            (FStarC_Util.starts_with name "binder_")
-                        then
-                          (if
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 =
+                               let uu___9 =
+                                 FStarC_Util.for_some
+                                   (fun wl -> FStarC_Util.contains name wl)
+                                   whitelist in
+                               Prims.op_Negation uu___9 in
+                             if uu___8
+                             then
+                               Prims.op_Negation
+                                 (FStarC_Util.starts_with name "binder_")
+                             else false in
+                           if uu___7
+                           then
                              Prims.op_Negation
                                (FStarC_Util.starts_with name "@query")
-                           then
-                             (if
-                                Prims.op_Negation
-                                  (FStarC_Util.starts_with name "@MaxFuel")
-                              then
-                                (if
-                                   Prims.op_Negation
-                                     (FStarC_Util.starts_with name
-                                        "@MaxIFuel")
-                                 then
-                                   let uu___5 =
-                                     FStarC_Util.for_some
-                                       (fun name' -> name = name') names in
-                                   Prims.op_Negation uu___5
-                                 else false)
-                              else false)
-                           else false)
-                        else false)
+                           else false in
+                         if uu___6
+                         then
+                           Prims.op_Negation
+                             (FStarC_Util.starts_with name "@MaxFuel")
+                         else false in
+                       if uu___5
+                       then
+                         Prims.op_Negation
+                           (FStarC_Util.starts_with name "@MaxIFuel")
+                       else false in
+                     if uu___4
+                     then
+                       let uu___5 =
+                         FStarC_Util.for_some (fun name' -> name = name')
+                           names in
+                       Prims.op_Negation uu___5
                      else false) core in
               (match missing with
                | [] -> ()
@@ -993,8 +997,8 @@ let mk_input (fresh : Prims.bool)
        if uu___3
        then true
        else
-         (let uu___5 = FStarC_Options.use_hints () in
-          if uu___5 then FStarC_Options.use_hint_hashes () else false) in
+         (let uu___4 = FStarC_Options.use_hints () in
+          if uu___4 then FStarC_Options.use_hint_hashes () else false) in
      if uu___2
      then
        let uu___3 =

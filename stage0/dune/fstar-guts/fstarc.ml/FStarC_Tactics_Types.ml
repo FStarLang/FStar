@@ -246,18 +246,24 @@ let set_ps_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate)
   }
 let tracepoint_with_psc (psc : FStarC_TypeChecker_Primops_Base.psc)
   (ps : proofstate) : Prims.bool=
-  let do_trace = FStarC_Options.tactic_trace () in
-  let trace_depth = FStarC_Options.tactic_trace_d () in
-  if (if do_trace then true else ps.depth <= trace_depth)
-  then (let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE")
-  else ();
+  (let uu___1 =
+     let uu___2 = FStarC_Options.tactic_trace () in
+     if uu___2
+     then true
+     else
+       (let uu___3 = FStarC_Options.tactic_trace_d () in ps.depth <= uu___3) in
+   if uu___1
+   then let ps1 = set_ps_psc psc ps in ps1.__dump ps1 "TRACE"
+   else ());
   true
 let tracepoint (ps : proofstate) : Prims.bool=
-  let do_trace = FStarC_Options.tactic_trace () in
-  let trace_depth = FStarC_Options.tactic_trace_d () in
-  if (if do_trace then true else ps.depth <= trace_depth)
-  then ps.__dump ps "TRACE"
-  else ();
+  (let uu___1 =
+     let uu___2 = FStarC_Options.tactic_trace () in
+     if uu___2
+     then true
+     else
+       (let uu___3 = FStarC_Options.tactic_trace_d () in ps.depth <= uu___3) in
+   if uu___1 then ps.__dump ps "TRACE" else ());
   true
 let set_proofstate_range (ps : proofstate) (r : FStarC_Range_Type.t) :
   proofstate=

@@ -9,11 +9,10 @@ let __proj__Mkpos__item__col (projectee : pos) : Prims.int=
   match projectee with | { line; col;_} -> col
 let max (i : Prims.int) (j : Prims.int) : Prims.int= if i < j then j else i
 let compare_pos (p1 : pos) (p2 : pos) : FStarC_Order.order=
-  let c = FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.line p2.line in
-  match c with
-  | FStarC_Order.Eq ->
-      FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.col p2.col
-  | uu___ -> c
+  let uu___ = FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.line p2.line in
+  FStarC_Order.lex uu___
+    (fun uu___1 ->
+       FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.col p2.col)
 let deq_pos : pos FStarC_Class_Deq.deq=
   { FStarC_Class_Deq.op_Equals_Question = (=) }
 let ord_pos : pos FStarC_Class_Ord.ord=

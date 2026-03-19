@@ -247,7 +247,9 @@ let is_fvar (t : FStarC_Reflection_Types.term) (nm : Prims.string) :
   | uu___ -> false
 let rec is_any_fvar (t : FStarC_Reflection_Types.term)
   (nms : Prims.string Prims.list) : Prims.bool=
-  match nms with | [] -> false | v::vs -> (is_fvar t v) || (is_any_fvar t vs)
+  match nms with
+  | [] -> false
+  | v::vs -> if is_fvar t v then true else is_any_fvar t vs
 let is_uvar (t : FStarC_Reflection_Types.term) : Prims.bool=
   match FStarC_Reflection_V1_Builtins.inspect_ln (head t) with
   | FStarC_Reflection_V1_Data.Tv_Uvar (uu___, uu___1) -> true

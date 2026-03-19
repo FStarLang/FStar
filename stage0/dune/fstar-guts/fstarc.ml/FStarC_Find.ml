@@ -75,13 +75,13 @@ let read_fstar_include (fn : Prims.string) :
                  (FStarC_String.split [13; 10] s) in
              FStarC_List.filter
                (fun s1 ->
-                  let ne = s1 <> "" in
-                  let nc =
+                  if s1 <> ""
+                  then
                     let uu___2 =
                       let uu___3 = FStarC_String.get s1 Prims.int_zero in
                       uu___3 = 35 in
-                    Prims.op_Negation uu___2 in
-                  if ne then nc else false) uu___1 in
+                    Prims.op_Negation uu___2
+                  else false) uu___1 in
            FStar_Pervasives_Native.Some subdirs) ()
   with
   | uu___ ->

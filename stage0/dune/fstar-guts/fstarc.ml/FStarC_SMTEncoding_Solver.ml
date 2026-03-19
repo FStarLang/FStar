@@ -478,29 +478,28 @@ let query_errors (settings : query_settings)
            FStar_Pervasives_Native.Some err)
 let detail_hint_replay (settings : query_settings)
   (z3result : FStarC_SMTEncoding_Z3.z3result) : unit=
-  if used_hint settings
+  let uu___ =
+    if used_hint settings
+    then FStarC_Options.detail_hint_replay ()
+    else false in
+  if uu___
   then
-    let uu___ = FStarC_Options.detail_hint_replay () in
-    (if uu___
-     then
-       match z3result.FStarC_SMTEncoding_Z3.z3result_status with
-       | FStarC_SMTEncoding_Z3.UNSAT uu___1 -> ()
-       | _failed ->
-           let ask_z3 label_assumptions =
-             let uu___1 =
-               with_fuel_and_diagnostics settings label_assumptions in
-             let uu___2 =
-               let uu___3 =
-                 FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                   settings.query_index in
-               FStarC_Format.fmt2 "(%s, %s)" settings.query_name uu___3 in
-             FStarC_SMTEncoding_Z3.ask settings.query_range
-               settings.query_hash settings.query_all_labels uu___1 uu___2
-               false FStar_Pervasives_Native.None in
-           FStarC_SMTEncoding_ErrorReporting.detail_errors true
-             (settings.query_env).FStarC_SMTEncoding_Env.tcenv
-             settings.query_all_labels ask_z3
-     else ())
+    match z3result.FStarC_SMTEncoding_Z3.z3result_status with
+    | FStarC_SMTEncoding_Z3.UNSAT uu___1 -> ()
+    | _failed ->
+        let ask_z3 label_assumptions =
+          let uu___1 = with_fuel_and_diagnostics settings label_assumptions in
+          let uu___2 =
+            let uu___3 =
+              FStarC_Class_Show.show FStarC_Class_Show.showable_int
+                settings.query_index in
+            FStarC_Format.fmt2 "(%s, %s)" settings.query_name uu___3 in
+          FStarC_SMTEncoding_Z3.ask settings.query_range settings.query_hash
+            settings.query_all_labels uu___1 uu___2 false
+            FStar_Pervasives_Native.None in
+        FStarC_SMTEncoding_ErrorReporting.detail_errors true
+          (settings.query_env).FStarC_SMTEncoding_Env.tcenv
+          settings.query_all_labels ask_z3
   else ()
 let find_localized_errors (errs : errors Prims.list) :
   errors FStar_Pervasives_Native.option=

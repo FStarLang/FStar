@@ -326,31 +326,32 @@ let gen (env : FStarC_TypeChecker_Env.env) (is_rec : Prims.bool)
                        FStarC_Syntax_Unionfind.equiv
                          u.FStarC_Syntax_Syntax.ctx_uvar_head
                          u'.FStarC_Syntax_Syntax.ctx_uvar_head) u21) u11 in
-           let fwd = uvars_subseteq u1 u2 in
-           let bwd = uvars_subseteq u2 u1 in
-           if (if fwd then bwd else false)
+           let uu___3 =
+             let uu___4 = uvars_subseteq u1 u2 in
+             if uu___4 then uvars_subseteq u2 u1 else false in
+           if uu___3
            then ()
            else
-             (let uu___4 = lec_hd in
-              match uu___4 with
-              | (lb1, uu___5, uu___6) ->
-                  let uu___7 = lec2 in
-                  (match uu___7 with
-                   | (lb2, uu___8, uu___9) ->
+             (let uu___5 = lec_hd in
+              match uu___5 with
+              | (lb1, uu___6, uu___7) ->
+                  let uu___8 = lec2 in
+                  (match uu___8 with
+                   | (lb2, uu___9, uu___10) ->
                        let msg =
-                         let uu___10 =
+                         let uu___11 =
                            FStarC_Class_Show.show
                              (FStarC_Class_Show.show_either
                                 FStarC_Syntax_Print.showable_bv
                                 FStarC_Syntax_Syntax.showable_fv) lb1 in
-                         let uu___11 =
+                         let uu___12 =
                            FStarC_Class_Show.show
                              (FStarC_Class_Show.show_either
                                 FStarC_Syntax_Print.showable_bv
                                 FStarC_Syntax_Syntax.showable_fv) lb2 in
                          FStarC_Format.fmt2
                            "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s"
-                           uu___10 uu___11 in
+                           uu___11 uu___12 in
                        FStarC_Errors.raise_error
                          FStarC_TypeChecker_Env.hasRange_env env
                          FStarC_Errors_Codes.Fatal_IncompatibleNumberOfTypes

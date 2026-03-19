@@ -457,17 +457,13 @@ let rec term_eq (t1 : t) (t2 : t) : Prims.bool=
       if interp1 = interp2 then arity1 = arity2 else false
   | (Accu (a1, as1), Accu (a2, as2)) -> atom_eq a1 a2
   | (Construct (fv1, us1, args1), Construct (fv2, us2, args2)) ->
-      if fv1 = fv2
-      then
-        let uu___ = FStarC_Syntax_Util.eq_univs_list us1 us2 in
-        (if uu___ then args_eq args1 args2 else false)
-      else false
+      let uu___ =
+        if fv1 = fv2 then FStarC_Syntax_Util.eq_univs_list us1 us2 else false in
+      if uu___ then args_eq args1 args2 else false
   | (FV (fv1, us1, args1), FV (fv2, us2, args2)) ->
-      if fv1 = fv2
-      then
-        let uu___ = FStarC_Syntax_Util.eq_univs_list us1 us2 in
-        (if uu___ then args_eq args1 args2 else false)
-      else false
+      let uu___ =
+        if fv1 = fv2 then FStarC_Syntax_Util.eq_univs_list us1 us2 else false in
+      if uu___ then args_eq args1 args2 else false
   | (Constant c1, Constant c2) -> c1 = c2
   | (Type_t u1, Type_t u2) -> u1 = u2
   | (Univ u1, Univ u2) -> u1 = u2
@@ -496,8 +492,9 @@ and args_eq (as1 : args) (as2 : args) : Prims.bool=
   match (as1, as2) with
   | ([], []) -> true
   | ((x, qx)::xs, (y, qy)::ys) ->
-      let uu___ = term_eq x y in
-      if uu___ then (if qx = qy then args_eq xs ys else false) else false
+      let uu___ =
+        let uu___1 = term_eq x y in if uu___1 then qx = qy else false in
+      if uu___ then args_eq xs ys else false
   | (uu___, uu___1) -> false
 let rec eq_t (env : FStarC_TypeChecker_Env.env_t) (t1 : t) (t2 : t) :
   FStarC_TypeChecker_TermEqAndSimplify.eq_result=
@@ -839,35 +836,38 @@ let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
   | Lazy (FStar_Pervasives.Inl li, thunk) ->
       let uu___ = FStarC_Thunk.force thunk in f uu___
   | Lazy (FStar_Pervasives.Inr (b, et'), thunk) ->
-      let et_val = et () in
-      let eager = FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
-      if (if et_val <> et' then true else eager)
+      let uu___ =
+        let uu___1 = let uu___2 = et () in uu___2 <> et' in
+        if uu___1
+        then true
+        else FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
+      if uu___
       then
-        let res = let uu___ = FStarC_Thunk.force thunk in f uu___ in
-        ((let uu___1 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___1
-          then
-            let uu___2 =
-              let uu___3 = et () in
-              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
-                uu___3 in
-            let uu___3 =
-              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
-                et' in
-            FStarC_Format.print2 "Unembed cancellation failed\n\t%s <> %s\n"
-              uu___2 uu___3
-          else ());
-         res)
-      else
-        (let a1 = FStarC_Dyn.undyn b in
-         (let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+        let res = let uu___1 = FStarC_Thunk.force thunk in f uu___1 in
+        ((let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___2
           then
             let uu___3 =
               let uu___4 = et () in
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
                 uu___4 in
-            FStarC_Format.print1 "Unembed cancelled for %s\n" uu___3
+            let uu___4 =
+              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
+                et' in
+            FStarC_Format.print2 "Unembed cancellation failed\n\t%s <> %s\n"
+              uu___3 uu___4
+          else ());
+         res)
+      else
+        (let a1 = FStarC_Dyn.undyn b in
+         (let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___3
+          then
+            let uu___4 =
+              let uu___5 = et () in
+              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
+                uu___5 in
+            FStarC_Format.print1 "Unembed cancelled for %s\n" uu___4
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->
@@ -2082,10 +2082,10 @@ let and_op (args1 : args) : t FStar_Pervasives_Native.option=
   | a1::a2::[] ->
       let uu___ = arg_as_bool a1 in
       (match uu___ with
-       | FStar_Pervasives_Native.Some (false) ->
+       | FStar_Pervasives_Native.Some false ->
            let uu___1 = embed e_bool bogus_cbs false in
            FStar_Pervasives_Native.Some uu___1
-       | FStar_Pervasives_Native.Some (true) ->
+       | FStar_Pervasives_Native.Some true ->
            FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___ -> FStarC_Effect.failwith "Unexpected number of arguments"
@@ -2094,10 +2094,10 @@ let or_op (args1 : args) : t FStar_Pervasives_Native.option=
   | a1::a2::[] ->
       let uu___ = arg_as_bool a1 in
       (match uu___ with
-       | FStar_Pervasives_Native.Some (true) ->
+       | FStar_Pervasives_Native.Some true ->
            let uu___1 = embed e_bool bogus_cbs true in
            FStar_Pervasives_Native.Some uu___1
-       | FStar_Pervasives_Native.Some (false) ->
+       | FStar_Pervasives_Native.Some false ->
            FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
        | uu___1 -> FStar_Pervasives_Native.None)
   | uu___ -> FStarC_Effect.failwith "Unexpected number of arguments"

@@ -5,7 +5,9 @@ let dbg_NBETop : Prims.bool FStarC_Effect.ref=
 let max (a : Prims.int) (b : Prims.int) : Prims.int= if a > b then a else b
 let map_rev (f : 'a -> 'b) (l : 'a Prims.list) : 'b Prims.list=
   let rec aux l1 acc =
-    match l1 with | [] -> acc | x::xs -> aux xs ((f x) :: acc) in
+    match l1 with
+    | [] -> acc
+    | x::xs -> let uu___ = let uu___1 = f x in uu___1 :: acc in aux xs uu___ in
   aux l []
 let map_rev_append (f : 'a -> 'b) (l1 : 'a Prims.list) (l2 : 'b Prims.list) :
   'b Prims.list=
@@ -340,9 +342,9 @@ let pickBranch (cfg : config) (scrut : FStarC_TypeChecker_NBETerm.t)
                        p in
                    FStarC_Format.print1 "Pattern %s matches\n" uu___3);
               FStar_Pervasives_Native.Some (e, matches))
-         | FStar_Pervasives.Inr (false) ->
+         | FStar_Pervasives.Inr false ->
              pickBranch_aux scrut1 branches2 branches0
-         | FStar_Pervasives.Inr (true) -> FStar_Pervasives_Native.None) in
+         | FStar_Pervasives.Inr true -> FStar_Pervasives_Native.None) in
   pickBranch_aux scrut branches branches
 let should_reduce_recursive_definition
   (arguments : FStarC_TypeChecker_NBETerm.args)
@@ -1088,56 +1090,49 @@ let rec translate (cfg : config)
          FStarC_TypeChecker_Cfg.should_reduce_local_let cfg.core_cfg lb in
        if uu___2
        then
-         (if
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+         let uu___3 =
+           let uu___4 =
+             if
+               ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+             then FStarC_Syntax_Util.is_unit lb.FStarC_Syntax_Syntax.lbtyp
+             else false in
+           if uu___4
+           then
+             FStarC_Syntax_Util.is_pure_or_ghost_effect
+               lb.FStarC_Syntax_Syntax.lbeff
+           else false in
+         (if uu___3
           then
-            let uu___3 =
-              FStarC_Syntax_Util.is_unit lb.FStarC_Syntax_Syntax.lbtyp in
-            (if uu___3
-             then
-               (if
-                  FStarC_Syntax_Util.is_pure_or_ghost_effect
-                    lb.FStarC_Syntax_Syntax.lbeff
-                then
-                  let bs1 =
-                    (mk_rt
-                       (FStarC_Syntax_Syntax.range_of_lbname
-                          lb.FStarC_Syntax_Syntax.lbname)
-                       (FStarC_TypeChecker_NBETerm.Constant
-                          FStarC_TypeChecker_NBETerm.Unit))
-                    :: bs in
-                  translate cfg bs1 body
-                else
-                  (let bs1 =
-                     let uu___5 = translate_letbinding cfg bs lb in uu___5 ::
-                       bs in
-                   translate cfg bs1 body))
-             else
-               (let bs1 =
-                  let uu___5 = translate_letbinding cfg bs lb in uu___5 :: bs in
-                translate cfg bs1 body))
+            let bs1 =
+              (mk_rt
+                 (FStarC_Syntax_Syntax.range_of_lbname
+                    lb.FStarC_Syntax_Syntax.lbname)
+                 (FStarC_TypeChecker_NBETerm.Constant
+                    FStarC_TypeChecker_NBETerm.Unit))
+              :: bs in
+            translate cfg bs1 body
           else
             (let bs1 =
-               let uu___4 = translate_letbinding cfg bs lb in uu___4 :: bs in
+               let uu___5 = translate_letbinding cfg bs lb in uu___5 :: bs in
              translate cfg bs1 body))
        else
          (let def uu___4 =
-            if
-              ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+            let uu___5 =
+              let uu___6 =
+                if
+                  ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+                then FStarC_Syntax_Util.is_unit lb.FStarC_Syntax_Syntax.lbtyp
+                else false in
+              if uu___6
+              then
+                FStarC_Syntax_Util.is_pure_or_ghost_effect
+                  lb.FStarC_Syntax_Syntax.lbeff
+              else false in
+            if uu___5
             then
-              let uu___5 =
-                FStarC_Syntax_Util.is_unit lb.FStarC_Syntax_Syntax.lbtyp in
-              (if uu___5
-               then
-                 (if
-                    FStarC_Syntax_Util.is_pure_or_ghost_effect
-                      lb.FStarC_Syntax_Syntax.lbeff
-                  then
-                    mk_t1
-                      (FStarC_TypeChecker_NBETerm.Constant
-                         FStarC_TypeChecker_NBETerm.Unit)
-                  else translate cfg bs lb.FStarC_Syntax_Syntax.lbdef)
-               else translate cfg bs lb.FStarC_Syntax_Syntax.lbdef)
+              mk_t1
+                (FStarC_TypeChecker_NBETerm.Constant
+                   FStarC_TypeChecker_NBETerm.Unit)
             else translate cfg bs lb.FStarC_Syntax_Syntax.lbdef in
           let typ uu___4 = translate cfg bs lb.FStarC_Syntax_Syntax.lbtyp in
           let name =
@@ -2447,12 +2442,10 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
   FStarC_Syntax_Syntax.term=
   let debug1 = debug cfg in
   let readback_args cfg1 args =
-    let uu___ =
-      FStarC_List.map
-        (fun uu___1 ->
-           match uu___1 with
-           | (x1, q) -> let uu___2 = readback cfg1 x1 in (uu___2, q)) args in
-    FStarC_List.rev uu___ in
+    map_rev
+      (fun uu___ ->
+         match uu___ with
+         | (x1, q) -> let uu___1 = readback cfg1 x1 in (uu___1, q)) args in
   let with_range t =
     {
       FStarC_Syntax_Syntax.n = (t.FStarC_Syntax_Syntax.n);
@@ -2474,9 +2467,9 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Unit) ->
        with_range FStarC_Syntax_Syntax.unit_const
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Bool
-       (true)) -> with_range FStarC_Syntax_Util.exp_true_bool
+       true) -> with_range FStarC_Syntax_Util.exp_true_bool
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Bool
-       (false)) -> with_range FStarC_Syntax_Util.exp_false_bool
+       false) -> with_range FStarC_Syntax_Util.exp_false_bool
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Int i)
        ->
        let uu___1 =
@@ -2662,13 +2655,10 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
        let uu___1 = FStarC_Syntax_Util.arrow binders c1 in with_range uu___1
    | FStarC_TypeChecker_NBETerm.Construct (fv, us, args) ->
        let args1 =
-         let uu___1 =
-           FStarC_List.map
-             (fun uu___2 ->
-                match uu___2 with
-                | (x1, q) -> let uu___3 = readback cfg x1 in (uu___3, q))
-             args in
-         FStarC_List.rev uu___1 in
+         map_rev
+           (fun uu___1 ->
+              match uu___1 with
+              | (x1, q) -> let uu___2 = readback cfg x1 in (uu___2, q)) args in
        let fv1 =
          FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar fv)
            (FStarC_Syntax_Syntax.range_of_fv fv) in
@@ -2679,13 +2669,10 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
        with_range app
    | FStarC_TypeChecker_NBETerm.FV (fv, us, args) ->
        let args1 =
-         let uu___1 =
-           FStarC_List.map
-             (fun uu___2 ->
-                match uu___2 with
-                | (x1, q) -> let uu___3 = readback cfg x1 in (uu___3, q))
-             args in
-         FStarC_List.rev uu___1 in
+         map_rev
+           (fun uu___1 ->
+              match uu___1 with
+              | (x1, q) -> let uu___2 = readback cfg x1 in (uu___2, q)) args in
        let fv1 =
          FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar fv)
            FStarC_Range_Type.dummyRange in

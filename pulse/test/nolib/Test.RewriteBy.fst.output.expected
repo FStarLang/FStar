@@ -1,0 +1,16 @@
+* Info at Test.RewriteBy.fst(31,1-37,8):
+  - Expected failure:
+  - rewrite: could not prove equality of
+  - p
+  - q
+  - Using tactic:
+    fun _ ->
+      dump "a";
+      tac ()
+  - Tactic failed
+  - Tactic got stuck!
+  - Reduction stopped at:
+      reify (let _ = FStar.Stubs.Tactics.V2.Builtins.dump "a" in
+          Test.RewriteBy.tac ())
+        "(((ref proofstate)))"
+

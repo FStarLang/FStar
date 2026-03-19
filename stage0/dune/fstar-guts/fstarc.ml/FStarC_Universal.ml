@@ -300,17 +300,17 @@ let tc_one_fragment (is_interface : Prims.bool)
     | uu___ -> false in
   let check_module_name_declaration ast_modul =
     let uu___ =
-      let uu___1 = FStarC_Options.interactive () in
+      let uu___1 =
+        let uu___2 = FStarC_Options.interactive () in
+        if uu___2
+        then
+          let uu___3 = FStarC_Parser_Dep.fly_deps_enabled () in
+          Prims.op_Negation uu___3
+        else false in
       if uu___1
       then
-        let uu___2 =
-          let uu___3 = FStarC_Parser_Dep.fly_deps_enabled () in
-          Prims.op_Negation uu___3 in
-        (if uu___2
-         then
-           with_dsenv_of_tcenv env
-             (FStarC_ToSyntax_Interleave.interleave_module ast_modul false)
-         else (ast_modul, env))
+        with_dsenv_of_tcenv env
+          (FStarC_ToSyntax_Interleave.interleave_module ast_modul false)
       else (ast_modul, env) in
     match uu___ with
     | (ast_modul1, env1) ->
@@ -382,23 +382,23 @@ let tc_one_fragment (is_interface : Prims.bool)
                (Obj.magic "First statement must be a module declaration"))
     | FStar_Pervasives_Native.Some modul ->
         let uu___ =
-          let uu___1 = FStarC_Options.interactive () in
+          let uu___1 =
+            let uu___2 = FStarC_Options.interactive () in
+            if uu___2
+            then
+              let uu___3 = FStarC_Parser_Dep.fly_deps_enabled () in
+              Prims.op_Negation uu___3
+            else false in
           if uu___1
           then
-            let uu___2 =
-              let uu___3 = FStarC_Parser_Dep.fly_deps_enabled () in
-              Prims.op_Negation uu___3 in
-            (if uu___2
-             then
-               FStarC_Util.fold_map
-                 (fun env1 a_decl ->
-                    let uu___3 =
-                      with_dsenv_of_tcenv env1
-                        (FStarC_ToSyntax_Interleave.prefix_with_interface_decls
-                           a_decl) in
-                    match uu___3 with | (decls, env2) -> (env2, decls)) env
-                 ast_decls
-             else (env, [ast_decls]))
+            FStarC_Util.fold_map
+              (fun env1 a_decl ->
+                 let uu___2 =
+                   with_dsenv_of_tcenv env1
+                     (FStarC_ToSyntax_Interleave.prefix_with_interface_decls
+                        a_decl) in
+                 match uu___2 with | (decls, env2) -> (env2, decls)) env
+              ast_decls
           else (env, [ast_decls]) in
         (match uu___ with
          | (env1, ast_decls_l) ->
@@ -918,14 +918,10 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
         if uu___2
         then
           let r =
-            if fly_deps
-            then
-              let uu___3 = FStarC_Options.should_check_file fn in
-              (if uu___3
-               then FStar_Pervasives_Native.None
-               else
-                 FStarC_CheckedFiles.load_module_from_cache
-                   (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) fn)
+            let uu___3 =
+              if fly_deps then FStarC_Options.should_check_file fn else false in
+            if uu___3
+            then FStar_Pervasives_Native.None
             else
               FStarC_CheckedFiles.load_module_from_cache
                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) fn in
@@ -1069,11 +1065,11 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                       FStar_Pervasives_Native.None
                   | FStar_Pervasives_Native.Some tgt ->
                       let uu___5 =
-                        let se =
+                        let uu___6 =
                           FStarC_Options.should_extract
                             (FStarC_Ident.string_of_lid
                                tcmod.FStarC_Syntax_Syntax.name) tgt in
-                        if se
+                        if uu___6
                         then
                           (if
                              Prims.op_Negation
@@ -1571,28 +1567,25 @@ let load_fly_deps_and_tc_one_fragment (filename : Prims.string)
   (FStarC_Syntax_Syntax.modul FStar_Pervasives_Native.option *
     FStarC_TypeChecker_Env.env * lang_decls_t * Prims.string Prims.list)=
   let tcenv1 =
-    let uu___ = FStarC_Options.interactive () in
+    let uu___ =
+      let uu___1 =
+        let uu___2 = FStarC_Options.interactive () in
+        if uu___2
+        then
+          Prims.op_Negation
+            (FStarC_Syntax_DsEnv.iface_interleaving_init
+               tcenv.FStarC_TypeChecker_Env.dsenv)
+        else false in
+      if uu___1 then FStarC_Parser_Dep.is_implementation filename else false in
     if uu___
     then
-      (if
-         Prims.op_Negation
-           (FStarC_Syntax_DsEnv.iface_interleaving_init
-              tcenv.FStarC_TypeChecker_Env.dsenv)
-       then
-         let uu___1 = FStarC_Parser_Dep.is_implementation filename in
-         (if uu___1
-          then
-            let deps =
-              FStarC_Syntax_DsEnv.dep_graph
-                tcenv.FStarC_TypeChecker_Env.dsenv in
-            let m = FStarC_Parser_Dep.lowercase_module_name filename in
-            let uu___2 = FStarC_Parser_Dep.interface_of deps m in
-            match uu___2 with
-            | FStar_Pervasives_Native.None -> tcenv
-            | FStar_Pervasives_Native.Some fn ->
-                load_interface_decls tcenv fn
-          else tcenv)
-       else tcenv)
+      let deps =
+        FStarC_Syntax_DsEnv.dep_graph tcenv.FStarC_TypeChecker_Env.dsenv in
+      let m = FStarC_Parser_Dep.lowercase_module_name filename in
+      let uu___1 = FStarC_Parser_Dep.interface_of deps m in
+      match uu___1 with
+      | FStar_Pervasives_Native.None -> tcenv
+      | FStar_Pervasives_Native.Some fn -> load_interface_decls tcenv fn
     else tcenv in
   let ast_decls =
     match frag_or_decl with

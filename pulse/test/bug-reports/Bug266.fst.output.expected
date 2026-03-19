@@ -1,0 +1,22 @@
+* Info at Bug266.fst(10,2-10,14):
+  - Expected failure:
+  - Failed to prove pure property: l_False
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Bug266.fst(10,31-10,36)
+
+* Info at Bug266.fst(24,2-24,9):
+  - Admitting continuation.
+  - Current context:
+      emp
+  - In typing environment:
+      __#66 : squash (__ == my_intro l_False)
+      __#65 :
+        ghost fn
+          requires pure l_False
+          ensures post ()
+      uu___0#50 : unit
+
+      goto _return#54 requires emp
+

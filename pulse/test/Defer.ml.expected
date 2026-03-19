@@ -1,0 +1,14 @@
+open Prims
+let rec without_defer (x : Prims.bool) : unit=
+  let _return = Pulse_Lib_Reference.alloc () false in
+  let v = Pulse_Lib_Vec.alloc 1 (Stdint.Uint64.of_int (10)) in
+  if x
+  then (Pulse_Lib_Vec.free v (); Pulse_Lib_Reference.write _return true)
+  else ();
+  (let _return1 = Pulse_Lib_Reference.read _return () () in
+   if _return1 then () else Pulse_Lib_Vec.free v ())
+let rec with_defer (x : Prims.bool) : unit=
+  let _return = Pulse_Lib_Reference.alloc () false in
+  let v = Pulse_Lib_Vec.alloc 1 (Stdint.Uint64.of_int (10)) in
+  if x then Pulse_Lib_Reference.write _return true else ();
+  Pulse_Lib_Vec.free v ()

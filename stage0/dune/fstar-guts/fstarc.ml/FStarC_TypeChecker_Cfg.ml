@@ -601,270 +601,289 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
   {
     FStarC_Class_Deq.op_Equals_Question =
       (fun f1 f2 ->
-         let b_beta =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.beta
-             f2.beta in
-         let b_iota =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.iota
-             f2.iota in
-         let b_zeta =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.zeta
-             f2.zeta in
-         let b_zeta_full =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.zeta_full
-             f2.zeta_full in
-         let b_weak =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.weak
-             f2.weak in
-         let b_hnf =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.hnf
-             f2.hnf in
-         let b_primops =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.primops
-             f2.primops in
-         let b_dunfold =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.do_not_unfold_pure_lets f2.do_not_unfold_pure_lets in
-         let b_until =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Deq.deq_option
-                FStarC_Syntax_Syntax.deq_delta_depth) f1.unfold_until
-             f2.unfold_until in
-         let b_only =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_list FStarC_Syntax_Syntax.ord_fv)))
-             f1.unfold_only f2.unfold_only in
-         let b_fully =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_list FStarC_Syntax_Syntax.ord_fv)))
-             f1.unfold_fully f2.unfold_fully in
-         let b_attr =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_list FStarC_Syntax_Syntax.ord_fv)))
-             f1.unfold_attr f2.unfold_attr in
-         let b_qual =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_list FStarC_Class_Ord.ord_string)))
-             f1.unfold_qual f2.unfold_qual in
-         let b_ns =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_tuple2
-                      (FStarC_Class_Ord.ord_list
-                         (FStarC_Class_Ord.ord_tuple2
-                            (FStarC_Class_Ord.ord_list
-                               FStarC_Class_Ord.ord_string)
-                            FStarC_Class_Ord.ord_bool))
-                      FStarC_Class_Ord.ord_bool))) f1.unfold_namespace
-             f2.unfold_namespace in
-         let b_dattr =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq
-                (FStarC_Class_Ord.ord_option
-                   (FStarC_Class_Ord.ord_list FStarC_Syntax_Syntax.ord_fv)))
-             f1.dont_unfold_attr f2.dont_unfold_attr in
-         let b_pure =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.pure_subterms_within_computations
-             f2.pure_subterms_within_computations in
-         let b_simp =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.simplify
-             f2.simplify in
-         let b_erase =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.erase_universes f2.erase_universes in
-         let b_unbound =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.allow_unbound_universes f2.allow_unbound_universes in
-         let b_reify =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.reify_
-             f2.reify_ in
-         let b_compress =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.compress_uvars f2.compress_uvars in
-         let b_nofull =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.no_full_norm f2.no_full_norm in
-         let b_nouvars =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.check_no_uvars f2.check_no_uvars in
-         let b_unmeta =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.unmeta
-             f2.unmeta in
-         let b_unasc =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.unascribe
-             f2.unascribe in
-         let b_fullnorm =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.in_full_norm_request f2.in_full_norm_request in
-         let b_weak_scrut =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.weakly_reduce_scrutinee f2.weakly_reduce_scrutinee in
-         let b_nbe =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.nbe_step
-             f2.nbe_step in
-         let b_extract =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.for_extraction f2.for_extraction in
-         let b_unref =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.unrefine
-             f2.unrefine in
-         let b_defunivs =
-           FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-             f1.default_univs_to_zero f2.default_univs_to_zero in
-         let b_tactics =
+         let uu___ =
+           let uu___1 =
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               let uu___11 =
+                                 let uu___12 =
+                                   let uu___13 =
+                                     let uu___14 =
+                                       let uu___15 =
+                                         let uu___16 =
+                                           let uu___17 =
+                                             let uu___18 =
+                                               let uu___19 =
+                                                 let uu___20 =
+                                                   let uu___21 =
+                                                     let uu___22 =
+                                                       let uu___23 =
+                                                         let uu___24 =
+                                                           let uu___25 =
+                                                             let uu___26 =
+                                                               let uu___27 =
+                                                                 let uu___28
+                                                                   =
+                                                                   let uu___29
+                                                                    =
+                                                                    let uu___30
+                                                                    =
+                                                                    FStarC_Class_Deq.op_Equals_Question
+                                                                    (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                    f1.beta
+                                                                    f2.beta in
+                                                                    if
+                                                                    uu___30
+                                                                    then
+                                                                    FStarC_Class_Deq.op_Equals_Question
+                                                                    (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                    f1.iota
+                                                                    f2.iota
+                                                                    else
+                                                                    false in
+                                                                   if uu___29
+                                                                   then
+                                                                    FStarC_Class_Deq.op_Equals_Question
+                                                                    (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                    f1.zeta
+                                                                    f2.zeta
+                                                                   else false in
+                                                                 if uu___28
+                                                                 then
+                                                                   FStarC_Class_Deq.op_Equals_Question
+                                                                    (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                    f1.zeta_full
+                                                                    f2.zeta_full
+                                                                 else false in
+                                                               if uu___27
+                                                               then
+                                                                 FStarC_Class_Deq.op_Equals_Question
+                                                                   (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                   f1.weak
+                                                                   f2.weak
+                                                               else false in
+                                                             if uu___26
+                                                             then
+                                                               FStarC_Class_Deq.op_Equals_Question
+                                                                 (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                 f1.hnf
+                                                                 f2.hnf
+                                                             else false in
+                                                           if uu___25
+                                                           then
+                                                             FStarC_Class_Deq.op_Equals_Question
+                                                               (FStarC_Class_Ord.ord_eq
+                                                                  FStarC_Class_Ord.ord_bool)
+                                                               f1.primops
+                                                               f2.primops
+                                                           else false in
+                                                         if uu___24
+                                                         then
+                                                           FStarC_Class_Deq.op_Equals_Question
+                                                             (FStarC_Class_Ord.ord_eq
+                                                                FStarC_Class_Ord.ord_bool)
+                                                             f1.do_not_unfold_pure_lets
+                                                             f2.do_not_unfold_pure_lets
+                                                         else false in
+                                                       if uu___23
+                                                       then
+                                                         FStarC_Class_Deq.op_Equals_Question
+                                                           (FStarC_Class_Deq.deq_option
+                                                              FStarC_Syntax_Syntax.deq_delta_depth)
+                                                           f1.unfold_until
+                                                           f2.unfold_until
+                                                       else false in
+                                                     if uu___22
+                                                     then
+                                                       FStarC_Class_Deq.op_Equals_Question
+                                                         (FStarC_Class_Ord.ord_eq
+                                                            (FStarC_Class_Ord.ord_option
+                                                               (FStarC_Class_Ord.ord_list
+                                                                  FStarC_Syntax_Syntax.ord_fv)))
+                                                         f1.unfold_only
+                                                         f2.unfold_only
+                                                     else false in
+                                                   if uu___21
+                                                   then
+                                                     FStarC_Class_Deq.op_Equals_Question
+                                                       (FStarC_Class_Ord.ord_eq
+                                                          (FStarC_Class_Ord.ord_option
+                                                             (FStarC_Class_Ord.ord_list
+                                                                FStarC_Syntax_Syntax.ord_fv)))
+                                                       f1.unfold_fully
+                                                       f2.unfold_fully
+                                                   else false in
+                                                 if uu___20
+                                                 then
+                                                   FStarC_Class_Deq.op_Equals_Question
+                                                     (FStarC_Class_Ord.ord_eq
+                                                        (FStarC_Class_Ord.ord_option
+                                                           (FStarC_Class_Ord.ord_list
+                                                              FStarC_Syntax_Syntax.ord_fv)))
+                                                     f1.unfold_attr
+                                                     f2.unfold_attr
+                                                 else false in
+                                               if uu___19
+                                               then
+                                                 FStarC_Class_Deq.op_Equals_Question
+                                                   (FStarC_Class_Ord.ord_eq
+                                                      (FStarC_Class_Ord.ord_option
+                                                         (FStarC_Class_Ord.ord_list
+                                                            FStarC_Class_Ord.ord_string)))
+                                                   f1.unfold_qual
+                                                   f2.unfold_qual
+                                               else false in
+                                             if uu___18
+                                             then
+                                               FStarC_Class_Deq.op_Equals_Question
+                                                 (FStarC_Class_Ord.ord_eq
+                                                    (FStarC_Class_Ord.ord_option
+                                                       (FStarC_Class_Ord.ord_tuple2
+                                                          (FStarC_Class_Ord.ord_list
+                                                             (FStarC_Class_Ord.ord_tuple2
+                                                                (FStarC_Class_Ord.ord_list
+                                                                   FStarC_Class_Ord.ord_string)
+                                                                FStarC_Class_Ord.ord_bool))
+                                                          FStarC_Class_Ord.ord_bool)))
+                                                 f1.unfold_namespace
+                                                 f2.unfold_namespace
+                                             else false in
+                                           if uu___17
+                                           then
+                                             FStarC_Class_Deq.op_Equals_Question
+                                               (FStarC_Class_Ord.ord_eq
+                                                  (FStarC_Class_Ord.ord_option
+                                                     (FStarC_Class_Ord.ord_list
+                                                        FStarC_Syntax_Syntax.ord_fv)))
+                                               f1.dont_unfold_attr
+                                               f2.dont_unfold_attr
+                                           else false in
+                                         if uu___16
+                                         then
+                                           FStarC_Class_Deq.op_Equals_Question
+                                             (FStarC_Class_Ord.ord_eq
+                                                FStarC_Class_Ord.ord_bool)
+                                             f1.pure_subterms_within_computations
+                                             f2.pure_subterms_within_computations
+                                         else false in
+                                       if uu___15
+                                       then
+                                         FStarC_Class_Deq.op_Equals_Question
+                                           (FStarC_Class_Ord.ord_eq
+                                              FStarC_Class_Ord.ord_bool)
+                                           f1.simplify f2.simplify
+                                       else false in
+                                     if uu___14
+                                     then
+                                       FStarC_Class_Deq.op_Equals_Question
+                                         (FStarC_Class_Ord.ord_eq
+                                            FStarC_Class_Ord.ord_bool)
+                                         f1.erase_universes
+                                         f2.erase_universes
+                                     else false in
+                                   if uu___13
+                                   then
+                                     FStarC_Class_Deq.op_Equals_Question
+                                       (FStarC_Class_Ord.ord_eq
+                                          FStarC_Class_Ord.ord_bool)
+                                       f1.allow_unbound_universes
+                                       f2.allow_unbound_universes
+                                   else false in
+                                 if uu___12
+                                 then
+                                   FStarC_Class_Deq.op_Equals_Question
+                                     (FStarC_Class_Ord.ord_eq
+                                        FStarC_Class_Ord.ord_bool) f1.reify_
+                                     f2.reify_
+                                 else false in
+                               if uu___11
+                               then
+                                 FStarC_Class_Deq.op_Equals_Question
+                                   (FStarC_Class_Ord.ord_eq
+                                      FStarC_Class_Ord.ord_bool)
+                                   f1.compress_uvars f2.compress_uvars
+                               else false in
+                             if uu___10
+                             then
+                               FStarC_Class_Deq.op_Equals_Question
+                                 (FStarC_Class_Ord.ord_eq
+                                    FStarC_Class_Ord.ord_bool)
+                                 f1.no_full_norm f2.no_full_norm
+                             else false in
+                           if uu___9
+                           then
+                             FStarC_Class_Deq.op_Equals_Question
+                               (FStarC_Class_Ord.ord_eq
+                                  FStarC_Class_Ord.ord_bool)
+                               f1.check_no_uvars f2.check_no_uvars
+                           else false in
+                         if uu___8
+                         then
+                           FStarC_Class_Deq.op_Equals_Question
+                             (FStarC_Class_Ord.ord_eq
+                                FStarC_Class_Ord.ord_bool) f1.unmeta
+                             f2.unmeta
+                         else false in
+                       if uu___7
+                       then
+                         FStarC_Class_Deq.op_Equals_Question
+                           (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                           f1.unascribe f2.unascribe
+                       else false in
+                     if uu___6
+                     then
+                       FStarC_Class_Deq.op_Equals_Question
+                         (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                         f1.in_full_norm_request f2.in_full_norm_request
+                     else false in
+                   if uu___5
+                   then
+                     FStarC_Class_Deq.op_Equals_Question
+                       (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                       f1.weakly_reduce_scrutinee f2.weakly_reduce_scrutinee
+                   else false in
+                 if uu___4
+                 then
+                   FStarC_Class_Deq.op_Equals_Question
+                     (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                     f1.nbe_step f2.nbe_step
+                 else false in
+               if uu___3
+               then
+                 FStarC_Class_Deq.op_Equals_Question
+                   (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                   f1.for_extraction f2.for_extraction
+               else false in
+             if uu___2
+             then
+               FStarC_Class_Deq.op_Equals_Question
+                 (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+                 f1.unrefine f2.unrefine
+             else false in
+           if uu___1
+           then
+             FStarC_Class_Deq.op_Equals_Question
+               (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+               f1.default_univs_to_zero f2.default_univs_to_zero
+           else false in
+         if uu___
+         then
            FStarC_Class_Deq.op_Equals_Question
              (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.tactics
-             f2.tactics in
-         if
-           (if
-              (if
-                 (if
-                    (if
-                       (if
-                          (if
-                             (if
-                                (if
-                                   (if
-                                      (if
-                                         (if
-                                            (if
-                                               (if
-                                                  (if
-                                                     (if
-                                                        (if
-                                                           (if
-                                                              (if
-                                                                 (if
-                                                                    (
-                                                                    if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    (if
-                                                                    b_beta
-                                                                    then
-                                                                    b_iota
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_zeta
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_zeta_full
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_weak
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_hnf
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_primops
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_dunfold
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_until
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_only
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_fully
-                                                                    else
-                                                                    false)
-                                                                    then
-                                                                    b_attr
-                                                                    else
-                                                                    false)
-                                                                  then b_qual
-                                                                  else false)
-                                                               then b_ns
-                                                               else false)
-                                                            then b_dattr
-                                                            else false)
-                                                         then b_pure
-                                                         else false)
-                                                      then b_simp
-                                                      else false)
-                                                   then b_erase
-                                                   else false)
-                                                then b_unbound
-                                                else false)
-                                             then b_reify
-                                             else false)
-                                          then b_compress
-                                          else false)
-                                       then b_nofull
-                                       else false)
-                                    then b_nouvars
-                                    else false)
-                                 then b_unmeta
-                                 else false)
-                              then b_unasc
-                              else false)
-                           then b_fullnorm
-                           else false)
-                        then b_weak_scrut
-                        else false)
-                     then b_nbe
-                     else false)
-                  then b_extract
-                  else false)
-               then b_unref
-               else false)
-            then b_defunivs
-            else false)
-         then b_tactics
+             f2.tactics
          else false)
   }
 let default_steps : fsteps=
@@ -2626,46 +2645,50 @@ let config'
       let uu___2 = cached_steps () in merge_steps uu___1 uu___2 in
     add_steps uu___ psteps in
   let dbg_flag = FStarC_List.contains FStarC_TypeChecker_Env.NormDebug s in
-  let v_Norm = FStarC_Effect.op_Bang dbg_Norm in
-  let v_NormTop = FStarC_Effect.op_Bang dbg_NormTop in
-  let v_NormCfg = FStarC_Effect.op_Bang dbg_NormCfg in
-  let v_Primops = FStarC_Effect.op_Bang dbg_Primops in
-  let v_Unfolding = FStarC_Effect.op_Bang dbg_Unfolding in
-  let v_380 = FStarC_Effect.op_Bang dbg_380 in
-  let v_WPE = FStarC_Effect.op_Bang dbg_WPE in
-  let v_NormDelayed = FStarC_Effect.op_Bang dbg_NormDelayed in
-  let v_print_normalized = FStarC_Effect.op_Bang dbg_print_normalized in
-  let v_NBE = FStarC_Effect.op_Bang dbg_NBE in
-  let v_EraseErasableArgs =
-    FStarC_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
-  let v_normalize_pure =
-    FStarC_Options.normalize_pure_terms_for_extraction () in
-  let v_compat_memo =
-    FStarC_Options_Ext.enabled "compat:normalizer_memo_ignore_cfg" in
   let uu___ =
     let uu___1 =
-      if v_EraseErasableArgs
-      then
-        FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env e
-          FStarC_Errors_Codes.Warning_WarnOnUse ()
-          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-          (Obj.magic
-             "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound")
-      else ();
-      v_EraseErasableArgs in
+      let uu___2 = FStarC_Effect.op_Bang dbg_Norm in
+      if uu___2 then true else dbg_flag in
+    let uu___2 =
+      let uu___3 = FStarC_Effect.op_Bang dbg_NormTop in
+      if uu___3 then true else dbg_flag in
+    let uu___3 = FStarC_Effect.op_Bang dbg_NormCfg in
+    let uu___4 = FStarC_Effect.op_Bang dbg_Primops in
+    let uu___5 = FStarC_Effect.op_Bang dbg_Unfolding in
+    let uu___6 = FStarC_Effect.op_Bang dbg_380 in
+    let uu___7 = FStarC_Effect.op_Bang dbg_WPE in
+    let uu___8 = FStarC_Effect.op_Bang dbg_NormDelayed in
+    let uu___9 = FStarC_Effect.op_Bang dbg_print_normalized in
+    let uu___10 = FStarC_Effect.op_Bang dbg_NBE in
+    let uu___11 =
+      (let uu___13 = FStarC_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
+       if uu___13
+       then
+         FStarC_Errors.log_issue FStarC_TypeChecker_Env.hasRange_env e
+           FStarC_Errors_Codes.Warning_WarnOnUse ()
+           (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+           (Obj.magic
+              "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound")
+       else ());
+      FStarC_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
     {
-      gen = (if v_Norm then true else dbg_flag);
-      top = (if v_NormTop then true else dbg_flag);
-      cfg = v_NormCfg;
-      primop = v_Primops;
-      unfolding = v_Unfolding;
-      b380 = v_380;
-      wpe = v_WPE;
-      norm_delayed = v_NormDelayed;
-      print_normalized = v_print_normalized;
-      debug_nbe = v_NBE;
-      erase_erasable_args = uu___1
+      gen = uu___1;
+      top = uu___2;
+      cfg = uu___3;
+      primop = uu___4;
+      unfolding = uu___5;
+      b380 = uu___6;
+      wpe = uu___7;
+      norm_delayed = uu___8;
+      print_normalized = uu___9;
+      debug_nbe = uu___10;
+      erase_erasable_args = uu___11
     } in
+  let uu___1 =
+    if Prims.op_Negation steps.pure_subterms_within_computations
+    then true
+    else FStarC_Options.normalize_pure_terms_for_extraction () in
+  let uu___2 = FStarC_Options_Ext.enabled "compat:normalizer_memo_ignore_cfg" in
   {
     steps;
     tcenv = e;
@@ -2674,12 +2697,9 @@ let config'
     primitive_steps = psteps1;
     strong = false;
     memoize_lazy = true;
-    normalize_pure_lets =
-      (if Prims.op_Negation steps.pure_subterms_within_computations
-       then true
-       else v_normalize_pure);
+    normalize_pure_lets = uu___1;
     reifying = false;
-    compat_memo_ignore_cfg = v_compat_memo
+    compat_memo_ignore_cfg = uu___2
   }
 let config (s : FStarC_TypeChecker_Env.step Prims.list)
   (e : FStarC_TypeChecker_Env.env) : cfg= config' [] s e
@@ -2688,37 +2708,42 @@ let should_reduce_local_let (cfg1 : cfg)
   if (cfg1.steps).do_not_unfold_pure_lets
   then false
   else
-    (let has_inline =
-       FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
-         FStarC_Parser_Const.inline_let_attr in
-     let has_no_inline =
-       FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
-         FStarC_Parser_Const.no_inline_let_attr in
-     if
-       (if (cfg1.steps).pure_subterms_within_computations
-        then has_inline
-        else false)
+    (let uu___1 =
+       if (cfg1.steps).pure_subterms_within_computations
+       then
+         FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
+           FStarC_Parser_Const.inline_let_attr
+       else false in
+     if uu___1
      then true
      else
-       if has_no_inline
-       then false
-       else
-         (let n =
-            FStarC_TypeChecker_Env.norm_eff_name cfg1.tcenv
-              lb.FStarC_Syntax_Syntax.lbeff in
-          let is_pure = FStarC_Syntax_Util.is_pure_effect n in
-          let is_ghost = FStarC_Syntax_Util.is_ghost_effect n in
-          if
-            (if is_pure
-             then (if cfg1.normalize_pure_lets then true else has_inline)
-             else false)
-          then true
-          else
-            if is_ghost
-            then
-              Prims.op_Negation
-                (cfg1.steps).pure_subterms_within_computations
-            else false))
+       (let uu___3 =
+          FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
+            FStarC_Parser_Const.no_inline_let_attr in
+        if uu___3
+        then false
+        else
+          (let n =
+             FStarC_TypeChecker_Env.norm_eff_name cfg1.tcenv
+               lb.FStarC_Syntax_Syntax.lbeff in
+           let uu___5 =
+             if FStarC_Syntax_Util.is_pure_effect n
+             then
+               (if cfg1.normalize_pure_lets
+                then true
+                else
+                  FStarC_Syntax_Util.has_attribute
+                    lb.FStarC_Syntax_Syntax.lbattrs
+                    FStarC_Parser_Const.inline_let_attr)
+             else false in
+           if uu___5
+           then true
+           else
+             if FStarC_Syntax_Util.is_ghost_effect n
+             then
+               Prims.op_Negation
+                 (cfg1.steps).pure_subterms_within_computations
+             else false)))
 let translate_norm_step (s : FStarC_NormSteps.norm_step) :
   FStarC_TypeChecker_Env.step Prims.list=
   match s with

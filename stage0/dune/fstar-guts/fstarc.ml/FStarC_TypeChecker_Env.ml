@@ -2065,11 +2065,18 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
     normalized_eff_names = uu___4;
     fv_delta_depths = uu___5;
     proof_ns = uu___6;
-    synth_hook = (fun e g tau rng -> Prims.magic ());
-    try_solve_implicits_hook = (fun e tau imps -> ());
-    splice = (fun e is_typed _quals _attrs lids tau range -> Prims.magic ());
-    mpreprocess = (fun e tau tm -> Prims.magic ());
-    postprocess = (fun e tau typ tm -> Prims.magic ());
+    synth_hook =
+      (fun e g tau rng -> FStarC_Effect.failwith "no synthesizer available");
+    try_solve_implicits_hook =
+      (fun e tau imps -> FStarC_Effect.failwith "no implicit hook available");
+    splice =
+      (fun e is_typed _quals _attrs lids tau range ->
+         FStarC_Effect.failwith "no splicer available");
+    mpreprocess =
+      (fun e tau tm -> FStarC_Effect.failwith "no preprocessor available");
+    postprocess =
+      (fun e tau typ tm ->
+         FStarC_Effect.failwith "no postprocessor available");
     identifier_info = uu___7;
     tc_hooks = default_tc_hooks;
     dsenv = uu___8;
@@ -2853,57 +2860,57 @@ let add_se_to_attrtab (env1 : env) (se : FStarC_Syntax_Syntax.sigelt) :
 let try_add_sigelt (force : Prims.bool) (env1 : env)
   (se : FStarC_Syntax_Syntax.sigelt) (l : FStarC_Ident.lident) : unit=
   let s = FStarC_Ident.string_of_lid l in
-  if force
-  then ()
-  else
-    (let uu___2 =
-       let uu___3 = FStarC_SMap.try_find (sigtab env1) s in
-       FStar_Pervasives_Native.uu___is_Some uu___3 in
-     if uu___2
+  (let uu___1 =
+     if Prims.op_Negation force
      then
-       let old_se =
-         let uu___3 = FStarC_SMap.try_find (sigtab env1) s in
-         FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
-       (if
-          (if
-             FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
-               old_se.FStarC_Syntax_Syntax.sigel
-           then
-             (if
-                (if
-                   FStarC_Syntax_Syntax.uu___is_Sig_let
-                     se.FStarC_Syntax_Syntax.sigel
-                 then true
-                 else
-                   FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
-                     se.FStarC_Syntax_Syntax.sigel)
-              then true
-              else
-                FStarC_Syntax_Syntax.uu___is_Sig_datacon
-                  se.FStarC_Syntax_Syntax.sigel)
-           else false)
-        then ()
-        else
-          (let uu___4 =
+       let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
+       FStar_Pervasives_Native.uu___is_Some uu___2
+     else false in
+   if uu___1
+   then
+     let old_se =
+       let uu___2 = FStarC_SMap.try_find (sigtab env1) s in
+       FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+     (if
+        (if
+           FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
+             old_se.FStarC_Syntax_Syntax.sigel
+         then
+           (if
+              (if
+                 FStarC_Syntax_Syntax.uu___is_Sig_let
+                   se.FStarC_Syntax_Syntax.sigel
+               then true
+               else
+                 FStarC_Syntax_Syntax.uu___is_Sig_inductive_typ
+                   se.FStarC_Syntax_Syntax.sigel)
+            then true
+            else
+              FStarC_Syntax_Syntax.uu___is_Sig_datacon
+                se.FStarC_Syntax_Syntax.sigel)
+         else false)
+      then ()
+      else
+        (let uu___3 =
+           let uu___4 =
              let uu___5 =
                let uu___6 =
                  let uu___7 =
-                   let uu___8 =
-                     FStarC_Range_Ops.string_of_range
-                       (FStarC_Ident.range_of_lid l) in
-                   FStar_Pprint.arbitrary_string uu___8 in
-                 FStar_Pprint.op_Hat_Slash_Hat
-                   (FStarC_Errors_Msg.text "Previously declared at") uu___7 in
-               [uu___6] in
-             (FStar_Pprint.op_Hat_Slash_Hat
-                (FStarC_Errors_Msg.text "Duplicate top-level names")
-                (FStar_Pprint.arbitrary_string s))
-               :: uu___5 in
-           FStarC_Errors.raise_error FStarC_Ident.hasrange_lident l
-             FStarC_Errors_Codes.Fatal_DuplicateTopLevelNames ()
-             (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-             (Obj.magic uu___4)))
-     else ());
+                   FStarC_Range_Ops.string_of_range
+                     (FStarC_Ident.range_of_lid l) in
+                 FStar_Pprint.arbitrary_string uu___7 in
+               FStar_Pprint.op_Hat_Slash_Hat
+                 (FStarC_Errors_Msg.text "Previously declared at") uu___6 in
+             [uu___5] in
+           (FStar_Pprint.op_Hat_Slash_Hat
+              (FStarC_Errors_Msg.text "Duplicate top-level names")
+              (FStar_Pprint.arbitrary_string s))
+             :: uu___4 in
+         FStarC_Errors.raise_error FStarC_Ident.hasrange_lident l
+           FStarC_Errors_Codes.Fatal_DuplicateTopLevelNames ()
+           (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+           (Obj.magic uu___3)))
+   else ());
   FStarC_SMap.add (sigtab env1) s se
 let rec add_sigelt (force : Prims.bool) (env1 : env)
   (se : FStarC_Syntax_Syntax.sigelt) : unit=
@@ -5823,34 +5830,35 @@ let uvars_in_env (env1 : env) : FStarC_Syntax_Syntax.uvars=
          (Obj.magic
             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_ctx_uvar))
          ()) in
-  FStarC_List.fold_left
-    (fun uu___1 uu___ ->
-       (fun out b ->
-          match b with
-          | FStarC_Syntax_Syntax.Binding_univ uu___ ->
-              Obj.magic (Obj.repr out)
-          | FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)) ->
-              Obj.magic
-                (Obj.repr
-                   (let uu___2 = FStarC_Syntax_Free.uvars t in
-                    FStarC_Class_Setlike.union ()
-                      (Obj.magic
-                         (FStarC_FlatSet.setlike_flat_set
-                            FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
-                      (Obj.magic uu___2)))
-          | FStarC_Syntax_Syntax.Binding_var
-              { FStarC_Syntax_Syntax.ppname = uu___;
-                FStarC_Syntax_Syntax.index = uu___1;
-                FStarC_Syntax_Syntax.sort = t;_}
-              ->
-              Obj.magic
-                (Obj.repr
-                   (let uu___2 = FStarC_Syntax_Free.uvars t in
-                    FStarC_Class_Setlike.union ()
-                      (Obj.magic
-                         (FStarC_FlatSet.setlike_flat_set
-                            FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
-                      (Obj.magic uu___2)))) uu___1 uu___) no_uvs env1.gamma
+  let rec aux out g =
+    match g with
+    | [] -> out
+    | (FStarC_Syntax_Syntax.Binding_univ uu___)::tl -> aux out tl
+    | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.uvars t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl
+    | (FStarC_Syntax_Syntax.Binding_var
+        { FStarC_Syntax_Syntax.ppname = uu___;
+          FStarC_Syntax_Syntax.index = uu___1;
+          FStarC_Syntax_Syntax.sort = t;_})::tl
+        ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.uvars t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Free.ord_ctx_uvar)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl in
+  aux no_uvs env1.gamma
 let univ_vars (env1 : env) :
   FStarC_Syntax_Syntax.universe_uvar FStarC_FlatSet.t=
   let no_univs =
@@ -5859,35 +5867,35 @@ let univ_vars (env1 : env) :
          (Obj.magic
             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Free.ord_univ_uvar))
          ()) in
-  FStarC_List.fold_left
-    (fun uu___1 uu___ ->
-       (fun out b ->
-          match b with
-          | FStarC_Syntax_Syntax.Binding_univ uu___ ->
-              Obj.magic (Obj.repr out)
-          | FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)) ->
-              Obj.magic
-                (Obj.repr
-                   (let uu___2 = FStarC_Syntax_Free.univs t in
-                    FStarC_Class_Setlike.union ()
-                      (Obj.magic
-                         (FStarC_FlatSet.setlike_flat_set
-                            FStarC_Syntax_Free.ord_univ_uvar))
-                      (Obj.magic out) (Obj.magic uu___2)))
-          | FStarC_Syntax_Syntax.Binding_var
-              { FStarC_Syntax_Syntax.ppname = uu___;
-                FStarC_Syntax_Syntax.index = uu___1;
-                FStarC_Syntax_Syntax.sort = t;_}
-              ->
-              Obj.magic
-                (Obj.repr
-                   (let uu___2 = FStarC_Syntax_Free.univs t in
-                    FStarC_Class_Setlike.union ()
-                      (Obj.magic
-                         (FStarC_FlatSet.setlike_flat_set
-                            FStarC_Syntax_Free.ord_univ_uvar))
-                      (Obj.magic out) (Obj.magic uu___2)))) uu___1 uu___)
-    no_univs env1.gamma
+  let rec aux out g =
+    match g with
+    | [] -> out
+    | (FStarC_Syntax_Syntax.Binding_univ uu___)::tl -> aux out tl
+    | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.univs t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl
+    | (FStarC_Syntax_Syntax.Binding_var
+        { FStarC_Syntax_Syntax.ppname = uu___;
+          FStarC_Syntax_Syntax.index = uu___1;
+          FStarC_Syntax_Syntax.sort = t;_})::tl
+        ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.univs t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Free.ord_univ_uvar)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl in
+  aux no_univs env1.gamma
 let univnames (env1 : env) : FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t=
   let no_univ_names =
     Obj.magic
@@ -5895,38 +5903,42 @@ let univnames (env1 : env) : FStarC_Syntax_Syntax.univ_name FStarC_FlatSet.t=
          (Obj.magic
             (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_ident))
          ()) in
-  FStarC_List.fold_left
-    (fun uu___1 uu___ ->
-       (fun out b ->
-          match b with
-          | FStarC_Syntax_Syntax.Binding_univ uname ->
-              Obj.magic
-                (FStarC_Class_Setlike.add ()
-                   (Obj.magic
-                      (FStarC_FlatSet.setlike_flat_set
-                         FStarC_Syntax_Syntax.ord_ident)) uname
-                   (Obj.magic out))
-          | FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)) ->
-              let uu___2 = FStarC_Syntax_Free.univnames t in
-              Obj.magic
-                (FStarC_Class_Setlike.union ()
-                   (Obj.magic
-                      (FStarC_FlatSet.setlike_flat_set
-                         FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
-                   (Obj.magic uu___2))
-          | FStarC_Syntax_Syntax.Binding_var
-              { FStarC_Syntax_Syntax.ppname = uu___;
-                FStarC_Syntax_Syntax.index = uu___1;
-                FStarC_Syntax_Syntax.sort = t;_}
-              ->
-              let uu___2 = FStarC_Syntax_Free.univnames t in
-              Obj.magic
-                (FStarC_Class_Setlike.union ()
-                   (Obj.magic
-                      (FStarC_FlatSet.setlike_flat_set
-                         FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
-                   (Obj.magic uu___2))) uu___1 uu___) no_univ_names
-    env1.gamma
+  let rec aux out g =
+    match g with
+    | [] -> out
+    | (FStarC_Syntax_Syntax.Binding_univ uname)::tl ->
+        let out1 =
+          Obj.magic
+            (FStarC_Class_Setlike.add ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Syntax.ord_ident)) uname (Obj.magic out)) in
+        aux out1 tl
+    | (FStarC_Syntax_Syntax.Binding_lid (uu___, (uu___1, t)))::tl ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.univnames t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl
+    | (FStarC_Syntax_Syntax.Binding_var
+        { FStarC_Syntax_Syntax.ppname = uu___;
+          FStarC_Syntax_Syntax.index = uu___1;
+          FStarC_Syntax_Syntax.sort = t;_})::tl
+        ->
+        let out1 =
+          let uu___2 = FStarC_Syntax_Free.univnames t in
+          Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_FlatSet.setlike_flat_set
+                     FStarC_Syntax_Syntax.ord_ident)) (Obj.magic out)
+               (Obj.magic uu___2)) in
+        aux out1 tl in
+  aux no_univ_names env1.gamma
 let lidents (env1 : env) : FStarC_Ident.lident Prims.list=
   let keys = FStarC_List.collect FStar_Pervasives_Native.fst env1.gamma_sig in
   FStarC_SMap.fold (sigtab env1)
@@ -6099,8 +6111,9 @@ let string_of_proof_ns (env1 : env) : Prims.string=
         then "*"
         else
           Prims.strcat (if b then "+" else "-") (FStarC_Ident.text_of_path p) in
-  let mapped = FStarC_List.map aux env1.proof_ns in
-  let rev = FStarC_List.rev mapped in FStarC_String.concat " " rev
+  let uu___ =
+    let uu___1 = FStarC_List.map aux env1.proof_ns in FStarC_List.rev uu___1 in
+  FStarC_String.concat " " uu___
 let guard_of_guard_formula (g : FStarC_TypeChecker_Common.guard_formula) :
   guard_t=
   {

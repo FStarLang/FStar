@@ -278,57 +278,62 @@ let rec type_leq_c (unfold_ty : unfold_t)
              FStarC_Extraction_ML_Syntax.mlty = uu___;
              FStarC_Extraction_ML_Syntax.loc = uu___1;_}
            ->
-           let tl1 = type_leq unfold_ty t1' t1 in
-           if (if tl1 then eff_leq f f' else false)
+           let uu___2 =
+             let uu___3 = type_leq unfold_ty t1' t1 in
+             if uu___3 then eff_leq f f' else false in
+           if uu___2
            then
              (if
                 (if f = FStarC_Extraction_ML_Syntax.E_PURE
                  then f' = FStarC_Extraction_ML_Syntax.E_ERASABLE
                  else false)
               then
-                let tl2 = type_leq unfold_ty t2 t2' in
-                (if tl2
+                let uu___3 = type_leq unfold_ty t2 t2' in
+                (if uu___3
                  then
-                   let tl3 =
-                     type_leq unfold_ty t2
-                       FStarC_Extraction_ML_Syntax.ml_unit_ty in
                    let body1 =
-                     if tl3
+                     let uu___4 =
+                       type_leq unfold_ty t2
+                         FStarC_Extraction_ML_Syntax.ml_unit_ty in
+                     if uu___4
                      then FStarC_Extraction_ML_Syntax.ml_unit
                      else
                        FStarC_Extraction_ML_Syntax.with_ty t2'
                          (FStarC_Extraction_ML_Syntax.MLE_Coerce
                             (FStarC_Extraction_ML_Syntax.ml_unit,
                               FStarC_Extraction_ML_Syntax.ml_unit_ty, t2')) in
-                   let uu___2 =
-                     let uu___3 =
-                       let uu___4 =
+                   let uu___4 =
+                     let uu___5 =
+                       let uu___6 =
                          mk_ty_fun [x] body1.FStarC_Extraction_ML_Syntax.mlty in
-                       FStarC_Extraction_ML_Syntax.with_ty uu___4
+                       FStarC_Extraction_ML_Syntax.with_ty uu___6
                          (FStarC_Extraction_ML_Syntax.MLE_Fun ([x], body1)) in
-                     FStar_Pervasives_Native.Some uu___3 in
-                   (true, uu___2)
+                     FStar_Pervasives_Native.Some uu___5 in
+                   (true, uu___4)
                  else (false, FStar_Pervasives_Native.None))
               else
-                (let uu___3 =
-                   let uu___4 =
-                     let uu___5 = mk_fun xs body in
-                     FStar_Pervasives_Native.Some uu___5 in
-                   type_leq_c unfold_ty uu___4 t2 t2' in
-                 match uu___3 with
+                (let uu___4 =
+                   let uu___5 =
+                     let uu___6 = mk_fun xs body in
+                     FStar_Pervasives_Native.Some uu___6 in
+                   type_leq_c unfold_ty uu___5 t2 t2' in
+                 match uu___4 with
                  | (ok, body1) ->
                      let res =
                        match body1 with
                        | FStar_Pervasives_Native.Some body2 ->
-                           let uu___4 = mk_fun [x] body2 in
-                           FStar_Pervasives_Native.Some uu___4
-                       | uu___4 -> FStar_Pervasives_Native.None in
+                           let uu___5 = mk_fun [x] body2 in
+                           FStar_Pervasives_Native.Some uu___5
+                       | uu___5 -> FStar_Pervasives_Native.None in
                      (ok, res)))
            else (false, FStar_Pervasives_Native.None)
        | uu___ ->
-           let tl1 = type_leq unfold_ty t1' t1 in
-           let tl2 = type_leq unfold_ty t2 t2' in
-           if (if (if tl1 then eff_leq f f' else false) then tl2 else false)
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = type_leq unfold_ty t1' t1 in
+               if uu___3 then eff_leq f f' else false in
+             if uu___2 then type_leq unfold_ty t2 t2' else false in
+           if uu___1
            then (true, e)
            else (false, FStar_Pervasives_Native.None))
   | (FStarC_Extraction_ML_Syntax.MLTY_Named (args, path),
@@ -369,8 +374,8 @@ let rec type_leq_c (unfold_ty : unfold_t)
   | uu___ -> (false, FStar_Pervasives_Native.None)
 and type_leq (g : unfold_t) (t1 : FStarC_Extraction_ML_Syntax.mlty)
   (t2 : FStarC_Extraction_ML_Syntax.mlty) : Prims.bool=
-  let r = type_leq_c g FStar_Pervasives_Native.None t1 t2 in
-  FStar_Pervasives_Native.fst r
+  let uu___ = type_leq_c g FStar_Pervasives_Native.None t1 t2 in
+  FStar_Pervasives_Native.fst uu___
 let rec erase_effect_annotations (t : FStarC_Extraction_ML_Syntax.mlty) :
   FStarC_Extraction_ML_Syntax.mlty=
   match t with

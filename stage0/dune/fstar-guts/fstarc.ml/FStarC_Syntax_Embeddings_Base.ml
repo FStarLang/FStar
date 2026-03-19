@@ -280,38 +280,41 @@ let lazy_unembed (pa : 'a printer) (et : FStarC_Syntax_Syntax.emb_typ)
         FStarC_Syntax_Syntax.ltyp = uu___;
         FStarC_Syntax_Syntax.rng = uu___1;_}
       ->
-      let eager = FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
-      if (if et <> et' then true else eager)
+      let uu___2 =
+        if et <> et'
+        then true
+        else FStarC_Effect.op_Bang FStarC_Options.eager_embedding in
+      if uu___2
       then
-        let res = let uu___2 = FStarC_Thunk.force t in f uu___2 in
-        ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
-          then
-            let uu___4 =
-              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
-            let uu___5 =
-              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
-                et' in
-            let uu___6 =
-              match res with
-              | FStar_Pervasives_Native.None -> "None"
-              | FStar_Pervasives_Native.Some x2 ->
-                  let uu___7 = pa x2 in Prims.strcat "Some " uu___7 in
-            FStarC_Format.print3
-              "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n" uu___4
-              uu___5 uu___6
-          else ());
-         res)
-      else
-        (let a1 = FStarC_Dyn.undyn b in
-         (let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+        let res = let uu___3 = FStarC_Thunk.force t in f uu___3 in
+        ((let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___4
           then
             let uu___5 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
-            let uu___6 = pa a1 in
+            let uu___6 =
+              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
+                et' in
+            let uu___7 =
+              match res with
+              | FStar_Pervasives_Native.None -> "None"
+              | FStar_Pervasives_Native.Some x2 ->
+                  let uu___8 = pa x2 in Prims.strcat "Some " uu___8 in
+            FStarC_Format.print3
+              "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n" uu___5
+              uu___6 uu___7
+          else ());
+         res)
+      else
+        (let a1 = FStarC_Dyn.undyn b in
+         (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___5
+          then
+            let uu___6 =
+              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
+            let uu___7 = pa a1 in
             FStarC_Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-              uu___5 uu___6
+              uu___6 uu___7
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->

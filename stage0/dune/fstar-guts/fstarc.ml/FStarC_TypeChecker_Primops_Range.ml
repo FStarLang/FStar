@@ -10,7 +10,7 @@ let mk_range (fn : Prims.string) (from_l : Prims.int) (from_c : Prims.int)
     (FStarC_Range_Type.mk_pos to_l to_c)
 let __mk_range (fn : Prims.string) (from_l : Prims.int) (from_c : Prims.int)
   (to_l : Prims.int) (to_c : Prims.int) : unsealedRange=
-  let uu___ = mk_range fn from_l from_c to_l to_c in U uu___
+  U (mk_range fn from_l from_c to_l to_c)
 let explode (r : unsealedRange) :
   (Prims.string * Prims.int * Prims.int * Prims.int * Prims.int)=
   match r with
@@ -55,8 +55,14 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
        FStarC_TypeChecker_NBETerm.e_int FStarC_TypeChecker_NBETerm.e_int
        FStarC_TypeChecker_NBETerm.e_int FStarC_TypeChecker_NBETerm.e_int)
     explode;
-  FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
     FStarC_Parser_Const.join_range_lid FStarC_Syntax_Embeddings.e_range
     FStarC_TypeChecker_NBETerm.e_range FStarC_Syntax_Embeddings.e_range
     FStarC_TypeChecker_NBETerm.e_range FStarC_Syntax_Embeddings.e_range
-    FStarC_TypeChecker_NBETerm.e_range FStarC_Range_Ops.union_ranges]
+    FStarC_TypeChecker_NBETerm.e_range
+    (fun r1 r2 ->
+       let uu___ = FStarC_Range_Ops.union_ranges r1 r2 in
+       FStar_Pervasives_Native.Some uu___)
+    (fun r1 r2 ->
+       let uu___ = FStarC_Range_Ops.union_ranges r1 r2 in
+       FStar_Pervasives_Native.Some uu___)]

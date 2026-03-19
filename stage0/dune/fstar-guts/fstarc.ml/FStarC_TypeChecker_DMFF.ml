@@ -209,990 +209,1043 @@ let gen_wps_for_free (env1 : FStarC_TypeChecker_Env.env)
              FStarC_Syntax_Syntax.bv_to_name
                bv.FStarC_Syntax_Syntax.binder_bv in
            FStarC_Syntax_Syntax.as_arg uu___2) in
-    let _ctx_gctx =
-      let _ctx_gctx1 =
+    let uu___2 =
+      let uu___3 =
         let mk1 f =
           let t =
             FStarC_Syntax_Syntax.gen_bv "t" FStar_Pervasives_Native.None
               FStarC_Syntax_Util.ktype in
           let body =
-            let uu___2 =
-              let uu___3 = FStarC_Syntax_Syntax.bv_to_name t in f uu___3 in
-            FStarC_Syntax_Util.arrow gamma uu___2 in
+            let uu___4 =
+              let uu___5 = FStarC_Syntax_Syntax.bv_to_name t in f uu___5 in
+            FStarC_Syntax_Util.arrow gamma uu___4 in
           FStarC_Syntax_Util.abs
             (FStarC_List.op_At binders
                [FStarC_Syntax_Syntax.mk_binder a1;
                FStarC_Syntax_Syntax.mk_binder t]) body
             FStar_Pervasives_Native.None in
-        let uu___2 = mk1 FStarC_Syntax_Syntax.mk_Total in
-        let uu___3 = mk1 FStarC_Syntax_Syntax.mk_GTotal in (uu___2, uu___3) in
-      let ctx_def = FStar_Pervasives_Native.fst _ctx_gctx1 in
-      let gctx_def = FStar_Pervasives_Native.snd _ctx_gctx1 in
-      let ctx_lid = mk_lid "ctx" in
-      let ctx_fv = register env1 ctx_lid ctx_def in
-      let gctx_lid = mk_lid "gctx" in
-      let gctx_fv = register env1 gctx_lid gctx_def in (ctx_fv, gctx_fv) in
-    let ctx_fv = FStar_Pervasives_Native.fst _ctx_gctx in
-    let gctx_fv = FStar_Pervasives_Native.snd _ctx_gctx in
-    let mk_ctx_gctx_app fv t =
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 =
-              FStarC_List.map
-                (fun uu___6 ->
-                   match uu___6 with
-                   | { FStarC_Syntax_Syntax.binder_bv = bv;
-                       FStarC_Syntax_Syntax.binder_qual = uu___7;
-                       FStarC_Syntax_Syntax.binder_positivity = uu___8;
-                       FStarC_Syntax_Syntax.binder_attrs = uu___9;_} ->
-                       let uu___10 = FStarC_Syntax_Syntax.bv_to_name bv in
-                       (uu___10,
-                         (FStarC_Syntax_Syntax.as_aqual_implicit false)))
-                binders in
-            let uu___6 =
-              let uu___7 =
-                let uu___8 = FStarC_Syntax_Syntax.bv_to_name a1 in
-                (uu___8, (FStarC_Syntax_Syntax.as_aqual_implicit false)) in
-              [uu___7; (t, (FStarC_Syntax_Syntax.as_aqual_implicit false))] in
-            FStarC_List.op_At uu___5 uu___6 in
-          { FStarC_Syntax_Syntax.hd = fv; FStarC_Syntax_Syntax.args = uu___4
-          } in
-        FStarC_Syntax_Syntax.Tm_app uu___3 in
-      mk uu___2 in
-    let mk_ctx t = mk_ctx_gctx_app ctx_fv t in
-    let mk_gctx t = mk_ctx_gctx_app gctx_fv t in
-    let c_pure =
-      let t =
-        FStarC_Syntax_Syntax.gen_bv "t" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let x =
-        let uu___2 = FStarC_Syntax_Syntax.bv_to_name t in
-        FStarC_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None uu___2 in
-      let ret =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t in mk_ctx uu___4 in
-          FStarC_Syntax_Util.residual_tot uu___3 in
-        FStar_Pervasives_Native.Some uu___2 in
-      let body =
-        let uu___2 = FStarC_Syntax_Syntax.bv_to_name x in
-        FStarC_Syntax_Util.abs gamma uu___2 ret in
-      let uu___2 =
-        let uu___3 = mk_all_implicit binders in
-        let uu___4 = binders_of_list [(a1, true); (t, true); (x, false)] in
-        FStarC_List.op_At uu___3 uu___4 in
-      FStarC_Syntax_Util.abs uu___2 body ret in
-    let c_pure1 = let uu___2 = mk_lid "pure" in register env1 uu___2 c_pure in
-    let c_app =
-      let t1 =
-        FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t2 =
-        FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let l =
-        let uu___2 =
+        let uu___4 = mk1 FStarC_Syntax_Syntax.mk_Total in
+        let uu___5 = mk1 FStarC_Syntax_Syntax.mk_GTotal in (uu___4, uu___5) in
+      match uu___3 with
+      | (ctx_def, gctx_def) ->
+          let ctx_lid = mk_lid "ctx" in
+          let ctx_fv = register env1 ctx_lid ctx_def in
+          let gctx_lid = mk_lid "gctx" in
+          let gctx_fv = register env1 gctx_lid gctx_def in
+          (env1, ctx_fv, gctx_fv) in
+    match uu___2 with
+    | (env2, ctx_fv, gctx_fv) ->
+        let mk_ctx_or_gctx fv t =
           let uu___3 =
             let uu___4 =
               let uu___5 =
                 let uu___6 =
-                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name t1 in
-                  FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-                    uu___7 in
-                FStarC_Syntax_Syntax.mk_binder uu___6 in
-              [uu___5] in
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Syntax.bv_to_name t2 in
-              FStarC_Syntax_Syntax.mk_GTotal uu___6 in
-            FStarC_Syntax_Util.arrow uu___4 uu___5 in
-          mk_gctx uu___3 in
-        FStarC_Syntax_Syntax.gen_bv "l" FStar_Pervasives_Native.None uu___2 in
-      let r =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Syntax.bv_to_name t1 in mk_gctx uu___3 in
-        FStarC_Syntax_Syntax.gen_bv "r" FStar_Pervasives_Native.None uu___2 in
-      let ret =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t2 in mk_gctx uu___4 in
-          FStarC_Syntax_Util.residual_tot uu___3 in
-        FStar_Pervasives_Native.Some uu___2 in
-      let outer_body =
-        let gamma_as_args = args_of_binders gamma in
-        let inner_body =
-          let uu___2 = FStarC_Syntax_Syntax.bv_to_name l in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name r in
-                  FStarC_Syntax_Util.mk_app uu___7 gamma_as_args in
-                FStarC_Syntax_Syntax.as_arg uu___6 in
-              [uu___5] in
-            FStarC_List.op_At gamma_as_args uu___4 in
-          FStarC_Syntax_Util.mk_app uu___2 uu___3 in
-        FStarC_Syntax_Util.abs gamma inner_body ret in
-      let uu___2 =
-        let uu___3 = mk_all_implicit binders in
-        let uu___4 =
-          binders_of_list
-            [(a1, true); (t1, true); (t2, true); (l, false); (r, false)] in
-        FStarC_List.op_At uu___3 uu___4 in
-      FStarC_Syntax_Util.abs uu___2 outer_body ret in
-    let c_app1 = let uu___2 = mk_lid "app" in register env1 uu___2 c_app in
-    let c_lift1 =
-      let t1 =
-        FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t2 =
-        FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t_f =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
-            FStarC_Syntax_Syntax.null_binder uu___4 in
-          [uu___3] in
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Syntax.bv_to_name t2 in
-          FStarC_Syntax_Syntax.mk_GTotal uu___4 in
-        FStarC_Syntax_Util.arrow uu___2 uu___3 in
-      let f =
-        FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
-      let a11 =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Syntax.bv_to_name t1 in mk_gctx uu___3 in
-        FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None uu___2 in
-      let ret =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t2 in mk_gctx uu___4 in
-          FStarC_Syntax_Util.residual_tot uu___3 in
-        FStar_Pervasives_Native.Some uu___2 in
-      let uu___2 =
-        let uu___3 = mk_all_implicit binders in
-        let uu___4 =
-          binders_of_list
-            [(a1, true); (t1, true); (t2, true); (f, false); (a11, false)] in
-        FStarC_List.op_At uu___3 uu___4 in
-      let uu___3 =
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 = FStarC_Syntax_Syntax.bv_to_name f in [uu___9] in
-                FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___8 in
-              FStarC_Syntax_Util.mk_app c_pure1 uu___7 in
-            let uu___7 =
-              let uu___8 = FStarC_Syntax_Syntax.bv_to_name a11 in [uu___8] in
-            uu___6 :: uu___7 in
-          FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___5 in
-        FStarC_Syntax_Util.mk_app c_app1 uu___4 in
-      FStarC_Syntax_Util.abs uu___2 uu___3 ret in
-    let c_lift11 =
-      let uu___2 = mk_lid "lift1" in register env1 uu___2 c_lift1 in
-    let c_lift2 =
-      let t1 =
-        FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t2 =
-        FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t3 =
-        FStarC_Syntax_Syntax.gen_bv "t3" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t_f =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
-            FStarC_Syntax_Syntax.null_binder uu___4 in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Syntax.bv_to_name t2 in
-              FStarC_Syntax_Syntax.null_binder uu___6 in
-            [uu___5] in
-          uu___3 :: uu___4 in
-        let uu___3 =
-          let uu___4 = FStarC_Syntax_Syntax.bv_to_name t3 in
-          FStarC_Syntax_Syntax.mk_GTotal uu___4 in
-        FStarC_Syntax_Util.arrow uu___2 uu___3 in
-      let f =
-        FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
-      let a11 =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Syntax.bv_to_name t1 in mk_gctx uu___3 in
-        FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None uu___2 in
-      let a2 =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Syntax.bv_to_name t2 in mk_gctx uu___3 in
-        FStarC_Syntax_Syntax.gen_bv "a2" FStar_Pervasives_Native.None uu___2 in
-      let ret =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t3 in mk_gctx uu___4 in
-          FStarC_Syntax_Util.residual_tot uu___3 in
-        FStar_Pervasives_Native.Some uu___2 in
-      let uu___2 =
-        let uu___3 = mk_all_implicit binders in
-        let uu___4 =
-          binders_of_list
-            [(a1, true);
-            (t1, true);
-            (t2, true);
-            (t3, true);
-            (f, false);
-            (a11, false);
-            (a2, false)] in
-        FStarC_List.op_At uu___3 uu___4 in
-      let uu___3 =
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 =
-                      let uu___11 =
-                        let uu___12 = FStarC_Syntax_Syntax.bv_to_name f in
-                        [uu___12] in
-                      FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___11 in
-                    FStarC_Syntax_Util.mk_app c_pure1 uu___10 in
-                  let uu___10 =
-                    let uu___11 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                    [uu___11] in
-                  uu___9 :: uu___10 in
-                FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___8 in
-              FStarC_Syntax_Util.mk_app c_app1 uu___7 in
-            let uu___7 =
-              let uu___8 = FStarC_Syntax_Syntax.bv_to_name a2 in [uu___8] in
-            uu___6 :: uu___7 in
-          FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___5 in
-        FStarC_Syntax_Util.mk_app c_app1 uu___4 in
-      FStarC_Syntax_Util.abs uu___2 uu___3 ret in
-    let c_lift21 =
-      let uu___2 = mk_lid "lift2" in register env1 uu___2 c_lift2 in
-    let c_push =
-      let t1 =
-        FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t2 =
-        FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t_f =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
-            FStarC_Syntax_Syntax.null_binder uu___4 in
-          [uu___3] in
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = FStarC_Syntax_Syntax.bv_to_name t2 in mk_gctx uu___5 in
-          FStarC_Syntax_Syntax.mk_Total uu___4 in
-        FStarC_Syntax_Util.arrow uu___2 uu___3 in
-      let f =
-        FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
-      let ret =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name t1 in
-                  FStarC_Syntax_Syntax.null_binder uu___7 in
-                [uu___6] in
-              let uu___6 =
-                let uu___7 = FStarC_Syntax_Syntax.bv_to_name t2 in
-                FStarC_Syntax_Syntax.mk_GTotal uu___7 in
-              FStarC_Syntax_Util.arrow uu___5 uu___6 in
-            mk_ctx uu___4 in
-          FStarC_Syntax_Util.residual_tot uu___3 in
-        FStar_Pervasives_Native.Some uu___2 in
-      let e1 =
-        let uu___2 = FStarC_Syntax_Syntax.bv_to_name t1 in
-        FStarC_Syntax_Syntax.gen_bv "e1" FStar_Pervasives_Native.None uu___2 in
-      let body =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Syntax.bv_to_name f in
-          let uu___4 =
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Syntax.bv_to_name e1 in
-              FStarC_Syntax_Syntax.as_arg uu___6 in
-            let uu___6 = args_of_binders gamma in uu___5 :: uu___6 in
-          FStarC_Syntax_Util.mk_app uu___3 uu___4 in
-        FStarC_Syntax_Util.abs
-          (FStarC_List.op_At gamma [FStarC_Syntax_Syntax.mk_binder e1])
-          uu___2 ret in
-      let uu___2 =
-        let uu___3 = mk_all_implicit binders in
-        let uu___4 =
-          binders_of_list [(a1, true); (t1, true); (t2, true); (f, false)] in
-        FStarC_List.op_At uu___3 uu___4 in
-      FStarC_Syntax_Util.abs uu___2 body ret in
-    let c_push1 = let uu___2 = mk_lid "push" in register env1 uu___2 c_push in
-    let ret_tot_wp_a =
-      FStar_Pervasives_Native.Some (FStarC_Syntax_Util.residual_tot wp_a1) in
-    let mk_generic_app c =
-      if (FStarC_List.length binders) > Prims.int_zero
-      then
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = args_of_binders binders in
-            { FStarC_Syntax_Syntax.hd = c; FStarC_Syntax_Syntax.args = uu___4
-            } in
-          FStarC_Syntax_Syntax.Tm_app uu___3 in
-        mk uu___2
-      else c in
-    let wp_if_then_else =
-      let result_comp =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.null_binder wp_a1 in
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Syntax.null_binder wp_a1 in [uu___6] in
-            uu___4 :: uu___5 in
-          let uu___4 = FStarC_Syntax_Syntax.mk_Total wp_a1 in
-          FStarC_Syntax_Util.arrow uu___3 uu___4 in
-        FStarC_Syntax_Syntax.mk_Total uu___2 in
-      let c =
-        FStarC_Syntax_Syntax.gen_bv "c" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Syntax.binders_of_list [a1; c] in
-        FStarC_List.op_At binders uu___3 in
-      let uu___3 =
-        let l_ite =
-          FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.ite_lid
-            FStar_Pervasives_Native.None in
-        let uu___4 =
-          let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 = FStarC_Syntax_Syntax.bv_to_name c in
-                    FStarC_Syntax_Syntax.as_arg uu___10 in
-                  [uu___9] in
-                FStarC_Syntax_Util.mk_app l_ite uu___8 in
-              [uu___7] in
-            FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___6 in
-          FStarC_Syntax_Util.mk_app c_lift21 uu___5 in
-        FStarC_Syntax_Util.ascribe uu___4
-          ((FStar_Pervasives.Inr result_comp), FStar_Pervasives_Native.None,
-            false) in
-      let uu___4 =
-        let uu___5 = FStarC_Syntax_Util.residual_comp_of_comp result_comp in
-        FStar_Pervasives_Native.Some uu___5 in
-      FStarC_Syntax_Util.abs uu___2 uu___3 uu___4 in
-    let wp_if_then_else1 =
-      let uu___2 = mk_lid "wp_if_then_else" in
-      register env1 uu___2 wp_if_then_else in
-    let wp_if_then_else2 = mk_generic_app wp_if_then_else1 in
-    let wp_close =
-      let b =
-        FStarC_Syntax_Syntax.gen_bv "b" FStar_Pervasives_Native.None
-          FStarC_Syntax_Util.ktype in
-      let t_f =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name b in
-            FStarC_Syntax_Syntax.null_binder uu___4 in
-          [uu___3] in
-        let uu___3 = FStarC_Syntax_Syntax.mk_Total wp_a1 in
-        FStarC_Syntax_Util.arrow uu___2 uu___3 in
-      let f =
-        FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
-      let body =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 =
-              let uu___5 =
-                FStarC_List.map FStarC_Syntax_Syntax.as_arg
-                  [FStarC_Syntax_Util.tforall] in
-              FStarC_Syntax_Util.mk_app c_pure1 uu___5 in
-            let uu___5 =
-              let uu___6 =
-                let uu___7 =
-                  let uu___8 =
-                    let uu___9 = FStarC_Syntax_Syntax.bv_to_name f in
-                    [uu___9] in
-                  FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___8 in
-                FStarC_Syntax_Util.mk_app c_push1 uu___7 in
-              [uu___6] in
-            uu___4 :: uu___5 in
-          FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___3 in
-        FStarC_Syntax_Util.mk_app c_app1 uu___2 in
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Syntax.binders_of_list [a1; b; f] in
-        FStarC_List.op_At binders uu___3 in
-      FStarC_Syntax_Util.abs uu___2 body ret_tot_wp_a in
-    let wp_close1 =
-      let uu___2 = mk_lid "wp_close" in register env1 uu___2 wp_close in
-    let wp_close2 = mk_generic_app wp_close1 in
-    let ret_tot_type =
-      FStar_Pervasives_Native.Some
-        (FStarC_Syntax_Util.residual_tot FStarC_Syntax_Util.ktype) in
-    let ret_gtot_type =
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            FStarC_Syntax_Syntax.mk_GTotal FStarC_Syntax_Util.ktype in
-          FStarC_TypeChecker_Common.lcomp_of_comp uu___4 in
-        FStarC_TypeChecker_Common.residual_comp_of_lcomp uu___3 in
-      FStar_Pervasives_Native.Some uu___2 in
-    let mk_forall x body =
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 =
-              let uu___6 =
-                FStarC_Syntax_Util.abs [FStarC_Syntax_Syntax.mk_binder x]
-                  body ret_tot_type in
-              FStarC_Syntax_Syntax.as_arg uu___6 in
-            [uu___5] in
-          {
-            FStarC_Syntax_Syntax.hd = FStarC_Syntax_Util.tforall;
-            FStarC_Syntax_Syntax.args = uu___4
-          } in
-        FStarC_Syntax_Syntax.Tm_app uu___3 in
-      FStarC_Syntax_Syntax.mk uu___2 FStarC_Range_Type.dummyRange in
-    let rec is_discrete t =
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Subst.compress t in
-        uu___3.FStarC_Syntax_Syntax.n in
-      match uu___2 with
-      | FStarC_Syntax_Syntax.Tm_type uu___3 -> false
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
-          ->
-          let uu___3 =
-            FStarC_List.for_all
-              (fun uu___4 ->
-                 match uu___4 with
-                 | { FStarC_Syntax_Syntax.binder_bv = b;
-                     FStarC_Syntax_Syntax.binder_qual = uu___5;
-                     FStarC_Syntax_Syntax.binder_positivity = uu___6;
-                     FStarC_Syntax_Syntax.binder_attrs = uu___7;_} ->
-                     is_discrete b.FStarC_Syntax_Syntax.sort) bs in
-          if uu___3
-          then is_discrete (FStarC_Syntax_Util.comp_result c)
-          else false
-      | uu___3 -> true in
-    let rec is_monotonic t =
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Subst.compress t in
-        uu___3.FStarC_Syntax_Syntax.n in
-      match uu___2 with
-      | FStarC_Syntax_Syntax.Tm_type uu___3 -> true
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
-          ->
-          let uu___3 =
-            FStarC_List.for_all
-              (fun uu___4 ->
-                 match uu___4 with
-                 | { FStarC_Syntax_Syntax.binder_bv = b;
-                     FStarC_Syntax_Syntax.binder_qual = uu___5;
-                     FStarC_Syntax_Syntax.binder_positivity = uu___6;
-                     FStarC_Syntax_Syntax.binder_attrs = uu___7;_} ->
-                     is_discrete b.FStarC_Syntax_Syntax.sort) bs in
-          if uu___3
-          then is_monotonic (FStarC_Syntax_Util.comp_result c)
-          else false
-      | uu___3 -> is_discrete t in
-    let rec mk_rel rel t x y =
-      let mk_rel1 = mk_rel rel in
-      let t1 =
-        FStarC_TypeChecker_Normalize.normalize
-          [FStarC_TypeChecker_Env.Beta;
-          FStarC_TypeChecker_Env.Eager_unfolding;
-          FStarC_TypeChecker_Env.DontUnfoldAttr
-            [FStarC_Parser_Const.tac_opaque_attr];
-          FStarC_TypeChecker_Env.UnfoldUntil
-            FStarC_Syntax_Syntax.delta_constant] env1 t in
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Subst.compress t1 in
-        uu___3.FStarC_Syntax_Syntax.n in
-      match uu___2 with
-      | FStarC_Syntax_Syntax.Tm_type uu___3 -> rel x y
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = binder::[];
-            FStarC_Syntax_Syntax.comp =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.GTotal b;
-                FStarC_Syntax_Syntax.pos = uu___3;
-                FStarC_Syntax_Syntax.vars = uu___4;
-                FStarC_Syntax_Syntax.hash_code = uu___5;_};_}
-          ->
-          let a2 =
-            (binder.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-          let uu___6 =
-            let uu___7 = is_monotonic a2 in
-            if uu___7 then true else is_monotonic b in
-          if uu___6
-          then
-            let a11 =
-              FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
-                a2 in
-            let body =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                    FStarC_Syntax_Syntax.as_arg uu___10 in
-                  [uu___9] in
-                FStarC_Syntax_Util.mk_app x uu___8 in
-              let uu___8 =
-                let uu___9 =
-                  let uu___10 =
-                    let uu___11 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                    FStarC_Syntax_Syntax.as_arg uu___11 in
-                  [uu___10] in
-                FStarC_Syntax_Util.mk_app y uu___9 in
-              mk_rel1 b uu___7 uu___8 in
-            mk_forall a11 body
-          else
-            (let a11 =
-               FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
-                 a2 in
-             let a21 =
-               FStarC_Syntax_Syntax.gen_bv "a2" FStar_Pervasives_Native.None
-                 a2 in
-             let body =
-               let uu___8 =
-                 let uu___9 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                 let uu___10 = FStarC_Syntax_Syntax.bv_to_name a21 in
-                 mk_rel1 a2 uu___9 uu___10 in
-               let uu___9 =
-                 let uu___10 =
-                   let uu___11 =
-                     let uu___12 =
-                       let uu___13 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                       FStarC_Syntax_Syntax.as_arg uu___13 in
-                     [uu___12] in
-                   FStarC_Syntax_Util.mk_app x uu___11 in
-                 let uu___11 =
-                   let uu___12 =
-                     let uu___13 =
-                       let uu___14 = FStarC_Syntax_Syntax.bv_to_name a21 in
-                       FStarC_Syntax_Syntax.as_arg uu___14 in
-                     [uu___13] in
-                   FStarC_Syntax_Util.mk_app y uu___12 in
-                 mk_rel1 b uu___10 uu___11 in
-               FStarC_Syntax_Util.mk_imp uu___8 uu___9 in
-             let uu___8 = mk_forall a21 body in mk_forall a11 uu___8)
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = binder::[];
-            FStarC_Syntax_Syntax.comp =
-              { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Total b;
-                FStarC_Syntax_Syntax.pos = uu___3;
-                FStarC_Syntax_Syntax.vars = uu___4;
-                FStarC_Syntax_Syntax.hash_code = uu___5;_};_}
-          ->
-          let a2 =
-            (binder.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-          let uu___6 =
-            let uu___7 = is_monotonic a2 in
-            if uu___7 then true else is_monotonic b in
-          if uu___6
-          then
-            let a11 =
-              FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
-                a2 in
-            let body =
-              let uu___7 =
-                let uu___8 =
-                  let uu___9 =
-                    let uu___10 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                    FStarC_Syntax_Syntax.as_arg uu___10 in
-                  [uu___9] in
-                FStarC_Syntax_Util.mk_app x uu___8 in
-              let uu___8 =
-                let uu___9 =
-                  let uu___10 =
-                    let uu___11 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                    FStarC_Syntax_Syntax.as_arg uu___11 in
-                  [uu___10] in
-                FStarC_Syntax_Util.mk_app y uu___9 in
-              mk_rel1 b uu___7 uu___8 in
-            mk_forall a11 body
-          else
-            (let a11 =
-               FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
-                 a2 in
-             let a21 =
-               FStarC_Syntax_Syntax.gen_bv "a2" FStar_Pervasives_Native.None
-                 a2 in
-             let body =
-               let uu___8 =
-                 let uu___9 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                 let uu___10 = FStarC_Syntax_Syntax.bv_to_name a21 in
-                 mk_rel1 a2 uu___9 uu___10 in
-               let uu___9 =
-                 let uu___10 =
-                   let uu___11 =
-                     let uu___12 =
-                       let uu___13 = FStarC_Syntax_Syntax.bv_to_name a11 in
-                       FStarC_Syntax_Syntax.as_arg uu___13 in
-                     [uu___12] in
-                   FStarC_Syntax_Util.mk_app x uu___11 in
-                 let uu___11 =
-                   let uu___12 =
-                     let uu___13 =
-                       let uu___14 = FStarC_Syntax_Syntax.bv_to_name a21 in
-                       FStarC_Syntax_Syntax.as_arg uu___14 in
-                     [uu___13] in
-                   FStarC_Syntax_Util.mk_app y uu___12 in
-                 mk_rel1 b uu___10 uu___11 in
-               FStarC_Syntax_Util.mk_imp uu___8 uu___9 in
-             let uu___8 = mk_forall a21 body in mk_forall a11 uu___8)
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = binder::binders1;
-            FStarC_Syntax_Syntax.comp = comp;_}
-          ->
-          let t2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 = FStarC_Syntax_Util.arrow binders1 comp in
-                  FStarC_Syntax_Syntax.mk_Total uu___6 in
-                {
-                  FStarC_Syntax_Syntax.bs1 = [binder];
-                  FStarC_Syntax_Syntax.comp = uu___5
-                } in
-              FStarC_Syntax_Syntax.Tm_arrow uu___4 in
-            {
-              FStarC_Syntax_Syntax.n = uu___3;
-              FStarC_Syntax_Syntax.pos = (t1.FStarC_Syntax_Syntax.pos);
-              FStarC_Syntax_Syntax.vars = (t1.FStarC_Syntax_Syntax.vars);
-              FStarC_Syntax_Syntax.hash_code =
-                (t1.FStarC_Syntax_Syntax.hash_code)
-            } in
-          mk_rel1 t2 x y
-      | FStarC_Syntax_Syntax.Tm_arrow
-          { FStarC_Syntax_Syntax.bs1 = [];
-            FStarC_Syntax_Syntax.comp = uu___3;_}
-          -> FStarC_Effect.failwith "impossible: arrow with empty binders"
-      | uu___3 -> FStarC_Syntax_Util.mk_untyped_eq2 x y in
-    let stronger =
-      let wp1 =
-        FStarC_Syntax_Syntax.gen_bv "wp1" FStar_Pervasives_Native.None wp_a1 in
-      let wp2 =
-        FStarC_Syntax_Syntax.gen_bv "wp2" FStar_Pervasives_Native.None wp_a1 in
-      let rec mk_stronger t x y =
-        let t1 =
-          FStarC_TypeChecker_Normalize.normalize
-            [FStarC_TypeChecker_Env.Beta;
-            FStarC_TypeChecker_Env.Eager_unfolding;
-            FStarC_TypeChecker_Env.DontUnfoldAttr
-              [FStarC_Parser_Const.tac_opaque_attr];
-            FStarC_TypeChecker_Env.UnfoldUntil
-              FStarC_Syntax_Syntax.delta_constant] env1 t in
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Subst.compress t1 in
-          uu___3.FStarC_Syntax_Syntax.n in
-        match uu___2 with
-        | FStarC_Syntax_Syntax.Tm_type uu___3 ->
-            FStarC_Syntax_Util.mk_imp x y
-        | FStarC_Syntax_Syntax.Tm_app
-            { FStarC_Syntax_Syntax.hd = head;
-              FStarC_Syntax_Syntax.args = args;_}
-            when
-            let uu___3 = FStarC_Syntax_Subst.compress head in
-            FStarC_Syntax_Util.is_tuple_constructor uu___3 ->
-            let project i tuple =
-              let projector =
-                let uu___3 =
-                  let uu___4 =
-                    FStarC_Parser_Const_Tuples.mk_tuple_data_lid
-                      (FStarC_List.length args) FStarC_Range_Type.dummyRange in
-                  FStarC_TypeChecker_Env.lookup_projector env1 uu___4 i in
-                FStarC_Syntax_Syntax.fvar_with_dd uu___3
-                  FStar_Pervasives_Native.None in
-              FStarC_Syntax_Util.mk_app projector
-                [(tuple, FStar_Pervasives_Native.None)] in
-            let uu___3 =
-              let uu___4 =
-                FStarC_List.mapi
-                  (fun i uu___5 ->
-                     match uu___5 with
-                     | (t2, q) ->
-                         let uu___6 = project i x in
-                         let uu___7 = project i y in
-                         mk_stronger t2 uu___6 uu___7) args in
-              match uu___4 with
-              | [] ->
-                  FStarC_Effect.failwith
-                    "Impossible: empty application when creating stronger relation in DM4F"
-              | rel0::rels -> (rel0, rels) in
-            (match uu___3 with
-             | (rel0, rels) ->
-                 FStarC_List.fold_left FStarC_Syntax_Util.mk_conj rel0 rels)
-        | FStarC_Syntax_Syntax.Tm_arrow
-            { FStarC_Syntax_Syntax.bs1 = binders1;
-              FStarC_Syntax_Syntax.comp =
-                { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.GTotal b;
-                  FStarC_Syntax_Syntax.pos = uu___3;
-                  FStarC_Syntax_Syntax.vars = uu___4;
-                  FStarC_Syntax_Syntax.hash_code = uu___5;_};_}
-            ->
-            let bvs =
-              FStarC_List.mapi
-                (fun i uu___6 ->
-                   match uu___6 with
-                   | { FStarC_Syntax_Syntax.binder_bv = bv;
-                       FStarC_Syntax_Syntax.binder_qual = q;
-                       FStarC_Syntax_Syntax.binder_positivity = uu___7;
-                       FStarC_Syntax_Syntax.binder_attrs = uu___8;_} ->
-                       let uu___9 =
-                         let uu___10 =
-                           FStarC_Class_Show.show
-                             FStarC_Class_Show.showable_int i in
-                         Prims.strcat "a" uu___10 in
-                       FStarC_Syntax_Syntax.gen_bv uu___9
-                         FStar_Pervasives_Native.None
-                         bv.FStarC_Syntax_Syntax.sort) binders1 in
-            let args =
-              FStarC_List.map
-                (fun ai ->
-                   let uu___6 = FStarC_Syntax_Syntax.bv_to_name ai in
-                   FStarC_Syntax_Syntax.as_arg uu___6) bvs in
-            let body =
-              let uu___6 = FStarC_Syntax_Util.mk_app x args in
-              let uu___7 = FStarC_Syntax_Util.mk_app y args in
-              mk_stronger b uu___6 uu___7 in
-            FStarC_List.fold_right (fun bv body1 -> mk_forall bv body1) bvs
-              body
-        | FStarC_Syntax_Syntax.Tm_arrow
-            { FStarC_Syntax_Syntax.bs1 = binders1;
-              FStarC_Syntax_Syntax.comp =
-                { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Total b;
-                  FStarC_Syntax_Syntax.pos = uu___3;
-                  FStarC_Syntax_Syntax.vars = uu___4;
-                  FStarC_Syntax_Syntax.hash_code = uu___5;_};_}
-            ->
-            let bvs =
-              FStarC_List.mapi
-                (fun i uu___6 ->
-                   match uu___6 with
-                   | { FStarC_Syntax_Syntax.binder_bv = bv;
-                       FStarC_Syntax_Syntax.binder_qual = q;
-                       FStarC_Syntax_Syntax.binder_positivity = uu___7;
-                       FStarC_Syntax_Syntax.binder_attrs = uu___8;_} ->
-                       let uu___9 =
-                         let uu___10 =
-                           FStarC_Class_Show.show
-                             FStarC_Class_Show.showable_int i in
-                         Prims.strcat "a" uu___10 in
-                       FStarC_Syntax_Syntax.gen_bv uu___9
-                         FStar_Pervasives_Native.None
-                         bv.FStarC_Syntax_Syntax.sort) binders1 in
-            let args =
-              FStarC_List.map
-                (fun ai ->
-                   let uu___6 = FStarC_Syntax_Syntax.bv_to_name ai in
-                   FStarC_Syntax_Syntax.as_arg uu___6) bvs in
-            let body =
-              let uu___6 = FStarC_Syntax_Util.mk_app x args in
-              let uu___7 = FStarC_Syntax_Util.mk_app y args in
-              mk_stronger b uu___6 uu___7 in
-            FStarC_List.fold_right (fun bv body1 -> mk_forall bv body1) bvs
-              body
-        | uu___3 -> FStarC_Effect.failwith "Not a DM elaborated type" in
-      let body =
-        let uu___2 = FStarC_Syntax_Util.unascribe wp_a1 in
-        let uu___3 = FStarC_Syntax_Syntax.bv_to_name wp1 in
-        let uu___4 = FStarC_Syntax_Syntax.bv_to_name wp2 in
-        mk_stronger uu___2 uu___3 uu___4 in
-      let uu___2 =
-        let uu___3 =
-          binders_of_list [(a1, false); (wp1, false); (wp2, false)] in
-        FStarC_List.op_At binders uu___3 in
-      FStarC_Syntax_Util.abs uu___2 body ret_tot_type in
-    let stronger1 =
-      let uu___2 = mk_lid "stronger" in register env1 uu___2 stronger in
-    let stronger2 = mk_generic_app stronger1 in
-    let ite_wp =
-      let wp =
-        FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None wp_a1 in
-      let uu___2 = FStarC_Util.prefix gamma in
-      match uu___2 with
-      | (wp_args, post) ->
-          let k =
-            FStarC_Syntax_Syntax.gen_bv "k" FStar_Pervasives_Native.None
-              (post.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-          let equiv =
-            let k_tm = FStarC_Syntax_Syntax.bv_to_name k in
-            let eq =
-              let uu___3 =
-                FStarC_Syntax_Syntax.bv_to_name
-                  post.FStarC_Syntax_Syntax.binder_bv in
-              mk_rel FStarC_Syntax_Util.mk_iff k.FStarC_Syntax_Syntax.sort
-                k_tm uu___3 in
-            let uu___3 = FStarC_Syntax_Formula.destruct_typ_as_formula eq in
-            match uu___3 with
-            | FStar_Pervasives_Native.Some (FStarC_Syntax_Formula.QAll
-                (binders1, [], body)) ->
-                let k_app =
-                  let uu___4 = args_of_binders binders1 in
-                  FStarC_Syntax_Util.mk_app k_tm uu___4 in
-                let guard_free =
-                  FStarC_Syntax_Syntax.fv_to_tm
-                    (FStarC_Syntax_Syntax.lid_and_dd_as_fv
-                       FStarC_Parser_Const.guard_free
-                       FStar_Pervasives_Native.None) in
-                let pat =
-                  FStarC_Syntax_Util.mk_app guard_free
-                    [FStarC_Syntax_Syntax.as_arg k_app] in
-                let pattern_guarded_body =
-                  let uu___4 =
-                    let uu___5 =
-                      let uu___6 =
-                        let uu___7 =
-                          let uu___8 =
-                            FStarC_Syntax_Syntax.binders_to_names binders1 in
-                          (uu___8, [[FStarC_Syntax_Syntax.as_arg pat]]) in
-                        FStarC_Syntax_Syntax.Meta_pattern uu___7 in
-                      {
-                        FStarC_Syntax_Syntax.tm2 = body;
-                        FStarC_Syntax_Syntax.meta = uu___6
-                      } in
-                    FStarC_Syntax_Syntax.Tm_meta uu___5 in
-                  mk uu___4 in
-                FStarC_Syntax_Util.close_forall_no_univs binders1
-                  pattern_guarded_body
-            | uu___4 ->
-                FStarC_Effect.failwith
-                  "Impossible: Expected the equivalence to be a quantified formula" in
-          let body =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 = FStarC_Syntax_Syntax.bv_to_name wp in
-                  let uu___7 =
-                    let uu___8 = args_of_binders wp_args in
-                    let uu___9 =
-                      let uu___10 =
-                        let uu___11 = FStarC_Syntax_Syntax.bv_to_name k in
-                        FStarC_Syntax_Syntax.as_arg uu___11 in
-                      [uu___10] in
-                    FStarC_List.op_At uu___8 uu___9 in
-                  FStarC_Syntax_Util.mk_app uu___6 uu___7 in
-                FStarC_Syntax_Util.mk_imp equiv uu___5 in
-              FStarC_Syntax_Util.mk_forall_no_univ k uu___4 in
-            FStarC_Syntax_Util.abs gamma uu___3 ret_gtot_type in
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.binders_of_list [a1; wp] in
-            FStarC_List.op_At binders uu___4 in
-          FStarC_Syntax_Util.abs uu___3 body ret_gtot_type in
-    let ite_wp1 = let uu___2 = mk_lid "ite_wp" in register env1 uu___2 ite_wp in
-    let ite_wp2 = mk_generic_app ite_wp1 in
-    let null_wp =
-      let wp =
-        FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None wp_a1 in
-      let uu___2 = FStarC_Util.prefix gamma in
-      match uu___2 with
-      | (wp_args, post) ->
-          let x =
-            FStarC_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
-              FStarC_Syntax_Syntax.tun in
-          let body =
-            let uu___3 =
-              let uu___4 =
-                FStarC_Syntax_Syntax.bv_to_name
-                  post.FStarC_Syntax_Syntax.binder_bv in
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name x in
-                  FStarC_Syntax_Syntax.as_arg uu___7 in
-                [uu___6] in
-              FStarC_Syntax_Util.mk_app uu___4 uu___5 in
-            FStarC_Syntax_Util.mk_forall_no_univ x uu___3 in
-          let uu___3 =
-            let uu___4 =
-              let uu___5 = FStarC_Syntax_Syntax.binders_of_list [a1] in
-              FStarC_List.op_At uu___5 gamma in
-            FStarC_List.op_At binders uu___4 in
-          FStarC_Syntax_Util.abs uu___3 body ret_gtot_type in
-    let null_wp1 =
-      let uu___2 = mk_lid "null_wp" in register env1 uu___2 null_wp in
-    let null_wp2 = mk_generic_app null_wp1 in
-    let wp_trivial =
-      let wp =
-        FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None wp_a1 in
-      let body =
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = FStarC_Syntax_Syntax.bv_to_name a1 in
-            let uu___5 =
-              let uu___6 =
+                  FStarC_List.map
+                    (fun uu___7 ->
+                       match uu___7 with
+                       | { FStarC_Syntax_Syntax.binder_bv = bv;
+                           FStarC_Syntax_Syntax.binder_qual = uu___8;
+                           FStarC_Syntax_Syntax.binder_positivity = uu___9;
+                           FStarC_Syntax_Syntax.binder_attrs = uu___10;_} ->
+                           let uu___11 = FStarC_Syntax_Syntax.bv_to_name bv in
+                           (uu___11,
+                             (FStarC_Syntax_Syntax.as_aqual_implicit false)))
+                    binders in
                 let uu___7 =
                   let uu___8 =
                     let uu___9 = FStarC_Syntax_Syntax.bv_to_name a1 in
-                    FStarC_Syntax_Syntax.as_arg uu___9 in
+                    (uu___9, (FStarC_Syntax_Syntax.as_aqual_implicit false)) in
+                  [uu___8;
+                  (t, (FStarC_Syntax_Syntax.as_aqual_implicit false))] in
+                FStarC_List.op_At uu___6 uu___7 in
+              {
+                FStarC_Syntax_Syntax.hd = fv;
+                FStarC_Syntax_Syntax.args = uu___5
+              } in
+            FStarC_Syntax_Syntax.Tm_app uu___4 in
+          mk uu___3 in
+        let mk_ctx t = mk_ctx_or_gctx ctx_fv t in
+        let mk_gctx t = mk_ctx_or_gctx gctx_fv t in
+        let c_pure =
+          let t =
+            FStarC_Syntax_Syntax.gen_bv "t" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let x =
+            let uu___3 = FStarC_Syntax_Syntax.bv_to_name t in
+            FStarC_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
+              uu___3 in
+          let ret =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t in
+                mk_ctx uu___5 in
+              FStarC_Syntax_Util.residual_tot uu___4 in
+            FStar_Pervasives_Native.Some uu___3 in
+          let body =
+            let uu___3 = FStarC_Syntax_Syntax.bv_to_name x in
+            FStarC_Syntax_Util.abs gamma uu___3 ret in
+          let uu___3 =
+            let uu___4 = mk_all_implicit binders in
+            let uu___5 = binders_of_list [(a1, true); (t, true); (x, false)] in
+            FStarC_List.op_At uu___4 uu___5 in
+          FStarC_Syntax_Util.abs uu___3 body ret in
+        let c_pure1 =
+          let uu___3 = mk_lid "pure" in register env2 uu___3 c_pure in
+        let c_app =
+          let t1 =
+            FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t2 =
+            FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let l =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Syntax_Syntax.bv_to_name t1 in
+                      FStarC_Syntax_Syntax.new_bv
+                        FStar_Pervasives_Native.None uu___8 in
+                    FStarC_Syntax_Syntax.mk_binder uu___7 in
+                  [uu___6] in
+                let uu___6 =
+                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                  FStarC_Syntax_Syntax.mk_GTotal uu___7 in
+                FStarC_Syntax_Util.arrow uu___5 uu___6 in
+              mk_gctx uu___4 in
+            FStarC_Syntax_Syntax.gen_bv "l" FStar_Pervasives_Native.None
+              uu___3 in
+          let r =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
+              mk_gctx uu___4 in
+            FStarC_Syntax_Syntax.gen_bv "r" FStar_Pervasives_Native.None
+              uu___3 in
+          let ret =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                mk_gctx uu___5 in
+              FStarC_Syntax_Util.residual_tot uu___4 in
+            FStar_Pervasives_Native.Some uu___3 in
+          let outer_body =
+            let gamma_as_args = args_of_binders gamma in
+            let inner_body =
+              let uu___3 = FStarC_Syntax_Syntax.bv_to_name l in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Syntax_Syntax.bv_to_name r in
+                      FStarC_Syntax_Util.mk_app uu___8 gamma_as_args in
+                    FStarC_Syntax_Syntax.as_arg uu___7 in
+                  [uu___6] in
+                FStarC_List.op_At gamma_as_args uu___5 in
+              FStarC_Syntax_Util.mk_app uu___3 uu___4 in
+            FStarC_Syntax_Util.abs gamma inner_body ret in
+          let uu___3 =
+            let uu___4 = mk_all_implicit binders in
+            let uu___5 =
+              binders_of_list
+                [(a1, true); (t1, true); (t2, true); (l, false); (r, false)] in
+            FStarC_List.op_At uu___4 uu___5 in
+          FStarC_Syntax_Util.abs uu___3 outer_body ret in
+        let c_app1 = let uu___3 = mk_lid "app" in register env2 uu___3 c_app in
+        let c_lift1 =
+          let t1 =
+            FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t2 =
+            FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t_f =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t1 in
+                FStarC_Syntax_Syntax.null_binder uu___5 in
+              [uu___4] in
+            let uu___4 =
+              let uu___5 = FStarC_Syntax_Syntax.bv_to_name t2 in
+              FStarC_Syntax_Syntax.mk_GTotal uu___5 in
+            FStarC_Syntax_Util.arrow uu___3 uu___4 in
+          let f =
+            FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
+          let a11 =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
+              mk_gctx uu___4 in
+            FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
+              uu___3 in
+          let ret =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                mk_gctx uu___5 in
+              FStarC_Syntax_Util.residual_tot uu___4 in
+            FStar_Pervasives_Native.Some uu___3 in
+          let uu___3 =
+            let uu___4 = mk_all_implicit binders in
+            let uu___5 =
+              binders_of_list
+                [(a1, true);
+                (t1, true);
+                (t2, true);
+                (f, false);
+                (a11, false)] in
+            FStarC_List.op_At uu___4 uu___5 in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = FStarC_Syntax_Syntax.bv_to_name f in
+                      [uu___10] in
+                    FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___9 in
+                  FStarC_Syntax_Util.mk_app c_pure1 uu___8 in
+                let uu___8 =
+                  let uu___9 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                  [uu___9] in
+                uu___7 :: uu___8 in
+              FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___6 in
+            FStarC_Syntax_Util.mk_app c_app1 uu___5 in
+          FStarC_Syntax_Util.abs uu___3 uu___4 ret in
+        let c_lift11 =
+          let uu___3 = mk_lid "lift1" in register env2 uu___3 c_lift1 in
+        let c_lift2 =
+          let t1 =
+            FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t2 =
+            FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t3 =
+            FStarC_Syntax_Syntax.gen_bv "t3" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t_f =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t1 in
+                FStarC_Syntax_Syntax.null_binder uu___5 in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                  FStarC_Syntax_Syntax.null_binder uu___7 in
+                [uu___6] in
+              uu___4 :: uu___5 in
+            let uu___4 =
+              let uu___5 = FStarC_Syntax_Syntax.bv_to_name t3 in
+              FStarC_Syntax_Syntax.mk_GTotal uu___5 in
+            FStarC_Syntax_Util.arrow uu___3 uu___4 in
+          let f =
+            FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
+          let a11 =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Syntax.bv_to_name t1 in
+              mk_gctx uu___4 in
+            FStarC_Syntax_Syntax.gen_bv "a1" FStar_Pervasives_Native.None
+              uu___3 in
+          let a2 =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Syntax.bv_to_name t2 in
+              mk_gctx uu___4 in
+            FStarC_Syntax_Syntax.gen_bv "a2" FStar_Pervasives_Native.None
+              uu___3 in
+          let ret =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t3 in
+                mk_gctx uu___5 in
+              FStarC_Syntax_Util.residual_tot uu___4 in
+            FStar_Pervasives_Native.Some uu___3 in
+          let uu___3 =
+            let uu___4 = mk_all_implicit binders in
+            let uu___5 =
+              binders_of_list
+                [(a1, true);
+                (t1, true);
+                (t2, true);
+                (t3, true);
+                (f, false);
+                (a11, false);
+                (a2, false)] in
+            FStarC_List.op_At uu___4 uu___5 in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        let uu___11 =
+                          let uu___12 =
+                            let uu___13 = FStarC_Syntax_Syntax.bv_to_name f in
+                            [uu___13] in
+                          FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___12 in
+                        FStarC_Syntax_Util.mk_app c_pure1 uu___11 in
+                      let uu___11 =
+                        let uu___12 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                        [uu___12] in
+                      uu___10 :: uu___11 in
+                    FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___9 in
+                  FStarC_Syntax_Util.mk_app c_app1 uu___8 in
+                let uu___8 =
+                  let uu___9 = FStarC_Syntax_Syntax.bv_to_name a2 in [uu___9] in
+                uu___7 :: uu___8 in
+              FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___6 in
+            FStarC_Syntax_Util.mk_app c_app1 uu___5 in
+          FStarC_Syntax_Util.abs uu___3 uu___4 ret in
+        let c_lift21 =
+          let uu___3 = mk_lid "lift2" in register env2 uu___3 c_lift2 in
+        let c_push =
+          let t1 =
+            FStarC_Syntax_Syntax.gen_bv "t1" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t2 =
+            FStarC_Syntax_Syntax.gen_bv "t2" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t_f =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name t1 in
+                FStarC_Syntax_Syntax.null_binder uu___5 in
+              [uu___4] in
+            let uu___4 =
+              let uu___5 =
+                let uu___6 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                mk_gctx uu___6 in
+              FStarC_Syntax_Syntax.mk_Total uu___5 in
+            FStarC_Syntax_Util.arrow uu___3 uu___4 in
+          let f =
+            FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
+          let ret =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Syntax_Syntax.bv_to_name t1 in
+                      FStarC_Syntax_Syntax.null_binder uu___8 in
+                    [uu___7] in
+                  let uu___7 =
+                    let uu___8 = FStarC_Syntax_Syntax.bv_to_name t2 in
+                    FStarC_Syntax_Syntax.mk_GTotal uu___8 in
+                  FStarC_Syntax_Util.arrow uu___6 uu___7 in
+                mk_ctx uu___5 in
+              FStarC_Syntax_Util.residual_tot uu___4 in
+            FStar_Pervasives_Native.Some uu___3 in
+          let e1 =
+            let uu___3 = FStarC_Syntax_Syntax.bv_to_name t1 in
+            FStarC_Syntax_Syntax.gen_bv "e1" FStar_Pervasives_Native.None
+              uu___3 in
+          let body =
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Syntax.bv_to_name f in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = FStarC_Syntax_Syntax.bv_to_name e1 in
+                  FStarC_Syntax_Syntax.as_arg uu___7 in
+                let uu___7 = args_of_binders gamma in uu___6 :: uu___7 in
+              FStarC_Syntax_Util.mk_app uu___4 uu___5 in
+            FStarC_Syntax_Util.abs
+              (FStarC_List.op_At gamma [FStarC_Syntax_Syntax.mk_binder e1])
+              uu___3 ret in
+          let uu___3 =
+            let uu___4 = mk_all_implicit binders in
+            let uu___5 =
+              binders_of_list
+                [(a1, true); (t1, true); (t2, true); (f, false)] in
+            FStarC_List.op_At uu___4 uu___5 in
+          FStarC_Syntax_Util.abs uu___3 body ret in
+        let c_push1 =
+          let uu___3 = mk_lid "push" in register env2 uu___3 c_push in
+        let ret_tot_wp_a =
+          FStar_Pervasives_Native.Some
+            (FStarC_Syntax_Util.residual_tot wp_a1) in
+        let mk_generic_app c =
+          if (FStarC_List.length binders) > Prims.int_zero
+          then
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = args_of_binders binders in
+                {
+                  FStarC_Syntax_Syntax.hd = c;
+                  FStarC_Syntax_Syntax.args = uu___5
+                } in
+              FStarC_Syntax_Syntax.Tm_app uu___4 in
+            mk uu___3
+          else c in
+        let wp_if_then_else =
+          let result_comp =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.null_binder wp_a1 in
+                let uu___6 =
+                  let uu___7 = FStarC_Syntax_Syntax.null_binder wp_a1 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
+              let uu___5 = FStarC_Syntax_Syntax.mk_Total wp_a1 in
+              FStarC_Syntax_Util.arrow uu___4 uu___5 in
+            FStarC_Syntax_Syntax.mk_Total uu___3 in
+          let c =
+            FStarC_Syntax_Syntax.gen_bv "c" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Syntax.binders_of_list [a1; c] in
+            FStarC_List.op_At binders uu___4 in
+          let uu___4 =
+            let l_ite =
+              FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.ite_lid
+                FStar_Pervasives_Native.None in
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        let uu___11 = FStarC_Syntax_Syntax.bv_to_name c in
+                        FStarC_Syntax_Syntax.as_arg uu___11 in
+                      [uu___10] in
+                    FStarC_Syntax_Util.mk_app l_ite uu___9 in
                   [uu___8] in
-                FStarC_Syntax_Util.mk_app null_wp2 uu___7 in
+                FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___7 in
+              FStarC_Syntax_Util.mk_app c_lift21 uu___6 in
+            FStarC_Syntax_Util.ascribe uu___5
+              ((FStar_Pervasives.Inr result_comp),
+                FStar_Pervasives_Native.None, false) in
+          let uu___5 =
+            let uu___6 = FStarC_Syntax_Util.residual_comp_of_comp result_comp in
+            FStar_Pervasives_Native.Some uu___6 in
+          FStarC_Syntax_Util.abs uu___3 uu___4 uu___5 in
+        let wp_if_then_else1 =
+          let uu___3 = mk_lid "wp_if_then_else" in
+          register env2 uu___3 wp_if_then_else in
+        let wp_if_then_else2 = mk_generic_app wp_if_then_else1 in
+        let wp_close =
+          let b =
+            FStarC_Syntax_Syntax.gen_bv "b" FStar_Pervasives_Native.None
+              FStarC_Syntax_Util.ktype in
+          let t_f =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name b in
+                FStarC_Syntax_Syntax.null_binder uu___5 in
+              [uu___4] in
+            let uu___4 = FStarC_Syntax_Syntax.mk_Total wp_a1 in
+            FStarC_Syntax_Util.arrow uu___3 uu___4 in
+          let f =
+            FStarC_Syntax_Syntax.gen_bv "f" FStar_Pervasives_Native.None t_f in
+          let body =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    FStarC_List.map FStarC_Syntax_Syntax.as_arg
+                      [FStarC_Syntax_Util.tforall] in
+                  FStarC_Syntax_Util.mk_app c_pure1 uu___6 in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        let uu___10 = FStarC_Syntax_Syntax.bv_to_name f in
+                        [uu___10] in
+                      FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___9 in
+                    FStarC_Syntax_Util.mk_app c_push1 uu___8 in
+                  [uu___7] in
+                uu___5 :: uu___6 in
+              FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___4 in
+            FStarC_Syntax_Util.mk_app c_app1 uu___3 in
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Syntax.binders_of_list [a1; b; f] in
+            FStarC_List.op_At binders uu___4 in
+          FStarC_Syntax_Util.abs uu___3 body ret_tot_wp_a in
+        let wp_close1 =
+          let uu___3 = mk_lid "wp_close" in register env2 uu___3 wp_close in
+        let wp_close2 = mk_generic_app wp_close1 in
+        let ret_tot_type =
+          FStar_Pervasives_Native.Some
+            (FStarC_Syntax_Util.residual_tot FStarC_Syntax_Util.ktype) in
+        let ret_gtot_type =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                FStarC_Syntax_Syntax.mk_GTotal FStarC_Syntax_Util.ktype in
+              FStarC_TypeChecker_Common.lcomp_of_comp uu___5 in
+            FStarC_TypeChecker_Common.residual_comp_of_lcomp uu___4 in
+          FStar_Pervasives_Native.Some uu___3 in
+        let mk_forall x body =
+          let uu___3 =
+            let uu___4 =
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStarC_Syntax_Util.abs [FStarC_Syntax_Syntax.mk_binder x]
+                      body ret_tot_type in
+                  FStarC_Syntax_Syntax.as_arg uu___7 in
+                [uu___6] in
+              {
+                FStarC_Syntax_Syntax.hd = FStarC_Syntax_Util.tforall;
+                FStarC_Syntax_Syntax.args = uu___5
+              } in
+            FStarC_Syntax_Syntax.Tm_app uu___4 in
+          FStarC_Syntax_Syntax.mk uu___3 FStarC_Range_Type.dummyRange in
+        let rec is_discrete t =
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Subst.compress t in
+            uu___4.FStarC_Syntax_Syntax.n in
+          match uu___3 with
+          | FStarC_Syntax_Syntax.Tm_type uu___4 -> false
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = bs;
+                FStarC_Syntax_Syntax.comp = c;_}
+              ->
+              let uu___4 =
+                FStarC_List.for_all
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | { FStarC_Syntax_Syntax.binder_bv = b;
+                         FStarC_Syntax_Syntax.binder_qual = uu___6;
+                         FStarC_Syntax_Syntax.binder_positivity = uu___7;
+                         FStarC_Syntax_Syntax.binder_attrs = uu___8;_} ->
+                         is_discrete b.FStarC_Syntax_Syntax.sort) bs in
+              if uu___4
+              then is_discrete (FStarC_Syntax_Util.comp_result c)
+              else false
+          | uu___4 -> true in
+        let rec is_monotonic t =
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Subst.compress t in
+            uu___4.FStarC_Syntax_Syntax.n in
+          match uu___3 with
+          | FStarC_Syntax_Syntax.Tm_type uu___4 -> true
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = bs;
+                FStarC_Syntax_Syntax.comp = c;_}
+              ->
+              let uu___4 =
+                FStarC_List.for_all
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | { FStarC_Syntax_Syntax.binder_bv = b;
+                         FStarC_Syntax_Syntax.binder_qual = uu___6;
+                         FStarC_Syntax_Syntax.binder_positivity = uu___7;
+                         FStarC_Syntax_Syntax.binder_attrs = uu___8;_} ->
+                         is_discrete b.FStarC_Syntax_Syntax.sort) bs in
+              if uu___4
+              then is_monotonic (FStarC_Syntax_Util.comp_result c)
+              else false
+          | uu___4 -> is_discrete t in
+        let rec mk_rel rel t x y =
+          let mk_rel1 = mk_rel rel in
+          let t1 =
+            FStarC_TypeChecker_Normalize.normalize
+              [FStarC_TypeChecker_Env.Beta;
+              FStarC_TypeChecker_Env.Eager_unfolding;
+              FStarC_TypeChecker_Env.DontUnfoldAttr
+                [FStarC_Parser_Const.tac_opaque_attr];
+              FStarC_TypeChecker_Env.UnfoldUntil
+                FStarC_Syntax_Syntax.delta_constant] env2 t in
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Subst.compress t1 in
+            uu___4.FStarC_Syntax_Syntax.n in
+          match uu___3 with
+          | FStarC_Syntax_Syntax.Tm_type uu___4 -> rel x y
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = binder::[];
+                FStarC_Syntax_Syntax.comp =
+                  { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.GTotal b;
+                    FStarC_Syntax_Syntax.pos = uu___4;
+                    FStarC_Syntax_Syntax.vars = uu___5;
+                    FStarC_Syntax_Syntax.hash_code = uu___6;_};_}
+              ->
+              let a2 =
+                (binder.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
               let uu___7 =
-                let uu___8 = FStarC_Syntax_Syntax.bv_to_name wp in [uu___8] in
-              uu___6 :: uu___7 in
-            uu___4 :: uu___5 in
-          FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___3 in
-        FStarC_Syntax_Util.mk_app stronger2 uu___2 in
-      let uu___2 =
-        let uu___3 = FStarC_Syntax_Syntax.binders_of_list [a1; wp] in
-        FStarC_List.op_At binders uu___3 in
-      FStarC_Syntax_Util.abs uu___2 body ret_tot_type in
-    let wp_trivial1 =
-      let uu___2 = mk_lid "wp_trivial" in register env1 uu___2 wp_trivial in
-    let wp_trivial2 = mk_generic_app wp_trivial1 in
-    (let uu___3 = FStarC_Effect.op_Bang dbg in
-     if uu___3 then d1 "End Dijkstra monads for free" else ());
-    (let c = FStarC_Syntax_Subst.close binders in
-     let ed_combs =
-       match ed.FStarC_Syntax_Syntax.combinators with
-       | FStarC_Syntax_Syntax.DM4F_eff combs ->
-           let uu___3 =
-             let uu___4 = let uu___5 = c stronger2 in ([], uu___5) in
-             let uu___5 = let uu___6 = c wp_if_then_else2 in ([], uu___6) in
-             let uu___6 = let uu___7 = c ite_wp2 in ([], uu___7) in
-             let uu___7 = let uu___8 = c wp_close2 in ([], uu___8) in
-             let uu___8 = let uu___9 = c wp_trivial2 in ([], uu___9) in
-             {
-               FStarC_Syntax_Syntax.ret_wp =
-                 (combs.FStarC_Syntax_Syntax.ret_wp);
-               FStarC_Syntax_Syntax.bind_wp =
-                 (combs.FStarC_Syntax_Syntax.bind_wp);
-               FStarC_Syntax_Syntax.stronger = uu___4;
-               FStarC_Syntax_Syntax.if_then_else = uu___5;
-               FStarC_Syntax_Syntax.ite_wp = uu___6;
-               FStarC_Syntax_Syntax.close_wp = uu___7;
-               FStarC_Syntax_Syntax.trivial = uu___8;
-               FStarC_Syntax_Syntax.repr = (combs.FStarC_Syntax_Syntax.repr);
-               FStarC_Syntax_Syntax.return_repr =
-                 (combs.FStarC_Syntax_Syntax.return_repr);
-               FStarC_Syntax_Syntax.bind_repr =
-                 (combs.FStarC_Syntax_Syntax.bind_repr)
-             } in
-           FStarC_Syntax_Syntax.DM4F_eff uu___3
-       | uu___3 ->
-           FStarC_Effect.failwith
-             "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
-     let uu___3 =
-       let uu___4 = FStarC_Effect.op_Bang sigelts in FStarC_List.rev uu___4 in
-     (uu___3,
-       {
-         FStarC_Syntax_Syntax.mname = (ed.FStarC_Syntax_Syntax.mname);
-         FStarC_Syntax_Syntax.cattributes =
-           (ed.FStarC_Syntax_Syntax.cattributes);
-         FStarC_Syntax_Syntax.univs = (ed.FStarC_Syntax_Syntax.univs);
-         FStarC_Syntax_Syntax.binders = (ed.FStarC_Syntax_Syntax.binders);
-         FStarC_Syntax_Syntax.signature = (ed.FStarC_Syntax_Syntax.signature);
-         FStarC_Syntax_Syntax.combinators = ed_combs;
-         FStarC_Syntax_Syntax.actions = (ed.FStarC_Syntax_Syntax.actions);
-         FStarC_Syntax_Syntax.eff_attrs = (ed.FStarC_Syntax_Syntax.eff_attrs);
-         FStarC_Syntax_Syntax.extraction_mode =
-           (ed.FStarC_Syntax_Syntax.extraction_mode)
-       }))))
+                let uu___8 = is_monotonic a2 in
+                if uu___8 then true else is_monotonic b in
+              if uu___7
+              then
+                let a11 =
+                  FStarC_Syntax_Syntax.gen_bv "a1"
+                    FStar_Pervasives_Native.None a2 in
+                let body =
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        let uu___11 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                        FStarC_Syntax_Syntax.as_arg uu___11 in
+                      [uu___10] in
+                    FStarC_Syntax_Util.mk_app x uu___9 in
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 =
+                        let uu___12 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                        FStarC_Syntax_Syntax.as_arg uu___12 in
+                      [uu___11] in
+                    FStarC_Syntax_Util.mk_app y uu___10 in
+                  mk_rel1 b uu___8 uu___9 in
+                mk_forall a11 body
+              else
+                (let a11 =
+                   FStarC_Syntax_Syntax.gen_bv "a1"
+                     FStar_Pervasives_Native.None a2 in
+                 let a21 =
+                   FStarC_Syntax_Syntax.gen_bv "a2"
+                     FStar_Pervasives_Native.None a2 in
+                 let body =
+                   let uu___9 =
+                     let uu___10 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                     let uu___11 = FStarC_Syntax_Syntax.bv_to_name a21 in
+                     mk_rel1 a2 uu___10 uu___11 in
+                   let uu___10 =
+                     let uu___11 =
+                       let uu___12 =
+                         let uu___13 =
+                           let uu___14 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                           FStarC_Syntax_Syntax.as_arg uu___14 in
+                         [uu___13] in
+                       FStarC_Syntax_Util.mk_app x uu___12 in
+                     let uu___12 =
+                       let uu___13 =
+                         let uu___14 =
+                           let uu___15 = FStarC_Syntax_Syntax.bv_to_name a21 in
+                           FStarC_Syntax_Syntax.as_arg uu___15 in
+                         [uu___14] in
+                       FStarC_Syntax_Util.mk_app y uu___13 in
+                     mk_rel1 b uu___11 uu___12 in
+                   FStarC_Syntax_Util.mk_imp uu___9 uu___10 in
+                 let uu___9 = mk_forall a21 body in mk_forall a11 uu___9)
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = binder::[];
+                FStarC_Syntax_Syntax.comp =
+                  { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Total b;
+                    FStarC_Syntax_Syntax.pos = uu___4;
+                    FStarC_Syntax_Syntax.vars = uu___5;
+                    FStarC_Syntax_Syntax.hash_code = uu___6;_};_}
+              ->
+              let a2 =
+                (binder.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+              let uu___7 =
+                let uu___8 = is_monotonic a2 in
+                if uu___8 then true else is_monotonic b in
+              if uu___7
+              then
+                let a11 =
+                  FStarC_Syntax_Syntax.gen_bv "a1"
+                    FStar_Pervasives_Native.None a2 in
+                let body =
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        let uu___11 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                        FStarC_Syntax_Syntax.as_arg uu___11 in
+                      [uu___10] in
+                    FStarC_Syntax_Util.mk_app x uu___9 in
+                  let uu___9 =
+                    let uu___10 =
+                      let uu___11 =
+                        let uu___12 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                        FStarC_Syntax_Syntax.as_arg uu___12 in
+                      [uu___11] in
+                    FStarC_Syntax_Util.mk_app y uu___10 in
+                  mk_rel1 b uu___8 uu___9 in
+                mk_forall a11 body
+              else
+                (let a11 =
+                   FStarC_Syntax_Syntax.gen_bv "a1"
+                     FStar_Pervasives_Native.None a2 in
+                 let a21 =
+                   FStarC_Syntax_Syntax.gen_bv "a2"
+                     FStar_Pervasives_Native.None a2 in
+                 let body =
+                   let uu___9 =
+                     let uu___10 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                     let uu___11 = FStarC_Syntax_Syntax.bv_to_name a21 in
+                     mk_rel1 a2 uu___10 uu___11 in
+                   let uu___10 =
+                     let uu___11 =
+                       let uu___12 =
+                         let uu___13 =
+                           let uu___14 = FStarC_Syntax_Syntax.bv_to_name a11 in
+                           FStarC_Syntax_Syntax.as_arg uu___14 in
+                         [uu___13] in
+                       FStarC_Syntax_Util.mk_app x uu___12 in
+                     let uu___12 =
+                       let uu___13 =
+                         let uu___14 =
+                           let uu___15 = FStarC_Syntax_Syntax.bv_to_name a21 in
+                           FStarC_Syntax_Syntax.as_arg uu___15 in
+                         [uu___14] in
+                       FStarC_Syntax_Util.mk_app y uu___13 in
+                     mk_rel1 b uu___11 uu___12 in
+                   FStarC_Syntax_Util.mk_imp uu___9 uu___10 in
+                 let uu___9 = mk_forall a21 body in mk_forall a11 uu___9)
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = binder::binders1;
+                FStarC_Syntax_Syntax.comp = comp;_}
+              ->
+              let t2 =
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = FStarC_Syntax_Util.arrow binders1 comp in
+                      FStarC_Syntax_Syntax.mk_Total uu___7 in
+                    {
+                      FStarC_Syntax_Syntax.bs1 = [binder];
+                      FStarC_Syntax_Syntax.comp = uu___6
+                    } in
+                  FStarC_Syntax_Syntax.Tm_arrow uu___5 in
+                {
+                  FStarC_Syntax_Syntax.n = uu___4;
+                  FStarC_Syntax_Syntax.pos = (t1.FStarC_Syntax_Syntax.pos);
+                  FStarC_Syntax_Syntax.vars = (t1.FStarC_Syntax_Syntax.vars);
+                  FStarC_Syntax_Syntax.hash_code =
+                    (t1.FStarC_Syntax_Syntax.hash_code)
+                } in
+              mk_rel1 t2 x y
+          | FStarC_Syntax_Syntax.Tm_arrow
+              { FStarC_Syntax_Syntax.bs1 = [];
+                FStarC_Syntax_Syntax.comp = uu___4;_}
+              ->
+              FStarC_Effect.failwith "impossible: arrow with empty binders"
+          | uu___4 -> FStarC_Syntax_Util.mk_untyped_eq2 x y in
+        let stronger =
+          let wp1 =
+            FStarC_Syntax_Syntax.gen_bv "wp1" FStar_Pervasives_Native.None
+              wp_a1 in
+          let wp2 =
+            FStarC_Syntax_Syntax.gen_bv "wp2" FStar_Pervasives_Native.None
+              wp_a1 in
+          let rec mk_stronger t x y =
+            let t1 =
+              FStarC_TypeChecker_Normalize.normalize
+                [FStarC_TypeChecker_Env.Beta;
+                FStarC_TypeChecker_Env.Eager_unfolding;
+                FStarC_TypeChecker_Env.DontUnfoldAttr
+                  [FStarC_Parser_Const.tac_opaque_attr];
+                FStarC_TypeChecker_Env.UnfoldUntil
+                  FStarC_Syntax_Syntax.delta_constant] env2 t in
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Subst.compress t1 in
+              uu___4.FStarC_Syntax_Syntax.n in
+            match uu___3 with
+            | FStarC_Syntax_Syntax.Tm_type uu___4 ->
+                FStarC_Syntax_Util.mk_imp x y
+            | FStarC_Syntax_Syntax.Tm_app
+                { FStarC_Syntax_Syntax.hd = head;
+                  FStarC_Syntax_Syntax.args = args;_}
+                when
+                let uu___4 = FStarC_Syntax_Subst.compress head in
+                FStarC_Syntax_Util.is_tuple_constructor uu___4 ->
+                let project i tuple =
+                  let projector =
+                    let uu___4 =
+                      let uu___5 =
+                        FStarC_Parser_Const_Tuples.mk_tuple_data_lid
+                          (FStarC_List.length args)
+                          FStarC_Range_Type.dummyRange in
+                      FStarC_TypeChecker_Env.lookup_projector env2 uu___5 i in
+                    FStarC_Syntax_Syntax.fvar_with_dd uu___4
+                      FStar_Pervasives_Native.None in
+                  FStarC_Syntax_Util.mk_app projector
+                    [(tuple, FStar_Pervasives_Native.None)] in
+                let uu___4 =
+                  let uu___5 =
+                    FStarC_List.mapi
+                      (fun i uu___6 ->
+                         match uu___6 with
+                         | (t2, q) ->
+                             let uu___7 = project i x in
+                             let uu___8 = project i y in
+                             mk_stronger t2 uu___7 uu___8) args in
+                  match uu___5 with
+                  | [] ->
+                      FStarC_Effect.failwith
+                        "Impossible: empty application when creating stronger relation in DM4F"
+                  | rel0::rels -> (rel0, rels) in
+                (match uu___4 with
+                 | (rel0, rels) ->
+                     FStarC_List.fold_left FStarC_Syntax_Util.mk_conj rel0
+                       rels)
+            | FStarC_Syntax_Syntax.Tm_arrow
+                { FStarC_Syntax_Syntax.bs1 = binders1;
+                  FStarC_Syntax_Syntax.comp =
+                    { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.GTotal b;
+                      FStarC_Syntax_Syntax.pos = uu___4;
+                      FStarC_Syntax_Syntax.vars = uu___5;
+                      FStarC_Syntax_Syntax.hash_code = uu___6;_};_}
+                ->
+                let bvs =
+                  FStarC_List.mapi
+                    (fun i uu___7 ->
+                       match uu___7 with
+                       | { FStarC_Syntax_Syntax.binder_bv = bv;
+                           FStarC_Syntax_Syntax.binder_qual = q;
+                           FStarC_Syntax_Syntax.binder_positivity = uu___8;
+                           FStarC_Syntax_Syntax.binder_attrs = uu___9;_} ->
+                           let uu___10 =
+                             let uu___11 =
+                               FStarC_Class_Show.show
+                                 FStarC_Class_Show.showable_int i in
+                             Prims.strcat "a" uu___11 in
+                           FStarC_Syntax_Syntax.gen_bv uu___10
+                             FStar_Pervasives_Native.None
+                             bv.FStarC_Syntax_Syntax.sort) binders1 in
+                let args =
+                  FStarC_List.map
+                    (fun ai ->
+                       let uu___7 = FStarC_Syntax_Syntax.bv_to_name ai in
+                       FStarC_Syntax_Syntax.as_arg uu___7) bvs in
+                let body =
+                  let uu___7 = FStarC_Syntax_Util.mk_app x args in
+                  let uu___8 = FStarC_Syntax_Util.mk_app y args in
+                  mk_stronger b uu___7 uu___8 in
+                FStarC_List.fold_right (fun bv body1 -> mk_forall bv body1)
+                  bvs body
+            | FStarC_Syntax_Syntax.Tm_arrow
+                { FStarC_Syntax_Syntax.bs1 = binders1;
+                  FStarC_Syntax_Syntax.comp =
+                    { FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Total b;
+                      FStarC_Syntax_Syntax.pos = uu___4;
+                      FStarC_Syntax_Syntax.vars = uu___5;
+                      FStarC_Syntax_Syntax.hash_code = uu___6;_};_}
+                ->
+                let bvs =
+                  FStarC_List.mapi
+                    (fun i uu___7 ->
+                       match uu___7 with
+                       | { FStarC_Syntax_Syntax.binder_bv = bv;
+                           FStarC_Syntax_Syntax.binder_qual = q;
+                           FStarC_Syntax_Syntax.binder_positivity = uu___8;
+                           FStarC_Syntax_Syntax.binder_attrs = uu___9;_} ->
+                           let uu___10 =
+                             let uu___11 =
+                               FStarC_Class_Show.show
+                                 FStarC_Class_Show.showable_int i in
+                             Prims.strcat "a" uu___11 in
+                           FStarC_Syntax_Syntax.gen_bv uu___10
+                             FStar_Pervasives_Native.None
+                             bv.FStarC_Syntax_Syntax.sort) binders1 in
+                let args =
+                  FStarC_List.map
+                    (fun ai ->
+                       let uu___7 = FStarC_Syntax_Syntax.bv_to_name ai in
+                       FStarC_Syntax_Syntax.as_arg uu___7) bvs in
+                let body =
+                  let uu___7 = FStarC_Syntax_Util.mk_app x args in
+                  let uu___8 = FStarC_Syntax_Util.mk_app y args in
+                  mk_stronger b uu___7 uu___8 in
+                FStarC_List.fold_right (fun bv body1 -> mk_forall bv body1)
+                  bvs body
+            | uu___4 -> FStarC_Effect.failwith "Not a DM elaborated type" in
+          let body =
+            let uu___3 = FStarC_Syntax_Util.unascribe wp_a1 in
+            let uu___4 = FStarC_Syntax_Syntax.bv_to_name wp1 in
+            let uu___5 = FStarC_Syntax_Syntax.bv_to_name wp2 in
+            mk_stronger uu___3 uu___4 uu___5 in
+          let uu___3 =
+            let uu___4 =
+              binders_of_list [(a1, false); (wp1, false); (wp2, false)] in
+            FStarC_List.op_At binders uu___4 in
+          FStarC_Syntax_Util.abs uu___3 body ret_tot_type in
+        let stronger1 =
+          let uu___3 = mk_lid "stronger" in register env2 uu___3 stronger in
+        let stronger2 = mk_generic_app stronger1 in
+        let ite_wp =
+          let wp =
+            FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None
+              wp_a1 in
+          let uu___3 = FStarC_Util.prefix gamma in
+          match uu___3 with
+          | (wp_args, post) ->
+              let k =
+                FStarC_Syntax_Syntax.gen_bv "k" FStar_Pervasives_Native.None
+                  (post.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+              let equiv =
+                let k_tm = FStarC_Syntax_Syntax.bv_to_name k in
+                let eq =
+                  let uu___4 =
+                    FStarC_Syntax_Syntax.bv_to_name
+                      post.FStarC_Syntax_Syntax.binder_bv in
+                  mk_rel FStarC_Syntax_Util.mk_iff
+                    k.FStarC_Syntax_Syntax.sort k_tm uu___4 in
+                let uu___4 = FStarC_Syntax_Formula.destruct_typ_as_formula eq in
+                match uu___4 with
+                | FStar_Pervasives_Native.Some (FStarC_Syntax_Formula.QAll
+                    (binders1, [], body)) ->
+                    let k_app =
+                      let uu___5 = args_of_binders binders1 in
+                      FStarC_Syntax_Util.mk_app k_tm uu___5 in
+                    let guard_free =
+                      FStarC_Syntax_Syntax.fv_to_tm
+                        (FStarC_Syntax_Syntax.lid_and_dd_as_fv
+                           FStarC_Parser_Const.guard_free
+                           FStar_Pervasives_Native.None) in
+                    let pat =
+                      FStarC_Syntax_Util.mk_app guard_free
+                        [FStarC_Syntax_Syntax.as_arg k_app] in
+                    let pattern_guarded_body =
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
+                                FStarC_Syntax_Syntax.binders_to_names
+                                  binders1 in
+                              (uu___9, [[FStarC_Syntax_Syntax.as_arg pat]]) in
+                            FStarC_Syntax_Syntax.Meta_pattern uu___8 in
+                          {
+                            FStarC_Syntax_Syntax.tm2 = body;
+                            FStarC_Syntax_Syntax.meta = uu___7
+                          } in
+                        FStarC_Syntax_Syntax.Tm_meta uu___6 in
+                      mk uu___5 in
+                    FStarC_Syntax_Util.close_forall_no_univs binders1
+                      pattern_guarded_body
+                | uu___5 ->
+                    FStarC_Effect.failwith
+                      "Impossible: Expected the equivalence to be a quantified formula" in
+              let body =
+                let uu___4 =
+                  let uu___5 =
+                    let uu___6 =
+                      let uu___7 = FStarC_Syntax_Syntax.bv_to_name wp in
+                      let uu___8 =
+                        let uu___9 = args_of_binders wp_args in
+                        let uu___10 =
+                          let uu___11 =
+                            let uu___12 = FStarC_Syntax_Syntax.bv_to_name k in
+                            FStarC_Syntax_Syntax.as_arg uu___12 in
+                          [uu___11] in
+                        FStarC_List.op_At uu___9 uu___10 in
+                      FStarC_Syntax_Util.mk_app uu___7 uu___8 in
+                    FStarC_Syntax_Util.mk_imp equiv uu___6 in
+                  FStarC_Syntax_Util.mk_forall_no_univ k uu___5 in
+                FStarC_Syntax_Util.abs gamma uu___4 ret_gtot_type in
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.binders_of_list [a1; wp] in
+                FStarC_List.op_At binders uu___5 in
+              FStarC_Syntax_Util.abs uu___4 body ret_gtot_type in
+        let ite_wp1 =
+          let uu___3 = mk_lid "ite_wp" in register env2 uu___3 ite_wp in
+        let ite_wp2 = mk_generic_app ite_wp1 in
+        let null_wp =
+          let wp =
+            FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None
+              wp_a1 in
+          let uu___3 = FStarC_Util.prefix gamma in
+          match uu___3 with
+          | (wp_args, post) ->
+              let x =
+                FStarC_Syntax_Syntax.gen_bv "x" FStar_Pervasives_Native.None
+                  FStarC_Syntax_Syntax.tun in
+              let body =
+                let uu___4 =
+                  let uu___5 =
+                    FStarC_Syntax_Syntax.bv_to_name
+                      post.FStarC_Syntax_Syntax.binder_bv in
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = FStarC_Syntax_Syntax.bv_to_name x in
+                      FStarC_Syntax_Syntax.as_arg uu___8 in
+                    [uu___7] in
+                  FStarC_Syntax_Util.mk_app uu___5 uu___6 in
+                FStarC_Syntax_Util.mk_forall_no_univ x uu___4 in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 = FStarC_Syntax_Syntax.binders_of_list [a1] in
+                  FStarC_List.op_At uu___6 gamma in
+                FStarC_List.op_At binders uu___5 in
+              FStarC_Syntax_Util.abs uu___4 body ret_gtot_type in
+        let null_wp1 =
+          let uu___3 = mk_lid "null_wp" in register env2 uu___3 null_wp in
+        let null_wp2 = mk_generic_app null_wp1 in
+        let wp_trivial =
+          let wp =
+            FStarC_Syntax_Syntax.gen_bv "wp" FStar_Pervasives_Native.None
+              wp_a1 in
+          let body =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStarC_Syntax_Syntax.bv_to_name a1 in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        let uu___10 = FStarC_Syntax_Syntax.bv_to_name a1 in
+                        FStarC_Syntax_Syntax.as_arg uu___10 in
+                      [uu___9] in
+                    FStarC_Syntax_Util.mk_app null_wp2 uu___8 in
+                  let uu___8 =
+                    let uu___9 = FStarC_Syntax_Syntax.bv_to_name wp in
+                    [uu___9] in
+                  uu___7 :: uu___8 in
+                uu___5 :: uu___6 in
+              FStarC_List.map FStarC_Syntax_Syntax.as_arg uu___4 in
+            FStarC_Syntax_Util.mk_app stronger2 uu___3 in
+          let uu___3 =
+            let uu___4 = FStarC_Syntax_Syntax.binders_of_list [a1; wp] in
+            FStarC_List.op_At binders uu___4 in
+          FStarC_Syntax_Util.abs uu___3 body ret_tot_type in
+        let wp_trivial1 =
+          let uu___3 = mk_lid "wp_trivial" in register env2 uu___3 wp_trivial in
+        let wp_trivial2 = mk_generic_app wp_trivial1 in
+        ((let uu___4 = FStarC_Effect.op_Bang dbg in
+          if uu___4 then d1 "End Dijkstra monads for free" else ());
+         (let c = FStarC_Syntax_Subst.close binders in
+          let ed_combs =
+            match ed.FStarC_Syntax_Syntax.combinators with
+            | FStarC_Syntax_Syntax.DM4F_eff combs ->
+                let uu___4 =
+                  let uu___5 = let uu___6 = c stronger2 in ([], uu___6) in
+                  let uu___6 =
+                    let uu___7 = c wp_if_then_else2 in ([], uu___7) in
+                  let uu___7 = let uu___8 = c ite_wp2 in ([], uu___8) in
+                  let uu___8 = let uu___9 = c wp_close2 in ([], uu___9) in
+                  let uu___9 = let uu___10 = c wp_trivial2 in ([], uu___10) in
+                  {
+                    FStarC_Syntax_Syntax.ret_wp =
+                      (combs.FStarC_Syntax_Syntax.ret_wp);
+                    FStarC_Syntax_Syntax.bind_wp =
+                      (combs.FStarC_Syntax_Syntax.bind_wp);
+                    FStarC_Syntax_Syntax.stronger = uu___5;
+                    FStarC_Syntax_Syntax.if_then_else = uu___6;
+                    FStarC_Syntax_Syntax.ite_wp = uu___7;
+                    FStarC_Syntax_Syntax.close_wp = uu___8;
+                    FStarC_Syntax_Syntax.trivial = uu___9;
+                    FStarC_Syntax_Syntax.repr =
+                      (combs.FStarC_Syntax_Syntax.repr);
+                    FStarC_Syntax_Syntax.return_repr =
+                      (combs.FStarC_Syntax_Syntax.return_repr);
+                    FStarC_Syntax_Syntax.bind_repr =
+                      (combs.FStarC_Syntax_Syntax.bind_repr)
+                  } in
+                FStarC_Syntax_Syntax.DM4F_eff uu___4
+            | uu___4 ->
+                FStarC_Effect.failwith
+                  "Impossible! For a DM4F effect combinators must be in DM4f_eff" in
+          let uu___4 =
+            let uu___5 = FStarC_Effect.op_Bang sigelts in
+            FStarC_List.rev uu___5 in
+          (uu___4,
+            {
+              FStarC_Syntax_Syntax.mname = (ed.FStarC_Syntax_Syntax.mname);
+              FStarC_Syntax_Syntax.cattributes =
+                (ed.FStarC_Syntax_Syntax.cattributes);
+              FStarC_Syntax_Syntax.univs = (ed.FStarC_Syntax_Syntax.univs);
+              FStarC_Syntax_Syntax.binders =
+                (ed.FStarC_Syntax_Syntax.binders);
+              FStarC_Syntax_Syntax.signature =
+                (ed.FStarC_Syntax_Syntax.signature);
+              FStarC_Syntax_Syntax.combinators = ed_combs;
+              FStarC_Syntax_Syntax.actions =
+                (ed.FStarC_Syntax_Syntax.actions);
+              FStarC_Syntax_Syntax.eff_attrs =
+                (ed.FStarC_Syntax_Syntax.eff_attrs);
+              FStarC_Syntax_Syntax.extraction_mode =
+                (ed.FStarC_Syntax_Syntax.extraction_mode)
+            })))))
 type env_ = env
 let get_env (env1 : env) : FStarC_TypeChecker_Env.env= env1.tcenv
 let set_env (dmff_env : env) (env' : FStarC_TypeChecker_Env.env) : env=
@@ -2191,159 +2244,154 @@ and infer (env1 : env) (e : FStarC_Syntax_Syntax.term) :
       (match uu___1 with
        | (env3, u_binders) ->
            let u_binders1 = FStarC_List.rev u_binders in
-           let _csbu =
-             let _r =
-               let uu___2 = is_monadic rc_opt1 in
-               if uu___2 then check_m env3 body1 else check_n env3 body1 in
-             let t =
-               let uu___2 = _r in
-               match uu___2 with | (x, uu___3, uu___4) -> x in
-             let s_body =
-               let uu___2 = _r in
-               match uu___2 with | (uu___3, x, uu___4) -> x in
-             let u_body =
-               let uu___2 = _r in
-               match uu___2 with | (uu___3, uu___4, x) -> x in
-             let uu___2 =
-               let uu___3 =
-                 let uu___4 = is_monadic rc_opt1 in
-                 if uu___4 then M t else N t in
-               comp_of_nm uu___3 in
-             (uu___2, s_body, u_body) in
-           let comp =
-             let uu___2 = _csbu in
-             match uu___2 with | (c, uu___3, uu___4) -> c in
-           let s_body =
-             let uu___2 = _csbu in
-             match uu___2 with | (uu___3, s, uu___4) -> s in
-           let u_body =
-             let uu___2 = _csbu in
-             match uu___2 with | (uu___3, uu___4, u) -> u in
-           let t = FStarC_Syntax_Util.arrow binders1 comp in
-           let s_rc_opt =
-             match rc_opt1 with
-             | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-             | FStar_Pervasives_Native.Some rc ->
-                 (match rc.FStarC_Syntax_Syntax.residual_typ with
-                  | FStar_Pervasives_Native.None ->
-                      let rc1 =
-                        let uu___2 =
-                          FStarC_Util.for_some
-                            (fun uu___3 ->
-                               match uu___3 with
-                               | FStarC_Syntax_Syntax.CPS -> true
-                               | uu___4 -> false)
-                            rc.FStarC_Syntax_Syntax.residual_flags in
-                        if uu___2
-                        then
-                          let uu___3 =
-                            FStarC_List.filter
-                              (fun uu___4 ->
-                                 match uu___4 with
-                                 | FStarC_Syntax_Syntax.CPS -> false
-                                 | uu___5 -> true)
-                              rc.FStarC_Syntax_Syntax.residual_flags in
-                          FStarC_Syntax_Util.mk_residual_comp
-                            FStarC_Parser_Const.effect_Tot_lid
-                            FStar_Pervasives_Native.None uu___3
-                        else rc in
-                      FStar_Pervasives_Native.Some rc1
-                  | FStar_Pervasives_Native.Some rt ->
-                      let rt1 =
-                        let uu___2 = get_env env3 in
-                        FStarC_TypeChecker_Normalize.normalize
-                          [FStarC_TypeChecker_Env.Beta;
-                          FStarC_TypeChecker_Env.Eager_unfolding;
-                          FStarC_TypeChecker_Env.DontUnfoldAttr
-                            [FStarC_Parser_Const.tac_opaque_attr];
-                          FStarC_TypeChecker_Env.UnfoldUntil
-                            FStarC_Syntax_Syntax.delta_constant;
-                          FStarC_TypeChecker_Env.EraseUniverses] uu___2 rt in
-                      let uu___2 =
-                        FStarC_Util.for_some
-                          (fun uu___3 ->
-                             match uu___3 with
-                             | FStarC_Syntax_Syntax.CPS -> true
-                             | uu___4 -> false)
-                          rc.FStarC_Syntax_Syntax.residual_flags in
-                      if uu___2
-                      then
-                        let flags =
-                          FStarC_List.filter
-                            (fun uu___3 ->
-                               match uu___3 with
-                               | FStarC_Syntax_Syntax.CPS -> false
-                               | uu___4 -> true)
-                            rc.FStarC_Syntax_Syntax.residual_flags in
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 = double_star rt1 in
-                            FStar_Pervasives_Native.Some uu___5 in
-                          FStarC_Syntax_Util.mk_residual_comp
-                            FStarC_Parser_Const.effect_Tot_lid uu___4 flags in
-                        FStar_Pervasives_Native.Some uu___3
-                      else
-                        (let uu___4 =
-                           let uu___5 =
-                             let uu___6 = star_type' env3 rt1 in
-                             FStar_Pervasives_Native.Some uu___6 in
-                           {
-                             FStarC_Syntax_Syntax.residual_effect =
-                               (rc.FStarC_Syntax_Syntax.residual_effect);
-                             FStarC_Syntax_Syntax.residual_typ = uu___5;
-                             FStarC_Syntax_Syntax.residual_flags =
-                               (rc.FStarC_Syntax_Syntax.residual_flags)
-                           } in
-                         FStar_Pervasives_Native.Some uu___4)) in
            let uu___2 =
-             let comp1 =
-               let uu___3 = is_monadic rc_opt1 in
-               let uu___4 = FStarC_Syntax_Subst.subst env3.subst s_body in
-               trans_G env3 (FStarC_Syntax_Util.comp_result comp) uu___3
-                 uu___4 in
              let uu___3 =
-               FStarC_Syntax_Util.ascribe u_body
-                 ((FStar_Pervasives.Inr comp1), FStar_Pervasives_Native.None,
-                   false) in
-             let uu___4 =
-               let uu___5 = FStarC_Syntax_Util.residual_comp_of_comp comp1 in
-               FStar_Pervasives_Native.Some uu___5 in
-             (uu___3, uu___4) in
+               let uu___4 = is_monadic rc_opt1 in
+               if uu___4 then check_m env3 body1 else check_n env3 body1 in
+             match uu___3 with
+             | (t, s_body, u_body) ->
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = is_monadic rc_opt1 in
+                     if uu___6 then M t else N t in
+                   comp_of_nm uu___5 in
+                 (uu___4, s_body, u_body) in
            (match uu___2 with
-            | (u_body1, u_rc_opt) ->
-                let s_body1 = FStarC_Syntax_Subst.close s_binders s_body in
-                let s_binders1 = FStarC_Syntax_Subst.close_binders s_binders in
-                let s_term =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_Syntax_Subst.closing_of_binders s_binders1 in
-                        subst_rc_opt uu___6 s_rc_opt in
-                      {
-                        FStarC_Syntax_Syntax.bs = s_binders1;
-                        FStarC_Syntax_Syntax.body = s_body1;
-                        FStarC_Syntax_Syntax.rc_opt = uu___5
-                      } in
-                    FStarC_Syntax_Syntax.Tm_abs uu___4 in
-                  mk uu___3 in
-                let u_body2 = FStarC_Syntax_Subst.close u_binders1 u_body1 in
-                let u_binders2 = FStarC_Syntax_Subst.close_binders u_binders1 in
-                let u_term =
-                  let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_Syntax_Subst.closing_of_binders u_binders2 in
-                        subst_rc_opt uu___6 u_rc_opt in
-                      {
-                        FStarC_Syntax_Syntax.bs = u_binders2;
-                        FStarC_Syntax_Syntax.body = u_body2;
-                        FStarC_Syntax_Syntax.rc_opt = uu___5
-                      } in
-                    FStarC_Syntax_Syntax.Tm_abs uu___4 in
-                  mk uu___3 in
-                ((N t), s_term, u_term)))
+            | (comp, s_body, u_body) ->
+                let t = FStarC_Syntax_Util.arrow binders1 comp in
+                let s_rc_opt =
+                  match rc_opt1 with
+                  | FStar_Pervasives_Native.None ->
+                      FStar_Pervasives_Native.None
+                  | FStar_Pervasives_Native.Some rc ->
+                      (match rc.FStarC_Syntax_Syntax.residual_typ with
+                       | FStar_Pervasives_Native.None ->
+                           let rc1 =
+                             let uu___3 =
+                               FStarC_Util.for_some
+                                 (fun uu___4 ->
+                                    match uu___4 with
+                                    | FStarC_Syntax_Syntax.CPS -> true
+                                    | uu___5 -> false)
+                                 rc.FStarC_Syntax_Syntax.residual_flags in
+                             if uu___3
+                             then
+                               let uu___4 =
+                                 FStarC_List.filter
+                                   (fun uu___5 ->
+                                      match uu___5 with
+                                      | FStarC_Syntax_Syntax.CPS -> false
+                                      | uu___6 -> true)
+                                   rc.FStarC_Syntax_Syntax.residual_flags in
+                               FStarC_Syntax_Util.mk_residual_comp
+                                 FStarC_Parser_Const.effect_Tot_lid
+                                 FStar_Pervasives_Native.None uu___4
+                             else rc in
+                           FStar_Pervasives_Native.Some rc1
+                       | FStar_Pervasives_Native.Some rt ->
+                           let rt1 =
+                             let uu___3 = get_env env3 in
+                             FStarC_TypeChecker_Normalize.normalize
+                               [FStarC_TypeChecker_Env.Beta;
+                               FStarC_TypeChecker_Env.Eager_unfolding;
+                               FStarC_TypeChecker_Env.DontUnfoldAttr
+                                 [FStarC_Parser_Const.tac_opaque_attr];
+                               FStarC_TypeChecker_Env.UnfoldUntil
+                                 FStarC_Syntax_Syntax.delta_constant;
+                               FStarC_TypeChecker_Env.EraseUniverses] uu___3
+                               rt in
+                           let uu___3 =
+                             FStarC_Util.for_some
+                               (fun uu___4 ->
+                                  match uu___4 with
+                                  | FStarC_Syntax_Syntax.CPS -> true
+                                  | uu___5 -> false)
+                               rc.FStarC_Syntax_Syntax.residual_flags in
+                           if uu___3
+                           then
+                             let flags =
+                               FStarC_List.filter
+                                 (fun uu___4 ->
+                                    match uu___4 with
+                                    | FStarC_Syntax_Syntax.CPS -> false
+                                    | uu___5 -> true)
+                                 rc.FStarC_Syntax_Syntax.residual_flags in
+                             let uu___4 =
+                               let uu___5 =
+                                 let uu___6 = double_star rt1 in
+                                 FStar_Pervasives_Native.Some uu___6 in
+                               FStarC_Syntax_Util.mk_residual_comp
+                                 FStarC_Parser_Const.effect_Tot_lid uu___5
+                                 flags in
+                             FStar_Pervasives_Native.Some uu___4
+                           else
+                             (let uu___5 =
+                                let uu___6 =
+                                  let uu___7 = star_type' env3 rt1 in
+                                  FStar_Pervasives_Native.Some uu___7 in
+                                {
+                                  FStarC_Syntax_Syntax.residual_effect =
+                                    (rc.FStarC_Syntax_Syntax.residual_effect);
+                                  FStarC_Syntax_Syntax.residual_typ = uu___6;
+                                  FStarC_Syntax_Syntax.residual_flags =
+                                    (rc.FStarC_Syntax_Syntax.residual_flags)
+                                } in
+                              FStar_Pervasives_Native.Some uu___5)) in
+                let uu___3 =
+                  let comp1 =
+                    let uu___4 = is_monadic rc_opt1 in
+                    let uu___5 = FStarC_Syntax_Subst.subst env3.subst s_body in
+                    trans_G env3 (FStarC_Syntax_Util.comp_result comp) uu___4
+                      uu___5 in
+                  let uu___4 =
+                    FStarC_Syntax_Util.ascribe u_body
+                      ((FStar_Pervasives.Inr comp1),
+                        FStar_Pervasives_Native.None, false) in
+                  let uu___5 =
+                    let uu___6 =
+                      FStarC_Syntax_Util.residual_comp_of_comp comp1 in
+                    FStar_Pervasives_Native.Some uu___6 in
+                  (uu___4, uu___5) in
+                (match uu___3 with
+                 | (u_body1, u_rc_opt) ->
+                     let s_body1 = FStarC_Syntax_Subst.close s_binders s_body in
+                     let s_binders1 =
+                       FStarC_Syntax_Subst.close_binders s_binders in
+                     let s_term =
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 =
+                               FStarC_Syntax_Subst.closing_of_binders
+                                 s_binders1 in
+                             subst_rc_opt uu___7 s_rc_opt in
+                           {
+                             FStarC_Syntax_Syntax.bs = s_binders1;
+                             FStarC_Syntax_Syntax.body = s_body1;
+                             FStarC_Syntax_Syntax.rc_opt = uu___6
+                           } in
+                         FStarC_Syntax_Syntax.Tm_abs uu___5 in
+                       mk uu___4 in
+                     let u_body2 =
+                       FStarC_Syntax_Subst.close u_binders1 u_body1 in
+                     let u_binders2 =
+                       FStarC_Syntax_Subst.close_binders u_binders1 in
+                     let u_term =
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 =
+                               FStarC_Syntax_Subst.closing_of_binders
+                                 u_binders2 in
+                             subst_rc_opt uu___7 u_rc_opt in
+                           {
+                             FStarC_Syntax_Syntax.bs = u_binders2;
+                             FStarC_Syntax_Syntax.body = u_body2;
+                             FStarC_Syntax_Syntax.rc_opt = uu___6
+                           } in
+                         FStarC_Syntax_Syntax.Tm_abs uu___5 in
+                       mk uu___4 in
+                     ((N t), s_term, u_term))))
   | FStarC_Syntax_Syntax.Tm_fvar
       { FStarC_Syntax_Syntax.fv_name = lid;
         FStarC_Syntax_Syntax.fv_qual = uu___1;_}

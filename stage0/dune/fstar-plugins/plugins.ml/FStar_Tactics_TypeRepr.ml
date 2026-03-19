@@ -193,15 +193,18 @@ let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
                  FStarC_Tactics_V2_Builtins.t_destruct
                    (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps in
                (FStar_Tactics_V2_Derived.guard
-                  ((((FStar_List_Tot_Base.length x2) = Prims.int_one) &&
-                      ((FStarC_Reflection_V2_Builtins.inspect_fv
-                          (FStar_Pervasives_Native.fst
-                             (FStar_List_Tot_Base.hd x2)))
-                         = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))
-                     &&
-                     ((FStar_Pervasives_Native.snd
-                         (FStar_List_Tot_Base.hd x2))
-                        = (Prims.of_int (2)))) ps;
+                  (if
+                     (if (FStar_List_Tot_Base.length x2) = Prims.int_one
+                      then
+                        (FStarC_Reflection_V2_Builtins.inspect_fv
+                           (FStar_Pervasives_Native.fst
+                              (FStar_List_Tot_Base.hd x2)))
+                          = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+                      else false)
+                   then
+                     (FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
+                       = (Prims.of_int (2))
+                   else false) ps;
                 (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x6 = FStarC_Tactics_V2_Builtins.intro () ps in
@@ -222,15 +225,18 @@ let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
                  FStarC_Tactics_V2_Builtins.t_destruct
                    (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps in
                (FStar_Tactics_V2_Derived.guard
-                  ((((FStar_List_Tot_Base.length x2) = Prims.int_one) &&
-                      ((FStarC_Reflection_V2_Builtins.inspect_fv
-                          (FStar_Pervasives_Native.fst
-                             (FStar_List_Tot_Base.hd x2)))
-                         = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]))
-                     &&
-                     ((FStar_Pervasives_Native.snd
-                         (FStar_List_Tot_Base.hd x2))
-                        = (Prims.of_int (2)))) ps;
+                  (if
+                     (if (FStar_List_Tot_Base.length x2) = Prims.int_one
+                      then
+                        (FStarC_Reflection_V2_Builtins.inspect_fv
+                           (FStar_Pervasives_Native.fst
+                              (FStar_List_Tot_Base.hd x2)))
+                          = ["FStar"; "Pervasives"; "Native"; "Mktuple2"]
+                      else false)
+                   then
+                     (FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
+                       = (Prims.of_int (2))
+                   else false) ps;
                 (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x6 = FStarC_Tactics_V2_Builtins.intro () ps in

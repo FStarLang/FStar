@@ -1364,18 +1364,23 @@ let sigelt_has_noextract (se : FStarC_Syntax_Syntax.sigelt) : Prims.bool=
       if has_noextract_qualifier then true else has_noextract_attribute
 let karamel_fixup_qual (se : FStarC_Syntax_Syntax.sigelt) :
   FStarC_Syntax_Syntax.sigelt=
-  let is_krml =
-    let uu___ = FStarC_Options.codegen () in
-    uu___ = (FStar_Pervasives_Native.Some FStarC_Options.Krml) in
-  let has_ne =
-    get_noextract_to se (FStar_Pervasives_Native.Some FStarC_Options.Krml) in
-  if
-    (if (if is_krml then has_ne else false)
-     then
-       Prims.op_Negation
-         (FStarC_List.contains FStarC_Syntax_Syntax.NoExtract
-            se.FStarC_Syntax_Syntax.sigquals)
-     else false)
+  let uu___ =
+    let uu___1 =
+      let uu___2 =
+        let uu___3 = FStarC_Options.codegen () in
+        uu___3 = (FStar_Pervasives_Native.Some FStarC_Options.Krml) in
+      if uu___2
+      then
+        get_noextract_to se
+          (FStar_Pervasives_Native.Some FStarC_Options.Krml)
+      else false in
+    if uu___1
+    then
+      Prims.op_Negation
+        (FStarC_List.contains FStarC_Syntax_Syntax.NoExtract
+           se.FStarC_Syntax_Syntax.sigquals)
+    else false in
+  if uu___
   then
     {
       FStarC_Syntax_Syntax.sigel = (se.FStarC_Syntax_Syntax.sigel);
@@ -1524,21 +1529,23 @@ let rec extract_sigelt_iface (g : FStarC_Extraction_ML_UEnv.uenv)
            FStarC_Syntax_Syntax.us2 = uu___2; FStarC_Syntax_Syntax.t2 = t;_}
          ->
          let quals = se2.FStarC_Syntax_Syntax.sigquals in
-         if FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals
+         let uu___3 =
+           if FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals
+           then
+             let uu___4 =
+               FStarC_TypeChecker_Util.must_erase_for_extraction
+                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) t in
+             Prims.op_Negation uu___4
+           else false in
+         if uu___3
          then
-           let must_erase =
-             FStarC_TypeChecker_Util.must_erase_for_extraction
-               (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) t in
-           (if Prims.op_Negation must_erase
-            then
-              let uu___3 =
-                let uu___4 =
-                  let uu___5 = let uu___6 = always_fail lid t in [uu___6] in
-                  (false, uu___5) in
-                FStarC_Extraction_ML_Term.extract_lb_iface g uu___4 in
-              match uu___3 with
-              | (g1, bindings) -> (g1, (iface_of_bindings bindings))
-            else (g, empty_iface))
+           let uu___4 =
+             let uu___5 =
+               let uu___6 = let uu___7 = always_fail lid t in [uu___7] in
+               (false, uu___6) in
+             FStarC_Extraction_ML_Term.extract_lb_iface g uu___5 in
+           (match uu___4 with
+            | (g1, bindings) -> (g1, (iface_of_bindings bindings)))
          else (g, empty_iface)
      | FStarC_Syntax_Syntax.Sig_let
          { FStarC_Syntax_Syntax.lbs1 = (false, lb::[]);
@@ -1598,19 +1605,20 @@ let rec extract_sigelt_iface (g : FStarC_Extraction_ML_UEnv.uenv)
      | FStarC_Syntax_Syntax.Sig_fail uu___2 ->
          FStarC_Effect.failwith "impossible: trying to extract Sig_fail"
      | FStarC_Syntax_Syntax.Sig_new_effect ed ->
-         let is_reify =
-           let uu___2 =
-             FStarC_TypeChecker_Util.effect_extraction_mode
-               (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-               ed.FStarC_Syntax_Syntax.mname in
-           uu___2 = FStarC_Syntax_Syntax.Extract_reify in
-         if
-           (if is_reify
-            then FStarC_List.isEmpty ed.FStarC_Syntax_Syntax.binders
-            else false)
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               FStarC_TypeChecker_Util.effect_extraction_mode
+                 (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
+                 ed.FStarC_Syntax_Syntax.mname in
+             uu___4 = FStarC_Syntax_Syntax.Extract_reify in
+           if uu___3
+           then FStarC_List.isEmpty ed.FStarC_Syntax_Syntax.binders
+           else false in
+         if uu___2
          then
-           let uu___2 = extract_reifiable_effect g ed in
-           (match uu___2 with | (env, iface1, uu___3) -> (env, iface1))
+           let uu___3 = extract_reifiable_effect g ed in
+           (match uu___3 with | (env, iface1, uu___4) -> (env, iface1))
          else (g, empty_iface))
 let extract_iface' (g : env_t) (modul : FStarC_Syntax_Syntax.modul) :
   (env_t * iface)=
@@ -1866,17 +1874,21 @@ let extract_bundle (env : FStarC_Extraction_ML_UEnv.uenv)
   | uu___ -> FStarC_Effect.failwith "Unexpected signature element"
 let lb_is_irrelevant (g : env_t) (lb : FStarC_Syntax_Syntax.letbinding) :
   Prims.bool=
-  let ni =
-    FStarC_TypeChecker_Env.non_informative
-      (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
-      lb.FStarC_Syntax_Syntax.lbtyp in
-  let not_arity =
-    let uu___ =
-      FStarC_Extraction_ML_Term.is_arity g lb.FStarC_Syntax_Syntax.lbtyp in
-    Prims.op_Negation uu___ in
-  let pure_or_ghost =
-    FStarC_Syntax_Util.is_pure_or_ghost_effect lb.FStarC_Syntax_Syntax.lbeff in
-  if (if ni then not_arity else false) then pure_or_ghost else false
+  let uu___ =
+    let uu___1 =
+      FStarC_TypeChecker_Env.non_informative
+        (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g)
+        lb.FStarC_Syntax_Syntax.lbtyp in
+    if uu___1
+    then
+      let uu___2 =
+        FStarC_Extraction_ML_Term.is_arity g lb.FStarC_Syntax_Syntax.lbtyp in
+      Prims.op_Negation uu___2
+    else false in
+  if uu___
+  then
+    FStarC_Syntax_Util.is_pure_or_ghost_effect lb.FStarC_Syntax_Syntax.lbeff
+  else false
 let lb_is_tactic (g : env_t) (lb : FStarC_Syntax_Syntax.letbinding) :
   Prims.bool=
   if FStarC_Syntax_Util.is_pure_effect lb.FStarC_Syntax_Syntax.lbeff
@@ -1960,14 +1972,16 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
                { FStarC_Syntax_Syntax.lbs1 = (uu___5, lbs);
                  FStarC_Syntax_Syntax.lids1 = uu___6;_}
                when
-               let is_plugin =
-                 let uu___7 = FStarC_Options.codegen () in
-                 FStarC_List.mem uu___7
-                   [FStar_Pervasives_Native.Some FStarC_Options.Plugin;
-                   FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib] in
-               let all_tactics = FStarC_List.for_all (lb_is_tactic g) lbs in
-               if Prims.op_Negation is_plugin then all_tactics else false ->
-               (g, [])
+               let uu___7 =
+                 let uu___8 =
+                   let uu___9 = FStarC_Options.codegen () in
+                   FStarC_List.mem uu___9
+                     [FStar_Pervasives_Native.Some FStarC_Options.Plugin;
+                     FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib] in
+                 Prims.op_Negation uu___8 in
+               if uu___7
+               then FStarC_List.for_all (lb_is_tactic g) lbs
+               else false -> (g, [])
            | FStarC_Syntax_Syntax.Sig_declare_typ
                { FStarC_Syntax_Syntax.lid2 = lid;
                  FStarC_Syntax_Syntax.us2 = univs;
@@ -2126,78 +2140,81 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
                  FStarC_Syntax_Syntax.t2 = t;_}
                ->
                let quals = se2.FStarC_Syntax_Syntax.sigquals in
-               if FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals
+               let uu___6 =
+                 if
+                   FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals
+                 then
+                   let uu___7 =
+                     FStarC_TypeChecker_Util.must_erase_for_extraction
+                       (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) t in
+                   Prims.op_Negation uu___7
+                 else false in
+               if uu___6
                then
-                 let must_erase =
-                   FStarC_TypeChecker_Util.must_erase_for_extraction
-                     (FStarC_Extraction_ML_UEnv.tcenv_of_uenv g) t in
-                 (if Prims.op_Negation must_erase
-                  then
-                    let always_fail1 =
-                      let uu___6 =
-                        let uu___7 =
-                          let uu___8 =
-                            let uu___9 =
-                              let uu___10 = always_fail lid t in [uu___10] in
-                            (false, uu___9) in
-                          {
-                            FStarC_Syntax_Syntax.lbs1 = uu___8;
-                            FStarC_Syntax_Syntax.lids1 = []
-                          } in
-                        FStarC_Syntax_Syntax.Sig_let uu___7 in
-                      {
-                        FStarC_Syntax_Syntax.sigel = uu___6;
-                        FStarC_Syntax_Syntax.sigrng =
-                          (se2.FStarC_Syntax_Syntax.sigrng);
-                        FStarC_Syntax_Syntax.sigquals =
-                          (se2.FStarC_Syntax_Syntax.sigquals);
-                        FStarC_Syntax_Syntax.sigmeta =
-                          (se2.FStarC_Syntax_Syntax.sigmeta);
-                        FStarC_Syntax_Syntax.sigattrs =
-                          (se2.FStarC_Syntax_Syntax.sigattrs);
-                        FStarC_Syntax_Syntax.sigopens_and_abbrevs =
-                          (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-                        FStarC_Syntax_Syntax.sigopts =
-                          (se2.FStarC_Syntax_Syntax.sigopts)
-                      } in
-                    let uu___6 = extract_sig g always_fail1 in
-                    match uu___6 with
-                    | (g1, mlm) ->
-                        let uu___7 =
-                          FStarC_Util.find_map quals
-                            (fun uu___8 ->
-                               match uu___8 with
-                               | FStarC_Syntax_Syntax.Discriminator l ->
-                                   FStar_Pervasives_Native.Some l
-                               | uu___9 -> FStar_Pervasives_Native.None) in
-                        (match uu___7 with
-                         | FStar_Pervasives_Native.Some l ->
-                             let uu___8 =
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStarC_Extraction_ML_Term.ind_discriminator_body
-                                     g1 lid l in
-                                 [uu___10] in
-                               (FStarC_Extraction_ML_Syntax.mk_mlmodule1
-                                  (FStarC_Extraction_ML_Syntax.MLM_Loc
-                                     (FStarC_Extraction_ML_Util.mlloc_of_range
-                                        se2.FStarC_Syntax_Syntax.sigrng)))
-                                 :: uu___9 in
-                             (g1, uu___8)
-                         | uu___8 ->
-                             let uu___9 =
-                               FStarC_Util.find_map quals
-                                 (fun uu___10 ->
-                                    match uu___10 with
-                                    | FStarC_Syntax_Syntax.Projector
-                                        (l, uu___11) ->
-                                        FStar_Pervasives_Native.Some l
-                                    | uu___11 -> FStar_Pervasives_Native.None) in
-                             (match uu___9 with
-                              | FStar_Pervasives_Native.Some uu___10 ->
-                                  (g1, [])
-                              | uu___10 -> (g1, mlm)))
-                  else (g, []))
+                 let always_fail1 =
+                   let uu___7 =
+                     let uu___8 =
+                       let uu___9 =
+                         let uu___10 =
+                           let uu___11 = always_fail lid t in [uu___11] in
+                         (false, uu___10) in
+                       {
+                         FStarC_Syntax_Syntax.lbs1 = uu___9;
+                         FStarC_Syntax_Syntax.lids1 = []
+                       } in
+                     FStarC_Syntax_Syntax.Sig_let uu___8 in
+                   {
+                     FStarC_Syntax_Syntax.sigel = uu___7;
+                     FStarC_Syntax_Syntax.sigrng =
+                       (se2.FStarC_Syntax_Syntax.sigrng);
+                     FStarC_Syntax_Syntax.sigquals =
+                       (se2.FStarC_Syntax_Syntax.sigquals);
+                     FStarC_Syntax_Syntax.sigmeta =
+                       (se2.FStarC_Syntax_Syntax.sigmeta);
+                     FStarC_Syntax_Syntax.sigattrs =
+                       (se2.FStarC_Syntax_Syntax.sigattrs);
+                     FStarC_Syntax_Syntax.sigopens_and_abbrevs =
+                       (se2.FStarC_Syntax_Syntax.sigopens_and_abbrevs);
+                     FStarC_Syntax_Syntax.sigopts =
+                       (se2.FStarC_Syntax_Syntax.sigopts)
+                   } in
+                 let uu___7 = extract_sig g always_fail1 in
+                 (match uu___7 with
+                  | (g1, mlm) ->
+                      let uu___8 =
+                        FStarC_Util.find_map quals
+                          (fun uu___9 ->
+                             match uu___9 with
+                             | FStarC_Syntax_Syntax.Discriminator l ->
+                                 FStar_Pervasives_Native.Some l
+                             | uu___10 -> FStar_Pervasives_Native.None) in
+                      (match uu___8 with
+                       | FStar_Pervasives_Native.Some l ->
+                           let uu___9 =
+                             let uu___10 =
+                               let uu___11 =
+                                 FStarC_Extraction_ML_Term.ind_discriminator_body
+                                   g1 lid l in
+                               [uu___11] in
+                             (FStarC_Extraction_ML_Syntax.mk_mlmodule1
+                                (FStarC_Extraction_ML_Syntax.MLM_Loc
+                                   (FStarC_Extraction_ML_Util.mlloc_of_range
+                                      se2.FStarC_Syntax_Syntax.sigrng)))
+                               :: uu___10 in
+                           (g1, uu___9)
+                       | uu___9 ->
+                           let uu___10 =
+                             FStarC_Util.find_map quals
+                               (fun uu___11 ->
+                                  match uu___11 with
+                                  | FStarC_Syntax_Syntax.Projector
+                                      (l, uu___12) ->
+                                      FStar_Pervasives_Native.Some l
+                                  | uu___12 -> FStar_Pervasives_Native.None) in
+                           (match uu___10 with
+                            | FStar_Pervasives_Native.Some uu___11 ->
+                                (g1, [])
+                            | uu___11 -> (g1, mlm))))
                else (g, [])
            | FStarC_Syntax_Syntax.Sig_assume uu___5 -> (g, [])
            | FStarC_Syntax_Syntax.Sig_sub_effect uu___5 -> (g, [])

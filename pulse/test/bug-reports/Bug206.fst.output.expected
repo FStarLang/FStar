@@ -1,0 +1,12 @@
+* Info at Bug206.fst(14,2-14,6):
+  - Expected failure:
+  - Ill-typed term: test x
+  - Expected a term of type
+      fn
+        requires emp
+        ensures emp
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Bug206.fst(14,2-14,8)
+
