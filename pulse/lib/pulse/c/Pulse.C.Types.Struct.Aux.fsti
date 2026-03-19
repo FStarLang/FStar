@@ -10,5 +10,5 @@ noeq
 type field_description_gen_t (field_t: eqtype) : Type u#1 = {
   fd_nonempty: squash (exists (f: field_t) . True);
   fd_type: (field_t -> Type0);
-  fd_typedef: ((s: field_t) -> Tot (typedef (fd_type s)));
+  fd_tydef: ((s: field_t) -> Tot (tydef (fd_type s)));
 }

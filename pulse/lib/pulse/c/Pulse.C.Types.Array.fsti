@@ -15,11 +15,11 @@ inline_for_extraction [@@noextract_to "krml"]
 let base_array_index_t (n: array_size_t) : Tot eqtype =
   Pulse.C.Types.Array.Base.array_domain (Ghost.hide n)
 [@@noextract_to "krml"]
-val base_array0 (#t: Type0) (tn: Type0) (td: typedef t) (n: array_size_t) : Tot (typedef (base_array_t t tn n))
+val base_array0 (#t: Type0) (tn: Type0) (td: tydef t) (n: array_size_t) : Tot (tydef (base_array_t t tn n))
 
 inline_for_extraction
 [@@noextract_to "krml"] // proof-only
-let base_array (#t: Type0) (#tn: Type0) (td: typedef t) (n: nat {SZ.fits n /\ n > 0}) (# [solve_nat_t_of_nat ()] prf: squash (norm norm_typenat (nat_t_of_nat n == tn))) : Tot (typedef (base_array_t t tn (SZ.uint_to_t n)))
+let base_array (#t: Type0) (#tn: Type0) (td: tydef t) (n: nat {SZ.fits n /\ n > 0}) (# [solve_nat_t_of_nat ()] prf: squash (norm norm_typenat (nat_t_of_nat n == tn))) : Tot (tydef (base_array_t t tn (SZ.uint_to_t n)))
 = base_array0 tn td (SZ.uint_to_t n)
 
 val base_array_index (#t: Type0) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (i: base_array_index_t n) : GTot t
@@ -52,13 +52,13 @@ let mk_base_array_inj  (#t: Type) (tn: Type0) (n: array_size_t) (v1 v2: Seq.seq 
   [SMTPat (mk_base_array tn n v1); SMTPat (mk_base_array tn n v2)]
 = assert (forall (i: nat) . i < SZ.v n ==> base_array_index (mk_base_array tn n v1) (SZ.uint_to_t i) == base_array_index (mk_base_array tn n v2) (SZ.uint_to_t i));
   assert (v1 `Seq.equal` v2)
-val base_array_fractionable (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (td: typedef t) : Lemma
+val base_array_fractionable (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (td: tydef t) : Lemma
   (
     fractionable (base_array0 tn td n) a <==>
       (forall (i: base_array_index_t n) . fractionable td (base_array_index a i))
   )
   [SMTPat (fractionable (base_array0 tn td n) a)]
-val base_array_mk_fraction   (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (td: typedef t) (p: perm) (i: base_array_index_t n) : Lemma
+val base_array_mk_fraction   (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (td: tydef t) (p: perm) (i: base_array_index_t n) : Lemma
   (requires (
     fractionable (base_array0 tn td n) a
   ))
@@ -68,15 +68,15 @@ val base_array_mk_fraction   (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base
   ))
   [SMTPat (base_array_index (mk_fraction (base_array0 tn td n) a p) i)]
 
-val base_array_index_unknown (#t: Type) (tn: Type0) (n: array_size_t) (td: typedef t) (i: base_array_index_t n) : Lemma
+val base_array_index_unknown (#t: Type) (tn: Type0) (n: array_size_t) (td: tydef t) (i: base_array_index_t n) : Lemma
   (base_array_index (unknown (base_array0 tn td n)) i == unknown td)
   [SMTPat (base_array_index (unknown (base_array0 tn td n)) i)]
 
-val base_array_index_uninitialized (#t: Type) (tn: Type0) (n: array_size_t) (td: typedef t) (i: base_array_index_t n) : Lemma
+val base_array_index_uninitialized (#t: Type) (tn: Type0) (n: array_size_t) (td: tydef t) (i: base_array_index_t n) : Lemma
   (base_array_index (uninitialized (base_array0 tn td n)) i == uninitialized td)
   [SMTPat (base_array_index (uninitialized (base_array0 tn td n)) i)]
 
-val base_array_index_full (#t: Type) (#tn: Type0) (#n: array_size_t) (td: typedef t) (x: base_array_t t tn n) : Lemma
+val base_array_index_full (#t: Type) (#tn: Type0) (#n: array_size_t) (td: tydef t) (x: base_array_t t tn n) : Lemma
   (full (base_array0 tn td n) x <==> (forall (i: base_array_index_t n) . full td (base_array_index x i)))
   [SMTPat (full (base_array0 tn td n) x)]
 
@@ -84,7 +84,7 @@ val has_base_array_cell
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
@@ -94,7 +94,7 @@ val has_base_array_cell_post
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
@@ -108,7 +108,7 @@ val has_base_array_cell_dup
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
@@ -120,7 +120,7 @@ val has_base_array_cell_inj
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r1 r2: ref td)
@@ -132,7 +132,7 @@ val has_base_array_cell_equiv_from
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r1 r2: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
@@ -144,7 +144,7 @@ val has_base_array_cell_equiv_to
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r1 r2: ref td)
@@ -167,31 +167,31 @@ val array_void_ptr : Type0
 [@@noextract_to "krml"] // primitive
 let array_ptr_gen ([@@@unused] t: Type0) : Tot Type0 = array_void_ptr
 inline_for_extraction [@@noextract_to "krml"] // primitive
-let array_ptr (#t: Type) (td: typedef t) = array_ptr_gen t
+let array_ptr (#t: Type) (td: tydef t) = array_ptr_gen t
 [@@noextract_to "krml"] // primitive
 val null_array_void_ptr: array_void_ptr
 [@@noextract_to "krml"] // primitive
-let null_array_ptr (#t: Type) (td: typedef t) : Tot (array_ptr td) = null_array_void_ptr
-val g_array_ptr_is_null (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost bool
+let null_array_ptr (#t: Type) (td: tydef t) : Tot (array_ptr td) = null_array_void_ptr
+val g_array_ptr_is_null (#t: Type) (#td: tydef t) (a: array_ptr td) : Ghost bool
   (requires True)
   (ensures (fun y -> y == true <==> a == null_array_ptr td))
 inline_for_extraction [@@noextract_to "krml"]
-let array_ref (#t: Type) (td: typedef t) = (a: array_ptr td { g_array_ptr_is_null a == false })
+let array_ref (#t: Type) (td: tydef t) = (a: array_ptr td { g_array_ptr_is_null a == false })
 
 (*
-val array_ref_base_size_type (#t: Type) (#td: typedef t) (a: array_ref td) : Type0
+val array_ref_base_size_type (#t: Type) (#td: tydef t) (a: array_ref td) : Type0
 *)
-val array_ref_base_size (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
+val array_ref_base_size (#t: Type) (#td: tydef t) (a: array_ptr td) : Ghost SZ.t
   (requires True)
   (ensures (fun y -> SZ.v y == 0 <==> a == null_array_ptr td))
-val has_array_ref_base (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : prop
-val has_array_ref_base_inj (#t: Type) (#td: typedef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
+val has_array_ref_base (#t: Type) (#td: tydef t) (a: array_ref td) (#ty: Type) (r: ref (base_array0 ty td (array_ref_base_size a))) : prop
+val has_array_ref_base_inj (#t: Type) (#td: tydef t) (a: array_ref td) (#ty: Type) (r1 r2: ref (base_array0 ty td (array_ref_base_size a))) : Lemma
   (requires (has_array_ref_base a r1 /\ has_array_ref_base a r2))
   (ensures (r1 == r2))
-val array_ref_offset (#t: Type) (#td: typedef t) (a: array_ptr td) : Ghost SZ.t
+val array_ref_offset (#t: Type) (#td: tydef t) (a: array_ptr td) : Ghost SZ.t
   (requires True)
   (ensures (fun y -> SZ.v y <= SZ.v (array_ref_base_size a)))
-val array_ref_base_offset_inj (#t: Type) (#td: typedef t) (#ty: Type) (a1: array_ref td) (r1: ref (base_array0 ty td (array_ref_base_size a1))) (a2: array_ref td) (r2: ref (base_array0 ty td (array_ref_base_size a2))) : Lemma
+val array_ref_base_offset_inj (#t: Type) (#td: tydef t) (#ty: Type) (a1: array_ref td) (r1: ref (base_array0 ty td (array_ref_base_size a1))) (a2: array_ref td) (r2: ref (base_array0 ty td (array_ref_base_size a2))) : Lemma
   (requires (
     array_ref_base_size a1 == array_ref_base_size a2 /\
     has_array_ref_base a1 r1 /\
@@ -202,56 +202,56 @@ val array_ref_base_offset_inj (#t: Type) (#td: typedef t) (#ty: Type) (a1: array
   (ensures (a1 == a2))
 
 inline_for_extraction [@@noextract_to "krml"]
-let array_len_t (#t: Type) (#td: typedef t) (r: array_ptr td) : Tot Type0 =
+let array_len_t (#t: Type) (#td: tydef t) (r: array_ptr td) : Tot Type0 =
   (len: Ghost.erased SZ.t { SZ.v (array_ref_offset r) + SZ.v len <= SZ.v (array_ref_base_size r) })
 
 inline_for_extraction [@@noextract_to "krml"]
-let array_or_null (#t: Type) (td: typedef t) : Tot Type0 = (r: array_ptr td & array_len_t r)
+let array_or_null (#t: Type) (td: tydef t) : Tot Type0 = (r: array_ptr td & array_len_t r)
 
 inline_for_extraction [@@noextract_to "krml"]
-let array_ptr_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array_ptr td) =
+let array_ptr_of (#t: Type) (#td: tydef t) (ar: array_or_null td) : Tot (array_ptr td) =
   match ar with
   | (| a, _ |) -> a
 
-let array_len_of (#t: Type) (#td: typedef t) (ar: array_or_null td) : Tot (array_len_t (array_ptr_of ar)) =
+let array_len_of (#t: Type) (#td: tydef t) (ar: array_or_null td) : Tot (array_len_t (array_ptr_of ar)) =
   match ar with
   | (| _, a |) -> a
 
 inline_for_extraction [@@noextract_to "krml"]
-let mk_array_or_null (#t: Type) (#td: typedef t) (a: array_ptr td) (len: array_len_t a) : Tot (array_or_null td) =
+let mk_array_or_null (#t: Type) (#td: tydef t) (a: array_ptr td) (len: array_len_t a) : Tot (array_or_null td) =
   (| a, len |)
 
-let g_array_is_null (#t: Type) (#td: typedef t) (a: array_or_null td) : GTot bool =
+let g_array_is_null (#t: Type) (#td: tydef t) (a: array_or_null td) : GTot bool =
   g_array_ptr_is_null (array_ptr_of a)
 
 inline_for_extraction [@@noextract_to "krml"]
-let array (#t: Type) (td: typedef t) : Tot Type0 = (a: array_or_null td { g_array_is_null a == false })
+let array (#t: Type) (td: tydef t) : Tot Type0 = (a: array_or_null td { g_array_is_null a == false })
 
 inline_for_extraction [@@noextract_to "krml"]
-let array_ref_of (#t: Type) (#td: typedef t) (ar: array td) : Tot (array_ref td) =
+let array_ref_of (#t: Type) (#td: tydef t) (ar: array td) : Tot (array_ref td) =
   array_ptr_of ar
 
 inline_for_extraction [@@noextract_to "krml"]
-let mk_array (#t: Type) (#td: typedef t) (a: array_ref td) (len: array_len_t a) : Tot (array td) =
+let mk_array (#t: Type) (#td: tydef t) (a: array_ref td) (len: array_len_t a) : Tot (array td) =
   mk_array_or_null a len
 
 let array_length
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
 : GTot nat
 = SZ.v (dsnd a)
 
 val array_pts_to
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
 : Tot slprop
 
 let array_pts_to_or_null
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: array_or_null td)
   (v: Ghost.erased (Seq.seq t))
 : Tot slprop
@@ -263,7 +263,7 @@ let array_pts_to_or_null
 val array_ptr_is_null
   (#t: Type)
 //  (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (Seq.seq t))
   (r: array_ptr td)
   (len: array_len_t r)
@@ -281,7 +281,7 @@ inline_for_extraction [@@noextract_to "krml"]
 fn array_is_null
   (#t: Type)
 //  (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (Seq.seq t))
   (r: array_or_null td)
 // : STAtomicBase bool false opened Unobservable
@@ -305,7 +305,7 @@ ensures
 
 val array_pts_to_length
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
 : stt_ghost unit emp_inames
@@ -320,7 +320,7 @@ let has_array_of_base
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (a: array td)
 : prop
@@ -334,7 +334,7 @@ let has_array_of_base_inj
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref (base_array0 tn td n))
   (a1 a2: array td)
 : Lemma
@@ -359,7 +359,7 @@ val ghost_array_of_base_focus
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
   (a: array td)
@@ -373,7 +373,7 @@ val ghost_array_of_base
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
 : stt_ghost (a: Ghost.erased (array td) { has_array_of_base r a })
@@ -385,7 +385,7 @@ let array_ref_of_base_post
   (#t: Type)
   (#tn: Type0)
   (#n: Ghost.erased array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
   (a: array_ref td)
@@ -405,7 +405,7 @@ val array_ref_of_base
   (#tn: Type0)
 //  (#opened: _)
   (#n: Ghost.erased array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
 //: STAtomicBase (array_ref td) false opened Unobservable
@@ -423,7 +423,7 @@ fn array_of_base
   (#tn: Type0)
 //  (#opened: _)
   (#n: Ghost.erased array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (base_array_t t tn n))
   (r: ref (base_array0 tn td n))
 // : STAtomicBase (a: array td { has_array_of_base r a }) false opened Unobservable
@@ -447,7 +447,7 @@ val unarray_of_base
   (#t: Type)
   (#tn: Type0)
   (#n: array_size_t)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased (Seq.seq t))
   (r: ref (base_array0 tn td n))
   (a: array td)
@@ -462,13 +462,13 @@ val unarray_of_base
 
 val freeable_array
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
 : Tot slprop
 
 let freeable_or_null_array
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array_or_null td)
 : Tot slprop
 = if g_array_is_null a
@@ -478,7 +478,7 @@ let freeable_or_null_array
 [@@noextract_to "krml"] // primitive
 val array_ptr_alloc
   (#t: Type)
-  (td: typedef t)
+  (td: tydef t)
   (sz: SZ.t { SZ.v sz > 0 })
 : stt (array_ptr td)
     emp
@@ -495,7 +495,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_alloc
   (#t: Type)
-  (td: typedef t)
+  (td: tydef t)
   (sz: SZ.t { SZ.v sz > 0 })
 requires
     emp
@@ -521,11 +521,11 @@ ensures
 }
 
 
-let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : prop =
+let full_seq (#t: Type) (td: tydef t) (v: Seq.seq t) : prop =
   forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
 
 let full_seq_seq_of_base_array
-  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
+  (#t: Type0) (tn: Type0) (td: tydef t) (#n: array_size_t)
   (b: base_array_t t tn n)
 : Lemma
   (ensures (full_seq td (seq_of_base_array b) <==> full (base_array0 tn td n) b))
@@ -535,7 +535,7 @@ let full_seq_seq_of_base_array
 [@@noextract_to "krml"] // primitive
 val array_ref_free
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array_ref td)
   (n: array_len_t a)
@@ -549,7 +549,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_free
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
 requires
@@ -568,7 +568,7 @@ requires
 (*
 val has_array_of_ref
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref td)
   (a: array td)
 : Tot slprop
@@ -576,7 +576,7 @@ val has_array_of_ref
 val has_array_of_ref_post
   (#opened: _)
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref td)
   (a: array td)
 : STGhost unit opened
@@ -592,7 +592,7 @@ val has_array_of_ref_post
 
 // val has_array_of_ref_inj
 //   (#t: Type)
-//   (#td: typedef t)
+//   (#td: tydef t)
 //   (r: ref td)
 //   (a1 a2: array td)
 // : Lemma
@@ -605,7 +605,7 @@ val has_array_of_ref_post
 val ghost_array_of_ref_focus
   (#t: Type)
   (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (r: ref td)
   (a: array td)
@@ -616,7 +616,7 @@ val ghost_array_of_ref_focus
 val ghost_array_of_ref
   (#t: Type)
   (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (r: ref td)
 : stt_ghost (Ghost.erased (array td)) opened
@@ -627,7 +627,7 @@ val ghost_array_of_ref
 [@@noextract_to "krml"] // primitive
 val array_ref_of_ref
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (r: ref td)
 : stt (a: array_ref td { array_ref_base_size a == 1sz /\ array_ref_offset a == 0sz })
@@ -637,7 +637,7 @@ val array_ref_of_ref
 inline_for_extraction [@@noextract_to "krml"]
 let array_of_ref
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (r: ref td)
 : stt (array td)
@@ -652,7 +652,7 @@ let array_of_ref
 val unarray_of_ref
   (#t: Type)
   (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (r: ref td)
   (a: array td)
@@ -663,7 +663,7 @@ val unarray_of_ref
 
 val has_array_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
   (r: ref td)
@@ -675,7 +675,7 @@ val has_array_cell
 
 val has_array_cell_post
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
   (r': ref td)
@@ -687,7 +687,7 @@ val has_array_cell_post
 
 val has_array_cell_has_base_array_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
   (r: ref td)
@@ -703,7 +703,7 @@ val has_array_cell_has_base_array_cell
 
 val has_base_array_cell_has_array_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
   (r: ref td)
@@ -721,7 +721,7 @@ val has_base_array_cell_has_array_cell
 
 val has_array_cell_inj
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
   (r1 r2: ref td)
@@ -741,7 +741,7 @@ val has_array_cell_inj
 val has_array_cell_array_of_ref
   (#opened: _)
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref td)
   (a: array td)
 : SteelGhostT unit opened
@@ -751,7 +751,7 @@ val has_array_cell_array_of_ref
 
 val ghost_array_cell_focus
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
@@ -763,7 +763,7 @@ val ghost_array_cell_focus
 
 val ghost_array_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
@@ -777,7 +777,7 @@ val ghost_array_cell
 [@@noextract_to "krml"] // primitive
 val array_ref_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array_ref td)
   (len: array_len_t a)
@@ -792,7 +792,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
@@ -816,7 +816,7 @@ ensures
 
 val unarray_cell
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (#v: Ghost.erased t)
   (a: array td)
@@ -831,7 +831,7 @@ val unarray_cell
 
 val array_ref_shift
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array_ref td)
   (i: SZ.t)
 : Ghost (array_ref td)
@@ -844,7 +844,7 @@ val array_ref_shift
 
 val array_ref_shift_zero
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array_ref td)
 : Lemma
     (ensures (
@@ -853,7 +853,7 @@ val array_ref_shift_zero
 
 val array_ref_shift_assoc
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array_ref td)
   (i1 i2: SZ.t)
 : Lemma
@@ -865,7 +865,7 @@ val array_ref_shift_assoc
 inline_for_extraction [@@noextract_to "krml"]
 let array_split_l
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
 : Pure (array td)
@@ -876,7 +876,7 @@ let array_split_l
 
 let array_split_r
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (a: array td)
   (i: SZ.t)
 : Ghost (array td)
@@ -887,7 +887,7 @@ let array_split_r
 
 val ghost_array_split
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
@@ -901,7 +901,7 @@ val ghost_array_split
 
 let array_ref_split_post
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
@@ -914,7 +914,7 @@ let array_ref_split_post
 [@@noextract_to "krml"] // primitive
 val array_ref_split
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (al: array_ref td)
   (len: array_len_t al)
@@ -934,7 +934,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_split
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t { SZ.v i <= array_length a })
@@ -970,7 +970,7 @@ ensures
 
 val array_join
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#sl #sr: Ghost.erased (Seq.seq t))
   (a al ar: array td)
   (i: SZ.t)
@@ -982,22 +982,22 @@ val array_join
     ))
     (fun _ -> array_pts_to a (sl `Seq.append` sr))
 
-let fractionable_seq (#t: Type) (td: typedef t) (s: Seq.seq t) : prop =
+let fractionable_seq (#t: Type) (td: tydef t) (s: Seq.seq t) : prop =
   forall (i: nat). i < Seq.length s ==> fractionable td (Seq.index s i)
 
-let mk_fraction_seq (#t: Type) (td: typedef t) (s: Seq.seq t) (p: perm) : Ghost (Seq.seq t)
+let mk_fraction_seq (#t: Type) (td: tydef t) (s: Seq.seq t) (p: perm) : Ghost (Seq.seq t)
   (requires (fractionable_seq td s))
   (ensures (fun _ -> True))
 = Seq.init_ghost (Seq.length s) (fun i -> mk_fraction td (Seq.index s i) p)
 
-let mk_fraction_seq_full (#t: Type0) (td: typedef t) (x: Seq.seq t) : Lemma
+let mk_fraction_seq_full (#t: Type0) (td: tydef t) (x: Seq.seq t) : Lemma
   (requires (fractionable_seq td x))
   (ensures (mk_fraction_seq td x 1.0R == x))
   [SMTPat (mk_fraction_seq td x 1.0R)]
 = assert (mk_fraction_seq td x 1.0R `Seq.equal` x)
 
 val mk_fraction_seq_split_gen
-  (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p) ** pure (
     p == p1 +. p2 /\ (p <=. 1.0R \/ Seq.length v == 0)
@@ -1005,7 +1005,7 @@ val mk_fraction_seq_split_gen
   (fun _ -> array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
 
 val mk_fraction_seq_split
-  (#t: Type) (#td: typedef t) (r: array td) (v: Ghost.erased (Seq.seq t) { fractionable_seq td v }) (p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: array td) (v: Ghost.erased (Seq.seq t) { fractionable_seq td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r v ** pure (
     1.0R == p1 +. p2
@@ -1018,14 +1018,14 @@ val mk_fraction_seq_split
 *)
 
 val mk_fraction_seq_join
-  (#t: Type) (#td: typedef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: array td) (v: Seq.seq t { fractionable_seq td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (array_pts_to r (mk_fraction_seq td v p1) ** array_pts_to r (mk_fraction_seq td v p2))
   (fun _ -> array_pts_to r (mk_fraction_seq td v (p1 +. p2)))
 
 val array_fractional_permissions_theorem
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (v1: Seq.seq t { fractionable_seq td v1 })
   (v2: Seq.seq t { fractionable_seq td v2 })
   (p1 p2: perm)
@@ -1039,7 +1039,7 @@ val array_fractional_permissions_theorem
     ))
 
 let fractionable_seq_seq_of_base_array
-  (#t: Type0) (tn: Type0) (td: typedef t) (#n: array_size_t)
+  (#t: Type0) (tn: Type0) (td: tydef t) (#n: array_size_t)
   (b: base_array_t t tn n)
 : Lemma
   (ensures (fractionable_seq td (seq_of_base_array b) <==> fractionable (base_array0 tn td n) b))
@@ -1047,7 +1047,7 @@ let fractionable_seq_seq_of_base_array
 = assert (forall (i: base_array_index_t n) . base_array_index b i == Seq.index (seq_of_base_array b) (SZ.v i))
 
 let array_blit_post
-  (#t:_) (#td: typedef t) (s0 s1:Ghost.erased (Seq.seq t))
+  (#t:_) (#td: tydef t) (s0 s1:Ghost.erased (Seq.seq t))
   (src:array td)
   (idx_src: SZ.t)
   (dst:array td)
@@ -1071,7 +1071,7 @@ let array_blit_post
 [@@noextract_to "krml"] //primitive
 val array_blit_ptr
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
   (#p_src: perm)
   (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
@@ -1096,7 +1096,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_blit
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
   (#p_src: perm)
   (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })
@@ -1138,7 +1138,7 @@ inline_for_extraction [@@noextract_to "krml"]
 
 fn array_memcpy
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v_src: Ghost.erased (Seq.seq t) { full_seq td v_src /\ fractionable_seq td v_src })
   (#p_src: perm)
   (#v_dst: Ghost.erased (Seq.seq t) { full_seq td v_dst })

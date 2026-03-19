@@ -23,7 +23,7 @@ include Pulse.C.Types.Base
 [@@noextract_to "krml"] // primitive
 val scalar_t ( [@@@strictly_positive] t: Type0) : Type0
 [@@noextract_to "krml"] // proof-only
-val scalar (t: Type) : typedef (scalar_t t)
+val scalar (t: Type) : tydef (scalar_t t)
 val mk_scalar (#t: Type) (v: t) : Ghost (scalar_t t)
   (requires True)
   (ensures (fun y ->

@@ -21,7 +21,7 @@ type field_description_t (t: Type0) : Type u#1 = {
   fd_def: (string -> GTot bool);
   fd_empty: (fd_empty: bool { fd_empty == true <==> (forall s . fd_def s == false) });
   fd_type: (string -> Type0);
-  fd_typedef: ((s: string) -> Pure (typedef (fd_type s)) (requires (fd_def s)) (ensures (fun _ -> True)));
+  fd_tydef: ((s: string) -> Pure (tydef (fd_type s)) (requires (fd_def s)) (ensures (fun _ -> True)));
 }
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
@@ -36,20 +36,20 @@ let field_description_nil : field_description_t field_t_nil = {
   fd_def = (fun _ -> false);
   fd_empty = true;
   fd_type = (fun _ -> unit);
-  fd_typedef = (fun _ -> false_elim ());
+  fd_tydef = (fun _ -> false_elim ());
 }
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
 let field_description_cons0
-  (fname: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: typedef ft) (fd: field_description_t fc)
+  (fname: Type0) (#ft: Type0) (#fc: Type0) (n: string) (t: tydef ft) (fd: field_description_t fc)
 : Tot (nonempty_field_description_t (field_t_cons fname ft fc))
 = {
     fd_def = (fun n' -> n = n' || fd.fd_def n');
     fd_empty = false;
     fd_type = (fun n' -> if n = n' then ft else fd.fd_type n');
-    fd_typedef = (fun n' -> if n = n' then t else fd.fd_typedef n');
+    fd_tydef = (fun n' -> if n = n' then t else fd.fd_tydef n');
   }
 
 inline_for_extraction [@@noextract_to "krml"; norm_field_attr]
-let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fname: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fname))) (t: typedef ft) (fd: field_description_t fc) : Tot (nonempty_field_description_t (field_t_cons fname ft fc)) =
+let field_description_cons (#ft: Type0) (#fc: Type0) (n: string) (#fname: Type0) (# [ solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == fname))) (t: tydef ft) (fd: field_description_t fc) : Tot (nonempty_field_description_t (field_t_cons fname ft fc)) =
   field_description_cons0 fname #ft #fc n t fd

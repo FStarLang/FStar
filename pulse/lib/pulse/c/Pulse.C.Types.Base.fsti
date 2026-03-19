@@ -28,49 +28,49 @@ val prod_perm (p1 p2: perm) : Pure perm
   ))
 
 [@@noextract_to "krml"] // proof-only
-val typedef (t: Type0) : Type0
+val tydef (t: Type0) : Type0
 
 inline_for_extraction [@@noextract_to "krml"]
-let typeof (#t: Type0) (td: typedef t) : Tot Type0 = t
+let typeof (#t: Type0) (td: tydef t) : Tot Type0 = t
 
-val fractionable (#t: Type0) (td: typedef t) (x: t) : prop
+val fractionable (#t: Type0) (td: tydef t) (x: t) : prop
 
-val mk_fraction (#t: Type0) (td: typedef t) (x: t) (p: perm) : Ghost t
+val mk_fraction (#t: Type0) (td: tydef t) (x: t) (p: perm) : Ghost t
   (requires (fractionable td x))
   (ensures (fun y -> p <=. 1.0R ==> fractionable td y))
 
-val mk_fraction_full (#t: Type0) (td: typedef t) (x: t) : Lemma
+val mk_fraction_full (#t: Type0) (td: tydef t) (x: t) : Lemma
   (requires (fractionable td x))
   (ensures (mk_fraction td x 1.0R == x))
   [SMTPat (mk_fraction td x 1.0R)]
 
-val mk_fraction_compose (#t: Type0) (td: typedef t) (x: t) (p1 p2: perm) : Lemma
+val mk_fraction_compose (#t: Type0) (td: tydef t) (x: t) (p1 p2: perm) : Lemma
   (requires (fractionable td x /\ p1 <=. 1.0R /\ p2 <=. 1.0R))
   (ensures (mk_fraction td (mk_fraction td x p1) p2 == mk_fraction td x (p1 `prod_perm` p2)))
 
-val full (#t: Type0) (td: typedef t) (v: t) : prop
+val full (#t: Type0) (td: tydef t) (v: t) : prop
 
-val uninitialized (#t: Type0) (td: typedef t) : Ghost t
+val uninitialized (#t: Type0) (td: tydef t) : Ghost t
   (requires True)
   (ensures (fun y -> full td y /\ fractionable td y))
 
-val unknown (#t: Type0) (td: typedef t) : Ghost t
+val unknown (#t: Type0) (td: tydef t) : Ghost t
   (requires True)
   (ensures (fun y -> fractionable td y))
 
 val full_not_unknown
   (#t: Type)
-  (td: typedef t)
+  (td: tydef t)
   (v: t)
 : Lemma
   (requires (full td v))
   (ensures (~ (v == unknown td)))
   [SMTPat (full td v)]
 
-val mk_fraction_unknown (#t: Type0) (td: typedef t) (p: perm) : Lemma
+val mk_fraction_unknown (#t: Type0) (td: tydef t) (p: perm) : Lemma
   (ensures (mk_fraction td (unknown td) p == unknown td))
 
-val mk_fraction_eq_unknown (#t: Type0) (td: typedef t) (v: t) (p: perm) : Lemma
+val mk_fraction_eq_unknown (#t: Type0) (td: tydef t) (v: t) (p: perm) : Lemma
   (requires (fractionable td v /\ mk_fraction td v p == unknown td))
   (ensures (v == unknown td))
 
@@ -108,17 +108,17 @@ val ghost_ptr_gen_of_void_ptr_of_ptr_gen
   [SMTPat (ghost_ptr_gen_of_void_ptr (ghost_void_ptr_of_ptr_gen x) t)]
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
-let ptr (#t: Type) (td: typedef t) : Tot Type0 = ptr_gen t
+let ptr (#t: Type) (td: tydef t) : Tot Type0 = ptr_gen t
 inline_for_extraction [@@noextract_to "krml"] // primitive
-let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
+let null (#t: Type) (td: tydef t) : Tot (ptr td) = null_gen t
 
 inline_for_extraction [@@noextract_to "krml"]
-let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
+let ref (#t: Type) (td: tydef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#td: typedef t) ([@@@mkey]r: ref td) (v: Ghost.erased t) : slprop
+val pts_to (#t: Type) (#td: tydef t) ([@@@mkey]r: ref td) (v: Ghost.erased t) : slprop
 
 let pts_to_or_null
-  (#t: Type) (#td: typedef t) ([@@@mkey]p: ptr td) (v: Ghost.erased t) : slprop
+  (#t: Type) (#td: tydef t) ([@@@mkey]p: ptr td) (v: Ghost.erased t) : slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
   then emp
   else pts_to p v
@@ -127,7 +127,7 @@ let pts_to_or_null
 val is_null
   (#t: Type)
 //  (#opened: _)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (p: ptr td)
 // : STAtomicBase bool false opened Unobservable
@@ -141,7 +141,7 @@ val is_null
 ghost
 fn assert_null
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (p: ptr td)
 requires
@@ -157,7 +157,7 @@ requires
 ghost
 fn assert_not_null
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (p: ptr td)
 requires
@@ -173,17 +173,17 @@ ensures
 
 
 [@@noextract_to "krml"] // primitive
-// val void_ptr_of_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td) : STAtomicBase void_ptr false opened Unobservable
-val void_ptr_of_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td) : stt void_ptr
+// val void_ptr_of_ptr (#t: Type) (#opened: _) (#td: tydef t) (#v: Ghost.erased t) (x: ptr td) : STAtomicBase void_ptr false opened Unobservable
+val void_ptr_of_ptr (#t: Type) (#td: tydef t) (#v: Ghost.erased t) (x: ptr td) : stt void_ptr
   (pts_to_or_null x v)
   (fun y -> pts_to_or_null x v ** pure (
     y == ghost_void_ptr_of_ptr_gen x
   ))
 
 [@@noextract_to "krml"] inline_for_extraction
-// let void_ptr_of_ref (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ref td) : STAtomicBase void_ptr false opened Unobservable
+// let void_ptr_of_ref (#t: Type) (#opened: _) (#td: tydef t) (#v: Ghost.erased t) (x: ref td) : STAtomicBase void_ptr false opened Unobservable
 
-fn void_ptr_of_ref (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ref td)
+fn void_ptr_of_ref (#t: Type) (#td: tydef t) (#v: Ghost.erased t) (x: ref td)
 requires
   (pts_to x v)
 returns y: void_ptr
@@ -200,17 +200,17 @@ ensures
 
 
 [@@noextract_to "krml"] // primitive
-// val ptr_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : STAtomicBase (ptr td) false opened Unobservable
-val ptr_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : stt (ptr td)
+// val ptr_of_void_ptr (#t: Type) (#opened: _) (#td: tydef t) (#v: Ghost.erased t) (x: void_ptr) : STAtomicBase (ptr td) false opened Unobservable
+val ptr_of_void_ptr (#t: Type) (#td: tydef t) (#v: Ghost.erased t) (x: void_ptr) : stt (ptr td)
   (pts_to_or_null #t #td (ghost_ptr_gen_of_void_ptr x t) v)
   (fun y -> pts_to_or_null y v ** pure (
     y == ghost_ptr_gen_of_void_ptr x t
   ))
 
 [@@noextract_to "krml"] inline_for_extraction
-// let ref_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : STAtomicBase (ref td) false opened Unobservable
+// let ref_of_void_ptr (#t: Type) (#opened: _) (#td: tydef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : STAtomicBase (ref td) false opened Unobservable
 
-fn ref_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td))
+fn ref_of_void_ptr (#t: Type) (#td: tydef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td))
 requires
   (pts_to y' v ** pure (
     ghost_ptr_gen_of_void_ptr x t == Ghost.reveal y'
@@ -230,13 +230,13 @@ ensures
 
 val ref_equiv
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r1 r2: ref td)
 : Tot slprop
 
 val pts_to_equiv
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r1 r2: ref td)
   (v: Ghost.erased t)
 : stt_ghost unit emp_inames
@@ -245,13 +245,13 @@ val pts_to_equiv
 
 val freeable
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref td)
 : Tot slprop
 
 val freeable_dup
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ref td)
 : stt_ghost unit emp_inames
     (freeable r)
@@ -259,7 +259,7 @@ val freeable_dup
 
 val freeable_equiv
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r1 r2: ref td)
 : stt_ghost unit emp_inames
     (ref_equiv r1 r2 ** freeable r1)
@@ -267,7 +267,7 @@ val freeable_equiv
 
 let freeable_or_null
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ptr td)
 : Tot slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
@@ -278,7 +278,7 @@ let freeable_or_null
 let freeable_or_null_dup
   (#opened: _)
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (r: ptr td)
 : SteelGhostT slprop opened
     (freeable_or_null r)
@@ -291,7 +291,7 @@ let freeable_or_null_dup
 [@@noextract_to "krml"] // primitive
 val alloc
   (#t: Type)
-  (td: typedef t)
+  (td: tydef t)
 : stt (ptr td)
     emp
     (fun p -> pts_to_or_null p (uninitialized td) ** freeable_or_null p)
@@ -299,7 +299,7 @@ val alloc
 [@@noextract_to "krml"] // primitive
 val free
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v: Ghost.erased t)
   (r: ref td)
 : stt unit
@@ -309,7 +309,7 @@ val free
     (fun _ -> emp)
 
 val mk_fraction_split_gen
-  (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: ref td) (v: t { fractionable td v }) (p p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p) ** pure (
     p == p1 +. p2 /\ p <=. 1.0R
@@ -317,7 +317,7 @@ val mk_fraction_split_gen
   (fun _ -> pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
 
 val mk_fraction_split
-  (#t: Type) (#td: typedef t) (r: ref td) (v: Ghost.erased t { fractionable td v }) (p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: ref td) (v: Ghost.erased t { fractionable td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r v ** pure (
     1.0R == p1 +. p2
@@ -330,14 +330,14 @@ val mk_fraction_split
 *)
 
 val mk_fraction_join
-  (#t: Type) (#td: typedef t) (r: ref td) (v: t { fractionable td v }) (p1 p2: perm)
+  (#t: Type) (#td: tydef t) (r: ref td) (v: t { fractionable td v }) (p1 p2: perm)
 : stt_ghost unit emp_inames
   (pts_to r (mk_fraction td v p1) ** pts_to r (mk_fraction td v p2))
   (fun _ -> pts_to r (mk_fraction td v (p1 +. p2)))
 
 val fractional_permissions_theorem
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (v1: t { fractionable td v1 })
   (v2: t { fractionable td v2 })
   (p1 p2: perm)
@@ -353,7 +353,7 @@ val fractional_permissions_theorem
 [@@noextract_to "krml"] // primitive
 val copy
   (#t: Type)
-  (#td: typedef t)
+  (#td: tydef t)
   (#v_src: Ghost.erased t { full td v_src /\ fractionable td v_src })
   (#p_src: perm)
   (#v_dst: Ghost.erased t { full td v_dst })

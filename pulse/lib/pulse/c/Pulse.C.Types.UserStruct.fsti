@@ -83,25 +83,25 @@ let get_set (#t: Type) (sd: struct_def t) (x: t) (f: field_t sd.fields) (v: sd.f
 = sd.get_mk (set_aux sd x f v) f'
 
 [@@noextract_to "krml"]
-val struct_typedef
+val struct_tydef
   (#t: Type)
   (sd: struct_def t)
-: Tot (typedef t)
+: Tot (tydef t)
 
 val has_struct_field
   (#t: Type)
   (#sd: struct_def t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r': ref (sd.field_desc.fd_typedef field))
+  (r': ref (sd.field_desc.fd_tydef field))
 : Tot slprop
 
 val has_struct_field_dup
   (#t: Type)
   (#sd: struct_def t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r': ref (sd.field_desc.fd_typedef field))
+  (r': ref (sd.field_desc.fd_tydef field))
 : stt_ghost unit
     emp_inames
     (has_struct_field r field r')
@@ -110,9 +110,9 @@ val has_struct_field_dup
 val has_struct_field_inj
   (#t: Type)
   (#sd: struct_def t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r1 r2: ref (sd.field_desc.fd_typedef field))
+  (r1 r2: ref (sd.field_desc.fd_tydef field))
 : stt_ghost unit
     emp_inames
     (has_struct_field r field r1 ** has_struct_field r field r2)
@@ -121,10 +121,10 @@ val has_struct_field_inj
 val has_struct_field_equiv_from
   (#t: Type)
   (#sd: struct_def t)
-  (r1: ref (struct_typedef sd))
+  (r1: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r': ref (sd.field_desc.fd_typedef field))
-  (r2: ref (struct_typedef sd))
+  (r': ref (sd.field_desc.fd_tydef field))
+  (r2: ref (struct_tydef sd))
 : stt_ghost unit
     emp_inames
     (ref_equiv r1 r2 ** has_struct_field r1 field r')
@@ -133,9 +133,9 @@ val has_struct_field_equiv_from
 val has_struct_field_equiv_to
   (#t: Type)
   (#sd: struct_def t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r1' r2': ref (sd.field_desc.fd_typedef field))
+  (r1' r2': ref (sd.field_desc.fd_tydef field))
 : stt_ghost unit
     emp_inames
     (ref_equiv r1' r2' ** has_struct_field r field r1')
@@ -145,24 +145,24 @@ val ghost_struct_field_focus
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (r': ref (sd.field_desc.fd_typedef field))
+  (r': ref (sd.field_desc.fd_tydef field))
 : stt_ghost unit
     emp_inames
     (has_struct_field r field r' ** pts_to r v)
-    (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to r' (sd.get v field))
+    (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_tydef field))) ** pts_to r' (sd.get v field))
 
 val ghost_struct_field
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-: stt_ghost (Ghost.erased (ref (sd.field_desc.fd_typedef field)))
+: stt_ghost (Ghost.erased (ref (sd.field_desc.fd_tydef field)))
     emp_inames
     (pts_to r v)
-    (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to r' (sd.get v field))
+    (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_tydef field))) ** pts_to r' (sd.get v field))
 
 [@@noextract_to "krml"] // primitive
 val struct_field0
@@ -170,44 +170,44 @@ val struct_field0
   (t': Type0)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-  (td': typedef t' {
+  (td': tydef t' {
     t' ==  sd.field_desc.fd_type field /\
-    td' == sd.field_desc.fd_typedef field
+    td' == sd.field_desc.fd_tydef field
   })
 : stt (ref td')
     (pts_to r v)
-    (fun r' -> has_struct_field r field (coerce_eq () r') ** pts_to r (set sd (Ghost.reveal v) field (unknown (sd.field_desc.fd_typedef field))) ** pts_to #_ #(sd.field_desc.fd_typedef field) (coerce_eq () r') (sd.get (Ghost.reveal v) field))
+    (fun r' -> has_struct_field r field (coerce_eq () r') ** pts_to r (set sd (Ghost.reveal v) field (unknown (sd.field_desc.fd_tydef field))) ** pts_to #_ #(sd.field_desc.fd_tydef field) (coerce_eq () r') (sd.get (Ghost.reveal v) field))
 
 inline_for_extraction [@@noextract_to "krml"] // primitive
 let struct_field
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
-: stt (ref #(norm norm_field_steps (sd.field_desc.fd_type field)) (sd.field_desc.fd_typedef field))
+: stt (ref #(norm norm_field_steps (sd.field_desc.fd_type field)) (sd.field_desc.fd_tydef field))
     (pts_to r v)
-    (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_typedef field))) ** pts_to #(norm norm_field_steps (sd.field_desc.fd_type field)) r' (sd.get v field))
+    (fun r' -> has_struct_field r field r' ** pts_to r (set sd v field (unknown (sd.field_desc.fd_tydef field))) ** pts_to #(norm norm_field_steps (sd.field_desc.fd_type field)) r' (sd.get v field))
 = struct_field0
     (norm norm_field_steps (sd.field_desc.fd_type field))
     r
     field
-    (sd.field_desc.fd_typedef field)
+    (sd.field_desc.fd_tydef field)
 
 val unstruct_field
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
   (#v': Ghost.erased (sd.field_desc.fd_type field))
-  (r': ref (sd.field_desc.fd_typedef field))
+  (r': ref (sd.field_desc.fd_tydef field))
 : stt_ghost unit
     emp_inames
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
-      sd.get v field == unknown (sd.field_desc.fd_typedef field)
+      sd.get v field == unknown (sd.field_desc.fd_tydef field)
     ))
     (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field v'))
 
@@ -217,13 +217,13 @@ fn unstruct_field_alt
   (#t: Type)
   (#sd: struct_def t)
   (#v: Ghost.erased t)
-  (r: ref (struct_typedef sd))
+  (r: ref (struct_tydef sd))
   (field: field_t sd.fields)
   (#v': Ghost.erased (sd.field_desc.fd_type field))
-  (r': ref (sd.field_desc.fd_typedef field))
+  (r': ref (sd.field_desc.fd_tydef field))
 requires
     (has_struct_field r field r' ** pts_to r v ** pts_to r' v' ** pure (
-      sd.get v field == unknown (sd.field_desc.fd_typedef field)
+      sd.get v field == unknown (sd.field_desc.fd_tydef field)
     ))
 returns s': (Ghost.erased t)
 ensures
@@ -241,8 +241,8 @@ val fractionable_struct
   (sd: struct_def t)
   (s: t)
 : Lemma
-  (fractionable (struct_typedef sd) s <==> (forall field . fractionable (sd.field_desc.fd_typedef field) (sd.get s field)))
-  [SMTPat (fractionable (struct_typedef sd) s)]
+  (fractionable (struct_tydef sd) s <==> (forall field . fractionable (sd.field_desc.fd_tydef field) (sd.get s field)))
+  [SMTPat (fractionable (struct_tydef sd) s)]
 
 val mk_fraction_struct
   (#t: Type)
@@ -251,9 +251,9 @@ val mk_fraction_struct
   (p: perm)
   (field: field_t sd.fields)
 : Lemma
-  (requires (fractionable (struct_typedef sd) s))
-  (ensures (sd.get (mk_fraction (struct_typedef sd) s p) field == mk_fraction (sd.field_desc.fd_typedef field) (sd.get s field) p))
-  [SMTPat (sd.get (mk_fraction (struct_typedef sd) s p) field)]
+  (requires (fractionable (struct_tydef sd) s))
+  (ensures (sd.get (mk_fraction (struct_tydef sd) s p) field == mk_fraction (sd.field_desc.fd_tydef field) (sd.get s field) p))
+  [SMTPat (sd.get (mk_fraction (struct_tydef sd) s p) field)]
 
 (*
 val mk_fraction_struct_recip
@@ -265,7 +265,7 @@ val mk_fraction_struct_recip
   (p: perm)
 : Ghost (struct_t0 tn n fields)
   (requires (
-    (forall field . exists v . fractionable (fields.fd_typedef field) v /\ struct_get_field s field == mk_fraction (fields.fd_typedef field) v p)
+    (forall field . exists v . fractionable (fields.fd_tydef field) v /\ struct_get_field s field == mk_fraction (fields.fd_tydef field) v p)
   ))
   (ensures (fun s' ->
     fractionable (struct0 tn n fields) s' /\
@@ -278,5 +278,5 @@ val full_struct
   (sd: struct_def t)
   (s: t)
 : Lemma
-  (full (struct_typedef sd) s <==> (forall field . full (sd.field_desc.fd_typedef field) (sd.get s field)))
-  [SMTPat (full (struct_typedef sd) s)]
+  (full (struct_tydef sd) s <==> (forall field . full (sd.field_desc.fd_tydef field) (sd.get s field)))
+  [SMTPat (full (struct_tydef sd) s)]

@@ -62,7 +62,7 @@ val union_get_field_same
   (field: field_t fields)
   (v: fields.fd_type field)
 : Lemma
-  (requires (~ (v == unknown (fields.fd_typedef field))))
+  (requires (~ (v == unknown (fields.fd_tydef field))))
   (ensures (
     let u = union_set_field tn n fields field v in
     union_get_case u == Some field /\
@@ -88,11 +88,11 @@ val union_set_field_same
   [SMTPat (union_set_field tn n fields (union_get_field s field))]
 
 [@@noextract_to "krml"] // proof-only
-val union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
+val union0 (tn: Type0) (#tf: Type0) (n: string) (fields: field_description_t tf) : Tot (tydef (union_t0 tn n fields))
 
 inline_for_extraction
 [@@noextract_to "krml"; norm_field_attr] // proof-only
-let union (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot (typedef (union_t0 tn n fields))
+let union (#tf: Type0) (n: string) (#tn: Type0) (# [solve_mk_string_t ()] prf: squash (norm norm_typestring (mk_string_t n == tn))) (fields: field_description_t tf) : Tot (tydef (union_t0 tn n fields))
 = union0 tn #tf n fields
 
 val union_get_case_unknown
@@ -111,8 +111,8 @@ val union_set_field_unknown
   (fields: field_description_t tf)
   (field: field_t fields)
 : Lemma
-  (union_set_field tn n fields field (unknown (fields.fd_typedef field)) == unknown (union0 tn n fields))
-  [SMTPat (union_set_field tn n fields field (unknown (fields.fd_typedef field)))]
+  (union_set_field tn n fields field (unknown (fields.fd_tydef field)) == unknown (union0 tn n fields))
+  [SMTPat (union_set_field tn n fields field (unknown (fields.fd_tydef field)))]
 
 val union_get_case_uninitialized
   (tn: Type0)
@@ -147,7 +147,7 @@ val fractionable_union_get_field
 : Lemma
   (requires (union_get_case s == Some field))
   (ensures (
-    fractionable (union0 tn n fields) s <==> fractionable (fields.fd_typedef field) (union_get_field s field)
+    fractionable (union0 tn n fields) s <==> fractionable (fields.fd_tydef field) (union_get_field s field)
   ))
   [SMTPat (fractionable (union0 tn n fields) s); SMTPat (union_get_field s field)]
 
@@ -161,7 +161,7 @@ val mk_fraction_union_get_field
   (field: field_t fields)
 : Lemma
   (requires (fractionable (union0 tn n fields) s /\ union_get_case s == Some field))
-  (ensures (union_get_field (mk_fraction (union0 tn n fields) s p) field == mk_fraction (fields.fd_typedef field) (union_get_field s field) p))
+  (ensures (union_get_field (mk_fraction (union0 tn n fields) s p) field == mk_fraction (fields.fd_tydef field) (union_get_field s field) p))
   [SMTPat (union_get_field (mk_fraction (union0 tn n fields) s p) field)]
 
 val mk_fraction_union_set_field
@@ -173,10 +173,10 @@ val mk_fraction_union_set_field
   (v: fields.fd_type field)
   (p: perm)
 : Lemma
-  (requires (fractionable (fields.fd_typedef field) v))
+  (requires (fractionable (fields.fd_tydef field) v))
   (ensures (
     fractionable (union0 tn n fields) (union_set_field tn n fields field v) /\
-    mk_fraction (union0 tn n fields) (union_set_field tn n fields field v) p == union_set_field tn n fields field (mk_fraction (fields.fd_typedef field) v p)
+    mk_fraction (union0 tn n fields) (union_set_field tn n fields field v) p == union_set_field tn n fields field (mk_fraction (fields.fd_tydef field) v p)
   ))
 
 val full_union
@@ -189,7 +189,7 @@ val full_union
 : Lemma
   (requires (union_get_case s == Some field))
   (ensures (
-    full (union0 tn n fields) s <==> full (fields.fd_typedef field) (union_get_field s field)
+    full (union0 tn n fields) s <==> full (fields.fd_tydef field) (union_get_field s field)
   ))
   [SMTPat (full (union0 tn n fields) s); SMTPat (union_get_field s field)]
 
@@ -201,7 +201,7 @@ let full_union_set_field_intro
   (field: field_t fields)
   (v: fields.fd_type field)
 : Lemma
-  (requires (full (fields.fd_typedef field) v))
+  (requires (full (fields.fd_tydef field) v))
   (ensures (
     full (union0 tn n fields) (union_set_field tn n fields field v)
   ))
@@ -219,7 +219,7 @@ let full_union_set_field_elim
     full (union0 tn n fields) (union_set_field tn n fields field v)
   ))
   (ensures (
-    full (fields.fd_typedef field) v
+    full (fields.fd_tydef field) v
   ))
 = full_union (union_set_field tn n fields field v) field
 
@@ -233,7 +233,7 @@ let full_union_set_field
 : Lemma
   (requires True)
   (ensures (
-    full (union0 tn n fields) (union_set_field tn n fields field v) <==> full (fields.fd_typedef field) v
+    full (union0 tn n fields) (union_set_field tn n fields field v) <==> full (fields.fd_tydef field) v
   ))
   [SMTPat (full (union0 tn n fields) (union_set_field tn n fields field v))]
 = Classical.move_requires (full_union_set_field_intro #tn #tf #n #fields field) v;
@@ -247,7 +247,7 @@ val has_union_field
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r': ref td')
 : Tot slprop
 
@@ -259,14 +259,14 @@ val has_union_field_prop
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r': ref td')
 : stt_ghost unit
     emp_inames
     (has_union_field r field r')
     (fun _ -> has_union_field r field r' ** pure (
       t' == fields.fd_type field /\
-      td' == fields.fd_typedef field
+      td' == fields.fd_tydef field
     ))
 
 val has_union_field_dup
@@ -277,7 +277,7 @@ val has_union_field_dup
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r': ref td')
 : stt_ghost unit
     emp_inames
@@ -292,10 +292,10 @@ val has_union_field_inj
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t1: Type0)
-  (#td1: typedef t1)
+  (#td1: tydef t1)
   (r1: ref td1)
   (#t2: Type0)
-  (#td2: typedef t2)
+  (#td2: tydef t2)
   (r2: ref td2)
 : stt_ghost (squash (t1 == t2 /\ td1 == td2))
     emp_inames
@@ -310,7 +310,7 @@ val has_union_field_equiv_from
   (r1 r2: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r': ref td')
 : stt_ghost unit
     emp_inames
@@ -325,7 +325,7 @@ val has_union_field_equiv_to
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r1 r2: ref td')
 : stt_ghost unit
     emp_inames
@@ -341,11 +341,11 @@ val ghost_union_field_focus
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (r': ref td')
 : stt_ghost (squash (
       t' == fields.fd_type field /\
-      td' == fields.fd_typedef field
+      td' == fields.fd_tydef field
   ))
     emp_inames
     (has_union_field r field r' ** pts_to r v)
@@ -359,7 +359,7 @@ val ghost_union_field
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-: stt_ghost (Ghost.erased (ref (fields.fd_typedef field)))
+: stt_ghost (Ghost.erased (ref (fields.fd_tydef field)))
     emp_inames
     (pts_to r v)
     (fun r' -> has_union_field r field r' ** pts_to r' (union_get_field v field))
@@ -374,9 +374,9 @@ val union_field0
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-  (td': typedef t' {
+  (td': tydef t' {
     t' ==  fields.fd_type field /\
-    td' == fields.fd_typedef field
+    td' == fields.fd_tydef field
   })
 : stt (ref td')
     (pts_to r v)
@@ -392,9 +392,9 @@ let union_field1
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
-  (td': typedef t')
+  (td': tydef t')
   (sq_t': squash (t' ==  fields.fd_type field))
-  (sq_td': squash (td' == fields.fd_typedef field))
+  (sq_td': squash (td' == fields.fd_tydef field))
 : stt (ref td')
     (pts_to r v)
     (fun r' -> has_union_field r field r' ** pts_to r' (union_get_field v field))
@@ -410,9 +410,9 @@ let union_field
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
-  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_tydef field))
   ()
 : stt (ref td')
     (pts_to r v)
@@ -431,7 +431,7 @@ val ununion_field
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (#v': Ghost.erased t')
   (r': ref td')
 : stt_ghost (Ghost.erased (union_t0 tn n fields))
@@ -439,7 +439,7 @@ val ununion_field
     (has_union_field r field r' ** pts_to r' v')
     (fun res -> has_union_field r field r' ** pts_to r res ** pure (
       t' == fields.fd_type field /\
-      td' == fields.fd_typedef field /\
+      td' == fields.fd_tydef field /\
       Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
     ))
 
@@ -453,7 +453,7 @@ fn ununion_field_and_drop
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (#v': Ghost.erased t')
   (r': ref td')
 requires
@@ -462,7 +462,7 @@ returns res: Ghost.erased (union_t0 tn n fields)
 ensures
     (pts_to r res ** pure (
       t' == fields.fd_type field /\
-      td' == fields.fd_typedef field /\
+      td' == fields.fd_tydef field /\
       Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
     ))
 {
@@ -484,9 +484,9 @@ val union_switch_field0
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (td': typedef t' {
+  (td': tydef t' {
     t' ==  fields.fd_type field /\
-    td' == fields.fd_typedef field
+    td' == fields.fd_tydef field
   })
 : stt (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v ** pure (
@@ -504,9 +504,9 @@ let union_switch_field1
   (#v: Ghost.erased (union_t0 tn n fields))
   (r: ref (union0 tn n fields))
   (field: field_t fields)
-  (td': typedef t')
+  (td': tydef t')
   (sq_t': squash (t' ==  fields.fd_type field))
-  (sq_td': squash (td' == fields.fd_typedef field))
+  (sq_td': squash (td' == fields.fd_tydef field))
 : stt (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v ** pure (
       full (union0 tn n fields) v
@@ -524,9 +524,9 @@ let union_switch_field
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (#t': Type0)
-  (#td': typedef t')
+  (#td': tydef t')
   (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
-  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_tydef field))
   ()
 : stt (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v ** pure (
