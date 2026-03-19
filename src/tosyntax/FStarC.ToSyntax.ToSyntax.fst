@@ -4176,15 +4176,15 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
               actions       = List.map erase_action ed.actions
           }
       in
+      let en, pop_when_done = Env.prepare_module_or_interface false false false en m.name mii in
       let push_sigelt env se =
           match se.sigel with
           | Sig_new_effect ed ->
             let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt env se' in
+            let env = if pop_when_done then Env.push_sigelt_force env se' else Env.push_sigelt env se' in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
-          | _ -> Env.push_sigelt env se
+          | _ -> if pop_when_done then Env.push_sigelt_force env se else Env.push_sigelt env se
       in
-      let en, pop_when_done = Env.prepare_module_or_interface false false false en m.name mii in
       let en = List.fold_left
                     push_sigelt
                     (Env.set_current_module en m.name)

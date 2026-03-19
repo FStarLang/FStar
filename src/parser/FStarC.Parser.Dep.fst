@@ -1185,27 +1185,11 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
     else PreferInterface module_name
   in
 
-  let add_dependence_edge original_or_working_map lid is_friend =
+   let add_dependence_edge original_or_working_map lid is_friend =
     let key = lowercase_join_longident lid true in
     if !dbg then Format.print1 "Resolving %s ..\n" key;
     match resolve_module_name original_or_working_map key with
     | Some module_name ->
-      if is_friend
-      && fly_deps_enabled()
-      then (
-        let already_depends_on_iface =
-          !deps 
-          |> List.existsb (function
-              | PreferInterface mname' -> mname' = mname
-              | _ -> false)
-        in
-        if already_depends_on_iface then
-           raise_error (range_of_lid lid) Errors.Fatal_CyclicDependence [
-            text "Friend dependences must be declared as the first dependence on a module.";
-            text (Format.fmt1 "A non-friend dependence was already found on module %s." module_name)
-          ]
-      
-      );
       add_dep (dep_edge module_name is_friend);
       true
     | _ ->

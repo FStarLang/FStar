@@ -541,9 +541,11 @@ let try_add_sigelt force env se l : ML _ =
   if not force && Some? (SMap.try_find (sigtab env) s) then (
     let old_se = Some?.v (SMap.try_find (sigtab env) s) in
     if Sig_declare_typ? old_se.sigel &&
-        (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)
+        (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel
+         || Sig_declare_typ? se.sigel)
     then
-      (* overriding a val with a let, a type, or a datacon is ok *)
+      (* overriding a val with a let, a type, a datacon, or
+         another val (e.g., friend upgrade re-loading) is ok *)
       ()
     else (
       (* anything else is an error *)

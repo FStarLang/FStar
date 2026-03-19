@@ -692,15 +692,24 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
       Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
     );
     let filenames = List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load in
-    filenames |> List.iter
-      (fun fn ->
-        if env.modules |> List.existsb (fun m -> Dep.module_name_of_file fn = Ident.string_of_lid m.name)
-        then begin
-          raise_error (Env.get_range env) Errors.Fatal_CyclicDependence [
-            text "Friend dependences must be declared as the first dependence on a module.";
-            text (Format.fmt1 "A non-friend dependence was already found on module %s." (Dep.module_name_of_file fn))
-          ]
-        end);
+    (* When a friend declaration needs to load an implementation (.fst)
+       for a module already loaded via interface only (as a transitive
+       non-friend dep), insert the .fsti before the .fst so that
+       tc_one_file_from_remaining will pair and interleave them. *)
+    let filenames =
+      List.collect (fun fn ->
+        if Dep.is_implementation fn then
+          let m = Dep.module_name_of_file fn in
+          if env.modules |> List.existsb (fun m' -> m = Ident.string_of_lid m'.name)
+          then
+            let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
+            match Dep.interface_of deps m with
+            | Some intf -> [intf; fn]
+            | None -> [fn]
+          else [fn]
+        else [fn])
+      filenames
+    in
     filenames, env
   in  
   let filenames, env = with_tcenv_of_env env (fun tcenv -> scan_fragment_deps tcenv frag_or_decl) in
