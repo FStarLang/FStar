@@ -1,5 +1,5 @@
 module C
 friend B
 friend A
-let c = A.a + B.b
-let test = assert (c == 85)
+let c = A.a + B.b + A.a_plus_one
+let test = assert (c == 128)
