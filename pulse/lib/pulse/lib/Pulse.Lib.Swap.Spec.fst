@@ -620,7 +620,7 @@ let array_as_ring_buffer_swap
     0 < l /\
     l < n /\
     (forall (i': nat_up_to bz.d) .
-      (forall (j: nat_up_to bz.q_n) .
+      (forall (j: nat_up_to bz.q_n) . {:nopattern (* ring buffer swap *)}
         (i' < bz.d) ==> (
         let idx = iter_fun #(nat_up_to n) (jump n l) j i' in
         Seq.index s idx == Seq.index s0 (jump n l idx)
@@ -647,11 +647,11 @@ let array_swap_outer_invariant // hoisting necessary because "Let binding is eff
   i <= bz.d /\
   n == Seq.length s0 /\
   n == Seq.length s /\
-  (forall (i': nat_up_to bz.d) . // this is always true, but I need it here for the pattern
+  (forall (i': nat_up_to bz.d) . {:nopattern (* outer invariant: identity at zero *)} // this is always true, but I need it here for the pattern
     Seq.index s i' == Seq.index s (iter_fun #(nat_up_to (n)) (jump (n) (l)) 0 i')
   ) /\ 
   (forall (i': nat_up_to bz.d). 
-    (forall (j: nat_up_to bz.q_n) .
+    (forall (j: nat_up_to bz.q_n) . {:nopattern (* outer invariant: swap progress *)}
         let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j i' in
         Seq.index s idx == Seq.index s0 (if i' < i then jump (n) (l) idx else idx))
   )
@@ -667,7 +667,7 @@ let array_swap_inner_invariant
   j < bz.q_n /\
   idx == iter_fun #(nat_up_to (n)) (jump (n) (l)) (j) (i) /\
   n == Seq.length s /\
-  (forall (i': nat_up_to bz.d) (j': nat_up_to bz.q_n) .
+  (forall (i': nat_up_to bz.d) (j': nat_up_to bz.q_n) . {:nopattern (* inner invariant: swap progress *)}
         let idx = iter_fun #(nat_up_to (n)) (jump (n) (l)) j' i' in
         Seq.index s idx == Seq.index s0 (if i' < i || (i' = i && j' < j) then jump (n) (l) idx else idx)
   )

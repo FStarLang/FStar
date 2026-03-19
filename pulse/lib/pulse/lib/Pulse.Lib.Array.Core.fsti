@@ -229,7 +229,7 @@ ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j:
   ensures exists* (v': Seq.seq (option t)).
     pts_to_mask arr #f v' (fun k -> i <= k /\ k < j /\ mask (k - i)) **
     pure (Seq.length v' == length arr /\
-      (forall (k:nat). k < j - i ==> Seq.index v k == Seq.index v' (k + i)))
+      (forall (k:nat). {:nopattern (* gsub_elim: index correspondence *)} k < j - i ==> Seq.index v k == Seq.index v' (k + i)))
 
 [@@pulse_impure_spec_no_proof_required]
 unobservable

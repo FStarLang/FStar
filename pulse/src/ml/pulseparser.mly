@@ -411,8 +411,9 @@ typX(X):
         | [] ->
           raise_error_text (rr2 $loc(q) $loc($3)) Fatal_MissingQuantifierBinder "Missing binders for a quantifier"
         | _ ->
+          let (pats, nopattern) = trigger in
           let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
-          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+          mk_term (q (bs, (idents, pats, nopattern), e)) (rr2 $loc(q) $loc(e)) Formula
       }
 
 pulseSLProp:

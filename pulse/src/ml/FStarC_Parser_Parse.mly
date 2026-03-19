@@ -146,7 +146,7 @@ type tc_constraint = {
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token SEQ_BANG_LBRACK
 %token BAR RBRACK RBRACE DOLLAR
-%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
+%token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN LBRACE_COLON_NOPATTERN
 %token PIPE_LEFT PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SPLICET SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES DECREASES LBRACE_COLON_WELL_FOUNDED
@@ -1196,8 +1196,9 @@ typ:
 
 %public
 trigger:
-  |   { [] }
-  | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
+  |   { ([], false) }
+  | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { (pats, false) }
+  | LBRACE_COLON_NOPATTERN RBRACE { ([], true) }
 
 disjunctivePats:
   | pats=separated_nonempty_list(DISJUNCTION, conjunctivePat) { pats }
@@ -1494,8 +1495,9 @@ onlyTrailingTerm:
         | [] ->
           raise_error_text (rr2 $loc(q) $loc($3)) Fatal_MissingQuantifierBinder "Missing binders for a quantifier"
         | _ ->
+          let (pats, nopattern) = trigger in
           let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
-          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+          mk_term (q (bs, (idents, pats, nopattern), e)) (rr2 $loc(q) $loc(e)) Formula
       }
 
 atomicTermQUident:

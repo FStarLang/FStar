@@ -123,19 +123,19 @@ type spec_submap_repr #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
 : Type0
-= forall k. Some? (lookup_spec spec k) ==> lookup_repr repr k == lookup_spec spec k
+= forall k. {:nopattern (* spec_submap_repr: need full instantiation *)} Some? (lookup_spec spec k) ==> lookup_repr repr k == lookup_spec spec k
 
 type repr_submap_spec #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
 : Type0
-= forall k. Some? (lookup_repr repr k) ==> lookup_repr repr k == lookup_spec spec k
+= forall k. {:nopattern (* repr_submap_spec: need full instantiation *)} Some? (lookup_repr repr k) ==> lookup_repr repr k == lookup_spec spec k
 
 type unique_keys #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
 : Type0
-= forall i k v. repr @@ i == Used k v ==> lookup_repr_index repr k == Some (v, i)
+= forall i k v. {:nopattern (* unique_keys: need full instantiation *)} repr @@ i == Used k v ==> lookup_repr_index repr k == Some (v, i)
 
 // FIXME: missing a bunch more interesting properties
 type pht_models #kt #vt

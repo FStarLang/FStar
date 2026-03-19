@@ -93,7 +93,7 @@ let left_neq_right (i j:nat) : Lemma (left_idx i <> right_idx j) = ()
 // Heap property: each node <= its children
 //
 let is_heap #t {| total_order t |} (s:Seq.seq t) : prop =
-  forall (i:nat). i < Seq.length s ==>
+  forall (i:nat). {:nopattern (* is_heap: intentionally unguarded *)} i < Seq.length s ==>
     (left_idx i < Seq.length s ==> Seq.index s i <=? Seq.index s (left_idx i)) /\
     (right_idx i < Seq.length s ==> Seq.index s i <=? Seq.index s (right_idx i))
 
@@ -122,7 +122,7 @@ let heap_down_at #t {| total_order t |} (s:Seq.seq t) (i:nat{i < Seq.length s}) 
 
 // Full heap = heap_down_at holds for all nodes
 let is_heap_alt #t {| total_order t |} (s:Seq.seq t) : prop =
-  forall (i:nat). i < Seq.length s ==> heap_down_at s i
+  forall (i:nat). {:nopattern (* is_heap_alt: intentionally unguarded *)} i < Seq.length s ==> heap_down_at s i
 
 // Almost heap for sift_up: node at `bad` might be smaller than its parent
 // - All heap_up_at hold except at `bad`
@@ -824,9 +824,9 @@ let snoc_no_children #t (s:Seq.seq t) (x:t)
 /// This allows the node at `bad` to be larger than its children
 let almost_heap_sift_down #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s}) : prop =
   // All heap_up_at hold except for direct children of bad
-  (forall (i:nat). i < Seq.length s /\ (i = 0 \/ parent_idx i <> bad) ==> heap_up_at s i) /\
+  (forall (i:nat). {:nopattern} i < Seq.length s /\ (i = 0 \/ parent_idx i <> bad) ==> heap_up_at s i) /\
   // All heap_down_at hold except at bad
-  (forall (i:nat). i < Seq.length s /\ i <> bad ==> heap_down_at s i)
+  (forall (i:nat). {:nopattern} i < Seq.length s /\ i <> bad ==> heap_down_at s i)
 
 let almost_down_to_full_heap #t {| total_order t |} (s:Seq.seq t) (bad:nat{bad < Seq.length s})
   : Lemma (requires almost_heap_sift_down s bad /\ heap_down_at s bad)

@@ -41,7 +41,7 @@ let composable_maps (#a:_)
                     (p:pcm a)
                     (m0 m1: map k a)
   : prop
-  = forall k. Map.sel m0 k `composable p` Map.sel m1 k
+  = forall k. {:nopattern} Map.sel m0 k `composable p` Map.sel m1 k
 
 /// Compose maps pointwise
 let compose_maps (#a:_) (#k:eqtype)

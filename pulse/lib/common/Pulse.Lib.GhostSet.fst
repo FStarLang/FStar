@@ -47,7 +47,7 @@ let rec list_filterP #t (p: t->prop) (xs: list t) :
 let is_finite_union_r #t (x y: set t) =
   introduce is_finite (union x y) ==> is_finite x with _.
   let xy' = is_finite_elim (union x y) in
-  assert (forall a. mem a (union x y) <==> List.memP a xy');
+  assert (forall a. {:nopattern (* mem pattern disrupts union proof *)} mem a (union x y) <==> List.memP a xy');
   let x' = list_filterP (fun a -> mem a x) xy' in
   lemma_equal_intro x (as_set x')
 

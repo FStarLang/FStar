@@ -201,13 +201,13 @@ let table_spec_well_formed_extend (spec:table_spec) (table_size:nat) (entries:in
   let new_table_size = table_size + 1 in
   
   // From table_spec_well_formed, all entries are < table_size
-  assert (forall i. i `Set.mem` entries ==> i < table_size);
+  assert (forall i. {:nopattern (* entries bounded *)} i `Set.mem` entries ==> i < table_size);
   // So table_size is not in entries
   assert (not (table_size `Set.mem` entries));
   
   // Prove forall i. i >= new_table_size \/ not (i `Set.mem` new_entries) ==> new_spec i == 0.0R
-  assert (forall i. i >= new_table_size ==> i <> table_size);
-  assert (forall i. i >= new_table_size ==> new_spec i == spec i);
+  assert (forall i. {:nopattern (* extended entries bound *)} i >= new_table_size ==> i <> table_size);
+  assert (forall i. {:nopattern (* spec agreement above *)} i >= new_table_size ==> new_spec i == spec i);
   
   // Prove forall i. i `Set.mem` new_entries ==> i < new_table_size
   // new_entries = {table_size} ∪ entries
@@ -216,7 +216,7 @@ let table_spec_well_formed_extend (spec:table_spec) (table_size:nat) (entries:in
   
   // total_frac new_spec entries == total_frac spec entries
   // since new_spec i == spec i for all i in entries (entries all < table_size)
-  assert (forall i. i `Set.mem` entries ==> new_spec i == spec i);
+  assert (forall i. {:nopattern (* new_spec matches spec on entries *)} i `Set.mem` entries ==> new_spec i == spec i);
   total_frac_extensional new_spec spec entries;
   
   // Prove total_frac new_spec new_entries + half_f == 1.0R
@@ -266,13 +266,13 @@ let table_spec_well_formed_shrink (spec:table_spec) (table_size:nat) (entries:in
   // Case 1: i >= table_size => spec i == 0.0R (from table_spec_well_formed spec) => new_spec i = 0.0R if i <> reader_pos, = 0.0R if i = reader_pos
   // Case 2: not (i `Set.mem` new_entries) and i <> reader_pos => not (i `Set.mem` entries) => spec i = 0.0R => new_spec i = 0.0R
   // Case 2': not (i `Set.mem` new_entries) and i = reader_pos => new_spec i = 0.0R by definition
-  assert (forall i. i `Set.mem` new_entries ==> i `Set.mem` entries);
-  assert (forall i. i `Set.mem` new_entries ==> i < table_size);
+  assert (forall i. {:nopattern} i `Set.mem` new_entries ==> i `Set.mem` entries);
+  assert (forall i. {:nopattern} i `Set.mem` new_entries ==> i < table_size);
   
   // Prove total_frac new_spec new_entries + new_avail == 1.0R
   // new_spec i = spec i for i <> reader_pos
   // So total_frac new_spec new_entries = total_frac spec new_entries (since reader_pos not in new_entries)
-  assert (forall i. i `Set.mem` new_entries ==> new_spec i == spec i);
+  assert (forall i. {:nopattern} i `Set.mem` new_entries ==> new_spec i == spec i);
   total_frac_extensional new_spec spec new_entries;
   
   // total_frac spec entries = spec reader_pos + total_frac spec new_entries

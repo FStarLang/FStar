@@ -50,7 +50,7 @@ let mk_base_array_inj  (#t: Type) (tn: Type0) (n: array_size_t) (v1 v2: Seq.seq 
   ))
   (ensures (v1 == v2))
   [SMTPat (mk_base_array tn n v1); SMTPat (mk_base_array tn n v2)]
-= assert (forall (i: nat) . i < SZ.v n ==> base_array_index (mk_base_array tn n v1) (SZ.uint_to_t i) == base_array_index (mk_base_array tn n v2) (SZ.uint_to_t i));
+= assert (forall (i: nat) . {:nopattern (* mk_base_array_inj: pointwise equality *)} i < SZ.v n ==> base_array_index (mk_base_array tn n v1) (SZ.uint_to_t i) == base_array_index (mk_base_array tn n v2) (SZ.uint_to_t i));
   assert (v1 `Seq.equal` v2)
 val base_array_fractionable (#t: Type) (#tn: Type0) (#n: array_size_t) (a: base_array_t t tn n) (td: typedef t) : Lemma
   (

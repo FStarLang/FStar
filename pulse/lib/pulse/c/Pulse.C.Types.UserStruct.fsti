@@ -34,7 +34,7 @@ let set_def
 
 noextract
 let nonempty_set (t: eqtype) =
-  (s: Set.set t { exists x . set_def s x == true })
+  (s: Set.set t { exists x . {:nopattern (* nonempty witness *)} set_def s x == true })
 
 noextract
 let set_snoc // for associativity reasons

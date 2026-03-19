@@ -1489,7 +1489,7 @@ let empty_keys_cardinality (#k:eqtype) (#v:Type0)
   (bucket_contents:Seq.seq (list (entry k v))) 
   (idx:nat)
   : Lemma 
-    (requires forall (j:nat). idx <= j /\ j < Seq.length bucket_contents ==> Seq.index bucket_contents j == [])
+    (requires forall (j:nat). {:nopattern} idx <= j /\ j < Seq.length bucket_contents ==> Seq.index bucket_contents j == [])
     (ensures FS.cardinality (build_keys_from_buckets bucket_contents idx) == 0)
   = empty_buckets_keys bucket_contents idx;
     FS.all_finite_set_facts_lemma ()
@@ -2166,8 +2166,8 @@ let build_keys_after_cons_remove (#k:eqtype) (#v:Type0)
 (** Connect seq_index_opt to Seq.index for all-empty case *)
 let seq_index_opt_to_index (#a:Type) (s:Seq.seq a) (cap:nat) (v:a)
   : Lemma 
-    (requires Seq.length s == cap /\ (forall (j:nat). j < cap ==> seq_index_opt s j == Some v))
-    (ensures forall (j:nat). j < cap ==> Seq.index s j == v)
+    (requires Seq.length s == cap /\ (forall (j:nat). {:nopattern (* seq_index_opt_to_index *)} j < cap ==> seq_index_opt s j == Some v))
+    (ensures forall (j:nat). {:nopattern (* seq_index_opt_to_index *)} j < cap ==> Seq.index s j == v)
   = ()
 
 (** Initialize buckets recursively from index i up to capacity *)

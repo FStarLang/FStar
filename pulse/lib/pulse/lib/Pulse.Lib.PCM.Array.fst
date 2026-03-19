@@ -54,8 +54,8 @@ let mk_carrier_inj
     s1 `Seq.equal` s2 /\
     (Seq.length s1 > 0 ==> p1 == p2)
   ))
-= assert (forall (i: nat) . i < Seq.length s1 ==>
+= assert (forall (i: nat) . {:nopattern (* mk_carrier_inj: need full instantiation *)} i < Seq.length s1 ==>
     (M.sel (mk_carrier len offset s1 p1) (offset + i) == Some (Seq.index s1 i, p1)));
-  assert (forall (i: nat) . i < Seq.length s2 ==>
+  assert (forall (i: nat) . {:nopattern (* mk_carrier_inj: need full instantiation *)} i < Seq.length s2 ==>
      M.sel (mk_carrier len offset s2 p2) (offset + i) == Some (Seq.index s2 i, p2))
 
