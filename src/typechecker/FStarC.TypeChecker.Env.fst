@@ -538,25 +538,20 @@ The force flag overrides the check, it's convenient in the checking for
 haseq in inductives. *)
 let try_add_sigelt force env se l : ML _ =
   let s = string_of_lid l in
-  if not force && Some? (SMap.try_find (sigtab env) s) then (
+  let reloading = !FStarC.Parser.Dep.fly_deps_reloading in
+  if not force && not reloading && Some? (SMap.try_find (sigtab env) s) then (
     let old_se = Some?.v (SMap.try_find (sigtab env) s) in
     if Sig_declare_typ? old_se.sigel &&
-        (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel
-         || Sig_declare_typ? se.sigel)
+        (Sig_let? se.sigel || Sig_inductive_typ? se.sigel || Sig_datacon? se.sigel)
     then
-      (* overriding a val with a let, a type, a datacon, or
-         another val (e.g., friend upgrade re-loading) is ok *)
+      (* overriding a val with a let, a type, or a datacon is ok *)
       ()
     else (
-      (* anything else is an error *)
       let open FStarC.Errors.Msg in
       let open FStarC.Pprint in
       raise_error l Errors.Fatal_DuplicateTopLevelNames [
         text "Duplicate top-level names" ^/^ arbitrary_string s;
         text "Previously declared at" ^/^ arbitrary_string (Range.string_of_range (range_of_lid l));
-        // text "New decl = " ^/^ Print.sigelt_to_doc se;
-        // text "Old decl = " ^/^ Print.sigelt_to_doc old_se;
-        // backtrace_doc ();
       ]
     )
   );

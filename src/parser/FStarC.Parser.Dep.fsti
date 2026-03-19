@@ -23,6 +23,7 @@ open FStarC.Util { out_channel }
 val debug_fly_deps () : ML bool
 val fly_deps_enabled () : ML bool
 val with_fly_deps_disabled (f:unit -> ML 'a) : ML 'a
+val fly_deps_reloading : ref bool
 
 type open_kind = | Open_module | Open_namespace
 

@@ -695,25 +695,47 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
     (* When a friend declaration needs to load an implementation (.fst)
        for a module already loaded via interface only (as a transitive
        non-friend dep), insert the .fsti before the .fst so that
-       tc_one_file_from_remaining will pair and interleave them. *)
+       tc_one_file_from_remaining will pair and interleave them.
+       Also track which modules need re-loading so that duplicate
+       checks can be relaxed. *)
+    let reloading_modules = mk_ref [] in
     let filenames =
       List.collect (fun fn ->
         if Dep.is_implementation fn then
           let m = Dep.module_name_of_file fn in
           if env.modules |> List.existsb (fun m' -> m = Ident.string_of_lid m'.name)
-          then
+          then begin
+            reloading_modules := m :: !reloading_modules;
             let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
             match Dep.interface_of deps m with
             | Some intf -> [intf; fn]
             | None -> [fn]
+          end
           else [fn]
         else [fn])
       filenames
     in
-    filenames, env
-  in  
-  let filenames, env = with_tcenv_of_env env (fun tcenv -> scan_fragment_deps tcenv frag_or_decl) in
-  let env = load_fly_deps env filenames in
+    filenames, env, !reloading_modules
+  in
+  let reloading_ref = mk_ref [] in
+  let filenames, env = with_tcenv_of_env env (fun tcenv ->
+    let filenames, env, reloading = scan_fragment_deps tcenv frag_or_decl in
+    reloading_ref := reloading;
+    filenames, env)
+  in
+  let reloading_modules = !reloading_ref in
+  (* When re-loading modules for friend upgrades, set a flag to
+     relax duplicate sigelt checks in DsEnv and TcEnv *)
+  let env =
+    if List.length reloading_modules > 0
+    then begin
+      Dep.fly_deps_reloading := true;
+      let env = load_fly_deps env filenames in
+      Dep.fly_deps_reloading := false;
+      env
+    end
+    else load_fly_deps env filenames
+  in
   env, filenames
 
 and tc_one_file_from_remaining 

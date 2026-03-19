@@ -1212,6 +1212,7 @@ let push_sigelt' fail_on_dup env s : ML _ =
     ]
   in
   let globals = mk_ref env.scope_mods in
+  let reloading = !FStarC.Parser.Dep.fly_deps_reloading in
   let env =
       let exclude_interface = match s.sigel with
         | Sig_let _
@@ -1226,7 +1227,7 @@ let push_sigelt' fail_on_dup env s : ML _ =
       let lids = List.filter (fun lid -> not (BU.starts_with (show (ident_of_lid lid))  "__proj__")) lids in
 
       (* Maybe check for duplicates. *)
-      if fail_on_dup then
+      if fail_on_dup && not reloading then
         (match BU.find_map lids (fun l -> if not (unique (*any_val:*)false exclude_interface env l) then Some l else None) with
           | Some l -> err l
           | _ -> ());

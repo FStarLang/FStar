@@ -83,6 +83,8 @@ let with_fly_deps_disabled (f: unit -> ML 'a) : ML 'a =
   fd_enabled := Some false;
   FStarC.Util.finally (fun _ -> fd_enabled := v) f
 
+let fly_deps_reloading = mk_ref false
+
 (* This is faster than the quadratic BU.remove_dups, since we can use
 the total order. *)
 let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : ML (list a) =
