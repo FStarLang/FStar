@@ -15,10 +15,10 @@ let rec append #a (l1 l2:list a)
     | hd :: tl -> hd :: append tl l2
 
 let total_order (#a:Type) (f: (a -> a -> bool)) =
-    (forall a. f a a)                                         (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ a1=!=a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
+    (forall a. {:pattern f a a} f a a)                                         (* reflexivity   *)
+    /\ (forall a1 a2. {:pattern f a1 a2} (f a1 a2 /\ a1=!=a2)  <==> not (f a2 a1))  (* anti-symmetry *)
+    /\ (forall a1 a2 a3. {:pattern f a1 a3; f a2 a3} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+    /\ (forall a1 a2. {:pattern f a1 a2} f a1 a2 \/ f a2 a1)                       (* totality *)
 let total_order_t (a:Type) = f:(a -> a -> bool) { total_order f }
 
 let rec sorted #a  (f:total_order_t a) (l:list a)
@@ -40,11 +40,11 @@ let mem (#a:eqtype) (i:a) (l:list a)
   = count i l > 0
 
 let is_permutation (#a:eqtype) (l m:list a) =
-  forall x. count x l = count x m
+  forall x. {:pattern count x l \/ count x m} count x l = count x m
 
 let rec append_count (#t:eqtype)
                      (l1 l2:list t)
-  : Lemma (ensures (forall a. count a (append l1 l2) = (count a l1 + count a l2)))
+  : Lemma (ensures (forall a. {:pattern count a (append l1 l2) } count a (append l1 l2) = (count a l1 + count a l2)))
   = match l1 with
     | [] -> ()
     | hd::tl -> append_count tl l2
@@ -72,8 +72,8 @@ let rec partition_mem_permutation (#a:eqtype)
                                   (f:(a -> bool))
                                   (l:list a)
   : Lemma (let l1, l2 = partition f l in
-           (forall x. {:nopattern} mem x l1 ==> f x) /\
-           (forall x. {:nopattern} mem x l2 ==> not (f x)) /\
+           (forall x. {:pattern f x} mem x l1 ==> f x) /\
+           (forall x. {:pattern f x} mem x l2 ==> not (f x)) /\
            (is_permutation l (append l1 l2)))
   = match l with
     | [] -> ()
@@ -89,8 +89,8 @@ let rec sorted_concat (#a:eqtype)
                       (l1:list a{sorted f l1})
                       (l2:list a{sorted f l2})
                       (pivot:a)
-  : Lemma (requires (forall y. {:nopattern} mem y l1 ==> not (f pivot y)) /\
-                    (forall y. {:nopattern} mem y l2 ==> f pivot y))
+  : Lemma (requires (forall y. {:pattern f pivot y} mem y l1 ==> not (f pivot y)) /\
+                    (forall y. {:pattern f pivot y} mem y l2 ==> f pivot y))
           (ensures sorted f (append l1 (pivot :: l2)))
   = match l1 with
     | [] -> ()
