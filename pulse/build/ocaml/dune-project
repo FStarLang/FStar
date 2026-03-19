@@ -1,8 +1,0 @@
-(lang dune 3.2)
-(name pulse)
-(generate_opam_files false)
-(using menhir 2.1)
-(package
-  (name pulse)
-  (synopsis "The Pulse separation logic DSL for F*")
-)
