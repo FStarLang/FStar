@@ -315,7 +315,7 @@ let rewrite_rule_soundness #f (r:rewrite_rule f)
 noeq
 type rewrite_t (f:_) {| eval f |} {| functor f |} = {
   rule: rewrite_rule f;
-  soundness: unit -> Lemma (forall x. rewrite_rule_soundness rule x)
+  soundness: unit -> Lemma (forall x. {:nopattern} rewrite_rule_soundness rule x)
 }
 //SNIPPET_END: rewrite_rule$
 
@@ -345,17 +345,17 @@ let or_else (x:option 'a)
 
 //SNIPPET_START: expected_semantics$
 let ev_val_sem #f (ev: eval f) {| functor f |} {| leq value f |} =
-  forall (x:expr f). dflt True 
+  forall (x:expr f). {:nopattern} dflt True 
     (let? Val a = project x in
      Some (eval_expr x == a))
 
 let ev_add_sem #f (ev: eval f) {| functor f |} {| leq add f |} =
-  forall (x:expr f). dflt True 
+  forall (x:expr f). {:nopattern} dflt True 
     (let? Add a b = project x in
      Some (eval_expr x == eval_expr a + eval_expr b))
 
 let ev_mul_sem #f (ev: eval f) {| functor f |} {| leq mul f |} =
-  forall (x:expr f). dflt True 
+  forall (x:expr f). {:nopattern} dflt True 
     (let? Mul a b = project x in
      Some (eval_expr x == eval_expr a * eval_expr b))
 //SNIPPET_END: expected_semantics$

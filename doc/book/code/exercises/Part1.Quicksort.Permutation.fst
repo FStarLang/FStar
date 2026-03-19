@@ -71,8 +71,8 @@ let rec partition_mem_permutation (#a:eqtype)
                                   (f:(a -> bool))
                                   (l:list a)
   : Lemma (let l1, l2 = partition f l in
-           (forall x. mem x l1 ==> f x) /\
-           (forall x. mem x l2 ==> not (f x)) /\
+           (forall x. {:nopattern} mem x l1 ==> f x) /\
+           (forall x. {:nopattern} mem x l2 ==> not (f x)) /\
            (is_permutation l (append l1 l2)))
   = admit()
   
@@ -81,8 +81,8 @@ let rec sorted_concat (#a:eqtype)
                       (l1:list a{sorted f l1})
                       (l2:list a{sorted f l2})
                       (pivot:a)
-  : Lemma (requires (forall y. mem y l1 ==> not (f pivot y)) /\
-                    (forall y. mem y l2 ==> f pivot y))
+  : Lemma (requires (forall y. {:nopattern} mem y l1 ==> not (f pivot y)) /\
+                    (forall y. {:nopattern} mem y l2 ==> f pivot y))
           (ensures sorted f (append l1 (pivot :: l2)))
   = match l1 with
     | [] -> ()

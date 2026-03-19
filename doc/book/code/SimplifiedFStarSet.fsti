@@ -84,7 +84,7 @@ val mem_complement (#a:eqtype) (x:a) (s:set a)
 //SNIPPET_START: equal_intro_elim$
 val equal_intro (#a:eqtype) (s1 s2: set a)
   : Lemma
-    (requires  (forall x. mem x s1 = mem x s2))
+    (requires  (forall x. {:nopattern (* inferred mem pattern disrupts set extensionality proof *)} mem x s1 = mem x s2))
     (ensures (equal s1 s2))
     [SMTPat (equal s1 s2)]
 
