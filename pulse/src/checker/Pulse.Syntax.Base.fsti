@@ -374,10 +374,21 @@ type slprop_defn = {
 
 
 noeq
+type fn_typedef = {
+  (* A type definition, like `typedef fn ty (x:int) returns int`.
+     Produces a let binding for the elaborated arrow type. *)
+  id : R.ident;
+  us : list R.univ_name;
+  bs : list (option qualifier & binder & bv);
+  comp : comp_st; (* bs in scope *)
+}
+
+noeq
 type decl' =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
   | SlpropDefn of slprop_defn
+  | FnTypeDef of fn_typedef
 
 and decl = {
   d : decl';

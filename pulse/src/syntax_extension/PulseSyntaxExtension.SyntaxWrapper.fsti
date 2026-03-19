@@ -160,6 +160,14 @@ val fn_decl :
   comp:comp ->
   decl
 
+val fn_typedef :
+  range ->
+  name:ident ->
+  us:list ident ->
+  bs:list (option qualifier & binder & bv) ->
+  comp:comp ->
+  decl
+
 val slprop_defn :
   range ->
   name:ident ->

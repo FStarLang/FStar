@@ -71,7 +71,7 @@ let add_decorations decors ds =
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
-%token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE PREDICATE
+%token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE PREDICATE TYPEDEF
 %token GHOST ATOMIC UNOBSERVABLE
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
@@ -111,6 +111,7 @@ startOfNextPulseDeclToken:
  | i=startOfNextDeclToken { i }
  | qual { None }
  | FN { None }
+ | TYPEDEF { None }
 
 iLangDeclOrEOF:
   | EOF { None }
@@ -152,6 +153,16 @@ pulseDecl:
     {
       let decors = [] in
       PulseSyntaxExtension_Sugar.SlpropDefn (mk_slprop_defn lid bs body decors (rr $loc))
+    }
+
+  | TYPEDEF q=qualOptFn
+    lid=lidentOrOperator us=univParams bs=pulseBinderList
+    ascription=pulseComputationType
+    {
+      let decors = [] in
+      let open PulseSyntaxExtension_Sugar in
+      let ascription = with_computation_tag ascription q in
+      FnTypeDef (mk_fn_decl lid us (List.flatten bs) (Inl ascription) decors (rr $loc))
     }
  
 (* defining this as two tokens, option(qual) FN, seems to cause menhir to report an

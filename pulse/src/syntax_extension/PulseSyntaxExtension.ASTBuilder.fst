@@ -149,6 +149,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
         let open PulseSyntaxExtension.Sugar in
         match d with
         | SlpropDefn {} -> false
+        | FnTypeDef {} -> false
         | FnDefn {} | FnDecl {} -> true
       in
       let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
@@ -156,7 +157,8 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
         match d with
         | SlpropDefn { id; range }
         | FnDefn { id; range }
-        | FnDecl { id; range } -> id, range
+        | FnDecl { id; range }
+        | FnTypeDef { id; range } -> id, range
       in
       let splice_decl
           (d:PulseSyntaxExtension.Sugar.decl)
@@ -168,7 +170,8 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
           match d with
           | SlpropDefn { decorations }
           | FnDefn { decorations }
-          | FnDecl { decorations } -> decorations
+          | FnDecl { decorations }
+          | FnTypeDef { decorations } -> decorations
         in
         let decors =
           if not (should_be_irreducible d) then decors else

@@ -16,6 +16,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "predicate" -> PP.PREDICATE
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
+    | IDENT "typedef" -> PP.TYPEDEF
     | IDENT "each" -> PP.EACH
     | IDENT "rewrite" -> PP.REWRITE
     | IDENT "fold" -> PP.FOLD

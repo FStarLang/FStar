@@ -1034,6 +1034,21 @@ let desugar_decl (env:env_t) (d:Sugar.decl)
     let! qbs = map2 faux bs bvs in
     return (SW.slprop_defn range id qbs body)
 
+  | Sugar.FnTypeDef { id; us; binders; ascription=Inl ascription; range } ->
+    let! env, bs, bvs = desugar_binders env binders in
+    let! pannots = parse_annots ascription.range ascription.annots in
+    let fvs = free_vars_comp env pannots in
+    let! env, bs', bvs' = idents_as_binders env fvs in
+    let bs = bs@bs' in
+    let bvs = bvs@bvs' in
+    let! comp = desugar_computation_type env ascription in
+    let! qbs = map2 faux bs bvs in
+    let comp = close_comp_bvs comp (List.Tot.map (fun (_,_,bv) -> bv) qbs) in
+    return (SW.fn_typedef range id us qbs comp)
+
+  | Sugar.FnTypeDef { id; us; binders; ascription=Inr ascription; range } ->
+    fail "Unexpected FnTypeDef with F* type" range
+
   | _ ->
     fail "Unexpected Pulse declaration" (Sugar.range_of_decl d)
 

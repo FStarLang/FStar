@@ -391,6 +391,7 @@ type decl =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
   | SlpropDefn of slprop_defn
+  | FnTypeDef of fn_decl
 open FStarC.Class.Deq
 let eq_ident (i1 i2:Ident.ident) : ML bool = i1 =? i2
 let eq_lident (i1 i2:Ident.lident) : ML bool = i1 =? i2
@@ -420,6 +421,7 @@ let rec eq_decl (d1 d2:decl) : ML bool =
   | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
   | FnDecl d1, FnDecl d2 -> eq_fn_decl d1 d2
   | SlpropDefn d1, SlpropDefn d2 -> eq_slprop_defn d1 d2
+  | FnTypeDef d1, FnTypeDef d2 -> eq_fn_decl d1 d2
   | _ -> false
 and eq_fn_decl (f1 f2:fn_decl) : ML bool =
   eq_ident f1.id f2.id &&
@@ -578,6 +580,7 @@ let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : ML unit =
   | FnDefn f -> scan_fn_defn cbs f
   | FnDecl d -> scan_fn_decl cbs d
   | SlpropDefn d -> scan_slprop_defn cbs d
+  | FnTypeDef d -> scan_fn_decl cbs d
 and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) : ML unit =
   iter (scan_binder cbs) f.binders;
   scan_ascription cbs f.ascription
@@ -688,6 +691,7 @@ let range_of_decl (d:decl) =
   | FnDefn f -> f.range
   | FnDecl d -> d.range
   | SlpropDefn d -> d.range
+  | FnTypeDef d -> d.range
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
 let mk_comp tag literally annots range =
   {
@@ -701,6 +705,7 @@ let add_decorations d ds =
   | FnDefn f -> FnDefn { f with decorations=ds @ f.decorations }
   | FnDecl f -> FnDecl { f with decorations=ds @ f.decorations }
   | SlpropDefn f -> SlpropDefn { f with decorations=ds @ f.decorations }
+  | FnTypeDef f -> FnTypeDef { f with decorations=ds @ f.decorations }
   
 // let mk_slprop_exists binders body = SLPropExists { binders; body }
 let mk_expr e args = Expr { e; args }

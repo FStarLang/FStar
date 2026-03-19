@@ -601,3 +601,7 @@ let decl_to_string (d:decl) : T.Tac string =
      fst (R.inspect_ident id) ^ " " ^ 
      String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs) ^
       " = " ^ term_to_string body ^ "\n"
+  | FnTypeDef {id; bs} ->
+    "typedef fn " ^
+    fst (R.inspect_ident id) ^ " " ^
+    String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs)

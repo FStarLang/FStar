@@ -209,38 +209,49 @@ let check_fndefn
   end
 #pop-options
 
+(* Elaborate a function type from binders and computation.
+   Creates a dummy admitted body and runs the checker to get
+   the elaborated arrow type. Used by check_fndecl and check_fntypedef. *)
+let elaborate_fn_type
+    (label : string)
+    (g : stt_env{bindings g == []})
+    (range : R.range)
+    (id : R.ident)
+    (us : list R.univ_name)
+    (bs : list (option qualifier & binder & bv))
+    (comp : comp_st)
+  : T.Tac (string & R.term)
+=
+  let g = push_univ_vars g us in
+  if Nil? bs then
+    fail g (Some range)
+      (Printf.sprintf "main: %s does not have binders" label);
+
+  let nm = fst (inspect_ident id) in
+  let stc = st_comp_of_comp comp in
+  let body : st_term =
+    mk_term (Tm_Admit {
+      ctag   = ctag_of_comp_st comp;
+      u      = stc.u;
+      typ    = stc.res;
+      post   = None;
+    }) range
+  in
+  let body = Pulse.Checker.Abs.mk_abs g bs body comp in
+  let (| _, c |) =
+    RU.with_extv "pulse:no_admit_diag" "1" (fun () ->
+      Pulse.Checker.Abs.check_abs g body Pulse.Checker.check
+    )
+  in
+  (nm, elab_comp c)
+
 let check_fndecl
     (d : decl{FnDecl? d.d})
     (g : stt_env{bindings g == []})
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) None)
 =
   let FnDecl { id; us; bs; comp } = d.d in
-  let g = push_univ_vars g us in
-  if Nil? bs then
-    fail g (Some d.range) "main: FnDecl does not have binders";
-
-  let nm = fst (inspect_ident id) in
-  let stc = st_comp_of_comp comp in
-
-  (* We make a dummy FnDefn setting the body to a Tm_Admit, and
-  call the checker to elaborate its actual type. *)
-  let body : st_term =
-    mk_term (Tm_Admit {
-      ctag   = ctag_of_comp_st comp;
-      u      = stc.u;
-      typ    = stc.res;
-      post   = None; // Some stc.post?
-    }) d.range
-  in
-  let body = Pulse.Checker.Abs.mk_abs g bs body comp in
-  let rng = body.range in
-  let (| _, c |) =
-    (* We don't want to print the diagnostic for the admit in the body. *)
-    RU.with_extv "pulse:no_admit_diag" "1" (fun () ->
-      Pulse.Checker.Abs.check_abs g body Pulse.Checker.check
-    )
-  in
-  let typ = elab_comp c in
+  let (nm, typ) = elaborate_fn_type "FnDecl" g d.range id us bs comp in
   let se : sigelt =
     pack_sigelt <|
     Sg_Val {
@@ -250,6 +261,23 @@ let check_fndecl
     }
   in
   ([], (false, se, None), [])
+
+let check_fntypedef
+    (d : decl{FnTypeDef? d.d})
+    (g : stt_env{bindings g == []})
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g) None)
+=
+  let FnTypeDef { id; us; bs; comp } = d.d in
+  let (nm, typ) = elaborate_fn_type "FnTypeDef" g d.range id us bs comp in
+  let cur_module = T.cur_module () in
+  [], (false, R.pack_sigelt (R.Sg_Let false [
+    R.pack_lb {
+      lb_fv = R.pack_fv (cur_module @ [nm]);
+      lb_us = [];
+      lb_typ = tm_unknown;
+      lb_def = typ;
+    }
+  ]), None), []
 
 let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
@@ -270,6 +298,11 @@ let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
         else
           fail g (Some d.range) "pulse main: expected type provided for a FnDecl?"
       | SlpropDefn {} -> check_slprop_defn d g expected_t pre
+      | FnTypeDef {} ->
+        if None? expected_t then
+          check_fntypedef d g
+        else
+          fail g (Some d.range) "pulse main: expected type provided for a FnTypeDef?"
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in
