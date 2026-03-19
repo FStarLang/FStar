@@ -26,7 +26,7 @@ open Pulse.Lib.SmallType
 open Pulse.Lib.Send
 
 let visibility = 
-  vis:(loc_id -> loc_id) { forall l. vis (process_of l) == vis l }
+  vis:(loc_id -> loc_id) { forall l. {:nopattern (* Pulse Array.Core *)} vis (process_of l) == vis l }
 
 [@@erasable] val base_t : Type0
 
@@ -79,7 +79,7 @@ fn pts_to_mask_len u#a (#t: Type u#a) (a:array t) (#p:perm) #x #mask
 ghost
 fn pts_to_mask_perm_bound u#a (#t: Type u#a) (arr: array t) #p #s #mask
   preserves pts_to_mask arr #p s mask
-  requires pure (exists (i: nat). i < Seq.length s /\ mask i)
+  requires pure (exists (i: nat). {:nopattern (* Pulse Array.Core *)} i < Seq.length s /\ mask i)
   ensures pure (p <=. 1.0R)
 
 ghost
@@ -90,19 +90,19 @@ fn pts_to_mask_not_null u#a (#a: Type u#a) #p (r:array a) #v #mask
 ghost fn mask_vext u#a (#t: Type u#a) (arr: array t) #f #v v' #mask
   requires pts_to_mask arr #f v mask
   requires pure (Seq.length v' == Seq.length v /\
-    (forall (i: nat). mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
+    (forall (i: nat). {:nopattern (* Pulse Array.Core *)} mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
   ensures pts_to_mask arr #f v' mask
 
 ghost fn mask_mext u#a (#t: Type u#a) (arr: array t) #f #v #mask (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
-  requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
+  requires pure (forall (i: nat). {:nopattern (* Pulse Array.Core *)} i < Seq.length v ==> (mask i <==> mask' i))
   ensures pts_to_mask arr #f v mask'
 
 ghost fn mask_ext u#a (#t: Type u#a) (arr: array t) #f #v #mask v' (mask': nat -> prop)
   requires pts_to_mask arr #f v mask
-  requires pure (forall (i: nat). i < Seq.length v ==> (mask i <==> mask' i))
+  requires pure (forall (i: nat). {:nopattern (* Pulse Array.Core *)} i < Seq.length v ==> (mask i <==> mask' i))
   requires pure (Seq.length v' == Seq.length v /\
-    (forall (i: nat). mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
+    (forall (i: nat). {:nopattern (* Pulse Array.Core *)} mask i /\ i < Seq.length v ==> Seq.index v i == Seq.index v' i))
   ensures pts_to_mask arr #f v' mask'
 
 [@@deprecated "Array.mask_alloc_with_vis is unsound; only use for model implementations"]
@@ -132,7 +132,7 @@ fn mask_alloc u#a (elt: Type u#a) {| small_type u#a |} (n: SZ.t)
 [@@deprecated "Array.mask_free is unsound; only use for model implementations"]
 fn mask_free u#a (#elt: Type u#a) (a: array elt) (#s: erased (Seq.seq (option elt))) #mask
   requires pts_to_mask a s mask
-  requires pure (forall i. mask i)
+  requires pure (forall i. {:nopattern (* Pulse Array.Core *)} mask i)
   requires pure (is_full_array a)
 
 ghost
@@ -152,10 +152,10 @@ fn mask_share u#a (#a: Type u#a) (arr:array a) #s #p #mask
 ghost fn mask_gather u#a (#t: Type u#a) (arr: array t) #p1 #p2 #s1 #s2 #mask1 #mask2
   requires pts_to_mask arr #p1 s1 mask1
   requires pts_to_mask arr #p2 s2 mask2
-  requires pure (forall i. mask1 i <==> mask2 i)
+  requires pure (forall i. {:nopattern (* Pulse Array.Core *)} mask1 i <==> mask2 i)
   ensures exists* (v: Seq.seq (option t)). pts_to_mask arr #(p1 +. p2) v mask1 **
     pure ((Seq.length v == Seq.length s1 /\ Seq.length v == Seq.length s2) /\
-      (forall (i: nat). i < Seq.length v /\ mask1 i ==> Seq.index v i == Seq.index s1 i /\ Seq.index v i == Seq.index s2 i))
+      (forall (i: nat). {:nopattern (* Pulse Array.Core *)} i < Seq.length v /\ mask1 i ==> Seq.index v i == Seq.index s1 i /\ Seq.index v i == Seq.index s2 i))
 
 // We need to give names to these combinators, otherwise unfold can't
 // distinguish them when we have multiple pts_to_mask resources.
@@ -171,11 +171,11 @@ ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> 
 ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
   requires pts_to_mask arr #f v1 mask1
   requires pts_to_mask arr #f v2 mask2
-  requires pure (forall i. ~(mask1 i /\ mask2 i))
+  requires pure (forall i. {:nopattern (* Pulse Array.Core *)} ~(mask1 i /\ mask2 i))
   ensures exists* (v: Seq.seq (option t)).
     pts_to_mask arr #f v (fun i -> mask1 i \/ mask2 i) **
     pure (Seq.length v == Seq.length v1 /\ Seq.length v == Seq.length v2 /\
-      (forall (i: nat). i < Seq.length v ==>
+      (forall (i: nat). {:nopattern (* Pulse Array.Core *)} i < Seq.length v ==>
         (mask1 i ==> Seq.index v i == Seq.index v1 i) /\
         (mask2 i ==> Seq.index v i == Seq.index v2 i)))
 
@@ -183,7 +183,7 @@ ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
 ghost fn join_mask' u#a (#t: Type u#a) (arr: array t) #f #v #mask1 #mask2
   requires pts_to_mask arr #f v mask1
   requires pts_to_mask arr #f v mask2
-  requires pure (forall i. ~(mask1 i /\ mask2 i))
+  requires pure (forall i. {:nopattern (* Pulse Array.Core *)} ~(mask1 i /\ mask2 i))
   ensures pts_to_mask arr #f v (fun i -> mask1 i \/ mask2 i)
 
 [@@allow_ambiguous]

@@ -23,8 +23,8 @@ module R = Pulse.Lib.Reference
 open FStar.UInt32
 
 let sorted (s0 s:Seq.seq U32.t) =
-   (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
-   (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
+   (forall (i:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
+   (forall (i:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} i < Seq.length s0 ==> (exists (j:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
 
 fn sort3_alt (a:array U32.t)
              (x y z: ref U32.t)

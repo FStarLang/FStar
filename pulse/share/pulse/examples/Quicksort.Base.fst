@@ -32,16 +32,16 @@ let seq_swap (#a: Type) (s: Seq.seq a) (i j: nat_smaller (Seq.length s)) : GTot 
   Seq.swap s j i
 
 let larger_than (s: Seq.seq int) (lb: int)
-  = forall (k: int). 0 <= k /\ k < Seq.length s ==> lb <= Seq.index s k
+  = forall (k: int). {:nopattern (* Quicksort *)} 0 <= k /\ k < Seq.length s ==> lb <= Seq.index s k
 
 let smaller_than (s: Seq.seq int) (rb: int)
-  = forall (k: int). 0 <= k /\ k < Seq.length s ==> Seq.index s k <= rb
+  = forall (k: int). {:nopattern (* Quicksort *)} 0 <= k /\ k < Seq.length s ==> Seq.index s k <= rb
 
 let between_bounds (s: Seq.seq int) (lb rb: int)
   = larger_than s lb /\ smaller_than s rb
 
 let sorted (s: Seq.seq int)
-  = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
+  = forall (i j: nat). {:nopattern (* Quicksort *)} i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
 #push-options "--retry 5"
 let lemma_sorted_append

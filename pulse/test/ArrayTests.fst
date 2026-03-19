@@ -46,7 +46,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
     A.pts_to a2 #p2 s2 **
     pure (
       US.v vi <= US.v l /\
-      (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
+      (forall (i:nat). {:nopattern (* array test *)} i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
     )
   )
   {
@@ -77,7 +77,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
       R.pts_to i vi **
       pure (US.v vi <= US.v l /\
             Seq.length s == A.length a /\
-            (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
+            (forall (i:nat). {:nopattern (* array test *)} i < US.v vi ==> Seq.index s i == v))
    )
    {
       let vi = !i; 
@@ -273,12 +273,12 @@ fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
 
 noextract
 let sorted (s0 s:Seq.seq U32.t) : GTot _ =
-   (forall (i:nat). i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
-   (forall (i:nat). i < Seq.length s0 ==> (exists (j:nat). j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
+   (forall (i:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} i < Seq.length s - 1 ==> U32.v (Seq.index s i) <= U32.v (Seq.index s (i + 1))) /\
+   (forall (i:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} i < Seq.length s0 ==> (exists (j:nat). {:nopattern (* Seq.index pattern disrupts sort proof *)} j < Seq.length s /\ U32.v (Seq.index s0 i) == U32.v (Seq.index s j)))
 
 let permutation (s:Seq.seq U32.t) (l:list U32.t) =
-   (forall (i:nat). i < Seq.length s ==> 
-      (exists (j:nat). j < List.Tot.length l /\ U32.v (Seq.index s i) == U32.v (List.Tot.index l j)))
+   (forall (i:nat). {:nopattern (* sort proof *)} i < Seq.length s ==> 
+      (exists (j:nat). {:nopattern (* sort proof *)} j < List.Tot.length l /\ U32.v (Seq.index s i) == U32.v (List.Tot.index l j)))
 
 open FStar.UInt32
 // #push-options "--query_stats"
