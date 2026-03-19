@@ -692,27 +692,21 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
       Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
     );
     let filenames = List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load in
-    (* When a friend declaration needs to load an implementation (.fst)
-       for a module already loaded via interface only (as a transitive
-       non-friend dep), insert the .fsti before the .fst so that
-       tc_one_file_from_remaining will pair and interleave them.
-       Also track which modules need re-loading so that duplicate
-       checks can be relaxed. *)
+    (* Track which modules need re-loading for friend upgrades
+       (implementation .fst whose module was already loaded via
+       interface only as a transitive non-friend dep). The
+       fly_deps_reloading flag relaxes duplicate sigelt checks
+       in DsEnv and TcEnv. We load just the .fst without
+       inserting .fsti, so export_interface is NOT called and
+       implementation-only definitions remain visible to friends. *)
     let reloading_modules = mk_ref [] in
-    let filenames =
-      List.collect (fun fn ->
+    let _ =
+      List.iter (fun fn ->
         if Dep.is_implementation fn then
           let m = Dep.module_name_of_file fn in
           if env.modules |> List.existsb (fun m' -> m = Ident.string_of_lid m'.name)
-          then begin
-            reloading_modules := m :: !reloading_modules;
-            let deps = FStarC.Syntax.DsEnv.dep_graph env.dsenv in
-            match Dep.interface_of deps m with
-            | Some intf -> [intf; fn]
-            | None -> [fn]
-          end
-          else [fn]
-        else [fn])
+          then
+            reloading_modules := m :: !reloading_modules)
       filenames
     in
     filenames, env, !reloading_modules

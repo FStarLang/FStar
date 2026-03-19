@@ -4090,7 +4090,11 @@ let desugar_modul env (m:AST.modul) : ML (env_t & Syntax.modul) =
     let env, modul = Env.finish_module_or_interface env modul in
     if Options.dump_module (string_of_lid modul.name)
     then Format.print1 "Module after desugaring:\n%s\n" (show modul);
-    (if pop_when_done then export_interface modul.name env else env), modul
+    (* When re-loading a module for friend upgrade (fly_deps_reloading),
+       skip export_interface so that implementation-only definitions
+       remain visible to friend modules. *)
+    (if pop_when_done && not !FStarC.Parser.Dep.fly_deps_reloading
+     then export_interface modul.name env else env), modul
   )
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -4190,7 +4194,11 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
                     (Env.set_current_module en m.name)
                     m.declarations in
       let en = if finish then Env.finish en m else en in
-      (), (if pop_when_done then export_interface m.name en else en)
+      (* When re-loading a module for friend upgrade (fly_deps_reloading),
+         skip export_interface so implementation-only definitions
+         remain visible to friend modules. *)
+      (), (if pop_when_done && not !FStarC.Parser.Dep.fly_deps_reloading
+           then export_interface m.name en else en)
 
 let add_partial_modul_to_env = add_modul_to_env_core false
 let add_modul_to_env = add_modul_to_env_core true
