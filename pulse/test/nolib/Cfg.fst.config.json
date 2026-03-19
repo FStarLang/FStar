@@ -1,13 +1,14 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "../../../stage3/dune/_build/install/default/bin/fstar.exe",
   "options": [
     "--query_cache",
     "--ext", "optimize_let_vc",
     "--ext", "fly_deps"
   ],
   "include_dirs": [
-    "../../build/ocaml/installed/lib/pulse",
+    "../../../ulib",
+    "../../../stage2/out/lib/fstar/ulib.checked",
     "../../lib/common",
-    "../../lib/pulse/_cache"
+    "../../build/lib.common.checked"
   ]
 }

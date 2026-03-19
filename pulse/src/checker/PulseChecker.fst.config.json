@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "../../../stage2/out/bin/fstar.exe",
   "options": [
     "--query_cache",
     "--ext",
@@ -14,6 +14,7 @@
     "(set-option :smt.arith.nl false)"
   ],
   "include_dirs": [
-    "--include", "../../build/checker.checked"
+    "../../lib/common",
+    "../../build/checker.checked"
   ]
 }
