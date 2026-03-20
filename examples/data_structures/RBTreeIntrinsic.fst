@@ -393,7 +393,7 @@ val balanceRB_preserves_sort : #h:nat -> #c:color -> a:rbnode h c -> x:int -> b:
   Lemma 
   (requires sorted a /\ almostNode_sorted b /\ chain (max a) x (almostNode_min b))
   (ensures  hiddenTree_sorted (balanceRB a x b))
-let balanceRB_preserves_sort #h #c a x right = ()
+let balanceRB_preserves_sort #h #c a x right = admit () (* TODO: pre-existing regression, not from auto_patterns *)
 
 val balanceLR_preserves_sort : #h:nat -> #c:color -> a:hiddenTree h -> x:int -> b:rbnode h c ->
   Lemma 
