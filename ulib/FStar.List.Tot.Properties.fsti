@@ -70,7 +70,7 @@ val memP_map_elim
   (l: list a)
 : Lemma
   (requires True)
-  (ensures (memP y (map f l) ==> (exists (x : a) . {:nopattern} memP x l /\ f x == y)))
+  (ensures (memP y (map f l) ==> (exists (x : a) . {:pattern (memP x l)} memP x l /\ f x == y)))
 
 (** The empty list has no elements *)
 val mem_empty : #a:eqtype -> x:a ->
@@ -261,11 +261,11 @@ val lemma_snoc_length : (lx:(list 'a & 'a)) ->
 (** Reverse induction principle **)
 
 val rev'_list_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
-  Lemma (requires ((p []) /\ (forall hd tl. {:nopattern} p (rev' tl) ==> p (rev' (hd::tl)))))
+  Lemma (requires ((p []) /\ (forall hd tl. {:pattern (rev' (hd::tl))} p (rev' tl) ==> p (rev' (hd::tl)))))
         (ensures (p (rev' l)))
 
 val rev_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
-  Lemma (requires ((p []) /\ (forall hd tl. {:nopattern} p hd ==> p (hd@[tl]))))
+  Lemma (requires ((p []) /\ (forall hd tl. {:pattern (p (hd@[tl]))} p hd ==> p (hd@[tl]))))
         (ensures (p l))
 
 (** Properties about iterators **)
@@ -408,7 +408,7 @@ val partition_count_forall: #a:eqtype -> f:(a -> Tot bool)
 (** Properties about subset **)
 
 val mem_subset (#a: eqtype) (la lb: list a)
-    : Lemma (subset la lb <==> (forall x. {:nopattern} mem x la ==> mem x lb))
+    : Lemma (subset la lb <==> (forall x. {:pattern (mem x la)} mem x la ==> mem x lb))
             [SMTPat (subset la lb)]
 
 (* NOTE: This is implied by mem_subset above, kept for compatibility *)
@@ -422,7 +422,7 @@ any [x] in [sortWith f l] is the same as the number of occurrences in
 [l]. *)
 val sortWith_permutation: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires True)
-        (ensures (forall x. {:nopattern} count x l = count x (sortWith f l)))
+        (ensures (forall x. {:pattern (count x l)} count x l = count x (sortWith f l)))
 
 (** [sorted f l] holds if, and only if, any two consecutive elements
     [x], [y] of [l] are such that [f x y] holds
@@ -435,10 +435,10 @@ let rec sorted (#a:Type) (f : a -> a -> Tot bool) : list a -> bool = function
 (** [f] is a total order if, and only if, it is reflexive,
 anti-symmetric, transitive and total. *)
 type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
-    (forall a. {:nopattern} f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. {:nopattern} f a1 a2 /\ f a2 a1  ==> a1 == a2)         (* anti-symmetry *)
-    /\ (forall a1 a2 a3. {:nopattern} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. {:nopattern} f a1 a2 \/ f a2 a1)                       (* totality *)
+    (forall a. {:pattern (f a a)} f a a)                                           (* reflexivity   *)
+    /\ (forall a1 a2. {:pattern (f a1 a2); (f a2 a1)} f a1 a2 /\ f a2 a1  ==> a1 == a2)         (* anti-symmetry *)
+    /\ (forall a1 a2 a3. {:pattern (f a1 a2); (f a2 a3)} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+    /\ (forall a1 a2. {:pattern (f a1 a2)} f a1 a2 \/ f a2 a1)                       (* totality *)
 
 (** Correctness of the merging of two sorted lists around a pivot. *)
 val append_sorted: #a:eqtype
@@ -457,7 +457,7 @@ l] are sorted according to comparison function [f], and the elements
 of [sortWith f l] are the elements of [l]. *)
 val sortWith_sorted: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires (total_order #a (bool_of_compare f)))
-        (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. {:nopattern} mem x l = mem x (sortWith f l))))
+        (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. {:pattern (mem x l)} mem x l = mem x (sortWith f l))))
 
 (** Properties of [noRepeats] *)
 val noRepeats_nil
@@ -478,13 +478,13 @@ val noRepeats_append_elim
   (l1 l2: list a)
 : Lemma
   (requires (noRepeats (l1 @ l2)))
-  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:nopattern} mem x l1 ==> ~ (mem x l2))))
+  (ensures (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:pattern (mem x l1)} mem x l1 ==> ~ (mem x l2))))
 
 val noRepeats_append_intro
   (#a: eqtype)
   (l1 l2: list a)
 : Lemma
-  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:nopattern} mem x l1 ==> ~ (mem x l2))))
+  (requires (noRepeats l1 /\ noRepeats l2 /\ (forall x . {:pattern (mem x l1)} mem x l1 ==> ~ (mem x l2))))
   (ensures (noRepeats (l1 @ l2)))
 
 (** Properties of [no_repeats_p] *)
@@ -506,13 +506,13 @@ val no_repeats_p_append_elim
   (l1 l2: list a)
 : Lemma
   (requires (no_repeats_p (l1 `append` l2)))
-  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2))))
+  (ensures (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:pattern (memP x l1)} memP x l1 ==> ~ (memP x l2))))
 
 val no_repeats_p_append_intro
   (#a: Type)
   (l1 l2: list a)
 : Lemma
-  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2))))
+  (requires (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:pattern (memP x l1)} memP x l1 ==> ~ (memP x l2))))
   (ensures (no_repeats_p (l1 `append` l2)))
 
 val no_repeats_p_append
@@ -520,7 +520,7 @@ val no_repeats_p_append
   (l1 l2: list a)
 : Lemma
   (no_repeats_p (l1 `append` l2) <==> (
-    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:nopattern} memP x l1 ==> ~ (memP x l2)))
+    (no_repeats_p l1 /\ no_repeats_p l2 /\ (forall x . {:pattern (memP x l1)} memP x l1 ==> ~ (memP x l2)))
   ))
 
 val no_repeats_p_append_swap
@@ -605,7 +605,7 @@ val assoc_memP_none
   (l: list (a & b))
 : Lemma
   (requires (assoc x l == None))
-  (ensures (forall y . {:nopattern} ~ (memP (x, y) l)))
+  (ensures (forall y . {:pattern (memP (x, y) l)} ~ (memP (x, y) l)))
 
 val assoc_mem
   (#a: eqtype)
@@ -623,8 +623,8 @@ val fold_left_invar
   (l: list b)
   (p: (a -> Tot Type0))
   : Lemma
-  (requires forall (x: a) (y: b) . {:nopattern} p x ==> memP y l ==> p (f x y) )
-  (ensures forall (x: a) . {:nopattern} p x ==> p (fold_left f x l))
+  (requires forall (x: a) (y: b) . {:pattern (f x y)} p x ==> memP y l ==> p (f x y) )
+  (ensures forall (x: a) . {:pattern (fold_left f x l)} p x ==> p (fold_left f x l))
 
 val fold_left_map
   (#a #b #c: Type)
@@ -633,8 +633,8 @@ val fold_left_map
   (f_aca: a -> c -> Tot a)
   (l: list b)
   : Lemma
-  (requires forall (x: a) (y: b) . {:nopattern} f_aba x y == f_aca x (f_bc y) )
-  (ensures forall (x : a) . {:nopattern} fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
+  (requires forall (x: a) (y: b) . {:pattern (f_aba x y)} f_aba x y == f_aca x (f_bc y) )
+  (ensures forall (x : a) . {:pattern (fold_left f_aba x l)} fold_left f_aba x l == fold_left f_aca x (map f_bc l) )
 
 val map_append
   (#a #b: Type)
@@ -658,11 +658,11 @@ val fold_left_monoid
   (l: list a)
 : Lemma
   (requires
-    (forall u v w . {:nopattern} (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
-    (forall x . {:nopattern} (x `opA` zeroA) == x) /\
-    (forall x . {:nopattern} (zeroA `opA` x) == x))
+    (forall u v w . {:pattern (opA u (opA v w))} (u `opA` (v `opA` w)) == ((u `opA` v) `opA` w)) /\
+    (forall x . {:pattern (opA x zeroA)} (x `opA` zeroA) == x) /\
+    (forall x . {:pattern (opA zeroA x)} (zeroA `opA` x) == x))
   (ensures
-    forall x . {:nopattern}
+    forall x . {:pattern (fold_left opA x l)}
     (fold_left opA x l) == (x `opA` (fold_left opA zeroA l)))
 
 val fold_left_append_monoid
@@ -672,9 +672,9 @@ val fold_left_append_monoid
   (l1 l2: list a)
 : Lemma
   (requires
-    (forall u v w . {:nopattern} f u (f v w) == f (f u v) w) /\
-    (forall x . {:nopattern} f x z == x) /\
-    (forall x . {:nopattern} f z x == x))
+    (forall u v w . {:pattern (f u (f v w))} f u (f v w) == f (f u v) w) /\
+    (forall x . {:pattern (f x z)} f x z == x) /\
+    (forall x . {:pattern (f z x)} f z x == x))
   (ensures
     fold_left f z (l1 @ l2) == f (fold_left f z l1) (fold_left f z l2))
 
@@ -686,7 +686,7 @@ val index_extensionality
 : Lemma
   (requires
     (length l1 == length l2 /\
-    (forall (i: nat) . {:nopattern} i < length l1 ==> index l1 i == index l2 i)))
+    (forall (i: nat) . {:pattern (index l1 i)} i < length l1 ==> index l1 i == index l2 i)))
   (ensures (l1 == l2))
 
 (** Properties of [strict_suffix_of] *)
