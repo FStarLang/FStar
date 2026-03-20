@@ -61,3 +61,4 @@ tags
 /.devcontainer_build.log
 
 boot-diff/**
+__pycache__/
