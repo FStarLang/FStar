@@ -1,506 +1,73 @@
-Module after desugaring:
-module Monoid
-Declarations: [
-let right_unitality_lemma m u15 mult = forall (x: m). mult x u15 == x
-let left_unitality_lemma m u15 mult = forall (x: m). mult u15 x == x
-let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
-unopteq
-type monoid (m: Type) =
-  | Monoid :
-      unit: m ->
-      mult: (_: m -> _: m -> m) ->
-      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
-      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
-      associativity: Prims.squash (Monoid.associativity_lemma m mult)
-    -> Monoid.monoid m
-let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
-let nat_plus_monoid =
-  let add x y = x + y <: Prims.nat in
-  Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
-let conjunction_monoid =
-  let u14 = FStar.Pervasives.singleton Prims.l_True in
-  let mult p q = p /\ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u14 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u14 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u14 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u14 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u14) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u14 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u14 mult
-let disjunction_monoid =
-  let u14 = FStar.Pervasives.singleton Prims.l_False in
-  let mult p q = p \/ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u14 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u14 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u14 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u14 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u14) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u14 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u14 mult
-let bool_and_monoid =
-  let and_ b1 b2 = b1 && b2 in
-  Monoid.intro_monoid Prims.bool true and_
-let bool_or_monoid =
-  let or_ b1 b2 = b1 || b2 in
-  Monoid.intro_monoid Prims.bool false or_
-let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
-  Monoid.intro_monoid Prims.bool false xor
-let lift_monoid_option m =
-  (let mult x y =
-      match x, y with
-      | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
-        FStar.Pervasives.Native.Some (mult m x0 y0)
-      | _, _ -> FStar.Pervasives.Native.None
-    in
-    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
-      (FStar.Pervasives.Native.Some (unit m))
-      mult)
-  <:
-  Monoid.monoid (FStar.Pervasives.Native.option a)
-let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
-let monoid_morphism_mult_lemma f ma mb =
-  forall (x: a) (y: a). mb.mult (f x) (f y) == f (ma.mult x y)
-type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
-  | MonoidMorphism :
-      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
-      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
-    -> Monoid.monoid_morphism f ma mb
-let intro_monoid_morphism f ma mb =
-  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
-let embed_nat_int n = n <: Prims.int
-private
-let _ =
-  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
-let neg p = ~p <: Prims.prop
-private
-let _ =
-  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
-private
-let _ =
-  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
-let mult_act_lemma m a mult act =
-  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
-let unit_act_lemma m a u16 act = forall (y: a). act u16 y == y
-unopteq
-type left_action (mm: Monoid.monoid m) (a: Type) =
-  | LAct :
-      act: (_: m -> _: a -> a) ->
-      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
-      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
-    -> Monoid.left_action mm a
-let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
-]
-
-Module before type checking:
-module Monoid
-Declarations: [
-let right_unitality_lemma m u15 mult = forall (x: m). mult x u15 == x
-let left_unitality_lemma m u15 mult = forall (x: m). mult u15 x == x
-let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
-unopteq
-type monoid (m: Type) =
-  | Monoid :
-      unit: m ->
-      mult: (_: m -> _: m -> m) ->
-      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
-      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
-      associativity: Prims.squash (Monoid.associativity_lemma m mult)
-    -> Monoid.monoid m
-let intro_monoid m u15 mult = Monoid.Monoid u15 mult () () () <: Prims.Pure (Monoid.monoid m)
-let nat_plus_monoid =
-  let add x y = x + y <: Prims.nat in
-  Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
-let conjunction_monoid =
-  let u14 = FStar.Pervasives.singleton Prims.l_True in
-  let mult p q = p /\ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u14 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u14 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u14 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u14 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u14) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u14 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u14 mult
-let disjunction_monoid =
-  let u14 = FStar.Pervasives.singleton Prims.l_False in
-  let mult p q = p \/ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u14 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u14 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u14 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u14 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u14) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u14 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u14 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u14 mult
-let bool_and_monoid =
-  let and_ b1 b2 = b1 && b2 in
-  Monoid.intro_monoid Prims.bool true and_
-let bool_or_monoid =
-  let or_ b1 b2 = b1 || b2 in
-  Monoid.intro_monoid Prims.bool false or_
-let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
-  Monoid.intro_monoid Prims.bool false xor
-let lift_monoid_option m =
-  (let mult x y =
-      match x, y with
-      | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
-        FStar.Pervasives.Native.Some (mult m x0 y0)
-      | _, _ -> FStar.Pervasives.Native.None
-    in
-    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
-      (FStar.Pervasives.Native.Some (unit m))
-      mult)
-  <:
-  Monoid.monoid (FStar.Pervasives.Native.option a)
-let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
-let monoid_morphism_mult_lemma f ma mb =
-  forall (x: a) (y: a). mb.mult (f x) (f y) == f (ma.mult x y)
-type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
-  | MonoidMorphism :
-      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
-      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
-    -> Monoid.monoid_morphism f ma mb
-let intro_monoid_morphism f ma mb =
-  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
-let embed_nat_int n = n <: Prims.int
-private
-let _ =
-  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
-let neg p = ~p <: Prims.prop
-private
-let _ =
-  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
-private
-let _ =
-  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
-let mult_act_lemma m a mult act =
-  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
-let unit_act_lemma m a u16 act = forall (y: a). act u16 y == y
-unopteq
-type left_action (mm: Monoid.monoid m) (a: Type) =
-  | LAct :
-      act: (_: m -> _: a -> a) ->
-      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
-      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
-    -> Monoid.left_action mm a
-let left_action_morphism f mf la lb = forall (g: ma) (x: a). lb.act (mf g) (f x) == f (la.act g x)
-]
-
-Module after type checking:
-module Monoid
-Declarations: [
-let right_unitality_lemma m u556 mult = forall (x: m). mult x u556 == x
-let left_unitality_lemma m u556 mult = forall (x: m). mult u556 x == x
-let associativity_lemma m mult = forall (x: m) (y: m) (z: m). mult (mult x y) z == mult x (mult y z)
-unopteq
-type monoid (m: Type) =
-  | Monoid :
-      unit: m ->
-      mult: (_: m -> _: m -> m) ->
-      right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult) ->
-      left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult) ->
-      associativity: Prims.squash (Monoid.associativity_lemma m mult)
-    -> Monoid.monoid m
-val monoid__uu___haseq: Prims.l_True /\
-(forall (m: Type). {:pattern Prims.hasEq (Monoid.monoid m)}
-    Prims.l_True /\
-    (forall (unit: m)
-        (mult: (_: m -> _: m -> m))
-        (right_unitality: Prims.squash (Monoid.right_unitality_lemma m unit mult))
-        (left_unitality: Prims.squash (Monoid.left_unitality_lemma m unit mult))
-        (associativity: Prims.squash (Monoid.associativity_lemma m mult)).
-        Prims.l_True /\ Prims.hasEq m /\ Prims.hasEq (_: m -> _: m -> m) /\
-        Prims.hasEq (Prims.squash (Monoid.right_unitality_lemma m unit mult)) /\
-        Prims.hasEq (Prims.squash (Monoid.left_unitality_lemma m unit mult)) /\
-        Prims.hasEq (Prims.squash (Monoid.associativity_lemma m mult))) ==>
-    Prims.hasEq (Monoid.monoid m))
-
-
-
-
-
-
-
-
-
-
-
-
-let intro_monoid m u556 mult = Monoid.Monoid u556 mult () () () <: Prims.Pure (Monoid.monoid m)
-let nat_plus_monoid =
-  let add x y = x + y <: Prims.nat in
-  Monoid.intro_monoid Prims.nat 0 add
-let int_plus_monoid = Monoid.intro_monoid Prims.int 0 Prims.op_Addition
-let conjunction_monoid =
-  let u554 = FStar.Pervasives.singleton Prims.l_True in
-  let mult p q = p /\ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u554 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u554 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u554 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u554 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u554) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u554 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u554 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u554 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u554 mult
-let disjunction_monoid =
-  let u554 = FStar.Pervasives.singleton Prims.l_False in
-  let mult p q = p \/ q <: Prims.prop in
-  let left_unitality_helper p =
-    (assert (mult u554 p <==> p);
-      FStar.PropositionalExtensionality.apply (mult u554 p) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult u554 p == p)
-  in
-  let right_unitality_helper p =
-    (assert (mult p u554 <==> p);
-      FStar.PropositionalExtensionality.apply (mult p u554) p)
-    <:
-    FStar.Pervasives.Lemma (ensures mult p u554 == p)
-  in
-  let associativity_helper p1 p2 p3 =
-    (assert (mult (mult p1 p2) p3 <==> mult p1 (mult p2 p3));
-      FStar.PropositionalExtensionality.apply (mult (mult p1 p2) p3) (mult p1 (mult p2 p3)))
-    <:
-    FStar.Pervasives.Lemma (ensures mult (mult p1 p2) p3 == mult p1 (mult p2 p3))
-  in
-  FStar.Classical.forall_intro right_unitality_helper;
-  assert (Monoid.right_unitality_lemma Prims.prop u554 mult);
-  FStar.Classical.forall_intro left_unitality_helper;
-  assert (Monoid.left_unitality_lemma Prims.prop u554 mult);
-  FStar.Classical.forall_intro_3 associativity_helper;
-  assert (Monoid.associativity_lemma Prims.prop mult);
-  Monoid.intro_monoid Prims.prop u554 mult
-let bool_and_monoid =
-  let and_ b1 b2 = b1 && b2 in
-  Monoid.intro_monoid Prims.bool true and_
-let bool_or_monoid =
-  let or_ b1 b2 = b1 || b2 in
-  Monoid.intro_monoid Prims.bool false or_
-let bool_xor_monoid =
-  let xor b1 b2 = (b1 || b2) && Prims.op_Negation (b1 && b2) in
-  Monoid.intro_monoid Prims.bool false xor
-let lift_monoid_option m =
-  (let mult x y =
-      (match x, y with
-        | FStar.Pervasives.Native.Some x0, FStar.Pervasives.Native.Some y0 ->
-          FStar.Pervasives.Native.Some (m.mult x0 y0)
-        | _, _ -> FStar.Pervasives.Native.None)
-      <:
-      FStar.Pervasives.Native.option a
-    in
-    Monoid.intro_monoid (FStar.Pervasives.Native.option a)
-      (FStar.Pervasives.Native.Some m.unit)
-      mult)
-  <:
-  Monoid.monoid (FStar.Pervasives.Native.option a)
-let monoid_morphism_unit_lemma f ma mb = f ma.unit == mb.unit
-let monoid_morphism_mult_lemma f ma mb =
-  forall (x: a) (y: a). {:pattern ma.mult x y} mb.mult (f x) (f y) == f (ma.mult x y)
-type monoid_morphism (f: (_: a -> b)) (ma: Monoid.monoid a) (mb: Monoid.monoid b) =
-  | MonoidMorphism :
-      unit: Prims.squash (Monoid.monoid_morphism_unit_lemma f ma mb) ->
-      mult: Prims.squash (Monoid.monoid_morphism_mult_lemma f ma mb)
-    -> Monoid.monoid_morphism f ma mb
-val monoid_morphism__uu___haseq: forall (a: Type)
-  (b: Type)
-  (f: (_: a -> b))
-  (ma: Monoid.monoid a)
-  (mb: Monoid.monoid b).
-  {:pattern Prims.hasEq (Monoid.monoid_morphism f ma mb)}
-  Prims.l_True /\ Prims.hasEq a /\ Prims.hasEq b ==> Prims.hasEq (Monoid.monoid_morphism f ma mb)
-
-
-
-
-
-
-let intro_monoid_morphism f ma mb =
-  Monoid.MonoidMorphism () () <: Prims.Pure (Monoid.monoid_morphism f ma mb)
-let embed_nat_int n = n <: Prims.int
-private
-let _ =
-  Monoid.intro_monoid_morphism Monoid.embed_nat_int Monoid.nat_plus_monoid Monoid.int_plus_monoid
-let neg p = ~p <: Prims.prop
-private
-let _ =
-  assert (Monoid.neg Prims.l_True <==> Prims.l_False);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_True) Prims.l_False;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p /\ q) <==> Monoid.neg p \/ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p /\ q)) (Monoid.neg p \/ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p /\ q) == (Monoid.neg p \/ Monoid.neg q))
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.conjunction_monoid Monoid.disjunction_monoid
-private
-let _ =
-  assert (Monoid.neg Prims.l_False <==> Prims.l_True);
-  FStar.PropositionalExtensionality.apply (Monoid.neg Prims.l_False) Prims.l_True;
-  let mult_lemma_helper p q =
-    (assert (Monoid.neg (p \/ q) <==> Monoid.neg p /\ Monoid.neg q);
-      FStar.PropositionalExtensionality.apply (Monoid.neg (p \/ q)) (Monoid.neg p /\ Monoid.neg q))
-    <:
-    FStar.Pervasives.Lemma (ensures Monoid.neg (p \/ q) == Monoid.neg p /\ Monoid.neg q)
-  in
-  FStar.Classical.forall_intro_2 mult_lemma_helper;
-  Monoid.intro_monoid_morphism Monoid.neg Monoid.disjunction_monoid Monoid.conjunction_monoid
-let mult_act_lemma m a mult act =
-  forall (x: m) (x': m) (y: a). act (mult x x') y == act x (act x' y)
-let unit_act_lemma m a u558 act = forall (y: a). act u558 y == y
-unopteq
-type left_action (mm: Monoid.monoid m) (a: Type) =
-  | LAct :
-      act: (_: m -> _: a -> a) ->
-      mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act) ->
-      unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)
-    -> Monoid.left_action mm a
-val left_action__uu___haseq: Prims.l_True /\
-(forall (m: Type) (mm: Monoid.monoid m) (a: Type). {:pattern Prims.hasEq (Monoid.left_action mm a)}
-    Prims.l_True /\
-    (forall (act: (_: m -> _: a -> a))
-        (mult_lemma: Prims.squash (Monoid.mult_act_lemma m a mm.mult act))
-        (unit_lemma: Prims.squash (Monoid.unit_act_lemma m a mm.unit act)).
-        Prims.l_True /\ Prims.hasEq (_: m -> _: a -> a) /\
-        Prims.hasEq (Prims.squash (Monoid.mult_act_lemma m a mm.mult act)) /\
-        Prims.hasEq (Prims.squash (Monoid.unit_act_lemma m a mm.unit act))) ==>
-    Prims.hasEq (Monoid.left_action mm a))
-
-
-
-
-
-
-
-
-let left_action_morphism f mf la lb =
-  forall (g: ma) (x: a). {:pattern la.act g x} lb.act (mf g) (f x) == f (la.act g x)
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Monoid.right_unitality_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1666217,"running":false,"undercount":false}}
+{"tag":"Monoid.left_unitality_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1911075,"running":false,"undercount":false}}
+{"tag":"Monoid.associativity_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3203440,"running":false,"undercount":false}}
+{"tag":"Monoid.monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4720612,"running":false,"undercount":false}}
+{"tag":"Monoid.monoid__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":10708417,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_Monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":615431,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_Monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":735485,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__unit","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":464336,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__unit","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2260848,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__mult","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1151809,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__mult","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2987183,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__right_unitality","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1866174,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__right_unitality","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":7289341,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__left_unitality","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1359777,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__left_unitality","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6898577,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__associativity","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1136129,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__Monoid__item__associativity","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4447523,"running":false,"undercount":false}}
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Monoid.fst(39,2-39,24))	Query-stats (Monoid.intro_monoid, 1)	succeeded in 31 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.011)
+{"tag":"Monoid.intro_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":45884805,"running":false,"undercount":false}}
+(Monoid.fst(44,0-46,24))	Query-stats (Monoid.nat_plus_monoid, 1)	succeeded in 7 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.027)
+{"tag":"Monoid.nat_plus_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":13538765,"running":false,"undercount":false}}
+(Monoid.fst(48,0-49,24))	Query-stats (Monoid.int_plus_monoid, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.020)
+{"tag":"Monoid.int_plus_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":8949837,"running":false,"undercount":false}}
+(Monoid.fst(54,0-79,26))	Query-stats (Monoid.conjunction_monoid, 1)	succeeded in 16 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.055)
+{"tag":"Monoid.conjunction_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":57229755,"running":false,"undercount":false}}
+(Monoid.fst(82,0-107,26))	Query-stats (Monoid.disjunction_monoid, 1)	succeeded in 16 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.057)
+{"tag":"Monoid.disjunction_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":57019048,"running":false,"undercount":false}}
+(Monoid.fst(109,0-111,29))	Query-stats (Monoid.bool_and_monoid, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.016)
+{"tag":"Monoid.bool_and_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":9789636,"running":false,"undercount":false}}
+(Monoid.fst(113,0-115,29))	Query-stats (Monoid.bool_or_monoid, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.016)
+{"tag":"Monoid.bool_or_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":9108703,"running":false,"undercount":false}}
+(Monoid.fst(117,0-119,29))	Query-stats (Monoid.bool_xor_monoid, 1)	succeeded in 11 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.064)
+{"tag":"Monoid.bool_xor_monoid","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":16448325,"running":false,"undercount":false}}
+(Monoid.fst(121,67-127,44))	Query-stats (Monoid.lift_monoid_option, 1)	succeeded in 54 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.312)
+{"tag":"Monoid.lift_monoid_option","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":70967956,"running":false,"undercount":false}}
+{"tag":"Monoid.monoid_morphism_unit_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2159594,"running":false,"undercount":false}}
+{"tag":"Monoid.monoid_morphism_mult_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3879903,"running":false,"undercount":false}}
+(Monoid.fst(137,0-141,27))	Query-stats (Monoid.monoid_morphism, 1)	succeeded in 7 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.019)
+{"tag":"Monoid.monoid_morphism","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":30466556,"running":false,"undercount":false}}
+{"tag":"Monoid.monoid_morphism__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4483413,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_MonoidMorphism","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1680818,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_MonoidMorphism","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1714899,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__MonoidMorphism__item__unit","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2208715,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__MonoidMorphism__item__unit","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5413656,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__MonoidMorphism__item__mult","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2741944,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__MonoidMorphism__item__mult","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5076054,"running":false,"undercount":false}}
+(Monoid.fst(148,2-148,22))	Query-stats (Monoid.intro_monoid_morphism, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.012)
+{"tag":"Monoid.intro_monoid_morphism","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":20337328,"running":false,"undercount":false}}
+{"tag":"Monoid.embed_nat_int","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":714895,"running":false,"undercount":false}}
+(Monoid.fst(151,0-151,75))	Query-stats (Monoid.uu___0, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.019)
+{"tag":"Monoid.uu___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":10874143,"running":false,"undercount":false}}
+{"tag":"Monoid.neg","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1092977,"running":false,"undercount":false}}
+(Monoid.fst(154,0-162,65))	Query-stats (Monoid.uu___1, 1)	succeeded in 19 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.086)
+{"tag":"Monoid.uu___1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":45108368,"running":false,"undercount":false}}
+(Monoid.fst(164,0-172,65))	Query-stats (Monoid.uu___2, 1)	succeeded in 20 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.096)
+{"tag":"Monoid.uu___2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":51527659,"running":false,"undercount":false}}
+{"tag":"Monoid.mult_act_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3961936,"running":false,"undercount":false}}
+{"tag":"Monoid.unit_act_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2138723,"running":false,"undercount":false}}
+{"tag":"Monoid.left_action","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6333318,"running":false,"undercount":false}}
+{"tag":"Monoid.left_action__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":12328093,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_LAct","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1310565,"running":false,"undercount":false}}
+{"tag":"Monoid.uu___is_LAct","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":718674,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__act","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1445870,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__act","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4254406,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__mult_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2626190,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__mult_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":8024155,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__unit_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2543567,"running":false,"undercount":false}}
+{"tag":"Monoid.__proj__LAct__item__unit_lemma","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":7237968,"running":false,"undercount":false}}
+{"tag":"Monoid.left_action_morphism","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":7183767,"running":false,"undercount":false}}
+Killing old z3proc (ask_count=13, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 805 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Monoid.fst

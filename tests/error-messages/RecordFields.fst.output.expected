@@ -1,13 +1,31 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+RecordFields.r, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+RecordFields.r__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+RecordFields.__proj__Mkr__item__a, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+RecordFields.__proj__Mkr__item__a, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+RecordFields.__proj__Mkr__item__b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+RecordFields.__proj__Mkr__item__b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+RecordFields.__proj__Mkr__item__c, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+RecordFields.__proj__Mkr__item__c, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+RecordFields.t1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at RecordFields.fst(8,29-8,30):
   - Expected failure:
   - No field 'd' in record type 'RecordFields.r'.
 
+RecordFields.fst(8,0-8,33), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at RecordFields.fst(11,14-11,22):
   - Expected failure:
   - Missing fields for record type 'RecordFields.r': 'c'
 
+RecordFields.fst(11,0-11,23), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at RecordFields.fst(14,24-14,25):
   - Expected failure:
   - No field 'd' in record type 'RecordFields.r'.
   - Missing fields: 'c'
 
+RecordFields.fst(14,0-14,28), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 170 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures RecordFields.fst

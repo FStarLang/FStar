@@ -1,3 +1,13 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+GhostImplicits.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+GhostImplicits.f, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+GhostImplicits.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+GhostImplicits.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+GhostImplicits.g, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at GhostImplicits.fst(25,54-25,57):
   - Expected failure:
   - Computed type Prims.nat
@@ -5,3 +15,7 @@
     is not compatible with the annotated type Prims.nat
     and effect Tot
 
+GhostImplicits.fst(25,0-25,57), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+GhostImplicits.h, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+GhostImplicits.test4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TOTAL TIME 179 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures GhostImplicits.fst

@@ -1,2 +1,31 @@
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
 {"msg":["Expected failure:","Type annotation Prims.int for inductive AnotType.tc is not Type or eqtype, or it\nis eqtype but contains noeq/unopteq qualifiers"],"level":"Info","range":{"def":{"file_name":"AnotType.fst","start_pos":{"line":19,"col":5},"end_pos":{"line":19,"col":7}},"use":{"file_name":"AnotType.fst","start_pos":{"line":19,"col":5},"end_pos":{"line":19,"col":7}}},"number":309,"ctx":["While typechecking the top-level declaration `type AnotType.tc`","While typechecking the top-level declaration `[@@expect_failure] type AnotType.tc`"]}
+{"tag":"AnotType.fst(19,0-19,19)","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1457560,"running":false,"undercount":false}}
+{"tag":"AnotType.ta","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2879989,"running":false,"undercount":false}}
+{"tag":"AnotType.ta__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":458256,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_A","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":395023,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_A","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":238128,"running":false,"undercount":false}}
+{"tag":"AnotType.tb","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2991452,"running":false,"undercount":false}}
+{"tag":"AnotType.tb__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":642322,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_B","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":432586,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_B","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":221198,"running":false,"undercount":false}}
 {"msg":["Expected failure:","Expected expression of type Type0\ngot expression tb\nof type Type"],"level":"Info","range":{"def":{"file_name":"AnotType.fst","start_pos":{"line":27,"col":14},"end_pos":{"line":27,"col":16}},"use":{"file_name":"AnotType.fst","start_pos":{"line":27,"col":14},"end_pos":{"line":27,"col":16}}},"number":189,"ctx":["While typechecking the top-level declaration `let uu___0`","While typechecking the top-level declaration `[@@expect_failure] let uu___0`"]}
+{"tag":"AnotType.fst(27,0-27,16)","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":672873,"running":false,"undercount":false}}
+{"tag":"AnotType.td","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2083162,"running":false,"undercount":false}}
+{"tag":"AnotType.td__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":613111,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_D","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":458316,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_D","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":221778,"running":false,"undercount":false}}
+{"tag":"AnotType.te","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4340749,"running":false,"undercount":false}}
+{"tag":"AnotType.te__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1170140,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ea","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":736726,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ea","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1813173,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Eb","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1016545,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Eb","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1698539,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ec","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":699504,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ec","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1660737,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ed","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":712384,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___is_Ed","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1547383,"running":false,"undercount":false}}
+{"tag":"AnotType.fst(39,0-39,23)","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":29711,"running":false,"undercount":false}}
+{"tag":"AnotType.f","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":903231,"running":false,"undercount":false}}
+{"tag":"AnotType.uu___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":428404,"running":false,"undercount":false}}
+TOTAL TIME 189 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures AnotType.fst

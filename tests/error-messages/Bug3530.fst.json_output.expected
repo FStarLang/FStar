@@ -1,63 +1,10 @@
-Module after desugaring:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
-
-Module before type checking:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
-
-Module after type checking:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Bug3530.uu___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":645662,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":445016,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":521208,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":444865,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":439065,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___5","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1152370,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___6","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":459286,"running":false,"undercount":false}}
+{"tag":"Bug3530.uu___7","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":436565,"running":false,"undercount":false}}
+TOTAL TIME 166 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Bug3530.fst

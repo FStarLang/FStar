@@ -1,26 +1,103 @@
+Bug3980.slprop, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.p, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.op_Star_Star, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.a, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.c, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3980.fst(16,0-16,24):
   - Term Bug3980.p 1 ** Bug3980.p 2 ** Bug3980.p 3 has type Bug3980.slprop
 
+Bug3980.fst(16,0-16,24), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3980.fst(17,0-17,26):
   - Term (Bug3980.p 1 ** Bug3980.p 2) ** Bug3980.p 3 has type Bug3980.slprop
 
+Bug3980.fst(17,0-17,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3980.fst(18,0-18,26):
   - Term Bug3980.p 1 ** Bug3980.p 2 ** Bug3980.p 3 has type Bug3980.slprop
+
+Bug3980.fst(18,0-18,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Bug3980.fst(20,0-20,23))	Query-stats (Bug3980.uu___0, 1)	succeeded in 31 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.001)
+Bug3980.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 34 ms
+(Bug3980.fst(23,0-23,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(23,0-23,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(23,0-23,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(23,0-23,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+Bug3980.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Bug3980.fst(23,8-23,14):
+  - Assertion failed
+  - See also Bug3980.fst(23,15-23,23)
+
+* Warning 252 at Bug3980.fst(23,8-23,14):
+  - Assertion failed
+  - See also Bug3980.fst(23,15-23,23)
+
+* Warning 252 at Bug3980.fst(23,8-23,14):
+  - Assertion failed
+  - See also Bug3980.fst(23,15-23,23)
+
+* Warning 252 at Bug3980.fst(23,8-23,14):
+  - Assertion failed
+  - See also Bug3980.fst(23,15-23,23)
 
 * Info at Bug3980.fst(23,8-23,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Bug3980.fst(23,15-23,23)
+
+(Bug3980.fst(25,0-25,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(25,0-25,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(25,0-25,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(Bug3980.fst(25,0-25,23))	Query-stats (Bug3980.uu___1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+Bug3980.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Bug3980.fst(25,8-25,14):
+  - Assertion failed
+  - See also Bug3980.fst(25,15-25,23)
+
+* Warning 252 at Bug3980.fst(25,8-25,14):
+  - Assertion failed
+  - See also Bug3980.fst(25,15-25,23)
+
+* Warning 252 at Bug3980.fst(25,8-25,14):
+  - Assertion failed
+  - See also Bug3980.fst(25,15-25,23)
+
+* Warning 252 at Bug3980.fst(25,8-25,14):
+  - Assertion failed
+  - See also Bug3980.fst(25,15-25,23)
 
 * Info at Bug3980.fst(25,8-25,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Bug3980.fst(25,15-25,23)
 
+Bug3980.op_Bar_Subtraction_Greater, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3980.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3980.fst(33,0-33,29):
   - Term "a" |-> 1 ** "b" |-> 2 has type Bug3980.slprop
 
+Bug3980.fst(33,0-33,29), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 236 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug3980.fst

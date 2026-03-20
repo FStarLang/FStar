@@ -1,19 +1,175 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(TestHasEq.fst(18,0-24,40))	Query-stats (TestHasEq.mlist, 1)	succeeded in 37 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+TestHasEq.mlist, profiled FStarC.TypeChecker.Tc.process_one_decl:	 56 ms
+TestHasEq.mlist__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.nlist__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_MNil, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_MNil, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TestHasEq.uu___is_MCons, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_MCons, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TestHasEq.__proj__MCons__item__hd, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(TestHasEq.fst(20,11-20,13))	Query-stats (TestHasEq.__proj__MCons__item__hd, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+TestHasEq.__proj__MCons__item__hd, profiled FStarC.TypeChecker.Tc.process_one_decl:	 9 ms
+TestHasEq.__proj__MCons__item__tl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(TestHasEq.fst(20,19-20,21))	Query-stats (TestHasEq.__proj__MCons__item__tl, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+TestHasEq.__proj__MCons__item__tl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+TestHasEq.uu___is_NNil, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_NNil, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_NCons, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_NCons, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TestHasEq.__proj__NCons__item__hd, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(TestHasEq.fst(24,11-24,13))	Query-stats (TestHasEq.__proj__NCons__item__hd, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+TestHasEq.__proj__NCons__item__hd, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+TestHasEq.__proj__NCons__item__tl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(TestHasEq.fst(24,19-24,21))	Query-stats (TestHasEq.__proj__NCons__item__tl, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+TestHasEq.__proj__NCons__item__tl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+(TestHasEq.fst(26,14-26,61))	Query-stats (TestHasEq.test1, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+TestHasEq.test1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+TestHasEq.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+TestHasEq.t__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+TestHasEq.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.__proj__C__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+TestHasEq.__proj__C__item__y, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.__proj__C__item__y, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+(TestHasEq.fst(39,14-39,60))	Query-stats (TestHasEq.test2, 1)	succeeded in 9 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+TestHasEq.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 13 ms
+(TestHasEq.fst(41,0-42,48))	Query-stats (TestHasEq.t1, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+TestHasEq.t1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 18 ms
+TestHasEq.t1__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_C1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_C1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C1__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C1__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TestHasEq.__proj__C1__item__y, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C1__item__y, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.__proj__C1__item__z, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.__proj__C1__item__z, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+(TestHasEq.fst(44,0-44,36))	Query-stats (TestHasEq.test3, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+TestHasEq.test3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 8 ms
+(TestHasEq.fst(46,0-46,64))	Query-stats (TestHasEq.test4, 1)	succeeded in 7 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+TestHasEq.test4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 11 ms
+TestHasEq.tp, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.t2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+TestHasEq.t2__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TestHasEq.uu___is_Bad, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_Bad, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(TestHasEq.fst(57,0-58,19))	Query-stats (TestHasEq.t3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+(TestHasEq.fst(57,0-58,19))	Query-stats (TestHasEq.t3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(TestHasEq.fst(57,0-58,19))	Query-stats (TestHasEq.t3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(TestHasEq.fst(57,0-58,19))	Query-stats (TestHasEq.t3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+TestHasEq.t3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+TestHasEq.t3__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_C3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+* Warning 252 at TestHasEq.fst(58,10-58,11):
+  - Failed to prove that the type
+    'TestHasEq.t3'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also TestHasEq.fst(57,0-58,19)
+
+* Warning 252 at TestHasEq.fst(58,10-58,11):
+  - Failed to prove that the type
+    'TestHasEq.t3'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also TestHasEq.fst(57,0-58,19)
+
+* Warning 252 at TestHasEq.fst(58,10-58,11):
+  - Failed to prove that the type
+    'TestHasEq.t3'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also TestHasEq.fst(57,0-58,19)
+
+* Warning 252 at TestHasEq.fst(58,10-58,11):
+  - Failed to prove that the type
+    'TestHasEq.t3'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also TestHasEq.fst(57,0-58,19)
+
 * Info at TestHasEq.fst(58,10-58,11):
   - Expected failure:
   - Failed to prove that the type
     'TestHasEq.t3'
     supports decidable equality because of this argument.
   - Add either the 'noeq' or 'unopteq' qualifier
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also TestHasEq.fst(57,0-58,19)
+
+TestHasEq.fst(57,0-58,19), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+(TestHasEq.fst(60,0-61,22))	Query-stats (TestHasEq.t4, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+TestHasEq.t4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+TestHasEq.t4__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_C4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_C4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C4__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.__proj__C4__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.fst(66,0-66,24), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.test_1514, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+TestHasEq.fst(70,0-70,12), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.erasable_t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_C_erasable_t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_C_erasable_t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TestHasEq.uu___is_D_erasable_t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TestHasEq.uu___is_D_erasable_t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(TestHasEq.fst(85,2-85,24))	Query-stats (TestHasEq.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 11 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(TestHasEq.fst(85,2-85,24))	Query-stats (TestHasEq.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(TestHasEq.fst(85,2-85,24))	Query-stats (TestHasEq.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(TestHasEq.fst(85,2-85,24))	Query-stats (TestHasEq.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+TestHasEq.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at TestHasEq.fst(84,10-84,70):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also TestHasEq.fst(84,12-84,22)
+
+* Warning 252 at TestHasEq.fst(84,10-84,70):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also TestHasEq.fst(84,12-84,22)
+
+* Warning 252 at TestHasEq.fst(84,10-84,70):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also TestHasEq.fst(84,12-84,22)
+
+* Warning 252 at TestHasEq.fst(84,10-84,70):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also TestHasEq.fst(84,12-84,22)
 
 * Info at TestHasEq.fst(84,10-84,70):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also TestHasEq.fst(84,12-84,22)
 
 * Info at TestHasEq.fst(88,8-89,30):
@@ -22,3 +178,6 @@
   - The `unopteq` qualifier is not allowed on erasable inductives since they
     don't have decidable equality.
 
+TestHasEq.fst(88,8-89,30), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Killing old z3proc (ask_count=18, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 478 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures TestHasEq.fst

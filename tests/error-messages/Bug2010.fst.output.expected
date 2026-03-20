@@ -1,6 +1,13 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at Bug2010.fst(6,66-6,67):
   - Expected failure:
   - Failed to resolve implicit argument ?12
     of type Prims.nat
     introduced for user-provided implicit term at Bug2010.fst(6,66-6,67)
 
+Bug2010.fst(6,0-6,82), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TOTAL TIME 246 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug2010.fst

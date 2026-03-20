@@ -1,0 +1,11 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+DumpUvarsOf.p, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DumpUvarsOf.q, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DumpUvarsOf.lem, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DumpUvarsOf.p5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DumpUvarsOf.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 20 ms
+TOTAL TIME 542 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures DumpUvarsOf.fst

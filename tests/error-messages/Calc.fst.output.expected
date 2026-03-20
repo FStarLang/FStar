@@ -1,82 +1,445 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Calc.eta, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Calc.fst(12,2-17,23))	Query-stats (Calc.test_gt_lt_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 45 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.023)
+(Calc.fst(12,2-17,23))	Query-stats (Calc.test_gt_lt_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.021)
+(Calc.fst(12,2-17,23))	Query-stats (Calc.test_gt_lt_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.021)
+(Calc.fst(12,2-17,23))	Query-stats (Calc.test_gt_lt_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.021)
+Calc.test_gt_lt_elab, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(12,2-12,13):
+  - Could not prove that this calc-chain is compatible
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Calc.fsti(47,51-47,56)
+
+* Warning 252 at Calc.fst(12,2-12,13):
+  - Could not prove that this calc-chain is compatible
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Calc.fsti(47,51-47,56)
+
+* Warning 252 at Calc.fst(12,2-12,13):
+  - Could not prove that this calc-chain is compatible
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Calc.fsti(47,51-47,56)
+
+* Warning 252 at Calc.fst(12,2-12,13):
+  - Could not prove that this calc-chain is compatible
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Calc.fsti(47,51-47,56)
+
 * Info at Calc.fst(12,2-12,13):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also FStar.Calc.fsti(47,51-47,56)
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Calc.fsti(47,51-47,56)
+
+(Calc.fst(22,2-28,3))	Query-stats (Calc.test_gt_lt, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(22,2-28,3))	Query-stats (Calc.test_gt_lt, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(22,2-28,3))	Query-stats (Calc.test_gt_lt, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(22,2-28,3))	Query-stats (Calc.test_gt_lt, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+Calc.test_gt_lt, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(22,2-28,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(22,7-22,11)
+
+* Warning 252 at Calc.fst(22,2-28,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(22,7-22,11)
+
+* Warning 252 at Calc.fst(22,2-28,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(22,7-22,11)
+
+* Warning 252 at Calc.fst(22,2-28,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(22,7-22,11)
 
 * Info at Calc.fst(22,2-28,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(22,7-22,11)
+
+(Calc.fst(33,2-35,3))	Query-stats (Calc.test_singl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+(Calc.fst(33,2-35,3))	Query-stats (Calc.test_singl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(Calc.fst(33,2-35,3))	Query-stats (Calc.test_singl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(Calc.fst(33,2-35,3))	Query-stats (Calc.test_singl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+Calc.test_singl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(33,2-35,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(33,7-33,10)
+
+* Warning 252 at Calc.fst(33,2-35,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(33,7-33,10)
+
+* Warning 252 at Calc.fst(33,2-35,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(33,7-33,10)
+
+* Warning 252 at Calc.fst(33,2-35,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(33,7-33,10)
 
 * Info at Calc.fst(33,2-35,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(33,7-33,10)
+
+(Calc.fst(40,2-44,3))	Query-stats (Calc.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 9 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(40,2-44,3))	Query-stats (Calc.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(40,2-44,3))	Query-stats (Calc.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(40,2-44,3))	Query-stats (Calc.test, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+Calc.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(40,2-44,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(40,7-40,10)
+
+* Warning 252 at Calc.fst(40,2-44,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(40,7-40,10)
+
+* Warning 252 at Calc.fst(40,2-44,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(40,7-40,10)
+
+* Warning 252 at Calc.fst(40,2-44,3):
+  - Could not prove that this calc-chain is compatible
+  - See also Calc.fst(40,7-40,10)
 
 * Info at Calc.fst(40,2-44,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(40,7-40,10)
+
+(Calc.fst(49,2-57,3))	Query-stats (Calc.fail1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 14 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(49,2-57,3))	Query-stats (Calc.fail1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(49,2-57,3))	Query-stats (Calc.fail1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(49,2-57,3))	Query-stats (Calc.fail1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+Calc.fail1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(51,6-51,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (1 == 2) got type Prims.unit
+  - See also Calc.fst(51,3-51,5)
+
+* Warning 252 at Calc.fst(51,6-51,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (1 == 2) got type Prims.unit
+  - See also Calc.fst(51,3-51,5)
+
+* Warning 252 at Calc.fst(51,6-51,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (1 == 2) got type Prims.unit
+  - See also Calc.fst(51,3-51,5)
+
+* Warning 252 at Calc.fst(51,6-51,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (1 == 2) got type Prims.unit
+  - See also Calc.fst(51,3-51,5)
 
 * Info at Calc.fst(51,6-51,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (1 == 2) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(51,3-51,5)
+
+(Calc.fst(61,2-69,3))	Query-stats (Calc.fail2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 14 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(61,2-69,3))	Query-stats (Calc.fail2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(61,2-69,3))	Query-stats (Calc.fail2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(61,2-69,3))	Query-stats (Calc.fail2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+Calc.fail2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(65,6-65,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (2 == 3) got type Prims.unit
+  - See also Calc.fst(65,3-65,5)
+
+* Warning 252 at Calc.fst(65,6-65,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (2 == 3) got type Prims.unit
+  - See also Calc.fst(65,3-65,5)
+
+* Warning 252 at Calc.fst(65,6-65,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (2 == 3) got type Prims.unit
+  - See also Calc.fst(65,3-65,5)
+
+* Warning 252 at Calc.fst(65,6-65,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (2 == 3) got type Prims.unit
+  - See also Calc.fst(65,3-65,5)
 
 * Info at Calc.fst(65,6-65,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (2 == 3) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(65,3-65,5)
+
+(Calc.fst(73,2-81,3))	Query-stats (Calc.fail3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 14 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(73,2-81,3))	Query-stats (Calc.fail3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(73,2-81,3))	Query-stats (Calc.fail3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(Calc.fst(73,2-81,3))	Query-stats (Calc.fail3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+Calc.fail3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(79,6-79,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (3 == 4) got type Prims.unit
+  - See also Calc.fst(79,3-79,5)
+
+* Warning 252 at Calc.fst(79,6-79,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (3 == 4) got type Prims.unit
+  - See also Calc.fst(79,3-79,5)
+
+* Warning 252 at Calc.fst(79,6-79,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (3 == 4) got type Prims.unit
+  - See also Calc.fst(79,3-79,5)
+
+* Warning 252 at Calc.fst(79,6-79,8):
+  - Subtyping check failed
+  - Expected type Prims.squash (3 == 4) got type Prims.unit
+  - See also Calc.fst(79,3-79,5)
 
 * Info at Calc.fst(79,6-79,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (3 == 4) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(79,3-79,5)
+
+Calc.p, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Calc.q, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Calc.lem, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(Calc.fst(90,2-94,3))	Query-stats (Calc.test_impl_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 14 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(90,2-94,3))	Query-stats (Calc.test_impl_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(90,2-94,3))	Query-stats (Calc.test_impl_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(90,2-94,3))	Query-stats (Calc.test_impl_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+Calc.test_impl_elab, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(93,42-93,44):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(91,20-91,21)
+
+* Warning 252 at Calc.fst(93,42-93,44):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(91,20-91,21)
+
+* Warning 252 at Calc.fst(93,42-93,44):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(91,20-91,21)
+
+* Warning 252 at Calc.fst(93,42-93,44):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(91,20-91,21)
 
 * Info at Calc.fst(93,42-93,44):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(91,20-91,21)
+
+(Calc.fst(98,2-102,3))	Query-stats (Calc.test_impl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 13 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(98,2-102,3))	Query-stats (Calc.test_impl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(98,2-102,3))	Query-stats (Calc.test_impl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+(Calc.fst(98,2-102,3))	Query-stats (Calc.test_impl, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.006)
+Calc.test_impl, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(100,10-100,12):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(101,4-101,5)
+
+* Warning 252 at Calc.fst(100,10-100,12):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(101,4-101,5)
+
+* Warning 252 at Calc.fst(100,10-100,12):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(101,4-101,5)
+
+* Warning 252 at Calc.fst(100,10-100,12):
+  - Subtyping check failed
+  - Expected type Prims.squash q got type Prims.unit
+  - See also Calc.fst(101,4-101,5)
 
 * Info at Calc.fst(100,10-100,12):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(101,4-101,5)
+
+Calc.my_lemma, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(Calc.fst(110,2-115,21))	Query-stats (Calc.test_1763_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 18 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(110,2-115,21))	Query-stats (Calc.test_1763_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(110,2-115,21))	Query-stats (Calc.test_1763_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(110,2-115,21))	Query-stats (Calc.test_1763_elab, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+Calc.test_1763_elab, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(114,17-114,25):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(114,17-114,25):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(114,17-114,25):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(114,17-114,25):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
 
 * Info at Calc.fst(114,17-114,25):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also Calc.fst(105,12-105,17)
+
+(Calc.fst(119,2-125,3))	Query-stats (Calc.test_1763, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 17 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(119,2-125,3))	Query-stats (Calc.test_1763, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(119,2-125,3))	Query-stats (Calc.test_1763, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(Calc.fst(119,2-125,3))	Query-stats (Calc.test_1763, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+Calc.test_1763, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Calc.fst(121,9-121,17):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(121,9-121,17):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(121,9-121,17):
+  - Assertion failed
+  - See also Calc.fst(105,12-105,17)
+
+* Warning 252 at Calc.fst(121,9-121,17):
+  - Assertion failed
   - See also Calc.fst(105,12-105,17)
 
 * Info at Calc.fst(121,9-121,17):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Calc.fst(105,12-105,17)
 
+Killing old z3proc (ask_count=43, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 1222 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Calc.fst

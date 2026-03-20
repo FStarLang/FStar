@@ -1,6 +1,44 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+NegativeTests.Heap.x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Heap.y, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Heap.h, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Heap.DistinctXY, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(NegativeTests.Heap.fst(26,14-26,54))	Query-stats (NegativeTests.Heap.test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 32 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.012)
+(NegativeTests.Heap.fst(26,14-26,54))	Query-stats (NegativeTests.Heap.test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(NegativeTests.Heap.fst(26,14-26,54))	Query-stats (NegativeTests.Heap.test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(NegativeTests.Heap.fst(26,14-26,54))	Query-stats (NegativeTests.Heap.test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+NegativeTests.Heap.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at NegativeTests.Heap.fst(26,21-26,54):
+  - Assertion failed
+
+* Warning 252 at NegativeTests.Heap.fst(26,21-26,54):
+  - Assertion failed
+
+* Warning 252 at NegativeTests.Heap.fst(26,21-26,54):
+  - Assertion failed
+
+* Warning 252 at NegativeTests.Heap.fst(26,21-26,54):
+  - Assertion failed
+
 * Info at NegativeTests.Heap.fst(26,21-26,54):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
 
+Killing old z3proc (ask_count=3, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 246 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures NegativeTests.Heap.fst

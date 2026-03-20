@@ -1,14 +1,28 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at Bug1988.fst(4,14-4,30):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression "string literal"
     of type Prims.string
 
+Bug1988.fst(4,0-4,30), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug1988.ident, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug1988.text_of_id, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug1988.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug1988.__proj__Mkt__item__tm, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug1988.__proj__Mkt__item__tm, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at Bug1988.fst(15,32-15,38):
   - Expected failure:
   - string is not equal to the expected type _: ident -> string
 
+Bug1988.fst(13,0-16,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at Bug1988.fst(21,32-21,38):
   - Expected failure:
   - string is not a subtype of the expected type _: (*?u21*)_ -> (*?u22*)_
 
+Bug1988.fst(19,0-22,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TOTAL TIME 169 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug1988.fst

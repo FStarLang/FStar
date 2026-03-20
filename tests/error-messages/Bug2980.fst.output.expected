@@ -1,6 +1,13 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at Bug2980.fst(5,4-5,5):
   - Expected failure:
   - Expected expression of type Type0
     got expression Bug2980.t
     of type _: Prims.int -> Type0
 
+Bug2980.fst(4,0-5,5), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TOTAL TIME 150 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug2980.fst

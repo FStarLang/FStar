@@ -1,96 +1,29 @@
-Module after desugaring:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
 
-Module before type checking:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
-
-Module after type checking:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-
-
-
-
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-
-
-
-
-
-
-
-
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
-
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(PatImps.fst(4,2-6,17))	Query-stats (PatImps.f1, 1)	succeeded in 30 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+PatImps.f1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 37 ms
+PatImps.t2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatImps.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatImps.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatImps.__proj__A__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatImps.__proj__A__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatImps.f2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatImps.t3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+PatImps.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatImps.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatImps.__proj__B__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(PatImps.fst(17,9-17,10))	Query-stats (PatImps.__proj__B__item__x, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatImps.__proj__B__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+PatImps.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatImps.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatImps.__proj__C__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(PatImps.fst(18,9-18,10))	Query-stats (PatImps.__proj__C__item__x, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatImps.__proj__C__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+(PatImps.fst(21,2-23,13))	Query-stats (PatImps.f3, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+PatImps.f3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+Killing old z3proc (ask_count=3, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 231 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures PatImps.fst

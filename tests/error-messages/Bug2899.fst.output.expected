@@ -1,19 +1,27 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Bug2899.fst(4,0-4,32), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2899.fst(7,12-7,18):
   - Expected failure:
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at: Prims.admit ()
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Tactics.Effect.fsti(167,48-167,58)
 
+Bug2899.fst(7,0-7,35), profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
 * Info at Bug2899.fst(10,12-10,18):
   - Expected failure:
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at: Prims.admit ()
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Tactics.Effect.fsti(167,48-167,58)
 
+Bug2899.fst(10,0-10,81), profiled FStarC.TypeChecker.Tc.process_one_decl:	 13 ms
 * Info at Bug2899.fst(13,12-13,18):
   - Expected failure:
   - Tactic failed
@@ -22,12 +30,15 @@
       FStar.Stubs.Tactics.V2.Builtins.dump (Prims.admit ())
         "(((ref proofstate)))"
   - The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?
-  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Tactics.Effect.fsti(167,48-167,58)
 
+Bug2899.fst(13,0-13,45), profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
 * Info at Bug2899.fst(17,50-17,66):
   - Expected failure:
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at: reify (tac ()) "(((ref proofstate)))"
-  - See also FStar.Tactics.Effect.fsti(167,48-167,58)
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.Tactics.Effect.fsti(167,48-167,58)
 
+Bug2899.fst(17,0-17,75), profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+TOTAL TIME 533 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug2899.fst

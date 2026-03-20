@@ -1,4 +1,11 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at IfThen.fst(5,2-6,6):
   - Expected failure:
   - Expected expression of type Prims.int got expression () of type Prims.unit
 
+IfThen.fst(4,0-6,6), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 152 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures IfThen.fst

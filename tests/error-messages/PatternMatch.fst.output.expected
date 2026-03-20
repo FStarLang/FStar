@@ -1,3 +1,16 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+PatternMatch.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.pair_on_arg, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+PatternMatch.ab, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+PatternMatch.ab__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatternMatch.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at PatternMatch.fst(15,27-15,34):
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
@@ -6,70 +19,274 @@
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
+PatternMatch.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+PatternMatch.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 46 ms
+* Warning 252 at PatternMatch.fst(21,4-21,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(21,4-21,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(21,4-21,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(21,4-21,8):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(21,4-21,8)
 
+PatternMatch.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.003)
+PatternMatch.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 18 ms
+* Warning 252 at PatternMatch.fst(24,4-24,11):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(24,4-24,11):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(24,4-24,11):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(24,4-24,11):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(24,4-24,11)
 
+PatternMatch.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___2, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.001)
+PatternMatch.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+PatternMatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+PatternMatch.uu___4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 10 ms
+* Warning 252 at PatternMatch.fst(29,4-29,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(29,4-29,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(29,4-29,8):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(29,4-29,8):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(29,4-29,8)
 
+PatternMatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
 * Info at PatternMatch.fst(32,4-32,9):
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
+PatternMatch.fst(32,0-32,13), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+PatternMatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
 * Info at PatternMatch.fst(35,4-35,5):
   - Expected failure:
   - Type of pattern PatternMatch.ab does not match type of scrutinee Prims.int
   - Head mismatch PatternMatch.ab vs Prims.int
 
+PatternMatch.fst(35,0-35,9), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+PatternMatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.uu___4, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+PatternMatch.uu___4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 13 ms
+* Warning 252 at PatternMatch.fst(38,4-38,5):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(38,4-38,5):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(38,4-38,5):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(38,4-38,5):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(38,4-38,5)
 
 * Info at PatternMatch.fst(41,3-41,24):
   - Expected failure:
   - Type ascriptions within patterns are only allowed on variables
 
+PatternMatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.x1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatternMatch.y1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatternMatch.uu___4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.x2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatternMatch.y2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(PatternMatch.fst(46,0-46,25))	Query-stats (PatternMatch.uu___5, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.uu___5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 9 ms
+(PatternMatch.fst(47,0-47,27))	Query-stats (PatternMatch.uu___6, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.uu___6, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+(PatternMatch.fst(48,0-48,25))	Query-stats (PatternMatch.uu___7, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.uu___7, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+(PatternMatch.fst(49,0-49,27))	Query-stats (PatternMatch.uu___8, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.uu___8, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+PatternMatch.r, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+PatternMatch.r__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.__proj__Mkr__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.__proj__Mkr__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+PatternMatch.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
 * Info at PatternMatch.fst(55,4-55,8):
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
+PatternMatch.fst(55,0-55,12), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+PatternMatch.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
 * Info at PatternMatch.fst(58,4-58,16):
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
+PatternMatch.fst(58,0-58,28), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+PatternMatch.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.004)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+PatternMatch.x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 20 ms
+* Warning 252 at PatternMatch.fst(61,5-61,12):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(61,5-61,12):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(61,5-61,12):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(61,5-61,12):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(61,5-61,12)
 
+PatternMatch.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 10 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+PatternMatch.x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 34 ms
+* Warning 252 at PatternMatch.fst(64,5-64,20):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(64,5-64,20):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(64,5-64,20):
+  - Patterns are incomplete
+
+* Warning 252 at PatternMatch.fst(64,5-64,20):
+  - Patterns are incomplete
+
 * Info:
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - Also see: PatternMatch.fst(64,5-64,20)
 
+PatternMatch.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(dummy(0,0-0,0))	Query-stats (PatternMatch.x, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+PatternMatch.uu___10, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
 * Info at PatternMatch.fst(69,5-69,15):
   - Expected failure:
   - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
 
+PatternMatch.fst(69,0-69,29), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+PatternMatch.uu___10, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(dummy(0,0-0,0))	Query-stats (PatternMatch.z, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+PatternMatch.z, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+PatternMatch.uu___11, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+PatternMatch.uu___12, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Killing old z3proc (ask_count=30, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 404 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures PatternMatch.fst

@@ -1,26 +1,79 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+NegativeTests.Positivity.t1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+NegativeTests.Positivity.uu___is_C11, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at NegativeTests.Positivity.fst(22,10-22,12):
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t1 does not satisfy the strict positivity condition
 
+NegativeTests.Positivity.fst(22,5-23,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+NegativeTests.Positivity.t3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+NegativeTests.Positivity.uu___is_C31, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.uu___is_C31, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.__proj__C31__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.__proj__C31__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.t4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.uu___is_C41, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.uu___is_C41, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.__proj__C41__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(dummy(0,0-0,0))	Query-stats (NegativeTests.Positivity.__proj__C41__item___0, 1)	succeeded in 30 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+NegativeTests.Positivity.__proj__C41__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 36 ms
+NegativeTests.Positivity.uu___is_C42, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.uu___is_C42, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.__proj__C42__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (NegativeTests.Positivity.__proj__C42__item___0, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+NegativeTests.Positivity.__proj__C42__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+NegativeTests.Positivity.__proj__C42__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (NegativeTests.Positivity.__proj__C42__item___1, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+NegativeTests.Positivity.__proj__C42__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+NegativeTests.Positivity.t5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+NegativeTests.Positivity.uu___is_C51, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at NegativeTests.Positivity.fst(37,10-37,12):
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t5 does not satisfy the strict positivity condition
 
+NegativeTests.Positivity.fst(37,5-38,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+NegativeTests.Positivity.t6, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+NegativeTests.Positivity.uu___is_C61, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.uu___is_C61, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.__proj__C61__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (NegativeTests.Positivity.__proj__C61__item___0, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+NegativeTests.Positivity.__proj__C61__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 10 ms
+NegativeTests.Positivity.__proj__C61__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (NegativeTests.Positivity.__proj__C61__item___1, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+NegativeTests.Positivity.__proj__C61__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+NegativeTests.Positivity.uu___is_C62, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.uu___is_C62, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
 * Info at NegativeTests.Positivity.fst(49,4-49,7):
   - Expected failure:
   - Type NegativeTests.Positivity.t7 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t7 of NegativeTests.Positivity.t6
   - See also NegativeTests.Positivity.fst(49,12-49,14)
 
+NegativeTests.Positivity.fst(48,5-49,24), profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
 * Info at NegativeTests.Positivity.fst(54,4-54,7):
   - Expected failure:
   - Type NegativeTests.Positivity.t8 is not strictly positive since it instantiates a non-uniformly recursive parameter or index NegativeTests.Positivity.t8 of NegativeTests.Positivity.t6
   - See also NegativeTests.Positivity.fst(54,16-54,18)
 
+NegativeTests.Positivity.fst(53,5-54,24), profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.Positivity.t9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.Positivity.t10, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+NegativeTests.Positivity.uu___is_C101, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at NegativeTests.Positivity.fst(61,10-61,13):
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t10 does not satisfy the strict positivity condition
 
+NegativeTests.Positivity.fst(61,5-62,23), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+NegativeTests.Positivity.t11, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+NegativeTests.Positivity.uu___is_C111, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at NegativeTests.Positivity.fst(66,10-66,13):
   - Expected failure:
   - Inductive type NegativeTests.Positivity.t11 does not satisfy the strict positivity condition
 
+NegativeTests.Positivity.fst(66,5-67,30), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+Killing old z3proc (ask_count=4, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 331 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures NegativeTests.Positivity.fst

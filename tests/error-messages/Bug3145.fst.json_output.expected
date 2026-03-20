@@ -1,27 +1,6 @@
-Module after desugaring:
-module Bug3145
-Declarations: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
-
-Module before type checking:
-module Bug3145
-Declarations: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
-
-Module after type checking:
-module Bug3145
-Declarations: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Bug3145.t1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":764856,"running":false,"undercount":false}}
+{"tag":"Bug3145.t2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":741525,"running":false,"undercount":false}}
+{"tag":"Bug3145.t3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":675523,"running":false,"undercount":false}}
+{"tag":"Bug3145.t4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1054346,"running":false,"undercount":false}}
+TOTAL TIME 155 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Bug3145.fst

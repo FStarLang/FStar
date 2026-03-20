@@ -1,81 +1,17 @@
-Module after desugaring:
-module Bug3292
-Declarations: [
-#set-options "--print_implicits"
-let op_Plus #a x y = x, y
-let op_Minus #a x y = x, y
-let op_Slash #a x y = x, y
-let op_Greater #a x y = x, y
-let op_Less #a x y = x, y
-let op_GreaterEquals #a x y = x, y
-let op_LessEquals #a x y = x, y
-private
-let _ = 1 + 1
-private
-let _ = 1 - 1
-private
-let _ = 1 / 1
-private
-let _ = 1 > 1
-private
-let _ = 1 < 1
-private
-let _ = 1 >= 1
-private
-let _ = 1 <= 1
-]
-
-Module before type checking:
-module Bug3292
-Declarations: [
-#set-options "--print_implicits"
-let op_Plus x y = x, y
-let op_Minus x y = x, y
-let op_Slash x y = x, y
-let op_Greater x y = x, y
-let op_Less x y = x, y
-let op_GreaterEquals x y = x, y
-let op_LessEquals x y = x, y
-private
-let _ = 1 + 1
-private
-let _ = 1 - 1
-private
-let _ = 1 / 1
-private
-let _ = 1 > 1
-private
-let _ = 1 < 1
-private
-let _ = 1 >= 1
-private
-let _ = 1 <= 1
-]
-
-Module after type checking:
-module Bug3292
-Declarations: [
-#set-options "--print_implicits"
-let op_Plus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Slash #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Greater #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_GreaterEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-let op_LessEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
-private
-let _ = Bug3292.op_Plus #Prims.int 1 1
-private
-let _ = 1 - 1
-private
-let _ = Bug3292.op_Slash #Prims.int 1 1
-private
-let _ = Bug3292.op_Greater #Prims.int 1 1
-private
-let _ = Bug3292.op_Less #Prims.int 1 1
-private
-let _ = 1 >= 1
-private
-let _ = 1 <= 1
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Bug3292.fst(3,0-3,32)","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":64282,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_Plus","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":960143,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_Minus","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":852619,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_Slash","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1259654,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_Greater","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":799117,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_Less","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1196081,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_GreaterEquals","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1236553,"running":false,"undercount":false}}
+{"tag":"Bug3292.op_LessEquals","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":789647,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1061306,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":211518,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":474617,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":469166,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1077677,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___5","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":217748,"running":false,"undercount":false}}
+{"tag":"Bug3292.uu___6","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":201896,"running":false,"undercount":false}}
+TOTAL TIME 175 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Bug3292.fst

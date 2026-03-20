@@ -1,10 +1,85 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(ArrowRanges.fst(4,11-4,39))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 22 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+(ArrowRanges.fst(4,11-4,39))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(ArrowRanges.fst(4,11-4,39))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(ArrowRanges.fst(4,11-4,39))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+ArrowRanges.ppof, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at ArrowRanges.fst(4,30-4,39):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(81,23-81,30)
+
+* Warning 252 at ArrowRanges.fst(4,30-4,39):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(81,23-81,30)
+
+* Warning 252 at ArrowRanges.fst(4,30-4,39):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(81,23-81,30)
+
+* Warning 252 at ArrowRanges.fst(4,30-4,39):
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(81,23-81,30)
+
 * Info at ArrowRanges.fst(4,30-4,39):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also Prims.fst(81,23-81,30)
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(81,23-81,30)
+
+(ArrowRanges.fst(7,0-11,1))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(ArrowRanges.fst(7,0-11,1))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(ArrowRanges.fst(7,0-11,1))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(ArrowRanges.fst(7,0-11,1))	Query-stats (ArrowRanges.ppof, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+ArrowRanges.ppof, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+ArrowRanges.ppof__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+ArrowRanges.__proj__Mkppof__item__tot_p, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+* Warning 252 at ArrowRanges.fst(8,10-8,28):
+  - Failed to prove that the type
+    'ArrowRanges.ppof'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also ArrowRanges.fst(7,0-11,1)
+
+* Warning 252 at ArrowRanges.fst(8,10-8,28):
+  - Failed to prove that the type
+    'ArrowRanges.ppof'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also ArrowRanges.fst(7,0-11,1)
+
+* Warning 252 at ArrowRanges.fst(8,10-8,28):
+  - Failed to prove that the type
+    'ArrowRanges.ppof'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also ArrowRanges.fst(7,0-11,1)
+
+* Warning 252 at ArrowRanges.fst(8,10-8,28):
+  - Failed to prove that the type
+    'ArrowRanges.ppof'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
+  - See also ArrowRanges.fst(7,0-11,1)
 
 * Info at ArrowRanges.fst(8,10-8,28):
   - Expected failure:
@@ -12,7 +87,19 @@
     'ArrowRanges.ppof'
     supports decidable equality because of this argument.
   - Add either the 'noeq' or 'unopteq' qualifier
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also ArrowRanges.fst(7,0-11,1)
 
+ArrowRanges.fst(7,0-11,1), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+Killing old z3proc (ask_count=7, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 225 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures ArrowRanges.fst

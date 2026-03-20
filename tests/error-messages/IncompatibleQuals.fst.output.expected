@@ -1,21 +1,47 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at IncompatibleQuals.fst(7,0-7,11):
   - Expected failure:
   - Invalid qualifiers for declaration `val IncompatibleQuals.x`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
+IncompatibleQuals.fst(7,0-7,11), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.r1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+IncompatibleQuals.r1__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at IncompatibleQuals.fst(13,1-13,2):
   - Expected failure:
   - Invalid qualifiers for declaration
       `val IncompatibleQuals.__proj__Mkr1__item__x`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
+IncompatibleQuals.fst(12,0-14,1), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+IncompatibleQuals.r2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+IncompatibleQuals.r2__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.r3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+IncompatibleQuals.r3__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.__proj__Mkr3__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.__proj__Mkr3__item__b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.var1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+IncompatibleQuals.var1__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at IncompatibleQuals.fst(33,3-33,5):
   - Expected failure:
   - Invalid qualifiers for declaration `val IncompatibleQuals.uu___is_A1`
   - Qualifiers `assume` and `inline_for_extraction` are not compatible.
 
+IncompatibleQuals.fst(32,0-33,10), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, some operations raised exceptions and we not accounted for)
+IncompatibleQuals.var2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+IncompatibleQuals.var2__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.var3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+IncompatibleQuals.var3__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.uu___is_A3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+IncompatibleQuals.uu___is_B3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at IncompatibleQuals.fst(47,5-47,6):
   - Expected failure:
   - Invalid qualifiers for declaration `let t`
   - Definitions cannot be marked `assume`.
 
+IncompatibleQuals.fst(47,0-47,13), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 189 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures IncompatibleQuals.fst

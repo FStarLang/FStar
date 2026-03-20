@@ -1,18 +1,32 @@
+Bug3757.fst(3,0-3,40), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3757.fst(8,4-8,13):
   - Expected failure:
   - Expected a pattern of type Prims.int & Prims.int
   - Type FStar.Pervasives.Native.tuple2 is not a record type.
 
+Bug3757.fst(6,0-9,14), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3757.fst(12,28-12,31):
   - Expected failure:
   - Expected an expression of type Prims.int & Prims.bool
   - Type FStar.Pervasives.Native.tuple2 is not a record type.
 
+Bug3757.fst(12,0-12,33), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug3757.fst(15,15-15,17):
   - Expected failure:
   - Field name _1 could not be resolved.
 
+Bug3757.fst(15,0-15,27), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
+Bug3757.t__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.uu___is_X, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.uu___is_X, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.__proj__X__item__f1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.__proj__X__item__f1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3757.__proj__X__item__f2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3757.__proj__X__item__f2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at Bug3757.fst(21,9-21,11):
   - Expected failure:
   - Field name f1 could not be resolved.
 
+Bug3757.fst(21,0-21,20), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 168 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug3757.fst

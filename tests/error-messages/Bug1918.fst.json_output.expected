@@ -1,1 +1,16 @@
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Bug1918.mon","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2136053,"running":false,"undercount":false}}
+{"tag":"Bug1918.__proj__Mkmon__item__t","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":323851,"running":false,"undercount":false}}
+{"tag":"Bug1918.__proj__Mkmon__item__t","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1061796,"running":false,"undercount":false}}
+{"tag":"Bug1918.__proj__Mkmon__item__comp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":875980,"running":false,"undercount":false}}
+{"tag":"Bug1918.__proj__Mkmon__item__comp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4569368,"running":false,"undercount":false}}
+{"tag":"Bug1918.t","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":733355,"running":false,"undercount":false}}
+{"tag":"Bug1918.t","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1789051,"running":false,"undercount":false}}
+{"tag":"Bug1918.comp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5801389,"running":false,"undercount":false}}
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Bug1918.fst(8,36-8,44))	Query-stats (Bug1918.comp1, 1)	succeeded in 35 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+{"tag":"Bug1918.comp1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":43287506,"running":false,"undercount":false}}
 {"msg":["Expected failure:","Tactic failed","Could not solve typeclass constraint `mon`"],"level":"Info","range":{"def":{"file_name":"Bug1918.fst","start_pos":{"line":11,"col":13},"end_pos":{"line":11,"col":14}},"use":{"file_name":"Bug1918.fst","start_pos":{"line":11,"col":13},"end_pos":{"line":11,"col":14}}},"number":228,"ctx":["While synthesizing term with a tactic","Running tactic for meta-arg","While typechecking the top-level declaration `let comp2`","While typechecking the top-level declaration `[@@expect_failure] let comp2`"]}
+{"tag":"Bug1918.fst(11,0-11,36)","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2248477,"running":false,"undercount":false}}
+Killing old z3proc (ask_count=0, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 353 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Bug1918.fst

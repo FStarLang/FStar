@@ -1,21 +1,29 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at Bug2021.fst(5,15-5,16):
   - Expected failure:
   - Failed to resolve implicit argument ?2
     of type Type
     introduced for user-provided implicit term at Bug2021.fst(5,15-5,16)
 
+Bug2021.fst(4,0-6,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2021.fst(10,8-10,9):
   - Expected failure:
   - Failed to resolve implicit argument ?2
     of type Type
     introduced for user-provided implicit term at Bug2021.fst(10,8-10,9)
 
+Bug2021.fst(9,0-11,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2021.fst(16,12-16,13):
   - Expected failure:
   - Failed to resolve implicit argument ?5
     of type Type
     introduced for user-provided implicit term at Bug2021.fst(16,12-16,13)
 
+Bug2021.fst(14,0-19,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2021.fst(24,13-24,14):
   - Expected failure:
   - Failed to resolve implicit argument ?9
@@ -23,6 +31,7 @@
     introduced for Instantiating implicit argument 'x'
   - See also Bug2021.fst(23,11-23,12)
 
+Bug2021.fst(23,0-25,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2021.fst(30,13-30,17):
   - Expected failure:
   - Failed to resolve implicit argument ?10
@@ -30,6 +39,7 @@
     introduced for Instantiating implicit argument 'x'
   - See also Bug2021.fst(29,11-30,17)
 
+Bug2021.fst(29,0-31,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at Bug2021.fst(36,13-36,17):
   - Expected failure:
   - Failed to resolve implicit argument ?13
@@ -37,3 +47,5 @@
     introduced for Instantiating implicit argument 'x'
   - See also Bug2021.fst(35,11-36,17)
 
+Bug2021.fst(35,0-37,4), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 169 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug2021.fst

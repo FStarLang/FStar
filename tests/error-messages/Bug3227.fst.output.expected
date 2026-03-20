@@ -1,62 +1,31 @@
-Module after desugaring:
-module Bug3227
-Declarations: [
-type box (a: Type) = { x:a }
-let proj b = x (x (x b)) <: Prims.int
-type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-let test b = Box2? b && Box2? b.x
-noeq
-type boxf (a: Type) = { ff:_: a -> a }
-let test2 r = ff r 5
-noeq
-type boxfi (a: Type) = { ff:a }
-let test3 r = ff r
-let test4 r x = ff r x <: a
-]
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
 
-Module before type checking:
-module Bug3227
-Declarations: [
-type box (a: Type) = { x:a }
-let proj b = x (x (x b)) <: Prims.int
-type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-let test b = Box2? b && Box2? b.x
-noeq
-type boxf (a: Type) = { ff:_: a -> a }
-let test2 r = ff r 5
-noeq
-type boxfi (a: Type) = { ff:a }
-let test3 r = ff r
-let test4 r x = ff r x <: a
-]
-
-Module after type checking:
-module Bug3227
-Declarations: [
-type box (a: Type) = { x:a }
-val box__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box a)}
-  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box a)
-
-
-let proj b = b.x.x.x <: Prims.int
-type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
-val box2__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box2 a)}
-  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box2 a)
-
-
-
-
-let test b = Box2? b && Box2? b.x
-noeq
-type boxf (a: Type) = { ff:_: a -> a }
-
-
-let test2 r = r.ff 5
-noeq
-type boxfi (a: Type) = { ff:a }
-
-
-let test3 r = r.ff
-let test4 r x = r.ff x <: a
-]
-
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Bug3227.fst(3,0-3,30))	Query-stats (Bug3227.box, 1)	succeeded in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+Bug3227.box, profiled FStarC.TypeChecker.Tc.process_one_decl:	 40 ms
+Bug3227.box__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.__proj__Mkbox__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.__proj__Mkbox__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.proj, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+(Bug3227.fst(6,0-6,43))	Query-stats (Bug3227.box2, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+Bug3227.box2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+Bug3227.box2__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.uu___is_Box2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.uu___is_Box2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.__proj__Box2__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.__proj__Box2__item__x, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.boxf, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.__proj__Mkboxf__item__ff, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.__proj__Mkboxf__item__ff, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.boxfi, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+Bug3227.__proj__Mkboxfi__item__ff, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.__proj__Mkboxfi__item__ff, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3227.test3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3227.test4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Killing old z3proc (ask_count=1, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 238 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug3227.fst

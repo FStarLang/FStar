@@ -1,96 +1,25 @@
-Module after desugaring:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
-
-Module before type checking:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
-
-Module after type checking:
-module PatImps
-Declarations: [
-let f1 x =
-  (match x with
-    | [] -> 0
-    | _ :: _ -> 1)
-  <:
-  Prims.int
-noeq
-type t2 = | A : PatImps.t2
-
-
-
-
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
-noeq
-type t3 =
-  | B : PatImps.t3
-  | C : PatImps.t3
-
-
-
-
-
-
-
-
-let f3 x =
-  (match x with
-    | PatImps.B #i -> i
-    | PatImps.C #i -> i)
-  <:
-  Prims.int
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(PatImps.fst(4,2-6,17))	Query-stats (PatImps.f1, 1)	succeeded in 36 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.006)
+{"tag":"PatImps.f1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":43904877,"running":false,"undercount":false}}
+{"tag":"PatImps.t2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1883264,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_A","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":402514,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_A","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":247028,"running":false,"undercount":false}}
+{"tag":"PatImps.__proj__A__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":400273,"running":false,"undercount":false}}
+{"tag":"PatImps.__proj__A__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1148899,"running":false,"undercount":false}}
+{"tag":"PatImps.f2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1441009,"running":false,"undercount":false}}
+{"tag":"PatImps.t3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2211836,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_B","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":388443,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_B","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1329855,"running":false,"undercount":false}}
+{"tag":"PatImps.__proj__B__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1118178,"running":false,"undercount":false}}
+(PatImps.fst(17,9-17,10))	Query-stats (PatImps.__proj__B__item__x, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"PatImps.__proj__B__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6822934,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_C","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":914272,"running":false,"undercount":false}}
+{"tag":"PatImps.uu___is_C","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1535352,"running":false,"undercount":false}}
+{"tag":"PatImps.__proj__C__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1082697,"running":false,"undercount":false}}
+(PatImps.fst(18,9-18,10))	Query-stats (PatImps.__proj__C__item__x, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"PatImps.__proj__C__item__x","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6240934,"running":false,"undercount":false}}
+(PatImps.fst(21,2-23,13))	Query-stats (PatImps.f3, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+{"tag":"PatImps.f3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":7339803,"running":false,"undercount":false}}
+Killing old z3proc (ask_count=3, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 243 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures PatImps.fst

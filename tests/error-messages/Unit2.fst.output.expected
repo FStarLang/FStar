@@ -1,6 +1,72 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Unit2.test1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.vector, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Unit2.fst(23,14-23,41))	Query-stats (Unit2.test3, 1)	succeeded in 34 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+Unit2.test3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 38 ms
+Unit2.zat, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.geq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(Unit2.fst(29,14-29,33))	Query-stats (Unit2.test5, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+Unit2.test5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+Unit2.test6, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Unit2.fst(37,21-38,60):
+  - Assertion failed
+
+* Warning 252 at Unit2.fst(37,21-38,60):
+  - Assertion failed
+
+* Warning 252 at Unit2.fst(37,21-38,60):
+  - Assertion failed
+
+* Warning 252 at Unit2.fst(37,21-38,60):
+  - Assertion failed
+
 * Info at Unit2.fst(37,21-38,60):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
 
+Unit2.test7, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+Unit2.t__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.uu___is_Int, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.uu___is_Int, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.__proj__Int__item__i, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(Unit2.fst(49,10-49,11))	Query-stats (Unit2.__proj__Int__item__i, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+Unit2.__proj__Int__item__i, profiled FStarC.TypeChecker.Tc.process_one_decl:	 8 ms
+Unit2.uu___is_Bool, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.uu___is_Bool, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.__proj__Bool__item__b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(Unit2.fst(50,11-50,12))	Query-stats (Unit2.__proj__Bool__item__b, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+Unit2.__proj__Bool__item__b, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+(Unit2.fst(53,2-55,19))	Query-stats (Unit2.f, 1)	succeeded in 8 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+Unit2.f, profiled FStarC.TypeChecker.Tc.process_one_decl:	 15 ms
+Unit2.f1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.f2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.f3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.f4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.eta_f4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.map, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Unit2.eta_f4', profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Unit2.test, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 299 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Unit2.fst

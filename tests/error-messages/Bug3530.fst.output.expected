@@ -1,63 +1,14 @@
-Module after desugaring:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
 
-Module before type checking:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
-
-Module after type checking:
-module Bug3530
-Declarations: [
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-private
-let _ = x: Prims.int -> Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = Prims.bool
-private
-let _ = [@@@ 1]x: Prims.int -> Prims.bool
-]
-
+Bug3530.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Bug3530.uu___6, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Bug3530.uu___7, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 165 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Bug3530.fst

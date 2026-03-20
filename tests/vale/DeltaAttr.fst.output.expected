@@ -139,6 +139,18 @@ let test_5 x =
   Prims.int
 ]
 
+DeltaAttr.myattr, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DeltaAttr.otherattr, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DeltaAttr.normalize, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+DeltaAttr.add_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DeltaAttr.sub_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DeltaAttr.add, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DeltaAttr.test_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+DeltaAttr.test_2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+DeltaAttr.test_3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+DeltaAttr.test_3', profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+DeltaAttr.test_4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+DeltaAttr.test_5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 12 ms
 Module after type checking:
 module DeltaAttr
 Declarations: [
@@ -169,3 +181,4 @@ let test_4 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
 let test_5 x = x + 1 - 1 + (x + 1 - 1) <: Prims.int
 ]
 
+TOTAL TIME 611 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --dump_module DeltaAttr --message_format human --silent -f --print_expected_failures DeltaAttr.fst

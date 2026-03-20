@@ -1,141 +1,27 @@
-Module after desugaring:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
-
-Module before type checking:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
-
-Module after type checking:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"DTuples.uu___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2907310,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2754495,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3312954,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2258677,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1487391,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___5","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1910896,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___6","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2613900,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___7","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":441785,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___8","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1098688,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___9","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":735316,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___10","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1393779,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___11","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":679993,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___12","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1468390,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___13","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1489121,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___14","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":656042,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___15","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1185471,"running":false,"undercount":false}}
+{"tag":"DTuples.uu___16","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1872254,"running":false,"undercount":false}}
+{"tag":"DTuples.t1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":904331,"running":false,"undercount":false}}
+{"tag":"DTuples.t2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1859424,"running":false,"undercount":false}}
+{"tag":"DTuples.t3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1723809,"running":false,"undercount":false}}
+{"tag":"DTuples.d1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1973478,"running":false,"undercount":false}}
+{"tag":"DTuples.d2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2223076,"running":false,"undercount":false}}
+{"tag":"DTuples.d3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1932147,"running":false,"undercount":false}}
+{"tag":"DTuples.dd2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2994673,"running":false,"undercount":false}}
+{"tag":"DTuples.dd3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2782055,"running":false,"undercount":false}}
+TOTAL TIME 215 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures DTuples.fst

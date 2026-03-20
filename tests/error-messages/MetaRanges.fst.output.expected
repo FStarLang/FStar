@@ -1,33 +1,51 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+MetaRanges.basic, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at MetaRanges.fst(9,15-9,16):
   - Expected failure:
   - Tactic failed
   - See also MetaRanges.fst(9,8-9,13)
 
+MetaRanges.fst(9,0-9,16), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+MetaRanges.deq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MetaRanges.__proj__Mkdeq__item__op_Equals_Question, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+MetaRanges.__proj__Mkdeq__item__op_Equals_Question, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MetaRanges.op_Equals_Question, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+MetaRanges.op_Equals_Question, profiled FStarC.TypeChecker.Tc.process_one_decl:	 4 ms
 * Info at MetaRanges.fst(16,10-16,12):
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `deq int`
 
+MetaRanges.fst(16,0-16,14), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at MetaRanges.fst(19,9-19,11):
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `deq int`
 
+MetaRanges.fst(19,0-19,16), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at MetaRanges.fst(23,9-23,15):
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `deq int`
   - See also MetaRanges.fst(23,9-23,11)
 
+MetaRanges.fst(23,0-23,19), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at MetaRanges.fst(27,17-27,18):
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `deq int`
   - See also MetaRanges.fst(27,9-27,11)
 
+MetaRanges.fst(27,0-27,22), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at MetaRanges.fst(31,17-31,22):
   - Expected failure:
   - Tactic failed
   - Could not solve typeclass constraint `deq int`
   - See also MetaRanges.fst(3,33-3,38)
 
+MetaRanges.fst(31,0-31,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+TOTAL TIME 554 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures MetaRanges.fst

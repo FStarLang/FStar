@@ -1,1 +1,46 @@
-{"msg":["Expected failure:","Assertion failed","The SMT solver could not prove the query. Use --query_stats for more details."],"level":"Info","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":19,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Unit2.test1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2061010,"running":false,"undercount":false}}
+{"tag":"Unit2.vector","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":352562,"running":false,"undercount":false}}
+{"tag":"Unit2.test2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2039460,"running":false,"undercount":false}}
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Unit2.fst(23,14-23,41))	Query-stats (Unit2.test3, 1)	succeeded in 32 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+{"tag":"Unit2.test3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":36723151,"running":false,"undercount":false}}
+{"tag":"Unit2.zat","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":558420,"running":false,"undercount":false}}
+{"tag":"Unit2.geq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1703938,"running":false,"undercount":false}}
+(Unit2.fst(29,14-29,33))	Query-stats (Unit2.test5, 1)	succeeded in 0 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+{"tag":"Unit2.test5","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3355515,"running":false,"undercount":false}}
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+(Unit2.fst(37,14-38,60))	Query-stats (Unit2.test6, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.002)
+{"tag":"Unit2.test6","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":0,"running":true,"undercount":false}}
+{"msg":["Assertion failed"],"level":"Warning","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":252,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"msg":["Assertion failed"],"level":"Warning","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":252,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"msg":["Assertion failed"],"level":"Warning","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":252,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"msg":["Assertion failed"],"level":"Warning","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":252,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"msg":["Expected failure:","Assertion failed","SMT solver says:\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)\nNote:\n  - 'canceled' or 'resource limits reached' means the SMT query timed out, so\n  you might want to increase the rlimit\n  - 'incomplete quantifiers' means Z3 could not prove the query, so try to spell\n  out your proof out in greater detail, increase fuel or ifuel\n  - 'unknown' means Z3 provided no further reason for the proof failing"],"level":"Info","range":{"def":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}},"use":{"file_name":"Unit2.fst","start_pos":{"line":37,"col":21},"end_pos":{"line":38,"col":60}}},"number":19,"ctx":["While typechecking the top-level declaration `let test6`","While typechecking the top-level declaration `[@@expect_failure] let test6`"]}
+{"tag":"Unit2.test7","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1958107,"running":false,"undercount":false}}
+{"tag":"Unit2.t","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6918427,"running":false,"undercount":false}}
+{"tag":"Unit2.t__uu___haseq","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1398457,"running":false,"undercount":false}}
+{"tag":"Unit2.uu___is_Int","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":576430,"running":false,"undercount":false}}
+{"tag":"Unit2.uu___is_Int","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1900005,"running":false,"undercount":false}}
+{"tag":"Unit2.__proj__Int__item__i","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1047196,"running":false,"undercount":false}}
+(Unit2.fst(49,10-49,11))	Query-stats (Unit2.__proj__Int__item__i, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+{"tag":"Unit2.__proj__Int__item__i","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":6868976,"running":false,"undercount":false}}
+{"tag":"Unit2.uu___is_Bool","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":623081,"running":false,"undercount":false}}
+{"tag":"Unit2.uu___is_Bool","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1890475,"running":false,"undercount":false}}
+{"tag":"Unit2.__proj__Bool__item__b","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1186800,"running":false,"undercount":false}}
+(Unit2.fst(50,11-50,12))	Query-stats (Unit2.__proj__Bool__item__b, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+{"tag":"Unit2.__proj__Bool__item__b","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5193438,"running":false,"undercount":false}}
+(Unit2.fst(53,2-55,19))	Query-stats (Unit2.f, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+{"tag":"Unit2.f","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":10434018,"running":false,"undercount":false}}
+{"tag":"Unit2.f1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1136669,"running":false,"undercount":false}}
+{"tag":"Unit2.f2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":811497,"running":false,"undercount":false}}
+{"tag":"Unit2.f3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1738939,"running":false,"undercount":false}}
+{"tag":"Unit2.f4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":389503,"running":false,"undercount":false}}
+{"tag":"Unit2.eta_f4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":797798,"running":false,"undercount":false}}
+{"tag":"Unit2.map","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":912901,"running":false,"undercount":false}}
+{"tag":"Unit2.eta_f4'","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1916036,"running":false,"undercount":false}}
+{"tag":"Unit2.test","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3707217,"running":false,"undercount":false}}
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 283 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Unit2.fst

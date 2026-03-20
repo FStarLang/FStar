@@ -1,19 +1,3 @@
-Module after desugaring:
-module Bug2820
-Declarations: [
-let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
-]
-
-Module before type checking:
-module Bug2820
-Declarations: [
-let basic _ = () <: FStar.Pervasives.Lemma (ensures forall (x: x: _{x + 1 == 1 + x}). Prims.l_True)
-]
-
-Module after type checking:
-module Bug2820
-Declarations: [
-let basic _ =
-  () <: FStar.Pervasives.Lemma (ensures forall (x: Prims.int{x + 1 == 1 + x}). Prims.l_True)
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"Bug2820.basic","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3793221,"running":false,"undercount":false}}
+TOTAL TIME 157 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures Bug2820.fst

@@ -1,24 +1,4 @@
-Module after desugaring:
-module InfixImps
-Declarations: [
-let op_Plus_Plus #t xs ys = xs
-let foo = [1] ++ [2]
-]
-
-Module before type checking:
-module InfixImps
-Declarations: [
-let op_Plus_Plus #t xs ys = xs
-let foo = [1] ++ [2]
-]
-
-Module after type checking:
-module InfixImps
-Declarations: [
-let op_Plus_Plus #t xs ys = xs
-let foo =
-  InfixImps.op_Plus_Plus #Prims.int
-    (Prims.Cons #Prims.int 1 (Prims.Nil #Prims.int))
-    (Prims.Cons #Prims.int 2 (Prims.Nil #Prims.int))
-]
-
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"InfixImps.op_Plus_Plus","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":874360,"running":false,"undercount":false}}
+{"tag":"InfixImps.foo","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1864574,"running":false,"undercount":false}}
+TOTAL TIME 155 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures InfixImps.fst

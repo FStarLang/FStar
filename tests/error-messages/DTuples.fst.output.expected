@@ -1,141 +1,31 @@
-Module after desugaring:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
 
-Module before type checking:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
-
-Module after type checking:
-module DTuples
-Declarations: [
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
-private
-let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
-private
-let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
-private
-let _ = a: Prims.int & b: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
-private
-let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
-private
-let _ = Prims.int & (Prims.int & Prims.int)
-private
-let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
-private
-let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
-private
-let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
-private
-let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
-private
-let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
-let t1 = 1, 2, 3
-let t2 = (1, 2), 3
-let t3 = 1, (2, 3)
-let d1 = (| 1, 2, 3 |)
-let d2 = (| (1, 2), 3 |)
-let d3 = (| 1, (2, 3) |)
-let dd2 = (| (| 1, 2 |), 3 |)
-let dd3 = (| 1, (| 2, 3 |) |)
-]
-
+DTuples.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DTuples.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DTuples.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+DTuples.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DTuples.uu___4, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___5, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___6, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DTuples.uu___7, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DTuples.uu___8, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___9, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DTuples.uu___10, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___11, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DTuples.uu___12, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___13, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___14, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DTuples.uu___15, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.uu___16, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.t1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+DTuples.t2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.t3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.d1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.d2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+DTuples.d3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+DTuples.dd2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+DTuples.dd3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+TOTAL TIME 217 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures DTuples.fst

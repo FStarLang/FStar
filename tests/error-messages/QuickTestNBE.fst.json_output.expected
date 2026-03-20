@@ -1,1 +1,78 @@
-{"msg":["Expected failure:","","The SMT solver could not prove the query. Use --query_stats for more details.","Also see: QuickTestNBE(1,2-3,4)","Other related locations: QuickTestNBE.fst(116,16-116,18)"],"level":"Info","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":131,"col":2},"end_pos":{"line":134,"col":34}},"use":{"file_name":"QuickTestNBE.fst","start_pos":{"line":131,"col":2},"end_pos":{"line":134,"col":34}}},"number":19,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+{"msg":["Implicitly opening namespace 'fstar.' shadows module 'calc' in file \"Calc.fst\".","Rename\n\"Calc.fst\"\nto avoid conflicts."],"level":"Warning","range":{"def":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}},"use":{"file_name":"dummy","start_pos":{"line":0,"col":0},"end_pos":{"line":0,"col":0}}},"number":274,"ctx":[]}
+{"tag":"QuickTestNBE.va_qattr","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":160166,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.vale_state","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1591965,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__Mkvale_state__item__vs_ok","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":415524,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__Mkvale_state__item__vs_ok","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1148280,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.quickProc_wp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":838158,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.t_ensure","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3351435,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.t_proof","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3471920,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.quickCode","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2470114,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QProc","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":572240,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QProc","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":347671,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QProc__item__wp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":530788,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QProc__item__wp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1979778,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QProc__item__proof","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1212101,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QProc__item__proof","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2743054,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.labeled_wrap","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1209232,"running":false,"undercount":false}}
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(QuickTestNBE.fst(32,2-33,22))	Query-stats (QuickTestNBE.label, 1)	succeeded in 24 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+{"tag":"QuickTestNBE.label","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":31737519,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.quickCodes","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5459657,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QEmpty","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1260453,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QEmpty","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2555268,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QEmpty__item___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1138470,"running":false,"undercount":false}}
+(dummy(0,0-0,0))	Query-stats (QuickTestNBE.__proj__QEmpty__item___0, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"QuickTestNBE.__proj__QEmpty__item___0","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":13918978,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QPURE","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":792517,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.uu___is_QPURE","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3082455,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QPURE__item__r","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2169865,"running":false,"undercount":false}}
+(QuickTestNBE.fst(37,9-37,10))	Query-stats (QuickTestNBE.__proj__QPURE__item__r, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"QuickTestNBE.__proj__QPURE__item__r","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":10210580,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QPURE__item__msg","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1236003,"running":false,"undercount":false}}
+(QuickTestNBE.fst(37,20-37,23))	Query-stats (QuickTestNBE.__proj__QPURE__item__msg, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"QuickTestNBE.__proj__QPURE__item__msg","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":9642602,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QPURE__item__pre","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1320196,"running":false,"undercount":false}}
+(QuickTestNBE.fst(37,34-37,37))	Query-stats (QuickTestNBE.__proj__QPURE__item__pre, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"QuickTestNBE.__proj__QPURE__item__pre","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":10054555,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QPURE__item___3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2933191,"running":false,"undercount":false}}
+(dummy(0,0-0,0))	Query-stats (QuickTestNBE.__proj__QPURE__item___3, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+{"tag":"QuickTestNBE.__proj__QPURE__item___3","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":16213457,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.__proj__QPURE__item___4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":1288055,"running":false,"undercount":false}}
+(dummy(0,0-0,0))	Query-stats (QuickTestNBE.__proj__QPURE__item___4, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.003)
+{"tag":"QuickTestNBE.__proj__QPURE__item___4","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":9272048,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.qPURE","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5071065,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.range1","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":568929,"running":false,"undercount":false}}
+(QuickTestNBE.fst(54,2-60,28))	Query-stats (QuickTestNBE.wp, 1)	succeeded in 13 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.013)
+{"tag":"QuickTestNBE.wp","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":38835304,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.wp_block","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2039560,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.qblock_proof","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":5162198,"running":false,"undercount":false}}
+(QuickTestNBE.fst(73,2-73,41))	Query-stats (QuickTestNBE.qblock, 1)	succeeded in 15 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+{"tag":"QuickTestNBE.qblock","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":25726203,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.wp_sound_code_pre","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3158959,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.wp_sound_code_post","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4304318,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.normal_steps","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":903681,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.normal","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":4422761,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.wp_sound_code_norm","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3745789,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.f","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":477256,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.lem","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":2892549,"running":false,"undercount":false}}
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(QuickTestNBE.fst(97,0-106,3))	Query-stats (QuickTestNBE.va_qcode_Test, 1)	succeeded in 33 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.029)
+{"tag":"QuickTestNBE.va_qcode_Test","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":59543384,"running":false,"undercount":false}}
+(QuickTestNBE.fst(109,2-112,34))	Query-stats (QuickTestNBE.va_lemma_Test, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.013)
+{"tag":"QuickTestNBE.va_lemma_Test","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":9654352,"running":false,"undercount":false}}
+{"tag":"QuickTestNBE.lem2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":3681076,"running":false,"undercount":false}}
+(QuickTestNBE.fst(120,0-127,3))	Query-stats (QuickTestNBE.va_qcode_Test2, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.013)
+{"tag":"QuickTestNBE.va_qcode_Test2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":16898180,"running":false,"undercount":false}}
+(QuickTestNBE.fst(131,2-134,34))	Query-stats (QuickTestNBE.va_lemma_Test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+(QuickTestNBE.fst(131,2-134,34))	Query-stats (QuickTestNBE.va_lemma_Test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.007)
+(QuickTestNBE.fst(131,2-134,34))	Query-stats (QuickTestNBE.va_lemma_Test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.007)
+(QuickTestNBE.fst(131,2-134,34))	Query-stats (QuickTestNBE.va_lemma_Test2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.007)
+{"tag":"QuickTestNBE.va_lemma_Test2","counter":{"id":"FStarC.TypeChecker.Tc.process_one_decl","total_time":0,"running":true,"undercount":false}}
+{"msg":[""],"level":"Warning","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":116,"col":16},"end_pos":{"line":116,"col":18}},"use":{"file_name":"QuickTestNBE","start_pos":{"line":1,"col":2},"end_pos":{"line":3,"col":4}}},"number":252,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+{"msg":[""],"level":"Warning","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":116,"col":16},"end_pos":{"line":116,"col":18}},"use":{"file_name":"QuickTestNBE","start_pos":{"line":1,"col":2},"end_pos":{"line":3,"col":4}}},"number":252,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+{"msg":[""],"level":"Warning","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":116,"col":16},"end_pos":{"line":116,"col":18}},"use":{"file_name":"QuickTestNBE","start_pos":{"line":1,"col":2},"end_pos":{"line":3,"col":4}}},"number":252,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+{"msg":[""],"level":"Warning","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":116,"col":16},"end_pos":{"line":116,"col":18}},"use":{"file_name":"QuickTestNBE","start_pos":{"line":1,"col":2},"end_pos":{"line":3,"col":4}}},"number":252,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+{"msg":["Expected failure:","","SMT solver says:\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)\n  unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)\nNote:\n  - 'canceled' or 'resource limits reached' means the SMT query timed out, so\n  you might want to increase the rlimit\n  - 'incomplete quantifiers' means Z3 could not prove the query, so try to spell\n  out your proof out in greater detail, increase fuel or ifuel\n  - 'unknown' means Z3 provided no further reason for the proof failing","Also see: QuickTestNBE(1,2-3,4)","Other related locations: QuickTestNBE.fst(116,16-116,18)"],"level":"Info","range":{"def":{"file_name":"QuickTestNBE.fst","start_pos":{"line":131,"col":2},"end_pos":{"line":134,"col":34}},"use":{"file_name":"QuickTestNBE.fst","start_pos":{"line":131,"col":2},"end_pos":{"line":134,"col":34}}},"number":19,"ctx":["While typechecking the top-level declaration `let va_lemma_Test2`","While typechecking the top-level declaration `[@@expect_failure] let va_lemma_Test2`"]}
+Killing old z3proc (ask_count=6, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 566 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format json --silent -f --print_expected_failures QuickTestNBE.fst

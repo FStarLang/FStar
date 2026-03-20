@@ -1,5 +1,43 @@
+MatchRest.t, profiled FStarC.TypeChecker.Tc.process_one_decl:	 17 ms
+MatchRest.t__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MatchRest.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+MatchRest.uu___is_A, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MatchRest.__proj__A__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(dummy(0,0-0,0))	Query-stats (MatchRest.__proj__A__item___0, 1)	succeeded in 24 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__A__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 30 ms
+MatchRest.__proj__A__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (MatchRest.__proj__A__item___1, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__A__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+MatchRest.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+MatchRest.uu___is_B, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+MatchRest.__proj__B__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (MatchRest.__proj__B__item___0, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__B__item___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+MatchRest.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+MatchRest.uu___is_C, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MatchRest.__proj__C__item__uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(MatchRest.fst(6,9-6,10))	Query-stats (MatchRest.__proj__C__item__uu___0, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__C__item__uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+MatchRest.__proj__C__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(dummy(0,0-0,0))	Query-stats (MatchRest.__proj__C__item___1, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__C__item___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+MatchRest.uu___is_D, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+MatchRest.uu___is_D, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+MatchRest.__proj__D__item__uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(MatchRest.fst(7,9-7,10))	Query-stats (MatchRest.__proj__D__item__uu___1, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__D__item__uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+MatchRest.__proj__D__item__uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(MatchRest.fst(7,19-7,20))	Query-stats (MatchRest.__proj__D__item__uu___2, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+MatchRest.__proj__D__item__uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 5 ms
+(MatchRest.fst(10,2-14,13))	Query-stats (MatchRest.tag, 1)	succeeded in 7 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+MatchRest.tag, profiled FStarC.TypeChecker.Tc.process_one_decl:	 16 ms
 * Info at MatchRest.fst(19,4-19,6):
   - Expected failure:
   - Unexpected pattern.
   - Using `..` is only allowed as argument to a data constructor, e.g. `C ..`.
 
+(MatchRest.fst(22,2-25,13))	Query-stats (MatchRest.deep, 1)	succeeded in 8 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+MatchRest.deep, profiled FStarC.TypeChecker.Tc.process_one_decl:	 18 ms
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 313 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --warn_error +240 --message_format human --silent -f --print_expected_failures MatchRest.fst

@@ -1,27 +1,42 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+UnivInst.id, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at UnivInst.fst(8,8-8,10):
   - Expected failure:
   - Unexpected number of universe instantiations for "id" (2 vs 1)
   - See also UnivInst.fst(5,4-5,6)
 
+UnivInst.fst(8,0-8,25), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+UnivInst.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at UnivInst.fst(13,16-13,19):
   - Expected failure:
   - Expected expression of type Type
     got expression Prims.int
     of type Prims.eqtype
 
+UnivInst.fst(13,0-13,21), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+UnivInst.foo, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
 * Info at UnivInst.fst(18,8-18,11):
   - Expected failure:
   - Unexpected number of universe instantiations for "foo" (1 vs 2)
   - See also UnivInst.fst(15,4-15,7)
 
+UnivInst.fst(18,0-18,22), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+UnivInst.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at UnivInst.fst(23,22-23,26):
   - Expected failure:
   - Expected expression of type Type
     got expression Prims.bool
     of type Prims.eqtype
 
+UnivInst.fst(23,0-23,26), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at UnivInst.fst(26,8-26,11):
   - Expected failure:
   - Unexpected number of universe instantiations for "foo" (3 vs 2)
   - See also UnivInst.fst(15,4-15,7)
 
+UnivInst.fst(26,0-26,30), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 160 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures UnivInst.fst

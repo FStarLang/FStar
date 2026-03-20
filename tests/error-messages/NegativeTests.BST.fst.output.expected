@@ -1,3 +1,85 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(NegativeTests.BST.fst(19,0-29,17))	Query-stats (NegativeTests.BST.tree, 1)	succeeded in 37 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+NegativeTests.BST.tree, profiled FStarC.TypeChecker.Tc.process_one_decl:	 69 ms
+NegativeTests.BST.tree__uu___haseq, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+NegativeTests.BST.uu___is_Leaf, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.BST.uu___is_Leaf, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+NegativeTests.BST.__proj__Leaf__item__n, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(NegativeTests.BST.fst(20,11-20,12))	Query-stats (NegativeTests.BST.__proj__Leaf__item__n, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+NegativeTests.BST.__proj__Leaf__item__n, profiled FStarC.TypeChecker.Tc.process_one_decl:	 10 ms
+NegativeTests.BST.uu___is_Node, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+NegativeTests.BST.uu___is_Node, profiled FStarC.TypeChecker.Tc.process_one_decl:	 3 ms
+NegativeTests.BST.__proj__Node__item__l, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(NegativeTests.BST.fst(21,12-21,13))	Query-stats (NegativeTests.BST.__proj__Node__item__l, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+NegativeTests.BST.__proj__Node__item__l, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+NegativeTests.BST.__proj__Node__item__left, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(NegativeTests.BST.fst(22,11-22,15))	Query-stats (NegativeTests.BST.__proj__Node__item__left, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+NegativeTests.BST.__proj__Node__item__left, profiled FStarC.TypeChecker.Tc.process_one_decl:	 14 ms
+NegativeTests.BST.__proj__Node__item__n, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(NegativeTests.BST.fst(23,11-23,12))	Query-stats (NegativeTests.BST.__proj__Node__item__n, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+NegativeTests.BST.__proj__Node__item__n, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+NegativeTests.BST.__proj__Node__item__r, profiled FStarC.TypeChecker.Tc.process_one_decl:	 1 ms
+(NegativeTests.BST.fst(24,12-24,13))	Query-stats (NegativeTests.BST.__proj__Node__item__r, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.002)
+NegativeTests.BST.__proj__Node__item__r, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+NegativeTests.BST.__proj__Node__item__right, profiled FStarC.TypeChecker.Tc.process_one_decl:	 7 ms
+(NegativeTests.BST.fst(25,11-25,16))	Query-stats (NegativeTests.BST.__proj__Node__item__right, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.014)
+NegativeTests.BST.__proj__Node__item__right, profiled FStarC.TypeChecker.Tc.process_one_decl:	 77 ms
+(NegativeTests.BST.fst(32,21-32,43))	Query-stats (NegativeTests.BST.test_node_1, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+NegativeTests.BST.test_node_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+(NegativeTests.BST.fst(33,37-33,72))	Query-stats (NegativeTests.BST.test_node_2, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+NegativeTests.BST.test_node_2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 9 ms
+(NegativeTests.BST.fst(34,56-34,88))	Query-stats (NegativeTests.BST.test_node_3, 1)	succeeded in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.012)
+NegativeTests.BST.test_node_3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 11 ms
+(NegativeTests.BST.fst(37,20-37,42))	Query-stats (NegativeTests.BST.bad_node_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+(NegativeTests.BST.fst(37,20-37,42))	Query-stats (NegativeTests.BST.bad_node_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(NegativeTests.BST.fst(37,20-37,42))	Query-stats (NegativeTests.BST.bad_node_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+(NegativeTests.BST.fst(37,20-37,42))	Query-stats (NegativeTests.BST.bad_node_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 1 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.005)
+NegativeTests.BST.bad_node_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at NegativeTests.BST.fst(37,38-37,42):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree 2)
+        { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
+          None? FStar.Pervasives.Native.None == (1 = 0) }
+    got type FStar.Pervasives.Native.option (tree 2)
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(37,38-37,42):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree 2)
+        { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
+          None? FStar.Pervasives.Native.None == (1 = 0) }
+    got type FStar.Pervasives.Native.option (tree 2)
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(37,38-37,42):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree 2)
+        { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
+          None? FStar.Pervasives.Native.None == (1 = 0) }
+    got type FStar.Pervasives.Native.option (tree 2)
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(37,38-37,42):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree 2)
+        { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
+          None? FStar.Pervasives.Native.None == (1 = 0) }
+    got type FStar.Pervasives.Native.option (tree 2)
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
 * Info at NegativeTests.BST.fst(37,38-37,42):
   - Expected failure:
   - Subtyping check failed
@@ -7,8 +89,62 @@
         { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
           None? FStar.Pervasives.Native.None == (1 = 0) }
     got type FStar.Pervasives.Native.option (tree 2)
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+(NegativeTests.BST.fst(40,36-40,65))	Query-stats (NegativeTests.BST.bad_node_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(40,36-40,65))	Query-stats (NegativeTests.BST.bad_node_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(40,36-40,65))	Query-stats (NegativeTests.BST.bad_node_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(40,36-40,65))	Query-stats (NegativeTests.BST.bad_node_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+NegativeTests.BST.bad_node_2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at NegativeTests.BST.fst(40,61-40,65):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t) == (l = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(40,61-40,65):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t) == (l = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(40,61-40,65):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t) == (l = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(40,61-40,65):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t) == (l = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(40,61-40,65):
@@ -20,8 +156,62 @@
         { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
           None? (FStar.Pervasives.Native.Some t) == (l = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+(NegativeTests.BST.fst(43,55-43,87))	Query-stats (NegativeTests.BST.bad_node_3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(43,55-43,87))	Query-stats (NegativeTests.BST.bad_node_3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(43,55-43,87))	Query-stats (NegativeTests.BST.bad_node_3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.008)
+(NegativeTests.BST.fst(43,55-43,87))	Query-stats (NegativeTests.BST.bad_node_3, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.009)
+NegativeTests.BST.bad_node_3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at NegativeTests.BST.fst(43,78-43,87):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(43,78-43,87):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(43,78-43,87):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
+  - See also NegativeTests.BST.fst(27,36-27,58)
+
+* Warning 252 at NegativeTests.BST.fst(43,78-43,87):
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
   - See also NegativeTests.BST.fst(27,36-27,58)
 
 * Info at NegativeTests.BST.fst(43,78-43,87):
@@ -33,7 +223,18 @@
         { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
           None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
     got type FStar.Pervasives.Native.option (tree (l + 1))
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also NegativeTests.BST.fst(27,36-27,58)
 
+Killing old z3proc (ask_count=21, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 471 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures NegativeTests.BST.fst

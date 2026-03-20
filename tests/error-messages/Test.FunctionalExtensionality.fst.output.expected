@@ -1,31 +1,192 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(Test.FunctionalExtensionality.fst(36,49-36,50))	Query-stats (Test.FunctionalExtensionality.sub_fails, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 29 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(36,49-36,50))	Query-stats (Test.FunctionalExtensionality.sub_fails, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.009)
+(Test.FunctionalExtensionality.fst(36,49-36,50))	Query-stats (Test.FunctionalExtensionality.sub_fails, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.009)
+(Test.FunctionalExtensionality.fst(36,49-36,50))	Query-stats (Test.FunctionalExtensionality.sub_fails, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.009)
+Test.FunctionalExtensionality.sub_fails, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Test.FunctionalExtensionality.fst(36,49-36,50):
+  - Subtyping check failed
+  - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(36,49-36,50):
+  - Subtyping check failed
+  - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(36,49-36,50):
+  - Subtyping check failed
+  - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(36,49-36,50):
+  - Subtyping check failed
+  - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
 * Info at Test.FunctionalExtensionality.fst(36,49-36,50):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+Test.FunctionalExtensionality.sub_ok, profiled FStarC.TypeChecker.Tc.process_one_decl:	 2 ms
+Test.FunctionalExtensionality.f, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Test.FunctionalExtensionality.g, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Test.FunctionalExtensionality.h, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(Test.FunctionalExtensionality.fst(50,0-61,29))	Query-stats (Test.FunctionalExtensionality.on_dom_transitivity_of_equality, 1)	succeeded in 12 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.019)
+Test.FunctionalExtensionality.on_dom_transitivity_of_equality, profiled FStarC.TypeChecker.Tc.process_one_decl:	 41 ms
+Test.FunctionalExtensionality.f1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Test.FunctionalExtensionality.g1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+(Test.FunctionalExtensionality.fst(69,0-80,43))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.011)
+(Test.FunctionalExtensionality.fst(69,0-80,43))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(69,0-80,43))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(69,0-80,43))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_1, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Test.FunctionalExtensionality.fst(80,2-80,8):
+  - Assertion failed
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(80,2-80,8):
+  - Assertion failed
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(80,2-80,8):
+  - Assertion failed
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(80,2-80,8):
+  - Assertion failed
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
 
 * Info at Test.FunctionalExtensionality.fst(80,2-80,8):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+
+(Test.FunctionalExtensionality.fst(83,0-92,52))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(83,0-92,52))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(83,0-92,52))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(83,0-92,52))	Query-stats (Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_2, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 2 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+Test.FunctionalExtensionality.unable_to_extend_equality_to_larger_domains_2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Test.FunctionalExtensionality.fst(92,36-92,47):
+  - Subtyping check failed
+  - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(682,18-682,24)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(92,36-92,47):
+  - Subtyping check failed
+  - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(682,18-682,24)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(92,36-92,47):
+  - Subtyping check failed
+  - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(682,18-682,24)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(92,36-92,47):
+  - Subtyping check failed
+  - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(682,18-682,24)
 
 * Info at Test.FunctionalExtensionality.fst(92,36-92,47):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also Prims.fst(682,18-682,24)
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/Prims.fst(682,18-682,24)
+
+(Test.FunctionalExtensionality.fst(94,0-103,42))	Query-stats (Test.FunctionalExtensionality.shrinking_domains_ok, 1)	succeeded in 15 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.015)
+Test.FunctionalExtensionality.shrinking_domains_ok, profiled FStarC.TypeChecker.Tc.process_one_decl:	 62 ms
+Test.FunctionalExtensionality.f_1542, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Test.FunctionalExtensionality.test_1542, profiled FStarC.TypeChecker.Tc.process_one_decl:	 8 ms
+(Test.FunctionalExtensionality.fst(125,4-125,6))	Query-stats (Test.FunctionalExtensionality.restricted_t_2_idem, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.008)
+Test.FunctionalExtensionality.restricted_t_2_idem, profiled FStarC.TypeChecker.Tc.process_one_decl:	 16 ms
+Test.FunctionalExtensionality.on_2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 6 ms
+(Test.FunctionalExtensionality.fst(133,6-133,8))	Query-stats (Test.FunctionalExtensionality.on_2_interp, 1)	succeeded in 17 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.041)
+Test.FunctionalExtensionality.on_2_interp, profiled FStarC.TypeChecker.Tc.process_one_decl:	 24 ms
+(Test.FunctionalExtensionality.fst(142,57-142,58))	Query-stats (Test.FunctionalExtensionality.sub_currently_not, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(142,57-142,58))	Query-stats (Test.FunctionalExtensionality.sub_currently_not, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(142,57-142,58))	Query-stats (Test.FunctionalExtensionality.sub_currently_not, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 5 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+(Test.FunctionalExtensionality.fst(142,57-142,58))	Query-stats (Test.FunctionalExtensionality.sub_currently_not, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 4 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.010)
+Test.FunctionalExtensionality.sub_currently_not, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at Test.FunctionalExtensionality.fst(142,57-142,58):
+  - Subtyping check failed
+  - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(142,57-142,58):
+  - Subtyping check failed
+  - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(142,57-142,58):
+  - Subtyping check failed
+  - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
+* Warning 252 at Test.FunctionalExtensionality.fst(142,57-142,58):
+  - Subtyping check failed
+  - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
 
 * Info at Test.FunctionalExtensionality.fst(142,57-142,58):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
+  - See also /home/nswamy/clean/FStar/stage3/out/lib/fstar/ulib/FStar.FunctionalExtensionality.fsti(102,60-102,77)
 
+(Test.FunctionalExtensionality.fst(145,63-145,94))	Query-stats (Test.FunctionalExtensionality.needs_explicit_coercion, 1)	succeeded in 3 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.007)
+Test.FunctionalExtensionality.needs_explicit_coercion, profiled FStarC.TypeChecker.Tc.process_one_decl:	 12 ms
+(Test.FunctionalExtensionality.fst(149,2-154,3))	Query-stats (Test.FunctionalExtensionality.sub_currently_not_why, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.011)
+Test.FunctionalExtensionality.sub_currently_not_why, profiled FStarC.TypeChecker.Tc.process_one_decl:	 26 ms
+Killing old z3proc (ask_count=21, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 534 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures Test.FunctionalExtensionality.fst

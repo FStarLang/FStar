@@ -1,7 +1,64 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(StrictUnfolding.fst(23,2-24,15))	Query-stats (StrictUnfolding.project, 1)	succeeded in 25 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.004)
+StrictUnfolding.project, profiled FStarC.TypeChecker.Tc.process_one_decl:	 35 ms
+(StrictUnfolding.fst(27,2-27,8))	Query-stats (StrictUnfolding.test1, 1)	succeeded in 6 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.011)
+StrictUnfolding.test1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 29 ms
+(StrictUnfolding.fst(34,2-38,16))	Query-stats (StrictUnfolding.test2, 1)	succeeded in 1 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+StrictUnfolding.test2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 19 ms
+(StrictUnfolding.fst(41,2-41,35))	Query-stats (StrictUnfolding.test_integer_generic, 1)	succeeded in 47 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.087)
+StrictUnfolding.test_integer_generic, profiled FStarC.TypeChecker.Tc.process_one_decl:	 65 ms
+StrictUnfolding.fst(44,0-44,53), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Killing old z3proc (ask_count=3, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(StrictUnfolding.fst(50,2-51,36))	Query-stats (StrictUnfolding.test_integer_generic_wo_fstar_integers, 1)	succeeded in 27 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+(StrictUnfolding.fst(50,2-50,8))	Query-stats (StrictUnfolding.test_integer_generic_wo_fstar_integers, 2)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 10 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.012)
+(StrictUnfolding.fst(50,2-50,8))	Query-stats (StrictUnfolding.test_integer_generic_wo_fstar_integers, 2)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.011)
+(StrictUnfolding.fst(50,2-50,8))	Query-stats (StrictUnfolding.test_integer_generic_wo_fstar_integers, 2)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.011)
+(StrictUnfolding.fst(50,2-50,8))	Query-stats (StrictUnfolding.test_integer_generic_wo_fstar_integers, 2)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 3 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.012)
+StrictUnfolding.test_integer_generic_wo_fstar_integers, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at StrictUnfolding.fst(50,2-50,8):
+  - Could not prove goal #1
+  - See also StrictUnfolding.fst(50,48-50,72)
+
+* Warning 252 at StrictUnfolding.fst(50,2-50,8):
+  - Could not prove goal #1
+  - See also StrictUnfolding.fst(50,48-50,72)
+
+* Warning 252 at StrictUnfolding.fst(50,2-50,8):
+  - Could not prove goal #1
+  - See also StrictUnfolding.fst(50,48-50,72)
+
+* Warning 252 at StrictUnfolding.fst(50,2-50,8):
+  - Could not prove goal #1
+  - See also StrictUnfolding.fst(50,48-50,72)
+
 * Info at StrictUnfolding.fst(50,2-50,8):
   - Expected failure:
   - Could not prove goal #1
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also StrictUnfolding.fst(50,48-50,72)
 
+(StrictUnfolding.fst(55,0-57,35))	Query-stats (StrictUnfolding.test_int_64, 1)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+(StrictUnfolding.fst(56,2-56,8))	Query-stats (StrictUnfolding.test_int_64, 2)	succeeded in 5 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.009)
+StrictUnfolding.test_int_64, profiled FStarC.TypeChecker.Tc.process_one_decl:	 66 ms
+(StrictUnfolding.fst(71,2-74,19))	Query-stats (StrictUnfolding.test_extraction_generic, 1)	succeeded in 9 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+StrictUnfolding.test_extraction_generic, profiled FStarC.TypeChecker.Tc.process_one_decl:	 51 ms
+(StrictUnfolding.fst(89,2-92,19))	Query-stats (StrictUnfolding.test_extraction_specific, 1)	succeeded in 2 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.005)
+StrictUnfolding.test_extraction_specific, profiled FStarC.TypeChecker.Tc.process_one_decl:	 46 ms
+Killing old z3proc (ask_count=8, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 1155 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures StrictUnfolding.fst

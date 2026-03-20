@@ -1,68 +1,94 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
+ArgsMismatch.foo, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(7,33-7,34):
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(7,19-7,34), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(8,35-8,36):
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
+ArgsMismatch.fst(8,19-8,36), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(10,34-10,35):
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(10,19-10,35), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.bar, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(14,33-14,34):
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(14,19-14,34), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(15,35-15,36):
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
+ArgsMismatch.fst(15,19-15,36), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.uu___1, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(17,34-17,35):
   - Expected failure:
   - Too many arguments to function of type y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(17,19-17,35), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.baz, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(21,33-21,34):
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(21,19-21,34), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(22,35-22,36):
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
+ArgsMismatch.fst(22,19-22,36), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.uu___2, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(24,34-24,35):
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(24,19-24,35), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.qux, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(28,33-28,34):
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(28,19-28,34), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(29,35-29,36):
   - Expected failure:
   - Inconsistent argument qualifiers.
   - Expected an implicit argument, got an explicit one.
 
+ArgsMismatch.fst(29,19-29,36), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ArgsMismatch.uu___3, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ArgsMismatch.fst(31,34-31,35):
   - Expected failure:
   - Too many arguments to function of type [@@@ 2]y: Prims.int -> Prims.int
   - Got 2 arguments
   - Remaining type is Prims.int
 
+ArgsMismatch.fst(31,19-31,35), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+TOTAL TIME 175 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures ArgsMismatch.fst

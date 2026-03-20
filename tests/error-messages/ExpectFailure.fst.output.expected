@@ -1,44 +1,121 @@
+* Warning 274:
+  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
+    "Calc.fst".
+  - Rename "Calc.fst" to avoid conflicts.
+
 * Info at ExpectFailure.fst(20,12-20,15):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
+ExpectFailure.fst(20,0-20,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ExpectFailure.fst(24,12-24,15):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
+ExpectFailure.fst(24,0-24,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Creating new z3proc (cmd=[("z3-4.13.3", ["-smt2", "-in"])], version=["4.13.3"])
+(ExpectFailure.fst(28,0-28,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 32 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(28,0-28,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(28,0-28,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(28,0-28,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+ExpectFailure.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at ExpectFailure.fst(28,8-28,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(28,15-28,20)
+
+* Warning 252 at ExpectFailure.fst(28,8-28,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(28,15-28,20)
+
+* Warning 252 at ExpectFailure.fst(28,8-28,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(28,15-28,20)
+
+* Warning 252 at ExpectFailure.fst(28,8-28,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(28,15-28,20)
+
 * Info at ExpectFailure.fst(28,8-28,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also ExpectFailure.fst(28,15-28,20)
+
+(ExpectFailure.fst(30,0-30,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 2 and ifuel 1 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(30,0-30,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 2 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(30,0-30,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 4 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+(ExpectFailure.fst(30,0-30,20))	Query-stats (ExpectFailure.uu___0, 1)	failed {reason-unknown=unknown because (incomplete quantifiers)} in 0 milliseconds with fuel 8 and ifuel 2 and rlimit 5 (used rlimit 0.000)
+ExpectFailure.uu___0, profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms (Warning, this counter is still running)
+* Warning 252 at ExpectFailure.fst(30,8-30,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(30,15-30,20)
+
+* Warning 252 at ExpectFailure.fst(30,8-30,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(30,15-30,20)
+
+* Warning 252 at ExpectFailure.fst(30,8-30,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(30,15-30,20)
+
+* Warning 252 at ExpectFailure.fst(30,8-30,14):
+  - Assertion failed
+  - See also ExpectFailure.fst(30,15-30,20)
 
 * Info at ExpectFailure.fst(30,8-30,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - SMT solver says:
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=8; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=4; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=2)
+      unknown because (incomplete quantifiers) (rlimit=5; fuel=2; ifuel=1)
+    Note:
+      - 'canceled' or 'resource limits reached' means the SMT query timed out,
+      so you might want to increase the rlimit
+      - 'incomplete quantifiers' means Z3 could not prove the query, so try to
+      spell out your proof out in greater detail, increase fuel or ifuel
+      - 'unknown' means Z3 provided no further reason for the proof failing
   - See also ExpectFailure.fst(30,15-30,20)
 
+ExpectFailure.fst(33,0-33,39), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ExpectFailure.fst(37,0-37,20), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ExpectFailure.fst(39,0-39,19), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ExpectFailure.fst(43,12-43,15):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
+ExpectFailure.fst(43,0-43,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+ExpectFailure.fst(45,0-45,17), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ExpectFailure.fst(50,12-50,15):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
+ExpectFailure.fst(50,0-50,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
 * Info at ExpectFailure.fst(61,12-61,15):
   - Expected failure:
   - Expected expression of type Prims.int
     got expression 'a'
     of type FStar.Char.char
 
+ExpectFailure.fst(61,0-61,15), profiled FStarC.TypeChecker.Tc.process_one_decl:	 0 ms
+Killing old z3proc (ask_count=7, old_cmd=[("z3-4.13.3", ["-smt2", "-in"])])
+TOTAL TIME 280 ms: /home/nswamy/clean/FStar/stage3/out/bin/fstar.exe --silent --odir _output --cache_dir _cache --already_cached Prims,FStar --warn_error -321 --warn_error -271 --ext auto_patterns=false --timing --query_stats --warn_error -271 --message_format human --silent -f --print_expected_failures ExpectFailure.fst
