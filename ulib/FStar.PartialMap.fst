@@ -36,5 +36,9 @@ let sel_remove _ _ = ()
 let sel_remove_distinct_key _ _ _ = ()
 
 let equal m1 m2 = feq m1 m2 /\ True
-let eq_intro _ _ = ()
+let eq_intro m1 m2 =
+  let aux (x:_) : Lemma (m1 x == m2 x) =
+    assert (sel m1 x == sel m2 x)
+  in
+  Classical.forall_intro aux
 let eq_elim _ _ = ()

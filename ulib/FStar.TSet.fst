@@ -45,7 +45,11 @@ let mem_subset     #_ _ _   = ()
 let subset_mem     #_ _ _   = ()
 let mem_intension  #_ _ _   = ()
 
-let lemma_equal_intro #_ _ _   = ()
+let lemma_equal_intro #_ s1 s2 =
+  let aux (x:_) : Lemma (s1 x <==> s2 x) =
+    assert (mem x s1 <==> mem x s2)
+  in
+  Classical.forall_intro aux
 let lemma_equal_elim  #a s1 s2 = PredicateExtensionality.predicateExtensionality a s1 s2
 let lemma_equal_refl  #_ _ _   = ()
 

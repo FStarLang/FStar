@@ -48,6 +48,10 @@ let comprehend_mem #a f x     = ()
 let mem_of_set     #a f x     = ()
 
 (* extensionality *)
-let lemma_equal_intro #a s1 s2 = ()
+let lemma_equal_intro #a s1 s2 =
+  let aux (x:a) : Lemma (s1 x == s2 x) =
+    assert (mem x s1 = mem x s2)
+  in
+  Classical.forall_intro aux
 let lemma_equal_elim  #a s1 s2 = ()
 let lemma_equal_refl  #a s1 s2 = ()

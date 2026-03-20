@@ -578,7 +578,7 @@ val allow_inversion (a: Type) : Pure unit (requires True) (ensures (fun x -> inv
 (** Since the [option] type is so common, we always allow inverting
     options, regardless of [ifuel] *)
 val invertOption (a: Type)
-    : Lemma (requires True) (ensures (forall (x: option a). {:nopattern} None? x \/ Some? x)) [SMTPat (option a)]
+    : Lemma (requires True) (ensures (forall (x: option a). {:pattern (None? x)} None? x \/ Some? x)) [SMTPat (option a)]
 
 (** Values of type [a] or type [b] *)
 type either a b =

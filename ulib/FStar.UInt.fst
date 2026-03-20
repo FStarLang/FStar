@@ -151,7 +151,10 @@ let ones_from_vec_lemma #n =
   to_vec_lemma_2 (from_vec (ones_vec #n)) (ones n)
 
 let nth_lemma #n a b =
-  assert(forall (i:nat{i < n}).  index (to_vec #n a) i = index (to_vec #n b) i);
+  let aux (i:nat{i < n}) : Lemma (index (to_vec #n a) i = index (to_vec #n b) i) =
+    assert (nth a i = nth b i)
+  in
+  Classical.forall_intro aux;
   to_vec_lemma_2 a b
 
 let zero_nth_lemma #n i = ()

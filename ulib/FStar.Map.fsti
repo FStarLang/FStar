@@ -89,7 +89,7 @@ let disjoint_dom (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value)
 
 (* has_dom m dom: A relational version of the `domain m` function *)
 let has_dom (#key:eqtype) (#value:Type) (m:t key value) (dom:S.set key)
-  = forall x. {:nopattern} contains m x <==> S.mem x dom
+  = forall x. {:pattern (contains m x)} contains m x <==> S.mem x dom
 
 (* Properties about map functions *)
 val lemma_SelUpd1: #key:eqtype -> #value:Type -> m:t key value -> k:key -> v:value ->
@@ -170,7 +170,7 @@ val equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) : prop
      Introducing `equal m1 m2` by showing maps to be pointwise equal on the same domain
 *)
 val lemma_equal_intro: #key:eqtype -> #value:Type -> m1:t key value -> m2:t key value ->
-                       Lemma (requires (forall k. {:nopattern} sel m1 k == sel m2 k /\
+                       Lemma (requires (forall k. {:pattern (sel m1 k)} sel m1 k == sel m2 k /\
                                              contains m1 k = contains m2 k))
                              (ensures (equal m1 m2))
                              [SMTPat (equal m1 m2)]

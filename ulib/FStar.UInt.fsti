@@ -272,7 +272,7 @@ let nth (#n:pos) (a:uint_t n) (i:nat{i < n}) : Tot bool =
   index (to_vec #n a) i
 
 val nth_lemma: #n:pos -> a:uint_t n -> b:uint_t n ->
-  Lemma (requires forall (i:nat{i < n}). {:nopattern} nth a i = nth b i)
+  Lemma (requires forall (i:nat{i < n}). {:pattern (nth a i)} nth a i = nth b i)
         (ensures a = b)
 
 (* Lemmas for constants *)

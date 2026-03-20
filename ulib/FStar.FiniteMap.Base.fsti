@@ -84,7 +84,7 @@ let rec item_list_doesnt_repeat_keys (#a: eqtype) (#b: Type u#b) (items: list (a
   | (k, v) :: tl -> not (key_in_item_list k tl) && item_list_doesnt_repeat_keys tl
 
 val map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-  : GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:nopattern} key_in_item_list key items <==> mem key m)})
+  : GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. {:pattern (mem key m)} key_in_item_list key items <==> mem key m)})
 
 /// We represent the Dafny operator [] on maps with `lookup`:
 
@@ -407,8 +407,8 @@ let subtract_element_fact =
 
 let map_equal_fact =
   forall (a: eqtype) (b: Type u#b) (m1: map a b) (m2: map a b).{:pattern equal m1 m2}
-    equal m1 m2 <==>   (forall key. {:nopattern} FSet.mem key (domain m1) = FSet.mem key (domain m2))
-                   /\ (forall key. {:nopattern} FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
+    equal m1 m2 <==>   (forall key. {:pattern (FSet.mem key (domain m1))} FSet.mem key (domain m1) = FSet.mem key (domain m2))
+                   /\ (forall key. {:pattern (FSet.mem key (domain m1))} FSet.mem key (domain m1) ==> (elements m1) key == (elements m2) key)
 
 /// We represent the following Dafny axiom with `map_extensionality_fact`:
 ///

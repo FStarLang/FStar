@@ -90,7 +90,7 @@ val sel_remove_distinct_key (#k:eqtype) (#v:Type) (m:t k v) (x1 x2:k)
 val equal (#k:eqtype) (#v:Type) (m1 m2:t k v) : prop
 
 val eq_intro (#k:eqtype) (#v:Type) (m1 m2:t k v)
-  : Lemma (requires forall (x:k). {:nopattern} sel m1 x == sel m2 x)
+  : Lemma (requires forall (x:k). {:pattern (sel m1 x)} sel m1 x == sel m2 x)
           (ensures equal m1 m2)
           [SMTPat (equal m1 m2)]
 
