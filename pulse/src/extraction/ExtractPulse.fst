@@ -56,7 +56,7 @@ let head_and_args (e : mlexpr) : mlexpr & list mlexpr =
   in
   aux [] e
 
-let zero_for_deref = EQualified (["C"], "_zero_for_deref")
+let zero_for_deref = EQualified (["Pulse"; "Lib"; "Pervasives"], "_zero_for_deref")
 
 type goto_env_elem =
   | ReturnLabel

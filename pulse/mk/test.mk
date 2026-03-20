@@ -106,7 +106,7 @@ $(OUTPUT_DIR)/$(subst .,_,%).krml:
 	$(call msg, "EXTRACT", $(basename $(notdir $@)))
 	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
 
-$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
+$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml	$(OUTPUT_DIR)/Pulse_Lib_Pervasives.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	if ! which $(KRML_EXE); then echo "krml ($(KRML_EXE)) not found" >&2; false; fi
 	$(KRML_EXE) $(KRML_FLAGS) -skip-makefiles -header=$(PULSE_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)

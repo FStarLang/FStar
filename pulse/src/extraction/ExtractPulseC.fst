@@ -135,6 +135,8 @@ let my_types () : ML unit = register_pre_translate_type begin fun env t ->
   | _ -> raise NotSupportedByKrmlExtension
 end
 
+let zero_for_deref = EQualified (["Pulse"; "Lib"; "Pervasives"], "_zero_for_deref")
+
 let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
   match e.expr with
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _ (* typedef *) ])
@@ -197,7 +199,7 @@ let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
     ->
       EAddrOf (EField (
         TQualified (Option.must (lident_of_string struct_name)),
-        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        EBufRead (translate_expr env r, zero_for_deref),
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, (t :: _))},
@@ -212,17 +214,17 @@ let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
     ->
       EAddrOf (EField (
         translate_type env t,
-        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        EBufRead (translate_expr env r, zero_for_deref),
         field_name))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *) ; _ (* perm *) ; r])
     when string_of_mlpath p = "Pulse.C.Types.Scalar.read0" ->
-      EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
+      EBufRead (translate_expr env r, zero_for_deref)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [_ (* value *); r; x])
     when string_of_mlpath p = "Pulse.C.Types.Scalar.write" ->
       EAssign (
-        EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref")),
+        EBufRead (translate_expr env r, zero_for_deref),
         translate_expr env x)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
@@ -235,8 +237,8 @@ let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
     ])
     when string_of_mlpath p = "Pulse.C.Types.Base.copy" ->
       EAssign (
-        EBufRead (translate_expr env dst, EQualified (["C"], "_zero_for_deref")),
-        EBufRead (translate_expr env src, EQualified (["C"], "_zero_for_deref")))
+        EBufRead (translate_expr env dst, zero_for_deref),
+        EBufRead (translate_expr env src, zero_for_deref))
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
       _ (* typedef *);
@@ -268,7 +270,7 @@ let my_exprs () : ML unit = register_pre_translate_expr begin fun env e ->
     ])
     when string_of_mlpath p = "Pulse.C.Types.Array.array_ref_of_base" ->
       // this is not a true read, this is how Karamel models arrays decaying into pointers
-      EBufRead (translate_expr env r, EQualified (["C"], "_zero_for_deref"))
+      EBufRead (translate_expr env r, zero_for_deref)
 
   | MLE_App ({expr=MLE_TApp ({expr=MLE_Name p}, _)}, [
       _ (* typedef *);
