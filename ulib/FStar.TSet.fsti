@@ -38,7 +38,7 @@ val complement : #a:Type -> x:set a -> Tot (set a)
 val intension  : #a:Type -> (a -> prop) -> Tot (set a)
 
 (* ops *)
-let subset (#a:Type) (s1:set a) (s2:set a) : Type0 = forall x. {:pattern (mem x s1)} mem x s1 ==> mem x s2
+let subset (#a:Type) (s1:set a) (s2:set a) : Type0 = forall x. {:nopattern} mem x s1 ==> mem x s2
 
 (* Properties *)
 val mem_empty: #a:Type -> x:a -> Lemma
@@ -67,13 +67,13 @@ val mem_complement: #a:Type -> x:a -> s:set a -> Lemma
    [SMTPat (mem x (complement s))]
 
 val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma
-   (requires (forall x. {:pattern (mem x s1)} mem x s1 ==> mem x s2))
+   (requires (forall x. {:nopattern} mem x s1 ==> mem x s2))
    (ensures (subset s1 s2))
    [SMTPat (subset s1 s2)]
 
 val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (subset s1 s2))
-   (ensures (forall x. {:pattern (mem x s1)} mem x s1 ==> mem x s2))
+   (ensures (forall x. {:nopattern} mem x s1 ==> mem x s2))
    [SMTPat (subset s1 s2)]
 
 val mem_intension (#a:Type) (x:a) (f:(a -> prop))
@@ -84,7 +84,7 @@ val mem_intension (#a:Type) (x:a) (f:(a -> prop))
 (* extensionality *)
 
 val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
-    (requires  (forall x. {:pattern (mem x s1)} mem x s1 <==> mem x s2))
+    (requires  (forall x. {:nopattern} mem x s1 <==> mem x s2))
     (ensures (equal s1 s2))
     [SMTPat (equal s1 s2)]
 

@@ -155,7 +155,7 @@ val lemma_count_slice: #a:eqtype -> s:seq a -> i:nat{i<=length s} -> Lemma
 type total_order (a:eqtype) (f: (a -> a -> Tot bool)) =
     (forall a. {:pattern (f a a)} f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. {:pattern (f a1 a2)} (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. {:pattern (f a1 a3); (f a2 a3)} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+    /\ (forall a1 a2 a3. {:nopattern (* any pattern on transitivity breaks some proofs; leave to Z3 *)} f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 type tot_ord (a:eqtype) = f:(a -> a -> Tot bool){total_order a f}
 
 val sorted_concat_lemma: #a:eqtype
