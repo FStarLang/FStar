@@ -661,6 +661,7 @@ clean-0: .force
 define clean-stage
 	$(call bold_msg, "CLEAN", "STAGE $(1)")
 	$(MAKE) -C stage$(1) clean
+	rm -f stage$(1)/.fstarlock
 	rm -rf stage$(1)/fstarc.checked
 	rm -rf stage$(1)/fstarc.ml
 	rm -rf stage$(1)/plugins.checked
@@ -677,11 +678,20 @@ clean-2: .force
 	$(call clean-stage,2)
 
 clean-3: .force
-	$(call clean-stage,3)
-	rm -rf stage3/checker.ml
-	rm -rf stage3/extraction.ml
-	rm -rf stage3/syntax_extension.ml
-	$(MAKE) -C pulse clean
+	$(call bold_msg, "CLEAN", "STAGE 3")
+	$(MAKE) -C stage3 clean
+	rm -f stage3/.fstarlock
+	rm -rf stage3/fstarc.ml
+	rm -rf stage3/plugins.checked
+	rm -rf stage3/plugins.ml
+	rm -rf stage3/ulib.ml
+	rm -rf stage3/ulib.pluginml
+	rm -rf pulse/build/checker.checked pulse/build/checker.ml
+	rm -rf pulse/build/extraction.checked pulse/build/extraction.ml
+	rm -rf pulse/build/syntax_extension.checked pulse/build/syntax_extension.ml
+	rm -rf pulse/build/lib.pulse.checked pulse/build/lib.pulse.ml
+	rm -rf pulse/build/lib.core.checked pulse/build/lib.core.ml
+	rm -rf pulse/build/lib.common.checked pulse/build/lib.common.ml
 
 clean-boot-diff: .force
 	$(call bold_msg, "CLEAN", "STAGE 2+1")
@@ -693,6 +703,8 @@ clean: trim
 	$(call bold_msg, "CLEAN", "out/")
 	# ah.. this is just a symlink, recursive calls above should just trim
 	rm -rf out
+	rm -rf bin
+	rm -f .*.touch
 
 distclean: clean
 	$(call bold_msg, "DISTCLEAN")
