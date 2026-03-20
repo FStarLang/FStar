@@ -661,6 +661,7 @@ clean-0: .force
 define clean-stage
 	$(call bold_msg, "CLEAN", "STAGE $(1)")
 	$(MAKE) -C stage$(1) clean
+	rm -f stage$(1)/.fstarlock
 	rm -rf stage$(1)/fstarc.checked
 	rm -rf stage$(1)/fstarc.ml
 	rm -rf stage$(1)/plugins.checked
@@ -679,6 +680,7 @@ clean-2: .force
 clean-3: .force
 	$(call bold_msg, "CLEAN", "STAGE 3")
 	$(MAKE) -C stage3 clean
+	rm -f stage3/.fstarlock
 	rm -rf stage3/fstarc.ml
 	rm -rf stage3/plugins.checked
 	rm -rf stage3/plugins.ml
@@ -701,6 +703,8 @@ clean: trim
 	$(call bold_msg, "CLEAN", "out/")
 	# ah.. this is just a symlink, recursive calls above should just trim
 	rm -rf out
+	rm -rf bin
+	rm -f .*.touch
 
 distclean: clean
 	$(call bold_msg, "DISTCLEAN")
