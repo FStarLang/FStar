@@ -68,6 +68,48 @@ let add_decorations decors ds =
     | Inl p -> Inl (PulseSyntaxExtension_Sugar.add_decorations p decors)
     | Inr d -> Inr (FStarC_Parser_AST.add_decorations d decors)) ds
 
+(* Build an F* AST term for a Pulse fn type expression.
+   fn (x:t1) (y:t2) requires pre ensures post
+   becomes: (x:t1) -> (y:t2) -> stt ret_type pre (fun ret_name -> post)
+*)
+let build_fn_type_term (binders : FStarC_Parser_AST.binder list list) (comp : PulseSyntaxExtension_Sugar.computation_type) r : FStarC_Parser_AST.term =
+  let open PulseSyntaxExtension_Sugar in
+  let flat_bs = List.flatten binders in
+  let annots = List.map fst comp.annots in
+  let star op t1 t2 = mk_term (Op (FStarC_Ident.mk_ident (op, r), [t1; t2])) r Un in
+  let star_join terms =
+    match terms with
+    | [] -> mk_term (Var (FStarC_Ident.lid_of_ids [FStarC_Ident.mk_ident("emp", r)])) r Un
+    | [t] -> t
+    | t :: rest -> List.fold_left (star "**") t rest
+  in
+  let requires = List.filter_map (function Requires t | Preserves t -> Some t | _ -> None) annots in
+  let ensures = List.filter_map (function Ensures t | Preserves t -> Some t | _ -> None) annots in
+  let ret_info = List.find_map (function Returns (id_opt, ty) -> Some (id_opt, ty) | _ -> None) annots in
+  let opens = List.find_map (function Opens t -> Some t | _ -> None) annots in
+  let ret_ty = match ret_info with Some (_, ty) -> ty | None -> mk_term (Var (FStarC_Ident.lid_of_ids [FStarC_Ident.mk_ident("unit", r)])) r Un in
+  let ret_name = match ret_info with Some (Some id, _) -> id | _ -> FStarC_Ident.mk_ident("_", r) in
+  let pre = star_join requires in
+  let post = star_join ensures in
+  let post_pat = mk_pattern (PatVar (ret_name, None, [])) r in
+  let post_lam = mk_term (Abs ([post_pat], post)) r Un in
+  let stt_name = match comp.tag with
+    | ST -> "stt" | STGhost -> "stt_ghost"
+    | STAtomic -> "stt_atomic" | STUnobservable -> "stt_unobservable"
+  in
+  let stt_var = mk_term (Var (FStarC_Ident.lid_of_ids [FStarC_Ident.mk_ident(stt_name, r)])) r Un in
+  let stt_app = match comp.tag with
+    | ST ->
+      mkApp stt_var [(ret_ty, Nothing); (pre, Nothing); (post_lam, Nothing)] r
+    | STGhost | STAtomic | STUnobservable ->
+      let inames = match opens with
+        | Some t -> t
+        | None -> mk_term (Var (FStarC_Ident.lid_of_ids [FStarC_Ident.mk_ident("emp_inames", r)])) r Un
+      in
+      mkApp stt_var [(ret_ty, Nothing); (inames, Nothing); (pre, Nothing); (post_lam, Nothing)] r
+  in
+  mk_term (Product (flat_bs, stt_app)) r Type_level
+
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
@@ -123,6 +165,18 @@ incrementalLangDecl:
 declBody:
   | p=pulseDecl { [Inl p] }
   | d=decoratableDecl { List.map (fun x -> Inr x) d }
+
+(* Extend F*'s typeDefinition to support fn type abbreviations:
+   type name <type_params> = fn <fn_params> comp *)
+%public
+typeDefinition:
+  | EQUALS q=qualOptFn fn_params=list(multiBinder)
+    ascription=pulseComputationType
+    {
+      let comp = with_computation_tag ascription q in
+      let body = build_fn_type_term fn_params comp (rr $loc) in
+      (fun id binders kopt -> TyconAbbrev(id, binders, kopt, body))
+    }
 
 pulseDecl:
   | q=qualOptFn (* workaround what seems to be a menhir bug *)
@@ -185,6 +239,27 @@ pulseDeclEOF:
   | p=pulseDecl EOF
     {
       p
+    }
+
+(* fn type as a term: fn (x:int) requires p ensures q
+   We extend typ and simpleArrow to support fn type syntax in all type
+   positions. typ covers type definitions, val return types, record
+   fields, etc. simpleArrow is needed separately because binder
+   annotations (x : simpleArrow) do not go through typ. *)
+%public
+typ:
+  | q=qualOptFn bs=list(multiBinder) comp=pulseComputationType
+    {
+      let comp = with_computation_tag comp q in
+      build_fn_type_term bs comp (rr $loc)
+    }
+
+%public
+simpleArrow:
+  | q=qualOptFn bs=list(multiBinder) comp=pulseComputationType
+    {
+      let comp = with_computation_tag comp q in
+      build_fn_type_term bs comp (rr $loc)
     }
 
 pulseBinderList:
