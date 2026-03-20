@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "../../../stage2/out/bin/fstar.exe",
   "options": [
     "--query_cache",
     "--lax",

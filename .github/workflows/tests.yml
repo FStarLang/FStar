@@ -74,7 +74,7 @@ jobs:
         run: tar xzf fstar.tar.gz && ln -s fstar out
 
       - name: Run tests, without forcing a build
-        run: make -skj$(nproc) _test
+        run: make -skj$(nproc) _test _test_pulse
 
   # This runs the bare tests over the bare stage2 compiler.
   # We start from the built repo.

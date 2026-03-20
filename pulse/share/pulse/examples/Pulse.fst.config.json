@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "../../../../out/bin/fstar.exe",
   "options": [
     "--query_cache",
     "--cache_dir",
@@ -12,7 +12,6 @@
     "fly_deps"
   ],
   "include_dirs": [
-    "../../../out/lib/pulse",
     "by-example",
     "parallel",
     "c",
