@@ -1,82 +1,63 @@
 #!/bin/bash
+#
+# bench_autopatterns.sh — Benchmark auto_patterns vs baseline
+#
+# Clones the repo twice, does a full clean build + test in each,
+# and compares query_stats output.
+#
+# Usage:
+#   ./tools/bench_autopatterns.sh [WORKDIR]
+#
+# WORKDIR defaults to /tmp/bench-autopatterns-<timestamp>
+#
 set -uo pipefail
 
-FSTAR_ROOT="/home/nswamy/clean/FStar"
-FSTAR="$FSTAR_ROOT/stage3/out/bin/fstar.exe"
-WORKDIR="/tmp/bench-v4"
-rm -rf "$WORKDIR"
-mkdir -p "$WORKDIR/base" "$WORKDIR/head"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+WORKDIR="${1:-/tmp/bench-autopatterns-$(date +%s)}"
+BASE_DIR="$WORKDIR/base"
+HEAD_DIR="$WORKDIR/head"
 
-TARGETS="tests/micro-benchmarks tests/bug-reports tests/calc tests/coercions tests/typeclasses tests/tactics tests/semiring tests/projectors tests/error-messages tests/friends tests/hacl tests/vale examples/algorithms examples/data_structures examples/demos examples/dm4free examples/dsls examples/indexed_effects examples/layeredeffects examples/metatheory examples/misc examples/oplss2021 examples/paradoxes examples/param examples/preorders examples/rel examples/software_foundations examples/tactics examples/termination examples/typeclasses examples/verifythis"
+echo "=== Auto-patterns benchmark ==="
+echo "Repo:    $REPO_DIR"
+echo "Workdir: $WORKDIR"
+echo ""
 
-run_config() {
-  local label=$1 outdir=$2 extra_flags=$3
-  cd "$FSTAR_ROOT"
+mkdir -p "$WORKDIR"
 
-  echo "=== $label: Rebuilding ulib ==="
-  rm -rf stage2/ulib.checked && mkdir -p stage2/ulib.checked
-  env SRC=ulib/ FSTAR_EXE="$FSTAR" CACHE_DIR=stage2/ulib.checked/ OUTPUT_DIR=stage2/ulib.ml/ \
-      CODEGEN=OCaml TAG=lib OTHERFLAGS="$extra_flags --warn_error -271" TOUCH=".alib_${label}.src.touch" \
-      make -f mk/lib.mk verify -j16 -sk 2>&1 | tail -1
-  rm -f stage3/out/lib/fstar/ulib.checked
-  ln -sf "$FSTAR_ROOT/stage2/ulib.checked" stage3/out/lib/fstar/ulib.checked
+# Clone twice
+echo "=== Cloning baseline ==="
+git clone "$REPO_DIR" "$BASE_DIR"
+echo "=== Cloning head ==="
+git clone "$REPO_DIR" "$HEAD_DIR"
 
-  echo "=== $label: Rebuilding Pulse lib ==="
-  rm -rf pulse/build/lib.pulse.checked pulse/build/lib.common.checked pulse/build/lib.core.checked 2>/dev/null || true
-  mkdir -p pulse/build
+# Baseline: build + test with auto_patterns=false
+echo "=== BASELINE: make test (auto_patterns=false) ==="
+cd "$BASE_DIR"
+/usr/bin/time -v -o "$WORKDIR/base.time" \
+  make test \
+    OTHERFLAGS="--ext auto_patterns=false --timing --query_stats --warn_error -271" \
+    -j$(nproc) -sk \
+  > "$WORKDIR/base.stdout" 2> "$WORKDIR/base.stderr" || true
+echo "=== BASELINE DONE ==="
 
-  /usr/bin/time -v -o "$outdir/pulse_core.time" \
-    make -C pulse/ -f mk/lib-common.mk FSTAR_EXE="$FSTAR" \
-      OTHERFLAGS="$extra_flags --timing --query_stats --warn_error -271" \
-      -j16 -sk \
-    > "$outdir/pulse_core.stdout" 2> "$outdir/pulse_core.stderr" || true
-  echo "  pulse core done"
+# Head: build + test with auto_patterns=true (default)
+echo "=== HEAD: make test (auto_patterns=true, default) ==="
+cd "$HEAD_DIR"
+/usr/bin/time -v -o "$WORKDIR/head.time" \
+  make test \
+    OTHERFLAGS="--timing --query_stats --warn_error -271" \
+    -j$(nproc) -sk \
+  > "$WORKDIR/head.stdout" 2> "$WORKDIR/head.stderr" || true
+echo "=== HEAD DONE ==="
 
-  /usr/bin/time -v -o "$outdir/pulse_lib.time" \
-    make -C pulse/ -f mk/lib-pulse.mk FSTAR_EXE="$FSTAR" \
-      OTHERFLAGS="$extra_flags --timing --query_stats --warn_error -271" \
-      -j16 -sk \
-    > "$outdir/pulse_lib.stdout" 2> "$outdir/pulse_lib.stderr" || true
-  echo "  pulse lib done"
-
-  echo "=== $label: F* tests+examples ==="
-  date -u "+%Y-%m-%dT%H:%M:%SZ" > "$outdir/start.txt"
-  for dir in $TARGETS; do
-    local tag
-    tag=$(echo "$dir" | tr '/' '_')
-    local fulldir="$FSTAR_ROOT/$dir"
-    [ -d "$fulldir" ] || continue
-    rm -rf "$fulldir/_cache" 2>/dev/null
-    /usr/bin/time -v -o "$outdir/${tag}.time" \
-      make -C "$fulldir" all FSTAR_EXE="$FSTAR" \
-        OTHERFLAGS="$extra_flags --timing --query_stats --warn_error -271" \
-        -j16 -sk \
-      > "$outdir/${tag}.stdout" 2> "$outdir/${tag}.stderr" || true
-    echo -n "."
-  done
-  echo ""
-
-  # Pulse tests
-  rm -rf pulse/test/_cache 2>/dev/null
-  /usr/bin/time -v -o "$outdir/pulse_test.time" \
-    make -C pulse/test/ FSTAR_EXE="$FSTAR" STAGE3=1 \
-      OTHERFLAGS="$extra_flags --timing --query_stats --warn_error -271" \
-      -j16 -sk \
-    > "$outdir/pulse_test.stdout" 2> "$outdir/pulse_test.stderr" || true
-  echo "  pulse test done"
-
-  date -u "+%Y-%m-%dT%H:%M:%SZ" > "$outdir/end.txt"
-  echo "=== $label: Done ==="
-}
-
-run_config "baseline" "$WORKDIR/base" "--ext auto_patterns=false"
-run_config "head" "$WORKDIR/head" ""
-
-echo "=== Report ==="
+# Report
+echo "=== Generating report ==="
 python3 - "$WORKDIR" << 'PYREPORT'
 import sys, os, re
+
 workdir = sys.argv[1]
-def parse_time(f):
+
+def parse_wall(f):
     try:
         with open(f) as fh:
             for line in fh:
@@ -84,6 +65,7 @@ def parse_time(f):
                 if m: return float(m.group(1))*60 + float(m.group(2))
     except: pass
     return 0
+
 def count_stats(f):
     nq = 0; rl = 0.0; qtime = 0
     try:
@@ -94,48 +76,35 @@ def count_stats(f):
                 elif 'Query-stats' in line and 'failed' in line: nq += 1
     except: pass
     return nq, rl, qtime
-tags = set()
-for d in ['base', 'head']:
-    for f in os.listdir(os.path.join(workdir, d)):
-        if f.endswith('.time'): tags.add(f[:-5])
-rows = []
-for tag in sorted(tags):
-    bw = parse_time(os.path.join(workdir, 'base', tag + '.time'))
-    hw = parse_time(os.path.join(workdir, 'head', tag + '.time'))
-    bq, brl, bqt = count_stats(os.path.join(workdir, 'base', tag + '.stdout'))
-    hq, hrl, hqt = count_stats(os.path.join(workdir, 'head', tag + '.stdout'))
-    rows.append(dict(tag=tag, bw=bw, hw=hw, bq=bq, hq=hq, brl=brl, hrl=hrl, bqt=bqt, hqt=hqt))
-tw_b = sum(r['bw'] for r in rows); tw_h = sum(r['hw'] for r in rows)
-tq_b = sum(r['bq'] for r in rows); tq_h = sum(r['hq'] for r in rows)
-trl_b = sum(r['brl'] for r in rows); trl_h = sum(r['hrl'] for r in rows)
-tqt_b = sum(r['bqt'] for r in rows); tqt_h = sum(r['hqt'] for r in rows)
+
+bw = parse_wall(os.path.join(workdir, 'base.time'))
+hw = parse_wall(os.path.join(workdir, 'head.time'))
+bq, brl, bqt = count_stats(os.path.join(workdir, 'base.stdout'))
+hq, hrl, hqt = count_stats(os.path.join(workdir, 'head.stdout'))
+
 R = []
-R.append("=" * 130)
-R.append("  FULL BENCHMARK: F* tests+examples + Pulse core+lib+tests")
-R.append("=" * 130)
+R.append("=" * 70)
+R.append("  auto_patterns benchmark: make test")
+R.append("  baseline = --ext auto_patterns=false")
+R.append("  head     = auto_patterns=true (default)")
+R.append("=" * 70)
 R.append("")
-hdr = "%-40s %8s %8s %8s %7s  %6s %6s %9s %9s %7s" % (
-    "Target", "Base(s)", "Head(s)", "D(s)", "D(%)", "BQ", "HQ", "BRlim", "HRlim", "DRl(%)")
-R.append(hdr)
-R.append("-" * 130)
-for r in rows:
-    dw = r['hw'] - r['bw']
-    dpct = (dw / r['bw'] * 100) if r['bw'] > 1 else 0
-    drl = ((r['hrl'] - r['brl']) / r['brl'] * 100) if r['brl'] > 0.1 else 0
-    R.append("%-40s %8.1f %8.1f %+8.1f %+6.1f%%  %6d %6d %9.1f %9.1f %+6.1f%%" % (
-        r['tag'], r['bw'], r['hw'], dw, dpct, r['bq'], r['hq'], r['brl'], r['hrl'], drl))
-R.append("-" * 130)
-tdpct = (tw_h - tw_b) / tw_b * 100 if tw_b > 0 else 0
-tdrl = (trl_h - trl_b) / trl_b * 100 if trl_b > 0 else 0
-R.append("%-40s %8.1f %8.1f %+8.1f %+6.1f%%  %6d %6d %9.1f %9.1f %+6.1f%%" % (
-    "TOTAL", tw_b, tw_h, tw_h-tw_b, tdpct, tq_b, tq_h, trl_b, trl_h, tdrl))
-R.append("")
-R.append("Targets: %d" % len(rows))
-R.append("Wall time:  %.1fs -> %.1fs  (%+.1f%%)" % (tw_b, tw_h, tdpct))
-R.append("Z3 time:    %.1fs -> %.1fs  (%+.1f%%)" % (tqt_b/1000, tqt_h/1000, (tqt_h-tqt_b)/tqt_b*100 if tqt_b else 0))
-R.append("Rlimit:     %.1f -> %.1f  (%+.1f%%)" % (trl_b, trl_h, tdrl))
-R.append("Queries:    %d -> %d  (%+d)" % (tq_b, tq_h, tq_h-tq_b))
+R.append("%-20s %12s %12s %15s" % ("Metric", "Baseline", "Head", "Delta"))
+R.append("-" * 65)
+R.append("%-20s %12.1f %12.1f %+10.1f (%+.1f%%)" % (
+    "Wall time (s)", bw, hw, hw-bw, (hw-bw)/bw*100 if bw else 0))
+R.append("%-20s %12.1f %12.1f %+10.1f (%+.1f%%)" % (
+    "Z3 time (s)", bqt/1000, hqt/1000, (hqt-bqt)/1000,
+    (hqt-bqt)/bqt*100 if bqt else 0))
+R.append("%-20s %12.1f %12.1f %+10.1f (%+.1f%%)" % (
+    "Z3 rlimit", brl, hrl, hrl-brl,
+    (hrl-brl)/brl*100 if brl else 0))
+R.append("%-20s %12d %12d %+10d" % ("Queries", bq, hq, hq-bq))
+
 txt = "\n".join(R)
 print(txt)
-with open(os.path.join(workdir, "report.txt"), "w") as f: f.write(txt + "\n")
+rpt = os.path.join(workdir, "report.txt")
+with open(rpt, "w") as f:
+    f.write(txt + "\n")
+print("\nReport: " + rpt)
 PYREPORT
