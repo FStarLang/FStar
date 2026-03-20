@@ -677,11 +677,19 @@ clean-2: .force
 	$(call clean-stage,2)
 
 clean-3: .force
-	$(call clean-stage,3)
-	rm -rf stage3/checker.ml
-	rm -rf stage3/extraction.ml
-	rm -rf stage3/syntax_extension.ml
-	$(MAKE) -C pulse clean
+	$(call bold_msg, "CLEAN", "STAGE 3")
+	$(MAKE) -C stage3 clean
+	rm -rf stage3/fstarc.ml
+	rm -rf stage3/plugins.checked
+	rm -rf stage3/plugins.ml
+	rm -rf stage3/ulib.ml
+	rm -rf stage3/ulib.pluginml
+	rm -rf pulse/build/checker.checked pulse/build/checker.ml
+	rm -rf pulse/build/extraction.checked pulse/build/extraction.ml
+	rm -rf pulse/build/syntax_extension.checked pulse/build/syntax_extension.ml
+	rm -rf pulse/build/lib.pulse.checked pulse/build/lib.pulse.ml
+	rm -rf pulse/build/lib.core.checked pulse/build/lib.core.ml
+	rm -rf pulse/build/lib.common.checked pulse/build/lib.common.ml
 
 clean-boot-diff: .force
 	$(call bold_msg, "CLEAN", "STAGE 2+1")
