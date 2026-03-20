@@ -31,6 +31,18 @@ def find_files(workdir, label, ext):
     if os.path.isdir(sub): return sorted(glob.glob(os.path.join(sub, f'*.{ext}')))
     return []
 
+def module_name(query_name):
+    """Extract the module name from a query name like 'FStar.Seq.Properties.lemma_foo'.
+    Module name = the uppercase-beginning dot-separated prefix."""
+    parts = query_name.split('.')
+    mod_parts = []
+    for p in parts:
+        if p and p[0].isupper():
+            mod_parts.append(p)
+        else:
+            break
+    return '.'.join(mod_parts) if mod_parts else query_name
+
 def parse_query_stats(files):
     per_mod = defaultdict(lambda: dict(queries=0, rlimit=0.0, z3time=0))
     total = dict(queries=0, rlimit=0.0, z3time=0)
@@ -42,21 +54,19 @@ def parse_query_stats(files):
                     r'(succeeded|failed) in (\d+) milliseconds.*'
                     r'used rlimit ([\d.]+)', line)
                 if m:
-                    name = m.group(1)  # e.g. "NormVsSMT.l2"
+                    name = m.group(1)
                     ms = int(m.group(3))
                     rl = float(m.group(4))
                     total['queries'] += 1; total['rlimit'] += rl; total['z3time'] += ms
-                    parts = name.split('.')
-                    group = '.'.join(parts[:2]) if len(parts) >= 2 else parts[0]
-                    per_mod[group]['queries'] += 1
-                    per_mod[group]['rlimit'] += rl
-                    per_mod[group]['z3time'] += ms
+                    mod = module_name(name)
+                    per_mod[mod]['queries'] += 1
+                    per_mod[mod]['rlimit'] += rl
+                    per_mod[mod]['z3time'] += ms
         except: pass
     return per_mod, total
 
 def get_wall(workdir, label):
-    files = find_files(workdir, label, 'time')
-    return sum(parse_wall(f) for f in files)
+    return sum(parse_wall(f) for f in find_files(workdir, label, 'time'))
 
 def pct(d, b): return d/b*100 if b else 0
 
@@ -93,16 +103,16 @@ print("=" * 110)
 print("  Per-module breakdown (sorted by rlimit delta)")
 print("=" * 110)
 print()
-print("%-35s %6s %6s %7s  %9s %9s %10s  %8s %8s" % (
-    "Module group", "BQ", "HQ", "DQ", "BRlim", "HRlim", "DRlim(%)", "BZ3(s)", "HZ3(s)"))
+print("%-40s %6s %6s %7s  %9s %9s %10s  %8s %8s" % (
+    "Module", "BQ", "HQ", "DQ", "BRlim", "HRlim", "DRlim(%)", "BZ3(s)", "HZ3(s)"))
 print("-" * 110)
 for g, b, h, drl in rows:
-    print("%-35s %6d %6d %+7d  %9.1f %9.1f %+9.1f%%  %8.1f %8.1f" % (
-        g[:35], b['queries'], h['queries'], h['queries']-b['queries'],
+    print("%-40s %6d %6d %+7d  %9.1f %9.1f %+9.1f%%  %8.1f %8.1f" % (
+        g[:40], b['queries'], h['queries'], h['queries']-b['queries'],
         b['rlimit'], h['rlimit'], pct(drl, b['rlimit']),
         b['z3time']/1000, h['z3time']/1000))
 print("-" * 110)
-print("%-35s %6d %6d %+7d  %9.1f %9.1f %+9.1f%%  %8.1f %8.1f" % (
+print("%-40s %6d %6d %+7d  %9.1f %9.1f %+9.1f%%  %8.1f %8.1f" % (
     "TOTAL", bt['queries'], ht['queries'], ht['queries']-bt['queries'],
     bt['rlimit'], ht['rlimit'], pct(ht['rlimit']-bt['rlimit'], bt['rlimit']),
     bt['z3time']/1000, ht['z3time']/1000))
