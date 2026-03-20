@@ -24,6 +24,10 @@
 # It also defines some other utilities for resource monitoring and
 # paths manipulation for cygwin
 
+# Disable C extraction (via krml) by default, since the external tool
+# is not always available. Set NOEXTRACT_C= (empty) to re-enable.
+NOEXTRACT_C ?= 1
+
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
