@@ -555,7 +555,7 @@ _test_pulse: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
 _test_pulse:
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/
+	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE)
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
