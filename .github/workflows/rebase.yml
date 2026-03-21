@@ -1,0 +1,85 @@
+name: Rebase PR
+
+# Triggered by posting a comment containing "!rebase" on a pull request.
+# Rebases the PR branch onto its base branch and force-pushes the result.
+
+on:
+  issue_comment:
+    types: [created]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  rebase:
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '!rebase') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Get PR info
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('base_ref', pr.data.base.ref);
+            core.setOutput('head_repo_full_name', pr.data.head.repo.full_name);
+            core.setOutput('is_fork', pr.data.head.repo.full_name !== pr.data.base.repo.full_name);
+
+      - name: Check if fork
+        if: steps.pr.outputs.is_fork == 'true'
+        run: |
+          echo "::error::Cannot rebase PRs from forks (no push access to ${{ steps.pr.outputs.head_repo_full_name }})"
+          exit 1
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rebase onto base
+        run: |
+          git config user.name "${{ github.event.comment.user.login }}"
+          git config user.email "${{ github.event.comment.user.id }}+${{ github.event.comment.user.login }}@users.noreply.github.com"
+          git fetch origin ${{ steps.pr.outputs.base_ref }}
+          git rebase origin/${{ steps.pr.outputs.base_ref }}
+
+      - name: Force-push
+        run: git push --force-with-lease
+
+      - name: React with result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '${{ job.status }}' === 'success' ? 'rocket' : '-1'
+            });
