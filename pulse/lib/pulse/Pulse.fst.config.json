@@ -1,5 +1,5 @@
 {
-	"fstar_exe": "../../../out/bin/fstar.exe",
+	"fstar_exe": "../../../stage3/dune/_build/default/fstarc-full/fstarc3_full.exe",
 	"options": [
 		"--query_cache",
 		"--ext", "optimize_let_vc",
