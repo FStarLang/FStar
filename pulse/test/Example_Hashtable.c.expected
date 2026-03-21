@@ -13,19 +13,7 @@ size_t Example_Hashtable_hash(size_t x)
   return x;
 }
 
-#define Clean 0
-#define Zombie 1
-#define Used 2
-
-typedef uint8_t cell__size_t_Example_Hashtable_data_tags;
-
-typedef struct cell__size_t_Example_Hashtable_data_s
-{
-  cell__size_t_Example_Hashtable_data_tags tag;
-  size_t k;
-  Example_Hashtable_data v;
-}
-cell__size_t_Example_Hashtable_data;
+typedef struct cell__size_t_Example_Hashtable_data_s cell__size_t_Example_Hashtable_data;
 
 typedef struct ht_t__size_t_Example_Hashtable_data_s
 {
@@ -45,6 +33,20 @@ mk_ht__size_t_Example_Hashtable_data(
   return
     ((ht_t__size_t_Example_Hashtable_data){ .sz = sz, .hashf = hashf, .contents = contents });
 }
+
+#define Clean 0
+#define Zombie 1
+#define Used 2
+
+typedef uint8_t cell__size_t_Example_Hashtable_data_tags;
+
+typedef struct cell__size_t_Example_Hashtable_data_s
+{
+  cell__size_t_Example_Hashtable_data_tags tag;
+  size_t k;
+  Example_Hashtable_data v;
+}
+cell__size_t_Example_Hashtable_data;
 
 static ht_t__size_t_Example_Hashtable_data
 alloc__size_t_Example_Hashtable_data(size_t (*hashf)(size_t x0), size_t l)
