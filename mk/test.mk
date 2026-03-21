@@ -101,13 +101,22 @@ $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
 	$(FSTAR) --codegen FSharp $< -o $@
 
-# No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
 	$(call msg, "OCAMLOPT", $(basename $(notdir $<)))
 	$(FSTAR_EXE) --ocamlopt $< -o $@
 
+$(OUTPUT_DIR)/%.fs-exe: $(OUTPUT_DIR)/%.fs
+	$(call msg, "FSHARPC", $(basename $(notdir $<)))
+	@test -f $*.fsproj || { echo "ERROR: $*.fsproj not found"; false; }
+	dotnet publish --nologo -v q $*.fsproj -r linux-x64 --self-contained -p:PublishSingleFile=true -o $(dir $@)
+	mv $(OUTPUT_DIR)/$* $@
+
 $(OUTPUT_DIR)/%.out: $(OUTPUT_DIR)/%.exe
 	$(call msg, "RUN", $(basename $(notdir $<)))
+	./$< > $@
+
+$(OUTPUT_DIR)/%.fs-out: $(OUTPUT_DIR)/%.fs-exe
+	$(call msg, "RUN (F#)", $(basename $(notdir $<)))
 	./$< > $@
 
 ### Checking expected output for any kind of file (error output, ml, etc)
@@ -180,6 +189,7 @@ all: __build
 endif
 
 __run: $(patsubst %.fst,$(OUTPUT_DIR)/%.out,$(RUN))
+__run: $(patsubst %.fst,$(OUTPUT_DIR)/%.fs-out,$(RUN_FSHARP))
 run: __run
 ifeq ($(NORUN),)
 all: __run
