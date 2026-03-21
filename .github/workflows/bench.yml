@@ -1,0 +1,165 @@
+name: Benchmark Comparison
+
+# Triggered by posting a comment containing "!bench" on a pull request.
+# Builds F* for both the base and PR branches, runs the test suite with
+# resource monitoring, and posts a comparison report as a PR comment.
+
+on:
+  issue_comment:
+    types: [created]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  bench:
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '!bench') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    container:
+      image: mtzguido/dev-base
+      # ramon needs cgroup2 write access to measure resource usage.
+      options: --privileged
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes'
+            });
+
+      - name: Get PR info
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('head_sha', pr.data.head.sha);
+            core.setOutput('base_sha', pr.data.base.sha);
+            core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('base_ref', pr.data.base.ref);
+
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Install ramon
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libcap2-bin > /dev/null
+          git clone --depth 1 https://github.com/mtzguido/ramon
+          cd ramon
+          make ramon
+          sudo make install
+          cd ..
+          rm -rf ramon
+          ramon --version || true
+
+      - name: Enable cgroup controllers for ramon
+        run: |
+          # ramon needs memory+pids cgroup controllers. In a Docker container
+          # the root cgroup has no controllers in subtree_control by default.
+          # We must first move all processes to a child cgroup (cgroupv2
+          # "no internal processes" rule), then enable the controllers.
+          sudo mkdir -p /sys/fs/cgroup/init
+          for pid in $(cat /sys/fs/cgroup/cgroup.procs 2>/dev/null); do
+            sudo sh -c "echo $pid > /sys/fs/cgroup/init/cgroup.procs" 2>/dev/null || true
+          done
+          sudo sh -c 'echo "+memory +pids" > /sys/fs/cgroup/cgroup.subtree_control'
+
+      - name: Checkout base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.base_sha }}
+          path: fstar-base
+
+      - name: Checkout head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.head_sha }}
+          path: fstar-head
+
+      # Run full CI (build + tests) sequentially with resource monitoring.
+      # Building the compiler is included since F* is bootstrapped.
+      # Continue even if one side fails — the report will show what matched.
+      - name: CI baseline
+        working-directory: fstar-base
+        continue-on-error: true
+        run: |
+          make -skj$(nproc) 0 # build stage0 without monitoring, we don't care
+          make -skj$(nproc) ci RESOURCEMONITOR=1 ACCEPT=1 -k
+
+      - name: CI head
+        working-directory: fstar-head
+        continue-on-error: true
+        run: |
+          make -skj$(nproc) 0 # build stage0 without monitoring, we don't care
+          make -skj$(nproc) ci RESOURCEMONITOR=1 ACCEPT=1 -k
+
+      - name: Generate comparison report
+        run: |
+          python3 fstar-head/.scripts/ramon-report.py \
+            fstar-base fstar-head \
+            -o report.md \
+            --lhs-label "Base (${{ steps.pr.outputs.base_ref }} @ ${{ steps.pr.outputs.base_sha }})" \
+            --rhs-label "PR #${{ github.event.issue.number }} (${{ steps.pr.outputs.head_ref }} @ ${{ steps.pr.outputs.head_sha }})"
+          python3 fstar-head/.scripts/ramon-report.py \
+            fstar-base fstar-head \
+            -o report.html \
+            --lhs-label "Base (${{ steps.pr.outputs.base_ref }} @ ${{ steps.pr.outputs.base_sha }})" \
+            --rhs-label "PR #${{ github.event.issue.number }} (${{ steps.pr.outputs.head_ref }} @ ${{ steps.pr.outputs.head_sha }})"
+
+      - name: Collect ramon files
+        run: |
+          mkdir -p ramon-files/base ramon-files/head
+          (cd fstar-base && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/base/ \;) || true
+          (cd fstar-head && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/head/ \;) || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-pr-${{ github.event.issue.number }}
+          path: |
+            report.html
+            ramon-files/
+          retention-days: 30
+
+      - name: Post report as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            let body = fs.readFileSync('report.md', 'utf8');
+            body += `\n\n---\n📎 [Download HTML report and raw .ramon files](${runUrl}#artifacts)\n`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: React with result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: '${{ job.status }}' === 'success' ? 'rocket' : '-1'
+            });

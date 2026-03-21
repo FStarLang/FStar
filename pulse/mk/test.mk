@@ -52,7 +52,7 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) 				\
+FSTAR = $(RAMON) $(FSTAR_EXE) $(SIL) 				\
 	--cache_checked_modules				\
 	--odir $(OUTPUT_DIR)				\
 	--cache_dir $(CACHE_DIR)			\

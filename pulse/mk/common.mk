@@ -31,7 +31,7 @@ NOEXTRACT_C ?= 1
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
-RUNLIM=
+RAMON=
 ifneq ($(V),)
 	Q=
 	SIL=
@@ -39,11 +39,10 @@ else
 	MAKEFLAGS += -s
 endif
 
-define NO_RUNLIM_ERR
-runlim not found:
-  To use RESOURCEMONITOR=1, the `runlim` tool must be installed and in your $$PATH.
-  It must also be a recent version supporting the `-p` option.
-  You can get it from: [https://github.com/arminbiere/runlim]
+define NO_RAMON_ERR
+ramon not found:
+  To use RESOURCEMONITOR=1, the `ramon ` tool must be installed and in your $$PATH.
+  You can get it from: [https://github.com/mtzguido/ramon]
 endef
 
 define msg =
@@ -56,16 +55,16 @@ define bold_msg =
 @printf "  %s\n" $(2)
 endef
 
-# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
+# Passing RESOURCEMONITOR=1 will create .ramon files through the source tree with
 # information about the time and space taken by each F* invocation.
 ifneq ($(RESOURCEMONITOR),)
-	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR))
+	ifeq ($(shell which ramon),)
+		_ := $(error $(NO_RAMON_ERR))
 	endif
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif
-	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
+	RAMON=ramon -o $@.$(MONPREFIX)ramon
 endif
 
 # Can be called as $(call maybe_cygwin_path,...)
