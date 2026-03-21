@@ -29,8 +29,8 @@ jobs:
         with:
           name: fstar-repo
 
-      - name: Check for a boot diff and F# library build
-        run: make -skj$(nproc) boot-diff lib-fsharp
+      - name: Check for a boot diff, and run F# tests
+        run: make -skj$(nproc) boot-diff fsharp-all
         working-directory: FStar
 
   # Download the stage2 binary package from the previous job and run the
