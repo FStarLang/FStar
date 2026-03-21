@@ -9,7 +9,7 @@ include mk/common.mk
 FSTAR_DEFAULT_GOAL ?= build
 .DEFAULT_GOAL := $(FSTAR_DEFAULT_GOAL)
 
-all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare lib-fsharp
+all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
 ### STAGES
@@ -298,7 +298,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	touch $@
 
 # F# library, from stage 2.
-lib-fsharp.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
+fsharp-lib.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
 	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
@@ -313,10 +313,13 @@ lib-fsharp.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
 	  DEPFLAGS='--extract -FStar.Map,-FStar.Set' \
 	  $(MAKE) -f mk/lib.mk all-fs
 
-.PHONY: lib-fsharp
-lib-fsharp: lib-fsharp.src
-	$(MAKE) -C fsharp/VS all
+.PHONY: fsharp-lib
+fsharp-lib: fsharp-lib.src
+	+$(MAKE) -C fsharp lib
 
+.PHONY: fsharp-all
+fsharp-all: fsharp-lib
+	+$(MAKE) -C fsharp all
 
 # Stage 2+1 is different, we don't build it, we just check that the
 # extracted OCaml files coincide exactly with stage2. We also do not
@@ -583,7 +586,7 @@ _examples: need_fstar_exe .force
 
 ci: .force
 	+$(MAKE) 2
-	+$(MAKE) test lib-fsharp boot-diff test-2-bare stage2-unit-tests
+	+$(MAKE) test fsharp-all boot-diff test-2-bare stage2-unit-tests
 
 save: stage0_new
 
@@ -727,7 +730,7 @@ help:
 	echo "  ADMIT=1            skip verification (pass '--admit_smt_queries true')"
 	echo
 	echo "Rules for F* hackers:"
-	echo "  all                build all stages, run tests, extract boot-diff sources, and lib-fsharp"
+	echo "  all                build all stages, run tests and extract boot-diff sources"
 	echo "  0                  build the stage0 compiler (in stage0/)"
 	echo "  stage1             build a full stage 1 compiler and libraries"
 	echo "  1                  stage1 + set the out/ symlink"

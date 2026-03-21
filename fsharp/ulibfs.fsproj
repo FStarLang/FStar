@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
+    <OtherFlags>--nowarn:0086 --mlcompatibility --nologo --langversion:5.0</OtherFlags>
     <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentation>True</GenerateDocumentation>
