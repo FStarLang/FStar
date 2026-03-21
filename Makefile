@@ -572,7 +572,21 @@ _test_pulse_examples: karamel
 	  STAGE3=1 \
 	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
 
-.PHONY: _test_pulse_test _test_pulse_examples
+accept_pulse_test:
+	env \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+accept_pulse_examples:
+	env \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+accept_pulse: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+accept_pulse: override KRML_HOME := $(abspath karamel)
+accept_pulse: accept_pulse_test accept_pulse_examples
+
+.PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
