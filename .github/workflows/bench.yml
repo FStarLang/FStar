@@ -49,8 +49,13 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              basehead: `${pr.data.base.sha}...${pr.data.head.sha}`,
+            });
             core.setOutput('head_sha', pr.data.head.sha);
-            core.setOutput('base_sha', pr.data.base.sha);
+            core.setOutput('base_sha', comparison.data.merge_base_commit.sha);
             core.setOutput('head_ref', pr.data.head.ref);
             core.setOutput('base_ref', pr.data.base.ref);
 
