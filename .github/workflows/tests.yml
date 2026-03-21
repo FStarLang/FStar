@@ -63,6 +63,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          submodules: true
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
