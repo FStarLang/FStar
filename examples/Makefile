@@ -29,11 +29,9 @@ SUBDIRS += verifythis
 
 # These have custom makefiles
 
-# hello has its F# extraction broken, and the dune/ocamlopt variants can
-# be found in tests/simple_hello and tests/dune_hello, so I'm disabling
-# this.
-# SUBDIRS_ALL += hello
-# SUBDIRS_CLEAN += hello
+SUBDIRS_ALL += hello
+SUBDIRS_CLEAN += hello
+
 SUBDIRS_ALL += dependencies
 SUBDIRS_CLEAN += dependencies
 
