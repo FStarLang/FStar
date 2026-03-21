@@ -130,8 +130,8 @@ jobs:
       - name: Collect ramon files
         run: |
           mkdir -p ramon-files/base ramon-files/head
-          (cd fstar-base && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/base/ \;) || true
-          (cd fstar-head && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/head/ \;) || true
+          (cd fstar-base && find . \( -name '*.ramon' -o -name '*.fstarmem' \) -exec cp --parents {} ../ramon-files/base/ \;) || true
+          (cd fstar-head && find . \( -name '*.ramon' -o -name '*.fstarmem' \) -exec cp --parents {} ../ramon-files/head/ \;) || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

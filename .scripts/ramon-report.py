@@ -69,6 +69,19 @@ def load_ramon_file(fn):
         return None
     if "rc" not in ret or "time" not in ret or "mem" not in ret:
         return None
+
+    # Prefer F*-only memory (excludes Z3) from companion .fstarmem file.
+    fstarmem_fn = fn.removesuffix(".ramon") + ".fstarmem"
+    try:
+        with open(fstarmem_fn) as f:
+            for line in f:
+                parts = line.split(None, 1)
+                if len(parts) >= 2 and parts[0] == "fstar.mempeak":
+                    ret["mem"] = int(parts[1].strip())
+                    break
+    except FileNotFoundError:
+        pass
+
     return ret
 
 def find_ramon_files(root):
@@ -299,8 +312,8 @@ def generate_markdown(matches, stats, lhs_label, rhs_label):
 
     # ── Notes ──
     L.append("---\n")
-    L.append("> **Note:** Time measurements are from single runs and may be noisy, especially for fast tests. "
-             "Memory measurements are generally more deterministic. "
+    L.append("> **Note:** Memory values report the peak OCaml heap of the F\\* process (excluding Z3 subprocesses). "
+             "Time measurements are from single runs and may be noisy, especially for fast tests. "
              "Tests with baseline time < 0.1s are excluded from time statistics. "
              "The geometric mean (Geo Mean) of the patched/baseline ratio is the most robust summary "
              "statistic for performance comparisons (1.0× = no change, <1× = improvement).")
@@ -474,8 +487,9 @@ summary {{ cursor: pointer; font-weight: bold; padding: 0.5em; background: #f0f0
 </div>
 
 <div class="note">
-<strong>Note on measurement reliability:</strong> Time measurements are from single runs and may be noisy,
-especially for tests completing in under 5 seconds. Memory measurements are generally more deterministic.
+<strong>Note on measurement reliability:</strong> Memory values report the peak OCaml heap of the F* process,
+excluding Z3 subprocesses. Time measurements are from single runs and may be noisy,
+especially for tests completing in under 5 seconds.
 Tests with baseline time &lt; 0.1s are excluded from time statistics.
 The geometric mean (Geo Mean) of the patched/baseline ratio is the most robust summary statistic
 for performance comparisons (1.0× = no change, &lt;1× = improvement).
