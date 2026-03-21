@@ -41,9 +41,9 @@ RUN get_fstar_z3.sh ~/bin
 
 # Install dotnet
 ENV DOTNET_ROOT /home/$USER/dotnet
-RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a6a-4d0d-b42e-dfd3b880e222/008a93f83aba6d1acf75ded3d2cfba24/dotnet-sdk-6.0.400-linux-x64.tar.gz && \
+RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.419/dotnet-sdk-8.0.419-linux-x64.tar.gz && \
     mkdir -p $DOTNET_ROOT && \
-    tar xf dotnet-sdk-6.0.400-linux-x64.tar.gz -C $DOTNET_ROOT && \
+    tar xf dotnet-sdk-8.0.419-linux-x64.tar.gz -C $DOTNET_ROOT && \
     echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile && \
     rm -f dotnet-sdk*.tar.gz
 

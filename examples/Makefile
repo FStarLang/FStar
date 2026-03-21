@@ -45,3 +45,5 @@ SUBDIRS_CLEAN += native_tactics
 
 FSTAR_ROOT ?= ..
 include $(FSTAR_ROOT)/mk/test.mk
+
+# F# tests live in fsharp/tests/ and are run via `make fsharp-lib`

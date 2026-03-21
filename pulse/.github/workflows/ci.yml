@@ -14,7 +14,7 @@ defaults:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete

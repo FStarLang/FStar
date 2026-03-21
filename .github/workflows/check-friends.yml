@@ -11,7 +11,7 @@ defaults:
 jobs:
   build-krml:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -48,7 +48,7 @@ jobs:
 
   test-krml:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     if: false # No karamel test since it needs a full build (and Low*)
     needs:
       - build-krml
@@ -81,7 +81,7 @@ jobs:
 
   build-steel:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -111,7 +111,7 @@ jobs:
 
   build-steel-proofs:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     needs:
       - build-krml
       - build-steel
@@ -141,7 +141,7 @@ jobs:
 
   test-steel:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     needs:
       - build-krml
       - build-steel
@@ -171,7 +171,7 @@ jobs:
 
   build-pulse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -201,7 +201,7 @@ jobs:
 
   test-pulse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     needs:
       - build-krml
       - build-pulse
@@ -230,7 +230,7 @@ jobs:
 
   build-everparse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     if: false # Currently needs Low*
     needs:
       - build-krml
@@ -289,7 +289,7 @@ jobs:
 
   test-everparse:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     if: false # Currently needs Low*
     needs:
       - build-everparse
@@ -341,7 +341,7 @@ jobs:
 
   starmalloc:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     needs:
       - build-krml
       - build-steel
@@ -378,7 +378,7 @@ jobs:
 
   secrefstar:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -404,7 +404,7 @@ jobs:
 
   sciostar:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
