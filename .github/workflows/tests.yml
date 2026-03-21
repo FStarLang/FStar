@@ -15,7 +15,7 @@ jobs:
   # packaged, so not built by the job above)
   boot-diff:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -54,7 +54,7 @@ jobs:
     #       - fstar-stage1.tar.gz
     # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -80,7 +80,7 @@ jobs:
   # We start from the built repo.
   bare:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -97,7 +97,7 @@ jobs:
   # The internal tests (src/tests)
   internal:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
