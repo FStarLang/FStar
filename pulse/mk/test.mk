@@ -168,9 +168,7 @@ __clean:
 clean: __clean
 
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT))
-ifeq ($(NOEXTRACT_C),)
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.c,$(EXTRACT_C))
-endif
 extract: __extract
 ifeq ($(NOEXTRACT),)
 all: __extract
@@ -188,11 +186,7 @@ ifeq ($(NORUN),)
 all: __run
 endif
 
-EXPECTED_FILES := $(wildcard *.expected)
-ifneq ($(NOEXTRACT_C),)
-EXPECTED_FILES := $(filter-out %.c.expected, $(EXPECTED_FILES))
-endif
-__diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(EXPECTED_FILES))
+__diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(wildcard *.expected))
 diff: __diff
 ifneq ($(ACCEPT),)
 all: __accept
@@ -203,7 +197,7 @@ endif
 endif
 
 accept: $(addsuffix .__accept,$(SUBDIRS))
-__accept: $(patsubst %.expected,$(OUTPUT_DIR)/%.accept,$(EXPECTED_FILES))
+__accept: $(patsubst %.expected,$(OUTPUT_DIR)/%.accept,$(wildcard *.expected))
 accept: __accept
 
 # Client makefiles can extend all these rules (all,verify,clean, etc) by adding more
