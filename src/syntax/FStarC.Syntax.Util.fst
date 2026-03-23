@@ -1618,6 +1618,7 @@ let process_pragma p r =
 
     | PrintEffectsGraph -> ()  //Typechecker handles it
     | Check _ -> ()  //Typechecker handles it
+    | Eval _ -> ()  //Typechecker handles it
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm : ML (list bv) =

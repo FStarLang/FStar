@@ -626,6 +626,21 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
       )
     )
 
+  | Eval t0 ->
+    let env' = push_context env "#eval" in
+    let tx = UF.new_transaction () in
+    BU.finally (fun () -> ignore (pop_context env' "#eval"); UF.rollback tx) (fun () ->
+      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
+                            Env.UnfoldUntil S.delta_constant;
+                            Env.Eager_unfolding; Env.Inlining;
+                            Env.Unmeta; Env.Unascribe] env t in
+      let open FStarC.Pprint in
+      Errors.info r [
+        text "#eval" ^/^ pp t0 ^/^ text "==>" ^/^ pp t
+      ]
+    )
+
   | _ -> ()
 
 let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
@@ -736,6 +751,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       match p with
       | ShowOptions
       | PrintEffectsGraph
+      | Eval _
       | Check _ -> false
       | _ -> true
     in

@@ -448,6 +448,7 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
   | Check of term
+  | Eval of term
 
 instance val showable_pragma : showable pragma
 

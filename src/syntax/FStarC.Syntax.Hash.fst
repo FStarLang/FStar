@@ -774,6 +774,7 @@ instance hashable_pragma : hashable pragma = {
           | RestartSolver -> hash 6
           | PrintEffectsGraph -> hash 7
           | Check t -> hash 8 `H.mix` hash t
+          | Eval t -> hash 9 `H.mix` hash t
           );
 }
 

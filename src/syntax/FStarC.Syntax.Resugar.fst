@@ -1399,6 +1399,7 @@ let resugar_pragma env = function
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
   | S.Check t -> A.Check (resugar_term' env t)
+  | S.Eval t -> A.Eval (resugar_term' env t)
 
 (* drop the first n binders (implicit or explicit) from an arrow type *)
 let drop_n_bs (n:int) (t:S.term) : ML S.term =

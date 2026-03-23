@@ -232,6 +232,7 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph
   | Check of term
+  | Eval of term
 
 type dep_scan_callbacks = {
    scan_term: term -> ML unit;
