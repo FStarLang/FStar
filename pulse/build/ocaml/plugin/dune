@@ -12,7 +12,8 @@
  ; (private_modules Pulse_Util)
  (modes native)
  (wrapped false)
- (flags (:standard -w -A))
+ ; -open Fstarcompiler: see stage3/dune/pulse-plugin/dune for details.
+ (flags (:standard -w -A -open Fstarcompiler))
 )
 
 (menhir
