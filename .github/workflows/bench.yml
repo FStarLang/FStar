@@ -49,8 +49,13 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              basehead: `${pr.data.base.sha}...${pr.data.head.sha}`,
+            });
             core.setOutput('head_sha', pr.data.head.sha);
-            core.setOutput('base_sha', pr.data.base.sha);
+            core.setOutput('base_sha', comparison.data.merge_base_commit.sha);
             core.setOutput('head_ref', pr.data.head.ref);
             core.setOutput('base_ref', pr.data.base.ref);
 
@@ -125,8 +130,8 @@ jobs:
       - name: Collect ramon files
         run: |
           mkdir -p ramon-files/base ramon-files/head
-          (cd fstar-base && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/base/ \;) || true
-          (cd fstar-head && find . -name '*.ramon' -exec cp --parents {} ../ramon-files/head/ \;) || true
+          (cd fstar-base && find . \( -name '*.ramon' -o -name '*.fstarmem' \) -exec cp --parents {} ../ramon-files/base/ \;) || true
+          (cd fstar-head && find . \( -name '*.ramon' -o -name '*.fstarmem' \) -exec cp --parents {} ../ramon-files/head/ \;) || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
