@@ -2308,7 +2308,7 @@ let refl_typing_builtin_wrapper (f:unit -> 'a)  : ML (tac (option 'a & issues)) 
       [issue], None
   in
   UF.rollback tx;
-  if List.length errs > 0
+  if Cons? errs
   then ret (None, errs)
   else ret (r, errs)
 

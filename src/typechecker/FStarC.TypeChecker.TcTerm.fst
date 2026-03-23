@@ -473,7 +473,7 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
     | Tm_meta {tm=t} -> aux t
   in
   let tlist = t |> pat_terms |> List.collect aux in
-  if List.length tlist = 0 then ()  //did not find any offending term
+  if Nil? tlist then ()  //did not find any offending term
   else
     let open FStarC.Pprint in
     let open FStarC.Class.PP in
@@ -4265,7 +4265,7 @@ and build_let_rec_env _top_level env lbs : ML (list letbinding & env_t & guard_t
 
      // TODO: There's a similar error in check_let_recs, would be nice
      // to remove this one.
-     if List.isEmpty formals || List.isEmpty actuals then
+     if Nil? formals || Nil? actuals then
        // TODO: GM: maybe point to the one that's actually empty?
        raise_error lbtyp Errors.Fatal_RecursiveFunctionLiteral [
          text "Only function literals with arrow types can be defined recursively.";
@@ -4373,7 +4373,7 @@ and check_let_recs env lbts : ML _ =
         in
         let bs0, bs1 = List.splitAt arity bs in
         let def =
-            if List.isEmpty bs1
+            if Nil? bs1
             then U.abs bs0 t lcomp
             else let inner = U.abs bs1 t lcomp in
                  let inner = SS.close bs0 inner in
@@ -4415,7 +4415,7 @@ and check_let_bound_def top_level env lb
 
     (* 2. type-check e1 *)
     (* Only toplevel terms should have universe openings *)
-    assert ( top_level || List.length univ_opening = 0 );
+    assert ( top_level || Nil? univ_opening );
     let e1 = subst univ_opening e1 in
     let e1, c1, g1 = tc_maybe_toplevel_term ({env1 with top_level=top_level}) e1 in
 
@@ -4644,7 +4644,7 @@ let level_of_type env e t : ML _ =
 
 (* private *)
 let rec apply_well_typed env (t_hd:typ) (args:args) : ML (option typ) =
-  if List.length args = 0
+  if Nil? args
   then Some t_hd
   else match (N.unfold_whnf env t_hd).n with
        | Tm_arrow {bs; comp=c} ->

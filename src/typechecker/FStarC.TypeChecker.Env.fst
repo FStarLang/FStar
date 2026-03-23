@@ -1224,7 +1224,7 @@ let get_lid_valued_effect_attr env
     match attr_args with
     | None -> None
     | Some args ->
-      if List.length args = 0
+      if Nil? args
       then default_if_attr_has_no_arg
       else args
            |> List.hd

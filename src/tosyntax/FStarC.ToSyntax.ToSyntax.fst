@@ -1053,7 +1053,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                     ("Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
       | Some op ->
-            if List.length args > 0 then
+            if Cons? args then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
                                                          (t', None), s) |> List.unzip in
               mk (Tm_app {hd=op; args}), join_aqs aqs
@@ -1147,7 +1147,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                   arg_withimp_t imp te, aq) args |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 let tm =
-                  if List.length args = 0
+                  if Nil? args
                   then head
                   else mk (Tm_app {hd=head; args}) in
                 tm, join_aqs aqs
@@ -2370,7 +2370,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         raise_error t Errors.Fatal_EffectNotFound "Expected an effect constructor"
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
-    if List.length args = 0 then
+    if Nil? args then
       fail Errors.Fatal_NotEnoughArgsToEffect (Format.fmt1 "Not enough args to effect %s" (show eff));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
@@ -3805,7 +3805,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
        * which will trigger a check for completeness of pat
        * wrt the body. (See issues #829 and #1903)
        *)
-      if List.isEmpty bvs && not (is_var_pattern pat)
+      if Nil? bvs && not (is_var_pattern pat)
       then build_coverage_check main_let
       else List.fold_left build_projection main_let bvs
 

@@ -1292,7 +1292,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let begin_module lid =
-    if List.length (ns_of_lid lid) > 0 then (
+    if Cons? (ns_of_lid lid) then (
       if !dbg then Format.print1 "Begin module %s ..\n" (show lid);
       ignore (enter_namespace original_map working_map (String.lowercase (namespace_of_lid lid)))
     )

@@ -713,7 +713,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : ML (list
     let mutual_lids = List.map (fun se -> match se.sigel with | Sig_inductive_typ {lid} -> lid ) mutual_sigelts in
     let proc_one (typ_sigelt:sigelt) =
       let Sig_inductive_typ {lid=tlid; params=ps} = typ_sigelt.sigel in
-      if List.length ps > 0 then
+      if Cons? ps then
         raise (Unsupported "parameters on inductive");
       let ns = Ident.ns_of_lid tlid in
       let name = Ident.string_of_id (List.last (Ident.ids_of_lid tlid)) in

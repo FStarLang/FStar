@@ -251,7 +251,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                || Some? us_opt
                then inst_head hd us_opt, us_opt
                else let us, _ = Env.lookup_datacon env (Syntax.lid_of_fv fv) in
-                    if List.length us = 0 then hd, Some []
+                    if Nil? us then hd, Some []
                     else Syntax.mk_Tm_uinst hd us, Some us
              in
              let e = mk_Tm_app hd (args |> List.rev) p.p in

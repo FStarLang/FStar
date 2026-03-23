@@ -208,7 +208,7 @@ let tc_inductive' env ses quals attrs lids =
       //assuming that we have already propagated attrs from the bundle to its elements
       let is_erasable () = U.has_attribute (List.hd tcs).sigattrs FStarC.Parser.Const.erasable_attr in
 
-      List.length tcs = 0 ||
+      Nil? tcs ||
       (lid_equals env.curmodule PC.prims_lid && skip_prims_type ()) ||
       is_noeq ||
       is_erasable () in

@@ -133,7 +133,7 @@ let ptsym_of_symbol (s : mlsymbol) : ML mlsymbol =
     else s
 
 let ptsym (currentModule : mlsymbol) (mlp : mlpath) : ML mlsymbol =
-    if (List.isEmpty (fst mlp))
+    if (Nil? (fst mlp))
     then ptsym_of_symbol (snd  mlp)
     else
         let (p, s) = mlpath_of_mlpath currentModule mlp in
@@ -716,7 +716,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     in
 
     let doc = List.map for1 decls in
-    let doc = if (List.length doc >0) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
+    let doc = if (Cons? doc) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
     doc
 
 (* -------------------------------------------------------------------- *)

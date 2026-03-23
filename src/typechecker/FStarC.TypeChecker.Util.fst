@@ -3507,7 +3507,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   let rest_bs =
     let lift_t = sub.lift_wp |> Option.must in
     match (lift_t |> snd |> SS.compress).n with
-    | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
+    | Tm_arrow {bs=_::bs} when Cons? bs ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
       raise_error (snd lift_t) Errors.Fatal_UnexpectedEffect
