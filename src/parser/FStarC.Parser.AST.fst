@@ -874,6 +874,7 @@ let string_of_pragma (p:pragma) : ML string = match p with
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
   | Check t -> "check " ^ term_to_string t
+  | Eval t -> "eval " ^ term_to_string t
 
 let restriction_to_string (r:FStarC.Syntax.Syntax.restriction) : ML string =
   let open FStarC.Syntax.Syntax in

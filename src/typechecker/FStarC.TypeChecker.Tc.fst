@@ -582,6 +582,67 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
 
     [se], [], env0
 
+let snapshot_context env msg = BU.atomically (fun () ->
+    TypeChecker.Env.snapshot env msg)
+
+let rollback_context solver msg depth : ML env = BU.atomically (fun () ->
+    let env = TypeChecker.Env.rollback solver msg depth in
+    env)
+
+let push_context env msg = snd (snapshot_context env msg)
+let pop_context env msg = rollback_context env.solver msg None
+
+(* Wrapper around U.process_pragma that also handles
+   pragmas with typechecker side effects (Check, Eval, etc.) *)
+let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
+  U.process_pragma p r;
+  match p with
+  | ShowOptions ->
+    Errors.info r [
+      text "Option state:";
+      Pprint.arbitrary_string (Options.show_options ());
+    ]
+
+  | PrintEffectsGraph ->
+    BU.write_file "effects.graph" (Env.print_effects_graph env)
+
+  | Check t0 ->
+    let env' = push_context env "#check" in
+    let tx = UF.new_transaction () in
+    BU.finally (fun () -> ignore (pop_context env' "#check"); UF.rollback tx) (fun () ->
+      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let c, g' = lcomp_comp lc in
+      let g = Class.Monoid.mplus g g' in
+      let open FStarC.Pprint in
+      Options.with_saved_options (fun () ->
+        ignore (Options.set_options "--print_effect_args");
+        Errors.info r [
+          text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
+          if not (is_trivial g) then
+            text "With guard: " ^/^ pp g
+          else
+            empty
+        ]
+      )
+    )
+
+  | Eval t0 ->
+    let env' = push_context env "#eval" in
+    let tx = UF.new_transaction () in
+    BU.finally (fun () -> ignore (pop_context env' "#eval"); UF.rollback tx) (fun () ->
+      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
+                            Env.UnfoldUntil S.delta_constant;
+                            Env.Eager_unfolding; Env.Inlining;
+                            Env.Unmeta; Env.Unascribe] env t in
+      let open FStarC.Pprint in
+      Errors.info r [
+        text "#eval" ^/^ pp t0 ^/^ text "==>" ^/^ pp t
+      ]
+    )
+
+  | _ -> ()
+
 let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
   let env = env0 in
   let se = match se.sigel with
@@ -683,8 +744,18 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     [ sigbndle ], projectors_ses, env0
 
   | Sig_pragma p ->  //no need for two-phase here
-    U.process_pragma p r;
-    [se], [], env0
+    process_pragma env p r;
+    (* Some pragmas are immediately dropped and do not
+    make it into the checked file. *)
+    let keep_pragma =
+      match p with
+      | ShowOptions
+      | PrintEffectsGraph
+      | Eval _
+      | Check _ -> false
+      | _ -> true
+    in
+    (if keep_pragma then [se] else []), [], env0
 
   | Sig_new_effect ne ->
     let is_unelaborated_dm4f =
@@ -922,16 +993,6 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     [se], [], env0)
 
 
-let snapshot_context env msg = BU.atomically (fun () ->
-    TypeChecker.Env.snapshot env msg)
-
-let rollback_context solver msg depth : ML env = BU.atomically (fun () ->
-    let env = TypeChecker.Env.rollback solver msg depth in
-    env)
-
-let push_context env msg = snd (snapshot_context env msg)
-let pop_context env msg = rollback_context env.solver msg None
-
 (* [tc_decl env se] typechecks [se] in environment [env] and returns
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked. This may also be called
@@ -999,13 +1060,6 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
     let env = Env.push_sigelt env se in
     //match again to perform postprocessing
     match se.sigel with
-    | Sig_pragma ShowOptions ->
-      Errors.info se [
-        text "Option state:";
-        Pprint.arbitrary_string (Options.show_options ());
-      ];
-      env
-
     | Sig_pragma (PushOptions _)
     | Sig_pragma PopOptions
     | Sig_pragma (SetOptions _)
@@ -1025,28 +1079,8 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
         env
       end
 
-    | Sig_pragma PrintEffectsGraph ->
-      BU.write_file "effects.graph" (Env.print_effects_graph env);
-      env
-
-    | Sig_pragma (Check t0) ->
-      let env = push_context env "#check" in
-      let tx = UF.new_transaction () in
-      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
-      let c, g' = lcomp_comp lc in
-      let g = Class.Monoid.mplus g g' in
-      let open FStarC.Pprint in
-      Options.with_saved_options (fun () ->
-        ignore (Options.set_options "--print_effect_args");
-        Errors.info se [
-          text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
-          if not (is_trivial g) then
-            text "With guard: " ^/^ pp g
-          else
-            empty
-        ]
-      );
-      let env = pop_context env "#check" in
+    | Sig_pragma _ ->
+      (* Others were already handled. *)
       env
 
     | Sig_new_effect ne ->

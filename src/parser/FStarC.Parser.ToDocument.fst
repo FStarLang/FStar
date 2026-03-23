@@ -853,6 +853,7 @@ and p_pragma : _ -> ML _ = function
   | RestartSolver -> str "#restart-solver"
   | PrintEffectsGraph -> str "#print-effects-graph"
   | Check t -> str "#check" ^/^ p_term false false t
+  | Eval t -> str "#eval" ^/^ p_term false false t
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars (bs: list binder): ML document = p_binders true bs

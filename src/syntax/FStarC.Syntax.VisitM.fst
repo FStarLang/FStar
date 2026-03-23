@@ -442,6 +442,9 @@ let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : ML (m sigelt') =
   | Sig_pragma (Check t) ->
     let! t = f_term t in
     return <| Sig_pragma (Check t)
+  | Sig_pragma (Eval t) ->
+    let! t = f_term t in
+    return <| Sig_pragma (Eval t)
   | Sig_pragma _ -> return se
 
   | Sig_polymonadic_bind {m_lid; n_lid; p_lid; tm; typ; kind} ->

@@ -3057,6 +3057,10 @@ let trans_pragma env (_x_:AST.pragma) : ML _ = match _x_ with
     let t, aq = desugar_term_maybe_top true env t in
     check_no_aq aq;
     S.Check t
+  | AST.Eval t ->
+    let t, aq = desugar_term_maybe_top true env t in
+    check_no_aq aq;
+    S.Eval t
 
 let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls : ML _ =
     let env0 = env in
