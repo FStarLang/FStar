@@ -35,7 +35,6 @@ open FStarC.Class.Deq
 
 module S  = FStarC.Syntax.Syntax
 module I  = FStarC.Ident
-module EMB = FStarC.Syntax.Embeddings
 
 type fsteps = {
      beta : bool;

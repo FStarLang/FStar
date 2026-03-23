@@ -40,7 +40,6 @@ open FStarC.Interactive
 open FStarC.Parser.ParseIt
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
-module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 module QH = FStarC.Interactive.QueryHelper
