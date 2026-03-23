@@ -607,24 +607,24 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     BU.write_file "effects.graph" (Env.print_effects_graph env)
 
   | Check t0 ->
-    let env = push_context env "#check" in
+    let env' = push_context env "#check" in
     let tx = UF.new_transaction () in
-    let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
-    let c, g' = lcomp_comp lc in
-    let g = Class.Monoid.mplus g g' in
-    let open FStarC.Pprint in
-    Options.with_saved_options (fun () ->
-      ignore (Options.set_options "--print_effect_args");
-      Errors.info r [
-        text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
-        if not (is_trivial g) then
-          text "With guard: " ^/^ pp g
-        else
-          empty
-      ]
-    );
-    let _ = pop_context env "#check" in
-    ()
+    BU.finally (fun () -> ignore (pop_context env' "#check"); UF.rollback tx) (fun () ->
+      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let c, g' = lcomp_comp lc in
+      let g = Class.Monoid.mplus g g' in
+      let open FStarC.Pprint in
+      Options.with_saved_options (fun () ->
+        ignore (Options.set_options "--print_effect_args");
+        Errors.info r [
+          text "Term" ^/^ pp t ^/^ text "has type" ^/^ pp c;
+          if not (is_trivial g) then
+            text "With guard: " ^/^ pp g
+          else
+            empty
+        ]
+      )
+    )
 
   | _ -> ()
 
