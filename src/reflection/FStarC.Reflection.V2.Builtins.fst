@@ -334,7 +334,7 @@ let pack_comp (cv : comp_view) : ML comp =
     | C_Eff (us, ef, res, args, decrs) ->
         let pack_arg (a, q) = (a, pack_aqual q) in
         let flags =
-          if List.length decrs = 0
+          if Nil? decrs
           then []
           else [DECREASES (Decreases_lex decrs)] in
         let ct = { comp_univs  = us

@@ -747,7 +747,7 @@ let rec translate_type_without_decay' env t: ML typ =
       TTuple (List.map (translate_type_without_decay env) args)
   
   | MLTY_Named (args, lid) ->
-      if List.length args > 0 then
+      if Cons? args then
         TApp (lid, List.map (translate_type_without_decay env) args)
       else
         TQualified lid
@@ -1196,7 +1196,7 @@ and translate_expr' env e: ML expr =
 and assert_lid env t : ML typ =
   match t with
   | MLTY_Named (ts, lid) ->
-      if List.length ts > 0 then
+      if Cons? ts then
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid
@@ -1358,7 +1358,7 @@ let translate_let' env flavor lb: ML (option decl) =
         | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
       in
-      if List.length tvars = 0 then
+      if Nil? tvars then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
         if not (Options.silent ()) then

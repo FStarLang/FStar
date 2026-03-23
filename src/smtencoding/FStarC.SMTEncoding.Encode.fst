@@ -467,7 +467,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
          let dd = Term.DeclFun(vtok, univ_sorts, Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd] |> mk_decls_trivial, env
     else if prims.is lid
-         then let _ = if List.length us <> 0 then failwith "Impossible: unexpected universe-polymorphic primitive function" in
+         then let _ = if Cons? us then failwith "Impossible: unexpected universe-polymorphic primitive function" in
               let vname = varops.new_fvar lid in
               let tok, arity, definition = prims.mk lid vname in
               let env = push_free_var env lid arity 0 vname (Some tok) in
@@ -536,7 +536,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                 in
                 // Thunk if ...
                 nsstr lid <> "Prims"  //not in prims
-                && List.length us = 0 //has no universe binders
+                && Nil? us //has no universe binders
                 && not (quals |> List.contains Logic) //not logic qualified terms
                 && not (is_squash t_norm) //not ambient squashed properties
                 && not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
@@ -1291,7 +1291,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   let kindingAx =
     let k, decls = encode_term_pred None res env' tapp in
     let karr =
-      if List.length formals > 0
+      if Cons? formals
       then [Util.mkAssume(
           mkForall (Ident.range_of_lid t) ([[ttok_tm]], univ_vars, mk_tester "Tm_arrow" (mk_PreType ttok_tm)),
           Some "pretyping", ("pre_kinding_"^ttok))]

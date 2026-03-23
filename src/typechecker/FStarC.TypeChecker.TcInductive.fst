@@ -839,7 +839,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
   //    we record whether the universes were already annotated
   //    and later use it to decide if we should generalize
   let univs =
-    if List.length tys = 0 then []
+    if Nil? tys then []
     else
       match (List.hd tys).sigel with
       | Sig_inductive_typ {us=uvs} -> uvs
@@ -875,7 +875,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     then Format.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);
 
     Rel.force_trivial_guard env0 g;
-    if List.length univs = 0 then generalize_and_inst_within env0 tcs datas
+    if Nil? univs then generalize_and_inst_within env0 tcs datas
     else (List.map fst tcs), datas
   in
 

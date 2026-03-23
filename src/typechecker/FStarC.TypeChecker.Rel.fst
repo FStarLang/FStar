@@ -998,7 +998,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       (* No subst, nothing to do *)
       t0, wl
 
-    | Tm_uvar (uv, _) when List.isEmpty uv.ctx_uvar_binders ->
+    | Tm_uvar (uv, _) when Nil? uv.ctx_uvar_binders ->
       (* No binders in scope, also good *)
       t0, wl
 
@@ -1254,7 +1254,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
     (src.ctx_uvar_binders |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)) &&  //binder exists in G_t
     (not (pfx |> List.existsb (fun ({binder_bv=bv2}) -> S.bv_eq bv1 bv2)))) in  //but not in the maximal prefix
 
-  if List.length bs = 0 then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
+  if Nil? bs then aux (U.ctx_uvar_typ src) (fun src' -> src')  //no abstraction over bs
   else begin
     aux
       (let t = U.ctx_uvar_typ src in t |> S.mk_Total |> U.arrow bs)  //bs -> Tot t_t

@@ -297,7 +297,7 @@ let gen_wps_for_free
 
   let ret_tot_wp_a = Some (U.residual_tot wp_a) in
   let mk_generic_app c =
-    if List.length binders > 0 then
+    if Cons? binders then
       mk (Tm_app {hd=c; args=args_of_binders binders})
     else
       c
@@ -1519,7 +1519,7 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
   in
 
   let apply_close t =
-    if List.length effect_binders = 0 then
+    if Nil? effect_binders then
       t
     else
       close effect_binders (mk (Tm_app {hd=t; args=snd (U.args_of_binders effect_binders)}))
@@ -1687,7 +1687,7 @@ let cps_and_elaborate (env:FStarC.TypeChecker.Env.env) (ed:S.eff_decl)
     Format.print_string (show ed);
 
   let lift_from_pure_opt =
-    if List.length effect_binders = 0 then begin
+    if Nil? effect_binders then begin
       // Won't work with parameterized effect
       let lift_from_pure = {
           source = PC.effect_PURE_lid;

@@ -559,7 +559,7 @@ let subcomp_combinator_kind (env:env)
 
   // peel off the f:repr a is binder
   let? rest_bs, f_b =
-    if List.length rest_bs >= 1
+    if Cons? rest_bs
     then let rest_bs, [f_b] = List.splitAt (List.length rest_bs - 1) rest_bs in
          (rest_bs, f_b) |> Some
     else None in
@@ -1058,7 +1058,7 @@ let lift_combinator_kind (env:env)
     (f_bs, f_bs_kinds, rest_bs) |> Some in
 
   let? rest_bs, f_b =
-    if List.length rest_bs >= 1
+    if Cons? rest_bs
     then let rest_bs, [f_b] = List.splitAt (List.length rest_bs - 1) rest_bs in
          (rest_bs, f_b) |> Some
     else None in
@@ -2499,14 +2499,14 @@ let tc_lift env sub r : ML _ =
       | lift, Some (uvs, lift_wp) ->
         //AR: open the universes, if present (two phases)
         let env, lift_wp =
-          if List.length uvs > 0 then
+          if Cons? uvs then
             let usubst, uvs = SS.univ_var_opening uvs in
             Env.push_univ_vars env uvs, SS.subst usubst lift_wp
           else env, lift_wp
         in
         (* Covers both the "classic" format and the reifiable case. *)
         //AR: if universes are already annotated, simply close, else generalize
-        let lift_wp = if List.length uvs = 0 then check_and_gen env lift_wp expected_k
+        let lift_wp = if Nil? uvs then check_and_gen env lift_wp expected_k
                       else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
         in
         lift, lift_wp
@@ -2514,7 +2514,7 @@ let tc_lift env sub r : ML _ =
       | Some (what, lift), None ->
         //AR: open the universes if present (two phases)
         let uvs, lift =
-          if List.length what > 0
+          if Cons? what
           then let usubst, uvs = SS.univ_var_opening what in
                uvs, SS.subst usubst lift
           else [], lift
@@ -2527,7 +2527,7 @@ let tc_lift env sub r : ML _ =
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
         let lift_wp = DMFF.recheck_debug "lift-wp" env lift_wp in
         let lift_elab = DMFF.recheck_debug "lift-elab" env lift_elab in
-        if List.length uvs = 0 then Some (Gen.generalize_universes env lift_elab), Gen.generalize_universes env lift_wp
+        if Nil? uvs then Some (Gen.generalize_universes env lift_elab), Gen.generalize_universes env lift_wp
         else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
     in
     (* we do not expect the lift to verify, *)
@@ -2555,7 +2555,7 @@ let tc_lift env sub r : ML _ =
       let expected_k, _, _ =
         tc_tot_or_gtot_term env expected_k in
       let lift =
-        if List.length uvs = 0 then check_and_gen env lift expected_k
+        if Nil? uvs then check_and_gen env lift expected_k
         else
           let lift = tc_check_trivial_guard env lift expected_k in
           uvs, SS.close_univ_vars uvs lift in
@@ -2581,7 +2581,7 @@ let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r
 
   //AR: open universes in tps and c if needed
   let env, uvs, tps, c =
-    if List.length uvs = 0 then env, uvs, tps, c
+    if Nil? uvs then env, uvs, tps, c
     else
       let usubst, uvs = SS.univ_var_opening uvs in
       let tps = SS.subst_binders usubst tps in
