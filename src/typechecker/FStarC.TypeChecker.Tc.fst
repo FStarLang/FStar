@@ -730,7 +730,16 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
   | Sig_pragma p ->  //no need for two-phase here
     process_pragma env p r;
-    [se], [], env0
+    (* Some pragmas are immediately dropped and do not
+    make it into the checked file. *)
+    let keep_pragma =
+      match p with
+      | ShowOptions
+      | PrintEffectsGraph
+      | Check _ -> false
+      | _ -> true
+    in
+    (if keep_pragma then [se] else []), [], env0
 
   | Sig_new_effect ne ->
     let is_unelaborated_dm4f =
