@@ -7,6 +7,12 @@
  )
  (modes native)
  (wrapped false)
+ ; -open Fstarcompiler: the merged parser uses the canonical F* parser
+ ; (src/ml/FStarC_Parser_Parse.mly) which has unqualified module names
+ ; like FStar_Char. In this plugin context the F* compiler is an external
+ ; wrapped library, so we need -open to bring its modules into scope
+ ; (including in the menhir-generated .mli).
+ (flags (:standard -open Fstarcompiler))
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
  ; ^ Needed for some of the base modules.
 )

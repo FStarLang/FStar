@@ -1380,6 +1380,7 @@ binop_name:
 tmEqNoRefinement:
   | e=tmEqWith(appTermNoRecordExp) { e }
 
+%public
 tmEq:
   | e=tmEqWith(tmRefinement)  { e }
 
