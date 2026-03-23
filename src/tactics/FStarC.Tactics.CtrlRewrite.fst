@@ -19,7 +19,6 @@ module FStarC.Tactics.CtrlRewrite
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
 open FStarC.TypeChecker.Common

@@ -281,8 +281,6 @@ let parse_incremental_decls () =
       failwith "Incremental parsing failed: Unexpected output"
 
 
-open FStarC.Class.Show
-
 let parse_incremental_decls_use_lang () =
   let source0 =
     "module Demo\n\

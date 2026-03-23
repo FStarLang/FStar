@@ -33,7 +33,6 @@ open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
-open FStarC.Syntax
 open FStarC.Common
 
 open FStarC.Class.Deq
@@ -43,7 +42,6 @@ open FStarC.Class.Setlike
 open FStarC.Class.Listlike
 open FStarC.Class.Monoid
 module Setlike = FStarC.Class.Setlike
-open FStarC.Class.Listlike
 open FStarC.CList
 module Listlike = FStarC.Class.Listlike
 

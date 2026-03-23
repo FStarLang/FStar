@@ -38,7 +38,6 @@ open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive
 open FStarC.Parser.ParseIt
-open FStarC.Interactive.Ide.Types
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err

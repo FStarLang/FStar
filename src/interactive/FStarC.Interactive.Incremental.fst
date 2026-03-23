@@ -36,7 +36,6 @@ module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Parser.AST.Diff { eq_decl }
-open FStarC.Class.Show
 let dbg = Debug.get_toggle "IDE"
 let qid = string & int
 let qst a = qid & repl_state -> ML (a & qid)

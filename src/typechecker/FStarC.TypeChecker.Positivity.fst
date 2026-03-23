@@ -20,7 +20,6 @@ module FStarC.TypeChecker.Positivity
 
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.TypeChecker.Env
 open FStarC.Syntax

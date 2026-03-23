@@ -18,7 +18,6 @@ module FStarC.Tests.Unif
 //open FSharp.Compatibility.OCaml
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax.Syntax

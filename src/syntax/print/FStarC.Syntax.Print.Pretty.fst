@@ -16,8 +16,6 @@
 
 module FStarC.Syntax.Print.Pretty
 open FStarC
-
-open FStarC
 open FStarC.Syntax.Syntax
 open FStarC.Util
 module Resugar    = FStarC.Syntax.Resugar

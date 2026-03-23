@@ -20,7 +20,6 @@ module FStarC.Tactics.V2.Primops
 into this module for all of that. *)
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
