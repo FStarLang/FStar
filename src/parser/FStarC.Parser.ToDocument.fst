@@ -1704,7 +1704,7 @@ and p_quantifier e : ML _ = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
     | QuantOp (i, _, _, _) -> p_ident i
-    | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
+    | _ -> failwith "Impossible: p_quantifier called on a non-quantifier term"
 
 and p_trigger : _ -> ML _ = function
     | [] -> empty

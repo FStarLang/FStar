@@ -503,7 +503,7 @@ let rec desugar_maybe_non_constant_universe t
       (* TODO : That might be a little dangerous... *)
       let n = int_of_string repr in
       if n < 0
-      then raise_error t Errors.Fatal_NegativeUniverseConstFatal_NotSupported
+      then raise_error t Errors.Fatal_NegativeUniverseConstNotSupported
              ("Negative universe constant  are not supported : " ^ repr);
       Inl n
   | Op (_op_plus, [t1 ; t2]) ->
@@ -1049,7 +1049,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       begin
       match op_as_term env (List.length args) s with
       | None ->
-        raise_error s Errors.Fatal_UnepxectedOrUnboundOperator
+        raise_error s Errors.Fatal_UnexpectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
       | Some op ->
@@ -1127,7 +1127,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
       | None ->
-        raise_error top Errors.Fatal_DataContructorNotFound (Format.fmt1 "Data constructor %s not found" (string_of_lid lid))
+        raise_error top Errors.Fatal_DataConstructorNotFound (Format.fmt1 "Data constructor %s not found" (string_of_lid lid))
       | _ ->
         let lid' = U.mk_discriminator lid in
         desugar_name mk setpos env true lid', noaqs
@@ -1294,7 +1294,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                 | [] -> None
                 | [p, _] -> Some p // NB: We ignore the type annotation here, the typechecker catches that anyway in tc_abs
                 | _ ->
-                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns [
+                  raise_error p Errors.Fatal_UnsupportedDisjunctivePatterns [
                     text "Disjunctive patterns are not supported in abstractions";
                   ]
             in

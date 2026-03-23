@@ -16,7 +16,6 @@
 module FStarC.Reflection.V2.NBEEmbeddings
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Syntax

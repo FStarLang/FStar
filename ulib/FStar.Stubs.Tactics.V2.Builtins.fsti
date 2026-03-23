@@ -25,7 +25,6 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
-open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal

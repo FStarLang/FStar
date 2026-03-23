@@ -1390,7 +1390,7 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
         List.mapi (fun nth (other, _) ->
           let nth = match nth with | 0 -> "first" | 1 -> "second" | 2 -> "third" | nth -> show (nth + 1) ^ "th" in
           {
-            issue_msg = [show other ^ " " ^ nth ^ " occurence comes from this declaration" |> FStarC.Errors.Msg.text];
+            issue_msg = [show other ^ " " ^ nth ^ " occurrence comes from this declaration" |> FStarC.Errors.Msg.text];
             issue_level = EError;
             issue_range = Some (range_of_id other);
             issue_number = None;

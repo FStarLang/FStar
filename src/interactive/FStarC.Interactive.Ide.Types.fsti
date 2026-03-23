@@ -17,7 +17,6 @@
 module FStarC.Interactive.Ide.Types
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Range

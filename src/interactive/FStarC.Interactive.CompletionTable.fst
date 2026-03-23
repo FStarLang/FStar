@@ -16,7 +16,6 @@
 
 module FStarC.Interactive.CompletionTable
 open FStarC
-open FStarC
 open FStarC.Effect
 
 let string_compare s1 s2 =

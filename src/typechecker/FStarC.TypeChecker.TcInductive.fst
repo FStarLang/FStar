@@ -892,7 +892,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
       let fail expected inferred =
         let open FStarC.Errors.Msg in
         let open FStarC.Pprint in
-        raise_error se Errors.Fatal_UnexpectedInductivetype [
+        raise_error se Errors.Fatal_UnexpectedInductiveType [
           text "Expected an inductive with type" ^/^ Print.tscheme_to_doc expected;
           text "Got" ^/^ Print.tscheme_to_doc inferred;
         ]
@@ -917,13 +917,13 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
           |> List.map (fun {binder_attrs=attrs; binder_positivity=pqual} -> attrs, pqual) in
         if List.length expected_attrs <> List.length binders
         then raise_error se
-               Errors.Fatal_UnexpectedInductivetype
+               Errors.Fatal_UnexpectedInductiveType
                 (Format.fmt2 "Could not get %s type parameters from val type %s"
                             (binders |> List.length |> show)
                             (show expected))
         else List.map2 (fun (ex_attrs, pqual) b ->
                if not (Common.check_positivity_qual true pqual b.binder_positivity)
-               then raise_error b Errors.Fatal_UnexpectedInductivetype "Incompatible positivity annotation";
+               then raise_error b Errors.Fatal_UnexpectedInductiveType "Incompatible positivity annotation";
                {b with binder_attrs = b.binder_attrs@ex_attrs; binder_positivity=pqual}
              ) expected_attrs binders
       in

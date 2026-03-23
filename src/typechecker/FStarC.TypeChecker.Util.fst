@@ -97,7 +97,7 @@ let check_uvars r t : ML _ =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.log_issue r Errors.Error_UncontrainedUnificationVar
+    Errors.log_issue r Errors.Error_UnconstrainedUnificationVar
       (Format.fmt2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" (show uvs) (show t));
     Options.pop()

@@ -174,7 +174,7 @@ let check_erasable_binder_attributes env attrs (binder_ty:typ) : ML unit =
       (fun attr ->
         if U.is_fvar Const.erasable_attr attr
         && not (N.non_info_norm env binder_ty)
-        then raise_error attr Errors.Fatal_QulifierListNotPermitted
+        then raise_error attr Errors.Fatal_QualifierListNotPermitted
                 ("Incompatible attributes:  an erasable attribute on a binder must bind a name at an non-informative type"))
 
 let push_binding env b : ML _ =
@@ -2866,7 +2866,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                 | _ ->
                     let open FStarC.Class.PP in
                     let open FStarC.Pprint in
-                    raise_error (argpos arg) Fatal_ToManyArgumentToFunction [
+                    raise_error (argpos arg) Fatal_TooManyArgumentsToFunction [
                         prefix 4 1 (text "Too many arguments to function of type") (pp thead);
                         text "Got" ^/^ pp (n_args <: int) ^/^ text "arguments";
                         prefix 4 1 (text "Remaining type is") (pp tres);

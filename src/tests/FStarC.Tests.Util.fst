@@ -16,7 +16,6 @@
 module FStarC.Tests.Util
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Errors
 open FStarC.Syntax
@@ -35,7 +34,6 @@ open FStarC.Range
 open FStarC.Class.Tagged
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}
-open FStarC.Class.Show
 
 let always (id : int) b : ML unit =
     if b

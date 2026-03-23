@@ -17,7 +17,6 @@ module FStarC.OCaml
 
 open FStarC
 open FStar.List.Tot.Base
-open FStarC
 open FStarC.Effect
 
 let shellescape (s:string) : string =

@@ -28,7 +28,6 @@ open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.CompletionTable
 
 module U = FStarC.Util
-module PI = FStarC.Parser.ParseIt
 module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env

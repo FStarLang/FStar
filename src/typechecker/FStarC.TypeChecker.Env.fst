@@ -1193,7 +1193,7 @@ let num_inductive_uniform_ty_params env lid : ML _ =
     (
       match num_uniform with
       | None ->
-        raise_error lid Errors.Fatal_UnexpectedInductivetype
+        raise_error lid Errors.Fatal_UnexpectedInductiveType
           (Format.fmt1 "Internal error: Inductive %s is not decorated with its uniform type parameters"
                                 (show lid))
       | Some n -> Some n
