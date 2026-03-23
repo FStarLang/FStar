@@ -144,7 +144,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
       let err msg =
-        raise_error r Errors.Fatal_QulifierListNotPermitted (
+        raise_error r Errors.Fatal_QualifierListNotPermitted (
           [ prefix 2 1 (text "Invalid qualifiers for declaration")
                        (bquotes <| doc_of_string (Print.sigelt_to_string_short se));
           ] @ msg
@@ -214,12 +214,12 @@ let check_erasable env quals (r:Range.t) se =
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Declaration is marked `erasable` but the definition is not.";
          ];
   if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Definition is marked `erasable` but the declaration is not.";
          ];
@@ -228,7 +228,7 @@ let check_erasable env quals (r:Range.t) se =
     match se.sigel with
     | Sig_bundle _ ->
       if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
               text "Incompatible attributes and qualifiers: \
                erasable types do not support decidable equality and must be marked `noeq`."
              ]
@@ -240,7 +240,7 @@ let check_erasable env quals (r:Range.t) se =
     | Sig_let {lbs=(false, [lb])} ->
       let _, body, _ = U.abs_formals lb.lbdef in
       if not (N.non_info_norm env body)
-      then raise_error body Errors.Fatal_QulifierListNotPermitted [
+      then raise_error body Errors.Fatal_QualifierListNotPermitted [
                   text "Illegal attribute: \
                    the `erasable` attribute is only permitted on inductive type definitions \
                    and abbreviations for non-informative types.";
@@ -249,12 +249,12 @@ let check_erasable env quals (r:Range.t) se =
 
     | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
       if not (List.contains TotalEffect quals)
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
                text "Effect" ^/^ pp eff_name ^/^ text "is marked erasable but only total effects are allowed to be erasable."
              ]
 
     | _ ->
-      raise_error r Errors.Fatal_QulifierListNotPermitted [
+      raise_error r Errors.Fatal_QualifierListNotPermitted [
           text "Illegal attribute: \
           the `erasable` attribute is only permitted on inductive type definitions \
           and abbreviations for non-informative types.";

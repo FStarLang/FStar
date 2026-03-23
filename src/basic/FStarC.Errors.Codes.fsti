@@ -163,7 +163,7 @@ type error_code =
   | Fatal_MultipleLetBinding
   | Fatal_NameNotFound
   | Fatal_NameSpaceNotFound
-  | Fatal_NegativeUniverseConstFatal_NotSupported
+  | Fatal_NegativeUniverseConstNotSupported
   | Fatal_NoFileProvided
   | Fatal_NonInductiveInMutuallyDefinedType
   | Fatal_NonLinearPatternNotPermitted
@@ -188,9 +188,9 @@ type error_code =
   | Fatal_ParseErrors
   | Fatal_ParseItError
   | Fatal_PolyTypeExpected
-  | Fatal_PossibleInfiniteTyp
+  | Fatal_PossibleInfiniteType
   | Fatal_PreModuleMismatch
-  | Fatal_QulifierListNotPermitted
+  | Fatal_QualifierListNotPermitted
   | Fatal_RecursiveFunctionLiteral
   | Fatal_ReflectOnlySupportedOnEffects
   | Fatal_ReservedPrefix
@@ -201,14 +201,14 @@ type error_code =
   | Fatal_TacticGotStuck
   | Fatal_TcOneFragmentFailed
   | Fatal_TermOutsideOfDefLanguage
-  | Fatal_ToManyArgumentToFunction
+  | Fatal_TooManyArgumentsToFunction
   | Fatal_TooManyOrTooFewFileMatch
   | Fatal_TooManyPatternArguments
   | Fatal_TooManyUniverse
   | Fatal_TypeMismatch
   | Fatal_TypeWithinPatternsAllowedOnVariablesOnly
   | Fatal_UnableToReadFile
-  | Fatal_UnepxectedOrUnboundOperator
+  | Fatal_UnexpectedOrUnboundOperator
   | Fatal_UnexpectedBinder
   | Fatal_UnexpectedBindShape
   | Fatal_UnexpectedChar
@@ -225,14 +225,14 @@ type error_code =
   | Fatal_UnexpectedIdentifier
   | Fatal_UnexpectedImplicitArgument
   | Fatal_UnexpectedImplictArgument
-  | Fatal_UnexpectedInductivetype
+  | Fatal_UnexpectedInductiveType
   | Fatal_UnexpectedLetBinding
   | Fatal_UnexpectedModuleDeclaration
   | Fatal_UnexpectedNumberOfUniverse
   | Fatal_UnexpectedNumericLiteral
   | Fatal_UnexpectedPattern
   | Fatal_UnexpectedPosition
-  | Fatal_UnExpectedPreCondition
+  | Fatal_UnexpectedPreCondition
   | Fatal_UnexpectedReturnShape
   | Fatal_UnexpectedSignatureForMonad
   | Fatal_UnexpectedTerm

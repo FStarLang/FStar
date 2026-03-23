@@ -448,7 +448,7 @@ let ctrl_rewrite
     let! gt' = do_ctrl_rewrite g dir controller rewriter (goal_env g) gt in
 
     if_verbose (fun () ->
-        Format.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
+        Format.print1 "ctrl_rewrite seems to have succeeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
     let g = goal_with_type g gt' in

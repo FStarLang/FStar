@@ -503,7 +503,7 @@ let rec desugar_maybe_non_constant_universe t
       (* TODO : That might be a little dangerous... *)
       let n = int_of_string repr in
       if n < 0
-      then raise_error t Errors.Fatal_NegativeUniverseConstFatal_NotSupported
+      then raise_error t Errors.Fatal_NegativeUniverseConstNotSupported
              ("Negative universe constant  are not supported : " ^ repr);
       Inl n
   | Op (_op_plus, [t1 ; t2]) ->
@@ -1049,7 +1049,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       begin
       match op_as_term env (List.length args) s with
       | None ->
-        raise_error s Errors.Fatal_UnepxectedOrUnboundOperator
+        raise_error s Errors.Fatal_UnexpectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
       | Some op ->

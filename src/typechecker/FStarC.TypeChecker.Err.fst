@@ -251,7 +251,7 @@ let raise_basic_type_error #a env (rng:Range.t) eopt t1 t2 : ML a =
   Errors.raise_error rng Errors.Error_TypeError msg
 
 let occurs_check =
-  (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
+  (Errors.Fatal_PossibleInfiniteType, "Possibly infinite typ (occurs check failed)")
 
 let constructor_fails_the_positivity_check env (d:term) (l:lid) : ML _ =
   (Errors.Fatal_ConstructorFailedCheck, (Format.fmt2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
@@ -309,7 +309,7 @@ let computed_computation_type_does_not_match_annotation_eq #a env (r:Range.t) e 
   ]
 
 let unexpected_non_trivial_precondition_on_term #a env f : ML a =
-  Errors.raise_error env Errors.Fatal_UnExpectedPreCondition
+  Errors.raise_error env Errors.Fatal_UnexpectedPreCondition
     (Format.fmt1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f))
 
 let __expected_eff_expression #a (effname:string) (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a =

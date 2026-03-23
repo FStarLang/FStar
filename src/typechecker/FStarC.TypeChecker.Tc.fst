@@ -989,7 +989,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : ML Env.env =
   match se.sigel with
   | Sig_inductive_typ _
   | Sig_datacon _ ->
-    raise_error se Errors.Fatal_UnexpectedInductivetype
+    raise_error se Errors.Fatal_UnexpectedInductiveType
       (Format.fmt1 "add_sigelt_to_env: unexpected bare type/data constructor: %s" (show se))
 
   | Sig_declare_typ _
