@@ -30,7 +30,7 @@ let default_settings : list error_setting =
     Error_TooManyFiles                                , CAlwaysError, 10;
     Error_TypeCheckerFailToProve                      , CAlwaysError, 11;
     Error_TypeError                                   , CAlwaysError, 12;
-    Error_UncontrainedUnificationVar                  , CAlwaysError, 13;
+    Error_UnconstrainedUnificationVar                  , CAlwaysError, 13;
     Error_UnexpectedGTotComputation                   , CAlwaysError, 14;
     Error_UnexpectedInstance                          , CAlwaysError, 15;
     Error_UnknownFatal_AssertionFailure               , CError, 16;
@@ -55,12 +55,12 @@ let default_settings : list error_setting =
     Fatal_ConstructorArgLengthMismatch                , CFatal, 35;
     Fatal_ConstructorFailedCheck                      , CFatal, 36;
     Fatal_ConstructorNotFound                         , CFatal, 37;
-    Fatal_ConstsructorBuildWrongType                  , CFatal, 38;
+    Fatal_ConstructorBuildWrongType                    , CFatal, 38;
     Fatal_CycleInRecTypeAbbreviation                  , CFatal, 39;
-    Fatal_DataContructorNotFound                      , CFatal, 40;
+    Fatal_DataConstructorNotFound                      , CFatal, 40;
     Fatal_DefaultQualifierNotAllowedOnEffects         , CFatal, 41;
     Fatal_DefinitionNotFound                          , CFatal, 42;
-    Fatal_DisjuctivePatternVarsMismatch               , CFatal, 43;
+    Fatal_DisjunctivePatternVarsMismatch               , CFatal, 43;
     Fatal_DivergentComputationCannotBeIncludedInTotal , CFatal, 44;
     Fatal_DuplicateInImplementation                   , CFatal, 45;
     Fatal_DuplicateModuleOrInterface                  , CFatal, 46;
@@ -242,7 +242,7 @@ let default_settings : list error_setting =
     Fatal_UnrecognizedExtension                       , CFatal, 223;
     Fatal_UnresolvedPatternVar                        , CFatal, 224;
     Fatal_UnsupportedConstant                         , CFatal, 225;
-    Fatal_UnsupportedDisjuctivePatterns               , CFatal, 226;
+    Fatal_UnsupportedDisjunctivePatterns               , CFatal, 226;
     Fatal_UnsupportedQualifier                        , CFatal, 227;
     Fatal_UserTacticFailure                           , CFatal, 228;
     Fatal_ValueRestriction                            , CFatal, 229;

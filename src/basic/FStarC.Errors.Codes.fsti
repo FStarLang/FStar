@@ -41,7 +41,7 @@ type error_code =
   | Error_TooManyFiles
   | Error_TypeCheckerFailToProve
   | Error_TypeError
-  | Error_UncontrainedUnificationVar
+  | Error_UnconstrainedUnificationVar
   | Error_UnexpectedGTotComputation
   | Error_UnexpectedInstance
   | Error_UnknownFatal_AssertionFailure
@@ -66,12 +66,12 @@ type error_code =
   | Fatal_ConstructorArgLengthMismatch
   | Fatal_ConstructorFailedCheck
   | Fatal_ConstructorNotFound
-  | Fatal_ConstsructorBuildWrongType
+  | Fatal_ConstructorBuildWrongType
   | Fatal_CycleInRecTypeAbbreviation
-  | Fatal_DataContructorNotFound
+  | Fatal_DataConstructorNotFound
   | Fatal_DefaultQualifierNotAllowedOnEffects
   | Fatal_DefinitionNotFound
-  | Fatal_DisjuctivePatternVarsMismatch
+  | Fatal_DisjunctivePatternVarsMismatch
   | Fatal_DivergentComputationCannotBeIncludedInTotal
   | Fatal_DuplicateInImplementation
   | Fatal_DuplicateModuleOrInterface
@@ -253,7 +253,7 @@ type error_code =
   | Fatal_UnrecognizedExtension
   | Fatal_UnresolvedPatternVar
   | Fatal_UnsupportedConstant
-  | Fatal_UnsupportedDisjuctivePatterns
+  | Fatal_UnsupportedDisjunctivePatterns
   | Fatal_UnsupportedQualifier
   | Fatal_UserTacticFailure
   | Fatal_ValueRestriction

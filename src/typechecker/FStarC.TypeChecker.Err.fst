@@ -279,7 +279,7 @@ let expected_poly_typ env (f:term) t targ : ML _ =
 let disjunctive_pattern_vars (v1 v2 : list bv) : ML _ =
   let vars v =
     v |> List.map show |> String.concat ", " in
-  (Errors.Fatal_DisjuctivePatternVarsMismatch, (Format.fmt2
+  (Errors.Fatal_DisjunctivePatternVarsMismatch, (Format.fmt2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)))
 
