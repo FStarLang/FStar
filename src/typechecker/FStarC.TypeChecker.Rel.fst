@@ -263,10 +263,6 @@ let maybe_invert_p  = function
 let make_prob_eq  = function
     | TProb p -> TProb ({p with relation=EQ})
     | CProb p -> CProb ({p with relation=EQ})
-let vary_rel rel  = function
-    | INVARIANT -> EQ
-    | CONTRAVARIANT -> invert_rel rel
-    | COVARIANT -> rel
 let p_pid  = function
    | TProb p -> p.pid
    | CProb p -> p.pid
@@ -301,10 +297,6 @@ let p_env wl prob : ML _
   (* Note: ctx_uvar_gamma should be an extension of tcenv.gamma,
    * since we created this uvar during this unification run. *)
   { wl.tcenv with gamma=(p_guard_uvar prob).ctx_uvar_gamma}
-
-let p_guard_env wl prob : ML _
-  =
-  { wl.tcenv with gamma=(match p_element prob with | None -> [] | Some x -> [Binding_var x]) @ (p_guard_uvar prob).ctx_uvar_gamma}
 
 (* ------------------------------------------------*)
 (* </prob/problem ops>                             *)
@@ -476,9 +468,6 @@ let mk_eq2 wl prob t1 t2 : ML (term & worklist) =
     let u = env.universe_of env tt in
     U.mk_eq2 u tt t1 t2, wl
 
-let p_invert  = function
-   | TProb p -> TProb <| invert p
-   | CProb p -> CProb <| invert p
 let p_logical  = function
    | TProb p -> p.logical
    | CProb p -> p.logical
@@ -486,7 +475,6 @@ let set_logical (b:bool)  = function
    | TProb p -> TProb {p with logical=b}
    | CProb p -> CProb {p with logical=b}
 
-let is_top_level_prob p  = p_reason p |> List.length = 1
 let incr r  = r := !r + 1
 let next_pid =
     let ctr = mk_ref 0 in
@@ -661,19 +649,6 @@ let occurs_check (uk:ctx_uvar) t : ML _
                         (show t)) in
     uvars, not occurs, msg
 
-let occurs_full (uk:ctx_uvar) t : ML _
-  =
-    let uvars =
-        Free.uvars_full t
-        |> elems // Bad: order dependent
-    in
-    let occurs =
-        (uvars
-        |> BU.for_some (fun uv ->
-           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
-    in
-    occurs
-
 let set_uvar env u (should_check_opt:option S.should_check_uvar) t : ML _
   =
   // Useful for debugging uvars setting bugs
@@ -714,14 +689,6 @@ let commit (env:env_t) (uvis:list uvi)  = uvis |> List.iter (function
       def_check_scoped #(list bv) #term t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
       set_uvar env u None t
     )
-
-let find_term_uvar uv s  = BU.find_map s (function
-    | UNIV _ -> None
-    | TERM(u, t) -> if UF.equiv uv u.ctx_uvar_head then Some t else None)
-
-let find_univ_uvar u s  = BU.find_map s (function
-    | UNIV(u', t) -> if UF.univ_equiv u u' then Some t else None
-    | _ -> None)
 
 (* ------------------------------------------------*)
 (* </uvi ops>                                      *)
@@ -775,7 +742,6 @@ let whnf env t : ML _
     (Some (Ident.string_of_lid (Env.current_module env)))
     "FStarC.TypeChecker.Rel.whnf"
 
-let norm_arg env t  = sn env (fst t), snd t
 let sn_binders env (binders:binders) : ML _
   =
     binders |> List.map (fun b -> {b with binder_bv={b.binder_bv with sort=sn env b.binder_bv.sort} })
@@ -1202,10 +1168,6 @@ let rec maximal_prefix (bs:binders) (bs':binders) : ML (binders & (binders & bin
     else [], (bs, bs')
   | _ -> [], (bs, bs')
 
-let extend_gamma (g:gamma) (bs:binders) : ML _
-  =
-    List.fold_left (fun g ({binder_bv=x}) -> Binding_var x::g) g bs
-
 let gamma_until (g:gamma) (bs:binders) : ML _
   =
     match List.last_opt bs with
@@ -1550,11 +1512,6 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : ML (match_result & opti
         Format.print3 "head_matches_delta (%s, %s) = %s\n"
             (show t1) (show t2) (show r);
     r
-
-let kind_type (binders:binders) (r:Range.t) : ML _
-  =
-    U.type_u() |> fst
-
 
 (* ----------------------------------------------------- *)
 (* Ranking problems for the order in which to solve them *)
@@ -2039,7 +1996,8 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
 
          let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
            let p, wl = sub_prob wl t1 EQ t2 "effect params subcomp" in
-           ps@[p], wl) ([], wl) param_args1 param_args2 in
+           p::ps, wl) ([], wl) param_args1 param_args2 in
+         let probs = List.rev probs in
          let param_subst = List.map2 (fun b (arg, _) ->
            NT (b.binder_bv, arg)) eff_params_bs param_args1 in
          bs, subst@param_subst, args1, args2, probs, wl in
@@ -2066,7 +2024,8 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
     then begin
       let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
         let p, wl = sub_prob wl t1 EQ t2 "substitutive inv subcomp args" in
-        ps@[p], wl) ([], wl) args1 args2 in
+        p::ps, wl) ([], wl) args1 args2 in
+      let probs = List.rev probs in
       bs, subst, probs, wl
     end
     else failwith "Impossible (rel.apply_substitutive_indexed_subcomp unexpected k" in
@@ -2166,8 +2125,9 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
       then Format.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
              (show f_sort_i) (show c1_i);
       let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
-        ps@[p], wl
+        p::ps, wl
     ) ([], wl) f_sort_is (ct1.effect_args |> List.map fst) in
+    let f_sub_probs = List.rev f_sub_probs in
 
   let subcomp_ct = subcomp_c |> SS.subst_comp substs |> Env.comp_to_comp_typ env in
 
@@ -2183,8 +2143,9 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
       then Format.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
              (show g_sort_i) (show c2_i);
       let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
-      ps@[p], wl
+      p::ps, wl
     ) ([], wl) g_sort_is (ct2.effect_args |> List.map fst) in
+    let g_sub_probs = List.rev g_sub_probs in
 
   let fml =
     let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
@@ -2220,9 +2181,6 @@ let lazy_complete_repr (k:lazy_kind) : ML bool =
 
 let has_free_uvars (t:term) : ML bool =
   not (Setlike.is_empty (Free.uvars_uncached t))
-
-let env_has_free_uvars (e:env_t) : ML bool =
-  List.existsb (fun b -> has_free_uvars b.binder_bv.sort) (Env.all_binders e)
 
 let gamma_has_free_uvars (g:list binding) : ML bool =
   List.existsb (function Binding_var bv -> has_free_uvars bv.sort

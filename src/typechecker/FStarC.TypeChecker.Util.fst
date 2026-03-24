@@ -645,15 +645,6 @@ let is_pure_or_ghost_effect env l : ML _ =
   lid_equals l C.effect_PURE_lid
   || (lid_equals l C.effect_GHOST_lid)
 
-let lax_mk_tot_or_comp_l mname u_result result flags : ML _ =
-    if Ident.lid_equals mname C.effect_Tot_lid
-    then S.mk_Total result
-    else mk_comp_l mname u_result result S.tun flags
-
-let is_function t : ML _ = match (compress t).n with
-    | Tm_arrow _ -> true
-    | _ -> false
-
 let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c

@@ -465,8 +465,8 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
       else []
 
     | Tm_app {hd=t; args} ->
-      List.fold_left (fun acc (t, _) ->
-        acc @ aux t) (aux t) args
+      let ts = aux t :: List.map (fun (t, _) -> aux t) args in
+      List.flatten ts
 
     | Tm_ascribed {tm=t}
     | Tm_uinst (t, _)
@@ -1982,7 +1982,8 @@ and tc_comp env c : ML (comp                                      (* checked ver
           let env, _ = Env.clear_expected_typ env in
           let l, g = l |> List.fold_left (fun (l, g) e ->
             let e, _, g_e = tc_tot_or_gtot_term env e in
-            l@[e], g ++ g_e) ([], mzero) in
+            e::l, g ++ g_e) ([], mzero) in
+          let l = List.rev l in
           DECREASES (Decreases_lex l), g
         | DECREASES (Decreases_wf (rel, e)) ->
           (*
