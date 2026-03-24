@@ -1996,7 +1996,8 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
 
          let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
            let p, wl = sub_prob wl t1 EQ t2 "effect params subcomp" in
-           ps@[p], wl) ([], wl) param_args1 param_args2 in
+           p::ps, wl) ([], wl) param_args1 param_args2 in
+         let probs = List.rev probs in
          let param_subst = List.map2 (fun b (arg, _) ->
            NT (b.binder_bv, arg)) eff_params_bs param_args1 in
          bs, subst@param_subst, args1, args2, probs, wl in
@@ -2023,7 +2024,8 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
     then begin
       let probs, wl = List.fold_left2 (fun (ps, wl) (t1, _) (t2, _) ->
         let p, wl = sub_prob wl t1 EQ t2 "substitutive inv subcomp args" in
-        ps@[p], wl) ([], wl) args1 args2 in
+        p::ps, wl) ([], wl) args1 args2 in
+      let probs = List.rev probs in
       bs, subst, probs, wl
     end
     else failwith "Impossible (rel.apply_substitutive_indexed_subcomp unexpected k" in
@@ -2123,8 +2125,9 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
       then Format.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
              (show f_sort_i) (show c1_i);
       let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
-        ps@[p], wl
+        p::ps, wl
     ) ([], wl) f_sort_is (ct1.effect_args |> List.map fst) in
+    let f_sub_probs = List.rev f_sub_probs in
 
   let subcomp_ct = subcomp_c |> SS.subst_comp substs |> Env.comp_to_comp_typ env in
 
@@ -2140,8 +2143,9 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
       then Format.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
              (show g_sort_i) (show c2_i);
       let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
-      ps@[p], wl
+      p::ps, wl
     ) ([], wl) g_sort_is (ct2.effect_args |> List.map fst) in
+    let g_sub_probs = List.rev g_sub_probs in
 
   let fml =
     let u, wp = List.hd subcomp_ct.comp_univs, fst (List.hd subcomp_ct.effect_args) in
