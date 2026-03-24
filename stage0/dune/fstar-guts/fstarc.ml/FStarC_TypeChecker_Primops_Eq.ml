@@ -38,9 +38,9 @@ let negopt3 (uu___ : unit) :
     'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> Prims.bool FStar_Pervasives_Native.option=
   push3
     (fun uu___1 ->
-       (Obj.magic
-          (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-             (fun uu___1 -> (Obj.magic Prims.op_Negation) uu___1))) uu___1)
+       Obj.magic
+         (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
+            (fun uu___1 -> Obj.magic Prims.op_Negation uu___1)) uu___1)
 let dec_eq_ops (env : FStarC_TypeChecker_Env.env_t) :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   let uu___ =
@@ -63,7 +63,7 @@ let dec_eq_ops (env : FStarC_TypeChecker_Env.env_t) :
         FStarC_Syntax_Embeddings.e_abstract_term
         FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
         FStarC_Syntax_Embeddings.e_bool FStarC_TypeChecker_NBETerm.e_bool
-        ((negopt3 ()) (s_eq env)) ((negopt3 ()) (nbe_eq env)) in
+        (negopt3 () (s_eq env)) (negopt3 () (nbe_eq env)) in
     [uu___2] in
   uu___ :: uu___1
 let s_eq2 (env : FStarC_TypeChecker_Env.env_t)

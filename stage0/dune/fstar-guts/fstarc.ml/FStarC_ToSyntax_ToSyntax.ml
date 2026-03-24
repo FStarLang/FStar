@@ -951,7 +951,7 @@ let rec desugar_maybe_non_constant_universe (t : FStarC_Parser_AST.term) :
                  "Negative universe constant  are not supported : " repr))
        else ();
        FStar_Pervasives.Inl n)
-  | FStarC_Parser_AST.Op (op_plus, t1::t2::[]) ->
+  | FStarC_Parser_AST.Op (_op_plus, t1::t2::[]) ->
       let u1 = desugar_maybe_non_constant_universe t1 in
       let u2 = desugar_maybe_non_constant_universe t2 in
       (match (u1, u2) with
@@ -979,7 +979,7 @@ let rec desugar_maybe_non_constant_universe (t : FStarC_Parser_AST.term) :
         | FStarC_Parser_AST.App (t2, targ, uu___3) ->
             let uarg = desugar_maybe_non_constant_universe targ in
             aux t2 (uarg :: univargs)
-        | FStarC_Parser_AST.Var max_lid ->
+        | FStarC_Parser_AST.Var _max_lid ->
             let uu___4 =
               FStarC_List.existsb
                 (fun uu___5 ->

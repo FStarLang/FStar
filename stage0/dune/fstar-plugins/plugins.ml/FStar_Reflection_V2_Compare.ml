@@ -16,30 +16,29 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_name"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
-                        Fstarcompiler.FStarC_Syntax_Embeddings.e_string)
-                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
-                        Fstarcompiler.FStarC_Syntax_Embeddings.e_string)
-                     FStar_Order.e_order compare_name
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_name") cb us)
-                    args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
+                       Fstarcompiler.FStarC_Syntax_Embeddings.e_string)
+                    (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
+                       Fstarcompiler.FStarC_Syntax_Embeddings.e_string)
+                    FStar_Order.e_order compare_name
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_name") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_name"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
-                      Fstarcompiler.FStarC_TypeChecker_NBETerm.e_string)
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
-                      Fstarcompiler.FStarC_TypeChecker_NBETerm.e_string)
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_name
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_name") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
+                     Fstarcompiler.FStarC_TypeChecker_NBETerm.e_string)
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
+                     Fstarcompiler.FStarC_TypeChecker_NBETerm.e_string)
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_name
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_name") cb us args))
 let compare_fv (f1 : FStarC_Reflection_Types.fv)
   (f2 : FStarC_Reflection_Types.fv) : FStar_Order.order=
   compare_name (FStarC_Reflection_V2_Builtins.inspect_fv f1)
@@ -54,25 +53,25 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_fv"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv
-                     FStar_Order.e_order compare_fv
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_fv
+                    FStar_Order.e_order compare_fv
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_fv") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_fv"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_fv
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_fv
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_fv
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_fv
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_fv
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_fv
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_fv") cb us args))
 let compare_const (c1 : FStarC_Reflection_V2_Data.vconst)
   (c2 : FStarC_Reflection_V2_Data.vconst) : FStar_Order.order=
   match (c1, c2) with
@@ -132,12 +131,12 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_const"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst
-                     FStar_Order.e_order compare_const
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_const") cb us)
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_vconst
+                    FStar_Order.e_order compare_const
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_const") cb us
                     args))
     (fun cb ->
        fun us ->
@@ -145,14 +144,13 @@ let _ =
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_const"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_vconst
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_vconst
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_const
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_const") cb us)
-                  args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_vconst
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_vconst
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_const
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_const") cb us args))
 let compare_ident (i1 : FStarC_Reflection_Types.ident)
   (i2 : FStarC_Reflection_Types.ident) : FStar_Order.order=
   let uu___ = FStarC_Reflection_V2_Builtins.inspect_ident i1 in
@@ -173,12 +171,12 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_ident"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_ident
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_ident
-                     FStar_Order.e_order compare_ident
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_ident") cb us)
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_ident
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_ident
+                    FStar_Order.e_order compare_ident
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_ident") cb us
                     args))
     (fun cb ->
        fun us ->
@@ -186,14 +184,13 @@ let _ =
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_ident"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_ident
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_ident
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_ident
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_ident") cb us)
-                  args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_ident
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_ident
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_ident
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_ident") cb us args))
 let rec compare_universe (u1 : FStarC_Reflection_Types.universe)
   (u2 : FStarC_Reflection_Types.universe) : FStar_Order.order=
   match ((FStarC_Reflection_V2_Builtins.inspect_universe u1),
@@ -237,12 +234,12 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_universe"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     FStar_Order.e_order compare_universe
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_universe") cb us)
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    FStar_Order.e_order compare_universe
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_universe") cb us
                     args))
     (fun cb ->
        fun us ->
@@ -250,13 +247,13 @@ let _ =
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_universe"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_universe
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_universe") cb us)
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_universe
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_universe") cb us
                   args))
 let compare_universes (us1 : FStarC_Reflection_V2_Data.universes)
   (us2 : FStarC_Reflection_V2_Data.universes) : FStar_Order.order=
@@ -271,30 +268,30 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_universes"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
-                        Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
-                     (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
-                        Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
-                     FStar_Order.e_order compare_universes
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_universes") cb
-                     us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
+                       Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
+                    (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
+                       Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe)
+                    FStar_Order.e_order compare_universes
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_universes") cb us
+                    args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_universes"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
-                      Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe)
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
-                      Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe)
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_universes
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_universes") cb us)
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
+                     Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe)
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_list
+                     Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe)
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_universes
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_universes") cb us
                   args))
 let rec __compare_term (s : FStarC_Reflection_Types.term)
   (t : FStarC_Reflection_Types.term) : FStar_Order.order=
@@ -522,26 +519,25 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_term"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     FStar_Order.e_order compare_term
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_term") cb us)
-                    args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    FStar_Order.e_order compare_term
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_term") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_term"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_term
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_term") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_term
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_term") cb us args))
 let compare_comp :
   FStarC_Reflection_Types.comp ->
     FStarC_Reflection_Types.comp -> FStar_Order.order=
@@ -556,26 +552,25 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_comp"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp
-                     FStar_Order.e_order compare_comp
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_comp") cb us)
-                    args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_comp
+                    FStar_Order.e_order compare_comp
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_comp") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_comp"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_comp
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_comp
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_comp
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_comp") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_comp
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_comp
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_comp
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_comp") cb us args))
 let compare_binder :
   FStarC_Reflection_Types.binder ->
     FStarC_Reflection_Types.binder -> FStar_Order.order=
@@ -590,12 +585,12 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.V2.Compare.compare_binder"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binder
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binder
-                     FStar_Order.e_order compare_binder
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.V2.Compare.compare_binder") cb us)
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binder
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binder
+                    FStar_Order.e_order compare_binder
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.V2.Compare.compare_binder") cb us
                     args))
     (fun cb ->
        fun us ->
@@ -603,11 +598,10 @@ let _ =
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.V2.Compare.compare_binder"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_binder
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_binder
-                   (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
-                   compare_binder
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.V2.Compare.compare_binder") cb us)
-                  args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_binder
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_binder
+                  (Fstarcompiler.FStarC_TypeChecker_NBETerm.e_unsupported ())
+                  compare_binder
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.V2.Compare.compare_binder") cb us args))

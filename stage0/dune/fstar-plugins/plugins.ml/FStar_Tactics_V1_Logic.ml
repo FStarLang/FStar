@@ -975,13 +975,13 @@ let _ =
                (fun _ ->
                   match args with
                   | (tv_0, _)::args_tail ->
-                      (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_1
-                         (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
-                            tv_0)
-                         (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
-                            tv_0) easy
-                         (Fstarcompiler.FStarC_Ident.lid_of_str
-                            "FStar.Tactics.V1.Logic.easy") cb us) args_tail
+                      Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_1
+                        (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
+                           tv_0)
+                        (Fstarcompiler.FStarC_Syntax_Embeddings.mk_any_emb
+                           tv_0) easy
+                        (Fstarcompiler.FStarC_Ident.lid_of_str
+                           "FStar.Tactics.V1.Logic.easy") cb us args_tail
                   | _ -> failwith "arity mismatch"))
     (fun cb ->
        fun us ->
@@ -991,13 +991,13 @@ let _ =
              (fun _ ->
                 match args with
                 | (tv_0, _)::args_tail ->
-                    (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1
-                       (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
-                          tv_0)
-                       (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
-                          tv_0) easy
-                       (Fstarcompiler.FStarC_Ident.lid_of_str
-                          "FStar.Tactics.V1.Logic.easy") cb us) args_tail
+                    Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_1
+                      (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
+                         tv_0)
+                      (Fstarcompiler.FStarC_TypeChecker_NBETerm.mk_any_emb
+                         tv_0) easy
+                      (Fstarcompiler.FStarC_Ident.lid_of_str
+                         "FStar.Tactics.V1.Logic.easy") cb us args_tail
                 | _ -> failwith "arity mismatch"))
 let using_lemma (t : FStarC_Reflection_Types.term) :
   (FStarC_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr=

@@ -1,6 +1,9 @@
 open Prims
 let fd_enabled : Prims.bool FStar_Pervasives_Native.option FStarC_Effect.ref=
   FStarC_Effect.mk_ref FStar_Pervasives_Native.None
+let debug_fly_deps : unit -> Prims.bool=
+  let dbg = FStarC_Debug.get_toggle "fly_deps" in
+  fun uu___ -> FStarC_Effect.op_Bang dbg
 let fly_deps_enabled (uu___ : unit) : Prims.bool=
   let uu___1 = FStarC_Effect.op_Bang fd_enabled in
   match uu___1 with
@@ -16,7 +19,7 @@ let fly_deps_enabled (uu___ : unit) : Prims.bool=
               (FStarC_Options.any_dump_module ()) in
           (if uu___3
            then
-             ((let uu___5 = FStarC_Debug.any () in
+             ((let uu___5 = debug_fly_deps () in
                if uu___5
                then
                  FStarC_Format.print_string
@@ -24,13 +27,13 @@ let fly_deps_enabled (uu___ : unit) : Prims.bool=
                else ());
               false)
            else
-             ((let uu___6 = FStarC_Debug.any () in
+             ((let uu___6 = debug_fly_deps () in
                if uu___6
                then FStarC_Format.print_string "fly_deps is on!\n"
                else ());
               true))
         else
-          ((let uu___5 = FStarC_Debug.any () in
+          ((let uu___5 = debug_fly_deps () in
             if uu___5
             then FStarC_Format.print_string "fly_deps is off!\n"
             else ());
@@ -45,9 +48,6 @@ let with_fly_deps_disabled (f : unit -> 'a) : 'a=
     (FStar_Pervasives_Native.Some false);
   FStarC_Util.finally
     (fun uu___1 -> FStarC_Effect.op_Colon_Equals fd_enabled v) f
-let debug_fly_deps : unit -> Prims.bool=
-  let dbg = FStarC_Debug.get_toggle "fly_deps" in
-  fun uu___ -> FStarC_Effect.op_Bang dbg
 type open_kind =
   | Open_module 
   | Open_namespace 

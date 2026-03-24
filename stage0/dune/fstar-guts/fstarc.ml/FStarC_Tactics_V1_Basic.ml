@@ -3015,7 +3015,7 @@ let apply_implicits_as_goals (uu___2 : FStarC_TypeChecker_Env.env)
                  | uu___4 -> ret [])) in
      Obj.magic
        (FStarC_Class_Monad.mapM FStarC_Tactics_Monad.monad_tac () ()
-          (fun uu___ -> (Obj.magic one_implicit_as_goal) uu___)
+          (fun uu___ -> Obj.magic one_implicit_as_goal uu___)
           (Obj.magic imps))) uu___2 uu___1 uu___
 let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
   (tc_resolved_uvars : Prims.bool) (tm : FStarC_Syntax_Syntax.term) :

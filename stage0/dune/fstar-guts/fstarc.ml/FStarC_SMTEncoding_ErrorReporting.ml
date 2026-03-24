@@ -600,6 +600,18 @@ let label_goals
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvShr, uu___1)
             -> failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRol uu___1, uu___2) ->
+            failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvRor uu___1, uu___2) ->
+            failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRol, uu___1) ->
+            failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
+            (FStarC_SMTEncoding_Term.BvExtRor, uu___1) ->
+            failwith "Impossible: non-propositional term"
+        | FStarC_SMTEncoding_Term.App
             (FStarC_SMTEncoding_Term.BvUdiv, uu___1) ->
             failwith "Impossible: non-propositional term"
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.BvMod, uu___1)

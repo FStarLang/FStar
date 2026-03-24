@@ -26,6 +26,7 @@ EXTRACT_NS += -FStar.IO
 EXTRACT_NS += -FStar.List
 EXTRACT_NS += -FStar.List.Tot.Base
 EXTRACT_NS += -FStar.Option
+EXTRACT_NS += -FStar.Parse
 EXTRACT_NS += -FStar.Pervasives.Native
 EXTRACT_NS += -FStar.ST
 EXTRACT_NS += -FStar.Exn

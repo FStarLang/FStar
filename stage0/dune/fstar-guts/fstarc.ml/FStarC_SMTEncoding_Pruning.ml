@@ -20,10 +20,10 @@ let showable_psmap (uu___ : 'a FStarC_Class_Show.showable) :
 let triggers_as_triggers_set (ts : triggers) : triggers_set=
   FStarC_List.map
     (fun uu___ ->
-       (Obj.magic
-          (FStarC_Class_Setlike.from_list ()
-             (Obj.magic
-                (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+       Obj.magic
+         (FStarC_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
          uu___) ts
 type assumption_name = Prims.string
 type sym = {
@@ -298,10 +298,10 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
     let uu___ =
       FStarC_List.map
         (fun uu___1 ->
-           (Obj.magic
-              (FStarC_Class_Setlike.elems ()
-                 (Obj.magic
-                    (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+           Obj.magic
+             (FStarC_Class_Setlike.elems ()
+                (Obj.magic
+                   (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
              uu___1) triggers1 in
     FStarC_List.fold_left
       (FStarC_List.fold_left (add_trigger_to_assumption a)) p1 uu___ in
@@ -744,10 +744,10 @@ let remove_trigger_for_assumption (p : pruning_state) (trig : sym)
       let eligible =
         FStarC_Util.for_some
           (fun uu___1 ->
-             (Obj.magic
-                (FStarC_Class_Setlike.is_empty ()
-                   (Obj.magic
-                      (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+             Obj.magic
+               (FStarC_Class_Setlike.is_empty ()
+                  (Obj.magic
+                     (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
                uu___1) l1.remaining_triggers in
       let uu___1 =
         let uu___2 = FStarC_PSMap.add p.assumption_to_triggers aname l1 in
@@ -780,11 +780,11 @@ let rec add_decl (d : FStarC_SMTEncoding_Term.decl) (p : pruning_state) :
         let uu___ =
           FStarC_List.map
             (fun uu___1 ->
-               (Obj.magic
-                  (FStarC_Class_Setlike.elems ()
-                     (Obj.magic
-                        (FStarC_RBSet.setlike_rbset
-                           FStarC_Class_Ord.ord_string)))) uu___1) triggers1 in
+               Obj.magic
+                 (FStarC_Class_Setlike.elems ()
+                    (Obj.magic
+                       (FStarC_RBSet.setlike_rbset
+                          FStarC_Class_Ord.ord_string))) uu___1) triggers1 in
         FStarC_List.fold_left
           (FStarC_List.fold_left (add_trigger_to_assumption a)) p uu___ in
       add_assumption_to_triggers a p1 triggers1

@@ -2792,7 +2792,7 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                         FStarC_Syntax_Embeddings_Base.try_unembed ea a1 norm in
                       FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option
                         () ()
-                        (fun uu___5 -> (Obj.magic FStarC_Sealed.seal) uu___5)
+                        (fun uu___5 -> Obj.magic FStarC_Sealed.seal uu___5)
                         (Obj.magic uu___4)))
             | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
       uu___1 uu___ in

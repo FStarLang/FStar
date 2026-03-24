@@ -1141,24 +1141,7 @@ let doc_of_modbody (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   reduce (FStarC_List.flatten docs)
 let doc_of_mlmodule_r (fsharp : Prims.bool)
   (mod1 : FStarC_Extraction_ML_Syntax.mlmodule) : doc=
-  let rec p_sig mod2 =
-    let uu___ = mod2 in
-    match uu___ with
-    | (x, sigmod) ->
-        let x1 = FStarC_Extraction_ML_Util.flatten_mlpath x in
-        let head = reduce1 [text "module"; text x1; text ":"; text "sig"] in
-        let tail = reduce1 [text "end"] in
-        let doc1 =
-          FStarC_Option.map
-            (fun uu___1 -> match uu___1 with | (s, uu___2) -> doc_of_sig x1 s)
-            sigmod in
-        reduce
-          [cat head hardline;
-          (match doc1 with
-           | FStar_Pervasives_Native.None -> empty
-           | FStar_Pervasives_Native.Some s -> cat s hardline);
-          cat tail hardline]
-  and p_mod istop mod2 =
+  let p_mod istop mod2 =
     let uu___ = mod2 in
     match uu___ with
     | (mod_name, sigmod) ->

@@ -1161,22 +1161,21 @@ let rec term_eq (t1 : FStarC_Syntax_Syntax.term)
      FStarC_Reflection_V2_Data.Tv_Uvar (n2, uv2)) -> n1 = n2
   | (FStarC_Reflection_V2_Data.Tv_Let (r1, ats1, b1, m1, n1),
      FStarC_Reflection_V2_Data.Tv_Let (r2, ats2, b2, m2, n2)) ->
-      ((((r1 = r2) && ((eqlist ()) term_eq ats1 ats2)) && (binder_eq b1 b2))
-         && (term_eq m1 m2))
+      ((((r1 = r2) && (eqlist () term_eq ats1 ats2)) && (binder_eq b1 b2)) &&
+         (term_eq m1 m2))
         && (term_eq n1 n2)
   | (FStarC_Reflection_V2_Data.Tv_Match (h1, an1, brs1),
      FStarC_Reflection_V2_Data.Tv_Match (h2, an2, brs2)) ->
-      ((term_eq h1 h2) && ((eqopt ()) match_ret_asc_eq an1 an2)) &&
-        ((eqlist ()) branch_eq brs1 brs2)
+      ((term_eq h1 h2) && (eqopt () match_ret_asc_eq an1 an2)) &&
+        (eqlist () branch_eq brs1 brs2)
   | (FStarC_Reflection_V2_Data.Tv_AscribedT (e1, t11, topt1, eq1),
      FStarC_Reflection_V2_Data.Tv_AscribedT (e2, t21, topt2, eq2)) ->
       (((term_eq e1 e2) && (term_eq t11 t21)) &&
-         ((eqopt ()) term_eq topt1 topt2))
+         (eqopt () term_eq topt1 topt2))
         && (eq1 = eq2)
   | (FStarC_Reflection_V2_Data.Tv_AscribedC (e1, c1, topt1, eq1),
      FStarC_Reflection_V2_Data.Tv_AscribedC (e2, c2, topt2, eq2)) ->
-      (((term_eq e1 e2) && (comp_eq c1 c2)) &&
-         ((eqopt ()) term_eq topt1 topt2))
+      (((term_eq e1 e2) && (comp_eq c1 c2)) && (eqopt () term_eq topt1 topt2))
         && (eq1 = eq2)
   | (FStarC_Reflection_V2_Data.Tv_Unknown,
      FStarC_Reflection_V2_Data.Tv_Unknown) -> true
@@ -1208,7 +1207,7 @@ and binder_eq (b1 : FStarC_Syntax_Syntax.binder)
      (aqual_eq bview1.FStarC_Reflection_V2_Data.qual
         bview2.FStarC_Reflection_V2_Data.qual))
     &&
-    ((eqlist ()) term_eq bview1.FStarC_Reflection_V2_Data.attrs
+    (eqlist () term_eq bview1.FStarC_Reflection_V2_Data.attrs
        bview2.FStarC_Reflection_V2_Data.attrs)
 and bv_eq (bv1 : FStarC_Syntax_Syntax.bv) (bv2 : FStarC_Syntax_Syntax.bv) :
   Prims.bool= bv1.FStarC_Syntax_Syntax.index = bv2.FStarC_Syntax_Syntax.index
@@ -1228,12 +1227,12 @@ and comp_eq (c1 : FStarC_Syntax_Syntax.comp) (c2 : FStarC_Syntax_Syntax.comp)
   | (FStarC_Reflection_V2_Data.C_Eff (us1, name1, t1, args1, decrs1),
      FStarC_Reflection_V2_Data.C_Eff (us2, name2, t2, args2, decrs2)) ->
       ((((univs_eq us1 us2) && (name1 = name2)) && (term_eq t1 t2)) &&
-         ((eqlist ()) arg_eq args1 args2))
-        && ((eqlist ()) term_eq decrs1 decrs2)
+         (eqlist () arg_eq args1 args2))
+        && (eqlist () term_eq decrs1 decrs2)
   | uu___1 -> false
 and match_ret_asc_eq (a1 : FStarC_Syntax_Syntax.match_returns_ascription)
   (a2 : FStarC_Syntax_Syntax.match_returns_ascription) : Prims.bool=
-  (eqprod ()) binder_eq ascription_eq a1 a2
+  eqprod () binder_eq ascription_eq a1 a2
 and ascription_eq (asc1 : FStarC_Syntax_Syntax.ascription)
   (asc2 : FStarC_Syntax_Syntax.ascription) : Prims.bool=
   let uu___ = asc1 in
@@ -1247,11 +1246,11 @@ and ascription_eq (asc1 : FStarC_Syntax_Syntax.ascription)
                  term_eq t1 t2
              | (FStar_Pervasives.Inr c1, FStar_Pervasives.Inr c2) ->
                  comp_eq c1 c2)
-              && ((eqopt ()) term_eq topt1 topt2))
+              && (eqopt () term_eq topt1 topt2))
              && (eq1 = eq2))
 and branch_eq (c1 : FStarC_Reflection_V2_Data.branch)
   (c2 : FStarC_Reflection_V2_Data.branch) : Prims.bool=
-  (eqprod ()) pattern_eq term_eq c1 c2
+  eqprod () pattern_eq term_eq c1 c2
 and pattern_eq (p1 : FStarC_Reflection_V2_Data.pattern)
   (p2 : FStarC_Reflection_V2_Data.pattern) : Prims.bool=
   match (p1, p2) with
@@ -1260,15 +1259,15 @@ and pattern_eq (p1 : FStarC_Reflection_V2_Data.pattern)
   | (FStarC_Reflection_V2_Data.Pat_Cons (fv1, us1, subpats1),
      FStarC_Reflection_V2_Data.Pat_Cons (fv2, us2, subpats2)) ->
       ((FStarC_Syntax_Syntax.fv_eq fv1 fv2) &&
-         ((eqopt ()) ((eqlist ()) univ_eq) us1 us2))
+         (eqopt () (eqlist () univ_eq) us1 us2))
         &&
-        ((eqlist ()) ((eqprod ()) pattern_eq (fun b1 b2 -> b1 = b2)) subpats1
+        (eqlist () (eqprod () pattern_eq (fun b1 b2 -> b1 = b2)) subpats1
            subpats2)
   | (FStarC_Reflection_V2_Data.Pat_Var (uu___, uu___1),
      FStarC_Reflection_V2_Data.Pat_Var (uu___2, uu___3)) -> true
   | (FStarC_Reflection_V2_Data.Pat_Dot_Term topt1,
      FStarC_Reflection_V2_Data.Pat_Dot_Term topt2) ->
-      (eqopt ()) term_eq topt1 topt2
+      eqopt () term_eq topt1 topt2
   | uu___ -> false
 and const_eq (c1 : FStarC_Reflection_V2_Data.vconst)
   (c2 : FStarC_Reflection_V2_Data.vconst) : Prims.bool= c1 = c2
@@ -1277,7 +1276,7 @@ and univ_eq (u1 : FStarC_Syntax_Syntax.universe)
   FStarC_Syntax_Util.eq_univs u1 u2
 and univs_eq (us1 : FStarC_Syntax_Syntax.universe Prims.list)
   (us2 : FStarC_Syntax_Syntax.universe Prims.list) : Prims.bool=
-  (eqlist ()) univ_eq us1 us2
+  eqlist () univ_eq us1 us2
 let implode_qn (ns : Prims.string Prims.list) : Prims.string=
   FStarC_String.concat "." ns
 let explode_qn (s : Prims.string) : Prims.string Prims.list=
