@@ -1,0 +1,34 @@
+; Route to subdirectories
+(dirs Hello Hello-gen multifile multifile-gen)
+
+; Per-project generator rules in sibling virtual dirs. dynamic_include
+; cycles when generator and consumer are in parent→child dirs, so each
+; project gets its own sibling gen dir. (universe) avoids listing deps
+; explicitly. %{workspace_root}/../../ escapes the build tree back to
+; the source tree root.
+
+; Hello project: build (checking) and extract (codegen) phases
+(subdir Hello-gen
+ (rule
+  (target deps.build.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --output_ext fst.checked --already_cached "Prims FStar" %{workspace_root}/../../Hello/))))
+ (rule
+  (target deps.extract.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --output_ext ml --codegen OCaml --already_cached "Prims FStar" %{workspace_root}/../../Hello/)))))
+
+; multifile project: build (checking) and extract (codegen) phases
+(subdir multifile-gen
+ (rule
+  (target deps.build.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --output_ext fst.checked --already_cached "Prims FStar" %{workspace_root}/../../multifile/))))
+ (rule
+  (target deps.extract.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe} --dep dune --output_ext ml --codegen OCaml --already_cached "Prims FStar" %{workspace_root}/../../multifile/)))))
