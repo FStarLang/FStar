@@ -16,7 +16,7 @@ OUTPUT_DIR=_output
 CODEGEN=krml
 TAG=cbor
 ROOTS=$(shell find $(SRC) -type f -name '*.fst' -o -name '*.fsti')
-DEPFLAGS=--extract '* -FStar -Pulse -PulseCore'
+DEPFLAGS=--extract '* -FStar -Pulse -PulseCore +Pulse.Lib -Pulse.Lib.Array.Core -Pulse.Lib.Core -Pulse.Lib.HigherReference'
 OTHERFLAGS += --already_cached '*,-CBOR.Pulse.Type,-CDDLExtractionTest'
 include $(PULSE_ROOT)/mk/boot.mk
 

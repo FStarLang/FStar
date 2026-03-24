@@ -12,6 +12,12 @@ FSTAR_DEFAULT_GOAL ?= build
 all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
+karamel: KRML_HOME ?= $(abspath karamel)
+karamel:
+	+$(MAKE) -C $(KRML_HOME) minimal
+
+.PHONY: karamel
+
 ### STAGES
 
 # For developers: you can set this variable externally, pointing
@@ -545,20 +551,45 @@ test-2: stage2
 	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
 
 test-3: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+test-3: override KRML_HOME := $(abspath karamel)
 test-3: stage3
 	# Only test-3 calls test_pulse. The other compilers do not
 	# support Pulse.
-	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE)
+	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
 
 unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 unit-tests: _unit-tests
 
 # Use directly only at your own risk.
 _test_pulse: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test_pulse:
+_test_pulse: KRML_HOME ?= $(abspath karamel)
+_test_pulse: _test_pulse_test _test_pulse_examples
+
+_test_pulse_test: karamel
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE)
+	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+_test_pulse_examples: karamel
+	env \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+accept_pulse_test:
+	env \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+accept_pulse_examples:
+	env \
+	  STAGE3=1 \
+	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+
+accept_pulse: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
+accept_pulse: override KRML_HOME := $(abspath karamel)
+accept_pulse: accept_pulse_test accept_pulse_examples
+
+.PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
