@@ -214,6 +214,18 @@ val shift_left (a:t) (s:t) : Pure t
   (requires (v s < n))
   (ensures (fun c -> FStar.UInt.shift_left (v a) (v s) = v c))
 
+(**** Rotate operators *)
+
+(** Rotate right, rotating at most the integer width *)
+val rotate_right (a:t) (s:t) : Pure t
+  (requires (v s < n))
+  (ensures (fun c -> FStar.UInt.rotate_right (v a) (v s) = v c))
+
+(** Rotate left, rotating at most the integer width *)
+val rotate_left (a:t) (s:t) : Pure t
+  (requires (v s < n))
+  (ensures (fun c -> FStar.UInt.rotate_left (v a) (v s) = v c))
+
 (**** Comparison operators *)
 
 (** Equality
@@ -331,6 +343,8 @@ inline_for_extraction unfold let ( &^ )  = logand
 inline_for_extraction unfold let ( |^ )  = logor
 inline_for_extraction unfold let ( <<^ ) = shift_left
 inline_for_extraction unfold let ( >>^ ) = shift_right
+inline_for_extraction unfold let ( <<<^ ) = rotate_left
+inline_for_extraction unfold let ( >>>^ ) = rotate_right
 inline_for_extraction unfold let ( =^ )  = eq
 inline_for_extraction unfold let ( <>^ ) = ne
 inline_for_extraction unfold let ( >^ )  = gt

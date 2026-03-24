@@ -66,6 +66,10 @@ type op =
   | BvMod 
   | BvMul 
   | BvUlt 
+  | BvExtRol 
+  | BvExtRor 
+  | BvRol of Prims.int 
+  | BvRor of Prims.int 
   | BvUext of Prims.int 
   | BvNot 
   | NatToBv of Prims.int 
@@ -132,6 +136,18 @@ let uu___is_BvMul (projectee : op) : Prims.bool=
   match projectee with | BvMul -> true | uu___ -> false
 let uu___is_BvUlt (projectee : op) : Prims.bool=
   match projectee with | BvUlt -> true | uu___ -> false
+let uu___is_BvExtRol (projectee : op) : Prims.bool=
+  match projectee with | BvExtRol -> true | uu___ -> false
+let uu___is_BvExtRor (projectee : op) : Prims.bool=
+  match projectee with | BvExtRor -> true | uu___ -> false
+let uu___is_BvRol (projectee : op) : Prims.bool=
+  match projectee with | BvRol _0 -> true | uu___ -> false
+let __proj__BvRol__item___0 (projectee : op) : Prims.int=
+  match projectee with | BvRol _0 -> _0
+let uu___is_BvRor (projectee : op) : Prims.bool=
+  match projectee with | BvRor _0 -> true | uu___ -> false
+let __proj__BvRor__item___0 (projectee : op) : Prims.int=
+  match projectee with | BvRor _0 -> _0
 let uu___is_BvUext (projectee : op) : Prims.bool=
   match projectee with | BvUext _0 -> true | uu___ -> false
 let __proj__BvUext__item___0 (projectee : op) : Prims.int=
@@ -712,6 +728,14 @@ let op_to_string (uu___ : op) : Prims.string=
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvExtRol -> "ext_rotate_left"
+  | BvExtRor -> "ext_rotate_right"
+  | BvRol n ->
+      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+      FStarC_Format.fmt1 "(_ rotate_left %s)" uu___1
+  | BvRor n ->
+      let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
+      FStarC_Format.fmt1 "(_ rotate_right %s)" uu___1
   | BvToNat -> "bv2int"
   | BvUext n ->
       let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
@@ -941,6 +965,68 @@ let mkBvShr (sz : Prims.int) (uu___ : (term * term))
             uu___3 in
         (BvShr, uu___2) in
       mkApp' uu___1 r
+let mkBvRol (sz : Prims.int) (uu___ : (term * term))
+  (r : FStarC_Range_Type.t) : term=
+  match uu___ with
+  | (t1, t2) ->
+      (match t2.tm with
+       | Integer n ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStarC_Util.int_of_string n in BvRol uu___3 in
+             (uu___2, [t1]) in
+           mkApp' uu___1 r
+       | App
+           (Var proj,
+            {
+              tm = App
+                (Var box,
+                 { tm = Integer n; freevars = uu___1; rng = uu___2;_}::[]);
+              freevars = uu___3; rng = uu___4;_}::[])
+           when (proj = "BoxInt_proj_0") && (box = "BoxInt") ->
+           let uu___5 =
+             let uu___6 =
+               let uu___7 = FStarC_Util.int_of_string n in BvRol uu___7 in
+             (uu___6, [t1]) in
+           mkApp' uu___5 r
+       | uu___1 ->
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = let uu___5 = mkNatToBv sz t2 r in [uu___5] in t1
+                 :: uu___4 in
+             (BvExtRol, uu___3) in
+           mkApp' uu___2 r)
+let mkBvRor (sz : Prims.int) (uu___ : (term * term))
+  (r : FStarC_Range_Type.t) : term=
+  match uu___ with
+  | (t1, t2) ->
+      (match t2.tm with
+       | Integer n ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = FStarC_Util.int_of_string n in BvRor uu___3 in
+             (uu___2, [t1]) in
+           mkApp' uu___1 r
+       | App
+           (Var proj,
+            {
+              tm = App
+                (Var box,
+                 { tm = Integer n; freevars = uu___1; rng = uu___2;_}::[]);
+              freevars = uu___3; rng = uu___4;_}::[])
+           when (proj = "BoxInt_proj_0") && (box = "BoxInt") ->
+           let uu___5 =
+             let uu___6 =
+               let uu___7 = FStarC_Util.int_of_string n in BvRor uu___7 in
+             (uu___6, [t1]) in
+           mkApp' uu___5 r
+       | uu___1 ->
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = let uu___5 = mkNatToBv sz t2 r in [uu___5] in t1
+                 :: uu___4 in
+             (BvExtRor, uu___3) in
+           mkApp' uu___2 r)
 let mkBvUdiv (sz : Prims.int) (uu___ : (term * term))
   (r : FStarC_Range_Type.t) : term=
   match uu___ with
@@ -977,6 +1063,12 @@ let mkBvShl' (sz : Prims.int) (uu___ : (term * term))
 let mkBvShr' (sz : Prims.int) (uu___ : (term * term))
   (r : FStarC_Range_Type.t) : term=
   match uu___ with | (t1, t2) -> mkApp' (BvShr, [t1; t2]) r
+let mkBvRol' (sz : Prims.int) (uu___ : (term * term))
+  (r : FStarC_Range_Type.t) : term=
+  match uu___ with | (t1, t2) -> mkApp' (BvExtRol, [t1; t2]) r
+let mkBvRor' (sz : Prims.int) (uu___ : (term * term))
+  (r : FStarC_Range_Type.t) : term=
+  match uu___ with | (t1, t2) -> mkApp' (BvExtRor, [t1; t2]) r
 let mkBvMul' (sz : Prims.int) (uu___ : (term * term))
   (r : FStarC_Range_Type.t) : term=
   match uu___ with | (t1, t2) -> mkApp' (BvMul, [t1; t2]) r
@@ -1066,6 +1158,10 @@ let check_pattern_ok (t : term) : term FStar_Pervasives_Native.option=
           | BvSub -> false
           | BvShl -> false
           | BvShr -> false
+          | BvRol uu___ -> false
+          | BvRor uu___ -> false
+          | BvExtRol -> false
+          | BvExtRor -> false
           | BvUdiv -> false
           | BvMod -> false
           | BvMul -> false

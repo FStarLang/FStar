@@ -93,3 +93,13 @@ let shift_arithmetic_right_vec (n : Prims.pos) (a : Obj.t bv_t)
          FStar_Seq_Base.append (ones_vec s)
            (FStar_Seq_Base.slice a Prims.int_zero (n - s)))
   else shift_right_vec n a s
+let rotate_left_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :
+  Obj.t bv_t=
+  let s1 = (mod) s n in
+  FStar_Seq_Base.append (FStar_Seq_Base.slice a s1 n)
+    (FStar_Seq_Base.slice a Prims.int_zero s1)
+let rotate_right_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :
+  Obj.t bv_t=
+  let s1 = (mod) s n in
+  FStar_Seq_Base.append (FStar_Seq_Base.slice a (n - s1) n)
+    (FStar_Seq_Base.slice a Prims.int_zero (n - s1))

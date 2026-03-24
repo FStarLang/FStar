@@ -116,3 +116,47 @@ let shift_arithmetic_right_vec_lemma_2 (#n: pos) (a: bv_t n) (s: nat) (i: nat{i 
     : Lemma (ensures index (shift_arithmetic_right_vec #n a s) i = index a (i - s))
       [SMTPat (index (shift_arithmetic_right_vec #n a s) i)] = ()
 
+(**** Rotate operators *)
+
+(** Relating the indexes of the rotated left vector to the original *)
+let rotate_left_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
+    : Lemma (ensures index (rotate_left_vec #n a s) i = index a ((i + s) % n))
+      [SMTPat (index (rotate_left_vec #n a s) i)] =
+  let s' = s % n in
+  if s' = 0 then ()
+  else if i < n - s' then ()
+  else ()
+
+(** Relating the indexes of the rotated right vector to the original *)
+let rotate_right_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
+    : Lemma (ensures index (rotate_right_vec #n a s) i = index a ((i + n - (s % n)) % n))
+      [SMTPat (index (rotate_right_vec #n a s) i)] =
+  let s' = s % n in
+  if s' = 0 then ()
+  else if i < s' then ()
+  else ()
+
+(** Rotate left by n is identity *)
+let rotate_left_vec_full_identity (#n: pos) (a: bv_t n)
+    : Lemma (ensures rotate_left_vec #n a n = a)
+      [SMTPat (rotate_left_vec #n a n)] =
+  assert (n % n = 0);
+  Seq.lemma_eq_intro (rotate_left_vec #n a n) a
+
+(** Rotate right by n is identity *)
+let rotate_right_vec_full_identity (#n: pos) (a: bv_t n)
+    : Lemma (ensures rotate_right_vec #n a n = a)
+      [SMTPat (rotate_right_vec #n a n)] =
+  assert (n % n = 0);
+  Seq.lemma_eq_intro (rotate_right_vec #n a n) a
+
+(** Rotate left and right are inverses *)
+let rotate_left_right_vec_inverse (#n: pos) (a: bv_t n) (s: nat)
+    : Lemma (ensures rotate_right_vec #n (rotate_left_vec #n a s) s = a) =
+  Seq.lemma_eq_intro (rotate_right_vec #n (rotate_left_vec #n a s) s) a
+
+(** Rotate right and left are inverses *)
+let rotate_right_left_vec_inverse (#n: pos) (a: bv_t n) (s: nat)
+    : Lemma (ensures rotate_left_vec #n (rotate_right_vec #n a s) s = a) =
+  Seq.lemma_eq_intro (rotate_left_vec #n (rotate_right_vec #n a s) s) a
+

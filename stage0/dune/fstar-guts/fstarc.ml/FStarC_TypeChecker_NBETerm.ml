@@ -1599,7 +1599,7 @@ let e_sealed (ea : 'a embedding) : 'a FStarC_Sealed.sealed embedding=
                      (let uu___2 = unembed ea cb a1 in
                       FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option
                         () ()
-                        (fun uu___3 -> (Obj.magic FStarC_Sealed.seal) uu___3)
+                        (fun uu___3 -> Obj.magic FStarC_Sealed.seal uu___3)
                         (Obj.magic uu___2)))
             | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
            uu___) in

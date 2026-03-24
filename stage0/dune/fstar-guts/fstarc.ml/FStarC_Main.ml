@@ -614,15 +614,14 @@ let go_normal (uu___ : unit) : unit=
                                    | FStar_Pervasives_Native.Some
                                        (files, deps) -> (files, deps, false)
                                    | FStar_Pervasives_Native.None ->
-                                       default_flydeps ()
-                                   | uu___20 ->
-                                       FStarC_Errors.raise_error0
-                                         FStarC_Errors_Codes.Error_TooManyFiles
-                                         ()
-                                         (Obj.magic
-                                            FStarC_Errors_Msg.is_error_message_string)
-                                         (Obj.magic
-                                            "When using --ext fly_deps, only one file can be provided."))))
+                                       default_flydeps ())))
+                          | uu___16 ->
+                              FStarC_Errors.raise_error0
+                                FStarC_Errors_Codes.Error_TooManyFiles ()
+                                (Obj.magic
+                                   FStarC_Errors_Msg.is_error_message_string)
+                                (Obj.magic
+                                   "When using --ext fly_deps, only one file can be provided.")
                         else
                           (let uu___17 =
                              FStarC_Dependencies.find_deps_if_needed

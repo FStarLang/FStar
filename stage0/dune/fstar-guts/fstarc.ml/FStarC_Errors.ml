@@ -213,7 +213,7 @@ let json_of_issue (issue1 : issue) : FStarC_Json.json=
                 (FStarC_Class_Monad.op_Less_Dollar_Greater
                    FStarC_Class_Monad.monad_option () ()
                    (fun uu___9 ->
-                      (Obj.magic FStarC_Range_Type.json_of_range) uu___9)
+                      Obj.magic FStarC_Range_Type.json_of_range uu___9)
                    (Obj.magic uu___8)) in
             FStarC_Option.dflt FStarC_Json.JsonNull uu___7 in
           ("range", uu___6) in

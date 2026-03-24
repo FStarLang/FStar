@@ -3249,42 +3249,84 @@ and tc_maybe_toplevel_term (env : FStarC_TypeChecker_Env.env)
                         (Prims.op_Negation rdc1.FStarC_Syntax_DsEnv.is_record) in
                     if uu___9
                     then
-                      let uu___10 =
-                        let uu___11 =
-                          let uu___12 =
-                            FStarC_Errors_Msg.text
-                              "Expected an expression of type" in
-                          let uu___13 =
-                            let uu___14 =
-                              let uu___15 =
-                                let uu___16 =
-                                  FStarC_TypeChecker_Env.expected_typ env1 in
-                                FStar_Pervasives_Native.__proj__Some__item__v
-                                  uu___16 in
-                              FStar_Pervasives_Native.fst uu___15 in
-                            FStarC_Class_PP.pp
-                              FStarC_Syntax_Print.pretty_term uu___14 in
-                          FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
-                        let uu___12 =
-                          let uu___13 =
-                            let uu___14 = FStarC_Errors_Msg.text "Type" in
-                            let uu___15 =
-                              let uu___16 =
-                                FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                                  rdc1.FStarC_Syntax_DsEnv.typename in
-                              let uu___17 =
+                      let rdc_field_names =
+                        FStarC_List.map
+                          (fun uu___10 ->
+                             match uu___10 with
+                             | (i, uu___11) -> FStarC_Ident.string_of_id i)
+                          rdc1.FStarC_Syntax_DsEnv.fields in
+                      let bad_field =
+                        FStarC_List.tryFind
+                          (fun i ->
+                             let uu___10 =
+                               FStarC_List.existsb
+                                 (fun f ->
+                                    let uu___11 =
+                                      let uu___12 =
+                                        FStarC_Ident.ident_of_lid i in
+                                      FStarC_Ident.string_of_id uu___12 in
+                                    f = uu___11) rdc_field_names in
+                             Prims.op_Negation uu___10)
+                          uc.FStarC_Syntax_Syntax.uc_fields in
+                      match bad_field with
+                      | FStar_Pervasives_Native.Some f ->
+                          let uu___10 =
+                            let uu___11 =
+                              let uu___12 =
                                 FStarC_Errors_Msg.text
-                                  "is not a record type." in
-                              FStar_Pprint.op_Hat_Slash_Hat uu___16 uu___17 in
-                            FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
-                          [uu___13] in
-                        uu___11 :: uu___12 in
-                      FStarC_Errors.raise_error
-                        (FStarC_Syntax_Syntax.has_range_syntax ()) top
-                        FStarC_Errors_Codes.Error_CannotResolveRecord ()
-                        (Obj.magic
-                           FStarC_Errors_Msg.is_error_message_list_doc)
-                        (Obj.magic uu___10)
+                                  "Expected an expression of type" in
+                              let uu___13 =
+                                let uu___14 =
+                                  let uu___15 =
+                                    let uu___16 =
+                                      FStarC_TypeChecker_Env.expected_typ
+                                        env1 in
+                                    FStar_Pervasives_Native.__proj__Some__item__v
+                                      uu___16 in
+                                  FStar_Pervasives_Native.fst uu___15 in
+                                FStarC_Class_PP.pp
+                                  FStarC_Syntax_Print.pretty_term uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___12 uu___13 in
+                            let uu___12 =
+                              let uu___13 =
+                                let uu___14 = FStarC_Errors_Msg.text "Type" in
+                                let uu___15 =
+                                  let uu___16 =
+                                    FStarC_Class_PP.pp
+                                      FStarC_Ident.pretty_lident
+                                      rdc1.FStarC_Syntax_DsEnv.typename in
+                                  let uu___17 =
+                                    let uu___18 =
+                                      FStarC_Errors_Msg.text
+                                        "is not declared as a record type;" in
+                                    let uu___19 =
+                                      let uu___20 =
+                                        FStarC_Errors_Msg.text "field" in
+                                      let uu___21 =
+                                        let uu___22 =
+                                          FStarC_Class_PP.pp
+                                            FStarC_Ident.pretty_lident f in
+                                        let uu___23 =
+                                          FStarC_Errors_Msg.text
+                                            "is not valid for this type." in
+                                        FStar_Pprint.op_Hat_Slash_Hat uu___22
+                                          uu___23 in
+                                      FStar_Pprint.op_Hat_Slash_Hat uu___20
+                                        uu___21 in
+                                    FStar_Pprint.op_Hat_Slash_Hat uu___18
+                                      uu___19 in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___16
+                                    uu___17 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___14 uu___15 in
+                              [uu___13] in
+                            uu___11 :: uu___12 in
+                          FStarC_Errors.raise_error
+                            (FStarC_Syntax_Syntax.has_range_syntax ()) top
+                            FStarC_Errors_Codes.Error_CannotResolveRecord ()
+                            (Obj.magic
+                               FStarC_Errors_Msg.is_error_message_list_doc)
+                            (Obj.magic uu___10)
+                      | FStar_Pervasives_Native.None -> ()
                     else ());
                    (let constructor1 =
                       FStarC_Syntax_Syntax.fv_to_tm constructor in
@@ -8408,31 +8450,72 @@ and tc_pat (env : FStarC_TypeChecker_Env.env)
                 FStarC_List.zip uc.FStarC_Syntax_Syntax.uc_fields sub_pats in
               (if Prims.op_Negation rdc.FStarC_Syntax_DsEnv.is_record
                then
-                 (let uu___5 =
-                    let uu___6 =
-                      let uu___7 =
-                        FStarC_Errors_Msg.text "Expected a pattern of type" in
-                      let uu___8 =
-                        FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t in
-                      FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
-                    let uu___7 =
-                      let uu___8 =
-                        let uu___9 = FStarC_Errors_Msg.text "Type" in
-                        let uu___10 =
-                          let uu___11 =
-                            FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                              rdc.FStarC_Syntax_DsEnv.typename in
-                          let uu___12 =
-                            FStarC_Errors_Msg.text "is not a record type." in
-                          FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                        FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
-                      [uu___8] in
-                    uu___6 :: uu___7 in
-                  FStarC_Errors.raise_error
-                    (FStarC_Syntax_Syntax.has_range_withinfo ()) p
-                    FStarC_Errors_Codes.Error_CannotResolveRecord ()
-                    (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                    (Obj.magic uu___5))
+                 (let rdc_field_names =
+                    FStarC_List.map
+                      (fun uu___5 ->
+                         match uu___5 with
+                         | (i, uu___6) -> FStarC_Ident.string_of_id i)
+                      rdc.FStarC_Syntax_DsEnv.fields in
+                  let bad_field =
+                    FStarC_List.tryFind
+                      (fun i ->
+                         let uu___5 =
+                           FStarC_List.existsb
+                             (fun f ->
+                                let uu___6 =
+                                  let uu___7 = FStarC_Ident.ident_of_lid i in
+                                  FStarC_Ident.string_of_id uu___7 in
+                                f = uu___6) rdc_field_names in
+                         Prims.op_Negation uu___5)
+                      uc.FStarC_Syntax_Syntax.uc_fields in
+                  match bad_field with
+                  | FStar_Pervasives_Native.Some f ->
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            FStarC_Errors_Msg.text
+                              "Expected a pattern of type" in
+                          let uu___8 =
+                            FStarC_Class_PP.pp
+                              FStarC_Syntax_Print.pretty_term t in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                        let uu___7 =
+                          let uu___8 =
+                            let uu___9 = FStarC_Errors_Msg.text "Type" in
+                            let uu___10 =
+                              let uu___11 =
+                                FStarC_Class_PP.pp FStarC_Ident.pretty_lident
+                                  rdc.FStarC_Syntax_DsEnv.typename in
+                              let uu___12 =
+                                let uu___13 =
+                                  FStarC_Errors_Msg.text
+                                    "is not declared as a record type;" in
+                                let uu___14 =
+                                  let uu___15 =
+                                    FStarC_Errors_Msg.text "field" in
+                                  let uu___16 =
+                                    let uu___17 =
+                                      FStarC_Class_PP.pp
+                                        FStarC_Ident.pretty_lident f in
+                                    let uu___18 =
+                                      FStarC_Errors_Msg.text
+                                        "is not valid for this type." in
+                                    FStar_Pprint.op_Hat_Slash_Hat uu___17
+                                      uu___18 in
+                                  FStar_Pprint.op_Hat_Slash_Hat uu___15
+                                    uu___16 in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                          [uu___8] in
+                        uu___6 :: uu___7 in
+                      FStarC_Errors.raise_error
+                        (FStarC_Syntax_Syntax.has_range_withinfo ()) p
+                        FStarC_Errors_Codes.Error_CannotResolveRecord ()
+                        (Obj.magic
+                           FStarC_Errors_Msg.is_error_message_list_doc)
+                        (Obj.magic uu___5)
+                  | FStar_Pervasives_Native.None -> ())
                else ();
                (let sub_pats1 =
                   FStarC_TypeChecker_Util.make_record_fields_in_order env1 uc

@@ -88,7 +88,7 @@ let errors_smt_detail (env : FStarC_TypeChecker_Env.env)
          match uu___ with
          | (e, msg, r, ctx) ->
              let uu___1 =
-               let msg1 = FStar_List_Tot_Base.append msg smt_detail in
+               let msg1 = FStar_List_Tot_Base.op_At msg smt_detail in
                if r = FStarC_Range_Type.dummyRange
                then
                  let uu___2 = FStarC_TypeChecker_Env.get_range env in
@@ -130,7 +130,7 @@ let errors_smt_detail (env : FStarC_TypeChecker_Env.env)
                             else FStar_Pprint.empty in
                           [uu___7] in
                         uu___5 :: uu___6 in
-                      FStar_List_Tot_Base.append msg1 uu___4 in
+                      FStar_List_Tot_Base.op_At msg1 uu___4 in
                     let uu___4 = FStarC_TypeChecker_Env.get_range env in
                     (e, msg2, uu___4, ctx)
                   else (e, msg1, r, ctx)) in

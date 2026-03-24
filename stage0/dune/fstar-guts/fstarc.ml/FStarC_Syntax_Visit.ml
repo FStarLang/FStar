@@ -26,7 +26,7 @@ let visit_term (pq : Prims.bool)
     Obj.magic
       (FStarC_Syntax_VisitM.visitM_term uu___0 pq
          (fun uu___1 ->
-            (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt)) uu___1) t) in
+            Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt) uu___1) t) in
   __proj__I__item__run uu___
 let visit_term_univs (pq : Prims.bool)
   (vt : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
@@ -36,9 +36,9 @@ let visit_term_univs (pq : Prims.bool)
     Obj.magic
       (FStarC_Syntax_VisitM.visitM_term_univs uu___0 pq
          (fun uu___1 ->
-            (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt)) uu___1)
+            Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt) uu___1)
          (fun uu___1 ->
-            (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu)) uu___1) t) in
+            Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu) uu___1) t) in
   __proj__I__item__run uu___
 let visit_sigelt (pq : Prims.bool)
   (vt : FStarC_Syntax_Syntax.term -> FStarC_Syntax_Syntax.term)
@@ -48,7 +48,7 @@ let visit_sigelt (pq : Prims.bool)
     Obj.magic
       (FStarC_Syntax_VisitM.visitM_sigelt uu___0 pq
          (fun uu___1 ->
-            (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt)) uu___1)
+            Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt) uu___1)
          (fun uu___1 ->
-            (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu)) uu___1) se) in
+            Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu) uu___1) se) in
   __proj__I__item__run uu___

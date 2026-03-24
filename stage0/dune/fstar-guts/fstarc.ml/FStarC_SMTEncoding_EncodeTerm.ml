@@ -492,41 +492,53 @@ let is_BitVector_primitive
   : Prims.bool=
   match ((head.FStarC_Syntax_Syntax.n), args) with
   | (FStarC_Syntax_Syntax.Tm_fvar fv, (sz_arg, uu___)::uu___1::uu___2::[]) ->
-      (((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
-                         FStarC_Parser_Const.bv_and_lid)
+      (((((((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
+                             FStarC_Parser_Const.bv_and_lid)
+                            ||
+                            (FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.bv_xor_lid))
+                           ||
+                           (FStarC_Syntax_Syntax.fv_eq_lid fv
+                              FStarC_Parser_Const.bv_or_lid))
+                          ||
+                          (FStarC_Syntax_Syntax.fv_eq_lid fv
+                             FStarC_Parser_Const.bv_add_lid))
+                         ||
+                         (FStarC_Syntax_Syntax.fv_eq_lid fv
+                            FStarC_Parser_Const.bv_sub_lid))
                         ||
                         (FStarC_Syntax_Syntax.fv_eq_lid fv
-                           FStarC_Parser_Const.bv_xor_lid))
+                           FStarC_Parser_Const.bv_shift_left_lid))
                        ||
                        (FStarC_Syntax_Syntax.fv_eq_lid fv
-                          FStarC_Parser_Const.bv_or_lid))
+                          FStarC_Parser_Const.bv_shift_right_lid))
                       ||
                       (FStarC_Syntax_Syntax.fv_eq_lid fv
-                         FStarC_Parser_Const.bv_add_lid))
+                         FStarC_Parser_Const.bv_udiv_lid))
                      ||
                      (FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.bv_sub_lid))
+                        FStarC_Parser_Const.bv_mod_lid))
                     ||
                     (FStarC_Syntax_Syntax.fv_eq_lid fv
-                       FStarC_Parser_Const.bv_shift_left_lid))
+                       FStarC_Parser_Const.bv_mul_lid))
                    ||
                    (FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.bv_shift_right_lid))
+                      FStarC_Parser_Const.bv_shift_left'_lid))
                   ||
                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.bv_udiv_lid))
+                     FStarC_Parser_Const.bv_shift_right'_lid))
                  ||
                  (FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.bv_mod_lid))
+                    FStarC_Parser_Const.bv_rotate_left_lid))
                 ||
                 (FStarC_Syntax_Syntax.fv_eq_lid fv
-                   FStarC_Parser_Const.bv_mul_lid))
+                   FStarC_Parser_Const.bv_rotate_right_lid))
                ||
                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.bv_shift_left'_lid))
+                  FStarC_Parser_Const.bv_rotate_left'_lid))
               ||
               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                 FStarC_Parser_Const.bv_shift_right'_lid))
+                 FStarC_Parser_Const.bv_rotate_right'_lid))
              ||
              (FStarC_Syntax_Syntax.fv_eq_lid fv
                 FStarC_Parser_Const.bv_udiv_unsafe_lid))
@@ -962,6 +974,12 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t)
                 let bv_shr =
                   mk_bv (FStarC_SMTEncoding_Util.mkBvShr sz) binary_arith
                     (FStarC_SMTEncoding_Term.boxBitVec sz) in
+                let bv_rol =
+                  mk_bv (FStarC_SMTEncoding_Util.mkBvRol sz) binary_arith
+                    (FStarC_SMTEncoding_Term.boxBitVec sz) in
+                let bv_ror =
+                  mk_bv (FStarC_SMTEncoding_Util.mkBvRor sz) binary_arith
+                    (FStarC_SMTEncoding_Term.boxBitVec sz) in
                 let bv_udiv =
                   mk_bv (FStarC_SMTEncoding_Util.mkBvUdiv sz) binary_arith
                     (FStarC_SMTEncoding_Term.boxBitVec sz) in
@@ -976,6 +994,12 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t)
                     (FStarC_SMTEncoding_Term.boxBitVec sz) in
                 let bv_shr' =
                   mk_bv (FStarC_SMTEncoding_Util.mkBvShr' sz) binary
+                    (FStarC_SMTEncoding_Term.boxBitVec sz) in
+                let bv_rol' =
+                  mk_bv (FStarC_SMTEncoding_Util.mkBvRol' sz) binary
+                    (FStarC_SMTEncoding_Term.boxBitVec sz) in
+                let bv_ror' =
+                  mk_bv (FStarC_SMTEncoding_Util.mkBvRor' sz) binary
                     (FStarC_SMTEncoding_Term.boxBitVec sz) in
                 let bv_udiv_unsafe =
                   mk_bv (FStarC_SMTEncoding_Util.mkBvUdivUnsafe sz) binary
@@ -1023,11 +1047,15 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t)
                   (FStarC_Parser_Const.bv_sub_lid, bv_sub);
                   (FStarC_Parser_Const.bv_shift_left_lid, bv_shl);
                   (FStarC_Parser_Const.bv_shift_right_lid, bv_shr);
+                  (FStarC_Parser_Const.bv_rotate_left_lid, bv_rol);
+                  (FStarC_Parser_Const.bv_rotate_right_lid, bv_ror);
                   (FStarC_Parser_Const.bv_udiv_lid, bv_udiv);
                   (FStarC_Parser_Const.bv_mod_lid, bv_mod);
                   (FStarC_Parser_Const.bv_mul_lid, bv_mul);
                   (FStarC_Parser_Const.bv_shift_left'_lid, bv_shl');
                   (FStarC_Parser_Const.bv_shift_right'_lid, bv_shr');
+                  (FStarC_Parser_Const.bv_rotate_left'_lid, bv_rol');
+                  (FStarC_Parser_Const.bv_rotate_right'_lid, bv_ror');
                   (FStarC_Parser_Const.bv_udiv_unsafe_lid, bv_udiv_unsafe);
                   (FStarC_Parser_Const.bv_mod_unsafe_lid, bv_mod_unsafe);
                   (FStarC_Parser_Const.bv_mul'_lid, bv_mul');

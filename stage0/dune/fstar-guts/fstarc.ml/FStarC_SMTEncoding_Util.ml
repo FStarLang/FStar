@@ -136,6 +136,14 @@ let mkBvShr (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
   norng (FStarC_SMTEncoding_Term.mkBvShr sz)
+let mkBvRol (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRol sz)
+let mkBvRor (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRor sz)
 let mkBvUdiv (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
@@ -156,6 +164,14 @@ let mkBvShr' (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=
   norng (FStarC_SMTEncoding_Term.mkBvShr' sz)
+let mkBvRol' (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRol' sz)
+let mkBvRor' (sz : Prims.int) :
+  (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
+    FStarC_SMTEncoding_Term.term=
+  norng (FStarC_SMTEncoding_Term.mkBvRor' sz)
 let mkBvUdivUnsafe (sz : Prims.int) :
   (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term) ->
     FStarC_SMTEncoding_Term.term=

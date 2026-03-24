@@ -428,24 +428,24 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.TermEq.term_eq"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     Fstarcompiler.FStarC_Syntax_Embeddings.e_bool term_eq
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.TermEq.term_eq") cb us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    Fstarcompiler.FStarC_Syntax_Embeddings.e_bool term_eq
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.TermEq.term_eq") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.TermEq.term_eq"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool term_eq
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.TermEq.term_eq") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool term_eq
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.TermEq.term_eq") cb us args))
 let term_eq_dec (t1 : faithful_term) (t2 : faithful_term) : Prims.bool=
   uu___is_Eq (term_cmp t1 t2)
 let _ =
@@ -458,26 +458,24 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.TermEq.term_eq_dec"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-                     Fstarcompiler.FStarC_Syntax_Embeddings.e_bool
-                     term_eq_dec
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.TermEq.term_eq_dec") cb us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
+                    Fstarcompiler.FStarC_Syntax_Embeddings.e_bool term_eq_dec
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.TermEq.term_eq_dec") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.TermEq.term_eq_dec"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
-                   Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool
-                   term_eq_dec
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.TermEq.term_eq_dec") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_term
+                  Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool term_eq_dec
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.TermEq.term_eq_dec") cb us args))
 let univ_eq (u1 : FStarC_Reflection_Types.universe)
   (u2 : FStarC_Reflection_Types.universe) : Prims.bool=
   uu___is_Eq (univ_cmp u1 u2)
@@ -491,24 +489,24 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.TermEq.univ_eq"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     Fstarcompiler.FStarC_Syntax_Embeddings.e_bool univ_eq
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.TermEq.univ_eq") cb us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    Fstarcompiler.FStarC_Syntax_Embeddings.e_bool univ_eq
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.TermEq.univ_eq") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.TermEq.univ_eq"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool univ_eq
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.TermEq.univ_eq") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool univ_eq
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.TermEq.univ_eq") cb us args))
 let univ_eq_dec (u1 : faithful_universe) (u2 : faithful_universe) :
   Prims.bool= uu___is_Eq (univ_cmp u1 u2)
 let _ =
@@ -521,23 +519,21 @@ let _ =
              Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
                "FStar.Reflection.TermEq.univ_eq_dec"
                (fun _ ->
-                  (Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
-                     Fstarcompiler.FStarC_Syntax_Embeddings.e_bool
-                     univ_eq_dec
-                     (Fstarcompiler.FStarC_Ident.lid_of_str
-                        "FStar.Reflection.TermEq.univ_eq_dec") cb us) args))
+                  Fstarcompiler.FStarC_Syntax_Embeddings.arrow_as_prim_step_2
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_universe
+                    Fstarcompiler.FStarC_Syntax_Embeddings.e_bool univ_eq_dec
+                    (Fstarcompiler.FStarC_Ident.lid_of_str
+                       "FStar.Reflection.TermEq.univ_eq_dec") cb us args))
     (fun cb ->
        fun us ->
          fun args ->
            Fstarcompiler.FStarC_Syntax_Embeddings.debug_wrap
              "FStar.Reflection.TermEq.univ_eq_dec"
              (fun _ ->
-                (Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
-                   Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool
-                   univ_eq_dec
-                   (Fstarcompiler.FStarC_Ident.lid_of_str
-                      "FStar.Reflection.TermEq.univ_eq_dec") cb us) args))
+                Fstarcompiler.FStarC_TypeChecker_NBETerm.arrow_as_prim_step_2
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  Fstarcompiler.FStarC_Reflection_V2_NBEEmbeddings.e_universe
+                  Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool univ_eq_dec
+                  (Fstarcompiler.FStarC_Ident.lid_of_str
+                     "FStar.Reflection.TermEq.univ_eq_dec") cb us args))

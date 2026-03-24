@@ -1283,26 +1283,31 @@ and scan_and_load_fly_deps_internal (filename : Prims.string) (env : uenv)
       FStarC_Parser_AST.decl) FStar_Pervasives.either)
   : (uenv * Prims.string Prims.list)=
   let load_fly_deps env1 filenames =
-    let run_load_tasks env2 filenames1 =
-      let uu___ = tc_fold_interleave false ([], [], env2) filenames1 in
-      match uu___ with | (uu___1, uu___2, env3) -> env3 in
-    let uu___ =
-      FStarC_Extraction_ML_UEnv.with_restored_tc_scope env1
-        (fun env2 ->
-           let uu___1 = run_load_tasks env2 filenames in ((), uu___1)) in
-    match uu___ with
-    | (uu___1, env2) ->
-        ((let uu___3 = FStarC_Parser_Dep.debug_fly_deps () in
-          if uu___3
-          then
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = FStarC_Extraction_ML_UEnv.tcenv_of_uenv env2 in
-                uu___6.FStarC_TypeChecker_Env.dsenv in
-              FStarC_Class_Show.show FStarC_Syntax_DsEnv.showable_env uu___5 in
-            FStarC_Format.print1 "After fly load deps: %s\n" uu___4
-          else ());
-         env2) in
+    match filenames with
+    | [] -> env1
+    | uu___ ->
+        let run_load_tasks env2 filenames1 =
+          let uu___1 = tc_fold_interleave false ([], [], env2) filenames1 in
+          match uu___1 with | (uu___2, uu___3, env3) -> env3 in
+        let uu___1 =
+          FStarC_Extraction_ML_UEnv.with_restored_tc_scope env1
+            (fun env2 ->
+               let uu___2 = run_load_tasks env2 filenames in ((), uu___2)) in
+        (match uu___1 with
+         | (uu___2, env2) ->
+             ((let uu___4 = FStarC_Parser_Dep.debug_fly_deps () in
+               if uu___4
+               then
+                 let uu___5 =
+                   let uu___6 =
+                     let uu___7 =
+                       FStarC_Extraction_ML_UEnv.tcenv_of_uenv env2 in
+                     uu___7.FStarC_TypeChecker_Env.dsenv in
+                   FStarC_Class_Show.show FStarC_Syntax_DsEnv.showable_env
+                     uu___6 in
+                 FStarC_Format.print1 "After fly load deps: %s\n" uu___5
+               else ());
+              env2)) in
   let scan_fragment_deps env1 frag_or_decl1 =
     let deps =
       FStarC_Syntax_DsEnv.dep_graph env1.FStarC_TypeChecker_Env.dsenv in

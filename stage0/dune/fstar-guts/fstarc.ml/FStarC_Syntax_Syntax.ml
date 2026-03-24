@@ -10,10 +10,9 @@ type var = FStarC_Ident.lident[@@deriving yojson,show]
 type sconst = FStarC_Const.sconst[@@deriving yojson,show]
 type 'a memo =
   (('a FStar_Pervasives_Native.option FStarC_Effect.ref)[@printer
-                                                          fun fmt ->
-                                                            fun _ ->
-                                                              Format.pp_print_string
-                                                                fmt "None"])
+                                                          fun fmt _ ->
+                                                            Format.pp_print_string
+                                                              fmt "None"])
 [@@deriving yojson,show]
 type emb_typ =
   | ET_abstract 
