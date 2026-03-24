@@ -83,11 +83,6 @@ let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
                 (show args))
 
-let err_ill_typed_erasure env (pos:Range.t) (ty : mlty) =
-    Errors.raise_error pos Fatal_IllTyped
-       (Format.fmt1 "Erased value found where a value of type %s was expected"
-                  (Code.string_of_mlty (current_module_of_uenv env) ty))
-
 let err_value_restriction (t:term) =
     Errors.raise_error t Fatal_ValueRestriction
        (Format.fmt2 "Refusing to generalize because of the value restriction: (%s) %s"
