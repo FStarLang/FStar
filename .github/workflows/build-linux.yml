@@ -52,11 +52,11 @@ jobs:
           # make -skj$(nproc) package-src FSTAR_TAG=
           # # ^ no tag in source package
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: fstar-Linux-*
           name: package-linux
-      # - uses: actions/upload-artifact@v4
+      # - uses: actions/upload-artifact@v7
       #   with:
       #     path: fstar-src.tar.gz
       #     name: package-src
@@ -76,7 +76,7 @@ jobs:
           version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package-linux
 
