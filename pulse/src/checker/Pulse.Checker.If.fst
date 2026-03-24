@@ -47,15 +47,18 @@ let check
   (pre:term)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
-  (b:term)
+  (b:st_term)
   (e1 e2:st_term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint) =
   
   let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
 
-  let b =
-    check_tot_term g b tm_bool in
+  let b : term =
+    match b.term with
+    | Tm_Return { term=bt } -> check_tot_term g bt tm_bool
+    | _ -> fail g (Some b.range) "check_if: expected a pure condition (Tm_Return); stateful conditions should have been elaborated away"
+  in
 
   let hyp = fresh g in
 
@@ -128,7 +131,8 @@ let check
 
   let c_typing = comp_typing_from_post_hint c post_hint' in
 
-  let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
+  let b_st = mk_term (Tm_Return { expected_type = tm_bool; insert_eq = false; term = b }) e1.range in
+  let if_st = wrst c (Tm_If { b=b_st; then_=e1; else_=e2; post=None }) in
   let d : st_typing_in_ctxt g pre (PostHint post_hint') =
     (| if_st, c |) in
 

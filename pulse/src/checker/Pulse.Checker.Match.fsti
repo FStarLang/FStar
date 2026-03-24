@@ -31,7 +31,7 @@ val check
         (pre:term)
         (post_hint:post_hint_for_env g)
         (res_ppname:ppname)
-        (sc:term)
+        (sc:st_term)
         (brs:list branch)
         (check:check_t)
   : T.Tac (checker_result_t g pre (PostHint post_hint))

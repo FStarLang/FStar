@@ -319,7 +319,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_If { b; then_; else_ } ->
       sprintf "if (%s)\n%s{\n%s%s\n%s}\n%selse\n%s{\n%s%s\n%s}"
-        (term_to_string b)
+        (st_term_to_string' level b)
         level
         (indent level)
         (st_term_to_string' (indent level) then_)
@@ -332,7 +332,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
 
     | Tm_Match {sc; brs} ->
       sprintf "match (%s) with %s"
-        (term_to_string sc)
+        (st_term_to_string' level sc)
         (branches_to_string brs)
 
     | Tm_IntroPure { p } ->

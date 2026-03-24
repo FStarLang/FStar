@@ -27,7 +27,7 @@ val check
   (pre:term)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
-  (b:term)
+  (b:st_term)
   (e1 e2:st_term)
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)

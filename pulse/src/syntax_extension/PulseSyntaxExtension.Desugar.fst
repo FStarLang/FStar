@@ -506,7 +506,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         in
         let t_match =
           {
-          mk_stmt (Match { head = A.(mk_term (Var (Ident.id_as_lid id)) lb.pat.prange Expr);
+          mk_stmt (Match { head = mk_stmt (Expr { e = A.(mk_term (Var (Ident.id_as_lid id)) lb.pat.prange Expr); args = [] }) s1range;
                           returns_annot = None;
                           branches = [(lb.norw, pat, s2)] }) s1range
                           with source = false }
@@ -555,7 +555,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       desugar_stmt env stmt
 
     | If { head; join_slprop; then_; else_opt } -> 
-      let! head = desugar_term env head in
+      let! head = desugar_stmt env head in
       let! join_slprop =
         match join_slprop with
         | None -> return None
@@ -574,7 +574,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       return (SW.tm_if head join_slprop then_ else_ s.range)
 
     | Match { head; returns_annot; branches } ->
-      let! head = desugar_term env head in
+      let! head = desugar_stmt env head in
       let! returns_annot = map_err_opt (fun (_, t, _opens) -> desugar_slprop env t) returns_annot in
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)

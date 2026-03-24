@@ -215,14 +215,14 @@ let rec eq_st_term (t1 t2:st_term)
 
     | Tm_If { b=g1; then_=ethen1; else_=eelse1; post=p1},
       Tm_If { b=g2; then_=ethen2; else_=eelse2; post=p2} ->
-      eq_tm g1 g2 &&
+      eq_st_term g1 g2 &&
       eq_st_term ethen1 ethen2 &&
       eq_st_term eelse1 eelse2 &&
       eq_tm_opt p1 p2
     
     | Tm_Match {sc=sc1; returns_=r1; brs=br1},
       Tm_Match {sc=sc2; returns_=r2; brs=br2} ->
-      eq_tm sc1 sc2 &&
+      eq_st_term sc1 sc2 &&
       eq_tm_opt r1 r2 &&
       eq_list_dec t1 t2 eq_branch br1 br2
 

@@ -206,10 +206,10 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
     ret (Tm_TotBind { binder; head; body = with_open binder body })
 
   | Tm_If { b; then_; else_; post } ->
-    ret (Tm_If { b; then_ = simplify_st_term g then_; else_ = simplify_st_term g else_; post })
+    ret (Tm_If { b = simplify_st_term g b; then_ = simplify_st_term g then_; else_ = simplify_st_term g else_; post })
 
   | Tm_Match { sc; returns_; brs } ->
-    ret (Tm_Match { sc; returns_; brs = T.map (simplify_branch g) brs })
+    ret (Tm_Match { sc = simplify_st_term g sc; returns_; brs = T.map (simplify_branch g) brs })
 
   | Tm_While { invariant; loop_requires; meas; condition; body } ->
     let condition = simplify_st_term g condition in
@@ -298,11 +298,13 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
            ret (Tm_TotBind { binder; head; body })
 
     | Tm_If { b; then_; else_; post } ->
+      let b = erase_ghost_subterms g b in
       let then_ = erase_ghost_subterms g then_ in
       let else_ = erase_ghost_subterms g else_ in
       ret (Tm_If { b; then_; else_; post })
 
     | Tm_Match { sc; brs; returns_ } ->
+      let sc = erase_ghost_subterms g sc in
       let brs = T.map (erase_ghost_subterms_branch g) brs in
       ret (Tm_Match { sc; brs; returns_ })
 
@@ -468,11 +470,17 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       ECL.mk_let b' e1 (close_term e2 x._2)
 
     | Tm_If { b; then_; else_ } ->
+      let b = (match b.term with
+               | Tm_Return { term } -> term
+               | _ -> extract_dv g b) in
       let then_ = extract_dv g then_ in
       let else_ = extract_dv g else_ in
       ECL.mk_if b then_ else_
 
     | Tm_Match { sc; brs } ->
+      let sc = (match sc.term with
+                | Tm_Return { term } -> term
+                | _ -> extract_dv g sc) in
       R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
 
     | Tm_While { condition; body } ->

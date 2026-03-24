@@ -21,3 +21,17 @@ open Pulse.Elaborate.Pure
 
 val readback_comp (t:R.term)
   : option (c:comp{ elab_comp c == t})
+
+val readback_pat (p:R.pattern)
+  : option pattern
+
+val readback_sub_pat (pb:R.pattern & bool)
+  : option (pattern & bool)
+
+val elab_readback_pat_x (rp:R.pattern) (p:pattern)
+  : Lemma (requires readback_pat rp == Some p)
+          (ensures elab_pat p == rp)
+
+val elab_readback_subpat (pb:R.pattern & bool)
+  : Lemma (requires (Some? (readback_sub_pat pb)))
+          (ensures elab_sub_pat (Some?.v (readback_sub_pat pb)) == pb)

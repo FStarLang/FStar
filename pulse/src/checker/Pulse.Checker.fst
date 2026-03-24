@@ -187,19 +187,39 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
       b in
     Pulse.Checker.Base.hoist g (Inr t) true rebuild
   | Tm_If {b; then_=e1; else_=e2; post} ->
-    let rebuild (b:either term st_term {Inl? b})
-    : T.Tac st_term
-    = let Inl b = b in
-      {t with term=Tm_If { b; then_=e1; else_=e2; post }}
-    in
-    Pulse.Checker.Base.hoist g (Inl b) true rebuild  
+    (match b.term with
+     | Tm_Return { expected_type; insert_eq; term=bt } ->
+       let rebuild (bt':either term st_term {Inl? bt'})
+       : T.Tac st_term
+       = let Inl bt' = bt' in
+         let b' = { b with term = Tm_Return { expected_type; insert_eq; term = bt' } } in
+         {t with term=Tm_If { b=b'; then_=e1; else_=e2; post }}
+       in
+       Pulse.Checker.Base.hoist g (Inl bt) true rebuild
+     | _ ->
+       // Stateful condition: transform into let _cond = b; if (return _cond) { e1 } else { e2 }
+       let binder = mk_binder_ppname Pulse.Typing.tm_bool (mk_ppname_no_range "_if_cond") in
+       let bv0 = Pulse.Syntax.Pure.tm_bvar { bv_index = 0; bv_ppname = ppname_default } in
+       let pure_b = mk_term (Tm_Return { expected_type = Pulse.Typing.tm_bool; insert_eq = false; term = bv0 }) b.range in
+       let inner_if = {t with term = Tm_If { b = pure_b; then_ = e1; else_ = e2; post }} in
+       Some (mk_term (Tm_Bind { binder; head = b; body = inner_if }) t.range))
   | Tm_Match {sc; returns_=post_match; brs} ->
-    let rebuild (sc:either term st_term {Inl? sc})
-    : T.Tac st_term
-    = let Inl sc = sc in
-      { t with term=Tm_Match {sc; returns_=post_match; brs} }
-    in
-    Pulse.Checker.Base.hoist g (Inl sc) true rebuild
+    (match sc.term with
+     | Tm_Return { expected_type; insert_eq; term=sct } ->
+       let rebuild (sct':either term st_term {Inl? sct'})
+       : T.Tac st_term
+       = let Inl sct' = sct' in
+         let sc' = { sc with term = Tm_Return { expected_type; insert_eq; term = sct' } } in
+         { t with term=Tm_Match {sc=sc'; returns_=post_match; brs} }
+       in
+       Pulse.Checker.Base.hoist g (Inl sct) true rebuild
+     | _ ->
+       // Stateful scrutinee: transform into let _sc = sc; match (return _sc) { brs }
+       let binder = mk_binder_ppname Pulse.Syntax.Pure.tm_unknown (mk_ppname_no_range "_match_sc") in
+       let bv0 = Pulse.Syntax.Pure.tm_bvar { bv_index = 0; bv_ppname = ppname_default } in
+       let pure_sc = mk_term (Tm_Return { expected_type = Pulse.Syntax.Pure.tm_unknown; insert_eq = false; term = bv0 }) sc.range in
+       let inner_match = {t with term = Tm_Match { sc = pure_sc; returns_ = post_match; brs }} in
+       Some (mk_term (Tm_Bind { binder; head = sc; body = inner_match }) t.range))
   | Tm_WithLocal { binder; initializer=Some initializer; body } ->
     let rebuild (sc:either term st_term {Inl? sc})
     : T.Tac st_term

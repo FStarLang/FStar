@@ -143,14 +143,14 @@ type stmt' =
     }
     
   | If {
-      head:A.term;
+      head:stmt;
       join_slprop:option ensures_slprop;
       then_:stmt;
       else_opt:option stmt;
     }
 
   | Match {
-      head:A.term;
+      head:stmt;
       returns_annot:option ensures_slprop;
       branches:list (bool & A.pattern & stmt);
       (* ^ boolean true for 'norewrite' *)
@@ -330,14 +330,14 @@ let rec stmt_to_string (s:stmt) : ML string =
     "Block {" ^ stmt_to_string stmt ^ "}"
   | If { head; join_slprop; then_; else_opt } ->
     "If " ^ record_string [
-      "head", show head;
+      "head", stmt_to_string head;
       "join_slprop", show join_slprop;
       "then_", stmt_to_string then_;
       "else_opt", FStarC.Common.string_of_option stmt_to_string else_opt;
     ]
   | Match { head; returns_annot; branches } ->
     "Match " ^ record_string [
-      "head", show head;
+      "head", stmt_to_string head;
       "returns_annot", show returns_annot;
       "branches", FStarC.Common.string_of_list branch_to_string branches;
     ]
@@ -479,12 +479,12 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
     eq_opt eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
   | If { head=h1; join_slprop=j1; then_=t1; else_opt=e1 }, If { head=h2; join_slprop=j2; then_=t2; else_opt=e2 } ->
-    AD.eq_term h1 h2 &&
+    eq_stmt h1 h2 &&
     eq_opt eq_ensures_slprop j1 j2 &&
     eq_stmt t1 t2 &&
     eq_opt eq_stmt e1 e2
   | Match { head=h1; returns_annot=r1; branches=b1 }, Match { head=h2; returns_annot=r2; branches=b2 } ->
-    AD.eq_term h1 h2 &&
+    eq_stmt h1 h2 &&
     eq_opt eq_ensures_slprop r1 r2 &&
     forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
   | While { guard=g1; invariant=i1; body=b1 }, While { guard=g2; invariant=i2; body=b2 } ->
@@ -626,12 +626,12 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
     iopt cbs.scan_term t
   | Block { stmt=s } -> scan_stmt cbs s
   | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
-    cbs.scan_term h;
+    scan_stmt cbs h;
     iopt (scan_ensures_slprop cbs) j;
     scan_stmt cbs t;
     iopt (scan_stmt cbs) e
   | Match { head=h; returns_annot=r; branches=b } ->
-    cbs.scan_term h;
+    scan_stmt cbs h;
     iopt (scan_ensures_slprop cbs) r;
     iter (fun (_, p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
   | While { guard=g; invariant=i; body=b } ->

@@ -91,18 +91,50 @@ let rec lemma_map_opt_dec_len #a #b #z (top:z) (f : (x:a{x << top}) -> option b)
     | [] -> ()
     | x::xs -> lemma_map_opt_dec_len top f xs
 
-// let rec __lemma_map_opt_index (f : 'a -> option 'b) (xs : list 'a) (ys : list 'b) (i:nat{i < L.length xs})
-//   : Lemma (requires map_opt f xs == Some ys)
-//           (ensures f (xs `L.index` i) == Some (ys `L.index` i))
-//   = match xs, ys, i with
-//     | _, _, 0 -> ()
-//     | x::xs, y::ys, _ ->
-//      __lemma_map_opt_index f xs ys (i-1)
+let rec lemma_map_len (f : 'a -> 'b) (xs : list 'a)
+  : Lemma (L.length (L.map f xs) == L.length xs)
+          [SMTPat (L.length (L.map f xs))]
+  = match xs with
+    | [] -> ()
+    | x::xs -> lemma_map_len f xs
 
-// let lemma_map_opt_index (f : 'a -> option 'b) (xs : list 'a) (ys : list 'b)
-//   : Lemma (requires map_opt f xs == Some ys)
-//           (ensures forall i. f (xs `L.index` i) == Some (ys `L.index` i))
-//   = Classical.forall_intro (Classical.move_requires (__lemma_map_opt_index f xs ys))
+let rec lemma_map_index (f : 'a -> 'b) (xs : list 'a) (i : nat{i < L.length xs})
+  : Lemma (L.map f xs `L.index` i == f (xs `L.index` i))
+  = match i, xs with
+    | 0, _ -> ()
+    | _, x::xs -> lemma_map_index f xs (i-1)
+
+let rec __lemma_map_opt_lenx (f : 'a -> option 'b) (xs : list 'a) (ys : list 'b)
+  : Lemma (requires map_opt f xs == Some ys)
+          (ensures L.length xs == L.length ys)
+  = match xs, ys with
+    | [], [] -> ()
+    | x::xs, y::ys ->
+      __lemma_map_opt_lenx f xs ys
+    | _ -> assert False
+
+let lemma_map_opt_lenx (f : 'a -> option 'b) (xs : list 'a)
+  : Lemma (requires Some? (map_opt f xs))
+          (ensures L.length xs == L.length (Some?.v (map_opt f xs)))
+          [SMTPat (map_opt f xs)]
+  = let Some ys = map_opt f xs in
+    __lemma_map_opt_lenx f xs ys
+
+let rec __lemma_map_opt_dec_lenx (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : list 'a{xs << top}) (ys : list 'b)
+  : Lemma (requires map_opt_dec top f xs == Some ys)
+          (ensures L.length xs == L.length ys)
+  = match xs, ys with
+    | [], [] -> ()
+    | x::xs, y::ys ->
+      __lemma_map_opt_dec_lenx top f xs ys
+    | _ -> assert False
+
+let lemma_map_opt_dec_lenx (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : list 'a{xs << top})
+  : Lemma (requires Some? (map_opt_dec top f xs))
+          (ensures L.length xs == L.length (Some?.v (map_opt_dec top f xs)))
+          [SMTPat (map_opt_dec top f xs)]
+  = let Some ys = map_opt_dec top f xs in
+    __lemma_map_opt_dec_lenx top f xs ys
 
 
 let rec dec_index #a (top:'z) (l : list a{l << top}) (i : nat{i < L.length l})
@@ -111,6 +143,19 @@ let rec dec_index #a (top:'z) (l : list a{l << top}) (i : nat{i < L.length l})
 = match l, i with
   | _, 0 -> ()
   | _::l, _ -> dec_index top l (i-1)
+
+let rec __lemma_map_opt_dec_index (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : list 'a{xs << top}) (ys : list 'b) (i:nat{i < L.length xs})
+  : Lemma (requires map_opt_dec top f xs == Some ys)
+          (ensures f (xs `L.index` i) == Some (ys `L.index` i))
+  = match xs, ys, i with
+    | _, _, 0 -> ()
+    | x::xs, y::ys, _ ->
+     __lemma_map_opt_dec_index top f xs ys (i-1)
+
+let lemma_map_opt_dec_index (top:'z) (f : (x:'a{x << top}) -> option 'b) (xs : list 'a{xs << top}) (ys : list 'b)
+  : Lemma (requires map_opt_dec top f xs == Some ys)
+          (ensures forall i. f (xs `L.index` i) == Some (ys `L.index` i))
+  = Classical.forall_intro (Classical.move_requires (__lemma_map_opt_dec_index top f xs ys))
 
 
 
