@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.15.3
 
       - name: Get fstar package
         uses: actions/download-artifact@v4
