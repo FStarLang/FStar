@@ -386,7 +386,9 @@ fn par (#preL: slprop) #postL #preR #postR
   requires preR
   ensures postL
   ensures postR
-{ admit() }
+{ 
+  f(); g() //just some scaffolding for this example; not really running them in parallel 
+}
 
 fn main ()
 {
