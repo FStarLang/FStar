@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: React to comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -41,7 +41,7 @@ jobs:
 
       - name: Get PR info
         id: pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -86,13 +86,13 @@ jobs:
           sudo sh -c 'echo "+memory +pids" > /sys/fs/cgroup/cgroup.subtree_control'
 
       - name: Checkout base
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr.outputs.base_sha }}
           path: fstar-base
 
       - name: Checkout head
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr.outputs.head_sha }}
           path: fstar-head
@@ -134,7 +134,7 @@ jobs:
           (cd fstar-head && find . \( -name '*.ramon' -o -name '*.fstarmem' \) -exec cp --parents {} ../ramon-files/head/ \;) || true
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bench-pr-${{ github.event.issue.number }}
           path: |
@@ -143,7 +143,7 @@ jobs:
           retention-days: 30
 
       - name: Post report as PR comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -159,7 +159,7 @@ jobs:
 
       - name: React with result
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             await github.rest.reactions.createForIssueComment({

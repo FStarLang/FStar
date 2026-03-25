@@ -40,12 +40,12 @@ jobs:
         working-directory: FStar
 
       # Upload the archives.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: FStar/fstar.tar.gz
           name: fstar.tar.gz
           retention-days: 3
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: FStar/fstar-src.tar.gz
           name: fstar-src.tar.gz

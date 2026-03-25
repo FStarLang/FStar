@@ -92,13 +92,13 @@ jobs:
       #     echo -------------------------------------------------
       #     make -kj$(nproc) package V=1
 
-      # - uses: actions/upload-artifact@v4
+      # - uses: actions/upload-artifact@v7
       #   with:
       #     path: FStar\fstar-Windows_NT-x86_64.tar.gz
       #     name: fstar-Windows_NT-x86_64.tar.gz
 
       # Get source package, extract, install its OPAM deps.
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: package-src
       - run: tar xzf fstar-src.tar.gz
@@ -137,7 +137,7 @@ jobs:
 
       - run: find . -name '*.zip'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ always () }}
         with:
           name: package-win
@@ -148,7 +148,7 @@ jobs:
     runs-on: windows-latest
     steps:
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: package-win
 
