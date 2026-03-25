@@ -535,13 +535,13 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
             []
            end
     in
-    if List.length vars = 0 then body
+    if Nil? vars then body
     else match body.tm with
          | App(TrueOp, _) -> body
          | _ -> mk (Quant(qop, all_pats_ok pats, wopt, vars, body)) r
 
 let mkLet (es, body) r =
-  if List.length es = 0 then body
+  if Nil? es then body
   else mk (Let (es,body)) r
 
 (*****************************************************)

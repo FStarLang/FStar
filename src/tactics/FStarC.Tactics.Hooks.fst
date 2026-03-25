@@ -868,7 +868,7 @@ let splice
             // For spliced vals, their lids is set to []
             //   (see ToSyntax.fst:desugar_decl, splice case)
             //
-            if List.length lids = 0
+            if Nil? lids
             then None, None
             else
               match Env.try_lookup_val_decl env (List.hd lids) with

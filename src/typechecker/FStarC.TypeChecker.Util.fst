@@ -97,7 +97,7 @@ let check_uvars r t : ML _ =
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.log_issue r Errors.Error_UncontrainedUnificationVar
+    Errors.log_issue r Errors.Error_UnconstrainedUnificationVar
       (Format.fmt2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" (show uvs) (show t));
     Options.pop()
@@ -644,15 +644,6 @@ let is_pure_or_ghost_effect env l : ML _ =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
   || (lid_equals l C.effect_GHOST_lid)
-
-let lax_mk_tot_or_comp_l mname u_result result flags : ML _ =
-    if Ident.lid_equals mname C.effect_Tot_lid
-    then S.mk_Total result
-    else mk_comp_l mname u_result result S.tun flags
-
-let is_function t : ML _ = match (compress t).n with
-    | Tm_arrow _ -> true
-    | _ -> false
 
 let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
@@ -3507,7 +3498,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   let rest_bs =
     let lift_t = sub.lift_wp |> Option.must in
     match (lift_t |> snd |> SS.compress).n with
-    | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
+    | Tm_arrow {bs=_::bs} when Cons? bs ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
       raise_error (snd lift_t) Errors.Fatal_UnexpectedEffect

@@ -503,7 +503,7 @@ let rec desugar_maybe_non_constant_universe t
       (* TODO : That might be a little dangerous... *)
       let n = int_of_string repr in
       if n < 0
-      then raise_error t Errors.Fatal_NegativeUniverseConstFatal_NotSupported
+      then raise_error t Errors.Fatal_NegativeUniverseConstNotSupported
              ("Negative universe constant  are not supported : " ^ repr);
       Inl n
   | Op (_op_plus, [t1 ; t2]) ->
@@ -1049,11 +1049,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       begin
       match op_as_term env (List.length args) s with
       | None ->
-        raise_error s Errors.Fatal_UnepxectedOrUnboundOperator
+        raise_error s Errors.Fatal_UnexpectedOrUnboundOperator
                     ("Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
       | Some op ->
-            if List.length args > 0 then
+            if Cons? args then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
                                                          (t', None), s) |> List.unzip in
               mk (Tm_app {hd=op; args}), join_aqs aqs
@@ -1127,7 +1127,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
     | Discrim lid ->
       begin match Env.try_lookup_datacon env lid with
       | None ->
-        raise_error top Errors.Fatal_DataContructorNotFound (Format.fmt1 "Data constructor %s not found" (string_of_lid lid))
+        raise_error top Errors.Fatal_DataConstructorNotFound (Format.fmt1 "Data constructor %s not found" (string_of_lid lid))
       | _ ->
         let lid' = U.mk_discriminator lid in
         desugar_name mk setpos env true lid', noaqs
@@ -1147,7 +1147,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                   arg_withimp_t imp te, aq) args |> List.unzip in
                 let head = if universes = [] then head else mk (Tm_uinst(head, universes)) in
                 let tm =
-                  if List.length args = 0
+                  if Nil? args
                   then head
                   else mk (Tm_app {hd=head; args}) in
                 tm, join_aqs aqs
@@ -1294,7 +1294,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                 | [] -> None
                 | [p, _] -> Some p // NB: We ignore the type annotation here, the typechecker catches that anyway in tc_abs
                 | _ ->
-                  raise_error p Errors.Fatal_UnsupportedDisjuctivePatterns [
+                  raise_error p Errors.Fatal_UnsupportedDisjunctivePatterns [
                     text "Disjunctive patterns are not supported in abstractions";
                   ]
             in
@@ -2370,7 +2370,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
         raise_error t Errors.Fatal_EffectNotFound "Expected an effect constructor"
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
-    if List.length args = 0 then
+    if Nil? args then
       fail Errors.Fatal_NotEnoughArgsToEffect (Format.fmt1 "Not enough args to effect %s" (show eff));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
@@ -3057,6 +3057,10 @@ let trans_pragma env (_x_:AST.pragma) : ML _ = match _x_ with
     let t, aq = desugar_term_maybe_top true env t in
     check_no_aq aq;
     S.Check t
+  | AST.Eval t ->
+    let t, aq = desugar_term_maybe_top true env t in
+    check_no_aq aq;
+    S.Eval t
 
 let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layered:bool) eff_name eff_binders eff_typ eff_decls : ML _ =
     let env0 = env in
@@ -3801,7 +3805,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
        * which will trigger a check for completeness of pat
        * wrt the body. (See issues #829 and #1903)
        *)
-      if List.isEmpty bvs && not (is_var_pattern pat)
+      if Nil? bvs && not (is_var_pattern pat)
       then build_coverage_check main_let
       else List.fold_left build_projection main_let bvs
 

@@ -63,9 +63,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          submodules: true
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           # name: ${{ matrix.pak }}
           name: fstar.tar.gz
@@ -119,7 +121,7 @@ jobs:
           version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
 
@@ -149,7 +151,7 @@ jobs:
           version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.pak }}
       - run: tar xzf ${{ matrix.pak }}
@@ -183,7 +185,7 @@ jobs:
           version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
 

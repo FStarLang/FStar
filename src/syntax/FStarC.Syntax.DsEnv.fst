@@ -61,7 +61,7 @@ let rec list_sep2 #a (s1 s2 : a) (xs : list a) : list a =
 let typo_msg (x : string) (xs : list string) : ML Pprint.document =
   let open FStarC.Pprint in
   let cands = typo_candidates x xs in
-  if List.length cands = 0
+  if Nil? cands
   then empty
   else
     nest 2 <| text "Hint: Did you mean" ^/^
@@ -98,7 +98,7 @@ type scope_mod =
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
 let namespace_scope_of_module mname : ML _ =
-  if List.length (ns_of_lid mname) > 0
+  if Cons? (ns_of_lid mname)
   then [ (lid_of_ids (ns_of_lid mname), Open_namespace, Unrestricted) ]
   else []
 
@@ -615,7 +615,7 @@ let shorten_module_path env ids is_full_path : ML _ =
       | None -> ([], ids)
       | Some (stripped_ids, rev_kept_ids) -> (stripped_ids, List.rev rev_kept_ids) in
 
-  if is_full_path && List.length ids > 0 then
+  if is_full_path && Cons? ids then
     // Try to strip the entire prefix.  This is the cheap common case.
     match resolve_module_name env (FStarC.Ident.lid_of_ids ids) true with
     | Some m when module_is_open env m -> (ids, [])
@@ -1390,7 +1390,7 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
         List.mapi (fun nth (other, _) ->
           let nth = match nth with | 0 -> "first" | 1 -> "second" | 2 -> "third" | nth -> show (nth + 1) ^ "th" in
           {
-            issue_msg = [show other ^ " " ^ nth ^ " occurence comes from this declaration" |> FStarC.Errors.Msg.text];
+            issue_msg = [show other ^ " " ^ nth ^ " occurrence comes from this declaration" |> FStarC.Errors.Msg.text];
             issue_level = EError;
             issue_range = Some (range_of_id other);
             issue_number = None;
@@ -1760,7 +1760,7 @@ let fail_or env lookup lid : ML _ =
     (* We couldn't find it. Try to report a nice error. *)
     let opened_modules = List.map (fun (lid, _) -> string_of_lid lid) env.modules in
     let open FStarC.Class.PP in
-    if List.length (ns_of_lid lid) = 0 then begin
+    if Nil? (ns_of_lid lid) then begin
       if Debug.any()
       then Format.print2 "Dump env (is iface=%s):\n%s\n" (show env.iface) (show env);
       raise_error lid Errors.Fatal_IdentifierNotFound [

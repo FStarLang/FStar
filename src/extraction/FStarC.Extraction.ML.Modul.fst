@@ -870,7 +870,7 @@ let rec extract_sigelt_iface (g:uenv) (se:sigelt) : ML (uenv & iface) =
 
     | Sig_new_effect ed ->
       if TcUtil.effect_extraction_mode (tcenv_of_uenv g) ed.mname = S.Extract_reify
-      && List.isEmpty ed.binders //we do not extract parameterized effects
+      && Nil? ed.binders //we do not extract parameterized effects
       then let env, iface, _ = extract_reifiable_effect g ed in
            env, iface
       else g, empty_iface
@@ -961,7 +961,7 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
                    ([], env)
              in
              Some (MLTD_Record fields), g
-         | _ when List.length ctors = 0 ->
+         | _ when Nil? ctors ->
              None, env
          | _ ->
              Some (MLTD_DType ctors), env

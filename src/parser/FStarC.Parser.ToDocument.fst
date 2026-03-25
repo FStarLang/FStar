@@ -73,7 +73,7 @@ let rec all (f: 'a -> bool) (l: list 'a): bool =
   | x :: xs -> if f x then all f xs else false
 
 let all1_explicit (args:list (term&imp)) : ML bool =
-    not (List.isEmpty args) &&
+    Cons? args &&
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
@@ -853,6 +853,7 @@ and p_pragma : _ -> ML _ = function
   | RestartSolver -> str "#restart-solver"
   | PrintEffectsGraph -> str "#print-effects-graph"
   | Check t -> str "#check" ^/^ p_term false false t
+  | Eval t -> str "#eval" ^/^ p_term false false t
 
 (* TODO : needs to take the F# specific type instantiation *)
 and p_typars (bs: list binder): ML document = p_binders true bs
@@ -1704,7 +1705,7 @@ and p_quantifier e : ML _ = match e.tm with
     | QForall _ -> str "forall"
     | QExists _ -> str "exists"
     | QuantOp (i, _, _, _) -> p_ident i
-    | _ -> failwith "Imposible : p_quantifier called on a non-quantifier term"
+    | _ -> failwith "Impossible: p_quantifier called on a non-quantifier term"
 
 and p_trigger : _ -> ML _ = function
     | [] -> empty
@@ -1810,7 +1811,7 @@ and format_sig style terms ret_d no_last_op flat_space : ML _ =
     | Binders (n, ln, parens) ->
         n, ln, break1, colon ^^ space
   in
-  let last_op = if List.length terms > 0 && (not no_last_op) then last_op else empty in
+  let last_op = if Cons? terms && (not no_last_op) then last_op else empty in
   let one_line_space = if not (ret_d = empty) || not no_last_op then space else empty in
   let single_line_arg_indent = repeat n space in
   let fs = if flat_space then space else empty in
@@ -2309,7 +2310,7 @@ let extract_decl_range (d: decl): decl_meta =
   in
   { r = d.drange;
     has_qs = has_qs;
-    has_attrs = not (List.isEmpty d.attrs); }
+    has_attrs = not (Nil? d.attrs); }
 
 let decls_with_comments_to_document (decls:list decl) comments =
   match decls with

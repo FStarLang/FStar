@@ -19,7 +19,6 @@ module FStarC.Tactics.InterpFuns
 (* This module is awful, don't even look at it please. *)
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range

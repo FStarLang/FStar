@@ -82,7 +82,6 @@ caches:
 *)
 open FStarC
 open FStar.List.Tot
-open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker

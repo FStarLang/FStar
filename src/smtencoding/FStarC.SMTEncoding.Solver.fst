@@ -1310,7 +1310,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : ML u
             (Errors.Error_QuakeFailed, [
               Errors.text <|
               Format.fmt6
-                "Query %s failed the quake test, %s out of %s attempts succeded, \
+                "Query %s failed the quake test, %s out of %s attempts succeeded, \
                  but the threshold was %s out of %s%s"
                  name
                 (show nsuccess)

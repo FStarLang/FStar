@@ -30,7 +30,6 @@ open FStarC.Syntax.Print {}
 open FStarC.Syntax.Subst
 open FStarC.Ident
 open FStarC.TypeChecker.Common
-open FStarC.Syntax
 
 module BU = FStarC.Util
 module S = FStarC.Syntax.Syntax

@@ -431,7 +431,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       in
       let body = resugar_term' env body in
       (* If no binders/patterns remain after filtering, drop the Abs node *)
-      if List.isEmpty patterns
+      if Nil? patterns
       then body
       else mk (A.Abs(patterns, body))
 
@@ -533,7 +533,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       in
       (* We have a projector, applied to at least one argument, and the first argument
       is explicit (so not one of the parameters of the type). In this case we resugar nicely. *)
-      if Some? (is_projector e) && List.length args >= 1 && None? (snd (List.hd args)) then
+      if Some? (is_projector e) && Cons? args && None? (snd (List.hd args)) then
         let arg1 :: rest_args = args in
         let (_, fi) = Some?.v (is_projector e) in
         let arg = resugar_term' env (fst arg1) in
@@ -770,7 +770,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
-          if List.length args > 0 then
+          if Cons? args then
             let args = last args in
             begin match args with
               | [(b, _)] -> resugar_forall_body b
@@ -1399,6 +1399,7 @@ let resugar_pragma env = function
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
   | S.Check t -> A.Check (resugar_term' env t)
+  | S.Eval t -> A.Eval (resugar_term' env t)
 
 (* drop the first n binders (implicit or explicit) from an arrow type *)
 let drop_n_bs (n:int) (t:S.term) : ML S.term =

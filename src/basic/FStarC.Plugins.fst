@@ -17,7 +17,6 @@
 module FStarC.Plugins
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Plugins.Base
 

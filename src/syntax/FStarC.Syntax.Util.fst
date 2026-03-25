@@ -105,12 +105,6 @@ let name_function_binders t = match t.n with
     | Tm_arrow {bs=binders; comp} -> mk (Tm_arrow {bs=name_binders binders; comp}) t.pos
     | _ -> t
 
-let null_binders_of_tks (tks:list (typ & bqual)) : ML binders =
-    tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
-
-let binders_of_tks (tks:list (typ & bqual)) : ML binders =
-    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
-
 let mk_subst s = [s]
 
 let subst_of_list (formals:binders) (actuals:args) : ML subst_t =
@@ -163,11 +157,7 @@ let rec univ_kernel u = match Subst.compress_univ u with
     | U_max _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_bvar i -> failwith ("Imposible: univ_kernel (U_bvar " ^ show i ^ ")")
-
-//requires: kernel u = U_zero, n
-//returns: n
-let constant_univ_as_nat u = snd (univ_kernel u)
+    | U_bvar i -> failwith ("Impossible: univ_kernel (U_bvar " ^ show i ^ ")")
 
 //ordering on universes:
 //    constants come first, in order of their size
@@ -1618,6 +1608,7 @@ let process_pragma p r =
 
     | PrintEffectsGraph -> ()  //Typechecker handles it
     | Check _ -> ()  //Typechecker handles it
+    | Eval _ -> ()  //Typechecker handles it
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 let rec unbound_variables tm : ML (list bv) =

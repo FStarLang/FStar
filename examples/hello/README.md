@@ -1,40 +1,40 @@
-GM 2024-10-23: None of this worked for me. I am disabling this directory
-for now.
-
-Hello F*
+Hello F\*
 ========
 
-Sample of using F* together with F#
+Sample projects demonstrating F\* verification and OCaml extraction using dune.
 
-# Prerequiresites
+# Prerequisites
 
-For running this sample you should have [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download) installed.
+- An F\* installation (provides `fstar.exe`)
+- OCaml toolchain with opam
+- dune (≥ 3.15)
+- The `fstar.lib` opam package (F\* OCaml support library)
 
-# How to run Hello sample
+# Projects
 
-From this folder run following commands
+## Hello
 
-```
-cd Hello
-dotnet run
-```
-
-# How to run TestSeq sample
-
-From this folder run following commands
+A single-file example: verifies `Hello.fst` and extracts it to OCaml.
 
 ```
-cd TestSeq
-dotnet run
+dune exec Hello/Hello.exe
 ```
 
-# How to use TestFSharp sample
+## multifile
 
-From this folder run following commands
+A multi-module example with `A.fst`, `B.fst`, and `Main.fst` demonstrating
+inter-module dependencies.
 
 ```
-cd TestFSharp
-dotnet build
+dune exec multifile/Main.exe
 ```
 
-That produce DLL which you can reference from other projects.
+# How it works
+
+Each project uses `--dep dune` to generate dependency rules in two phases:
+
+1. **Build phase** (`--output_ext fst.checked`): verifies `.fst` files → `.fst.checked`
+2. **Extract phase** (`--output_ext ml --codegen OCaml`): extracts checked files → `.ml`
+
+The generated rules are dynamically included into each project's `dune` file.
+The `(executable ...)` stanza then compiles the extracted OCaml into a native binary.

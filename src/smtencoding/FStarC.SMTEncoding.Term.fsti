@@ -16,8 +16,6 @@
 
 module FStarC.SMTEncoding.Term
 open FStarC
-
-open FStarC
 open FStarC.Effect
 open FStarC.Class.Show
 open FStarC.List

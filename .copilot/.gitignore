@@ -1,0 +1,4 @@
+# Exclude everything except mcp-config.json
+logs/
+config.json
+session-state/

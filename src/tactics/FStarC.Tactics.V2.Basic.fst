@@ -2306,7 +2306,7 @@ let __refl_typing_builtin_wrapper (f:unit -> ML ('a & list refl_guard_and_tok_t)
   UF.rollback tx;
 
   (* Make sure to return None if any error was logged. *)
-  if List.length errs > 0
+  if Cons? errs
   then return (None, errs)
   else (
     (* Try to discharge the guards, but if any of them fails, return a decent error. *)

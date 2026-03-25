@@ -296,6 +296,8 @@ val krmloutput                  : unit    -> ML (option string)
 
 val output_deps_to              : unit    -> ML (option string)
 
+val output_ext                  : unit    -> ML (option string)
+
 val ugly                        : unit    -> ML bool
 
 val print_bound_var_types       : unit    -> ML bool

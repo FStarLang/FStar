@@ -46,7 +46,9 @@ ifneq ($(RESOURCEMONITOR),)
 	ifneq ($(MONID),)
 		MONPREFIX=$(MONID).
 	endif
-	RAMON=ramon -o $@.$(MONPREFIX)ramon --
+	# NB: this sets the Make variable RAMON to the string "FSTAR_MEM_REPORT=... ramon ...".
+	# In the recipe, the shell interprets FSTAR_MEM_REPORT=... as an env var for ramon.
+	RAMON=FSTAR_MEM_REPORT=$@.$(MONPREFIX)fstarmem ramon -o $@.$(MONPREFIX)ramon --
 endif
 
 # Ensure that any failing rule will not create its target file.

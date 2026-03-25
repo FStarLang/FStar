@@ -18,7 +18,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -58,7 +58,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -67,7 +67,7 @@ jobs:
 
 
       # krml test needs node
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 16
 
@@ -88,7 +88,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -121,7 +121,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -151,7 +151,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -184,7 +184,7 @@ jobs:
           path: pulse/
           repository: FStarLang/pulse
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -211,7 +211,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -246,7 +246,7 @@ jobs:
       # Install rust toolchain
       - uses: dtolnay/rust-toolchain@stable
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -304,7 +304,7 @@ jobs:
       # Install rust toolchain
       - uses: dtolnay/rust-toolchain@stable
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -351,7 +351,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -385,7 +385,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
@@ -411,7 +411,7 @@ jobs:
       - run: echo "HOME=/home/user" >> $GITHUB_ENV
       - uses: mtzguido/set-opam-env@master
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
