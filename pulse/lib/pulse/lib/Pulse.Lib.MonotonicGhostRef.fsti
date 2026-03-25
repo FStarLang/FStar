@@ -70,6 +70,12 @@ fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   requires snapshot r u
   ensures pure (as_prop (p u v))
 
+ghost
+fn snapshots_related (#t:Type0) (#p:preorder t) (r:mref p) (#u #v:t)
+  preserves snapshot r u
+  preserves snapshot r v
+  ensures pure (p u v \/ p v u)
+
 instance val duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u)
 
 ghost

@@ -37,7 +37,7 @@ let snapshot' (#t:Type)
 = exists* h.
     GR.pts_to r (None, h) **
     pure (Cons? h /\ PulseCore.Preorder.curval h == v)
-let snapshot = snapshot'
+let snapshot #t #p r v = snapshot' #t #p r v
 let placeless_snapshot r v = Tactics.Typeclasses.solve
 let snapshot_is_timeless (#t:Type) (#p:preorder t) (r:mref p) (v:t) = ()
 let full (#t:Type) (#p:preorder t) (v:t) : FP.pcm_carrier p = 
@@ -129,6 +129,42 @@ fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   GR.share r (Some f, h) (None, h');
   fold (snapshot r u);
   fold (pts_to r #f v);
+}
+
+ghost
+fn snapshots_related_alt (#t:Type0) (#p:preorder t) (r s:mref p) (#h0 #h1: erased (PulseCore.Preorder.hist #t p))
+  requires with_pure (Cons? h0 /\ Cons? h1)
+  requires pure (r == s)
+  preserves GR.pts_to r (None, reveal h0)
+  preserves GR.pts_to s (None, reveal h1)
+  ensures pure (
+    p (PulseCore.Preorder.curval h0) (PulseCore.Preorder.curval h1) \/
+    p (PulseCore.Preorder.curval h1) (PulseCore.Preorder.curval h0)
+  )
+{ 
+  rewrite each s as r;
+  GR.gather r _ _;
+  GR.share r _ _;
+  rewrite (GR.pts_to r (None, reveal h1)) as (GR.pts_to s (None, reveal h1));
+}
+
+ghost
+fn snapshots_related (#t:Type0) (#p:preorder t) (r:mref p) (#u #v:t)
+  preserves snapshot r u
+  preserves snapshot r v
+  ensures pure (
+    p u v \/ p v u
+  )
+{
+  let s = r;
+  rewrite (snapshot r v) as (snapshot s v);
+  unfold snapshot s v;
+  unfold snapshot r u;
+  with h0. assert (GR.pts_to r (None, reveal h0));
+  with h1. assert (GR.pts_to s (None, reveal h1));
+  snapshots_related_alt r s #h0 #h1;
+  fold snapshot r u;
+  fold snapshot s v;
 }
 
 ghost
