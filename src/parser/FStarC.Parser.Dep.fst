@@ -1710,31 +1710,34 @@ let rec all_fstar_files_in_dir (dir:string) : ML (list file_name) =
   ) files
 
 (** Expand any directories in the command line file list to their contained F* files.
-    When a module has both .fst and .fsti, only include the .fsti to avoid 
-    "breaking abstraction" errors. *)
+    When a directory is expanded and a module has both .fst and .fsti, only include
+    the .fsti to avoid "breaking abstraction" errors. Files explicitly listed on
+    the command line are always preserved. *)
 let expand_directories (files: list file_name) : ML (list file_name) =
-  let all_files = List.collect (fun f ->
+  let non_dir_files = List.filter (fun f -> not (Filepath.is_directory f)) files in
+  let expanded_files = List.collect (fun f ->
     if Filepath.is_directory f then
       all_fstar_files_in_dir f
     else
-      [f]
+      []
   ) files in
-  (* Filter out .fst files when corresponding .fsti exists *)
+  (* Filter out .fst files from expanded directories when corresponding .fsti exists *)
   let fsti_set : RBSet.t string = 
     List.fold_left (fun acc f ->
       if Util.ends_with f ".fsti" then
         let base = String.substring f 0 (String.length f - 1) in (* remove trailing 'i' to get .fst *)
         RBSet.add base acc
       else acc
-    ) (RBSet.empty ()) all_files
+    ) (RBSet.empty ()) expanded_files
   in
-  List.filter (fun f ->
+  let filtered_expanded = List.filter (fun f ->
     if Util.ends_with f ".fst" && not (Util.ends_with f ".fsti") then
       (* Only keep .fst if there's no corresponding .fsti *)
       not (RBSet.mem f fsti_set)
     else
       true
-  ) all_files
+  ) expanded_files in
+  non_dir_files @ filtered_expanded
 
 (* In public interface *)
 let collect (all_cmd_line_files: list file_name)
