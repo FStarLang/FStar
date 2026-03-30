@@ -132,6 +132,8 @@ jobs:
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe B.fst
 
   ocaml-smoke:
     strategy:
@@ -172,6 +174,8 @@ jobs:
           ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./out/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./out/bin/fstar.exe B.fst
         working-directory: fstar
 
   perf-canaries:
