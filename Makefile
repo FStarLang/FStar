@@ -312,15 +312,15 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 	touch $@
 
-# F# library, from stage 2.
-fsharp-lib.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
+# F# library
+fsharp-lib.src: export FSTAR_EXE ?= $(FSTAR3_FULL_EXE)
+fsharp-lib.src: .alib2.src.touch .force
 	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
 	# Note: FStar.Map and FStar.Set are special-cased
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  CACHE_DIR=stage2/ulib.checked/ \
 	  OUTPUT_DIR=fsharp/extracted/ \
 	  CODEGEN=FSharp \
