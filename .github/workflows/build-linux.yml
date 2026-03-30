@@ -18,6 +18,8 @@ jobs:
     # all more recent versions.
     steps:
       - uses: actions/checkout@master
+        with:
+          submodules: true
 
       - uses: ocaml/setup-ocaml@v3
         with:

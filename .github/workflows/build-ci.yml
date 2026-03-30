@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@master
         with:
           path: FStar
+          submodules: true
 
       - name: Produce all artifacts
         run: |

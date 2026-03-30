@@ -9,6 +9,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@master
+        with:
+          submodules: true
 
       - uses: ocaml/setup-ocaml@v3
         with:

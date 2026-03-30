@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
         id: checkout
+        with:
+          submodules: true
 
       - name: Check cache
         id: check-cache
