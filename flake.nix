@@ -4,11 +4,16 @@
   inputs = {
     flake-utils.url = "flake-utils";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    karamel-src = {
+      url = "github:FStarLang/karamel/fstar2";
+      flake = false;
+    };
   };
 
   outputs =
     {
       flake-utils,
+      karamel-src,
       nixpkgs,
       self,
     }:
@@ -23,6 +28,14 @@
         z3 = pkgs.callPackage (import ./.nix/z3.nix) { };
         version = self.rev or "dirty";
 
+        # Import karamel's derivation to extract its OCaml dependencies.
+        # fstar = null is safe: it's unused for computing propagatedBuildInputs.
+        # This avoids a circular dependency between fstar and karamelDrv.
+        karamelDrv = pkgs.callPackage "${karamel-src}/.nix/karamel.nix" {
+          fstar = null;
+          inherit ocamlPackages version z3;
+        };
+
         # Create OCaml library path with .so files for CAML_LD_LIBRARY_PATH
         ocamlLibraryPath = pkgs.symlinkJoin {
           name = "ocaml-shared-libs";
@@ -34,7 +47,8 @@
         };
 
         fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
-          inherit version z3 ocamlLibraryPath;
+          inherit version z3 ocamlLibraryPath karamel-src;
+          karamelOcamlDeps = karamelDrv.propagatedBuildInputs;
         };
 
         emacs = pkgs.writeScriptBin "emacs-fstar" ''
