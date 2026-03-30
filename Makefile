@@ -406,19 +406,21 @@ define install-stage
 	$(call bold_msg, "INSTALL", "STAGE $(1)")
 	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
+	@# Manual karamel install
+	install karamel/krml $(CURDIR)/stage$(1)/out/bin/krml
 	touch $@
 endef
 
 .install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
+.install-stage1.touch: .stage1.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,1)
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
+.install-stage2.touch: .stage2.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,2)
 
 .install-stage3.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage3.touch: .stage3.src.touch $(MAYBEFORCE)
+.install-stage3.touch: .stage3.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,3,FSTAR_DUNE_RELEASE=1)
 
 setlink-%:
