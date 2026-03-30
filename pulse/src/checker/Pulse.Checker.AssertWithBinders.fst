@@ -29,7 +29,6 @@ module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
-module PS = Pulse.Checker.Prover.Substs
 module Prover = Pulse.Checker.Prover
 module Env = Pulse.Typing.Env
 module RU = Pulse.RuntimeUtils

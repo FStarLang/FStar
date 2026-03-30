@@ -23,7 +23,6 @@ module D = FStarC.Syntax.DsEnv
 module S = FStarC.Syntax.Syntax
 module L = FStarC.List
 module SS = FStarC.Syntax.Subst
-module BU = FStarC.Util
 module ToSyntax = FStarC.ToSyntax.ToSyntax
 open FStarC.Class.Show
 open FStarC.Class.HasRange

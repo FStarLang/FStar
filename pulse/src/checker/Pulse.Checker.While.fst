@@ -25,7 +25,6 @@ open Pulse.Checker.ImpureSpec
 
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
-module P = Pulse.Syntax.Printer
 module RU = Pulse.RuntimeUtils
 
 let empty_env g = mk_env (fstar_env g)

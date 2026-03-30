@@ -24,7 +24,6 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module J = Pulse.JoinComp
-module RW = Pulse.Checker.Prover.RewritesTo
 #set-options "--z3rlimit 40"
 
 

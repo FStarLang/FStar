@@ -16,6 +16,8 @@
 
 module Pulse.Checker.Prover.Substs
 
+module T = FStar.Tactics.V2
+module RT = FStar.Reflection.Typing
 open FStar.List.Tot
 
 open Pulse.Syntax
@@ -25,7 +27,6 @@ open Pulse.Checker.Pure
 
 module L = FStar.List.Tot
 
-module Env = Pulse.Typing.Env
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
 

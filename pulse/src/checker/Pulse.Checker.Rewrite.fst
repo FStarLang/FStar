@@ -25,7 +25,6 @@ open Pulse.Checker.ImpureSpec
 open Pulse.PP
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
-module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 
 let check_slprop_equiv_ext r (g:env) (p q:slprop)

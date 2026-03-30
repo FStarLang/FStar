@@ -24,10 +24,7 @@ open FStar.Ghost
 module SZ = FStar.SizeT
 module Seq = FStar.Seq
 open FStar.PCM
-module Frac = Pulse.Lib.PCM.Fraction
-module PM = Pulse.Lib.PCM.Map
 open Pulse.Lib.PCM.Array
-module PA = Pulse.Lib.PCM.Array
 open Pulse.Lib.WithPure
 
 let pts_to_range

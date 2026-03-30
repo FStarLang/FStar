@@ -16,9 +16,7 @@
 module Pulse.Lib.Core.Inv
 friend PulseCore.InstantiatedSemantics
 friend Pulse.Lib.Core
-module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
-module T = FStar.Tactics.V2
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability

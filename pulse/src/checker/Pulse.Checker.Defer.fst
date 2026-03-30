@@ -23,8 +23,6 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
-module P = Pulse.Syntax.Printer
-module RU = Pulse.RuntimeUtils
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
 let check

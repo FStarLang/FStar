@@ -21,7 +21,6 @@ module T = FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 module PCP = Pulse.Checker.Pure
-module RU = Pulse.RuntimeUtils
 module PS = Pulse.Checker.Prover.Substs
 open Pulse.Checker.Base
 

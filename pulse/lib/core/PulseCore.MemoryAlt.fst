@@ -17,7 +17,6 @@
 module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
-module CM = FStar.Algebra.CommMonoid
 module B = PulseCore.BaseHeapSig
 
 let ghost_action_preorder (_:unit)

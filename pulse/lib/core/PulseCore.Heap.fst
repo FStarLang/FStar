@@ -14,10 +14,8 @@
    limitations under the License.
 *)
 module PulseCore.Heap
-module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM
-module PP = PulseCore.Preorder
 
 let addr = nat
 

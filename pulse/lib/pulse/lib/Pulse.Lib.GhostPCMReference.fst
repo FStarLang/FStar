@@ -16,7 +16,6 @@
 module Pulse.Lib.GhostPCMReference
 #lang-pulse
 open FStar.PCM
-module PR = Pulse.Lib.PCM.Raise
 module U = Pulse.Lib.Raise
 module C = Pulse.Lib.Core.Refs
 open Pulse.Lib.PCM.Raise

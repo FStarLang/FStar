@@ -1,5 +1,4 @@
 module PulseCore.BaseHeapSig
-module H = PulseCore.Heap
 module H2 = PulseCore.Heap2
 open PulseCore.Tags
 

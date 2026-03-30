@@ -22,7 +22,6 @@ open Pulse.Lib.Pervasives
 module Seq = FStar.Seq
 module SZ = FStar.SizeT
 module V = Pulse.Lib.Vec
-module Box = Pulse.Lib.Box
 open Pulse.Lib.Box
 
 /// Internal representation
