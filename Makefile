@@ -20,7 +20,7 @@ all-packages: package-1 package-2 package-src-1 package-src-2
 
 .krml.touch: .krml.src.touch
 	$(call bold_msg, "BUILD", "KARAMEL")
-	+$(MAKE) -C karamel minimal
+	+$(MAKE) -C karamel LOWSTAR=false
 	@# Building will change files in karamel/, bump timestamp
 	@touch .krml.src.touch
 	@touch .krml.touch
@@ -406,8 +406,8 @@ define install-stage
 	$(call bold_msg, "INSTALL", "STAGE $(1)")
 	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
-	@# Manual karamel install
-	install karamel/krml $(CURDIR)/stage$(1)/out/bin/krml
+	@# Karamel install
+	$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false
 	touch $@
 endef
 
