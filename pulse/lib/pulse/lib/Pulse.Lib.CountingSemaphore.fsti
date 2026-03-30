@@ -17,7 +17,6 @@
 module Pulse.Lib.CountingSemaphore
 #lang-pulse
 open Pulse.Lib.Pervasives
-module T = FStar.Tactics.V2
 module U32 = FStar.UInt32
 module Tank = Pulse.Lib.Tank
 

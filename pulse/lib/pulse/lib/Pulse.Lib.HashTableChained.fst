@@ -34,7 +34,6 @@ module List = FStar.List.Tot
 module V = Pulse.Lib.Vec
 module B = Pulse.Lib.Box
 module LL = Pulse.Lib.LinkedList
-module LLI = Pulse.Lib.LinkedList.Iter
 module OR = Pulse.Lib.OnRange
 module T = Pulse.Lib.Trade.Util
 module FE = FStar.FunctionalExtensionality

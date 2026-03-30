@@ -19,7 +19,6 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
-module T = FStar.Tactics.V2
 open Pulse.Lib.Dv {}
 open FStar.ExtractAs
 open Pulse.Lib.Core

@@ -20,7 +20,6 @@ open FStarC.Effect
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Ident
-module BU = FStarC.Util
 module List = FStarC.List
 module AU = FStarC.Parser.AST.Util
 module S = FStarC.Syntax.Syntax

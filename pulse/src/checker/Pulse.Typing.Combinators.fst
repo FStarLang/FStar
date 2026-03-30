@@ -16,7 +16,6 @@
 
 module Pulse.Typing.Combinators
 
-module RT = FStar.Reflection.Typing
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module CU = Pulse.Checker.Util

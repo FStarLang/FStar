@@ -713,7 +713,6 @@ let forallb (k: 'a -> T.Tac bool) (xs: list 'a) =
 
 open Pulse.PP
 
-module RT = FStar.Reflection.Typing
 let check_slprop_equiv_ext r (g:env) (p q:slprop)
 : T.Tac (unit)
 = 

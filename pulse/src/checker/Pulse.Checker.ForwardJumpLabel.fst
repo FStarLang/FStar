@@ -17,7 +17,6 @@
 module Pulse.Checker.ForwardJumpLabel
 
 module T = FStar.Tactics.V2
-module R = FStar.Reflection.V2
 
 open Pulse.Syntax
 open Pulse.Typing
@@ -25,7 +24,6 @@ open Pulse.Checker.Pure
 open Pulse.Checker.Base
 open Pulse.Checker.Prover
 open Pulse.Checker.ImpureSpec
-module RU = Pulse.RuntimeUtils
 
 let starts_with (a b: string) : bool =
   if String.length b > String.length a then false

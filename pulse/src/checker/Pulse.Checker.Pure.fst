@@ -29,7 +29,6 @@ open Pulse.Syntax
 open Pulse.Reflection.Util
 open Pulse.Typing
 open Pulse.Show
-module P = Pulse.Syntax.Printer
 module RTB = FStar.Stubs.Tactics.V2.Builtins
 module RU = Pulse.RuntimeUtils
 module CheckLN = FStar.Tactics.CheckLN

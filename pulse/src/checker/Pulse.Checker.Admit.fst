@@ -23,7 +23,6 @@ open Pulse.Typing
 open Pulse.Checker.Pure
 open Pulse.Checker.Base
 
-module RU = Pulse.RuntimeUtils
 module P = Pulse.Syntax.Printer
 
 let check

@@ -32,7 +32,6 @@ open Pulse.Show
 module P = Pulse.Syntax.Printer
 module RU = Pulse.RuntimeUtils
 
-module Abs = Pulse.Checker.Abs
 module If = Pulse.Checker.If
 module Bind = Pulse.Checker.Bind
 module Match = Pulse.Checker.Match

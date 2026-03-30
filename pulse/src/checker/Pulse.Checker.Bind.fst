@@ -28,7 +28,6 @@ open Pulse.Checker.Util
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module Abs = Pulse.Checker.Abs
-module RU = Pulse.Reflection.Util
 
 #push-options "--z3rlimit_factor 8 --split_queries no --fuel 0 --ifuel 1"
 let check_bind_fn

@@ -11,7 +11,6 @@ open FStarC.Extraction.ML.Syntax
 open FStarC.Const
 open FStarC.BaseTypes
 
-module BU = FStarC.Util
 
 open FStarC.Class.Show
 

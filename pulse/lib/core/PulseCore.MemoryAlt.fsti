@@ -18,7 +18,6 @@ module PulseCore.MemoryAlt
 open FStar.Ghost
 open FStar.PCM
 module PST = PulseCore.HoareStateMonad
-module CM = FStar.Algebra.CommMonoid
 module B = PulseCore.BaseHeapSig
 
 (**** Basic memory properties *)

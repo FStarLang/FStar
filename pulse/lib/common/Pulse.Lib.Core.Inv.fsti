@@ -21,7 +21,6 @@ open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
 open FStar.ExtractAs
-module T = FStar.Tactics.V2
 
 val inv (i:iname) (p:slprop) : slprop
 

@@ -27,7 +27,6 @@ module L = FStarC.List
 module U = FStarC.Syntax.Util
 module SS = FStarC.Syntax.Subst
 module R = FStarC.Range
-module BU = FStarC.Util
 
 open FStarC.Class.Show
 open FStarC.Class.HasRange
