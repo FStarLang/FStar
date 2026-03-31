@@ -1981,7 +1981,9 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : ML (decls_t & en
     let encode_binding b (i, decls, env) = match b with
         | S.Binding_univ u ->
           let u_fv, u_tm = EncodeTerm.encode_univ_name u in
-          let decls' = [Term.DeclFun(fv_name u_fv, [], univ_sort, Some "universe local constant")] |> mk_decls_trivial in
+          let decls' = [
+            Term.DeclFun(fv_name u_fv, [], univ_sort, Some "universe local constant");
+            Util.mkAssume (mkApp("univ_ok", [u_tm]), Some ("univ_ok_" ^ fv_name u_fv), "univ_ok_" ^ fv_name u_fv)] |> mk_decls_trivial in
           i+1, decls@decls', env
 
         | S.Binding_var x ->
