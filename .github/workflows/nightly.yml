@@ -8,15 +8,23 @@ name: F* nightly build
 #
 # The default GITHUB_TOKEN only allows access to the current repo, so it's
 # not useful.
+#
+# Nightly builds are scheduled by nightly-schedule.yml, which dispatches
+# this workflow for each branch. You can also trigger it manually.
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        type: string
+        default: 'master'
 
 jobs:
   build-all:
     uses: ./.github/workflows/build-all.yml
+    with:
+      ref: ${{ inputs.branch }}
 
   publish:
     runs-on: ubuntu-latest
@@ -24,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0 # full clone, so we can push objects
           submodules: true
 
@@ -34,10 +43,19 @@ jobs:
 
           # We push nightly builds to a different repo (same org)
           REPO="${{github.repository}}-nightly"
-          TAG=nightly-$(date -I)
+
+          BRANCH="${{ inputs.branch }}"
+          if [[ "$BRANCH" == "master" ]]; then
+            TAG=nightly-$(date -I)
+          else
+            TAG=nightly-${BRANCH}-$(date -I)
+          fi
+
+          SHA=$(git rev-parse HEAD)
 
           echo "REPO=$REPO" >>$GITHUB_ENV
           echo "TAG=$TAG" >>$GITHUB_ENV
+          echo "SHA=$SHA" >>$GITHUB_ENV
 
       - uses: actions/download-artifact@v8
         with:
@@ -62,7 +80,7 @@ jobs:
 
       - name: Create tag
         run: |
-          git tag $TAG ${{github.sha}}
+          git tag $TAG $SHA
 
       - name: Push tag to nightly repo
         run: |
@@ -75,7 +93,7 @@ jobs:
         run: |
           gh release create -R "$REPO" \
             --generate-notes \
-            --target ${{ github.sha }} \
+            --target $SHA \
             $TAG artifacts/*
           echo "Done!"
 
