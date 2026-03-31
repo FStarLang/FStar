@@ -134,6 +134,36 @@ let mltyscheme_to_doc (tsc:mltyscheme) : ML document =
       ^^ doc_of_string "," ^/^ mlty_to_doc (snd tsc))
 let mltyscheme_to_string (tsc:mltyscheme) : ML string = render (mltyscheme_to_doc tsc)
 
+let meta_to_doc (m:meta) : ML document =
+  match m with
+  | Mutable -> doc_of_string "Mutable"
+  | Assumed -> doc_of_string "Assumed"
+  | Private -> doc_of_string "Private"
+  | NoExtract -> doc_of_string "NoExtract"
+  | CInline -> doc_of_string "CInline"
+  | Substitute -> doc_of_string "Substitute"
+  | GCType -> doc_of_string "GCType"
+  | PpxDerivingShow -> doc_of_string "PpxDerivingShow"
+  | PpxDerivingShowConstant s -> ctor' "PpxDerivingShowConstant" [dquotes (doc_of_string s)]
+  | PpxDerivingYoJson -> doc_of_string "PpxDerivingYoJson"
+  | Comment s -> ctor' "Comment" [dquotes (doc_of_string s)]
+  | StackInline -> doc_of_string "StackInline"
+  | CPrologue s -> ctor' "CPrologue" [dquotes (doc_of_string s)]
+  | CEpilogue s -> ctor' "CEpilogue" [dquotes (doc_of_string s)]
+  | CConst s -> ctor' "CConst" [dquotes (doc_of_string s)]
+  | CCConv s -> ctor' "CCConv" [dquotes (doc_of_string s)]
+  | Erased -> doc_of_string "Erased"
+  | CAbstract -> doc_of_string "CAbstract"
+  | CIfDef -> doc_of_string "CIfDef"
+  | CMacro -> doc_of_string "CMacro"
+  | Deprecated s -> ctor' "Deprecated" [dquotes (doc_of_string s)]
+  | RemoveUnusedTypeParameters (is, r) ->
+    ctor' "RemoveUnusedTypeParameters" [pp is; pp r]
+  | HasValDecl r ->
+    ctor' "HasValDecl" [pp r]
+  | CNoInline -> doc_of_string "CNoInline"
+let meta_to_string (m:meta) : ML string = render (meta_to_doc m)
+
 let pair a b = group (parens (a ^^ comma ^/^ b))
 let triple a b c = group (parens (a ^^ comma ^/^ b ^^ comma ^/^ c))
 let ctor2 n a b = ctor n (pair a b)
@@ -205,6 +235,7 @@ and mllb_to_doc (lb) : ML document =
     fld "mllb_tysc" (option_to_doc lb.mllb_tysc (fun (_, t) -> mlty_to_doc t));
     fld "mllb_add_unit" (pp lb.mllb_add_unit);
     fld "mllb_def" (mlexpr_to_doc lb.mllb_def);
+    fld "mllb_meta" ((pp_list _ { pp = meta_to_doc }).pp lb.mllb_meta);
   ]
 
 and mlconstant_to_doc mlc : ML document =
@@ -282,9 +313,13 @@ instance showable_mlconstant   : showable mlconstant   = { show = mlconstant_to_
 instance showable_mlexpr       : showable mlexpr       = { show = mlexpr_to_string }
 instance showable_mlmodule1    : showable mlmodule1    = { show = mlmodule1_to_string }
 instance showable_mlmodulebody : showable mlmodulebody = { show = mlmodulebody_to_string }
+instance showable_mllb         : showable mllb         = { show = mllb_to_string }
+instance showable_meta         : showable meta         = { show = meta_to_string }
 
 instance pp_mlty               : pretty mlty           = { pp   = mlty_to_doc }
 instance pp_mlconstant         : pretty mlconstant     = { pp   = mlconstant_to_doc }
 instance pp_mlexpr             : pretty mlexpr         = { pp   = mlexpr_to_doc }
 instance pp_mlmodule1          : pretty mlmodule1      = { pp   = mlmodule1_to_doc }
 instance pp_mlmodulebody       : pretty mlmodulebody   = { pp   = mlmodulebody_to_doc }
+instance pp_mllb               : pretty mllb           = { pp   = mllb_to_doc }
+instance pp_meta               : pretty meta           = { pp   = meta_to_doc }
