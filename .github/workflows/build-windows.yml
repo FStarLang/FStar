@@ -12,6 +12,10 @@ name: Build F* (Windows)
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
   workflow_dispatch:
 
 defaults:
@@ -23,6 +27,8 @@ jobs:
   # We begin from a source package (built in Linux)
   build-src:
     uses: ./.github/workflows/build-src.yml
+    with:
+      ref: ${{ inputs.ref || '' }}
 
   build:
     needs: build-src
@@ -68,7 +74,12 @@ jobs:
           # Setting FSTAR_VERSION for nightly and release builds. If unset,
           # we use $(version.txt)~dev. Setting it avoids the ~dev.
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
-            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            REF="${{ inputs.ref }}"
+            if [[ -n "$REF" && "$REF" != "master" ]]; then
+              echo FSTAR_VERSION="nightly-${REF}-$(date -I)" >> $GITHUB_ENV
+            else
+              echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            fi
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
             echo FSTAR_VERSION="$(cat FStar/version.txt)" >> $GITHUB_ENV
           fi
@@ -172,3 +183,5 @@ jobs:
           $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8' # Make sure we write UTF-8 files
           echo "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           .\fstar\bin\fstar.exe --already_cached *,-A A.fst
+          echo -e "module B`n#lang-pulse`nopen Pulse`nfn test (x:int) returns int { (x+1); }" > B.fst
+          .\fstar\bin\fstar.exe B.fst
