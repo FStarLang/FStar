@@ -1390,8 +1390,9 @@ let translate_let' env flavor lb: ML (option decl) =
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
-          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
-        end;
+          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg;
+          None
+        end else
         let t = translate_type env t in
         let binders = translate_binders env args in
         let env = add_binders env args in
