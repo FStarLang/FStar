@@ -5,6 +5,10 @@ name: Build F* (Linux)
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
   workflow_dispatch:
 
 defaults:
@@ -19,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
         with:
+          ref: ${{ inputs.ref || '' }}
           submodules: true
 
       - uses: ocaml/setup-ocaml@v3
@@ -36,7 +41,12 @@ jobs:
           # Setting FSTAR_VERSION for nightly and release builds. If unset,
           # we use $(version.txt)~dev. Setting it avoids the ~dev.
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
-            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            REF="${{ inputs.ref }}"
+            if [[ -n "$REF" && "$REF" != "master" ]]; then
+              echo FSTAR_VERSION="nightly-${REF}-$(date -I)" >> $GITHUB_ENV
+            else
+              echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            fi
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
             echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
             echo FSTAR_RELEASE=1 >> $GITHUB_ENV
