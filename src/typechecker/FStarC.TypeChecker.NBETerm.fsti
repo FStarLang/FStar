@@ -201,7 +201,6 @@ and cflag =
   | TRIVIAL_POSTCONDITION
   | SHOULD_NOT_INLINE
   | LEMMA
-  | CPS
   | DECREASES_lex of list t
   | DECREASES_wf of (t & t)
 

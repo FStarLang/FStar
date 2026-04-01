@@ -26,7 +26,7 @@ let exn = string
 
 let gex (a:Type) = unit -> M ((set exn) & either a exn)
 
-(* If DM4F would accept it, would prefer to use the more precise spec below *)
+(*(* Would prefer to use the more precise spec below *)
 
 let gex' (a:Type) = unit -> M (s:set exn & (either a (e:exn{mem e s})))
 

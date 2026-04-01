@@ -115,10 +115,6 @@ val plugin (x: int) : Tot unit
     elaborate and typecheck, but unfold before verification. *)
 val tcnorm : unit
 
-(** This attribute is used with the Dijkstra Monads for Free
-    construction to track position information in generated VCs *)
-val dm4f_bind_range : unit
-
 (** We erase all ghost functions and unit-returning pure functions to
     [()] at extraction. This creates a small issue with abstract
     types. Consider a module that defines an abstract type [t] whose

@@ -23,7 +23,7 @@ open FStar.Preorder
 
 module W = FStar.Monotonic.Witnessed
 
-(* The state-and-preorder indexed MST effect; defined explicitly rather than via DM4F due to the pi-types used in it *)
+(* The state-and-preorder indexed MST effect; defined explicitly due to the pi-types used in it *)
 
 //s is at a fixed universe level (here #u0) because otherwise sub_effect complains about being too universe polymorphic
 
@@ -72,7 +72,7 @@ let st_trivial (a:Type) (wp:st_wp a)
 new_effect {
   IMST : result:Type -> wp:st_wp result -> Effect
   with 
-     //repr         = s:Type0 -> s -> M (a * s) //pi-types currently not supported by DM4F
+     //repr         = s:Type0 -> s -> M (a * s)
        return_wp    = st_return
      ; bind_wp      = st_bind
      ; if_then_else = st_if_then_else

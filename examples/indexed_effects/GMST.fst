@@ -78,7 +78,7 @@ new_effect {
 }
 
 (*
-   DA: For some reason, DM4F didn't accept the representation
+   DA: For some reason, the representation below was not accepted
 
      s -> M ((s -> s -> Type0) * a * s)
 

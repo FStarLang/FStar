@@ -71,7 +71,7 @@ let st_trivial (a:Type) (wp:st_wp a)
 new_effect {
   STATE : result:Type -> wp:st_wp result -> Effect
   with 
-     //repr         = s:Type0 -> s -> M (a * s) //pi-types currently not supported by DM4F
+     //repr         = s:Type0 -> s -> M (a * s)
        return_wp    = st_return
      ; bind_wp      = st_bind_wp
      ; if_then_else = st_if_then_else

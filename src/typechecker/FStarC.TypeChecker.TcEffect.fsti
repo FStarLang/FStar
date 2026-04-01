@@ -23,9 +23,6 @@ open FStarC.Ident
 module S = FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 
-
-val dmff_cps_and_elaborate : Env.env -> S.eff_decl -> ML (list S.sigelt & S.eff_decl & option S.sigelt)
-
 val tc_eff_decl : Env.env -> S.eff_decl -> list S.qualifier -> list S.attribute -> ML S.eff_decl
 
 val tc_lift : Env.env -> S.sub_eff -> Range.t -> ML S.sub_eff

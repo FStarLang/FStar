@@ -322,7 +322,6 @@ and hash_flag f
   | SOMETRIVIAL -> of_int 983
   | TRIVIAL_POSTCONDITION -> of_int 991
   | SHOULD_NOT_INLINE -> of_int 997
-  | CPS -> of_int 1009
   | DECREASES (Decreases_lex ts) -> mix (of_int 1013) (hash_list hash_term ts)
   | DECREASES (Decreases_wf (t0, t1)) -> mix (of_int 2341) (hash_list hash_term [t0;t1])
 

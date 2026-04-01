@@ -461,32 +461,6 @@ let rec generalize_annotated_univs (s:sigelt) : ML sigelt =
   | Sig_pragma _ ->
     s
 
-let is_special_effect_combinator (_x_:string) : ML _ = match _x_ with
-  | "lift1"
-  | "lift2"
-  | "pure"
-  | "app"
-  | "push"
-  | "wp_if_then_else"
-  | "wp_assert"
-  | "wp_assume"
-  | "wp_close"
-  | "stronger"
-  | "ite_wp"
-  | "wp_trivial"
-  | "ctx"
-  | "gctx"
-  | "lift_from_pure"
-  | "return_wp"
-  | "return_elab"
-  | "bind_wp"
-  | "bind_elab"
-  | "repr"
-  | "post"
-  | "pre"
-  | "wp" -> true
-  | _ -> false
-
 let rec sum_to_universe u n =
     if n = 0 then u else U_succ (sum_to_universe u (n-1))
 
@@ -1088,22 +1062,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
     | Name lid when string_of_lid lid = "False"   ->
         S.fvar_with_dd (Ident.set_lid_range Const.false_lid top.range) None,
                               noaqs
-    | Projector (eff_name, id)
-      when is_special_effect_combinator (string_of_id id) && Env.is_effect_name env eff_name ->
-      (* TODO : would it be possible to normalize the effect name at that point so that *)
-      (* we get back the original effect definition instead of an effect abbreviation *)
-      let txt = string_of_id id in
-      begin match try_lookup_effect_defn env eff_name with
-        | Some ed ->
-          let lid = U.dm4f_lid ed txt in
-          S.fvar_with_dd lid None, noaqs
-        | None ->
-          failwith (Format.fmt2 "Member %s of effect %s is not accessible \
-                                (using an effect abbreviation instead of the original effect ?)"
-                               (Ident.string_of_lid eff_name)
-                               txt)
-      end
-
     | Var l
     | Name l ->
       desugar_name mk setpos env true l, noaqs
@@ -2607,7 +2565,6 @@ let typars_of_binders env bs : ML (_ & binders) =
 let desugar_attributes (env:env_t) (cattributes:list term) : ML (list cflag) =
     let desugar_attribute t =
         match (unparen t).tm with
-            | Var lid when string_of_lid lid = "cps" -> CPS
             | _ -> raise_error t Errors.Fatal_UnknownAttribute ("Unknown attribute " ^ term_to_string t)
     in List.map desugar_attribute cattributes
 
@@ -3071,21 +3028,19 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
 
     let num_indices = List.length (fst (U.arrow_formals eff_t)) in
 
-    (* An effect for free has a type of the shape "a:Type -> Effect" *)
-    let for_free = num_indices = 1 && not is_layered in
-    if for_free
-    then Errors.log_issue d Errors.Warning_DeprecatedGeneric
-            (Format.fmt1 "DM4Free feature is deprecated and will be removed soon, \
+    (* An effect with only "a:Type -> Effect" shape was DM4F; now removed *)
+    if num_indices = 1 && not is_layered
+    then raise_error d Errors.Fatal_UnexpectedEffect
+            (Format.fmt1 "DM4Free feature has been removed, \
               use layered effects to define %s" (Ident.string_of_id eff_name));
 
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
-      if for_free then rr_members
-        (*
-         * AR: subcomp, if_then_else, and close are optional
-         *     but adding here so as not to count them as actions
-         *)
-      else if is_layered then rr_members @ [ "subcomp"; "if_then_else"; "close" ]
+      (*
+       * AR: subcomp, if_then_else, and close are optional
+       *     but adding here so as not to count them as actions
+       *)
+      if is_layered then rr_members @ [ "subcomp"; "if_then_else"; "close" ]
         (* the first 3 are optional but must not be counted as actions *)
       else rr_members @ [
         "return_wp";
@@ -3116,9 +3071,8 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     let binders = Subst.close_binders binders in
     let actions = actions |> List.map (fun d ->
         match d.d with
-        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not for_free ->
-            // When the effect is not for free, user has to provide a pair of
-            // the definition and its cps'd type.
+        | Tycon(_, _,[TyconAbbrev(name, action_params, _, { tm = Construct (_, [ def, _; cps_type, _ ])})]) when not is_layered ->
+            // User provides a pair of the definition and its cps'd type.
             let env, action_params = desugar_binders env action_params in
             let action_params = Subst.close_binders action_params in
             {
@@ -3129,10 +3083,8 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
               action_defn=Subst.close (binders @ action_params) (desugar_term env def);
               action_typ=Subst.close (binders @ action_params) (desugar_typ env cps_type)
             }
-        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn)]) when for_free || is_layered ->
-            // When for free, the user just provides the definition and the rest
-            // is elaborated
-            // For layered effects also, user just provides the definition
+        | Tycon(_, _, [TyconAbbrev(name, action_params, _, defn)]) when is_layered ->
+            // For layered effects, user just provides the definition
             let env, action_params = desugar_binders env action_params in
             let action_params = Subst.close_binders action_params in
             {
@@ -3145,9 +3097,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
             }
         | _ ->
             raise_error d Errors.Fatal_MalformedActionDeclaration
-              ("Malformed action declaration; if this is an \"effect \
-              for free\", just provide the direct-style declaration. If this is \
-              not an \"effect for free\", please provide a pair of the definition \
+              ("Malformed action declaration; please provide a pair of the definition \
               and its cps-type with arrows inserted in the right place (see \
               examples).")
     ) in
@@ -3159,22 +3109,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     let qualifiers  =List.map (trans_qual d.drange (Some mname)) quals in
     let dummy_tscheme = [], S.tun in
     let eff_sig, combinators =
-      if for_free then
-        WP_eff_sig ([], eff_t),
-        DM4F_eff ({
-          ret_wp = dummy_tscheme;
-          bind_wp = dummy_tscheme;
-          stronger = dummy_tscheme;
-          if_then_else = dummy_tscheme;
-          ite_wp = dummy_tscheme;
-          close_wp = dummy_tscheme;
-          trivial = dummy_tscheme;
-
-          repr = Some (lookup "repr");
-          return_repr = Some (lookup "return");
-          bind_repr = Some (lookup "bind");
-        })
-      else if is_layered then
+      if is_layered then
         let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
         let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
         let has_close = List.existsb (fun decl -> name_of_eff_decl decl = "close") eff_decls in
@@ -3250,10 +3185,6 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
     let extraction_mode =
       if is_layered
       then S.Extract_none ""  // will be populated by the typechecker
-      else if for_free
-      then if BU.for_some (function S.Reifiable -> true | _ -> false) qualifiers
-           then S.Extract_reify
-           else S.Extract_primitive
       else S.Extract_primitive in
 
     let sigel = Sig_new_effect ({

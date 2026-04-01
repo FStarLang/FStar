@@ -20,7 +20,7 @@ module IEXN
 *)
 
 
-(* The allowed exceptions indexed EXN effect; defined explicitly rather than via DM4F due to the pi-types used in it *)
+(* The allowed exceptions indexed EXN effect; defined explicitly due to the pi-types used in it *)
 
 let exns = FStar.GSet.set exn
 
@@ -78,7 +78,7 @@ let iex_trivial (a:Type) (wp:iex_wp a) =
 new_effect {
   IEXN : result:Type -> wp:iex_wp result -> Effect
   with
-  //repr         = e:exns -> M (result a) //pi-types currently not supported by DM4F
+  //repr         = e:exns -> M (result a)
     return_wp    = iex_return
   ; bind_wp      = iex_bind_wp
   ; if_then_else = iex_if_then_else

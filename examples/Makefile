@@ -1,13 +1,6 @@
-rel.__all: dm4free.__verify
-rel.__accept: dm4free.__verify
-rel.__verify: dm4free.__verify
-# ^ rel uses modules from dm4free, make sure to check them in proper
-# order.
-
 SUBDIRS += algorithms
 SUBDIRS += crypto
 SUBDIRS += data_structures
-SUBDIRS += dm4free
 SUBDIRS += dsls
 SUBDIRS += indexed_effects
 SUBDIRS += layeredeffects
@@ -18,7 +11,6 @@ SUBDIRS += paradoxes
 SUBDIRS += param
 SUBDIRS += preorders
 SUBDIRS += printf
-SUBDIRS += rel
 SUBDIRS += software_foundations
 SUBDIRS += tactics
 SUBDIRS += termination
