@@ -1,7 +1,7 @@
 (*
    A simple heap model for use in layered effect examples.
 *)
-module FStar.SimpleHeap
+module SimpleHeap
 
 module S = FStar.Set
 module F = FStar.FunctionalExtensionality

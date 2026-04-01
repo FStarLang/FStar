@@ -16,12 +16,12 @@
 
 module HoareST
 
-/// Hoare-style ST effect as a layered effect, using FStar.SimpleHeap.
+/// Hoare-style ST effect as a layered effect, using SimpleHeap.
 ///
 /// This is a simplified version without preorders or witness/recall.
 /// Read operations require a `contains` precondition.
 
-open FStar.SimpleHeap
+open SimpleHeap
 open ExampleST
 
 #set-options "--fuel 0 --ifuel 0"

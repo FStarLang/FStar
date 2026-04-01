@@ -1,8 +1,8 @@
 module ExampleST
 
-open FStar.SimpleHeap
+open SimpleHeap
 
-new_effect ExST = STATE_h FStar.SimpleHeap.heap
+new_effect ExST = STATE_h SimpleHeap.heap
 
 unfold let lift_div_exst (a:Type) (wp:pure_wp a) (p:st_post_h heap a) (h:heap) = wp (fun a -> p a h)
 sub_effect DIV ~> ExST = lift_div_exst

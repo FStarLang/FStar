@@ -18,7 +18,7 @@ module TestHoareST
 
 /// Testing the HoareST layered effect from HoareST.fst
 
-open FStar.SimpleHeap
+open SimpleHeap
 open HoareST
 
 #set-options "--fuel 0 --ifuel 4"

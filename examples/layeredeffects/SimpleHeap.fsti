@@ -4,7 +4,7 @@
    References are nats, the heap maps nats to typed values.
    No preorders, no witness/recall.
 *)
-module FStar.SimpleHeap
+module SimpleHeap
 
 module S = FStar.Set
 module F = FStar.FunctionalExtensionality
