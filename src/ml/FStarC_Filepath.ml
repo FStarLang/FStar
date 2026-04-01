@@ -63,3 +63,20 @@ let file_exists = Sys.file_exists
 (* Sys.is_directory raises Sys_error if the path does not exist *)
 let is_directory f = Sys.file_exists f && Sys.is_directory f
 
+let make_relative_to_cwd (path:string) : string =
+  if not (is_path_absolute path) then path
+  else
+    let path = normalize_file_path path in
+    let cwd  = normalize_file_path (Sys.getcwd ()) in
+    let split s = List.filter (fun x -> x <> "") (BatString.nsplit s ~by:"/") in
+    let path_parts = split path in
+    let cwd_parts  = split cwd  in
+    let rec skip_common pp cp =
+      match pp, cp with
+      | ph :: pt, ch :: ct when ph = ch -> skip_common pt ct
+      | _ -> (pp, cp)
+    in
+    let (remaining_path, remaining_cwd) = skip_common path_parts cwd_parts in
+    let ups = List.map (fun _ -> "..") remaining_cwd in
+    String.concat "/" (ups @ remaining_path)
+

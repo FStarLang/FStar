@@ -35,3 +35,6 @@ val canonicalize : string -> string
 
 (* Like canonicalize, but always returns an absolute path. *)
 val normalize_file_path: string -> ML string
+
+(* Make a path relative to the current working directory. *)
+val make_relative_to_cwd: string -> ML string

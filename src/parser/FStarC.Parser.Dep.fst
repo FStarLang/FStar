@@ -2067,7 +2067,10 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
     in
     let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
-    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
+    let norm_path s =
+      let s = Filepath.make_relative_to_cwd s in
+      replace_chars (replace_chars s '\\' "/") ' ' "\\ "
+    in
     let print_entry (target : string) (all_deps : list string) : ML unit =
         (* Print a target with dependencies. *)
         pr target; pr ":";
