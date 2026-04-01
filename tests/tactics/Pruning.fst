@@ -16,8 +16,6 @@
 module Pruning
 
 open FStar.Algebra.Monoid
-open FStar.Array
-open FStar.Axiomatic.Array
 open FStar.BitVector
 open FStar.Bytes
 open FStar.Char
@@ -29,7 +27,6 @@ open FStar.Fin
 open FStar.Float
 open FStar.FunctionalExtensionality
 open FStar.Ghost
-open FStar.Heap
 open FStar.IndefiniteDescription
 open FStar.Int
 open FStar.Int128
@@ -49,7 +46,6 @@ open FStar.MarkovsPrinciple
 open FStar.Math.Lemmas
 open FStar.Math.Lib
 open FStar.Matrix2
-open FStar.MRef
 open FStar.Mul
 open FStar.Option
 open FStar.Order

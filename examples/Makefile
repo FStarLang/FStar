@@ -8,7 +8,7 @@ SUBDIRS += misc
 SUBDIRS += oplss2021
 SUBDIRS += paradoxes
 SUBDIRS += param
-SUBDIRS += preorders
+
 SUBDIRS += printf
 SUBDIRS += software_foundations
 SUBDIRS += tactics

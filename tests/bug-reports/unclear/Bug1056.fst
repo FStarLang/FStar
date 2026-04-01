@@ -15,7 +15,6 @@
 *)
 module Bug1056
 
-open FStar.ST
 open FStar.All
 
 (* Bound variables 'c#246404' escapes; add a type annotation

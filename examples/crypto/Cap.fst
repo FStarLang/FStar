@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Cap (* capabilities *)
-open FStar.ST
+open FStar.All
 open FStar.Seq
 open FStar.String
 open Cert.ACLs

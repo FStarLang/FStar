@@ -15,7 +15,7 @@
 *)
 module Neg
 
-open FStar.ST
+open FStar.All
 open FStar.Tactics.V2
 
 assume val __phi: Type

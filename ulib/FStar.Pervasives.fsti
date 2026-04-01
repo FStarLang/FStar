@@ -280,7 +280,7 @@ effect EXT (a: Type) = Dv a
 /// Note, [STATE_h] is itself not a computation type in F*, since it
 /// is parameterized by the type of heap. However, instantiations of
 /// [STATE_h] with specific types of the heap are computation
-/// types. See, e.g., [FStar.ST] for such instantiations.
+/// types. See, e.g., [FStar.All] for such instantiations.
 ///
 /// Weakest preconditions for stateful computations transform
 /// [st_post_h] postconditions to [st_pre_h] preconditions. Both are

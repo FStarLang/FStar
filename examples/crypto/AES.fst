@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module AES (* concrete implementation of a one-block symmetric cipher *)
-open FStar.ST
-open FStar.Array
+open FStar.All
 
 module Bytes = Platform.Bytes
 

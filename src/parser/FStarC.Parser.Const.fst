@@ -247,14 +247,13 @@ let array_lid          = p2l ["FStar"; "Array"; "array"]
 let array_of_list_lid = p2l ["FStar"; "Array"; "of_list"]
 
 (* Stateful constants *)
-let st_lid       = p2l ["FStar"; "ST"]
-let write_lid    = p2l ["FStar"; "ST"; "write"]
-let read_lid     = p2l ["FStar"; "ST"; "read"]
-let alloc_lid    = p2l ["FStar"; "ST"; "alloc"]
-let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
+let write_lid    = p2l ["FStar"; "All"; "op_Colon_Equals"]
+let read_lid     = p2l ["FStar"; "All"; "op_Bang"]
+let alloc_lid    = p2l ["FStar"; "All"; "alloc"]
+let op_ColonEq   = p2l ["FStar"; "All"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
-let ref_lid             = p2l ["FStar"; "Heap"; "ref"]
+let ref_lid             = p2l ["FStar"; "All"; "ref"]
 let heap_addr_of_lid    = p2l ["FStar"; "Heap"; "addr_of"]
 let set_empty           = p2l ["FStar"; "Set"; "empty"]
 let set_singleton       = p2l ["FStar"; "Set"; "singleton"]

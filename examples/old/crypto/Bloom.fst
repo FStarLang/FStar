@@ -18,7 +18,6 @@ module Bloom
 open FStar.All
 open FStar.String
 open FStar.IO
-open FStar.Heap
 open FStar.Seq
 
 open Format
