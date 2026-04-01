@@ -1,5 +1,4 @@
 SUBDIRS += algorithms
-SUBDIRS += crypto
 SUBDIRS += data_structures
 SUBDIRS += dsls
 SUBDIRS += layeredeffects
