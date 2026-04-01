@@ -1698,12 +1698,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
 
                   (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
-                  let maybe_range_arg =
-                    if BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
-                    then [as_arg (PO.embed_simple lb.lbpos lb.lbpos);
-                          as_arg (PO.embed_simple body.pos body.pos)]
-                    else []
-                  in
+                  let maybe_range_arg = [] in
                   [ (* a, b *)
                     as_arg lb.lbtyp; as_arg t] @
                     maybe_range_arg @ [
@@ -1805,7 +1800,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
             norm cfg env (List.tl stack) (mk (Tm_meta {tm=top; meta=Meta_monadic(m, t)}) top0.pos)
         in
 
-        (* This application case is only interesting for fully-applied dm4f actions. Otherwise,
+        (* This application case is only interesting for fully-applied effect actions. Otherwise,
          * we just continue rebuilding. *)
         begin match (U.un_uinst head).n with
         | Tm_fvar fv ->
@@ -1913,7 +1908,6 @@ and reify_lift cfg e msrc mtgt t : ML term =
        *     if source effect (i.e. e's effect) is reifiable, then we first reify e
        *     else if it is not, then we thunk e
        *     this is how lifts are written for layered effects
-       *     not sure what's the convention for DM4F, but DM4F lifts don't come to this point anyway
        *     they are handled as a `return` in the `then` branch above
        *)
       let e =

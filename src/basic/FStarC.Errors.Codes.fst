@@ -331,7 +331,6 @@ let default_settings : list error_setting =
     Error_BadClassDecl                                , CError, 312;
     Error_BadInductiveParam                           , CFatal, 313;
     Error_FieldShadow                                 , CFatal, 314;
-    Error_UnexpectedDM4FType                          , CFatal, 315;
     Fatal_EffectAbbreviationResultTypeMismatch        , CFatal, 316;
     Error_AlreadyCachedAssertionFailure               , CFatal, 317;
     Error_MustEraseMissing                            , CWarning, 318;

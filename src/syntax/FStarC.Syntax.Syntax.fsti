@@ -313,7 +313,6 @@ and cflag =                                                      (* flags applic
   | SOMETRIVIAL                                                    (* the WP is the null wp *)
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
-  | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of decreases_order
 and metadata =
   | Meta_pattern       of list term & list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
@@ -544,15 +543,9 @@ type action = {
 (*
  * Effect combinators for wp-based effects
  *
- * This includes both primitive effects (such as PURE, DIV)
- *   as well as user-defined DM4F effects
+ * This includes primitive effects (such as PURE, DIV)
  *
  * repr, return_repr, and bind_repr are optional, and are set only for reifiable effects
- *
- * For DM4F effects, ret_wp, bind_wp, and other wp combinators are derived and populated by the typechecker
- *   These fields are dummy ts ([], Tm_unknown) after desugaring
- *
- * We could add another boolean, elaborated somewhere
  *)
 
 type wp_eff_combinators = {
@@ -597,7 +590,6 @@ type layered_eff_combinators = {
 
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators
-  | DM4F_eff of wp_eff_combinators
   | Layered_eff of layered_eff_combinators
 
 type effect_signature =
@@ -605,7 +597,7 @@ type effect_signature =
   | WP_eff_sig of tscheme
 
 //
-// For primitive and DM4F effects, this is set in ToSyntax
+// For primitive effects, this is set in ToSyntax
 // For indexed effects, typechecker sets it (in TcEffect)
 //
 type eff_extraction_mode =
@@ -646,7 +638,6 @@ type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list string;
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
-                        //Used in DM4Free
     sigmeta_spliced:bool;
     sigmeta_already_checked:bool;
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
@@ -671,10 +662,6 @@ type restriction =
 type open_module_or_namespace = (lident & open_kind & restriction)      (* lident fully qualified name, already resolved. *)
 type module_abbrev = (ident & lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
-(*
- * AR: we no longer have Sig_new_effect_for_free
- *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
- *)
 type sigelt' =
   | Sig_inductive_typ  {  //type l forall u1..un. (x1:t1) ... (xn:tn) : t
       lid:lident;

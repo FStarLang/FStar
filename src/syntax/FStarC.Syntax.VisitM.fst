@@ -349,10 +349,6 @@ let on_sub_combinators #m {|d : lvm m |} (cbs : eff_combinators) : ML (m eff_com
     let! wpcs = on_sub_wp_eff_combinators wpcs in
     return <| Primitive_eff wpcs
 
-  | DM4F_eff wpcs ->
-    let! wpcs = on_sub_wp_eff_combinators wpcs in
-    return <| DM4F_eff wpcs
-
   | Layered_eff lecs ->
     let! lecs = on_sub_layered_eff_combinators lecs in
     return <| Layered_eff lecs

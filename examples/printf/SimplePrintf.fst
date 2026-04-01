@@ -68,8 +68,7 @@ let example1 : string =
 ml type of head is Prims.unit dir_type
 *)
 
-(* Below we write parse_format returning option
-   (see SimplePrintfReify for more interesting version) *)
+(* Below we write parse_format returning option *)
 
 // type hoption (a:Type) : Type = | Nothing : hoption a | Just : v:a -> hoption a
 

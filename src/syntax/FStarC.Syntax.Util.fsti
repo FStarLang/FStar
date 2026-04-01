@@ -375,7 +375,6 @@ val t_not : term
 val t_false : term
 val t_true : term
 val tac_opaque_attr : term
-val dm4f_bind_range_attr : term
 val tcdecltime_attr : term
 val inline_let_attr : term
 val rename_let_attr : term
@@ -469,13 +468,11 @@ val mk_reify (t:term) (lopt:option Ident.lident) : ML term
 val mk_reflect (t:term) : ML term
 
 (* Some utilities for clients who wish to build top-level bindings and keep
- * their delta-qualifiers correct (e.g. dmff). *)
+ * their delta-qualifiers correct. *)
 
 val incr_delta_depth : delta_depth -> delta_depth
 
 val is_unknown (t:term) : ML bool
-
-val dm4f_lid (ed:eff_decl) (name:string) : ML lident
 
 val mk_list (typ:term) (rng:range) (l:list term) : ML term
 
@@ -578,7 +575,6 @@ val apply_eff_sig (f:tscheme -> ML tscheme) : effect_signature -> ML effect_sign
 val eff_decl_of_new_effect (se:sigelt) : ML eff_decl
 
 val is_layered (ed:eff_decl) : bool
-val is_dm4f (ed:eff_decl) : bool
 
 val apply_wp_eff_combinators (f:tscheme -> ML tscheme) (combs:wp_eff_combinators) : ML wp_eff_combinators
 val apply_layered_eff_combinators (f:tscheme -> ML tscheme) (combs:layered_eff_combinators) : ML layered_eff_combinators
