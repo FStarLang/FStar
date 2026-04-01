@@ -9,7 +9,7 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Prims.fst(161,28-183,79)
+  - Also see: Prims.fst(157,28-179,79)
   - See also Bug267.fst(59,4-59,8)
 
 * Info at Bug267.fst(63,53-64,17):
