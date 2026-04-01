@@ -589,12 +589,13 @@ val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
         (ensures (n + (k1 * m) % (k1 * k2) ==
                   (n + k1 * m) % (k1 * k2)))
 #restart-solver
-#push-options "--z3rlimit_factor 4"
 let add_mod_small n m k1 k2 =
+  assert (k1 * k2 > 0);
+  assert (k1 * m >= 0);
+  assert (n + k1 * m >= 0);
   mod_spec (k1 * m) (k1 * k2);
   mod_spec (n + k1 * m) (k1 * k2);
   div_add_small n m k1 k2
-#pop-options
 
 let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2 128) =
   Math.pow2_plus 64 64;

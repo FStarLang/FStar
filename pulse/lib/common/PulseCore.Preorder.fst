@@ -330,7 +330,7 @@ let lem_is_unit #a #p (x:history a p)
       assert (forall (h:vhist p). extends #a #p h []);
       assert (h =!= []);
       assert (extends #a #p h [])
-#push-options "--z3rlimit_factor 2"
+#push-options "--split_queries always"
 let assoc_l #a #p (x y:history a p)
                   (z:history a p{history_composable y z /\
                                  history_composable x (history_compose y z)})
@@ -338,7 +338,15 @@ let assoc_l #a #p (x y:history a p)
            history_composable (history_compose x y) z /\
            history_compose (history_compose x y) z ==
            history_compose x (history_compose y z))
-  = ()
+  = match x, y, z with
+    | Witnessed _, Witnessed _, Witnessed _ -> ()
+    | Witnessed _, Witnessed _, Current _ _ -> ()
+    | Witnessed _, Current _ _, Witnessed _ -> ()
+    | Witnessed _, Current _ _, Current _ _ -> ()
+    | Current _ _, Witnessed _, Witnessed _ -> ()
+    | Current _ _, Witnessed _, Current _ _ -> ()
+    | Current _ _, Current _ _, Witnessed _ -> ()
+    | Current _ _, Current _ _, Current _ _ -> ()
 
 
 let assoc_r #a #p (x y:history a p)
@@ -348,7 +356,15 @@ let assoc_r #a #p (x y:history a p)
            history_composable x (history_compose y z) /\
            history_compose (history_compose x y) z ==
            history_compose x (history_compose y z))
-  = ()
+  = match x, y, z with
+    | Witnessed _, Witnessed _, Witnessed _ -> ()
+    | Witnessed _, Witnessed _, Current _ _ -> ()
+    | Witnessed _, Current _ _, Witnessed _ -> ()
+    | Witnessed _, Current _ _, Current _ _ -> ()
+    | Current _ _, Witnessed _, Witnessed _ -> ()
+    | Current _ _, Witnessed _, Current _ _ -> ()
+    | Current _ _, Current _ _, Witnessed _ -> ()
+    | Current _ _, Current _ _, Current _ _ -> ()
 #pop-options
 
 let pcm_history #a #p : pcm (history a p) = {
