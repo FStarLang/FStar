@@ -16,10 +16,10 @@
 
 module HoareSTPolyBind
 
-open ExampleHeap
+open FStar.SimpleHeap
 open ExampleST
 
-/// ST effect implemented as a layered effect over ExST (STATE_h ExampleHeap.heap)
+/// ST effect implemented as a layered effect over ExST (STATE_h FStar.SimpleHeap.heap)
 ///
 /// This module uses polymonadic binds to compose HoareST and PURE computations
 

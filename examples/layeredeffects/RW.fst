@@ -2,7 +2,7 @@ module RW
 
 #set-options "--print_effect_args"
 
-open ExampleHeap
+open FStar.SimpleHeap
 open ExampleST
 
 type idx =

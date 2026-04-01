@@ -2,7 +2,7 @@ module LatticeEff
 
 open FStar.Tactics.V2
 open FStar.List.Tot
-open ExampleHeap
+open FStar.SimpleHeap
 open ExampleALL
 open FStar.All
 

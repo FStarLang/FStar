@@ -1,8 +1,8 @@
 module ExampleALL
 
-open ExampleHeap
+open FStar.SimpleHeap
 
-new_effect ExALL = ALL_h ExampleHeap.heap
+new_effect ExALL = ALL_h FStar.SimpleHeap.heap
 
 unfold let lift_div_exall (a:Type) (wp:pure_wp a) (p:all_post_h heap a) (h:heap) = wp (fun a -> p (V a) h)
 sub_effect DIV ~> ExALL = lift_div_exall

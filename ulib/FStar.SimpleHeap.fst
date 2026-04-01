@@ -1,7 +1,7 @@
 (*
    A simple heap model for use in layered effect examples.
 *)
-module ExampleHeap
+module FStar.SimpleHeap
 
 module S = FStar.Set
 module F = FStar.FunctionalExtensionality
@@ -37,10 +37,6 @@ let contains #a h r =
 let addr_unused_in n h = None? (h.mem n)
 
 let unused_in #a r h = addr_unused_in (addr_of r) h
-
-private
-assume val contains_decidable (#a:Type0) (h:heap) (r:ref a)
-  : GTot (b:bool{b <==> h `contains` r})
 
 let sel #a h r =
   let Some (Cell _ v) = h.mem r in
