@@ -22,7 +22,6 @@ new
 val ref ([@@@ strictly_positive] a:Type0) : Type0
 
 (** References support decidable equality *)
-assume HasEq_ref: forall (a:Type0). hasEq (ref a)
 
 (** STATE effect: same WP as DIV (underspecified state) *)
 new_effect STATE = DIV
