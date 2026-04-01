@@ -2,7 +2,6 @@ SUBDIRS += algorithms
 SUBDIRS += crypto
 SUBDIRS += data_structures
 SUBDIRS += dsls
-SUBDIRS += indexed_effects
 SUBDIRS += layeredeffects
 SUBDIRS += metatheory
 SUBDIRS += misc
