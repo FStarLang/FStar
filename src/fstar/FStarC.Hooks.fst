@@ -62,6 +62,5 @@ let _ =
   Syntax.Util.tts_f := Some show;
   Syntax.Util.ttd_f := Some Class.PP.pp;
   TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
-  iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
   iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
   ()
