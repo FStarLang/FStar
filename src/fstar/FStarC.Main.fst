@@ -41,7 +41,6 @@ let print_stats () =
 and hence compile and link them in. They do not export anything,
 instead they register primitive steps in the normalizer during
 initialization. *)
-open FStarC.Reflection.V1.Interpreter {}
 open FStarC.Reflection.V2.Interpreter {}
 (* Same, except that it only defines some types for userspace to refer to. *)
 open FStarC.Tactics.Types.Reflection {}

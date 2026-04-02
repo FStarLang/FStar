@@ -295,8 +295,6 @@ let no_fstar_stubs_ns (ns : list mlsymbol) : ML (list mlsymbol) =
 
   (* These 3 modules are special, and are not in the guts. They live in src/ml/full and
   are visible at the ambient namespace when building the plugin lib. *)
-  | "FStar"::"Stubs"::"Tactics"::"V1"::"Builtins"::[] when plug () ->
-    "FStarC"::"Tactics"::"V1"::"Builtins"::[]
   | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
     "FStarC"::"Tactics"::"V2"::"Builtins"::[]
   | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->
