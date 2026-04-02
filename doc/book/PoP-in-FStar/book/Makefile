@@ -1,8 +1,9 @@
 # Minimal makefile for Sphinx documentation
 #
 
-export FSTAR_HOME?=$(realpath ../../everest/FStar)
-export PULSE_HOME?=$(FSTAR_HOME)/../pulse
+# This book lives at doc/book/PoP-in-FStar/book/ within the FStar repo
+export FSTAR_HOME?=$(realpath ../../../..)
+export PULSE_HOME?=$(FSTAR_HOME)/pulse
 
 FSTARLANG_ORG_ROOT?=www
 
@@ -14,9 +15,9 @@ SOURCEDIR     = .
 BUILDDIR      = _build
 
 prep:
-	mkdir -p code/pulse
-	cp -R $(FSTAR_HOME)/doc/book/code/* code
-	cp -R $(PULSE_HOME)/share/pulse/examples/by-example/* code/pulse
+	mkdir -p code
+	ln -sfn $(realpath $(FSTAR_HOME)/doc/book/code)/* code/
+	ln -sfn $(realpath $(PULSE_HOME)/share/pulse/examples/by-example) code/pulse
 
 
 html: Makefile
