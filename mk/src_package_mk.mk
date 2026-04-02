@@ -104,7 +104,12 @@ clean: trim
 	rm -rf pulse/common.checked
 	rm -rf pulse/pulse.checked
 
-all: install_lib install_fstarc install_pulse
+install_karamel:
+	$(call msg, "INSTALL KARAMEL")
+	mkdir -p out
+	$(MAKE) -C karamel install PREFIX=$(call cygpath,out) LOWSTAR=false
+
+all: install_lib install_fstarc install_pulse install_karamel
 
 install_fstarc: install_lib
 # ^ The windows build in Github actions seems to sporadically

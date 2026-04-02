@@ -31,8 +31,9 @@ jobs:
       - uses: actions/checkout@master
         with:
           path: FStar
+          submodules: true
 
-      - name: Produce all artifacts
+      - name: Produce binary package + source package
         run: |
           # Note: we don't package Z3 for the CI artifact as the images
           # already have the relevant Z3.
@@ -51,13 +52,12 @@ jobs:
           name: fstar-src.tar.gz
           retention-days: 3
 
-      # Upload full repo too, for stage3 check and Pulse. Note: we
-      # explicitly run 'make setlink-2' at this point to generate the out/
-      # directory, as the previous targets do not. Also, remove the
-      # previous archives so they don't blow up the size of this
-      # artifact.
+      # Upload full repo too, for boot diff check. Note: we explicitly run 'make
+      # stage3' at this point to generate the out/ directory, as the previous
+      # targets do not. Also, remove the previous archives so they don't blow up
+      # the size of this artifact.
       - run: rm -f FStar/fstar*.tar.gz
-      - run: make setlink-2
+      - run: make stage3
         working-directory: FStar
 
       - uses: mtzguido/gci-upload@master

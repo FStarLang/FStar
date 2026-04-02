@@ -1369,9 +1369,8 @@ let effect_repr_aux only_reifiable env c u_res : ML _ =
     let given, expected = List.length args, num_effect_indices env eff_name r in
     if given = expected  then ()
     else
-      let message = Format.fmt3 "Not enough arguments for effect %s, \
-        This usually happens when you use a partially applied DM4F effect, \
-        like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
+      let message = Format.fmt3 "Not enough arguments for effect %s \
+        (given:%s, expected:%s)."
         (Ident.string_of_lid eff_name) (show given) (show expected) in
       raise_error r Errors.Fatal_NotEnoughArgumentsForEffect message
   in

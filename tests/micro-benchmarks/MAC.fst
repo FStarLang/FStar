@@ -68,7 +68,7 @@ noeq type entry =
          -> entry
 
 #push-options "--warn_error -272" //Warning_TopLevelEffect
-let log :ref (list entry) = ST.alloc #(list entry) []
+let log :ref (list entry) = alloc #(list entry) []
 #pop-options
 
 let mac k t =

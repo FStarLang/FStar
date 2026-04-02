@@ -758,27 +758,6 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     (if keep_pragma then [se] else []), [], env0
 
   | Sig_new_effect ne ->
-    let is_unelaborated_dm4f =
-      match ne.combinators with
-      | DM4F_eff combs ->
-        (match combs.ret_wp |> snd |> SS.compress with
-         | { n = Tm_unknown } -> true
-         | _ -> false)
-       | _ -> false in
-
-    if is_unelaborated_dm4f then
-      let env = Env.set_range env r in
-      let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
-      let effect_and_lift_ses = match lift_from_pure_opt with
-        | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
-        | None -> [ { se with sigel = Sig_new_effect (ne) } ] in
-
-      let effect_and_lift_ses = effect_and_lift_ses |> List.map (fun sigelt ->
-        { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}) in
-
-      //only elaborate, the loop in tc_decls would send these back to us for typechecking
-      [], ses @ effect_and_lift_ses, env0
-    else
       let ne =
         if do_two_phases env then run_phase1 (fun _ ->
           let ne =

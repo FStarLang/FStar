@@ -343,7 +343,6 @@ type error_code =
   | Error_BadClassDecl
   | Error_BadInductiveParam
   | Error_FieldShadow
-  | Error_UnexpectedDM4FType
   | Fatal_EffectAbbreviationResultTypeMismatch
   | Error_AlreadyCachedAssertionFailure
   | Error_MustEraseMissing

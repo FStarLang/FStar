@@ -413,7 +413,6 @@ let rec sigelt_to_string_short (x: sigelt) : ML string = match x.sigel with
   | Sig_new_effect ed ->
     let kw =
       if SU.is_layered ed then "layered_effect"
-      else if SU.is_dm4f ed then "new_effect_for_free"
       else "new_effect"
     in
     Format.fmt2 "%s { %s ... }" kw (show ed.mname)
@@ -475,7 +474,6 @@ let cflag_to_string (c:cflag) : ML string =
   | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
   | SHOULD_NOT_INLINE -> "should_not_inline"
   | LEMMA -> "lemma"
-  | CPS -> "cps"
   | DECREASES do -> "decreases " ^ show do
 
 instance showable_cflag  = { show = cflag_to_string; }

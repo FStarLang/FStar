@@ -2785,7 +2785,6 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
           in
           let flags = lc.cflags |> List.collect (function
                                                  | RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN]
-                                                 | CPS -> [CPS] // KM : Not exactly sure if it is necessary
                                                  | _ -> [])
           in
           let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
@@ -3561,9 +3560,6 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : ML Env.mlift =
        //now a PURE computation in the VC gets lifted via: PURE ~> DIV ~> M
        //when extracting (and reifying the monadic lifts), we go the same route
        //but if there is no lift term from PURE ~> DIV, we get an error
-       //is this ok to do for DM4F? not sure in general
-       //but currently PURE and DIV are lifted to DM4F effects using M.return
-       //and not using the lift term (I don't think the lift term is even supported for DM4F, is it?)
        mlift_term =
          match sub.lift with
          | None -> Some (fun _ _ e -> e)

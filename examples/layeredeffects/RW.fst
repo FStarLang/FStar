@@ -2,62 +2,40 @@ module RW
 
 #set-options "--print_effect_args"
 
-module H = FStar.Heap
-open FStar.Tactics.V2
-open FStar.Universe
-open FStar.ST
+open SimpleHeap
+open ExampleST
 
 type idx =
  | RO
  | RW
  
-// cannot make this prop
 val flows : idx -> idx -> Type0
 let flows i1 i2 =
   match i1, i2 with
   | RW, RO -> False
   | _, _ -> True
 
-// fails later if we use this refinement
-//val join : i1:idx -> i2:idx -> r:idx{flows i1 r /\ flows i2 r}
 val join : i1:idx -> i2:idx -> idx
 let join i1 i2 =
   match i1, i2 with
   | RO, RO -> RO
   | _, _ -> RW
 
-// GM: Force a type equality by SMT
+// Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
-// unfold
-// let rowp #a (wp : st_wp a) : st_wp a =
-//   fun p h0 -> wp (fun x h1 -> h0 == h1 ==> p x h1) h0
-// 
-// let st_monotonic #a (wp : st_wp a) : Type =
-//   forall p1 p2 h0. (forall x h1. p1 x h1 ==> p2 x h1) ==> wp p1 h0 ==> wp p2 h0
-// 
-// let test_ro
-//   (#wp:_{st_monotonic wp})
-//   (f : unit -> STATE int (rowp wp))
-// : ST int (fun h0 -> wp (fun _ _ -> True) h0) (fun _ _ _ -> True)
-// = let h0 = get ()in
-//   let _ = f () in
-//   let h1 = get ()in
-//   assert (h0 == h1);
-//   42
+type st_pre = heap -> Type0
+type st_post (a:Type) = a -> heap -> Type0
+type st_bpost (a:Type) = heap -> a -> heap -> Type0
 
-// this can be seen as a lifting from RO postconditions to RW postconditions
 unfold
-let ro_post #a (post : H.heap -> st_post a) : H.heap -> st_post a =
+let ro_post #a (post : st_bpost a) : st_bpost a =
   fun h0 x h1 -> post h0 x h1 /\ h1 == h0
 
-let is_ro_post #a (post : H.heap -> st_post a) : Type =
+let is_ro_post #a (post : st_bpost a) : Type =
   forall h0 x h1. post h0 x h1 ==> h0 == h1
 
-let st_bpost (a:Type) : Type =
-  H.heap -> a -> H.heap -> Type0
-  
-let ro_sanity_check #a (post : H.heap -> st_post a) =
+let ro_sanity_check #a (post : st_bpost a) =
   assert (is_ro_post (ro_post post))
 
 let real_post #a (i : idx) (post : st_bpost a)
@@ -65,11 +43,10 @@ let real_post #a (i : idx) (post : st_bpost a)
   = match i with
     | RO -> ro_post post
     | _ -> post
-  
-// GM: Note, postconditions are totally defined, their well-typing cannot
-// depend on pre (see issue #57 and the `st_post'` type).
+
+/// The repr is a function into ExST that encodes pre/post/RO-RW index
 let m (a:Type u#aa) (i:idx) (pre : st_pre) (post : st_bpost a): Type0 =
-  unit -> ST a pre (real_post i post)
+  unit -> ExST a (fun p h -> pre h /\ (forall x h1. real_post i post h x h1 ==> p x h1))
   
 let return (a:Type) (x:a) : m a RO (fun _ -> True) (fun h0 y h1 -> y == x /\ h1 == h0) =
   fun () -> x
@@ -113,11 +90,9 @@ let rwi_subtype (a b : Type) (inj : a -> b)
 let pre_leq (pre1 pre2 : st_pre) =
   forall h. pre2 h ==> pre1 h
 
-let post_leq #a (post1 post2 : H.heap -> st_post a) =
+let post_leq #a (post1 post2 : st_bpost a) =
   forall h0 x h1. post1 h0 x h1 ==> post2 h0 x h1
 
-// how is subtyping handled? can I subtype on a?
-// note that post is contravariant in a
 let subcomp (a:Type) (i1:idx) (pre : st_pre)  (post  : st_bpost a)
   (i2:idx) (pre' : st_pre) (post' : st_bpost a)
   (f : m a i1 pre post)
@@ -162,8 +137,6 @@ let lift_pure_rwi
  (a:Type)
  (wp : pure_wp a)
  (f :unit -> PURE a wp)
- // with the index-polymorphic bind above, this has to be in RO,
- // or unification will usually not find the index here
  : m a RO (fun _ -> wp (fun _ -> True)) (fun h0 x h1 -> sp wp x /\ h1 == h0)
  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
    fun () -> f ()
@@ -199,13 +172,6 @@ let rec map #a #b
 
 let app #a #b #i #pre #post (f : a -> RWI b i pre post) (x : a) : RWI b i pre post = f x
 
-// can't resolve an index, providing it explicitly with #i makes it explode too
-// update: actually, putting a dollar sign on f makes it work... why? I can see
-// why it helps to find the index but why doesn't it explode too?
-
-(*
- * AR: Could not resolve #i in the recursive call
- *)
 let rec appn #a #i
   (n:nat)
   (f : a -> RWI a i (fun _ -> True) (fun _ _ _ -> True))
@@ -228,7 +194,6 @@ let labs (n:int) : RWI nat RO (fun _ -> True) (fun h0 _ h1 -> True) =
   else n
 
 let rwi_assert (p:Type0) : RWI unit RO (fun _ -> p) (fun h0 () h1 -> h0 == h1) =
-  // assert p // fails
   RWI?.reflect (fun () -> assert p)
   
 let rwi_assume (p:Type0) : RWI unit RO (fun _ -> True) (fun h0 () h1 -> h0 == h1 /\ p) =
@@ -242,21 +207,19 @@ let test_abs0 (n:int) : RWI int RO (fun _ -> True) (fun h0 r h1 -> r >= 0) =
   
 let test_abs0' (n:int) : RWI nat RO (fun _ -> True) (fun h0 _ h1 -> True) =
   let r = labs0 n in
-  let r : nat = r in // need this! an ascription won't work!
+  let r : nat = r in
   r
   
 let test_abs (n:int) : RWI nat RO (fun _ -> True) (fun h0 _ h1 -> True) =
   let r = labs n in
   r
 
-// just a test
-let get_indexed (#i:idx) () : RWI H.heap i (fun _ -> True) (fun h0 x h1 -> x == h0 /\ h1 == h0) =
-  RWI?.reflect (fun () -> ST.get ())
+let get_indexed (#i:idx) () : RWI heap i (fun _ -> True) (fun h0 x h1 -> x == h0 /\ h1 == h0) =
+  RWI?.reflect (fun () -> ExampleST.get ())
 
-let get_r () : RWI H.heap RO (fun _ -> True) (fun h0 x h1 -> x == h0 /\ h1 == h0) =
-  RWI?.reflect (fun () -> ST.get ())
+let get_r () : RWI heap RO (fun _ -> True) (fun h0 x h1 -> x == h0 /\ h1 == h0) =
+  RWI?.reflect (fun () -> ExampleST.get ())
 
-//let get #i = get_indexed #i
 let get = get_r
 
 let test_state_eq_rrr
@@ -309,8 +272,6 @@ let test_state_eq_www
   let h1 = get () in
   let y = g () in
   let h2 = get () in
-  //assert (h0 == h1);
-  //assert (h1 == h2);
   x + y
 
 
