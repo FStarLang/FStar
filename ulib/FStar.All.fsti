@@ -51,4 +51,4 @@ val exit : int -> ML 'a
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
 exception Failure of string
-val failwith : string -> ML 'a
+val failwith : s:string -> ALL 'a (fun p -> p (Err s))
