@@ -101,15 +101,6 @@ gh_curl() {
     -H "Accept: application/vnd.github+json"
     -H "X-GitHub-Api-Version: 2022-11-28"
   )
-  local token=""
-  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-    token="$GITHUB_TOKEN"
-  elif command -v gh &>/dev/null; then
-    token=$(gh auth token 2>/dev/null || true)
-  fi
-  if [[ -n "$token" ]]; then
-    headers+=(-H "Authorization: Bearer $token")
-  fi
   curl -sL "${headers[@]}" "$@"
 }
 
