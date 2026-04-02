@@ -1048,7 +1048,6 @@ and translate_flag cfg bs (f : S.cflag) : ML cflag =
     | S.TRIVIAL_POSTCONDITION -> TRIVIAL_POSTCONDITION
     | S.SHOULD_NOT_INLINE -> SHOULD_NOT_INLINE
     | S.LEMMA -> LEMMA
-    | S.CPS -> CPS
     | S.DECREASES (S.Decreases_lex l) -> DECREASES_lex (l |> List.map (translate cfg bs))
     | S.DECREASES (S.Decreases_wf (rel, e)) ->
       DECREASES_wf (translate cfg bs rel, translate cfg bs e)
@@ -1063,7 +1062,6 @@ and readback_flag cfg (f : cflag) : ML S.cflag =
     | TRIVIAL_POSTCONDITION -> S.TRIVIAL_POSTCONDITION
     | SHOULD_NOT_INLINE -> S.SHOULD_NOT_INLINE
     | LEMMA -> S.LEMMA
-    | CPS -> S.CPS
     | DECREASES_lex l -> S.DECREASES (S.Decreases_lex (l |> List.map (readback cfg)))
     | DECREASES_wf (rel, e) ->
       S.DECREASES (S.Decreases_wf (readback cfg rel, readback cfg e))
@@ -1088,12 +1086,7 @@ and translate_monadic mty cfg bs e : ML t =
             } in
            S.mk (Tm_abs {bs=[S.mk_binder (Inl?.v lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
        in
-       let maybe_range_arg =
-           if BU.for_some (TEQ.eq_tm_bool cfg.core_cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
-           then [translate cfg [] (PO.embed_simple lb.lbpos lb.lbpos), None;
-                 translate cfg [] (PO.embed_simple body.pos body.pos), None]
-           else []
-       in
+       let maybe_range_arg = [] in
        let t =
        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> Some?.v |> snd)))
                       [mk_t <| Univ U_unknown, None;  //We are cheating here a bit

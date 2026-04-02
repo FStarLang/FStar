@@ -44,13 +44,6 @@ open FStarC.Class.Tagged
 let dbg = Debug.get_toggle "ED"
 let dbg_LayeredEffectsTc = Debug.get_toggle "LayeredEffectsTc"
 
-let dmff_cps_and_elaborate (env:Env.env) (ed:S.eff_decl) : ML (list sigelt & eff_decl & option sigelt) =
-  (* This is only an elaboration rule not a typechecking one *)
-
-  // Let the power of Dijkstra generate everything "for free", then defer
-  // the rest of the job to [tc_decl].
-  DMFF.cps_and_elaborate env ed
-
 (*
  * Helper function used to typecheck and generalize various effect combinators
  *
@@ -2218,10 +2211,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
             Range.dummyRange in
           mk_repr b wp in
 
-        let maybe_range_arg =
-          if BU.for_some (TEQ.eq_tm_bool env U.dm4f_bind_range_attr) ed.eff_attrs
-          then [S.null_binder S.t_range; S.null_binder S.t_range]
-          else [] in
+        let maybe_range_arg = [] in
        
         let k = U.arrow ([S.mk_binder a; S.mk_binder b] @
                          maybe_range_arg @
@@ -2239,7 +2229,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
 
       let actions =
         let check_action (act:action) =
-          (* We should not have action params anymore, they should have been handled by dmff below *)
+          (* We should not have action params anymore, they should have been handled below *)
           if List.length act.action_params <> 0 then failwith "tc_eff_decl: expected action_params to be empty";
 
           // 0) The action definition has a (possibly) useless type; the
@@ -2377,7 +2367,6 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
   let combinators =
     match ed.combinators with
     | Primitive_eff _ -> Primitive_eff combinators
-    | DM4F_eff _ -> DM4F_eff combinators
     | _ -> failwith "Impossible! tc_eff_decl on a layered effect is not expected" in
 
   //univs and binders have already been set
@@ -2510,25 +2499,8 @@ let tc_lift env sub r : ML _ =
                       else let lift_wp = tc_check_trivial_guard env lift_wp expected_k in uvs, SS.close_univ_vars uvs lift_wp
         in
         lift, lift_wp
-      (* Sub-effect for free case *)
-      | Some (what, lift), None ->
-        //AR: open the universes if present (two phases)
-        let uvs, lift =
-          if Cons? what
-          then let usubst, uvs = SS.univ_var_opening what in
-               uvs, SS.subst usubst lift
-          else [], lift
-        in
-        if !dbg
-        then Format.print1 "Lift for free : %s\n" (show lift);
-        let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
-        let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
-        (* TODO : Check that comp is pure ? *)
-        let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
-        let lift_wp = DMFF.recheck_debug "lift-wp" env lift_wp in
-        let lift_elab = DMFF.recheck_debug "lift-elab" env lift_elab in
-        if Nil? uvs then Some (Gen.generalize_universes env lift_elab), Gen.generalize_universes env lift_wp
-        else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
+      | Some _, None ->
+        failwith "Sub-effect for free (DM4F) has been removed"
     in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)

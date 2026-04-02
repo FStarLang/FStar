@@ -465,7 +465,6 @@ and cflag_to_string c : ML string =
         | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
         | SHOULD_NOT_INLINE -> "should_not_inline"
         | LEMMA -> "lemma"
-        | CPS -> "cps"
         | DECREASES _ -> "" (* TODO : already printed for now *)
 
 and cflags_to_string fs : ML string = FStarC.Common.string_of_list cflag_to_string fs
@@ -575,8 +574,7 @@ let layered_eff_combinators_to_string combs : ML string =
     ]
 
 let eff_combinators_to_string (x:eff_combinators) : ML string = match x with
-  | Primitive_eff combs
-  | DM4F_eff combs -> wp_eff_combinators_to_string combs
+  | Primitive_eff combs -> wp_eff_combinators_to_string combs
   | Layered_eff combs -> layered_eff_combinators_to_string combs
 
 let eff_extraction_mode_to_string (x:eff_extraction_mode) : ML string = match x with
@@ -595,7 +593,7 @@ let eff_decl_to_string ed : ML string =
         %s\n\
       and effect_actions\n\t%s\n}\n"
         [eff_name;
-         "" ;  //(if for_free then "_for_free " else "");
+         "" ;
          lid_to_string ed.mname;
          enclose_universes <| univ_names_to_string ed.univs;
          binders_to_string " " ed.binders;
@@ -642,8 +640,7 @@ let rec sigelt_to_string (x: sigelt) : ML string =
             (List.map sigelt_to_string ses |> String.concat "\n")
 
       | Sig_new_effect(ed) ->
-        (if SU.is_dm4f ed then "(* DM4F *)" else "")
-        ^ quals_to_string' x.sigquals
+        quals_to_string' x.sigquals
         ^ eff_decl_to_string ed
 
       | Sig_sub_effect (se) -> sub_eff_to_string se

@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
       - if: env.DRY_RUN != 'true' # don't check on a dry run.
         run: |
           git fetch --tags
@@ -52,6 +54,7 @@ jobs:
 
       - uses: actions/checkout@v6
         with:
+          submodules: true
           path: FStar
       - name: Rename packages to have version number
         run: |

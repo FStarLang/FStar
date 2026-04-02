@@ -1470,7 +1470,7 @@ let resugar_tscheme'' env name (ts:S.tscheme) =
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
 
-let resugar_wp_eff_combinators env for_free combs =
+let resugar_wp_eff_combinators env combs =
   let resugar_opt name tsopt =
     match tsopt with
     | Some ts -> [resugar_tscheme'' env name ts]
@@ -1480,16 +1480,14 @@ let resugar_wp_eff_combinators env for_free combs =
   let return_repr = resugar_opt "return_repr" combs.return_repr in
   let bind_repr = resugar_opt "bind_repr" combs.bind_repr in
 
-  if for_free then repr@return_repr@bind_repr
-  else
-    (resugar_tscheme'' env "ret_wp" combs.ret_wp)::
-    (resugar_tscheme'' env "bind_wp" combs.bind_wp)::
-    (resugar_tscheme'' env "stronger" combs.stronger)::
-    (resugar_tscheme'' env "if_then_else" combs.if_then_else)::
-    (resugar_tscheme'' env "ite_wp" combs.ite_wp)::
-    (resugar_tscheme'' env "close_wp" combs.close_wp)::
-    (resugar_tscheme'' env "trivial" combs.trivial)::
-    (repr@return_repr@bind_repr)
+  (resugar_tscheme'' env "ret_wp" combs.ret_wp)::
+  (resugar_tscheme'' env "bind_wp" combs.bind_wp)::
+  (resugar_tscheme'' env "stronger" combs.stronger)::
+  (resugar_tscheme'' env "if_then_else" combs.if_then_else)::
+  (resugar_tscheme'' env "ite_wp" combs.ite_wp)::
+  (resugar_tscheme'' env "close_wp" combs.close_wp)::
+  (resugar_tscheme'' env "trivial" combs.trivial)::
+  (repr@return_repr@bind_repr)
 
 let resugar_layered_eff_combinators env combs =
   let resugar name (ts, _, _) = resugar_tscheme'' env name ts in
@@ -1503,14 +1501,13 @@ let resugar_layered_eff_combinators env combs =
 
 let resugar_combinators env combs =
   match combs with
-  | Primitive_eff combs -> resugar_wp_eff_combinators env false combs
-  | DM4F_eff combs -> resugar_wp_eff_combinators env true combs
+  | Primitive_eff combs -> resugar_wp_eff_combinators env combs
   | Layered_eff combs -> resugar_layered_eff_combinators env combs
 
 let resugar_eff_decl' env ed =
   let r = Range.dummyRange in
   let q = [] in
-  let resugar_action d for_free =
+  let resugar_action d =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
     let bs, action_typ = SS.open_term action_params d.action_typ in
@@ -1518,12 +1515,7 @@ let resugar_eff_decl' env ed =
     let action_params = action_params |> map (fun b -> resugar_binder' env b r) |> List.rev in
     let action_defn = resugar_term' env action_defn in
     let action_typ = resugar_term' env action_typ in
-    if for_free then
-      let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
-      let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, t ))]))
-    else
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
+    mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
   let eff_name = ident_of_lid ed.mname in
   let eff_binders, eff_typ =
@@ -1535,7 +1527,7 @@ let resugar_eff_decl' env ed =
 
   let mandatory_members_decls = resugar_combinators env ed.combinators in
 
-  let actions = ed.actions |> List.map (fun a -> resugar_action a false) in
+  let actions = ed.actions |> List.map (fun a -> resugar_action a) in
   let decls = mandatory_members_decls@actions in
   mk_decl r q (A.NewEffect(DefineEffect(eff_name, eff_binders, eff_typ, decls)))
 

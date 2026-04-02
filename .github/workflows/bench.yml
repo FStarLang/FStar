@@ -90,12 +90,14 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.base_sha }}
           path: fstar-base
+          submodules: true
 
       - name: Checkout head
         uses: actions/checkout@v6
         with:
           ref: ${{ steps.pr.outputs.head_sha }}
           path: fstar-head
+          submodules: true
 
       # Run full CI (build + tests) sequentially with resource monitoring.
       # Building the compiler is included since F* is bootstrapped.

@@ -2,8 +2,9 @@
   bash,
   batteries,
   buildDunePackage,
-  callPackage,
   installShellFiles,
+  karamel-src,
+  karamelOcamlDeps,
   lib,
   makeWrapper,
   memtrace,
@@ -59,7 +60,7 @@ buildDunePackage {
     stdint
     yojson
     zarith
-  ];
+  ] ++ karamelOcamlDeps;
 
   # Packages with shared libraries needed at runtime
   propagatedBuildInputs = [
@@ -73,6 +74,8 @@ buildDunePackage {
   prePatch = ''
     patchShebangs .scripts/*.sh
     patchShebangs ulib/ml/app/ints/mk_int_file.sh
+    cp -r ${karamel-src} karamel
+    chmod -R u+w karamel
   '';
 
   src = lib.sourceByRegex ./.. [

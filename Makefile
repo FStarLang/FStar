@@ -12,11 +12,20 @@ FSTAR_DEFAULT_GOAL ?= build
 all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
-karamel: KRML_HOME ?= $(abspath karamel)
-karamel:
-	+$(MAKE) -C $(KRML_HOME) minimal
+# This file is touched whenever any file in karamel/ changes, to trigger a
+# rebuild only then.
+.krml.src.touch: .force
+	[ -f $@ ] || touch $@
+	find karamel -type f -newer $@ -exec touch $@ \; -quit
 
-.PHONY: karamel
+.krml.touch: .krml.src.touch
+	$(call bold_msg, "BUILD", "KARAMEL")
+	+$(MAKE) -C karamel LOWSTAR=false
+	@# Building will change files in karamel/, bump timestamp
+	@touch .krml.src.touch
+	@touch .krml.touch
+
+karamel: .krml.touch
 
 ### STAGES
 
@@ -303,15 +312,15 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 	touch $@
 
-# F# library, from stage 2.
-fsharp-lib.src: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
+# F# library
+fsharp-lib.src: export FSTAR_EXE ?= $(FSTAR3_FULL_EXE)
+fsharp-lib.src: .alib2.src.touch .force
 	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
 	# Note: FStar.Map and FStar.Set are special-cased
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  CACHE_DIR=stage2/ulib.checked/ \
 	  OUTPUT_DIR=fsharp/extracted/ \
 	  CODEGEN=FSharp \
@@ -397,19 +406,21 @@ define install-stage
 	$(call bold_msg, "INSTALL", "STAGE $(1)")
 	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
+	@# Karamel install
+	$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false
 	touch $@
 endef
 
 .install-stage1.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage1.touch: .stage1.src.touch $(MAYBEFORCE)
+.install-stage1.touch: .stage1.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,1)
 
 .install-stage2.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage2.touch: .stage2.src.touch $(MAYBEFORCE)
+.install-stage2.touch: .stage2.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,2)
 
 .install-stage3.touch: export FSTAR_LINK_LIBDIRS=$(LINK_OK)
-.install-stage3.touch: .stage3.src.touch $(MAYBEFORCE)
+.install-stage3.touch: .stage3.src.touch karamel $(MAYBEFORCE)
 	$(call install-stage,3,FSTAR_DUNE_RELEASE=1)
 
 setlink-%:
@@ -454,6 +465,7 @@ __do-archive: .force
 	rm -rf $(PKGTMP)
 	# add an 'fstar' top-level directory to the archive
 	$(MAKE) $(INSTALL_RULE) PREFIX="$(abspath $(PKGTMP)/fstar)"
+	$(MAKE) -C karamel install PREFIX="$(abspath $(PKGTMP)/fstar)" LOWSTAR=false
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
 	.scripts/bin-install.sh "$(PKGTMP)/fstar"
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"

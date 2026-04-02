@@ -11,8 +11,7 @@ defaults:
 
 jobs:
   # This checks that the extracted fstarc (using stage2) matches exactly with
-  # stage2 (extracted with stage1). Also, we build the F# library (it is not
-  # packaged, so not built by the job above)
+  # stage2 (extracted with stage1).
   boot-diff:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
@@ -29,8 +28,8 @@ jobs:
         with:
           name: fstar-repo
 
-      - name: Check for a boot diff, and run F# tests
-        run: make -skj$(nproc) boot-diff fsharp-all
+      - name: Check for a boot diff
+        run: make -skj$(nproc) boot-diff
         working-directory: FStar
 
   # Download the stage2 binary package from the previous job and run the
@@ -76,6 +75,10 @@ jobs:
         run: tar xzf fstar.tar.gz && ln -s fstar out
 
       - name: Run tests, without forcing a build
+        # This frankenstein target is complicated due to having split the build
+        # into separate jobs. Perhaps we should just ditch that.  The advantage
+        # of splitting is gaining parallelism with testing the source package,
+        # as that runs after the normal build and takes ~10 minutes.
         run: make -skj$(nproc) _test _test_pulse
 
   # This runs the bare tests over the bare stage2 compiler.
@@ -132,6 +135,8 @@ jobs:
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe B.fst
 
   ocaml-smoke:
     strategy:
@@ -172,6 +177,8 @@ jobs:
           ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./out/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./out/bin/fstar.exe B.fst
         working-directory: fstar
 
   perf-canaries:

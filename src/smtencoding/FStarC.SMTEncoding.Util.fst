@@ -109,8 +109,7 @@ let mk_LexTop : term = {tm=App(Var "LexTop", []); freevars=alloc None; rng=Range
 (*
  * AR: When encoding abstractions that have a reifiable computation type
  *     for their bodies, we currently encode their reification
- *     Earlier this was fine, since the only reifiable effects came from DM4F
- *     But now layered effects are also reifiable, but I don't think we want
+ *     Layered effects are also reifiable, but I don't think we want
  *     to encode their reification to smt
  *     So adding these utils, that are then used in Encode.fs and EncodeTerm.fs
  *

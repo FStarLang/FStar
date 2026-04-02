@@ -21,6 +21,11 @@ depends: [
   "process"
   "ppx_deriving" {build}
   "ppx_deriving_yojson" {build}
+  # Inherited from karamel:
+  "uucp"
+  "visitors"
+  "wasm"
+  "fix"
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [

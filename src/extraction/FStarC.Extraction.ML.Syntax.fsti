@@ -255,9 +255,13 @@ instance val showable_mlconstant   : showable mlconstant
 instance val showable_mlexpr       : showable mlexpr
 instance val showable_mlmodule1    : showable mlmodule1
 instance val showable_mlmodulebody : showable mlmodulebody
+instance val showable_mllb         : showable mllb
+instance val showable_meta         : showable meta
 
 instance val pp_mlty               : pretty mlty
 instance val pp_mlconstant         : pretty mlconstant
 instance val pp_mlexpr             : pretty mlexpr
 instance val pp_mlmodule1          : pretty mlmodule1
 instance val pp_mlmodulebody       : pretty mlmodulebody
+instance val pp_mllb               : pretty mllb
+instance val pp_meta               : pretty meta

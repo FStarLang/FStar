@@ -37,10 +37,6 @@ module Prims
 assume new
 type attribute : Type0 
 
-(** An attribute indicating that some definition must be processed by the
-    Dijkstra monads for free construction *)
-assume
-val cps:attribute
 
 (** This attribute marks definitions for logical connectives that should
     not be unfolded during tactics. *)
@@ -616,15 +612,6 @@ let op_Hat s1 s2 = strcat s1 s2
 type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
-
-(** The [M] marker is interpreted by the Dijkstra Monads for Free
-     construction. It has a "double meaning", either as an alias for
-     reasoning about the direct definitions, or as a marker for places
-     where a CPS transformation should happen. *)
-effect M (a: Type) = Tot a (attributes cps)
-
-(** Returning a value into the [M] effect *)
-let returnM (a: Type) (x: a) : M a = x
 
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)

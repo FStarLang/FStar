@@ -2,6 +2,10 @@ name: Build F* binaries (all archs)
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
   workflow_dispatch:
 
 jobs:
@@ -11,9 +15,15 @@ jobs:
 
   linux:
     uses: ./.github/workflows/build-linux.yml
+    with:
+      ref: ${{ inputs.ref || '' }}
 
   macos:
     uses: ./.github/workflows/build-macos.yml
+    with:
+      ref: ${{ inputs.ref || '' }}
 
   windows:
     uses: ./.github/workflows/build-windows.yml
+    with:
+      ref: ${{ inputs.ref || '' }}
