@@ -1696,45 +1696,29 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
  *   to read the parsing data from checked files
  *)
 
-(** Recursively find all F* files in a directory *)
-let rec all_fstar_files_in_dir (dir:string) : ML (list file_name) =
-  let files = safe_readdir_for_include dir in
-  List.collect (fun f ->
-    let full_path = Filepath.join_paths dir f in
-    if Filepath.is_directory full_path then
-      all_fstar_files_in_dir full_path
-    else if List.existsb (fun ext -> Util.ends_with f ext) (all_file_suffixes ()) then
-      [full_path]
-    else
-      []
-  ) files
+(** Find all F* files in a directory, respecting fstar.include for subdirectory traversal.
+    Uses Find.expand_include_d to determine which subdirectories to visit. *)
+let all_fstar_files_in_dir (dir:string) : ML (list file_name) =
+  let dirs = Find.expand_include_d dir in
+  List.collect (fun d ->
+    let files = safe_readdir_for_include d in
+    List.collect (fun f ->
+      let full_path = Filepath.join_paths d f in
+      if not (Filepath.is_directory full_path)
+        && List.existsb (fun ext -> Util.ends_with f ext) (all_file_suffixes ())
+      then [full_path]
+      else []
+    ) files
+  ) dirs
 
-(** Expand any directories in the command line file list to their contained F* files.
-    When a module has both .fst and .fsti, only include the .fsti to avoid 
-    "breaking abstraction" errors. *)
+(** Expand any directories in the command line file list to their contained F* files. *)
 let expand_directories (files: list file_name) : ML (list file_name) =
-  let all_files = List.collect (fun f ->
+  files |> List.collect (fun f ->
     if Filepath.is_directory f then
       all_fstar_files_in_dir f
     else
       [f]
-  ) files in
-  (* Filter out .fst files when corresponding .fsti exists *)
-  let fsti_set : RBSet.t string = 
-    List.fold_left (fun acc f ->
-      if Util.ends_with f ".fsti" then
-        let base = String.substring f 0 (String.length f - 1) in (* remove trailing 'i' to get .fst *)
-        RBSet.add base acc
-      else acc
-    ) (RBSet.empty ()) all_files
-  in
-  List.filter (fun f ->
-    if Util.ends_with f ".fst" && not (Util.ends_with f ".fsti") then
-      (* Only keep .fst if there's no corresponding .fsti *)
-      not (RBSet.mem f fsti_set)
-    else
-      true
-  ) all_files
+  )
 
 (* In public interface *)
 let collect (all_cmd_line_files: list file_name)
