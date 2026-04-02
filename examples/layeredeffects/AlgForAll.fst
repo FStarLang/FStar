@@ -1,6 +1,5 @@
 module AlgForAll
 
-#set-options "--z3refresh"
 
 open FStar.Calc
 module T = FStar.Tactics.V2

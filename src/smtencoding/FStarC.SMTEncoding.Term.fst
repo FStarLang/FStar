@@ -966,19 +966,20 @@ and mkPrelude z3options : ML string =
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
-                (declare-datatypes () ((Universe (U_zero) (U_succ (prev Universe)))))\n\
+                (declare-sort Universe)\n\
+                (declare-fun U_zero () Universe)\n\
+                (declare-fun U_succ (Universe) Universe)\n\
                 (declare-fun ulevel ((Universe)) Int)\n\
                 (declare-fun Univ (Int) Universe)\n\
                 (assert (= (ulevel U_zero) 0))\n\
-                (assert (forall ((u Universe)) (! (= (ulevel (U_succ u)) (+ 1 (ulevel u))) :weight 0 :pattern ((ulevel (U_succ u))))))\n\
-                (assert (forall ((u Universe)) (! (>= (ulevel u) 0) :weight 0 :pattern ((ulevel u)))))\n\
-                (assert (forall ((u Universe)) (! (= (Univ (ulevel u)) u) :weight 0 :pattern ((ulevel u)))))\n\
-                (assert (forall ((i Int)) (! (implies (>= i 0) (= (ulevel (Univ i)) i)) :weight 0 :pattern ((Univ i)))))\n\
+                (assert (forall ((u Universe)) (! (= (ulevel (U_succ u)) (+ 1 (ulevel u))) :pattern ((ulevel (U_succ u))))))\n\
+                (assert (forall ((u Universe)) (! (>= (ulevel u) 0) :pattern ((ulevel u)))))\n\
+                (assert (forall ((u Universe)) (! (= (Univ (ulevel u)) u) :pattern ((ulevel u)))))\n\
+                (assert (forall ((i Int)) (! (implies (>= i 0) (= (ulevel (Univ i)) i)) :pattern ((Univ i)))))\n\
                 (declare-fun U_max (Universe Universe) Universe)\n\
                 (assert (forall ((u1 Universe) (u2 Universe))\n\
                   (! (= (U_max u1 u2)\n\
                         (ite (<= (ulevel u1) (ulevel u2)) u2 u1))\n\
-                    :weight 0\n\
                     :pattern ((U_max u1 u2)))))\n\
                 (declare-fun U_unif (Int) Universe)\n\
                 (declare-fun U_unknown () Universe)\n\
