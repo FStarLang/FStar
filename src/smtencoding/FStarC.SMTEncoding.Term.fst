@@ -966,22 +966,20 @@ and mkPrelude z3options : ML string =
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
-                (declare-datatypes () ((Universe \n\
-                                        (Univ (ulevel Int)))))\n\
-                (define-fun imax ((i Int) (j Int)) Int \n\
-                  (ite (<= i 0) j \n\
-                    (ite (<= j 0) i \n\
-                      (ite (<= i j) j i)))) \n\
-                (define-fun U_zero () Universe (Univ 0))\n\
-                (define-fun U_succ ((u Universe)) Universe\n\
-                  (Univ (+ (ulevel u) 1)))\n\
-                (declare-fun U_max (Universe Universe) Universe) \n\
-                (assert (forall ((u1 Universe) (u2 Universe)) \n\
-                                (! (= (U_max u1 u2)\n\
-                                      (Univ (imax (ulevel u1) (ulevel u2))))\n\
-                                 :pattern ((U_max u1 u2)))))\n\
-                (define-fun univ_ok ((u Universe)) Bool\n\
-                    (>= (ulevel u) 0))\n\
+                (declare-datatypes () ((Universe (U_zero) (U_succ (prev Universe)))))\n\
+                (declare-fun ulevel ((Universe)) Int)\n\
+                (declare-fun Univ (Int) Universe)\n\
+                (assert (= (ulevel U_zero) 0))\n\
+                (assert (forall ((u Universe)) (! (= (ulevel (U_succ u)) (+ 1 (ulevel u))) :weight 0 :pattern ((ulevel (U_succ u))))))\n\
+                (assert (forall ((u Universe)) (! (>= (ulevel u) 0) :weight 0 :pattern ((ulevel u)))))\n\
+                (assert (forall ((u Universe)) (! (= (Univ (ulevel u)) u) :weight 0 :pattern ((ulevel u)))))\n\
+                (assert (forall ((i Int)) (! (implies (>= i 0) (= (ulevel (Univ i)) i)) :weight 0 :pattern ((Univ i)))))\n\
+                (declare-fun U_max (Universe Universe) Universe)\n\
+                (assert (forall ((u1 Universe) (u2 Universe))\n\
+                  (! (= (U_max u1 u2)\n\
+                        (ite (<= (ulevel u1) (ulevel u2)) u2 u1))\n\
+                    :weight 0\n\
+                    :pattern ((U_max u1 u2)))))\n\
                 (declare-fun U_unif (Int) Universe)\n\
                 (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\

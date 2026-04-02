@@ -292,6 +292,7 @@ ghost fn pcm_rw u#a (#t: Type u#a)
   fold pts_to_mask a2 #p2 s2 m2;
 }
 
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1 --z3version 4.15.3"
 ghost fn pcm_share u#a (#t: Type u#a) #l
     (a: array t) p s m
     (a1: array t) p1 s1 m1
@@ -330,7 +331,9 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
     Some? (Map.sel (mk_carrier' a p s m (a.vis l)) (i2 + a2.offset)));
   fold pts_to_mask a2 #p2 s2 m2;
 }
+#pop-options
 
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1 --z3version 4.15.3"
 ghost fn pcm_gather u#a (#t: Type u#a) #l
     (a: array t) p s m
     (a1: array t) p1 s1 m1
@@ -371,7 +374,9 @@ ghost fn pcm_gather u#a (#t: Type u#a) #l
     Map.sel (mk_carrier' a p s m (a.vis l)) (i + a.offset) == Some ((Seq.index s i, a.vis l), p));
   fold pts_to_mask a #p s m;
 }
+#pop-options
 
+#push-options "--z3rlimit 40 --fuel 0 --ifuel 0 --z3version 4.15.3"
 ghost
 fn mask_share_gen u#a (#a: Type u#a) (arr:array a) #s #p (p1: perm) (p2: perm) #mask
   requires pts_to_mask arr #p s mask
@@ -386,6 +391,7 @@ fn mask_share_gen u#a (#a: Type u#a) (arr:array a) #s #p (p1: perm) (p2: perm) #
     arr p1 s mask
     arr p2 s mask;
 }
+#pop-options
 
 ghost
 fn mask_share u#a (#a: Type u#a) (arr:array a) #s #p #mask
@@ -418,6 +424,7 @@ ghost fn mask_gather u#a (#t: Type u#a) (arr: array t) #p1 #p2 #s1 #s2 #mask1 #m
       Some ((Seq.index s1 i, process_of l), p1));
 }
 
+#push-options "--z3rlimit 40 --z3refresh --fuel 1 --ifuel 1 --z3version 4.15.3"
 ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> prop)
   requires pts_to_mask arr #f v mask
   ensures pts_to_mask arr #f v (mask_isect mask pred)
@@ -430,6 +437,7 @@ ghost fn split_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask (pred: nat -> 
     arr f v (mask_isect mask pred)
     arr f v (mask_diff mask pred);
 }
+#pop-options
 
 let mix #t (v1: Seq.seq t) (v2: Seq.seq t { Seq.length v1 == Seq.length v2 }) (mask: nat -> prop) :
     GTot (res: Seq.seq t { Seq.length res == Seq.length v1 /\
@@ -439,6 +447,7 @@ let mix #t (v1: Seq.seq t) (v2: Seq.seq t { Seq.length v1 == Seq.length v2 }) (m
   Seq.init_ghost (Seq.length v1) fun i ->
     if IndefiniteDescription.strong_excluded_middle (mask i) then Seq.index v1 i else Seq.index v2 i
 
+#push-options "--z3rlimit 40 --fuel 0 --ifuel 0 --z3version 4.15.3"
 [@@allow_ambiguous]
 ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
   requires pts_to_mask arr #f v1 mask1
@@ -461,6 +470,7 @@ ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
     arr f v1 mask1
     arr f v2 mask2;
 }
+#pop-options
 
 [@@allow_ambiguous]
 ghost fn join_mask' u#a (#t: Type u#a) (arr: array t) #f #v #mask1 #mask2
