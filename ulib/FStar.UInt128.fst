@@ -1212,10 +1212,12 @@ let sum_shift_carry a b k =
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
+#push-options "--z3rlimit 40"
 let mul_wide_high_ok (x y: U64.t) :
   Lemma ((U64.v x * U64.v y) / pow2 64 == mul_wide_high x y) =
   product_high_expand x y;
   sum_shift_carry (phl x y + pll_h x y) (plh x y) (pow2 32)
+#pop-options
 
 let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   Lemma (x * y / pow2 n < pow2 n) =

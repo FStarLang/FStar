@@ -613,13 +613,10 @@ need_fstar_exe:
 		false; \
 	fi
 
-_doc: _doc_book_code _doc_old_tutorial
+_doc: _doc_book_code
 
 _doc_book_code: need_fstar_exe .force
 	+$(MAKE) -C doc/book/code FSTAR_EXE=$(FSTAR_EXE)
-
-_doc_old_tutorial: need_fstar_exe .force
-	+$(MAKE) -C doc/old/tutorial regressions FSTAR_EXE=$(FSTAR_EXE)
 
 _unit-tests: need_fstar_exe .force
 	+$(MAKE) -C tests all FSTAR_EXE=$(FSTAR_EXE)

@@ -15,7 +15,7 @@
 *)
 module Bug516
 
-open FStar.ST
+open FStar.All
 
 assume new type foo : Type0 // Fails without the annotation
 noeq type bar = | Cons: foo -> bar
