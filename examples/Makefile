@@ -1,5 +1,4 @@
 SUBDIRS += algorithms
-SUBDIRS += crypto
 SUBDIRS += data_structures
 SUBDIRS += dsls
 SUBDIRS += layeredeffects
@@ -8,7 +7,7 @@ SUBDIRS += misc
 SUBDIRS += oplss2021
 SUBDIRS += paradoxes
 SUBDIRS += param
-SUBDIRS += preorders
+
 SUBDIRS += printf
 SUBDIRS += software_foundations
 SUBDIRS += tactics

@@ -15,6 +15,6 @@
 *)
 module Bug541
 
-open FStar.Ref
+open FStar.All
 
 noeq type bla = | Bla: #t:Type -> b:ref t -> bla
