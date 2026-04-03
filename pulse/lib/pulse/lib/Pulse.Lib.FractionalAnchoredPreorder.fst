@@ -523,7 +523,7 @@ let avalue_anchored_update (#v:Type)
 /// A frame-preserving update for anchored values.
 ///   Notice the additional precondition, refining the preorder
 #restart-solver
-#push-options "--z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 2 --split_queries always"
 let update_anchored_hist (#v:Type)
                          (#p:preorder v)
                          (#s:anchor_rel p)

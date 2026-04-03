@@ -32,7 +32,7 @@
 module RBTreeIntrinsic
 
 /// Much of the file verifies with fuel=0, max_ifuel=1
-#set-options "--max_fuel 2 --max_ifuel 2 --z3rlimit 80"
+#set-options "--max_fuel 2 --max_ifuel 2 --z3rlimit 80 --z3refresh --split_queries always"
 
 type color =
 | Red
