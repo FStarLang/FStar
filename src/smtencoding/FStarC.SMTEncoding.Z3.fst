@@ -687,8 +687,20 @@ let z3_job
         try
           Timing.record_ms (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
-          do_refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
-          raise e
+          do_refresh None;
+          // Z3 may have crashed (e.g. an internal assertion violation).
+          // Warn and retry the query once in a fresh Z3 process.
+          let open FStarC.Errors.Msg in
+          let open FStarC.Pprint in
+          Errors.log_issue_doc r Errors.Warning_UnexpectedZ3Output [
+            text "Z3 crashed or returned unexpected output; retrying query in a fresh process." ^/^
+            text "Original error:" ^/^ doc_of_string (BU.print_exn e)
+          ];
+          try
+            Timing.record_ms (fun () -> doZ3Exe log_file r true input label_messages queryid)
+          with e2 ->
+            do_refresh None;
+            raise e2
           )
       (Some (query_logging.get_module_name()))
       "FStarC.SMTEncoding.Z3 (aggregate query time)"
