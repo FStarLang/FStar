@@ -23,9 +23,9 @@ open FStarC.Extraction.ML.UEnv
 val iface : Type0
 
 type extension_sigelt_extractor =
-  uenv -> sigelt -> FStarC.Dyn.dyn -> either (list mlmodule1) string
+  uenv -> sigelt -> FStarC.Dyn.dyn -> ML (either (list mlmodule1) string)
 type extension_sigelt_iface_extractor =
-  uenv -> sigelt -> FStarC.Dyn.dyn -> either (uenv & iface) string
+  uenv -> sigelt -> FStarC.Dyn.dyn -> ML (either (uenv & iface) string)
 
 type extension_extractor = {
    extract_sigelt : extension_sigelt_extractor;
@@ -35,7 +35,7 @@ type extension_extractor = {
 val register_extension_extractor
          (extension_name:string)
          (extractor:extension_extractor)
-  : unit
+  : ML unit
 
-val extract_iface: uenv -> modul -> uenv & iface
-val extract : uenv -> modul -> uenv & option mlmodule
+val extract_iface: uenv -> modul -> ML (uenv & iface)
+val extract : uenv -> modul -> ML (uenv & option mlmodule)

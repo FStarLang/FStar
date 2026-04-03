@@ -1,0 +1,15 @@
+{
+	"fstar_exe": "../../../out/bin/fstar.exe",
+	"options": [
+		"--query_cache",
+		"--ext",
+		"optimize_let_vc",
+		"--ext",
+		"fly_deps"
+	],
+	"include_dirs": [
+		"../../build/lib.common.checked",
+		"../../build/lib.core.checked",
+		"../common"
+	]
+}

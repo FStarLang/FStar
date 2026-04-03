@@ -27,37 +27,49 @@ open FStarC.TypeChecker.Common
 
 type lcomp_with_binder = option bv & lcomp
 
-//error report
-// val report: env -> list string -> unit
-
 //unification variables
-val new_implicit_var : string -> Range.t -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.t) & guard_t
-val check_uvars: Range.t -> typ -> unit
+val new_implicit_var : string -> Range.t -> env -> typ -> unrefine:bool -> ML (term & (ctx_uvar & Range.t) & guard_t)
 
 //caller can set the boolean to true if they want to solve the deferred constraints involving this binder now (best case)
-val close_guard_implicits: env -> bool -> binders -> guard_t -> guard_t
+val close_guard_implicits: env -> bool -> binders -> guard_t -> ML guard_t
+
+val check_uvars: Range.t -> typ -> ML unit
 
 //extracting annotations from a term
-val extract_let_rec_annotation: env -> letbinding -> univ_names & typ & term & bool
+val extract_let_rec_annotation: env -> letbinding -> ML (univ_names & typ & term & bool)
 
 //pattern utilities
-//val decorate_pattern: env -> pat -> term -> pat
-val decorated_pattern_as_term: pat -> list bv & term
-
-//instantiation of implicits
-val maybe_implicit_with_meta_or_attr: bqual -> list attribute -> bool
-
-val instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : term & typ & aqual & guard_t
-val maybe_instantiate : env -> term -> typ -> (term & typ & guard_t)
+val decorated_pattern_as_term: pat -> ML (list bv & term)
 
 //operations on computation types
-(* most operations on computations are lazy *)
-val lcomp_univ_opt: lcomp -> (option universe & guard_t)
-val is_pure_effect: env -> lident -> bool
-val is_pure_or_ghost_effect: env -> lident -> bool
-val should_not_inline_lc: lcomp -> bool
-val bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> lcomp
-val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
+val lcomp_univ_opt: lcomp -> ML (option universe & guard_t)
+
+//misc.
+val label: list Pprint.document -> Range.t -> typ -> ML typ
+val label_guard: Range.t -> list Pprint.document -> guard_t -> ML guard_t
+
+val is_pure_effect: env -> lident -> ML bool
+val is_pure_or_ghost_effect: env -> lident -> ML bool
+
+val close_wp_lcomp: env -> list bv -> lcomp -> ML lcomp
+val close_layered_lcomp_with_combinator: env -> list bv -> lcomp -> ML lcomp
+val close_layered_lcomp_with_substitutions: env -> list bv -> list term -> lcomp -> ML lcomp
+
+val should_not_inline_lc: lcomp -> ML bool
+
+val weaken_precondition: env -> lcomp -> guard_formula -> ML lcomp
+
+val strengthen_precondition: option (unit -> ML (list Pprint.document)) -> env -> term -> lcomp -> guard_t -> ML (lcomp & guard_t)
+
+val bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> lcomp_with_binder -> ML lcomp
+
+val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
+
+val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> ML lcomp
+
+val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option term -> lcomp -> e2:term -> lcomp_with_binder -> ML lcomp
+
+val fvar_env: env -> lident -> ML term
 
 (*
  * When typechecking a match term, typechecking each branch returns
@@ -78,10 +90,29 @@ val maybe_return_e2_and_bind: Range.t -> is_let_binding:bool -> env -> option te
  * (The last element of the list becomes the branch condition for the
      unreachable branch to check for pattern exhaustiveness)
  *)
-val get_neg_branch_conds: list formula -> list formula & formula
+val get_neg_branch_conds: list formula -> ML (list formula & formula)
 
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
-val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> lcomp)) -> bv -> lcomp
+val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> ML lcomp)) -> bv -> ML lcomp
+
+//
+// Setting the boolean flag to true, clients may say if they want to use equality
+//   instead of subtyping
+//
+val check_comp: env -> use_eq:bool -> term -> comp -> comp -> ML (term & comp & guard_t)
+
+val universe_of_comp: env -> universe -> comp -> ML universe
+
+(*
+ * return value: formula for input comp to have trivial wp * guard for that formula
+ *)
+val check_trivial_precondition_wp : env -> comp -> ML (comp_typ & formula & guard_t)
+
+//decorating terms with monadic operators
+val maybe_lift: env -> term -> lident -> lident -> typ -> ML term
+val maybe_monadic: env -> term -> lident -> typ -> ML term
+
+val maybe_coerce_lc : env -> term -> lcomp -> typ -> ML (term & lcomp & guard_t)
 
 (*
  * weaken_result_type env e lc t use_eq
@@ -96,60 +127,39 @@ val bind_cases: env -> typ -> list (typ & lident & list cflag & (bool -> lcomp))
  *               (c) env.use_eq_strict is true, then checking that lc.result_typ = t
  *
  *)
-val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> term & lcomp & guard_t
+val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> ML (term & lcomp & guard_t)
 
-val strengthen_precondition: (option (unit -> list Pprint.document) -> env -> term -> lcomp -> guard_t -> lcomp&guard_t)
-val weaken_guard: guard_formula -> guard_formula -> guard_formula
-val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
-val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
-val close_layered_lcomp_with_combinator: env -> list bv -> lcomp -> lcomp
-val close_wp_lcomp: env -> list bv -> lcomp -> lcomp
-val close_layered_lcomp_with_substitutions: env -> list bv -> list term -> lcomp -> lcomp
-val pure_or_ghost_pre_and_post: env -> comp -> (option typ & typ)
+val pure_or_ghost_pre_and_post: env -> comp -> ML (option typ & typ)
 
-//
-// Setting the boolean flag to true, clients may say if they want to use equality
-//   instead of subtyping
-//
-val check_comp: env -> use_eq:bool -> term -> comp -> comp -> term & comp & guard_t
+val norm_reify: env -> steps -> term -> ML term
+val remove_reify: term -> ML term
 
-val universe_of_comp: env -> universe -> comp -> universe
-(*
- * return value: formula for input comp to have trivial wp * guard for that formula
- *)
-val check_trivial_precondition_wp : env -> comp -> (comp_typ & formula & guard_t)
+//instantiation of implicits
+val maybe_implicit_with_meta_or_attr: bqual -> list attribute -> ML bool
+
+val instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : ML (term & typ & aqual & guard_t)
+val maybe_instantiate : env -> term -> typ -> ML (term & typ & guard_t)
 
 //
 //checking that e:t is convertible to t'
 //
 //set the boolan flag to true if you want to check for type equality
 //
-val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> guard_t
-val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> term & lcomp & guard_t
+val check_has_type : env -> term -> t:typ -> t':typ -> use_eq:bool -> ML guard_t
+val check_has_type_maybe_coerce : env -> term -> lcomp -> typ -> bool -> ML (term & lcomp & guard_t)
 
-val check_top_level: env -> guard_t -> lcomp -> bool&comp
+val check_top_level: env -> guard_t -> lcomp -> ML (bool & comp)
 
-val maybe_coerce_lc : env -> term -> lcomp -> typ -> term & lcomp & guard_t
+val short_circuit: term -> args -> ML guard_formula
+val short_circuit_head: term -> ML bool
 
-//misc.
-val label: list Pprint.document -> Range.t -> typ -> typ
-val label_guard: Range.t -> list Pprint.document -> guard_t -> guard_t
-val short_circuit: term -> args -> guard_formula
-val short_circuit_head: term -> bool
-val maybe_add_implicit_binders: env -> binders -> binders
-val fvar_env: env -> lident -> term
-val norm_reify: env -> steps -> term -> term
-val remove_reify: term -> term
+val maybe_add_implicit_binders: env -> binders -> ML binders
 
-//decorating terms with monadic operators
-val maybe_lift: env -> term -> lident -> lident -> typ -> term
-val maybe_monadic: env -> term -> lident -> typ -> term
-
-val must_erase_for_extraction: env -> term -> bool
+val must_erase_for_extraction: env -> term -> ML bool
 
 //layered effect utilities
 
-val effect_extraction_mode : env -> lident -> eff_extraction_mode
+val effect_extraction_mode : env -> lident -> ML eff_extraction_mode
 
 (*
  * This function returns ed.repr<u> a ?u1 ... ?un (note that u must be the universe of a)
@@ -157,36 +167,35 @@ val effect_extraction_mode : env -> lident -> eff_extraction_mode
  *
  * The unification variables are resolved in the input env
  *)
-val fresh_effect_repr: env -> Range.t -> lident -> signature:tscheme -> repr:option tscheme -> u:universe -> a:term -> term & guard_t
+val fresh_effect_repr: env -> Range.t -> lident -> signature:tscheme -> repr:option tscheme -> u:universe -> a:term -> ML (term & guard_t)
 
 (*
  * A wrapper over fresh_layered_effect_repr that looks up signature and repr from env
  *
  * If the effect does not have a repr (e.g. primitive effects), then we return a `unit -> M a ?u` term
  *)
-val fresh_effect_repr_en: env -> Range.t -> lident -> universe -> term -> term & guard_t
+val fresh_effect_repr_en: env -> Range.t -> lident -> universe -> term -> ML (term & guard_t)
 
 (*
  * Return binders for the layered effect indices with signature
  * In the binder types, a is substituted with a_tm (u is universe of a)
  *)
-val layered_effect_indices_as_binders:env -> Range.t -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> binders
+val layered_effect_indices_as_binders:env -> Range.t -> eff_name:lident -> signature:tscheme -> u:universe -> a_tm:term -> ML binders
 
-val get_field_projector_name : env -> datacon:lident -> index:int -> lident
-
+val get_field_projector_name : env -> datacon:lident -> index:int -> ML lident
 
 (* update the env functions *)
-val update_env_sub_eff : env -> sub_eff -> Range.t -> env
+val update_env_sub_eff : env -> sub_eff -> Range.t -> ML env
 val update_env_polymonadic_bind :
-  env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> env
+  env -> lident -> lident -> lident -> tscheme -> indexed_effect_combinator_kind -> ML env
 
-val try_lookup_record_type : env -> lident -> option DsEnv.record_or_dc
-val head_fv_of_typ (_:env) (t:typ) : option fv
-val find_record_or_dc_from_head_fv : env -> option fv -> unresolved_constructor -> Range.t -> DsEnv.record_or_dc & lident & fv
-val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> bool
+val try_lookup_record_type : env -> lident -> ML (option DsEnv.record_or_dc)
+val head_fv_of_typ (_:env) (t:typ) : ML (option fv)
+val find_record_or_dc_from_head_fv : env -> option fv -> unresolved_constructor -> Range.t -> ML (DsEnv.record_or_dc & lident & fv)
+val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> ML bool
 val make_record_fields_in_order : env -> unresolved_constructor -> option (either typ typ) ->
                                 DsEnv.record_or_dc ->
                                 list (lident & 'a) ->
-                                not_found:(ident -> option 'a) ->
+                                not_found:(ident -> ML (option 'a)) ->
                                 Range.t ->
-                                list 'a
+                                ML (list 'a)

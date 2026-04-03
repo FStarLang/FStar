@@ -16,30 +16,25 @@
 
 module HoareST
 
-open FStar.Heap
-open FStar.ST
+/// Hoare-style ST effect as a layered effect, using SimpleHeap.
+///
+/// This is a simplified version without preorders or witness/recall.
+/// Read operations require a `contains` precondition.
 
-module P = FStar.Preorder
-
-/// ST effect implemented as a layered effect over STATE
+open SimpleHeap
+open ExampleST
 
 #set-options "--fuel 0 --ifuel 0"
 
 type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0
 
-/// It has two indices: one for the precondition and one for the postcondition
-///
-/// Its encoding in STATE is as expected
-
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
-  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
+  unit -> ExST a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 
 let return (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
-= fun _ -> x
-
-/// bind bakes in the weakening of f's post to compose it with g's pre
+= fun () -> x
 
 let bind (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
@@ -50,8 +45,6 @@ let bind (a:Type) (b:Type)
 = fun _ ->
   let x = f () in
   g x ()
-
-/// sub comp rule
 
 let subcomp (a:Type)
   (pre_f:pre_t) (post_f:post_t a)
@@ -75,7 +68,6 @@ let if_then_else (a:Type)
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
   (fun h0 r h1 -> (p ==> post_f h0 r h1) /\ ((~ p) ==> post_g h0 r h1))
 
-[@@ top_level_effect "HoareST.HoareSTT"; primitive_extraction]
 reflectable
 effect {
   HoareST (a:Type) (pre:pre_t) (post:post_t a)
@@ -83,47 +75,43 @@ effect {
 }
 
 
-/// Effect actions from FStar.ST
+/// Effect actions
 
-let recall (#a:Type) (#rel:P.preorder a) (r:mref a rel)
-: HoareST unit
-  (fun _ -> True)
-  (fun h0 _ h1 ->
-    h0 == h1 /\
-    h1 `Heap.contains` r)
-= HoareST?.reflect (fun _ -> recall r)
-
-let alloc (#a:Type) (#rel:P.preorder a) (init:a)
-: HoareST (mref a rel)
+let alloc (#a:Type0) (init:a)
+: HoareST (ref a)
   (fun _ -> True)
   (fun h0 r h1 ->
     fresh r h0 h1 /\
-    modifies Set.empty h0 h1 /\
-    sel h1 r == init)
-= HoareST?.reflect (fun _ -> alloc init)
+    h1 `contains` r /\
+    sel h1 r == init /\
+    (forall (b:Type0) (r':ref b). h0 `contains` r' ==> h1 `contains` r' /\ sel h1 r' == sel h0 r'))
+= HoareST?.reflect (fun _ -> st_alloc init)
 
-let op_Bang (#a:Type) (#rel:P.preorder a) (r:mref a rel)
+let op_Bang (#a:Type0) (r:ref a)
 : HoareST a
-  (fun _ -> True)
+  (fun h -> h `contains` r)
   (fun h0 x h1 ->
+    h0 `contains` r /\
     h0 == h1 /\
-    x == sel h1 r)
-= HoareST?.reflect (fun _ -> read r)
+    x == sel h0 r)
+= HoareST?.reflect (fun _ -> st_read r)
 
-let op_Colon_Equals (#a:Type) (#rel:P.preorder a) (r:mref a rel) (x:a)
+let op_Colon_Equals (#a:Type0) (r:ref a) (x:a)
 : HoareST unit
-  (fun h -> rel (sel h r) x)
+  (fun h -> h `contains` r)
   (fun h0 _ h1 ->
-    modifies (Set.singleton (addr_of r)) h0 h1 /\
+    h0 `contains` r /\
+    modifies (only r) h0 h1 /\
     equal_dom h0 h1 /\
+    h1 `contains` r /\
     sel h1 r == x)
-= HoareST?.reflect (fun _ -> write r x)
+= HoareST?.reflect (fun _ -> st_write r x)
 
-let get ()
+let get_heap ()
 : HoareST heap
   (fun _ -> True)
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
-= HoareST?.reflect get
+= HoareST?.reflect (fun _ -> get ())
 
 /// lift from PURE
 
@@ -137,28 +125,28 @@ let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
 sub_effect PURE ~> HoareST = lift_pure_hoarest
 
 
-/// Implementing the array library using the layered effect
-
+/// Array library
 
 module Seq = FStar.Seq
-
 
 type array (a:Type0) = ref (Seq.seq a)
 
 let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
 : HoareST (array a)
-  (fun _ -> True)
+  (fun h -> h `contains` s1 /\ h `contains` s2)
   (fun h0 r h1 ->
-    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
-    modifies Set.empty h0 h1)
-= let s1 = !s1 in
-  let s2 = !s2 in
-  alloc (Seq.append s1 s2)
+    h0 `contains` s1 /\ h0 `contains` s2 /\
+    h1 `contains` r /\
+    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2))
+= let v1 = !s1 in
+  let v2 = !s2 in
+  alloc (Seq.append v1 v2)
 
 let index (#a:Type0) (x:array a) (i:nat)
 : HoareST a
-  (fun h -> i < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ i < Seq.length (sel h x))
   (fun h0 v h1 ->
+    h0 `contains` x /\
     i < Seq.length (sel h0 x) /\
     h0 == h1 /\
     v == Seq.index (sel h0 x) i)
@@ -167,10 +155,12 @@ let index (#a:Type0) (x:array a) (i:nat)
 
 let upd (#a:Type0) (x:array a) (i:nat) (v:a)
 : HoareST unit
-  (fun h -> i < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ i < Seq.length (sel h x))
   (fun h0 _ h1 ->
+    h0 `contains` x /\
     i < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    modifies (only x) h0 h1 /\
+    h1 `contains` x /\
     sel h1 x == Seq.upd (sel h0 x) i v)
 = let s = !x in
   let s = Seq.upd s i v in
@@ -178,58 +168,28 @@ let upd (#a:Type0) (x:array a) (i:nat) (v:a)
 
 let length (#a:Type0) (x:array a)
 : HoareST nat
-  (fun _ -> True)
-  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+  (fun h -> h `contains` x)
+  (fun h0 y h1 ->
+    h0 `contains` x /\
+    y == Seq.length (sel h0 x) /\ h0 == h1)
 = let s = !x in
   Seq.length s
 
 let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
 : HoareST unit
-  (fun h -> j < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ j < Seq.length (sel h x))
   (fun h0 _ h1 ->
+    h0 `contains` x /\
     j < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    modifies (only x) h0 h1 /\
+    h1 `contains` x /\
     sel h1 x == Seq.swap (sel h0 x) i j)
 = let v_i = index x i in
   let v_j = index x j in
   upd x j v_i;
   upd x i v_j
 
-let rec copy_aux
-  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
-: HoareST unit
-  (fun h ->
-    addr_of s =!= addr_of cpy /\
-    Seq.length (sel h cpy) == Seq.length (sel h s) /\
-    ctr <= Seq.length (sel h cpy) /\
-    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
-  (fun h0 _ h1 ->
-    modifies (only cpy) h0 h1 /\
-    Seq.equal (sel h1 cpy) (sel h1 s))
-= recall s; recall cpy;
-  let len = length cpy in
-  match len - ctr with
-  | 0 -> ()
-  | _ ->
-    upd cpy ctr (index s ctr);
-    copy_aux s cpy (ctr + 1)
-
-let copy (#a:Type0) (s:array a)
-: HoareST (array a)
-  (fun h -> Seq.length (sel h s) > 0)
-  (fun h0 r h1 ->
-    modifies Set.empty h0 h1 /\
-    r `unused_in` h0 /\
-    contains h1 r /\
-    sel h1 r == sel h0 s)
-= recall s;
-  let cpy = alloc (Seq.create (length s) (index s 0)) in
-  copy_aux s cpy 0;
-  cpy
-
-//
-// Top-level effect
-//
+/// Top-level effect
 
 effect HoareSTT (a:Type) (post:post_t a) = HoareST a (fun _ -> True) post
 

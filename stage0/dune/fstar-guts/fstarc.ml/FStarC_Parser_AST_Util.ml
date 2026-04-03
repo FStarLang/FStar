@@ -2,8 +2,8 @@ open Prims
 let concat_map (uu___ : unit) :
   ('uuuuu -> 'uuuuu1 Prims.list) -> 'uuuuu Prims.list -> 'uuuuu1 Prims.list=
   FStarC_List.collect
-let opt_map (f : 'a -> 'uuuuu Prims.list)
-  (x : 'a FStar_Pervasives_Native.option) : 'uuuuu Prims.list=
+let opt_map (f : 'a -> 'b Prims.list) (x : 'a FStar_Pervasives_Native.option)
+  : 'b Prims.list=
   match x with
   | FStar_Pervasives_Native.None -> []
   | FStar_Pervasives_Native.Some x1 -> f x1
@@ -14,28 +14,28 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
   match t with
   | FStarC_Parser_AST.Wild -> []
   | FStarC_Parser_AST.Const uu___ -> []
-  | FStarC_Parser_AST.Op (s, ts) -> concat_map () lidents_of_term ts
+  | FStarC_Parser_AST.Op (s, ts) -> (concat_map ()) lidents_of_term ts
   | FStarC_Parser_AST.Uvar uu___ -> []
   | FStarC_Parser_AST.Var lid -> [lid]
   | FStarC_Parser_AST.Name lid -> [lid]
   | FStarC_Parser_AST.Projector (lid, uu___) -> [lid]
   | FStarC_Parser_AST.Construct (lid, ts) ->
       let uu___ =
-        concat_map ()
+        (concat_map ())
           (fun uu___1 ->
              match uu___1 with | (t1, uu___2) -> lidents_of_term t1) ts in
       lid :: uu___
   | FStarC_Parser_AST.Function (brs, uu___) ->
-      concat_map () lidents_of_branch brs
+      (concat_map ()) lidents_of_branch brs
   | FStarC_Parser_AST.Abs (ps, t1) ->
-      let uu___ = concat_map () lidents_of_pattern ps in
+      let uu___ = (concat_map ()) lidents_of_pattern ps in
       let uu___1 = lidents_of_term t1 in FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.App (t1, t2, uu___) ->
       let uu___1 = lidents_of_term t1 in
       let uu___2 = lidents_of_term t2 in FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.Let (uu___, lbs, t1) ->
       let uu___1 =
-        concat_map ()
+        (concat_map ())
           (fun uu___2 ->
              match uu___2 with
              | (uu___3, (p, t2)) ->
@@ -45,7 +45,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
       let uu___2 = lidents_of_term t1 in FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.LetOperator (lbs, t1) ->
       let uu___ =
-        concat_map ()
+        (concat_map ())
           (fun uu___1 ->
              match uu___1 with
              | (uu___2, p, t2) ->
@@ -75,29 +75,29 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
       FStarC_List.op_At uu___2 uu___3
   | FStarC_Parser_AST.Match (t1, uu___, uu___1, bs) ->
       let uu___2 = lidents_of_term t1 in
-      let uu___3 = concat_map () lidents_of_branch bs in
+      let uu___3 = (concat_map ()) lidents_of_branch bs in
       FStarC_List.op_At uu___2 uu___3
   | FStarC_Parser_AST.TryWith (t1, bs) ->
       let uu___ = lidents_of_term t1 in
-      let uu___1 = concat_map () lidents_of_branch bs in
+      let uu___1 = (concat_map ()) lidents_of_branch bs in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.Ascribed (t1, t2, uu___, uu___1) ->
       let uu___2 = lidents_of_term t1 in
       let uu___3 = lidents_of_term t2 in FStarC_List.op_At uu___2 uu___3
   | FStarC_Parser_AST.Record (t1, ts) ->
       let uu___ =
-        concat_map ()
+        (concat_map ())
           (fun uu___1 ->
              match uu___1 with | (uu___2, t2) -> lidents_of_term t2) ts in
       let uu___1 = opt_map lidents_of_term t1 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.Project (t1, uu___) -> lidents_of_term t1
   | FStarC_Parser_AST.Product (ts, t1) ->
-      let uu___ = concat_map () lidents_of_binder ts in
+      let uu___ = (concat_map ()) lidents_of_binder ts in
       let uu___1 = lidents_of_term t1 in FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.Sum (ts, t1) ->
       let uu___ =
-        concat_map ()
+        (concat_map ())
           (fun uu___1 ->
              match uu___1 with
              | FStar_Pervasives.Inl b -> lidents_of_binder b
@@ -111,14 +111,14 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
   | FStarC_Parser_AST.Paren t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Requires t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Ensures t1 -> lidents_of_term t1
-  | FStarC_Parser_AST.LexList ts -> concat_map () lidents_of_term ts
+  | FStarC_Parser_AST.LexList ts -> (concat_map ()) lidents_of_term ts
   | FStarC_Parser_AST.WFOrder (t1, t2) ->
       let uu___ = lidents_of_term t1 in
       let uu___1 = lidents_of_term t2 in FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.Decreases t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Labeled (t1, uu___, uu___1) -> lidents_of_term t1
   | FStarC_Parser_AST.Discrim lid -> [lid]
-  | FStarC_Parser_AST.Attributes ts -> concat_map () lidents_of_term ts
+  | FStarC_Parser_AST.Attributes ts -> (concat_map ()) lidents_of_term ts
   | FStarC_Parser_AST.Antiquote t1 -> lidents_of_term t1
   | FStarC_Parser_AST.Quote (t1, uu___) -> lidents_of_term t1
   | FStarC_Parser_AST.VQuote t1 -> lidents_of_term t1
@@ -126,7 +126,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
       let uu___ = lidents_of_term t1 in
       let uu___1 =
         let uu___2 = lidents_of_term t2 in
-        let uu___3 = concat_map () lidents_of_calc_step ts in
+        let uu___3 = (concat_map ()) lidents_of_calc_step ts in
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.IntroForall (bs, t1, t2) ->
@@ -135,7 +135,7 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
   | FStarC_Parser_AST.IntroExists (bs, t1, ts, t2) ->
       let uu___ = lidents_of_term t1 in
       let uu___1 =
-        let uu___2 = concat_map () lidents_of_term ts in
+        let uu___2 = (concat_map ()) lidents_of_term ts in
         let uu___3 = lidents_of_term t2 in FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.IntroImplies (t1, t2, b, t3) ->
@@ -160,14 +160,14 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.ElimForall (bs, t1, ts) ->
-      let uu___ = concat_map () lidents_of_binder bs in
+      let uu___ = (concat_map ()) lidents_of_binder bs in
       let uu___1 =
         let uu___2 = lidents_of_term t1 in
-        let uu___3 = concat_map () lidents_of_term ts in
+        let uu___3 = (concat_map ()) lidents_of_term ts in
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.ElimExists (bs, t1, t2, b, t3) ->
-      let uu___ = concat_map () lidents_of_binder bs in
+      let uu___ = (concat_map ()) lidents_of_binder bs in
       let uu___1 =
         let uu___2 = lidents_of_term t1 in
         let uu___3 =
@@ -203,26 +203,27 @@ and lidents_of_term' (t : FStarC_Parser_AST.term') :
           let uu___5 = lidents_of_term t4 in FStarC_List.op_At uu___4 uu___5 in
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.ListLiteral ts -> concat_map () lidents_of_term ts
-  | FStarC_Parser_AST.SeqLiteral ts -> concat_map () lidents_of_term ts
+  | FStarC_Parser_AST.ListLiteral ts -> (concat_map ()) lidents_of_term ts
+  | FStarC_Parser_AST.SeqLiteral ts -> (concat_map ()) lidents_of_term ts
 and lidents_of_branch
-  (uu___ :
+  (b :
     (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term
       FStar_Pervasives_Native.option * FStarC_Parser_AST.term))
   : FStarC_Ident.lident Prims.list=
+  let uu___ = b in
   match uu___ with
   | (p, uu___1, t) ->
       let uu___2 = lidents_of_pattern p in
       let uu___3 = lidents_of_term t in FStarC_List.op_At uu___2 uu___3
-and lidents_of_calc_step (uu___ : FStarC_Parser_AST.calc_step) :
+and lidents_of_calc_step (x : FStarC_Parser_AST.calc_step) :
   FStarC_Ident.lident Prims.list=
-  match uu___ with
+  match x with
   | FStarC_Parser_AST.CalcStep (t1, t2, t3) ->
-      let uu___1 = lidents_of_term t1 in
-      let uu___2 =
-        let uu___3 = lidents_of_term t2 in
-        let uu___4 = lidents_of_term t3 in FStarC_List.op_At uu___3 uu___4 in
-      FStarC_List.op_At uu___1 uu___2
+      let uu___ = lidents_of_term t1 in
+      let uu___1 =
+        let uu___2 = lidents_of_term t2 in
+        let uu___3 = lidents_of_term t3 in FStarC_List.op_At uu___2 uu___3 in
+      FStarC_List.op_At uu___ uu___1
 and lidents_of_pattern (p : FStarC_Parser_AST.pattern) :
   FStarC_Ident.lident Prims.list=
   match p.FStarC_Parser_AST.pat with
@@ -230,16 +231,16 @@ and lidents_of_pattern (p : FStarC_Parser_AST.pattern) :
   | FStarC_Parser_AST.PatConst uu___ -> []
   | FStarC_Parser_AST.PatApp (p1, ps) ->
       let uu___ = lidents_of_pattern p1 in
-      let uu___1 = concat_map () lidents_of_pattern ps in
+      let uu___1 = (concat_map ()) lidents_of_pattern ps in
       FStarC_List.op_At uu___ uu___1
   | FStarC_Parser_AST.PatVar (i, uu___, uu___1) ->
       let uu___2 = FStarC_Ident.lid_of_ids [i] in [uu___2]
   | FStarC_Parser_AST.PatName lid -> [lid]
-  | FStarC_Parser_AST.PatList ps -> concat_map () lidents_of_pattern ps
+  | FStarC_Parser_AST.PatList ps -> (concat_map ()) lidents_of_pattern ps
   | FStarC_Parser_AST.PatTuple (ps, uu___) ->
-      concat_map () lidents_of_pattern ps
+      (concat_map ()) lidents_of_pattern ps
   | FStarC_Parser_AST.PatRecord ps ->
-      concat_map ()
+      (concat_map ())
         (fun uu___ ->
            match uu___ with | (uu___1, p1) -> lidents_of_pattern p1) ps
   | FStarC_Parser_AST.PatAscribed (p1, (t1, t2)) ->
@@ -249,7 +250,7 @@ and lidents_of_pattern (p : FStarC_Parser_AST.pattern) :
         let uu___3 = opt_map lidents_of_term t2 in
         FStarC_List.op_At uu___2 uu___3 in
       FStarC_List.op_At uu___ uu___1
-  | FStarC_Parser_AST.PatOr ps -> concat_map () lidents_of_pattern ps
+  | FStarC_Parser_AST.PatOr ps -> (concat_map ()) lidents_of_pattern ps
   | FStarC_Parser_AST.PatOp uu___ -> []
   | FStarC_Parser_AST.PatVQuote t -> lidents_of_term t
   | FStarC_Parser_AST.PatRest -> []
@@ -260,8 +261,9 @@ and lidents_of_binder (b : FStarC_Parser_AST.binder) :
   | FStarC_Parser_AST.NoName t -> lidents_of_term t
   | uu___ -> []
 let lidents_of_tycon_record
-  (uu___ : ('uuuuu * 'uuuuu1 * 'uuuuu2 * FStarC_Parser_AST.term)) :
+  (r : ('uuuuu * 'uuuuu1 * 'uuuuu2 * FStarC_Parser_AST.term)) :
   FStarC_Ident.lident Prims.list=
+  let uu___ = r in
   match uu___ with | (uu___1, uu___2, uu___3, t) -> lidents_of_term t
 let lidents_of_constructor_payload
   (t : FStarC_Parser_AST.constructor_payload) :
@@ -270,9 +272,9 @@ let lidents_of_constructor_payload
   | FStarC_Parser_AST.VpOfNotation t1 -> lidents_of_term t1
   | FStarC_Parser_AST.VpArbitrary t1 -> lidents_of_term t1
   | FStarC_Parser_AST.VpRecord (tc, FStar_Pervasives_Native.None) ->
-      concat_map () lidents_of_tycon_record tc
+      (concat_map ()) lidents_of_tycon_record tc
   | FStarC_Parser_AST.VpRecord (tc, FStar_Pervasives_Native.Some t1) ->
-      let uu___ = concat_map () lidents_of_tycon_record tc in
+      let uu___ = (concat_map ()) lidents_of_tycon_record tc in
       let uu___1 = lidents_of_term t1 in FStarC_List.op_At uu___ uu___1
 let lidents_of_tycon_variant
   (tc :
@@ -287,27 +289,27 @@ let lidents_of_tycon (tc : FStarC_Parser_AST.tycon) :
   FStarC_Ident.lident Prims.list=
   match tc with
   | FStarC_Parser_AST.TyconAbstract (uu___, bs, k) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
+      let uu___1 = (concat_map ()) lidents_of_binder bs in
       let uu___2 = opt_map lidents_of_term k in
       FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.TyconAbbrev (uu___, bs, k, t) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
+      let uu___1 = (concat_map ()) lidents_of_binder bs in
       let uu___2 =
         let uu___3 = opt_map lidents_of_term k in
         let uu___4 = lidents_of_term t in FStarC_List.op_At uu___3 uu___4 in
       FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.TyconRecord (uu___, bs, k, uu___1, tcs) ->
-      let uu___2 = concat_map () lidents_of_binder bs in
+      let uu___2 = (concat_map ()) lidents_of_binder bs in
       let uu___3 =
         let uu___4 = opt_map lidents_of_term k in
-        let uu___5 = concat_map () lidents_of_tycon_record tcs in
+        let uu___5 = (concat_map ()) lidents_of_tycon_record tcs in
         FStarC_List.op_At uu___4 uu___5 in
       FStarC_List.op_At uu___2 uu___3
   | FStarC_Parser_AST.TyconVariant (uu___, bs, k, tcs) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
+      let uu___1 = (concat_map ()) lidents_of_binder bs in
       let uu___2 =
         let uu___3 = opt_map lidents_of_term k in
-        let uu___4 = concat_map () lidents_of_tycon_variant tcs in
+        let uu___4 = (concat_map ()) lidents_of_tycon_variant tcs in
         FStarC_List.op_At uu___3 uu___4 in
       FStarC_List.op_At uu___1 uu___2
 let lidents_of_lift (l : FStarC_Parser_AST.lift) :
@@ -330,7 +332,7 @@ let rec lidents_of_decl (d : FStarC_Parser_AST.decl) :
   | FStarC_Parser_AST.Include (l, uu___) -> [l]
   | FStarC_Parser_AST.ModuleAbbrev (uu___, l) -> [l]
   | FStarC_Parser_AST.TopLevelLet (_q, lbs) ->
-      concat_map ()
+      (concat_map ())
         (fun uu___ ->
            match uu___ with
            | (p, t) ->
@@ -338,7 +340,7 @@ let rec lidents_of_decl (d : FStarC_Parser_AST.decl) :
                let uu___2 = lidents_of_term t in
                FStarC_List.op_At uu___1 uu___2) lbs
   | FStarC_Parser_AST.Tycon (uu___, uu___1, tcs) ->
-      concat_map () lidents_of_tycon tcs
+      (concat_map ()) lidents_of_tycon tcs
   | FStarC_Parser_AST.Val (uu___, t) -> lidents_of_term t
   | FStarC_Parser_AST.Exception (uu___, FStar_Pervasives_Native.None) -> []
   | FStarC_Parser_AST.Exception (uu___, FStar_Pervasives_Native.Some t) ->
@@ -363,14 +365,14 @@ and lidents_of_effect_decl (ed : FStarC_Parser_AST.effect_decl) :
   FStarC_Ident.lident Prims.list=
   match ed with
   | FStarC_Parser_AST.DefineEffect (uu___, bs, t, ds) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
+      let uu___1 = (concat_map ()) lidents_of_binder bs in
       let uu___2 =
         let uu___3 = lidents_of_term t in
-        let uu___4 = concat_map () lidents_of_decl ds in
+        let uu___4 = (concat_map ()) lidents_of_decl ds in
         FStarC_List.op_At uu___3 uu___4 in
       FStarC_List.op_At uu___1 uu___2
   | FStarC_Parser_AST.RedefineEffect (uu___, bs, t) ->
-      let uu___1 = concat_map () lidents_of_binder bs in
+      let uu___1 = (concat_map ()) lidents_of_binder bs in
       let uu___2 = lidents_of_term t in FStarC_List.op_At uu___1 uu___2
 type open_namespaces_and_abbreviations =
   {
@@ -429,12 +431,12 @@ let register_extension_parser (ext : Prims.string)
 let lookup_extension_parser (ext : Prims.string) :
   extension_parser FStar_Pervasives_Native.option=
   let do1 uu___ = FStarC_SMap.try_find extension_parser_table ext in
-  let uu___ = do1 () in
-  match uu___ with
+  let r = do1 () in
+  match r with
   | FStar_Pervasives_Native.None ->
-      let uu___1 = FStarC_Plugins.autoload_plugin ext in
-      if uu___1 then do1 () else FStar_Pervasives_Native.None
-  | r -> r
+      let uu___ = FStarC_Plugins.autoload_plugin ext in
+      if uu___ then do1 () else FStar_Pervasives_Native.None
+  | r1 -> r1
 type extension_lang_parser =
   {
   parse_decls:
@@ -487,12 +489,11 @@ let parse_extension_lang (lang_name : Prims.string) (raw_text : Prims.string)
   let extension_parser1 = lookup_extension_lang_parser lang_name in
   match extension_parser1 with
   | FStar_Pervasives_Native.None ->
-      let uu___ =
-        FStarC_Format.fmt1 "Unknown language extension %s" lang_name in
       FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
         raw_text_pos FStarC_Errors_Codes.Fatal_SyntaxError ()
         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-        (Obj.magic uu___)
+        (Obj.magic
+           (FStarC_Format.fmt1 "Unknown language extension %s" lang_name))
   | FStar_Pervasives_Native.Some parser ->
       let uu___ = parser.parse_decls raw_text raw_text_pos in
       (match uu___ with

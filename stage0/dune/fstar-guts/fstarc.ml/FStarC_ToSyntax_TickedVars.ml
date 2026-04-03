@@ -1,12 +1,13 @@
 open Prims
 let ident_is_ticked (id : FStarC_Ident.ident) : Prims.bool=
   let nm = FStarC_Ident.string_of_id id in
-  ((FStarC_String.length nm) > Prims.int_zero) &&
-    (let uu___ = FStarC_String.get nm Prims.int_zero in uu___ = 39)
+  if (FStarC_String.length nm) > Prims.int_zero
+  then let uu___ = FStarC_String.get nm Prims.int_zero in uu___ = 39
+  else false
 let lident_is_ticked (id : FStarC_Ident.lident) : Prims.bool=
   let ns = FStarC_Ident.ns_of_lid id in
   let id1 = FStarC_Ident.ident_of_lid id in
-  (Prims.uu___is_Nil ns) && (ident_is_ticked id1)
+  if Prims.uu___is_Nil ns then ident_is_ticked id1 else false
 let uu___0 : FStarC_Ident.ident FStarC_RBSet.t FStarC_Class_Monoid.monoid=
   let uu___ =
     Obj.magic
@@ -17,10 +18,10 @@ let uu___0 : FStarC_Ident.ident FStarC_RBSet.t FStarC_Class_Monoid.monoid=
     FStarC_Class_Monoid.mzero = uu___;
     FStarC_Class_Monoid.mplus =
       (fun uu___2 uu___1 ->
-         Obj.magic
-           (FStarC_Class_Setlike.union ()
-              (Obj.magic
-                 (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident)))
+         (Obj.magic
+            (FStarC_Class_Setlike.union ()
+               (Obj.magic
+                  (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_ident))))
            uu___2 uu___1)
   }
 type 'a m =
@@ -37,16 +38,19 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
   match t.FStarC_Parser_AST.tm with
   | FStarC_Parser_AST.Paren t1 -> go_term env t1
   | FStarC_Parser_AST.Labeled uu___ ->
-      failwith "Impossible --- labeled source term"
+      FStarC_Effect.failwith "Impossible --- labeled source term"
   | FStarC_Parser_AST.Var a ->
       let uu___ =
-        (lident_is_ticked a) &&
-          (let uu___1 =
-             let uu___2 = FStarC_Ident.ident_of_lid a in
-             FStarC_Syntax_DsEnv.try_lookup_id env uu___2 in
-           FStar_Pervasives_Native.uu___is_None uu___1) in
+        let uu___1 = lident_is_ticked a in
+        if uu___1
+        then
+          let uu___2 =
+            FStarC_Syntax_DsEnv.try_lookup_id env
+              (FStarC_Ident.ident_of_lid a) in
+          FStar_Pervasives_Native.uu___is_None uu___2
+        else false in
       if uu___
-      then let uu___1 = FStarC_Ident.ident_of_lid a in emit1 uu___1
+      then emit1 (FStarC_Ident.ident_of_lid a)
       else
         FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
           (Obj.repr ())
@@ -77,7 +81,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
   | FStarC_Parser_AST.NamedTyp (uu___, t1) -> go_term env t1
   | FStarC_Parser_AST.LexList l ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic l)
+        (fun uu___ -> (Obj.magic (go_term env)) uu___) (Obj.magic l)
   | FStarC_Parser_AST.WFOrder (rel, e) ->
       let uu___ = go_term env rel in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
@@ -86,7 +90,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
            (fun uu___1 ->
               let uu___1 = Obj.magic uu___1 in Obj.magic (go_term env e))
              uu___1)
-  | FStarC_Parser_AST.Paren t1 -> failwith "impossible"
+  | FStarC_Parser_AST.Paren t1 -> FStarC_Effect.failwith "impossible"
   | FStarC_Parser_AST.Ascribed (t1, t', tacopt, uu___) ->
       let uu___1 = go_term env t1 in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
@@ -118,7 +122,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
              uu___1) (Obj.magic ts)
   | FStarC_Parser_AST.Op (uu___, ts) ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___1 -> Obj.magic (go_term env) uu___1) (Obj.magic ts)
+        (fun uu___1 -> (Obj.magic (go_term env)) uu___1) (Obj.magic ts)
   | FStarC_Parser_AST.App (t1, t2, uu___) ->
       let uu___1 = go_term env t1 in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
@@ -174,7 +178,7 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
       let uu___ =
         Obj.magic
           (FStarC_Class_Monad.foldM_left (FStarC_Writer.monad_writer uu___0)
-             () () (fun uu___2 uu___1 -> Obj.magic go_binder uu___2 uu___1)
+             () () (fun uu___2 uu___1 -> (Obj.magic go_binder) uu___2 uu___1)
              (Obj.magic env) (Obj.magic binders)) in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
         () (Obj.magic uu___)
@@ -185,7 +189,8 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
   | FStarC_Parser_AST.Project (t1, uu___) -> go_term env t1
   | FStarC_Parser_AST.Attributes cattributes ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic cattributes)
+        (fun uu___ -> (Obj.magic (go_term env)) uu___)
+        (Obj.magic cattributes)
   | FStarC_Parser_AST.CalcProof (rel, init, steps) ->
       let uu___ = go_term env rel in
       FStarC_Class_Monad.op_let_Bang (FStarC_Writer.monad_writer uu___0) ()
@@ -253,7 +258,8 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
                          Obj.magic
                            (FStarC_Class_Monad.iterM
                               (FStarC_Writer.monad_writer uu___0) ()
-                              (fun uu___3 -> Obj.magic (go_term env') uu___3)
+                              (fun uu___3 ->
+                                 (Obj.magic (go_term env')) uu___3)
                               (Obj.magic ts))) uu___2))) uu___1)
   | FStarC_Parser_AST.ElimExists (binders, p, q, y, e) ->
       let uu___ = go_term env q in
@@ -401,10 +407,10 @@ let rec go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term)
              uu___1)
   | FStarC_Parser_AST.ListLiteral ts ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic ts)
+        (fun uu___ -> (Obj.magic (go_term env)) uu___) (Obj.magic ts)
   | FStarC_Parser_AST.SeqLiteral ts ->
       FStarC_Class_Monad.iterM (FStarC_Writer.monad_writer uu___0) ()
-        (fun uu___ -> Obj.magic (go_term env) uu___) (Obj.magic ts)
+        (fun uu___ -> (Obj.magic (go_term env)) uu___) (Obj.magic ts)
   | FStarC_Parser_AST.Abs uu___ ->
       FStarC_Class_Monad.return (FStarC_Writer.monad_writer uu___0) ()
         (Obj.repr ())
@@ -460,9 +466,12 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
      | FStarC_Parser_AST.Variable x ->
          let uu___ =
            let uu___1 =
-             (ident_is_ticked x) &&
-               (let uu___2 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-                FStar_Pervasives_Native.uu___is_None uu___2) in
+             let uu___2 = ident_is_ticked x in
+             if uu___2
+             then
+               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
+               FStar_Pervasives_Native.uu___is_None uu___3
+             else false in
            if uu___1
            then emit1 x
            else
@@ -484,9 +493,12 @@ and go_binder (uu___1 : FStarC_Syntax_DsEnv.env)
      | FStarC_Parser_AST.Annotated (x, t) ->
          let uu___ =
            let uu___1 =
-             (ident_is_ticked x) &&
-               (let uu___2 = FStarC_Syntax_DsEnv.try_lookup_id env x in
-                FStar_Pervasives_Native.uu___is_None uu___2) in
+             let uu___2 = ident_is_ticked x in
+             if uu___2
+             then
+               let uu___3 = FStarC_Syntax_DsEnv.try_lookup_id env x in
+               FStar_Pervasives_Native.uu___is_None uu___3
+             else false in
            if uu___1
            then emit1 x
            else
@@ -530,13 +542,12 @@ and go_binders (uu___1 : FStarC_Syntax_DsEnv.env)
   (fun env bs ->
      Obj.magic
        (FStarC_Class_Monad.foldM_left (FStarC_Writer.monad_writer uu___0) ()
-          () (fun uu___1 uu___ -> Obj.magic go_binder uu___1 uu___)
+          () (fun uu___1 uu___ -> (Obj.magic go_binder) uu___1 uu___)
           (Obj.magic env) (Obj.magic bs))) uu___1 uu___
 let free_ticked_vars (env : FStarC_Syntax_DsEnv.env)
   (t : FStarC_Parser_AST.term) : FStarC_Ident.ident Prims.list=
-  let uu___ =
-    let uu___1 = go_term env t in
-    Obj.magic (FStarC_Writer.run_writer uu___0 () (Obj.magic uu___1)) in
+  let w = go_term env t in
+  let uu___ = Obj.magic (FStarC_Writer.run_writer uu___0 () (Obj.magic w)) in
   match uu___ with
   | (fvs, ()) ->
       FStarC_Class_Setlike.elems ()
@@ -605,15 +616,13 @@ let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
        match uu___1 with
        | FStarC_Parser_AST.Product uu___2 -> t
        | uu___2 ->
-           let uu___3 =
-             let uu___4 =
-               let uu___5 =
-                 FStarC_Parser_AST.mk_term
-                   (FStarC_Parser_AST.Name FStarC_Parser_Const.effect_Tot_lid)
-                   t.FStarC_Parser_AST.range t.FStarC_Parser_AST.level in
-               (uu___5, t, FStarC_Parser_AST.Nothing) in
-             FStarC_Parser_AST.App uu___4 in
-           FStarC_Parser_AST.mk_term uu___3 t.FStarC_Parser_AST.range
+           FStarC_Parser_AST.mk_term
+             (FStarC_Parser_AST.App
+                ((FStarC_Parser_AST.mk_term
+                    (FStarC_Parser_AST.Name
+                       FStarC_Parser_Const.effect_Tot_lid)
+                    t.FStarC_Parser_AST.range t.FStarC_Parser_AST.level), t,
+                  FStarC_Parser_AST.Nothing)) t.FStarC_Parser_AST.range
              t.FStarC_Parser_AST.level in
      let result =
        FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Product (binders, t1))

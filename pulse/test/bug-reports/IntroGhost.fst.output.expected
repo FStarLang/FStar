@@ -1,0 +1,16 @@
+* Info at IntroGhost.fst(67,2-67,4):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      R.pts_to r 0
+  - In the context:
+      my_inv _b5 r
+
+* Info at IntroGhost.fst(84,46-87,24):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      my_inv true r
+  - In the context:
+      my_inv _b4 r
+

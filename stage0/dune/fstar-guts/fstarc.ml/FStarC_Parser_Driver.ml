@@ -1,6 +1,6 @@
 open Prims
 let is_cache_file (fn : Prims.string) : Prims.bool=
-  let uu___ = FStarC_Filepath.get_file_extension fn in uu___ = ".cache"
+  (FStarC_Filepath.get_file_extension fn) = ".cache"
 type fragment =
   | Empty 
   | Modul of FStarC_Parser_AST.modul 
@@ -41,7 +41,7 @@ let parse_fragment (lang_opt : FStarC_Parser_ParseIt.lang_opts)
         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
         (Obj.magic msg)
   | FStarC_Parser_ParseIt.Term uu___1 ->
-      failwith
+      FStarC_Effect.failwith
         "Impossible: parsing a Toplevel always results in an ASTFragment"
 let maybe_dump_module (m : FStarC_Parser_AST.modul) : unit=
   match m with
@@ -50,8 +50,7 @@ let maybe_dump_module (m : FStarC_Parser_AST.modul) : unit=
         FStarC_Parser_AST.mname = mname; FStarC_Parser_AST.decls = decls;_}
       ->
       let uu___1 =
-        let uu___2 = FStarC_Ident.string_of_lid mname in
-        FStarC_Options.dump_module uu___2 in
+        FStarC_Options.dump_module (FStarC_Ident.string_of_lid mname) in
       if uu___1
       then
         let uu___2 =
@@ -69,8 +68,7 @@ let maybe_dump_module (m : FStarC_Parser_AST.modul) : unit=
         FStarC_Parser_AST.admitted = uu___1;_}
       ->
       let uu___2 =
-        let uu___3 = FStarC_Ident.string_of_lid mname in
-        FStarC_Options.dump_module uu___3 in
+        FStarC_Options.dump_module (FStarC_Ident.string_of_lid mname) in
       if uu___2
       then
         let uu___3 =
@@ -102,5 +100,5 @@ let parse_file (fn : Prims.string) :
         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
         (Obj.magic msg)
   | FStarC_Parser_ParseIt.Term uu___1 ->
-      failwith
+      FStarC_Effect.failwith
         "Impossible: parsing a Filename always results in an ASTFragment"

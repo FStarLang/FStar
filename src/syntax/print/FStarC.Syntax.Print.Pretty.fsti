@@ -17,35 +17,37 @@
 module FStarC.Syntax.Print.Pretty
 
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 
 (* Use the 'primed' versions if possible: they abbreviate lidents *)
 
-val term_to_doc'     : DsEnv.env -> term -> Pprint.document
-val univ_to_doc'     : DsEnv.env -> universe -> Pprint.document
-val comp_to_doc'     : DsEnv.env -> comp -> Pprint.document
-val sigelt_to_doc'   : DsEnv.env -> sigelt -> Pprint.document
+val term_to_doc'     : DsEnv.env -> term -> ML Pprint.document
+val univ_to_doc'     : DsEnv.env -> universe -> ML Pprint.document
 
-val term_to_string'     : DsEnv.env -> term -> string
-val univ_to_string'     : DsEnv.env -> universe -> string
-val comp_to_string'     : DsEnv.env -> comp -> string
-val sigelt_to_string'   : DsEnv.env -> sigelt -> string
+val term_to_string'     : DsEnv.env -> term -> ML string
+val univ_to_string'     : DsEnv.env -> universe -> ML string
 
-(* If no DsEnv.env is at hand, these can be used instead. *)
-val term_to_doc         : term -> Pprint.document
-val univ_to_doc         : universe -> Pprint.document
-val comp_to_doc         : comp -> Pprint.document
-val sigelt_to_doc       : sigelt -> Pprint.document
+val comp_to_doc'     : DsEnv.env -> comp -> ML Pprint.document
+val comp_to_string'     : DsEnv.env -> comp -> ML string
 
-val term_to_string      : term -> string
-val univ_to_string      : universe -> string
-val comp_to_string      : comp -> string
-val sigelt_to_string    : sigelt -> string
+val sigelt_to_doc'   : DsEnv.env -> sigelt -> ML Pprint.document
+val sigelt_to_string'   : DsEnv.env -> sigelt -> ML string
 
-val tscheme_to_string   : tscheme -> string
-val tscheme_to_doc      : tscheme -> Pprint.document
+val term_to_doc         : term -> ML Pprint.document
+val univ_to_doc         : universe -> ML Pprint.document
+val comp_to_doc         : comp -> ML Pprint.document
+val sigelt_to_doc       : sigelt -> ML Pprint.document
 
-val pat_to_string       : pat -> string
-val binder_to_string'   : bool -> binder -> string
-val eff_decl_to_string  : eff_decl -> string
+val term_to_string      : term -> ML string
+val comp_to_string      : comp -> ML string
+val sigelt_to_string    : sigelt -> ML string
+val univ_to_string      : universe -> ML string
+
+val tscheme_to_doc      : tscheme -> ML Pprint.document
+val tscheme_to_string   : tscheme -> ML string
+
+val pat_to_string       : pat -> ML string
+val binder_to_string'   : bool -> binder -> ML string
+val eff_decl_to_string  : eff_decl -> ML string

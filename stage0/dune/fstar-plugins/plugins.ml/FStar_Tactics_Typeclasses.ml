@@ -254,7 +254,7 @@ let rec compact (uu___ : glb_entry Prims.list) :
                                    {
                                      class_name = (x.class_name);
                                      instances =
-                                       (op_At () x.instances
+                                       ((op_At ()) x.instances
                                           (FStar_List_Tot_Base.concatMap
                                              (fun y -> y.instances) same))
                                    } :: uu___1))) uu___)))) uu___
@@ -865,7 +865,7 @@ let __tcresolve (dbg : Prims.bool) :
                   FStar_Tactics_V2_Derived.fail_doc x7 ps1)
            | FStarC_Tactics_Common.TacticFailure (msg, r) ->
                FStar_Tactics_V2_Derived.fail_doc_at
-                 (op_At ()
+                 ((op_At ())
                     [FStar_Pprint.arbitrary_string
                        "Typeclass resolution failed."] msg) r
            | e ->
@@ -1111,7 +1111,7 @@ let mk_class (nm : Prims.string) :
                                               () ps1 in
                                           let x28 =
                                             FStarC_Reflection_V2_Builtins.pack_fv
-                                              (op_At () x27 [x25]) in
+                                              ((op_At ()) x27 [x25]) in
                                           let x29 =
                                             FStar_Tactics_V2_Derived.fresh_namedv_named
                                               "d" ps1 in
@@ -1144,7 +1144,7 @@ let mk_class (nm : Prims.string) :
                                             let x33 =
                                               FStar_Tactics_V2_Derived.cur_module
                                                 () ps1 in
-                                            op_At () x33
+                                            (op_At ()) x33
                                               [Prims.strcat x23 x25] in
                                           let x33 =
                                             FStar_Tactics_NamedView.pack
@@ -1217,7 +1217,7 @@ let mk_class (nm : Prims.string) :
                                                              binder_set_meta
                                                                b1 x30 in
                                                            FStar_Tactics_V2_SyntaxHelpers.mk_arr
-                                                             (op_At () ps2
+                                                             ((op_At ()) ps2
                                                                 (x41 :: bs'))
                                                              cod2 ps1)) in
                                            let x39 =
@@ -1243,7 +1243,7 @@ let mk_class (nm : Prims.string) :
                                                              binder_set_meta
                                                                b1 x30 in
                                                            mk_abs
-                                                             (op_At () ps2
+                                                             ((op_At ()) ps2
                                                                 (x42 :: bs'))
                                                              body ps1)) in
                                            debug'
@@ -1285,7 +1285,7 @@ let mk_class (nm : Prims.string) :
                                                        = [x45]
                                                    }) ps1 in
                                             FStarC_Reflection_V2_Builtins.set_sigelt_attrs
-                                              (op_At ()
+                                              ((op_At ())
                                                  ((FStarC_Reflection_V2_Builtins.pack_ln
                                                      (FStarC_Reflection_V2_Data.Tv_FVar
                                                         (FStarC_Reflection_V2_Builtins.pack_fv

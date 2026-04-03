@@ -25,8 +25,7 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
               FStar_Pervasives_Native.Some outf1
           | ToTempFile ->
               let outf1 =
-                let uu___1 = temp_file_name filename in
-                FStarC_Util.open_file_for_writing uu___1 in
+                FStarC_Util.open_file_for_writing (temp_file_name filename) in
               FStar_Pervasives_Native.Some outf1 in
         let leftover_comments =
           let comments1 = FStarC_List.rev comments in
@@ -37,11 +36,10 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
           | (doc, comments2) ->
               ((match outf with
                 | FStar_Pervasives_Native.Some f ->
-                    let uu___3 =
-                      FStarC_Pprint.pretty_string
-                        (FStarC_Util.float_of_string "1.0")
-                        (Prims.of_int (100)) doc in
-                    FStarC_Util.append_to_file f uu___3
+                    FStarC_Util.append_to_file f
+                      (FStarC_Pprint.pretty_string
+                         (FStarC_Util.float_of_string "1.0")
+                         (Prims.of_int (100)) doc)
                 | FStar_Pervasives_Native.None ->
                     FStarC_Pprint.pretty_out_channel
                       (FStarC_Util.float_of_string "1.0")
@@ -72,10 +70,9 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
                (FStarC_Util.float_of_string "1.0") (Prims.of_int (100))
                left_over_doc FStarC_Util.stdout
          | FStar_Pervasives_Native.Some outf1 ->
-             ((let uu___2 =
-                 FStarC_Pprint.pretty_string
+             (FStarC_Util.append_to_file outf1
+                (FStarC_Pprint.pretty_string
                    (FStarC_Util.float_of_string "1.0") (Prims.of_int (100))
-                   left_over_doc in
-               FStarC_Util.append_to_file outf1 uu___2);
+                   left_over_doc);
               FStarC_Util.close_out_channel outf1)) in
   FStarC_List.iter (parse_and_prettyprint m) filenames

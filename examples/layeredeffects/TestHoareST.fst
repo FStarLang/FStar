@@ -18,11 +18,10 @@ module TestHoareST
 
 /// Testing the HoareST layered effect from HoareST.fst
 
+open SimpleHeap
 open HoareST
 
-/// Note that we don't need FStar.ST since the layered effects abstraction does not need it for verification
-
-#set-options "--fuel 0 --ifuel 4 --using_facts_from '* -FStar.ST'"
+#set-options "--fuel 0 --ifuel 4"
 
 
 /// In this test:
@@ -119,19 +118,11 @@ let test8 (l:list int)
 assume val st_reify (#a:Type) (#pre:_) (#post:_) ($e:unit -> HoareST a pre post)
   : HoareST.repr a pre post
 
-#reset-options "--using_facts_from '*'"
-
-let test9 ()
-: FStar.ST.STATE int (fun p _ -> forall h1. p 3 h1)
-= st_reify (fun _ -> test6 ()) ()
-
 assume val some_pred : Type0
 
 assume val proof_of_pred : unit -> Tot (squash some_pred)
 assume val test10 : unit -> Pure unit (requires some_pred) (ensures fun _ -> True)
 
-//#restart-solver
-//#set-options "--fuel 0 --ifuel 0 --log_queries"
 let test11 () : Tot unit =
   let _ : squash some_pred = proof_of_pred () in
   test10 ()
@@ -142,3 +133,21 @@ assume val test12 : unit -> HoareST unit (requires fun _ -> some_pred) (ensures 
 let test13 () : HoareST unit (fun _ -> True) (fun _ _ _ -> True) = 
   let _ : squash some_pred = proof_of_pred () in
   test12 ()
+
+
+/// Testing with heap operations
+
+let test_alloc_read ()
+: HoareST int
+  (fun _ -> True)
+  (fun _ r _ -> r == 42)
+= let r = alloc 42 in
+  !r
+
+let test_write ()
+: HoareST int
+  (fun _ -> True)
+  (fun _ r _ -> r == 10)
+= let r = alloc 0 in
+  r := 10;
+  !r

@@ -29,10 +29,10 @@ let monad_writer (d : 'm FStarC_Class_Monoid.monoid) :
   ('m, Obj.t, unit) writer FStarC_Class_Monad.monad=
   {
     FStarC_Class_Monad.return =
-      (fun uu___1 uu___ -> Obj.magic (writer_return d) uu___1 uu___);
+      (fun uu___1 uu___ -> (Obj.magic (writer_return d)) uu___1 uu___);
     FStarC_Class_Monad.bind =
       (fun uu___3 uu___2 uu___1 uu___ ->
-         Obj.magic (writer_bind d) uu___3 uu___2 uu___1 uu___)
+         (Obj.magic (writer_bind d)) uu___3 uu___2 uu___1 uu___)
   }
 let emit (uu___ : 'm FStarC_Class_Monoid.monoid) (x : 'm) :
   ('m, Obj.t, unit) writer= Wr (x, ())

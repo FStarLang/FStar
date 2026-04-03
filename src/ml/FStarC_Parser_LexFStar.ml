@@ -465,6 +465,7 @@ match%sedlex lexbuf with
  | "#restart-solver" -> PRAGMA_RESTART_SOLVER
  | "#print-effects-graph" -> PRAGMA_PRINT_EFFECTS_GRAPH
  | "#check" -> PRAGMA_CHECK
+ | "#eval" -> PRAGMA_EVAL
  | "__SOURCE_FILE__" -> STRING (Filepath.basename (L.source_file lexbuf))
  | "__LINE__" -> INT (string_of_int (L.current_line lexbuf))
  | "__FILELINE__"   -> STRING (Filepath.basename (L.source_file lexbuf) ^ "(" ^ (string_of_int (L.current_line lexbuf)) ^ ")")

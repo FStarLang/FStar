@@ -9,7 +9,7 @@ let must (uu___ : 'a FStar_Pervasives_Native.option) : 'a=
   match uu___ with
   | FStar_Pervasives_Native.Some x -> x
   | FStar_Pervasives_Native.None ->
-      failwith "FStarC.Option.must: called on None"
+      FStarC_Effect.failwith "FStarC.Option.must: called on None"
 let dflt (d : 'a) (uu___ : 'a FStar_Pervasives_Native.option) : 'a=
   match uu___ with
   | FStar_Pervasives_Native.Some x -> x

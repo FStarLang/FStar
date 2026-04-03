@@ -28,7 +28,7 @@ val lt (o : order) : bool
 val eq (o : order) : bool
 
 // Lexicographical combination, thunked to be lazy
-val lex (o1 : order) (o2 : unit -> order) : order
+val lex (o1 : order) (o2 : unit -> ML order) : ML order
 
 val order_from_int (i : int) : order
 
@@ -44,7 +44,7 @@ val compare_bool (b1 b2 : bool) : order
  *)
 val compare_list (#a:Type)
   (l1 l2:list a)
-  (f:(x:a{x << l1} -> y:a{y << l2} -> order))
-  : order
+  (f:(x:a{x << l1} -> y:a{y << l2} -> ML order))
+  : ML order
 
-val compare_option (f : 'a -> 'a -> order) (x : option 'a) (y : option 'a) : order
+val compare_option (f : 'a -> 'a -> ML order) (x : option 'a) (y : option 'a) : ML order

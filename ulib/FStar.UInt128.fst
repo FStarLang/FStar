@@ -589,12 +589,13 @@ val add_mod_small: n: nat -> m:nat -> k1:pos -> k2:pos ->
         (ensures (n + (k1 * m) % (k1 * k2) ==
                   (n + k1 * m) % (k1 * k2)))
 #restart-solver
-#push-options "--z3rlimit_factor 4"
 let add_mod_small n m k1 k2 =
+  assert (k1 * k2 > 0);
+  assert (k1 * m >= 0);
+  assert (n + k1 * m >= 0);
   mod_spec (k1 * m) (k1 * k2);
   mod_spec (n + k1 * m) (k1 * k2);
   div_add_small n m k1 k2
-#pop-options
 
 let mod_then_mul_64 (n:nat) : Lemma (n % pow2 64 * pow2 64 == n * pow2 64 % pow2 128) =
   Math.pow2_plus 64 64;
@@ -1211,10 +1212,12 @@ let sum_shift_carry a b k =
   add_mod_then_mod b a k;
   Math.lemma_mod_spec (a+b) k
 
+#push-options "--z3rlimit 40"
 let mul_wide_high_ok (x y: U64.t) :
   Lemma ((U64.v x * U64.v y) / pow2 64 == mul_wide_high x y) =
   product_high_expand x y;
   sum_shift_carry (phl x y + pll_h x y) (plh x y) (pow2 32)
+#pop-options
 
 let product_div_bound (#n:pos) (x y: UInt.uint_t n) :
   Lemma (x * y / pow2 n < pow2 n) =

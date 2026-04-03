@@ -15,7 +15,7 @@
 *)
 module Bug289
 
-open FStar.ST
+open FStar.All
 
 val foo : unit -> St unit
 let foo () = ()

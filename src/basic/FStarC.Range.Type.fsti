@@ -20,6 +20,12 @@ open FStarC.Class.Deq
 open FStarC.Class.Ord
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
+new val pos : Type0
+
+instance val deq_pos : deq pos
+instance val ord_pos : ord pos
+
+[@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
@@ -28,14 +34,7 @@ new val range : Type0
 (* So we can write Range.t *)
 type t = range
 
-[@@ PpxDerivingYoJson; PpxDerivingShow]
-new val pos : Type0
-
-instance val deq_pos : deq pos
-instance val ord_pos : ord pos
-
 val dummy_rng : rng
-val mk_rng : string -> pos -> pos -> rng
 
 val dummyRange: range
 val use_range: range -> rng
@@ -44,6 +43,7 @@ val range_of_rng: def_rng:rng -> use_rng:rng -> range
 val set_use_range: range -> rng -> range
 val set_def_range: range -> rng -> range
 val mk_pos: int -> int -> pos
+val mk_rng : string -> pos -> pos -> rng
 val mk_range: string -> pos -> pos -> range
 
 val json_of_pos: pos -> FStarC.Json.json

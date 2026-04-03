@@ -10,13 +10,15 @@ let rec logand_vec (n : Prims.pos) (a : Obj.t bv_t) (b : Obj.t bv_t) :
   if n = Prims.int_one
   then
     FStar_Seq_Base.create Prims.int_one
-      ((FStar_Seq_Base.index a Prims.int_zero) &&
-         (FStar_Seq_Base.index b Prims.int_zero))
+      (if FStar_Seq_Base.index a Prims.int_zero
+       then FStar_Seq_Base.index b Prims.int_zero
+       else false)
   else
     FStar_Seq_Base.append
       (FStar_Seq_Base.create Prims.int_one
-         ((FStar_Seq_Base.index a Prims.int_zero) &&
-            (FStar_Seq_Base.index b Prims.int_zero)))
+         (if FStar_Seq_Base.index a Prims.int_zero
+          then FStar_Seq_Base.index b Prims.int_zero
+          else false))
       (logand_vec (n - Prims.int_one)
          (FStar_Seq_Base.slice a Prims.int_one n)
          (FStar_Seq_Base.slice b Prims.int_one n))
@@ -40,13 +42,15 @@ let rec logor_vec (n : Prims.pos) (a : Obj.t bv_t) (b : Obj.t bv_t) :
   if n = Prims.int_one
   then
     FStar_Seq_Base.create Prims.int_one
-      ((FStar_Seq_Base.index a Prims.int_zero) ||
-         (FStar_Seq_Base.index b Prims.int_zero))
+      (if FStar_Seq_Base.index a Prims.int_zero
+       then true
+       else FStar_Seq_Base.index b Prims.int_zero)
   else
     FStar_Seq_Base.append
       (FStar_Seq_Base.create Prims.int_one
-         ((FStar_Seq_Base.index a Prims.int_zero) ||
-            (FStar_Seq_Base.index b Prims.int_zero)))
+         (if FStar_Seq_Base.index a Prims.int_zero
+          then true
+          else FStar_Seq_Base.index b Prims.int_zero))
       (logor_vec (n - Prims.int_one) (FStar_Seq_Base.slice a Prims.int_one n)
          (FStar_Seq_Base.slice b Prims.int_one n))
 let rec lognot_vec (n : Prims.pos) (a : Obj.t bv_t) : Obj.t bv_t=

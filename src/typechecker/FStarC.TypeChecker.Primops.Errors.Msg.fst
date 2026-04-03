@@ -14,11 +14,21 @@ let ops =
   let open FStarC.Errors.Msg in
     [
       mk1 0 (nm "text") text;
-      mk2 0 (nm "sublist") sublist;
-      mk1 0 (nm "bulleted") bulleted;
+      mk2' 0 (nm "sublist")
+        (fun b es -> Some (sublist b es))
+        (fun b es -> Some (sublist b es));
+      mk1' 0 (nm "bulleted")
+        (fun l -> Some (bulleted l))
+        (fun l -> Some (bulleted l));
       mk1 0 (nm "mkmsg") mkmsg;
       mk1 0 (nm "subdoc") subdoc;
-      mk1 0 (nm "renderdoc") renderdoc;
-      mk1 0 (nm "backtrace_doc") backtrace_doc;
-      mk1 0 (nm "rendermsg") rendermsg;
+      mk1' 0 (nm "renderdoc")
+        (fun d -> Some (renderdoc d))
+        (fun d -> Some (renderdoc d));
+      mk1' 0 (nm "backtrace_doc")
+        (fun () -> Some (backtrace_doc ()))
+        (fun () -> Some (backtrace_doc ()));
+      mk1' 0 (nm "rendermsg")
+        (fun m -> Some (rendermsg m))
+        (fun m -> Some (rendermsg m));
     ]

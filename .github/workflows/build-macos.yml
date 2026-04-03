@@ -3,12 +3,19 @@ name: Build F* (macos)
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
 
 jobs:
   build:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@master
+        with:
+          ref: ${{ inputs.ref || '' }}
+          submodules: true
 
       - uses: ocaml/setup-ocaml@v3
         with:
@@ -26,7 +33,12 @@ jobs:
           # Setting FSTAR_VERSION for nightly and release builds. If unset,
           # we use $(version.txt)~dev. Setting it avoids the ~dev.
           if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
-            echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            REF="${{ inputs.ref }}"
+            if [[ -n "$REF" && "$REF" != "master" ]]; then
+              echo FSTAR_VERSION="nightly-${REF}-$(date -I)" >> $GITHUB_ENV
+            else
+              echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            fi
           elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
             echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
             echo FSTAR_RELEASE=1 >> $GITHUB_ENV
@@ -42,7 +54,7 @@ jobs:
           export FSTAR_TAG=-$KERNEL-$ARCH
           gmake -skj$(nproc) package
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: fstar-*
           name: package-mac
@@ -62,7 +74,7 @@ jobs:
           version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package-mac
 
@@ -73,3 +85,5 @@ jobs:
           ./fstar/bin/fstar.exe --admit_smt_queries true fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe --admit_smt_queries true B.fst

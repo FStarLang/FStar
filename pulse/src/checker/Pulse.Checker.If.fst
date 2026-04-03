@@ -1,0 +1,137 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Checker.If
+
+open Pulse.Syntax
+open Pulse.Typing
+open Pulse.Typing.Combinators
+open Pulse.Checker.Pure
+open Pulse.Checker.Base
+
+module T = FStar.Tactics.V2
+module J = Pulse.JoinComp
+#set-options "--z3rlimit 40"
+
+
+let retype_checker_result_post_hint #g #pre (ph:post_hint_for_env g)
+    (ph':post_hint_opt g {PostHint? ph' ==> PostHint?.v ph' == ph})
+    (r:checker_result_t g pre (PostHint ph))
+: T.Tac (checker_result_t g pre ph')
+= let (| x, g1, t, ctxt', k |) = r in
+  (| x, g1, t, ctxt', k |)
+
+let retype_checker_result (#g:env) (#ctxt:slprop) (#ph:post_hint_opt g) (ph':post_hint_opt g { not (PostHint? ph')})
+  (r:checker_result_t g ctxt ph)
+: checker_result_t g ctxt ph'
+= let (| x, g1, t, ctxt, k |) = r in
+  (| x, g1, t, ctxt, k |)
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
+#restart-solver
+let check
+  (g:env)
+  (pre:term)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (b:term)
+  (e1 e2:st_term)
+  (check:check_t)
+  : T.Tac (checker_result_t g pre post_hint) =
+  
+  let g = Pulse.Typing.Env.push_context g "check_if" e1.range in
+
+  let b =
+    check_tot_term g b tm_bool in
+
+  let hyp = fresh g in
+
+  let g_with_eq = g_with_eq g hyp b in  
+  let check_branch (eq_v:term) (br:st_term) (is_then:bool)
+  : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
+  =
+    let br =
+      let t =
+        mk_term (Tm_ProofHintWithBinders {
+          binders = [];
+          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm; elaborated=true };
+          t = br;
+        }) br.range
+      in
+      { t with effect_tag = br.effect_tag }
+    in
+
+    let ppname = mk_ppname_no_range "_if_br" in
+    let r = check (g_with_eq eq_v) pre post_hint ppname br in
+    r
+  in
+
+  let infer_post_branch (#eq_v:term) (r: checker_result_t (g_with_eq eq_v) pre NoHint) :
+    T.Tac (p:post_hint_for_env g {p.g == g /\ p.effect_annot==EffectAnnotSTT}) =
+    let (| x, g', (u, t), post, k |) = r in
+    J.infer_post' g g' u t x post
+  in
+
+  let then_ = check_branch tm_true e1 true in
+  let else_ = check_branch tm_false e2 false in
+  let joinable : (
+    ph:post_hint_for_env g & 
+    checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+    checker_result_t (g_with_eq tm_false) pre (PostHint ph)
+  ) = match post_hint with
+      | PostHint ph -> 
+        (| ph, then_, else_ |)
+      | _ ->
+        let then_ : checker_result_t _ _ NoHint = retype_checker_result _ then_ in
+        let else_ : checker_result_t _ _ NoHint = retype_checker_result _ else_ in
+        let post_then = infer_post_branch then_ in
+        let post_else = infer_post_branch else_ in
+        let post = Pulse.JoinComp.join_post #g #hyp #b post_then post_else in
+        let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
+        let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
+        (| post, then_, else_ |)
+  in
+  let (| post_hint', then_, else_ |) = joinable in
+
+  let extract #g #pre (#ph:post_hint_for_env g) (r:checker_result_t g pre (PostHint ph)) (is_then:bool)
+  : T.Tac (br:st_term { ~(hyp `Set.mem` freevars_st br) } &
+           c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (PostHint ph)})
+  = let (| br, c |) =
+      let ppname = mk_ppname_no_range "_if_br" in
+      apply_checker_result_k r ppname
+    in
+    let br_name = if is_then then "then" else "else" in
+    // if hyp `Set.mem` freevars_st br
+    // then fail g (Some br.range)
+    //        (Printf.sprintf "check_if: branch hypothesis is in freevars of checked %s branch" br_name)
+    // else
+     assume not (hyp `Set.mem` freevars_st br);
+     (| br, c |)
+  in
+  let (| e1, c1 |) = extract then_ true in
+  let (| e2, c2 |) = extract else_ false in
+  let c =
+    J.join_comps (g_with_eq tm_true) e1 c1 (g_with_eq tm_false) e2 c2 post_hint' in
+
+  let c_typing = comp_typing_from_post_hint c post_hint' in
+
+  let if_st = wrst c (Tm_If { b; then_=e1; else_=e2; post=None }) in
+  let d : st_typing_in_ctxt g pre (PostHint post_hint') =
+    (| if_st, c |) in
+
+  let res : checker_result_t g pre (PostHint post_hint') = checker_result_for_st_typing d res_ppname in
+  retype_checker_result_post_hint post_hint' post_hint res
+  #pop-options

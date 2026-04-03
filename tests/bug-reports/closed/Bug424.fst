@@ -15,7 +15,7 @@
 *)
 module Bug424
 
-open FStar.ST
+open FStar.All
 
 assume new type f (t:Type)
 

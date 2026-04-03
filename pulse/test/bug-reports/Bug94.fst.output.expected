@@ -1,0 +1,20 @@
+* Info at Bug94.fst(9,16-9,18):
+  - Expected failure:
+  - Ill-typed term: - 1
+  - Expected a term of type nat
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(669,18-669,24)
+
+* Info at Bug94.fst(16,16-16,17):
+  - Expected failure:
+  - Expected expression of type Prims.nat got expression y of type Prims.string
+
+* Info at Bug94.fst(30,18-30,27):
+  - Expected failure:
+  - Ill-typed term: hundred 0
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+

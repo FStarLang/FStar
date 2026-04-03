@@ -15,7 +15,7 @@
 *)
 module Bug517
 
-open FStar.ST
+open FStar.All
 
 type new_int (z:int) = x:int{x = z}
 

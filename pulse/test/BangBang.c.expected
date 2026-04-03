@@ -1,0 +1,23 @@
+/* krml header omitted for test repeatability */
+
+
+#include "BangBang.h"
+
+int32_t BangBang_modify_nested_ptr(int32_t **x)
+{
+  int32_t *__anf2 = *x;
+  int32_t *__anf01 = *x;
+  int32_t __anf1 = *__anf01;
+  *__anf2 = __anf1 + (int32_t)2;
+  int32_t *__anf03 = *x;
+  int32_t __anf11 = *__anf03;
+  return __anf11 + (int32_t)1;
+}
+
+void BangBang_decr_uint(void)
+{
+  uint32_t x = 1U;
+  uint32_t __anf0 = x;
+  x = __anf0 - 1U;
+}
+

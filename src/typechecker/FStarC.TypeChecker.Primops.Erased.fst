@@ -33,7 +33,7 @@ instance e_erased (a:Type) (d : EMB.embedding a) : Tot (EMB.embedding (emb_erase
       let ty = EMB.type_of d in
       U.mk_app r [S.iarg ty; S.as_arg (EMB.embed x rng shadow cbs)]
   in
-  let un (t:term) cbs : option (emb_erased term a) =
+  let un (t:term) cbs : ML (option (emb_erased term a)) =
     let head, args = U.head_and_args t in
     match (U.un_uinst head).n, args with
     | Tm_fvar fv, [(ty, Some _); (a, None)] when fv_eq_lid fv PC.hide ->
@@ -62,7 +62,7 @@ instance nbe_e_erased (a:Type) (d : NBE.embedding a) : Tot (NBE.embedding (emb_e
       let fv = S.lid_as_fv PC.reveal None in
       NBE.mkFV fv [] [NBE.as_arg (NBE.embed d cbs x); NBE.as_iarg (NBE.type_of d)]
   in
-  let un cbs (t:NBETerm.t) : option (emb_erased NBETerm.t a) =
+  let un cbs (t:NBETerm.t) : ML (option (emb_erased NBETerm.t a)) =
     match NBETerm.nbe_t_of_t t with
     | NBETerm.FV (fv, _, [(body, _); (ty, _)]) // NB: Argument order in NBE terms is reversed; so the body is first, the type is second
       when fv_eq_lid fv PC.hide ->

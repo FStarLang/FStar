@@ -187,7 +187,7 @@ let later (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = goals () ps in
     match x with
-    | g::gs -> FStarC_Tactics_V2_Builtins.set_goals (op_At () gs [g]) ps
+    | g::gs -> FStarC_Tactics_V2_Builtins.set_goals ((op_At ()) gs [g]) ps
     | uu___1 -> fail "later: no goals" ps
 let apply (t : FStar_Tactics_NamedView.term) :
   (unit, unit) FStar_Tactics_Effect.tac_repr=
@@ -317,9 +317,9 @@ let divide (n : Prims.int)
                       match x10 with
                       | (gsr, sgsr) ->
                           (FStarC_Tactics_V2_Builtins.set_goals
-                             (op_At () gsl gsr) ps;
+                             ((op_At ()) gsl gsr) ps;
                            FStarC_Tactics_V2_Builtins.set_smt_goals
-                             (op_At () sgs (op_At () sgsl sgsr)) ps;
+                             ((op_At ()) sgs ((op_At ()) sgsl sgsr)) ps;
                            (x5, x9))))))))
 let rec iseq
   (uu___ : (unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) Prims.list) :
@@ -344,9 +344,9 @@ let focus (t : unit -> ('a, unit) FStar_Tactics_Effect.tac_repr) :
         (FStarC_Tactics_V2_Builtins.set_goals [g] ps;
          FStarC_Tactics_V2_Builtins.set_smt_goals [] ps;
          (let x4 = t () ps in
-          (let x6 = let x7 = goals () ps in op_At () x7 gs in
+          (let x6 = let x7 = goals () ps in (op_At ()) x7 gs in
            FStarC_Tactics_V2_Builtins.set_goals x6 ps);
-          (let x7 = let x8 = smt_goals () ps in op_At () x8 x1 in
+          (let x7 = let x8 = smt_goals () ps in (op_At ()) x8 x1 in
            FStarC_Tactics_V2_Builtins.set_smt_goals x7 ps);
           x4))
 let dump1 (m : Prims.string) : (unit, unit) FStar_Tactics_Effect.tac_repr=
@@ -385,7 +385,7 @@ let iterAllSMT (t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) :
           match x4 with
           | (gs', sgs') ->
               (FStarC_Tactics_V2_Builtins.set_goals gs ps;
-               FStarC_Tactics_V2_Builtins.set_smt_goals (op_At () gs' sgs')
+               FStarC_Tactics_V2_Builtins.set_smt_goals ((op_At ()) gs' sgs')
                  ps)))
 let seq (f : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   (g : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) :
@@ -988,7 +988,7 @@ let tlabel' (l : Prims.string) : (unit, unit) FStar_Tactics_Effect.tac_repr=
 let focus_all (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     (let x1 =
-       let x2 = goals () ps in let x3 = smt_goals () ps in op_At () x2 x3 in
+       let x2 = goals () ps in let x3 = smt_goals () ps in (op_At ()) x2 x3 in
      FStarC_Tactics_V2_Builtins.set_goals x1 ps);
     FStarC_Tactics_V2_Builtins.set_smt_goals [] ps
 let rec extract_nth :
