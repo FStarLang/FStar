@@ -1,0 +1,3 @@
+[submodule "karamel"]
+	path = karamel
+	url = https://github.com/FStarLang/karamel.git

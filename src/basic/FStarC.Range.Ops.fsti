@@ -21,16 +21,16 @@ open FStarC.Effect
 open FStarC.Class.Show
 open FStarC.Class.PP
 
-val union_rng: rng -> rng -> rng
-val union_ranges: range -> range -> range
+val union_rng: rng -> rng -> ML rng
+val union_ranges: range -> range -> ML range
 
-val rng_included: rng -> rng -> bool
-val string_of_pos: pos -> string
-val string_of_range: range -> string
-val string_of_def_range: range -> string
-val string_of_use_range: range -> string
+val rng_included: rng -> rng -> ML bool
+val string_of_pos: pos -> ML string
 val file_of_range: range -> string
 val set_file_of_range: range -> string -> range
+val string_of_def_range: range -> ML string
+val string_of_use_range: range -> ML string
+val string_of_range: range -> ML string
 val start_of_range: range -> pos
 val end_of_range: range -> pos
 val file_of_use_range: range -> string
@@ -41,7 +41,7 @@ val col_of_pos: pos -> int
 val end_range: range -> range
 val compare: range -> range -> int
 val compare_use_range: range -> range -> int
-val range_before_pos : range -> pos -> bool
+val range_before_pos : range -> pos -> ML bool
 val end_of_line: pos -> pos
 val extend_to_end_of_line: range -> range
 
@@ -52,11 +52,11 @@ val json_of_def_range : range -> Json.json
 (** Bounds the range [r] by [bound]. Essentially, this is an intersection,
 making sure that whatever we report is within the bound. If the ranges
 are from different files, or there is no overlap, we return [bound]. *)
-val bound_range (r : range) (bound : range) : range
+val bound_range (r : range) (bound : range) : ML range
 
 instance val showable_range : showable range
 instance val pretty_range : pretty range
 
 (* See FStarC.Find.refind_file, this just applies it to both filename
 components. *)
-val refind_range (r:range) : range
+val refind_range (r:range) : ML range

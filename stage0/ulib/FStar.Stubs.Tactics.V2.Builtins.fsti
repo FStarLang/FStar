@@ -654,3 +654,5 @@ val call_subtac_tm
 that, there is no observable difference from calling [f].  We could also expose
 a pure version of this function. *)
 val stats_record #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp
+
+val with_error_context #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp

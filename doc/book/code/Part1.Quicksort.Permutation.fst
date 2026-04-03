@@ -142,3 +142,4 @@ let rec sort_intrinsic (#a:eqtype) (f:total_order_t a) (l:list a)
       append (sort_intrinsic f lo) (pivot :: sort_intrinsic f hi)
 
 
+#pop-options

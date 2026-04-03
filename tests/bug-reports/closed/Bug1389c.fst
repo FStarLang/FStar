@@ -17,7 +17,7 @@ module Bug1389c
 
 open FStar.Ghost
 open FStar.Seq
-open FStar.Ref
+open FStar.All
 
 type t = (s:seq (ref int){length s > 0})
 
@@ -29,10 +29,9 @@ let foo (s:t) (x:ref int{s `contains` x}) :
     (decreases (length s)) // This decreases turns the GTot into GHOST internally, exposing the bug
   = (), s
 
-val fail: es:erased t -> x:ref int{Ghost.reveal es `contains` x} ->
-  Tot (erased t)
 [@@expect_failure [189]]
-let fail es x =
+let fail (es:erased t) (x:ref int{Ghost.reveal es `contains` x}) :
+  Tot (erased t) =
   let es = elift2_p foo es (Ghost.hide x) in
   assert (False); // this DEFINITELY should NOT go through
   es // this should NOT type check

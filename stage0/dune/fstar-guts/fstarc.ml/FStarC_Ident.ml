@@ -23,6 +23,7 @@ let __proj__Mklident__item__nsstr (projectee : lident) : Prims.string=
   match projectee with | { ns; ident = ident1; nsstr; str;_} -> nsstr
 let __proj__Mklident__item__str (projectee : lident) : Prims.string=
   match projectee with | { ns; ident = ident1; nsstr; str;_} -> str
+type lid = lident[@@deriving yojson,show]
 let mk_ident (uu___ : (Prims.string * FStarC_Range_Type.range)) : ident=
   match uu___ with | (text, range) -> { idText = text; idRange = range }
 let set_id_range (r : FStarC_Range_Type.range) (i : ident) : ident=
@@ -46,10 +47,11 @@ let text_of_path (path1 : path) : Prims.string=
   FStarC_Util.concat_l "." path1
 let path_of_text (text : Prims.string) : path= FStarC_String.split [46] text
 let path_of_ns (ns : ipath) : path= FStarC_List.map string_of_id ns
-let path_of_lid (lid : lident) : path=
-  FStarC_List.map string_of_id (FStarC_List.op_At lid.ns [lid.ident])
-let ns_of_lid (lid : lident) : ipath= lid.ns
-let ids_of_lid (lid : lident) : ipath= FStarC_List.op_At lid.ns [lid.ident]
+let path_of_lid (lid1 : lident) : path=
+  FStarC_List.map string_of_id (FStarC_List.op_At lid1.ns [lid1.ident])
+let ns_of_lid (lid1 : lident) : ipath= lid1.ns
+let ids_of_lid (lid1 : lident) : ipath=
+  FStarC_List.op_At lid1.ns [lid1.ident]
 let lid_of_ns_and_id (ns : ipath) (id : ident) : lident=
   let nsstr =
     let uu___ = FStarC_List.map string_of_id ns in text_of_path uu___ in
@@ -72,11 +74,10 @@ let lid_of_str (str : Prims.string) : lident=
 let lid_of_path (path1 : path) (pos : FStarC_Range_Type.range) : lident=
   let ids = FStarC_List.map (fun s -> mk_ident (s, pos)) path1 in
   lid_of_ids ids
-let text_of_lid (lid : lident) : Prims.string= lid.str
+let text_of_lid (lid1 : lident) : Prims.string= lid1.str
 let lid_equals (l1 : lident) (l2 : lident) : Prims.bool= l1.str = l2.str
 let ident_equals (id1 : ident) (id2 : ident) : Prims.bool=
   id1.idText = id2.idText
-type lid = lident[@@deriving yojson,show]
 let range_of_lid (lid1 : lid) : FStarC_Range_Type.range=
   range_of_id lid1.ident
 let set_lid_range (l : lident) (r : FStarC_Range_Type.range) : lident=
@@ -88,18 +89,16 @@ let set_lid_range (l : lident) (r : FStarC_Range_Type.range) : lident=
   }
 let lid_add_suffix (l : lident) (s : Prims.string) : lident=
   let path1 = path_of_lid l in
-  let uu___ = range_of_lid l in
-  lid_of_path (FStarC_List.op_At path1 [s]) uu___
+  lid_of_path (FStarC_List.op_At path1 [s]) (range_of_lid l)
 let ml_path_of_lid (lid1 : lident) : Prims.string=
   let uu___ =
     let uu___1 = path_of_ns lid1.ns in
-    let uu___2 = let uu___3 = string_of_id lid1.ident in [uu___3] in
-    FStarC_List.op_At uu___1 uu___2 in
+    FStarC_List.op_At uu___1 [string_of_id lid1.ident] in
   FStarC_String.concat "_" uu___
 let string_of_lid (lid1 : lident) : Prims.string= lid1.str
 let qual_id (lid1 : lident) (id : ident) : lident=
   let uu___ = lid_of_ids (FStarC_List.op_At lid1.ns [lid1.ident; id]) in
-  let uu___1 = range_of_id id in set_lid_range uu___ uu___1
+  set_lid_range uu___ (range_of_id id)
 let nsstr (l : lid) : Prims.string= l.nsstr
 let showable_ident : ident FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = string_of_id }
@@ -133,16 +132,14 @@ let ord_ident : ident FStarC_Class_Ord.ord=
     FStarC_Class_Ord.super = deq_ident;
     FStarC_Class_Ord.cmp =
       (fun x y ->
-         let uu___ = string_of_id x in
-         let uu___1 = string_of_id y in
-         FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string uu___ uu___1)
+         FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string (string_of_id x)
+           (string_of_id y))
   }
 let ord_lident : lident FStarC_Class_Ord.ord=
   {
     FStarC_Class_Ord.super = deq_lident;
     FStarC_Class_Ord.cmp =
       (fun x y ->
-         let uu___ = string_of_lid x in
-         let uu___1 = string_of_lid y in
-         FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string uu___ uu___1)
+         FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_string (string_of_lid x)
+           (string_of_lid y))
   }

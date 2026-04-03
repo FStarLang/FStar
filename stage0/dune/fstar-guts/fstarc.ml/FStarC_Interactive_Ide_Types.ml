@@ -1,8 +1,8 @@
 open Prims
 let initial_range (filename : Prims.string) : FStarC_Range_Type.range=
-  let uu___ = FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero in
-  let uu___1 = FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero in
-  FStarC_Range_Type.mk_range filename uu___ uu___1
+  FStarC_Range_Type.mk_range filename
+    (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero)
+    (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero)
 type push_kind =
   | SyntaxCheck 
   | LaxCheck 
@@ -378,7 +378,8 @@ let __proj__Mkgrepl_state__item__grepl_repls (projectee : grepl_state) :
 let __proj__Mkgrepl_state__item__grepl_stdin (projectee : grepl_state) :
   FStarC_Util.stream_reader=
   match projectee with | { grepl_repls; grepl_stdin;_} -> grepl_stdin
-let string_of_timed_fname (uu___ : timed_fname) : Prims.string=
+let string_of_timed_fname (x : timed_fname) : Prims.string=
+  let uu___ = x in
   match uu___ with
   | { tf_fname = fname; tf_modtime = modtime;_} ->
       if modtime = t0
@@ -389,30 +390,31 @@ let string_of_timed_fname (uu___ : timed_fname) : Prims.string=
              { FStarC_Class_Show.show = FStarC_Time.string_of_time_of_day }
              modtime in
          FStarC_Format.fmt2 "{ %s; %s }" fname uu___2)
-let string_of_repl_task (uu___ : repl_task) : Prims.string=
-  match uu___ with
+let string_of_repl_task (t : repl_task) : Prims.string=
+  match t with
   | LDInterleaved (intf, impl) ->
-      let uu___1 = string_of_timed_fname intf in
-      let uu___2 = string_of_timed_fname impl in
-      FStarC_Format.fmt2 "LDInterleaved (%s, %s)" uu___1 uu___2
+      let uu___ = string_of_timed_fname intf in
+      let uu___1 = string_of_timed_fname impl in
+      FStarC_Format.fmt2 "LDInterleaved (%s, %s)" uu___ uu___1
   | LDSingle intf_or_impl ->
-      let uu___1 = string_of_timed_fname intf_or_impl in
-      FStarC_Format.fmt1 "LDSingle %s" uu___1
+      let uu___ = string_of_timed_fname intf_or_impl in
+      FStarC_Format.fmt1 "LDSingle %s" uu___
   | LDInterfaceOfCurrentFile intf ->
-      let uu___1 = string_of_timed_fname intf in
-      FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" uu___1
-  | PushFragment (FStar_Pervasives.Inl frag, uu___1, uu___2, uu___3) ->
+      let uu___ = string_of_timed_fname intf in
+      FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" uu___
+  | PushFragment (FStar_Pervasives.Inl frag, uu___, uu___1, uu___2) ->
       FStarC_Format.fmt1 "PushFragment { code = %s }"
         frag.FStarC_Parser_ParseIt.frag_text
-  | PushFragment (FStar_Pervasives.Inr d, uu___1, uu___2, deps) ->
-      let uu___3 = FStarC_Class_Show.show FStarC_Parser_AST.showable_decl d in
-      let uu___4 =
+  | PushFragment (FStar_Pervasives.Inr d, uu___, uu___1, deps) ->
+      let uu___2 = FStarC_Class_Show.show FStarC_Parser_AST.showable_decl d in
+      let uu___3 =
         FStarC_Class_Show.show
           (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
           deps in
-      FStarC_Format.fmt2 "PushFragment { decl = %s; deps=%s }" uu___3 uu___4
+      FStarC_Format.fmt2 "PushFragment { decl = %s; deps=%s }" uu___2 uu___3
   | Noop -> "Noop {}"
-let string_of_repl_stack_entry (uu___ : repl_stack_entry_t) : Prims.string=
+let string_of_repl_stack_entry (x : repl_stack_entry_t) : Prims.string=
+  let uu___ = x in
   match uu___ with
   | ((depth, i), (task, state)) ->
       let uu___1 =
@@ -433,23 +435,22 @@ let repl_state_to_string (r : repl_state) : Prims.string=
       let uu___4 =
         let uu___5 =
           let uu___6 =
-            match r.repl_curmod with
-            | FStar_Pervasives_Native.None -> "None"
-            | FStar_Pervasives_Native.Some m ->
-                FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name in
-          let uu___7 =
-            let uu___8 = string_of_repl_stack r.repl_deps_stack in
-            let uu___9 =
-              let uu___10 =
-                let uu___11 =
+            let uu___7 = string_of_repl_stack r.repl_deps_stack in
+            let uu___8 =
+              let uu___9 =
+                let uu___10 =
                   FStarC_List.map (fun q -> q.qid)
                     r.repl_buffered_input_queries in
                 FStarC_Class_Show.show
                   (FStarC_Class_Show.show_list
-                     FStarC_Class_Show.showable_string) uu___11 in
-              [uu___10] in
-            uu___8 :: uu___9 in
-          uu___6 :: uu___7 in
+                     FStarC_Class_Show.showable_string) uu___10 in
+              [uu___9] in
+            uu___7 :: uu___8 in
+          (match r.repl_curmod with
+           | FStar_Pervasives_Native.None -> "None"
+           | FStar_Pervasives_Native.Some m ->
+               FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name)
+            :: uu___6 in
         (r.repl_fname) :: uu___5 in
       uu___3 :: uu___4 in
     uu___1 :: uu___2 in
@@ -522,31 +523,31 @@ let query_to_string (q : query) : Prims.string=
   | Format uu___ -> "Format"
   | RestartSolver -> "RestartSolver"
   | Cancel uu___ -> "Cancel"
-let query_needs_current_module (uu___ : query') : Prims.bool=
-  match uu___ with
+let query_needs_current_module (q : query') : Prims.bool=
+  match q with
   | Exit -> false
   | DescribeProtocol -> false
   | DescribeRepl -> false
-  | Segment uu___1 -> false
+  | Segment uu___ -> false
   | Pop -> false
   | Push
-      { push_kind = uu___1; push_line = uu___2; push_column = uu___3;
-        push_peek_only = false; push_code_or_decl = uu___4;_}
+      { push_kind = uu___; push_line = uu___1; push_column = uu___2;
+        push_peek_only = false; push_code_or_decl = uu___3;_}
       -> false
-  | VfsAdd uu___1 -> false
-  | GenericError uu___1 -> false
-  | ProtocolViolation uu___1 -> false
-  | PushPartialCheckedFile uu___1 -> false
-  | FullBuffer uu___1 -> false
-  | Callback uu___1 -> false
-  | Format uu___1 -> false
+  | VfsAdd uu___ -> false
+  | GenericError uu___ -> false
+  | ProtocolViolation uu___ -> false
+  | PushPartialCheckedFile uu___ -> false
+  | FullBuffer uu___ -> false
+  | Callback uu___ -> false
+  | Format uu___ -> false
   | RestartSolver -> false
-  | Cancel uu___1 -> false
-  | Push uu___1 -> true
-  | AutoComplete uu___1 -> true
-  | Lookup uu___1 -> true
-  | Compute uu___1 -> true
-  | Search uu___1 -> true
+  | Cancel uu___ -> false
+  | Push uu___ -> true
+  | AutoComplete uu___ -> true
+  | Lookup uu___ -> true
+  | Compute uu___ -> true
+  | Search uu___ -> true
 let interactive_protocol_vernum : Prims.int= (Prims.of_int (3))
 let interactive_protocol_features : Prims.string Prims.list=
   ["autocomplete";
@@ -590,43 +591,36 @@ let json_of_issue (issue : FStarC_Errors.issue) : FStarC_Json.json=
   let uu___ =
     let uu___1 =
       let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = FStarC_Errors.format_issue' false issue in
-            FStarC_Json.JsonStr uu___5 in
-          ("message", uu___4) in
+        let uu___3 = json_of_issue_level issue.FStarC_Errors.issue_level in
+        ("level", uu___3) in
+      [uu___2] in
+    let uu___2 =
+      let uu___3 =
         let uu___4 =
           let uu___5 =
-            let uu___6 =
-              let uu___7 =
-                let uu___8 =
-                  match r with
-                  | FStar_Pervasives_Native.None -> []
-                  | FStar_Pervasives_Native.Some r1 ->
-                      let uu___9 = FStarC_Range_Ops.json_of_use_range r1 in
-                      [uu___9] in
-                let uu___9 =
-                  match r with
-                  | FStar_Pervasives_Native.Some r1 when
-                      let uu___10 = FStarC_Range_Type.def_range r1 in
-                      let uu___11 = FStarC_Range_Type.use_range r1 in
-                      uu___10 <> uu___11 ->
-                      let uu___10 = FStarC_Range_Ops.json_of_def_range r1 in
-                      [uu___10]
-                  | uu___10 -> [] in
-                FStarC_List.op_At uu___8 uu___9 in
-              FStarC_Json.JsonList uu___7 in
-            ("ranges", uu___6) in
-          [uu___5] in
-        uu___3 :: uu___4 in
+            let uu___6 = FStarC_Errors.format_issue' false issue in
+            FStarC_Json.JsonStr uu___6 in
+          ("message", uu___5) in
+        [uu___4;
+        ("ranges",
+          (FStarC_Json.JsonList
+             (FStarC_List.op_At
+                (match r with
+                 | FStar_Pervasives_Native.None -> []
+                 | FStar_Pervasives_Native.Some r1 ->
+                     [FStarC_Range_Ops.json_of_use_range r1])
+                (match r with
+                 | FStar_Pervasives_Native.Some r1 when
+                     (FStarC_Range_Type.def_range r1) <>
+                       (FStarC_Range_Type.use_range r1)
+                     -> [FStarC_Range_Ops.json_of_def_range r1]
+                 | uu___5 -> []))))] in
       FStarC_List.op_At
         (match issue.FStarC_Errors.issue_number with
          | FStar_Pervasives_Native.None -> []
          | FStar_Pervasives_Native.Some n ->
-             [("number", (FStarC_Json.JsonInt n))]) uu___2 in
-    FStarC_List.op_At
-      [("level", (json_of_issue_level issue.FStarC_Errors.issue_level))]
-      uu___1 in
+             [("number", (FStarC_Json.JsonInt n))]) uu___3 in
+    FStarC_List.op_At uu___1 uu___2 in
   FStarC_Json.JsonAssoc uu___
 let js_pushkind (s : FStarC_Json.json) : push_kind=
   let uu___ = FStarC_Interactive_JsonHelper.js_str s in

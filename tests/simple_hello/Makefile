@@ -21,7 +21,7 @@ Hello.%.test: Hello.%
 	./$< | grep "Hello F\*!"
 
 %.checked: %
-	$(FSTAR_EXE) $< --cache_checked_modules --ext optimize_let_vc --ext fly_deps
+	$(FSTAR_EXE) $< --cache_checked_modules
 
 %.ml: %.fst.checked
 	$(FSTAR_EXE) --codegen OCaml $<

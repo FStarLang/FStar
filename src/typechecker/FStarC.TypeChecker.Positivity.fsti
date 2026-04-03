@@ -22,8 +22,8 @@ open FStarC.TypeChecker.Env
 open FStarC.Syntax.Syntax
 open FStarC.Ident
 
-val check_strict_positivity: env -> list lident -> sigelt -> bool
-val name_strictly_positive_in_type: env -> bv -> term -> bool
-val name_unused_in_type: env -> bv -> term -> bool
-val check_exn_strict_positivity: env -> lident -> bool
-val mark_uniform_type_parameters: env -> sigelt -> sigelt
+val mark_uniform_type_parameters: env -> sigelt -> ML sigelt
+val name_strictly_positive_in_type: env -> bv -> term -> ML bool
+val name_unused_in_type: env -> bv -> term -> ML bool
+val check_strict_positivity: env -> list lident -> sigelt -> ML bool
+val check_exn_strict_positivity: env -> lident -> ML bool

@@ -34,7 +34,7 @@ module List = FStarC.List
 
 (* Set externally, checks if the directory exists and otherwise
 logs an issue. Cannot do it here due to circular deps. *)
-let check_include_dir = mk_ref (fun (s:string) -> ())
+let check_include_dir = mk_ref (fun (s:string) -> () <: ML unit)
 
 exception NotSettable of string
 
@@ -56,9 +56,9 @@ let as_string = function
 let as_list' = function
   | List ts -> ts
   | _ -> failwith "Impos: expected List"
-let as_list as_t x =
+let as_list (as_t: option_val -> ML 'a) x : ML (list 'a) =
   as_list' x |> List.map as_t
-let as_option as_t = function
+let as_option (as_t: option_val -> ML 'a) : option_val -> ML (option 'a) = function
   | Unset -> None
   | v -> Some (as_t v)
 let as_comma_string_list = function
@@ -102,10 +102,10 @@ let history1 =
 
 let fstar_options : ref optionstate = mk_ref (PSMap.empty ())
 
-let snapshot_all () : history1 =
+let snapshot_all () : ML history1 =
   (Debug.snapshot (), Ext.save (), !Stats.enabled, !fstar_options)
 
-let restore_all (h : history1) : unit =
+let restore_all (h : history1) : ML unit =
   let dbg, ext, stats, opts = h in
   Debug.restore dbg;
   Ext.restore ext;
@@ -116,7 +116,7 @@ let restore_all (h : history1) : unit =
 let history : ref (list (list history1)) =
   mk_ref [] // IRRELEVANT: see clear() below
 
-let peek () = !fstar_options
+let peek () : ML optionstate = !fstar_options
 
 let internal_push () =
   let lev1::rest = !history in
@@ -194,7 +194,7 @@ let defaults = [
   ("already_cached"                            , Unset);
   ("cache_checked_modules"                     , Bool false);
   ("cache_off"                                 , Bool false);
-  ("cmi"                                       , Bool false);
+  ("no_cmi"                                     , Bool false);
   ("codegen-lib"                               , List []);
   ("codegen"                                   , Unset);
   ("compat_pre_core"                           , Unset);
@@ -250,8 +250,6 @@ let defaults = [
   ("max_fuel"                                  , Int 8);
   ("max_ifuel"                                 , Int 2);
   ("message_format"                            , String "auto");
-  ("MLish"                                     , Bool false);
-  ("MLish_effect"                              , String "FStar.Effect");
   ("no_extract"                                , List []);
   ("no_location_info"                          , Bool false);
   ("no_plugins"                                , Bool false);
@@ -261,6 +259,7 @@ let defaults = [
   ("no_smt"                                    , Bool false);
   ("no_tactics"                                , Bool false);
   ("output_deps_to"                            , Unset);
+  ("output_ext"                                , Unset);
   ("output_to"                                 , Unset);
   ("pretype"                                   , Bool true);
   ("prims_ref"                                 , Unset);
@@ -352,7 +351,7 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
-let rec option_val_to_string (v:option_val) : string =
+let rec option_val_to_string (v:option_val) : ML string =
   match v with
   | Bool b -> "Bool " ^ show b
   | String s -> "String " ^ show s
@@ -365,7 +364,7 @@ instance showable_option_val : showable option_val = {
   show = option_val_to_string;
 }
 
-let rec eq_option_val (v1 v2 : option_val) : bool =
+let rec eq_option_val (v1 v2 : option_val) : ML bool =
   match v1, v2 with
   | Bool x1, Bool x2
   | String x1, String x2
@@ -381,7 +380,7 @@ instance deq_option_val : deq option_val = {
 }
 
 let rec list_try_find #a #b {| deq a |} (k : a) (l : list (a & b))
-: option b
+: ML (option b)
 =
   match l with
   | [] -> None
@@ -404,7 +403,7 @@ let show_options () =
     else
       return (k, v)
   in
-  let rec show_optionval v =
+  let rec show_optionval v : ML string =
     match v with
     | String s -> "\"" ^ s ^ "\"" // FIXME: proper escape
     | Bool b -> show b
@@ -455,7 +454,7 @@ let set_verification_options o =
   ] in
   List.iter (fun k -> set_option k (psmap_try_find o k |> Some?.v)) verifopts
 
-let lookup_opt s c =
+let lookup_opt s (c: option_val -> ML 'a) : ML 'a =
   c (get_option s)
 
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
@@ -470,7 +469,7 @@ let get_already_cached          ()      = lookup_opt "already_cached"           
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
 let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
-let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
+let get_no_cmi                  ()      = lookup_opt "no_cmi"                   as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
 let get_defensive               ()      = lookup_opt "defensive"                as_string
@@ -508,8 +507,6 @@ let get_log_failing_queries     ()      = lookup_opt "log_failing_queries"      
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
-let get_MLish_effect            ()      = lookup_opt "MLish_effect"             as_string
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_prelude              ()      = lookup_opt "no_prelude"               as_bool
@@ -520,6 +517,7 @@ let get_normalize_pure_terms_for_extraction
 let get_output_to               ()      = lookup_opt "output_to"                (as_option as_string)
 let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
+let get_output_ext              ()      = lookup_opt "output_ext"               (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
@@ -607,7 +605,7 @@ let display_version () =
   Format.print_string (Format.fmt6 "F* %s\nplatform=%s\nsystem=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform (show FStarC.Platform.system) !_compiler !_date !_commit)
 
-let bold_doc (d:Pprint.document) : Pprint.document =
+let bold_doc (d:Pprint.document) : ML Pprint.document =
   let open FStarC.Pprint in
   (* very hacky, this would make no sense for documents going elsewhere
   other than stdout *)
@@ -619,7 +617,7 @@ let display_debug_keys () =
   let keys = Debug.list_all_toggles () in
   keys |> List.sortWith String.compare |> List.iter (fun s -> Format.print_string (s ^ "\n"))
 
-let usage_for (o : opt & Pprint.document) : Pprint.document =
+let usage_for (o : opt & Pprint.document) : ML Pprint.document =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let ((short, flag, p), explain) = o in
@@ -641,7 +639,7 @@ let usage_for (o : opt & Pprint.document) : Pprint.document =
   group (bold_doc (separate (comma ^^ blank 1) (short_opt @ long_opt))) ^^ hardline ^^
   group (blank 4 ^^ align explain) ^^ hardline
 
-let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
+let display_usage_aux (specs : list (opt & Pprint.document)) : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -652,7 +650,7 @@ let display_usage_aux (specs : list (opt & Pprint.document)) : unit =
   in
   Format.print_string (pretty_string (float_of_string "1.0") 80 d)
 
-let mk_spec (o : char & string & opt_variant option_val) : opt =
+let mk_spec (o : char & string & opt_variant option_val) : ML opt =
     let ns, name, arg = o in
     let arg =
         match arg with
@@ -694,7 +692,7 @@ function is called as ``parse_opt_val "codegen" (EnumStr ["OCaml"; "FSharp";
 "krml"]) "OCaml"`` and returns ``String "OCaml"``.
 
 `opt_name` is only used in error messages. **)
-let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : option_val =
+let rec parse_opt_val (opt_name: string) (typ: opt_type) (str_val: string) : ML option_val =
   try
     match typ with
     | Const c -> c
@@ -735,7 +733,7 @@ let rec desc_of_opt_type typ : option string =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let arg_spec_of_opt_type opt_name typ : opt_variant option_val =
+let arg_spec_of_opt_type opt_name typ : ML (opt_variant option_val) =
   let wrap s = "<" ^ s ^ ">" in
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
@@ -756,7 +754,7 @@ let abort_counter : ref int =
     mk_ref 0
 
 let interp_quake_arg (s:string)
-            : int & int & bool =
+            : ML (int & int & bool) =
            (* min,  max,  keep_going *)
   let ios = int_of_string in
   match split s "/" with
@@ -774,7 +772,7 @@ let interp_quake_arg (s:string)
 let set_option_warning_callback_aux,
     option_warning_callback =
     let cb = mk_ref None in
-    let set (f:string -> unit) =
+    let set (f:string -> ML unit) =
       cb := Some f
     in
     let call msg =
@@ -785,7 +783,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
+let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.document)) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -854,9 +852,9 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "Print the version for .checked files and exit.");
 
   ( noshort,
-    "cmi",
+    "no_cmi",
     Const (Bool true),
-    text "Inline across module interfaces during extraction (aka. cross-module inlining)");
+    text "Disable inlining across module interfaces during extraction (aka. cross-module inlining). Enabled by default.");
 
   ( noshort,
     "codegen",
@@ -918,12 +916,13 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
 
   ( noshort,
     "dep",
-    EnumStr ["make"; "graph"; "full"; "raw"],
-    text "Output the transitive closure of the full dependency graph in three formats:"
+    EnumStr ["make"; "graph"; "full"; "raw"; "dune"],
+    text "Output the transitive closure of the full dependency graph in several formats:"
     ^^ bulleted [
          text "'graph': a format suitable the 'dot' tool from 'GraphViz'";
          text "'full': a format suitable for 'make', including dependences for producing .ml and .krml files";
          text "'make': (deprecated) a format suitable for 'make', including only dependences among source files";
+         text "'dune': a format suitable for 'dune', outputting (rule ...) stanzas";
        ]);
 
   ( noshort,
@@ -960,7 +959,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     "ext",
     PostProcessed (
       (fun o ->
-        let parse_ext (s:string) : list (string & string) =
+        let parse_ext (s:string) : ML (list (string & string)) =
           let exts = Util.split s ";" in
           List.collect (fun s ->
             match Util.split s "=" with
@@ -1160,16 +1159,6 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "Number of unrolling of inductive datatypes to try at most (default 2)");
 
   ( noshort,
-    "MLish",
-    Const (Bool true),
-    text "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
-
-  ( noshort,
-    "MLish_effect",
-    SimpleStr "module_name",
-    text "Set the default effect *module* for --MLish (default: FStar.Effect)");
-
-  ( noshort,
     "no_default_includes",
     WithSideEffect ((fun _ -> Find.set_no_default_includes true),
                     Const (Bool true)),
@@ -1225,6 +1214,13 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     "output_deps_to",
     PathStr "file",
     text "[Deprecated: use -o instead.] Output the result of --dep into this file instead of to standard output.");
+
+  ( noshort,
+    "output_ext",
+    SimpleStr "ext",
+    text "When used with --dep dune, controls the target file extension in generated rules. \
+         The source file's extension is replaced by this value. \
+         For example, --output-ext fst.checked turns Hello.fst into Hello.fst.checked.");
 
   ( noshort,
     "prims",
@@ -1727,7 +1723,7 @@ let specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.docum
     text "A helper. This runs 'ocamlopt' in the environment set up by --ocamlenv, for building an F* plugin.");
   ]
 
-let specs (warn_unsafe:bool) : list (FStarC.Getopt.opt & Pprint.document) =
+let specs (warn_unsafe:bool) : ML (list (FStarC.Getopt.opt & Pprint.document)) =
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ), doc)
            (specs_with_types warn_unsafe)
@@ -1847,7 +1843,7 @@ let settable_specs =
       ((c, x, h'), doc)
   )
 
-let help_for_option (s:string) : option Pprint.document =
+let help_for_option (s:string) : ML (option Pprint.document) =
   match all_specs |> List.filter (fun ((_, x, _), _) -> x = s) with
   | [] -> None
   | o::_ -> Some (usage_for o) // NB: there should be only one
@@ -1857,7 +1853,7 @@ let help_for_option (s:string) : option Pprint.document =
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 let set_error_flags_callback_aux,
     set_error_flags =
-    let callback : ref (option (unit -> parse_cmdline_res)) = mk_ref None in
+    let callback : ref (option (unit -> ML parse_cmdline_res)) = mk_ref None in
     let set f = callback := Some f in
     let call () =
       match !callback with
@@ -1889,7 +1885,7 @@ let file_list_ : ref (list string) = mk_ref []
 *)
 
 
-let rec parse_filename_arg specs enable_filenames arg =
+let rec parse_filename_arg specs enable_filenames arg : ML parse_cmdline_res =
   if Util.starts_with arg "@"
   then begin
     // read and parse a response file
@@ -1941,7 +1937,7 @@ let restore_cmd_line_options should_clear =
     set_option' ("verify_module", List (List.map String old_verify_module));
     Success
 
-let with_restored_cmd_line_options (f:unit -> 'a) : 'a =
+let with_restored_cmd_line_options (f:unit -> ML 'a) : ML 'a =
   let snap = snapshot_all () in
   let h = !history in
   let _ = restore_cmd_line_options true in
@@ -1982,9 +1978,9 @@ let custom_prims () = get_prims()
 //   --already_cached
 let path_of_text text = String.split ['.'] text
 
-let parse_settings ns : list (list string & bool) =
+let parse_settings ns : ML (list (list string & bool)) =
     let cache = smap_create 31 in
-    let with_cache f s =
+    let with_cache (f: string -> ML (list (list string & bool))) s : ML (list (list string & bool)) =
       match smap_try_find cache s with
       | Some s -> s
       | None ->
@@ -2036,7 +2032,7 @@ let disallow_unification_guards  () = get_disallow_unification_guards    ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
-let cmi                          () = get_cmi                         ()
+let cmi                          () = not (get_no_cmi                  ())
 
 let parse_codegen =
   function
@@ -2139,9 +2135,6 @@ let keep_query_captions          () =
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let ml_ish                       () = get_MLish                       ()
-let ml_ish_effect                () = get_MLish_effect                ()
-let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
@@ -2158,6 +2151,7 @@ let ( ||| ) o x =
 let output_to                    () = get_output_to                   ()
 let krmloutput                   () = get_krmloutput                  () ||| output_to ()
 let output_deps_to               () = get_output_deps_to              () ||| output_to ()
+let output_ext                   () = get_output_ext                  ()
 
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
@@ -2246,7 +2240,7 @@ let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all                    () = lookup_opt "debug_all" as_bool
 let debug_all_modules            () = lookup_opt "debug_all_modules" as_bool
 
-let with_saved_options f =
+let with_saved_options (f: unit -> ML 'a) : ML 'a =
   // take some care to not mess up the stack on errors
   // (unless we're trying to track down an error)
   // TODO: This assumes `f` does not mess with the stack!
@@ -2305,15 +2299,15 @@ let print_pes pes =
              | Some s -> s)
 
 let find_setting_for_target tgt (s:list (codegen_t & string))
-  : option string
+  : ML (option string)
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
     | _ -> None
 
 let extract_settings
-  : unit -> option parsed_extract_setting
+  : unit -> ML (option parsed_extract_setting)
   = let memo:ref (option parsed_extract_setting & bool) = mk_ref (None, false) in
-    let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
+    let merge_parsed_extract_settings p0 p1 : ML parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with
         | None, None -> None
@@ -2400,7 +2394,7 @@ let extract_settings
              memo := (Some pes, true);
              Some pes
 
-let should_extract (m:string) (tgt:codegen_t) : bool =
+let should_extract (m:string) (tgt:codegen_t) : ML bool =
     let m = String.lowercase m in
     if m = "prims" then false
     else
@@ -2529,7 +2523,7 @@ let get_vconfig () =
   in
   vcfg
 
-let set_vconfig (vcfg:vconfig) : unit =
+let set_vconfig (vcfg:vconfig) : ML unit =
   let option_as (tag : 'a -> option_val) (o : option 'a) : option_val =
     match o with
     | None -> Unset

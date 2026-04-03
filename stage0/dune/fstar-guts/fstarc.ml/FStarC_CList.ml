@@ -82,14 +82,18 @@ let rec existsb : 'a . ('a -> Prims.bool) -> 'a clist -> Prims.bool =
   fun p l ->
     match l with
     | CNil -> false
-    | CCons (x, xs) -> (p x) || (existsb p xs)
-    | CCat (xs, ys) -> (existsb p xs) || (existsb p ys)
+    | CCons (x, xs) ->
+        let uu___ = p x in if uu___ then true else existsb p xs
+    | CCat (xs, ys) ->
+        let uu___ = existsb p xs in if uu___ then true else existsb p ys
 let rec for_all : 'a . ('a -> Prims.bool) -> 'a clist -> Prims.bool =
   fun p l ->
     match l with
     | CNil -> true
-    | CCons (x, xs) -> (p x) && (for_all p xs)
-    | CCat (xs, ys) -> (for_all p xs) && (for_all p ys)
+    | CCons (x, xs) ->
+        let uu___ = p x in if uu___ then for_all p xs else false
+    | CCat (xs, ys) ->
+        let uu___ = for_all p xs in if uu___ then for_all p ys else false
 let rec partition :
   'a . ('a -> Prims.bool) -> 'a clist -> ('a clist * 'a clist) =
   fun p l ->
@@ -106,10 +110,7 @@ let rec partition :
         (match uu___ with
          | (ys1, zs) ->
              let uu___1 = partition p ys1 in
-             (match uu___1 with
-              | (us, vs) ->
-                  let uu___2 = ccat ys1 us in
-                  let uu___3 = ccat zs vs in (uu___2, uu___3)))
+             (match uu___1 with | (us, vs) -> ((ccat ys1 us), (ccat zs vs))))
 let rec collect : 'a 'b . ('a -> 'b clist) -> 'a clist -> 'b clist =
   fun f l ->
     match l with

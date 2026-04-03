@@ -15,7 +15,6 @@
 *)
 module Bug151
 
-open FStar.Array
 open FStar.Seq
 
 assume new type p: int -> nat -> Type

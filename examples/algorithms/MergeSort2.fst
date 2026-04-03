@@ -106,11 +106,11 @@ let rec split_n #a l n =
 
 (** split_half splits a list halfway **)
 val split_half: #a:eqtype -> (l:list a{length l >= 2}) ->
-  Tot (l_tup:(list a & list a))
+  Tot (list a & list a)
 let split_half #a l = split_n l ((length l) / 2)
 
 (** Define mergesort **)
-val mergesort': #a:eqtype -> l:list a -> k:(a -> Tot int) -> Tot (l':list a) (decreases (length l))
+val mergesort': #a:eqtype -> l:list a -> k:(a -> Tot int) -> Tot (list a) (decreases (length l))
 let rec mergesort' #a l k =
   match l with
   | []

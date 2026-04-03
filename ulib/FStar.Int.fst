@@ -186,3 +186,35 @@ let shift_right_lemma_2 #n a s i = ()
 let shift_arithmetic_right_lemma_1 #n a s i = ()
 
 let shift_arithmetic_right_lemma_2 #n a s i = ()
+
+(* Rotate operators lemmas *)
+
+let rotate_left_lemma #n a s i = ()
+
+let rotate_right_lemma #n a s i = ()
+
+let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
+
+let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
+
+#push-options "--split_queries always"
+let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
+
+private let rec rotate_mod_lemma (i:nat) (s:nat) (n:pos)
+  : Lemma (requires i < n)
+          (ensures ((i + s) % n + n - (s % n)) % n = i)
+  = let open FStar.Math.Lemmas in
+    lemma_mod_add_distr i s n;
+    let r = s % n in
+    lemma_mod_lt (i + r) n;
+    if i + r < n
+    then (modulo_lemma (i + r) n; modulo_lemma i n)
+    else (lemma_mod_sub (i + r) n 1; modulo_lemma i n)
+
+let rotate_right_left_inverse #n a s =
+  let aux (i:nat{i < n}) : Lemma (nth (rotate_left #n (rotate_right #n a s) s) i = nth #n a i) =
+    rotate_mod_lemma i s n
+  in
+  Classical.forall_intro aux;
+  nth_lemma (rotate_left #n (rotate_right #n a s) s) a
+#pop-options

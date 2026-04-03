@@ -23,4 +23,4 @@ type printing_mode =
   | FromTempToStdout
   | FromTempToFile
 
-val generate (m: printing_mode) (filenames  : list string) : unit
+val generate (m: printing_mode) (filenames  : list string) : ML unit

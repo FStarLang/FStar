@@ -8,7 +8,7 @@ let r (uu___ : unit) (uu___1 : unit) (uu___2 : Obj.t -> Obj.t) : Prims.int=
   Prims.int_zero
 let g (uu___ : Prims.int) (uu___1 : Prims.int) : Prims.int= Prims.int_zero
 let ko (a : Prims.int) : Prims.int=
-  let a1 = a in r () () (fun uu___ -> (Obj.magic (g a1)) uu___)
+  let a1 = a in r () () (fun uu___ -> Obj.magic (g a1) uu___)
 type record_t = {
   struct1: Prims.int ;
   constraint1: Prims.bool }

@@ -1,7 +1,7 @@
 # Test the 'include' functionality
 
 # Do not warn about missing checked files in these tests.
-OTHERFLAGS += --warn_error -241 --ext optimize_let_vc --ext fly_deps
+OTHERFLAGS += --warn_error -241
 
 POSTESTS=$(wildcard *.pos)
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))

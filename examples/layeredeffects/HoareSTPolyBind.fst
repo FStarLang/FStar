@@ -16,36 +16,24 @@
 
 module HoareSTPolyBind
 
-open FStar.Heap
-open FStar.ST
+open SimpleHeap
+open ExampleST
 
-module P = FStar.Preorder
-
-
-/// ST effect implemented as a layered effect over STATE
+/// ST effect implemented as a layered effect over ExST (STATE_h SimpleHeap.heap)
 ///
 /// This module uses polymonadic binds to compose HoareST and PURE computations
-///
-/// See the `copy_aux` function below for some limitations of the polymonadic bind
 
 #set-options "--fuel 0 --ifuel 0"
 
 type pre_t = heap -> Type0
 type post_t (a:Type) = heap -> a -> heap -> Type0
 
-/// It has two indices: one for the precondition and one for the postcondition
-///
-/// Its encoding in STATE is as expected
-
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
-  unit -> STATE a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
+  unit -> ExST a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))
 
 let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
-
-
-/// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
@@ -56,9 +44,6 @@ let bind (a:Type) (b:Type)
 = fun _ ->
   let x = f () in
   g x ()
-
-
-/// sub comp rule
 
 let subcomp (a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
@@ -93,47 +78,44 @@ effect {
 }
 
 
-/// Effect actions from FStar.ST
+/// Effect actions
 
-let recall (#a:Type) (#rel:P.preorder a) (r:mref a rel)
-: HoareST unit
-  (fun _ -> True)
-  (fun h0 _ h1 ->
-    h0 == h1 /\
-    h1 `Heap.contains` r)
-= HoareST?.reflect (fun _ -> recall r)
-
-let alloc (#a:Type) (#rel:P.preorder a) (init:a)
-: HoareST (mref a rel)
+let alloc (#a:Type0) (init:a)
+: HoareST (ref a)
   (fun _ -> True)
   (fun h0 r h1 ->
     fresh r h0 h1 /\
-    modifies Set.empty h0 h1 /\
-    sel h1 r == init)
-= HoareST?.reflect (fun _ -> alloc init)
+    h1 `contains` r /\
+    sel h1 r == init /\
+    (forall (b:Type0) (r':ref b). h0 `contains` r' ==> h1 `contains` r' /\ sel h1 r' == sel h0 r'))
+= HoareST?.reflect (fun _ -> st_alloc init)
 
-let op_Bang (#a:Type) (#rel:P.preorder a) (r:mref a rel)
+let op_Bang (#a:Type0) (r:ref a)
 : HoareST a
-  (fun _ -> True)
+  (fun h -> h `contains` r)
   (fun h0 x h1 ->
+    h0 `contains` r /\
     h0 == h1 /\
-    x == sel h1 r)
-= HoareST?.reflect (fun _ -> read r)
+    x == sel h0 r)
+= HoareST?.reflect (fun _ -> st_read r)
 
-let op_Colon_Equals (#a:Type) (#rel:P.preorder a) (r:mref a rel) (x:a)
+let op_Colon_Equals (#a:Type0) (r:ref a) (x:a)
 : HoareST unit
-  (fun h -> rel (sel h r) x)
+  (fun h -> h `contains` r)
   (fun h0 _ h1 ->
-    modifies (Set.singleton (addr_of r)) h0 h1 /\
+    h0 `contains` r /\
+    modifies (only r) h0 h1 /\
     equal_dom h0 h1 /\
+    h1 `contains` r /\
     sel h1 r == x)
-= HoareST?.reflect (fun _ -> write r x)
+= HoareST?.reflect (fun _ -> st_write r x)
 
 let get ()
 : HoareST heap
   (fun _ -> True)
   (fun h0 h h1 -> h0 == h1 /\ h == h1)
-= HoareST?.reflect get
+= HoareST?.reflect (fun _ -> ExampleST.get ())
+
 
 /// We don't define a traditional lift from PURE to HoareST
 ///
@@ -168,9 +150,6 @@ let bind_hoarest_pure (a:Type u#a) (b:Type u#b) (req:pre_t) (ens:post_t a) (wp:a
 
 polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
 
-(*
-//  * PURE a wp <: HoareST a req ens
-//  *)
 
 let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
   (f:unit -> PURE a wp)
@@ -207,20 +186,6 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
 
 
-(*
-//  * In the polymonadic bind (PURE, HoareST) |> HoareST, the return type of
-//  *   g is not allowed to depend on x, the return value of f
-//  *
-//  * So then what happens when a function f whose return type depends on its argument
-//  *   is applied to a PURE term
-//  *   NOTE: PURE and not Tot, since Tot will just be substituted,
-//  *   without even invoking the bind
-//  *
-//  * When typechecking f e, the comp type is roughly
-//  *   bind C_e C_ret_f, where C_ret_f is the comp type of f (below the arrow binder)
-//  *   This is where bind comes in
-//  *)
-
 assume type t_int (x:int) : Type0
 assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
 assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). x >= 2 ==> p x))
@@ -228,51 +193,32 @@ assume val pure_g (_:unit) : PURE int (as_pure_wp (fun p -> forall (x:int). x >=
 let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
   dep_f (pure_g ())
 
-(*
-//  * This works!
-//  *
-//  * The reason is that, before bind is called, the typechecker has already
-//  *   substituted the pure term (pure_g ()) into the comp type of dep_f
-//  *   (below the binder)
-//  *)
-
-
-(*
-//  * But what happens when this is an explicit let binding?
-//  *   as opposed to a function application
-//  *)
 
 let test_dep_f2 () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
   let x = pure_g () in
   dep_f x
 
 
-(*
-//  * This also works because weakening the type using the annotation saves us!
-//  *)
-
-
-
-
 module Seq = FStar.Seq
-
 
 type array (a:Type0) = ref (Seq.seq a)
 
 let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
 : HoareST (array a)
-  (fun _ -> True)
+  (fun h -> h `contains` s1 /\ h `contains` s2)
   (fun h0 r h1 ->
-    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
-    modifies Set.empty h0 h1)
+    h0 `contains` s1 /\ h0 `contains` s2 /\
+    h1 `contains` r /\
+    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2))
 = let s1 = !s1 in
   let s2 = !s2 in
   alloc (Seq.append s1 s2)
 
 let index (#a:Type0) (x:array a) (i:nat)
 : HoareST a
-  (fun h -> i < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ i < Seq.length (sel h x))
   (fun h0 v h1 ->
+    h0 `contains` x /\
     i < Seq.length (sel h0 x) /\
     h0 == h1 /\
     v == Seq.index (sel h0 x) i)
@@ -281,10 +227,12 @@ let index (#a:Type0) (x:array a) (i:nat)
 
 let upd (#a:Type0) (x:array a) (i:nat) (v:a)
 : HoareST unit
-  (fun h -> i < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ i < Seq.length (sel h x))
   (fun h0 _ h1 ->
+    h0 `contains` x /\
     i < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    modifies (only x) h0 h1 /\
+    h1 `contains` x /\
     sel h1 x == Seq.upd (sel h0 x) i v)
 = let s = !x in
   let s = Seq.upd s i v in
@@ -292,17 +240,21 @@ let upd (#a:Type0) (x:array a) (i:nat) (v:a)
 
 let length (#a:Type0) (x:array a)
 : HoareST nat
-  (fun _ -> True)
-  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+  (fun h -> h `contains` x)
+  (fun h0 y h1 ->
+    h0 `contains` x /\
+    y == Seq.length (sel h0 x) /\ h0 == h1)
 = let s = !x in
   Seq.length s
 
 let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
 : HoareST unit
-  (fun h -> j < Seq.length (sel h x))
+  (fun h -> h `contains` x /\ j < Seq.length (sel h x))
   (fun h0 _ h1 ->
+    h0 `contains` x /\
     j < Seq.length (sel h0 x) /\
-    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    modifies (only x) h0 h1 /\
+    h1 `contains` x /\
     sel h1 x == Seq.swap (sel h0 x) i j)
 = let v_i = index x i in
   let v_j = index x j in
@@ -311,13 +263,8 @@ let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
 
 
 /// `match` with PURE code in one branch and HoareST in another doesn't work
-///
-/// Since it requires lifts
-///
-/// Just writing `admit ()` at the end of a HoareST function also doesn't work for the same reason
-
-
-/// But we can define a return combinator and use it
+/// since it requires lifts.
+/// But we can define a return combinator and use it.
 
 let return (#a:Type) (x:a)
 : HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
@@ -328,35 +275,3 @@ let test_lift (b:bool) : HoareST int (fun _ -> b == true) (fun h0 x h1 -> h0 == 
 = match b with
   | true -> return 0
   | false -> return 1
-
-let rec copy_aux
-  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
-: HoareST unit
-  (fun h ->
-    addr_of s =!= addr_of cpy /\
-    Seq.length (sel h cpy) == Seq.length (sel h s) /\
-    ctr <= Seq.length (sel h cpy) /\
-    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
-  (fun h0 _ h1 ->
-    modifies (only cpy) h0 h1 /\
-    Seq.equal (sel h1 cpy) (sel h1 s))
-= recall s; recall cpy;
-  let diff = length cpy - ctr in
-  match diff with
-  | 0 -> return ()
-  | _ ->
-    upd cpy ctr (index s ctr);
-    copy_aux s cpy (ctr + 1)
-
-let copy (#a:Type0) (s:array a)
-: HoareST (array a)
-  (fun h -> Seq.length (sel h s) > 0)
-  (fun h0 r h1 ->
-    modifies Set.empty h0 h1 /\
-    r `unused_in` h0 /\
-    contains h1 r /\
-    sel h1 r == sel h0 s)
-= recall s;
-  let cpy = alloc (Seq.create (length s) (index s 0)) in
-  copy_aux s cpy 0;
-  cpy

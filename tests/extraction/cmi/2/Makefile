@@ -8,7 +8,6 @@
 ################################################################################
 
 FSTAR_ROOT ?= ../../../..
-OTHERFLAGS += --cmi
 include $(FSTAR_ROOT)/mk/test.mk
 
 # Test.ml.expected should not contain a magic.

@@ -9,8 +9,6 @@ else
 cygpath=$(abspath $(1))
 endif
 
-FSTAR_OPTIONS += --ext fly_deps
-FSTAR_ARGS += --ext fly_deps
 MAKEFLAGS += --no-builtin-rules
 Q?=@
 SIL?=--silent
@@ -39,17 +37,18 @@ define bold_msg =
 printf -- "  %-15s  %s\n" $(1) $(2)
 endef
 
-# Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
-# information about the time and space taken by each F* invocation.
-ifneq ($(RESOURCEMONITOR),)
-	ifeq ($(shell which runlim),)
-		_ := $(error $(NO_RUNLIM_ERR))
-	endif
-	ifneq ($(MONID),)
-		MONPREFIX=$(MONID).
-	endif
-	RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
-endif
+# Disabled for stage0! We now use ramon
+# # Passing RESOURCEMONITOR=1 will create .runlim files through the source tree with
+# # information about the time and space taken by each F* invocation.
+# ifneq ($(RESOURCEMONITOR),)
+#         ifeq ($(shell which runlim),)
+#                 _ := $(error $(NO_RUNLIM_ERR))
+#         endif
+#         ifneq ($(MONID),)
+#                 MONPREFIX=$(MONID).
+#         endif
+#         RUNLIM=runlim -p -o $@.$(MONPREFIX)runlim
+# endif
 
 # Ensure that any failing rule will not create its target file.
 # In other words, make `make` less insane.

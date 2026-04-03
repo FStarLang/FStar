@@ -40,7 +40,7 @@ let conjunction_monoid :unit =
  * This breakage is currently masked by a normalization/compression pass between the two phases.
  * But we need a better solution.
  *)
-let rec f1: a:Type u#x -> l:list u#x a -> list u#x a = fun a l -> []
+let f1: a:Type u#x -> l:list u#x a -> list u#x a = fun a l -> []
 
 (*
  * If the recursive let binding (xxx below) is added at different types to Gamma in the two phases,
@@ -61,7 +61,7 @@ let rec false_elim (#a:Type) (u:unit{false}) : Tot a = false_elim ()
 
 let f4 n :nat = 1
 let f5 (ls:list nat) :nat =
-  let rec aux (xs:list nat) :nat = f4 0
+  let aux (xs:list nat) :nat = f4 0
   in
   0
 
@@ -138,7 +138,7 @@ type solve_1124 (#a:Type) (e1:a) (e2:a): Type =
 | By: t:unit{e1 == e2} -> solve_1124 e1 e2
 
 val nth_tot_1124: l:list 'a -> n:nat{n < length l} -> Tot 'a
-let rec nth_tot_1124 l n = 
+let nth_tot_1124 l n = 
   match nth l n with
   | None -> magic()
   | Some x -> x

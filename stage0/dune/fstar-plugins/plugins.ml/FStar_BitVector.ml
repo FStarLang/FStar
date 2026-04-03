@@ -10,13 +10,15 @@ let rec logand_vec (n : Prims.pos) (a : Obj.t bv_t) (b : Obj.t bv_t) :
   if n = Prims.int_one
   then
     FStar_Seq_Base.create Prims.int_one
-      ((FStar_Seq_Base.index a Prims.int_zero) &&
-         (FStar_Seq_Base.index b Prims.int_zero))
+      (if FStar_Seq_Base.index a Prims.int_zero
+       then FStar_Seq_Base.index b Prims.int_zero
+       else false)
   else
     FStar_Seq_Base.append
       (FStar_Seq_Base.create Prims.int_one
-         ((FStar_Seq_Base.index a Prims.int_zero) &&
-            (FStar_Seq_Base.index b Prims.int_zero)))
+         (if FStar_Seq_Base.index a Prims.int_zero
+          then FStar_Seq_Base.index b Prims.int_zero
+          else false))
       (logand_vec (n - Prims.int_one)
          (FStar_Seq_Base.slice a Prims.int_one n)
          (FStar_Seq_Base.slice b Prims.int_one n))
@@ -40,13 +42,15 @@ let rec logor_vec (n : Prims.pos) (a : Obj.t bv_t) (b : Obj.t bv_t) :
   if n = Prims.int_one
   then
     FStar_Seq_Base.create Prims.int_one
-      ((FStar_Seq_Base.index a Prims.int_zero) ||
-         (FStar_Seq_Base.index b Prims.int_zero))
+      (if FStar_Seq_Base.index a Prims.int_zero
+       then true
+       else FStar_Seq_Base.index b Prims.int_zero)
   else
     FStar_Seq_Base.append
       (FStar_Seq_Base.create Prims.int_one
-         ((FStar_Seq_Base.index a Prims.int_zero) ||
-            (FStar_Seq_Base.index b Prims.int_zero)))
+         (if FStar_Seq_Base.index a Prims.int_zero
+          then true
+          else FStar_Seq_Base.index b Prims.int_zero))
       (logor_vec (n - Prims.int_one) (FStar_Seq_Base.slice a Prims.int_one n)
          (FStar_Seq_Base.slice b Prims.int_one n))
 let rec lognot_vec (n : Prims.pos) (a : Obj.t bv_t) : Obj.t bv_t=
@@ -93,3 +97,13 @@ let shift_arithmetic_right_vec (n : Prims.pos) (a : Obj.t bv_t)
          FStar_Seq_Base.append (ones_vec s)
            (FStar_Seq_Base.slice a Prims.int_zero (n - s)))
   else shift_right_vec n a s
+let rotate_left_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :
+  Obj.t bv_t=
+  let s1 = (mod) s n in
+  FStar_Seq_Base.append (FStar_Seq_Base.slice a s1 n)
+    (FStar_Seq_Base.slice a Prims.int_zero s1)
+let rotate_right_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :
+  Obj.t bv_t=
+  let s1 = (mod) s n in
+  FStar_Seq_Base.append (FStar_Seq_Base.slice a (n - s1) n)
+    (FStar_Seq_Base.slice a Prims.int_zero (n - s1))

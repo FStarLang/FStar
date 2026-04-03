@@ -29,18 +29,24 @@ let fstar_refl_data_lid (s : Prims.string) : FStarC_Ident.lident=
   fstar_refl_lid ["V2"; "Data"; s]
 let fstar_syntax_syntax_const (s : Prims.string Prims.list) : refl_constant=
   let lid = fstar_syntax_syntax_lid s in
-  let uu___ =
-    FStarC_Syntax_Syntax.lid_as_fv lid
-      (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.Data_ctor) in
-  let uu___1 = FStarC_Syntax_Syntax.tdataconstr lid in
-  { lid; fv = uu___; t = uu___1 }
+  let uu___ = FStarC_Syntax_Syntax.tdataconstr lid in
+  {
+    lid;
+    fv =
+      (FStarC_Syntax_Syntax.lid_as_fv lid
+         (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.Data_ctor));
+    t = uu___
+  }
 let fstar_refl_data_const (s : Prims.string) : refl_constant=
   let lid = fstar_refl_data_lid s in
-  let uu___ =
-    FStarC_Syntax_Syntax.lid_as_fv lid
-      (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.Data_ctor) in
-  let uu___1 = FStarC_Syntax_Syntax.tdataconstr lid in
-  { lid; fv = uu___; t = uu___1 }
+  let uu___ = FStarC_Syntax_Syntax.tdataconstr lid in
+  {
+    lid;
+    fv =
+      (FStarC_Syntax_Syntax.lid_as_fv lid
+         (FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.Data_ctor));
+    t = uu___
+  }
 let mk_refl_types_lid_as_term (s : Prims.string) : FStarC_Syntax_Syntax.term=
   let uu___ = fstar_refl_types_lid s in FStarC_Syntax_Syntax.tconst uu___
 let mk_refl_types_lid_as_fv (s : Prims.string) : FStarC_Syntax_Syntax.fv=
@@ -267,19 +273,10 @@ let ref_Mk_namedv_view : refl_constant=
   let attr =
     let uu___ =
       let uu___9 = fstar_refl_data_lid "namedv_view" in
-      let uu___10 =
-        let uu___11 =
-          FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange) in
-        let uu___12 =
-          let uu___13 =
-            FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange) in
-          let uu___14 =
-            let uu___15 =
-              FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange) in
-            [uu___15] in
-          uu___13 :: uu___14 in
-        uu___11 :: uu___12 in
-      (uu___9, uu___10) in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)]) in
     FStarC_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -289,19 +286,10 @@ let ref_Mk_bv_view : refl_constant=
   let attr =
     let uu___ =
       let uu___9 = fstar_refl_data_lid "bv_view" in
-      let uu___10 =
-        let uu___11 =
-          FStarC_Ident.mk_ident ("index", FStarC_Range_Type.dummyRange) in
-        let uu___12 =
-          let uu___13 =
-            FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange) in
-          let uu___14 =
-            let uu___15 =
-              FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange) in
-            [uu___15] in
-          uu___13 :: uu___14 in
-        uu___11 :: uu___12 in
-      (uu___9, uu___10) in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("index", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)]) in
     FStarC_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -311,19 +299,10 @@ let ref_Mk_binding : refl_constant=
   let attr =
     let uu___ =
       let uu___9 = fstar_refl_data_lid "binding" in
-      let uu___10 =
-        let uu___11 =
-          FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange) in
-        let uu___12 =
-          let uu___13 =
-            FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange) in
-          let uu___14 =
-            let uu___15 =
-              FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange) in
-            [uu___15] in
-          uu___13 :: uu___14 in
-        uu___11 :: uu___12 in
-      (uu___9, uu___10) in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)]) in
     FStarC_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -333,24 +312,11 @@ let ref_Mk_binder_view : refl_constant=
   let attr =
     let uu___ =
       let uu___9 = fstar_refl_data_lid "binder_view" in
-      let uu___10 =
-        let uu___11 =
-          FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange) in
-        let uu___12 =
-          let uu___13 =
-            FStarC_Ident.mk_ident ("qual", FStarC_Range_Type.dummyRange) in
-          let uu___14 =
-            let uu___15 =
-              FStarC_Ident.mk_ident ("attrs", FStarC_Range_Type.dummyRange) in
-            let uu___16 =
-              let uu___17 =
-                FStarC_Ident.mk_ident
-                  ("ppname", FStarC_Range_Type.dummyRange) in
-              [uu___17] in
-            uu___15 :: uu___16 in
-          uu___13 :: uu___14 in
-        uu___11 :: uu___12 in
-      (uu___9, uu___10) in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("qual", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("attrs", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)]) in
     FStarC_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in
@@ -360,24 +326,11 @@ let ref_Mk_lb : refl_constant=
   let attr =
     let uu___ =
       let uu___9 = fstar_refl_data_lid "lb_view" in
-      let uu___10 =
-        let uu___11 =
-          FStarC_Ident.mk_ident ("lb_fv", FStarC_Range_Type.dummyRange) in
-        let uu___12 =
-          let uu___13 =
-            FStarC_Ident.mk_ident ("lb_us", FStarC_Range_Type.dummyRange) in
-          let uu___14 =
-            let uu___15 =
-              FStarC_Ident.mk_ident ("lb_typ", FStarC_Range_Type.dummyRange) in
-            let uu___16 =
-              let uu___17 =
-                FStarC_Ident.mk_ident
-                  ("lb_def", FStarC_Range_Type.dummyRange) in
-              [uu___17] in
-            uu___15 :: uu___16 in
-          uu___13 :: uu___14 in
-        uu___11 :: uu___12 in
-      (uu___9, uu___10) in
+      (uu___9,
+        [FStarC_Ident.mk_ident ("lb_fv", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("lb_us", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("lb_typ", FStarC_Range_Type.dummyRange);
+        FStarC_Ident.mk_ident ("lb_def", FStarC_Range_Type.dummyRange)]) in
     FStarC_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStarC_Syntax_Syntax.lid_as_fv lid (FStar_Pervasives_Native.Some attr) in

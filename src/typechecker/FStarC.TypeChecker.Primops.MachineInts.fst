@@ -19,7 +19,7 @@ module E = FStarC.Int.Extra
 (* NB: Eta expanding trips typeclass resolution *)
 let mymon = writer (list primitive_step)
 
-let bounded_arith_ops_for (k : machint_kind) : mymon unit =
+let bounded_arith_ops_for (k : machint_kind) : ML (mymon unit) =
   let mod_name = module_name_for k in
   let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
   (* Operators common to all *)

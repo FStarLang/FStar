@@ -15,7 +15,7 @@
 *)
 module Bug446
 
-open FStar.ST
+open FStar.All
 
 type wP (a:Type) = st_wp_h int a
 
