@@ -318,7 +318,7 @@ pulseStmtNoSeq:
 
 matchStmt:
   | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
-    { PulseSyntaxExtension_Sugar.mk_match tm c brs }
+    { PulseSyntaxExtension_Sugar.mk_match (PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_expr tm []) (rr $loc(tm))) c brs }
 
 letMutInit:
   | EQUALS p=pulseBindableTerm { let p = PulseSyntaxExtension_Sugar.mk_stmt p (rr $loc) in Stmt_initializer p }
@@ -390,7 +390,7 @@ pulseStmt:
 
 ifStmt:
   | IF tm=appTermNoRecordExp vp=option(ensuresSLProp) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
-    { PulseSyntaxExtension_Sugar.mk_if tm vp th e }
+    { PulseSyntaxExtension_Sugar.mk_if (PulseSyntaxExtension_Sugar.mk_stmt (PulseSyntaxExtension_Sugar.mk_expr tm []) (rr $loc(tm))) vp th e }
 
 elseBlock:
   | ELSE LBRACE p=pulseStmt RBRACE

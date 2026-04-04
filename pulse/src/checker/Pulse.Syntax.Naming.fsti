@@ -109,12 +109,12 @@ let rec freevars_st (t:st_term)
       freevars head ++
       freevars_st body
     | Tm_If { b; then_; else_; post } ->
-      freevars b ++
+      freevars_st b ++
       freevars_st then_ ++
       (freevars_st else_ ++ freevars_term_opt post)
 
     | Tm_Match { sc ; returns_; brs } ->
-      freevars sc ++
+      freevars_st sc ++
       freevars_term_opt returns_ ++
       freevars_branches brs
 
@@ -297,13 +297,13 @@ let rec ln_st' (t:st_term) (i:int)
       ln_st' body (i + 1)
 
     | Tm_If { b; then_; else_; post } ->
-      ln' b i &&
+      ln_st' b i &&
       ln_st' then_ i &&
       ln_st' else_ i &&
       ln_opt' ln' post (i + 1)
   
     | Tm_Match {sc; returns_; brs } ->
-      ln' sc i &&
+      ln_st' sc i &&
       ln_opt' ln' returns_ i &&
       ln_branches' t brs i
 
@@ -547,13 +547,13 @@ let rec subst_st_term (t:st_term) (ss:subst)
                    body = subst_st_term body (shift_subst ss) }
 
     | Tm_If { b; then_; else_; post } ->
-      Tm_If { b = subst_term b ss;
+      Tm_If { b = subst_st_term b ss;
               then_ = subst_st_term then_ ss;
               else_ = subst_st_term else_ ss;
               post = subst_term_opt post (shift_subst ss) }
 
     | Tm_Match { sc; returns_; brs } ->
-      Tm_Match { sc = subst_term sc ss;
+      Tm_Match { sc = subst_st_term sc ss;
                  returns_ = subst_term_opt returns_ ss;
                  brs = subst_branches t ss brs }
 

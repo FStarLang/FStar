@@ -241,13 +241,13 @@ type st_term' =
       body:st_term;
     }
   | Tm_If {
-      b:term;
+      b:st_term;
       then_:st_term;
       else_:st_term;
       post:option slprop;
     }
   | Tm_Match {
-      sc:term;
+      sc:st_term;
       returns_:option slprop;
       brs: list branch;
     }

@@ -157,7 +157,7 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' body x (i + 1)
 
     | Tm_If { b; then_; else_; post } ->
-      freevars_close_term' b x i;    
+      freevars_close_st_term' b x i;    
       freevars_close_st_term' then_ x i;    
       freevars_close_st_term' else_ x i;          
       freevars_close_term_opt' post x (i + 1)      

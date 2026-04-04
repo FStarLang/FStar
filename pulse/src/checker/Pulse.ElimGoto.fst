@@ -86,7 +86,11 @@ let mk_if_cond (g: env) (t: st_term) (cond: nvar) : T.Tac st_term =
     binder = mk_binder_ppname_inline tm_bool (fst cond);
     head = mk_read u0 tm_bool (term_of_nvar cond);
     body = wtag t.effect_tag <| Tm_If {
-      b = close_term (term_of_nvar cond) (snd cond);
+      b = wtag (as_effect_hint STT) <| Tm_Return {
+        expected_type = tm_bool;
+        insert_eq = false;
+        term = close_term (term_of_nvar cond) (snd cond);
+      };
       then_ = wtag t.effect_tag <| Tm_Return {
         expected_type = tm_unit;
         insert_eq = false;
@@ -247,7 +251,11 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
             binder = mk_binder_ppname_inline tm_bool ppname_default;
             body = (fun t -> close_st_term t y) <| wtag condition.effect_tag <|
               Tm_If {
-                b = term_of_nvar (ppname_default, y);
+                b = wtag (as_effect_hint STT) <| Tm_Return {
+                  expected_type = tm_bool;
+                  insert_eq = false;
+                  term = term_of_nvar (ppname_default, y);
+                };
                 then_ = wtag condition.effect_tag <| Tm_Return {
                   expected_type = tm_bool;
                   insert_eq = false;

@@ -21,6 +21,7 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
+module RB = Pulse.Readback
 open Pulse.Checker.Util
 open Pulse.Show
 
@@ -594,12 +595,78 @@ let bind_st_term (g:env) (s:st_term)
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
   g, b, x, RT.var_as_term x
 
+(* Hoist a single F*-level Tv_Match branch body by delegating to maybe_hoist.
+   Returns the body as an st_term and whether any hoisting was done. *)
+let hoist_branch_body (g:env) (body:term) (rng:Range.range)
+  (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
+: T.Tac (st_term & bool)
+= let body_rng = RU.range_of_term body in
+  let (_g', binders, (body', _q)) = maybe_hoist_fn g (body, R.Q_Explicit) in
+  match binders with
+  | [] ->
+    (mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body}) body_rng, false)
+  | _ ->
+    let ret = mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body'}) body_rng in
+    let final_st = List.Tot.fold_right
+      (fun (b, v, arg) (acc:st_term) ->
+        let acc' = Pulse.Syntax.Naming.close_st_term acc v in
+        mk_term (Tm_Bind { binder = b; head = arg; body = acc' }) rng)
+      binders
+      ret
+    in
+    (final_st, true)
+
+(* Process all branches of an F*-level Tv_Match, hoisting stateful apps
+   in each branch body. Returns processed branches and whether any changed. *)
+let rec process_fstar_match_branches
+  (g:env) (rng:Range.range)
+  (brs: list (R.pattern & term))
+  (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
+: T.Tac (list (R.pattern & st_term) & bool)
+= match brs with
+  | [] -> ([], false)
+  | (pat, body) :: rest ->
+    let (body_st, changed) = hoist_branch_body g body rng maybe_hoist_fn in
+    let (rest_results, rest_changed) = process_fstar_match_branches g rng rest maybe_hoist_fn in
+    ((pat, body_st) :: rest_results, changed || rest_changed)
+
+(* Convert an F*-level Tv_Match with stateful branches into a Pulse st_term.
+   Produces Tm_If for 2-branch matches (F*-level if/then/else), Tm_Match otherwise. *)
+let convert_fstar_match (g:env) (t:term)
+  (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
+: T.Tac (option st_term)
+= match R.inspect_ln t with
+  | R.Tv_Match sc _ret brs ->
+    let rng = RU.range_of_term t in
+    let (results, any_changed) = process_fstar_match_branches g rng brs maybe_hoist_fn in
+    if any_changed then (
+      let sc_st = mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=sc}) (RU.range_of_term sc) in
+      Some (match results with
+        | [(_pat1, body1); (_pat2, body2)] ->
+          mk_term (Tm_If { b = sc_st; then_ = body1; else_ = body2; post = None }) rng
+        | _ ->
+          let pulse_brs : list branch = T.map (fun (rpat, e) ->
+            match RB.readback_pat rpat with
+            | Some p -> { pat = p; e; norw = FStar.Sealed.seal false }
+            | None -> T.fail "Cannot readback pattern from F*-level match during hoisting"
+          ) results in
+          mk_term (Tm_Match { sc = sc_st; returns_ = None; brs = pulse_brs }) rng)
+    ) else None
+  | _ -> None
+
 let rec maybe_hoist (g:env) (arg:T.argv)
 : T.Tac (env & list (binder & var & st_term) & T.argv)
 = let t, q = arg in
   let head, args = T.collect_app_ln t in
   match args with
-  | [] -> g, [], arg //no args to hoist
+  | [] ->
+    // No application args. Check if the term is an F*-level Tv_Match
+    // with stateful operations in its branches (issue #443 "hard case").
+    (match convert_fstar_match g t maybe_hoist with
+     | Some st_cond ->
+       let g, b, x, var_t = bind_st_term g st_cond in
+       g, [b, x, st_cond], (var_t, q)
+     | None -> g, [], arg)
   | _ ->
   match is_stateful_application g t with
   | None -> (
@@ -664,7 +731,20 @@ let hoist_stateful_apps
   | Some (head, args, rebuild) ->
     let _, binders, args = maybe_hoist_args g args in
     match args with
-    | [] -> None
+    | [] ->
+      // No args after decomposition. Check if the term is an F*-level
+      // Tv_Match with stateful branches (the "hard case" from #443).
+      (match tt with
+       | Inl t ->
+         (match convert_fstar_match g t maybe_hoist with
+          | Some st_cond ->
+            let rng = RU.range_of_term t in
+            let _, b, v, var_t = bind_st_term g st_cond in
+            let bind_term = context (Inl var_t) in
+            let body = Pulse.Syntax.Naming.close_st_term bind_term v in
+            Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
+          | None -> None)
+       | _ -> None)
     | _ ->
       let tt' = rebuild args in
       let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in 
