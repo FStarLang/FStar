@@ -49,8 +49,8 @@ type int_t (n:pos) = x:int{size x n}
 
 /// Multiplicative operator semantics, see C11 6.5.5
 
-(* Truncation towards zero division *)
-let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
+(* Truncation towards zero division: (/-) *)
+let op_Slash_Subtraction (a:int) (b:int{b <> 0}) : Tot int =
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
 
@@ -151,26 +151,25 @@ let mul_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
 
 #pop-options
 
-(* Division primitives *)
+(* Division primitives. Truncates towards zero. *)
 let div (#n:pos) (a:int_t n) (b:int_t n{b <> 0})
     : Pure (int_t n)
-      (requires (size (a / b) n))
-      (ensures (fun c -> b <> 0 ==> a / b = c))
-= a / b
+      (requires (size (a /- b) n))
+      (ensures (fun c -> b <> 0 ==> a /- b = c))
+= a /- b
 
 val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
   (requires True)
   (ensures (fun c ->
-    (b <> 0 /\ size (a / b) n) ==> a / b = c))
+    (b <> 0 /\ size (a /- b) n) ==> a /- b = c))
 
 val div_size: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))
 
 let udiv (#n:pos) (a:int_t n{min_int n < a}) (b:int_t n{b <> 0})
-    : Tot (c:int_t n{b <> 0 ==> a / b = c})
+    : Tot (c:int_t n{b <> 0 ==> a /- b = c})
   = div_size #n a b;
-    a / b
-
+    a /- b
 
 (* Modulo primitives *)
 let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
