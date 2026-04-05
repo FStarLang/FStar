@@ -50,7 +50,7 @@ let mul_underspec #n a b =
   if fits (a*b) n then a * b else 0
 
 let div_underspec #n a b =
-  if fits (a / b) n then a / b else 0
+  if fits (a /- b) n then a /- b else 0
 
 let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom (abs a) (abs b)
