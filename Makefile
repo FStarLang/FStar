@@ -313,19 +313,23 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	touch $@
 
 # F# library
-fsharp-lib.src: export FSTAR_EXE ?= $(FSTAR3_FULL_EXE)
-fsharp-lib.src: .alib2.src.touch .force
+fsharp-lib.src: export FSTAR_EXE ?= $(INSTALLED_FSTAR3_FULL_EXE)
+fsharp-lib.src: .force
 	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
 	# Note: FStar.Map and FStar.Set are special-cased
+	# Also note: we explicitly add an include for F*'s own library so it can
+	# find the checked files for it, and make this run about extraction
+	# only. The lib.mk makefile passes --no_default_includes.
 	env \
 	  SRC=ulib/ \
-	  CACHE_DIR=stage2/ulib.checked/ \
 	  OUTPUT_DIR=fsharp/extracted/ \
+	  CACHE_DIR=fsharp/_cached/ \
 	  CODEGEN=FSharp \
 	  TAG=fsharplib \
-	  DEPFLAGS='--extract -FStar.Map,-FStar.Set' \
+	  DEPFLAGS='--extract -FStar.Map,-FStar.Set --already_cached Prims,FStar' \
+	  OTHERFLAGS='--include $(shell $(FSTAR_EXE) --locate_lib)' \
 	  $(MAKE) -f mk/lib.mk all-fs
 
 .PHONY: fsharp-lib
