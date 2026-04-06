@@ -1,6 +1,6 @@
 name: Nightly schedule
 
-# This workflow dispatches nightly.yml for each branch that needs a
+# This workflow dispatches nightly-build.yml for each branch that needs a
 # nightly build. To add a new branch, just add it to the matrix below.
 
 on:
@@ -17,6 +17,6 @@ jobs:
       matrix:
         branch: [master]
     steps:
-      - run: gh workflow run nightly.yml --repo ${{ github.repository }} -f branch=${{ matrix.branch }}
+      - run: gh workflow run nightly-build.yml --repo ${{ github.repository }} -f branch=${{ matrix.branch }}
         env:
           GH_TOKEN: ${{ github.token }}
