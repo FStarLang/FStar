@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        branch: [master, fstar2]
+        branch: [master]
     steps:
-      - run: gh workflow run nightly.yml -f branch=${{ matrix.branch }}
+      - run: gh workflow run nightly.yml --repo ${{ github.repository }} -f branch=${{ matrix.branch }}
         env:
           GH_TOKEN: ${{ github.token }}
