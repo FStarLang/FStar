@@ -81,6 +81,32 @@ jobs:
         # as that runs after the normal build and takes ~10 minutes.
         run: make -skj$(nproc) _test _test_pulse
 
+  # Build the F# library and the examples.
+  fsharp:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          submodules: true
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+
+      - name: Set up package locally
+        run: tar xzf fstar.tar.gz && ln -s fstar out
+
+      - name: Run tests, without forcing a build
+        run: make -skj$(nproc) fsharp-all FSTAR_EXE=$(pwd)/out/bin/fstar.exe
+
   # This runs the bare tests over the bare stage2 compiler.
   # We start from the built repo.
   bare:
