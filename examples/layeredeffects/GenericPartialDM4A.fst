@@ -135,7 +135,7 @@ effect {
 let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:unit -> PURE a wp)
   : Tot (repr a (wp (fun _ -> True)) (fun _ -> w_return (f ())))
   = fun _ -> 
-      FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+      FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
       let x = f () in
       interp_ret x;
       m_return x

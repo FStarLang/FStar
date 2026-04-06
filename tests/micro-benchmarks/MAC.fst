@@ -44,7 +44,7 @@ let sha1verify k txt tag = eq (sha1 k txt) tag
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-assume type key_prop : key -> text -> Type
+assume type key_prop : key -> text -> Type0
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 assume val leak: k:key { forall t. key_prop k t } -> ML bytes
@@ -67,7 +67,9 @@ noeq type entry =
          -> m:tag
          -> entry
 
-let log :ref (list entry) = ST.alloc #(list entry) []
+#push-options "--warn_error -272" //Warning_TopLevelEffect
+let log :ref (list entry) = alloc #(list entry) []
+#pop-options
 
 let mac k t =
   let m = sha1 k t in

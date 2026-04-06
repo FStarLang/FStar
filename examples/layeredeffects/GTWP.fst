@@ -17,8 +17,9 @@ let coerce #a #b (x:a{a == b}) : b = x
 let wp (a:Type) = pure_wp a
 
 unfold
-let bind_wp #a #b (wc : wp a) (wf : a -> wp b) : wp b =
-  elim_pure_wp_monotonicity_forall ();
+let bind_wp (#a:Type u#a) (#b:Type u#b) (wc : wp a) (wf : a -> wp b) : wp b =
+  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
   as_pure_wp (fun p -> wc (fun x -> wf x p))
 
 let m (a:Type u#aa) (i:idx) (w : wp a) : Type u#aa =
@@ -41,15 +42,24 @@ let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   | D -> coerce (d_return x)
 
 // these two rely on monotonicity since the computed WP is not exactly bind_wp
-let t_bind #a #b #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x))) : m b T (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
-let g_bind #a #b #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x))) : m b G (bind_wp wc wf) = elim_pure_wp_monotonicity_forall (); fun () -> f (c ()) ()
+let t_bind (#a:Type u#a) (#b:Type u#b) #wc #wf (c : m a T wc) (f : (x:a -> m b T (wf x)))
+: m b T (bind_wp wc wf)
+= elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
+  fun () -> f (c ()) ()
+let g_bind (#a:Type u#a) (#b:Type u#b) #wc #wf (c : m a G wc) (f : (x:a -> m b G (wf x)))
+: m b G (bind_wp wc wf)
+= elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
+  fun () -> f (c ()) ()
 
 let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bind_wp wc wf) =
   raise_val (fun () -> let y = downgrade_val c () in // cannot inline this
                     downgrade_val (f y) ())
 
-let bind (a b : Type) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
-  elim_pure_wp_monotonicity_forall ();
+let bind (a:Type u#a) (b : Type u#b) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
+  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
@@ -64,10 +74,17 @@ let subcomp (a:Type u#aa) (i:idx)
           (requires (forall p. wp2 p ==> wp1 p))
           (ensures (fun _ -> True))
    = match i with
-     | T -> f
-     | G -> f
+     | T ->
+       let f : m a T wp1 = coerce #(m a i wp1) #(m a T wp1) f in
+       let f : m a T wp2 = f in
+       coerce #(m a T wp2) #(m a i wp2) f
+     | G ->
+       let f : m a G wp1 = coerce #(m a i wp1) #(m a G wp1) f in
+       let f : m a G wp2 = f in
+       coerce #(m a G wp2) #(m a i wp2) f
      | D ->
        (* This case needs some handholding. *)
+       let f : m a D wp1 = coerce #(m a i wp1) #(m a D wp1) f in
        let f : raise_t (unit -> DIV a wp1) = f in
        let f : unit -> DIV a wp1 = downgrade_val f in
        let f : unit -> DIV a wp2 = f in
@@ -75,8 +92,8 @@ let subcomp (a:Type u#aa) (i:idx)
        coerce (raise_val f)
 
 unfold
-let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
-  elim_pure_wp_monotonicity_forall ();
+let ite_wp (#a:Type u#a) (w1 w2 : wp a) (b:bool) : wp a =
+  elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun p -> if b then w1 p else w2 p)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
@@ -99,18 +116,18 @@ effect {
   }
 }
 
-let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
+let lift_pure_gtd (a:Type u#a) (w : wp a) (i : idx)
                   (f : unit -> PURE a w)
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
- = elim_pure_wp_monotonicity_forall ();
+ = elim_pure_wp_monotonicity_forall u#a ();
    match i with
    | T -> f
    | G -> f
    | D -> let f' () : DIV a w = f () in
          let f'' : m a D w = raise_val f' in
-         f''
+         coerce f''
 
  // GM: Surprised that this works actually... I expected that I would need to
  //     case analyze [i].

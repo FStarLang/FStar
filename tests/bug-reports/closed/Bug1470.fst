@@ -28,13 +28,13 @@ let length1 (n:int) :Dv nat = 1 + aux n
 (*
  * From Karamel test suite
  *)
-open FStar.ST
+open FStar.All
 
 assume val bar (_:unit) :St (x:int{x == 42})
 
 assume val foo (x:int) :Pure int (requires True) (ensures (fun r -> r == x))
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 let test () :St unit =
   let y = foo (bar ()) in
   assert (y == 42)

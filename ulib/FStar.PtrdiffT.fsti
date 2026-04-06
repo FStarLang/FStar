@@ -107,8 +107,8 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-unfold let op_Plus_Hat = add
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+inline_for_extraction unfold let op_Plus_Hat = add
+inline_for_extraction unfold let op_Greater_Hat = gt
+inline_for_extraction unfold let op_Greater_Equals_Hat = gte
+inline_for_extraction unfold let op_Less_Hat = lt
+inline_for_extraction unfold let op_Less_Equals_Hat = lte

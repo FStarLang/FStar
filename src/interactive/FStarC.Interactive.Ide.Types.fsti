@@ -17,10 +17,10 @@
 module FStarC.Interactive.Ide.Types
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Util
 open FStarC.Range
+open FStarC.Class.Show
 module PI = FStarC.Parser.ParseIt
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
@@ -32,7 +32,7 @@ include FStarC.Json
 (***********************)
 (* Global state setup *)
 (***********************)
-val initial_range : range
+val initial_range (filename:string) : ML range
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
@@ -73,7 +73,7 @@ type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
   { tf_fname: string;
-    tf_modtime: time_of_day }
+    tf_modtime: Time.time_of_day }
 
 (** Every snapshot pushed in the repl stack is annotated with one of these.  The
 ``LD``-prefixed (“Load Dependency”) onces are useful when loading or updating
@@ -86,7 +86,11 @@ type repl_task =
   | PushFragment of either PI.input_frag FStarC.Parser.AST.decl (* code fragment *)
                   & push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
                   & list json (* any warnings that were raised while checking this fragment *)
+                  & list string (* dependences loaded on the fly *)
   | Noop (* Used by compute, PushPartialCheckedFile *)
+
+val mk_ld_interleaved (iface impl:string) : ML repl_task
+val mk_ld_single (filename:string) : ML repl_task
 
 type full_buffer_request_kind =
   | Full : full_buffer_request_kind
@@ -126,7 +130,7 @@ type query' =
 // Cancel all requests if the position is None
 | Cancel of option position
 and query = { qq: query'; qid: string }
-and callback_t = repl_state -> (query_status & list json) & either repl_state int
+and callback_t = repl_state -> ML ((query_status & list json) & either repl_state int)
 and repl_state = {
     repl_line: int;
     repl_column: int;
@@ -141,21 +145,23 @@ and repl_state = {
 }
 and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t  = repl_depth_t & (repl_task & repl_state)
-
 // Global repl_state, keeping state of different buffers
 type grepl_state = { grepl_repls: PSMap.t repl_state; grepl_stdin: stream_reader }
 
-val query_to_string : query -> string
+val string_of_repl_task : repl_task -> ML string
 
-val string_of_repl_task : repl_task -> string
+instance val repl_stack_entry_t_showable : showable repl_stack_entry_t
+instance val repl_state_showable : showable repl_state
 
-val json_of_issue : FStarC.Errors.issue -> json
-
-val js_pushkind : json -> push_kind
-val js_reductionrule : json -> FStarC.TypeChecker.Env.step
-val js_optional_completion_context : option json -> completion_context
-val js_optional_lookup_context : option json -> lookup_context
+val query_to_string : query -> ML string
 
 val query_needs_current_module : query' -> bool
 val interactive_protocol_vernum : int
 val interactive_protocol_features : list string
+
+val json_of_issue : FStarC.Errors.issue -> ML json
+
+val js_pushkind : json -> ML push_kind
+val js_reductionrule : json -> ML FStarC.TypeChecker.Env.step
+val js_optional_completion_context : option json -> ML completion_context
+val js_optional_lookup_context : option json -> ML lookup_context

@@ -34,24 +34,6 @@ let pow2_values x =
    | 64 -> assert_norm (pow2 64 == 18446744073709551616)
    | _  -> ()
 
-let incr_underspec #n a =
-  if a < max_int n then a + 1 else 0
-
-let decr_underspec #n a =
-  if a > min_int n then a - 1 else 0
-
-let add_underspec #n a b =
-  if fits (a+b) n then a + b else 0
-
-let sub_underspec #n a b =
-  if fits (a-b) n then a - b else 0
-
-let mul_underspec #n a b =
-  if fits (a*b) n then a * b else 0
-
-let div_underspec #n a b =
-  if fits (a / b) n then a / b else 0
-
 let div_size #n a b =
   FStar.Math.Lib.slash_decr_axiom (abs a) (abs b)
 
@@ -64,7 +46,7 @@ let to_vec_lemma_1 #n a b = ()
 let to_vec_lemma_2 #n a b = 
   UInt.to_vec_lemma_2 #n (to_uint a) (to_uint b)
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 let rec inverse_aux #n vec i =
   if i = n - 1 then 
     assert((from_vec vec) % 2 = (if index vec (n - 1) then 1 else 0)) 
@@ -186,3 +168,35 @@ let shift_right_lemma_2 #n a s i = ()
 let shift_arithmetic_right_lemma_1 #n a s i = ()
 
 let shift_arithmetic_right_lemma_2 #n a s i = ()
+
+(* Rotate operators lemmas *)
+
+let rotate_left_lemma #n a s i = ()
+
+let rotate_right_lemma #n a s i = ()
+
+let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
+
+let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
+
+#push-options "--split_queries always"
+let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
+
+private let rec rotate_mod_lemma (i:nat) (s:nat) (n:pos)
+  : Lemma (requires i < n)
+          (ensures ((i + s) % n + n - (s % n)) % n = i)
+  = let open FStar.Math.Lemmas in
+    lemma_mod_add_distr i s n;
+    let r = s % n in
+    lemma_mod_lt (i + r) n;
+    if i + r < n
+    then (modulo_lemma (i + r) n; modulo_lemma i n)
+    else (lemma_mod_sub (i + r) n 1; modulo_lemma i n)
+
+let rotate_right_left_inverse #n a s =
+  let aux (i:nat{i < n}) : Lemma (nth (rotate_left #n (rotate_right #n a s) s) i = nth #n a i) =
+    rotate_mod_lemma i s n
+  in
+  Classical.forall_intro aux;
+  nth_lemma (rotate_left #n (rotate_right #n a s) s) a
+#pop-options

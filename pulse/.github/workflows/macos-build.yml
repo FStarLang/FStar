@@ -1,0 +1,36 @@
+name: Build Pulse Binaries for MacOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Pulse
+      uses: actions/checkout@v3
+      with:
+        path: pulse
+    - name: Checkout everest
+      uses: actions/checkout@v3
+      with:
+        repository: project-everest/everest
+        path: pulse/.github/everest
+    - name: Install .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+    - name: Setup dependencies
+      run: ./pulse/.github/setup-macos.sh
+    - name: Package Pulse
+      run: |
+        source pulse/.github/env.sh
+        pulse/ci/package.sh -j
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pulse-Darwin_x86_64.tar.gz
+        path: pulse/ci/pulse.tar.gz

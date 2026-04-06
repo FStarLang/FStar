@@ -41,8 +41,6 @@ type t3 (a:Type) = nat -> t2 a
 noeq type t4 =
   | C4: t3 t4 -> t4
 
-open FStar.ST
-[@@expect_failure [3]]
 noeq
 type t =
   | MkT : ref t -> t
@@ -222,7 +220,7 @@ let loop' (s:bad) : GTot (squash ⊥) =
   return_squash (f s))
   
 let loop'' : squash (bad → GTot ⊥) = FStar.Squash.squash_double_arrow (FStar.Squash.return_squash loop')
-let loop : squash bad = bind_squash loop'' (λ l → FStar.Squash.return_squash (l (Bad loop'')))
+let loop : squash bad = bind_squash loop'' (λ f → f (Bad loop''))
 let ff (_:unit) : squash ⊥ = bind_squash loop loop'
 
 

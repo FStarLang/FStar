@@ -1,17 +1,17 @@
-﻿module FStarC.Defensive
+module FStarC.Defensive
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
+open FStarC.Range
 open FStarC.Class.Binders
 open FStarC.Class.Show
 open FStarC.Class.Ord
 open FStarC.Errors
-open FStarC.Errors.Msg
 open FStarC.Pprint
+open FStarC.Class.PP
 open FStarC.Class.Setlike
 
-let () = let open FStarC.Syntax.Print in ()
+open FStarC.Syntax.Print {}
 
 val __def_check_scoped :
   #env_t:Type -> #thing_t:Type ->
@@ -19,7 +19,7 @@ val __def_check_scoped :
   {| hasNames thing_t |} ->
   {| pretty thing_t |} ->
   range -> string ->
-  env_t -> thing_t -> unit
+  env_t -> thing_t -> ML unit
 
 instance pp_bv : pretty FStarC.Syntax.Syntax.bv = {
   pp = (fun bv -> arbitrary_string (show bv));
@@ -33,7 +33,7 @@ instance pp_set #a (_ : ord a) (_ : pretty a) : Tot (pretty (FlatSet.t a)) = {
     doclist (elems s |> List.map pp))
 }
 
-let __def_check_scoped rng msg env thing =
+let __def_check_scoped rng msg env thing : ML unit =
   let free = freeNames thing in
   let scope = boundNames env in
   if not (subset free scope) then
@@ -45,6 +45,6 @@ let __def_check_scoped rng msg env thing =
          text "Diff =" ^/^ pp (diff free scope);
        ]
 
-let def_check_scoped rng msg env thing =
+let def_check_scoped rng msg env thing : ML unit =
   if Options.defensive () then
     __def_check_scoped rng msg env thing

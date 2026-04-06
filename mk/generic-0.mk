@@ -44,7 +44,6 @@ verify: all-checked
 FSTAR_OPTIONS += --odir "$(OUTPUT_DIR)"
 FSTAR_OPTIONS += --cache_dir "$(CACHE_DIR)"
 FSTAR_OPTIONS += --include "$(SRC)"
-FSTAR_OPTIONS += --cache_checked_modules
 FSTAR_OPTIONS += $(OTHERFLAGS)
 
 ifeq ($(ADMIT),1)
@@ -53,34 +52,23 @@ endif
 
 FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
-%$(EXTENSION): FF=$(notdir $(subst $(EXTENSION),,$@))
+%$(EXTENSION): FF=$(notdir $<)
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached ',*' $<
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(FSTAR) --already_cached ',*' -c $< -o $@
 	touch -c $@ # update timestamp even if cache hit
 	$(maybe_touch)
 
-%.$(EEXT): FF=$(notdir $(subst $(EXTENSION),,$<))
-%.$(EEXT): MM=$(basename $(FF))
-%.$(EEXT): LBL=$(notdir $@)
-# ^ HACK we use notdir to get the module name since we need to pass in
-# the fst (not the checked file), but we don't know where it is, so this
-# is relying on F* looking in its include path.
+%.$(EEXT): FF=$(notdir $<)
 %.$(EEXT):
-	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) $(FF) --already_cached '*,' --codegen $(CODEGEN) --extract_module $(MM)
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(call msg, "EXTRACT", $(FF))
+	$(FSTAR) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
 	$(maybe_touch)
 
-%.krml: FF=$(notdir $(subst $(EXTENSION),,$<))
-%.krml: MM=$(basename $(FF))
-%.krml: LBL=$(notdir $@)
+%.krml: FF=$(notdir $<)
 %.krml:
-	$(call msg, "EXTRACT", $(LBL))
-	$(FSTAR) $(FF) --already_cached ',*' --codegen krml --extract_module $(MM)
+	$(call msg, "EXTRACT", $(FF))
+	$(FSTAR) --already_cached ',*' --codegen krml $< -o $@
 
 DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 
@@ -91,11 +79,12 @@ DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 $(DEPSTEM).touch: .force
 	mkdir -p $(dir $@)
 	[ -e $@ ] || touch $@
-	find $(SRC) -newer $@ -exec touch $@ \; -quit
+	# Ignore anything in CACHE_DIR and OUTPUT_DIR, to avoid rebuilding .depend in a loop
+	find $(SRC) -path $(CACHE_DIR) -prune -o -path $(OUTPUT_DIR) -prune -o -newer $@ -exec touch $@ \; -quit
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))
-	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $@
+	$(FSTAR) --dep full $(ROOTS) $(EXTRACT) $(DEPFLAGS) -o $@
 
 depend: $(DEPSTEM)
 include $(DEPSTEM)
@@ -103,7 +92,7 @@ include $(DEPSTEM)
 depgraph: $(DEPSTEM).pdf
 $(DEPSTEM).pdf: $(DEPSTEM) .force
 	$(call msg, "DEPEND GRAPH", $(SRC))
-	$(FSTAR) --dep graph $(ROOTS) $(EXTRACT) $(DEPFLAGS) --output_deps_to $(DEPSTEM).graph
+	$(FSTAR) --dep graph $(ROOTS) $(EXTRACT) $(DEPFLAGS) -o $(DEPSTEM).graph
 	$(FSTAR_ROOT)/.scripts/simpl_graph.py $(DEPSTEM).graph > $(DEPSTEM).simpl
 	dot -Tpdf -o $@ $(DEPSTEM).simpl
 	echo "Wrote $@"

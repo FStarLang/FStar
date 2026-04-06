@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,31 +15,34 @@
 *)
 
 module FStarC.SMTEncoding.ErrorReporting
+
+open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
 open FStarC.BaseTypes
-open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding
 open FStarC.Range
 open FStarC.Class.Setlike
+open FStarC.Class.Show
 module BU = FStarC.Util
 
 exception Not_a_wp_implication of string
-let sort_labels (l:(list (error_label & bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
-let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
-type msg = string & Range.range
-type ranges = list (option string & Range.range)
+let sort_labels (l:(list (error_label & bool))) : ML (list (error_label & bool)) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
+let remove_dups (l:labels) : ML labels = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
+type msg = string & Range.t
+type ranges = list (option string & Range.t)
 
 //decorate a term with an error label
 let __ctr = mk_ref 0
 
-let fresh_label : Errors.error_message -> Range.range -> term -> label & term =
+let incr r : ML unit = r := !r + 1
+
+let fresh_label : Errors.error_message -> Range.t -> term -> ML (label & term) =
     fun message range t ->
-        let l = incr __ctr; format1 "label_%s" (string_of_int !__ctr) in
+        let l = incr __ctr; Format.fmt1 "label_%s" (show !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
         let label = (lvar, message, range) in
         let lterm = mkFreeV lvar in
@@ -57,12 +60,12 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                                   //usually "could not check implicit argument",
                                   //        "could not prove post-condition"
                                   //or something like that
-                (r:Range.range)            //the source range in which this query was asked
+                (r:Range.t)            //the source range in which this query was asked
                 q            //the query
-               : labels      //the labels themselves
-               & term        //the query, decorated with labels
+               : ML (labels   //the labels themselves
+               & term)       //the query, decorated with labels
                =
-    let rec is_a_post_condition post_name_opt tm =
+    let rec is_a_post_condition post_name_opt tm : ML bool =
         match post_name_opt, tm.tm with
         | None, _ -> false
         | Some nm, FreeV fv ->
@@ -102,18 +105,17 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         fresh_label msg rng t
     in
     let rec aux (default_msg : Errors.error_message) //the error message text to generate at a label
-                (ropt:option Range.range) //an optional position, if there was an enclosing Labeled node
+                (ropt:option Range.t) //an optional position, if there was an enclosing Labeled node
                 (post_name_opt:option string) //the name of the current post-condition variable --- it is left uninstrumented
                 (labels:list label) //the labels accumulated so far
                 (q:term) //the term being instrumented
+     : ML (list label & term)
      =  match q.tm with
         | BoundV _
         | Integer _
         | String _
         | Real _ ->
           labels, q
-
-        | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
         | Labeled(arg, [d], label_range) when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
@@ -126,9 +128,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           begin try
               begin match arg.tm with
                 | Quant(Forall, pats, iopt, post::sorts, {tm=App(Imp, [lhs;rhs]); rng=rng}) ->
-                  let post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
+                  let post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
                   let names = mk_fv (post_name, post)
-                              ::List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts in
+                              ::List.map (fun s -> mk_fv ("^^" ^ (show <| GenSym.next_id()), s)) sorts in
                   let instantiation = List.map mkFreeV names in
                   let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
 
@@ -181,9 +183,9 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | Quant(Forall, [], None, sorts, {tm=App(Imp, [lhs;rhs]); rng=rng})
             when is_a_named_continuation lhs ->
           let sorts', post = BU.prefix sorts in
-          let new_post_name = "^^post_condition_"^ (BU.string_of_int <| GenSym.next_id ()) in
+          let new_post_name = "^^post_condition_"^ (show <| GenSym.next_id ()) in
           //printfn "Got a named continuation with post-condition %s" new_post_name;
-          let names = List.map (fun s -> mk_fv ("^^" ^ (string_of_int <| GenSym.next_id()), s)) sorts'
+          let names = List.map (fun s -> mk_fv ("^^" ^ (show <| GenSym.next_id()), s)) sorts'
                              @ [mk_fv (new_post_name, post)] in
           let instantiation = List.map mkFreeV names in
           let lhs, rhs = Term.inst instantiation lhs, Term.inst instantiation rhs in
@@ -274,10 +276,15 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         | App(BvSub, _)
         | App(BvShl, _)
         | App(BvShr, _)
+        | App(BvRol _, _)
+        | App(BvRor _, _)
+        | App(BvExtRol, _)
+        | App(BvExtRor, _)
         | App(BvUdiv, _)
         | App(BvMod, _)
         | App(BvMul, _)
         | App(BvUext _, _)
+        | App(BvNot, _)
         | App(BvToNat, _)
         | App(NatToBv _, _) ->
           failwith "Impossible: non-propositional term"
@@ -311,30 +318,31 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 let detail_errors hint_replay
                   env
                  (all_labels:labels)
-                 (askZ3:list decl -> Z3.z3result)
-    : unit =
+                 (askZ3:list decl -> ML Z3.z3result)
+    : ML unit =
 
-    let print_banner () =
+    let print_banner () : ML unit =
         let msg =
-            BU.format4
+            Format.fmt4
                 "Detailed %s report follows for %s\nTaking %s seconds per proof obligation (%s proofs in total)\n"
                     (if hint_replay then "hint replay" else "error")
                     (Range.string_of_range (TypeChecker.Env.get_range env))
-                    (BU.string_of_int 5)
-                    (BU.string_of_int (List.length all_labels)) in
-        BU.print_error msg
+                    (show 5)
+                    (show (List.length all_labels)) in
+        Format.print_error msg
     in
 
-    let print_result ((_, msg, r), success) =
+    let print_result (x : label & bool) : ML unit =
+      let ((_, msg, r), success) = x in
       let open FStarC.Pprint in
       let open FStarC.Errors.Msg in
         if success
-        then BU.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
+        then Format.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
         else if hint_replay
         then FStarC.Errors.log_issue r Errors.Warning_HintFailedToReplayProof
                (text "Hint failed to replay this sub-proof" :: msg)
         else FStarC.Errors.log_issue r Errors.Error_ProofObligationFailed ([
-                 text <| BU.format1 "XX: proof obligation at %s failed." (Class.Show.show r);
+                 text <| Format.fmt1 "XX: proof obligation at %s failed." (Class.Show.show r);
                ] @ msg)
     in
 
@@ -353,7 +361,7 @@ let detail_errors hint_replay
             Term.Assume a) in
 
     //check all active labels linearly and classify as eliminated/error
-    let rec linear_check eliminated errors active =
+    let rec linear_check eliminated errors active : ML (list (label & bool)) =
         FStarC.SMTEncoding.Z3.refresh (Some env.proof_ns);
         match active with
         | [] ->
@@ -363,7 +371,7 @@ let detail_errors hint_replay
             sort_labels results
 
         | hd::tl ->
-          BU.print1 "%s, " (BU.string_of_int (List.length active));
+          Format.print1 "%s, " (show (List.length active));
           let decls = elim <| (eliminated @ errors @ tl) in
           let result = askZ3 decls in //hd is the only thing to prove
           match result.z3result_status with
@@ -375,7 +383,7 @@ let detail_errors hint_replay
     print_banner ();
     Options.set_option "z3rlimit" (Options.Int 5);
     let res = linear_check [] [] all_labels in
-    BU.print_string "\n";
+    Format.print_string "\n";
     res |> List.iter print_result;
     if BU.for_all snd res
-    then BU.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"
+    then Format.print_string "Failed: the heuristic of trying each proof in isolation failed to identify a precise error\n"

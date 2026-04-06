@@ -18,7 +18,6 @@ open FStarC.Effect
 open FStarC
 open FStarC.SMTEncoding.Term
 open FStarC.BaseTypes
-open FStarC.Util
 module U = FStarC.SMTEncoding.UnsatCore
 module SolverState = FStarC.SMTEncoding.SolverState
 
@@ -40,47 +39,48 @@ type z3result = {
 }
 
 type query_log = {
-    get_module_name: unit -> string;
-    set_module_name: string -> unit;
-    write_to_log:    bool -> string -> string; (* returns name of log file written to *)
-    append_to_log:   string -> string; (* idem *)
-    close_log:       unit -> unit;
+    get_module_name: unit -> ML string;
+    set_module_name: string -> ML unit;
+    write_to_log:    bool -> string -> ML string; (* returns name of log file written to *)
+    append_to_log:   string -> ML string; (* idem *)
+    close_log:       unit -> ML unit;
 }
 
-val status_string_and_errors : z3status -> string & error_labels
+val status_string_and_errors : z3status -> ML (string & error_labels)
 
-val giveZ3 : list decl -> unit
+val query_logging : query_log
+
+val giveZ3 : list decl -> ML unit
 
 val ask_text
-       : r:Range.range
+       : r:Range.t
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> core:option U.unsat_core
-       -> string
+       -> ML string
 
-val ask: r:Range.range
+val ask: r:Range.t
        -> cache:option string // hash
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
        -> fresh:bool
        -> core:option U.unsat_core
-       -> z3result
+       -> ML z3result
 
 (* This will make sure the solver is in a fresh state, potentially
 killing the current process. A new process will *not* be started
 until we actually need to perform a query. *)
-val refresh: option SolverState.using_facts_from_setting -> unit
+val refresh: option SolverState.using_facts_from_setting -> ML unit
 
 (* Kill the current background Z3 process. *)
-val stop : unit -> unit
+val stop : unit -> ML unit
 
-val push : msg:string -> unit
-val pop : msg:string -> unit
-val snapshot : string -> int
-val rollback : string -> option int -> unit
-val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : unit
-val finish_query (msg:string) : unit
-val query_logging : query_log
+val push : msg:string -> ML unit
+val pop : msg:string -> ML unit
+val snapshot : string -> ML int
+val rollback : string -> option int -> ML unit
+val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : ML unit
+val finish_query (msg:string) : ML unit

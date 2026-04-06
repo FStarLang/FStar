@@ -1,8 +1,8 @@
 open Fstarcompiler
 open Prims
-let (term_eq :
-  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool)
-  = FStar_Reflection_TermEq.term_eq
+let term_eq :
+  FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool=
+  FStar_Reflection_TermEq.term_eq
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_plugin
     "FStar.Reflection.TermEq.Simple.term_eq" (Prims.of_int (2))
@@ -31,10 +31,10 @@ let _ =
                    Fstarcompiler.FStarC_TypeChecker_NBETerm.e_bool term_eq
                    (Fstarcompiler.FStarC_Ident.lid_of_str
                       "FStar.Reflection.TermEq.Simple.term_eq") cb us) args))
-let (univ_eq :
+let univ_eq :
   FStarC_Reflection_Types.universe ->
-    FStarC_Reflection_Types.universe -> Prims.bool)
-  = FStar_Reflection_TermEq.univ_eq
+    FStarC_Reflection_Types.universe -> Prims.bool=
+  FStar_Reflection_TermEq.univ_eq
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_plugin
     "FStar.Reflection.TermEq.Simple.univ_eq" (Prims.of_int (2))

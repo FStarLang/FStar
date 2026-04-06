@@ -1,0 +1,735 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module PulseSyntaxExtension.Sugar
+open FStarC
+open FStarC.Effect
+open FStarC.Ident
+module A = FStarC.Parser.AST
+module AD = FStarC.Parser.AST.Diff
+open FStarC.Class.Show
+open FStarC.Class.Tagged
+
+let rng = FStarC.Range.range
+let dummyRange = FStarC.Range.dummyRange
+
+//Note: We do not yet process binder attributes, like typeclass attributes
+type binder = A.binder
+type binders = list binder
+
+type slprop = A.term
+
+type st_comp_tag = 
+  | ST
+  | STAtomic
+  | STUnobservable
+  | STGhost
+
+type computation_annot' =
+  | Preserves of slprop
+  | Requires of slprop
+  | Ensures of slprop
+  | Returns of option ident & A.term
+  | Opens of A.term
+
+type computation_annot = computation_annot' & rng
+
+type computation_type = {
+     tag: st_comp_tag;
+     literally : bool;
+     annots : list computation_annot;
+     range:rng
+}
+
+(* Not used in this module, but the list in annots above
+is translated to this type before doing anything meaningful with it. *)
+type parsed_annots = {
+  precondition: slprop;
+  postcondition: slprop;
+  return_name: ident;
+  return_type: A.term;
+  opens: option A.term
+}
+
+type mut_or_ref =
+  | MUT | REF
+
+instance showable_mut_or_ref : showable mut_or_ref = {
+  show = (fun i -> match i with
+    | MUT -> "MUT"
+    | REF -> "REF")
+}
+
+type hint_type =
+  | ASSERT of slprop
+  | ASSUME of slprop
+  | UNFOLD of option (list lident) & slprop
+  | FOLD of option (list lident) & slprop
+  | RENAME of
+      list (A.term & A.term) &
+      option slprop & (* in goal *)
+      option A.term (* optional tactic *)
+  | REWRITE of
+      slprop &
+      slprop &
+      option A.term (* optional tactic *)
+  | WILD
+  | SHOW_PROOF_STATE of rng
+
+instance showable_hint_type : showable hint_type = {
+  show = (fun i -> match i with
+    | ASSERT s -> "ASSERT " ^ show s
+    | ASSUME s -> "ASSUME " ^ show s
+    | UNFOLD (ns, s) -> "UNFOLD " ^ show ns ^ " " ^ show s
+    | FOLD (ns, s) -> "FOLD " ^ show ns ^ " " ^ show s
+    | RENAME (ts, g, t) -> "RENAME " ^ show ts ^ " " ^ show g ^ " " ^ show t
+    | REWRITE (s1, s2, t) -> "REWRITE " ^ show s1 ^ " " ^ show s2 ^ " " ^ show t
+    | WILD -> "WILD"
+    | SHOW_PROOF_STATE r -> "SHOW_PROOF_STATE ...")
+}
+
+type array_init = {
+  init : option A.term;
+  len : A.term;
+}
+
+let ensures_slprop = option (ident & A.term) & slprop & option A.term
+
+type while_invariant1 =
+  | LoopInvariant of slprop
+  | LoopEnsures of A.term
+  | LoopRequires of A.term
+  | Decreases of A.term
+
+type while_invariant = list while_invariant1
+
+type stmt' =
+  | Open of lident
+  
+  | Expr { 
+      e : A.term;
+      args : list lambda;
+    }
+
+  | ArrayAssignment {
+      arr:A.term;
+      index:A.term;
+      value:A.term;
+    }
+
+  | LetBinding {
+      norw:bool; (* add norewrite to the branch if this desugars to a match. *)
+      qualifier: option mut_or_ref;
+      pat:A.pattern;
+      typ:option A.term;
+      init:option let_init
+    }
+      
+  | Block { 
+      stmt : stmt
+    }
+    
+  | If {
+      head:stmt;
+      join_slprop:option ensures_slprop;
+      then_:stmt;
+      else_opt:option stmt;
+    }
+
+  | Match {
+      head:stmt;
+      returns_annot:option ensures_slprop;
+      branches:list (bool & A.pattern & stmt);
+      (* ^ boolean true for 'norewrite' *)
+    }
+
+  | While {
+      guard: stmt;
+      invariant: while_invariant;
+      body: stmt;
+    }
+
+  | Introduce {
+      slprop:slprop;
+      witnesses:list A.term
+    }
+      
+  | Sequence {
+      s1:stmt;
+      s2:stmt;
+    }
+
+  | ProofHintWithBinders {
+      hint_type:hint_type;
+      binders:binders;
+    }
+
+  | PragmaSetOptions {
+      options:string;
+      body:stmt
+    }
+
+  | ForwardJumpLabel {
+      body: stmt;
+      lbl: ident;
+      post:option ensures_slprop;
+    }
+  
+  | Goto {
+      lbl: ident;
+      arg: option A.term;
+    }
+
+  | Defer {
+      handler_pre: slprop;
+      defer_handler: stmt;
+    }
+
+  | Return { arg: option A.term }
+  | Continue
+  | Break
+
+and stmt = {
+  s:stmt';
+  range:rng;
+  source:bool;
+  (* true if this was written by the user, false for statements
+  we generate automatically when desugaring. *)
+}
+
+and lambda = {
+  binders:binders;
+  ascription:option computation_type;
+  body:stmt;
+  range:rng
+}
+
+and fn_defn = {
+  id:ident;
+  is_rec:bool;
+  us:list ident;
+  binders:binders;
+  ascription:either computation_type (option A.term);
+  measure:option A.term; // with binders in scope
+  body:either stmt lambda;
+  decorations:list A.decoration;  
+  range:rng
+}
+
+and slprop_defn = {
+  id:ident;
+  // is_rec:bool;
+  // us:list ident;
+  binders:binders;
+  // measure:option A.term; // with binders in scope
+  body:A.term;
+  decorations:list A.decoration;  
+  range:rng
+}
+
+and let_init =
+  | Array_initializer of array_init
+  | Default_initializer of option A.term & list lambda
+  | Lambda_initializer of fn_defn
+  | Stmt_initializer of stmt
+
+instance showable_let_init : showable let_init = {
+  show = (fun i -> match i with
+    | Array_initializer a -> "Array_initializer ..."
+    | Default_initializer t -> "Default_initializer ..."
+    | Lambda_initializer l -> "Lambda_initializer ..."
+    | Stmt_initializer s -> "Stmt_initializer ...")
+}
+
+type fn_decl = {
+  id:ident;
+  us:list ident;
+  binders:binders;
+  ascription:either computation_type (option A.term); (* always Inl for now *)
+  decorations:list A.decoration;
+  range:rng
+}
+
+let tag_of_stmt (s:stmt) : string =
+  match s.s with
+  | Open _ -> "Open"
+  | Expr {} -> "Expr"
+  | ArrayAssignment {} -> "ArrayAssignment"
+  | LetBinding {} -> "LetBinding"
+  | Block {} -> "Block"
+  | If {} -> "If"
+  | Match {} -> "Match"
+  | While {} -> "While"
+  | Introduce {} -> "Introduce"
+  | Sequence {} -> "Sequence"
+  | ProofHintWithBinders {} -> "ProofHintWithBinders"
+  | ForwardJumpLabel {} -> "ForwardJumpLabel"
+  | Goto {} -> "Goto"
+  | Defer {} -> "Defer"
+
+instance tagged_stmt : Class.Tagged.tagged stmt = {
+  tag_of = tag_of_stmt
+}
+
+let record_string (fs : list (string & string)) : string =
+  "{" ^
+  (String.concat "; " <| List.Tot.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
+  "}"
+
+instance showable_pattern : showable A.pattern = {
+  show = A.pat_to_string;
+}
+
+instance showable_a_term : showable A.term = {
+  show = A.term_to_string;
+}
+instance showable_a_binder : showable A.binder = {
+  show = A.binder_to_string;
+}
+
+instance showable_while_invariant1 : showable while_invariant1 = {
+  show = (fun i -> match i with
+    | LoopInvariant x -> "LoopInvariant " ^ show x
+    | LoopEnsures x -> "LoopEnsures " ^ show x
+    | LoopRequires x -> "LoopRequires " ^ show x
+    | Decreases x -> "Decreases " ^ show x
+    );
+}
+
+let rec stmt_to_string (s:stmt) : ML string =
+  match s.s with
+  | Open l -> "Open " ^ show l
+  | Expr {e} -> "Expr " ^ show e
+  | ArrayAssignment { arr; index; value } ->
+    "ArrayAssignment " ^ record_string [
+      "arr", show arr;
+      "index", show index;
+      "value", show value;
+    ]
+  | LetBinding { qualifier; pat; typ; init } ->
+    "LetBinding " ^ record_string [
+      "qualifier", show qualifier;
+      "pat", show pat;
+      "typ", show typ;
+      "init", show init;
+    ]
+  | Block { stmt } ->
+    "Block {" ^ stmt_to_string stmt ^ "}"
+  | If { head; join_slprop; then_; else_opt } ->
+    "If " ^ record_string [
+      "head", stmt_to_string head;
+      "join_slprop", show join_slprop;
+      "then_", stmt_to_string then_;
+      "else_opt", FStarC.Common.string_of_option stmt_to_string else_opt;
+    ]
+  | Match { head; returns_annot; branches } ->
+    "Match " ^ record_string [
+      "head", stmt_to_string head;
+      "returns_annot", show returns_annot;
+      "branches", FStarC.Common.string_of_list branch_to_string branches;
+    ]
+  | While { guard; invariant; body } ->
+    "While " ^ record_string [
+      "guard", stmt_to_string guard;
+      "invariant", show invariant;
+      "body", stmt_to_string body;
+    ]
+  | Introduce { slprop; witnesses } ->
+    "Introduce " ^ record_string [
+      "slprop", show slprop;
+      "witnesses", FStarC.Common.string_of_list show witnesses
+    ]
+  | Sequence { s1; s2 } ->
+    "Sequence " ^ record_string [
+      "s1", stmt_to_string s1;
+      "s2", stmt_to_string s2;
+    ]
+  | ProofHintWithBinders { hint_type; binders } ->
+    "ProofHintWithBinders " ^ record_string [
+      "hint_type", show hint_type;
+      "binders", show binders;
+    ]
+  | ForwardJumpLabel { body; lbl; post } ->
+    "ForwardJumpLabel " ^ record_string [
+      "body", stmt_to_string body;
+      "lbl", show lbl;
+      "post", show post;
+    ]
+  | Goto { lbl; arg } ->
+    "ForwardJumpLabel " ^ record_string [
+      "lbl", show lbl;
+      "arg", show arg;
+    ]
+  | Defer { handler_pre; defer_handler } ->
+    "Defer " ^ record_string [
+      "pre", A.term_to_string handler_pre;
+      "handler", stmt_to_string defer_handler;
+    ]
+
+and branch_to_string (b:bool & A.pattern & stmt) : ML string =
+  let (norw, p, s) = b in
+  show p ^ (if norw then "(norw)" else "") ^ " -> " ^ stmt_to_string s
+
+instance showable_stmt : showable stmt = {
+  show = stmt_to_string
+}
+
+type decl =
+  | FnDefn of fn_defn
+  | FnDecl of fn_decl
+  | SlpropDefn of slprop_defn
+open FStarC.Class.Deq
+let eq_ident (i1 i2:Ident.ident) : ML bool = i1 =? i2
+let eq_lident (i1 i2:Ident.lident) : ML bool = i1 =? i2
+let rec forall2 (f:'a -> 'a -> ML bool) (l1 l2:list 'a) : ML bool =
+  match l1, l2 with
+  | [], [] -> true
+  | x::xs, y::ys -> f x y && forall2 f xs ys
+  | _, _ -> false
+let eq_opt (eq:'a -> 'a -> ML bool) (o1:option 'a) (o2:option 'a) : ML bool =
+  match o1, o2 with
+  | Some x, Some y -> eq x y
+  | None, None -> true
+  | _, _ -> false
+let eq_slprop (s1 s2 : slprop) =
+  AD.eq_term s1 s2
+
+let eq_while_invariant1 (i1 i2:while_invariant1) =
+  match i1, i2 with
+  | LoopInvariant t1, LoopInvariant t2 -> eq_slprop t1 t2
+  | LoopEnsures t1, LoopEnsures t2 -> AD.eq_term t1 t2
+  | LoopRequires t1, LoopRequires t2 -> AD.eq_term t1 t2
+  | Decreases t1, Decreases t2 -> AD.eq_term t1 t2
+  | _, _ -> false
+
+let rec eq_decl (d1 d2:decl) : ML bool =
+  match d1, d2 with
+  | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
+  | FnDecl d1, FnDecl d2 -> eq_fn_decl d1 d2
+  | SlpropDefn d1, SlpropDefn d2 -> eq_slprop_defn d1 d2
+  | _ -> false
+and eq_fn_decl (f1 f2:fn_decl) : ML bool =
+  eq_ident f1.id f2.id &&
+  forall2 eq_ident f1.us f2.us &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
+  eq_ascription f1.ascription f2.ascription
+and eq_fn_defn (f1 f2:fn_defn) : ML bool =
+  eq_ident f1.id f2.id &&
+  f1.is_rec = f2.is_rec &&
+  forall2 eq_ident f1.us f2.us &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
+  eq_ascription f1.ascription f2.ascription &&
+  eq_opt AD.eq_term f1.measure f2.measure &&
+  eq_body f1.body f2.body
+and eq_slprop_defn (f1 f2:slprop_defn) : ML bool =
+  eq_ident f1.id f2.id &&
+  // f1.is_rec = f2.is_rec &&
+  // forall2 eq_ident f1.us f2.us &&
+  forall2 AD.eq_binder f1.binders f2.binders &&
+  // eq_opt AD.eq_term f1.measure f2.measure &&
+  AD.eq_term f1.body f2.body
+and eq_ascription (a1 a2:either computation_type (option A.term)) : ML bool =
+  match a1, a2 with
+  | Inl c1, Inl c2 -> eq_computation_type c1 c2
+  | Inr t1, Inr t2 -> eq_opt AD.eq_term t1 t2
+  | _, _ -> false
+and eq_computation_type (c1 c2:computation_type) : ML bool =
+  c1.tag = c2.tag &&
+  forall2 eq_annot c1.annots c2.annots &&
+  c1.literally = c2.literally
+and eq_annot (a1 a2:computation_annot) : ML bool =
+  match fst a1, fst a2 with
+  | Preserves s1, Preserves s2 -> eq_slprop s1 s2
+  | Requires s1, Requires s2 -> eq_slprop s1 s2
+  | Ensures s1, Ensures s2 -> eq_slprop s1 s2
+  | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
+  | Opens t1, Opens t2 -> AD.eq_term t1 t2
+  | _, _ -> false
+and eq_body (b1 b2:either stmt lambda) : ML bool =
+  match b1, b2 with
+  | Inl s1, Inl s2 -> eq_stmt s1 s2
+  | Inr l1, Inr l2 -> eq_lambda l1 l2
+  | _, _ -> false
+and eq_stmt (s1 s2:stmt) : ML bool =
+  eq_stmt' s1.s s2.s
+and eq_stmt' (s1 s2:stmt') : ML bool =
+  match s1, s2 with
+  | Open l1, Open l2 -> eq_lident l1 l2
+  | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
+  | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
+    AD.eq_term a1 a2 && AD.eq_term i1 i2 && AD.eq_term v1 v2
+  | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
+    norw1 = norw2 &&
+    eq_opt eq_mut_or_ref q1 q2 &&
+    AD.eq_pattern pat1 pat2 &&
+    eq_opt AD.eq_term t1 t2 &&
+    eq_opt eq_let_init init1 init2
+  | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
+  | If { head=h1; join_slprop=j1; then_=t1; else_opt=e1 }, If { head=h2; join_slprop=j2; then_=t2; else_opt=e2 } ->
+    eq_stmt h1 h2 &&
+    eq_opt eq_ensures_slprop j1 j2 &&
+    eq_stmt t1 t2 &&
+    eq_opt eq_stmt e1 e2
+  | Match { head=h1; returns_annot=r1; branches=b1 }, Match { head=h2; returns_annot=r2; branches=b2 } ->
+    eq_stmt h1 h2 &&
+    eq_opt eq_ensures_slprop r1 r2 &&
+    forall2 (fun (norw1, p1, s1) (norw2, p2, s2) -> norw1 = norw2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) b1 b2
+  | While { guard=g1; invariant=i1; body=b1 }, While { guard=g2; invariant=i2; body=b2 } ->
+    eq_stmt g1 g2 &&
+    forall2 eq_while_invariant1 i1 i2 &&
+    eq_stmt b1 b2
+  | Introduce { slprop=s1; witnesses=w1 }, Introduce { slprop=s2; witnesses=w2 } ->
+    eq_slprop s1 s2 &&
+    forall2 AD.eq_term w1 w2
+  | Sequence { s1=s1; s2=s2 }, Sequence { s1=s1'; s2=s2' } ->
+    eq_stmt s1 s1' && eq_stmt s2 s2'
+  | ProofHintWithBinders { hint_type=ht1; binders=bs1 }, ProofHintWithBinders { hint_type=ht2; binders=bs2 } ->
+    eq_hint_type ht1 ht2 &&
+    forall2 AD.eq_binder bs1 bs2
+  | PragmaSetOptions { options=o1; body=b1 }, PragmaSetOptions { options=o2; body=b2 } ->
+    o1=o2 &&
+    eq_stmt b1 b2
+  | ForwardJumpLabel { body=b1; lbl=l1; post=p1 }, ForwardJumpLabel { body=b2; lbl=l2; post=p2 } ->
+    eq_stmt b1 b2 && eq_ident l1 l2 && eq_opt eq_ensures_slprop p1 p2
+  | Goto { lbl=l1; arg=a1 }, Goto { lbl=l2; arg=a2 } ->
+    eq_ident l1 l2 && eq_opt AD.eq_term a1 a2
+  | Defer { handler_pre=p1; defer_handler=h1 }, Defer { handler_pre=p2; defer_handler=h2 } ->
+    eq_slprop p1 p2 && eq_stmt h1 h2
+  | Return { arg=a1 }, Return { arg=a2 } ->
+    eq_opt AD.eq_term a1 a2
+  | Continue, Continue ->
+    true
+  | Break, Break ->
+    true
+  | _ -> false
+and eq_let_init (i1 i2:let_init) : ML bool =
+  match i1, i2 with
+  | Array_initializer a1, Array_initializer a2 -> eq_array_init a1 a2
+  | Default_initializer (t1, a1), Default_initializer (t2, a2) -> eq_opt AD.eq_term t1 t2 && forall2 eq_lambda a1 a2
+  | Lambda_initializer l1, Lambda_initializer l2 -> eq_fn_defn l1 l2
+  | Stmt_initializer s1, Stmt_initializer s2 -> eq_stmt s1 s2
+  | _, _ -> false
+and eq_array_init (a1 a2:array_init) : ML bool =
+  eq_opt AD.eq_term a1.init a2.init && AD.eq_term a1.len a2.len
+and eq_hint_type (h1 h2:hint_type) : ML bool =
+  match h1, h2 with
+  | ASSERT s1, ASSERT s2 -> eq_slprop s1 s2
+  | ASSUME s1, ASSUME s2 -> eq_slprop s1 s2
+  | UNFOLD (ns1, s1), UNFOLD (ns2, s2) ->
+    eq_opt (forall2 eq_lident) ns1 ns2 &&
+    eq_slprop s1 s2
+  | FOLD (ns1, s1), FOLD (ns2, s2) ->
+    eq_opt (forall2 eq_lident) ns1 ns2 &&
+    eq_slprop s1 s2
+  | RENAME (ts1, g1, t1), RENAME (ts2, g2, t2) ->
+    forall2 (fun (t1, t2) (t1', t2') -> AD.eq_term t1 t1' && AD.eq_term t2 t2') ts1 ts2 &&
+    eq_opt eq_slprop g1 g2 &&
+    eq_opt AD.eq_term t1 t2
+  | REWRITE (s1, s1', t1), REWRITE (s2, s2', t2) ->
+    eq_slprop s1 s2 &&
+    eq_slprop s1' s2' &&
+    eq_opt AD.eq_term t1 t2
+  | WILD, WILD -> true
+  | SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2 -> true
+  | _, _ -> false
+and eq_ensures_slprop (e1 e2:ensures_slprop) : ML bool =
+  let h1, s1, t1 = e1 in
+  let h2, s2, t2 = e2 in
+  eq_opt (fun (i1, t1) (i2, t2) -> eq_ident i1 i2 && AD.eq_term t1 t2) h1 h2 &&
+  eq_slprop s1 s2 &&
+  eq_opt AD.eq_term t1 t2
+and eq_lambda (l1 l2:lambda) : ML bool =
+  forall2 AD.eq_binder l1.binders l2.binders &&
+  eq_opt eq_computation_type l1.ascription l2.ascription &&
+  eq_stmt l1.body l2.body
+and eq_mut_or_ref (m1 m2:mut_or_ref) : ML bool =
+  match m1, m2 with
+  | MUT, MUT -> true
+  | REF, REF -> true
+  | _, _ -> false
+
+let rec iter (f:'a -> ML unit) (l:list 'a) : ML unit =
+  match l with
+  | [] -> ()
+  | x::xs -> f x; iter f xs
+let iopt (f:'a -> ML unit) (o:option 'a) : ML unit =
+  match o with
+  | Some x -> f x
+  | None -> ()
+let ieither (f:'a -> ML unit) (g:'b -> ML unit) (e:either 'a 'b) : ML unit =
+  match e with
+  | Inl x -> f x
+  | Inr x -> g x
+let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : ML unit =
+  match d with
+  | FnDefn f -> scan_fn_defn cbs f
+  | FnDecl d -> scan_fn_decl cbs d
+  | SlpropDefn d -> scan_slprop_defn cbs d
+and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) : ML unit =
+  iter (scan_binder cbs) f.binders;
+  scan_ascription cbs f.ascription
+and scan_fn_defn (cbs:A.dep_scan_callbacks) (f:fn_defn) : ML unit =
+  iter (scan_binder cbs) f.binders;
+  ieither (scan_computation_type cbs) (iopt cbs.scan_term) f.ascription;
+  iopt cbs.scan_term f.measure;
+  ieither (scan_stmt cbs) (scan_lambda cbs) f.body
+and scan_slprop_defn (cbs:A.dep_scan_callbacks) (f:slprop_defn) : ML unit =
+  iter (scan_binder cbs) f.binders;
+  // iopt cbs.scan_term f.measure;
+  cbs.scan_term f.body
+and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) : ML unit =
+  cbs.scan_binder b
+and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) : ML unit =
+  ieither (scan_computation_type cbs) (iopt cbs.scan_term) a
+and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) : ML unit =
+  iter (scan_annot cbs) c.annots
+and scan_annot cbs (a : computation_annot) : ML unit =
+  match fst a with
+  | Preserves s -> scan_slprop cbs s
+  | Requires s -> scan_slprop cbs s
+  | Ensures s -> scan_slprop cbs s
+  | Returns (i, t) -> cbs.scan_term t
+  | Opens t -> cbs.scan_term t
+and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) : ML unit =
+  cbs.scan_term s
+and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) : ML unit =
+  iter (scan_binder cbs) l.binders;
+  iopt (scan_computation_type cbs) l.ascription;
+  scan_stmt cbs l.body
+and scan_while_invariant1 (cbs:A.dep_scan_callbacks) (i:while_invariant1) : ML unit =
+  match i with
+  | LoopInvariant t -> cbs.scan_term t
+  | LoopEnsures t -> cbs.scan_term t
+  | LoopRequires t -> cbs.scan_term t
+  | Decreases t -> cbs.scan_term t
+and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
+  match s.s with
+  | Open l -> cbs.add_open l
+  | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
+  | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
+  | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
+    iopt (scan_let_init cbs) init;
+    cbs.scan_pattern p;
+    iopt cbs.scan_term t
+  | Block { stmt=s } -> scan_stmt cbs s
+  | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
+    scan_stmt cbs h;
+    iopt (scan_ensures_slprop cbs) j;
+    scan_stmt cbs t;
+    iopt (scan_stmt cbs) e
+  | Match { head=h; returns_annot=r; branches=b } ->
+    scan_stmt cbs h;
+    iopt (scan_ensures_slprop cbs) r;
+    iter (fun (_, p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
+  | While { guard=g; invariant=i; body=b } ->
+    scan_stmt cbs g;
+    iter (scan_while_invariant1 cbs) i;
+    scan_stmt cbs b
+  | Introduce { slprop=s; witnesses=w } ->
+    scan_slprop cbs s;
+    iter cbs.scan_term w
+  | Sequence { s1=s1; s2=s2 } -> scan_stmt cbs s1; scan_stmt cbs s2
+  | ProofHintWithBinders { hint_type=ht; binders=bs } ->
+    scan_hint_type cbs ht;
+    iter (scan_binder cbs) bs
+  | PragmaSetOptions { body } ->
+    scan_stmt cbs body
+  | ForwardJumpLabel { body; lbl; post } ->
+    scan_stmt cbs body;
+    iopt (scan_ensures_slprop cbs) post
+  | Goto { lbl; arg } ->
+    iopt cbs.scan_term arg
+  | Defer { handler_pre; defer_handler } ->
+    scan_slprop cbs handler_pre;
+    scan_stmt cbs defer_handler
+  | Return { arg } ->
+    iopt cbs.scan_term arg
+  | Continue ->
+    ()
+  | Break ->
+    ()
+and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) : ML unit =
+  match i with
+  | Array_initializer a -> iopt cbs.scan_term a.init; cbs.scan_term a.len
+  | Default_initializer (t, a) -> iopt cbs.scan_term t; iter (scan_lambda cbs) a
+  | Lambda_initializer l -> scan_fn_defn cbs l
+  | Stmt_initializer s -> scan_stmt cbs s
+and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) : ML unit =
+  let h, s, t = e in
+  iopt (fun (i, t) -> cbs.scan_term t) h;
+  scan_slprop cbs s;
+  iopt cbs.scan_term t
+and scan_hint_type (cbs:A.dep_scan_callbacks) (h:hint_type) : ML unit =
+  match h with
+  | ASSERT s -> scan_slprop cbs s
+  | ASSUME s -> scan_slprop cbs s
+  | UNFOLD (ns, s) -> scan_slprop cbs s
+  | FOLD (ns, s) -> scan_slprop cbs s
+  | RENAME (ts, g, t) -> iter (fun (t1, t2) -> cbs.scan_term t1; cbs.scan_term t2) ts; iopt (scan_slprop cbs) g; iopt cbs.scan_term t
+  | REWRITE (s1, s2, t) -> scan_slprop cbs s1; scan_slprop cbs s2; iopt cbs.scan_term t
+  | WILD -> ()
+  | SHOW_PROOF_STATE _ -> ()
+
+let range_of_decl (d:decl) =
+  match d with
+  | FnDefn f -> f.range
+  | FnDecl d -> d.range
+  | SlpropDefn d -> d.range
+(* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
+let mk_comp tag literally annots range =
+  {
+     tag;
+     literally;
+     annots;
+     range
+  }
+let add_decorations d ds =
+  match d with
+  | FnDefn f -> FnDefn { f with decorations=ds @ f.decorations }
+  | FnDecl f -> FnDecl { f with decorations=ds @ f.decorations }
+  | SlpropDefn f -> SlpropDefn { f with decorations=ds @ f.decorations }
+  
+// let mk_slprop_exists binders body = SLPropExists { binders; body }
+let mk_expr e args = Expr { e; args }
+let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr; args = [] }
+let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
+let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
+let mk_block stmt = Block { stmt }
+let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
+let mk_match head returns_annot branches = Match { head; returns_annot; branches }
+let mk_while guard invariant body = While { guard; invariant; body }
+let mk_intro slprop witnesses = Introduce { slprop; witnesses }
+let mk_sequence s1 s2 = Sequence { s1; s2 }
+let mk_stmt s range = { s; range; source=true }
+let mk_fn_defn id is_rec us binders ascription measure body decorations range
+: fn_defn
+= { id; is_rec; us; binders; ascription; measure; body; decorations; range }
+let mk_fn_decl id us binders ascription decorations range
+: fn_decl
+= { id; us; binders; ascription; decorations; range }
+let mk_slprop_defn id binders body decorations range
+: slprop_defn
+= { id; binders; body; decorations; range }
+let mk_open lid = Open lid
+let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
+let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
+let mk_pragma_set_options options body = PragmaSetOptions { options; body }
+let mk_forward_jump_label body lbl post = ForwardJumpLabel { body; lbl; post }
+let mk_goto lbl arg = Goto { lbl; arg }
+let mk_defer handler_pre defer_handler = Defer { handler_pre; defer_handler }
+let mk_return arg = Return { arg }
+let mk_continue = Continue
+let mk_break = Break

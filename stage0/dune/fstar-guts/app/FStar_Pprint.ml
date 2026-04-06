@@ -14,14 +14,6 @@
    limitations under the License.
 *)
 
-(* NOTE!!! This is a copy of FStarC_Pprint that is exposed to applications
-via the library, without needing to link against compiler modules. The compiler
-itself could also use this but there are some issues with effect polymorphism
-(e.g. flow_map would need two versions, and having the ML one in the ulib module
-would introduce a lot of dependencies) and also would need to have a single definition
-of `float` (the compiler defines its own, though this is probably unneeded and can
-be removed). *)
-
 (*  prettyprint.fsti's OCaml implementation is just a thin wrapper around
     Francois Pottier's pprint package. *)
 include PPrint

@@ -1,6 +1,3 @@
-FSTAR_OPTIONS += --ext optimize_let_vc
-FSTAR_OPTIONS += --z3version 4.13.3
-
 # Checking a library, make sure to not use the parent lib.
 FSTAR_OPTIONS += --no_default_includes
 FSTAR_OPTIONS += --include $(SRC)
@@ -27,6 +24,7 @@ EXTRACT_NS += -FStar.IO
 EXTRACT_NS += -FStar.List
 EXTRACT_NS += -FStar.List.Tot.Base
 EXTRACT_NS += -FStar.Option
+EXTRACT_NS += -FStar.Parse
 EXTRACT_NS += -FStar.Pervasives.Native
 EXTRACT_NS += -FStar.ST
 EXTRACT_NS += -FStar.Exn
@@ -54,7 +52,6 @@ EXTRACT_NS += -FStar.NMSTTotal
 EXTRACT_NS += -FStar.NMST
 EXTRACT_NS += -FStar.Printf
 EXTRACT_NS += -FStar.ModifiesGen
-EXTRACT_NS += -LowStar.Printf
 EXTRACT_NS += -FStar.Sealed
 EXTRACT_NS += +FStar.List.Pure.Base
 EXTRACT_NS += +FStar.List.Tot.Properties

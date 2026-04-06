@@ -1,3 +1,4 @@
+{"msg":["The operator '@' has been resolved to FStar.List.Tot.append even though\nFStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop\nrelying on this deprecated, special treatment of '@'."],"level":"Warning","range":{"def":{"file_name":"SeqLit.fst","start_pos":{"line":8,"col":17},"end_pos":{"line":8,"col":18}},"use":{"file_name":"SeqLit.fst","start_pos":{"line":8,"col":17},"end_pos":{"line":8,"col":18}}},"number":337,"ctx":["While desugaring module SeqLit"]}
 Module after desugaring:
 module SeqLit
 Declarations: [
@@ -73,4 +74,3 @@ private
 let _ = seq![1; 2; 3]
 ]
 
-{"msg":["The operator '@' has been resolved to FStar.List.Tot.append even though\nFStar.List.Tot is not in scope. Please add an 'open FStar.List.Tot' to stop\nrelying on this deprecated, special treatment of '@'."],"level":"Warning","range":{"def":{"file_name":"SeqLit.fst","start_pos":{"line":8,"col":17},"end_pos":{"line":8,"col":18}},"use":{"file_name":"SeqLit.fst","start_pos":{"line":8,"col":17},"end_pos":{"line":8,"col":18}}},"number":337,"ctx":["While desugaring module SeqLit"]}

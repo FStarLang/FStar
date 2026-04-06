@@ -17,7 +17,6 @@ module FStarC.Parser.Const
 
 open FStarC
 open FStarC.Effect
-open FStarC.Util
 open FStarC.Ident
 open FStarC.Range.Type
 open FStarC.Const
@@ -55,6 +54,8 @@ let option_lid       = psnconst "option"
 let either_lid       = psconst "either"
 let pattern_lid      = psconst "pattern"
 let lex_t_lid        = pconst "lex_t"
+let lextop_lid       = pconst "LexTop"
+let lexcons_lid       = pconst "LexCons"
 let precedes_lid     = pconst "precedes"
 let smtpat_lid       = psconst "smt_pat"
 let smtpatOr_lid     = psconst "smt_pat_or"
@@ -232,22 +233,27 @@ let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
 let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
 let bv_mul'_lid        = bvconst "bvmul'"
 
+let bv_rotate_left_lid = bvconst "bvrol"
+let bv_rotate_right_lid= bvconst "bvror"
+let bv_rotate_left'_lid= bvconst "bvrol'"
+let bv_rotate_right'_lid=bvconst "bvror'"
+
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
+let bv_not_lid         = bvconst "bvnot"
 
 (* Array constants *)
 let array_lid          = p2l ["FStar"; "Array"; "array"]
 let array_of_list_lid = p2l ["FStar"; "Array"; "of_list"]
 
 (* Stateful constants *)
-let st_lid       = p2l ["FStar"; "ST"]
-let write_lid    = p2l ["FStar"; "ST"; "write"]
-let read_lid     = p2l ["FStar"; "ST"; "read"]
-let alloc_lid    = p2l ["FStar"; "ST"; "alloc"]
-let op_ColonEq   = p2l ["FStar"; "ST"; "op_Colon_Equals"]
+let write_lid    = p2l ["FStar"; "All"; "op_Colon_Equals"]
+let read_lid     = p2l ["FStar"; "All"; "op_Bang"]
+let alloc_lid    = p2l ["FStar"; "All"; "alloc"]
+let op_ColonEq   = p2l ["FStar"; "All"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
-let ref_lid             = p2l ["FStar"; "Heap"; "ref"]
+let ref_lid             = p2l ["FStar"; "All"; "ref"]
 let heap_addr_of_lid    = p2l ["FStar"; "Heap"; "addr_of"]
 let set_empty           = p2l ["FStar"; "Set"; "empty"]
 let set_singleton       = p2l ["FStar"; "Set"; "singleton"]
@@ -270,14 +276,10 @@ let effect_DIV_lid   = psconst "DIV"
 let effect_Div_lid   = psconst "Div"
 let effect_Dv_lid    = psconst "Dv"
 
-(* The "All" monad and its associated symbols.
-
-NOTE: With --MLish and --MLish_effect <module> this is somewhat configurable *)
+(* The "All" monad and its associated symbols. *)
 
 let ef_base () =
-  if Options.ml_ish ()
-  then String.split ['.'] <| Options.ml_ish_effect ()
-  else ["FStar"; "All"]
+  ["FStar"; "All"]
 
 let effect_ALL_lid () = p2l <| ef_base () @ ["ALL"]
 let effect_ML_lid  () = p2l <| ef_base () @ ["ML"]
@@ -341,7 +343,6 @@ let no_inline_let_attr = attr "no_inline_let"
 let rename_let_attr = attr "rename_let"
 let plugin_attr     = attr "plugin"
 let tcnorm_attr    =  attr "tcnorm"
-let dm4f_bind_range_attr = attr "dm4f_bind_range"
 let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
 let strict_on_arguments_attr =  attr "strict_on_arguments"
 let resolve_implicits_attr_string = attr "resolve_implicits"
@@ -374,6 +375,7 @@ let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
 let no_auto_projectors_attr = attr "no_auto_projectors"
 let no_subtping_attr_lid = attr "no_subtyping"
 let admit_termination_lid = attr "admit_termination"
+let admitted_lid = attr "admitted"
 let unrefine_binder_attr = pconst "unrefine"
 let do_not_unrefine_attr = pconst "do_not_unrefine"
 let desugar_of_variant_record_lid = attr "desugar_of_variant_record"
@@ -395,7 +397,7 @@ let gen_reset =
     gen, reset
 let next_id = fst gen_reset
 
-let sli (l:lident) : string =
+let sli (l:lident) : ML string =
   if FStarC.Options.print_real_names()
   then string_of_lid l
   else string_of_id (ident_of_lid l)
@@ -405,18 +407,18 @@ let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_real r -> r^"R"
-  | Const_string(s, _) -> U.format1 "\"%s\"" s
+  | Const_string(s, _) -> Format.fmt1 "\"%s\"" s
   | Const_int (x, _) -> x
   | Const_char c -> "'" ^ U.string_of_char c ^ "'"
   | Const_range r -> FStarC.Range.string_of_range r
   | Const_range_of -> "range_of"
   | Const_set_range_of -> "set_range_of"
   | Const_reify lopt ->
-    U.format1 "reify%s"
+    Format.fmt1 "reify%s"
       (match lopt with
        | None -> ""
-       | Some l -> U.format1 "<%s>" (string_of_lid l))    
-  | Const_reflect l -> U.format1 "[[%s.reflect]]" (sli l)
+       | Some l -> Format.fmt1 "<%s>" (string_of_lid l))    
+  | Const_reflect l -> Format.fmt1 "[[%s.reflect]]" (sli l)
 
 let is_name (lid:lident) =
   let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
@@ -425,10 +427,12 @@ let is_name (lid:lident) =
 let term_view_lid  = p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]
 
 (* tactic constants *)
-let fstar_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Range.dummyRange
-let fstar_stubs_tactics_lid' s : lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
+let fstar_tactics_lid' s : ML lid = FStarC.Ident.lid_of_path (["FStar"; "Tactics"]@s) FStarC.Range.dummyRange
+let fstar_stubs_tactics_lid' s : ML lid = FStarC.Ident.lid_of_path (["FStar"; "Stubs"; "Tactics"]@s) FStarC.Range.dummyRange
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
+let tac_bind_lid = fstar_tactics_lid' ["Effect"; "tac_bind"]
+let lift_div_tac_lid = fstar_tactics_lid' ["Effect"; "lift_div_tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
 
 let tac_opaque_attr = pconst "tac_opaque"
@@ -471,14 +475,14 @@ let dsl_tac_typ_lid = lid_of_path ["FStar"; "Reflection"; "Typing"; "dsl_tac_t"]
 
 
 (* Calculational proofs, from FStar.Calc *)
-let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Range.dummyRange
+let calc_lid i : ML lid = lid_of_path ["FStar"; "Calc"; i] FStarC.Range.dummyRange
 let calc_init_lid   = calc_lid "calc_init"
 let calc_step_lid   = calc_lid "calc_step"
 let calc_finish_lid = calc_lid "calc_finish"
 let calc_push_impl_lid = calc_lid "calc_push_impl"
 
 (* Classical proofs, from FStar.Classical *)
-let classical_sugar_lid i : lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Range.dummyRange
+let classical_sugar_lid i : ML lid = lid_of_path ["FStar"; "Classical"; "Sugar"; i] FStarC.Range.dummyRange
 
 let forall_intro_lid = classical_sugar_lid "forall_intro"
 let exists_intro_lid = classical_sugar_lid "exists_intro"

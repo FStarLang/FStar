@@ -50,29 +50,19 @@ ifeq ($(ADMIT),1)
 FSTAR_OPTIONS += --admit_smt_queries true
 endif
 
-ifeq ($(OS),Windows_NT)
-WINWRAP=$(FSTAR_ROOT)/mk/winwrap.sh
-else
-WINWRAP=
-endif
-
-FSTAR := $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
+FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 %$(EXTENSION): FF=$(notdir $<)
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached ',*' -c $< -o $@
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(FSTAR) --already_cached ',*' -c $< -o $@
 	touch -c $@ # update timestamp even if cache hit
 	$(maybe_touch)
 
 %.$(EEXT): FF=$(notdir $<)
 %.$(EEXT):
 	$(call msg, "EXTRACT", $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(FSTAR) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
 	$(maybe_touch)
 
 %.krml: FF=$(notdir $<)
@@ -82,17 +72,15 @@ FSTAR := $(WINWRAP) $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 
 DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 
-# We always run this to compute a full list of fst/fsti files in the
-# $(SRC) (ignoring the roots, it's a bit conservative). The list is
-# saved in $(DEPSTEM).touch.chk, and compared to the one we generated
-# before in $(DEPSTEM).touch. If there's a change (or the 'previous')
-# does not exist, the timestamp of $(DEPSTEM0.touch will be updated
-# triggering an actual dependency run.
+# This file's timestamp is updated whenever anything in $(SRC)
+# changes, forcing rebuilds downstream. Note that deleting a file
+# will bump the directories timestamp, we also catch that.
 .PHONY: .force
 $(DEPSTEM).touch: .force
 	mkdir -p $(dir $@)
-	find $(SRC) -name '*.fst*' > $@.chk
-	diff -q $@ $@.chk 2>/dev/null || cp $@.chk $@
+	[ -e $@ ] || touch $@
+	# Ignore anything in CACHE_DIR and OUTPUT_DIR, to avoid rebuilding .depend in a loop
+	find $(SRC) -path $(CACHE_DIR) -prune -o -path $(OUTPUT_DIR) -prune -o -newer $@ -exec touch $@ \; -quit
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))

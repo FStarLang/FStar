@@ -22,6 +22,11 @@ release_url=(
   "Darwin-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
   "Darwin-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
   "Windows-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
+  "Linux-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-glibc-2.39.zip"
+  "Linux-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-glibc-2.34.zip"
+  "Darwin-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-osx-13.7.6.zip"
+  "Darwin-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-osx-13.7.6.zip"
+  "Windows-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-win.zip"
 )
 
 get_url() {
@@ -91,29 +96,57 @@ full_install_z3() {
 }
 
 usage() {
-  echo "Usage: get_fstar_z3.sh destination/directory/bin"
+  echo "Usage: get_fstar_z3.sh destination/directory/bin [--full] [--arch <x86_64|aarch64>] [--kernel <Linux|Darwin|Windows>]"
   exit 1
 }
 
-if [ $# -ge 1 ] && [ "$1" == "--full" ]; then
-  # Passing --full xyz/ will create a tree like
-  #  xyz/z3-4.8.5/bin/z3
-  #  xyz/z3-4.13.3/bin/z3
-  # (plus all other files in each package). This is used
-  # for our binary packages which include Z3.
-  full_install=true;
-  shift;
-fi
+dest_dir_set=false
+while [ $# -ge 1 ]; do
+  case "$1" in
+    --arch)
+      shift
+      if [ $# -lt 1 ]; then usage; fi
+      arch="$1"
+      ;;
+    --kernel)
+      shift
+      if [ $# -lt 1 ]; then usage; fi
+      kernel="$1"
+      ;;
+    --full)
+      # Passing --full xyz/ will create a tree like
+      #  xyz/z3-4.8.5/bin/z3
+      #  xyz/z3-4.13.3/bin/z3
+      # (plus all other files in each package). This is used
+      # for our binary packages which include Z3.
+      full_install=true;
+      ;;
+    --*)
+      usage
+      ;;
+    --)
+      if $dest_dir_set; then usage; fi
+      shift
+      if [ $# -lt 1 ]; then usage; fi
+      dest_dir="$1"
+      dest_dir_set=true
+      ;;
+    *)
+      if $dest_dir_set; then usage; fi
+      dest_dir="$1"
+      dest_dir_set=true
+      ;;
+  esac
+  shift
+done
 
-if [ $# -ne 1 ]; then
+if [ "$dest_dir_set" == "false" ]; then
   usage
 fi
 
-dest_dir="$1"
-
 mkdir -p "$dest_dir"
 
-for z3_ver in 4.8.5 4.13.3; do
+for z3_ver in 4.8.5 4.13.3 4.15.3; do
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
 

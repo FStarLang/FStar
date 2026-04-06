@@ -22,6 +22,7 @@ open FStarC.Options
 module BU = FStarC.Util
 module SMap = FStarC.SMap
 open FStarC.Json
+open FStarC.Class.Show
 
 (*
    A counter id is the name of a profiling phase;
@@ -66,7 +67,7 @@ let create_or_lookup_counter cid =
     c
 
 (* Time an operation, if the the profiler is enabled *)
-let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
+let profile  (f: unit -> ML 'a) (module_name:option string) (cid:string) : ML 'a =
   // Stats.record cid fun () ->
   if Options.profile_enabled module_name cid
   then let c = create_or_lookup_counter cid in
@@ -93,7 +94,7 @@ let report_json tag c =
     JsonAssoc [
       "tag", JsonStr tag;
       "counter", counter;
-    ] |> string_of_json |> BU.print1_error "%s\n"
+    ] |> string_of_json |> Format.print1_error "%s\n"
 
 let report_human tag c =
     let warn = if !c.running
@@ -103,10 +104,10 @@ let report_human tag c =
                else ""
     in
     //print each counter's profile
-    BU.print4 "%s, profiled %s:\t %s ms%s\n"
+    Format.print4 "%s, profiled %s:\t %s ms%s\n"
                   tag
                   c.cid
-                  (BU.string_of_int (!c.total_time / 1000000))
+                  (show (!c.total_time / 1000000))
                   warn
 
 let report tag c =
@@ -115,7 +116,7 @@ let report tag c =
   | Json -> report_json tag c
 
 (* Report all profiles and clear all counters *)
-let report_and_clear tag =
+let report_and_clear tag : ML _ =
     let ctrs = //all the counters as a list
       SMap.fold all_counters (fun _ v l -> v :: l) []
     in

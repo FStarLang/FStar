@@ -27,5 +27,5 @@ open FStarC.Effect
  *   getting deps from the checked files
  *)
 val find_deps_if_needed (files : list string)
-  (get_parsing_data_from_cache:string -> option Parser.Dep.parsing_data)
-   : list string & Parser.Dep.deps
+  (get_parsing_data_from_cache:string -> ML (option Parser.Dep.parsing_data))
+   : ML (list string & Parser.Dep.deps)

@@ -21,7 +21,7 @@ open FStar.Reflection.V2.Formula
 open FStar.Tactics.NamedView
 open FStar.Tactics.Logic.Lemmas {} (* bring lemmas into TC scope *)
 
-(* Repeated to avoid importing FStar.Tactics.V1.Derived. *)
+(* Repeated to avoid importing FStar.Tactics.Derived. *)
 private let cur_goal () : Tac typ =
   let open FStar.Stubs.Tactics.Types in
   let open FStar.Stubs.Tactics.V2.Builtins in

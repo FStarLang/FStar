@@ -1,6 +1,7 @@
 module StringMatching
 open FStar.Seq
 open FStar.Mul
+#set-options " --ext context_pruning_no_ambients"
 (* Some basic notions *)
 
 // Type of a string of t
@@ -124,7 +125,7 @@ let lemma_mod_add_3 (a b c:int) (p:pos)
   lemma_mod_add_distr_l (a + c) b p
 
 #push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2 --split_queries no"
-
+#restart-solver
 // This is the main utility lemma on the hash function
 // It allows inverting the hash to inspect the most significant digit
 let rec hash_inversion
@@ -316,7 +317,8 @@ let maybe_found #t (xs pat:str t) (o:option nat) =
   | None -> forall j. ~(pat `occurs_at j` xs)
   | Some i -> pat`occurs_at i` xs
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4 --split_queries no"
+#restart-solver
 let rabin_karp_matcher_nat
     (xs pat:str nat)
     (base:nat)

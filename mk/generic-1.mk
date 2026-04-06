@@ -55,18 +55,14 @@ FSTAR := $(FSTAR_EXE) $(SIL) $(FSTAR_OPTIONS)
 %$(EXTENSION): FF=$(notdir $<)
 %$(EXTENSION):
 	$(call msg, $(MSG), $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached ',*' -c $< -o $@
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(FSTAR) --already_cached ',*' -c $< -o $@
 	touch -c $@ # update timestamp even if cache hit
 	$(maybe_touch)
 
 %.$(EEXT): FF=$(notdir $<)
 %.$(EEXT):
 	$(call msg, "EXTRACT", $(FF))
-	$(FSTAR) $(if $(findstring FStarC.,$<),--MLish,) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
-	@# HACK: finding FStarC modules and passing --MLish
-	@# for them and only them.
+	$(FSTAR) --already_cached '*,' --codegen $(CODEGEN) $< -o $@
 	$(maybe_touch)
 
 %.krml: FF=$(notdir $<)
@@ -83,7 +79,8 @@ DEPSTEM := $(CACHE_DIR)/.depend$(TAG)
 $(DEPSTEM).touch: .force
 	mkdir -p $(dir $@)
 	[ -e $@ ] || touch $@
-	find $(SRC) -newer $@ -exec touch $@ \; -quit
+	# Ignore anything in CACHE_DIR and OUTPUT_DIR, to avoid rebuilding .depend in a loop
+	find $(SRC) -path $(CACHE_DIR) -prune -o -path $(OUTPUT_DIR) -prune -o -newer $@ -exec touch $@ \; -quit
 
 $(DEPSTEM): $(DEPSTEM).touch
 	$(call msg, "DEPEND", $(SRC))

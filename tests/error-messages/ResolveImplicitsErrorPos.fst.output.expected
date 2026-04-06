@@ -1,6 +1,5 @@
->> Got issues: [
-* Error 228 at ResolveImplicitsErrorPos.fst(15,10-15,11):
+* Info at ResolveImplicitsErrorPos.fst(15,10-15,11):
+  - Expected failure:
   - Tactic failed
   - oops
 
->>]

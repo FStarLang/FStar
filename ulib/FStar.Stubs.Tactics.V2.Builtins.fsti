@@ -25,15 +25,20 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
-open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
+
+val get ()
+  : Tac proofstate
 
 val fixup_range : Range.range -> TacRO Range.range
 
 (** Resolve unification variable indirections at the top of the term. *)
 val compress : term -> TacRO term
+
+(** Resolve unification variable indirections at the top of the universe. *)
+val compress_univ : universe -> TacRO universe
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
@@ -71,12 +76,13 @@ val unquote : #a:Type -> term -> Tac a
 (** [catch t] will attempt to run [t] and allow to recover from a
 failure. If [t] succeeds with return value [a], [catch t] returns [Inr
 a]. On failure, it returns [Inl msg], where [msg] is the error [t]
-raised, and all unionfind effects are reverted. See also [recover] and
-[or_else]. *)
+raised, and all unionfind effects are reverted. See also [or_else]. *)
 val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
-(** Like [catch t], but will not discard unionfind effects on failure. *)
-val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+val raise_core (e:exn) : TacH unit (requires True) (ensures fun _ -> False)
+inline_for_extraction
+let raise #a (e:exn) : TacH a (requires True) (ensures fun _ -> False) =
+    raise_core e; ()
 
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
@@ -440,15 +446,6 @@ val comp_to_doc : comp -> TacRO Pprint.document
 (** Print a source range as a string *)
 val range_to_string : range -> TacRO string
 
-(** A variant of Reflection.term_eq that may inspect more underlying
-details of terms. This function could distinguish two _otherwise equal
-terms_, but that distinction cannot leave the Tac effect.
-
-This is only exposed as a migration path. Please use
-[Reflection.term_eq] instead. *)
-[@@deprecated "Use Reflection.term_eq instead"]
-val term_eq_old : term -> term -> TacRO bool
-
 (** Runs the input tactic `f` with compat pre core setting `n`.
 It is an escape hatch for maintaining backward compatibility
 for code that breaks with the core typechecker. *)
@@ -560,7 +557,7 @@ type prop_validity_token (g:env) (t:term) =
            typing_token g e (E_Total, t)}
   )
 
-val check_prop_validity (g:env) (t:term)
+val check_prop_validity (g:env) (t:term { typing_token g t (E_Total, (`prop)) })
   : Tac (ret_t (prop_validity_token g t))
 
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
@@ -650,3 +647,11 @@ val call_subtac_tm
     (g:env) (t : term) (u:universe)
     (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
   : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+
+(* This will call the function [f] and log the time it takes under the stat key
+[s]. The stats can be printed by running F* with `--stats true`. Other than
+that, there is no observable difference from calling [f].  We could also expose
+a pure version of this function. *)
+val stats_record #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp
+
+val with_error_context #a #wp (s : string) ($f : unit -> TAC a wp) : TAC a wp

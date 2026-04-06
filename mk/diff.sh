@@ -20,7 +20,7 @@ else
   # We're gonna fail. If we're running in CI, emit a Github
   # error message.
   if [ -v GITHUB_ENV ]; then
-    DIFFTEXT=$($DIFF "$ACTUAL" "$EXPECTED" | sed 's/$/%0A/' | tr -d '\n')
+    DIFFTEXT=$($DIFF "$EXPECTED" "$ACTUAL" | sed 's/$/%0A/' | tr -d '\n')
     ACTUAL=$(realpath "$ACTUAL")
     ACTUAL="${ACTUAL#$FSTAR_ROOT}"
     EXPECTED=$(realpath "$EXPECTED")

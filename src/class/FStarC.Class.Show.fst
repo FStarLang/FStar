@@ -12,14 +12,14 @@ instance showable_bool : showable bool =
   show = Prims.string_of_bool
 }
 
-instance showable_nat : showable nat =
+instance showable_int : showable int =
 {
   show = Prims.string_of_int
 }
 
-instance showable_int : showable int =
+instance showable_nat : showable nat =
 {
-  show = Prims.string_of_int
+  show = show #int
 }
 
 instance showable_string : showable string =
@@ -30,7 +30,7 @@ instance showable_string : showable string =
 instance show_list (a:Type) (_ : showable a) : Tot (showable (list a)) = {
   show =
     (fun l ->
-      let rec show_list_aux = (fun l ->
+      let rec show_list_aux (l : list a) : ML string = (
         match l with
         | [] -> ""
         | [x] -> show x

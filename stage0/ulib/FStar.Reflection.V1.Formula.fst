@@ -23,6 +23,7 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V1.Builtins
 open FStar.Reflection.V1.Derived
 open FStar.Stubs.Reflection.V1.Data
+open FStar.Reflection.TermEq.Simple { term_eq }
 
 ///// Cannot open FStar.Tactics.Derived here /////
 private let bv_to_string (bv : bv) : Tac string =

@@ -13,7 +13,9 @@ type t : eqtype = | Sz : (x:U64.t { U64.v x < bound }) -> t
 
 let fits x =
   FStar.UInt.fits x U64.n == true /\
-  x < bound
+  0 <= x /\ x < bound
+
+let fits_nonneg x = ()
 
 let fits_at_least_16 _ = ()
 
@@ -25,7 +27,7 @@ let uint_to_t x =
   Sz (U64.uint_to_t x)
 
 let size_v_inj (x: t) = ()
-let size_uint_to_t_inj (x: nat) = ()
+let size_uint_to_t_inj (x: int) = ()
 
 
 /// These two predicates are only used for modeling purposes, and their definitions must
@@ -40,15 +42,15 @@ let fits_u64_implies_fits_32 ()
     (ensures fits_u32)
   = ()
 
-let fits_u32_implies_fits (x:nat)
+let fits_u32_implies_fits (x:int)
   : Lemma
-    (requires fits_u32 /\ x < pow2 32)
+    (requires fits_u32 /\ 0 <= x /\ x < pow2 32)
     (ensures fits x)
   = ()
 
-let fits_u64_implies_fits (x:nat)
+let fits_u64_implies_fits (x:int)
   : Lemma
-    (requires fits_u64 /\ x < pow2 64)
+    (requires fits_u64 /\ 0 <= x /\ x < pow2 64)
     (ensures fits x)
   = ()
 
@@ -79,6 +81,8 @@ let div x y =
   res
 
 let rem x y = Sz <| U64.rem x.x y.x
+let eq  x y = U64.eq  x.x y.x
+let ne  x y = U64.ne  x.x y.x
 let gt  x y = U64.gt  x.x y.x
 let gte x y = U64.gte x.x y.x
 let lt  x y = U64.lt  x.x y.x

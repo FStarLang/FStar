@@ -16,4 +16,4 @@
 module FStar.Tactics.Derived
 
 (* This module is a temporary for Meta-F* migration *)
-include FStar.Tactics.V1.Derived
+include FStar.Tactics.V2.Derived

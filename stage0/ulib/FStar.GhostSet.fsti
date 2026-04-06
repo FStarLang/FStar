@@ -16,7 +16,6 @@
 *)
 module FStar.GhostSet
 (** Ghost computational sets: membership is a ghost boolean function *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 [@@must_erase_for_extraction; erasable]
 val set (a: Type u#a) : Type u#a
@@ -115,7 +114,6 @@ let disjoint_not_in_both (a:Type) (s1:set a) (s2:set a) :
   FStar.Classical.forall_intro f
 
 (* Converting lists to sets *)
-#reset-options //restore fuel usage here
 
 let rec as_set' (#a:Type) (f:decide_eq a) (l:list a) : set a = 
   match l with

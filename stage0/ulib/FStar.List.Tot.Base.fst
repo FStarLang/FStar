@@ -86,7 +86,7 @@ let rec nth l n = match l with
 (** [index l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th). Requires, at type-checking time, that [l] be
 of length at least [n+1]. *)
-val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a
+val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a (decreases i)
 let rec index #a (l: list a) (i:nat{i < length l}): Tot a =
   if i = 0 then
     hd l
@@ -315,6 +315,26 @@ let rec for_all_mem
 = match l with
   | [] -> ()
   | _ :: q -> for_all_mem f q
+
+(** [for_allP pre l] returns [true] if, and only if,
+for all elements [x] appearing in [l], [pre x] holds. *)
+
+val for_allP: #a:Type -> (a -> prop) -> list a -> prop
+let rec for_allP #a pre l =
+  match l with
+  | [] -> True
+  | h::t -> pre h /\ for_allP pre t
+
+(** Specification for [for_allP pre l] vs. memP *)
+
+val for_allP_eq:
+  #a:Type ->
+  pre:(a -> prop) -> l:list a ->
+  Lemma (for_allP pre l <==> (forall x. memP x l ==> pre x))
+let rec for_allP_eq #a pre l =
+  match l with
+  | [] -> ()
+  | h::t -> for_allP_eq pre t
 
 (** [collect f l] applies [f] to each element of [l] and returns the
 concatenation of the results, in the order of the original elements of

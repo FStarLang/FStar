@@ -24,7 +24,7 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
 open FStar.Monotonic.Pure
 
-val f : x:int -> PURE int (as_pure_wp (fun 'p -> x > 0 /\ 'p (x + 1)))
+val f : x:int -> PURE int (as_pure_wp (fun p -> x > 0 /\ p (x + 1)))
 let f x = assert (x > 0); x + 1
 
 val h : #req:(int -> Type) -> #ens:(int -> int -> Type) -> $f:(x:int -> Pure int (req x) (ens x)) -> y:int -> Pure int (req y) (ens y)
@@ -51,9 +51,9 @@ val good_hoare : unit -> Pure int True (fun r -> r == 3)
 (*
  * An example from Dominique Unruh
  *)
-let mono a (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
+let mono (a:Type u#a) (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
     Lemma (wp p ==> wp q) = 
-	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ()
+	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ()
 
 [@@ expect_failure]
 let contradiction () : Lemma(False) = 

@@ -16,7 +16,6 @@
 *)
 module FStar.GSet
 (** Computational sets (on Types): membership is a boolean function *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 [@@erasable]
 val set (a: Type u#a) : Type u#a
@@ -113,7 +112,6 @@ let disjoint_not_in_both (a:Type) (s1:set a) (s2:set a) :
   FStar.Classical.forall_intro f
 
 (* Converting lists to sets *)
-#reset-options //restore fuel usage here
 
 let rec as_set' (#a:Type) (l:list a) : set a = 
   match l with

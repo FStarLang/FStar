@@ -67,7 +67,7 @@ val find (#a: Type) (s: S.seq a) (p: (a -> bool)) (i: under (S.length s))
     indexes in [s] that contain the same element *)
 val pigeonhole (#n: pos) (s: S.seq (under n))
     : Pure (in_ s & in_ s)
-      (requires S.length s = n + 1)
+      (requires S.length s > n)
       (ensures (fun (i1, i2) -> i1 < i2 /\ S.index s i1 = S.index s i2))
       (decreases n)  
 

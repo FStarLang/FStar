@@ -1,5 +1,6 @@
 module FStarC.Class.Hashable
 
+open FStarC.Effect
 open FStarC.Hash
 include FStarC.Hash
 open FStarC.Class.Show
@@ -7,7 +8,7 @@ open FStarC.Class.Deq
 open FStarC.Class.Ord
 
 class hashable (a:Type) = {
-  hash : a -> hash_code;
+  hash : a -> ML hash_code;
 }
 
 (* Properties about hash_code, better moved elsewhere. *)

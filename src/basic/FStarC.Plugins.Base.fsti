@@ -20,4 +20,4 @@ open FStarC.Effect
 
 exception DynlinkError of string
 
-val dynlink_loadfile : string -> unit
+val dynlink_loadfile : string -> ML unit

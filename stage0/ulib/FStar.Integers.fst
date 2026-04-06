@@ -15,7 +15,7 @@
 *)
 module FStar.Integers
 
-#set-options "--initial_ifuel 2 --max_ifuel 2 --initial_fuel 0 --max_fuel 0"
+#set-options "--ifuel 2 --fuel 0"
 
 irreducible
 let mark_for_norm = ()

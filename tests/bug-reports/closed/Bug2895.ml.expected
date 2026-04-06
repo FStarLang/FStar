@@ -1,28 +1,27 @@
 open Prims
 type 't foo = 't -> Prims.bool
-let rec (f : Prims.string foo) = fun u -> false
-let (test : Prims.bool) = f "123"
+let rec f : Prims.string foo= fun u -> false
+let test : Prims.bool= f "123"
 type 't comparator_for = 't -> 't -> Prims.bool
-let rec (univ_eq : Prims.int comparator_for) = fun u1 -> fun u2 -> false
+let rec univ_eq : Prims.int comparator_for= fun u1 u2 -> false
 type ('t, 'x, 'y) cmpres = Prims.bool
 type 't comparator_for' = 't -> 't -> ('t, Obj.t, Obj.t) cmpres
-let (string_eq : Prims.string comparator_for') = fun x -> fun y -> x = y
-let (bool_eq : Prims.bool comparator_for') = fun x -> fun y -> x = y
+let string_eq : Prims.string comparator_for'= fun x y -> x = y
+let bool_eq : Prims.bool comparator_for'= fun x y -> x = y
 type sb =
   | S of Prims.string 
   | B of Prims.bool 
-let (uu___is_S : sb -> Prims.bool) =
-  fun projectee -> match projectee with | S _0 -> true | uu___ -> false
-let (__proj__S__item___0 : sb -> Prims.string) =
-  fun projectee -> match projectee with | S _0 -> _0
-let (uu___is_B : sb -> Prims.bool) =
-  fun projectee -> match projectee with | B _0 -> true | uu___ -> false
-let (__proj__B__item___0 : sb -> Prims.bool) =
-  fun projectee -> match projectee with | B _0 -> _0
-let rec (sb_eq : sb comparator_for') =
-  fun sb1 ->
-    fun sb2 ->
-      match (sb1, sb2) with
-      | (S s1, S s2) -> Obj.magic (Obj.repr (string_eq s1 s2))
-      | (B b1, B b2) -> Obj.magic (Obj.repr (bool_eq b1 b2))
-      | uu___ -> Obj.magic (Obj.repr false)
+let uu___is_S (projectee : sb) : Prims.bool=
+  match projectee with | S _0 -> true | uu___ -> false
+let __proj__S__item___0 (projectee : sb) : Prims.string=
+  match projectee with | S _0 -> _0
+let uu___is_B (projectee : sb) : Prims.bool=
+  match projectee with | B _0 -> true | uu___ -> false
+let __proj__B__item___0 (projectee : sb) : Prims.bool=
+  match projectee with | B _0 -> _0
+let rec sb_eq : sb comparator_for'=
+  fun sb1 sb2 ->
+    match (sb1, sb2) with
+    | (S s1, S s2) -> Obj.magic (Obj.repr (string_eq s1 s2))
+    | (B b1, B b2) -> Obj.magic (Obj.repr (bool_eq b1 b2))
+    | uu___ -> Obj.magic (Obj.repr false)

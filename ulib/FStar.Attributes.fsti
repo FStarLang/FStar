@@ -115,10 +115,6 @@ val plugin (x: int) : Tot unit
     elaborate and typecheck, but unfold before verification. *)
 val tcnorm : unit
 
-(** This attribute is used with the Dijkstra Monads for Free
-    construction to track position information in generated VCs *)
-val dm4f_bind_range : unit
-
 [@@deprecated "use [@@erasable] instead"]
 val must_erase_for_extraction : unit
 
@@ -400,6 +396,10 @@ val no_auto_projectors_decls : unit
     subtyping obligations
 *)
 val no_subtyping : unit
+
+(* This can be attached to a top-level declaration to admit its verification
+   conditions. *)
+val admitted : unit
 
 (* This can be attached to a recursive definition to admit its proof
    of termination (but nothing else). *)

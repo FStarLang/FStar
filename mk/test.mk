@@ -29,10 +29,8 @@ export FSTAR_EXE
 
 FSTAR_ARGS += --odir $(OUTPUT_DIR)
 FSTAR_ARGS += --cache_dir $(CACHE_DIR)
-FSTAR_ARGS += --already_cached Prims,FStar,LowStar
+FSTAR_ARGS += --already_cached Prims,FStar
 FSTAR_ARGS += --warn_error -321 # This warning is really useless.
-FSTAR_ARGS += --ext optimize_let_vc
-FSTAR_ARGS += --z3version 4.13.3
 FSTAR_ARGS += $(OTHERFLAGS)
 
 # Set ADMIT=1 to admit queries
@@ -45,7 +43,7 @@ FSTAR_ARGS += $(if $(ADMIT),--admit_smt_queries true)
 OUTPUT_DIR ?= _output
 CACHE_DIR ?= _cache
 
-FSTAR = $(RUNLIM) $(FSTAR_EXE) $(SIL) 						\
+FSTAR = $(RAMON) $(FSTAR_EXE) $(SIL) 						\
 	$(FSTAR_ARGS)
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -103,19 +101,28 @@ $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
 	$(FSTAR) --codegen FSharp $< -o $@
 
-# No FSharp compilation in these makefiles, sorry.
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
 	$(call msg, "OCAMLOPT", $(basename $(notdir $<)))
 	$(FSTAR_EXE) --ocamlopt $< -o $@
+
+$(OUTPUT_DIR)/%.fs-exe: $(OUTPUT_DIR)/%.fs
+	$(call msg, "FSHARPC", $(basename $(notdir $<)))
+	@test -f $*.fsproj || { echo "ERROR: $*.fsproj not found"; false; }
+	dotnet publish --nologo -v q $*.fsproj -r linux-x64 --self-contained -p:PublishSingleFile=true -o $(dir $@)
+	mv $(OUTPUT_DIR)/$* $@
 
 $(OUTPUT_DIR)/%.out: $(OUTPUT_DIR)/%.exe
 	$(call msg, "RUN", $(basename $(notdir $<)))
 	./$< > $@
 
+$(OUTPUT_DIR)/%.fs-out: $(OUTPUT_DIR)/%.fs-exe
+	$(call msg, "RUN (F#)", $(basename $(notdir $<)))
+	./$< > $@
+
 ### Checking expected output for any kind of file (error output, ml, etc)
 $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 	$(call msg, "DIFF", $<)
-	$(FSTAR_ROOT)/mk/diff.sh $^
+	bash $(FSTAR_ROOT)/mk/diff.sh $^
 	touch $@
 
 $(OUTPUT_DIR)/%.accept: $(OUTPUT_DIR)/%
@@ -182,6 +189,7 @@ all: __build
 endif
 
 __run: $(patsubst %.fst,$(OUTPUT_DIR)/%.out,$(RUN))
+__run: $(patsubst %.fst,$(OUTPUT_DIR)/%.fs-out,$(RUN_FSHARP))
 run: __run
 ifeq ($(NORUN),)
 all: __run

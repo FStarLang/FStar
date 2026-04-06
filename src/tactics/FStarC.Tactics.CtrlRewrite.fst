@@ -19,11 +19,8 @@ module FStarC.Tactics.CtrlRewrite
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC
-open FStarC.Util
 open FStarC.Reflection.V2.Data
 open FStarC.Reflection.V2.Builtins
-open FStarC.Tactics.Result
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Tactics.Types
@@ -34,7 +31,6 @@ open FStarC.Class.Show
 open FStarC.Class.Monad
 open FStarC.Syntax.Print {}
 
-module BU     = FStarC.Util
 module S      = FStarC.Syntax.Syntax
 module U      = FStarC.Syntax.Util
 module SS     = FStarC.Syntax.Subst
@@ -51,7 +47,7 @@ let __do_rewrite
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac term
+  : ML (tac term)
 =
   (*
    * We skip certain terms. In particular if the term is a constant
@@ -132,7 +128,7 @@ let __do_rewrite
                (rangeof g0)
     in
     if_verbose (fun () ->
-                  BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                  Format.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
                     (show tm) (show ut)) ;!
     add_irrelevant_goal
                       g0
@@ -145,7 +141,7 @@ let __do_rewrite
     // Try to get rid of all the unification lambdas
     let ut = N.reduce_uvar_solutions env ut in
     if_verbose (fun () ->
-       BU.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+       Format.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
                    (show tm)
                    (show ut)) ;!
     return ut
@@ -157,13 +153,13 @@ let do_rewrite
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac term
+  : ML (tac term)
   = match! catch (__do_rewrite g0 rewriter env tm) with
     | Inl SKIP -> return tm
     | Inl e -> traise e
     | Inr tm' -> return tm'
 
-type ctac 'a = 'a -> tac ('a & ctrl_flag)
+type ctac 'a = 'a -> ML (tac ('a & ctrl_flag))
 
 (* Transform a value x with c1, and continue with c2 if needed *)
 let seq_ctac (c1 : ctac 'a) (c2 : ctac 'a)
@@ -224,7 +220,7 @@ let maybe_rewrite
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term & ctrl_flag)
+  : ML (tac (term & ctrl_flag))
   = let! (rw, ctrl_flag) = controller tm in
     let! tm' = 
          if rw
@@ -240,7 +236,7 @@ let rec ctrl_fold_env
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term & ctrl_flag)
+  : ML (tac (term & ctrl_flag))
   = let recurse tm =
       ctrl_fold_env g0 d controller rewriter env tm
     in
@@ -253,8 +249,8 @@ let rec ctrl_fold_env
       seq_ctac (on_subterms g0 d controller rewriter env)
                (maybe_rewrite g0 controller rewriter env) tm
 
-and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_opt:option residual_comp) recurse
-  : tac (option residual_comp & ctrl_flag)
+and recurse_option_residual_comp (env:env) (retyping_subst:list subst_elt) (rc_opt:option residual_comp) (recurse: Env.env -> term -> ML (tac (term & ctrl_flag)))
+  : ML (tac (option residual_comp & ctrl_flag))
   = // return (None, Continue)
     match rc_opt with
     | None -> return (None, Continue)
@@ -273,7 +269,7 @@ and on_subterms
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term & ctrl_flag)
+  : ML (tac (term & ctrl_flag))
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
 
@@ -284,7 +280,10 @@ and on_subterms
     // The retyping_subst is an identity substitution that replaces the bound vars
     // in the term with their new variants tagged with the rewritten bv sorts
     //
-    let rec descend_binders orig accum_binders retyping_subst accum_flag env bs t k rebuild =
+    let rec descend_binders orig accum_binders retyping_subst accum_flag env bs t k
+      (rebuild: list binder -> term -> option residual_comp -> ML term')
+      : ML (tac (term' & ctrl_flag))
+      =
       match bs with
       | [] ->
         let t = SS.subst retyping_subst t in
@@ -299,7 +298,7 @@ and on_subterms
           // For dependent binders, we need to re-compute the substitution incrementally; applying subst to bs doesn't work
           let bs = SS.close_binders bs in
           let t = SS.subst subst t in
-          let k = BU.map_option (SS.subst_residual_comp subst) k in
+          let k = Option.map (SS.subst_residual_comp subst) k in
           return (rebuild bs t k,
                par_combine (accum_flag, (par_combine (t_flag, k_flag))))
         end
@@ -316,7 +315,7 @@ and on_subterms
           let retyping_subst = NT(bv, bv_to_name bv) :: retyping_subst in
           descend_binders orig (b::accum_binders) retyping_subst (par_combine (accum_flag, flag)) env bs t k rebuild
     in
-    let go () : tac (term' & ctrl_flag) =
+    let go () : ML (tac (term' & ctrl_flag)) =
       let tm = SS.compress tm in
       match tm.n with
       (* Run on hd and args in parallel *)
@@ -327,7 +326,7 @@ and on_subterms
       (* Open, descend, rebuild *)
       | Tm_abs {bs; body=t; rc_opt=k} ->
         let bs_orig, t, subst = SS.open_term' bs t in
-        let k = k |> BU.map_option (SS.subst_residual_comp subst) in
+        let k = k |> Option.map (SS.subst_residual_comp subst) in
         descend_binders tm [] [] Continue env bs_orig t k
                         (fun bs t k -> Tm_abs {bs; body=t; rc_opt=k})
 
@@ -362,7 +361,7 @@ and on_subterms
        * and do not go into patterns.
        * also ignoring the return annotations *)
       | Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt} ->
-        let c_branch (br:S.branch) : tac (S.branch & ctrl_flag) =
+        let c_branch (br:S.branch) : ML (tac (S.branch & ctrl_flag)) =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
           let! e, flag = recurse (Env.push_bvs env bvs) e in
@@ -391,7 +390,7 @@ and on_subterms
       (* Descend, in parallel, in *every* definiens and the body.
        * Again body is properly opened, and we don't go into types. *)
      | Tm_let {lbs=(true, lbs); body=e} ->
-       let c_lb (lb:S.letbinding) : tac (S.letbinding & ctrl_flag) =
+       let c_lb (lb:S.letbinding) : ML (tac (S.letbinding & ctrl_flag)) =
          let! (def, flag) = rr lb.lbdef in
          return ({lb with lbdef = def }, flag)
        in
@@ -412,7 +411,7 @@ and on_subterms
        return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
-       (* BU.print1 "GG ignoring %s\n" (tag_of tm); *)
+       (* Format.print1 "GG ignoring %s\n" (tag_of tm); *)
        return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in
@@ -425,7 +424,7 @@ let do_ctrl_rewrite
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac term
+  : ML (tac term)
   = let! tm', _ = ctrl_fold_env g0 dir controller rewriter env tm in
     return tm'
 
@@ -433,7 +432,7 @@ let ctrl_rewrite
     (dir : direction)
     (controller : controller_ty)
     (rewriter   : rewriter_ty)
-  : tac unit
+  : ML (tac unit)
   = wrap_err "ctrl_rewrite" <| (
     let! ps = get in
     let g, gs = match ps.goals with
@@ -443,12 +442,12 @@ let ctrl_rewrite
     dismiss_all ;!
     let gt = (goal_type g) in
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
+        Format.print1 "ctrl_rewrite starting with %s\n" (show gt)) ;!
 
     let! gt' = do_ctrl_rewrite g dir controller rewriter (goal_env g) gt in
 
     if_verbose (fun () ->
-        BU.print1 "ctrl_rewrite seems to have succeded with %s\n" (show gt')) ;!
+        Format.print1 "ctrl_rewrite seems to have succeeded with %s\n" (show gt')) ;!
 
     push_goals gs ;!
     let g = goal_with_type g gt' in

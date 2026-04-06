@@ -23,29 +23,29 @@ open FStarC.Range
 (* Non-dependent tuples *)
 
 (* tycon *)
-val mk_tuple_lid (arity : int) (r : range) : lid
+val mk_tuple_lid (arity : int) (r : range) : ML lid
 (* datacon *)
-val mk_tuple_data_lid (arity : int) (r : range) : lid
+val mk_tuple_data_lid (arity : int) (r : range) : ML lid
 
 val get_tuple_datacon_arity (s:string) : option int
 val get_tuple_tycon_arity (s:string) : option int
 
 val is_tuple_constructor_lid (lid : lident) : bool
-val is_tuple_data_lid (f : lident) (n : int) : bool
+val is_tuple_data_lid (f : lident) (n : int) : ML bool
 val is_tuple_datacon_lid (f : lident) : bool
 
 (* Dependent tuples *)
 
 (* tycon *)
-val mk_dtuple_lid (arity : int) (r : range) : lid
+val mk_dtuple_lid (arity : int) (r : range) : ML lid
 (* datacon *)
-val mk_dtuple_data_lid (arity : int) (r : range) : lid
+val mk_dtuple_data_lid (arity : int) (r : range) : ML lid
 
 val get_dtuple_datacon_arity (s:string) : option int
 val get_dtuple_tycon_arity (s:string) : option int
 
 val is_dtuple_constructor_lid (lid : lident) : bool
-val is_dtuple_data_lid (f : lident) (n : int) : bool
+val is_dtuple_data_lid (f : lident) (n : int) : ML bool
 val is_dtuple_datacon_lid (f : lident) : bool
 
 (* Shortcuts *)

@@ -23,7 +23,7 @@ open FStarC.Parser.AST
 (* Returns every identifier mentioned in a decl (including
 the body). This is used from the interactive mode to provide
 hover information and jump-to-definition. *)
-val lidents_of_decl (t:decl) : list FStarC.Ident.lident
+val lidents_of_decl (t:decl) : ML (list FStarC.Ident.lident)
 
 type open_namespaces_and_abbreviations = {
    open_namespaces: list FStarC.Ident.lident;
@@ -32,34 +32,34 @@ type open_namespaces_and_abbreviations = {
 
 type error_message = {
    message: list FStarC.Pprint.document;
-   range: FStarC.Range.range;
+   range: FStarC.Range.t;
 }
 
 type extension_parser = {
   parse_decl_name:
     (contents:string ->
-     FStarC.Range.range ->
-     either error_message FStarC.Ident.ident);
+     FStarC.Range.t ->
+     ML (either error_message FStarC.Ident.ident));
 
   parse_decl:
    (open_namespaces_and_abbreviations ->
     contents:string ->
-    p:FStarC.Range.range ->
-    either error_message decl)
+    p:FStarC.Range.t ->
+    ML (either error_message decl))
 }
 
-val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
-val lookup_extension_parser (extension_name:string) : option extension_parser
+val register_extension_parser (extension_name:string) (parser:extension_parser) : ML unit
+val lookup_extension_parser (extension_name:string) : ML (option extension_parser)
 
 
 type extension_lang_parser = {
   parse_decls:
    (contents:string ->
-    p:FStarC.Range.range ->
-    either error_message (list decl))
+    p:FStarC.Range.t ->
+    ML (either error_message (list decl)))
 }
 
-val as_open_namespaces_and_abbrevs (ls:list decl) : open_namespaces_and_abbreviations
-val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : unit
-val lookup_extension_lang_parser (extension_name:string) : option extension_lang_parser
-val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.range) : list decl
+val as_open_namespaces_and_abbrevs (ls:list decl) : ML open_namespaces_and_abbreviations
+val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : ML unit
+val lookup_extension_lang_parser (extension_name:string) : ML (option extension_lang_parser)
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.t) : ML (list decl)

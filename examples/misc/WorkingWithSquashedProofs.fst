@@ -31,18 +31,18 @@ val bar (a:Type) (x:a) : Type
 
 //And let's say I have a way of proving some Lemma based on a proof of this `pred`
 assume
-val foo_pf_implies_bar (a:Type) (x:a) (pf:foo a x)
-  : Lemma (bar a x)
+val foo_pf_implies_bar (a:Type u#a) (x:a) (pf:foo u#a u#b a x)
+  : Lemma (bar u#a u#0 a x)
 
 //Now, if I have `foo` in a refinement, I can still prove `bar, like so
 
 //One can use FStar.Squash.bind_squash for that, but it takes a couple of steps
 
 //expect_failure is an attribute that tells F* that this next definition will fail
-[@expect_failure] //but this doesn't quite work because `bind_squash` expects a GTot function but we are giving it a Lemma, which isn't identical
-let foo_implies_bar (a:Type) (x:a{foo a x})
+[@expect_failure]   ///but this doesn't quite work because `bind_squash` expects a GTot function but we are giving it a Lemma, which isn't identical
+let foo_implies_bar (a:Type u#a) (x:a{foo u#a u#b a x})
   : Lemma (bar a x)
-  = let s : squash (foo a x) = () in
+  = let s : squash (foo u#a u#b a x) = () in
     FStar.Squash.bind_squash #(foo a x) #(bar a x) s (foo_pf_implies_bar a x)
 
 //So, to make it work, we need to turn a lemma into a GTot function returning a squash
@@ -51,9 +51,9 @@ let lemma_as_squash #a #b ($lem: (a -> Lemma b)) (x:a)
   = lem x
 
 //Now, I can use FStar.Squash.bind_squash to complete the proof
-let foo_implies_bar (a:Type) (x:a{foo a x})
+let foo_implies_bar (a:Type) (x:a{foo u#a u#b a x})
   : Lemma (bar a x)
-  = FStar.Squash.bind_squash () (lemma_as_squash (foo_pf_implies_bar a x))
+  = FStar.Squash.bind_squash () (lemma_as_squash (foo_pf_implies_bar u#a u#b a x))
 
 // Another example, this time with disjunctions
 

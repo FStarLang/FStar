@@ -14,12 +14,15 @@
    limitations under the License.
 *)
 module FStarC.Parser.ParseIt
+
+open FStarC
 open FStarC.Effect
 open FStarC.Parser
-open FStarC.Util
-open FStarC
 open FStarC.Errors
+open FStarC.Time
+
 module AU = FStarC.Parser.AST.Util
+
 type filename = string
 
 type input_frag = {
@@ -29,11 +32,11 @@ type input_frag = {
     frag_col:int
 }
 
-val read_vfs_entry : string -> option (time_of_day & string)
+val read_vfs_entry : string -> ML (option (time_of_day & string))
 // This lets the ide tell us about edits not (yet) reflected on disk.
-val add_vfs_entry: fname:string -> contents:string -> unit
+val add_vfs_entry: fname:string -> contents:string -> ML unit
 // This reads mtimes from the VFS as well
-val get_file_last_modification_time: fname:string -> time_of_day
+val get_file_last_modification_time: fname:string -> ML time_of_day
 
 type parse_frag =
     | Filename of filename
@@ -41,18 +44,18 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (error_code & error_message & Range.range)
+type parse_error = (error_code & error_message & Range.t)
 
 type code_fragment = {
     code: string;
-    range: FStarC.Range.range;
+    range: FStarC.Range.t;
 }
 
 type incremental_result 'a = 
-    list ('a & code_fragment) & list (string & Range.range) & option parse_error
+    list ('a & code_fragment) & list (string & Range.t) & option parse_error
 
 type parse_result =
-    | ASTFragment of (AST.inputFragment & list (string & Range.range))
+    | ASTFragment of (AST.inputFragment & list (string & Range.t))
     | IncrementalFragment of incremental_result AST.decl
     | Term of AST.term
     | ParseError of parse_error
@@ -60,10 +63,10 @@ type parse_result =
 let lang_opts = option string
 val parse (ext_lang:lang_opts)
           (frag:parse_frag)
-: parse_result
-val find_file: string -> string
+: ML parse_result
+val find_file: string -> ML string
 
-val parse_warn_error: string -> list FStarC.Errors.error_setting
+val parse_warn_error: string -> ML (option (list FStarC.Errors.error_setting))
 
 (* useful for unit testing and registered a #lang-fstar parser *)
 val parse_fstar_incrementally : AU.extension_lang_parser

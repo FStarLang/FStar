@@ -15,7 +15,7 @@
 *)
 module Bug1502
 
-#set-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0"
+#set-options "--initial_fuel 0 --initial_ifuel 0 --fuel 0 --ifuel 0"
 
 type ty =
   | TGhost

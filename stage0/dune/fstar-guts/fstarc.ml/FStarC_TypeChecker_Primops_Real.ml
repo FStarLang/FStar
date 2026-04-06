@@ -2,17 +2,15 @@ open Prims
 type tf =
   | T 
   | F 
-let (uu___is_T : tf -> Prims.bool) =
-  fun projectee -> match projectee with | T -> true | uu___ -> false
-let (uu___is_F : tf -> Prims.bool) =
-  fun projectee -> match projectee with | F -> true | uu___ -> false
-let (e_tf : tf FStarC_Syntax_Embeddings_Base.embedding) =
+let uu___is_T (projectee : tf) : Prims.bool=
+  match projectee with | T -> true | uu___ -> false
+let uu___is_F (projectee : tf) : Prims.bool=
+  match projectee with | F -> true | uu___ -> false
+let e_tf : tf FStarC_Syntax_Embeddings_Base.embedding=
   let ty = FStarC_Syntax_Util.fvar_const FStarC_Parser_Const.prop_lid in
   let emb_t_prop =
-    let uu___ =
-      let uu___1 = FStarC_Ident.string_of_lid FStarC_Parser_Const.prop_lid in
-      (uu___1, []) in
-    FStarC_Syntax_Syntax.ET_app uu___ in
+    FStarC_Syntax_Syntax.ET_app
+      ((FStarC_Ident.string_of_lid FStarC_Parser_Const.prop_lid), []) in
   let em p rng _shadow _norm =
     match p with
     | T -> FStarC_Syntax_Util.t_true
@@ -32,10 +30,10 @@ let (e_tf : tf FStarC_Syntax_Embeddings_Base.embedding) =
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___ -> ty)
     (fun uu___ -> match uu___ with | T -> "T" | F -> "F")
     (fun uu___ -> emb_t_prop)
-let (nbe_e_tf : tf FStarC_TypeChecker_NBETerm.embedding) =
+let nbe_e_tf : tf FStarC_TypeChecker_NBETerm.embedding=
   let lid_as_typ l us args =
-    let uu___ = FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
-    FStarC_TypeChecker_NBETerm.mkFV uu___ us args in
+    FStarC_TypeChecker_NBETerm.mkFV
+      (FStarC_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None) us args in
   let em _cb a =
     match a with
     | T -> lid_as_typ FStarC_Parser_Const.true_lid [] []
@@ -52,116 +50,186 @@ let (nbe_e_tf : tf FStarC_TypeChecker_NBETerm.embedding) =
   FStarC_TypeChecker_NBETerm.mk_emb em un
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.bool_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of e_tf)
-let (lt :
-  FStarC_Real.real -> FStarC_Real.real -> tf FStar_Pervasives_Native.option)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun r1 ->
-         fun r2 ->
-           let uu___ = FStarC_Real.cmp r1 r2 in
-           Obj.magic
-             (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-                (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      match uu___1 with
-                      | FStarC_Order.Lt -> Obj.magic T
-                      | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___)))
-        uu___1 uu___
-let (le :
-  FStarC_Real.real -> FStarC_Real.real -> tf FStar_Pervasives_Native.option)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun r1 ->
-         fun r2 ->
-           let uu___ = FStarC_Real.cmp r1 r2 in
-           Obj.magic
-             (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-                (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      match uu___1 with
-                      | FStarC_Order.Lt -> Obj.magic T
-                      | FStarC_Order.Eq -> Obj.magic T
-                      | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___)))
-        uu___1 uu___
-let (gt :
-  FStarC_Real.real -> FStarC_Real.real -> tf FStar_Pervasives_Native.option)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun r1 ->
-         fun r2 ->
-           let uu___ = FStarC_Real.cmp r1 r2 in
-           Obj.magic
-             (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-                (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      match uu___1 with
-                      | FStarC_Order.Gt -> Obj.magic T
-                      | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___)))
-        uu___1 uu___
-let (ge :
-  FStarC_Real.real -> FStarC_Real.real -> tf FStar_Pervasives_Native.option)
-  =
-  fun uu___1 ->
-    fun uu___ ->
-      (fun r1 ->
-         fun r2 ->
-           let uu___ = FStarC_Real.cmp r1 r2 in
-           Obj.magic
-             (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-                (fun uu___1 ->
-                   (fun uu___1 ->
-                      let uu___1 = Obj.magic uu___1 in
-                      match uu___1 with
-                      | FStarC_Order.Gt -> Obj.magic T
-                      | FStarC_Order.Eq -> Obj.magic T
-                      | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___)))
-        uu___1 uu___
-let (of_int : FStarC_BigInt.t -> FStarC_Real.real) =
-  fun i ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = FStarC_BigInt.to_int_fs i in Prims.string_of_int uu___2 in
-      Prims.strcat uu___1 ".0" in
-    FStarC_Real.Real uu___
-let (ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
+let lt (uu___1 : FStarC_Real.real) (uu___ : FStarC_Real.real) :
+  tf FStar_Pervasives_Native.option=
+  (fun r1 r2 ->
+     let uu___ = FStarC_Real.cmp r1 r2 in
+     Obj.magic
+       (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
+          (fun uu___1 ->
+             (fun uu___1 ->
+                let uu___1 = Obj.magic uu___1 in
+                match uu___1 with
+                | FStarC_Order.Lt -> Obj.magic T
+                | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___))) uu___1
+    uu___
+let le (uu___1 : FStarC_Real.real) (uu___ : FStarC_Real.real) :
+  tf FStar_Pervasives_Native.option=
+  (fun r1 r2 ->
+     let uu___ = FStarC_Real.cmp r1 r2 in
+     Obj.magic
+       (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
+          (fun uu___1 ->
+             (fun uu___1 ->
+                let uu___1 = Obj.magic uu___1 in
+                match uu___1 with
+                | FStarC_Order.Lt -> Obj.magic T
+                | FStarC_Order.Eq -> Obj.magic T
+                | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___))) uu___1
+    uu___
+let gt (uu___1 : FStarC_Real.real) (uu___ : FStarC_Real.real) :
+  tf FStar_Pervasives_Native.option=
+  (fun r1 r2 ->
+     let uu___ = FStarC_Real.cmp r1 r2 in
+     Obj.magic
+       (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
+          (fun uu___1 ->
+             (fun uu___1 ->
+                let uu___1 = Obj.magic uu___1 in
+                match uu___1 with
+                | FStarC_Order.Gt -> Obj.magic T
+                | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___))) uu___1
+    uu___
+let ge (uu___1 : FStarC_Real.real) (uu___ : FStarC_Real.real) :
+  tf FStar_Pervasives_Native.option=
+  (fun r1 r2 ->
+     let uu___ = FStarC_Real.cmp r1 r2 in
+     Obj.magic
+       (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
+          (fun uu___1 ->
+             (fun uu___1 ->
+                let uu___1 = Obj.magic uu___1 in
+                match uu___1 with
+                | FStarC_Order.Gt -> Obj.magic T
+                | FStarC_Order.Eq -> Obj.magic T
+                | uu___2 -> Obj.magic F) uu___1) (Obj.magic uu___))) uu___1
+    uu___
+let is_lit (s : Prims.string) (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ =
+    FStarC_TypeChecker_Primops_Base.try_unembed_simple
+      FStarC_Syntax_Embeddings.e_real t in
+  match uu___ with
+  | FStar_Pervasives_Native.Some r ->
+      let uu___1 = FStarC_Real.cmp r (FStarC_Real.Real s) in
+      uu___1 = (FStar_Pervasives_Native.Some FStarC_Order.Eq)
+  | uu___1 -> false
+let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs=
+  {
+    FStarC_TypeChecker_NBETerm.iapp = (fun h _args -> h);
+    FStarC_TypeChecker_NBETerm.translate =
+      (fun uu___ -> FStarC_Effect.failwith "bogus_cbs translate")
+  }
+let is_nbe_lit (s : Prims.string) (t : FStarC_TypeChecker_NBETerm.t) :
+  Prims.bool=
+  let uu___ =
+    FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_real
+      bogus_cbs t in
+  match uu___ with
+  | FStar_Pervasives_Native.Some r ->
+      let uu___1 = FStarC_Real.cmp r (FStarC_Real.Real s) in
+      uu___1 = (FStar_Pervasives_Native.Some FStarC_Order.Eq)
+  | uu___1 -> false
+let is_zero : FStarC_Syntax_Syntax.term -> Prims.bool= is_lit "0.0"
+let is_one : FStarC_Syntax_Syntax.term -> Prims.bool= is_lit "1.0"
+let is_nbe_zero : FStarC_TypeChecker_NBETerm.t -> Prims.bool=
+  is_nbe_lit "0.0"
+let is_nbe_one : FStarC_TypeChecker_NBETerm.t -> Prims.bool= is_nbe_lit "1.0"
+let add_op (psc : FStarC_TypeChecker_Primops_Base.psc)
+  (_norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb)
+  (_us : FStarC_Syntax_Syntax.universes) (args : FStarC_Syntax_Syntax.args) :
+  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
+  match args with
+  | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
+      ->
+      let uu___ = is_zero a1 in
+      if uu___
+      then FStar_Pervasives_Native.Some a2
+      else
+        (let uu___2 = is_zero a2 in
+         if uu___2
+         then FStar_Pervasives_Native.Some a1
+         else FStar_Pervasives_Native.None)
+  | uu___ -> FStar_Pervasives_Native.None
+let mul_op (psc : FStarC_TypeChecker_Primops_Base.psc)
+  (_norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb)
+  (_us : FStarC_Syntax_Syntax.universes) (args : FStarC_Syntax_Syntax.args) :
+  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
+  match args with
+  | (a1, FStar_Pervasives_Native.None)::(a2, FStar_Pervasives_Native.None)::[]
+      ->
+      let uu___ = is_one a1 in
+      if uu___
+      then FStar_Pervasives_Native.Some a2
+      else
+        (let uu___2 = is_one a2 in
+         if uu___2
+         then FStar_Pervasives_Native.Some a1
+         else FStar_Pervasives_Native.None)
+  | uu___ -> FStar_Pervasives_Native.None
+let add_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
+  fun _cbs univs args ->
+    match args with
+    | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
+        ->
+        let uu___ = is_nbe_zero l in
+        if uu___
+        then FStar_Pervasives_Native.Some r
+        else
+          (let uu___2 = is_nbe_zero r in
+           if uu___2
+           then FStar_Pervasives_Native.Some l
+           else FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
+let mul_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
+  fun _cbs univs args ->
+    match args with
+    | (r, FStar_Pervasives_Native.None)::(l, FStar_Pervasives_Native.None)::[]
+        ->
+        let uu___ = is_nbe_one l in
+        if uu___
+        then FStar_Pervasives_Native.Some r
+        else
+          (let uu___2 = is_nbe_one r in
+           if uu___2
+           then FStar_Pervasives_Native.Some l
+           else FStar_Pervasives_Native.None)
+    | uu___ -> FStar_Pervasives_Native.None
+let of_int (i : Prims.int) : FStarC_Real.real=
+  FStarC_Real.Real (Prims.strcat (Prims.string_of_int i) ".0")
+let as_primitive_step (is_strong : Prims.bool) (l : FStarC_Ident.lident)
+  (arity : Prims.int) (u_arity : Prims.int)
+  (f : FStarC_TypeChecker_Primops_Base.interp_t)
+  (f_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t) :
+  FStarC_TypeChecker_Primops_Base.primitive_step=
+  FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs is_strong
+    (l, arity, u_arity, f, f_nbe)
+let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
+  let s1 =
     FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero
       FStarC_Parser_Const.real_of_int FStarC_Syntax_Embeddings.e_int
       FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_real
       FStarC_TypeChecker_NBETerm.e_real of_int in
-  [uu___]
-let (simplify_ops :
-  FStarC_TypeChecker_Primops_Base.primitive_step Prims.list) =
-  let uu___ =
-    FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-      FStarC_Parser_Const.real_op_LT FStarC_Syntax_Embeddings.e_real
-      FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-      FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf lt lt in
-  let uu___1 =
-    let uu___2 =
-      FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-        FStarC_Parser_Const.real_op_LTE FStarC_Syntax_Embeddings.e_real
-        FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-        FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf le le in
-    let uu___3 =
-      let uu___4 =
-        FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-          FStarC_Parser_Const.real_op_GT FStarC_Syntax_Embeddings.e_real
-          FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-          FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf gt gt in
-      let uu___5 =
-        let uu___6 =
-          FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
-            FStarC_Parser_Const.real_op_GTE FStarC_Syntax_Embeddings.e_real
-            FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
-            FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf ge ge in
-        [uu___6] in
-      uu___4 :: uu___5 in
-    uu___2 :: uu___3 in
-  uu___ :: uu___1
+  let s2 =
+    as_primitive_step true FStarC_Parser_Const.real_op_Addition
+      (Prims.of_int (2)) Prims.int_zero add_op add_op_nbe in
+  let s3 =
+    as_primitive_step true FStarC_Parser_Const.real_op_Multiply
+      (Prims.of_int (2)) Prims.int_zero mul_op mul_op_nbe in
+  [s1; s2; s3]
+let simplify_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
+  [FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+     FStarC_Parser_Const.real_op_LT FStarC_Syntax_Embeddings.e_real
+     FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+     FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf lt lt;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_LTE FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf le le;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_GT FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf gt gt;
+  FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero
+    FStarC_Parser_Const.real_op_GTE FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real FStarC_Syntax_Embeddings.e_real
+    FStarC_TypeChecker_NBETerm.e_real e_tf nbe_e_tf ge ge]

@@ -48,6 +48,9 @@ val no_method : unit
 run this tactics without having to know its definition in the .fst *)
 val tcresolve : unit -> Tac unit
 
+(* Like `tcresolve`, but will print debugging information when called. *)
+val tcresolve_debug : unit -> Tac unit
+
 (* The metaprogram to generate class methods. Also a plugin. This
 is inserted automatically by the desugaring phase for any `class`
 declaration. *)
@@ -56,3 +59,7 @@ val mk_class (nm:string) : Tac decls
 (* Helper to solve an explicit argument by typeclass resolution *)
 [@@tcnorm]
 unfold let solve (#a:Type) (#[tcresolve ()] ev : a) : Tot a = ev
+
+(* Like `solve`, but prints debugging information. *)
+[@@tcnorm]
+unfold let solve_debug (#a:Type) (#[tcresolve_debug ()] ev : a) : Tot a = ev

@@ -19,7 +19,7 @@ open X64.Vale.State_i
 open FStar.UInt
 module S = X64.Semantics_s
 
-#reset-options "--initial_fuel 2 --max_fuel 2"
+#reset-options "--fuel 2"
 
 let eval_while b c n s0 s1 : Type0 = admit ()
 

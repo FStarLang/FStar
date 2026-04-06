@@ -19,10 +19,9 @@
 
 module FStarC.Interactive.QueryHelper
 open FStarC
+open FStarC.Effect
 open FStarC.Range
-open FStarC.Util
 open FStarC.TypeChecker.Env
-open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
 
 module TcEnv = FStarC.TypeChecker.Env
@@ -30,22 +29,11 @@ module CTable = FStarC.Interactive.CompletionTable
 
 type position = string & int & int
 type sl_reponse = { slr_name: string;
-                    slr_def_range: option Range.range;
+                    slr_def_range: option Range.t;
                     slr_typ: option string;
                     slr_doc: option string;
                     slr_def: option string }
 
-// Shared by IDE and LSP
-val term_to_string : TcEnv.env -> Syntax.Syntax.term -> string
-val symlookup : TcEnv.env -> string -> option position -> list string -> option sl_reponse
-val ck_completion : repl_state -> string -> list CTable.completion_result
-
-(* Used exclusively by LSP *)
-// Lookup the definition of a particular term located at txdoc_pos
-val deflookup : TcEnv.env -> txdoc_pos -> option assoct
-
-// Lookup the on-hover documentation for a particular term located at txdoc_pos
-val hoverlookup : TcEnv.env -> txdoc_pos -> option assoct
-
-// Lookup the completion information for a particular term located at txdoc_pos
-val complookup : repl_state -> txdoc_pos -> option assoct
+val term_to_string : TcEnv.env -> Syntax.Syntax.term -> ML string
+val symlookup : TcEnv.env -> string -> option position -> list string -> ML (option sl_reponse)
+val ck_completion : repl_state -> string -> ML (list CTable.completion_result)

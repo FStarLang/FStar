@@ -1,0 +1,22 @@
+name: Nightly schedule
+
+# This workflow dispatches nightly.yml for each branch that needs a
+# nightly build. To add a new branch, just add it to the matrix below.
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch: [master]
+    steps:
+      - run: gh workflow run nightly.yml --repo ${{ github.repository }} -f branch=${{ matrix.branch }}
+        env:
+          GH_TOKEN: ${{ github.token }}

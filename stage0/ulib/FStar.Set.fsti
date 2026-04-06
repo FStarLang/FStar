@@ -17,7 +17,6 @@
 
 module FStar.Set
 (** Computational sets (on eqtypes): membership is a boolean function *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 val set (a:eqtype)
   : Type0
@@ -120,8 +119,6 @@ val disjoint_not_in_both (a:eqtype) (s1:set a) (s2:set a)
 
 (* Converting lists to sets *)
 
-(* WHY IS THIS HERE? It is not strictly part of the interface *)
-#reset-options //restore fuel usage here
 let rec as_set' (#a:eqtype) (l:list a) : set a =
   match l with
   | [] -> empty

@@ -216,20 +216,15 @@ instance pretty_width = { pp = function
   | PtrdiffT -> doc_of_string "PtrdiffT"
 }
 
-let record_string (fs : list (string & string)) : string =
-  "{" ^
-  (String.concat "; " <| List.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
-  "}"
-
 let ctor (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
 // let ctor (n: string) (arg: document) : document =
 //   nest 2 (group (parens (doc_of_string n ^/^ arg)))
 
-let pp_list' (#a:Type) (f: a -> document) (xs: list a) : document =
-  (pp_list a { pp = f }).pp xs // hack
+let pp_list' (#a:Type) (f: a -> ML document) (xs: list a) : ML document =
+  group (nest 2 (brackets (flow_map (semi ^^ break_ 1) f xs)))
 
-let rec typ_to_doc (t:typ) : document =
+let rec typ_to_doc (t:typ) : ML document =
   match t with
   | TInt w -> ctor "TInt" [pp w]
   | TBuf t -> ctor "TBuf" [typ_to_doc t]
@@ -320,7 +315,7 @@ instance pretty_cc = { pp = function
   | FastCall -> doc_of_string "FastCall"
 }
 
-let rec pattern_to_doc (p:pattern) : document =
+let rec pattern_to_doc (p:pattern) : ML document =
   match p with
   | PUnit -> doc_of_string "PUnit"
   | PBool b -> ctor "PBool" [pp b]
@@ -332,7 +327,7 @@ let rec pattern_to_doc (p:pattern) : document =
 
 instance pretty_pattern = { pp = pattern_to_doc }
 
-let rec decl_to_doc (d:decl) : document =
+let rec decl_to_doc (d:decl) : ML document =
   match d with
   | DGlobal (fs, x, i, t, e) -> ctor "DGlobal" [pp fs; pp x; pp i; pp t; expr_to_doc e]
   | DFunction (cc, fs, i, t, x, bs, e) -> ctor "DFunction" [pp cc; pp fs; pp i; pp t; pp x; pp bs; expr_to_doc e]
@@ -344,7 +339,7 @@ let rec decl_to_doc (d:decl) : document =
   | DExternal (cc, fs, x, t, xs) -> ctor "DExternal" [pp cc; pp fs; pp x; pp t; pp xs]
   | DUntaggedUnion (x, fs, i, xs) -> ctor "DUntaggedUnion" [pp x; pp fs; pp i; pp xs] 
 
-and expr_to_doc (e:expr) : document =
+and expr_to_doc (e:expr) : ML document =
   match e with
   | EBound x -> ctor "EBound" [pp x]
   | EQualified x -> ctor "EQualified" [pp x]
@@ -389,7 +384,7 @@ and expr_to_doc (e:expr) : document =
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   
-and pp_branch (b:branch) : document =
+and pp_branch (b:branch) : ML document =
   let (p, e) = b in
   parens (pp p ^^ comma ^/^ expr_to_doc e)
 
@@ -433,48 +428,27 @@ let is_bool_op op =
   mk_bool_op op <> None
 
 let mk_op = function
-  | "add" | "op_Plus_Hat" | "add_underspec" ->
-      Some Add
-  | "add_mod" | "op_Plus_Percent_Hat" ->
-      Some AddW
-  | "sub" | "op_Subtraction_Hat" | "sub_underspec" ->
-      Some Sub
-  | "sub_mod" | "op_Subtraction_Percent_Hat" ->
-      Some SubW
-  | "mul" | "op_Star_Hat" | "mul_underspec" ->
-      Some Mult
-  | "mul_mod" | "op_Star_Percent_Hat" ->
-      Some MultW
-  | "div" | "op_Slash_Hat" ->
-      Some Div
-  | "div_mod" | "op_Slash_Percent_Hat" ->
-      Some DivW
-  | "rem" | "op_Percent_Hat" ->
-      Some Mod
-  | "logor" | "op_Bar_Hat" ->
-      Some BOr
-  | "logxor" | "op_Hat_Hat" ->
-      Some BXor
-  | "logand" | "op_Amp_Hat" ->
-      Some BAnd
-  | "lognot" ->
-      Some BNot
-  | "shift_right" | "op_Greater_Greater_Hat" ->
-      Some BShiftR
-  | "shift_left" | "op_Less_Less_Hat" ->
-      Some BShiftL
-  | "eq" | "op_Equals_Hat" ->
-      Some Eq
-  | "op_Greater_Hat" | "gt" ->
-      Some Gt
-  | "op_Greater_Equals_Hat" | "gte" ->
-      Some Gte
-  | "op_Less_Hat" | "lt" ->
-      Some Lt
-  | "op_Less_Equals_Hat" | "lte" ->
-      Some Lte
-  | _ ->
-      None
+  | "add" | "add_underspec"  -> Some Add
+  | "add_mod"                -> Some AddW
+  | "sub" | "sub_underspec"  -> Some Sub
+  | "sub_mod"                -> Some SubW
+  | "mul" |  "mul_underspec" -> Some Mult
+  | "mul_mod"                -> Some MultW
+  | "div"                    -> Some Div
+  | "div_mod"                -> Some DivW
+  | "rem"                    -> Some Mod
+  | "logor"                  -> Some BOr
+  | "logxor"                 -> Some BXor
+  | "logand"                 -> Some BAnd
+  | "lognot"                 -> Some BNot
+  | "shift_right"            -> Some BShiftR
+  | "shift_left"             -> Some BShiftL
+  | "eq"                     -> Some Eq
+  |  "gt"                    -> Some Gt
+  |  "gte"                   -> Some Gte
+  | "lt"                     -> Some Lt
+  | "lte"                    -> Some Lte
+  | _                        -> None
 
 let is_op op =
   mk_op op <> None
@@ -508,31 +482,31 @@ let extend env x =
 let extend_t env x =
   { env with names_t = x :: env.names_t }
 
-let find_name env x =
+let find_name env x : ML name =
   match List.tryFind (fun name -> name.pretty = x) env.names with
   | Some name ->
       name
   | None ->
       failwith "internal error: name not found"
 
-let find env x =
+let find env x : ML int =
   try
     List.index (fun name -> name.pretty = x) env.names
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
-let find_t env x =
+let find_t env x : ML int =
   try
     List.index (fun name -> name = x) env.names_t
   with _ ->
-    failwith (BU.format1 "Internal error: name not found %s\n" x)
+    failwith (Format.fmt1 "Internal error: name not found %s\n" x)
 
 let add_binders env bs =
   List.fold_left (fun env {mlbinder_name} -> extend env mlbinder_name) env bs
 
 (* Actual translation ********************************************************)
 
-let list_elements e =
+let list_elements e : ML (list mlexpr) =
   let lopt = FStarC.Extraction.ML.Util.list_elements e in
   match lopt with
   | None -> failwith "Argument of FStar.Buffer.createL is not a list literal!"
@@ -597,7 +571,7 @@ let register_post_translate_type_without_decay
     with NotSupportedByKrmlExtension -> f e t
   in
   ref_translate_type_without_decay := after
-let translate_type_without_decay env t = !ref_translate_type_without_decay env t
+let translate_type_without_decay env t : ML typ = !ref_translate_type_without_decay env t
 
 // The outermost array type constructor decays to pointer
 let translate_type_t = env -> mlty -> ML typ
@@ -622,7 +596,7 @@ let register_post_translate_type
     with NotSupportedByKrmlExtension -> f e t
   in
   ref_translate_type := after
-let translate_type env t = !ref_translate_type env t
+let translate_type env t : ML typ = !ref_translate_type env t
 
 let translate_expr_t = env -> mlexpr -> ML expr
 let ref_translate_expr : ref translate_expr_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
@@ -646,7 +620,7 @@ let register_post_translate_expr
     with NotSupportedByKrmlExtension -> f e t
   in
   ref_translate_expr := after
-let translate_expr (env: env) (e: mlexpr) = !ref_translate_expr env e
+let translate_expr (env: env) (e: mlexpr) : ML expr = !ref_translate_expr env e
 
 let translate_type_decl_t = env -> one_mltydecl -> ML (option decl)
 let ref_translate_type_decl : ref translate_type_decl_t = mk_ref (fun _ _ -> raise NotSupportedByKrmlExtension)
@@ -670,13 +644,15 @@ let register_post_translate_type_decl
     with NotSupportedByKrmlExtension -> f e t
   in
   ref_translate_type_decl := after
-let translate_type_decl env ty: option decl =
+let translate_type_decl env ty: ML (option decl) =
   if List.mem Syntax.NoExtract ty.tydecl_meta then
     None
   else
     !ref_translate_type_decl env ty
 
-let rec translate_type_without_decay' env t: typ =
+type env_and_pat = env & pattern
+
+let rec translate_type_without_decay' env t: ML typ =
   match t with
   | MLTY_Tuple []
   | MLTY_Top ->
@@ -692,9 +668,9 @@ let rec translate_type_without_decay' env t: typ =
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "Prims.bool") ->
       TBool
   | MLTY_Named ([], ([ "FStar"; m ], "t")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], ([ "FStar"; m ], "t'")) when is_machine_int m ->
-      TInt (must (mk_width m))
+      TInt (Option.must (mk_width m))
   | MLTY_Named ([], p) when (Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mem") ->
       TUnit
   
@@ -712,7 +688,7 @@ let rec translate_type_without_decay' env t: typ =
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmstackref" ||
     Syntax.string_of_mlpath p = "FStar.Monotonic.HyperStack.mmmref" ||
-    Syntax.string_of_mlpath p = "FStar.Monotonic.Heap.mref" ||
+    Syntax.string_of_mlpath p = "FStar.All.ref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mreference" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mstackref" ||
     Syntax.string_of_mlpath p = "FStar.HyperStack.ST.mref" ||
@@ -771,7 +747,7 @@ let rec translate_type_without_decay' env t: typ =
       TTuple (List.map (translate_type_without_decay env) args)
   
   | MLTY_Named (args, lid) ->
-      if List.length args > 0 then
+      if Cons? args then
         TApp (lid, List.map (translate_type_without_decay env) args)
       else
         TQualified lid
@@ -779,16 +755,17 @@ let rec translate_type_without_decay' env t: typ =
   | MLTY_Tuple ts ->
       TTuple (List.map (translate_type_without_decay env) ts)
   
-and translate_type' env t: typ =
+and translate_type' env t: ML typ =
   // The outermost array type constructor decays to pointer
   match t with
       
   | t -> translate_type_without_decay env t
 
-and translate_binders env bs =
+and translate_binders env bs : ML (list binder) =
   List.map (translate_binder env) bs
 
-and translate_binder env ({mlbinder_name; mlbinder_ty; mlbinder_attrs} ) =
+and translate_binder env b : ML binder =
+  let {mlbinder_name; mlbinder_ty; mlbinder_attrs} = b in
   {
     name = mlbinder_name;
     typ = translate_type env mlbinder_ty;
@@ -796,7 +773,7 @@ and translate_binder env ({mlbinder_name; mlbinder_ty; mlbinder_attrs} ) =
     meta = [];
   }
 
-and translate_expr' env e: expr =
+and translate_expr' env e: ML expr =
   match e.expr with
   | MLE_Tuple [] ->
       EUnit
@@ -809,10 +786,10 @@ and translate_expr' env e: expr =
 
   // Some of these may not appear beneath an [EApp] node because of partial applications
   | MLE_Name ([ "FStar"; m ], op) when (is_machine_int m && is_op op) ->
-      EOp (must (mk_op op), must (mk_width m))
+      EOp (Option.must (mk_op op), Option.must (mk_width m))
 
   | MLE_Name ([ "Prims" ], op) when (is_bool_op op) ->
-      EOp (must (mk_bool_op op), Bool)
+      EOp (Option.must (mk_bool_op op), Bool)
 
   | MLE_Name n ->
       EQualified n
@@ -1075,15 +1052,15 @@ and translate_expr' env e: expr =
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->
-      mk_op_app env (must (mk_width m)) (must (mk_op op)) args
+      mk_op_app env (Option.must (mk_width m)) (Option.must (mk_op op)) args
 
   | MLE_App ({ expr = MLE_Name ([ "Prims" ], op) }, args) when (is_bool_op op) ->
-      mk_op_app env Bool (must (mk_bool_op op)) args
+      mk_op_app env Bool (Option.must (mk_bool_op op)) args
 
   // Fixed-width literals are represented as calls to [FStar.Int32.uint_to_t]
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "int_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }])
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "uint_to_t") }, [ { expr = MLE_Const (MLC_Int (c, None)) }]) when is_machine_int m ->
-      EConstant (must (mk_width m), c)
+      EConstant (Option.must (mk_width m), c)
 
   | MLE_App ({ expr = MLE_Name ([ "C" ], "string_of_literal") }, [ { expr = e } ])
   | MLE_App ({ expr = MLE_Name ([ "C"; "Compat"; "String" ], "of_literal") }, [ { expr = e } ])
@@ -1187,10 +1164,10 @@ and translate_expr' env e: expr =
   | MLE_Let _ ->
       (* Things not supported (yet): let-bindings for functions; meaning, rec flags are not
        * supported, and quantified type schemes are not supported either *)
-      failwith (BU.format1 "todo: translate_expr [MLE_Let] (expr is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_Let] (expr is: %s)"
         (ML.Code.string_of_mlexpr ([],"") e))
   | MLE_App (head, _) ->
-      failwith (BU.format1 "todo: translate_expr [MLE_App] (head is: %s)"
+      failwith (Format.fmt1 "todo: translate_expr [MLE_App] (head is: %s)"
         (ML.Code.string_of_mlexpr ([], "") head))
   | MLE_Seq seqs ->
       ESequence (List.map (translate_expr env) seqs)
@@ -1216,27 +1193,31 @@ and translate_expr' env e: expr =
   | MLE_Coerce _ ->
       failwith "todo: translate_expr [MLE_Coerce]"
 
-and assert_lid env t =
+and assert_lid env t : ML typ =
   match t with
   | MLTY_Named (ts, lid) ->
-      if List.length ts > 0 then
+      if Cons? ts then
         TApp (lid, List.map (translate_type env) ts)
       else
         TQualified lid
-  | _ -> failwith (BU.format1 "invalid argument: expected MLTY_Named, got %s"
+  | _ -> failwith (Format.fmt1 "invalid argument: expected MLTY_Named, got %s"
                              (ML.Code.string_of_mlty ([], "") t))
 
-and translate_branches env branches =
-  List.map (translate_branch env) branches
+and translate_branches env (branches:list mlbranch) : ML (list branch) =
+  match branches with
+  | [] -> []
+  | b :: rest -> translate_branch env b :: translate_branches env rest
 
-and translate_branch env (pat, guard, expr) =
+and translate_branch env b : ML branch =
+  let (pat, guard, expr) = b in
   if guard = None then
     let env, pat = translate_pat env pat in
     pat, translate_expr env expr
   else
     failwith "todo: translate_branch"
 
-and translate_width = function
+and translate_width (w:option (FC.signedness & FC.width)) : ML width =
+  match w with
   | None -> CInt
   | Some (FC.Signed, FC.Int8) -> Int8
   | Some (FC.Signed, FC.Int16) -> Int16
@@ -1248,7 +1229,7 @@ and translate_width = function
   | Some (FC.Unsigned, FC.Int64) -> UInt64
   | Some (FC.Unsigned, FC.Sizet) -> SizeT
 
-and translate_pat env p =
+and translate_pat env p : ML env_and_pat =
   match p with
   | MLP_Const MLC_Unit ->
       env, PUnit
@@ -1287,7 +1268,7 @@ and translate_pat env p =
   | MLP_Branch _ ->
       failwith "todo: translate_pat [MLP_Branch]"
 
-and translate_constant c: expr =
+and translate_constant c: ML expr =
   match c with
   | MLC_Unit ->
       EUnit
@@ -1296,11 +1277,11 @@ and translate_constant c: expr =
   | MLC_String s ->
       if FStar.String.list_of_string s
       |> BU.for_some (fun (c:FStar.Char.char) -> c = FStar.Char.char_of_int 0)
-      then failwith (BU.format1 "Refusing to translate a string literal that contains a null character: %s" s);
+      then failwith (Format.fmt1 "Refusing to translate a string literal that contains a null character: %s" s);
       EString s
   | MLC_Char c ->
       let i = BU.int_of_char c in
-      let s = BU.string_of_int i in
+      let s = show i in
       let c = EConstant (CInt, s) in
       let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
       EApp(char_of_int, [c])
@@ -1308,17 +1289,15 @@ and translate_constant c: expr =
       EConstant (translate_width (Some (sg, wd)), s)
   | MLC_Float _ ->
       failwith "todo: translate_expr [MLC_Float]"
-  | MLC_Bytes _ ->
-      failwith "todo: translate_expr [MLC_Bytes]"
   | MLC_Int (s, None) ->
       EConstant (CInt, s)
 
 (* Helper functions **********************************************************)
 
-and mk_op_app env w op args =
+and mk_op_app env w op args : ML expr =
   EApp (EOp (op, w), List.map (translate_expr env) args)
 
-let translate_type_decl' env ty: option decl =
+let translate_type_decl' env ty: ML (option decl) =
     match ty with
     | {tydecl_assumed=assumed;
        tydecl_name=name;
@@ -1331,7 +1310,8 @@ let translate_type_decl' env ty: option decl =
           Some (DTypeAbstractStruct name)
         else if assumed then
           let name = string_of_mlpath name in
-          BU.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
+          if not (Options.silent ()) then
+            Format.print1_warning "Not extracting type definition %s to KaRaMeL (assumed type)\n" name;
           // JP: TODO: shall we be smarter here?
           None
         else
@@ -1361,11 +1341,11 @@ let translate_type_decl' env ty: option decl =
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
         Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-            Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
+            Errors.Msg.text <| Format.fmt1 "Error extracting type definition %s to KaRaMeL." name;
           ];
         None
 
-let translate_let' env flavor lb: option decl =
+let translate_let' env flavor lb: ML (option decl) =
   match lb with
   | {
       mllb_name = name;
@@ -1378,10 +1358,11 @@ let translate_let' env flavor lb: option decl =
         | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
       in
-      if List.length tvars = 0 then
+      if Nil? tvars then
         Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
       else begin
-        BU.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
+        if not (Options.silent ()) then
+          Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
       end
 
@@ -1405,12 +1386,13 @@ let translate_let' env flavor lb: option decl =
         in
         let name = env.module_name, name in
         let i, eff, t = find_return_type E_PURE (List.length args) t0 in
-        if i > 0 then begin
+        if i > 0 && not (Options.silent ()) then begin
           let msg = "function type annotation has less arrows than the \
             number of arguments; please mark the return type abbreviation as \
             inline_for_extraction" in
-          BU.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg
-        end;
+          Format.print2_warning "Not extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg;
+          None
+        end else
         let t = translate_type env t in
         let binders = translate_binders env args in
         let env = add_binders env args in
@@ -1423,14 +1405,23 @@ let translate_let' env flavor lb: option decl =
         begin try
           let body = translate_expr env body in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, body))
-        with e ->
+        with
+        | e ->
+          let open FStarC.Pprint in
+          let open FStarC.Errors.Msg in
           // JP: TODO: figure out what are the remaining things we don't extract
-          let msg = BU.print_exn e in
-          Errors.log_issue0 Errors.Warning_FunctionNotExtacted [
-            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
-            Pprint.arbitrary_string msg;
-          ];
-          let msg = "This function was not extracted:\n" ^ msg in
+          let sub_msg : list document =
+            match e with
+            | Errors.Error (code, msg, pos, ctx) ->
+              [prefix 2 1 (text (Format.fmt2 "Got error %s at %s." (show (Errors.errno code)) (show pos)))
+                (Errors.render_as_doc msg)]
+            | e ->
+              [text "Got an exception: " ^^ arbitrary_string (BU.print_exn e)]
+          in
+          Errors.log_issue0 Errors.Warning_FunctionNotExtacted ([
+            Errors.Msg.text <| Format.fmt1 "Error while extracting %s to KaRaMeL." (show name);
+          ] @ sub_msg);
+          let msg = "This function was not extracted:\n" ^ show name in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
 
@@ -1453,7 +1444,7 @@ let translate_let' env flavor lb: option decl =
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
           Errors.log_issue0 Errors.Warning_DefinitionNotTranslated [
-              Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+              Errors.Msg.text <| Format.fmt1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
               Pprint.arbitrary_string (BU.print_exn e);
             ];
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
@@ -1462,10 +1453,10 @@ let translate_let' env flavor lb: option decl =
   | { mllb_name = name; mllb_tysc = ts } ->
       // TODO JP: figure out what exactly we're hitting here...?
       Errors.log_issue0 Errors.Warning_DefinitionNotTranslated
-        (BU.format1 "Not extracting %s to KaRaMeL\n" name);
+        (Format.fmt1 "Not extracting %s to KaRaMeL\n" name);
       begin match ts with
       | Some (tps, t) ->
-          BU.print2 "Type scheme is: forall %s. %s\n"
+          Format.print2 "Type scheme is: forall %s. %s\n"
             (String.concat ", " (ty_param_names tps))
             (ML.Code.string_of_mlty ([], "") t)
       | None ->
@@ -1486,10 +1477,10 @@ let register_pre_translate_let
     with NotSupportedByKrmlExtension -> before e fl lb
   in
   ref_translate_let := after
-let translate_let env flavor lb: option decl =
+let translate_let env flavor lb: ML (option decl) =
   !ref_translate_let env flavor lb
 
-let translate_decl env d: list decl =
+let translate_decl env d: ML (list decl) =
   match d.mlmodule1_m with
   | MLM_Let (flavor, lbs) ->
       // We don't care about mutual recursion, since every C file will include
@@ -1509,10 +1500,11 @@ let translate_decl env d: list decl =
       failwith "todo: translate_decl [MLM_Top]"
 
   | MLM_Exn (m, _) ->
-      BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
+      if not (Options.silent ()) then
+        Format.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
+let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : ML file =
   let (module_name, modul) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
@@ -1523,23 +1515,23 @@ let translate_module uenv (m : mlpath & option (mlsig & mlmodulebody)) : file =
   in
   (String.concat "_" module_name), program
 
-let translate (ue:uenv) (modules : list mlmodule): list file =
+let translate (ue:uenv) (modules : list mlmodule): ML (list file) =
   List.filter_map (fun m ->
     let m_name =
       let path, _ = m in
       Syntax.string_of_mlpath path
     in
     try
-      if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
+      if not (Options.silent()) then (Format.print1 "Attempting to translate module %s\n" m_name);
       Some (translate_module ue m)
     with
     | e ->
-        BU.print2 "Unable to translate module: %s because:\n  %s\n"
+        Format.print2 "Unable to translate module: %s because:\n  %s\n"
           m_name (BU.print_exn e);
         None
   ) modules
 
-let _ =
+let _init_krml =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';

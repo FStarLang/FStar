@@ -116,6 +116,7 @@ unfold let n = $i
 EOF
   cat $D/FStar.UIntN.fstip >> $f
   if [ $i -eq 8 ]; then
+    echo >> $f
     echo "unfold inline_for_extraction type byte = t" >> $f
   fi
   if [ $i -eq 128 ]; then

@@ -241,6 +241,7 @@ let ref_C_Range     = fstar_refl_data_const "C_Range"
 let ref_C_Reify     = fstar_refl_data_const "C_Reify"
 let ref_C_Reflect   = fstar_refl_data_const "C_Reflect"
 let ref_C_Real      = fstar_refl_data_const "C_Real"
+let ref_C_Char      = fstar_refl_data_const "C_Char"
 
 (* pattern *)
 let ref_Pat_Constant = fstar_refl_data_const "Pat_Constant"

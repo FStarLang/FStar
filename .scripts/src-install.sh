@@ -13,6 +13,10 @@ PREFIX="$2"
 mkdir -p "$PREFIX"
 PREFIX="$(realpath "$PREFIX")"
 
+# The tests.ml directory may not exist after a build, and rsync
+# in src-install will complain if so. Create it just in case.
+mkdir -p "${BROOT}/tests.ml"
+
 # Note: we must exclude everything in the Dune build directories, since
 # if some files "vanish" during this copy, rsync will fail (even if
 # ignored). We could also copy everything over and then remove the
@@ -52,6 +56,10 @@ cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
 cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
 
+# Copy a clean checkout of karamel
+mkdir "${PREFIX}/karamel"
+git -C karamel archive HEAD | tar -C "${PREFIX}/karamel" -x
+
 cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 
 # Make sure the source package has a proper version.
@@ -68,5 +76,5 @@ fi
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
 # duplicates.
-rm -r "$PREFIX"/*.ml
-rm -r "$PREFIX"/*.pluginml
+rm -rf "$PREFIX"/*.ml
+rm -rf "$PREFIX"/*.pluginml

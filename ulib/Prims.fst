@@ -37,10 +37,6 @@ module Prims
 assume new
 type attribute : Type0 
 
-(** An attribute indicating that some definition must be processed by the
-    Dijkstra monads for free construction *)
-assume
-val cps:attribute
 
 (** This attribute marks definitions for logical connectives that should
     not be unfolded during tactics. *)
@@ -161,7 +157,7 @@ val smt_theory_symbol:attribute
 let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
-    as "False" and rendered in the ide as [Falsee]. It is a squashed version
+    as "False" and rendered in the ide as [False]. It is a squashed version
     of constructive falsehood, the empty type. *)
 [@@ tac_opaque; smt_theory_symbol]
 let l_False:logical = squash empty
@@ -617,15 +613,6 @@ type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
 
-(** The [M] marker is interpreted by the Dijkstra Monads for Free
-     construction. It has a "double meaning", either as an alias for
-     reasoning about the direct definitions, or as a marker for places
-     where a CPS transformation should happen. *)
-effect M (a: Type) = Tot a (attributes cps)
-
-(** Returning a value into the [M] effect *)
-let returnM (a: Type) (x: a) : M a = x
-
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
@@ -731,4 +718,4 @@ val string_of_int: int -> Tot string
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 73
+let __cache_version_number__ = 77

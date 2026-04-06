@@ -9,52 +9,27 @@ module B        = FStarC_Tactics_V1_Basic
 module TM       = FStarC_Tactics_Monad
 module CTRW     = FStarC_Tactics_CtrlRewrite
 
-type ('a,'wp) tac_repr = proofstate -> 'a __result
-type 'a __tac = ('a, unit) tac_repr
-
-let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
-  TM.run t ps
-
-let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
-  t ps
+type 'a __tac = 'a TM.tac
 
 let to_tac_0 (t: 'a __tac): 'a TM.tac =
-  (fun (ps: proofstate) ->
-    uninterpret_tac t ps) |> TM.mk_tac
+  t
 
-let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac = fun x ->
-  (fun (ps: proofstate) ->
-    uninterpret_tac (t x) ps) |> TM.mk_tac
+let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac =
+  t
 
 let from_tac_1 (t: 'a -> 'b TM.tac): 'a  -> 'b __tac =
-  fun (x: 'a) ->
-    fun (ps: proofstate) ->
-      let m = t x in
-      interpret_tac m ps
+  t
 
 let from_tac_2 (t: 'a -> 'b -> 'c TM.tac): 'a  -> 'b -> 'c __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (ps: proofstate) ->
-        let m = t x y in
-        interpret_tac m ps
+  t
 
 let from_tac_3 (t: 'a -> 'b -> 'c -> 'd TM.tac): 'a  -> 'b -> 'c -> 'd __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (z: 'c) ->
-        fun (ps: proofstate) ->
-          let m = t x y z in
-          interpret_tac m ps
+  t
 
 let from_tac_4 (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e __tac =
-  fun (x: 'a) ->
-  fun (y: 'b) ->
-  fun (z: 'c) ->
-  fun (w: 'd) ->
-  fun (ps: proofstate) ->
-  let m = t x y z w in
-  interpret_tac m ps
+  t
+
+let get () : proofstate __tac = TM.get
 
 (* Pointing to the internal primitives *)
 let set_goals               = from_tac_1 TM.set_goals
@@ -116,7 +91,6 @@ let push_bv_dsenv           = from_tac_2 B.push_bv_dsenv
 let term_to_string          = from_tac_1 B.term_to_string
 let comp_to_string          = from_tac_1 B.comp_to_string
 let range_to_string         = from_tac_1 B.range_to_string
-let term_eq_old             = from_tac_2 B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 B.with_compat_pre_core n (to_tac_0 (f ()))
@@ -128,7 +102,7 @@ let free_uvars              = from_tac_1 B.free_uvars
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.catch   (to_tac_0 (t ()))
-let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 TM.recover (to_tac_0 (t ()))
+let raise_core = from_tac_1 TM.traise
 
 let ctrl_rewrite
     (d : direction)

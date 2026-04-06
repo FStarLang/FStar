@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,7 @@ let use_hints () = Options.use_hints ()
 
 (* fresh: true iff we are recording hints for the whole file, and hence should
 not merge hints with old ones. *)
-let initialize_hints_db filename (refresh:bool) : unit =
+let initialize_hints_db filename (refresh:bool) : ML unit =
     recorded_hints := [];
     refreshing_hints := refresh;
 
@@ -87,7 +87,7 @@ let initialize_hints_db filename (refresh:bool) : unit =
             let expected_digest = BU.digest_of_file norm_src_filename in
             if Options.hint_info()
             then begin
-                    BU.print3 "(%s) digest is %s from %s.\n" norm_src_filename
+                    Format.print3 "(%s) digest is %s from %s.\n" norm_src_filename
                         (if hints.module_digest = expected_digest
                          then "valid; using hints"
                          else "invalid; using potentially stale hints")
@@ -98,7 +98,7 @@ let initialize_hints_db filename (refresh:bool) : unit =
           | MalformedJson ->
             if use_hints () then
               Err.log_issue0 Err.Warning_CouldNotReadHints [
-                Errors.Msg.text <| BU.format1 "Malformed JSON hints file: %s; ran without hints"
+                Errors.Msg.text <| Format.fmt1 "Malformed JSON hints file: %s; ran without hints"
                                        val_filename
               ];
             ()
@@ -106,7 +106,7 @@ let initialize_hints_db filename (refresh:bool) : unit =
           | UnableToOpen ->
             if use_hints () then
               Err.log_issue0 Err.Warning_CouldNotReadHints [
-                Errors.Msg.text <| BU.format1 "Unable to open hints file: %s; ran without hints"
+                Errors.Msg.text <| Format.fmt1 "Unable to open hints file: %s; ran without hints"
                                        val_filename
               ];
             ()
@@ -137,7 +137,7 @@ let merge_hints_db (prev next : hints_db) : hints_db =
 (* This is called after we check every single top-level in the interactive mode, so
 we can record hints before "finishing" a module (which is never triggered in
 interactive mode, currently). *)
-let flush_hints () : unit =
+let flush_hints () : ML unit =
   let hints = !recorded_hints in
   let src_filename = !src_filename in
   (* If empty, don't do anything. *)
@@ -162,7 +162,7 @@ let flush_hints () : unit =
   recorded_hints := [];
   replaying_hints := None
 
-let finalize_hints_db () : unit =
+let finalize_hints_db () : ML unit =
   flush_hints ()
 
 let with_hints_db fname f =
@@ -197,21 +197,21 @@ type errors = {
 }
 
 let error_to_short_string err =
-    BU.format5 "%s (rlimit=%s; fuel=%s; ifuel=%s%s)"
+    Format.fmt5 "%s (rlimit=%s; fuel=%s; ifuel=%s%s)"
             err.error_reason
             (show err.error_rlimit)
             (show err.error_fuel)
             (show err.error_ifuel)
-            (if Option.isSome err.error_hint then "; with hint" else "")
+            (if Some? err.error_hint then "; with hint" else "")
 
 let error_to_is_timeout err =
     if BU.ends_with err.error_reason "canceled"
-    then [BU.format5 "timeout (rlimit=%s; fuel=%s; ifuel=%s; %s)"
+    then [Format.fmt5 "timeout (rlimit=%s; fuel=%s; ifuel=%s; %s)"
             err.error_reason
             (show err.error_rlimit)
             (show err.error_fuel)
             (show err.error_ifuel)
-            (if Option.isSome err.error_hint then "with hint" else "")]
+            (if Some? err.error_hint then "with hint" else "")]
     else []
 
 type query_settings = {
@@ -219,7 +219,7 @@ type query_settings = {
     query_decl:decl;
     query_name:string;
     query_index:int;
-    query_range:Range.range;
+    query_range:Range.t;
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;
@@ -240,7 +240,7 @@ corresponded to 5 seconds in some "blessed" setting. But rlimit units
 are only very roughly correlated to time, and having this very non-round
 number makes reading SMT query dumps pretty confusing. So, for new
 solvers, we now just make it 500k. *)
-let convert_rlimit (r : int) : int =
+let convert_rlimit (r : int) : ML int =
   let open FStar.Mul in
   if Misc.version_ge (Options.z3_version ()) "4.12.3" then
     500000 * r
@@ -253,15 +253,15 @@ let with_fuel_and_diagnostics settings label_assumptions =
     let i = settings.query_ifuel in
     let rlimit = convert_rlimit settings.query_rlimit in
     [  //fuel and ifuel settings
-        Term.Caption (BU.format2 "<fuel='%s' ifuel='%s'>"
-                        (string_of_int n)
-                        (string_of_int i));
+        Term.Caption (Format.fmt2 "<fuel='%s' ifuel='%s'>"
+                        (show n)
+                        (show i));
         Util.mkAssume(mkEq(mkApp("MaxFuel", []), n_fuel n), None, "@MaxFuel_assumption");
         Util.mkAssume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None, "@MaxIFuel_assumption");
         settings.query_decl        //the query itself
     ]
     @label_assumptions         //the sub-goals that are currently disabled
-    @[  Term.SetOption ("rlimit", string_of_int rlimit); //the rlimit setting for the check-sat
+    @[  Term.SetOption ("rlimit", show rlimit); //the rlimit setting for the check-sat
 
         // Print stats just before the query, so we know the initial rlimit.
         Term.Echo "<initial_stats>";
@@ -280,7 +280,7 @@ let with_fuel_and_diagnostics settings label_assumptions =
     @settings.query_suffix //recover error labels and a final "Done!" message
 
 
-let used_hint s = Option.isSome s.query_hint
+let used_hint s = Some? s.query_hint
 
 let get_hint_for qname qindex =
     match !replaying_hints with
@@ -323,20 +323,20 @@ let detail_hint_replay settings z3result =
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
-                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
+                      (Format.fmt2 "(%s, %s)" settings.query_name (show settings.query_index))
                       false
                       None
                       // settings.query_hint
            in
            detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3
 
-let find_localized_errors (errs : list errors) : option errors =
+let find_localized_errors (errs : list errors) : ML (option errors) =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
-let errors_to_report (tried_recovery : bool) (settings : query_settings) : list Errors.error =
+let errors_to_report (tried_recovery : bool) (settings : query_settings) : ML (list Errors.error) =
     let open FStarC.Pprint in
     let open FStarC.Errors in
-    let format_smt_error (msg:list document) : list document =
+    let format_smt_error (msg:list document) : ML (list document) =
       (* This creates an error component with the answers from Z3. Only used
       for --query_stats. *)
       let d =
@@ -494,7 +494,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                      (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
+                      (Format.fmt2 "(%s, %s)" settings.query_name (show settings.query_index))
                       false
                       None
               in
@@ -511,15 +511,15 @@ let report_errors tried_recovery qry_settings =
 
 
 type unique_string_accumulator = {
-  add: string -> unit;
-  get: unit -> list string;
-  clear: unit -> unit
+  add: string -> ML unit;
+  get: unit -> ML (list string);
+  clear: unit -> ML unit
 }
 
 (* A generic accumulator of unique strings,
    extracted in sorted order *)
 let mk_unique_string_accumulator ()
-: unique_string_accumulator
+: ML unique_string_accumulator
 = let strings = mk_ref [] in
   let add m =
     let ms = !strings in
@@ -532,8 +532,8 @@ let mk_unique_string_accumulator ()
   let clear () = strings := [] in
   { add ; get; clear }
 
-let div_with_decimals (ndec : nat) (x y : int) : string =
-  // BU.print2 "div_with_decimals: %s / %s\n" (show x) (show y);
+let div_with_decimals (ndec : nat) (x y : int) : ML string =
+  // Format.print2 "div_with_decimals: %s / %s\n" (show x) (show y);
   let open FStar.Mul in
   let mul =
     (* no power function in F* sources? *)
@@ -548,7 +548,7 @@ let div_with_decimals (ndec : nat) (x y : int) : string =
   let frac =
     let len = String.length (show frac) in
     let pad = ndec - len in
-    String.make pad '0' ^ string_of_int frac
+    String.make pad '0' ^ show frac
   in
   show intg ^ "." ^ frac // pad
 
@@ -583,7 +583,7 @@ let query_info settings z3result =
           into a module name + a top-level identifier
        *)
        let parse_axiom_name (s:string) =
-            // BU.print1 "Parsing axiom name <%s>\n" s;
+            // Format.print1 "Parsing axiom name <%s>\n" s;
             let chars = String.list_of_string s in
             let first_upper_index =
                 BU.try_find_index BU.is_upper chars
@@ -640,18 +640,18 @@ let query_info settings z3result =
                 else [ components |> String.concat "."]
         in
         let should_log = Options.hint_info () || Options.query_stats () in
-        let maybe_log (f:unit -> unit) = if should_log then f () in
+        let maybe_log (f:unit -> ML unit) = if should_log then f () in
         match core with
         | None ->
-           maybe_log <| (fun _ -> BU.print_string "no unsat core\n")
+           maybe_log <| (fun _ -> Format.print_string "no unsat core\n")
         | Some core ->
            let core = List.collect parse_axiom_name core in
            maybe_log <| (fun _ ->
-            BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
+            Format.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
                       (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
-            BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
+            Format.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
                       (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
-            BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+            Format.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
                       (get_discarded_names() |> String.concat ", "))
     in
     if Options.hint_info()
@@ -664,8 +664,8 @@ let query_info settings z3result =
             | Some s -> "@"^s
         in
         let tag, core = match z3result.z3result_status with
-         | UNSAT core -> BU.colorize_green "succeeded", core
-         | _ -> BU.colorize_red ("failed {reason-unknown=" ^ status_string ^ "}"), None
+         | UNSAT core -> Format.colorize_green "succeeded", core
+         | _ -> Format.colorize_red ("failed {reason-unknown=" ^ status_string ^ "}"), None
         in
         let range = "(" ^ show settings.query_range ^ at_log_file ^ ")" in
         let used_hint_tag = if used_hint settings then " (with hint)" else "" in
@@ -679,14 +679,20 @@ let query_info settings z3result =
           try
             let open FStar.Mul in
             let decimals = 3 in
-            let r0 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
-            let r1 = int_of_string <| BU.must <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let r0 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
+            let r1 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
             let used = r1 - r0 in
             div_with_decimals decimals used (convert_rlimit 1)
           with
           | _ -> "unknown"
         in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
+        if Options.Ext.enabled "query_stats_trace"
+        then (
+          Format.print "At %s\nQuery term is %s\n"
+                [BU.stack_dump();
+                 show settings.query_term]
+        );
+        Format.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s (used rlimit %s)\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
@@ -697,7 +703,6 @@ let query_info settings z3result =
                 show settings.query_ifuel;
                 show settings.query_rlimit;
                 used_rlimit_str;
-                // stats ()
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
@@ -732,7 +737,7 @@ let record_hint settings z3result =
       match z3result.z3result_status with
       | UNSAT None ->
         // we succeeded by just matching a query hash
-        store_hint (Option.get (get_hint_for settings.query_name settings.query_index))
+        store_hint (Option.must (get_hint_for settings.query_name settings.query_index))
       | UNSAT unsat_core ->
         if used_hint settings //if we already successfully use a hint
         then //just re-use the successful hint, but record the hash of the pruned theory
@@ -741,7 +746,7 @@ let record_hint settings z3result =
       | _ ->  () //the query failed, so nothing to do
     end
 
-let process_result settings result : option errors =
+let process_result settings result : ML (option errors) =
     let errs = query_errors settings result in
     query_info settings result;
     record_hint settings result;
@@ -757,10 +762,10 @@ let process_result settings result : option errors =
 // without a success, where errs is the list of errors each query
 // returned.
 let fold_queries (qs:list query_settings)
-                 (ask:query_settings -> z3result)
-                 (f:query_settings -> z3result -> option errors)
-                 : either (list errors) query_settings =
-    let rec aux (acc : list errors) qs : either (list errors) query_settings =
+                 (ask:query_settings -> ML z3result)
+                 (f:query_settings -> z3result -> ML (option errors))
+                 : ML (either (list errors) query_settings) =
+    let rec aux (acc : list errors) qs : ML (either (list errors) query_settings) =
         match qs with
         | [] -> Inl acc
         | q::qs ->
@@ -774,9 +779,9 @@ let fold_queries (qs:list query_settings)
     aux [] qs
 
 let full_query_id settings =
-    "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
+    "(" ^ settings.query_name ^ ", " ^ (show settings.query_index) ^ ")"
 
-let collect_dups (l : list 'a) : list ('a & int) =
+let collect_dups (l : list 'a) : ML (list ('a & int)) =
     let acc : list ('a & int) = [] in
     let rec add_one acc x =
         match acc with
@@ -835,7 +840,7 @@ let ans_fail : answer =
   { ans_ok with ok = false; nsuccess = 0 }
 
 instance _ : showable answer = {
-  show = (fun ans -> BU.format5 "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s"
+  show = (fun ans -> Format.fmt5 "ok=%s nsuccess=%s lo=%s hi=%s tried_recovery=%s"
                             (show ans.ok)
                             (show ans.nsuccess)
                             (show ans.lo)
@@ -852,7 +857,7 @@ let make_solver_configs
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
- : (list query_settings & option hint)
+ : ML (list query_settings & option hint)
  =
     (* Fetch the settings. *)
     let qname, index =
@@ -891,9 +896,9 @@ let make_solver_configs
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if use_hints () && next_hint |> is_some
+        if use_hints () && next_hint |> Some?
         then
-          let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
+          let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> Option.must in
           (* Make sure the recorded fuels are allowed now, so we don't
           keep succeeding with a hint even after reducing the maximum allowed
           fuels. *)
@@ -906,7 +911,7 @@ let make_solver_configs
                                     query_ifuel=j}]
           else (
             if Options.query_stats () then
-              BU.print3 "Hint for %s has fuels not currently valid (%s, %s), ignoring!\n"
+              Format.print3 "Hint for %s has fuels not currently valid (%s, %s), ignoring!\n"
                 qname (show i) (show j);
             []
           )
@@ -950,9 +955,9 @@ let make_solver_configs
 Not to be used directly, see ask_solver below. *)
 let __ask_solver
     (configs : list query_settings)
- : either (list errors) query_settings
+ : ML (either (list errors) query_settings)
  =
-    let check_one_config config : z3result =
+    let check_one_config config : ML z3result =
           if Options.z3_refresh()
           then (
             Z3.refresh (Some config.query_env.tcenv.proof_ns)
@@ -961,7 +966,7 @@ let __ask_solver
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
-                  (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
+                  (Format.fmt2 "(%s, %s)" config.query_name (show config.query_index))
                   (used_hint config)
                   config.query_hint
     in
@@ -974,7 +979,7 @@ if --quake is specified. This function is always called, but when
 creating an [answer] record). *)
 let ask_solver_quake
     (configs : list query_settings)
- : answer
+ : ML answer
  =
     let lo   = Options.quake_lo () in
     let hi   = Options.quake_hi () in
@@ -990,7 +995,7 @@ let ask_solver_quake
         else if lo > hi then hi
         else lo
     in
-    let run_one (seed:int) : either (list errors) query_settings =
+    let run_one (seed:int) : ML (either (list errors) query_settings) =
         (* Here's something annoying regarding --quake:
          *
          * In normal circumstances, we can just run the query again and get
@@ -1016,14 +1021,14 @@ let ask_solver_quake
                __ask_solver configs)
         else __ask_solver configs
     in
-    let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
+    let rec fold_nat' (f : 'a -> int -> ML 'a) (acc : 'a) (lo : int) (hi : int) : ML 'a =
         if lo > hi
         then acc
         else fold_nat' f (f acc lo) (lo + 1) hi
     in
     let best_fuel = mk_ref None in
     let best_ifuel = mk_ref None in
-    let maybe_improve (r:ref (option int)) (n:int) : unit =
+    let maybe_improve (r:ref (option int)) (n:int) : ML unit =
         match !r with
         | None -> r := Some n
         | Some m -> if n < m then r := Some n
@@ -1039,14 +1044,14 @@ let ask_solver_quake
                  if quaking_or_retrying
                     && (Options.interactive () || Debug.any ()) (* only on emacs or when debugging *)
                     && n>0 then (* no need to print last *)
-                   BU.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
+                   Format.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
                        (if quaking then "Quake" else "Retry")
                        name
-                       (if quaking then BU.format1 "succeeded %s times and " (string_of_int nsucc) else "")
+                       (if quaking then Format.fmt1 "succeeded %s times and " (show nsucc) else "")
                        (* ^ if --retrying, it does not make sense to print successes since
                         * they must be exactly 0 *)
-                       (if quaking then string_of_int nfail else string_of_int nfail ^ " times")
-                       (string_of_int (hi-n));
+                       (if quaking then show nfail else show nfail ^ " times")
+                       (show (hi-n));
                  let r = run_one (seed+n) in
                  let nsucc, nfail =
                     match r with
@@ -1068,13 +1073,21 @@ let ask_solver_quake
         let fuel_msg =
           match !best_fuel, !best_ifuel with
           | Some f, Some i ->
-            BU.format2 " (best fuel=%s, best ifuel=%s)" (string_of_int f) (string_of_int i)
+            Format.fmt2 " (best fuel=%s, best ifuel=%s)" (show f) (show i)
           | _, _ -> ""
         in
-        BU.print5 "Quake: query %s succeeded %s/%s times%s%s\n"
+        let ratio =
+          let s = Format.fmt2 "%s/%s" (show nsuccess) (show total_ran) in
+          if nsuccess = total_ran then
+            Format.colorize_green s
+          else if nsuccess >= lo then
+            Format.colorize_yellow s
+          else
+            Format.colorize_red s
+        in
+        Format.print4 "Quake: query %s \tsucceeded %s times%s%s\n"
                   name
-                  (string_of_int nsuccess)
-                  (string_of_int total_ran)
+                  ratio
                   (if total_ran < hi then " (early finish)" else "")
                   fuel_msg
     end;
@@ -1101,7 +1114,7 @@ type recovery_hammer =
   | IncreaseRLimit of (*factor : *)int
   | RestartAnd of recovery_hammer
 
-let rec pp_hammer (h : recovery_hammer) : Pprint.document =
+let rec pp_hammer (h : recovery_hammer) : ML Pprint.document =
   let open FStarC.Errors.Msg in
   let open FStarC.Pprint in
   match h with
@@ -1115,7 +1128,7 @@ times, increasing rlimits, until we get a success. If not, we just
 call ask_solver_quake. *)
 let ask_solver_recover
     (configs : list query_settings)
- : answer
+ : ML answer
  =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
@@ -1130,14 +1143,14 @@ let ask_solver_recover
         text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.";
       ];
 
-      let try_factor (n:int) : answer =
+      let try_factor (n:int) : ML answer =
         let open FStar.Mul in
         Errors.diag cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
         let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
         ask_solver_quake [cfg]
       in
 
-      let rec try_hammer (h : recovery_hammer) : answer =
+      let rec try_hammer (h : recovery_hammer) : ML answer =
         match h with
         | IncreaseRLimit factor -> try_factor factor
         | RestartAnd h ->
@@ -1146,7 +1159,7 @@ let ask_solver_recover
           try_hammer h
       in
 
-      let rec aux (hammers : list recovery_hammer) : answer =
+      let rec aux (hammers : list recovery_hammer) : ML answer =
         match hammers with
         | [] -> { r with tried_recovery = true }
         | h::hs ->
@@ -1173,19 +1186,19 @@ let ask_solver_recover
 
 let failing_query_ctr : ref int = mk_ref 0
 
-let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
+let maybe_save_failing_query (env:env_t) (qs:query_settings) : ML unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
   if Options.log_failing_queries () then (
     let mod = show (Env.current_module env.tcenv) in
     let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
-    let file_name = BU.format2 "failedQueries-%s-%s.smt2" mod (show n) in
+    let file_name = Format.fmt2 "failedQueries-%s-%s.smt2" mod (show n) in
     let query_str = Z3.ask_text
                             qs.query_range
                             // (filter_assertions qs.query_env None qs.query_hint)
                             qs.query_hash
                             qs.query_all_labels
                             (with_fuel_and_diagnostics qs [])
-                            (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+                            (Format.fmt2 "(%s, %s)" qs.query_name (show qs.query_index))
                             qs.query_hint
     in
     write_file file_name query_str;
@@ -1197,8 +1210,12 @@ let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
     let open FStarC.Class.PP in
     let open FStarC.Errors.Msg in
     Errors.diag qs.query_range [
-      text "This query failed:";
-      pp qs.query_term;
+      text "A query failed.";
+      prefix 2 1 (text "Env =")
+        (all_binders qs.query_env.tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+          group <| parens <| nest 2 <|
+            pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+      prefix 2 1 (text "VC =") (pp qs.query_term);
     ]
   );
   ()
@@ -1208,7 +1225,7 @@ let ask_solver
     // (prefix : list decl)
     (configs: list query_settings)
     (next_hint : option hint)
- : list query_settings & answer
+ : ML (list query_settings & answer)
  =  (* The default config is at the head. We distinguish this one since
     it includes some metadata that we need, such as the query name, etc.
     (Though all other configs also contain it.) *)
@@ -1226,9 +1243,9 @@ let ask_solver
     let ans =
       if skip
       then (
-        if Options.record_hints () && next_hint |> is_some then
+        if Options.record_hints () && next_hint |> Some? then
           //restore the hint as is, cf. #1651
-          next_hint |> must |> store_hint;
+          next_hint |> Option.must |> store_hint;
         ans_ok
       ) else (
         // Feed the context of the query to the solver. We do this only
@@ -1246,7 +1263,7 @@ let ask_solver
     configs, ans
 
 (* Reports query errors to the user. The errors are logged, not raised. *)
-let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit =
+let report (env:Env.env) (default_settings : query_settings) (a : answer) : ML unit =
     let nsuccess = a.nsuccess in
     let name = full_query_id default_settings in
     let lo = a.lo in
@@ -1272,7 +1289,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
             let m =
               let open FStarC.Pprint in
               if n > 1
-              then m @ [doc_of_string (format1 "Repeated %s times" (string_of_int n))]
+              then m @ [doc_of_string (Format.fmt1 "Repeated %s times" (show n))]
               else m
             in
             (e, m, r, ctx))
@@ -1292,14 +1309,14 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
             env rng
             (Errors.Error_QuakeFailed, [
               Errors.text <|
-              BU.format6
-                "Query %s failed the quake test, %s out of %s attempts succeded, \
+              Format.fmt6
+                "Query %s failed the quake test, %s out of %s attempts succeeded, \
                  but the threshold was %s out of %s%s"
                  name
-                (string_of_int nsuccess)
-                (string_of_int total_ran)
-                (string_of_int lo)
-                (string_of_int hi)
+                (show nsuccess)
+                (show total_ran)
+                (show lo)
+                (show hi)
                 (if total_ran < hi then " (early abort)" else "")])
         end
 
@@ -1327,7 +1344,7 @@ type solver_cfg = {
 
 let _last_cfg : ref (option solver_cfg) = mk_ref None
 
-let get_cfg env : solver_cfg =
+let get_cfg env : ML solver_cfg =
     { seed             = Options.z3_seed ()
     ; cliopt           = Options.z3_cliopt ()
     ; smtopt           = Options.z3_smtopt ()
@@ -1353,23 +1370,16 @@ let maybe_refresh_solver env =
           Z3.refresh (Some env.proof_ns)
         )
 
-let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
-  let r =
-    try f () with
-    | e -> h(); raise e
-  in
-  h (); r
-
 (* The query_settings list is non-empty unless the query was trivial. *)
-let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
-  let do () : list query_settings & answer =
+let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML (list query_settings & answer) =
+  let do () : ML (list query_settings & answer) =
     maybe_refresh_solver tcenv;
-    let msg =  (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+    let msg =  (Format.fmt1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
     Z3.start_query msg prefix qry;
     let finish_query () = 
-      let msg = (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+      let msg = (Format.fmt1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
       Encode.pop_encoding_state msg;
       Z3.finish_query msg
     in
@@ -1382,17 +1392,17 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
       | Assume _ ->
         if (is_retry || Options.split_queries() = Options.Always)
-        && Debug.any()
+        && !dbg_SMTQuery
         then (
           let n = List.length labels in
           if n <> 1
           then
             FStarC.Errors.diag
                 (Env.get_range tcenv)
-                (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
+                (Format.fmt3 "Encoded split query %s\nto %s\nwith %s labels"
                           (show q)
                           (Term.declToSmt "" qry)
-                          (BU.string_of_int n))
+                          (show n))
         );
         let env = FStarC.SMTEncoding.Encode.get_current_env tcenv in
         let configs, next_hint =
@@ -1403,50 +1413,48 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
       | _ -> failwith "Impossible"
     )
   in
-  if Solver.Cache.try_find_query_cache tcenv q then (
+  if Options.admit_smt_queries () then (
+    ([], ans_ok)
+  )
+  else if Solver.Cache.try_find_query_cache tcenv q then (
     ([], { ans_ok with cache_hit = true })
-  ) else (
-    let (cfgs, ans) = do () in
+  ) 
+  else (
+    let (cfgs, ans) = FStarC.Stats.record "Solver.encode_and_ask" do in
     if ans.ok then
       Solver.Cache.query_cache_add tcenv q;
     (cfgs, ans)
   )
 
 (* Asks the solver and reports errors. Does quake if needed. *)
-let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
-  let ans_opt =
-    try Some (encode_and_ask can_split is_retry use_env_msg tcenv q) with
-    (* Each (potentially splitted) query can fail with this error, raise by encode_query.
-     * Note, even though this is a log_issue, the error cannot be turned into a warning
-     * nor ignored. *)
-    | FStarC.SMTEncoding.Env.Inner_let_rec names ->
-      FStarC.TypeChecker.Err.log_issue
-        tcenv tcenv.range
-        (Errors.Error_NonTopRecFunctionNotFullyEncoded, [
-          Errors.text <|
-         BU.format1
-           "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-           (String.concat "," (List.map fst names))]);
-       None
-  in
+let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : ML unit =
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  let open FStarC.Class.PP in
+  if !dbg_SMTQuery then
+    Errors.diag tcenv [
+      text "Before calling solver.";
+      prefix 2 1 (text "Env =")
+        (all_binders tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+          group <| parens <| nest 2 <|
+            pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+      prefix 2 1 (text "VC =") (pp q);
+    ];
+  let ans_opt = encode_and_ask can_split is_retry use_env_msg tcenv q in
   match ans_opt with
-  | Some (default_settings::_, ans) when not ans.ok ->
+  | default_settings::_, ans when not ans.ok ->
     report tcenv default_settings ans
 
-  | Some (_, ans) when ans.ok ->
+  | _, ans when ans.ok ->
     () (* trivial or succeeded *)
 
-  | Some ([], ans) when not ans.ok ->
+  | [], ans when not ans.ok ->
     failwith "impossible: bad answer from encode_and_ask"
 
-  | None -> () (* already logged an error *)
-
-let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
-  if Debug.any () || Options.query_stats () then begin
-    let range = "(" ^ (Range.string_of_range (Env.get_range tcenv)) ^ ")" in
-    BU.print2 "%s\tQuery-stats splitting query because %s\n"
-                range
-                (if retrying then "retrying failed query" else "--split_queries is always")
+let split_and_solve (retrying:bool) use_env_msg tcenv q : ML unit =
+  if retrying && (!dbg_SMTQuery || Options.query_stats ()) then begin
+    Format.print1 "(%s)\tQuery-stats splitting query because retrying failed query\n"
+                   (show (Env.get_range tcenv))
   end;
   let goals =
     match Env.split_smt_query tcenv q with
@@ -1472,14 +1480,14 @@ let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
         please use the '--split_queries always' option rather than relying on it implicitly."])
    )
 
-let disable_quake_for (f : unit -> 'a) : 'a =
+let disable_quake_for (f : unit -> ML 'a) : ML 'a =
   Options.with_saved_options (fun () ->
     Options.set_option "quake_hi" (Options.Int 1);
     f ())
 
 (* Split queries if needed according to --split_queries option. Note:
 sync SMT queries do not pass via this function. *)
-let do_solve_maybe_split use_env_msg tcenv q : unit =
+let do_solve_maybe_split use_env_msg tcenv q : ML unit =
   (* If we are admiting queries, don't do anything, and bail out
   right now to save time/memory *)
   if tcenv.admit then () else begin
@@ -1496,6 +1504,9 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
       end
     | Options.Always ->
       (* Set retrying=false so queries go through the full config list, etc. *)
+      if !dbg_SMTQuery || Options.query_stats () then
+        Format.print1 "(%s)\tQuery-stats splitting query because --split_queries is always\n"
+                      (show (Env.get_range tcenv));
       split_and_solve false use_env_msg tcenv q
   end
 
@@ -1503,21 +1514,21 @@ let do_solve_maybe_split use_env_msg tcenv q : unit =
 automatically retry increasing fuel as needed, and perform quake testing
 (repeating the query to make sure it is robust). This function will
 _log_ (not raise) an error if the VC could not be proven. *)
-let solve use_env_msg tcenv q : unit =
-    if Options.no_smt () then
-        let open FStarC.Errors.Msg in
-        let open FStarC.Pprint in
-        let open FStarC.Class.PP in
-        FStarC.TypeChecker.Err.log_issue
-          tcenv tcenv.range
-            (Errors.Error_NoSMTButNeeded,
-             [text "A query could not be solved internally, and --no_smt was given.";
-              text "Query = " ^/^ pp q])
-    else
+let solve use_env_msg tcenv q : ML unit =
+  let open FStarC.Errors.Msg in
+  let open FStarC.Pprint in
+  if Options.no_smt () then
+    FStarC.TypeChecker.Err.log_issue
+      tcenv tcenv.range
+        (Errors.Error_NoSMTButNeeded,
+         [text "A query could not be solved internally, and --no_smt was given.";
+          text "Query = " ^/^ pp q])
+  else (
     Profiling.profile
       (fun () -> do_solve_maybe_split use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
       "FStarC.SMTEncoding.solve_top_level"
+  )
 
 (* This asks the SMT to solve a query, and returns the answer without
 logging any kind of error. Mostly useful for the smt_sync tactic
@@ -1528,7 +1539,7 @@ It will NOT do quake testing.
 It WILL raise fuel incrementally to attempt to solve the query
 
 *)
-let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
+let solve_sync use_env_msg tcenv (q:Syntax.term) : ML answer =
     if Options.no_smt () then ans_fail
     else
     let go () =
@@ -1548,7 +1559,7 @@ let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
       "FStarC.SMTEncoding.solve_sync_top_level"
 
 (* The version actually exported, and used by tactics. *)
-let solve_sync_bool use_env_msg tcenv q : bool =
+let solve_sync_bool use_env_msg tcenv q : ML bool =
     let ans = solve_sync use_env_msg tcenv q in
     ans.ok
 

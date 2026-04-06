@@ -106,7 +106,7 @@ effect {
 }
 
 let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity w;
   fun s0 p -> w (fun x -> p x s0)
 
 let lift_id_st a wp st (f : ID5.repr a wp)
@@ -142,6 +142,8 @@ let add_via_state (x y : int) : ST int int (fun s0 p -> p (x+y) s0) =
   put o;
   r
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main =
   let r, n = reify (reify (add_via_state 1 2) 3) (Ghost.hide (fun _ -> True)) () in
   FStar.IO.print_string (FStar.Printf.sprintf "%d:%d\n" r n)
+#pop-options

@@ -16,4 +16,4 @@
 module FStar.Tactics.Logic
 
 (* This module is a temporary for Meta-F* migration *)
-include FStar.Tactics.V1.Logic
+include FStar.Tactics.V2.Logic

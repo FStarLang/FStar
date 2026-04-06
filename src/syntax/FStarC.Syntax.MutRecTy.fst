@@ -20,7 +20,6 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Syntax.InstFV
 
@@ -38,8 +37,8 @@ let disentangle_abbrevs_from_bundle
     (sigelts: list sigelt)
     (quals:   list qualifier)
     (members: list lident)
-    (rng:   FStarC.Range.range)
-    : sigelt & list sigelt =
+    (rng:   FStarC.Range.t)
+    : ML (sigelt & list sigelt) =
 
    (* NS: Attributes on the type constructors and abbreviation are gathered,
           and placed on the bundle.
@@ -77,7 +76,7 @@ let disentangle_abbrevs_from_bundle
    | _ ->
 
     let type_abbrevs = type_abbrev_sigelts |> List.map begin fun x -> match x.sigel with
-        | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} -> fv.fv_name.v
+        | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} -> fv.fv_name
         | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible"
     end
     in
@@ -101,20 +100,20 @@ let disentangle_abbrevs_from_bundle
         reordered after being unfolded. *)
         let not_unfolded_yet = mk_ref type_abbrev_sigelts in
 
-        let remove_not_unfolded lid =
+        let remove_not_unfolded lid : ML unit =
             not_unfolded_yet := !not_unfolded_yet |> List.filter begin fun x -> match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv } ] )} ->
-                  not (lid_equals lid fv.fv_name.v)
+                  not (lid_equals lid fv.fv_name)
                 | _ -> true
             end
         in
 
         (* Replace a free variable corresponding to a type
         abbreviation, with memoization. *)
-        let rec unfold_abbrev_fv (t: term) (fv : S.fv) : term =
+        let rec unfold_abbrev_fv (t: term) (fv : S.fv) : ML term =
             let replacee (x: sigelt) = match x.sigel with
                 | Sig_let {lbs=(_, [ { lbname = Inr fv' } ] )}
-                  when lid_equals fv'.fv_name.v fv.fv_name.v ->
+                  when lid_equals fv'.fv_name fv.fv_name ->
                   Some x
                 | _ -> None
             in
@@ -127,15 +126,15 @@ let disentangle_abbrevs_from_bundle
                 | None ->
                   begin match U.find_map type_abbrev_sigelts replacee with
                       | Some se ->
-                          if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name.v) !in_progress
-                          then let msg = U.format1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name.v) in
-                               raise_error fv.fv_name.v Errors.Fatal_CycleInRecTypeAbbreviation msg
+                          if FStarC.List.existsb (fun x -> lid_equals x fv.fv_name) !in_progress
+                          then let msg = Format.fmt1 "Cycle on %s in mutually recursive type abbreviations" (string_of_lid fv.fv_name) in
+                               raise_error fv.fv_name Errors.Fatal_CycleInRecTypeAbbreviation msg
                           else unfold_abbrev se
                       | _ -> t
                   end
 
         (* Start unfolding in a type abbreviation that has not occurred before. *)
-        and unfold_abbrev (x: sigelt) = match x.sigel with
+        and unfold_abbrev (x: sigelt) : ML term = match x.sigel with
             | Sig_let {lbs=(false, [lb])} ->
                 (* eliminate some qualifiers for definitions *)
                 let quals = x.sigquals |> List.filter begin function
@@ -143,7 +142,7 @@ let disentangle_abbrevs_from_bundle
                 | _ -> true
                 end in
                 let lid = match lb.lbname with
-                    | Inr fv -> fv.fv_name.v
+                    | Inr fv -> fv.fv_name
                     | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: lid: impossible"
                 in
                 let () = in_progress := lid :: !in_progress in  (* push *)
@@ -158,7 +157,7 @@ let disentangle_abbrevs_from_bundle
             | _ -> failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible"
         in
 
-        let rec aux () = match !not_unfolded_yet with
+        let rec aux () : ML (list sigelt) = match !not_unfolded_yet with
             | x :: _ -> let _unused = unfold_abbrev x in aux ()
             | _ -> List.rev !rev_unfolded_type_abbrevs
 
@@ -169,25 +168,25 @@ let disentangle_abbrevs_from_bundle
 
       (* Now, unfold in inductive types and data constructors *)
 
-      let filter_out_type_abbrevs l =
+      let filter_out_type_abbrevs l : ML (list lident) =
           List.filter (fun lid -> FStarC.List.for_all (fun lid' -> not (lid_equals lid lid')) type_abbrevs) l
       in
 
       let inductives_with_abbrevs_unfolded =
 
-          let find_in_unfolded fv = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
-              | Sig_let {lbs=(_, [ { lbname = Inr fv' ; lbdef = tm } ] )} when (lid_equals fv'.fv_name.v fv.fv_name.v) ->
+          let find_in_unfolded fv : ML (option term) = U.find_map unfolded_type_abbrevs begin fun x -> match x.sigel with
+              | Sig_let {lbs=(_, [ { lbname = Inr fv' ; lbdef = tm } ] )} when (lid_equals fv'.fv_name fv.fv_name) ->
                 Some tm
               | _ -> None
           end
           in
 
-          let unfold_fv (t: term) (fv: S.fv) : term = match find_in_unfolded fv with
+          let unfold_fv (t: term) (fv: S.fv) : ML term = match find_in_unfolded fv with
               | Some t' -> t'
               | _ -> t
           in
 
-          let unfold_in_sig (x: sigelt) = match x.sigel with
+          let unfold_in_sig (x: sigelt) : ML (list sigelt) = match x.sigel with
               | Sig_inductive_typ {lid; us=univs; params=bnd;
                                    num_uniform_params=num_uniform;
                                    t=ty; mutuals=mut; ds=dc;
@@ -206,7 +205,7 @@ let disentangle_abbrevs_from_bundle
 
               | Sig_datacon {lid; us=univs; t=ty; ty_lid=res;
                              num_ty_params=npars; mutuals=mut;
-                             injective_type_params } ->
+                             injective_type_params; proj_disc_lids } ->
                 let ty' = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
                 [{ x with sigel = Sig_datacon {lid;
@@ -215,7 +214,8 @@ let disentangle_abbrevs_from_bundle
                                                ty_lid=res;
                                                num_ty_params=npars;
                                                mutuals=mut';
-                                               injective_type_params } }]
+                                               injective_type_params;
+                                               proj_disc_lids } }]
 
               | Sig_let _ ->
                 []

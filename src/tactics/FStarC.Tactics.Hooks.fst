@@ -16,10 +16,10 @@
 
 module FStarC.Tactics.Hooks
 
+
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
@@ -53,11 +53,9 @@ let dbg_Tac        = Debug.get_toggle "Tac"
 let dbg_SpinoffAll = Debug.get_toggle "SpinoffAll"
 
 let run_tactic_on_typ
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (typ:term)
-                    : list goal // remaining goals
-                    & term // witness
-                    =
+                    : ML (list goal & term) =
     let rng = range_of_rng (use_range rng_tac) (use_range rng_goal) in
     let ps, w = FStarC.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
     let tactic_already_typed = false in
@@ -65,9 +63,9 @@ let run_tactic_on_typ
     gs, w
 
 let run_tactic_on_all_implicits
-        (rng_tac : Range.range) (rng_goal : Range.range)
+        (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (imps:Env.implicits)
-    : list goal // remaining goals
+    : ML (list goal) // remaining goals
     =
     let ps, _ = FStarC.Tactics.V2.Basic.proofstate_of_all_implicits rng_goal env imps in
     let tactic_already_typed = false in
@@ -108,11 +106,11 @@ let flip p = match p with
     | Neg -> Pos
     | Both -> Both
 
-let getprop (e:Env.env) (t:term) : option term =
+let getprop (e:Env.env) (t:term) : ML (option term) =
     let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
-let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
+let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
@@ -183,12 +181,12 @@ let explode (t : tres_m 'a) : 'a & 'a & list goal =
     | Simplified (t, gs) -> (t, t, gs)
     | Dual (tn, tp, gs) -> (tn, tp, gs)
 
-let comb1 (f : 'a -> 'b) : tres_m 'a -> tres_m 'b = function
+let comb1 (f : 'a -> ML 'b) : tres_m 'a -> ML (tres_m 'b) = function
     | Unchanged t -> Unchanged (f t)
     | Simplified (t, gs) -> Simplified (f t, gs)
     | Dual (tn, tp, gs) -> Dual (f tn, f tp, gs)
 
-let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m 'a) (y : tres_m 'b) : tres_m 'c =
+let comb2 (f : 'a -> 'b -> ML 'c) (x : tres_m 'a) (y : tres_m 'b) : ML (tres_m 'c) =
     match x, y with
     | Unchanged t1, Unchanged t2 ->
         Unchanged (f t1 t2)
@@ -205,18 +203,18 @@ let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m 'a) (y : tres_m 'b) : tres_m 'c =
         let (n2, p2, gs2) = explode y in
         Dual (f n1 n2, f p1 p2, gs1@gs2)
 
-let comb_list (rs : list (tres_m 'a)) : tres_m (list 'a) =
-    let rec aux rs acc =
+let comb_list (rs : list (tres_m 'a)) : ML (tres_m (list 'a)) =
+    let rec aux rs acc : ML _ =
         match rs with
         | [] -> acc
         | hd::tl -> aux tl (comb2 (fun l r -> l::r) hd acc)
     in
     aux (List.rev rs) (tpure [])
 
-let emit (gs : list goal) (m : tres_m 'a) : tres_m 'a =
+let emit (gs : list goal) (m : tres_m 'a) : ML (tres_m 'a) =
     comb2 (fun () x -> x) (Simplified ((), gs)) m
 
-let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
+let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t:term) : ML tres =
     let r =
         match (SS.compress t).n with
         | Tm_uinst (t,us) -> let tr = traverse f pol e t in
@@ -303,12 +301,12 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let preprocess (env:Env.env) (goal:term)
-  : bool & list (Env.env & term & O.optionstate)
+  : ML (bool & list (Env.env & term & O.optionstate))
     (* bool=true iff any tactic actually ran *)
 =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     if !dbg_Tac then
-        BU.print2 "About to preprocess %s |= %s\n"
+        Format.print2 "About to preprocess %s |= %s\n"
                         (show <| Env.all_binders env)
                         (show goal);
     let initial = (1, []) in
@@ -320,7 +318,7 @@ let preprocess (env:Env.env) (goal:term)
         | _ -> failwith "preprocess: impossible, traverse returned a Dual"
     in
     if !dbg_Tac then
-        BU.print2 "Main goal simplified to: %s |- %s\n"
+        Format.print2 "Main goal simplified to: %s |- %s\n"
                 (show <| Env.all_binders env)
                 (show t');
     let s = initial in
@@ -328,11 +326,11 @@ let preprocess (env:Env.env) (goal:term)
                  let phi = match getprop (goal_env g) (goal_type g) with
                            | None ->
                                 Err.raise_error env Err.Fatal_TacticProofRelevantGoal
-                                  (BU.format1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))
+                                  (Format.fmt1 "Tactic returned proof-relevant goal: %s" (show (goal_type g)))
                            | Some phi -> phi
                  in
                  if !dbg_Tac then
-                     BU.print2 "Got goal #%s: %s\n" (show n) (show (goal_type g));
+                     Format.print2 "Got goal #%s: %s\n" (show n) (show (goal_type g));
                  let label =
                    let open FStarC.Pprint in
                    let open FStarC.Class.PP in
@@ -351,20 +349,20 @@ let preprocess (env:Env.env) (goal:term)
 
 let rec traverse_for_spinoff
                  (pol:pol)
-                 (label_ctx:option (list Pprint.document & Range.range))
+                 (label_ctx:option (list Pprint.document & Range.t))
                  (e:Env.env)
-                 (t:term) : tres =
+                 (t:term) : ML tres =
     let debug_any = Debug.any () in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let traverse_ctx pol (ctx : list Pprint.document & Range.range) (e:Env.env) (t:term) : tres =
+    let traverse_ctx pol (ctx : list Pprint.document & Range.t) (e:Env.env) (t:term) : ML tres =
       let print_lc (msg, rng) =
-        BU.format3 "(%s,%s) : %s"
+        Format.fmt3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
           (Range.string_of_use_range rng)
           (Errors.Msg.rendermsg msg)
       in
        if !dbg_SpinoffAll
-       then BU.print2 "Changing label context from %s to %s"
+       then Format.print2 "Changing label context from %s to %s"
              (match label_ctx with
               | None -> "None"
               | Some lc -> print_lc lc)
@@ -394,10 +392,10 @@ let rec traverse_for_spinoff
           res
     in
     let maybe_spinoff pol
-                      (label_ctx:option (list Pprint.document & Range.range))
+                      (label_ctx:option (list Pprint.document & Range.t))
                       (e:Env.env)
                       (t:term)
-      : tres =
+      : ML tres =
         let label_goal (env, t) =
             let t =
               match (SS.compress t).n, label_ctx with
@@ -415,7 +413,7 @@ let rec traverse_for_spinoff
         let spinoff t =
           match pol with
           | StrictlyPositive ->
-            if !dbg_SpinoffAll then BU.print1 "Spinning off %s\n" (show t);
+            if !dbg_SpinoffAll then Format.print1 "Spinning off %s\n" (show t);
             Simplified (FStarC.Syntax.Util.t_true, [label_goal (e,t)])
 
           | _ ->
@@ -426,7 +424,7 @@ let rec traverse_for_spinoff
         then spinoff t
         else Unchanged t
     in
-    let rewrite_boolean_conjunction t =
+    let rewrite_boolean_conjunction t : ML _ =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
@@ -442,8 +440,8 @@ let rec traverse_for_spinoff
             )
         | _ -> None
     in
-    let try_rewrite_match env t =
-        let rec pat_as_exp env p =
+    let try_rewrite_match env t : ML _ =
+        let rec pat_as_exp env p : ML _ =
           match FStarC.TypeChecker.PatternUtils.raw_pat_as_exp env p with
           | None -> None
           | Some (e, _) ->
@@ -454,16 +452,16 @@ let rec traverse_for_spinoff
               FStarC.TypeChecker.TcTerm.universe_of env lc.res_typ in
             Some (e, lc.res_typ, u)
         in
-        let bv_universes env bvs =
+        let bv_universes env bvs : ML _ =
           List.map (fun x -> x, FStarC.TypeChecker.TcTerm.universe_of env x.sort) bvs
         in
-        let mk_forall_l bv_univs term = 
+        let mk_forall_l bv_univs term : ML _ = 
           List.fold_right
             (fun (x,u) out -> U.mk_forall u x out)
             bv_univs
             term
         in
-        let mk_exists_l bv_univs term = 
+        let mk_exists_l bv_univs term : ML _ = 
           List.fold_right
             (fun (x,u) out -> U.mk_exists u x out)
             bv_univs
@@ -473,7 +471,7 @@ let rec traverse_for_spinoff
         else (
           match (SS.compress t).n with
           | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt=lopt} ->  //AR: not traversing the return annotation
-            let rec rewrite_branches path_condition branches =
+            let rec rewrite_branches path_condition branches : ML _ =
               match branches with
               | [] -> Inr (U.mk_imp path_condition U.t_false)
               | br::branches ->
@@ -502,13 +500,13 @@ let rec traverse_for_spinoff
                if debug_any
                then FStarC.Errors.diag 
                       (Env.get_range env)
-                      (BU.format2 "Failed to split match term because %s (%s)" msg (show t));
+                      (Format.fmt2 "Failed to split match term because %s (%s)" msg (show t));
                None
              | Inr res ->
                if debug_any
                then FStarC.Errors.diag 
                       (Env.get_range env)
-                      (BU.format2 "Rewrote match term\n%s\ninto %s\n"
+                      (Format.fmt2 "Rewrote match term\n%s\ninto %s\n"
                         (show t)
                         (show res));
              
@@ -588,7 +586,7 @@ let rec traverse_for_spinoff
                               TEQ.eq_tm e t U.t_true = TEQ.Equal ->
                          //simplify squash True to True
                          //important for simplifying queries to Trivial
-                         if !dbg_SpinoffAll then BU.print_string "Simplified squash True to True";
+                         if !dbg_SpinoffAll then Format.print_string "Simplified squash True to True";
                          U.t_true.n
 
                        | _ ->
@@ -633,8 +631,8 @@ let pol_to_string = function
   | Both -> "Both"
 
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
-  : list (Env.env & term)
-  = if !dbg_SpinoffAll then BU.print1 "spinoff_all called with %s\n" (show goal);
+  : ML (list (Env.env & term))
+  = if !dbg_SpinoffAll then Format.print1 "spinoff_all called with %s\n" (show goal);
     Errors.with_ctx "While spinning off all goals" (fun () ->
       let initial = (1, []) in
       // This match should never fail
@@ -654,12 +652,12 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
         | NonTrivial t ->
           if !dbg_SpinoffAll
           then (
-            let msg = BU.format2 "Main goal simplified to: %s |- %s\n"
+            let msg = Format.fmt2 "Main goal simplified to: %s |- %s\n"
                             (show <| Env.all_binders env)
                             (show t) in
             FStarC.Errors.diag
               (Env.get_range env)
-              (BU.format1 
+              (Format.fmt1 
                "Verification condition was to be split into several atomic sub-goals, \
                 but this query had some sub-goals that couldn't be split---the error report, if any, may be \
                 inaccurate.\n%s\n"
@@ -687,25 +685,26 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
             | Trivial -> None
             | NonTrivial t ->
               if !dbg_SpinoffAll
-              then BU.print1 "Got goal: %s\n" (show t);
+              then Format.print1 "Got goal: %s\n" (show t);
               Some (env, t))
       in
 
-      FStarC.Errors.diag (Env.get_range env)
-              (BU.format1 "Split query into %s sub-goals" (show (List.length gs)));
+      if !dbg_Tac then
+        FStarC.Errors.diag (Env.get_range env)
+                (Format.fmt1 "Split query into %s sub-goals" (show (List.length gs)));
 
       main_goal@gs
   )
 
 
-let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+let synthesize (env:Env.env) (typ:typ) (tau:term) rng : ML term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
     if env.flychecking
     then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
 
-    let gs, w = run_tactic_on_typ tau.pos typ.pos tau env typ in
+    let gs, w = run_tactic_on_typ tau.pos rng tau env typ in
     // Check that all goals left are irrelevant and provable
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
@@ -714,7 +713,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
         | Some vc ->
             begin
             if !dbg_Tac then
-              BU.print1 "Synthesis left a goal: %s\n" (show vc);
+              Format.print1 "Synthesis left a goal: %s\n" (show vc);
             let guard = guard_of_guard_formula (NonTrivial vc) in
             TcRel.force_trivial_guard (goal_env g) guard
             end
@@ -724,7 +723,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     end
   )
 
-let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : ML unit =
   Errors.with_ctx "While solving implicits with a tactic" (fun () ->
     if env.flychecking then () else
     begin
@@ -734,7 +733,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     // TODO: It would be nicer to combine all of these into a guard and return
     // that to TcTerm, but the varying environments make it awkward.
     if Options.profile_enabled None "FStarC.TypeChecker"
-    then BU.print1 "solve_implicits produced %s goals\n" (show (List.length gs));
+    then Format.print1 "solve_implicits produced %s goals\n" (show (List.length gs));
     
     Options.with_saved_options (fun () ->
       let _ = Options.set_options "--no_tactics" in
@@ -744,7 +743,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
         | Some vc ->
           begin
             if !dbg_Tac then
-              BU.print1 "Synthesis left a goal: %s\n" (show vc);
+              Format.print1 "Synthesis left a goal: %s\n" (show vc);
             if not env.admit
             then (
               let guard = guard_of_guard_formula (NonTrivial vc) in
@@ -761,7 +760,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
   )
 
 (* Retrieves a tactic associated to a given attribute, if any *)
-let find_user_tac_for_attr env (a:term) : option sigelt =
+let find_user_tac_for_attr env (a:term) : ML (option sigelt) =
   let hooks = Env.lookup_attr env (Ident.string_of_lid PC.handle_smt_goals_attr) in
   hooks |> BU.try_find (fun _ -> true)
 
@@ -770,7 +769,7 @@ let find_user_tac_for_attr env (a:term) : option sigelt =
    If such a tactic exists, all the unresolved goals must be propositions,
    that will be directly encoded to SMT inside Rel.discharge_guard.
    If such a tactic does not exist, this function is a no-op. *)
-let handle_smt_goal env goal =
+let handle_smt_goal env goal : ML _ =
   match check_trivial goal with
   (* No need to pass the term to the tactic if trivial *)
   | Trivial -> [env, goal]
@@ -798,7 +797,7 @@ let handle_smt_goal env goal =
             match getprop (goal_env g) (goal_type g) with
             | Some vc ->
                 if !dbg_Tac then
-                  BU.print1 "handle_smt_goals left a goal: %s\n" (show vc);
+                  Format.print1 "handle_smt_goals left a goal: %s\n" (show vc);
                 (goal_env g), vc
             | None ->
                 Err.raise_error env Err.Fatal_OpenGoalsInSynthesis "Handling an SMT goal by tactic left non-prop open goals")
@@ -819,6 +818,15 @@ type dsl_tac_result_t =
   dsl_typed_sigelt_t &
   list dsl_typed_sigelt_t
 
+let rec us_equals (us vs: list univ_name) : bool =
+  match us, vs with
+  | u::us, v::vs ->
+    if Ident.ident_equals u v then
+      us_equals us vs
+    else
+      false
+  | _ -> true
+
 let splice
   (env:Env.env)
   (quals : list S.qualifier)
@@ -826,7 +834,7 @@ let splice
   (is_typed:bool)
   (lids:list Ident.lident)
   (tau:term)
-  (rng:Range.range) : list sigelt =
+  (rng:Range.t) : ML (list sigelt) =
   
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.flychecking then [] else begin
@@ -853,28 +861,21 @@ let splice
         //
         if List.length lids > 1
         then Err.raise_error rng Errors.Error_BadSplice
-               (BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
+               (Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
         else begin
-          let val_t : option typ =  // val type, if any, for the lid
+          let val_t, uv_t : option typ & option (list univ_name) =  // val type / univ params, if any, for the lid
             //
             // For spliced vals, their lids is set to []
             //   (see ToSyntax.fst:desugar_decl, splice case)
             //
-            if List.length lids = 0
-            then None
+            if Nil? lids
+            then None, None
             else
               match Env.try_lookup_val_decl env (List.hd lids) with
-              | None -> None
+              | None -> None, None
               | Some ((uvs, tval), _) ->
-                //
-                // No universe polymorphic typed splice yet
-                //
-                if List.length uvs <> 0
-                then
-                  Err.raise_error rng Errors.Error_BadSplice 
-                    (BU.format1 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
-                       (show (List.length uvs)))
-                else Some tval in
+                let uvs, tval = SS.open_univ_vars uvs tval in
+                Some tval, Some uvs in
 
           //
           // The arguments to run_tactic_on_ps here are in sync with ulib/FStarC.Tactics.dsl_tac_t
@@ -889,6 +890,17 @@ let splice
               tactic_already_typed
               ps
           in
+          (match uv_t, sig_blob with
+            | Some uv_t, (true, {sigel}, _) ->
+              let actual_uv =
+                match sigel with
+                | Sig_let {lbs = (_, [{lbunivs}])} -> lbunivs
+                | _ -> [] in
+              if not (us_equals uv_t actual_uv) then
+                Err.raise_error rng Errors.Error_BadSplice
+                  (Format.fmt3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s"
+                    (show (List.hd lids)) (show actual_uv) (show uv_t))
+            | _ -> ());
           let sig_blobs = sig_blobs_before@(sig_blob::sig_blobs_after) in
           let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
             { se with
@@ -917,7 +929,7 @@ let splice
         let r =
           (* If this name was provided in the definition list of the splice,
           prefer that range. Otherwise set range to the full splice. *)
-          match tryFind (fun i -> Ident.lid_equals i fv.fv_name.v) lids with
+          match tryFind (fun i -> Ident.lid_equals i fv.fv_name) lids with
           | Some i -> pos i
           | _ -> rng
         in
@@ -940,7 +952,7 @@ let splice
         | Some vc ->
             begin
             if !dbg_Tac then
-              BU.print1 "Splice left a goal: %s\n" (show vc);
+              Format.print1 "Splice left a goal: %s\n" (show vc);
             let guard = guard_of_guard_formula (NonTrivial vc) in
             TcRel.force_trivial_guard (goal_env g) guard
             end
@@ -954,13 +966,13 @@ let splice
        * so flycheck does spuriously not mark the line red *)
       | None when not env.flychecking ->
         Err.raise_error rng Errors.Fatal_SplicedUndef
-          (BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
+          (Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
              (show lid) (show lids'))
       | _ -> ()
     ) lids;
 
     if !dbg_Tac then
-      BU.print1 "splice: got decls = {\n\n%s\n\n}\n" (show sigelts);
+      Format.print1 "splice: got decls = {\n\n%s\n\n}\n" (show sigelts);
 
     (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. Also set range. *)
     let sigelts = sigelts |> List.map (fun se ->
@@ -990,7 +1002,7 @@ let splice
             let open FStarC.Errors.Msg in
             let open FStarC.Pprint in
             Err.raise_error rng Err.Error_InternalQualifier [
-              text <| BU.format1 "The qualifier %s is internal." (show q);
+              text <| Format.fmt1 "The qualifier %s is internal." (show q);
               prefix 2 1 (text "It cannot be attached to spliced declaration:")
                 (arbitrary_string (Print.sigelt_to_string_short se));
             ]
@@ -1000,7 +1012,7 @@ let splice
     end
   )
 
-let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+let mpreprocess (env:Env.env) (tau:term) (tm:term) : ML term =
   Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.flychecking then tm else begin
     let ps = FStarC.Tactics.V2.Basic.proofstate_of_goals tm.pos env [] [] in
@@ -1010,7 +1022,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
     end
   )
 
-let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : ML term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.flychecking then tm else begin
     //we know that tm:typ
@@ -1028,7 +1040,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
         | Some vc ->
             begin
             if !dbg_Tac then
-              BU.print1 "Postprocessing left a goal: %s\n" (show vc);
+              Format.print1 "Postprocessing left a goal: %s\n" (show vc);
             let guard = guard_of_guard_formula (NonTrivial vc) in
             TcRel.force_trivial_guard (goal_env g) guard
             end

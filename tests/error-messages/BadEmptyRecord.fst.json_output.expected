@@ -1,3 +1,1 @@
->> Got issues: [
-{"msg":["Could not resolve the type for this record."],"level":"Error","range":{"def":{"file_name":"BadEmptyRecord.fst","start_pos":{"line":9,"col":6},"end_pos":{"line":9,"col":8}},"use":{"file_name":"BadEmptyRecord.fst","start_pos":{"line":9,"col":6},"end_pos":{"line":9,"col":8}}},"number":360,"ctx":["While typechecking the top-level declaration `let test`","While typechecking the top-level declaration `[@@expect_failure] let test`"]}
->>]
+{"msg":["Expected failure:","Could not resolve the type for this record."],"level":"Info","range":{"def":{"file_name":"BadEmptyRecord.fst","start_pos":{"line":9,"col":6},"end_pos":{"line":9,"col":8}},"use":{"file_name":"BadEmptyRecord.fst","start_pos":{"line":9,"col":6},"end_pos":{"line":9,"col":8}}},"number":360,"ctx":["While typechecking the top-level declaration `let test`","While typechecking the top-level declaration `[@@expect_failure] let test`"]}

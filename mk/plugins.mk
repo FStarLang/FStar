@@ -68,10 +68,10 @@ ROOTS += ../ulib/FStar.Tactics.Print.fsti
 ROOTS += ../ulib/FStar.Tactics.SMT.fsti
 ROOTS += ../ulib/FStar.Tactics.Typeclasses.fsti
 ROOTS += ../ulib/FStar.Tactics.TypeRepr.fsti
-ROOTS += ../ulib/FStar.Tactics.V1.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
 ROOTS += ../ulib/FStar.Tactics.Visit.fst
 ROOTS += ../ulib/FStar.Tactics.PrettifyType.fst
+ROOTS += ../ulib/FStar.Tactics.LaxTermEq.fst
 
 include mk/generic-1.mk

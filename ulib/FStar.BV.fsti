@@ -83,6 +83,11 @@ val inverse_num_lemma (#n: pos) (num: uint_t n)
       (ensures num = bv2int #n (int2bv #n num))
       [SMTPat (bv2int #n (int2bv #n num))]
 
+val int2bv_bv_uext (#n #i: pos)
+  (a: uint_t n)
+  : Lemma
+    (ensures (bv_uext #n #i (int2bv #n a) == int2bv #(i + n) (zero_extends #n i a)))
+
 (**** Relating lists to bitvectors *)
 
 (** Mapping a list of booleans to a bitvector *)
@@ -192,6 +197,52 @@ val int2bv_shr:
     #z: bv_t n ->
     squash (bvshr #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_right #n x y) == z)
+
+(**** Rotate operations *)
+
+(** Bitwise rotate left: rotate by bit-vector. *)
+val bvrol' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise rotate left: rotate by integer. *)
+val bvrol  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_rol':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvrol' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (rotate_left #n x y) == z)
+
+val int2bv_rol:
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvrol #n (int2bv #n x) y == z)
+  -> Lemma (int2bv #n (rotate_left #n x y) == z)
+
+(** Bitwise rotate right: rotate by bit-vector. *)
+val bvror' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise rotate right: rotate by integer. *)
+val bvror  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_ror':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvror' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (rotate_right #n x y) == z)
+
+val int2bv_ror:
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvror #n (int2bv #n x) y == z)
+  -> Lemma (int2bv #n (rotate_right #n x y) == z)
 
 (**** Arithmetic operations *)
 unfold

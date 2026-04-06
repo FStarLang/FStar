@@ -15,6 +15,11 @@ $(OUTPUT_DIR)/%.ideout: %.in
 	$(eval FST := $(firstword $(subst ., ,$<)))
 	$(FSTAR) --ide --silent "$(realpath ${FST}.fst)" < "$<" | $(JSON_CLEANUP) "$@"
 
+# The Missing* tests require a predictable full path
+$(OUTPUT_DIR)/Missin%.ideout: Missin%.in
+	$(call msg, "OUT_IDE", $<)
+	$(FSTAR) --ide --silent /Missing.fst < "$<" | $(JSON_CLEANUP) "$@"
+
 # The Harness.* tests for the push-partial-checked-file request require Harness.fst.checked
 $(OUTPUT_DIR)/Harness.%.ideout: Harness.%.in $(CACHE_DIR)/Harness.fst.checked
 	$(call msg, "OUT_IDE", $<)

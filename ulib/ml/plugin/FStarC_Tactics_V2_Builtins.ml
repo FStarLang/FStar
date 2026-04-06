@@ -9,54 +9,35 @@ module B        = FStarC_Tactics_V2_Basic
 module TM       = FStarC_Tactics_Monad
 module CTRW     = FStarC_Tactics_CtrlRewrite
 
-type ('a,'wp) tac_repr = proofstate -> 'a __result
-type 'a __tac = ('a, unit) tac_repr
-
-let interpret_tac (s:string) (t: 'a TM.tac) (ps: proofstate): 'a __result =
-  FStarC_Errors.with_ctx
-    ("While running primitive " ^ s ^ " (called from within a plugin)")
-    (fun () -> TM.run t ps)
-
-let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
-  t ps
+type 'a __tac = 'a TM.tac
 
 let to_tac_0 (t: 'a __tac): 'a TM.tac =
-  (fun (ps: proofstate) ->
-    uninterpret_tac t ps) |> TM.mk_tac
+  t
 
-let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac = fun x ->
-  (fun (ps: proofstate) ->
-    uninterpret_tac (t x) ps) |> TM.mk_tac
+let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac =
+  t
 
 let from_tac_1 s (t: 'a -> 'r TM.tac): 'a  -> 'r __tac =
-  fun (xa: 'a) (ps : proofstate) ->
-    let m = t xa in
-    interpret_tac s m ps
+  t
 
 let from_tac_2 s (t: 'a -> 'b -> 'r TM.tac): 'a  -> 'b -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (ps : proofstate) ->
-    let m = t xa xb in
-    interpret_tac s m ps
+  t
 
 let from_tac_3 s (t: 'a -> 'b -> 'c -> 'r TM.tac): 'a  -> 'b -> 'c -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (ps : proofstate) ->
-    let m = t xa xb xc in
-    interpret_tac s m ps
+  t
 
 let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd)  (ps : proofstate) ->
-    let m = t xa xb xc xd in
-    interpret_tac s m ps
+  t
 
 let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e -> 'r __tac =
-  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd) (xe: 'e) (ps : proofstate) ->
-    let m = t xa xb xc xd xe in
-    interpret_tac s m ps
+  t
 
+let get () : proofstate __tac = TM.get
 
 (* Pointing to the internal primitives *)
 let fixup_range             = from_tac_1 "B.fixup_range" B.fixup_range
 let compress                = from_tac_1 "B.compress" B.compress
+let compress_univ           = from_tac_1 "B.compress_univ" B.compress_univ
 let set_goals               = from_tac_1 "TM.set_goals" TM.set_goals
 let set_smt_goals           = from_tac_1 "TM.set_smt_goals" TM.set_smt_goals
 let top_env                 = from_tac_1 "B.top_env" B.top_env
@@ -119,7 +100,6 @@ let comp_to_string          = from_tac_1 "B.comp_to_string" B.comp_to_string
 let term_to_doc             = from_tac_1 "B.term_to_doc" B.term_to_doc
 let comp_to_doc             = from_tac_1 "B.comp_to_doc" B.comp_to_doc
 let range_to_string         = from_tac_1 "B.range_to_string" B.range_to_string
-let term_eq_old             = from_tac_2 "B.term_eq_old" B.term_eq_old
 
 let with_compat_pre_core (n:Prims.int) (f: unit -> 'a __tac) : 'a __tac =
   from_tac_2 "B.with_compat_pre_core" B.with_compat_pre_core n (to_tac_0 (f ()))
@@ -166,7 +146,7 @@ let log_issues                   = from_tac_1 "B.log_issues" B.log_issues
 
 (* The handlers need to "embed" their argument. *)
 let catch   (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.catch" TM.catch   (to_tac_0 (t ()))
-let recover (t: unit -> 'a __tac): ((exn, 'a) either) __tac = from_tac_1 "TM.recover" TM.recover (to_tac_0 (t ()))
+let raise_core = from_tac_1 "TM.raise" TM.traise
 
 let ctrl_rewrite
     (d : direction)
@@ -180,3 +160,9 @@ let call_subtac g (t : unit -> unit __tac) u ty =
   from_tac_4 "B.call_subtac" B.call_subtac g t u ty
 
 let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_tm
+
+let stats_record (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.stats_record" (B.stats_record () ()) s (to_tac_0 (f ()))
+
+let with_error_context (s : string) (f : unit -> 'c __tac) : 'c __tac =
+  from_tac_2 "B.with_error_context" (B.with_error_context () ()) s (to_tac_0 (f ()))

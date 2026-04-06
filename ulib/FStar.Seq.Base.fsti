@@ -16,7 +16,7 @@
 
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module FStar.Seq.Base
-//#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+//#set-options "--fuel 0 --ifuel 1"
 
 module List = FStar.List.Tot.Base
 
@@ -229,4 +229,4 @@ val init_ghost_index_ (#a:Type) (len:nat) (contents:(i:nat { i < len } -> GTot a
     [SMTPat (index (init_ghost len contents) j)]
 
 val lemma_equal_instances_implies_equal_types (_:unit)
-  :Lemma (forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)
+  :Lemma (forall (a:Type u#a) (b:Type u#a) (s1:seq a) (s2:seq b). s1 === s2 ==> a == b)

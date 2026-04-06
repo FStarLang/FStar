@@ -16,7 +16,7 @@
 *)
 module FStar.GhostSet
 (** Ghost computational sets: membership is a ghost boolean function *)
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 

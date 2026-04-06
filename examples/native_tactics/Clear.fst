@@ -19,7 +19,7 @@ open FStar.Tactics.V2
 
 assume val phi : Type
 assume val psi : Type
-assume val xi : Type
+assume val xi : Type u#0
 
 assume val p : squash xi
 

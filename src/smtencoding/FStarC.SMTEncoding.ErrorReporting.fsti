@@ -18,7 +18,6 @@ module FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
 open FStarC
 open FStarC.BaseTypes
-open FStarC.Util
 open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding
@@ -27,10 +26,10 @@ open FStarC.Range
 type label = error_label
 type labels = list label
 
-val label_goals : option (unit -> string) -> range -> q:term -> labels & term
+val label_goals : option (unit -> ML string) -> range -> q:term -> ML (labels & term)
 
 val detail_errors :  bool //detail_hint_replay?
                   -> TypeChecker.Env.env
                   -> labels
-                  -> (list decl -> Z3.z3result)
-                  -> unit
+                  -> (list decl -> ML Z3.z3result)
+                  -> ML unit

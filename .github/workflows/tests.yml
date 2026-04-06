@@ -10,12 +10,11 @@ defaults:
 
 
 jobs:
-  # This checks that the stage3 extracted fstarc matches exactly with
-  # stage2. Also, we build the F# library (it is not packaged, so not
-  # built by the job above)
-  check-stage3:
+  # This checks that the extracted fstarc (using stage2) matches exactly with
+  # stage2 (extracted with stage1).
+  boot-diff:
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -23,14 +22,14 @@ jobs:
       - uses: mtzguido/set-opam-env@master
 
       # We download the full repo state from the step below and start a
-      # stage3 check. This allows the rest of the workflow to go ahead
+      # boot-diff check. This allows the rest of the workflow to go ahead
       # while we do this.
       - uses: mtzguido/gci-download@master
         with:
           name: fstar-repo
 
-      - name: Check for a stage 3 diff and F# library build
-        run: make -skj$(nproc) stage3-diff lib-fsharp
+      - name: Check for a boot diff
+        run: make -skj$(nproc) boot-diff
         working-directory: FStar
 
   # Download the stage2 binary package from the previous job and run the
@@ -46,7 +45,7 @@ jobs:
   # CI usage, and getting a nicer display of the workflow run. Ideally
   # there would be a toggle for calling this workflow to check the
   # stage1, but it's really clunky to tweak a matrix in Github actions.
-  test-local:
+  tests:
     # strategy:
     #   matrix:
     #     pak:
@@ -54,7 +53,7 @@ jobs:
     #       - fstar-stage1.tar.gz
     # runs-on: [self-hosted, linux, X64] # self-hosted so we use fast runners
     runs-on: ubuntu-latest
-    container: mtzguido/dev-base
+    container: mtzguido/dev-base:v2
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -63,9 +62,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@master
+        with:
+          submodules: true
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           # name: ${{ matrix.pak }}
           name: fstar.tar.gz
@@ -74,17 +75,82 @@ jobs:
         run: tar xzf fstar.tar.gz && ln -s fstar out
 
       - name: Run tests, without forcing a build
-        run: make -skj$(nproc) _test
+        # This frankenstein target is complicated due to having split the build
+        # into separate jobs. Perhaps we should just ditch that.  The advantage
+        # of splitting is gaining parallelism with testing the source package,
+        # as that runs after the normal build and takes ~10 minutes.
+        run: make -skj$(nproc) _test _test_pulse
+
+  # Build the F# library and the examples.
+  fsharp:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          submodules: true
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+
+      - name: Set up package locally
+        run: tar xzf fstar.tar.gz && ln -s fstar out
+
+      - name: Run tests, without forcing a build
+        run: make -skj$(nproc) fsharp-all FSTAR_EXE=$(pwd)/out/bin/fstar.exe
+
+  # This runs the bare tests over the bare stage2 compiler.
+  # We start from the built repo.
+  bare:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - run: make -skj$(nproc) test-2-bare
+        working-directory: FStar
+
+  # The internal tests (src/tests)
+  internal:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: fstar-repo
+
+      - run: make -skj$(nproc) stage2-unit-tests
+        working-directory: FStar
 
   binary-smoke:
     runs-on: ubuntu-24.04
     steps:
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
 
@@ -95,6 +161,8 @@ jobs:
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe B.fst
 
   ocaml-smoke:
     strategy:
@@ -108,13 +176,13 @@ jobs:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      # TODO: Install both 4.8.5 and 4.13.1
+      # TODO: Install both 4.8.5 and 4.13.3
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.pak }}
       - run: tar xzf ${{ matrix.pak }}
@@ -135,6 +203,8 @@ jobs:
           ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
           echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./out/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./out/bin/fstar.exe B.fst
         working-directory: fstar
 
   perf-canaries:
@@ -145,10 +215,10 @@ jobs:
 
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.8.5
+          version: 4.13.3
 
       - name: Get fstar package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fstar.tar.gz
 

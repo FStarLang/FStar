@@ -22,7 +22,6 @@ open Prims
 open FStar_Pervasives
 open FStarC_Errors
 open FStarC_List
-open FStarC_Util
 open FStarC_Range
 
 (* TODO : these files should be deprecated and removed *)
@@ -44,9 +43,6 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-let do_notation_deprecation_warning =
-  "The lightweight do notation [x <-- y; z] or [x ;; z] is deprecated, use let operators (i.e. [let* x = y in z] or [y ;* z], [*] being any sequence of operator characters) instead."
-
 let none_to_empty_list x =
   match x with
   | None -> []
@@ -65,37 +61,100 @@ let parse_use_lang_blob (extension_name:string)
 : FStarC_Parser_AST.decl list
 = FStarC_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
 
+type tc_constraint = {
+  id: FStarC_Ident.ident;
+  t: FStarC_Parser_AST.term;
+  r: FStarC_Range.t;
+}
+
+let pattern_must_be_binder (p : pattern) : binder =
+  match p.pat with
+  | PatConst Const_unit ->
+    (* A unit pattern: `()`. Unsure if this is the right place to look
+    for it. *)
+    let x = gen p.prange in
+    let u =
+      unit_type p.prange
+      (* mk_term (Const Const_unit) p.prange Expr *)
+    in
+    mk_binder (Annotated (x, u)) p.prange Expr None
+
+  | PatAscribed ({ pat = PatVar (x, aq, attrs)}, (t, _tac_opt)) ->
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatVar (x, aq, attrs) ->
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | PatAscribed ({ pat = PatWild (aq, attrs)}, (t, _tac_opt)) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatWild (aq, attrs) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | _ ->
+    raise_error_text p.prange Fatal_SyntaxError
+      ("Must be a simple binder: " ^ pat_to_string p)
+
+(* For a multibinder like `(a b c : Type | eq, ord)`, this generates
+   binders
+     {| _ : eq a |} {| _ : ord a |}
+     {| _ : eq b |} {| _ : ord b |}
+     {| _ : eq c |} {| _ : ord c |}
+  in that order.
+*)
+let expand_inline_constraints (cts : term list) (xs : ident list) : pattern list =
+  List.concat_map (fun x ->
+    List.concat_map (fun ct ->
+      let r = ct.range in
+      let x_t = mk_term (Var (lid_of_ids [x])) r Expr in
+      let ct = mk_term (App (ct, x_t, Nothing)) r Expr in
+      let id = gen r in
+      [ mk_pattern (PatAscribed(mk_pattern (PatVar (id, Some TypeClassArg, [])) r, (ct, None))) r ]
+    ) cts
+  ) xs
+
+let rec pat_names (bs : pattern list) : ident list =
+  match bs with
+  | [] -> []
+  | b::bs' ->
+    match b.pat with
+    | PatAscribed ({pat = PatVar (x, _, _)}, _)
+    | PatVar (x, _, _) -> x :: pat_names bs'
+    | _ ->
+      raise_error_text b.prange Fatal_SyntaxError
+        ("Inline constraints require simple variable binders, got: " ^ pat_to_string b)
+
 %}
 
 %token <string> STRING
 %token <string> IDENT
 %token <string> NAME
-%token <string> TVAR
 %token <string> TILDE
 
-/* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
-%token <string * bool> INT8
-%token <string * bool> INT16
-%token <string * bool> INT32
-%token <string * bool> INT64
-%token <string * bool> INT
-%token <string> RANGE
-
+%token <string> INT
+%token <string> INT8
 %token <string> UINT8
+%token <string> INT16
 %token <string> UINT16
+%token <string> INT32
 %token <string> UINT32
+%token <string> INT64
 %token <string> UINT64
 %token <string> SIZET
+
 %token <string> REAL
+
 %token <FStar_Char.char> CHAR
-%token <bool> LET
+%token LET
 %token <string> LET_OP
 %token <string> AND_OP
 %token <string> MATCH_OP
 %token <string> IF_OP
-%token <bool> EXISTS
+%token EXISTS
 %token <string> EXISTS_OP
-%token <bool> FORALL
+%token FORALL
 %token <string> FORALL_OP
 
 
@@ -112,10 +171,10 @@ let parse_use_lang_blob (extension_name:string)
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
-%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH
-%token TYP_APP_LESS TYP_APP_GREATER SUBTYPE EQUALTYPE SUBKIND BY
+%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK PRAGMA_EVAL
+%token SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
-%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE DEFAULT
+%token EXCEPTION FALSE FUN FUNCTION IF IN MODULE
 %token MATCH OF
 %token FRIEND OPEN REC THEN TRUE TRY TYPE CALC CLASS INSTANCE EFFECT VAL
 %token INTRO ELIM
@@ -138,7 +197,7 @@ let parse_use_lang_blob (extension_name:string)
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
 
-%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
+%token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3L OPINFIX3R OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  BLOB
 %token<string * string * Lexing.position * FStarC_Sedlexing.snap>  USE_LANG_BLOB
@@ -166,19 +225,18 @@ let parse_use_lang_blob (extension_name:string)
 %right    PIPE_LEFT
 %right    OPINFIX1
 %left     OPINFIX2 MINUS QUOTE
-%left     OPINFIX3
+%left     OPINFIX3L
+%right    OPINFIX3R
 %left     BACKTICK
 %right    OPINFIX4
 
 %start inputFragment
 %start term
-%start warn_error_list
 %start oneDeclOrEOF
 %type <FStarC_Parser_AST.inputFragment> inputFragment
 %type <(FStarC_Parser_AST.decl list * FStarC_Sedlexing.snap option) option> oneDeclOrEOF
 %type <FStarC_Parser_AST.term> term
 %type <FStarC_Ident.ident> lident
-%type <(FStarC_Errors_Codes.error_flag * string) list> warn_error_list
 %%
 
 (* inputFragment is used at the same time for whole files and fragment of codes (for interactive mode) *)
@@ -226,18 +284,14 @@ startOfNextDeclToken:
  
 pragmaStartToken:
  | PRAGMA_SHOW_OPTIONS
-     { () }
  | PRAGMA_SET_OPTIONS
-     { () }
  | PRAGMA_RESET_OPTIONS
-     { () }
  | PRAGMA_PUSH_OPTIONS
-     { () }
  | PRAGMA_POP_OPTIONS
-     { () }
  | PRAGMA_RESTART_SOLVER
-     { () }
  | PRAGMA_PRINT_EFFECTS_GRAPH
+ | PRAGMA_CHECK
+ | PRAGMA_EVAL
      { () }
 
 /******************************************************************************/
@@ -259,6 +313,10 @@ pragma:
       { RestartSolver }
   | PRAGMA_PRINT_EFFECTS_GRAPH
       { PrintEffectsGraph }
+  | PRAGMA_CHECK t=term
+      { Check t }
+  | PRAGMA_EVAL t=term
+      { Eval t }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -405,8 +463,6 @@ rawDecl:
       {
         let r = rr $loc in
         let lbs = focusLetBindings lbs r in
-        if q <> Rec && List.length lbs <> 1
-        then raise_error_text r Fatal_MultipleLetBinding "Unexpected multiple let-binding (Did you forget some rec qualifier ?)";
         TopLevelLet(q, lbs)
       }
   | VAL c=constant
@@ -457,12 +513,7 @@ typeDecl:
       { tcdef lid tparams ascr_opt }
 
 typars:
-  | x=tvarinsts              { x }
   | x=binders                { x }
-
-tvarinsts:
-  | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
 
 %inline recordDefinition:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
@@ -519,7 +570,7 @@ letoperatorbinding:
     }
 
 letbinding:
-  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
+  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(genBinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
         let pat = mk_pattern (PatVar(lid, None, [])) (rr $loc(lid)) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rr2 $loc(focus_opt) $loc(lbp)) in
@@ -644,7 +695,6 @@ qualifier:
   }
   | IRREDUCIBLE   { Irreducible }
   | NOEXTRACT     { NoExtract }
-  | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
 
@@ -702,15 +752,16 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | DOT_DOT
-      {
-        mk_pattern PatRest (rr $loc)
-      }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rr2 $loc(pat) $loc(t) in
         let pos = rr $loc in
         mkRefinedPattern pat t true phi_opt pos_t pos
+      }
+  | LPAREN pat=tuplePattern RPAREN   { pat }
+  | DOT_DOT
+      {
+        mk_pattern PatRest (rr $loc)
       }
   | LBRACK pats=right_flexible_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
@@ -718,14 +769,8 @@ atomicPattern:
       { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
-  | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rr $loc(tv)) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
-  | UNDERSCORE
-      { mk_pattern (PatWild (None, [])) (rr $loc) }
-  | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit, [])) (rr $loc) }
   | c=constant
       { mk_pattern (PatConst c) (rr $loc(c)) }
   | tok=MINUS c=constant
@@ -746,6 +791,10 @@ atomicPattern:
     {
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rr $loc(qual_id)) }
+  | qual_id=aqualifiedWithAttrs(UNDERSCORE)
+    {
+      let (aqual, attrs), _ = qual_id in
+      mk_pattern (PatWild (aqual, attrs)) (rr $loc(qual_id)) }
   | uid=quident
       { mk_pattern (PatName uid) (rr $loc(uid)) }
 
@@ -755,74 +804,69 @@ fieldPattern:
   | lid=qlident
       { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rr $loc(lid)) }
 
-  (* (x : t) is already covered by atomicPattern *)
-  (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
-  (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
-patternOrMultibinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
-      }
+tc_constraint:
+  | id=ioption(id=lidentOrUnderscore COLON {id}) t=simpleArrow
+    { let r = rr $loc in
+      let id = match id with | Some id -> id | None -> gen r in
+      {id; t; r}
+    }
 
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
-        let w = mk_pattern (PatVar (id, Some TypeClassArg, [])) r in
-        let asc = (t, None) in
-        [mk_pattern (PatAscribed(w, asc)) r]
-      }
-  | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
-      {
-        let pos = rr $loc in
-        let t_pos = rr $loc(t) in
-        let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
-      }
+(* Typeclass constraints: what appears inside a {| ... |}. They can
+be named or anonymous *)
+tc_constraints:
+  | constraints=right_flexible_nonempty_list(COMMA, tc_constraint) { constraints }
 
-binder:
-  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
-     {
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
-     }
+(* Constraints on binders: like (#a : Type | deq) *)
+type_tc_constraints:
+  | BAR constraints=right_flexible_nonempty_list(COMMA, tmEqNoRefinement) { constraints }
+  | { [] }
 
-  | tv=tvar { mk_binder (TVariable tv) (rr $loc) Kind None  }
-       (* small regression here : fun (=x : t) ... is not accepted anymore *)
-
+(* NOTE: multiBinder and genBinder have parallel structure for {| ... |}
+   and multi-identifier (x y : t | constraints) cases, but produce different
+   types (binder list vs pattern list). Keep them in sync when modifying
+   constraint handling. Both use expand_inline_constraints for the shared
+   logic. *)
 %public
 multiBinder:
-  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_binder (c:tc_constraint) =
+          mk_binder (Annotated (c.id, c.t)) c.r Type_level (Some TypeClassArg)
+        in
+        List.map constraint_as_binder constraints
       }
 
-  | LBRACE_BAR t=simpleArrow BAR_RBRACE
-      { let r = rr $loc in
-        let id = gen r in
-        [mk_binder (Annotated (id, t)) r Type_level (Some TypeClassArg)]
-      }
-
-  | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore))
+      COLON t=simpleArrow r=refineOpt cts=type_tc_constraints
+    RPAREN
      {
-       let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun ((q, attrs), x) ->
-         mkRefinedBinder x t should_bind_var r (rr $loc) q attrs) qual_ids
+       let n = List.length qual_ids in
+       let bs = List.mapi (fun idx ((q, attrs), x) ->
+         let refine_opt = if idx = Int.sub n 1 then r else None in
+         mkRefinedBinder x t true refine_opt (rr $loc) q attrs
+       ) qual_ids in
+       let names = List.map (fun ((_, _), x) -> x) qual_ids in
+       let cts_binders = List.map pattern_must_be_binder
+                           (expand_inline_constraints cts names) in
+       bs @ cts_binders
      }
 
   | LPAREN_RPAREN
     {
       let r = rr $loc in
-      let unit_t = mk_term (Var (lid_of_ids [(mk_ident("unit", r))])) r Un in
-      [mk_binder (Annotated (gen r, unit_t)) r Un None]
+      let unit_t = unit_type r in
+      [mk_binder (Annotated (gen r, unit_t)) r Type_level None]
     }
 
-  | b=binder { [b] }
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
+     {
+       let (q, attrs), lid = aqualifiedWithAttrs_lid in
+       [mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs]
+     }
 
 %public
-binders: bss=list(bs=multiBinder {bs}) { flatten bss }
+binders: bss=list(multiBinder) { flatten bss }
 
 aqualifiedWithAttrs(X):
   | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
@@ -886,9 +930,6 @@ lident:
 uident:
   | id=NAME { mk_ident(id, rr $loc(id)) }
 
-tvar:
-  | tv=TVAR { mk_ident(tv, rr $loc(tv)) }
-
 
 /******************************************************************************/
 /*                            Types and terms                                 */
@@ -925,18 +966,16 @@ term:
 (*     exists for the previous production *)
   | e1=noSeqTerm op=SEMICOLON_OP e2=term
       { let t = match op with
-	  | Some op ->
-	     let op = mk_ident ("let" ^ op, rr $loc(op)) in
-	     let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
-	     LetOperator ([(op, pat, e1)], e2)
-	  | None   ->
-             log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-	     Bind(gen (rr $loc(op)), e1, e2)
-        in mk_term t (rr2 $loc(e1) $loc(e2)) Expr
+        | Some op ->
+          let op = mk_ident ("let" ^ op, rr $loc(op)) in
+          let pat = mk_pattern (PatWild(None, [])) (rr $loc(op)) in
+          LetOperator ([(op, pat, e1)], e2)
+        | None ->
+          Bind(gen (rr $loc(op)), e1, e2)
+        in mk_term t (rr $loc) Expr
       }
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
-    { log_issue_text (rr $loc) Warning_DeprecatedLightDoNotation do_notation_deprecation_warning;
-      mk_term (Bind(x, e1, e2)) (rr2 $loc(x) $loc(e2)) Expr }
+    { mk_term (Bind(x, e1, e2)) (rr $loc) Expr }
 
 match_returning:
   | as_opt=option(AS i=lident {i}) RETURNS t=tmIff {as_opt,t,false}
@@ -973,11 +1012,11 @@ noSeqTerm:
         mk_term (Op(opid, [ e1; e2; e3 ])) (rr2 $loc(e1) $loc(e3)) Expr
       }
   | REQUIRES t=typ
-      { mk_term (Requires(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Requires t) (rr2 $loc($1) $loc(t)) Type_level }
   | ENSURES t=typ
-      { mk_term (Ensures(t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Ensures t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rr2 $loc($1) $loc(t)) Type_level }
+      { mk_term (Decreases t) (rr2 $loc($1) $loc(t)) Type_level }
   | DECREASES LBRACE_COLON_WELL_FOUNDED t=noSeqTerm RBRACE
       (*
        * decreases clause with relation is written as e1 e2,
@@ -988,7 +1027,7 @@ noSeqTerm:
       { match t.tm with
         | App (t1, t2, _) ->
           let ot = mk_term (WFOrder (t1, t2)) (rr2 $loc(t) $loc(t)) Type_level in
-          mk_term (Decreases (ot, None)) (rr2 $loc($1) $loc($4)) Type_level
+          mk_term (Decreases ot) (rr2 $loc($1) $loc($4)) Type_level
         | _ ->
           raise_error_text (rr $loc(t)) Fatal_SyntaxError
             "Syntax error: To use well-founded relations, write e1 e2"
@@ -1342,12 +1381,14 @@ tmNoEqNoRecordWith(X):
             in
             mk_term (Sum(dom, res)) (rr2 $loc(e1) $loc(e2)) Type_level
       }
-  | e1=tmNoEqWith(X) op=OPINFIX3 e2=tmNoEqWith(X)
+
+  | e1=tmNoEqWith(X) op=OPINFIX3L e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX3R e2=tmNoEqWith(X)
+  | e1=tmNoEqWith(X) op=OPINFIX4  e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
+
   | e1=tmNoEqWith(X) BACKTICK op=tmNoEqWith(X) BACKTICK e2=tmNoEqWith(X)
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
- | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
-      { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
@@ -1366,7 +1407,8 @@ binop_name:
   | o=OPINFIX0d              { mk_ident (o, rr $loc) }
   | o=OPINFIX1               { mk_ident (o, rr $loc) }
   | o=OPINFIX2               { mk_ident (o, rr $loc) }
-  | o=OPINFIX3               { mk_ident (o, rr $loc) }
+  | o=OPINFIX3L              { mk_ident (o, rr $loc) }
+  | o=OPINFIX3R              { mk_ident (o, rr $loc) }
   | o=OPINFIX4               { mk_ident (o, rr $loc) }
   | o=IMPLIES                { mk_ident ("==>", rr $loc) }
   | o=CONJUNCTION            { mk_ident ("/\\", rr $loc) }
@@ -1380,6 +1422,7 @@ binop_name:
 tmEqNoRefinement:
   | e=tmEqWith(appTermNoRecordExp) { e }
 
+%public
 tmEq:
   | e=tmEqWith(tmRefinement)  { e }
 
@@ -1411,7 +1454,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
-  | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
+  | lid=qlidentOrOperator { lid, mk_term (Var (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
 appTermArgs:
   | h=maybeHash a=onlyTrailingTerm { [h, a] }
@@ -1469,7 +1512,7 @@ trailingTerm:
     { x }
 
 onlyTrailingTerm:
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
+  | FUN pats=nonempty_list(genBinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
   | q=quantifier bs=binders DOT trigger=trigger e=term
       {
@@ -1495,7 +1538,6 @@ atomicTermQUident:
 
 atomicTermNotQUident:
   | UNDERSCORE { mk_term Wild (rr $loc) Un }
-  | tv=tvar     { mk_term (Tvar tv) (rr $loc) Type_level }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
@@ -1515,10 +1557,12 @@ opPrefixTerm(Tm):
 
 
 projectionLHS:
-  | e=qidentWithTypeArgs(qlident, option(fsTypeArgs))
-      { e }
-  | e=qidentWithTypeArgs(quident, some(fsTypeArgs))
-      { e }
+  | id=qlident
+      {
+        let t = if is_name id then Name id else Var id in
+         mk_term t (rr $loc(id)) Un
+      }
+
   | LPAREN e=term sort_opt=option(pair(hasSort, simpleTerm)) RPAREN
       {
         (* Note: we have to keep the parentheses here. Consider t * u * v. This
@@ -1546,22 +1590,6 @@ projectionLHS:
   | lid=quident QMARK
       { mk_term (Discrim lid) (rr2 $loc(lid) $loc($2)) Un }
 
-fsTypeArgs:
-  | TYP_APP_LESS targs=separated_nonempty_list(COMMA, atomicTerm) TYP_APP_GREATER
-    {targs}
-
-(* Qid : quident or qlident.
-   TypeArgs : option(fsTypeArgs) or someFsTypeArgs. *)
-qidentWithTypeArgs(Qid,TypeArgs):
-  | id=Qid targs_opt=TypeArgs
-      {
-        let t = if is_name id then Name id else Var id in
-        let e = mk_term t (rr $loc(id)) Un in
-        match targs_opt with
-        | None -> e
-        | Some targs -> mkFsTypApp e targs (rr2 $loc(id) $loc(targs_opt))
-      }
-
 hasSort:
   (* | SUBTYPE { Expr } *)
   | SUBKIND { Type_level } (* Remove with stratify *)
@@ -1574,44 +1602,22 @@ constant:
   | LPAREN_RPAREN { Const_unit }
   | n=INT
      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for representable integer constants";
-        Const_int (fst n, None)
+        Const_int (n, None)
      }
   | c=CHAR { Const_char c }
   | s=STRING { Const_string (s, rr $loc) }
   | TRUE { Const_bool true }
   | FALSE { Const_bool false }
   | r=REAL { Const_real r }
-  | n=UINT8 { Const_int (n, Some (Unsigned, Int8)) }
-  | n=INT8
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 8-bit signed integers";
-        Const_int (fst n, Some (Signed, Int8))
-      }
+  | n=UINT8  { Const_int (n, Some (Unsigned, Int8)) }
+  | n=INT8   { Const_int (n, Some (Signed,   Int8)) }
   | n=UINT16 { Const_int (n, Some (Unsigned, Int16)) }
-  | n=INT16
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 16-bit signed integers";
-        Const_int (fst n, Some (Signed, Int16))
-      }
+  | n=INT16  { Const_int (n, Some (Signed,   Int16)) }
   | n=UINT32 { Const_int (n, Some (Unsigned, Int32)) }
-  | n=INT32
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 32-bit signed integers";
-        Const_int (fst n, Some (Signed, Int32))
-      }
+  | n=INT32  { Const_int (n, Some (Signed,   Int32)) }
   | n=UINT64 { Const_int (n, Some (Unsigned, Int64)) }
-  | n=INT64
-      {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange "This number is outside the allowable range for 64-bit signed integers";
-        Const_int (fst n, Some (Signed, Int64))
-      }
-  | n=SIZET { Const_int (n, Some (Unsigned, Sizet)) }
+  | n=INT64  { Const_int (n, Some (Signed,   Int64)) }
+  | n=SIZET  { Const_int (n, Some (Unsigned, Sizet)) }
   (* TODO : What about reflect ? There is also a constant representing it *)
   | REIFY   { Const_reify None }
   | RANGE_OF     { Const_range_of }
@@ -1645,37 +1651,11 @@ atomicUniverse:
       { mk_term Wild (rr $loc) Expr }
   | n=INT
       {
-        if snd n then
-          log_issue_text (rr $loc) Error_OutOfRange ("This number is outside the allowable range for representable integer constants");
-        mk_term (Const (Const_int (fst n, None))) (rr $loc(n)) Expr
+        mk_term (Const (Const_int (n, None))) (rr $loc(n)) Expr
       }
   | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rr2 $loc($1) $loc($3)) Expr*) }
-
-warn_error_list:
-  | e=warn_error EOF { e }
-
-warn_error:
-  | f=flag r=range
-    { [(f, r)] }
-  | f=flag r=range e=warn_error
-    { (f, r) :: e }
-
-flag:
-  | op=OPINFIX1
-    { if op = "@" then CAlwaysError else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | op=OPINFIX2
-    { if op = "+" then CWarning else failwith (format1 "unexpected token %s in warn-error list" op)}
-  | MINUS
-          { CSilent }
-
-range:
-  | i=INT
-    { format2 "%s..%s" (fst i) (fst i) }
-  | r=RANGE
-    { r }
-
 
 /******************************************************************************/
 /*                       Miscellanous, tools                                   */
@@ -1751,3 +1731,50 @@ reverse_left_flexible_nonempty_list(delim, X):
 %inline left_flexible_nonempty_list(delim, X):
  xs = reverse_left_flexible_nonempty_list(delim, X)
    { List.rev xs }
+
+(* See note on multiBinder about keeping these in sync. *)
+genBinder:
+  (* Typeclass constraints {| ... |} *)
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_pat (c:tc_constraint) =
+          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
+          let asc = (c.t, None) in
+          mk_pattern (PatAscribed(w, asc)) c.r
+        in
+        List.map constraint_as_pat constraints
+      }
+
+  | pat=atomicPattern { [pat] }
+
+  (* Multi-binder: (x y : t | constraints) — 2+ identifiers with annotation *)
+  | LPAREN
+      qual_id0=aqualifiedWithAttrs(lidentOrUnderscore)
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore))
+      COLON t=simpleArrow r=refineOpt cts=type_tc_constraints
+    RPAREN
+      {
+        let qual_ids = qual_id0 :: qual_ids in
+        let pos = rr $loc in
+        let n = List.length qual_ids in
+        let pats = List.mapi (fun idx ((aq, attrs), x) ->
+          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
+          let refine_opt = if idx = Int.sub n 1 then r else None in
+          mkRefinedPattern pat t true refine_opt (rr $loc(t)) pos
+        ) qual_ids in
+        let names = List.map (fun ((_, _), x) -> x) qual_ids in
+        pats @ expand_inline_constraints cts names
+      }
+
+  (* Single pattern with inline constraints: (x : t | constraints) *)
+  | LPAREN
+      pat=tuplePattern
+      COLON t=simpleArrow r=refineOpt
+      BAR cts=right_flexible_nonempty_list(COMMA, tmEqNoRefinement)
+    RPAREN
+      {
+        let pos_t = rr2 $loc(pat) $loc(t) in
+        let p = mkRefinedPattern pat t true r pos_t (rr $loc) in
+        let names = pat_names [p] in
+        [p] @ expand_inline_constraints cts names
+      }

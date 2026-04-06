@@ -22,7 +22,7 @@ open TransparentMap {} // lemmas
 
 module F = FStar.FunctionalExtensionality
 
-#reset-options "--initial_fuel 2 --max_fuel 2"
+#reset-options "--fuel 2"
 
 let state_to_S (s:state) : S.state = {
   S.ok = s.ok;

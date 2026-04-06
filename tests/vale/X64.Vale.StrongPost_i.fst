@@ -18,7 +18,7 @@ open X64.Machine_s
 open X64.Vale.State_i
 open X64.Vale.Decls
 
-#reset-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 20"
+#reset-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
 let empty = ()
 

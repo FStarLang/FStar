@@ -22,7 +22,7 @@ open FStar.Tactics.V2.Bare
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
-let term_eq = FStar.Stubs.Tactics.V2.Builtins.term_eq_old
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (* A simple expression canonizer for commutative monoids.
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.

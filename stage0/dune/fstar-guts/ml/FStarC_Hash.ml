@@ -1,12 +1,11 @@
-module Z = FStarC_BigInt
 
-type hash_code = int
+type hash_code = int (* OCaml int *)
 
 let cmp_hash (x:hash_code) (y:hash_code) : Z.t = Z.of_int (x-y)
 
-let to_int (i:int) = Z.of_int i
+let to_int (i:hash_code) : Z.t = Z.of_int i
 
-let of_int (i:Z.t) = Z.to_int i
+let of_int (i:Z.t) : hash_code = Z.to_int i
 let of_string (s:string) = BatHashtbl.hash s
 
 (* This function is taken from Bob Jenkins'

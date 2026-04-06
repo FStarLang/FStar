@@ -21,8 +21,9 @@ open FStar.Tactics.V1.Derived
 open FStar.Tactics.Util
 open FStar.Reflection.V1
 open FStar.Reflection.V1.Formula
+open FStar.Reflection.TermEq.Simple { term_eq }
 
-open FStar.Tactics.V1.Logic.Lemmas
+open FStar.Tactics.Logic.Lemmas
 
 (** Revert an introduced binder as a forall. *)
 let l_revert () : Tac unit =

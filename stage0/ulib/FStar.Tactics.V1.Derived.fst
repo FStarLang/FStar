@@ -19,11 +19,11 @@ open FStar.Reflection.V1
 open FStar.Reflection.V1.Formula
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
-open FStar.Stubs.Tactics.Result
 open FStar.Tactics.Util
 open FStar.Stubs.Tactics.V1.Builtins
 open FStar.Tactics.V1.SyntaxHelpers
 open FStar.Stubs.VConfig
+open FStar.Reflection.TermEq.Simple { term_eq }
 include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base
@@ -48,11 +48,11 @@ let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TacH a (requires True) (ensures fun _ -> False)
   = raise #a (TacticFailure (mkmsg m, None))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (mkmsg m, None)) ps))
+  : TacH a (requires True) (ensures fun _ -> False)
   = set_urgency 0;
     raise #a (TacticFailure (mkmsg m, None))
 
@@ -70,14 +70,6 @@ let cur_goal () : Tac typ = goal_type (_cur_goal ())
 
 (** [cur_witness] returns the current goal's witness *)
 let cur_witness () : Tac term = goal_witness (_cur_goal ())
-
-(** [cur_goal_safe] will always return the current goal, without failing.
-It must be statically verified that there indeed is a goal in order to
-call it. *)
-let cur_goal_safe () : TacH goal (requires (fun ps -> ~(goals_of ps == [])))
-                                 (ensures (fun ps0 r -> exists g. r == Success g ps0))
- = match goals_of (get ()) with
-   | g :: _ -> g
 
 (** [cur_binders] returns the list of binders in the current goal. *)
 let cur_binders () : Tac binders =
@@ -397,10 +389,8 @@ let fresh_implicit_binder t : Tac binder =
     let i = fresh () in
     fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
-let guard (b : bool) : TacH unit (requires (fun _ -> True))
-                                 (ensures (fun ps r -> if b
-                                                       then Success? r /\ Success?.ps r == ps
-                                                       else Failed? r))
+let guard (b : bool) : TacH unit (requires True)
+                                 (ensures fun _ -> b)
         (* ^ the proofstate on failure is not exactly equal (has the psc set) *)
     =
     if not b then

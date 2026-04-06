@@ -15,7 +15,7 @@
 *)
 module Bug771
 
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--fuel 1 --ifuel 1"
 
 val len: pos
 val clen: l:FStar.UInt32.t{FStar.UInt32.v l = len}

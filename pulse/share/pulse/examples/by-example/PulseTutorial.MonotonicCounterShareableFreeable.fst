@@ -1,0 +1,132 @@
+module PulseTutorial.MonotonicCounterShareableFreeable
+#lang-pulse
+open Pulse.Lib.Pervasives
+open FStar.Preorder
+open Pulse.Lib.Par
+module MR = Pulse.Lib.MonotonicGhostRef
+module B = Pulse.Lib.Box
+module CI = Pulse.Lib.CancellableInvariant
+
+assume
+val incr_atomic_box (r:B.box int) (#n:erased int)
+  : stt_atomic int emp_inames
+        (B.pts_to r n) 
+        (fun i -> B.pts_to r i ** pure (i == n + 1))
+
+inline_for_extraction
+let next_f (inv: perm -> int -> slprop) =    p:perm -> i:erased int -> stt int (inv p i) (fun j -> inv p j ** pure (i < j))
+inline_for_extraction
+let share_f (inv: perm -> int -> slprop) =   p:perm -> i:erased int -> stt_ghost unit emp_inames (inv p i) (fun y -> inv (p /. 2.0R) i ** inv (p /. 2.0R) i)
+inline_for_extraction
+let gather_f (inv: perm -> int -> slprop) =  p:perm -> q:perm -> i:erased int -> j:erased int -> stt_ghost unit emp_inames (inv p i ** inv q j) (fun y -> inv (p +. q) i)
+inline_for_extraction
+let destroy_f (inv: perm -> int -> slprop) = i:erased int -> stt unit (inv 1.0R i) (fun _ -> emp)
+
+noeq
+type ctr = {
+    inv:     perm -> int -> slprop;
+    is_send_inv: (p:perm -> i:int -> is_send (inv p i));
+    next:    next_f inv;
+    share:   share_f inv;
+    gather:  gather_f inv;
+    destroy: destroy_f inv;
+}
+
+instance is_send_ctr_inv (c: ctr) p i : is_send (c.inv p i) =
+    c.is_send_inv p i
+
+let next c #p #i = c.next p i
+let share c #p #i = c.share p i
+let destroy c #i = c.destroy i
+[@@allow_ambiguous]
+ghost
+fn gather (c:ctr) #p #q #i #j
+requires c.inv p i
+requires c.inv q j
+ensures c.inv (p +. q) i
+{
+    let gather = c.gather;
+    gather p q i j
+}
+
+let increases : preorder int = fun x y -> b2t (x <= y)
+let mctr = MR.mref increases
+
+let inv_core (x:B.box int) (mr:MR.mref increases)
+: slprop
+= exists* j. B.pts_to x j ** MR.pts_to mr #1.0R j
+
+fn new_counter ()
+returns c:ctr
+ensures c.inv 1.0R 0
+{
+    open Pulse.Lib.Box;
+    open CI;
+    let x = alloc 0;
+    let mr : MR.mref increases = MR.alloc #int #increases 0;
+    MR.take_snapshot mr #1.0R 0;
+    fold (inv_core x mr);
+    let ii = CI.new_cancellable_invariant (inv_core x mr);
+    
+    with inv. assert pure (inv == (fun p (i:int) ->
+        Pulse.Lib.Inv.inv (iname_of ii) (cinv_vp ii (inv_core x mr)) ** CI.active ii p ** MR.snapshot mr i));
+
+    fn next (#_: unit) : next_f inv = p i {
+        with_invariants int emp_inames (iname_of ii) (cinv_vp ii (inv_core x mr))
+            (CI.active ii p ** MR.snapshot mr i)
+            (fun j -> CI.active ii p ** MR.snapshot mr j ** pure (i < j))
+        fn _ {
+            unpack_cinv_vp ii;
+            unfold inv_core;
+            let res = incr_atomic_box x;
+            MR.recall_snapshot mr;
+            MR.update mr res;
+            MR.take_snapshot mr #1.0R res;
+            fold (inv_core);
+            pack_cinv_vp ii;
+            res
+        }
+    };
+
+    ghost
+    fn share (#_: unit) : share_f inv = p i {
+        CI.share ii;
+    };
+
+    ghost
+    fn gather (#_: unit) : gather_f inv = p q i j {
+        CI.gather #p #q ii;
+    };
+
+    fn destroy (#_: unit) : destroy_f inv = i {
+        later_credit_buy 1;
+        CI.cancel ii;
+        unfold inv_core;
+        B.free x;
+        drop_ (MR.pts_to mr _);
+    };
+
+    let c = { inv; next; share; gather; destroy; is_send_inv = Tactics.Typeclasses.solve };
+            
+    rewrite inv 1.0R 0 as (c.inv 1.0R 0);
+    c
+}
+
+fn do_something (c:ctr) #p (#i:erased int) (_:unit)
+requires c.inv p i
+ensures exists* j. c.inv p j
+{ 
+    let v1 = next c;
+    let v2 = next c;
+    assert pure (v1 < v2);
+}
+
+fn test_counter ()
+{
+    let c = new_counter ();
+    share c;
+    par (do_something c #(1.0R/.2.0R) #0) (do_something c #(1.0R/.2.0R) #0);
+    gather c;
+    rewrite each (1.0R /. 2.0R +. 1.0R /. 2.0R) as 1.0R;
+    destroy c
+}

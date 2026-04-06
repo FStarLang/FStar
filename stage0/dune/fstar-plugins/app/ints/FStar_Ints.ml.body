@@ -60,8 +60,21 @@ let shift_right n i  = M.shift_right n (Stdint.Uint32.to_int i)
 let shift_left  n i  = M.shift_left n (Stdint.Uint32.to_int i)
 let shift_arithmetic_right = shift_right
 
+(* Rotate operations - the shift amount is a uint32.
+ * Converting uint32 to native int may truncate on 32-bit machines (values >= 2^31),
+ * but the subsequent modulo operation ensures amount is in range [0, bitwidth-1],
+ * making the result safe regardless of any truncation in the conversion. *)
+let rotate_left a i =
+  let amount = (Stdint.Uint32.to_int i) mod (Z.to_int n) in
+  M.logor (M.shift_left a amount) (M.shift_right a ((Z.to_int n) - amount))
+
+let rotate_right a i =
+  let amount = (Stdint.Uint32.to_int i) mod (Z.to_int n) in
+  M.logor (M.shift_right a amount) (M.shift_left a ((Z.to_int n) - amount))
+
 (* Comparison operators *)
 let eq  (a:t) (b:t) : bool = a = b
+let ne  (a:t) (b:t) : bool = a <> b
 let gt  (a:t) (b:t) : bool = a > b
 let gte (a:t) (b:t) : bool = a >= b
 let lt  (a:t) (b:t) : bool = a < b
@@ -70,26 +83,3 @@ let lte (a:t) (b:t) : bool = a <= b
 (* NOT Constant time operators *)
 let eq_mask  (a:t) (b:t) : t = if a  = b then ones else zero
 let gte_mask (a:t) (b:t) : t = if a >= b then ones else zero
-
-(* Infix notations *)
-let op_Plus_Hat                 = add
-let op_Plus_Question_Hat        = add_underspec
-let op_Plus_Percent_Hat         = add_mod
-let op_Subtraction_Hat          = sub
-let op_Subtraction_Question_Hat = sub_underspec
-let op_Subtraction_Percent_Hat  = sub_mod
-let op_Star_Hat                 = mul
-let op_Star_Question_Hat        = mul_underspec
-let op_Star_Percent_Hat         = mul_mod
-let op_Slash_Hat                = div
-let op_Percent_Hat              = rem
-let op_Hat_Hat                  = logxor
-let op_Amp_Hat                  = logand
-let op_Bar_Hat                  = logor
-let op_Less_Less_Hat            = shift_left
-let op_Greater_Greater_Hat      = shift_right
-let op_Equals_Hat               = eq
-let op_Greater_Hat              = gt
-let op_Greater_Equals_Hat       = gte
-let op_Less_Hat                 = lt
-let op_Less_Equals_Hat          = lte

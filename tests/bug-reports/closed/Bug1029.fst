@@ -16,4 +16,4 @@
 module Bug1029
 
 [@@expect_failure] // we can attach this to pragmas too :-)
-#reset-options "-z3rlimit 20 --initial_fuel 1 --max_fuel 1"
+#reset-options "-z3rlimit 20 --fuel 1"

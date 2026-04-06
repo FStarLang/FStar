@@ -7,6 +7,17 @@ let x =
       if Fstarcompiler.FStarC_Platform.unix then
         ignore (Unix.sigprocmask Unix.SIG_BLOCK [Sys.sigpipe]);
 
+      (* Kill all lingering Z3 subprocesses if we are being killed with
+         a SIGTERM. This is what VS Code sends when a file is closed. *)
+      if Fstarcompiler.FStarC_Platform.unix then (
+        let hdlr (s:int) =
+          Fstarcompiler.FStarC_Util.kill_all ();
+          exit 130
+        in
+        let _ = Sys.signal Sys.sigterm (Sys.Signal_handle hdlr) in
+        ()
+      );
+
       (* Enable memtrace, only if the environment variable MEMTRACE is set. *)
       Memtrace.trace_if_requested ();
 

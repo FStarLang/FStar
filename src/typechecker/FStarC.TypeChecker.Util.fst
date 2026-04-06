@@ -19,7 +19,6 @@ module FStarC.TypeChecker.Util
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Errors.Msg
 open FStarC.Pprint
@@ -48,6 +47,7 @@ module TcComm = FStarC.TypeChecker.Common
 module C = FStarC.Parser.Const
 module UF = FStarC.Syntax.Unionfind
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
+module Print = FStarC.Syntax.Print
 
 open FStarC.Class.Setlike
 
@@ -70,7 +70,7 @@ let dbg_SMTEncodingReify     = Debug.get_toggle "SMTEncodingReify"
 let new_implicit_var reason r env k unrefine =
   Env.new_implicit_var_aux reason r env k Strict None unrefine
 
-let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
+let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : ML guard_t =
   if Options.eager_subtyping ()
   || solve_deferred
   then
@@ -79,26 +79,26 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
     in
     if !dbg_Rel
     then begin
-      BU.print_string "SOLVE BEFORE CLOSING:\n";
-      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
-      BU.print_string " ...DEFERRED THE REST:\n";
-      List.iter (fun (_, s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
-      BU.print_string "END\n"
+      Format.print_string "SOLVE BEFORE CLOSING:\n";
+      List.iter (fun (_, s, p) -> Format.print2 "%s: %s\n" s (Rel.prob_to_string env p)) solve_now;
+      Format.print_string " ...DEFERRED THE REST:\n";
+      List.iter (fun (_, s, p) -> Format.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
+      Format.print_string "END\n"
     end;
     let g = Rel.solve_non_tactic_deferred_constraints false env ({g with deferred = Listlike.from_list solve_now}) in
     let g = {g with deferred = Listlike.from_list defer} in
     g
   else g
 
-let check_uvars r t =
+let check_uvars r t : ML _ =
   let uvs = Free.uvars t in
   if not (is_empty uvs) then begin
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
     Options.set_option "print_implicits" (Options.Bool true);
-    Errors.log_issue r Errors.Error_UncontrainedUnificationVar
-      (BU.format2 "Unconstrained unification variables %s in type signature %s; \
+    Errors.log_issue r Errors.Error_UnconstrainedUnificationVar
+      (Format.fmt2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" (show uvs) (show t));
     Options.pop()
   end
@@ -186,19 +186,20 @@ let check_uvars r t =
      re-typechecked. Except in case 1, the flag is set.
 *)
 (************************************************************************)
-let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
-    list univ_name
+let extract_let_rec_annotation env (lb:letbinding) :
+    ML (list univ_name
    & typ
    & term
-   & bool //true indicates that the type needs to be checked; false indicates that it is already checked
+   & bool) //true indicates that the type needs to be checked; false indicates that it is already checked
    =
+  let {lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} = lb in
   let rng = S.range_of_lbname lbname in
   let t = SS.compress t in
   let u_subst, univ_vars = SS.univ_var_opening univ_vars in
   let e = SS.subst u_subst e in
   let t = SS.subst u_subst t in
   if !dbg_Dec
-  then BU.print2 "extract_let_rec_annotation lbdef=%s; lbtyp=%s\n"
+  then Format.print2 "extract_let_rec_annotation lbdef=%s; lbtyp=%s\n"
                  (show e)
                  (show t);
   let env = Env.push_univ_vars env univ_vars in
@@ -264,11 +265,11 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
         | _ -> failwith "Impossible"
   in
   let extract_annot_from_body (lbtyp_opt:option typ)
-    : typ
+    : ML (typ
     & term
-    & bool
+    & bool)
     = let rec aux_lbdef e
-        : typ & term & bool
+        : ML (typ & term & bool)
         = let e = SS.compress e in
           match e.n with
           | Tm_meta {tm=e';meta=m} ->
@@ -295,12 +296,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
           | Tm_abs _ ->
             let bs, body, rcopt = U.abs_formals_maybe_unascribe_body false e in
             let mk_comp t =
-              if Options.ml_ish()
-              then U.ml_comp t t.pos
-              else S.mk_Total t
+              S.mk_Total t
             in
             let mk_arrow c = U.arrow bs c in
-            let rec aux_abs_body body =
+            let rec aux_abs_body body : ML _ =
               let body = SS.compress body in
               match body.n with
               | Tm_meta {tm=body; meta=m} ->
@@ -394,16 +393,16 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 //            | Pat_var x, Tm_name y ->
 //              if not (bv_eq x y)
-//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (show x) (show y));
+//              then failwith (Format.fmt2 "Expected pattern variable %s; got %s" (show x) (show y));
 //              if !dbg_Pat
-//              then BU.print2 "Pattern variable %s introduced at type %s\n" (show x) (Normalize.term_to_string env y.sort);
+//              then Format.print2 "Pattern variable %s introduced at type %s\n" (show x) (Normalize.term_to_string env y.sort);
 //              let s = Normalize.normalize [Env.Beta] env y.sort in
 //              let x = {x with sort=s} in
 //              pkg (Pat_var x)
 
 //            | Pat_wild x, Tm_name y ->
 //              if bv_eq x y |> not
-//              then failwith (BU.format2 "Expected pattern variable %s; got %s" (show x) (show y));
+//              then failwith (Format.fmt2 "Expected pattern variable %s; got %s" (show x) (show y));
 //              let s = Normalize.normalize [Env.Beta] env y.sort in
 //              let x = {x with sort=s} in
 //              pkg (Pat_wild x)
@@ -413,14 +412,14 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 //            | Pat_cons(fv, []), Tm_fvar fv' ->
 //              if not (Syntax.fv_eq fv fv')
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
+//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name) (string_of_lid fv'.fv_name));
 //              pkg (Pat_cons(fv', []))
 
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
 //              if fv_eq fv fv' |> not
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
+//              then failwith (Format.fmt2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name) (string_of_lid fv'.fv_name));
 
 //              let fv = fv' in
 //              let rec match_args matched_pats args argpats = match args, argpats with
@@ -437,12 +436,12 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 //                          match_args (pat::matched_pats) args argpats
 //                 end
 
-//                | _ -> failwith (BU.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (show p) (show e)) in
+//                | _ -> failwith (Format.fmt2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (show p) (show e)) in
 
 //              match_args [] args argpats
 
 //           | _ ->
-//            failwith (BU.format3
+//            failwith (Format.fmt3
 //                            "(%s) Impossible: pattern to decorate is %s; expression is %s\n"
 //                            (Range.string_of_range qq.p)
 //                            (show qq)
@@ -450,8 +449,8 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 //    in
 //    aux p exp
 
- let rec decorated_pattern_as_term (pat:pat) : list bv & term =
-    let mk f : term = mk f pat.p in
+ let rec decorated_pattern_as_term (pat:pat) : ML (list bv & term) =
+    let mk f : ML term = mk f pat.p in
 
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
@@ -485,7 +484,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
 
-let comp_univ_opt c =
+let comp_univ_opt c : ML _ =
     match c.n with
     | Total _ | GTotal _ -> None
     | Comp c ->
@@ -493,20 +492,20 @@ let comp_univ_opt c =
       | [] -> None
       | hd::_ -> Some hd
 
-let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
+let lcomp_univ_opt lc : ML _ = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
 
-let destruct_wp_comp c : (universe & typ & typ) = U.destruct_comp c
+let destruct_wp_comp c : ML (universe & typ & typ) = U.destruct_comp c
 
-let mk_comp_l mname u_result result wp flags =
+let mk_comp_l mname u_result result wp flags : ML _ =
   mk_Comp ({ comp_univs=[u_result];
              effect_name=mname;
              result_typ=result;
              effect_args=[S.as_arg wp];
              flags=flags})
 
-let mk_comp md = mk_comp_l md.mname
+let mk_comp md : ML _ = mk_comp_l md.mname
 
-let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list term =
+let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.t) : ML (list term) =
   let err () =
     raise_error r Errors.Fatal_UnexpectedEffect [
         text "Could not get effect args from repr" ^/^ pp repr ^/^ text "with is_layered=" ^^ pp is_layered
@@ -527,49 +526,46 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list t
  *
  * Caller must ensure that ed is a wp-based effect
  *)
-let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp
+let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
+: ML comp
 = let c =
     if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
     then mk_Total a
     else if U.is_unit a
     then S.mk_Total a
     else let wp =
-           if Options.lax()
-           && Options.ml_ish() //NS: Disabling this optimization temporarily
-           then S.tun
-           else let ret_wp = ed |> U.get_return_vc_combinator in
-                mk_Tm_app
-                  (inst_effect_fun_with [u_a] env ed ret_wp)
-                  [S.as_arg a; S.as_arg e]
-                  e.pos in
-         mk_comp ed u_a a wp [RETURN]
+            let ret_wp = ed |> U.get_return_vc_combinator in
+                 mk_Tm_app
+                   (inst_effect_fun_with [u_a] env ed ret_wp)
+                   [S.as_arg a; S.as_arg e]
+                   e.pos in
+          mk_comp ed u_a a wp [RETURN]
   in
   if !dbg_Return
-  then BU.print3 "(%s) returning %s at comp type %s\n"
+  then Format.print3 "(%s) returning %s at comp type %s\n"
                     (Range.string_of_range e.pos)
                     (show e)
                     (N.comp_to_string env c);
   c
 
-let label reason r f : term =
+let label reason r f : ML term =
     mk (Tm_meta {tm=f; meta=Meta_labeled(reason, r, false)}) f.pos
 
-let label_opt env reason r f = match reason with
+let label_opt env (reason:option (unit -> ML (list Pprint.document))) r f : ML _ = match reason with
     | None -> f
     | Some reason ->
         if not <| Env.should_verify env
         then f
         else label (reason()) r f
 
-let label_guard r reason (g:guard_t) = match g.guard_f with
+let label_guard r reason (g:guard_t) : ML _ = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
-let lift_comp env (c:comp_typ) lift : comp & guard_t =
+let lift_comp env (c:comp_typ) lift : ML (comp & guard_t) =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
-let join_effects env l1_in l2_in =
+let join_effects env l1_in l2_in : ML _ =
   let l1, l2 = Env.norm_eff_name env l1_in, Env.norm_eff_name env l2_in in
   match Env.join_opt env l1 l2 with
   | Some (m, _, _) -> m
@@ -581,7 +577,7 @@ let join_effects env l1_in l2_in =
           text "Effects" ^/^ pp l1_in ^/^ text "and" ^/^ pp l2_in ^/^ text "cannot be composed"
       ]
 
-let join_lcomp env c1 c2 =
+let join_lcomp env c1 c2 : ML _ =
   if TcComm.is_total_lcomp c1
   && TcComm.is_total_lcomp c2
   then C.effect_Tot_lid
@@ -590,7 +586,7 @@ let join_lcomp env c1 c2 =
 // GM, 2023/01/30: This is here to make c2 well-scoped in lift_comps_sep_guards
 // below. Is it needed to push a null_binder, as below, when b is None? Not for
 // scoping, at least.
-let maybe_push (env : Env.env) (b : option bv) : Env.env =
+let maybe_push (env : Env.env) (b : option bv) : ML Env.env =
   match b with
   | None -> env
   | Some bv -> Env.push_bv env bv
@@ -603,7 +599,7 @@ let maybe_push (env : Env.env) (b : option bv) : Env.env =
  *   where the two guards are weakened using different branch conditions
  *)
 let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
-: lident & comp & comp & guard_t & guard_t =
+: ML (lident & comp & comp & guard_t & guard_t) =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let env2 = maybe_push env b in
   let c2 = Env.unfold_effect_abbrev env2 c2 in
@@ -627,7 +623,7 @@ let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
     ]
 
 let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
-  : lident & comp & comp & guard_t =
+  : ML (lident & comp & comp & guard_t) =
   let l, c1, c2, g1, g2 = lift_comps_sep_guards
     env
     c1
@@ -636,35 +632,23 @@ let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
     for_bind in
   l, c1, c2, Env.conj_guard g1 g2
 
-let is_pure_effect env l =
+let is_pure_effect env l : ML _ =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
 
-let is_ghost_effect env l =
+let is_ghost_effect env l : ML _ =
   let l = norm_eff_name env l in
   lid_equals l C.effect_GHOST_lid
 
-let is_pure_or_ghost_effect env l =
+let is_pure_or_ghost_effect env l : ML _ =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
-  || lid_equals l C.effect_GHOST_lid
+  || (lid_equals l C.effect_GHOST_lid)
 
-let lax_mk_tot_or_comp_l mname u_result result flags =
-    if Ident.lid_equals mname C.effect_Tot_lid
-    then S.mk_Total result
-    else mk_comp_l mname u_result result S.tun flags
-
-let is_function t = match (compress t).n with
-    | Tm_arrow _ -> true
-    | _ -> false
-
-let close_wp_comp env bvs (c:comp) =
+let close_wp_comp env bvs (c:comp) : ML _ =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
-    else if Options.lax()
-    && Options.ml_ish() //NS: disabling this optimization temporarily
-    then c
-    else begin
+        else begin
             (*
              * We make an environment containing all the BVs so the calls
              * to env.universe_of and unfold_effect_abbrev below are properly scoped.
@@ -673,7 +657,7 @@ let close_wp_comp env bvs (c:comp) =
              *)
             let env_bvs = Env.push_bvs env bvs in
             let close_wp u_res md res_t bvs wp0 =
-              let close = md |> U.get_wp_close_combinator |> must in
+              let close = md |> U.get_wp_close_combinator |> Option.must in
               List.fold_right (fun x wp ->
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env_bvs x.sort] in
@@ -702,7 +686,7 @@ let close_wp_comp env bvs (c:comp) =
               (c.flags |> List.filter (function | MLEFFECT | SHOULD_NOT_INLINE -> true | _ -> false))
         end
 
-let close_wp_lcomp env bvs (lc:lcomp) : lcomp =
+let close_wp_lcomp env bvs (lc:lcomp) : ML lcomp =
   let bs = bvs |> List.map S.mk_binder in
   lc |>
   TcComm.apply_lcomp
@@ -721,9 +705,9 @@ let substitutive_indexed_close_substs (env:env)
   (b_bv:bv)
   (ct_args:args)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
 
-  : list subst_elt =
+  : ML (list subst_elt) =
   
   let debug = !dbg_LayeredEffectsApp in
 
@@ -748,7 +732,7 @@ let substitutive_indexed_close_substs (env:env)
 //
 // The caller ensures that the effect has the close combinator defined
 //
-let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
+let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : ML comp =
   let r = c.pos in
   
   let env_bvs = Env.push_bvs env bvs in
@@ -759,7 +743,7 @@ let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
     | Layered_eff_sig (n, _) -> n
     | _ -> raise_error r Errors.Fatal_UnexpectedEffect "mk_indexed_close called with a non-indexed effect"
   in
-  let close_ts = U.get_layered_close_combinator ed |> must in
+  let close_ts = U.get_layered_close_combinator ed |> Option.must in
   let effect_args = List.fold_right (fun x args ->
     let u_a = List.hd ct.comp_univs in
     let u_b = env.universe_of env_bvs x.sort in
@@ -773,7 +757,7 @@ let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : comp =
   ) bvs ct.effect_args in
   S.mk_Comp {ct with effect_args}
 
-let close_layered_lcomp_with_combinator env bvs lc =
+let close_layered_lcomp_with_combinator env bvs lc : ML _ =
   let bs = bvs |> List.map S.mk_binder in
   lc |>
   TcComm.apply_lcomp
@@ -783,7 +767,7 @@ let close_layered_lcomp_with_combinator env bvs lc =
 (*
  * Closing of layered computations via substitution
  *)
-let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
+let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) : ML _ =
   let bs = bvs |> List.map S.mk_binder in
   let substs = List.map2 (fun bv tm ->
     NT (bv, tm)
@@ -793,7 +777,7 @@ let close_layered_lcomp_with_substitutions env bvs tms (lc:lcomp) =
     (SS.subst_comp substs)
     (fun g -> g |> Env.close_guard env bs |> close_guard_implicits env false bs)
 
-let should_not_inline_lc (lc:lcomp) =
+let should_not_inline_lc (lc:lcomp) : ML _ =
     lc.cflags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
 
 (* should_return env (Some e) lc:
@@ -804,7 +788,7 @@ let should_not_inline_lc (lc:lcomp) =
  * (c) Its head symbol is not marked irreducible (in this case inlining is not going to help, it is equivalent to having a bound variable)
  * (d) It's not a let rec, as determined by the absence of the SHOULD_NOT_INLINE flag---see issue #1362. Would be better to just encode inner let recs to the SMT solver properly
  *)
-let should_return env eopt lc =
+let should_return env eopt lc : ML _ =
   let lc_is_unit_or_effectful =
     //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
     let c = lc.res_typ |> U.arrow_formals_comp |> snd in
@@ -858,17 +842,17 @@ let substitutive_indexed_bind_substs env
   (bs:binders)
   (binder_kinds:list indexed_effect_binder_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (r1:Range.range)
+  (r1:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   let bind_name () =
     if debug
-    then BU.format3 "(%s, %s) |> %s"
+    then Format.fmt3 "(%s, %s) |> %s"
            (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
            (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
           (p_ed.mname |> Ident.ident_of_lid |> string_of_id)
@@ -936,7 +920,7 @@ let substitutive_indexed_bind_substs env
             Env.uvars_for_binders env [g_b] ss
               (fun b ->
                if debug
-               then BU.format3 "implicit var for no abs g binder %s of %s at %s"
+               then Format.fmt3 "implicit var for no abs g binder %s of %s at %s"
                       (show b)
                       (bind_name ())
                       (Range.string_of_range r1)
@@ -969,7 +953,7 @@ let substitutive_indexed_bind_substs env
     let [uv_t], g_uv = Env.uvars_for_binders env [b] ss
       (fun b ->
        if debug
-       then BU.format3 "implicit var for additional g binder %s of %s at %s"
+       then Format.fmt3 "implicit var for additional g binder %s of %s at %s"
               (show b)
               (bind_name ())
               (Range.string_of_range r1)
@@ -985,16 +969,16 @@ let ad_hoc_indexed_bind_substs env
   (m_ed n_ed p_ed:S.eff_decl)
   (bs:binders)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (r1:Range.range)
+  (r1:Range.t)
   (has_range_binders:bool)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   let bind_name () =
     if debug
-    then BU.format3 "(%s, %s) |> %s"
+    then Format.fmt3 "(%s, %s) |> %s"
            (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
            (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
            (p_ed.mname |> Ident.ident_of_lid |> string_of_id)
@@ -1002,7 +986,7 @@ let ad_hoc_indexed_bind_substs env
 
   let bind_t_shape_error r (s:string) =
     raise_error r Errors.Fatal_UnexpectedEffect
-      (BU.format2 "bind %s does not have proper shape (reason:%s)" (bind_name ()) s)
+      (Format.fmt2 "bind %s does not have proper shape (reason:%s)" (bind_name ()) s)
   in
 
   let num_range_binders =
@@ -1026,7 +1010,7 @@ let ad_hoc_indexed_bind_substs env
       env rest_bs [NT (a_b.binder_bv, ct1.result_typ); NT (b_b.binder_bv, ct2.result_typ)]
       (fun b ->
        if debug
-       then BU.format3
+       then Format.fmt3
               "implicit var for binder %s of %s at %s"
               (show b) (bind_name ()) (Range.string_of_range r1)
        else "ad_hoc_indexed_bind_substs") r1 in
@@ -1036,7 +1020,7 @@ let ad_hoc_indexed_bind_substs env
        List.iter (fun t ->
          match (SS.compress t).n with
          | Tm_uvar (u, _ ) ->
-           BU.print2 "Generated uvar %s with attribute %s\n"
+           Format.print2 "Generated uvar %s with attribute %s\n"
              (show t) (show u.ctx_uvar_meta)
          | _ -> failwith ("Impossible, expected a uvar, got : " ^ show t));
 
@@ -1051,7 +1035,7 @@ let ad_hoc_indexed_bind_substs env
     List.fold_left2
       (fun g i1 f_i1 ->
         if !dbg_ResolveImplicitsHook
-        then BU.print2 "Generating constraint %s = %s\n"
+        then Format.print2 "Generating constraint %s = %s\n"
                                    (show i1)
                                    (show f_i1);
         Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some (bind_name ()))))
@@ -1079,7 +1063,7 @@ let ad_hoc_indexed_bind_substs env
     List.fold_left2
       (fun g i1 g_i1 ->
         if !dbg_ResolveImplicitsHook
-        then BU.print2 "Generating constraint %s = %s\n"
+        then Format.print2 "Generating constraint %s = %s\n"
                                    (show i1)
                                    (show g_i1);
          Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some (bind_name ()))))
@@ -1097,13 +1081,13 @@ let ad_hoc_indexed_bind_substs env
  *
  * Caller must ensure that ed is an indexed effect
  *)
-let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-  : comp & guard_t =
+let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
+  : ML (comp & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   if debug
-  then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
+  then Format.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
          (Ident.string_of_lid ed.mname) (show u_a)
          (show a) (show e);
 
@@ -1129,9 +1113,9 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
       env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
       (fun b ->
        if debug
-       then BU.format3 "implicit var for binder %s of %s at %s"
+       then Format.fmt3 "implicit var for binder %s of %s at %s"
               (show b)
-              (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
+              (Format.fmt1 "%s.return" (Ident.string_of_lid ed.mname))
               (Range.string_of_range r)
        else "mk_indexed_return_env") r in
 
@@ -1152,7 +1136,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
   }) in
 
   if debug
-  then BU.print1 "} c after return %s\n" (show c);
+  then Format.print1 "} c after return %s\n" (show c);
 
   c, g_uvars
 
@@ -1160,26 +1144,26 @@ let mk_indexed_bind env
   (m:lident) (n:lident) (p:lident) (bind_t:tscheme)
   (bind_combinator_kind:indexed_effect_combinator_kind)
   (ct1:comp_typ) (b:option bv) (ct2:comp_typ)
-  (flags:list cflag) (r1:Range.range)
+  (flags:list cflag) (r1:Range.t)
   (num_effect_params:int)
   (has_range_binders:bool)
-  : comp & guard_t =
+  : ML (comp & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   if debug then
-    BU.print2 "Binding indexed effects: c1:%s and c2:%s {\n"
+    Format.print2 "Binding indexed effects: c1:%s and c2:%s {\n"
       (show (S.mk_Comp ct1)) (show (S.mk_Comp ct2));
 
   if !dbg_ResolveImplicitsHook
-  then BU.print2 "///////////////////////////////Bind at %s/////////////////////\n\
+  then Format.print2 "///////////////////////////////Bind at %s/////////////////////\n\
                   with bind_t = %s\n"
                  (Range.string_of_range (Env.get_range env))
                  (Print.tscheme_to_string bind_t);
 
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
-  let bind_name () = BU.format3 "(%s, %s) |> %s"
+  let bind_name () = Format.fmt3 "(%s, %s) |> %s"
     (m_ed.mname |> Ident.ident_of_lid |> string_of_id)
     (n_ed.mname |> Ident.ident_of_lid |> string_of_id)
     (p_ed.mname |> Ident.ident_of_lid |> string_of_id) in
@@ -1226,7 +1210,7 @@ let mk_indexed_bind env
   }) in
 
   if debug
-  then BU.print1 "} c after bind: %s\n" (show c);
+  then Format.print1 "} c after bind: %s\n" (show c);
 
   let guard =
     Env.conj_guards [
@@ -1235,15 +1219,15 @@ let mk_indexed_bind env
   in
 
   if !dbg_ResolveImplicitsHook
-  then BU.print2 "///////////////////////////////EndBind at %s/////////////////////\n\
+  then Format.print2 "///////////////////////////////EndBind at %s/////////////////////\n\
                  guard = %s\n"
                  (Range.string_of_range (Env.get_range env))
                  (guard_to_string env guard);
 
   c, guard
 
-let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.range)
-  : comp =
+let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option bv) (ct2:comp_typ) (flags:list cflag) (r1:Range.t)
+  : ML comp =
 
   let (md, a, kwp), (u_t1, t1, wp1), (u_t2, t2, wp2) =
     let md = Env.get_effect_decl env m in
@@ -1274,7 +1258,7 @@ let mk_bind env
   (b:option bv)
   (c2:comp)
   (flags:list cflag)
-  (r1:Range.range) : comp & guard_t =
+  (r1:Range.t) : ML (comp & guard_t) =
 
   let env2 = maybe_push env b in
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env2 c2 in
@@ -1303,11 +1287,11 @@ let mk_bind env
           | _ -> failwith "Impossible (mk_bind expected an indexed effect)" in
         let bind_t, bind_kind = m_ed |> U.get_bind_vc_combinator in
         let has_range_args = U.has_attribute m_ed.eff_attrs C.bind_has_range_args_attr in
-        mk_indexed_bind env m m m bind_t (bind_kind |> must) ct1 b ct2 flags r1 num_effect_params has_range_args
+        mk_indexed_bind env m m m bind_t (bind_kind |> Option.must) ct1 b ct2 flags r1 num_effect_params has_range_args
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
-let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) (f:formula) flags : comp & guard_t =
+let strengthen_comp env (reason:option (unit -> ML (list Pprint.document))) (c:comp) (f:formula) flags : ML (comp & guard_t) =
     if env.phase1 || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
@@ -1345,8 +1329,8 @@ let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) 
 (*
  * Wrapper over mk_wp_return and mk_indexed_return
  *)
-let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp & guard_t
+let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.t)
+: ML (comp & guard_t)
 = if ed |> U.is_layered
   then mk_indexed_return env ed u_a a e r
   else mk_wp_return env ed u_a a e r, Env.trivial_guard
@@ -1354,14 +1338,14 @@ let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range
 (*
  * Return a value in eff_lid
  *)
-let return_value env eff_lid u_t_opt t v =
+let return_value env eff_lid u_t_opt t v : ML _ =
   let u =
     match u_t_opt with
     | None -> env.universe_of env t
     | Some u -> u in
   mk_return env (Env.get_effect_decl env eff_lid) u t v v.pos
 
-let weaken_flags flags =
+let weaken_flags flags : ML _ =
     if flags |> BU.for_some (function SHOULD_NOT_INLINE -> true | _ -> false)
     then [SHOULD_NOT_INLINE]
     else flags |> List.collect (function
@@ -1369,7 +1353,7 @@ let weaken_flags flags =
          | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
          | f -> [f])
 
-let weaken_comp env (c:comp) (formula:term) : comp & guard_t =
+let weaken_comp env (c:comp) (formula:term) : ML (comp & guard_t) =
   if U.is_ml_comp c
   then c, Env.trivial_guard
   else let ct = Env.unfold_effect_abbrev env c in
@@ -1405,13 +1389,10 @@ let weaken_comp env (c:comp) (formula:term) : comp & guard_t =
 
        mk_bind env pure_c None c (weaken_flags ct.flags) r
 
-let weaken_precondition env lc (f:guard_formula) : lcomp =
+let weaken_precondition env lc (f:guard_formula) : ML lcomp =
   let weaken () =
       let c, g_c = TcComm.lcomp_comp lc in
-      if Options.lax ()
-      && Options.ml_ish() //NS: Disabling this optimization temporarily
-      then c, g_c
-      else match f with
+            match f with
            | Trivial -> c, g_c
            | NonTrivial f ->
              let c, g_w = weaken_comp env c f in
@@ -1420,12 +1401,12 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
 let strengthen_precondition
-            (reason:option (unit -> list Pprint.document))
+            (reason:option (unit -> ML (list Pprint.document)))
             env
             (e_for_debugging_only:term)
             (lc:lcomp)
             (g0:guard_t)
-    : lcomp & guard_t =
+    : ML (lcomp & guard_t) =
     if Env.is_trivial_guard_formula g0
     then lc, g0
     else let flags =
@@ -1453,7 +1434,7 @@ let strengthen_precondition
                  | Trivial -> c, g_c
                  | NonTrivial f ->
                    if Debug.extreme ()
-                   then BU.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
+                   then Format.print2 "-------------Strengthening pre-condition of term %s with guard %s\n"
                      (N.term_to_string env e_for_debugging_only)
                      (N.term_to_string env f);
                    let c, g_s = strengthen_comp env reason c f flags in
@@ -1466,7 +1447,7 @@ let strengthen_precondition
        {g0 with guard_f=Trivial}
 
 
-let lcomp_has_trivial_postcondition (lc:lcomp) =
+let lcomp_has_trivial_postcondition (lc:lcomp) : ML _ =
     TcComm.is_tot_or_gtot_lcomp lc
     || BU.for_some (function SOMETRIVIAL | TRIVIAL_POSTCONDITION -> true | _ -> false)
                    lc.cflags
@@ -1481,8 +1462,8 @@ let lcomp_has_trivial_postcondition (lc:lcomp) =
  *
  * We should make wp-effects also same as the layered effects
  *)
-let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) 
-: comp & guard_t & bool
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
+: ML (comp & guard_t & bool)
 = let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
   | Tm_refine {b; phi} ->
@@ -1501,13 +1482,14 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp)
     else c, Env.trivial_guard, false
   | _ -> c, Env.trivial_guard, false
 
-let optimize_bind_vc () = Options.Ext.enabled "optimize_let_vc"
+let optimize_bind_vc () : ML _ = Options.Ext.enabled "optimize_let_vc"
 
 let bind
-      (r1:Range.range)
+      (r1:Range.t)
       (is_let_binding:bool) 
-      (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
-  let debug f =
+      (env:Env.env) (e1opt:option term) (lc1:lcomp) (binder_lc2:lcomp_with_binder) : ML lcomp =
+  let (b, lc2) = binder_lc2 in
+  let debug (f: unit -> ML unit) : ML unit =
       if Debug.extreme () || !dbg_bind
       then f ()
   in
@@ -1534,14 +1516,9 @@ let bind
           else flags
   in
   let bind_it () =
-      if Options.lax ()
-      && Options.ml_ish() //NS: disabling this optimization temporarily
-      then
-         let u_t = env.universe_of env lc2.res_typ in
-         lax_mk_tot_or_comp_l joined_eff u_t lc2.res_typ [], Env.trivial_guard  //AR: TODO: FIXME: fix for layered effects
-      else begin
-          let c1, g_c1 = TcComm.lcomp_comp lc1 in
-          let c2, g_c2 = TcComm.lcomp_comp lc2 in
+       begin
+           let c1, g_c1 = TcComm.lcomp_comp lc1 in
+           let c2, g_c2 = TcComm.lcomp_comp lc2 in
 
           (*
            * AR: we need to be careful about handling g_c2 since it may have x free
@@ -1558,7 +1535,7 @@ let bind
             | None -> g_c2) in
 
           debug (fun () ->
-            BU.print5 "(1) bind (is_let_binding=%s): \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
+            Format.print5 "(1) bind (is_let_binding=%s): \n\tc1=%s\n\tx=%s\n\tc2=%s\n\te1=%s\n(1. end bind)\n"
             (show is_let_binding)
             (show c1)
             (match b with
@@ -1581,7 +1558,7 @@ let bind
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let try_simplify () : either (comp & guard_t & string) string =
+          let try_simplify () : ML (either (comp & guard_t & string) string) =
             let aux_with_trivial_guard () =
               match aux () with
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
@@ -1671,13 +1648,13 @@ let bind
           match try_simplify () with
           | Inl (c, g, reason) ->
             debug (fun () ->
-                BU.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
+                Format.print2 "(2) bind: Simplified (because %s) to\n\t%s\n"
                             reason
                             (show c));
             c, g
           | Inr reason ->
             debug (fun () ->
-                BU.print1 "(2) bind: Not simplified because %s\n" reason);
+                Format.print1 "(2) bind: Not simplified because %s\n" reason);
 
             let mk_bind c1 b c2 g =  (* AR: end code for inlining pure and ghost terms *)
               let c, g_bind = mk_bind env c1 b c2 bind_flags r1 in
@@ -1691,10 +1668,10 @@ let bind
               | None -> env.universe_of env t, t
               | Some u -> u, t in
             //c1 and c2 are bound to the input comps
-            if Option.isSome b
+            if Some? b
             && should_return env e1opt lc1
-            then let e1 = Option.get e1opt in
-                 let x = Option.get b in
+            then let e1 = Option.must e1opt in
+                 let x = Option.must b in
                  //we will inline e1 in the WP of c2
                  //Aiming to build a VC of the form
                  //
@@ -1729,13 +1706,13 @@ let bind
                      not is_let_binding)
                  then
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
+                        Format.print2 "(3) bind (case a): Substituting %s for %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let g = Env.conj_guard g_c1 (Env.map_guard g_c2 (SS.subst [NT (x, e1)])) in
                       mk_bind c1 b c2 g
                  else
                       let _ = debug (fun () ->
-                        BU.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
+                        Format.print2 "(3) bind (case b): Adding equality %s = %s\n" (N.term_to_string env e1) (show x)) in
                       let c2 = 
                         if not (optimize_bind_vc()) || not is_let_binding
                         then SS.subst_comp [NT(x,e1)] c2
@@ -1758,7 +1735,7 @@ let bind
                      bind_flags
                      bind_it
 
-let weaken_guard g1 g2 = match g1, g2 with
+let weaken_guard g1 g2 : ML _ = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
       let g = (U.mk_imp f1 f2) in
       NonTrivial g
@@ -1779,19 +1756,19 @@ let weaken_guard g1 g2 = match g1, g2 with
  *
  * This forces the lcomp thunk and recreates it to keep the callers same
  *)
-let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : lcomp =
+let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : ML lcomp =
   (*
    * AR: m is the effect that we are going to do return in
    *)
   let m =
-    if m_opt |> is_none || is_ghost_effect env lc.eff_name
+    if m_opt |> None? || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
-    else m_opt |> must in
+    else m_opt |> Option.must in
 
   let flags =
     if TcComm.is_total_lcomp lc then RETURN::lc.cflags else PARTIAL_RETURN::lc.cflags in
 
-  let refine () : comp & guard_t =
+  let refine () : ML (comp & guard_t) =
       let c, g_c = TcComm.lcomp_comp lc in
       let u_t =
           match comp_univ_opt c with
@@ -1830,7 +1807,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
   else let c, g = refine () in
        TcComm.lcomp_of_comp_guard c g
 
-let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : lcomp =
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : ML lcomp =
   let should_return =
       not env.phase1
    && not (Env.too_early_in_prims env) //we're not too early in prims
@@ -1840,18 +1817,19 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc
   if not should_return then lc
   else assume_result_eq_pure_term_in_m env m_opt e lc
 
-let maybe_assume_result_eq_pure_term env e lc =
+let maybe_assume_result_eq_pure_term env e lc : ML _ =
   maybe_assume_result_eq_pure_term_in_m env None e lc
 
 let maybe_return_e2_and_bind
-        (r:Range.range)
+        (r:Range.t)
         (is_let_binding:bool)
         (env:env)
         (e1opt:option term)
         (lc1:lcomp)
         (e2:term)
-        (x, lc2)
-   : lcomp =
+        (xlc2: option bv & lcomp)
+   : ML lcomp =
+   let (x, lc2) = xlc2 in
    let env_x =
      match x with
      | None -> env
@@ -1869,8 +1847,8 @@ let maybe_return_e2_and_bind
          *     we must return eff2 into eff1,
          *)
         if lid_equals eff2 C.effect_PURE_lid &&
-           Env.join_opt env eff1 eff2 |> is_none &&
-           Env.exists_polymonadic_bind env eff1 eff2 |> is_none
+           Env.join_opt env eff1 eff2 |> None? &&
+           Env.exists_polymonadic_bind env eff1 eff2 |> None?
         then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else if (not (is_pure_or_ghost_effect env eff1)
              ||  should_not_inline_lc lc1)
@@ -1879,7 +1857,7 @@ let maybe_return_e2_and_bind
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r is_let_binding env e1opt lc1 (x, lc2)
 
-let fvar_env env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
+let fvar_env env lid : ML _ =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) None
 
 //
 // Apply substitutive ite combinator for indexed effects
@@ -1892,9 +1870,9 @@ let substitutive_indexed_ite_substs (env:env)
   (ct_then:comp_typ)
   (ct_else:comp_typ)
   (num_effect_params:int)
-  (r:Range.range)
+  (r:Range.t)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
   
   let debug = !dbg_LayeredEffectsApp in
 
@@ -1956,7 +1934,7 @@ let substitutive_indexed_ite_substs (env:env)
     let [uv_t], g_uv = Env.uvars_for_binders env [b] subst
       (fun b ->
        if debug
-       then BU.format3 "implicit var for additional ite binder %s of %s at %s)"
+       then Format.fmt3 "implicit var for additional ite binder %s of %s at %s)"
               (show b)
               (string_of_lid ct_then.effect_name)
              (Range.string_of_range r)
@@ -1974,17 +1952,17 @@ let ad_hoc_indexed_ite_substs (env:env)
   (p:term)
   (ct_then:comp_typ)
   (ct_else:comp_typ)
-  (r:Range.range)
+  (r:Range.t)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   let conjunction_name () =
-    if debug then BU.format1 "%s.conjunction" (string_of_lid ct_then.effect_name)
+    if debug then Format.fmt1 "%s.conjunction" (string_of_lid ct_then.effect_name)
     else "" in
 
-  let conjunction_t_error #a r (s:string) : a =
+  let conjunction_t_error #a r (s:string) : ML a =
     raise_error r Errors.Fatal_UnexpectedEffect [
       text "Conjunction" ^^ pp ct_then.effect_name ^^ text "does not have proper shape.";
       text "Reason: " ^^ text s;
@@ -2002,7 +1980,7 @@ let ad_hoc_indexed_ite_substs (env:env)
       env rest_bs [NT (a_b.binder_bv, a)]
       (fun b ->
        if debug
-       then BU.format3
+       then Format.fmt3
               "implicit var for binder %s of %s:conjunction at %s"
               (show b) (Ident.string_of_lid ct_then.effect_name)
               (r |> Range.string_of_range)
@@ -2038,12 +2016,12 @@ let ad_hoc_indexed_ite_substs (env:env)
   substs,
   Env.conj_guards [g_uvars; f_guard; g_guard]
 
-let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
-: comp & guard_t =
+let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.t)
+: ML (comp & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
-  let conjunction_t_error #a r (s:string) : a =
+  let conjunction_t_error #a r (s:string) : ML a =
     raise_error r Errors.Fatal_UnexpectedEffect [
       text "Conjunction" ^^ pp ct1.effect_name ^^ text "does not have proper shape.";
       text "Reason: " ^^ text s;
@@ -2051,14 +2029,14 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
   in
 
   let conjunction, kind =
-    let ts, kopt = ed |> U.get_layered_if_then_else_combinator |> must in
+    let ts, kopt = ed |> U.get_layered_if_then_else_combinator |> Option.must in
     let _, conjunction = Env.inst_tscheme_with ts [u_a] in
-    conjunction, kopt |> must in
+    conjunction, kopt |> Option.must in
 
   let bs, body, _ = U.abs_formals conjunction in
 
   if debug then
-    BU.print2 "layered_ite c1: %s and c2: %s {\n"
+    Format.print2 "layered_ite c1: %s and c2: %s {\n"
       (ct1 |> S.mk_Comp |> show)
       (ct2 |> S.mk_Comp |> show);
 
@@ -2086,18 +2064,18 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     flags = []
   }) in
 
-  if debug then BU.print_string "\n}\n";
+  if debug then Format.print_string "\n}\n";
 
   c, g
 
 (*
  * For non-layered effects, just apply the if_then_else combinator
  *)
-let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
-: comp & guard_t =
+let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.t)
+: ML (comp & guard_t) =
   //p is a boolean guard, so b2t it
   let p = U.b2t p in
-  let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
+  let if_then_else = ed |> U.get_wp_if_then_else_combinator |> Option.must in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
   let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
@@ -2110,7 +2088,7 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
  *
  * This is the comp type for a match with no cases (used in bind_cases)
  *)
-let comp_pure_wp_false env (u:universe) (t:typ) =
+let comp_pure_wp_false env (u:universe) (t:typ) : ML _ =
   let post_k = U.arrow [null_binder t] (S.mk_Total U.ktype0) in
   let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
   let post   = S.new_bv None post_k in
@@ -2140,7 +2118,7 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
      unreachable branch to check for pattern exhaustiveness)
  *)
 let get_neg_branch_conds (branch_conds:list formula)
-  : list formula & formula
+  : ML (list formula & formula)
   = branch_conds
     |> List.fold_left (fun (conds, acc) g ->
         let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
@@ -2160,8 +2138,8 @@ let get_neg_branch_conds (branch_conds:list formula)
  * branch matches: i.e. the exhaustiveness check.
  *)
 let bind_cases env0 (res_t:typ)
-  (lcases:list (formula & lident & list cflag & (bool -> lcomp)))
-  (scrutinee:bv) : lcomp =
+  (lcases:list (formula & lident & list cflag & (bool -> ML lcomp)))
+  (scrutinee:bv) : ML lcomp =
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
                              C.effect_PURE_lid
@@ -2175,14 +2153,10 @@ let bind_cases env0 (res_t:typ)
     in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
-        if Options.lax()
-        && Options.ml_ish() //NS: Disabling this optimization temporarily
-        then
-             lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
-        else begin
-            let maybe_return eff_label_then cthen =
+                begin
+            let maybe_return eff_label_then (cthen: bool -> ML lcomp) : ML lcomp =
                if should_not_inline_whole_match
-               || not (is_pure_or_ghost_effect env eff)
+                   || not (is_pure_or_ghost_effect env eff)
                then cthen true //inline each the branch, if eligible
                else cthen false //the entire match is pure and inlineable, so no need to inline each branch
             in
@@ -2256,11 +2230,10 @@ let bind_cases env0 (res_t:typ)
                     g_lift_then, g_lift_else in
 
                   //function to apply the if-then-else combinator
-                  let fn =
-                    if md |> U.is_layered then mk_layered_conjunction
-                    else mk_non_layered_conjunction in
-
-                  let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
+                  let c, g_conjunction =
+                    if (md |> U.is_layered)
+                    then mk_layered_conjunction env md u_res_t res_t g ct_then ct_else (Env.get_range env)
+                    else mk_non_layered_conjunction env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
 
                   //weaken the then and else guards
                   //neg_cond is the negated branch condition upto this branch
@@ -2296,12 +2269,12 @@ let bind_cases env0 (res_t:typ)
             | []
             | [_] -> comp, g_comp
             | _ ->
-              if md |> must |> U.is_layered then comp, g_comp
+              if md |> Option.must |> U.is_layered then comp, g_comp
               else
                 let comp = Env.comp_to_comp_typ env comp in
                 let md = Env.get_effect_decl env comp.effect_name in
                 let _, _, wp = destruct_wp_comp comp in
-                let ite_wp = md |> U.get_wp_ite_combinator |> must in
+                let ite_wp = md |> U.get_wp_ite_combinator |> Option.must in
                 let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                    [S.as_arg res_t; S.as_arg wp]
                                    wp.pos in
@@ -2310,24 +2283,23 @@ let bind_cases env0 (res_t:typ)
     in
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
-let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term & comp & guard_t =
+let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : ML (term & comp & guard_t) =
   def_check_scoped c.pos "check_comp.c" env c;
   def_check_scoped c'.pos "check_comp.c'" env c';
   if Debug.extreme () then
-    BU.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
+    Format.print4 "Checking comp relation:\n%s has type %s\n\t %s \n%s\n"
             (show e)
             (show c)
             (if use_eq then "$:" else "<:")
             (show c');
-  let f = if use_eq then Rel.eq_comp else Rel.sub_comp in
-  match f env c c' with
+  match (if use_eq then Rel.eq_comp env c c' else Rel.sub_comp env c c') with
     | None ->
         if use_eq
         then Err.computed_computation_type_does_not_match_annotation_eq env (Env.get_range env) e c c'
         else Err.computed_computation_type_does_not_match_annotation env (Env.get_range env) e c c'
     | Some g -> e, c', g
 
-let universe_of_comp env u_res c =
+let universe_of_comp env u_res c : ML _ =
   (*
    * Universe computation for M t wp:
    *   if M is pure or ghost, then return universe of t
@@ -2343,15 +2315,15 @@ let universe_of_comp env u_res c =
     else match Env.effect_repr env c u_res with
          | None ->
            raise_error c Errors.Fatal_EffectCannotBeReified
-                        (BU.format1 "Effect %s is marked total but does not have a repr" (show c_lid))
+                        (Format.fmt1 "Effect %s is marked total but does not have a repr" (show c_lid))
          | Some tm -> env.universe_of env tm
 
-let check_trivial_precondition_wp env c =
+let check_trivial_precondition_wp env c : ML _ =
   let ct = c |> Env.unfold_effect_abbrev env in
   let md = Env.get_effect_decl env ct.effect_name in
   let u_t, t, wp = destruct_wp_comp ct in
   let vc = mk_Tm_app
-    (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> must))
+    (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> Option.must))
     [S.as_arg t; S.as_arg wp]
     (Env.get_range env)
   in
@@ -2359,7 +2331,7 @@ let check_trivial_precondition_wp env c =
   ct, vc, Env.guard_of_guard_formula <| NonTrivial vc
 
 //Decorating terms with monadic operators
-let maybe_lift env e c1 c2 t =
+let maybe_lift env e c1 c2 t : ML _ =
     let m1 = Env.norm_eff_name env c1 in
     let m2 = Env.norm_eff_name env c2 in
     if Ident.lid_equals m1 m2
@@ -2368,7 +2340,7 @@ let maybe_lift env e c1 c2 t =
     then e
     else mk (Tm_meta {tm=e; meta=Meta_monadic_lift(m1, m2, t)}) e.pos
 
-let maybe_monadic env e c t =
+let maybe_monadic env e c t : ML _ =
     let m = Env.norm_eff_name env c in
     if is_pure_or_ghost_effect env m
     || Ident.lid_equals m C.effect_Tot_lid
@@ -2381,11 +2353,11 @@ let coerce_with (env:Env.env)
                 (f : lident) // coercion
                 (us : universes) (eargs : args) // extra arguments to coertion
                 (comp2 : comp) // new result computation type
-                : term & lcomp =
+                : ML (term & lcomp) =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if !dbg_Coercions then
-            BU.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
+            Format.print1 "Coercing with %s!\n" (Ident.string_of_lid f);
         let lc2 = TcComm.lcomp_of_comp <| comp2 in
         let lc_res = bind e.pos false env (Some e) lc (None, lc2) in
         let coercion = S.fvar (Ident.set_lid_range f e.pos) None in
@@ -2410,7 +2382,7 @@ let coerce_with (env:Env.env)
         e, lc_res
     | None ->
         Errors.log_issue e Errors.Warning_CoercionNotFound
-                                (BU.format1 "Coercion %s was not found in the environment, not coercing."
+                                (Format.fmt1 "Coercion %s was not found in the environment, not coercing."
                                             (string_of_lid f));
         e, lc
 
@@ -2419,7 +2391,7 @@ type isErased =
     | Maybe
     | No
 
-let rec check_erased (env:Env.env) (t:term) : isErased =
+let rec check_erased (env:Env.env) (t:term) : ML isErased =
   let norm' = N.normalize [Beta; Eager_unfolding;
                            UnfoldUntil delta_constant;
                            Exclude Zeta; Primops;
@@ -2471,7 +2443,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
       No
   in
   (* if Debug.any () then *)
-  (*   BU.print2 "check_erased (%s) = %s\n" *)
+  (*   Format.print2 "check_erased (%s) = %s\n" *)
   (*     (show t) *)
   (*     (match r with *)
   (*      | Yes a -> "Yes " ^ show a *)
@@ -2479,29 +2451,32 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
   (*      | No -> "No"); *)
   r
 
-let rec first_opt (f : 'a -> option 'b) (xs : list 'a) : option 'b =
+let rec first_opt (f : 'a -> ML (option 'b)) (xs : list 'a) : ML (option 'b) =
   match xs with
   | [] -> None
-  | x::xs -> BU.catch_opt (f x) (fun () -> first_opt f xs)
+  | x::xs -> Option.catch (f x) (fun () -> first_opt f xs)
 
-let (let?) = BU.bind_opt
-let bool_guard (b:bool) : option unit =
+let (let?) = Option.bind
+let bool_guard (b:bool) : ML (option unit) =
   if b then Some () else None
 
 let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
-: option (term & lcomp & guard_t)
+: ML (option (term & lcomp & guard_t))
 // returns coerced term, new lcomp type, and guard
 // or None if no coercion applied
 =
  Errors.with_ctx "find_coercion" (fun () ->
-  let is_type t =
-      let t = N.unfold_whnf env t in
-      let t = U.unrefine t in (* mostly to catch `prop` too *)
+  let rec is_type retry t : ML bool =
       match (SS.compress t).n with
       | Tm_type _ -> true
+      | _ when retry ->
+        let t = N.unfold_whnf env t in
+        let t = U.unrefine t in (* mostly to catch `prop` too *)
+        is_type false t
       | _ -> false
   in
-  let rec head_of (t : term) : term =
+  let is_type = is_type true in
+  let rec head_of (t : term) : ML term =
       match (compress t).n with
       | Tm_app {hd=t}
       | Tm_match {scrutinee=t}
@@ -2555,7 +2530,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
       (* `f` is the candidate coercion, `e` the term to coerce *)
       let? f_name, f_us, f_typ =
         match se.sigel with
-        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (BU.right lb.lbname), lb.lbunivs, lb.lbtyp)
+        | Sig_let {lbs=(_,[lb])} -> Some (S.lid_of_fv (Inr?.v lb.lbname), lb.lbunivs, lb.lbtyp)
         | Sig_declare_typ {lid; us; t} -> Some (lid, us, t)
         | _ -> None
       in
@@ -2605,24 +2580,30 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
     )
 )
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
+let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & guard_t) =
+  let head_types_equal t0 t1 =
+    match (U.un_uinst (U.unrefine t0)).n, (U.un_uinst (U.unrefine t1)).n with
+    | Tm_fvar fv0, Tm_fvar fv1 -> S.fv_eq fv0 fv1
+    | _ -> false
+  in
   let should_coerce =
-      (env.phase1
-    || Options.lax ()) && not env.nocoerce
+      (env.phase1 || Options.lax ()) &&
+      not env.nocoerce &&
+      not (head_types_equal lc.res_typ exp_t)
   in
   if not should_coerce then (
     if !dbg_Coercions then
-      BU.print4 "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
+      Format.print4 "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
               (show e.pos) (show e) (show lc.res_typ) (show exp_t);
     (e, lc, Env.trivial_guard)
   ) else (
     if !dbg_Coercions then
-      BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
+      Format.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
               (show e.pos) (show e) (show lc.res_typ) (show exp_t);
     match find_coercion env lc exp_t e with
     | Some (coerced, lc, g) ->
       let _ = if !dbg_Coercions then
-              BU.print3 "(%s) COERCING %s to %s\n"
+              Format.print3 "(%s) COERCING %s to %s\n"
                       (Range.string_of_range e.pos)
                       (show e)
                       (show coerced)
@@ -2630,13 +2611,13 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
       coerced, lc, g
     | None ->
       let _ = if !dbg_Coercions then
-              BU.print1 "(%s) No user coercion found\n"
+              Format.print1 "(%s) No user coercion found\n"
                       (Range.string_of_range e.pos)
       in
       
       (* TODO: hide/reveal also user coercions? it's trickier for sure *)
 
-      let strip_hide_or_reveal (e:term) (hide_or_reveal:lident) : option term =
+      let strip_hide_or_reveal (e:term) (hide_or_reveal:lident) : ML (option term) =
         let hd, args = U.leftmost_head_and_args e in
         match (SS.compress hd).n, args with
         | Tm_uinst (hd, _), [(_, aq_t); (e, aq_e)]
@@ -2664,23 +2645,23 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
             //     we still let coerce_with happen just above,
             //     since it has logic to compute the correct lc
             //  
-            let e_hide = BU.dflt e_hide (strip_hide_or_reveal e C.reveal) in
+            let e_hide = Option.dflt e_hide (strip_hide_or_reveal e C.reveal) in
             e_hide, lc, g
           end
 
       | Yes ty, No ->
         let u = env.universe_of env ty in
         let e_reveal, lc = coerce_with env e lc C.reveal [u] [S.iarg ty] (S.mk_GTotal ty) in
-        let e_reveal = BU.dflt e_reveal (strip_hide_or_reveal e C.hide) in
+        let e_reveal = Option.dflt e_reveal (strip_hide_or_reveal e C.hide) in
         e_reveal, lc, Env.trivial_guard
 
       | _ ->
         e, lc, Env.trivial_guard
   )
 
-let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lcomp & guard_t =
+let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term & lcomp & guard_t) =
   if Debug.high () then
-    BU.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
+    Format.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
             (show use_eq) (show e) (TcComm.lcomp_to_string lc) (show t);
   let use_eq =
     use_eq            ||  //caller wants to check equality
@@ -2715,11 +2696,11 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
             let c, g_c = TcComm.lcomp_comp lc in
             let res_t = Util.comp_result c in
 
-            let set_result_typ (c:comp) :comp = Util.set_result_typ c t in
+            let set_result_typ (c:comp) : ML comp = Util.set_result_typ c t in
 
             if TEQ.eq_tm env t res_t = TEQ.Equal then begin  //if the two types res_t and t are same, then just set the result type
               if Debug.extreme()
-              then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
+              then Format.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
                              (show res_t) (show t);
               set_result_typ c, g_c
             end
@@ -2740,13 +2721,13 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
                   //AR: an M_M bind
                 let lc = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
                 if Debug.extreme ()
-                then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
+                then Format.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
                                (show e) (show c) (show t) (TcComm.lcomp_to_string lc);
                 let c, g_lc = TcComm.lcomp_comp lc in
                 set_result_typ c, Env.conj_guards [g_c; gret; g_lc]
               else begin
                 if Debug.extreme ()
-                then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
+                then Format.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
                                (show res_t) (show c);
                 set_result_typ c, g_c
               end
@@ -2757,11 +2738,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
           let strengthen () =
-              if Options.lax()
-              && Options.ml_ish() //NS: disabling this optimization temporarily
-              then
-                TcComm.lcomp_comp lc
-              else begin
+              begin
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
@@ -2773,7 +2750,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
                       | _ ->
                           let c, g_c = TcComm.lcomp_comp lc in
                           if Debug.extreme ()
-                          then BU.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
+                          then Format.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
                                   (N.term_to_string env lc.res_typ)
                                   (N.term_to_string env t)
                                   (N.comp_to_string env c)
@@ -2802,24 +2779,23 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
                           let c = bind e.pos false env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
                           let c, g_lc = TcComm.lcomp_comp c in
                           if Debug.extreme ()
-                          then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
+                          then Format.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
                           c, Env.conj_guards [g_c; gret; g_lc]
                 end
           in
           let flags = lc.cflags |> List.collect (function
                                                  | RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN]
-                                                 | CPS -> [CPS] // KM : Not exactly sure if it is necessary
                                                  | _ -> [])
           in
           let lc = TcComm.mk_lcomp (norm_eff_name env lc.eff_name) t flags strengthen in
           let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
-let pure_or_ghost_pre_and_post env comp =
+let pure_or_ghost_pre_and_post env comp : ML _ =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] res_t.pos) in
-    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding;Env.EraseUniverses] env t in
+    let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding] env t in
     if U.is_tot_or_gtot_comp comp
     then None, U.comp_result comp
     else begin match comp.n with
@@ -2827,13 +2803,13 @@ let pure_or_ghost_pre_and_post env comp =
             | Total _ -> failwith "Impossible"
             | Comp ct ->
               if lid_equals ct.effect_name C.effect_Pure_lid
-              || lid_equals ct.effect_name C.effect_Ghost_lid
+              || (lid_equals ct.effect_name C.effect_Ghost_lid)
               then begin match ct.effect_args with
                       | (req, _)::(ens, _)::_ ->
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ ->
                         raise_error comp Errors.Fatal_EffectConstructorNotFullyApplied
-                          (BU.format1 "Effect constructor is not fully applied; got %s" (show comp))
+                          (Format.fmt1 "Effect constructor is not fully applied; got %s" (show comp))
                    end
               else let ct = Env.unfold_effect_abbrev env comp in
                    begin match ct.effect_args with
@@ -2854,18 +2830,18 @@ let pure_or_ghost_pre_and_post env comp =
 (* [norm_reify env t] assumes that [t] has the shape reify t0 *)
 (* where env |- t0 : M t' for some effect M and type t' where M is reifiable *)
 (* and returns the result of reducing t with reification on *)
-let norm_reify (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
+let norm_reify (env:Env.env) (steps:Env.steps) (t:S.term) : ML S.term =
     def_check_scoped t.pos "norm_reify" env t;
     let t' = N.normalize
-      ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
+      ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
       env t in
     if !dbg_SMTEncodingReify
-    then BU.print2 "Reified body %s \nto %s\n"
+    then Format.print2 "Reified body %s \nto %s\n"
         (show t)
         (show t') ;
     t'
 
-let remove_reify (t: S.term): S.term =
+let remove_reify (t: S.term): ML S.term =
   if (match (SS.compress t).n with | Tm_app _ -> false | _ -> true)
   then t
   else
@@ -2881,7 +2857,7 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
-let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
+let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) : ML _ =
   match aq, attrs with
   | Some (Meta _), _
   | Some (Implicit _), _::_ -> true
@@ -2899,9 +2875,9 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
  * to find an instance for it. We might not even be able to, since instances
  * are for concrete types.
  *)
-let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t =
+let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : ML (term & typ & aqual & guard_t) =
   if Debug.high () then
-    BU.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
+    Format.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
   let (++) = Env.conj_guard in
   let { binder_bv=x } = b in
   let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in (* meta/attrs computed here *)
@@ -2915,7 +2891,7 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
       in
       let name = "'" ^ show x ^ "'" in
       if is_typeclass then "Typeclass constraint argument"
-      else if Some? ctx_uvar_meta then "Instantiating meta argument" ^ name
+      else if Some? ctx_uvar_meta then "Instantiating meta argument " ^ name
       else "Instantiating implicit argument " ^ name
     in
     Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta should_unrefine
@@ -2925,26 +2901,26 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
 
   let r = varg, t, aq, implicits in
   if Debug.high () then
-    BU.print1 "instantiate_one_binder: result = %s\n" (show (r._1, r._2));
+    Format.print1 "instantiate_one_binder: result = %s\n" (show (r._1, r._2));
   r
 
 (* Will instantiate e, by applying it to some unification variables for its implicit
 arguments, if that is needed to match the expected type in the environment. [t] is the type
 of [e]. Returns elaborated [e'], its type [t'], and a guard. *)
-let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
+let maybe_instantiate (env:Env.env) (e:term) (t:typ) : ML (term & typ & guard_t) =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, mzero
   else begin
        if Debug.high () then
-         BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
+         Format.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                  (show e) (show t) (show (Env.expected_typ env));
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
         * of arrow_formals{,_comp}?*)
-       let unfolded_arrow_formals env (t:term) : list binder =
-         let rec aux (env:Env.env) (bs:list binder) (t:term) : list binder =
+       let unfolded_arrow_formals env (t:term) : ML (list binder) =
+         let rec aux (env:Env.env) (bs:list binder) (t:term) : ML (list binder) =
            let t = N.unfold_whnf env t in
            let bs', t = U.arrow_formals t in
            match bs' with
@@ -2956,7 +2932,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals env t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality)) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> None? imp || U.eq_bqual imp (Some Equality)) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
@@ -2978,13 +2954,13 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
                 | Some i -> Some (i - 1)
         in
         let t = N.unfold_whnf env t in
-        begin match t.n with
-            | Tm_arrow {bs; comp=c} ->
-              let bs, c = SS.open_comp bs c in
+        begin let bs,c = U.arrow_formals_comp t in
+              match bs with
+              | _::_ ->
               //instantiate at most inst_n implicit binders, when inst_n = Some n
               //otherwise, instantate all implicits
               //See issue #807 for why this is important
-              let rec aux (subst:list subst_elt) inst_n bs =
+              let rec aux (subst:list subst_elt) inst_n bs : ML _ =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, {binder_qual = Some (Implicit _)} ::rest
@@ -3027,7 +3003,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
 //check_has_type env e t1 t2
 //checks is e:t1 has type t2, subject to some guard.
 
-let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
+let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : ML guard_t =
   let env = Env.set_range env e.pos in
 
   let g_opt =
@@ -3045,19 +3021,19 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
   | None -> Err.expected_expression_of_type env (Env.get_range env) t2 e t1
   | Some g -> g
 
-let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term & lcomp & guard_t =
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : ML (term & lcomp & guard_t) =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
   let g = check_has_type env e lc.res_typ t2 use_eq in
   if !dbg_Rel then
-    BU.print1 "Applied guard is %s\n" <| guard_to_string env g;
+    Format.print1 "Applied guard is %s\n" <| guard_to_string env g;
   e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
-let check_top_level env g lc : (bool & comp) =
+let check_top_level env g lc : ML (bool & comp) =
  Errors.with_ctx "While checking for top-level effects" (fun () ->
   if Debug.medium () then
-    BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
+    Format.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
     force_trivial_guard env g;
     TcComm.is_pure_lcomp lc in
@@ -3096,7 +3072,7 @@ let check_top_level env g lc : (bool & comp) =
            raise_error
              (Env.get_range env)
              Errors.Fatal_UnexpectedEffect
-              (BU.format1 "Indexed effect %s cannot be used as a top-level effect" (c_eff |> Ident.string_of_lid))
+              (Format.fmt1 "Indexed effect %s cannot be used as a top-level effect" (c_eff |> Ident.string_of_lid))
          | Some top_level_eff ->
            // If top-level effect is same as c_eff, return
            if Ident.lid_equals top_level_eff c_eff
@@ -3106,7 +3082,7 @@ let check_top_level env g lc : (bool & comp) =
              match bc_opt with
              | None -> 
                raise_error env Errors.Fatal_UnexpectedEffect
-                  (BU.format2 "Could not find top-level effect abbreviation %s for %s"
+                  (Format.fmt2 "Could not find top-level effect abbreviation %s for %s"
                     (Ident.string_of_lid top_level_eff)
                     (c_eff |> Ident.string_of_lid))
              | Some (bs, _) ->
@@ -3123,7 +3099,7 @@ let check_top_level env g lc : (bool & comp) =
                    [NT (a.binder_bv, U.comp_result c)]
                    (fun b ->
                     if debug
-                    then BU.format2
+                    then Format.fmt2
                            "implicit for binder %s in effect abbreviation %s while checking top-level effect"
                            (show b)
                           (Ident.string_of_lid top_level_eff)
@@ -3140,7 +3116,7 @@ let check_top_level env g lc : (bool & comp) =
                match gopt with
                | None -> 
                  raise_error env Errors.Fatal_UnexpectedEffect
-                    (BU.format2 "Could not unify %s and %s when checking top-level effect"
+                    (Format.fmt2 "Could not unify %s and %s when checking top-level effect"
                       (show top_level_comp)
                       (show c))
                | Some g ->
@@ -3152,15 +3128,15 @@ let check_top_level env g lc : (bool & comp) =
               |> Normalize.normalize_comp steps env in
             let ct, vc, g_pre = check_trivial_precondition_wp env c in
             if !dbg_Simplification
-            then BU.print1 "top-level VC: %s\n" (show vc);
+            then Format.print1 "top-level VC: %s\n" (show vc);
             discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> S.mk_Comp
  )
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,
    if head is a short-circuiting operator *)
-let short_circuit (head:term) (seen_args:args) : guard_formula =
-    let short_bin_op f : args -> guard_formula = function
+let short_circuit (head:term) (seen_args:args) : ML guard_formula =
+    let short_bin_op (f: term -> ML guard_formula) : args -> ML guard_formula = function
         | [] -> (* no args seen yet *) Trivial
         | [(fst, _)] -> f fst
         | _ -> failwith "Unexpected args to binary operator" in
@@ -3171,12 +3147,12 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
     let op_or_t t  = t |> U.mk_neg |> NonTrivial in
     let op_imp_t t = t |> NonTrivial in
 
-    let short_op_ite : args -> guard_formula = function
+    let short_op_ite : args -> ML guard_formula = function
         | [] -> Trivial
         | [(guard, _)] -> NonTrivial guard
         | [_then;(guard, _)] -> U.mk_neg guard |> NonTrivial
         | _ -> failwith "Unexpected args to ITE" in
-    let table =
+    let table : list (lident & (args -> ML guard_formula)) =
         [(C.op_And,  short_bin_op op_and_e);
          (C.op_Or,   short_bin_op op_or_e);
          (C.and_lid, short_bin_op op_and_t);
@@ -3186,14 +3162,14 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
 
      match head.n with
         | Tm_fvar fv ->
-          let lid = fv.fv_name.v in
+          let lid = fv.fv_name in
           begin match BU.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with
             | None ->   Trivial
             | Some g -> g
           end
         | _ -> Trivial
 
-let short_circuit_head l =
+let short_circuit_head l : ML _ =
     match (U.un_uinst l).n with
         | Tm_fvar fv ->
            BU.for_some (S.fv_eq_lid fv)
@@ -3218,8 +3194,9 @@ let short_circuit_head l =
 (* This helps us sometimes to build a better decreases clause           *)
 (*   since it helps us count the arity by including implicits           *)
 (************************************************************************)
-let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
-    let is_implicit_binder ({binder_qual=q}) : bool =
+let maybe_add_implicit_binders (env:env) (bs:binders) : ML binders =
+    let is_implicit_binder (b:binder) : ML bool =
+        let q = b.binder_qual in
         match q with
         | Some (Implicit _)
         | Some (Meta _) -> true
@@ -3252,15 +3229,15 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : binders =
 
 let must_erase_for_extraction (g:env) (t:typ) =
   let res = N.non_info_norm g t in
-  if !dbg_Extraction then BU.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
+  if !dbg_Extraction then Format.print2 "must_erase=%s: %s\n" (if res then "true" else "false") (show t);
   res
 
-let effect_extraction_mode env l =
+let effect_extraction_mode env l : ML _ =
   l |> Env.norm_eff_name env
     |> Env.get_effect_decl env
     |> (fun ed -> ed.extraction_mode)
 
-let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
+let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
   let fail t = Err.unexpected_signature_for_monad env r eff_name t in
 
   let _, signature = Env.inst_tscheme signature_ts in
@@ -3282,7 +3259,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
          Env.uvars_for_binders env bs [NT (a.binder_bv, a_tm)]
            (fun b ->
             if debug
-            then BU.format3
+            then Format.fmt3
                    "uvar for binder %s when creating a fresh repr for %s at %s"
                    (show b) (string_of_lid eff_name) (Range.string_of_range r)
             else "fresh_effect_repr") r in
@@ -3305,12 +3282,12 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
      | _ -> fail signature)
   | _ -> fail signature
 
-let fresh_effect_repr_en env r eff_name u a_tm =
+let fresh_effect_repr_en env r eff_name u a_tm : ML _ =
   eff_name
   |> Env.get_effect_decl env
   |> (fun ed -> fresh_effect_repr env r eff_name (U.effect_sig_ts ed.signature) (ed |> U.get_eff_repr)  u a_tm)
 
-let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
+let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm : ML _ =
   let _, sig_tm = Env.inst_tscheme_with sig_ts [u] in
 
   let fail t = Err.unexpected_signature_for_monad env r eff_name t in
@@ -3324,13 +3301,13 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
   | _ -> fail sig_tm
 
 
-let check_non_informative_type_for_lift env m1 m2 t (r:Range.range) : unit =
+let check_non_informative_type_for_lift env m1 m2 t (r:Range.t) : ML unit =
   //raise an error if m1 is erasable, m2 is not erasable, and t is informative
   if Env.is_erasable_effect env m1       &&
      not (Env.is_erasable_effect env m2) &&
      not (N.non_info_norm env t)
   then Errors.raise_error r Errors.Error_TypeError
-          (BU.format3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
+          (Format.fmt3 "Cannot lift erasable expression from %s ~> %s since its type %s is informative"
             (string_of_lid m1)
             (string_of_lid m2)
             (show t))
@@ -3342,9 +3319,9 @@ let substitutive_indexed_lift_substs (env:env)
   (bs:binders)
   (ct:comp_typ)
   (lift_name:string)
-  (r:Range.range)
+  (r:Range.t)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
@@ -3364,7 +3341,7 @@ let substitutive_indexed_lift_substs (env:env)
     let [uv_t], g_uv = Env.uvars_for_binders env [b] subst
       (fun b ->
        if debug
-       then BU.format3 "implicit var for additional lift binder %s of %s at %s)"
+       then Format.fmt3 "implicit var for additional lift binder %s of %s at %s)"
               (show b)
               lift_name
               (Range.string_of_range r)
@@ -3376,14 +3353,14 @@ let ad_hoc_indexed_lift_substs (env:env)
   (bs:binders)
   (ct:comp_typ)
   (lift_name:string)
-  (r:Range.range)
+  (r:Range.t)
 
-  : list subst_elt & guard_t =
+  : ML (list subst_elt & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
 
   let lift_t_shape_error s =
-    BU.format2 "Lift %s has unexpected shape, reason: %s"
+    Format.fmt2 "Lift %s has unexpected shape, reason: %s"
       lift_name s in
 
   let a_b, (rest_bs, [f_b]) =
@@ -3398,7 +3375,7 @@ let ad_hoc_indexed_lift_substs (env:env)
       [NT (a_b.binder_bv, ct.result_typ)]
       (fun b ->
        if debug
-       then BU.format3
+       then Format.fmt3
               "implicit var for binder %s of %s at %s"
               (show b)
               lift_name
@@ -3420,12 +3397,12 @@ let ad_hoc_indexed_lift_substs (env:env)
   Env.conj_guard g guard_f
 
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect_combinator_kind)
-  env (c:comp) : comp & guard_t =
+  env (c:comp) : ML (comp & guard_t) =
 
   let debug = !dbg_LayeredEffectsApp in
   
   if debug then
-    BU.print2 "Lifting indexed comp %s to  %s {\n"
+    Format.print2 "Lifting indexed comp %s to  %s {\n"
       (show c) (show tgt);
 
   let r = Env.get_range env in
@@ -3435,7 +3412,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
   check_non_informative_type_for_lift env ct.effect_name tgt ct.result_typ r;
 
   let lift_name () =
-    if debug then BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt)
+    if debug then Format.fmt2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt)
     else "" in
 
   let _, lift_t = Env.inst_tscheme_with lift_ts [List.hd ct.comp_univs] in
@@ -3458,7 +3435,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
 
   if !dbg_LayeredEffects &&
      Debug.extreme ()
-  then BU.print1 "Guard for lift is: %s" (show fml);
+  then Format.print1 "Guard for lift is: %s" (show fml);
 
   let c = mk_Comp ({
     comp_univs = ct.comp_univs;
@@ -3468,7 +3445,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
     flags = []  //AR: setting the flags to empty
   }) in
 
-  if debug then BU.print1 "} Lifted comp: %s\n" (show c);
+  if debug then Format.print1 "} Lifted comp: %s\n" (show c);
 
   let g = Env.conj_guards [
     g;
@@ -3482,29 +3459,29 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect
  * binders that are meant to compute indices
  *)
 let lift_tf_layered_effect_term env (sub:sub_eff)
-  (u:universe) (a:typ) (e:term) : term =
+  (u:universe) (a:typ) (e:term) : ML term =
 
-  let lift = sub.lift |> must |> (fun ts -> inst_tscheme_with ts [u]) |> snd in
+  let lift = sub.lift |> Option.must |> (fun ts -> inst_tscheme_with ts [u]) |> snd in
 
   let rest_bs =
-    let lift_t = sub.lift_wp |> must in
+    let lift_t = sub.lift_wp |> Option.must in
     match (lift_t |> snd |> SS.compress).n with
-    | Tm_arrow {bs=_::bs} when List.length bs >= 1 ->
+    | Tm_arrow {bs=_::bs} when Cons? bs ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
       raise_error (snd lift_t) Errors.Fatal_UnexpectedEffect
-        (BU.format1 "lift_t tscheme %s is not an arrow with enough binders"
+        (Format.fmt1 "lift_t tscheme %s is not an arrow with enough binders"
           (Print.tscheme_to_string lift_t))
   in
 
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
   mk (Tm_app {hd=lift; args}) e.pos
 
-let get_field_projector_name env datacon index =
+let get_field_projector_name env datacon index : ML _ =
   let _, t = Env.lookup_datacon env datacon in
   let err n =
     raise_error env Errors.Fatal_UnexpectedDataConstructor
-      (BU.format3 "Data constructor %s does not have enough binders (has %s, tried %s)"
+      (Format.fmt3 "Data constructor %s does not have enough binders (has %s, tried %s)"
         (show datacon) (show n) (show index))  in
   match (SS.compress t).n with
   | Tm_arrow {bs} ->
@@ -3516,11 +3493,11 @@ let get_field_projector_name env datacon index =
   | _ -> err 0
 
 
-let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
+let get_mlift_for_subeff env (sub:S.sub_eff) : ML Env.mlift =
   if Env.is_layered_effect env sub.source || Env.is_layered_effect env sub.target
 
   then
-    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> must) (sub.kind |> must);
+    ({ mlift_wp = lift_tf_layered_effect sub.target (sub.lift_wp |> Option.must) (sub.kind |> Option.must);
        mlift_term = Some (lift_tf_layered_effect_term env sub) })
 
   else
@@ -3541,7 +3518,7 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
       mk (Tm_app {hd=lift_t; args=[as_arg r; as_arg S.tun; as_arg e]}) e.pos
     in
 
-    ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;
+    ({ mlift_wp = sub.lift_wp |> Option.must |> mk_mlift_wp;
        //AR: this is funky
        //it is saying, if you don't give us a lift term (a function that lifts terms),
        //we are assuming that the function is an identity
@@ -3552,22 +3529,19 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
        //now a PURE computation in the VC gets lifted via: PURE ~> DIV ~> M
        //when extracting (and reifying the monadic lifts), we go the same route
        //but if there is no lift term from PURE ~> DIV, we get an error
-       //is this ok to do for DM4F? not sure in general
-       //but currently PURE and DIV are lifted to DM4F effects using M.return
-       //and not using the lift term (I don't think the lift term is even supported for DM4F, is it?)
        mlift_term =
          match sub.lift with
-         | None -> Some (fun _ _ e -> return_all e)
+         | None -> Some (fun _ _ e -> e)
          | Some ts -> Some (mk_mlift_term ts) })
 
 
-let update_env_sub_eff env sub r =
+let update_env_sub_eff env sub r : ML _ =
   let r0 = env.range in
   let env = Env.update_effect_lattice
     ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub) in
   { env with range = r0 }
 
-let update_env_polymonadic_bind env m n p ty k =
+let update_env_polymonadic_bind env m n p ty k : ML _ =
   //
   //false means no range support in polymonadic bind yet
   //
@@ -3585,7 +3559,7 @@ let update_env_polymonadic_bind env m n p ty k =
    and the field names of that constructor
  *)
 let try_lookup_record_type env (typename:lident)
-  : option DsEnv.record_or_dc
+  : ML (option DsEnv.record_or_dc)
   = try
       match Env.datacons_of_typ env typename with
       | _, [dc] ->
@@ -3611,17 +3585,17 @@ let try_lookup_record_type env (typename:lident)
                 Some r
 
            else (
-            //  BU.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
-            //    (string_of_int nparms)
+            //  Format.print3 "Not enough formals; nparms=%s; type = %s; formals=%s\n"
+            //    (show nparms)
             //    (show t)
             //    (Print.binders_to_string ", " formals);
              None
            )
          | _ ->
-          //  BU.print1 "Could not find %s\n" (string_of_lid dc);
+          //  Format.print1 "Could not find %s\n" (string_of_lid dc);
            None)
       | _, dcs ->
-        // BU.print2 "Could not find type %s ... Got %s\n"
+        // Format.print2 "Could not find type %s ... Got %s\n"
         //    (string_of_lid typename)
         //    (FStarC.Common.string_of_list Ident.string_of_lid dcs);
         None
@@ -3636,7 +3610,14 @@ let try_lookup_record_type env (typename:lident)
     - t is None, the uc is used
     - otherwise t overrides uc
  *)
-let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rng =
+
+let head_fv_of_typ env (t:typ) : ML (option fv) =
+    let t, _ = U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
+    match (SS.compress (U.un_uinst t)).n with
+    | Tm_fvar fv -> Some fv
+    | _ -> None
+
+let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constructor) rng : ML _ =
     let default_rdc () =
       let open FStarC.Errors.Msg in
       match uc.uc_typename, uc.uc_fields with
@@ -3648,7 +3629,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
       | None, f::_ ->
         let f = List.hd uc.uc_fields in
         raise_error f Errors.Error_CannotResolveRecord [
-            text <| BU.format1 "Field name %s could not be resolved." (string_of_lid f);
+            text <| Format.fmt1 "Field name %s could not be resolved." (string_of_lid f);
         ]
 
       | Some tn, _ ->
@@ -3656,23 +3637,16 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
         | Some rdc -> rdc
         | None ->
           raise_error tn Errors.Fatal_NameNotFound 
-            (BU.format1 "Record name %s not found." (string_of_lid tn))
+            (Format.fmt1 "Record name %s not found." (string_of_lid tn))
     in
     let rdc : DsEnv.record_or_dc =
-      match t with
+      match head_fv with
       | None -> default_rdc()
-      | Some t ->
-        let thead, _ = 
-          U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t)
-        in
-        match (SS.compress (U.un_uinst thead)).n with
-        | Tm_fvar type_name ->
-          begin
-          match try_lookup_record_type env type_name.fv_name.v with
-          | None -> default_rdc ()
-          | Some r -> r
-          end
-        | _ -> default_rdc()
+      | Some type_name -> (
+        match try_lookup_record_type env type_name.fv_name with
+        | None -> default_rdc ()
+        | Some r -> r
+      )
     in
     let constrname =
           let name = lid_of_ids (ns_of_lid rdc.typename @ [rdc.constrname]) in
@@ -3701,7 +3675,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
    has to resolve to a field in the unambiguous module reference in
    the qualifier.
 *)
-let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) =
+let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident) : ML _ =
     Ident.ident_equals field (Ident.ident_of_lid field_name) &&
     (if ns_of_lid field_name <> []
      then nsstr field_name = nsstr rdc.typename
@@ -3724,20 +3698,20 @@ let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident
 let make_record_fields_in_order env uc topt
        (rdc : DsEnv.record_or_dc)
        (fas : list (lident & 'a))
-       (not_found:ident -> option 'a)
-       (rng : Range.range)
-  : list 'a
+       (not_found:ident -> ML (option 'a))
+       (rng : Range.t)
+  : ML (list 'a)
   = let debug () =
       let print_rdc (rdc:DsEnv.record_or_dc) =
-        BU.format3 "{typename=%s; constrname=%s; fields=[%s]}"
+        Format.fmt3 "{typename=%s; constrname=%s; fields=[%s]}"
           (string_of_lid rdc.typename)
           (string_of_id rdc.constrname)
           (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
       in
       let print_topt topt =
-        BU.format2 "topt=%s; rdc=%s" (show topt) (print_rdc rdc)
+        Format.fmt2 "topt=%s; rdc=%s" (show topt) (print_rdc rdc)
       in
-      BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
+      Format.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
           (show uc.uc_typename)
           (show uc.uc_fields)
           (print_topt topt)
@@ -3768,7 +3742,7 @@ let make_record_fields_in_order env uc topt
            | x1::x2::_ ->
 //             debug();
              raise_error (fst x1) Errors.Fatal_MissingFieldInRecord
-                (BU.format2 "Field '%s' of record type '%s' is given multiple assignments."
+                (Format.fmt2 "Field '%s' of record type '%s' is given multiple assignments."
                   (string_of_id field_name)
                   (string_of_lid rdc.typename)))
         (fas, [], [])
@@ -3783,7 +3757,7 @@ let make_record_fields_in_order env uc topt
       | (f, _)::_, _ ->
 //        debug();
         raise_error f Errors.Fatal_MissingFieldInRecord [
-            Errors.Msg.text <| BU.format2 "No field '%s' in record type '%s'." (show f) (show rdc.typename);
+            Errors.Msg.text <| Format.fmt2 "No field '%s' in record type '%s'." (show f) (show rdc.typename);
             if Cons? missing then
               prefix 2 1 (text "Missing fields:")
                 (pp_missing ())
@@ -3793,7 +3767,7 @@ let make_record_fields_in_order env uc topt
 
       | [], _ ->
         raise_error rng Errors.Fatal_MissingFieldInRecord [
-            prefix 2 1 (text <| BU.format1 "Missing fields for record type '%s':" (show rdc.typename))
+            prefix 2 1 (text <| Format.fmt1 "Missing fields for record type '%s':" (show rdc.typename))
                 (pp_missing ())
         ]
     in

@@ -18,45 +18,51 @@
 
 module FStarC.Common
 
+open FStarC
 open FStarC.Effect
-module List = FStarC.List
-module BU = FStarC.Util
 open FStarC.PSMap
 
-let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
+module List = FStarC.List
+module BU = FStarC.Util
+module SB = FStarC.StringBuffer
+
+let dbg = Debug.get_toggle "Snapshot"
+
+let snapshot msg (push: 'a -> ML 'b) (stackref: ref (list 'c)) (arg: 'a) : ML (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in
+  if !dbg then Format.print2 "(%s)snapshot %s\n" msg (string_of_int len);
   (len, arg'))
 
-let rollback (pop: unit -> 'a) (stackref: ref (list 'c)) (depth: option int) =
-  let rec aux n : 'a =
-    if n <= 0 then failwith "Too many pops"
+let rollback msg (pop: unit -> ML 'a) (stackref: ref (list 'c)) (depth: option int) : ML 'a =
+  if !dbg then Format.print2 "(%s)rollback %s ... " msg (match depth with None -> "None" | Some len ->string_of_int len);
+  let rec aux n : ML 'a =
+    if n <= 0 then failwith "(rollback) Too many pops"
     else if n = 1 then pop ()
     else (ignore (pop ()); aux (n - 1)) in
   let curdepth = List.length !stackref in
   let n = match depth with Some d -> curdepth - d | None -> 1 in
+  if !dbg then Format.print1 " depth is %s\n "(string_of_int (List.length (!stackref)));
   BU.atomically (fun () -> aux n)
 
 // This function is separate to make it easier to put breakpoints on it
 let raise_failed_assertion msg =
-  failwith (BU.format1 "Assertion failed: %s" msg)
+  failwith (Format.fmt1 "Assertion failed: %s" msg)
 
-let runtime_assert b msg =
+let runtime_assert b msg : ML unit =
   if not b then raise_failed_assertion msg
 
-let __string_of_list (delim:string) (f : 'a -> string) (l : list 'a) : string =
+let __string_of_list (delim:string) (f : 'a -> ML string) (l : list 'a) : ML string =
   match l with
   | [] -> "[]"
   | x::xs ->
-    let strb = BU.new_string_builder () in
-    BU.string_builder_append strb "[";
-    BU.string_builder_append strb (f x);
+    let strb = SB.create 80 in
+    strb |> SB.add "[" |> SB.add (f x) |> ignore;
     List.iter (fun x ->
-               BU.string_builder_append strb delim;
-               BU.string_builder_append strb (f x)
+                strb |> SB.add delim |> SB.add (f x) |> ignore
                ) xs ;
-    BU.string_builder_append strb "]";
-    BU.string_of_string_builder strb
+    strb |> SB.add "]" |> ignore;
+    SB.contents strb
 
 (* Why two? This function was added during a refactoring, and
 both variants existed. We cannot simply move to ";" since that is a
@@ -74,8 +80,8 @@ let string_of_option f = function
   | Some x -> "Some " ^ f x
 
 (* Was List.init, but F* doesn't have this in ulib *)
-let tabulate (n:int) (f : int -> 'a) : list 'a =
-  let rec aux i : list 'a =
+let tabulate (n:int) (f : int -> ML 'a) : ML (list 'a) =
+  let rec aux i : ML (list 'a) =
     if i < n
     then f i :: aux (i + 1)
     else []
@@ -100,19 +106,18 @@ let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
-  let rec aux acc xs : list 'a & list 'a =
+let max_suffix (f : 'a -> ML bool) (xs : list 'a) : ML (list 'a & list 'a) =
+  let rec aux acc xs : ML (list 'a & list 'a) =
     match xs with
     | [] -> acc, []
-    | x::xs when f x ->
-      aux (x::acc) xs
     | x::xs ->
-      (acc, x::xs)
+      if f x then aux (x::acc) xs
+      else (acc, x::xs)
   in
   xs |> List.rev |> aux [] |> (fun (xs, ys) -> List.rev ys, xs)
 
-let rec eq_list (f: 'a -> 'a -> bool) (l1 l2 : list 'a)
-  : bool
+let rec eq_list (f: 'a -> 'a -> ML bool) (l1 l2 : list 'a)
+  : ML bool
   = match l1, l2 with
     | [], [] -> true
     | [], _ | _, [] -> false

@@ -21,7 +21,6 @@ open FStarC
 open FStarC.Parser.AST
 open FStarC.Errors
 open FStarC.Interactive.Ide.Types
-open FStarC.Util
 
 (* Various kinds of progress messages to print back to the client *)
 type fragment_progress =
@@ -47,10 +46,10 @@ val run_full_buffer (st:repl_state)
                     (code:string)
                     (full:full_buffer_request_kind)
                     (with_symbols:bool)
-                    (write_full_buffer_fragment_progress: fragment_progress -> unit)
-  : list query & list json
+                    (write_full_buffer_fragment_progress: fragment_progress -> ML unit)
+  : ML (list query & list json)
 
 (* Pretty-print the code for reformatting, or return a syntax error *)
 val format_code (st:repl_state)
                 (code:string)
-  : either string (list issue)
+  : ML (either string (list issue))

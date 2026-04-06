@@ -1,4 +1,4 @@
-(lang dune 3.8)
+(lang dune 3.15)
 (name fstar)
 (generate_opam_files false)
 (using menhir 2.1)

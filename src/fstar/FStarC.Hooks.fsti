@@ -15,10 +15,7 @@
 *)
 module FStarC.Hooks
 
-open FStarC.Effect
-
-(* This function sets ties some know between modules in the compiler source tree,
-enabling more recursion and breaking some dependencies.
-
-This is called directly by the Javascript port (it doesn't call Main) and the ocaml tests. *)
-val setup_hooks () : unit
+(* This module sets ties some know between modules in the compiler source tree,
+enabling more recursion and breaking some dependencies. It does this via a
+top-level effect. You only need to import this module in order for this to
+happen. *)

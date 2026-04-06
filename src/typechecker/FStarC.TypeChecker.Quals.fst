@@ -53,7 +53,7 @@ let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) 
   in
   go [] xs
 
-let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
+let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
     (* If this is a splice, the attributes don't mean anything, they will
     just be passed through to the tactic to decide what to do. So just
     accept them. *)
@@ -93,12 +93,14 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         || q2=NoExtract
 
       | New -> //no definition provided
-        inferred q2 || visibility q2 || assumption q2
+        inferred q2 || visibility q2 || assumption q2 ||
+        q2=Inline_for_extraction || q2=NoExtract
 
       | Inline_for_extraction ->
          q2=Logic || visibility q2 || reducibility q2 ||
          reification q2 || inferred q2 || has_eq q2 ||
-         (env.is_iface && q2=Assumption) || q2=NoExtract
+         (env.is_iface && q2=Assumption) || q2=NoExtract ||
+         q2=New
 
       | Unfold_for_unification_and_vcgen
       | Visible_default
@@ -142,7 +144,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
       let err msg =
-        raise_error r Errors.Fatal_QulifierListNotPermitted (
+        raise_error r Errors.Fatal_QualifierListNotPermitted (
           [ prefix 2 1 (text "Invalid qualifiers for declaration")
                        (bquotes <| doc_of_string (Print.sigelt_to_string_short se));
           ] @ msg
@@ -219,36 +221,36 @@ let non_info_norm_weak env t =
   in
   non_informative env (N.normalize steps env t)
 
-let check_erasable env quals (r:Range.range) se =
+let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
-    lids |> BU.for_some (fun l -> Option.isSome (Env.try_lookup_val_decl env l))
+    lids |> BU.for_some (fun l -> Some? (Env.try_lookup_val_decl env l))
   in
   let val_has_erasable_attr =
     lids |> BU.for_some (fun l ->
       let attrs_opt = Env.lookup_attrs_of_lid env l in
-      Option.isSome attrs_opt
-      && U.has_attribute (Option.get attrs_opt) FStarC.Parser.Const.erasable_attr)
+      Some? attrs_opt
+      && U.has_attribute (Option.must attrs_opt) FStarC.Parser.Const.erasable_attr)
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Declaration is marked `erasable` but the definition is not.";
          ];
   if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Definition is marked `erasable` but the declaration is not.";
          ];
   if not se_has_erasable_attr && not (Options.ide ()) then begin
     match se.sigel with
     | Sig_let {lbs=(false, [lb])} ->
-      let lbname = BU.right lb.lbname in
+      let Inr lbname = lb.lbname in
       let has_iface_val = match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-        | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
+        | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
         | None -> false in
-      let val_decl = Env.try_lookup_val_decl env lbname.fv_name.v in
+      let val_decl = Env.try_lookup_val_decl env lbname.fv_name in
       if has_iface_val && Some? val_decl then
         let _, body, _ = U.abs_formals lb.lbdef in
           let Some ((us, t), _) = val_decl in
@@ -257,9 +259,9 @@ let check_erasable env quals (r:Range.range) se =
           N.non_info_sort_norm env t in
         if not known_to_be_erasable && non_info_norm_weak env body then
           log_issue lbname Error_MustEraseMissing [
-            text (BU.format1 "Values of type `%s` will be erased during extraction, \
+            text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
                   but its interface hides this fact." (show lbname));
-            text (BU.format1 "Add the `erasable` \
+            text (Format.fmt1 "Add the `erasable` \
                   attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
           ]
     | _ -> ()
@@ -269,7 +271,7 @@ let check_erasable env quals (r:Range.range) se =
     match se.sigel with
     | Sig_bundle _ ->
       if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
               text "Incompatible attributes and qualifiers: \
                erasable types do not support decidable equality and must be marked `noeq`."
              ]
@@ -281,7 +283,7 @@ let check_erasable env quals (r:Range.range) se =
     | Sig_let {lbs=(false, [lb])} ->
       let _, body, _ = U.abs_formals lb.lbdef in
       if not (N.non_info_norm env body)
-      then raise_error body Errors.Fatal_QulifierListNotPermitted [
+      then raise_error body Errors.Fatal_QualifierListNotPermitted [
                   text "Illegal attribute: \
                    the `erasable` attribute is only permitted on inductive type definitions \
                    and abbreviations for non-informative types.";
@@ -290,19 +292,60 @@ let check_erasable env quals (r:Range.range) se =
 
     | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
       if not (List.contains TotalEffect quals)
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
                text "Effect" ^/^ pp eff_name ^/^ text "is marked erasable but only total effects are allowed to be erasable."
              ]
 
     | _ ->
-      raise_error r Errors.Fatal_QulifierListNotPermitted [
+      raise_error r Errors.Fatal_QualifierListNotPermitted [
           text "Illegal attribute: \
           the `erasable` attribute is only permitted on inductive type definitions \
           and abbreviations for non-informative types.";
         ]
   end
 
-let check_typeclass_instance_attribute env (rng:Range.range) se =
+(*
+ *  Given `val t : Type` in an interface
+ *  and   `let t = e`    in the corresponding implementation
+ *  The val declaration should contains the `must_erase_for_extraction` attribute
+ *  if and only if `e` is a type that's non-informative (e..g., unit, t -> unit, etc.)
+ *)
+let check_must_erase_attribute env se =
+  if Options.ide() then () else
+  match se.sigel with
+  | Sig_let {lbs; lids=l} ->
+    begin match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+     | None ->
+       ()
+
+     | Some iface_decls ->
+       snd lbs |> List.iter (fun lb ->
+           let lbname = Inr?.v lb.lbname in
+           let has_iface_val =
+               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
+           in
+           if has_iface_val
+           then
+               let must_erase = TcUtil.must_erase_for_extraction env lb.lbdef in
+               let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
+               if must_erase && not has_attr
+               then log_issue lbname Error_MustEraseMissing [
+                        text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
+                               but its interface hides this fact." (show lbname));
+                        text (Format.fmt1 "Add the `must_erase_for_extraction` \
+                               attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
+                      ]
+               else if has_attr && not must_erase
+               then log_issue lbname Error_MustEraseMissing [
+                        text (Format.fmt1 "Values of type `%s` cannot be erased during extraction, \
+                               but the `must_erase_for_extraction` attribute claims that it can."
+                               (show lbname));
+                        text "Please remove the attribute.";
+                      ])
+  end
+  | _ -> ()
+
+let check_typeclass_instance_attribute env (rng:Range.t) se =
   let is_tc_instance =
       se.sigattrs |> BU.for_some
         (fun t ->
@@ -310,12 +353,12 @@ let check_typeclass_instance_attribute env (rng:Range.range) se =
           | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.tcinstance_lid
           | _ -> false)
   in
-  let check_instance_typ (ty:typ) : unit =
+  let check_instance_typ (ty:typ) : ML unit =
     let _, res = U.arrow_formals_comp ty in
     if not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances are expected to be total.";
-          text "This instance has effect" ^^ pp (U.comp_effect_name res);
+          text "This instance has effect" ^/^ pp (U.comp_effect_name res);
       ];
 
     let t = U.comp_result res in
@@ -352,7 +395,7 @@ let check_typeclass_instance_attribute env (rng:Range.range) se =
           text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 
-let check_sigelt_quals_post env se =
+let check_sigelt_quals_post env se : ML unit =
   let quals = se.sigquals in
   let r = se.sigrng in
   check_erasable env quals r se;

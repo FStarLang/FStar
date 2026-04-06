@@ -15,6 +15,6 @@
 *)
 module FStar.Reflection
 
-(* This switch currently points to V1. Ask for V2 explicitly by
-importing FStar.Reflection.V2 *)
-include FStar.Reflection.V1
+(* This switch currently points to V2. Ask for V1 explicitly by
+importing FStar.Reflection.V1 *)
+include FStar.Reflection.V2

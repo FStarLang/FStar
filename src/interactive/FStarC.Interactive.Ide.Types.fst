@@ -19,12 +19,18 @@ open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
-
+open FStarC.Interactive.JsonHelper {
+  js_bool,
+  js_int, 
+  js_str, 
+  js_list,
+  js_assoc,
+  try_assoc,
+  js_fail
+}
 open FStarC.Universal
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
@@ -35,8 +41,8 @@ open FStarC.Json
 
 module SS = FStarC.Syntax.Syntax
 
-let initial_range =
-  Range.mk_range "<input>" (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+let initial_range filename : ML _ =
+  Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 instance showable_push_kind : showable push_kind = {
   show = (function
@@ -49,76 +55,94 @@ instance showable_push_kind : showable push_kind = {
 (* REPL tasks and states *)
 (*************************)
 
-let t0 = Util.get_time_of_day ()
+let t0 = Time.get_time_of_day ()
 
 (** Create a timed_fname with a dummy modtime **)
-let dummy_tf_of_fname fname =
+let dummy_tf_of_fname fname : ML _ =
   { tf_fname = fname;
     tf_modtime = t0 }
 
-let string_of_timed_fname { tf_fname = fname; tf_modtime = modtime } =
-  if modtime = t0 then Util.format1 "{ %s }" fname
-  else Util.format2 "{ %s; %s }" fname (string_of_time_of_day modtime)
 
-let string_of_repl_task = function
+let mk_ld_interleaved (iface impl:string) : ML repl_task =
+  let tod = Time.get_time_of_day () in
+  LDInterleaved ({tf_fname=iface; tf_modtime=tod}, {tf_fname=impl; tf_modtime=tod})
+
+let mk_ld_single (filename:string) : ML repl_task =
+  let tod = Time.get_time_of_day () in
+  LDSingle {tf_fname=filename; tf_modtime=tod}
+  
+let string_of_timed_fname x : ML _ = let { tf_fname = fname; tf_modtime = modtime } = x in
+  if modtime = t0 then Format.fmt1 "{ %s }" fname
+  else Format.fmt2 "{ %s; %s }" fname (show modtime)
+
+let string_of_repl_task t : ML _ = match t with
   | LDInterleaved (intf, impl) ->
-    Util.format2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
+    Format.fmt2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
   | LDSingle intf_or_impl ->
-    Util.format1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
+    Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->
-    Util.format1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
-  | PushFragment (Inl frag, _, _) ->
-    Util.format1 "PushFragment { code = %s }" frag.frag_text
-  | PushFragment (Inr d, _, _) ->
-    Util.format1 "PushFragment { decl = %s }" (show d)
+    Format.fmt1 "LDInterfaceOfCurrentFile %s" (string_of_timed_fname intf)
+  | PushFragment (Inl frag, _, _, _) ->
+    Format.fmt1 "PushFragment { code = %s }" frag.frag_text
+  | PushFragment (Inr d, _, _, deps) ->
+    Format.fmt2 "PushFragment { decl = %s; deps=%s }" (show d) (show deps)
   | Noop -> "Noop {}"
 
-module BU = FStarC.Util
 
 let string_of_repl_stack_entry
-  : repl_stack_entry_t -> string
-  = fun ((depth, i), (task, state)) ->
-      BU.format "{depth=%s; task=%s}"
-                [string_of_int i;
+  : repl_stack_entry_t -> ML string
+  = fun x ->
+      let ((depth, i), (task, state)) = x in
+      Format.fmt "{depth=%s; task=%s}"
+                [show i;
                 string_of_repl_task task]
                 
 
-let string_of_repl_stack s =
+let string_of_repl_stack s : ML _ =
   String.concat ";\n\t\t"
                 (List.map string_of_repl_stack_entry s)
 
 let repl_state_to_string (r:repl_state)
-  : string
-  = BU.format 
+  : ML string
+  = Format.fmt 
     "{\n\t\
       repl_line=%s;\n\t\
       repl_column=%s;\n\t\
       repl_fname=%s;\n\t\
       repl_cur_mod=%s;\n\t\      
       repl_deps_stack={%s}\n\
+      repl_buffered_queries={%s}\n
      }"
-     [string_of_int r.repl_line;
-      string_of_int r.repl_column;
+     [show r.repl_line;
+      show r.repl_column;
       r.repl_fname;
       (match r.repl_curmod with
        | None -> "None"
        | Some m -> Ident.string_of_lid m.name);
-      string_of_repl_stack r.repl_deps_stack]
+      string_of_repl_stack r.repl_deps_stack;
+      (show (r.repl_buffered_input_queries |> List.map (fun q -> q.qid)))]
 
-let push_query_to_string pq =
+instance repl_stack_entry_t_showable : showable repl_stack_entry_t = {
+  show = string_of_repl_stack_entry
+}
+instance repl_state_showable : showable repl_state = {
+  show = repl_state_to_string
+}
+
+let push_query_to_string pq : ML _ =
   let code_or_decl =
     match pq.push_code_or_decl with
     | Inl code -> code
     | Inr (_decl, code) -> code.code
   in
-  FStarC.Util.format "{ push_kind = %s; push_line = %s; \
+  FStarC.Format.fmt "{ push_kind = %s; push_line = %s; \
                push_column = %s; push_peek_only = %s; push_code_or_decl = %s }"
-    [show pq.push_kind; string_of_int pq.push_line;
-     string_of_int pq.push_column;
-     string_of_bool pq.push_peek_only;
+    [show pq.push_kind; show pq.push_line;
+     show pq.push_column;
+     show pq.push_peek_only;
      code_or_decl]
 
-let query_to_string (q:query) = match q.qq with
+let query_to_string (q:query) : ML _ = match q.qq with
 | Exit -> "Exit"
 | DescribeProtocol -> "DescribeProtocol"
 | DescribeRepl -> "DescribeRepl"
@@ -129,12 +153,12 @@ let query_to_string (q:query) = match q.qq with
 | VfsAdd _ -> "VfsAdd"
 | AutoComplete _ -> "AutoComplete"
 | Lookup(s, _lc, pos, features, _sr) ->
-  BU.format3 "(Lookup %s %s [%s])"
+  Format.fmt3 "(Lookup %s %s [%s])"
               s (match pos with
                  | None -> "None"
                  | Some (f, i, j) ->
-                   BU.format3 "(%s, %s, %s)"
-                              f (string_of_int i) (string_of_int j))
+                   Format.fmt3 "(%s, %s, %s)"
+                              f (show i) (show j))
                 (String.concat "; " features)
 | Compute _ -> "Compute"
 | Search _ -> "Search"
@@ -146,7 +170,7 @@ let query_to_string (q:query) = match q.qq with
 | RestartSolver -> "RestartSolver"
 | Cancel _ -> "Cancel"
 
-let query_needs_current_module = function
+let query_needs_current_module q = match q with
   | Exit | DescribeProtocol | DescribeRepl | Segment _
   | Pop | Push { push_peek_only = false } | VfsAdd _
   | GenericError _ | ProtocolViolation _
@@ -154,7 +178,7 @@ let query_needs_current_module = function
   | FullBuffer _ | Callback _ | Format _ | RestartSolver | Cancel _ -> false
   | Push _ | AutoComplete _ | Lookup _ | Compute _ | Search _ -> true
 
-let interactive_protocol_vernum = 2
+let interactive_protocol_vernum = 3
 
 let interactive_protocol_features =
   ["autocomplete"; "autocomplete/context";
@@ -163,17 +187,17 @@ let interactive_protocol_features =
    "lookup"; "lookup/context"; "lookup/documentation"; "lookup/definition";
    "peek"; "pop"; "push"; "push-partial-checked-file"; "search"; "segment";
    "vfs-add"; "tactic-ranges"; "interrupt"; "progress";
-   "full-buffer"; "format"; "restart-solver"; "cancel"]
+   "full-buffer"; "format"; "restart-solver"; "cancel"; "fly-deps"]
 
-let json_of_issue_level i =
+let json_of_issue_level i : ML _ =
   JsonStr (match i with
            | ENotImplemented -> "not-implemented"
            | EInfo -> "info"
            | EWarning -> "warning"
            | EError -> "error")
 
-let json_of_issue issue =
-  let r = map_opt issue.issue_range Range.refind_range in
+let json_of_issue issue : ML _ =
+  let r = Option.map Range.refind_range issue.issue_range in
   JsonAssoc <|
      [("level", json_of_issue_level issue.issue_level)]
     @(match issue.issue_number with
@@ -193,13 +217,13 @@ let json_of_issue issue =
 (* Reading queries and writing responses *)
 (*****************************************)
 
-let js_pushkind s : push_kind = match js_str s with
+let js_pushkind s : ML push_kind = match js_str s with
   | "syntax" -> SyntaxCheck
   | "lax" -> LaxCheck
   | "full" -> FullCheck
   | _ -> js_fail "push_kind" s
 
-let js_reductionrule s = match js_str s with
+let js_reductionrule s : ML _ = match js_str s with
   | "beta" -> FStarC.TypeChecker.Env.Beta
   | "delta" -> FStarC.TypeChecker.Env.UnfoldUntil SS.delta_constant
   | "iota" -> FStarC.TypeChecker.Env.Iota
@@ -208,7 +232,7 @@ let js_reductionrule s = match js_str s with
   | "pure-subterms" -> FStarC.TypeChecker.Env.PureSubtermsWithinComputations
   | _ -> js_fail "reduction rule" s
 
-let js_optional_completion_context k =
+let js_optional_completion_context k : ML _ =
   match k with
   | None -> CKCode
   | Some k ->
@@ -225,7 +249,7 @@ let js_optional_completion_context k =
       js_fail "completion context (code, set-options, reset-options, \
 open, let-open, include, module-alias)" k
 
-let js_optional_lookup_context k =
+let js_optional_lookup_context k : ML _ =
   match k with
   | None -> LKSymbolOnly // Backwards-compatible default
   | Some k ->
@@ -241,4 +265,3 @@ let js_optional_lookup_context k =
     | _ ->
       js_fail "lookup context (symbol-only, code, set-options, reset-options, \
 open, let-open, include, module-alias)" k
-

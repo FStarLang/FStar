@@ -17,13 +17,11 @@
    Operations over the FStarC.Range.Type.range type.
 *)
 module FStarC.Range.Ops
-
-open FStarC
 friend FStarC.Range.Type
 
+open FStarC
 open FStarC.Json
 open FStarC.Effect 
-open FStarC.Util
 open FStarC.Class.Ord
 
 
@@ -49,11 +47,11 @@ let rng_included r1 r2 =
     r2.end_pos >=? r1.end_pos
 
 let string_of_pos pos =
-    format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
+    Format.fmt2 "%s,%s" (show pos.line) (show pos.col)
 let file_of_range r = r.def_range.file_name
 let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
 let string_of_rng r =
-    format3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
+    Format.fmt3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
 let string_of_use_range r = string_of_rng r.use_range
 let string_of_range r     = string_of_def_range r
@@ -85,7 +83,7 @@ let compare_use_range r1 r2 = compare_rng r1.use_range r2.use_range
 let range_before_pos m1 p =
     p >=? end_of_range m1
 
-let end_of_line p = {p with col=max_int}
+let end_of_line p = {p with col = Util.max_int} // silly to depend on Util for this only...
 let extend_to_end_of_line r = mk_range (file_of_range r)
                                        (start_of_range r)
                                        (end_of_line (end_of_range r))
@@ -126,7 +124,7 @@ let intersect_ranges r1 r2 = {
   use_range=intersect_rng r1.use_range r2.use_range
 }
 
-let bound_range (r bound : range) : range =
+let bound_range (r bound : range) =
   intersect_ranges r bound
 
 instance showable_range = {
@@ -139,14 +137,14 @@ instance pretty_range = {
 
 (* See FStarC.Find.refind_file, this just applies it to both filename
 components. *)
-let refind_rng (r:rng) : rng =
+let refind_rng (r:rng) =
   { r with file_name =
       if Options.Ext.enabled "fstar:no_absolute_paths"
       then r.file_name (* already a basename *)
       else FStarC.Find.refind_file r.file_name
   }
 
-let refind_range (r:range) : range =
+let refind_range (r:range) =
   { r with
     def_range = refind_rng r.def_range;
     use_range = refind_rng r.use_range }

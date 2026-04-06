@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,6 @@ open FStarC.Class.PP
 open FStarC.Class.Deq
 open FStarC.Syntax.Print {}
 
-module BU    = FStarC.Util
 module Err   = FStarC.Errors
 module Ident = FStarC.Ident
 module PC    = FStarC.Parser.Const
@@ -109,12 +108,13 @@ otherwise since reduction is blocked.)
 let id_norm_cb : norm_cb = function
     | Inr x -> x
     | Inl l -> S.fv_to_tm (S.lid_as_fv l None)
+
+let map_shadow (s:shadow_term) (f:term -> ML term) : ML shadow_term =
+    Option.map (Thunk.map f) s
+let force_shadow (s:shadow_term) : ML (option term) = Option.map Thunk.force s
+
 exception Embedding_failure
 exception Unembedding_failure
-
-let map_shadow (s:shadow_term) (f:term -> term) : shadow_term =
-    BU.map_opt s (Thunk.map f)
-let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 class embedding (a:Type0) = {
   em      : a -> embed_t;
@@ -122,19 +122,19 @@ class embedding (a:Type0) = {
   print   : printer a;
 
   (* These are thunked so we can create Tot instances. *)
-  typ     : unit -> typ;
-  e_typ : unit -> emb_typ;
+  typ     : unit -> ML typ;
+  e_typ : unit -> ML emb_typ;
 }
 
 let emb_typ_of a #e () = e.e_typ ()
 
-let unknown_printer (typ : term) (_ : 'a) : string =
-    BU.format1 "unknown %s" (show typ)
+let unknown_printer (typ : term) (_ : 'a) : ML string =
+    Format.fmt1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
+    | _ -> failwith (Format.fmt1 "Embeddings not defined for type %s" (show t))
 
 let mk_emb em un fv : Tot _ =
     {
@@ -213,22 +213,22 @@ let unembed #a {| e:embedding a |} t n =
 
 let embed_as (ea:embedding 'a) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option S.typ) : Tot (embedding 'b) =
     mk_emb_full (fun (x:'b) -> embed (ba x))
-                (fun (t:term) cb -> BU.map_opt (try_unembed t cb) ab)
+                (fun (t:term) cb -> Option.map ab (try_unembed t cb))
                 (fun () -> match o with | Some t -> t | _ -> type_of ea)
-                (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
+                (fun (x:'b) -> Format.fmt1 "(embed_as>> %s)\n" (ea.print (ba x)))
                 ea.e_typ
 
 (* A simple lazy embedding, without cancellations nor an expressive type. *)
-let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
-  let ee (x:a) rng _topt _norm : term = U.mk_lazy x ty k (Some rng) in
-  let uu (t:term) _norm : option a =
+let e_lazy #a (k:lazy_kind) (ty : S.typ) : ML (embedding a) =
+  let ee (x:a) rng _topt _norm : ML term = U.mk_lazy x ty k (Some rng) in
+  let uu (t:term) _norm : ML (option a) =
     let t0 = t in
     match (SS.compress t).n with
     | Tm_lazy {blob=b; lkind=lkind} when lkind =? k -> Some (Dyn.undyn b)
     | Tm_lazy {blob=b; lkind=lkind} ->
       (* This is very likely a bug, warn! *)
       Err.log_issue t0 Err.Warning_NotEmbedded
-                (BU.format3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
+                (Format.fmt3 "Warning, lazy unembedding failed, tag mismatch.\n\t\
                             Expected %s, got %s\n\t\
                             t = %s."
                             (show k) (show lkind) (show t0));
@@ -238,9 +238,9 @@ let e_lazy #a (k:lazy_kind) (ty : S.typ) : embedding a =
   in
   mk_emb ee uu (term_as_fv ty)
 
-let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term) =
+let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> ML term) : ML term =
     if !Options.debug_embedding
-    then BU.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
+    then Format.print3 "Embedding a %s\n\temb_typ=%s\n\tvalue is %s\n"
                          (show ta)
                          (show et)
                          (pa x);
@@ -249,7 +249,7 @@ let lazy_embed (pa:printer 'a) (et:emb_typ) rng (ta:term) (x:'a) (f:unit -> term
     else let thunk = Thunk.mk f in
          U.mk_lazy x S.tun (Lazy_embedding (et, thunk)) (Some rng)
 
-let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> option 'a) : option 'a =
+let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> ML (option 'a)) : ML (option 'a) =
     let x = SS.compress x in
     match x.n with
     | Tm_lazy {blob=b; lkind=Lazy_embedding (et', t)}  ->
@@ -257,7 +257,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
       || !Options.eager_embedding
       then let res = f (Thunk.force t) in
            let _ = if !Options.debug_embedding
-                   then BU.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
+                   then Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n"
                                 (show et)
                                 (show et')
                                 (match res with None -> "None" | Some x -> "Some " ^ (pa x))
@@ -265,35 +265,35 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> opti
            res
       else let a = Dyn.undyn b in
            let _ = if !Options.debug_embedding
-                   then BU.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
+                   then Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
                                 (show et) (pa a)
            in
            Some a
     | _ ->
       let aopt = f x in
       let _ = if !Options.debug_embedding
-              then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
+              then Format.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                                (show et) (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
-let (let?) o f = BU.bind_opt o f
+let (let?) o f = Option.bind o f
 
-let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> term) : embedding 'a =
-  let uu (t:term) _norm : option 'a =
+let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> ML term) : ML (embedding 'a) =
+  let uu (t:term) _norm : ML (option 'a) =
     let hd, args = U.head_and_args t in
     let? hd_lid =
       match (SS.compress (U.un_uinst hd)).n with
-      | Tm_fvar fv -> Some fv.fv_name.v
+      | Tm_fvar fv -> Some fv.fv_name
       | _ -> None
     in
     u (Ident.string_of_lid hd_lid, List.map fst args)
   in
-  let ee (x:'a) rng _topt _norm : term = e x in
+  let ee (x:'a) rng _topt _norm : ML term = e x in
   mk_emb ee uu (S.lid_as_fv (Ident.lid_of_str name) None)
 
-let extracted_embed (e: embedding 'a) (x: 'a) : term =
+let extracted_embed (e: embedding 'a) (x: 'a) : ML term =
   embed x Range.dummyRange None id_norm_cb
 
-let extracted_unembed (e: embedding 'a) (t: term) : option 'a =
+let extracted_unembed (e: embedding 'a) (t: term) : ML (option 'a) =
   try_unembed t id_norm_cb

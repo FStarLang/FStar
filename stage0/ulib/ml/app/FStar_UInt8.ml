@@ -41,6 +41,15 @@ let int_to_uint8 (x:Prims.int) : uint8 = Z.to_int x % 256
 let shift_right (a:uint8) (b:Stdint.Uint32.t) : uint8 = a lsr (Stdint.Uint32.to_int b)
 let shift_left  (a:uint8) (b:Stdint.Uint32.t) : uint8 = (a lsl (Stdint.Uint32.to_int b)) land 255
 
+(* Rotate operations *)
+let rotate_left (a:uint8) (b:Stdint.Uint32.t) : uint8 =
+  let amount = (Stdint.Uint32.to_int b) mod 8 in
+  ((a lsl amount) lor (a lsr (8 - amount))) land 255
+
+let rotate_right (a:uint8) (b:Stdint.Uint32.t) : uint8 =
+  let amount = (Stdint.Uint32.to_int b) mod 8 in
+  ((a lsr amount) lor (a lsl (8 - amount))) land 255
+
 (* Comparison operators *)
 let eq (a:uint8) (b:uint8) : bool = a = b
 let gt (a:uint8) (b:uint8) : bool = a > b
@@ -52,29 +61,6 @@ let lte (a:uint8) (b:uint8) : bool =  a <= b
 let gte_mask (a:uint8) (b:uint8) : uint8 = if a >= b then 255 else 0
 let eq_mask (a:uint8) (b:uint8) : uint8 = if a = b then 255 else 0
                                              
-(* Infix notations *)
-let op_Plus_Hat = add
-let op_Plus_Question_Hat = add_underspec
-let op_Plus_Percent_Hat = add_mod
-let op_Subtraction_Hat = sub
-let op_Subtraction_Question_Hat = sub_underspec
-let op_Subtraction_Percent_Hat = sub_mod
-let op_Star_Hat = mul
-let op_Star_Question_Hat = mul_underspec
-let op_Star_Percent_Hat = mul_mod
-let op_Slash_Hat = div
-let op_Percent_Hat = rem
-let op_Hat_Hat = logxor  
-let op_Amp_Hat = logand
-let op_Bar_Hat = logor
-let op_Less_Less_Hat = shift_left
-let op_Greater_Greater_Hat = shift_right
-let op_Equals_Hat = eq
-let op_Greater_Hat = gt
-let op_Greater_Equals_Hat = gte
-let op_Less_Hat = lt
-let op_Less_Equals_Hat = lte
-
 let of_string s = int_of_string s
 let to_string s = string_of_int s
 let to_string_hex s = Printf.sprintf "0x%x" s

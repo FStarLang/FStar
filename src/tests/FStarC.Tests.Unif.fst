@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,8 @@ module FStarC.Tests.Unif
 //open FSharp.Compatibility.OCaml
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.Errors
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Tests.Pars
 module S = FStarC.Syntax.Syntax
@@ -29,7 +27,6 @@ module U = FStarC.Syntax.Util
 module N = FStarC.TypeChecker.Normalize
 module Rel = FStarC.TypeChecker.Rel
 module Env = FStarC.TypeChecker.Env
-module BU = FStarC.Util
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
 open FStarC.Ident
@@ -38,20 +35,20 @@ open FStarC.Tests.Util
 
 open FStarC.Class.Show
 
-let tcenv () = Pars.init()
+let tcenv () : ML _ = Pars.init()
 
-let guard_to_string g = match g with
+let guard_to_string g : ML _ = match g with
     | Trivial -> "trivial"
     | NonTrivial f ->
       N.term_to_string (tcenv()) f
 
 let success = mk_ref true
 
-let fail msg =
-    BU.print_string msg;
+let fail msg : ML unit =
+    Format.print_string msg;
     success := false
 
-let guard_eq i g g' =
+let guard_eq (i : int) g g' : ML unit =
     let b, g, g' = match g, g' with
         | Trivial, Trivial -> true, g, g'
         | NonTrivial f, NonTrivial f' ->
@@ -60,15 +57,15 @@ let guard_eq i g g' =
           term_eq f f', NonTrivial f, NonTrivial f'
         | _ -> false, g, g' in
     if not b
-    then fail <| BU.format3 "Test %s failed:\n\t\
+    then fail <| Format.fmt3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
-                        Got guard      %s\n" (BU.string_of_int i) (guard_to_string g') (guard_to_string g);
+                        Got guard      %s\n" (show i) (guard_to_string g') (guard_to_string g);
     success := !success && b
 
-let unify i bvs x y g' check =
-    BU.print1 "%s ..." (BU.string_of_int i);
+let unify i bvs x y g' (check: unit -> ML unit) : ML unit =
+    Format.print1 "%s ..." (show i);
     Options.parse_cmd_line () |> ignore; //set options
-    BU.print2 "Unify %s\nand %s\n" (show x) (show y);
+    Format.print2 "Unify %s\nand %s\n" (show x) (show y);
     let tcenv = tcenv() in
     let tcenv = Env.push_bvs tcenv bvs in
     let g = Rel.teq tcenv x y |> Rel.solve_deferred_constraints tcenv |> Rel.simplify_guard tcenv in
@@ -76,62 +73,62 @@ let unify i bvs x y g' check =
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
 
-let should_fail x y =
+let should_fail x y : ML unit =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (show x) (show y))
-            | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
-    with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" (Errors.rendermsg msg) // FIXME?
+            | Trivial -> fail (Format.fmt2 "%s and %s should not be unifiable\n" (show x) (show y))
+            | NonTrivial f -> Format.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
+    with Error(e, msg, r, _ctx) -> Format.print1 "Expected failure OK: %s\n" (Errors.rendermsg msg) // FIXME?
 
-let unify' x y =
+let unify' x y : ML unit =
     let x = pars x in
     let y = pars y in
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    BU.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
+    Format.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
 
-let norm t = N.normalize [] (tcenv()) t
+let norm t : ML _ = N.normalize [] (tcenv()) t
 
-let check_core i subtyping guard_ok x y =
+let check_core (i : int) subtyping guard_ok x y : ML unit =
   Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
-  let res = 
+  let res =
     if subtyping
     then FStarC.TypeChecker.Core.check_term_subtyping true true env x y
     else FStarC.TypeChecker.Core.check_term_equality  true true env x y
   in
-  let _ = 
+  let _ =
     match res with
     | Inl None ->
-      BU.print1 "%s core check ok\n" (BU.string_of_int i)
-    | Inl (Some g) ->
-      BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (show g);
+      Format.print1 "%s core check ok\n" (show i)
+    | Inl (Some (g, cb)) ->
+      Format.print2 "%s core check computed guard %s ok\n" (show i) (show g);
       if not guard_ok
       then success := false
     | Inr err ->
       success := false;
-      BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStarC.TypeChecker.Core.print_error err)
+      Format.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)
   in
   Options.init()
 
-let check_core_typing i e t =
+let check_core_typing (i : int) e t : ML unit =
   Options.parse_cmd_line () |> ignore; //set options
   let env = tcenv () in
   let _ =
     match FStarC.TypeChecker.Core.check_term env e t true with
-    | Inl None -> 
-      BU.print1 "%s core typing ok\n" (BU.string_of_int i)
-    | Inl (Some g) -> 
-      BU.print1 "%s core typing produced a guard\n" (BU.string_of_int i);
+    | Inl None ->
+      Format.print1 "%s core typing ok\n" (show i)
+    | Inl (Some g) ->
+      Format.print1 "%s core typing produced a guard\n" (show i);
       success := false
     | Inr err ->
       success := false;
-      BU.print2 "%s failed\n%s\n" (BU.string_of_int i) (FStarC.TypeChecker.Core.print_error err)      
+      Format.print2 "%s failed\n%s\n" (show i) (FStarC.TypeChecker.Core.print_error err)
   in
   Options.init()
 
-let inst n tm =
-   let rec aux out n =
+let inst n tm : ML _ =
+   let rec aux out n : ML _ =
     if n=0 then out
     else let t, _, _ = FStarC.TypeChecker.Util.new_implicit_var "" dummyRange (init()) U.ktype0 false in
          let u, _, _ = FStarC.TypeChecker.Util.new_implicit_var "" dummyRange (init()) t false in
@@ -139,10 +136,9 @@ let inst n tm =
    let us = aux [] n in
    norm (app tm us), us
 
-let run_all () =
-    BU.print_string "Testing the unifier\n";
+let run_all () : ML bool =
+    Format.print_string "Testing the unifier\n";
 
-    Options.__set_unit_tests();
     let unify_check n bvs x y g f = unify n bvs x y g f in
     let unify n bvs x y g = unify n bvs x y g (fun () -> ()) in
     let int_t = tc "Prims.int" in
@@ -201,8 +197,7 @@ let run_all () =
     unify_check 9 [] tm
             sol
             Trivial
-            (fun () ->
-                always 9 (term_eq (norm (List.hd us))
+            (fun () -> always 9 (term_eq (norm (List.hd us))
                                   (norm sol)));
 
     //imitation: unifies u to a lambda
@@ -211,7 +206,7 @@ let run_all () =
     unify_check 10 [] tm
             sol
             Trivial
-            (fun () ->always 10 (term_eq (norm (List.hd us))
+            (fun () -> always 10 (term_eq (norm (List.hd us))
                                 (norm sol)));
 
     let tm1 = tc ("x:int -> y:int{eq2 y x} -> bool") in
@@ -263,7 +258,7 @@ let run_all () =
     unify 14 bvs_14 tm1 tm2 Trivial;
 
     let tm1, tm2 =
-      let _ = Pars.pars_and_tc_fragment 
+      let _ = Pars.pars_and_tc_fragment
         "let ty0 n = x:int { x >= n }\n\
          let ty1 n = x:ty0 n { x > n }\n\
          assume val tc (t:Type0) : Type0"
@@ -282,27 +277,27 @@ let run_all () =
     check_core 16 false false tm1 tm2;
 
     let tm1, tm2 =
-      let _ = Pars.pars_and_tc_fragment 
+      let _ = Pars.pars_and_tc_fragment
         "let defn17_0 (x:nat) : nat -> nat -> Type0 = fun y z -> a:int { a + x == y + z }"
       in
       let t0 = tc "defn17_0 0 1 2" in
       let t1_head = tc "(defn17_0 0)" in
       let arg1 = tc "1" in
-      let arg2 = tc "2" in      
+      let arg2 = tc "2" in
       let t1 = S.mk_Tm_app t1_head [(arg1, None); (arg2, None)] t0.pos in
       t0, t1
     in
     check_core 17 false false tm1 tm2;
 
-    let tm1, tm2 = 
+    let tm1, tm2 =
       let t0 = tc "dp:((dtuple2 int (fun (y:int) -> z:int{ z > y })) <: Type0) { let (| x, _ |) = dp in x > 17 }" in
       let t1 = tc "(dtuple2 int (fun (y:int) -> z:int{ z > y }))" in
       t0, t1
     in
     check_core 18 true false tm1 tm2;
 
-    let tm1, tm2 = 
-      let _ = Pars.pars_and_tc_fragment 
+    let tm1, tm2 =
+      let _ = Pars.pars_and_tc_fragment
         "type vprop' = { t:Type0 ; n:nat }"
       in
       let t0 = tc "x:(({ t=bool; n=0 }).t <: Type0) { x == false }" in
@@ -312,14 +307,14 @@ let run_all () =
     check_core 19 false false tm1 tm2;
 
 
-    let tm1, tm2 = 
+    let tm1, tm2 =
       let t0 = tc "int" in
       let t1 = tc "j:(i:nat{ i > 17 } <: Type0){j > 42}" in
       t0, t1
     in
     check_core 20 true true tm1 tm2;
 
-    let tm, ty = 
+    let tm, ty =
       let _ = Pars.pars_and_tc_fragment "assume val tstr21 (x:string) : Type0" in
       let t0 = tc "(fun (x:bool) (y:int) (z: (fun (x:string) -> tstr21 x) \"hello\") -> x)" in
       let ty = tc "bool -> int -> tstr21 \"hello\" -> bool" in
@@ -327,8 +322,6 @@ let run_all () =
     in
     check_core_typing 21 tm ty;
 
-    Options.__clear_unit_tests();
-
     if !success
-    then BU.print_string "Unifier ok\n";
+    then Format.print_string "Unifier ok\n";
     !success

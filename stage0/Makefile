@@ -29,15 +29,6 @@ FSTAR_DUNE_BUILD_OPTIONS := $(FSTAR_DUNE_OPTIONS)
 .PHONY: .force
 .force:
 
-# In some places, we need to compute absolute paths, and in a Cygwin
-# enviroment we need Windows-style paths (forward slashes ok, but no
-# /cygdrive/).
-ifeq ($(OS),Windows_NT)
-cygpath=$(shell cygpath -m "$(abspath $(1))")
-else
-cygpath=$(abspath "$(1)")
-endif
-
 build:
 	$(call msg, "DUNE BUILD")
 	dune build --root=dune $(FSTAR_DUNE_BUILD_OPTIONS)
@@ -71,8 +62,12 @@ install_lib_src:
 
 install_lib: check_lib install_lib_src
 	$(call msg, "INSTALL LIB")
-	@# Install library checked files
-	cp -T -H -p -r ulib.checked out/lib/fstar/ulib.checked
+	@# Install library checked files. NOTE: We use /. at the end of the
+	@# src so that, if the target already exists as a directory, we copy
+	@# the *contents* of ulib.checked into it, instead of creating another
+	@# ulib.checked under it. In Linux, this can be avoided with the -T
+	@# flag, but MacOS does not have it.
+	cp -H -p -r ulib.checked/. out/lib/fstar/ulib.checked
 
 check_fstarc: install_bin
 	$(call msg, "CHECK FSTARC")
@@ -92,8 +87,9 @@ install_fstarc: check_fstarc
 	$(call msg, "INSTALL FSTARC")
 	@# Install checked files for FStarC
 	mkdir -p out/lib/fstar/fstarc/
-	cp -T -H -p -r src               out/lib/fstar/fstarc/src
-	cp -T -H -p -r fstarc.checked    out/lib/fstar/fstarc/src.checked
+	@# See note about /. above
+	cp -H -p -r src/.               out/lib/fstar/fstarc/src
+	cp -H -p -r fstarc.checked/.    out/lib/fstar/fstarc/src.checked
 	echo 'src'          > out/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> out/lib/fstar/fstarc/fstar.include
 
@@ -105,8 +101,10 @@ clean: trim
 	rm -rf $(CURDIR)/out
 	rm -rf ulib.checked
 	rm -rf fstarc.checked
+	rm -rf pulse/common.checked
+	rm -rf pulse/pulse.checked
 
-all: install_lib install_fstarc
+all: install_lib install_fstarc install_pulse
 
 install_fstarc: install_lib
 # ^ The windows build in Github actions seems to sporadically
@@ -114,9 +112,62 @@ install_fstarc: install_lib
 # some kind of stupid race, so sequentialize these two install
 # phases.
 
+# Build and install Pulse library, if present.
+ifneq ($(wildcard pulse/),)
+
+check_pulse_common: check_lib
+	$(call msg, "CHECK PULSE COMMON")
+	env \
+	  SRC=pulse/common \
+	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
+	  CACHE_DIR=pulse/common.checked \
+	  TAG=pulse_common \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
+	  FSTAR_ROOT=$(CURDIR) \
+	  OTHERFLAGS='--include ulib.checked' \
+	  DEPFLAGS='--already_cached Prims,FStar,FStarC' \
+	  ROOTS="$$(find pulse/common -name '*.fst' -o -name '*.fsti' | tr '\n' ' ')" \
+	  $(MAKE) -f mk/generic-1.mk verify
+
+check_pulse: check_pulse_common
+	$(call msg, "CHECK PULSE")
+	env \
+	  SRC=pulse/pulse \
+	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
+	  CACHE_DIR=pulse/pulse.checked \
+	  TAG=pulse \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
+	  FSTAR_ROOT=$(CURDIR) \
+	  OTHERFLAGS='--include ulib.checked --include pulse/common --include pulse/common.checked' \
+	  DEPFLAGS='--already_cached Prims,FStar,FStarC' \
+	  ROOTS="$$(find pulse/pulse -name '*.fst' -o -name '*.fsti' | tr '\n' ' ')" \
+	  $(MAKE) -f mk/generic-1.mk verify
+
+install_pulse: check_pulse
+	$(call msg, "INSTALL PULSE")
+	mkdir -p out/lib/fstar/pulse
+	cp -H -p -r pulse/common          out/lib/fstar/pulse/common
+	cp -H -p -r pulse/common.checked  out/lib/fstar/pulse/common.checked
+	cp -H -p -r pulse/pulse           out/lib/fstar/pulse/pulse
+	cp -H -p -r pulse/pulse.checked   out/lib/fstar/pulse/pulse.checked
+	echo 'common'         >> out/lib/fstar/pulse/fstar.include
+	echo 'common.checked' >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse'          >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse.checked'  >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse'          >> out/lib/fstar/fstar.include
+
+else
+
+install_pulse:
+	@true
+
+endif
+
 # Needed for 'opam install'
 PREFIX ?= /usr/local
-install: install_lib install_fstarc
+install: install_lib install_fstarc install_pulse
 	mkdir -p $(PREFIX)
 	cp -r out/* $(PREFIX)
 
@@ -127,5 +178,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2025-03-28 20:24:13 -0700
-export FSTAR_COMMIT=81d91f7d59780d9ea62eaa212c6322ba74dcbd54
+export FSTAR_COMMITDATE=2026-03-16 17:18:27 -0700
+export FSTAR_COMMIT=7dca050132a239d02361b33cb24c11240d81cf7e

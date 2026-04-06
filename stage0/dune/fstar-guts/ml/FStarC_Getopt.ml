@@ -6,13 +6,11 @@ type 'a opt' = FStar_Char.char * string * 'a opt_variant
 type opt = unit opt'
 type parse_cmdline_res =
   | Empty
-  | Help
   | Error of (string * string)
   | Success
 
 let bind l f =
     match l with
-    | Help
     | Error _ -> l
     | Success -> f ()
     (* | Empty  *)

@@ -8,15 +8,23 @@ name: F* nightly build
 #
 # The default GITHUB_TOKEN only allows access to the current repo, so it's
 # not useful.
+#
+# Nightly builds are scheduled by nightly-schedule.yml, which dispatches
+# this workflow for each branch. You can also trigger it manually.
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        type: string
+        default: 'master'
 
 jobs:
   build-all:
     uses: ./.github/workflows/build-all.yml
+    with:
+      ref: ${{ inputs.branch }}
 
   publish:
     runs-on: ubuntu-latest
@@ -24,41 +32,70 @@ jobs:
     steps:
       - uses: actions/checkout@master
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0 # full clone, so we can push objects
+          submodules: true
 
-      - name: Set up git
+      - name: Set up git and some variables
         run: |
           git config --global user.name "Dzomo, the Everest Yak"
           git config --global user.email "24394600+dzomo@users.noreply.github.com"
 
-      - uses: actions/download-artifact@v4
+          # We push nightly builds to a different repo (same org)
+          REPO="${{github.repository}}-nightly"
+
+          BRANCH="${{ inputs.branch }}"
+          if [[ "$BRANCH" == "master" ]]; then
+            TAG=nightly-$(date -I)
+          else
+            TAG=nightly-${BRANCH}-$(date -I)
+          fi
+
+          SHA=$(git rev-parse HEAD)
+
+          echo "REPO=$REPO" >>$GITHUB_ENV
+          echo "TAG=$TAG" >>$GITHUB_ENV
+          echo "SHA=$SHA" >>$GITHUB_ENV
+
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
           # ^ Download all artifacts into the same dir.
           # Each of them is a single file, so no clashes happen.
 
-      - name: Publish artifacts in nightly tag
-        run: |
-          git config --unset-all http.https://github.com/.extraheader
+      # For debugging.
+      - run: |
+          echo LOCAL
+          git config --local -l
+          echo GLOBAL
+          git config --global -l
+
+      - run: |
+          # git config --unset-all http.https://github.com/.extraheader
           # ^ https://stackoverflow.com/questions/64374179/how-to-push-to-another-repository-in-github-actions
+          # The above does not work anymore, GitHub switched to using includeif
+          # directives in the config. Remove them.
+          for key in $(git config -l | grep ^includeif | cut -d= -f1); do git config unset --all $key; done
 
-          # We push nightly builds to a different repo (same org)
-          REPO="${{github.repository}}-nightly"
-          TAG=nightly-$(date -I)
+      - name: Create tag
+        run: |
+          git tag $TAG $SHA
 
-          # Create tag
-          git tag $TAG ${{github.sha}}
-
-          # Add new remote and push tag
+      - name: Push tag to nightly repo
+        run: |
           git remote add nightly-repo https://${{secrets.DZOMO_GITHUB_TOKEN}}@github.com/$REPO
+          echo "Nightly remote added"
           git push nightly-repo $TAG
+          echo "Pushed to nightly repo"
 
-          # Create release
+      - name: Create release, with artifacts
+        run: |
           gh release create -R "$REPO" \
             --generate-notes \
-            --target ${{ github.sha }} \
+            --target $SHA \
             $TAG artifacts/*
+          echo "Done!"
 
         env:
           GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}

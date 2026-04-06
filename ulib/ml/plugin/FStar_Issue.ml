@@ -29,11 +29,11 @@ let mk_issue_level (i:issue_level_string)
     | "Info" -> EInfo
     | "Warning" -> EWarning
 
-let issue_to_doc (i:issue) : FStarC_Pprint.document = FStarC_Errors.issue_to_doc' true i
+let issue_to_doc (i:issue) : FStar_Pprint.document = FStarC_Errors.issue_to_doc' true i
 let render_issue (i:issue) : string = FStarC_Errors.format_issue i
 
 let mk_issue_doc (i:issue_level_string)
-             (msg:FStarC_Pprint.document list)
+             (msg:FStar_Pprint.document list)
              (range:FStarC_Range.range option)
              (number:Z.t option)
              (ctx:string list)
@@ -50,7 +50,7 @@ let mk_issue (i:issue_level_string)
              (number:Z.t option)
              (ctx:string list)
   = { issue_level = mk_issue_level i;
-      issue_msg = [FStarC_Pprint.arbitrary_string msg];
+      issue_msg = [FStar_Pprint.arbitrary_string msg];
       issue_range = range;
       issue_number = number;
       issue_ctx = ctx }

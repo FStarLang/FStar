@@ -20,13 +20,12 @@ open FStarC
 open FStarC.Parser
 open FStarC.Parser.AST
 open FStarC.Parser.ParseIt
-open FStarC.Util
 open FStarC.Errors
 open FStarC.Class.Show
 
 let is_cache_file (fn: string) = Filepath.get_file_extension fn = ".cache"
 
-let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
+let parse_fragment lang_opt (frag: ParseIt.input_frag) =
     match ParseIt.parse lang_opt (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module
         Modul modul
@@ -41,13 +40,13 @@ let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
-let maybe_dump_module (m:modul) = 
+let maybe_dump_module (m:modul) : ML unit = 
     match m with
     | Module {mname; decls}
     | Interface {mname; decls} ->
       if FStarC.Options.dump_module (Ident.string_of_lid mname)
       then (
-        print2 "Parsed module %s\n%s\n"
+        Format.print2 "Parsed module %s\n%s\n"
             (show mname)
             (List.map show decls |> String.concat "\n")
       )
@@ -57,7 +56,7 @@ let parse_file fn =
     | ASTFragment (Inl ast, comments) ->
         ast, comments
     | ASTFragment (Inr _ , _) ->
-        let msg = Util.format1 "%s: expected a module\n" fn in
+        let msg = Format.fmt1 "%s: expected a module\n" fn in
         let r = Range.dummyRange in
         raise_error r Errors.Fatal_ModuleExpected msg
     | ParseError (e, msg, r) ->

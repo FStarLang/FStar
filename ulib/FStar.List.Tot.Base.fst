@@ -86,7 +86,7 @@ let rec nth l n = match l with
 (** [index l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th). Requires, at type-checking time, that [l] be
 of length at least [n+1]. *)
-val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a
+val index: #a:Type -> l:list a -> i:nat{i < length l} -> Tot a (decreases i)
 let rec index #a (l: list a) (i:nat{i < length l}): Tot a =
   if i = 0 then
     hd l

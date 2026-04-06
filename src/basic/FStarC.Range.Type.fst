@@ -31,7 +31,7 @@ type pos = {
 }
 let max i j = if i < j then j else i
 
-let compare_pos (p1 p2 : pos) : order =
+let compare_pos (p1 p2 : pos) : ML order =
   lex (cmp p1.line p2.line) (fun _ -> cmp p1.col p2.col)
 
 instance deq_pos : deq pos = { (=?) = (=); }
@@ -75,7 +75,7 @@ let range_of_rng d u = {
 }
 let set_use_range r2 use_rng =
   if use_rng <> dummy_rng then
-    {r2 with use_range=use_rng}
+    {r2 with use_range=use_rng; def_range=(if r2.def_range=dummy_rng then use_rng else r2.def_range)}
   else r2
 let set_def_range r2 def_rng =
   if def_rng <> dummy_rng then

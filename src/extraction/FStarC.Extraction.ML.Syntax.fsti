@@ -17,16 +17,15 @@
 *)
 (* -------------------------------------------------------------------- *)
 module FStarC.Extraction.ML.Syntax
-
 open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Ident
-open FStarC.Util
 open FStarC.Const
 open FStarC.BaseTypes
 
 open FStarC.Class.Show
+open FStarC.Class.PP
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -69,7 +68,6 @@ type mlconstant =
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
-| MLC_Bytes  of FStarC.Array.array byte
 
 type mlpattern =
 | MLP_Wild
@@ -105,8 +103,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
-  | RemoveUnusedTypeParameters of list int & FStarC.Range.range //positional
-  | HasValDecl of FStarC.Range.range //this symbol appears in the interface of a module
+  | RemoveUnusedTypeParameters of list int & FStarC.Range.t //positional
+  | HasValDecl of FStarC.Range.t //this symbol appears in the interface of a module
   | CNoInline
 
 // rename
@@ -233,28 +231,37 @@ val ml_string_ty : mlty
 
 val ml_unit      : mlexpr
 
-val apply_obj_repr :  mlexpr -> mlty -> mlexpr
+val apply_obj_repr :  mlexpr -> mlty -> ML mlexpr
 
-val ty_param_names (tys:list ty_param) : list string
+val ty_param_names (tys:list ty_param) : ML (list string)
 
 val push_unit (eff:e_tag) (ts : mltyscheme) : mltyscheme
-val pop_unit (ts : mltyscheme) : e_tag & mltyscheme
+val pop_unit (ts : mltyscheme) : ML (e_tag & mltyscheme)
 
-val mltyscheme_to_string (tsc:mltyscheme) : string
-val mlbranch_to_string (b:mlbranch) : string
-val mlletbinding_to_string (lb:mlletbinding) : string
-val mllb_to_string (lb:mllb) : string
-val mlpattern_to_string (p:mlpattern) : string
+val mlty_to_string         (t:mlty)         : ML string
+val mltyscheme_to_string   (tsc:mltyscheme) : ML string
+val mlbranch_to_string     (b:mlbranch)     : ML string
+val mlletbinding_to_string (lb:mlletbinding) : ML string
+val mllb_to_string         (lb:mllb)        : ML string
+val mlpattern_to_string    (p:mlpattern)    : ML string
+val mlconstant_to_string   (c:mlconstant)   : ML string
+val mlexpr_to_string       (e:mlexpr)       : ML string
+val mltybody_to_string     (d:mltybody)     : ML string
+val one_mltydecl_to_string (d:one_mltydecl) : ML string
+val mlmodule1_to_string    (d:mlmodule1)    : ML string
 
-val mlconstant_to_string   (c:mlconstant)   : string
-val mlty_to_string         (t:mlty)         : string
-val mlexpr_to_string       (e:mlexpr)       : string
-val mltybody_to_string     (d:mltybody)     : string
-val one_mltydecl_to_string (d:one_mltydecl) : string
-val mlmodule1_to_string    (d:mlmodule1)    : string
-
-instance val showable_mlty      : showable mlty
-instance val showable_mlconstant : showable mlconstant
-instance val showable_mlexpr     : showable mlexpr
-instance val showable_mlmodule1 : showable mlmodule1
+instance val showable_mlty         : showable mlty
+instance val showable_mlconstant   : showable mlconstant
+instance val showable_mlexpr       : showable mlexpr
+instance val showable_mlmodule1    : showable mlmodule1
 instance val showable_mlmodulebody : showable mlmodulebody
+instance val showable_mllb         : showable mllb
+instance val showable_meta         : showable meta
+
+instance val pp_mlty               : pretty mlty
+instance val pp_mlconstant         : pretty mlconstant
+instance val pp_mlexpr             : pretty mlexpr
+instance val pp_mlmodule1          : pretty mlmodule1
+instance val pp_mlmodulebody       : pretty mlmodulebody
+instance val pp_mllb               : pretty mllb
+instance val pp_meta               : pretty meta

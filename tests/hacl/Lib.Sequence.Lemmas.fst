@@ -4,7 +4,7 @@ open FStar.Mul
 open Lib.IntTypes
 open Lib.Sequence
 
-#set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 \
+#set-options "--z3rlimit 30 --fuel 0 --ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Pervasives +FStar.Math.Lemmas +FStar.Seq \
     +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators'"
 #set-options "--z3refresh"

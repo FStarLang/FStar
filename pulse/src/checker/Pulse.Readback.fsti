@@ -1,0 +1,37 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Pulse.Readback
+module R = FStar.Reflection.V2
+open Pulse.Syntax.Base
+open Pulse.Elaborate.Pure
+
+val readback_comp (t:R.term)
+  : option (c:comp{ elab_comp c == t})
+
+val readback_pat (p:R.pattern)
+  : option pattern
+
+val readback_sub_pat (pb:R.pattern & bool)
+  : option (pattern & bool)
+
+val elab_readback_pat_x (rp:R.pattern) (p:pattern)
+  : Lemma (requires readback_pat rp == Some p)
+          (ensures elab_pat p == rp)
+
+val elab_readback_subpat (pb:R.pattern & bool)
+  : Lemma (requires (Some? (readback_sub_pat pb)))
+          (ensures elab_sub_pat (Some?.v (readback_sub_pat pb)) == pb)

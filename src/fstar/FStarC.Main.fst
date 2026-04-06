@@ -17,17 +17,21 @@ module FStarC.Main
 open FStarC
 open FStarC.Effect
 open FStarC.List
-open FStarC.Util
+open FStarC.Format
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.CheckedFiles
 open FStarC.Universal
-open FStarC
+open FStarC.Util
+
+open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
 
 open FStarC.Class.Show
 
 module E = FStarC.Errors
 module UF = FStarC.Syntax.Unionfind
+
+let cleanup () = Util.kill_all ()
 
 let print_stats () =
   if !Stats.ever_enabled then
@@ -37,7 +41,6 @@ let print_stats () =
 and hence compile and link them in. They do not export anything,
 instead they register primitive steps in the normalizer during
 initialization. *)
-open FStarC.Reflection.V1.Interpreter {}
 open FStarC.Reflection.V2.Interpreter {}
 (* Same, except that it only defines some types for userspace to refer to. *)
 open FStarC.Tactics.Types.Reflection {}
@@ -45,22 +48,22 @@ open FStarC.NormSteps {}
 
 (* process_args:  parses command line arguments, setting FStarC.Options *)
 (*                returns an error status and list of filenames        *)
-let process_args () : parse_cmdline_res & list string =
+let process_args () : ML (parse_cmdline_res & list string) =
   Options.parse_cmd_line ()
 
 (* printing a finished message *)
-let finished_message fmods errs =
-  let print_to = if errs > 0 then Util.print_error else Util.print_string in
+let finished_message fmods errs : ML unit =
+  let print_to : string -> ML unit = if errs > 0 then print_error else print_string in
   if not (Options.silent()) then begin
     fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
                 if Options.should_print_message (string_of_lid name)
-                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.string_of_lid name)));
+                then print_to (fmt2 "Verified %s: %s\n" tag (Ident.string_of_lid name)));
     if errs > 0
     then if errs = 1
-         then Util.print_error "1 error was reported (see above)\n"
-         else Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs)
-    else print1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully")
+         then print_error "1 error was reported (see above)\n"
+         else print1_error "%s errors were reported (see above)\n" (show errs)
+    else print1 "%s\n" (colorize_bold "All verification conditions discharged successfully")
   end
 
 (* printing total error count *)
@@ -70,6 +73,7 @@ let report_errors fmods =
   if nerrs > 0 then begin
     finished_message fmods nerrs;
     print_stats ();
+    cleanup ();
     exit 1
   end
 
@@ -85,13 +89,13 @@ let load_native_tactics () =
         | Some f -> f
         | None ->
           if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
-          then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Util.format1 "Could not find %s to load" cmxs)
+          then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Format.fmt1 "Could not find %s to load" cmxs)
           else  //else try to find and compile the ml file
             match Find.find_file_odir (ml_file m) with
             | None ->
               E.raise_error0 E.Fatal_FailToCompileNativeTactic [
                 text "Failed to compile native tactic.";
-                text (format1 "Extracted module %s not found." (ml_file m))
+                text (fmt1 "Extracted module %s not found." (ml_file m))
               ]
             | Some ml ->
               let dir = Filepath.dirname ml in
@@ -100,7 +104,7 @@ let load_native_tactics () =
                 | None ->
                   E.raise_error0 E.Fatal_FailToCompileNativeTactic [
                     text "Failed to compile native tactic.";
-                    text (format1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
+                    text (fmt1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
                   ]
                 | Some f -> f
               end
@@ -108,8 +112,7 @@ let load_native_tactics () =
 
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
     Plugins.load_plugins cmxs_files;
-    iter_opt (Options.use_native_tactics ())
-      Plugins.load_plugins_dir;
+    Options.use_native_tactics () |> Option.iter Plugins.load_plugins_dir;
     ()
 
 
@@ -124,6 +127,7 @@ let set_error_trap () =
   let h' s =
     let open FStarC.Pprint in
     let open FStarC.Errors.Msg in
+    Util.kill_all ();
     Debug.enable (); (* make sure diag is printed *)
     Options.set_option "error_contexts" (Options.Bool true);
     (* ^ Print context. Stack trace will be added since we have trace_error. *)
@@ -135,10 +139,13 @@ let set_error_trap () =
   in
   set_sigint_handler (sigint_handler_f h')
 
-let print_help_for (o : string) : unit =
+let print_help_for (o : string) : ML unit =
   match Options.help_for_option o with
-  | None -> ()
-  | Some doc -> Util.print_error (Errors.Msg.renderdoc doc)
+  | None ->
+    Format.print_string "Use `--help` to see all available options.\n";
+    ()
+  | Some doc ->
+    print_error (Errors.Msg.renderdoc doc)
 
 (* Normal mode with some flags, files, etc *)
 let go_normal () =
@@ -153,7 +160,7 @@ let go_normal () =
         command line (except for dependency analysis).";
     ];
 
-  let chopsuf (suf s : string) : option string =
+  let chopsuf (suf s : string) : ML (option string) =
     if ends_with s suf
     then Some (String.substring s 0 (String.length s - String.length suf))
     else None
@@ -189,38 +196,47 @@ let go_normal () =
   F* has done this for a long time, only sinc it simplified
   the handling of options. I think this should probably be removed,
   but a few makefiles here and there rely on it. *)
-  iter_opt (Find.get_odir ()) (mkdir false true);
-  iter_opt (Find.get_cache_dir ()) (mkdir false true);
+  Option.iter (mkdir false true) (Find.get_odir ());
+  Option.iter (mkdir false true) (Find.get_cache_dir ());
 
   let check_no_filenames opt =
     if Cons? filenames then (
-      Util.print1_error "error: No filenames should be passed with option %s\n" opt;
+      print1_error "error: No filenames should be passed with option %s\n" opt;
       exit 1
     )
   in
   if Options.trace_error () then set_error_trap ();
   match res with
-    | Empty     -> Options.display_usage(); exit 1
-    | Help      -> Options.display_usage(); exit 0
+    | _ when Options.help () ->
+      Options.display_usage();
+      exit 0
+
+    | Empty ->
+      print1 "F* version %s\n" !Options._version;
+      print1 "Usage: %s [options] file.fst\n" Util.argv0;
+      print_string "Use `--help` to see all available options.\n";
+      exit 1
+
     | Error (msg, opt) ->
-      Util.print_error ("error: " ^ msg);
+      print_error ("error: " ^ msg);
       print_help_for opt;
       exit 1
 
     | Success when Options.print_cache_version () ->
-      Util.print1 "F* cache version number: %s\n"
-                   (string_of_int FStarC.CheckedFiles.cache_version_number);
+      print1 "F* cache version number: %s\n"
+                   (show FStarC.CheckedFiles.cache_version_number);
       exit 0
 
     (* --dep: Just compute and print the transitive dependency graph;
               don't verify anything *)
     | Success when Options.dep () <> None ->
+      load_native_tactics ();
       let _, deps = Parser.Dep.collect filenames FStarC.CheckedFiles.load_parsing_data_from_cache in
       Parser.Dep.print deps;
       report_errors []
 
     (* --print: Emit files in canonical source syntax *)
-    | Success when Options.print () || Options.print_in_place () ->
+    | Success when (Options.print () || Options.print_in_place ()) ->
       let printing_mode =
         if Options.print ()
         then Prettyprint.FromTempToStdout
@@ -231,7 +247,7 @@ let go_normal () =
     (* --read_checked: read and print a checked file *)
     | Success when Some? (Options.read_checked_file ()) -> (
       let path = Some?.v <| Options.read_checked_file () in
-      let env = Universal.init_env Parser.Dep.empty_deps in
+      let env = Universal.init_env (Parser.Dep.empty_deps filenames) in
       let res = CheckedFiles.load_tc_result path in
       match res with
       | None ->
@@ -242,7 +258,10 @@ let go_normal () =
 
       | Some (deps, tcr) ->
         print1 "Deps: %s\n" (show deps);
-        print1 "%s\n" (show tcr.checked_module)
+        print1 "Inclusion info: %s\n" (show tcr.mii);
+        print1 "Checked module: %s\n" (show tcr.checked_module);
+        print1 "SMT decls: %s\n" (show <| fst tcr.smt_decls);
+        print1 "SMT fvars: %s\n" (show <| snd tcr.smt_decls)
     )
 
     (* --read_krml_file: read and print a krml file *)
@@ -265,32 +284,39 @@ let go_normal () =
 
     (* --list_plugins: emit a list of plugins and exit *)
     | Success when Options.list_plugins () ->
+      load_native_tactics ();
       let ps = TypeChecker.Cfg.list_plugins () in
       let ts = Tactics.Interpreter.native_tactics_steps () in
-      Util.print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ps));
-      Util.print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ts));
+      print1 "Registered plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ps));
+      print1 "Registered tactic plugins:\n%s\n" (String.concat "\n" (List.map (fun p -> "  " ^ show p.TypeChecker.Primops.Base.name) ts));
       ()
 
     (* --locate, --locate_lib, --locate_ocaml, --locate_file *)
+    | Success when Some? (Options.expand_include ()) ->
+      let Some d = Options.expand_include () in
+      let ds = Find.expand_include_d d in
+      List.iter (fun s -> print_string (Filepath.canonicalize s ^ "\n")) ds;
+      exit 0
+
     | Success when Options.locate () ->
       check_no_filenames "--locate";
-      Util.print1 "%s\n" (Find.locate ());
+      print1 "%s\n" (Find.locate ());
       exit 0
 
     | Success when Options.locate_lib () -> (
       check_no_filenames "--locate_lib";
       match Find.locate_lib () with
       | None ->
-        Util.print_error "No library found (is --no_default_includes set?)\n";
+        print_error "No library found (is --no_default_includes set?)\n";
         exit 1
       | Some s ->
-        Util.print1 "%s\n" s;
+        print1 "%s\n" s;
         exit 0
     )
 
     | Success when Options.locate_ocaml () ->
       check_no_filenames "--locate_ocaml";
-      Util.print1 "%s\n" (Find.locate_ocaml ());
+      print1 "%s\n" (Find.locate_ocaml ());
       exit 0
 
     | Success when Some? (Options.locate_file ()) -> (
@@ -298,10 +324,10 @@ let go_normal () =
       let f = Some?.v (Options.locate_file ()) in
       match Find.find_file f with
       | None ->
-        Util.print1_error "File %s was not found in include path.\n" f;
+        print1_error "File %s was not found in include path.\n" f;
         exit 1
       | Some fn ->
-        Util.print1 "%s\n" (Filepath.normalize_file_path fn);
+        print1 "%s\n" (Filepath.normalize_file_path fn);
         exit 0
     )
 
@@ -312,13 +338,22 @@ let go_normal () =
       | None ->
         // Use an actual error to reuse the pretty printing.
         Errors.log_issue0 Errors.Error_Z3InvocationError ([
-          Errors.Msg.text <| Util.format1 "Z3 version '%s' was not found." v;
+          Errors.Msg.text <| Format.fmt1 "Z3 version '%s' was not found." v;
           ] @ Find.Z3.z3_install_suggestion v);
         report_errors []; // but make sure to report.
         exit 1
       | Some fn ->
-        Util.print1 "%s\n" fn;
+        print1 "%s\n" fn;
         exit 0
+    )
+
+    (* --dump_ast *)
+    | Success when Options.dump_ast () -> (
+      filenames |> List.iter (fun fn ->
+        let ast, _ = Parser.Driver.parse_file fn in
+        print2 "Parsed %s:\n%s\n\n" fn (Pprint.render (Class.PP.pp ast))
+      );
+      exit 0
     )
 
     (* either batch or interactive mode *)
@@ -326,11 +361,11 @@ let go_normal () =
       fstar_files := Some filenames;
 
       if Debug.any () then (
-        Util.print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
-        Util.print1 "- Executable: %s\n" (Util.exec_name);
-        Util.print1 "- Library root: %s\n" (Util.dflt "<none>" (Find.lib_root ()));
-        Util.print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
-        Util.print_string "\n";
+        print3 "- F* version %s -- %s (on %s)\n"  !Options._version !Options._commit (Platform.kernel ());
+        print1 "- Executable: %s\n" (Util.exec_name);
+        print1 "- Library root: %s\n" (Option.dflt "<none>" (Find.lib_root ()));
+        print1 "- Full include path: %s\n" (show (Find.full_include_path ()));
+        print_string "\n";
         ()
       );
 
@@ -342,11 +377,8 @@ let go_normal () =
       (* Try to load the plugins that are specified in the command line *)
       load_native_tactics ();
 
-      (* --lsp: interactive mode for Language Server Protocol *)
-      if Options.lsp_server () then
-        Interactive.Lsp.start_server ()
-      (* --ide, --in: Interactive mode *)
-      else if Options.interactive () then begin
+      (* --ide: Interactive mode *)
+      if Options.interactive () then begin
         UF.set_rw ();
         match filenames with
         | [] -> (* input validation: move to process args? *)
@@ -358,19 +390,64 @@ let go_normal () =
             "--ide: Too many files in command line invocation\n";
           exit 1
         | [filename] ->
-          if Options.legacy_interactive () then
-            Interactive.Legacy.interactive_mode filename
-          else
-            Interactive.Ide.interactive_mode filename
+          Interactive.Ide.interactive_mode filename
         end
 
       (* Normal, batch mode compiler *)
       else begin
         if Nil? filenames then
           Errors.raise_error0 Errors.Error_MissingFileName "No file provided";
-
-        let filenames, dep_graph = Dependencies.find_deps_if_needed filenames CheckedFiles.load_parsing_data_from_cache in
-        let tcrs, env, cleanup = Universal.batch_mode_tc filenames dep_graph in
+        let filenames, dep_graph, fly_deps = 
+          if FStarC.Parser.Dep.fly_deps_enabled()
+          then (
+            //we first check if fn is already has a valid .checked file
+            //if so, we disable fly_deps and proceed; this will cause the
+            //batch mode tc to load all the checked files. It is important
+            //for --codegen mode, where typically, all the checked files
+            //already exists, and we do not want to check them again
+            //This also means that if you do `fstar.exe A.fst` and A.fst.checked
+            //is valid, then the compiler does nothing. This is something we could
+            //revisit and change.
+            match filenames with
+            | [fn] ->
+              let m = FStarC.Parser.Dep.lowercase_module_name fn in
+              Options.add_verify_module m;
+              let default_flydeps () =
+                //by default, just initialize an empty dep graph
+                //return the file, its interface if any, and go
+                let deps = FStarC.Parser.Dep.empty_deps [fn] in
+                let filenames =
+                  if FStarC.Parser.Dep.is_implementation fn
+                  then (
+                    match FStarC.Parser.Dep.interface_of deps m with
+                    | None -> [fn]
+                    | Some iface -> [iface; fn]
+                  )
+                  else [fn]
+                in
+                filenames, deps, true
+              in
+              if Options.force() then default_flydeps() else
+              begin match CheckedFiles.scan_deps_and_check_cache_validity fn with
+              | Some (files, deps) ->
+                files, deps, false //we have all the checked files; no need to fly deps
+              | None -> 
+                default_flydeps()
+              end
+            | _ ->
+              Errors.raise_error0 Errors.Error_TooManyFiles
+                "When using --ext fly_deps, only one file can be provided."
+          )
+          else (
+            let files, deps = 
+              Dependencies.find_deps_if_needed
+                filenames 
+                CheckedFiles.load_parsing_data_from_cache
+            in
+            files, deps, false
+          )
+        in
+        let tcrs, env, cleanup = Universal.batch_mode_tc fly_deps filenames dep_graph in
         ignore (cleanup env);
         let module_names =
           tcrs
@@ -391,7 +468,7 @@ let go () =
   match args with
   | _ :: "--ocamlenv" :: [] ->
     let new_ocamlpath = OCaml.new_ocamlpath () in
-    Util.print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (OCaml.shellescape new_ocamlpath);
+    print1 "OCAMLPATH='%s'; export OCAMLPATH;\n" (OCaml.shellescape new_ocamlpath);
     exit 0
 
   | _ :: "--ocamlenv" :: cmd :: args ->
@@ -408,27 +485,27 @@ let go () =
 
   | _ -> go_normal ()
 
-let handle_error e =
+let handle_error (e:exn) : ML unit =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e
     else begin
-      Util.print1_error "Unexpected error: %s\n" (Util.message_of_exn e);
+      print1_error "Unexpected error: %s\n" (Util.message_of_exn e);
       if Options.trace_error() then
-        Util.print1_error "Trace:\n%s\n" (Util.trace_of_exn e)
+        print1_error "Trace:\n%s\n" (Util.trace_of_exn e)
       else
-        Util.print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"
+        print_error "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"
     end;
     report_errors []
 
 let main () =
   try
-    Hooks.setup_hooks ();
     let _, time = Timing.record_ms go in
     if FStarC.Options.query_stats()
-    then Util.print2_error "TOTAL TIME %s ms: %s\n"
-              (FStarC.Util.string_of_int time)
+    then print2_error "TOTAL TIME %s ms: %s\n"
+              (show time)
               (String.concat " " (FStarC.Getopt.cmdline()));
     print_stats();
+    cleanup ();
     exit 0
   with
   | e ->

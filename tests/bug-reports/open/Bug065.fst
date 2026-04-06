@@ -48,7 +48,7 @@ let unsound () : nat =
 (*   | Node n t1 t2 -> f t1 t2 n (ind ta f a t1) (ind ta f a t2) *)
 
 (* (\* subtyping gets terribly confused here *\) *)
-(* #set-options "--initial_fuel 10 --max_fuel 10 --initial_ifuel 10 --max_ifuel 10" *)
+(* #set-options "--fuel 10 --ifuel 10" *)
 (* val find' : f:(int -> Tot bool) -> t:tree -> Tot (option (x:int{f x && in_tree x t})) *)
 (* let find' f = ind (fun t -> option (x:int{f x && in_tree x t})) *)
 (*                   (fun t1 t2 n o1 o2 -> if f n then Some n else *)

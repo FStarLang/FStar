@@ -48,23 +48,23 @@ let splitlast s = let x::xs = List.rev s in (List.rev xs, x)
 
 let mk e = with_ty MLTY_Top e
 
-let ml_name : Ident.lid -> mlexpr =
+let ml_name : Ident.lid -> ML mlexpr =
   fun l ->
     let s = Ident.path_of_lid l in
     let ns, id = splitlast s in
     mk (MLE_Name (ns, id))
 
-let ml_name' : string -> mlexpr =
+let ml_name' : string -> ML mlexpr =
   fun s ->
     ml_name (Ident.lid_of_str s)
 
-let ml_ctor : Ident.lid -> list mlexpr -> mlexpr =
+let ml_ctor : Ident.lid -> list mlexpr -> ML mlexpr =
   fun l args ->
     let s = Ident.path_of_lid l in
     let ns, id = splitlast s in
     mk (MLE_CTor ((ns, id), args))
 
-let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
+let ml_record : Ident.lid -> list (string & mlexpr) -> ML mlexpr =
   fun l args ->
     let s = Ident.path_of_lid l in
     // [] -> assuming same module
@@ -95,7 +95,7 @@ let cons_lid       = Ident.lid_of_str "Prims.Cons"
 
 let embed      = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_embed"]))
 let unembed    = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_unembed"]))
-let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Util"; "bind_opt"]))
+let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Option"; "bind"]))
 
 let ml_nbe_unsupported : mlexpr =
   (* extraction thunks this definition *)
@@ -110,7 +110,7 @@ let as_name mlp = with_ty MLTY_Top <| MLE_Name mlp
 let ml_failwith (s:string) : mlexpr =
   mk <| MLE_App(as_name ([], "failwith"), [mk <| MLE_Const (MLC_String s)])
 
-let rec as_ml_list (ts : list mlexpr) : mlexpr =
+let rec as_ml_list (ts : list mlexpr) : ML mlexpr =
   match ts with
   | [] -> ml_ctor nil_lid []
   | t::ts -> ml_ctor cons_lid [t; as_ml_list ts]
@@ -121,19 +121,19 @@ let rec pats_to_list_pat (vs : list mlpattern) : mlpattern =
   | p::ps -> MLP_CTor ((["Prims"], "Cons"), [p; pats_to_list_pat ps])
 (*** / ML syntax helpers ***)
 
-let fresh : string -> string =
+let fresh : string -> ML string =
   let r = mk_ref 0 in
   fun s ->
     let v = !r in
     r := v+1;
-    s^"_"^(string_of_int v)
+    s^"_"^(show v)
 
-let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
+let not_implemented_warning (r: Range.t) (t: string) (msg: string) =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in
   Errors.log_issue r Errors.Warning_PluginNotImplemented [
-    prefix 2 1 (text (BU.format1 "Plugin `%s' can not run natively because:" t))
+    prefix 2 1 (text (Format.fmt1 "Plugin `%s' can not run natively because:" t))
       (text msg);
     text "Use --warn_error -"
       ^^ pp (Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented))
@@ -204,21 +204,21 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
 let dbg_plugin = Debug.get_toggle "Plugins"
 
 let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = mk_ref []
-let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
+let register_embedding (l: Ident.lident) (d: embedding_data) : ML unit =
   if !dbg_plugin then
-    BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
+    Format.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
   local_fv_embeddings := (l,d) :: !local_fv_embeddings
 
 let list_local () = !local_fv_embeddings
 
-let find_fv_embedding' (l: Ident.lident) : option embedding_data =
+let find_fv_embedding' (l: Ident.lident) : ML (option embedding_data) =
   match List.find (fun (l', _) -> Ident.lid_equals l l')
         (!local_fv_embeddings @ builtin_embeddings)
   with
   | Some (_, data) -> Some data
   | None -> None
 
-let find_fv_embedding (l: Ident.lident) : embedding_data =
+let find_fv_embedding (l: Ident.lident) : ML embedding_data =
   match find_fv_embedding' l with
   | Some data -> data
   | None ->
@@ -238,7 +238,7 @@ let rec embedding_for
     (k: embedding_kind)
     (env:list (bv & string))
     (t: term)
-: mlexpr
+: ML mlexpr
 = let str_to_name s     = as_name ([], s) in
   let emb_arrow e1 e2 =
     let comb =
@@ -265,7 +265,7 @@ let rec embedding_for
       | SyntaxTerm -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"], "mk_any_emb")
       | NBETerm    -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"], "mk_any_emb")
     in
-    let s = snd (BU.must (BU.find_opt (find_env_entry bv) env)) in
+    let s = snd (Some?.v (Option.find (find_env_entry bv) env)) in
     mk <| MLE_App(comb, [str_to_name s])
 
   (* Refinements are irrelevant for embeddings. *)
@@ -307,13 +307,13 @@ let rec embedding_for
   all of them, using a name prefix __knot_e, and later define the e_X at the
   top-level by unthunking.
   *)
-  | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name.v) mutuals ->
-    let head = mk <| MLE_Var ("__knot_e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name.v)) in
+  | Tm_fvar fv when List.existsb (Ident.lid_equals fv.fv_name) mutuals ->
+    let head = mk <| MLE_Var ("__knot_e_" ^ Ident.string_of_id (Ident.ident_of_lid fv.fv_name)) in
     mk (MLE_App (head, [ml_unit]))
 
   (* An fv for which we have an embedding already registered. *)
-  | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name.v) ->
-    let emb_data = find_fv_embedding fv.fv_name.v in
+  | Tm_fvar fv when Some? (find_fv_embedding' fv.fv_name) ->
+    let emb_data = find_fv_embedding fv.fv_name in
     begin match k with
     | SyntaxTerm -> ml_name emb_data.syn_emb
     | NBETerm ->
@@ -332,7 +332,7 @@ let rec embedding_for
   | Tm_fvar fv when Env.fv_has_attr tcenv fv PC.plugin_attr ->
     begin match k with
     | SyntaxTerm ->
-      let lid = fv.fv_name.v in
+      let lid = fv.fv_name in
       as_name (List.map Ident.string_of_id (Ident.ns_of_lid lid),
                "e_" ^ Ident.string_of_id (Ident.ident_of_lid lid))
     | NBETerm ->
@@ -341,16 +341,16 @@ let rec embedding_for
 
   (* An fv which we do not have registered, and did not unfold *)
   | Tm_fvar fv ->
-    raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (show t)))
+    raise (NoEmbedding (Format.fmt1 "Embedding not defined for name `%s'" (show t)))
 
   | _ ->
-    raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (show t) (tag_of t)))
+    raise (NoEmbedding (Format.fmt2 "Cannot embed type `%s' (%s)" (show t) (tag_of t)))
 
 type wrapped_term = mlexpr & mlexpr & int & bool
 
 let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
-    : option wrapped_term =
-    let fv_lid = fv.fv_name.v in
+    : ML (option wrapped_term) =
+    let fv_lid = fv.fv_name in
     let tcenv = UEnv.tcenv_of_uenv env in
     let t = N.normalize [
       Env.EraseUniverses;
@@ -375,7 +375,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_InterpFuns"], idroot^string_of_int arity)
+      as_name (["Fstarcompiler.FStarC_Tactics_InterpFuns"], idroot^show arity)
     in
     let mk_from_tactic l arity =
       let idroot =
@@ -383,15 +383,15 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "from_tactic_"
         | NBETerm    -> "from_nbe_tactic_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_Native"], idroot^string_of_int arity)
+      as_name (["Fstarcompiler.FStarC_Tactics_Native"], idroot^show arity)
     in
-    let mk_arrow_as_prim_step k (arity: int) : mlexpr =
+    let mk_arrow_as_prim_step k (arity: int) : ML mlexpr =
       let modul =
         match k with
         | SyntaxTerm -> ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"]
         | NBETerm    -> ["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"]
       in
-      as_name (modul, "arrow_as_prim_step_" ^ string_of_int arity)
+      as_name (modul, "arrow_as_prim_step_" ^ show arity)
     in
     (*  Generates the ML syntax of a term of type
            `FStarC.Syntax.Embeddings.embedding [[t]]`
@@ -405,7 +405,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                representations of those type arguments
                peeling away a prefix of args corresponding to the type arguments
      *)
-    let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
+    let abstract_tvars tvar_names (body:mlexpr) : ML mlexpr =
         match tvar_names with
         | [] ->
           let body =
@@ -464,11 +464,11 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                bs, c
           else // n > bs
                let msg =
-                BU.format3
+                Format.fmt3
                     "Embedding not defined for %s; expected arity at least %s; got %s"
                     (Ident.string_of_lid fv_lid)
-                    (BU.string_of_int n)
-                    (BU.string_of_int n_bs) in
+                    (show n)
+                    (show n_bs) in
                raise (NoEmbedding msg)
     in
     let result_typ = U.comp_result c in
@@ -494,7 +494,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     *)
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
-    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
+    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ show i)) type_vars in
     let tvar_context : list (bv & string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
@@ -508,12 +508,12 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                  int,    //the arity of the compiled code (+1 for tactics)
                  bool)   //true if this is a tactic
     *)
-    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr & int & bool) =
+    let rec aux loc (accum_embeddings:list mlexpr) bs : ML (mlexpr & int & bool) =
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in
           let res_embedding = embedding_for tcenv [] loc tvar_context result_typ in
-          let fv_lid = fv.fv_name.v in
+          let fv_lid = fv.fv_name in
           if U.is_pure_comp c
           then begin
             let cb = str_to_name "cb" in
@@ -564,7 +564,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           else raise (NoEmbedding("Plugins not defined for type " ^ show t))
 
         | ({binder_bv=b})::bs ->
-          aux loc (embedding_for tcenv [] loc tvar_context b.sort::accum_embeddings) bs
+          let emb = embedding_for tcenv [] loc tvar_context b.sort in
+          aux loc (emb::accum_embeddings) bs
     in
     try
         let w, a, b = aux SyntaxTerm [] bs in
@@ -572,7 +573,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         Some (w, w', a, b)
     with
     | NoEmbedding msg ->
-      not_implemented_warning (Ident.range_of_lid fv.fv_name.v)
+      not_implemented_warning (Ident.range_of_lid fv.fv_name)
                               (show fv)
                               msg;
       None
@@ -583,7 +584,7 @@ let mk_unembed
     (mutuals : list Ident.lid)                // mutual inductives we are defining embedding for
     (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
     (ctors: list sigelt)                      // constructors of the inductive
-: mlexpr
+: ML mlexpr
 = let e_branches : ref (list mlbranch) = mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
@@ -634,7 +635,7 @@ let mk_embed
     (mutuals : list Ident.lid)                // mutual inductives we are defining embedding for
     (record_fields : option (list mlpath))    // if this type is a record, these are the (extracted) field names
     (ctors: list sigelt)                      // constructors of the inductive
-: mlexpr
+: ML mlexpr
 = let e_branches : ref (list mlbranch) = mk_ref [] in
   let arg_v = fresh "tm" in
   ctors |> List.iter (fun ctor ->
@@ -680,16 +681,16 @@ let mk_embed
   lam
 
 
-let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmodule1 =
-  // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
+let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : ML (list mlmodule1) =
+  // Format.print2 "Got plugin with attrs = %s; arity_opt=%s"
   //          (List.map show se.sigattrs |> String.concat " ")
-  //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
+  //          (match arity_opt with None -> "None" | Some x -> "Some " ^ show x);
   let r = se.sigrng in
   match se.sigel with
   | Sig_let {lbs} ->
-      let mk_registration lb : list mlmodule1 =
-         let fv = BU.right lb.lbname in
-         let fv_lid = fv.fv_name.v in
+      let mk_registration lb : ML (list mlmodule1) =
+         let fv = Inr?.v lb.lbname in
+         let fv_lid = fv.fv_name in
          let fv_t = lb.lbtyp in
          let ml_name_str = MLE_Const (MLC_String (Ident.string_of_lid fv_lid)) in
          match interpret_plugin_as_term_fun g fv fv_t arity_opt ml_name_str with
@@ -700,7 +701,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
                else (["Fstarcompiler.FStarC_Tactics_Native"], "register_tactic"), [interp]
              in
              let h = with_ty MLTY_Top <| MLE_Name register in
-             let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
+             let arity  = MLE_Const (MLC_Int(show arity, None)) in
              let app = with_ty MLTY_Top <| MLE_App (h, [mk ml_name_str; mk arity] @ args) in
              [MLM_Top app |> mk_mlmodule1]
          | None -> []
@@ -712,7 +713,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
     let mutual_lids = List.map (fun se -> match se.sigel with | Sig_inductive_typ {lid} -> lid ) mutual_sigelts in
     let proc_one (typ_sigelt:sigelt) =
       let Sig_inductive_typ {lid=tlid; params=ps} = typ_sigelt.sigel in
-      if List.length ps > 0 then
+      if Cons? ps then
         raise (Unsupported "parameters on inductive");
       let ns = Ident.ns_of_lid tlid in
       let name = Ident.string_of_id (List.last (Ident.ids_of_lid tlid)) in
@@ -787,12 +788,12 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
 
   | _ -> []
 
-let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmodule1 =
+let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : ML (list mlmodule1) =
   try __do_handle_plugin g arity_opt se with
   | Unsupported msg ->
     // Change error code?
     Errors.log_issue se Errors.Warning_PluginNotImplemented
-      (BU.format2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
+      (Format.fmt2 "Could not generate a plugin for %s, reason = %s" (Print.sigelt_to_string_short se) msg);
     []
   | NoEmbedding msg ->
     not_implemented_warning se.sigrng
@@ -804,13 +805,13 @@ let do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmod
    is extracted along with an invocation to FStarC.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
-let maybe_register_plugin (g:uenv) (se:sigelt) : list mlmodule1 =
+let maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1) =
   (* The `plugin` attribute takes an optional arity, parse it.
    *   None:          not a plugin
    *   Some None:     plugin without explicit arity
    *   Some (Some n): plugin with explicit arity n
    *)
-  let plugin_with_arity (attrs: list term) : option (option int) =
+  let plugin_with_arity (attrs: list term) : ML (option (option int)) =
     BU.find_map attrs (fun t ->
       let head, args = U.head_and_args t in
       if not (U.is_fvar PC.plugin_attr head) then

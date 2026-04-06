@@ -32,6 +32,16 @@ let int2bv_lemma_2 = U.to_vec_lemma_2
 let inverse_vec_lemma = U.inverse_vec_lemma
 let inverse_num_lemma = U.inverse_num_lemma
 
+let int2bv_bv_uext (#n #i: pos)
+  (a: uint_t n)
+  : Lemma
+    (ensures (bv_uext #n #i (int2bv #n a) == int2bv #(i + n) (U.zero_extends #n i a))) =
+  let zero = B.zero_vec #i in
+  assert (U.from_vec #i zero == 0);
+  U.append_lemma #i #n zero (int2bv #n a);
+  assert (U.from_vec #(i + n) (bv_uext #n #i (int2bv #n a)) == a);
+  ()
+
 (** Mapping an unbounded nat to a bitvector; only used for bvshl and bvshr
   compatibility funs *)
 let int2bv_nat (#n: pos) (num: nat): Tot (bv_t n) = U.to_vec (num % pow2 n)
@@ -85,6 +95,29 @@ let int2bv_shr' #n #x #y #z pf =
 let int2bv_shr #n #x #y #z pf =
   int2bv_nat_lemma #n y;
   inverse_vec_lemma #n (bvshr #n (int2bv #n x) y)
+
+(* Rotate operations *)
+let bvrol' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.rotate_left_vec #n a (bv2int #n s)
+let bvrol (#n: pos) (a: bv_t n) (s: nat): bv_t n =
+  bvrol' #n a (int2bv_nat #n s)
+
+let int2bv_rol' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvrol' #n (int2bv #n x) (int2bv #n y))
+let int2bv_rol #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
+  inverse_vec_lemma #n (bvrol #n (int2bv #n x) y)
+
+let bvror' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.rotate_right_vec #n a (bv2int #n s)
+let bvror (#n: pos) (a: bv_t n) (s: nat): bv_t n =
+  bvror' #n a (int2bv_nat #n s)
+
+let int2bv_ror' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvror' #n (int2bv #n x) (int2bv #n y))
+let int2bv_ror #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
+  inverse_vec_lemma #n (bvror #n (int2bv #n x) y)
 
 
 

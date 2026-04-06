@@ -3,6 +3,7 @@ module FStarC.Class.PP
 open FStarC
 open FStarC.Effect
 open FStarC.Pprint
+open FStarC.Class.Show
 
 let gparens a = group (nest 2 (parens a))
 let gbrackets a = group (nest 2 (brackets a))
@@ -12,7 +13,7 @@ instance pp_unit = {
 }
 
 instance pp_int = {
-   pp = (fun x -> doc_of_string (string_of_int x));
+   pp = (fun x -> doc_of_string (show x));
 }
 
 instance pp_bool = {

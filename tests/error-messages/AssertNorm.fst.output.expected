@@ -1,8 +1,7 @@
->> Got issues: [
-* Error 19 at AssertNorm.fst(7,2-7,13):
+* Info at AssertNorm.fst(7,2-7,13):
+  - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also AssertNorm.fst(7,14-7,30)
 
->>]

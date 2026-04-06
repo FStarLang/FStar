@@ -4,8 +4,7 @@ module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
 
-#set-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3cliopt 'smt.arith.nl=false'"
-
+#set-options "--z3smtopt '(set-option :smt.qi.eager_threshold 20)' --z3smtopt '(set-option :smt.arith.nl false)'"
 let var = nat
 let index = nat
 
@@ -126,6 +125,7 @@ let rec close_exp' (e:src_exp) (v:var) (n:nat)
 
 let open_exp e v = open_exp' e v 0
 let close_exp e v = close_exp' e v 0
+#restart-solver
 
 let rec open_close' (e:src_exp) (x:var) (n:nat { ln' e (n - 1) })
   : Lemma (open_exp' (close_exp' e x n) x n == e)
@@ -607,6 +607,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
 
 //key lemma about src types: Their elaborations are closed
 #push-options "--z3rlimit_factor 4 --fuel 8 --ifuel 2"
+#restart-solver
 let rec src_refinements_are_closed_core
                        (n:nat)
                        (e:src_exp {ln' e (n - 1) && closed e}) 
@@ -1146,7 +1147,8 @@ let rec src_typing_freevars #f (sg:src_env) (e:src_exp) (t:s_ty) (d:src_typing f
       src_typing_freevars _ _ _ dbody
 #pop-options
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#restart-solver
 let rec src_typing_renaming (#f:RT.fstar_top_env)
                             (sg sg':src_env)
                             (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1259,6 +1261,7 @@ let rec src_typing_renaming (#f:RT.fstar_top_env)
       in
       let dt = src_ty_ok_renaming _ _ _ _ _ _ dt in
       T_If _ _ _ _ _ _ _ _ db dt1 dt2 st1 st2 dt
+#pop-options
 
 let sub_typing_weakening #f (sg sg':src_env) 
                          (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1323,6 +1326,8 @@ let sub_typing_weakening #f (sg sg':src_env)
 
       | _ -> admit ())
 
+#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#restart-solver
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
                              (b:binding)
@@ -1518,6 +1523,8 @@ let freevars_refinement (e:R.term) (bv0:_)
   = ()
 #pop-options
     
+#push-options "--z3rlimit_factor 8 --query_stats --split_queries no --fuel 2 --ifuel 2"
+#restart-solver
 let rec soundness (#f:RT.fstar_top_env)
                   (#sg:src_env { src_env_ok sg } ) 
                   (#se:src_exp { ln se })
@@ -1673,7 +1680,9 @@ and src_ty_ok_soundness (#f:RT.fstar_top_env)
      in
      freevars_refinement (elab_exp e) bv0;
      RT.T_Refine (extend_env_l f sg) x RT.bool_ty refinement' _ _ _ _ bool_typing dr
+#pop-options
 
+#restart-solver
 let soundness_lemma (f:RT.fstar_top_env)
                     (sg:src_env { src_env_ok sg }) 
                     (se:src_exp { ln se })

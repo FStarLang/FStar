@@ -18,12 +18,11 @@ module FStarC.Interactive.Incremental
 open FStarC.Effect
 open FStarC.List
 open FStarC
+open FStarC.Class.Show
 open FStarC.Range
-open FStarC.Util
 open FStarC.Getopt
 open FStarC.Ident
 open FStarC.Errors
-open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.QueryHelper
 open FStarC.Interactive.PushHelper
 open FStarC.Universal
@@ -37,22 +36,22 @@ module BU = FStarC.Util
 open FStarC.Parser.AST
 open FStarC.Parser.AST.Util
 open FStarC.Parser.AST.Diff { eq_decl }
-
+let dbg = Debug.get_toggle "IDE"
 let qid = string & int
-let qst a = qid -> a & qid
-let return (x:'a) : qst 'a = fun q -> x, q
-let (let!) (f:qst 'a) (g: 'a -> qst 'b)
+let qst a = qid & repl_state -> ML (a & qid)
+let return (x:'a) : qst 'a = fun (q, _) -> x, q
+let (let!) (f:qst 'a) (g: 'a -> ML (qst 'b))
   : qst 'b
-  = fun q -> let x, q' = f q in
-          g x q'
+  = fun (q,s) -> let x, q' = f (q,s) in
+          g x (q',s)
 
-let run_qst (f:qst 'a) (q:string)
-  : 'a
-  = fst (f (q, 0))
+let run_qst (f:qst 'a) (q:string) (st:repl_state)
+  : ML 'a
+  = fst (f ((q, 0), st))
 
 
-let rec map (f:'a -> qst 'b) (l:list 'a)
-  : qst (list 'b)
+let rec map (f:'a -> ML (qst 'b)) (l:list 'a)
+  : ML (qst (list 'b))
   = match l with
     | [] -> return []
     | hd::tl ->
@@ -62,14 +61,16 @@ let rec map (f:'a -> qst 'b) (l:list 'a)
   
 let shift_qid (q:qid) (i:int) = fst q, snd q + i
 
+let get_filename : qst string = fun (q, s) -> s.repl_fname, q
+
 let next_qid
   : qst qid
-  = fun q -> let q = shift_qid q 1 in
+  = fun (q,_) -> let q = shift_qid q 1 in
           q, q
 
 let get_qid
   : qst qid
-  = fun q -> q, q
+  = fun (q,_) -> q, q
 
 let as_query (q:query') 
   : qst query
@@ -77,7 +78,7 @@ let as_query (q:query')
     return 
       {
         qq=q;
-        qid=qid_prefix ^ "." ^ string_of_int i
+        qid=qid_prefix ^ "." ^ show i
       }
 
 (* This function dumps a symbol table for the decl that has just been checked *)
@@ -90,17 +91,18 @@ let dump_symbols_for_lid (l:lident)
   let start_col = Range.col_of_pos start_pos in
   let end_line = Range.line_of_pos end_pos in
   let end_col = Range.col_of_pos end_pos in
-  let position = "<input>", start_line, start_col in
+  let! filename = get_filename in
+  let position = filename, start_line, start_col in
   as_query (Lookup(Ident.string_of_lid l,
                     LKCode,
                     Some position,
                     ["type"; "documentation"; "defined-at"],
-                    Some (JsonAssoc [("fname", JsonStr "<input>");
+                    Some (JsonAssoc [("fname", JsonStr filename);
                                     ("beg", JsonList [JsonInt start_line; JsonInt start_col]);
                                     ("end", JsonList [JsonInt end_line; JsonInt end_col])])))
 
 let dump_symbols (d:decl)
-: qst (list query)
+: ML (qst (list query))
 = let open FStarC.Parser.AST in
   let ls = lidents_of_decl d in
   map dump_symbols_for_lid ls
@@ -111,9 +113,9 @@ let dump_symbols (d:decl)
    for the decl that is about to run *)
 let push_decl (push_kind:push_kind)
               (with_symbols:bool)
-              (write_full_buffer_fragment_progress: fragment_progress -> unit)
+              (write_full_buffer_fragment_progress: fragment_progress -> ML unit)
               (ds:decl & code_fragment)              
-  : qst (list query)
+  : ML (qst (list query))
   = let open FStarC.Range in
     let d, s = ds in
     let pq = {
@@ -140,17 +142,17 @@ let push_decl (push_kind:push_kind)
     
 let push_decls (push_kind:push_kind)
                (with_symbols:bool)
-               (write_full_buffer_fragment_progress : fragment_progress -> unit)
+               (write_full_buffer_fragment_progress : fragment_progress -> ML unit)
                (ds:list (decl & code_fragment))
-  : qst (list query)
+  : ML (qst (list query))
   = let! qs = map (push_decl push_kind with_symbols write_full_buffer_fragment_progress) ds in
     return (List.flatten qs)
-  
+
+let repl_task_of_entry (_, (p, _)) = p
+
 let pop_entries (e:list repl_stack_entry_t)
-  : qst (list query)
+  : ML (qst (list query))
   = map (fun _ -> as_query Pop) e
-  
-let repl_task (_, (p, _)) = p
 
 let push_kind_geq pk1 pk2 =
   pk1=pk2 || (
@@ -159,6 +161,7 @@ let push_kind_geq pk1 pk2 =
   | LaxCheck, SyntaxCheck -> true
   | _ -> false
   )
+      
 (* Find a prefix of the repl stack that matche a prefix of the decls ds, 
    pop the rest of the stack
    and push the remaining suffix of decls
@@ -167,8 +170,8 @@ let inspect_repl_stack (s:repl_stack_t)
                        (ds:list (decl & code_fragment))
                        (push_kind : push_kind)
                        (with_symbols:bool)
-                       (write_full_buffer_fragment_progress: fragment_progress -> unit)                       
-  : qst (list query & list json)
+                       (write_full_buffer_fragment_progress: fragment_progress -> ML unit)                       
+  : ML (qst (list query & list json))
   = let entries = List.rev s in
     let push_decls = push_decls push_kind with_symbols write_full_buffer_fragment_progress in
     match BU.prefix_until 
@@ -179,24 +182,23 @@ let inspect_repl_stack (s:repl_stack_t)
       let! ds = push_decls ds in
       return (ds, [])
     
-    | Some (prefix, first_push, rest) ->
+    | Some (_prefix, first_push, rest) ->
       let entries = first_push :: rest in
-      let repl_task (_, (p, _)) = p in
       let rec matching_prefix (accum:list json) (lookups:list query) entries (ds:list (decl & code_fragment))
-        : qst (list query & list json)
+        : ML (qst (list query & list json))
         = match entries, ds with
           | [], [] ->
             return (lookups, accum)
             
           | e::entries, d::ds -> (
-            match repl_task e with
+            match repl_task_of_entry e with
             | Noop -> 
               matching_prefix accum lookups entries (d::ds)
-            | PushFragment (Inl frag, _, _) ->
+            | PushFragment (Inl frag, _, _, _) ->
               let! pops = pop_entries (e::entries) in
               let! pushes = push_decls (d::ds) in
               return (lookups @ pops @ pushes, accum)
-            | PushFragment (Inr d', pk, issues) ->
+            | PushFragment (Inr d', pk, issues, _) -> (
               if eq_decl (fst d) d' && pk `push_kind_geq` push_kind
               then (
                 let d, s = d in
@@ -211,6 +213,8 @@ let inspect_repl_stack (s:repl_stack_t)
                    let! pushes = push_decls (d::ds) in
                    return (pops @ lookups @ pushes, accum)
             )
+            | _ -> failwith "Impossible: non-push fragment in repl stack during incremental check"
+          )
 
          | [], ds ->
            let! pushes = push_decls ds in
@@ -220,15 +224,16 @@ let inspect_repl_stack (s:repl_stack_t)
            let! pops = pop_entries es in
            return (lookups@pops, accum)
       in
-      matching_prefix [] [] entries ds 
+      let! queries, json = matching_prefix [] [] entries ds in
+      return (queries, json)
 
 (* A reload_deps request just pops away the entire stack of PushFragments.
    We also push on just the `module A` declaration after popping. That's done below. *)
 let reload_deps repl_stack =
   let pop_until_deps entries
-  : qst (list query)
+  : ML (qst (list query))
   = match BU.prefix_until
-            (fun e -> match repl_task e with
+            (fun e -> match repl_task_of_entry e with
                       | PushFragment _ | Noop -> false
                       | _ -> true)
             entries
@@ -241,12 +246,13 @@ let reload_deps repl_stack =
   pop_until_deps repl_stack
 
 (* A utility to parse a chunk, used both in full_buffer and formatting *)
-let parse_code lang (code:string) =
+let parse_code st lang (code:string) =
+    let rng = initial_range st.repl_fname in
     P.parse lang (Incremental { 
-                         frag_fname = Range.file_of_range initial_range;
+                         frag_fname = Range.file_of_range rng;
                          frag_text = code;
-                         frag_line = Range.line_of_pos (Range.start_of_range initial_range);
-                         frag_col = Range.col_of_pos (Range.start_of_range initial_range);
+                         frag_line = Range.line_of_pos (Range.start_of_range rng);
+                         frag_col = Range.col_of_pos (Range.start_of_range rng);
                 })
     
 (* Format FStarC.Errors.error into a JSON error message *)
@@ -267,9 +273,20 @@ let run_full_buffer (st:repl_state)
                     (code:string)
                     (request_type:full_buffer_request_kind)
                     (with_symbols:bool)
-                    (write_full_buffer_fragment_progress: fragment_progress -> unit)
-  : list query & list json
-  = let parse_result = parse_code None code in
+                    (write_full_buffer_fragment_progress: fragment_progress -> ML unit)
+  : ML (list query & list json)
+  = // updating the vfs entry allows dependence scanning on the file to
+    // to use the latest snapshot of the file, rather than what was present
+    // in the buffer when the IDE was started. This is especially useful when
+    // creating a new file and launching F* on it
+    if !dbg then (
+      Format.print1 "run_full_buffer: repl_state=%s\n"
+          (show st);
+      Format.print1 "run_full_buffer: repl_stack=%s\n"
+          (show (!repl_stack))
+    );
+    FStarC.Parser.ParseIt.add_vfs_entry st.repl_fname code;
+    let parse_result = parse_code st None code in
     let log_syntax_issues err =
       match err with
       | None -> ()
@@ -294,13 +311,13 @@ let run_full_buffer (st:repl_state)
       | IncrementalFragment (decls, _, err_opt) -> (
         // This is a diagnostic message that is send to the IDE as an info message
         // The script test-incremental.py in tests/ide/ depends on this message
-        BU.print1 "Parsed %s declarations\n" (string_of_int (List.length decls));
+        Format.print1 "Parsed %s declarations\n" (show (List.length decls));
         match request_type, decls with
         | ReloadDeps, d::_ ->
           run_qst (let! queries = reload_deps (!repl_stack) in
                    let! push_mod = push_decl FullCheck with_symbols write_full_buffer_fragment_progress d in
                    return (queries @ push_mod, []))
-                  qid
+                  qid st
 
         | _ ->
           let decls = filter_decls decls in
@@ -311,12 +328,12 @@ let run_full_buffer (st:repl_state)
             | _ -> FullCheck
           in
           let queries, issues = 
-              run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
+              run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid st
           in
           if request_type <> Cache then log_syntax_issues err_opt;
-          if Debug.any()
+          if !dbg
           then (
-            BU.print1 "Generating queries\n%s\n" 
+            Format.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))
           );
           if request_type <> Cache then (queries, issues) else ([] , issues)
@@ -338,11 +355,11 @@ let format_code (st:repl_state) (code:string)
       | [] -> None
       | {d=FStarC.Parser.AST.UseLangDecls l}::_ -> Some l
     in
-    let parse_result = parse_code maybe_lang code in
+    let parse_result = parse_code st maybe_lang code in
     match parse_result with
     | IncrementalFragment (decls, comments, None) ->
       let doc_to_string doc =
-          FStarC.Pprint.pretty_string (float_of_string "1.0") 100 doc
+          FStarC.Pprint.pretty_string (Util.float_of_string "1.0") 100 doc
       in
       let formatted_code_rev, leftover_comments =
         List.fold_left

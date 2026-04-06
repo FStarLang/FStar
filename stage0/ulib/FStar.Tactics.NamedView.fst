@@ -40,7 +40,8 @@ let open_universe_view (v:RD.universe_view) : named_universe_view =
   | R.Uv_Unif uvar -> Uv_Unif uvar
   | R.Uv_Unk -> Uv_Unk
 
-let inspect_universe (u:universe) : named_universe_view =
+let inspect_universe (u:universe) : Tac named_universe_view =
+  let u = compress_univ u in
   let v = R.inspect_universe u in
   open_universe_view v
 

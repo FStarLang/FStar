@@ -49,8 +49,8 @@ type int_t (n:pos) = x:int{size x n}
 
 /// Multiplicative operator semantics, see C11 6.5.5
 
-(* Truncation towards zero division *)
-let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
+(* Truncation towards zero division: (/-) *)
+let op_Slash_Subtraction (a:int) (b:int{b <> 0}) : Tot int =
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
 
@@ -62,7 +62,7 @@ let op_At_Percent (v:int) (p:int{p>0/\ p%2=0}) : Tot int =
 
 let zero (n:pos) : Tot (int_t n) = 0
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 
 let pow2_n (#n:pos) (p:nat{p < n-1}) : Tot (int_t n) =
   pow2_le_compat (n - 2) p; pow2 p
@@ -88,14 +88,6 @@ let decr (#n:pos) (a:int_t n)
       (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
   = a - 1
 
-val incr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
-  (requires (b2t (a < max_int n)))
-  (ensures (fun b -> a + 1 = b))
-
-val decr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
-  (requires (b2t (a > min_int n)))
-  (ensures (fun b -> a - 1 = b))
-
 let incr_mod (#n:pos) (a:int_t n) : Tot (int_t n) =
   (a + 1) % (pow2 (n-1))
 
@@ -109,12 +101,7 @@ let add (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))
   = a + b
 
-val add_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a + b) n ==> a + b = c))
-
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 
 let add_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a + b) @% (pow2 n)
@@ -126,11 +113,6 @@ let sub (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))    
   = a - b
 
-val sub_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a - b) n ==> a - b = c))
-
 let sub_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a - b) @% (pow2 n)
 
@@ -141,46 +123,36 @@ let mul (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))
   = a * b
 
-val mul_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a * b) n ==> a * b = c))
-
 let mul_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a * b) @% (pow2 n)
 
 #pop-options
 
-(* Division primitives *)
+(* Division primitives. Truncates towards zero. *)
 let div (#n:pos) (a:int_t n) (b:int_t n{b <> 0})
     : Pure (int_t n)
-      (requires (size (a / b) n))
-      (ensures (fun c -> b <> 0 ==> a / b = c))
-= a / b
-
-val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    (b <> 0 /\ size (a / b) n) ==> a / b = c))
+      (requires (size (a /- b) n))
+      (ensures (fun c -> b <> 0 ==> a /- b = c))
+= a /- b
 
 val div_size: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))
 
 let udiv (#n:pos) (a:int_t n{min_int n < a}) (b:int_t n{b <> 0})
-    : Tot (c:int_t n{b <> 0 ==> a / b = c})
+    : Tot (c:int_t n{b <> 0 ==> a /- b = c})
   = div_size #n a b;
-    a / b
-
+    a /- b
 
 (* Modulo primitives *)
 let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
   a - ((a/b) * b)
 
 (* Comparison operators *)
-let eq #n (a:int_t n) (b:int_t n) : Tot bool = a = b
-let gt #n (a:int_t n) (b:int_t n) : Tot bool = a > b
+let eq  #n (a:int_t n) (b:int_t n) : Tot bool = a = b
+let ne  #n (a:int_t n) (b:int_t n) : Tot bool = a <> b
+let gt  #n (a:int_t n) (b:int_t n) : Tot bool = a > b
 let gte #n (a:int_t n) (b:int_t n) : Tot bool = a >= b
-let lt #n (a:int_t n) (b:int_t n) : Tot bool = a < b
+let lt  #n (a:int_t n) (b:int_t n) : Tot bool = a < b
 let lte #n (a:int_t n) (b:int_t n) : Tot bool = a <= b
 
 /// Casts
@@ -398,6 +370,20 @@ let shift_right (#n:pos) (a:int_t n{0 <= a}) (s:nat) : Tot (int_t n) =
 let shift_arithmetic_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
   from_vec (shift_arithmetic_right_vec #n (to_vec #n a) s)
 
+(* Rotate operators *)
+
+(** Rotate left.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
+let rotate_left (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
+  from_vec (rotate_left_vec #n (to_vec #n a) s)
+
+(** Rotate right.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
+let rotate_right (#n:pos) (a:int_t n) (s:nat) : Tot (int_t n) =
+  from_vec (rotate_right_vec #n (to_vec #n a) s)
+
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:int_t n{0 <= a} -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
@@ -433,3 +419,32 @@ val shift_arithmetic_right_lemma_2: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n 
   Lemma (requires True)
         (ensures (nth (shift_arithmetic_right #n a s) i = nth #n a (i - s)))
 	[SMTPat (nth (shift_arithmetic_right #n a s) i)]
+
+(* Rotate operators lemmas *)
+val rotate_left_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_left #n a s) i = nth #n a ((i + s) % n)))
+        [SMTPat (nth (rotate_left #n a s) i)]
+
+val rotate_right_lemma: #n:pos -> a:int_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_right #n a s) i = nth #n a ((i + n - (s % n)) % n)))
+        [SMTPat (nth (rotate_right #n a s) i)]
+
+(** Rotate left by n is identity *)
+val rotate_left_full_identity: #n:pos -> a:int_t n ->
+  Lemma (rotate_left #n a n = a)
+  [SMTPat (rotate_left #n a n)]
+
+(** Rotate right by n is identity *)
+val rotate_right_full_identity: #n:pos -> a:int_t n ->
+  Lemma (rotate_right #n a n = a)
+  [SMTPat (rotate_right #n a n)]
+
+(** Rotate left and right are inverses *)
+val rotate_left_right_inverse: #n:pos -> a:int_t n -> s:nat ->
+  Lemma (rotate_right #n (rotate_left #n a s) s = a)
+
+(** Rotate right and left are inverses *)
+val rotate_right_left_inverse: #n:pos -> a:int_t n -> s:nat ->
+  Lemma (rotate_left #n (rotate_right #n a s) s = a)

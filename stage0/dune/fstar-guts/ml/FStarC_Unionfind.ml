@@ -2,7 +2,6 @@
    https://www.lri.fr/~filliatr/puf/ *)
 
 open FStarC_Effect
-open FStarC_Util
 
 (* Persistent arrays *)
 type 'a pa_t = 'a data ref

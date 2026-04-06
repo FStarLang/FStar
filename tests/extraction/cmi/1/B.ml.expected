@@ -1,5 +1,5 @@
 open Prims
 type t =
   | T 
-let (uu___is_T : t -> Prims.bool) = fun projectee -> true
-let (test_function : t) = C.id T
+let uu___is_T (projectee : t) : Prims.bool= true
+let test_function : t= C.id T

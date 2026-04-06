@@ -180,10 +180,13 @@ let fold_of_subgen_aux #c #eq (#m:pos{m>1}) #n (cm: CE.cm c eq) (gen: matrix_gen
 
 let arithm_aux (m: pos{m>1}) (n: pos) : Lemma ((m-1)*n < m*n) = ()
 
+#push-options "--z3rlimit_factor 2"
+#restart-solver
 let terminal_case_aux #c #eq (#p:pos{p=1}) #n (cm:CE.cm c eq) (generator: matrix_generator c p n) (m: pos{m<=p}) : Lemma 
   (ensures SP.foldm_snoc cm (SB.slice (seq_of_matrix (init generator)) 0 (m*n)) `eq.eq`
            SP.foldm_snoc cm (SB.init m (fun (i:under m) -> SP.foldm_snoc cm (SB.init n (generator i)))))
   = one_row_matrix_fold_aux cm generator
+#pop-options
 
 #push-options "--ifuel 0 --fuel 1 --z3rlimit 10"
 let terminal_case_two_aux #c #eq (#p:pos) #n (cm:CE.cm c eq) (generator: matrix_generator c p n) (m: pos{m=1}) : Lemma 
@@ -1129,6 +1132,8 @@ let matrix_mul_is_left_distributive #c #eq #m #n #p (add: CE.cm c eq)
   in matrix_equiv_from_proof eq lhs rhs aux 
 #pop-options
 
+#push-options "--z3rlimit_factor 4"
+#restart-solver
 let matrix_mul_is_right_distributive #c #eq #m #n #p (add: CE.cm c eq)
                                     (mul: CE.cm c eq{is_fully_distributive mul add /\ is_absorber add.unit mul}) 
                                     (mx my: matrix c m n) (mz: matrix c n p)
@@ -1162,4 +1167,5 @@ let matrix_mul_is_right_distributive #c #eq #m #n #p (add: CE.cm c eq)
                     (sum_j init_rhs)
                     (ijth rhs i k) 
   in matrix_equiv_from_proof eq lhs rhs aux
+#pop-options
 #pop-options 

@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,16 +20,13 @@ module FStarC.Tactics.V2.Primops
 into this module for all of that. *)
 
 open FStarC
-open FStarC
 open FStarC.Effect
 open FStarC.List
 open FStarC.Range
-open FStarC.Util
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.TypeChecker.Common
 open FStarC.TypeChecker.Env
-open FStarC.Tactics.Result
 open FStarC.Tactics.Types
 open FStarC.Tactics.Printing
 open FStarC.Tactics.Monad
@@ -54,7 +51,7 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 instance _ = RE.e_term (* REMOVE ME *)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:Sealed.sealed 'a) : tac 'a = return (Sealed.unseal x)
+let unseal (_typ:_) (x:Sealed.sealed 'a) : ML (tac 'a) = return (Sealed.unseal x)
 let unseal_step =
   (* Unseal is not in builtins. *)
   let s =
@@ -86,6 +83,8 @@ let ops = [
   (* Tactic builtin steps *)
 
   unseal_step;
+  
+  mk_tac_step_1 0 "get" (fun () -> get) (fun () -> get);
 
   mk_tac_step_1 0 "fixup_range" fixup_range fixup_range;
 
@@ -99,11 +98,7 @@ let ops = [
     (fun _ -> catch)
     (fun _ -> catch);
 
-  mk_tac_step_2 1 "recover"
-    #e_any #(TI.e_tactic_thunk e_any) #(e_either E.e_exn e_any)
-    #NBET.e_any #(TI.e_tactic_nbe_thunk NBET.e_any) #(NBET.e_either E.e_exn_nbe NBET.e_any)
-    (fun _ -> recover)
-    (fun _ -> recover);
+  mk_tac_step_1 0 "raise_core" (traise <: exn -> tac unit) (traise <: exn -> tac unit) ;
 
   mk_tac_step_1 0 "intro" intro intro;
   mk_tac_step_1 0 "intros" intros intros;
@@ -197,7 +192,6 @@ let ops = [
   mk_tac_step_1 0 "term_to_doc"  term_to_doc term_to_doc;
   mk_tac_step_1 0 "comp_to_doc" comp_to_doc comp_to_doc;
   mk_tac_step_1 0 "range_to_string" range_to_string range_to_string;
-  mk_tac_step_2 0 "term_eq_old" term_eq_old term_eq_old;
 
   mk_tac_step_3 1 "with_compat_pre_core"
     #e_any #e_int #(TI.e_tactic_thunk e_any) #e_any
@@ -273,4 +267,16 @@ let ops = [
 
   mk_tac_step_4 0 "call_subtac_tm"
     call_subtac_tm call_subtac_tm;
+
+  mk_tac_step_4 1 "stats_record"
+    #e_any      #e_any      #_ #(TI.e_tactic_thunk e_any)          #e_any
+    #NBET.e_any #NBET.e_any #_ #(TI.e_tactic_nbe_thunk NBET.e_any) #NBET.e_any
+    stats_record
+    stats_record;
+
+  mk_tac_step_4 1 "with_error_context"
+    #e_any      #e_any      #_ #(TI.e_tactic_thunk e_any)          #e_any
+    #NBET.e_any #NBET.e_any #_ #(TI.e_tactic_nbe_thunk NBET.e_any) #NBET.e_any
+    with_error_context
+    with_error_context;
 ]
