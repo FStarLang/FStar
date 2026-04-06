@@ -18,7 +18,7 @@
   },
   // Runs only once when container is prepared
   "onCreateCommand": {
-    "link_to_home_bin" : "ln -s $PWD/bin/fstar.exe ~/bin/fstar.exe",
+    "link_to_home_bin" : "ln -s $PWD/out/bin/fstar.exe ~/bin/fstar.exe && ln -s $PWD/out/bin/krml ~/bin/krml",
     "make": "bash -i .devcontainer/onUpdate.sh"
   },
   // Runs periodically and/or when content of repo changes
