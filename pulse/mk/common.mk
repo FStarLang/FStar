@@ -8,9 +8,9 @@
 #
 # ocaml-output/%.ml:
 # 	$(call msg, "EXTRACT", $(notdir $@))
-# 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked.lax,,$<)) \
+# 	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked,,$<)) \
 #                   --codegen OCaml \
-#                   --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
+#                   --extract_module $(basename $(notdir $(subst .checked,,$<)))
 #
 # This unconditionally prints a message like '[EXTRACT FStar_Syntax_Subst.ml]'
 # (`notdir` is used to omit the directory of the target) and then

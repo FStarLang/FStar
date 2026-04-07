@@ -282,7 +282,9 @@ let load_checked_file_with_tc_result
       Inl msg
     | Inr deps_dig' ->
       let deps_dig, tc_result = checked_fn |> load_tc_result' in
+      let module_name = fn |> Dep.module_name_of_file in
       if deps_dig = deps_dig'
+      || Options.should_be_already_cached module_name
       then begin
         //mark the tc data of the file as valid
         let elt = (Valid (BU.digest_of_file checked_fn), parsing_data) in
