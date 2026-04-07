@@ -180,7 +180,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
           Qualifier Irreducible::quals@attrs
         in
         let d =
-          let open FStarC.Dyn in
+          let open FStar.Dyn in
           DeclToBeDesugared {
             lang_name="pulse";
             blob=mkdyn d;
@@ -226,11 +226,11 @@ let desugar_pulse (env:TcEnv.env)
 module S = FStarC.Syntax.Syntax
 let desugar_pulse_decl_callback
       (env:DsEnv.env)
-      (blob:FStarC.Dyn.dyn)
+      (blob:FStar.Dyn.dyn)
       (lids:list lident)
       (rng:R.range)
 : ML (list FStarC.Syntax.Syntax.sigelt')
-= let d = D.desugar_decl (D.mk_env env) (FStarC.Dyn.undyn blob) 0 in
+= let d = D.desugar_decl (D.mk_env env) (FStar.Dyn.undyn blob) 0 in
   match fst d with
   | Inr None ->
     //All errors were logged via the error API, just stop.

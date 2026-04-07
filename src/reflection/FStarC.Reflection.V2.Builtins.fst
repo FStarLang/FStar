@@ -44,7 +44,7 @@ module EMB   = FStarC.Syntax.Embeddings
 module N     = FStarC.TypeChecker.Normalize
 open FStarC.VConfig
 
-open FStarC.Dyn
+open FStar.Dyn
 
 (* This file provides implementation for reflection primitives in F*.
  *

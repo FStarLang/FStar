@@ -27,7 +27,7 @@ open FStarC.Ident
 
 module S = FStarC.Syntax.Syntax
 
-type extension_tosyntax_decl_t = env -> FStarC.Dyn.dyn -> lids:list lident -> Range.t -> ML (list sigelt')
+type extension_tosyntax_decl_t = env -> FStar.Dyn.dyn -> lids:list lident -> Range.t -> ML (list sigelt')
 val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : ML unit
 
 (* Return a list of wildcard patterns (implicit or explicit as needed)
