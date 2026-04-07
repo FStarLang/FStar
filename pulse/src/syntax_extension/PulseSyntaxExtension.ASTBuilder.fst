@@ -217,7 +217,7 @@ let desugar_pulse (env:TcEnv.env)
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
-: ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
+: ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))
 = let namespaces = L.map Ident.path_of_text namespaces in
   let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
   let env = D.reinitialize_env env.dsenv (TcEnv.current_module env) namespaces module_abbrevs in
@@ -258,7 +258,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
+  : ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))
   = let range = 
       let p = R.mk_pos line col in
       R.mk_range file_name p p

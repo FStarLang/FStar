@@ -7,6 +7,8 @@ ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 FSTAR_OPTIONS += --with_fstarc
 EXTRACT += --extract '-*,+PulseSyntaxExtension'
 FSTAR_OPTIONS += --lax
+FSTAR_OPTIONS += --include src/checker
+FSTAR_OPTIONS += --include lib/common
 
 DEPFLAGS += --already_cached 'Prims,FStarC'
 
