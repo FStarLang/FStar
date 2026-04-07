@@ -31,7 +31,6 @@ open Pulse.Syntax.Base
 module PSP = Pulse.Syntax.Pure
 module PSBuild = Pulse.Syntax.Builder
 module PSN = Pulse.Syntax.Naming
-module RT = FStar.Reflection.Typing
 
 open FStarC.Class.Show
 open FStarC.Class.HasRange
@@ -49,16 +48,16 @@ open PulseSyntaxExtension.Env
 let coerce (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq (admit()) x
 
 let ppname_of_id (i:ident) : ppname =
-  mk_ppname (RT.seal_pp_name (Ident.string_of_id i)) (coerce (Ident.range_of_id i))
+  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (coerce (Ident.range_of_id i))
 
 let sw_mk_binder (x:ident) (t:term) : binder =
   mk_binder_ppname (coerce t) (ppname_of_id x)
 
 let sw_mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder =
-  Pulse.Syntax.Base.mk_binder_with_attrs (coerce t) (ppname_of_id x) (FStar.Sealed.seal (coerce attrs))
+  coerce { Pulse.Syntax.Base.binder_ty = coerce t; binder_ppname = ppname_of_id x; binder_attrs = coerce (FStarC.Sealed.seal attrs) }
 
 let sw_mk_bv (i:Pulse.Syntax.Base.index) (name:string) (r:FStarC.Range.range) : bv =
-  { bv_index = i; bv_ppname = mk_ppname (RT.seal_pp_name name) (coerce r) }
+  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) (coerce r) }
 
 let sw_mk_fv (nm:lident) (r:FStarC.Range.range) : ML fv =
   { fv_name = Ident.path_of_lid nm; fv_range = coerce r }
@@ -155,7 +154,7 @@ let mk_show_proof_state_hint_type (r:FStarC.Range.range) : proof_hint_type = SHO
 let inspect_const (c:FStarC.Const.sconst) : ML constant =
   coerce (FStarC.Reflection.V2.Builtins.inspect_const c)
 
-let pat_var (s:string) (_r:FStarC.Range.range) : pattern = Pat_Var (RT.seal_pp_name s) (coerce S.tun)
+let pat_var (s:string) (_r:FStarC.Range.range) : pattern = Pat_Var (coerce (FStarC.Sealed.seal s)) (coerce S.tun)
 let pat_constant (c:constant) (_r:FStarC.Range.range) : pattern = Pat_Constant c
 let pat_cons (hd:fv) (ps:list pattern) (_r:FStarC.Range.range) : ML pattern =
   Pat_Cons hd (L.map (fun v -> (v, false)) ps)
@@ -163,9 +162,7 @@ let pat_cons (hd:fv) (ps:list pattern) (_r:FStarC.Range.range) : ML pattern =
 let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = coerce (PSBuild.mk_branch (coerce p) (coerce t) (coerce norw))
 
 let bvs_as_subst (vars:list var) : ML PSN.subst =
-  L.fold_left
-    (fun s b -> RT.ND b 0 :: PSN.shift_subst s)
-    [] vars
+  coerce (PSN.bvs_as_subst vars)
 
 let subst_st_term (s:PSN.subst) (t:st_term) : st_term = coerce (PSN.subst_st_term (coerce t) s)
 let subst_proof_hint (s:PSN.subst) (h:proof_hint_type) : proof_hint_type = coerce (PSN.subst_proof_hint (coerce h) s)
