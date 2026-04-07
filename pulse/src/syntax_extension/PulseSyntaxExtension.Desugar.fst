@@ -56,143 +56,149 @@ let term_to_s_term (t:Pulse.Syntax.Base.term) : S.term = FStar.Pervasives.coerce
 [@@coercion]
 let fstarc_range_to_range (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Pervasives.coerce_eq (admit()) r
 
-(* General coerce for remaining mismatches (e.g. sealed types, compound types) *)
+[@@coercion]
+let fstarc_vconst_to_constant (c:FStarC.Reflection.V2.Data.vconst) : Pulse.Syntax.Base.constant = FStar.Pervasives.coerce_eq (admit()) c
+
+[@@coercion]
+let fstarc_ident_to_ident (i:FStarC.Ident.ident) : FStar.Stubs.Reflection.Types.ident = FStar.Pervasives.coerce_eq (admit()) i
+
+(* General coerce for remaining mismatches *)
 let coerce (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq (admit()) x
 
 let ppname_of_id (i:ident) : ppname =
-  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (coerce (Ident.range_of_id i))
+  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (Ident.range_of_id i)
 
 let sw_mk_binder (x:ident) (t:term) : binder =
-  mk_binder_ppname (coerce t) (ppname_of_id x)
+  mk_binder_ppname (t) (ppname_of_id x)
 
 let sw_mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder =
-  coerce { Pulse.Syntax.Base.binder_ty = coerce t; binder_ppname = ppname_of_id x; binder_attrs = coerce (FStarC.Sealed.seal attrs) }
+  { Pulse.Syntax.Base.binder_ty = t; binder_ppname = ppname_of_id x; binder_attrs = coerce (FStarC.Sealed.seal attrs) }
 
 let sw_mk_bv (i:Pulse.Syntax.Base.index) (name:string) (r:FStarC.Range.range) : bv =
-  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) (coerce r) }
+  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) r }
 
 let sw_mk_fv (nm:lident) (r:FStarC.Range.range) : ML fv =
-  { fv_name = Ident.path_of_lid nm; fv_range = coerce r }
+  { fv_name = Ident.path_of_lid nm; fv_range = r }
 
 let sw_as_qual (imp:bool) : option qualifier = if imp then Some Implicit else None
 let tc_qual : option qualifier = Some TcArg
-let meta_qual (t:term) : option qualifier = Some (Meta (coerce t))
+let meta_qual (t:term) : option qualifier = Some (Meta t)
 
-let tm_emp (r:FStarC.Range.range) : term = coerce (PSP.pack_term_view PSP.Tm_Emp (coerce r))
-let tm_pure (p:term) (r:FStarC.Range.range) : term = coerce (PSP.pack_term_view (PSP.Tm_Pure (coerce p)) (coerce r))
-let tm_unknown (r:FStarC.Range.range) : term = coerce (PSP.pack_term_view PSP.Tm_Unknown (coerce r))
-let tm_expr (t:S.term) (r:FStarC.Range.range) : term = coerce (PSP.wr (coerce t) (coerce r))
+let tm_emp (r:FStarC.Range.range) : term = (PSP.pack_term_view PSP.Tm_Emp r)
+let tm_pure (p:term) (r:FStarC.Range.range) : term = (PSP.pack_term_view (PSP.Tm_Pure p) r)
+let tm_unknown (r:FStarC.Range.range) : term = (PSP.pack_term_view PSP.Tm_Unknown r)
+let tm_expr (t:S.term) (r:FStarC.Range.range) : term = (PSP.wr (t) r)
 
 let sw_mk_st_comp (pre:term) (ret:binder) (post:term) : st_comp =
-  { u = PSP.u_unknown; res = coerce ret.binder_ty; pre = coerce pre; post = coerce post }
+  { u = PSP.u_unknown; res = ret.binder_ty; pre = pre; post = post }
 
 let sw_mk_comp (pre:term) (ret:binder) (post:term) : comp =
   C_ST (sw_mk_st_comp pre ret post)
 
 let ghost_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp =
-  C_STGhost (coerce opens) (sw_mk_st_comp pre ret post)
+  C_STGhost (opens) (sw_mk_st_comp pre ret post)
 
 let atomic_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp =
-  C_STAtomic (coerce opens) Observable (sw_mk_st_comp pre ret post)
+  C_STAtomic opens Observable (sw_mk_st_comp pre ret post)
 
 let unobs_comp (opens:term) (pre:term) (ret:binder) (post:term) : comp =
-  C_STAtomic (coerce opens) Neutral (sw_mk_st_comp pre ret post)
+  C_STAtomic opens Neutral (sw_mk_st_comp pre ret post)
 
-let mk_tot (t:term) : comp = C_Tot (coerce t)
+let mk_tot (t:term) : comp = C_Tot t
 
 let tm_return (t:term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_return PSP.tm_unknown false (coerce t)) (coerce r)))
+  (PSBuild.(with_range (tm_return PSP.tm_unknown false t) r))
 
 let tm_ghost_return (t:term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_return PSP.tm_unknown false (coerce t)) (coerce r)))
+  (PSBuild.(with_range (tm_return PSP.tm_unknown false t) r))
 
 let tm_abs (b:binder) (q:option qualifier) (c:option comp) (body:st_term) (r:FStarC.Range.range) : st_term =
-  let asc : comp_ascription = coerce { annotated = c; elaborated = None } in
-  coerce (PSBuild.(with_range (tm_abs (coerce b) (coerce q) asc (coerce body)) (coerce r)))
+  let asc : comp_ascription = { annotated = c; elaborated = None } in
+  (PSBuild.(with_range (tm_abs (b) q asc body) r))
 
 let tm_st (head:term) (args:list st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_st (coerce head) (coerce args)) (coerce r)))
+  (PSBuild.(with_range (tm_st (head) args) r))
 
 let tm_bind (x:binder) (e1:st_term) (e2:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_bind (coerce x) (coerce e1) (coerce e2)) (coerce r)))
+  (PSBuild.(with_range (tm_bind (x) (e1) e2) r))
 
 let tm_totbind (x:binder) (e1:term) (e2:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_totbind (coerce x) (coerce e1) (coerce e2)) (coerce r)))
+  (PSBuild.(with_range (tm_totbind (x) (e1) e2) r))
 
 let tm_let_mut (x:binder) (v:option term) (k:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_with_local (coerce x) (coerce v) (coerce k)) (coerce r)))
+  (PSBuild.(with_range (tm_with_local (x) (v) k) r))
 
 let tm_let_mut_array (x:binder) (v:option term) (n:term) (k:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_with_local_array (coerce x) (coerce v) (coerce n) (coerce k)) (coerce r)))
+  (PSBuild.(with_range (tm_with_local_array (x) (v) (n) k) r))
 
 let tm_while (head:st_term) (invariant:slprop) (body:st_term) (loop_requires:term) (meas:list term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_while (coerce invariant) (coerce head) (coerce body) (coerce loop_requires) (coerce meas)) (coerce r)))
+  (PSBuild.(with_range (tm_while (invariant) (head) (body) (loop_requires) meas) r))
 
 let tm_if (head:st_term) (returns_annot:option slprop) (then_ else_:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_if (coerce head) (coerce then_) (coerce else_) (coerce returns_annot)) (coerce r)))
+  (PSBuild.(with_range (tm_if (head) (then_) (else_) returns_annot) r))
 
 let tm_match (sc:st_term) (returns_:option slprop) (brs:list branch) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_match (coerce sc) (coerce returns_) (coerce brs)) (coerce r)))
+  (PSBuild.(with_range (tm_match (sc) (returns_) brs) r))
 
 let tm_intro_exists (p:slprop) (witnesses:list term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_intro_exists (coerce p) (coerce witnesses)) (coerce r)))
+  (PSBuild.(with_range (tm_intro_exists (p) witnesses) r))
 
 let tm_with_options (options:string) (body:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_pragma_with_options options (coerce body)) (coerce r)))
+  (PSBuild.(with_range (tm_pragma_with_options options body) r))
 
 let tm_forward_jump_label (body:st_term) (lbl:ident) (post:comp) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_forward_jump_label (coerce body) (ppname_of_id lbl) (coerce post)) (coerce r)))
+  (PSBuild.(with_range (tm_forward_jump_label (body) (ppname_of_id lbl) post) r))
 
 let tm_goto (lbl:term) (arg:term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_goto (coerce lbl) (coerce arg)) (coerce r)))
+  (PSBuild.(with_range (tm_goto (lbl) arg) r))
 
 let tm_defer (handler_pre:term) (handler:st_term) (body:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_defer (coerce handler_pre) (coerce handler) (coerce body)) (coerce r)))
+  (PSBuild.(with_range (tm_defer (handler_pre) (handler) body) r))
 
 let tm_admit (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.(with_range (tm_admit STT PSP.u_zero (PSP.pack_term_view PSP.Tm_Unknown (coerce r)) None) (coerce r)))
+  (PSBuild.(with_range (tm_admit STT PSP.u_zero (PSP.pack_term_view PSP.Tm_Unknown r) None) r))
 
 let tm_proof_hint_with_binders (ht:proof_hint_type) (binders:list binder) (s:st_term) (r:FStarC.Range.range) : st_term =
-  coerce (PSBuild.with_range (Tm_ProofHintWithBinders { hint_type=coerce ht; binders=coerce binders; t=coerce s }) (coerce r))
+  (PSBuild.with_range (Tm_ProofHintWithBinders { hint_type=ht; binders=binders; t=s }) r)
 
-let mk_assert_hint_type (p:slprop) : proof_hint_type = coerce (PSBuild.mk_assert_hint_type (coerce p))
-let mk_unfold_hint_type ns p : proof_hint_type = coerce (PSBuild.mk_unfold_hint_type ns (coerce p))
-let mk_fold_hint_type ns p : proof_hint_type = coerce (PSBuild.mk_fold_hint_type ns (coerce p))
-let mk_rename_hint_type pairs goal tac_opt : proof_hint_type = coerce (PSBuild.mk_rename_hint_type (coerce pairs) (coerce goal) (coerce tac_opt))
-let mk_rewrite_hint_type t1 t2 tac_opt : proof_hint_type = coerce (PSBuild.mk_rewrite_hint_type (coerce t1) (coerce t2) (coerce tac_opt))
+let mk_assert_hint_type (p:slprop) : proof_hint_type = (PSBuild.mk_assert_hint_type p)
+let mk_unfold_hint_type ns p : proof_hint_type = (PSBuild.mk_unfold_hint_type ns p)
+let mk_fold_hint_type ns p : proof_hint_type = (PSBuild.mk_fold_hint_type ns p)
+let mk_rename_hint_type pairs goal tac_opt : proof_hint_type = (PSBuild.mk_rename_hint_type (pairs) (goal) tac_opt)
+let mk_rewrite_hint_type t1 t2 tac_opt : proof_hint_type = (PSBuild.mk_rewrite_hint_type (t1) (t2) tac_opt)
 let mk_wild_hint_type : proof_hint_type = WILD
-let mk_show_proof_state_hint_type (r:FStarC.Range.range) : proof_hint_type = SHOW_PROOF_STATE (coerce r)
+let mk_show_proof_state_hint_type (r:FStarC.Range.range) : proof_hint_type = SHOW_PROOF_STATE r
 
 let inspect_const (c:FStarC.Const.sconst) : ML constant =
-  coerce (FStarC.Reflection.V2.Builtins.inspect_const c)
+  (FStarC.Reflection.V2.Builtins.inspect_const c)
 
 let pat_var (s:string) (_r:FStarC.Range.range) : pattern = Pat_Var (coerce (FStarC.Sealed.seal s)) (coerce S.tun)
 let pat_constant (c:constant) (_r:FStarC.Range.range) : pattern = Pat_Constant c
 let pat_cons (hd:fv) (ps:list pattern) (_r:FStarC.Range.range) : ML pattern =
   Pat_Cons hd (L.map (fun v -> (v, false)) ps)
 
-let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = coerce (PSBuild.mk_branch (coerce p) (coerce t) (coerce norw))
+let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = PSBuild.mk_branch p t (coerce norw)
 
 let bvs_as_subst (vars:list var) : ML PSN.subst =
-  coerce (PSN.bvs_as_subst vars)
+  (PSN.bvs_as_subst vars)
 
-let subst_st_term (s:PSN.subst) (t:st_term) : st_term = coerce (PSN.subst_st_term (coerce t) s)
-let subst_proof_hint (s:PSN.subst) (h:proof_hint_type) : proof_hint_type = coerce (PSN.subst_proof_hint (coerce h) s)
+let subst_st_term (s:PSN.subst) (t:st_term) : st_term = (PSN.subst_st_term t s)
+let subst_proof_hint (s:PSN.subst) (h:proof_hint_type) : proof_hint_type = (PSN.subst_proof_hint h s)
 
 let fn_defn rng id isrec us bs (comp:Pulse.Syntax.Base.comp) meas body : decl =
-  coerce (PSBuild.mk_decl (coerce (PSBuild.mk_fn_defn (coerce id) isrec (coerce us) (coerce bs) (coerce comp) (coerce meas) (coerce body))) (coerce rng))
+  PSBuild.mk_decl (PSBuild.mk_fn_defn id isrec (coerce us) (coerce bs) comp (coerce meas) body) rng
 let fn_decl rng id us bs (comp:Pulse.Syntax.Base.comp) : decl =
-  coerce (PSBuild.mk_decl (coerce (PSBuild.mk_fn_decl (coerce id) (coerce us) (coerce bs) (coerce comp))) (coerce rng))
+  PSBuild.mk_decl (PSBuild.mk_fn_decl id (coerce us) (coerce bs) comp) rng
 let slprop_defn rng id bs body : decl =
-  coerce (PSBuild.mk_decl (coerce (PSBuild.mk_slprop_defn (coerce id) (coerce bs) (coerce body))) (coerce rng))
+  PSBuild.mk_decl (PSBuild.mk_slprop_defn id (coerce bs) body) rng
 
 let print_exn (e:exn) : ML string = FStarC.Util.print_exn e
 
 let close_st_term_bvs (e:st_term) (xs:list bv) : ML st_term = 
-  coerce (PSN.close_st_term_n (coerce e) (L.map (fun (b:bv) -> b.bv_index) xs))
+  (PSN.close_st_term_n (e) (L.map (fun (b:bv) -> b.bv_index) xs))
 
 let close_comp_bvs  (e:comp) (xs:list bv) : ML comp = 
-  coerce (PSN.close_comp_n (coerce e) (L.map (fun (b:bv) -> b.bv_index) xs))
+  (PSN.close_comp_n (e) (L.map (fun (b:bv) -> b.bv_index) xs))
 
 
 let rec fold_right1 (f : 'a -> 'a -> ML 'a) (l : list 'a) : ML 'a =
@@ -408,12 +414,12 @@ let tosyntax' (env:env_t) (t:A.term)
 
 let tosyntax (env:env_t) (t:A.term)
   : ML (err S.term)
-  = let! s = tosyntax' env t in
+  = let! s : S.term = tosyntax' env t in
     return s
 
 let desugar_term (env:env_t) (t:A.term)
   : ML (err term) 
-  = let! s = tosyntax env t in
+  = let! s : S.term = tosyntax env t in
     return (as_term s)
   
 let desugar_term_opt (env:env_t) (t:option A.term)
@@ -449,17 +455,17 @@ let idents_as_binders (env:env_t) (l:list ident)
 
 let desugar_slprop (env:env_t) (v:Sugar.slprop)
   : ML (err term)
-  = let! t = tosyntax env v in
-    return (coerce t)
+  = let! t : S.term = tosyntax env v in
+    return (s_term_to_term t)
 
 let desugar_slprop_annot (env:env_t) (v:Sugar.slprop) (lit:bool)
   : ML (err term)
-  = let! p = tosyntax env v in
+  = let! p : S.term = tosyntax env v in
     if lit then
-      return (coerce (U.mk_app (S.tconst (FStarC.Parser.Const.p2l ["Pulse"; "Lib"; "Core"; "literally"]))
+      return (s_term_to_term (U.mk_app (S.tconst (FStarC.Parser.Const.p2l ["Pulse"; "Lib"; "Core"; "literally"]))
         [p, None]))
     else
-      return (coerce p)
+      return (s_term_to_term p)
 
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : ML (err comp)
@@ -473,7 +479,7 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
     let! opens =
       match annots.Sugar.opens with
       | Some t -> desugar_term env t
-      | None -> return (coerce PSP.tm_emp_inames)
+      | None -> return (PSP.tm_emp_inames)
     in
 
     (* Should have return_name in scope I think *)
@@ -484,7 +490,7 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
     // let! posts = map_err (desugar_slprop env1) c.postconditions in
     // let post = fold_right1 (fun a b -> tm_star a b c.range) posts in
     let! post = desugar_slprop_annot env1 annots.Sugar.postcondition c.literally in
-    let post = coerce (PSN.close_term (coerce post) bv.index) in
+    let post = (PSN.close_term post bv.index) in
 
     match c.tag with
     | Sugar.ST ->
@@ -553,7 +559,7 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
       let! tac_opt = desugar_tac_opt env tac_opt in
       return (mk_rewrite_hint_type t1 t2 tac_opt)
     | WILD ->
-      return (mk_wild_hint_type)
+      return mk_wild_hint_type
     | SHOW_PROOF_STATE r ->
       return (mk_show_proof_state_hint_type r)
 
@@ -562,7 +568,7 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
 let desugar_datacon (env:env_t) (l:lid) : ML (err fv) =
   let rng = Ident.range_of_lid l in
   let t = A.mk_term (A.Name l) rng A.Expr in
-  let! tt = tosyntax env t in
+  let! tt : S.term = tosyntax env t in
   let! sfv =
     match (SS.compress tt).n with
     | S.Tm_fvar fv -> return fv
@@ -575,11 +581,11 @@ let mk_abs_with_comp qbs comp body range : ML _ =
   let _, abs =
     L.fold_right
       (fun (q,b,bv) (c, body) ->
-        let body' = coerce (PSN.close_st_term (coerce body) bv.bv_index) in
+        let body' = (PSN.close_st_term body bv.bv_index) in
         let asc =
           match c with
           | None -> None
-          | Some c -> Some  (coerce (PSN.close_comp (coerce c) bv.bv_index)) in
+          | Some c -> Some  ((PSN.close_comp c bv.bv_index)) in
         None, tm_abs b q asc body' range)
       qbs (comp, body)
   in
@@ -591,18 +597,18 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
   = let open Sugar in
     match s.s with
     | Expr { e; args } -> 
-      let! tm = tosyntax env e in
+      let! tm : S.term = tosyntax env e in
       if Nil? args then
         return (st_term_of_admit_or_return (admit_or_return env tm))
       else (
         let! args = desugar_st_args env args in
-        return (tm_st (coerce tm) args s.range)
+        return (tm_st tm args s.range)
       )
 
     | ArrayAssignment { arr; index; value } ->
-      let! arr = tosyntax env arr in
-      let! index = tosyntax env index in
-      let! value = tosyntax env value in      
+      let! arr : S.term = tosyntax env arr in
+      let! index : S.term = tosyntax env index in
+      let! value : S.term = tosyntax env value in      
       let! array_assignment_lid = resolve_lid env (op_array_assignment_lid s.range) in
       let tm = (app_lid array_assignment_lid [arr; index; value] s.range) in
       return (st_term_of_admit_or_return (admit_or_return env tm))
@@ -748,7 +754,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       
       let loop_requires = invs0 |> L.concatMap (function | LoopRequires r -> [r] | _ -> []) in
       let! loop_requires = mapM (tosyntax env) loop_requires in
-      let loop_requires =
+      let loop_requires : S.term =
         match loop_requires with
         | [] -> U.t_true
         | r::rs -> L.fold_left U.mk_conj r rs in
@@ -758,21 +764,21 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         if L.length meas_list > 1
         then fail "At most one decreases clause is allowed per while loop." s.range
         else return () in
-      let! meas =
+      let! meas : list S.term =
         match meas_list with
         | [{ A.tm = A.LexList ts }] -> mapM (tosyntax env) ts
         | _ -> mapM (tosyntax env) meas_list
       in
 
-      let while = tm_while guard inv body (coerce loop_requires) (coerce meas) s.range in
-      let while = coerce (PSN.close_st_term (coerce while) lblx.index) in
+      let while = tm_while guard inv body loop_requires (coerce meas) s.range in
+      let while = (PSN.close_st_term while lblx.index) in
 
       let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in
       let! loop_ensures = mapM (tosyntax env) loop_ensures in
       let loop_ensures =
         match loop_ensures with
         | [] -> tm_emp s.range
-        | r::rs -> tm_pure (coerce (L.fold_left U.mk_disj r rs)) s.range in
+        | r::rs -> tm_pure (s_term_to_term (L.fold_left U.mk_disj r rs)) s.range in
       let loop_ensures = sw_mk_comp (tm_unknown s.range) (sw_mk_binder (id_of_text "_") (tm_unknown s.range)) loop_ensures in
       return (tm_forward_jump_label while breaklbl loop_ensures s.range)
 
@@ -794,7 +800,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
     | ForwardJumpLabel { body; lbl; post } ->
       let env', lblx = push_bv env lbl in
       let! body = desugar_stmt env' body in
-      let body = coerce (PSN.close_st_term (coerce body) lblx.index) in
+      let body = (PSN.close_st_term body lblx.index) in
       let! post =
         match post with
         | None -> return (tm_emp s.range)
@@ -804,10 +810,10 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       return (tm_forward_jump_label body lbl post s.range)
 
     | Goto { lbl; arg } ->
-      let! lbl = tosyntax env (sugar_var (id_as_lid lbl) s.range) in
+      let! lbl : S.term = tosyntax env (sugar_var (id_as_lid lbl) s.range) in
       let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
-      let! arg = tosyntax env arg in
-      return (tm_goto (coerce lbl) (coerce arg) s.range)
+      let! arg : S.term = tosyntax env arg in
+      return (tm_goto (lbl) arg s.range)
 
     | Defer { handler_pre; defer_handler } ->
       fail "defer must be followed by a body (use defer pre { handler }; body)" s.range
@@ -832,7 +838,7 @@ and desugar_st_args (env:env_t) (args:list Sugar.lambda) : ML (err (list st_term
 and desugar_stmt (env:env_t) (s:Sugar.stmt) : ML (err st_term) =
   let! r = desugar_stmt' env s in
   if not s.source then
-    return (coerce (PSBuild.mark_not_source (coerce r)))
+    return ((PSBuild.mark_not_source r))
   else
     return r
 
@@ -842,7 +848,7 @@ and desugar_branch (env:env_t) (br: bool & A.pattern & Sugar.stmt)
     let! (p, vs) = desugar_pat env p in
     let env, bvs = push_bvs env vs in
     let! e = desugar_stmt env e in
-    let e = coerce (PSN.close_st_term_n (coerce e) (L.map (fun (v:S.bv) -> v.index <: nat) bvs)) in
+    let e = (PSN.close_st_term_n (e) (L.map (fun (v:S.bv) -> v.index <: nat) bvs)) in
     return (mk_branch p e norw)
 
 and desugar_pat (env:env_t) (p:A.pattern)
@@ -915,7 +921,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
     let! s2 =
       let env, bv = push_bv env id in
       let! s2 = desugar_stmt env s2 in
-      return (coerce (PSN.close_st_term (coerce s2) bv.index))
+      return ((PSN.close_st_term s2 bv.index))
     in
     match lb.init with
     | None ->
@@ -968,7 +974,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           fail "Nested functions are not yet fully supported" r
 
         | Default_initializer (Some e1, []) ->
-          let! s1 = tosyntax env e1 in
+          let! s1 : S.term = tosyntax env e1 in
           let t =
             match admit_or_return env s1 with
             | AdmitOrReturn_STTerm s1 ->
@@ -979,9 +985,9 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           return t
 
         | Default_initializer (Some e1, args) ->
-          let! s1 = tosyntax env e1 in
+          let! s1 : S.term = tosyntax env e1 in
           let! args = desugar_st_args env args in
-          let t = mk_bind b (tm_st (coerce s1) args r) s2 r in
+          let t = mk_bind b (tm_st s1 args r) s2 r in
           return t
 
         | Stmt_initializer e ->
@@ -1019,7 +1025,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
     let! s1 = desugar_stmt env s1 in
     let s1 =
       if semicolon
-      then coerce (PSBuild.mark_statement_sequence (coerce s1))
+      then (PSBuild.mark_statement_sequence s1)
       else s1
     in
     let! s2 = desugar_stmt env s2 in
@@ -1031,9 +1037,9 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
   = match s1.s with
     | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME p; binders=[] } ->
       let assume_fv = sw_mk_fv assume_lid r in
-      let assume_ : term = coerce (PSP.tm_fvar (coerce assume_fv)) in
+      let assume_ : term = (PSP.tm_fvar assume_fv) in
       let! p = desugar_slprop env p in
-      let s1 = tm_st (coerce (S.mk_Tm_app (coerce assume_) [coerce p, None] r)) [] r in
+      let s1 = tm_st (S.mk_Tm_app (term_to_s_term assume_) [term_to_s_term p, None] r) [] r in
       let! s2 =
         match k with
         | None -> return (tm_ghost_return (tm_expr S.unit_const r) r)
@@ -1056,7 +1062,7 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let sub = bvs_as_subst vars in
       let s2 = subst_st_term sub s2 in
       let ht = subst_proof_hint sub ht in
-      return (tm_proof_hint_with_binders ht (coerce (PSN.close_binders (coerce binders) vars)) s2 r)
+      return (tm_proof_hint_with_binders ht ((PSN.close_binders binders vars)) s2 r)
     | _ -> fail "Expected ProofHintWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)
@@ -1156,7 +1162,7 @@ let desugar_decl (env:env_t) (d:Sugar.decl)
 
   // A recursive definition where the body is a lambda, not supported yet.
   | Sugar.FnDefn { id; is_rec=true; us; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
-    fail "Recursive Pulse functions cannot be defined as lambdas (yet)" range
+    fail "Recursive Pulse functions cannot be defined as lambdas yet" range
 
   // Just a val declaration, with a computation type
   | Sugar.FnDecl { id; us; binders; ascription=Inl ascription; range } ->
