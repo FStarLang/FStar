@@ -105,7 +105,7 @@ let ops : list primitive_step =
                                                       [NBETerm.as_arg l]))))
          (fun  universes elt_t (l, lst) ->
             let blob = FStar.ImmutableArray.Base.of_list #NBETerm.t lst in
-            Some (universes, elt_t, (l, FStarC.Dyn.mkdyn blob)))
+            Some (universes, elt_t, (l, FStar.Dyn.mkdyn blob)))
          univs args
     in
     (  PC.immutable_array_of_list_lid, 2, 1,
@@ -130,11 +130,11 @@ let ops : list primitive_step =
           (fun r universes elt_t (l, lst) ->
             //The actual primitive step computing the IA.t blob
              let blob = FStar.ImmutableArray.Base.of_list #term lst in
-             Some (universes, elt_t, (l, FStarC.Dyn.mkdyn blob))),
+             Some (universes, elt_t, (l, FStar.Dyn.mkdyn blob))),
        nbe_of_list)
   in
   let arg1_as_elt_t (x:arg) : option term = Some (fst x) in
-  let arg2_as_blob (x:arg) : ML (option FStarC.Dyn.dyn) =
+  let arg2_as_blob (x:arg) : ML (option FStar.Dyn.dyn) =
       //try_unembed_simple an arg as a IA.t blob if the emb_typ
       //of the lkind tells us it has the right type
       match (SS.compress (fst x)).n with
@@ -142,7 +142,7 @@ let ops : list primitive_step =
         when head=Ident.string_of_lid PC.immutable_array_t_lid -> Some blob
       | _ -> None
   in
-  let arg2_as_blob_nbe (x:NBETerm.arg) : option FStarC.Dyn.dyn =
+  let arg2_as_blob_nbe (x:NBETerm.arg) : option FStar.Dyn.dyn =
       //try_unembed_simple an arg as a IA.t blob if the emb_typ
       //tells us it has the right type
       let open FStarC.TypeChecker.NBETerm in
@@ -153,8 +153,8 @@ let ops : list primitive_step =
   in
   let length_op =
     let embed_int (r:Range.t) (i:int) : ML term = embed_simple r i in
-    let run_op (blob:FStarC.Dyn.dyn) : ML (option int) =
-        Some (BU.array_length #term (FStarC.Dyn.undyn blob))
+    let run_op (blob:FStar.Dyn.dyn) : ML (option int) =
+        Some (BU.array_length #term (FStar.Dyn.undyn blob))
     in
     let nbe_length : nbe_interp_t =
       fun _cbs univs args ->
@@ -180,7 +180,7 @@ let ops : list primitive_step =
            arg2_as_blob_nbe //2nd arg is an `IA.t NBEterm.t` blob
            NBETerm.arg_as_int
            (fun tm -> tm) //In this case, the result is a NBE.t, so embedding is the identity
-           (fun _universes _t blob i  -> Some (BU.array_index #NBETerm.t (FStarC.Dyn.undyn blob) i))
+           (fun _universes _t blob i  -> Some (BU.array_index #NBETerm.t (FStar.Dyn.undyn blob) i))
            univs args
     in
     (PC.immutable_array_index_lid, 3, 1,
@@ -188,7 +188,7 @@ let ops : list primitive_step =
                         arg2_as_blob //2nd arg is the `IA.t term` blob
                         arg_as_int //3rd arg is an int
                         (fun r tm -> tm) //the result is just a term, so the embedding is the identity
-                        (fun r _universes _t blob i -> Some (BU.array_index #term (FStarC.Dyn.undyn blob) i)),
+                        (fun r _universes _t blob i -> Some (BU.array_index #term (FStar.Dyn.undyn blob) i)),
        nbe_index)
   in
   let s1 = as_primitive_step true of_list_op in

@@ -34,7 +34,7 @@ module SS      = FStarC.Syntax.Subst
 module U       = FStarC.Syntax.Util
 
 open FStarC.Reflection.V2.Builtins //needed for inspect_fv, but that feels wrong
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.Syntax.Embeddings.AppEmb
 open FStarC.Class.Monad
 

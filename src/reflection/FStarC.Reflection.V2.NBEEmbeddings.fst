@@ -22,7 +22,7 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.NBETerm
 open FStarC.Order
 open FStarC.Errors
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.Reflection.V2.Constants
 
 module Env     = FStarC.TypeChecker.Env
@@ -59,7 +59,7 @@ let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_t
 
 let mk_lazy cb obj ty kind : ML t =
     let li = {
-          blob = FStarC.Dyn.mkdyn obj
+          blob = FStar.Dyn.mkdyn obj
         ; lkind = kind
         ; ltyp = ty
         ; rng = Range.dummyRange
@@ -75,7 +75,7 @@ let e_bv =
     let unembed_bv cb (t:t) : ML (option bv) =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
-            Some <| FStarC.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded bv: %s" (t_to_string t));
             None
@@ -89,7 +89,7 @@ let e_namedv =
     let unembed_namedv cb (t:t) : ML (option namedv) =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_namedv}, _) ->
-            Some <| FStarC.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded namedv: %s" (t_to_string t));
             None
@@ -330,7 +330,7 @@ let unlazy_as_t k t : ML _ =
     match t.nbe_t with
     | Lazy (Inl {lkind=k'; blob=v}, _)
         when k =? k' ->
-      FStarC.Dyn.undyn v
+      FStar.Dyn.undyn v
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 

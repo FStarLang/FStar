@@ -244,11 +244,11 @@ type dep_scan_callbacks = {
 
 type to_be_desugared = {
   lang_name: string;
-  blob: FStarC.Dyn.dyn;
+  blob: FStar.Dyn.dyn;
   idents: list ident;
-  to_string: FStarC.Dyn.dyn -> ML string;
-  eq: FStarC.Dyn.dyn -> FStarC.Dyn.dyn -> ML bool;
-  dep_scan: dep_scan_callbacks -> FStarC.Dyn.dyn -> ML unit
+  to_string: FStar.Dyn.dyn -> ML string;
+  eq: FStar.Dyn.dyn -> FStar.Dyn.dyn -> ML bool;
+  dep_scan: dep_scan_callbacks -> FStar.Dyn.dyn -> ML unit
 }
 
 type decl' =

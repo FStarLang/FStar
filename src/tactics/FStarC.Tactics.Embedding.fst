@@ -156,7 +156,7 @@ let fv_as_emb_typ fv = S.ET_app (show fv.fv_name, [])
 let e_ref_proofstate_nbe =
     let embed_ref_proofstate _cb (ps:ref_proofstate) : ML NBETerm.t =
         let li = { lkind = Lazy_ref_proofstate
-                 ; blob = FStarC.Dyn.mkdyn ps
+                 ; blob = FStar.Dyn.mkdyn ps
                  ; ltyp = fstar_tactics_ref_proofstate.t
                  ; rng = Range.dummyRange }
         in
@@ -166,7 +166,7 @@ let e_ref_proofstate_nbe =
     let unembed_ref_proofstate _cb (t:NBETerm.t) : ML (option ref_proofstate) =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_ref_proofstate}, _) ->
-            Some <| FStarC.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
           if !Options.debug_embedding then
             Err.log_issue0
@@ -184,7 +184,7 @@ let e_ref_proofstate_nbe =
 let e_proofstate_nbe =
     let embed_proofstate _cb (ps:proofstate) : ML NBETerm.t =
         let li = { lkind = Lazy_proofstate
-                 ; blob = FStarC.Dyn.mkdyn ps
+                 ; blob = FStar.Dyn.mkdyn ps
                  ; ltyp = fstar_tactics_proofstate.t
                  ; rng = Range.dummyRange }
         in
@@ -194,7 +194,7 @@ let e_proofstate_nbe =
     let unembed_proofstate _cb (t:NBETerm.t) : ML (option proofstate) =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_proofstate}, _) ->
-            Some <| FStarC.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
           if !Options.debug_embedding then
             Err.log_issue0
@@ -212,7 +212,7 @@ let e_proofstate_nbe =
 let e_goal_nbe =
     let embed_goal _cb (ps:goal) : ML NBETerm.t =
         let li = { lkind = Lazy_goal
-                 ; blob = FStarC.Dyn.mkdyn ps
+                 ; blob = FStar.Dyn.mkdyn ps
                  ; ltyp = fstar_tactics_goal.t
                  ; rng = Range.dummyRange }
         in
@@ -222,7 +222,7 @@ let e_goal_nbe =
     let unembed_goal _cb (t:NBETerm.t) : ML (option goal) =
         match NBETerm.nbe_t_of_t t with
         | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_goal}, _) ->
-            Some <| FStarC.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
             if !Options.debug_embedding then
               Err.log_issue0 Err.Warning_NotEmbedded (Format.fmt1 "Not an embedded NBE goal: %s" (NBETerm.t_to_string t));
@@ -505,7 +505,7 @@ let e_tref #a =
 let e_tref_nbe #a =
   let embed_tref _cb (r:tref a) : ML NBETerm.t =
     let li = { lkind = Lazy_tref
-             ; blob = FStarC.Dyn.mkdyn r
+             ; blob = FStar.Dyn.mkdyn r
              ; ltyp = t_tref
              ; rng = Range.dummyRange }
     in
@@ -515,7 +515,7 @@ let e_tref_nbe #a =
   let unembed_tref _cb (t:NBETerm.t) : ML (option (tref a)) =
     match NBETerm.nbe_t_of_t t with
     | NBETerm.Lazy (Inl {blob=b; lkind = Lazy_tref}, _) ->
-      Some <| FStarC.Dyn.undyn b
+      Some <| FStar.Dyn.undyn b
     | _ ->
       if !Options.debug_embedding then
         Err.log_issue0
