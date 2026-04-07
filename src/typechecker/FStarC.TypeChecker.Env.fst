@@ -211,7 +211,7 @@ let missing_definition_list (e:env) : ML (list lident) =
 type sigtable = SMap.t sigelt
 
 let should_verify env : ML _ =
-    not (Options.lax ())
+    not (Options.admit_smt_queries ())
     && not env.admit
     && Options.should_verify (string_of_lid env.curmodule)
 

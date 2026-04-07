@@ -1314,7 +1314,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e, c, g =
       if TcUtil.short_circuit_head head && not env.phase1
       then
-        if Options.lax ()
+        if Options.admit_smt_queries ()
         then
           (* In lax mode, elaborate && and || to if-then-else
              to enforce proper short-circuit evaluation order

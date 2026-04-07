@@ -358,11 +358,7 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
  *)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
-      let cache_fn =
-        let lax = Options.lax () in
-        if lax then fn ^".checked.lax"
-        else fn ^".checked"
-      in
+      let cache_fn = fn ^ ".checked" in
       let mname = fn |> module_name_of_file in
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
@@ -2331,7 +2327,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
     (* Is this an extraction phase? (output-ext is ml, krml, etc.) *)
     let is_extract_phase =
         match output_ext with
-        | Some ext -> not (BU.ends_with ext "checked" || BU.ends_with ext "checked.lax")
+        | Some ext -> not (BU.ends_with ext "checked")
         | None -> false
     in
     
@@ -2377,7 +2373,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
     (* For dune: put checked files in current directory, not next to source *)
     let local_cache_file (f:string) : ML string =
         let base = Filepath.basename f in
-        if Options.lax() then base ^ ".checked.lax" else base ^ ".checked"
+        base ^ ".checked"
     in
     
     (* Format a dep: all files become local basename *)
@@ -2441,7 +2437,7 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         let checked_deps =
             (source :: all_deps) |> List.map (fun f ->
                 let base = Filepath.basename f in
-                if BU.ends_with base ".checked" || BU.ends_with base ".checked.lax"
+                if BU.ends_with base ".checked"
                 then base
                 else local_cache_file f
             )
@@ -2514,10 +2510,9 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
             let files =
               files |> List.filter (fun f ->
                 let base = Filepath.basename f in
-                (* Strip .checked / .checked.lax suffix to recover source name *)
+                (* Strip .checked suffix to recover source name *)
                 let src =
-                  if BU.ends_with base ".checked.lax" then String.substring base 0 (String.length base - 12)
-                  else if BU.ends_with base ".checked" then String.substring base 0 (String.length base - 8)
+                  if BU.ends_with base ".checked" then String.substring base 0 (String.length base - 8)
                   else base
                 in
                 match check_and_strip_suffix src with
