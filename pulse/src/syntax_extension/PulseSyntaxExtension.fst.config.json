@@ -10,5 +10,7 @@
     "fly_deps"
   ],
   "include_dirs": [
+    "../checker",
+    "../../lib/common"
   ]
 }
