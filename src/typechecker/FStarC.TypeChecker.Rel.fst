@@ -4717,7 +4717,7 @@ and solve_c (problem:problem comp) (wl:worklist) : ML solution =
                        solve (attempt [prob] wl)
                   else
                       let g =
-                         if Options.lax () then
+                         if Options.admit_smt_queries () then
                             U.t_true
                          else let wpc1_2 = lift_c1 () |> (fun ct -> List.hd ct.effect_args) in
                               if is_null_wp_2

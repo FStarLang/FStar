@@ -146,9 +146,14 @@ let print_help_for (o : string) : ML unit =
     ()
   | Some doc ->
     print_error (Errors.Msg.renderdoc doc)
+  
+let ( ||| ) x y =
+  match x with
+  | None -> y
+  | _ -> x
 
 (* Normal mode with some flags, files, etc *)
-let go_normal () =
+let go_normal () : ML unit =
   let res, filenames0 = process_args () in
 
   if Some? (Options.output_to()) &&
@@ -165,13 +170,8 @@ let go_normal () =
     then Some (String.substring s 0 (String.length s - String.length suf))
     else None
   in
-  let ( ||| ) x y =
-    match x with
-    | None -> y
-    | _ -> x
-  in
   let checked_of (f:string) =
-    chopsuf ".checked" f ||| chopsuf ".checked.lax" f
+    chopsuf ".checked" f
   in
 
   let filenames =
@@ -463,7 +463,7 @@ let go_normal () =
 (****************************************************************************)
 
 (* choose a main driver function and go *)
-let go () =
+let go () : ML unit =
   let args = Util.get_cmd_args () in
   match args with
   | _ :: "--ocamlenv" :: [] ->

@@ -173,7 +173,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
       progress_callback task;
       Options.restore_cmd_line_options false |> ignore;
       let timestamped_task = update_task_timestamps task in
-      let push_kind = if Options.lax () then LaxCheck else FullCheck in
+      let push_kind = if Options.admit_smt_queries () then LaxCheck else FullCheck in
       let success, st = run_repl_transaction st (Some push_kind) false timestamped_task in
       if success then aux ({ st with repl_deps_stack = !repl_stack }) tasks []
       else Inr st

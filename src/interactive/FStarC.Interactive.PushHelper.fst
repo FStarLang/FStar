@@ -40,7 +40,7 @@ module CTable = FStarC.Interactive.CompletionTable
 let repl_stack : ref repl_stack_t = mk_ref []
 
 let set_check_kind env check_kind : ML env_t =
-  { env with admit = (check_kind = LaxCheck || Options.lax());
+  { env with admit = (check_kind = LaxCheck || Options.admit_smt_queries());
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 (** Build a list of dependency loading tasks from a list of dependencies **)

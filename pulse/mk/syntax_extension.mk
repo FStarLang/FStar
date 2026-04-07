@@ -10,7 +10,7 @@ FSTAR_OPTIONS += --lax
 FSTAR_OPTIONS += --include src/checker
 FSTAR_OPTIONS += --include lib/common
 
-DEPFLAGS += --already_cached 'Prims,FStarC'
+DEPFLAGS += --already_cached 'Prims,FStarC,FStar'
 
 PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/boot.mk

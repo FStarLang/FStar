@@ -839,7 +839,7 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
       (* Stateful, does not go to optionstate. *)
       Find.set_cache_dir s;
       Unset), PathStr "dir"),
-    text "Read and write .checked and .checked.lax in directory dir");
+    text "Read and write .checked files in directory dir");
 
   ( noshort,
     "cache_off",
@@ -1118,7 +1118,9 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "lax",
-    WithSideEffect ((fun () -> if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
+    WithSideEffect ((fun () ->
+      set_admit_smt_queries true;
+      if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
     text "Run the lax-type checker only (admit all verification conditions)");
 
   ( noshort,
@@ -1954,7 +1956,7 @@ let should_check m =
   List.contains (String.lowercase m) l
 
 let should_verify m =
-  not (get_lax ()) && should_check m
+  not (get_admit_smt_queries ()) && not (get_lax ()) && should_check m
 
 let should_check_file fn =
     should_check (module_name_of_file_name fn)

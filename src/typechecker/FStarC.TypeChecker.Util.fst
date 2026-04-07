@@ -1427,7 +1427,7 @@ let strengthen_precondition
          in
          let strengthen () =
             let c, g_c = TcComm.lcomp_comp lc in
-            if Options.lax ()
+            if Options.admit_smt_queries ()
             then c, g_c
             else let g0 = Rel.simplify_guard env g0 in
                  match guard_form g0 with
@@ -2587,7 +2587,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : ML (term & lcomp & gu
     | _ -> false
   in
   let should_coerce =
-      (env.phase1 || Options.lax ()) &&
+      (env.phase1 || Options.admit_smt_queries ()) &&
       not env.nocoerce &&
       not (head_types_equal lc.res_typ exp_t)
   in

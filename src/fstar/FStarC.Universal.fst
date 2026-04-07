@@ -446,7 +446,7 @@ let rec tc_one_file_internal
       in
       let check_mod () =
           let check env =
-            if not (Options.lax()) then FStarC.SMTEncoding.Z3.refresh None;
+            FStarC.SMTEncoding.Z3.refresh None;
             let modul, env =
               if fly_deps
               then let Inl ast_mod = fmod in
@@ -457,9 +457,7 @@ let rec tc_one_file_internal
               //AR: encode the module to to smt
             restore_opts ();
             let smt_decls =
-              if not (Options.lax())
-              then FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
-              else [], []
+              FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
             in
             ((modul, smt_decls), env)
           in
@@ -543,11 +541,10 @@ let rec tc_one_file_internal
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 
         if FStarC.Errors.get_err_count() = 0
-        && (Options.lax()  //we'll write out a .checked.lax file
+        && (Options.admit_smt_queries()  //we'll write out a .checked file even in lax mode
             || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
-        //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
         then begin
           Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result
         end;
@@ -570,9 +567,8 @@ let rec tc_one_file_internal
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
             restore_opts ();
             //AR: encode smt module and do post processing
-            if (not (Options.lax())) then begin
-              FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
-            end;
+            if fst smt_decls <> [] || snd smt_decls <> [] then
+              FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
             (), env
         in
 
@@ -835,9 +831,7 @@ let load_fly_deps_and_tc_one_fragment
 (***********************************************************************)
 let init_env deps : ML TcEnv.env =
   let solver =
-    if Options.lax()
-    then SMT.dummy
-    else {SMT.solver with
+    {SMT.solver with
       preprocess=FStarC.Tactics.Hooks.preprocess;
       spinoff_strictly_positive_goals=Some FStarC.Tactics.Hooks.spinoff_strictly_positive_goals;
       handle_smt_goal=FStarC.Tactics.Hooks.handle_smt_goal
