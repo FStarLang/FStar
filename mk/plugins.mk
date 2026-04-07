@@ -13,6 +13,7 @@ EXTRACT += --extract -FStar.Ghost
 EXTRACT += --extract -FStar.Heap
 EXTRACT += --extract -FStar.Bytes
 EXTRACT += --extract -FStar.Char
+EXTRACT += --extract -FStar.Dyn
 EXTRACT += --extract -FStar.Exn
 EXTRACT += --extract -FStar.Float
 EXTRACT += --extract -FStar.Int16
