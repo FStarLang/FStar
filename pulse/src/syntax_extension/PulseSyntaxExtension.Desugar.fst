@@ -42,9 +42,21 @@ open PulseSyntaxExtension.Env
 
 (* Helper functions replacing PulseSyntaxExtension.SyntaxWrapper *)
 
-(* FStarC.Syntax.Syntax.term and Pulse.Syntax.Base.term (= FStar.Stubs.Reflection.Types.term)
-   are the same type at the OCaml level but different in F*. Since we build with --lax,
-   we use coerce_eq with admit() to bridge them. coerce_eq extracts as the identity. *)
+(* FStarC types and FStar/Pulse types are identical at the OCaml level but
+   distinct in F*. We define typed coercion functions (one per type pair)
+   using coerce_eq + admit. These extract as identity and are tagged
+   [@@coercion] so F* can apply them automatically. *)
+
+[@@coercion]
+let s_term_to_term (t:S.term) : Pulse.Syntax.Base.term = FStar.Pervasives.coerce_eq (admit()) t
+
+[@@coercion]
+let term_to_s_term (t:Pulse.Syntax.Base.term) : S.term = FStar.Pervasives.coerce_eq (admit()) t
+
+[@@coercion]
+let fstarc_range_to_range (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Pervasives.coerce_eq (admit()) r
+
+(* General coerce for remaining mismatches (e.g. sealed types, compound types) *)
 let coerce (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq (admit()) x
 
 let ppname_of_id (i:ident) : ppname =
@@ -174,7 +186,7 @@ let fn_decl rng id us bs (comp:Pulse.Syntax.Base.comp) : decl =
 let slprop_defn rng id bs body : decl =
   coerce (PSBuild.mk_decl (coerce (PSBuild.mk_slprop_defn (coerce id) (coerce bs) (coerce body))) (coerce rng))
 
-assume val print_exn (e:exn) : string
+let print_exn (e:exn) : ML string = FStarC.Util.print_exn e
 
 let close_st_term_bvs (e:st_term) (xs:list bv) : ML st_term = 
   coerce (PSN.close_st_term_n (coerce e) (L.map (fun (b:bv) -> b.bv_index) xs))
