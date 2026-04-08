@@ -74,12 +74,12 @@ let wtag ct (t:st_term') : st_term =
   { term = t;
     range = FStar.Range.range_0;
     effect_tag = ct;
-    source = Sealed.seal false;
-    seq_lhs = Sealed.seal false;
+    source = false;
+    seq_lhs = false;
   }
 
 let mk_binder_ppname_inline (binder_ty:term) (binder_ppname:ppname) : binder =
-  mk_binder_with_attrs binder_ty binder_ppname (T.seal [`CInline])
+  mk_binder_with_attrs binder_ty binder_ppname [`CInline]
 
 let mk_if_cond (g: env) (t: st_term) (cond: nvar) : T.Tac st_term =
   wtag t.effect_tag <| Tm_Bind {

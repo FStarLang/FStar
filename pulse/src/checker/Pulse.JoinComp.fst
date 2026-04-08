@@ -38,7 +38,7 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
 = let maybe_close (n, y,ty) (post:slprop) = 
     if not (y `Set.mem` freevars post) then post
     else (
-      let b = {binder_ty=ty; binder_ppname=n; binder_attrs=Sealed.seal []} in
+      let b = {binder_ty=ty; binder_ppname=n; binder_attrs=[]} in
       let u = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
       tm_exists_sl u b (close_term post y)
     )

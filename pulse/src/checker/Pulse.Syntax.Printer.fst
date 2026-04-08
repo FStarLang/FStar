@@ -75,7 +75,7 @@ let rec collect_binders (until: term_view -> bool) (t:term) : list binder & term
 let rec binder_to_string_paren (b:binder)
   : T.Tac string
   = sprintf "(%s%s:%s)"
-            (match T.unseal b.binder_attrs with
+            (match b.binder_attrs with
              | [] -> ""
              | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
             (T.unseal b.binder_ppname.name)
@@ -214,7 +214,7 @@ and term_to_doc t : T.Tac document
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s%s:%s"
-            (match T.unseal b.binder_attrs with
+            (match b.binder_attrs with
              | [] -> ""
              | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
             (T.unseal b.binder_ppname.name)
@@ -457,7 +457,7 @@ and branch_to_string br : T.Tac _ =
   let {pat; e; norw} = br in
   Printf.sprintf "{ %s%s -> %s }"
     (pattern_to_string pat)
-    (if T.unseal norw then "(norw)" else "")
+    (if norw then "(norw)" else "")
     (st_term_to_string' "" e)
 
 and pattern_to_string (p:pattern) : T.Tac string = 

@@ -55,7 +55,7 @@ let tm_pragma_with_options o b = Tm_PragmaWithOptions { options=o; body=b }
 let tm_forward_jump_label body lbl post = Tm_ForwardJumpLabel { body; lbl; post }
 let tm_goto lbl arg = Tm_Goto { lbl; arg }
 let tm_defer handler_pre handler body = Tm_Defer { handler_pre; handler; body }
-let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=Sealed.seal true; seq_lhs=Sealed.seal false; }
+let with_range t r = { term = t; range = r; effect_tag = default_effect_hint; source=true; seq_lhs=false; }
 let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT { p; elaborated=false }; binders=bs; t }
 let mk_assert_hint_type p = ASSERT { p; elaborated=false }
 let mk_unfold_hint_type names p = UNFOLD { names; p }
@@ -66,6 +66,6 @@ let mk_fn_defn id isrec us bs comp meas body : decl' = FnDefn { id; isrec; us; b
 let mk_fn_decl id us bs comp : decl' = FnDecl { id; us; bs; comp; }
 let mk_slprop_defn id bs body : decl' = SlpropDefn { id; bs; body }
 let mk_decl d range : decl = {d; range}
-let mark_statement_sequence (s : st_term) : st_term = { s with seq_lhs = Sealed.seal true }
-let mark_not_source         (s : st_term) : st_term = { s with source = Sealed.seal false }
+let mark_statement_sequence (s : st_term) : st_term = { s with seq_lhs = true }
+let mark_not_source         (s : st_term) : st_term = { s with source = false }
 let mk_branch pat e norw = { pat; e; norw }
