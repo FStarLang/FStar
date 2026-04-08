@@ -395,6 +395,12 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
+	env \
+	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
+	  $(MAKE) -C pulse/ -f mk/lib-core.mk
 	$(call bold_msg, "CHECK", "PULSE LIB")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
