@@ -635,30 +635,33 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as MLTY_Top?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps =
-  let extraction_norm_steps_core =
+let extraction_norm_steps () =
+  let steps =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
      Env.Eager_unfolding;
-     Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;
      Env.ForExtraction] in
-
-  let extraction_norm_steps_nbe =
-    Env.NBE::extraction_norm_steps_core in
-
-  if Options.use_nbe_for_extraction()
-  then extraction_norm_steps_nbe
-  else extraction_norm_steps_core
+  let steps =
+    if Options.Ext.enabled "kuiper"
+    then steps
+    else Env.Exclude Env.Zeta :: steps
+  in
+  let steps =
+    if Options.use_nbe_for_extraction()
+    then Env.NBE :: steps
+    else steps
+  in
+  steps
 
 let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : ML S.term =
   match c |> U.comp_effect_name
           |> TcUtil.effect_extraction_mode env with
   | S.Extract_reify ->
     TcEnv.reify_comp env c S.U_unknown
-    |> N.normalize extraction_norm_steps env
+    |> N.normalize (extraction_norm_steps ()) env
   | S.Extract_primitive -> U.comp_result c
   | S.Extract_none s ->
     err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (show c)
@@ -850,7 +853,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : ML (list (mlident & mlty) & ue
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize extraction_norm_steps (tcenv_of_uenv g) t0 in
+    let t = N.normalize (extraction_norm_steps ()) (tcenv_of_uenv g) t0 in
     translate_term_to_mlty g t
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -1972,7 +1975,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                         let norm_call () =
                             Profiling.profile
                               (fun () ->
-                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef)
+                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::(extraction_norm_steps())) tcenv lb.lbdef)
                               (Some (Ident.string_of_lid (Env.current_module tcenv)))
                               "FStarC.Extraction.ML.Term.normalize_lb_def"
                         in
