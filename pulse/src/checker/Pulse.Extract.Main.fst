@@ -79,7 +79,7 @@ and extend_env'_patterns g (ps:list Pulse.Syntax.Base.pattern) :
     g, bs@bs'
 
 let is_erasable (p:st_term) : T.Tac bool = 
-  let tag = T.unseal p.effect_tag in
+  let tag = p.effect_tag in
   match tag with
   | Some STT_Ghost -> true
   | _ -> false
@@ -136,8 +136,8 @@ let simplify_nested_let (e:st_term) (b_x:binder) (head:st_term) (e3:st_term)
     range = e.range;
     effect_tag = default_effect_hint;
     term = t;
-    source=Sealed.seal false;
-    seq_lhs=Sealed.seal false;
+    source=false;
+    seq_lhs=false;
   } in
   let body e2 = mk (Tm_Bind { binder = b_x; head = e2; body = e3 }) in
   match head.term with
@@ -364,7 +364,7 @@ let extract_dv_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.q
         T.seal "_"
       else
         b.binder_ppname.name;
-    attrs = T.unseal b.binder_attrs;
+    attrs = b.binder_attrs;
     qual = (match q with
       | Some Implicit -> R.Q_Implicit
 

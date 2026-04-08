@@ -45,8 +45,8 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv) { Cons? qbs })
     { term = s;
       range = r;
       effect_tag = default_effect_hint;
-      source=Sealed.seal false;
-      seq_lhs=Sealed.seal false;
+      source=false;
+      seq_lhs=false;
     }
   in
   match qbs with
@@ -87,7 +87,7 @@ let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder
     let g = push_binding g x (fst px) x_ty in
     let t = open_term_nv t px in
     let g, bs, t = exists_as_binders g t in
-    g, (x, { binder_ty = x_ty; binder_ppname = n; binder_attrs = T.seal [] }, Some Implicit) :: bs, t
+    g, (x, { binder_ty = x_ty; binder_ppname = n; binder_attrs = [] }, Some Implicit) :: bs, t
   | _ ->
     g, [], t
 
@@ -478,9 +478,7 @@ let rec check_abs_core
       // instantiate implicits in the attributes
       let binder_attrs =
         binder_attrs
-        |> T.unseal
-        |> T.map (fun attr -> attr |> (fun t -> instantiate_term_implicits g t None false) |> fst)
-        |> FStar.Sealed.seal in
+        |> T.map (fun attr -> attr |> (fun t -> instantiate_term_implicits g t None false) |> fst) in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
       let tres = tm_arrow {binder_ty=t;binder_ppname=ppname;binder_attrs} qual (close_comp c_body x) in

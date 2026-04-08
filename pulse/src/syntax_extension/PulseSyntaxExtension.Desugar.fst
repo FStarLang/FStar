@@ -72,7 +72,7 @@ let sw_mk_binder (x:ident) (t:term) : binder =
   mk_binder_ppname t (ppname_of_id x)
 
 let sw_mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder =
-  { Pulse.Syntax.Base.binder_ty = t; binder_ppname = ppname_of_id x; binder_attrs = coerce (FStarC.Sealed.seal attrs) }
+  { Pulse.Syntax.Base.binder_ty = t; binder_ppname = ppname_of_id x; binder_attrs = coerce attrs }
 
 let sw_mk_bv (i:Pulse.Syntax.Base.index) (name:string) (r:FStarC.Range.range) : bv =
   { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) r }
@@ -87,7 +87,7 @@ let pat_var (s:string) (_r:FStarC.Range.range) : pattern = Pat_Var (coerce (FSta
 let pat_cons (hd:fv) (ps:list pattern) (_r:FStarC.Range.range) : ML pattern =
   Pat_Cons hd (L.map (fun v -> (v, false)) ps)
 
-let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = PSBuild.mk_branch p t (coerce norw)
+let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = PSBuild.mk_branch p t norw
 
 let fn_defn rng id isrec us bs (comp:Pulse.Syntax.Base.comp) meas body : decl =
   PSBuild.mk_decl (PSBuild.mk_fn_defn id isrec (coerce us) (coerce bs) comp (coerce meas) body) rng
