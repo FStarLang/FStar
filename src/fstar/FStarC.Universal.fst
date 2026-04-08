@@ -541,10 +541,7 @@ let rec tc_one_file_internal
         let parsing_data, tc_result, mllib, env = tc_source_file () in
 
         if FStarC.Errors.get_err_count() = 0
-        && (Options.admit_smt_queries()  //we'll write out a .checked file even in lax mode
-            || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
-        //but we will not write out a .checked file for an unverified dependence
-        //of some file that should be checked
+        && Options.should_check (string_of_lid tc_result.checked_module.name)
         then begin
           Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result
         end;

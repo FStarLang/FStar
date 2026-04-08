@@ -1314,12 +1314,12 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e, c, g =
       if TcUtil.short_circuit_head head && not env.phase1
       then
-        if Options.admit_smt_queries ()
+        if Options.lax ()
         then
           (* In lax mode, elaborate && and || to if-then-else
              to enforce proper short-circuit evaluation order
              for impure arguments. Other SC ops (/\, \/, ==>) go
-             through check_application_args as in --MLish mode. *)
+             through check_application_args. *)
           match maybe_elaborate_short_circuit_args env0 head args with
           | Some rewritten -> tc_term env0 rewritten
           | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
