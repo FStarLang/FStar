@@ -23,7 +23,7 @@ open FStarC.Range.Type
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.Syntax.Subst
 
 open FStarC.Class.Show

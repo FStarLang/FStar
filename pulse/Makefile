@@ -35,7 +35,7 @@ checker.src: .force
 extraction.src: .force
 	$(MAKE) -f mk/extraction.mk
 
-syntax_extension.src: .force
+syntax_extension.src: checker.src .force
 	$(MAKE) -f mk/syntax_extension.mk
 
 plugin.src: checker.src extraction.src syntax_extension.src

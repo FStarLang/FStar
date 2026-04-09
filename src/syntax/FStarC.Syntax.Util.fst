@@ -23,7 +23,7 @@ open FStarC.Range
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 open FStarC.Const
-open FStarC.Dyn
+open FStar.Dyn
 module U = FStarC.Util
 module List = FStarC.List
 module PC = FStarC.Parser.Const

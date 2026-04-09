@@ -1,11 +1,9 @@
-# FIXME: z3.4.8.5-1 can no longer be installed on Ubuntu 24.04 because python3-distutils disappeared, and the z3 opam package has not been fixed for version 4.8.5, and 23.10 and all prior non-LTS are now EOL. Reverting to the previous LTS
-FROM ubuntu:22.04
-
-SHELL ["/bin/bash", "-c"]
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
 # python3 (for interactive tests)
+# libicu (for .NET, cf. https://aka.ms/dotnet-missing-libicu )
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates \
@@ -17,48 +15,48 @@ RUN apt-get update \
       python3 \
       python-is-python3 \
       libgmp-dev \
-      pkg-config \
       opam \
+      vim \
+      pkg-config \
+      time \
+      libffi-dev \
+      tmux \
+      rustup \
+      dotnet-sdk-8.0 \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
 # but it is not working, so just adding it above.
+# Same for pkg-config. OPAM prompts even if we're giving --yes
+# and setting OPAMYES.
 
-# Create a new user and give them sudo rights
-ARG USER=vscode
-RUN useradd -d /home/$USER -s /bin/bash -m $USER
-RUN echo "$USER ALL=NOPASSWD: ALL" >> /etc/sudoers
-USER $USER
-ENV HOME /home/$USER
-WORKDIR $HOME
-RUN mkdir -p $HOME/bin
+USER vscode
+ENV HOME=/home/vscode
+WORKDIR /home/vscode
 
 # Make sure ~/bin is in the PATH
+RUN mkdir -p $HOME/bin
 RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
-# Install Z3
-COPY ./bin/get_fstar_z3.sh /usr/local/bin
-RUN get_fstar_z3.sh ~/bin
-
-# Install dotnet
-ENV DOTNET_ROOT /home/$USER/dotnet
-RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.419/dotnet-sdk-8.0.419-linux-x64.tar.gz && \
-    mkdir -p $DOTNET_ROOT && \
-    tar xf dotnet-sdk-8.0.419-linux-x64.tar.gz -C $DOTNET_ROOT && \
-    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile && \
-    rm -f dotnet-sdk*.tar.gz
+# Install Rust
+RUN rustup install stable
 
 # Install OCaml
-ARG OCAML_VERSION=4.14.2
+ARG OCAML_VERSION=5.3.0
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1
 COPY ./fstar.opam .
 RUN opam install --deps-only . && rm fstar.opam
+RUN opam install domainslib
 
-WORKDIR $HOME
+# Install Z3
+COPY ./.scripts/get_fstar_z3.sh /usr/local/bin
+RUN get_fstar_z3.sh ~/bin
 
-# Instrument .bashrc to set the opam switch. Note that this
+# Install copilot-cli
+RUN curl -fsSL https://gh.io/copilot-install | bash
+
+# Instrument .profile and .bashrc to set the opam switch. Note that this
 # just appends the *call* to eval $(opam env) in these files, so we
-# compute the new environments fter the fact. Calling opam env here
-# would perhaps thrash some variables set by the devcontainer infra.
-RUN echo 'eval $(opam env --set-switch)' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+# compute the new environments after the fact.
+RUN echo 'eval $(opam env --set-switch)' | tee --append $HOME/.profile $HOME/.bashrc

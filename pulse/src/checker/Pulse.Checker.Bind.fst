@@ -63,7 +63,7 @@ let check_if_seq_lhs
   (r:checker_result_t g ctxt post_hint) (e1:st_term)
   : T.Tac unit
 =
-  if T.unseal e1.seq_lhs then begin
+  if e1.seq_lhs then begin
     let (| _x, g, (u, ty), _ctxt', _k |) = r in
     let open Pulse.PP in
     if T.Tv_Arrow? ty then

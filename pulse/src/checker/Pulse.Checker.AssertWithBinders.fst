@@ -339,16 +339,16 @@ let check_renaming
    // rename [pairs] in goal;
    // ...
    let body = {st with term = Tm_ProofHintWithBinders { ht with binders = [] };
-                       source = Sealed.seal false; } in
+                       source = false; } in
    check g pre post_hint res_ppname
    { st with
        term = Tm_ProofHintWithBinders { hint_type=ASSERT { p = goal; elaborated = true }; binders=bs; t=body };
-       source = Sealed.seal false;
+       source = false;
    }
 
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
-    let rhs, pairs = rewrite_all st.range (T.unseal st.source) g pairs pre pre elaborated tac_opt false in
+    let rhs, pairs = rewrite_all st.range st.source g pairs pre pre elaborated tac_opt false in
     check_pairs g st.range pairs tac_opt;
 
 
@@ -356,12 +356,12 @@ let check_renaming
     (| x, g', ty, ctxt', k_elab_equiv pre ctxt' k |)
 
   | [], Some goal -> (
-      let rhs, _ = rewrite_all st.range (T.unseal st.source) g pairs goal pre elaborated tac_opt true in
+      let rhs, _ = rewrite_all st.range st.source g pairs goal pre elaborated tac_opt true in
       let t = { st with term = Tm_Rewrite { t1 = goal; t2 = rhs; tac_opt; elaborated = true };
-                        source = Sealed.seal false; } in
+                        source = false; } in
       check g pre post_hint res_ppname
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body };
-                source = Sealed.seal false;
+                source = false;
       }
   )
 #restart-solver

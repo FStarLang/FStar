@@ -410,4 +410,8 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   t
 
 let purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) =
-  check_slprop g (purify_spec g ctxt t)
+  // purify_spec already elaborates the term via tc_term_phase1_with_type,
+  // so we only need the core checker for validation (skip instantiate_term_implicits)
+  let t = purify_spec g ctxt t in
+  check_slprop_with_core g t;
+  t

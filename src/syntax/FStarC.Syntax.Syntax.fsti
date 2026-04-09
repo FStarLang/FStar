@@ -21,7 +21,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Range.Type
 open FStarC.Ident
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.Const
 open FStarC.VConfig
 

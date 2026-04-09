@@ -19,7 +19,6 @@ open FStarC
 
 open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module D = FStarC.Syntax.DsEnv
 module R = FStarC.Range
 
@@ -33,7 +32,7 @@ let env_t : Type0 = PulseSyntaxExtension.Env.env_t
 
 val desugar_decl (env:env_t)
                  (p:Sugar.decl)
-  : ML (err SW.decl)
+  : ML (err Pulse.Syntax.Base.decl)
 
 let name = list string
 

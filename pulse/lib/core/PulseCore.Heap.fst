@@ -724,7 +724,8 @@ let full_heap_pred h =
 ////////////////////////////////////////////////////////////////////////////////
 let sel #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
   : a
-  = let Ref _ _ v = select_addr m (Addr?._0 r) in
+  = assert (contains_addr m (Addr?._0 r));
+    let Ref _ _ v = select_addr m (Addr?._0 r) in
     v
 
 let sel_v #a #pcm r v m = sel r m

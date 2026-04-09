@@ -33,7 +33,7 @@ Version:
 
 Destination:
   --dest DIR           Install F* into DIR (default: ~/.local/fstar)
-  --link-dir DIR       Create symlinks to F* binaries in DIR (default: ~/bin)
+  --link-dir DIR       Create symlinks to F* binaries in DIR (default: ~/.local/bin)
   --no-link            Don't create symlinks
 
 Other:
@@ -59,7 +59,7 @@ EOF
 SOURCE=release
 VERSION=latest
 DEST="$HOME/.local/fstar"
-LINK_DIR="$HOME/bin"
+LINK_DIR="$HOME/.local/bin"
 DO_LINK=true
 VERBOSE=false
 LIST=false

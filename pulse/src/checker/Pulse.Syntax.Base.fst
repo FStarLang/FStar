@@ -72,6 +72,15 @@ let rec eq_list (f: (x:'a -> y:'a -> b:bool { b <==> (x == y)})) (l m:list 'a)
       eq_list f t1 t2
     | _ -> false
 
+let rec eq_list_unr (f: ('a -> 'a -> bool)) (l m:list 'a)
+  : bool
+  = match l, m with
+    | [], [] -> true
+    | h1::t1, h2::t2 ->
+      f h1 h2 &&
+      eq_list_unr f t1 t2
+    | _ -> false
+
 let eq_opt_dec (l m:option 'a) (f: (x:'a -> y:'a{x << l /\ y << m} -> b:bool { b <==> (x == y)}))
   : b:bool { b <==> (l == m) }
   = match l, m with
@@ -103,22 +112,27 @@ let rec eq_list_dec top1 top2
       eq_list_dec top1 top2 f t1 t2
     | _ -> false
 
-let eq_binder (b0 b1:binder) : b:bool { b <==> (b0 == b1) } =
-  eq_tm b0.binder_ty b1.binder_ty
+let rec eq_list_dec_unr top1 top2
+   (f: (x:'a -> y:'a{x << top1 /\ y << top2} -> bool))
+   (l : list 'a{l << top1})
+   (m : list 'a{m << top2})
+  : bool
+  = match l, m with
+    | [], [] -> true
+    | h1::t1, h2::t2 ->
+      f h1 h2 &&
+      eq_list_dec_unr top1 top2 f t1 t2
+    | _ -> false
 
 let eq_tm_list (t1 t2:list term) = eq_list eq_tm t1 t2
+
+let eq_binder (b0 b1:binder) : bool =
+  eq_tm b0.binder_ty b1.binder_ty &&
+  eq_tm_list b0.binder_attrs b1.binder_attrs
 
 // wire to Reflection.TermEq
 assume val fstar_const_eq : c1:R.vconst -> c2:R.vconst -> b:bool{b <==> (c1==c2)}
 
-let rec sealed_list_eq #a (l1 l2 : list (Sealed.sealed a))
-  : Lemma ((length l1 = length l2) ==> (l1 == l2))
-  = match l1, l2 with
-    | [], [] -> ()
-    | h1::t1, h2::t2 ->
-      Sealed.sealed_singl h1 h2;
-      sealed_list_eq t1 t2
-    | _ -> ()
 
 let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   match p1, p2 with
@@ -171,7 +185,7 @@ let eq_ascription (a1 a2:comp_ascription)
 
 
 let rec eq_st_term (t1 t2:st_term) 
-  : b:bool { b <==> (t1 == t2) }
+  : bool
   = match t1.term, t2.term with
     | Tm_Return {expected_type=ty1; insert_eq=b1; term=t1}, 
       Tm_Return {expected_type=ty2; insert_eq=b2; term=t2} ->
@@ -187,7 +201,7 @@ let rec eq_st_term (t1 t2:st_term)
       eq_st_term t1 t2
   
     | Tm_ST { t=tm1; args=a1 }, Tm_ST { t=tm2; args=a2 } ->
-      eq_tm tm1 tm2 && eq_list_dec t1 t2 eq_st_term a1 a2
+      eq_tm tm1 tm2 && eq_list_dec_unr t1 t2 eq_st_term a1 a2
       
     | Tm_Bind { binder=b1; head=t1; body=k1 },
       Tm_Bind { binder=b2; head=t2; body=k2 } ->
@@ -224,7 +238,7 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Match {sc=sc2; returns_=r2; brs=br2} ->
       eq_st_term sc1 sc2 &&
       eq_tm_opt r1 r2 &&
-      eq_list_dec t1 t2 eq_branch br1 br2
+      eq_list_dec_unr t1 t2 eq_branch br1 br2
 
     | Tm_While { invariant=inv1; loop_requires=cr1; meas=d1; condition=cond1; body=body1 },
       Tm_While { invariant=inv2; loop_requires=cr2; meas=d2; condition=cond2; body=body2 } ->
@@ -268,7 +282,7 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_ProofHintWithBinders { hint_type=ht1; binders=bs1; t=t1 },
       Tm_ProofHintWithBinders { hint_type=ht2; binders=bs2; t=t2 } ->
       eq_hint_type ht1 ht2 &&
-      eq_list eq_binder bs1 bs2 &&
+      eq_list_unr eq_binder bs1 bs2 &&
       eq_st_term t1 t2
 
     | Tm_PragmaWithOptions { options=o1; body=b1 }, 
@@ -290,9 +304,10 @@ let rec eq_st_term (t1 t2:st_term)
     | _ -> false
 
 and eq_branch (b1 b2 : branch)
-  : b:bool{b <==> (b1 == b2)}
+  : bool
   = eq_pattern b1.pat b2.pat &&
-    eq_st_term b1.e   b2.e
+    eq_st_term b1.e   b2.e &&
+    b1.norw = b2.norw
 
 and eq_aqual (q1 q2 : qualifier) : b:bool{b <==> (q1 == q2)} =
   match q1, q2 with
