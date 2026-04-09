@@ -353,7 +353,7 @@ let is_goal_safe_as_well_typed (g:goal) : ML bool =
 let register_goal (g:goal) : ML unit =
   if not (Options.compat_pre_core_should_register()) then () else
   let env = goal_env g in
-  if env.phase1 || Options.lax () then () else
+  if env.phase1 || Options.admit_smt_queries () then () else
   let uv = g.goal_ctx_uvar in
   let i = Core.incr_goal_ctr () in
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else

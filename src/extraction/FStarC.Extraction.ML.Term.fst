@@ -1732,8 +1732,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                       //that expects an argument of type tExpected
                       let r = e0.pos in
                       let expected_effect =
-                            if Options.lax()
-                            && FStarC.TypeChecker.Util.short_circuit_head head
+                            if FStarC.TypeChecker.Util.short_circuit_head head
                             then E_IMPURE
                             else E_PURE in
                       let e0, tInferred =

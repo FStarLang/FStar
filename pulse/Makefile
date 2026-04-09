@@ -36,6 +36,11 @@ extraction.src: .force
 	$(MAKE) -f mk/extraction.mk
 
 syntax_extension.src: checker.src .force
+	@# Link Pulse checked files into syntax_extension cache for --already_cached resolution.
+	@# Exclude PulseSyntaxExtension.* since the syntax_extension has its own fsti for ASTBuilder.
+	@mkdir -p build/syntax_extension.checked
+	@find build/checker.checked -name 'Pulse.*.checked' ! -name 'PulseSyntaxExtension.*' \
+		-exec sh -c 'ln -sf "$$(pwd)/$$1" build/syntax_extension.checked/' _ {} \;
 	$(MAKE) -f mk/syntax_extension.mk
 
 plugin.src: checker.src extraction.src syntax_extension.src
