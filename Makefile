@@ -117,6 +117,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
@@ -129,6 +130,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/tests.checked/ \
 	  OUTPUT_DIR=stage1/tests.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -156,11 +158,11 @@ $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 stage1-unit-tests: $(TESTS1_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
 
-.full1.src.touch: $(FSTAR1_BARE_EXE) .force
+.full1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR1_BARE_EXE) \
+	  FSTAR_EXE=$(FSTAR0_EXE) \
 	  CACHE_DIR=stage1/plugins.checked/ \
 	  OUTPUT_DIR=stage1/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -257,11 +259,12 @@ $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 stage2-unit-tests: $(TESTS2_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
-.full2.src.touch: $(FSTAR2_BARE_EXE) .force
+.full2.src.touch: $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR2_BARE_EXE) \
+	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage2/plugins.checked/ \
 	  OUTPUT_DIR=stage2/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
