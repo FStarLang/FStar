@@ -1,11 +1,4 @@
 %{
-(*
-Warning: 27 states have shift/reduce conflicts.
-Warning: one state has reduce/reduce conflicts.
-Warning: 342 shift/reduce conflicts were arbitrarily resolved.
-Warning: one reduce/reduce conflict was arbitrarily resolved.
-Warning: 234 end-of-stream conflicts were arbitrarily resolved.
-*)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Fstarcompiler
 open Prims
@@ -250,19 +243,14 @@ while_invariant1:
 while_invariant:
   | is=list(while_invariant1) { is }
 
-pulseStmtAfterLabel:
-  | { None }
-  | SEMICOLON s=pulseStmtNonempty { Some s }
-
 pulseStmtNoSeq:
   | OPEN i=quident
     { PulseSyntaxExtension_Sugar.mk_open i }
-  | tm=appTerm LARROW arr_elt=noSeqTerm
+  | e1=indexingTerm LARROW e3=noSeqTerm
     {
-      match tm.tm with
+      match e1.tm with
       | Op(op, [arr;ix]) when FStarC_Ident.string_of_id op = ".()" ->
-        PulseSyntaxExtension_Sugar.mk_array_assignment arr ix arr_elt
-
+        PulseSyntaxExtension_Sugar.mk_array_assignment arr ix e3
       | _ ->
         raise_error_text (rr $loc) Fatal_SyntaxError "Expected an array assignment of the form x.(i) <- v"
     }
@@ -284,9 +272,9 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) bs }
   | bs=withBindersOpt ASSUME p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSUME p) bs }
-  | bs=withBindersOpt UNFOLD ns=option(names) p=pulseSLProp
+  | bs=withBindersOpt UNFOLD ns=optionalNames p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
-  | bs=withBindersOpt FOLD ns=option(names) p=pulseSLProp
+  | bs=withBindersOpt FOLD ns=optionalNames p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
   | bs=withBinders UNDERSCORE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
@@ -301,6 +289,8 @@ pulseStmtNoSeq:
   | LBRACE s=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_block s }
   | LBRACE body=pulseStmt RBRACE post=option(ensuresSLProp) LABEL lbl=lident COLON
+    { PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post }
+  | LABEL lbl=lident COLON LBRACE body=pulseStmt RBRACE post=option(ensuresSLProp)
     { PulseSyntaxExtension_Sugar.mk_forward_jump_label body lbl post }
   | p=matchStmt { p }
   | PRAGMA_SET_OPTIONS options=STRING LBRACE s=pulseStmt RBRACE
@@ -347,6 +337,10 @@ rewriteBody:
 names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK
     { l }
+
+optionalNames:
+  | ns=names { Some ns }
+  | %prec below_op { None }
 
 withBinders:
   | WITH bs=nonempty_list(multiBinder) DOT
