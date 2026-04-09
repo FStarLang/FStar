@@ -180,7 +180,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
           Qualifier Irreducible::quals@attrs
         in
         let d =
-          let open FStarC.Dyn in
+          let open FStar.Dyn in
           DeclToBeDesugared {
             lang_name="pulse";
             blob=mkdyn d;
@@ -217,7 +217,7 @@ let desugar_pulse (env:TcEnv.env)
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
-: ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
+: ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))
 = let namespaces = L.map Ident.path_of_text namespaces in
   let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
   let env = D.reinitialize_env env.dsenv (TcEnv.current_module env) namespaces module_abbrevs in
@@ -226,11 +226,11 @@ let desugar_pulse (env:TcEnv.env)
 module S = FStarC.Syntax.Syntax
 let desugar_pulse_decl_callback
       (env:DsEnv.env)
-      (blob:FStarC.Dyn.dyn)
+      (blob:FStar.Dyn.dyn)
       (lids:list lident)
       (rng:R.range)
 : ML (list FStarC.Syntax.Syntax.sigelt')
-= let d = D.desugar_decl (D.mk_env env) (FStarC.Dyn.undyn blob) 0 in
+= let d = D.desugar_decl (D.mk_env env) (FStar.Dyn.undyn blob) 0 in
   match fst d with
   | Inr None ->
     //All errors were logged via the error API, just stop.
@@ -258,7 +258,7 @@ let parse_pulse (env:TcEnv.env)
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : ML (either PulseSyntaxExtension.SyntaxWrapper.decl (option (list Pprint.document & R.range)))
+  : ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))
   = let range = 
       let p = R.mk_pos line col in
       R.mk_range file_name p p

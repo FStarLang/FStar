@@ -31,7 +31,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Ident
 open FStarC.Syntax.Subst
 open FStarC.Syntax
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Monoid

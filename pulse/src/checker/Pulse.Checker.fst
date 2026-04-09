@@ -163,7 +163,7 @@ let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
      pulse:trace_full turns it on for absolutely everything. *)
   let trace_opt = T.ext_getv "pulse:trace" = "1" in
   let trace_full_opt = T.ext_getv "pulse:trace_full" = "1" in
-  let is_source = T.unseal t.source in
+  let is_source = t.source in
   if (trace_opt && is_source && not (Tm_Bind? t.term || Tm_TotBind? t.term))
      || trace_full_opt
   then
@@ -171,7 +171,7 @@ let maybe_trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
 
 (* We set the error bound from t when t is a source term. Otherwise don't. *)
 let maybe_setting_error_bound (t:st_term) (f : unit -> T.Tac 'a) : T.Tac 'a =
-  if T.unseal t.source
+  if t.source
   then RU.with_error_bound t.range f
   else f ()
 
@@ -295,7 +295,7 @@ let rec check
               (show pre0)
               (show res_ppname)
               (show t)
-              (show (T.unseal t.source)))
+              (show t.source))
   );
 
   if RU.debug_at_level (fstar_env g0) "pulse.dump_proof_state" then (

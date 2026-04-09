@@ -13,22 +13,26 @@ defaults:
     shell: bash
 
 jobs:
-  opam:
-    name: opam
-    uses: ./.github/workflows/build-opam.yml
+  # opam and nix builds run on a nightly schedule, see nightly-ci.yml.
+  # It is a bit excessive to run them on every push.
 
-  build:
-    name: build
-    uses: ./.github/workflows/build-ci.yml
+  ci:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
 
-  tests:
-    name: tests
-    needs: build
-    uses: ./.github/workflows/tests.yml
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          submodules: true
 
-  nix-build:
-    name: nix
-    uses: ./.github/workflows/nix.yml
+      - name: Run CI
+        run: make -skj$(nproc) ci
+        working-directory: FStar
 
   # Branch protection points here
   ciok:
@@ -36,10 +40,7 @@ jobs:
     if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
     # ^ Workaround for insane github behavior: https://github.com/actions/runner/issues/2566
     needs:
-      - build
-      - tests
-      - opam
-      - nix-build
+      - ci
     steps:
       # Note: we only run on failure. Otherwise this is skipped, which counts
       # as a success.

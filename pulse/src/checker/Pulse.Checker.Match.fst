@@ -161,7 +161,7 @@ let check_branches_aux
     : T.Tac (check_branches_aux_t pre post_hint sc_u sc_ty sc)
     = let e = b.e in
       let (p, bs) = pbs in
-      let (| p, e, c |) = check_branch (T.unseal b.norw) g pre post_hint check sc_u sc_ty sc p e bs in
+      let (| p, e, c |) = check_branch b.norw g pre post_hint check sc_u sc_ty sc p e bs in
       (| {pat=p; e; norw=b.norw}, c |)
   in
   let r = zipWith tr1 brs0 bnds in

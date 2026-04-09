@@ -47,6 +47,7 @@ RUN opam option depext-run-installs=true
 ENV OPAMYES=1
 COPY ./fstar.opam .
 RUN opam install --deps-only . && rm fstar.opam
+RUN opam install domainslib
 
 # Install Z3
 COPY ./.scripts/get_fstar_z3.sh /usr/local/bin

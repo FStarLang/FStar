@@ -312,3 +312,8 @@ let close_binders (bs:list binder) (xs:list var { L.length bs == L.length xs }) 
       aux s (b::out) bs xs
   in
   aux [] [] bs xs
+
+let bvs_as_subst (vars:list var) : subst =
+  L.fold_left
+    (fun s b -> RT.ND b 0 :: shift_subst s)
+    [] vars
