@@ -189,6 +189,7 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
     | Some (Some x) -> Some x
 
 let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
+  FStarC_Stats.record "Pulse.tc_term_phase1" (fun () ->
   let issues, res = FStarC_Errors.catch_errors (fun _ ->
     let g = TcEnv.set_range g e.pos in
     let g = {g with phase1=true; admit=true; instantiate_imp} in
@@ -199,7 +200,7 @@ let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
     let guard = FStarC_TypeChecker_Rel.solve_deferred_constraints g guard in
     let guard = FStarC_TypeChecker_Rel.resolve_implicits g guard in
     e, t, eff) in
-  res, issues
+  res, issues)
 
 let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
   let issues, res = FStarC_Errors.catch_errors (fun _ ->

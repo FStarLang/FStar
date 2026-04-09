@@ -111,7 +111,10 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty =
+      if changed1 then fst (tc_type_phase1 g b_ty)
+      else b_ty
+    in
     debug g (fun _ -> [text "symb eval subterms abs 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -129,7 +132,10 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty =
+      if changed1 then fst (tc_type_phase1 g b_ty)
+      else b_ty
+    in
     debug g (fun _ -> [text "symb eval subterms refine 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
