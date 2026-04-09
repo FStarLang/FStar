@@ -33,6 +33,7 @@ val normalize:            steps -> Env.env -> term -> ML term
 val normalize_comp:       steps -> Env.env -> comp -> ML comp
 val normalize_universe:   Env.env -> universe -> ML universe
 val non_info_norm: Env.env -> term -> ML bool
+val non_info_sort_norm: Env.env -> term -> ML bool
 
 (*
  * The maybe versions of ghost_to_pure only promote

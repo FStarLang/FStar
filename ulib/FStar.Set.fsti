@@ -22,7 +22,7 @@ val set (a:eqtype)
   : Type0
 
 val equal (#a:eqtype) (s1:set a) (s2:set a)
-  : Type0
+  : prop
 
 (* destructors *)
 

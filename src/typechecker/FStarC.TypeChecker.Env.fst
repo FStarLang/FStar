@@ -972,13 +972,8 @@ let cache_in_fv_tab (tab:SMap.t 'a) (fv:fv) (f:unit -> ML (bool & 'a)) : ML ('a)
 let fv_has_erasable_attr env fv : ML _ =
   let f () =
      let ex, erasable = fv_exists_and_has_attr env fv.fv_name Const.erasable_attr in
-     ex,erasable
-     //unfortunately, treating the Const.must_erase_for_extraction_attr
-     //in the same way here as erasable_attr leads to regressions in fragile proofs,
-     //notably in FStar.ModifiesGen, since this expands the class of computation types
-     //that can be promoted from ghost to tot. That in turn results in slightly different
-     //smt encodings, leading to breakages. So, sadly, I'm not including must_erase_for_extraction
-     //here. In any case, must_erase_for_extraction is transitionary and should be removed
+     let ex, must_erase_for_extraction = fv_exists_and_has_attr env fv.fv_name Const.must_erase_for_extraction_attr in
+     ex, erasable || must_erase_for_extraction
   in
   cache_in_fv_tab env.erasable_types_tab fv f
 
@@ -1074,13 +1069,22 @@ let rec non_informative env t : ML _ =
       || fv_eq_lid fv Const.erased_lid
       || fv_has_erasable_attr env fv
     | Tm_app {hd=head} -> non_informative env head
+    | Tm_abs {body} -> non_informative env body
     | Tm_uinst (t, _) -> non_informative env t
     | Tm_arrow {comp=c} ->
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
       || is_erasable_effect env (comp_effect_name c)
+    | Tm_meta {tm} -> non_informative env tm
     | _ -> false
 
-let num_effect_indices env name r : ML _ =
+let rec non_informative_sort t =
+  match (U.unrefine t).n with
+  | Tm_fvar fv when fv_eq_lid fv Const.prop_lid -> true
+  | Tm_arrow {comp=c} -> non_informative_sort (comp_result c)
+  | Tm_meta {tm} -> non_informative_sort tm
+  | _ -> false
+
+let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
   match sig_t.n with
   | Tm_arrow {bs=_a::bs} -> List.length bs
