@@ -758,3 +758,5 @@ val close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
 
 val close_binders (bs:list binder) (vs:list var { L.length bs == L.length vs })
   : list binder
+
+val bvs_as_subst (vars:list var) : subst

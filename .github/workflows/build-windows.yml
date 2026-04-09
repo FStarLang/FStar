@@ -73,7 +73,7 @@ jobs:
         run: |
           # Setting FSTAR_VERSION for nightly and release builds. If unset,
           # we use $(version.txt)~dev. Setting it avoids the ~dev.
-          if [[ "${{github.workflow_ref}}" =~ "nightly.yml" ]]; then
+          if [[ "${{github.workflow_ref}}" =~ "nightly-build.yml" ]]; then
             REF="${{ inputs.ref }}"
             if [[ -n "$REF" && "$REF" != "master" ]]; then
               echo FSTAR_VERSION="nightly-${REF}-$(date -I)" >> $GITHUB_ENV

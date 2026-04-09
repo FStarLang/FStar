@@ -15,20 +15,24 @@
 *)
 
 module PulseSyntaxExtension.ASTBuilder
-module Refl = FStar.Reflection
+open FStarC
+open FStarC.Effect
+
+module TcEnv = FStarC.TypeChecker.Env
+module R = FStarC.Range
+
 val sugar_decl : Type0
 
-val desugar_pulse (env:Refl.env) 
+val desugar_pulse (env:TcEnv.env) 
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
-  : Dv (either Pulse.Syntax.decl (option (string & Refl.range)))
+  : ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))
 
-val parse_pulse (env:Refl.env) 
+val parse_pulse (env:TcEnv.env) 
                 (namespaces:list string)
                 (module_abbrevs:list (string & string))
                 (content:string)
                 (file_name:string)
                 (line col:int)
-  : Dv (either Pulse.Syntax.decl (option (string & Refl.range)))
-  // Option can be empty if all errors were already logged.
+  : ML (either Pulse.Syntax.Base.decl (option (list Pprint.document & R.range)))

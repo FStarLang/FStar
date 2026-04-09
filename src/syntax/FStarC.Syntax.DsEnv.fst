@@ -1456,6 +1456,13 @@ let push_include' env ns restriction : ML _ =
     let ns0 = ns in
     match resolve_module_name env ns false with
     | Some ns ->
+      (* Reject self-inclusion. Unlike `open`, which just adds a scope hint
+         for name resolution, `include` re-exports symbols by merging the
+         included module's trans_exported_ids into the current module's
+         exports. Self-inclusion creates a circular re-export that diverges. *)
+      if lid_equals ns (current_module env) then
+        raise_error ns Errors.Fatal_CyclicDependence
+          (Format.fmt1 "include: Module %s cannot include itself" (string_of_lid ns));
       env.ds_hooks.ds_push_include_hook env ns;
       (* from within the current module, include is equivalent to open *)
       let env = push_scope_mod env (Open_module_or_namespace ((ns, Open_module, restriction),false)) in

@@ -313,8 +313,8 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	touch $@
 
 # F# library
-fsharp-lib.src: export FSTAR_EXE ?= $(INSTALLED_FSTAR3_FULL_EXE)
-fsharp-lib.src: .force
+fsharp-lib.src: export FSTAR_EXE := $(INSTALLED_FSTAR3_FULL_EXE)
+fsharp-lib.src: .force stage3
 	# NB: shares checked files from .alib2.src,
 	# hence the dependency, though it is not quite precise.
 	$(call bold_msg, "EXTRACT", "FSHARP LIB")
@@ -395,6 +395,12 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
+	env \
+	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
+	  FSTAR_LIB=$(abspath ulib) \
+	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
+	  $(MAKE) -C pulse/ -f mk/lib-core.mk
 	$(call bold_msg, "CHECK", "PULSE LIB")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \

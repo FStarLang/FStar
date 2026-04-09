@@ -76,7 +76,7 @@ let check
     let Some c = Pulse.Readback.readback_comp ty in
 
     let eff = core_check_term_at_type g' e ty in
-    let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = T.seal (Some (ctag_of_comp_st c)) } in
+    let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = Some (ctag_of_comp_st c) } in
     if not (eff = T.E_Total) then (
       match c with
       | C_ST _ | C_STAtomic .. ->

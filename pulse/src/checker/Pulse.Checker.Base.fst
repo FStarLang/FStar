@@ -589,7 +589,7 @@ let bind_st_term (g:env) (s:st_term)
   let b = {
     binder_ty = tm_unknown;
     binder_ppname = mk_ppname (FStar.Reflection.Typing.seal_pp_name anf_name) s.range;
-    binder_attrs = FStar.Sealed.seal [anf_binder anf_name]; // What is this for?
+    binder_attrs = [anf_binder anf_name]; // What is this for?
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
@@ -647,7 +647,7 @@ let convert_fstar_match (g:env) (t:term)
         | _ ->
           let pulse_brs : list branch = T.map (fun (rpat, e) ->
             match RB.readback_pat rpat with
-            | Some p -> { pat = p; e; norw = FStar.Sealed.seal false }
+            | Some p -> { pat = p; e; norw = false }
             | None -> T.fail "Cannot readback pattern from F*-level match during hoisting"
           ) results in
           mk_term (Tm_Match { sc = sc_st; returns_ = None; brs = pulse_brs }) rng)

@@ -29,7 +29,7 @@ open FStarC.Syntax.Syntax
 open FStarC.Syntax.Subst
 open FStarC.Syntax.Util
 open FStarC.Const
-open FStarC.Dyn
+open FStar.Dyn
 open FStarC.TypeChecker.Rel
 
 open FStarC.Class.Show

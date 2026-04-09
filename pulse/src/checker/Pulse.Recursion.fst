@@ -103,7 +103,7 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
       | Q_Implicit -> Some Implicit
       | Q_Explicit | Q_Equality -> None
       | Q_Meta t -> Some (Meta t) in
-    (qual, { binder_ty = sort; binder_ppname = fst px; binder_attrs = T.seal attrs }, { bv_index = x; bv_ppname = fst px }) :: bs, c
+    (qual, { binder_ty = sort; binder_ppname = fst px; binder_attrs = attrs }, { bv_index = x; bv_ppname = fst px }) :: bs, c
   | qb::qbs, Some (_, c) ->
     let q, b, qbv = qb in
     let bs, c = recover_bs g qbs (open_term' c

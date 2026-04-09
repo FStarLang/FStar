@@ -19,7 +19,6 @@ module PulseSyntaxExtension.Printing
 open FStarC
 open FStarC.Effect
 
-module SW = PulseSyntaxExtension.SyntaxWrapper
 module A = FStarC.Parser.AST
 module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
@@ -32,6 +31,11 @@ open FStarC.Class.Show
 open FStarC.Class.PP
 open PulseSyntaxExtension.Env
 open FStarC.Pprint
+
+#push-options "--warn_error -272" //intentional top-level effect
+let emp_inames_lid = FStarC.Ident.lid_of_path ["Pulse";"Lib";"Core";"emp_inames"] FStarC.Range.dummyRange
+let tm_emp_inames : S.term = S.fv_to_tm (S.lid_as_fv emp_inames_lid None)
+#pop-options
 
 let hua (t:term) : ML (option (S.fv & list S.universe & S.args)) =
   let t = U.unmeta t in
@@ -80,7 +84,7 @@ let print_pulse_computation_type
         then doc_of_string tag ^/^ doc_of_string "fn"
         else doc_of_string "fn");
       doc_of_string "requires" ^/^ p (resugar_term' e pre);
-      (if U.term_eq opens SW.tm_emp_inames then empty
+      (if U.term_eq opens tm_emp_inames then empty
        else
         (doc_of_string "opens"    ^/^ p (resugar_term' e opens)));
       (match retname_opt with
@@ -102,7 +106,7 @@ let resugar_pulse_type (e:DsEnv.env) (t:S.term) : ML A.term =
     match args with
     | [(a, None); (pre, None); (post, None)]
       when S.fv_eq_lid fv stt_lid ->
-        ("", a, SW.tm_emp_inames, pre, post)
+        ("", a, tm_emp_inames, pre, post)
 
     | [(a, None); _obs; (opens, None); (pre, None); (post, None)]
       when S.fv_eq_lid fv stt_atomic_lid ->

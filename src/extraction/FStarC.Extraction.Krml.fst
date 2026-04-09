@@ -814,7 +814,7 @@ and translate_expr' env e: ML expr =
   // We recognize certain distinguished names from [FStar.HST] and other
   // modules, and translate them into built-in Karamel constructs
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, [t])}, [arg])
-    when string_of_mlpath p = "FStarC.Dyn.undyn" ->
+    when string_of_mlpath p = "FStar.Dyn.undyn" ->
       ECast (translate_expr env arg, translate_type env t)
   | MLE_App({expr=MLE_TApp ({ expr = MLE_Name p }, _)}, _)
     when string_of_mlpath p = "Prims.admit" ->
