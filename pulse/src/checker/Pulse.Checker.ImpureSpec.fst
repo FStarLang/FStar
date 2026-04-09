@@ -280,11 +280,12 @@ let is_literally (t: term) : option term =
   | _ -> None
 
 let tc_term_phase1_with_type_twice g t ty =
-  // If we call phase1 TC only once, then the universe instantiation in
-  // coercion-inserted reveal calls remains a uvar.
   let t, eff = tc_term_phase1_with_type g t ty in
-  let t, eff = tc_term_phase1_with_type g t ty in
-  t, eff
+  // If the first TC left unresolved uvars/univars (e.g., universe instantiation
+  // in coercion-inserted reveal calls), run TC again to resolve them.
+  if RU.no_uvars_in_term t
+  then t, eff
+  else let t, eff = tc_term_phase1_with_type g t ty in t, eff
 
 let or_emp (t: option slprop) : slprop =
   match t with Some t -> t | None -> tm_emp
@@ -403,9 +404,15 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let ctxt = { ctxt; in_old = false } in
   let t = purify_spec_core g' ctxt [t] |> or_emp in
   // TODO: check that xs is not free in t
-  // If we call phase1 TC only once, then the universe instantiation in
-  // op_Exists_Star can remain unresolved.
-  let t, _ = tc_term_phase1_with_type g t tm_slprop in
+  // Only run the final tc_term_phase1_with_type if there are unresolved
+  // uvars or universe variables (e.g., in op_Exists_Star when universe
+  // annotations are missing). In most cases, per-atom TC in purify_spec_core
+  // has already fully elaborated the term.
+  let t =
+    if RU.no_uvars_in_term t
+    then t
+    else let t, _ = tc_term_phase1_with_type g t tm_slprop in t
+  in
   debug g (fun _ -> [ text "purified" ^/^ pp t0; text "to" ^/^ pp t ]);
   t
 
