@@ -1,0 +1,61 @@
+open Prims
+let sum0 (x : Prims.int) (y : Prims.int) : Prims.int= x + y
+let t00 : Prims.int= (Prims.of_int (5))
+let t01 (x : Prims.int) : Prims.int= sum0 x (Prims.of_int (2))
+let t02 (y : Prims.int) : Prims.int= (Prims.of_int (3)) + y
+let t03 (x : Prims.int) (y : Prims.int) : Prims.int= sum0 x y
+let rec sum1 (x : Prims.int) (y : Prims.int) : Prims.int= x + y
+let t11 : Prims.int= (Prims.of_int (5))
+let t12 (x : Prims.int) : Prims.int= sum1 x (Prims.of_int (2))
+let t13 (y : Prims.int) : Prims.int= (Prims.of_int (3)) + y
+let t14 (x : Prims.int) (y : Prims.int) : Prims.int= sum1 x y
+let rec sum2 (x : Prims.nat) (y : Prims.nat) : Prims.int=
+  if x = Prims.int_zero
+  then y
+  else sum2 (x - Prims.int_one) (y + Prims.int_one)
+let t20 : Prims.int= (Prims.of_int (5))
+let t21 (x : Prims.nat) : Prims.int= sum2 x (Prims.of_int (2))
+let t22 (y : Prims.nat) : Prims.int=
+  ((y + Prims.int_one) + Prims.int_one) + Prims.int_one
+let t23 (x : Prims.nat) (y : Prims.nat) : Prims.int= sum2 x y
+let rec bring (uu___2 : unit) (uu___1 : Prims.nat) (uu___ : Obj.t) :
+  (Obj.t * Obj.t)=
+  (fun d i x ->
+     if i = Prims.int_zero
+     then Obj.magic (Obj.repr x)
+     else
+       Obj.magic
+         (Obj.repr
+            (match Obj.magic x with
+             | (xh, xt) ->
+                 (match bring () (i - Prims.int_one) xt with
+                  | (y, z) -> (y, (Obj.magic (xh, z))))))) uu___2 uu___1
+    uu___
+let bring0 (uu___1 : unit) (uu___ : Obj.t) : (Obj.t * Obj.t)=
+  (fun d x -> Obj.magic x) uu___1 uu___
+let bring1 (d : unit) (x : Obj.t) : (Obj.t * Obj.t)=
+  match Obj.magic x with
+  | (xh, xt) ->
+      (match Obj.magic xt with | (y, z) -> (y, (Obj.magic (xh, z))))
+let bring2 (d : unit) (x : Obj.t) : (Obj.t * Obj.t)=
+  match Obj.magic x with
+  | (xh, xt) ->
+      (match match Obj.magic xt with
+             | (xh1, xt1) ->
+                 (match Obj.magic xt1 with
+                  | (y, z) -> (y, (Obj.magic (xh1, z))))
+       with
+       | (y, z) -> (y, (Obj.magic (xh, z))))
+let bring3 (d : unit) (x : Obj.t) : (Obj.t * Obj.t)=
+  match Obj.magic x with
+  | (xh, xt) ->
+      (match match Obj.magic xt with
+             | (xh1, xt1) ->
+                 (match match Obj.magic xt1 with
+                        | (xh2, xt2) ->
+                            (match Obj.magic xt2 with
+                             | (y, z) -> (y, (Obj.magic (xh2, z))))
+                  with
+                  | (y, z) -> (y, (Obj.magic (xh1, z))))
+       with
+       | (y, z) -> (y, (Obj.magic (xh, z))))
