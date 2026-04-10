@@ -83,6 +83,10 @@ val check_slprop_with_core (g:env)
                           (t:term)
   : T.Tac unit
 
+val check_slprop_with_core_structural (g:env)
+                                      (t:term)
+  : T.Tac unit
+
 val try_get_non_informative_witness (g:env) (u:universe) (t:term)
   : T.Tac (option (non_informative_t g u t))
 

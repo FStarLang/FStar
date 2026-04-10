@@ -189,6 +189,7 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
     | Some (Some x) -> Some x
 
 let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
+  FStarC_Stats.record "Pulse.tc_term_phase1" (fun () ->
   let issues, res = FStarC_Errors.catch_errors (fun _ ->
     let g = TcEnv.set_range g e.pos in
     let g = {g with phase1=true; admit=true; instantiate_imp} in
@@ -199,7 +200,7 @@ let tc_term_phase1 (g:TcEnv.env) (e:S.term) (instantiate_imp:bool) =
     let guard = FStarC_TypeChecker_Rel.solve_deferred_constraints g guard in
     let guard = FStarC_TypeChecker_Rel.resolve_implicits g guard in
     e, t, eff) in
-  res, issues
+  res, issues)
 
 let teq_nosmt_force (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
   let issues, res = FStarC_Errors.catch_errors (fun _ ->
@@ -270,6 +271,58 @@ let record_stats (key:string) (f: unit -> 'a utac)
 : 'a utac
 = fun ps ->
     FStarC_Stats.record key (fun () -> f () ps)
+
+(* Per-call timing distribution for core_check_term profiling *)
+let core_check_term_timings : (int * float * string * string) list ref = ref []
+let core_check_term_call_count = ref 0
+let core_check_caller_label = ref ""
+let profiling_enabled = try ignore (Sys.getenv "PULSE_PROFILE_CORE"); true with Not_found -> false
+
+let record_core_check_term_call (label:string) (f: unit -> 'a) : 'a =
+  if not profiling_enabled then f ()
+  else begin
+    let idx = !core_check_term_call_count in
+    incr core_check_term_call_count;
+    let caller = !core_check_caller_label in
+    core_check_caller_label := "";
+    let t0 = Unix.gettimeofday () in
+    let result = f () in
+    let elapsed = Unix.gettimeofday () -. t0 in
+    core_check_term_timings := (idx, elapsed, label, caller) :: !core_check_term_timings;
+    result
+  end
+
+let () = Stdlib.at_exit (fun () ->
+  if not profiling_enabled then ()
+  else
+  let timings = List.rev !core_check_term_timings in
+  if timings <> [] then begin
+    let total = List.fold_left (fun acc (_, t, _, _) -> acc +. t) 0.0 timings in
+    Printf.eprintf "\n=== core_check_term per-call distribution (%d calls, %.1fms total) ===\n"
+      (List.length timings) (total *. 1000.0);
+    (* Print histogram buckets *)
+    let buckets = [0.0; 0.001; 0.01; 0.05; 0.1; 0.5; 1.0; 5.0] in
+    let counts = List.map (fun lo ->
+      let hi = match List.find_opt (fun x -> x > lo) buckets with Some x -> x | None -> infinity in
+      let n = List.length (List.filter (fun (_, t, _, _) -> t >= lo && t < hi) timings) in
+      let sum = List.fold_left (fun acc (_, t, _, _) -> if t >= lo && t < hi then acc +. t else acc) 0.0 timings in
+      (lo, hi, n, sum)
+    ) buckets in
+    List.iter (fun (lo, hi, n, sum) ->
+      if n > 0 then
+        Printf.eprintf "  [%.0fms-%.0fms): %d calls, %.1fms total\n"
+          (lo *. 1000.0) (hi *. 1000.0) n (sum *. 1000.0)
+    ) counts;
+    (* Print the top 20 slowest calls *)
+    let sorted = List.sort (fun (_, t1, _, _) (_, t2, _, _) -> compare t2 t1) timings in
+    Printf.eprintf "\nTop 20 slowest core_check_term calls:\n";
+    List.iteri (fun i (idx, t, label, caller) ->
+      if i < 20 then
+        Printf.eprintf "  #%d: %.1fms [%s] caller=%s\n" idx (t *. 1000.0) label caller
+    ) sorted;
+    Printf.eprintf "===\n%!"
+  end
+)
 
 let stack_dump () = FStarC_Util.stack_dump()
 

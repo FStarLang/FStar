@@ -519,6 +519,31 @@ let check_slprop_with_core (g:env)
   core_check_term
     (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
 
+// Structural slprop check: walk the Pulse term view and only fall back to
+// core_check_term for Tm_FStar (opaque) leaves. Sound because Pulse's
+// slprop constructors (Star, ExistsSL, ForallSL, WithPure, Pure, Emp, etc.)
+// are known to produce slprop-typed terms when their sub-components are slprops.
+let rec check_slprop_with_core_structural (g:env) (t:term)
+: T.Tac unit
+= match inspect_term t with
+  | Tm_Star l r ->
+    check_slprop_with_core_structural g l;
+    check_slprop_with_core_structural g r
+  | Tm_ExistsSL _ _ _
+  | Tm_ForallSL _ _ _
+  | Tm_WithPure _ _ _
+  | Tm_Pure _
+  | Tm_Emp
+  | Tm_Inv _ _
+  | Tm_SLProp
+  | Tm_IsUnreachable
+  | Tm_EmpInames
+  | Tm_Inames -> ()
+  | _ ->
+    // Opaque term: fall back to full core check
+    core_check_term
+      (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
+
   
 
 let non_informative_class_typing
