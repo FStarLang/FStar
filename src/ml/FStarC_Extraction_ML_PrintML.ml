@@ -112,7 +112,7 @@ let maybe_guts (s:string) : string =
   else s
 
 (* mapping functions from F* ML AST to Parsetree *)
-let build_constant (c: mlconstant): constant =
+let build_constant_expr (c: mlconstant) : expression =
   let stdint_module (s:FStarC_Const.signedness) (w:FStarC_Const.width) : string =
     let sign = match s with
       | FStarC_Const.Signed -> "Int"
@@ -123,45 +123,48 @@ let build_constant (c: mlconstant): constant =
     | FStarC_Const.Int16 -> with_w "16"
     | FStarC_Const.Int32 -> with_w "32"
     | FStarC_Const.Int64 -> with_w "64"
-    | FStarC_Const.Sizet -> with_w "64" in
-  match c with
-  | MLC_Int (v, None) ->
-      let s = match Z.of_string v with
-        | x when x = Z.zero ->
-          maybe_guts "Prims.int_zero"
-        | x when x = Z.one ->
-          maybe_guts "Prims.int_one"
-        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
-            BatString.concat v ["(Prims.of_int ("; "))"]
-        | x ->
-            BatString.concat v ["(Prims.parse_int \""; "\")"] in
-      Pconst_integer (s, None)
-  (* Special case for UInt8, as it's realized as OCaml built-in int type *)
-  | MLC_Int (v, Some (FStarC_Const.Unsigned, FStarC_Const.Int8)) ->
-      Pconst_integer (v, None)
-  | MLC_Int (v, Some (s, w)) ->
-      let s = match Z.of_string v with
-        | x when x = Z.zero ->
-            BatString.concat "" [stdint_module s w; ".zero"]
-        | x when x = Z.one ->
-            BatString.concat "" [stdint_module s w; ".one"]
-        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
-            BatString.concat "" ["("; stdint_module s w; ".of_int ("; v; "))"]
-        | x ->
-            BatString.concat "" ["("; stdint_module s w; ".of_string \""; v; "\")"] in
-      Pconst_integer (s, None)
-  | MLC_Float v -> Pconst_float (string_of_float v, None)
-  | MLC_Char v -> Pconst_integer (string_of_int v, None)
-  | MLC_String v -> Pconst_string (v, no_location, None)
-  | _ -> failwith "Case not handled"
-
-let build_constant_expr (c: mlconstant): expression =
+    | FStarC_Const.Sizet -> with_w "64"
+  in
   match c with
   | MLC_Unit -> pexp_construct ~loc (mk_lident "()") None
   | MLC_Bool b ->
      let id = if b then "true" else "false" in
      pexp_construct ~loc (mk_lident id) None
-  | _ -> pexp_constant ~loc (build_constant c)
+  (* Special case for UInt8, as it's realized as OCaml built-in int type *)
+  | MLC_Int (v, Some (FStarC_Const.Unsigned, FStarC_Const.Int8)) ->
+      pexp_constant ~loc @@ Pconst_integer (v, None)
+  | MLC_Int (v, None) -> (
+    (* Prims integers *)
+    match Z.of_string v with
+    | x when x = Z.zero -> pexp_ident ~loc (mk_lident "Prims.int_zero")
+    | x when x = Z.one  -> pexp_ident ~loc (mk_lident "Prims.int_one")
+    | x when min_of_int_const < x && x < max_of_int_const ->
+      let r = pexp_ident ~loc (mk_lident "Prims.of_int") in
+      let n = pexp_constant ~loc (Pconst_integer (v, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+    | x ->
+      let r = pexp_ident ~loc (mk_lident "Prims.parse_int") in
+      let n = pexp_constant ~loc (Pconst_string (v, no_location, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+  )
+  | MLC_Int (v, Some (s, w)) -> (
+    (* Machine integers. *)
+    match Z.of_string v with
+    | x when x = Z.zero -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".zero")
+    | x when x = Z.one  -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".one")
+    | x when min_of_int_const < x && x < max_of_int_const ->
+      let r = pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".of_int") in
+      let n = pexp_constant ~loc (Pconst_integer (v, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+    | x ->
+      let r = pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".of_string") in
+      let n = pexp_constant ~loc (Pconst_string (v, no_location, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+  )
+  | MLC_Float v -> pexp_constant ~loc @@ Pconst_float (string_of_float v, None)
+  | MLC_Char v -> pexp_constant ~loc @@ Pconst_integer (string_of_int v, None)
+  | MLC_String v -> pexp_constant ~loc @@ Pconst_string (v, no_location, None)
+  | _ -> failwith "Case not handled"
 
 let build_constant_pat (c: mlconstant): pattern =
   match c with
@@ -169,7 +172,11 @@ let build_constant_pat (c: mlconstant): pattern =
   | MLC_Bool b ->
      let id = if b then "true" else "false" in
      ppat_construct ~loc (mk_lident id) None
-  | _ -> ppat_constant ~loc (build_constant c)
+  | MLC_Float v  -> ppat_constant ~loc @@ Pconst_float (string_of_float v, None)
+  | MLC_Char v   -> ppat_constant ~loc @@ Pconst_integer (string_of_int v, None)
+  | MLC_String v -> ppat_constant ~loc @@ Pconst_string (v, no_location, None)
+  | _ -> failwith "ggg"
+  (* | _ -> ppat_constant ~loc (build_constant c) *)
 
 let rec build_pattern (p: mlpattern): pattern =
   match p with

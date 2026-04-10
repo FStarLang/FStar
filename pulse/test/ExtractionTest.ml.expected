@@ -8,13 +8,13 @@ let rec test_read_write (x : FStar_UInt32.t Pulse_Lib_Reference.ref)
   Pulse_Lib_Reference.write x (FStar_UInt32.add n Stdint.Uint32.zero)
 let rec test_write_10 (x : FStar_UInt32.t Pulse_Lib_Reference.ref)
   (_'n : unit) : unit=
-  Pulse_Lib_Reference.write x (Stdint.Uint32.of_int (2));
+  Pulse_Lib_Reference.write x (Stdint.Uint32.of_int 2);
   test_read_write x ();
   Pulse_Lib_Reference.write x Stdint.Uint32.zero
 let rec test_inner_ghost_fun (uu___ : unit) : unit= ()
 let rec write10 (x : FStar_UInt32.t Pulse_Lib_Reference.ref) (_'n : unit) :
   unit=
-  let ctr = Pulse_Lib_Reference.alloc () (Stdint.Uint32.of_int (10)) in
+  let ctr = Pulse_Lib_Reference.alloc () (Stdint.Uint32.of_int 10) in
   Pulse_Lib_Dv.while_
     (fun while_cond ->
        let __anf0 = Pulse_Lib_Reference.read ctr () () in
@@ -40,7 +40,7 @@ let rec fill_array (x : FStar_UInt32.t Pulse_Lib_Array_Core.array)
 let rec sub_array (x : FStar_UInt32.t Pulse_Lib_Array_Core.array) : unit=
   let __anf0 = Pulse_Lib_Array_Core.sub x () () Stdint.Uint64.one () () in
   Pulse_Lib_Array_Core.mask_write __anf0 Stdint.Uint64.zero
-    (Stdint.Uint32.of_int (42)) () ()
+    (Stdint.Uint32.of_int 42) () ()
 let test0 (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t=
   FStar_SizeT.rem x y
 type 'a opt =
@@ -72,7 +72,7 @@ let rec fib (x : Prims.nat) : Prims.nat=
   then Prims.int_one
   else
     (let x1 = fib (x - Prims.int_one) in
-     let x2 = fib (x - (Prims.of_int (2))) in x1 + x2)
+     let x2 = fib (x - (Prims.of_int 2)) in x1 + x2)
 let rec fib2 (x : Prims.nat) : Prims.nat=
   let n = fib x in let m = fib (x + Prims.int_one) in m + n
 type ('a, 'b) data =
