@@ -97,14 +97,13 @@ let try_with_idents : Longident.t Asttypes.loc list = [
 ]
 let is_try_with_ident x = List.exists (fun tw -> x = tw) try_with_idents
 
-(* For integer constants (not 0/1) in this range we will use Prims.of_int
- * Outside this range we will use string parsing to allow arbitrary sized
- * integers.
- * Using int_zero/int_one removes int processing to create the int
- * Using of_int removes string processing to create the int
- *)
-let max_of_int_const = Z.of_int   65535
-let min_of_int_const = Z.of_int (-65536)
+(* For integer constants outside of this range we will use Prims.parse_int,
+ * to allow for arbitrary sized integers.
+ * For small integers, we prefer using of_int to avoid string parsing.
+ * OCaml guarantees a minimum width of 31 ( *not* 32), so we can generate
+ * literals safely for anything in [-2^30, 2^30 - 1]. *)
+let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
+let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
 
 let maybe_guts (s:string) : string =
   if FStarC_Options.codegen () = Some FStarC_Options.Plugin
@@ -138,7 +137,7 @@ let build_constant_expr (c: mlconstant) : expression =
     match Z.of_string v with
     | x when x = Z.zero -> pexp_ident ~loc (mk_lident "Prims.int_zero")
     | x when x = Z.one  -> pexp_ident ~loc (mk_lident "Prims.int_one")
-    | x when min_of_int_const < x && x < max_of_int_const ->
+    | x when min_of_int_const <= x && x <= max_of_int_const ->
       let r = pexp_ident ~loc (mk_lident "Prims.of_int") in
       let n = pexp_constant ~loc (Pconst_integer (v, None)) in
       pexp_apply ~loc r [(Nolabel, n)]
@@ -152,7 +151,7 @@ let build_constant_expr (c: mlconstant) : expression =
     match Z.of_string v with
     | x when x = Z.zero -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".zero")
     | x when x = Z.one  -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".one")
-    | x when min_of_int_const < x && x < max_of_int_const ->
+    | x when min_of_int_const <= x && x <= max_of_int_const ->
       let r = pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".of_int") in
       let n = pexp_constant ~loc (Pconst_integer (v, None)) in
       pexp_apply ~loc r [(Nolabel, n)]
@@ -175,8 +174,8 @@ let build_constant_pat (c: mlconstant): pattern =
   | MLC_Float v  -> ppat_constant ~loc @@ Pconst_float (string_of_float v, None)
   | MLC_Char v   -> ppat_constant ~loc @@ Pconst_integer (string_of_int v, None)
   | MLC_String v -> ppat_constant ~loc @@ Pconst_string (v, no_location, None)
-  | _ -> failwith "ggg"
-  (* | _ -> ppat_constant ~loc (build_constant c) *)
+  | MLC_Int _ ->
+    failwith "PrintML: unexpected integer pattern, should have become a pattern guard"
 
 let rec build_pattern (p: mlpattern): pattern =
   match p with

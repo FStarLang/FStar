@@ -53,11 +53,9 @@ let uu___is_Some (projectee : 'a opt) : Prims.bool=
 let __proj__Some__item__v (projectee : 'a opt) : 'a=
   match projectee with | Some v -> v
 let my_safe_add (x : FStar_SizeT.t) (y : FStar_SizeT.t) : FStar_SizeT.t opt=
-  if FStar_SizeT.lte x (Stdint.Uint64.of_string "0xffff")
+  if FStar_SizeT.lte x (Stdint.Uint64.of_int 0xffff)
   then
-    (if
-       FStar_SizeT.lte y
-         (FStar_SizeT.sub (Stdint.Uint64.of_string "0xffff") x)
+    (if FStar_SizeT.lte y (FStar_SizeT.sub (Stdint.Uint64.of_int 0xffff) x)
      then Some (FStar_SizeT.add x y)
      else None)
   else None
