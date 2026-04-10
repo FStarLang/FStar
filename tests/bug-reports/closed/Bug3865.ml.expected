@@ -11,6 +11,6 @@ let intpak : pak=
     f = (fun x -> let x = Obj.magic x in Obj.magic (x + Prims.int_one))
   }
 let use : unit=
-  let x = intpak.f (Obj.magic (Prims.of_int (123))) in
+  let x = intpak.f (Obj.magic (Prims.of_int 123)) in
   FStar_IO.print_string
     (Prims.strcat (Prims.string_of_int (Obj.magic x)) "\n")
