@@ -97,7 +97,7 @@ endif
 	$(INSTALL_DIR) $(FSTAR_ROOT)/pulse/build/lib.common.checked $(PREFIX)/lib/fstar/pulse/common.checked
 	$(INSTALL_DIR) $(FSTAR_ROOT)/pulse/lib/pulse                $(PREFIX)/lib/fstar/pulse/pulse
 	$(INSTALL_DIR) $(FSTAR_ROOT)/pulse/build/lib.pulse.checked  $(PREFIX)/lib/fstar/pulse/pulse.checked
-	echo 'common'         >> $(PREFIX)/lib/fstar/pulse/fstar.include
+	echo 'common'          > $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'common.checked' >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse'          >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse.checked'  >> $(PREFIX)/lib/fstar/pulse/fstar.include
