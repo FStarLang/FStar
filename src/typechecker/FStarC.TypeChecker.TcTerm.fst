@@ -1324,8 +1324,8 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
           | Some rewritten -> tc_term env0 rewritten
           | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
         else
-          (* In verification mode (phase2), enforce purity of
-             arguments to all short-circuit operators. *)
+          (* Full verification: enforce purity of arguments to all
+             short-circuit operators. *)
           check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
       else check_application_args env head chead g_head args (Env.expected_typ env0)
     in

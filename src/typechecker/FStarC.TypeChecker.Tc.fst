@@ -257,7 +257,7 @@ let store_sigopts (se:sigelt) : ML sigelt =
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env.env))) =
   mk_ref None
 
-let do_two_phases env : ML bool = not (Options.lax ())
+let do_two_phases env : ML bool = true
 let run_phase1 (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in
