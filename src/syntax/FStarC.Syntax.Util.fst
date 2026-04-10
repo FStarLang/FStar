@@ -2115,3 +2115,12 @@ let eq_binding b1 b2 =
     | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
     | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
     | _ -> false
+
+let hua (t:term) : ML (option (fv & list universe & args)) =
+  let t = unmeta t in
+  let hd, args = head_and_args_full t in
+  let hd = unmeta hd in
+  match (compress hd).n with
+  | Tm_fvar fv -> Some (fv, [], args)
+  | Tm_uinst ({ n = Tm_fvar fv }, us) -> Some (fv, us, args)
+  | _ -> None

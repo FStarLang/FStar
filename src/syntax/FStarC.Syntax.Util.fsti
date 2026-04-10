@@ -630,3 +630,6 @@ val is_binder_unused (b:binder) : bool
 val deduplicate_terms (l:list term) : ML (list term)
 
 val eq_binding (b1 b2 : binding) : ML bool
+
+(* Destruct application: head, universes, and args. *)
+val hua (t:term) : ML (option (fv & list universe & args))
