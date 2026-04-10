@@ -77,40 +77,63 @@ let report_errors fmods =
     exit 1
   end
 
+let fstar_exe_modtime = Time.get_file_last_modification_time (Util.exec_name)
+
+let file_newer_than_us (f : string) : ML bool =
+  let open FStarC.Util in
+  let mtime = Time.get_file_last_modification_time f in
+  Time.is_before fstar_exe_modtime mtime
+
 let load_native_tactics () =
     let open FStarC.Errors.Msg in
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
-    let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
+    let cmxs_to_load = Options.load_cmxs () in
     let ml_module_name m = FStarC.Extraction.ML.Util.ml_module_name_of_lid m in
     let ml_file m = ml_module_name m ^ ".ml" in
-    let cmxs_file m =
-        let cmxs = ml_module_name m ^ ".cmxs" in
-        match Find.find_file_odir cmxs with
-        | Some f -> f
+    (* For --load, we try to build the plugin ourselves. We re-compile it if F*
+    has seemingly been updated (i.e. when the executable is newer than the
+    plugin). *)
+    let module_to_cmxs (m : lid) : ML string =
+      let cmxs = ml_module_name m ^ ".cmxs" in
+      let find_and_build_ml () : ML string =
+        match Find.find_file_odir (ml_file m) with
         | None ->
-          if List.contains m cmxs_to_load  //if this module comes from the cmxs list, fail hard
-          then E.raise_error0 E.Fatal_FailToCompileNativeTactic (Format.fmt1 "Could not find %s to load" cmxs)
-          else  //else try to find and compile the ml file
-            match Find.find_file_odir (ml_file m) with
+          E.raise_error0 E.Fatal_FailToCompileNativeTactic [
+            text "Failed to compile native tactic.";
+            text (fmt1 "Extracted module %s not found." (ml_file m))
+          ]
+        | Some ml ->
+          let dir = Filepath.dirname ml in
+          Plugins.compile_modules dir [ml_module_name m];
+          begin match Find.find_file_odir cmxs with
             | None ->
               E.raise_error0 E.Fatal_FailToCompileNativeTactic [
                 text "Failed to compile native tactic.";
-                text (fmt1 "Extracted module %s not found." (ml_file m))
+                text (fmt1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
               ]
-            | Some ml ->
-              let dir = Filepath.dirname ml in
-              Plugins.compile_modules dir [ml_module_name m];
-              begin match Find.find_file_odir cmxs with
-                | None ->
-                  E.raise_error0 E.Fatal_FailToCompileNativeTactic [
-                    text "Failed to compile native tactic.";
-                    text (fmt1 "Compilation seemingly succeeded, but compiled object %s not found." cmxs);
-                  ]
-                | Some f -> f
-              end
+            | Some f -> f
+          end
+      in
+      match Find.find_file_odir cmxs with
+      | None -> find_and_build_ml ()
+      | Some f when not (file_newer_than_us f) ->
+        (* The plugin seems old! Recompile anyway, but print a message about it. *)
+        E.diag0 [
+          text (fmt1 "Plugin %s looks old. Recompiling." cmxs)
+        ];
+        find_and_build_ml ()
+      | Some f -> f
     in
-
-    let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
+    (* For --load_cmxs, we just find the file. *)
+    let check_cmxs (f : string) : ML string =
+      let f = f ^ ".cmxs" in
+      match Find.find_file_odir f with
+      | Some f -> f
+      | None ->
+        E.raise_error0 E.Fatal_FailToCompileNativeTactic (Format.fmt1 "Could not find %s to load" f)
+    in
+    let cmxs_files = List.map module_to_cmxs modules_to_load
+                     @ List.map check_cmxs cmxs_to_load in
     Plugins.load_plugins cmxs_files;
     Options.use_native_tactics () |> Option.iter Plugins.load_plugins_dir;
     ()
