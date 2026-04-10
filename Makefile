@@ -652,6 +652,7 @@ stage0_new: .stage2.src.touch
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
+	rm -rf "$(TO)/karamel"        # only needed in source packages
 
 bump-stage0: stage0_new
 	$(call bold_msg, "BUMP!")
@@ -669,6 +670,14 @@ bump-stage0: stage0_new
 	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -rf stage1
 	cp -r stage2 stage1
+	rm -rf stage1/dune/_build
+	# Rename dune executables: stage1 must use fstarc1_*, not fstarc2_*
+	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-bare/dune
+	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-full/dune
+	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/tests/dune
+	mv stage1/dune/fstarc-bare/fstarc2_bare.ml stage1/dune/fstarc-bare/fstarc1_bare.ml
+	mv stage1/dune/fstarc-full/fstarc2_full.ml stage1/dune/fstarc-full/fstarc1_full.ml
+	mv stage1/dune/tests/fstarc2_tests.ml      stage1/dune/tests/fstarc1_tests.ml
 	rm -f stage1/dune/fstar-guts/app
 	ln -Trsf stage0/ulib/ml/app stage1/dune/fstar-guts/app
 
