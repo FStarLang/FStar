@@ -3,7 +3,7 @@
 # I avoid using the mk/test.mk here because it doesn't support other file extensions.
 
 FSTAR_OPT = --load TinyPlugin --lang_extensions tiny --already_cached FStar,Prims --cache_checked_modules --cache_dir .cache
-FSTAR_EXE ?= fstar.exe
+FSTAR_EXE ?= ../../out/bin/fstar.exe
 
 SRCS = Test0DotFst.fst Test1DotTiny.tiny Test2DotTiny.tiny
 CHECKED = $(patsubst %,%.checked,$(SRCS))
