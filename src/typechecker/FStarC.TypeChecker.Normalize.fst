@@ -225,17 +225,25 @@ let norm_universe cfg (env:env) u : ML universe =
         match u with
           | U_bvar x ->
             begin
-                try match (List.nth env x)._2 with
-                      | Univ u ->
-                           if !dbg_univ_norm then
-                               Format.print1 "Univ (in norm_universe): %s\n" (show u)
-                           else ();  aux u
-                      | Dummy -> [u]
-                      | _ -> failwith (Format.fmt1 "Impossible: universe variable u@%s bound to a term"
-                                                   (show x))
-                with _ -> if cfg.steps.allow_unbound_universes
-                          then [U_unknown]
-                          else failwith ("Universe variable not found: u@" ^ show x)
+              let vo =
+                try Some ((List.nth env x)._2)
+                with _ -> None
+              in
+              match vo with
+              | Some (Univ u) ->
+                if !dbg_univ_norm then
+                    Format.print1 "Univ (in norm_universe): %s\n" (show u);
+                aux u
+              | Some Dummy ->
+                [u]
+              | Some _ ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith (Format.fmt1 "Impossible: universe variable u@%s bound to a term" (show x))
+              | None ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith ("Universe variable not found: u@" ^ show x)
             end
           | U_unif _ when cfg.steps.default_univs_to_zero ->
             [U_zero]
