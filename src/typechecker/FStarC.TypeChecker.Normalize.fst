@@ -155,7 +155,7 @@ let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : ML unit =
 
 let closure_to_string = function
     | Clos (env, t, _, _) -> Format.fmt2 "(env=%s elts; %s)" (List.length env |> show) (show t)
-    | Univ _ -> "Univ"
+    | Univ u -> "Univ " ^ show u
     | Dummy -> "dummy"
 
 instance showable_closure : showable closure = {
@@ -167,7 +167,7 @@ instance showable_stack_elt : showable stack_elt = {
           | Arg (c, _, _) -> Format.fmt1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
           | Abs (_, bs, _, _, _) -> Format.fmt1 "Abs %s" (show <| List.length bs)
-          | UnivArgs _ -> "UnivArgs"
+          | UnivArgs us -> "UnivArgs " ^ show us
           | Match   _ -> "Match"
           | App (_, t,_,_) -> Format.fmt1 "App %s" (show t)
           | CBVApp (_, t,_,_) -> Format.fmt1 "CBVApp %s" (show t)
