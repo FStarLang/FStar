@@ -17,9 +17,16 @@ defaults:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    # We prefer slightly older Ubuntu so we get binaries that work on
-    # all more recent versions.
+    strategy:
+      matrix:
+        os:
+          # We prefer slightly older Ubuntu so we get binaries that work on
+          # all more recent versions.
+          - ubuntu-22.04
+
+          - ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
         with:
@@ -28,7 +35,7 @@ jobs:
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: 4.14.2
+          ocaml-compiler: 5.3.0
 
       - name: Prepare
         run: |
@@ -67,7 +74,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           path: fstar-Linux-*
-          name: package-linux
+          name: package-linux-${{ matrix.os }}
       # - uses: actions/upload-artifact@v7
       #   with:
       #     path: fstar-src.tar.gz
@@ -81,18 +88,16 @@ jobs:
           - ubuntu-22.04
           - ubuntu-24.04
           - ubuntu-latest
+          - ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: cda-tum/setup-z3@main
-        with:
-          version: 4.13.3
-
       - name: Get fstar package
         uses: actions/download-artifact@v8
         with:
-          name: package-linux
+          pattern: package-linux-*
+          merge-multiple: true
 
-      - run: tar xzf fstar*.tar.gz
+      - run: tar xzf fstar-Linux-$(uname -m).tar.gz
 
       - name: Smoke test
         run: |
