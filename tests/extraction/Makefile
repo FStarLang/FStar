@@ -11,6 +11,7 @@ ifneq ($(OS),Windows_NT)
 RUN += Div.fst
 endif
 
+RUN += Division.fst
 RUN += ExtractAs.fst
 RUN += ParseTest.fst
 
