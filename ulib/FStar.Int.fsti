@@ -143,9 +143,10 @@ let udiv (#n:pos) (a:int_t n{min_int n < a}) (b:int_t n{b <> 0})
   = div_size #n a b;
     a /- b
 
-(* Modulo primitives *)
+(* Remainder primitives (NOT modulo, division truncates towards zero
+   and remainders have the same sign as the dividend) *)
 let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
-  a - ((a/b) * b)
+  a - ((a /- b) * b)
 
 (* Comparison operators *)
 let eq  #n (a:int_t n) (b:int_t n) : Tot bool = a = b
