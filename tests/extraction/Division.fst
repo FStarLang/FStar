@@ -54,6 +54,15 @@ let test_i64
   if x `div` y <> rdiv || x `rem` y <> rrem then
     failwith "test_i64 failed"
 
+let test_z
+  (x y : int{y =!= 0})
+  (rdiv : int {rdiv == x / y})
+  (rrem : int {rrem == x % y})
+  : ML unit =
+  let open FStar.Int64 in
+  if x / y <> rdiv || x % y <> rrem then
+    failwith "test_i64 failed"
+
 #set-options "--warn_error -272"
 
 let _ : unit =
@@ -79,3 +88,10 @@ let _ : unit =
   test_i64 7L    (-2L) (-3L) 1L;
   test_i64 (-7L) 2L    (-3L) (-1L);
   test_i64 (-7L) (-2L) 3L    (-1L)
+
+(* Unbounded integers use euclidean division, so the results are different. *)
+let _ : unit =
+  test_z 7    2    3    1;
+  test_z 7    (-2) (-3) 1;
+  test_z (-7) 2    (-4) 1;
+  test_z (-7) (-2) 4    1
