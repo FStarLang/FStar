@@ -217,20 +217,14 @@ let rec prefix_with_iface_decls
 
      //Extension declarations (e.g., Pulse fn) in the interface:
      //When the implementation defines the same name, consume the interface decl.
-     //If the implementation is also an extension decl, don't prefix the interface decl
-     //(since both will produce their own sigelts). Otherwise, prefix it so the val is available.
-     //This prevents the implementation from getting KrmlPrivate.
+     //Always prefix the interface decl so it produces a val declaration,
+     //which the implementation can then be checked against.
+     //This also prevents the implementation from getting KrmlPrivate.
      | DeclToBeDesugared { idents=[x] } ->
        let def_ids = definition_lids impl in
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
        if defines_x then (
-         match impl.d with
-         | DeclToBeDesugared _ ->
-           //both interface and impl are extension decls; each produces its own sigelt
-           iface_tl, [impl]
-         | _ ->
-           //impl is a regular let; need the interface decl to provide the val
-           iface_tl, [iface_hd; impl]
+         iface_tl, [iface_hd; impl]
        ) else (
          //implementation doesn't define x; skip past this iface entry
          //and try to find a match further in the interface.
