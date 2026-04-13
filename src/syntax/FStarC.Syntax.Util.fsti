@@ -416,8 +416,10 @@ val t_haseq : term
 val decidable_eq : term
 val mk_decidable_eq (t e1 e2 : term) : ML term
 
-val b_and : term
+val b_or : term
+val mk_or (e1 e2 : term) : ML term
 
+val b_and : term
 val mk_and (e1 e2 : term) : ML term
 val mk_and_l (es : list term) : ML term
 val mk_boolean_negation (b:term) : ML term
