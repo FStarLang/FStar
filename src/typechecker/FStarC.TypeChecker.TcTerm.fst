@@ -1312,16 +1312,16 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let head, chead, g_head = tc_term (no_inst env) head in
     let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, g_head ++ g) in
     let e, c, g =
-      if TcUtil.short_circuit_head head && not env.phase1
+      if TcUtil.short_circuit_head head
       then
-        if Options.lax ()
+        if env.phase1
         then
-          (* In lax mode, elaborate && and || to if-then-else
+          (* In phase1, elaborate && and || to if-then-else
              to enforce proper short-circuit evaluation order
              for impure arguments. Other SC ops (/\, \/, ==>) go
              through check_application_args. *)
           match maybe_elaborate_short_circuit_args env0 head args with
-          | Some rewritten -> tc_term env0 rewritten
+          | Some rewritten -> rewritten
           | None -> check_application_args env head chead g_head args (Env.expected_typ env0)
         else
           (* Full verification: enforce purity of arguments to all
@@ -2935,19 +2935,42 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 (*     e1 || e2  -->  if e1 then true else e2                                 *)
 (******************************************************************************)
 and maybe_elaborate_short_circuit_args env0 head args
-  : ML (option term)
+  : ML (option (term & lcomp & guard_t))
   = match (U.un_uinst head).n with
     | Tm_fvar fv when S.fv_eq_lid fv Const.op_And || S.fv_eq_lid fv Const.op_Or ->
-      let is_and = S.fv_eq_lid fv Const.op_And in
       begin match args with
       | [(e1, _aq1); (e2, _aq2)] ->
+        let is_and = S.fv_eq_lid fv Const.op_And in
         let r = e1.pos in
-        let rewritten =
-          if is_and
-          then U.if_then_else e1 e2 U.exp_false_bool
-          else U.if_then_else e1 U.exp_true_bool e2
-        in
-        Some ({rewritten with pos = r})
+        let env1 = Env.set_expected_typ env0 U.t_bool in
+        let e1, c1, g1 = tc_term env1 e1 in
+        let e2, c2, g2 = tc_term env1 e2 in
+        let is_pure = TcComm.is_tot_or_gtot_lcomp c1 || TcComm.is_tot_or_gtot_lcomp c2 in
+        let c = TcUtil.bind r false env0 (Some e1) c1 (None, c2) in
+        let c = TcComm.set_result_typ_lc c U.t_bool in
+        if not (TcComm.is_tot_or_gtot_lcomp c1) then
+          let x1 = S.new_bv None U.t_bool in
+          let e =
+            let x1 = S.bv_to_name x1 in
+            if is_and
+            then U.if_then_else x1 e2 U.exp_false_bool
+            else U.if_then_else x1 U.exp_true_bool e2
+          in
+          let lb = U.mk_letbinding (Inl x1) [] U.t_bool c1.eff_name e1 [] e1.pos in
+          let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x1] e}) e.pos in
+          // TODO: maybe_lift??
+          Some (e, c, g1 ++ g2)
+        else if not (TcComm.is_tot_or_gtot_lcomp c2) then
+          let e =
+            if is_and
+            then U.if_then_else e1 e2 U.exp_false_bool
+            else U.if_then_else e1 U.exp_true_bool e2
+          in
+          // TODO: maybe_lift??
+          Some (e, c, g1 ++ g2)
+        else // TcComm.is_tot_or_gtot_lcomp c1 && TcComm.is_tot_or_gtot_lcomp c2
+          let e = if is_and then U.mk_and e1 e2 else U.mk_or e1 e2 in
+          Some (e, c, g1 ++ g2)
       | _ -> None
       end
     | _ -> None

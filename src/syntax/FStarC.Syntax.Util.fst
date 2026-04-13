@@ -1041,6 +1041,11 @@ let t_haseq   = fvar_with_dd PC.haseq_lid None
 let decidable_eq = fvar_const PC.op_Eq
 let mk_decidable_eq t e1 e2 =
   mk (Tm_app {hd=decidable_eq; args=[iarg t; as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+
+let b_or = fvar_const PC.op_Or
+let mk_or e1 e2 =
+  mk (Tm_app {hd=b_or; args=[as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
+
 let b_and = fvar_const PC.op_And
 let mk_and e1 e2 =
   mk (Tm_app {hd=b_and; args=[as_arg e1; as_arg e2]}) (Range.union_ranges e1.pos e2.pos)
