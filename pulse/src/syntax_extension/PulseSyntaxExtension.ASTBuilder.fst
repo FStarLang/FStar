@@ -185,7 +185,7 @@ let parse_extension_lang (contents:string) (r:FStarC.Range.range)
             lang_name="pulse";
             blob=mkdyn d;
             idents=[id];
-            to_string=(fun d -> "<TBD>");
+            to_string = (fun dyn -> let d : PulseSyntaxExtension.Sugar.decl = undyn dyn in show d);
             eq=(fun d1 d2 -> PulseSyntaxExtension.Sugar.eq_decl (undyn d1) (undyn d2));
             dep_scan=(fun cbs d -> PulseSyntaxExtension.Sugar.scan_decl cbs (undyn d));
           }

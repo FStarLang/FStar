@@ -382,6 +382,7 @@ val inline_let_attribute : term
 val inline_let_vc_attribute : term
 
 instance val showable_quote_kind : showable quote_kind
+instance val showable_decl'   : showable decl'
 instance val showable_decl    : showable decl
 instance val showable_term    : showable term
 instance val showable_pattern : showable pattern
@@ -397,5 +398,6 @@ instance val pretty_term    : pretty term
 instance val pretty_binder  : pretty binder
 instance val pretty_pattern : pretty pattern
 instance val pretty_pragma  : pretty pragma
+instance val pretty_decl'   : pretty decl'
 instance val pretty_decl    : pretty decl
 instance val pretty_modul   : pretty modul

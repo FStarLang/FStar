@@ -391,6 +391,14 @@ type decl =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
   | SlpropDefn of slprop_defn
+
+instance showable_decl : showable decl = {
+  show = (fun d -> match d with
+    | FnDefn f -> "FnDefn " ^ show f.id
+    | FnDecl f -> "FnDecl " ^ show f.id
+    | SlpropDefn f -> "SlpropDefn " ^ show f.id)
+}
+
 open FStarC.Class.Deq
 let eq_ident (i1 i2:Ident.ident) : ML bool = i1 =? i2
 let eq_lident (i1 i2:Ident.lident) : ML bool = i1 =? i2

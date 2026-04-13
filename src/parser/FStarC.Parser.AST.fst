@@ -881,7 +881,7 @@ let restriction_to_string (r:FStarC.Syntax.Syntax.restriction) : ML string =
   match r with | Unrestricted -> ""
            | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ Option.dflt "" (Option.map (fun renamed -> " as " ^ string_of_id renamed) renamed)) allow_list)  ^ "}"
 
-let decl_to_string (d:decl) : ML string = match d.d with
+let decl'_to_string (d:decl') : ML string = match d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open (l, r) -> "open " ^ string_of_lid l ^ restriction_to_string r
   | Friend l -> "friend " ^ (string_of_lid l)
@@ -916,6 +916,8 @@ let decl_to_string (d:decl) : ML string = match d.d with
     Format.fmt1 "#lang-%s" str
   | Unparseable ->
     "unparseable"
+
+let decl_to_string (d:decl) : ML string = decl'_to_string d.d
 
 let modul_to_string (m:modul) : ML string =
   match m with
@@ -967,6 +969,7 @@ instance showable_quote_kind : showable quote_kind = {
     | Dynamic -> "Dynamic"
 }
 
+instance showable_decl'   : showable decl'   = { show = decl'_to_string; }
 instance showable_decl    : showable decl    = { show = decl_to_string; }
 instance showable_term    : showable term    = { show = term_to_string; }
 instance showable_pattern : showable pattern = { show = pat_to_string; }
@@ -1255,8 +1258,8 @@ let pp_tycon (tc : tycon) : ML document =
     ctor "TyconVariant" [pp i; pp bs; pp knd; pp_list' pp_ctor ctors]
 instance pretty_tycon   : pretty tycon    = { pp = pp_tycon; }
 
-let pp_decl (d:decl) : ML document =
-  match d.d with
+let pp_decl' (d:decl') : ML document =
+  match d with
   | TopLevelModule l ->
       ctor "TopLevelModule" [pp l]
   | Open (l, r) ->
@@ -1304,6 +1307,9 @@ let pp_decl (d:decl) : ML document =
   | Unparseable ->
       ctor "Unparseable" []
 
+let pp_decl (d:decl) : ML document = pp_decl' d.d
+
+instance pretty_decl'   : pretty decl'    = { pp = pp_decl'; }
 instance pretty_decl    : pretty decl     = { pp = pp_decl; }
 
 let pp_modul (m:modul) : ML document =
