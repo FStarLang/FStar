@@ -261,8 +261,6 @@ val initial_ifuel               : unit    -> ML int
 
 val lang_extensions             : unit    -> ML (list string)
 
-val lax                         : unit    -> ML bool
-
 val load                        : unit    -> ML (list string)
 
 val load_cmxs                   : unit    -> ML (list string)
