@@ -31,7 +31,7 @@ want to prove, and can "massage" the assertion by simplifying it,
 splitting it into several sub-goals, tweaking particular SMT options,
 etc.
 
-For instance, let us take the the following example, where we want to
+For instance, let us take the following example, where we want to
 guarantee that ``pow2 x`` is less than one million given that ``x`` is
 at most ``19``. One way of going about this proof is by noting that
 ``pow2`` is an increasing function, and that ``pow2 19`` is less than
@@ -120,7 +120,7 @@ see no more goals remain (this is what ``qed()`` checks).
   
 There is still the "rest" of the proof, namely that ``pow2 x < 1000000``
 given the hypothesis and the fact that the assertion holds. We call
-this *skeleton* of the proof, and it is (by default) not handled by
+this the *skeleton* of the proof, and it is (by default) not handled by
 Meta-F*. In general, we only use tactics on those assertions that are
 particularly hard for the SMT solver, but leave all the rest to it.
 
@@ -376,7 +376,7 @@ The ``term`` type is *abstract*: it has no observable structure
 itself. Think of it as an opaque "box" containing a term inside. A
 priori, all that can be done with a ``term`` is pass it to primitives
 that expect one, such as ``tc`` to type-check it or ``norm_term`` to
-normalize it. But none of those give us full, programatic access to
+normalize it. But none of those give us full, programmatic access to
 the structure of the term.
 
 
@@ -398,10 +398,10 @@ recursive: its subterms have type ``term`` rather than ``term_view``.
       | Tv_Arrow  : bv:binder -> c:comp -> term_view
       ...
 
-The ``inspect`` primitves "peels away" one level of the abstraction
+The ``inspect`` primitives "peels away" one level of the abstraction
 layer, giving access to the top-level shape of the term.
 
-The ``Tv_FVar`` node above represents (an ocurrence of) a global name.
+The ``Tv_FVar`` node above represents (an occurrence of) a global name.
 The ``fv`` type is also abstract, and can be viewed as a ``name`` (which
 is just ``list string``) via ``inspect_fv``.
 
@@ -412,7 +412,7 @@ representation of the fully-qualified name ``Path.To.Module.qr-s``.
 
 Every syntactic construct (terms, free variables, bound variables,
 binders, computation types, etc) is modeled abstractly like ``term`` and
-``fv``, and has a corresponding inspection functions. A list can be found
+``fv``, and has a corresponding inspection function. A list can be found
 in ``FStar.Reflection.Builtins``.
 
 If the inspected term is an application, ``inspect`` will return a
@@ -473,7 +473,7 @@ using ``inspect``.
     many advantages, it is likely to be counterproductive when doing
     tactics and metaprogramming, hence ``inspect`` *opens* variables when
     it traverses a binder, transforming the term into a fully-named
-    representation. This is why ``inspect`` is effectul: it requires
+    representation. This is why ``inspect`` is effectful: it requires
     freshness to avoid name clashes. If you prefer to work with a
     locally-nameless representation, and avoid the effect label, you can
     use ``inspect_ln`` instead (which will return ``Tv_BVar`` nodes instead

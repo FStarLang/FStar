@@ -61,7 +61,7 @@ provides abstract machines to interpret pure terms using either a lazy
 evaluation strategy or a call-by-value strategy (see a
 :ref:`forthcoming chapter on F*'s normalizers
 <Under_the_hood>`). Further, compiling pure programs to OCaml, F*
-inherits the OCaml's call-by-value semantics for pure terms.
+inherits OCaml's call-by-value semantics for pure terms.
 
 When evaluating function calls with effectful arguments, the arguments
 are reduced to values first, exhibiting their effects, if any, prior

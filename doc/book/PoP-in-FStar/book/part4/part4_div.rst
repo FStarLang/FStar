@@ -13,7 +13,7 @@ such an interpreter would not be able to handle programs that
 intentionally loop forever. [#]_
 
 F*'s logical core of total (and ghost) functions can only express
-terminating computations. However, F*'s also allows expressing
+terminating computations. However, F* also allows expressing
 non-terminating or *divergent* computations, relying on the effect
 system to isolate divergent computations from the logical core. In
 particular, the computation type ``Dv t`` describes a computation that
@@ -87,17 +87,17 @@ Partial correctness semantics of ``Dv``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``Tot`` effect in F* has a *total correctness* semantics. That is,
-if a term has type ``e:Tot t``, then ``e`` terminates terminates and
+if a term has type ``e:Tot t``, then ``e`` terminates and
 produces a value of type ``t``.
 
 Terms with type ``Dv t`` have a *partial correctness* semantics. That
-is, a term ``e:Dv t``, ``e`` may either run forever, but if it
+is, a term ``e:Dv t`` may run forever, but if it
 terminates then the resulting value has type ``t``.
 
 Another perspective is that aside from disabling the termination
 checking features of F*, all other type-checking constraints are
-enforced on ``Dv`` term. This means that one can still give
-interesting sound, specifications to ``Dv`` programs, e.g., the type
+enforced on ``Dv`` terms. This means that one can still give
+interesting sound specifications to ``Dv`` programs, e.g., the type
 below proves that if the Collatz function terminates, then the last
 element of the sequence is ``1``.
 
@@ -236,7 +236,7 @@ involved. For example, one can define this:
    :end-before: //SNIPPET_END: nonpos$
 
 The type ``nonpos`` is not strictly positive, since it appears to the
-left of an arrow in a field of one of its constructors. Indeed, usingn
+left of an arrow in a field of one of its constructors. Indeed, using
 ``nonpos`` it is possible to define (without using ``let rec``) an
 infinitely looping program ``loop_nonpos()``---however, the type ``Dv
 False`` tells us that this program may loop forever, and the infinite

@@ -30,7 +30,7 @@ permissible to compare ``e₁ = e₂`` if ``t : eqtype``.
 
 For any type definition, F* automatically computes whether or not that
 type is an ``eqtype``. We'll explain later exactly how F* decides
-whether or not a type is an ``eqtype``. Roughly, for F* has built-in
+whether or not a type is an ``eqtype``. Roughly, F* has built-in
 knowledge that various primitive types like integers and booleans
 support decidable equality. When defining a new type, F* checks
 that all values of the new type are composed structurally of terms

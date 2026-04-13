@@ -65,7 +65,7 @@ There are a few points worth discussing in detail:
 
 2. We have to prove that ``sort`` terminates. The measure we've
    provided is ``length l``, meaning that at each recursive call,
-   we're claiming that the length of input list is strictly
+   we're claiming that the length of the input list is strictly
    decreasing.
 
 3. Why is this true? Well, informally, the recursive calls ``sort lo``
@@ -147,13 +147,13 @@ about the correctness of ``sort``.
        :start-after: SNIPPET_START: sort_correct
        :end-before: SNIPPET_END: sort_correct
 
-The structure of the lemma is mirrors the structure of ``sort``
+The structure of the lemma mirrors the structure of ``sort``
 itself.
 
 * In the base case, the proof is automatic.
 
 * In the inductive case, we partition the tail of the list and
-  recursively call the lemma on the the ``hi`` and ``lo`` components,
+  recursively call the lemma on the ``hi`` and ``lo`` components,
   just like ``sort`` itself. The intrinsic type of ``partition`` is
   also helpful here, using the ``length`` measure on the list to prove
   that the induction here is well-founded.
@@ -161,9 +161,8 @@ itself.
   - To prove the ``ensures`` postcondition, we apply our three
     auxiliary lemmas.
 
-    + ``partition_mem ((<=) pivot) tl`` gives us the precondition of
-      needed to satisfy the ``requires`` clause of
-      ``sorted_concat``.
+    + ``partition_mem ((<=) pivot) tl`` gives us the precondition
+      needed to satisfy the ``requires`` clause of ``sorted_concat``.
 
     + We also need to prove the ``sorted`` refinements on ``sort lo``
       and ``sort hi`` in order to call ``sorted_concat``, but the
@@ -348,7 +347,7 @@ Proving that ``sort`` is a permutation
 We promised at the beginning of this section that we'd eventually give
 a better specification for ``sort``, one that proves that it doesn't
 drop duplicate elements in the list. That's the goal of the exercise
-in this section—we'll prove that our generic Quicksort is returns a
+in this section—we'll prove that our generic Quicksort returns a
 permutation of the input list.
 
 Let's start by defining what it means for lists to be permutations of

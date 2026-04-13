@@ -36,7 +36,7 @@ Compare this with concatenating two lists:
        | hd::tl -> hd :: list_append tl l2
 
 Superficially, because of the implicit arguments, it may look like
-concatenating vectors with ``append`` is just as efficient as a
+concatenating vectors with ``append`` is just as efficient as
 concatenating lists---the length indexes seem to impose no
 overhead. But, let's look at the code that F* extracts to OCaml for
 length-indexed vectors.
@@ -131,7 +131,7 @@ effects, except for the value they return. As such, F*'s logical core
 really includes both ``Tot`` and ``GTot`` computations. The
 distinction between ``Tot`` and ``GTot`` is only relevant when
 considering how programs are compiled. Ghost computations are
-guaranteed to be erased by the the compiler, while ``Tot``
+guaranteed to be erased by the compiler, while ``Tot``
 computations are retained.
 
 Since ``Tot`` terms are implicitly promoted to ``GTot``, it is easy to
@@ -148,7 +148,7 @@ Its definition is identical to the corresponding total function that
 we saw earlier, except that we have annotated the return computation
 type of the function as ``GTot nat``. This indicates to F* that
 ``factorial`` is to be erased during compilation, and the F*
-type-and-effect checker ensures that ``Tot`` computation cannot depend
+type-and-effect checker ensures that ``Tot`` computations cannot depend
 on an application of ``factorial n``.
 
 .. [#] The name ``GTot`` is meant to stand for "Ghost and Total"
@@ -199,7 +199,7 @@ moment why this is permitted.
 Erasable and Non-informative Types
 ----------------------------------
 
-In addition to using the ``GTot`` effect to classifies computations
+In addition to using the ``GTot`` effect to classify computations
 that must be erased, F* also provides a way to mark certain *value
 types* as erasable.
 
@@ -226,7 +226,7 @@ derivation may be useful in some cases, often returning the whole
 derivation is unnecessary. By marking the definition of the ``typing``
 inductive as shown below (and keeping the rest of the definition the
 same), F* guarantees that the compiler will extract ``typing g e t``
-to the ``unit`` type and correspondinly, all values of ``typing g e
+to the ``unit`` type and correspondingly, all values of ``typing g e
 t`` will be erased to the unit value ``()``
 
 .. code-block:: fstar
@@ -338,7 +338,7 @@ A few comments on these examples:
   implicitly to ``erased nat``. Note, the effect of ``auto_reveal`` is
   ``GTot``
 
-* ``auto_reveal_2`` fails, since the the annotation claims,
+* ``auto_reveal_2`` fails, since the annotation claims,
   incorrectly, that the effect label is ``Tot``
 
 * ``incr`` is just a ``nat -> nat`` function.

@@ -55,7 +55,7 @@ works:
    :start-after: //incr_erased$
    :end-before: //end incr_erased$
 
-The ``ghost`` qualifier indicates the the Pulse checker that the
+The ``ghost`` qualifier indicates the Pulse checker that the
 function is to be erased at runtime, so ``ghost`` functions are
 allowed to make use of F* functions with ``GTot`` effect, like
 ``FStar.Ghost.reveal``.

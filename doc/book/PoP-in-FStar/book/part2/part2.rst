@@ -76,7 +76,7 @@ learn about indexed inductive types from three related perspectives:
     connectives <Part2_connectives>` and :ref:`equality
     <Part2_equality>`) and show how rather than being primitive
     notions in F*, their definitions arise from a few core
-    constructions involving inductive type. Other core notions in the
+    constructions involving inductive types. Other core notions in the
     language, including the handling of :ref:`termination proofs
     <Part1_termination>`, can also be understood in terms of inductive
     types that :ref:`model well-founded recursion

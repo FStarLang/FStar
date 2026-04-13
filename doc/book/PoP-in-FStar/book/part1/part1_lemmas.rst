@@ -32,7 +32,7 @@ Introducing lemmas
 ^^^^^^^^^^^^^^^^^^
 
 A lemma is a function in F* that always returns the ``():unit``
-value. However, the type of lemma carries useful information about
+value. However, the type of the lemma carries useful information about
 which facts are provable.
 
 Here's our first lemma:
@@ -65,7 +65,7 @@ Some syntactic shorthands for Lemmas
 ....................................
 
 Lemmas are so common in F* that it's convenient to have special syntax
-for them. Here's another take at our proof by ``factorial x > 0``
+for them. Here's another take at our proof of ``factorial x > 0``
 
 .. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
@@ -76,7 +76,7 @@ The type ``x:t -> Lemma (requires pre) (ensures post)`` is the type of
 a function
 
 * that can be called with an argument ``v:t``
-* the argument must satisfies the precondition ``pre[v/x]``
+* the argument must satisfy the precondition ``pre[v/x]``
 * the function always returns a ``unit``
 * and ensures that the postcondition ``post[v/x]`` is valid
 

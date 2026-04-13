@@ -382,7 +382,7 @@ Decidable equality and equality qualifiers
 
 To end this chapter, we discuss a third kind of equality in F*, the
 polymorphic *decidable equality* with the signature shown below taken
-from the the F* module ``Prims``.
+from the F* module ``Prims``.
 
 .. code-block:: fstar
 

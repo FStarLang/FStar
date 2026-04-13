@@ -101,7 +101,7 @@ for a Turing machine ``tm``, the fact ``halts tm`` can be defined as a
 ``prop``, although it is impossible to decide for an arbitrary ``tm``
 whether ``tm`` halts on all inputs. This is contrast with ``bool``,
 the type of booleans ``{true, false}``. Clearly, one could not define
-``halts tm`` as a ``bool``, since one would be claiming that for
+``halts tm`` as a ``bool``, since one would be claiming that
 ``halts`` is function that for any ``tm`` can decide (by returning
 true or false) whether or not ``tm`` halts on all inputs.
 
@@ -332,7 +332,7 @@ a function.
 
 However, it's body contains an assertion that ``x * x >= 0``. Now,
 many programming languages support runtime assertions—code to check
-some property of program when it executes. But, assertions in F* are
+some property of the program when it executes. But, assertions in F* are
 different—they are checked by the F* compiler *before* your program is
 executed.
 
