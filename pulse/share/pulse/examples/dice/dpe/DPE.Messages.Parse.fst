@@ -160,7 +160,7 @@ let destruct_spec_command_message
     | Array [Int64 _ cid'; vargs'] -> True
     | _ -> False))
   [SMTPat (Spec.command_message v)]
-= ()
+= assert_norm (Spec.command_message v)
 noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_args_postcond
   (cid: U64.t)

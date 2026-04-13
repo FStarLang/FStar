@@ -17,10 +17,6 @@ module Bug518
 
 open FStar.All
 
-//This workaround makes it typecheck
-//let op_Amp_Amp = Prims.op_AmpAmp
-
-[@@expect_failure [58]]
 let test () =
   let x = alloc 0 in
   (!x = 1) && (!x = 1)
