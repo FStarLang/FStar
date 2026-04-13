@@ -3730,6 +3730,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
     let try_match_heuristic orig wl s1 s2 t1t2_opt =
         let env = p_env wl orig in
         let try_solve_branch scrutinee p =
+            let tx = UF.new_transaction () in
             let (Flex (_t, uv, _args), wl) = destruct_flex_t scrutinee wl  in
             //
             // We add g_pat_as_exp implicits to the worklist later
@@ -3807,7 +3808,6 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                                   g_pat_term.deferred
                                   g_pat_term.deferred_to_tac
                                   (Listlike.empty) in
-              let tx = UF.new_transaction () in
               match solve wl' with
               | Success (_, defer_to_tac, imps) ->
                   let wl' = {wl' with attempting=[orig]} in
@@ -3826,7 +3826,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
                 UF.rollback tx;
                 None
             end
-            else None
+            else (UF.rollback tx; None)
         in
         match t1t2_opt with
         | None -> Inr None
