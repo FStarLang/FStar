@@ -9,15 +9,15 @@ let f_mpure (uu___ : unit) : Prims.int=
   failwith "Not yet implemented: Erasable.f_mpure"
 let eff_test1 (uu___ : unit) : Prims.int= f_mpure ()
 let eff_test3 (n : unit) : Prims.int=
-  let uu___ = f_mpure () in uu___ + (Prims.of_int (2))
+  let uu___ = f_mpure () in uu___ + (Prims.of_int 2)
 let eff_test4 (uu___ : unit) : Prims.int=
   let y = f_mpure () in
   let uu___1 = let uu___2 = eff_test3 () in uu___2 + y in
-  uu___1 + (Prims.of_int (2))
+  uu___1 + (Prims.of_int 2)
 let eff_test5 (b : Prims.bool) : Prims.int=
   if b
   then eff_test4 ()
-  else (let uu___ = eff_test3 () in uu___ + (Prims.of_int (2)))
+  else (let uu___ = eff_test3 () in uu___ + (Prims.of_int 2))
 let eff_test6 (b : Prims.bool) : Prims.int= eff_test3 ()
 let lift_MGHOST_MDIV (f : ('a, Obj.t) repr) : ('a, Obj.t) repr= f
 let f_mdiv (uu___ : unit) : Prims.int=

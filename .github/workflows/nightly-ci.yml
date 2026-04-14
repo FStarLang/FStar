@@ -1,0 +1,81 @@
+name: Nightly CI
+
+# Run the heavier CI checks (opam, nix, smoke tests) on a nightly
+# schedule instead of on every push. See ci.yml for context.
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  opam:
+    name: opam
+    uses: ./.github/workflows/build-opam.yml
+
+  nix-build:
+    name: nix
+    uses: ./.github/workflows/nix.yml
+
+  build:
+    name: build
+    uses: ./.github/workflows/build-packages.yml
+
+  binary-smoke:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+
+      - run: tar xzf fstar.tar.gz
+
+      - name: Smoke test
+        run: |
+          ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./fstar/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe B.fst
+
+  ocaml-smoke:
+    needs: build
+    strategy:
+      matrix:
+        pak:
+          - fstar-src.tar.gz
+        os:
+          - ubuntu-24.04
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.13.3
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.pak }}
+      - run: tar xzf ${{ matrix.pak }}
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.3.0
+
+      - run: opam install . --deps-only --with-test
+        working-directory: fstar
+      - run: eval $(opam env) && make -kj$(nproc) ADMIT=1
+        working-directory: fstar
+
+      - name: Smoke test
+        run: |
+          ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./out/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./out/bin/fstar.exe B.fst
+        working-directory: fstar

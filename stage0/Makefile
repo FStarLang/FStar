@@ -101,8 +101,10 @@ clean: trim
 	rm -rf $(CURDIR)/out
 	rm -rf ulib.checked
 	rm -rf fstarc.checked
+	rm -rf pulse/common.checked
+	rm -rf pulse/pulse.checked
 
-all: install_lib install_fstarc
+all: install_lib install_fstarc install_pulse
 
 install_fstarc: install_lib
 # ^ The windows build in Github actions seems to sporadically
@@ -110,9 +112,62 @@ install_fstarc: install_lib
 # some kind of stupid race, so sequentialize these two install
 # phases.
 
+# Build and install Pulse library, if present.
+ifneq ($(wildcard pulse/),)
+
+check_pulse_common: check_lib
+	$(call msg, "CHECK PULSE COMMON")
+	env \
+	  SRC=pulse/common \
+	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
+	  CACHE_DIR=pulse/common.checked \
+	  TAG=pulse_common \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
+	  FSTAR_ROOT=$(CURDIR) \
+	  OTHERFLAGS='--include ulib.checked' \
+	  DEPFLAGS='--already_cached Prims,FStar,FStarC' \
+	  ROOTS="$$(find pulse/common -name '*.fst' -o -name '*.fsti' | tr '\n' ' ')" \
+	  $(MAKE) -f mk/generic-1.mk verify
+
+check_pulse: check_pulse_common
+	$(call msg, "CHECK PULSE")
+	env \
+	  SRC=pulse/pulse \
+	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
+	  CACHE_DIR=pulse/pulse.checked \
+	  TAG=pulse \
+	  CODEGEN=none \
+	  OUTPUT_DIR=none \
+	  FSTAR_ROOT=$(CURDIR) \
+	  OTHERFLAGS='--include ulib.checked --include pulse/common --include pulse/common.checked' \
+	  DEPFLAGS='--already_cached Prims,FStar,FStarC' \
+	  ROOTS="$$(find pulse/pulse -name '*.fst' -o -name '*.fsti' | tr '\n' ' ')" \
+	  $(MAKE) -f mk/generic-1.mk verify
+
+install_pulse: check_pulse
+	$(call msg, "INSTALL PULSE")
+	mkdir -p out/lib/fstar/pulse
+	cp -H -p -r pulse/common          out/lib/fstar/pulse/common
+	cp -H -p -r pulse/common.checked  out/lib/fstar/pulse/common.checked
+	cp -H -p -r pulse/pulse           out/lib/fstar/pulse/pulse
+	cp -H -p -r pulse/pulse.checked   out/lib/fstar/pulse/pulse.checked
+	echo 'common'         >> out/lib/fstar/pulse/fstar.include
+	echo 'common.checked' >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse'          >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse.checked'  >> out/lib/fstar/pulse/fstar.include
+	echo 'pulse'          >> out/lib/fstar/fstar.include
+
+else
+
+install_pulse:
+	@true
+
+endif
+
 # Needed for 'opam install'
 PREFIX ?= /usr/local
-install: install_lib install_fstarc
+install: install_lib install_fstarc install_pulse
 	mkdir -p $(PREFIX)
 	cp -r out/* $(PREFIX)
 
@@ -123,5 +178,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2025-12-15 10:20:20 -0800
-export FSTAR_COMMIT=2ce4ca2d71973a9f96c84de114fa28e4302ccb74
+export FSTAR_COMMITDATE=2026-03-16 17:18:27 -0700
+export FSTAR_COMMIT=7dca050132a239d02361b33cb24c11240d81cf7e

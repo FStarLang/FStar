@@ -1,0 +1,465 @@
+/* krml header omitted for test repeatability */
+
+
+#include "Example_Hashtable.h"
+
+static size_t size_t_mod(size_t x, size_t y)
+{
+  return x % y;
+}
+
+size_t Example_Hashtable_hash(size_t x)
+{
+  return x;
+}
+
+typedef struct cell__size_t_Example_Hashtable_data_s cell__size_t_Example_Hashtable_data;
+
+typedef struct ht_t__size_t_Example_Hashtable_data_s
+{
+  size_t sz;
+  size_t (*hashf)(size_t x0);
+  cell__size_t_Example_Hashtable_data *contents;
+}
+ht_t__size_t_Example_Hashtable_data;
+
+static ht_t__size_t_Example_Hashtable_data
+mk_ht__size_t_Example_Hashtable_data(
+  size_t sz,
+  size_t (*hashf)(size_t x0),
+  cell__size_t_Example_Hashtable_data *contents
+)
+{
+  return
+    ((ht_t__size_t_Example_Hashtable_data){ .sz = sz, .hashf = hashf, .contents = contents });
+}
+
+#define Clean 0
+#define Zombie 1
+#define Used 2
+
+typedef uint8_t cell__size_t_Example_Hashtable_data_tags;
+
+typedef struct cell__size_t_Example_Hashtable_data_s
+{
+  cell__size_t_Example_Hashtable_data_tags tag;
+  size_t k;
+  Example_Hashtable_data v;
+}
+cell__size_t_Example_Hashtable_data;
+
+static ht_t__size_t_Example_Hashtable_data
+alloc__size_t_Example_Hashtable_data(size_t (*hashf)(size_t x0), size_t l)
+{
+  KRML_CHECK_SIZE(sizeof (cell__size_t_Example_Hashtable_data), l);
+  cell__size_t_Example_Hashtable_data
+  *contents = KRML_HOST_MALLOC(sizeof (cell__size_t_Example_Hashtable_data) * l);
+  if (contents != NULL)
+    for (uint32_t _i = 0U; _i < l; ++_i)
+      contents[_i] = ((cell__size_t_Example_Hashtable_data){ .tag = Clean });
+  ht_t__size_t_Example_Hashtable_data
+  ht = mk_ht__size_t_Example_Hashtable_data(l, hashf, contents);
+  return ht;
+}
+
+static cell__size_t_Example_Hashtable_data
+replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(
+  cell__size_t_Example_Hashtable_data **r,
+  size_t i,
+  cell__size_t_Example_Hashtable_data x
+)
+{
+  cell__size_t_Example_Hashtable_data *vc = *r;
+  cell__size_t_Example_Hashtable_data y = vc[i];
+  vc[i] = x;
+  return y;
+}
+
+static void
+write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(
+  cell__size_t_Example_Hashtable_data **r,
+  size_t i,
+  cell__size_t_Example_Hashtable_data x
+)
+{
+  cell__size_t_Example_Hashtable_data *vc = *r;
+  vc[i] = x;
+}
+
+#define None 0
+#define Some 1
+
+typedef uint8_t option__size_t_tags;
+
+typedef struct option__size_t_s
+{
+  option__size_t_tags tag;
+  size_t v;
+}
+option__size_t;
+
+typedef struct
+__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t_s
+{
+  ht_t__size_t_Example_Hashtable_data fst;
+  option__size_t snd;
+}
+__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t;
+
+static __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+lookup__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht, size_t k)
+{
+  size_t (*hashf)(size_t x0) = ht.hashf;
+  cell__size_t_Example_Hashtable_data *contents = ht.contents;
+  size_t cidx = size_t_mod(hashf(k), ht.sz);
+  size_t off = (size_t)0U;
+  option__size_t ret = { .tag = None };
+  bool _break = false;
+  bool cond;
+  if (_break)
+    cond = false;
+  else
+  {
+    size_t __anf0 = off;
+    cond = __anf0 <= ht.sz;
+  }
+  while (cond)
+  {
+    size_t voff = off;
+    if (voff == ht.sz)
+      _break = true;
+    bool _break1 = _break;
+    if (!_break1)
+    {
+      size_t sum = cidx + voff;
+      size_t idx = size_t_mod(sum, ht.sz);
+      cell__size_t_Example_Hashtable_data
+      c =
+        replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          idx,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
+      if (c.tag == Used)
+      {
+        Example_Hashtable_data v_ = c.v;
+        size_t k_ = c.k;
+        if (k_ == k)
+        {
+          ret = ((option__size_t){ .tag = Some, .v = idx });
+          replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+            idx,
+            ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+          _break = true;
+        }
+        else
+        {
+          off = voff + (size_t)1U;
+          replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+            idx,
+            ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+        }
+      }
+      else if (c.tag == Clean)
+      {
+        replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          idx,
+          c);
+        _break = true;
+      }
+      else if (c.tag == Zombie)
+      {
+        off = voff + (size_t)1U;
+        replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          idx,
+          c);
+      }
+      else
+      {
+        KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+          __FILE__,
+          __LINE__,
+          "unreachable (pattern matches are exhaustive in F*)");
+        KRML_HOST_EXIT(255U);
+      }
+    }
+    bool ite;
+    if (_break)
+      ite = false;
+    else
+    {
+      size_t __anf0 = off;
+      ite = __anf0 <= ht.sz;
+    }
+    cond = ite;
+  }
+  option__size_t o = ret;
+  cell__size_t_Example_Hashtable_data *vcontents = contents;
+  ht_t__size_t_Example_Hashtable_data
+  ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, ht.hashf, vcontents);
+  return
+    (
+      (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t){
+        .fst = ht1,
+        .snd = o
+      }
+    );
+}
+
+static ht_t__size_t_Example_Hashtable_data
+fst__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(
+  __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+  x
+)
+{
+  return x.fst;
+}
+
+static option__size_t
+snd__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(
+  __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+  x
+)
+{
+  return x.snd;
+}
+
+static cell__size_t_Example_Hashtable_data
+mk_used_cell__size_t_Example_Hashtable_data(size_t k, Example_Hashtable_data v)
+{
+  return ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k, .v = v });
+}
+
+typedef struct __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool_s
+{
+  ht_t__size_t_Example_Hashtable_data fst;
+  bool snd;
+}
+__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool;
+
+static __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool
+insert__size_t_Example_Hashtable_data(
+  ht_t__size_t_Example_Hashtable_data ht,
+  size_t k,
+  Example_Hashtable_data v
+)
+{
+  size_t (*hashf)(size_t x0) = ht.hashf;
+  cell__size_t_Example_Hashtable_data *contents = ht.contents;
+  size_t cidx = size_t_mod(hashf(k), ht.sz);
+  size_t off = (size_t)0U;
+  size_t idx = (size_t)0U;
+  bool _break = false;
+  bool cond;
+  if (_break)
+    cond = false;
+  else
+    cond = true;
+  while (cond)
+  {
+    size_t voff = off;
+    size_t sum = cidx + voff;
+    size_t vidx = size_t_mod(sum, ht.sz);
+    cell__size_t_Example_Hashtable_data
+    c =
+      replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+        vidx,
+        ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
+    if (c.tag == Used)
+    {
+      Example_Hashtable_data v_ = c.v;
+      size_t k_ = c.k;
+      if (k_ == k)
+      {
+        write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          vidx,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+        idx = vidx;
+        _break = true;
+      }
+      else
+      {
+        write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          vidx,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Used, .k = k_, .v = v_ }));
+        off = voff + (size_t)1U;
+      }
+    }
+    else if (c.tag == Clean)
+    {
+      write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+        vidx,
+        ((cell__size_t_Example_Hashtable_data){ .tag = Clean }));
+      idx = vidx;
+      _break = true;
+    }
+    else if (c.tag == Zombie)
+    {
+      cell__size_t_Example_Hashtable_data *vcontents = contents;
+      ht_t__size_t_Example_Hashtable_data
+      ht1 = { .sz = ht.sz, .hashf = hashf, .contents = vcontents };
+      __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+      res = lookup__size_t_Example_Hashtable_data(ht1, k);
+      contents =
+        fst__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res).contents;
+      option__size_t
+      o =
+        snd__Pulse_Lib_HashTable_Type_ht_t_size_t_Example_Hashtable_data_FStar_Pervasives_Native_option_size_t(res);
+      if (o.tag == Some)
+      {
+        size_t p = o.v;
+        write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+          p,
+          ((cell__size_t_Example_Hashtable_data){ .tag = Zombie }));
+        idx = vidx;
+        _break = true;
+      }
+      else if (o.tag == None)
+      {
+        idx = vidx;
+        _break = true;
+      }
+      else
+      {
+        KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+          __FILE__,
+          __LINE__,
+          "unreachable (pattern matches are exhaustive in F*)");
+        KRML_HOST_EXIT(255U);
+      }
+    }
+    else
+    {
+      KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+        __FILE__,
+        __LINE__,
+        "unreachable (pattern matches are exhaustive in F*)");
+      KRML_HOST_EXIT(255U);
+    }
+    bool ite;
+    if (_break)
+      ite = false;
+    else
+      ite = true;
+    cond = ite;
+  }
+  size_t __anf0 = idx;
+  write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+    __anf0,
+    mk_used_cell__size_t_Example_Hashtable_data(k, v));
+  cell__size_t_Example_Hashtable_data *__anf01 = contents;
+  ht_t__size_t_Example_Hashtable_data
+  ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, hashf, __anf01);
+  return
+    (
+      (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool){
+        .fst = ht1,
+        .snd = true
+      }
+    );
+}
+
+typedef struct
+__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_Example_Hashtable_data_s
+{
+  ht_t__size_t_Example_Hashtable_data fst;
+  Example_Hashtable_data snd;
+}
+__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_Example_Hashtable_data;
+
+static __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_Example_Hashtable_data
+replace__size_t_Example_Hashtable_data(
+  ht_t__size_t_Example_Hashtable_data ht,
+  size_t idx,
+  size_t k,
+  Example_Hashtable_data v
+)
+{
+  size_t (*hashf)(size_t x0) = ht.hashf;
+  cell__size_t_Example_Hashtable_data *contents = ht.contents;
+  cell__size_t_Example_Hashtable_data
+  v_ =
+    replace_i_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,
+      idx,
+      mk_used_cell__size_t_Example_Hashtable_data(k, v));
+  cell__size_t_Example_Hashtable_data *vcontents = contents;
+  ht_t__size_t_Example_Hashtable_data
+  ht1 = mk_ht__size_t_Example_Hashtable_data(ht.sz, hashf, vcontents);
+  if (v_.tag == Used)
+  {
+    Example_Hashtable_data v_1 = v_.v;
+    return
+      (
+        (__Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_Example_Hashtable_data){
+          .fst = ht1,
+          .snd = v_1
+        }
+      );
+  }
+  else if (v_.tag == Clean)
+  {
+    KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+      __FILE__,
+      __LINE__,
+      "Pulse.Lib.Dv.unreachable");
+    KRML_HOST_EXIT(255U);
+  }
+  else if (v_.tag == Zombie)
+  {
+    KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+      __FILE__,
+      __LINE__,
+      "Pulse.Lib.Dv.unreachable");
+    KRML_HOST_EXIT(255U);
+  }
+  else
+  {
+    KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+      __FILE__,
+      __LINE__,
+      "unreachable (pattern matches are exhaustive in F*)");
+    KRML_HOST_EXIT(255U);
+  }
+}
+
+static void dealloc__size_t_Example_Hashtable_data(ht_t__size_t_Example_Hashtable_data ht)
+{
+  KRML_HOST_FREE(ht.contents);
+}
+
+void Example_Hashtable_insert_lookup_and_replace(void)
+{
+  ht_t__size_t_Example_Hashtable_data
+  h = alloc__size_t_Example_Hashtable_data(Example_Hashtable_hash, (size_t)100U);
+  __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_bool
+  _letpattern =
+    insert__size_t_Example_Hashtable_data(h,
+      (size_t)1U,
+      ((Example_Hashtable_data){ .left = true, .right = false }));
+  ht_t__size_t_Example_Hashtable_data h1 = _letpattern.fst;
+  __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_FStar_Pervasives_Native_option__size_t
+  _letpattern1 = lookup__size_t_Example_Hashtable_data(h1, (size_t)1U);
+  ht_t__size_t_Example_Hashtable_data h2 = _letpattern1.fst;
+  option__size_t found = _letpattern1.snd;
+  if (found.tag == Some)
+  {
+    size_t i = found.v;
+    __Pulse_Lib_HashTable_Type_ht_t__size_t_Example_Hashtable_data_Example_Hashtable_data
+    _letpattern2 =
+      replace__size_t_Example_Hashtable_data(h2,
+        i,
+        (size_t)1U,
+        ((Example_Hashtable_data){ .left = false, .right = true }));
+    ht_t__size_t_Example_Hashtable_data h3 = _letpattern2.fst;
+    dealloc__size_t_Example_Hashtable_data(h3);
+  }
+  else if (found.tag == None)
+    dealloc__size_t_Example_Hashtable_data(h2);
+  else
+  {
+    KRML_HOST_EPRINTF("KaRaMeL abort at %s:%d\n%s\n",
+      __FILE__,
+      __LINE__,
+      "unreachable (pattern matches are exhaustive in F*)");
+    KRML_HOST_EXIT(255U);
+  }
+}
+

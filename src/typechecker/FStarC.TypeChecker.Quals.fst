@@ -53,7 +53,7 @@ let pairwise_compat #a (compat : a -> a -> bool) (xs : list a) : option (a & a) 
   in
   go [] xs
 
-let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
+let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
     (* If this is a splice, the attributes don't mean anything, they will
     just be passed through to the tactic to decide what to do. So just
     accept them. *)
@@ -144,7 +144,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
       let r = U.range_of_sigelt se in
       let no_dup_quals = BU.remove_dups (fun x y -> x=y) quals in
       let err msg =
-        raise_error r Errors.Fatal_QulifierListNotPermitted (
+        raise_error r Errors.Fatal_QualifierListNotPermitted (
           [ prefix 2 1 (text "Invalid qualifiers for declaration")
                        (bquotes <| doc_of_string (Print.sigelt_to_string_short se));
           ] @ msg
@@ -201,6 +201,26 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se =
         then err []
       | _ -> ()
 
+// A faster under-approximation of non_info_norm.
+// We call this function on every let-binding that has an interface val
+// (while non_info_norm is only called on types),
+// so it needs to be fast and shouldn't unfold too much.
+// The regular non_info_norm doesn't set Weak,
+// which makes the normalizer reduce lets.
+let non_info_norm_weak env t =
+  let steps = [UnfoldUntil delta_constant;
+               AllowUnboundUniverses;
+               EraseUniverses;
+               Primops;
+               Beta; Iota;
+               HNF;
+               Weak;
+               Unascribe;   //remove ascriptions
+               ForExtraction //and refinement types
+               ]
+  in
+  non_informative env (N.normalize steps env t)
+
 let check_erasable env quals (r:Range.t) se =
   let lids = U.lids_of_sigelt se in
   let val_exists =
@@ -214,21 +234,44 @@ let check_erasable env quals (r:Range.t) se =
   in
   let se_has_erasable_attr = U.has_attribute se.sigattrs FStarC.Parser.Const.erasable_attr in
   if ((val_exists && val_has_erasable_attr) && not se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Declaration is marked `erasable` but the definition is not.";
          ];
   if ((val_exists && not val_has_erasable_attr) && se_has_erasable_attr)
-  then raise_error r Errors.Fatal_QulifierListNotPermitted [
+  then raise_error r Errors.Fatal_QualifierListNotPermitted [
            text "Mismatch of attributes between declaration and definition.";
            text "Definition is marked `erasable` but the declaration is not.";
          ];
+  if not se_has_erasable_attr && not (Options.ide ()) then begin
+    match se.sigel with
+    | Sig_let {lbs=(false, [lb])} ->
+      let Inr lbname = lb.lbname in
+      let has_iface_val = match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+        | Some iface_decls -> iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name))
+        | None -> false in
+      let val_decl = Env.try_lookup_val_decl env lbname.fv_name in
+      if has_iface_val && Some? val_decl then
+        let _, body, _ = U.abs_formals lb.lbdef in
+          let Some ((us, t), _) = val_decl in
+        let known_to_be_erasable =
+          let env = Env.push_univ_vars env us in
+          N.non_info_sort_norm env t in
+        if not known_to_be_erasable && non_info_norm_weak env body then
+          log_issue lbname Error_MustEraseMissing [
+            text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
+                  but its interface hides this fact." (show lbname));
+            text (Format.fmt1 "Add the `erasable` \
+                  attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
+          ]
+    | _ -> ()
+  end;
   if se_has_erasable_attr
   then begin
     match se.sigel with
     | Sig_bundle _ ->
       if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
               text "Incompatible attributes and qualifiers: \
                erasable types do not support decidable equality and must be marked `noeq`."
              ]
@@ -240,7 +283,7 @@ let check_erasable env quals (r:Range.t) se =
     | Sig_let {lbs=(false, [lb])} ->
       let _, body, _ = U.abs_formals lb.lbdef in
       if not (N.non_info_norm env body)
-      then raise_error body Errors.Fatal_QulifierListNotPermitted [
+      then raise_error body Errors.Fatal_QualifierListNotPermitted [
                   text "Illegal attribute: \
                    the `erasable` attribute is only permitted on inductive type definitions \
                    and abbreviations for non-informative types.";
@@ -249,12 +292,12 @@ let check_erasable env quals (r:Range.t) se =
 
     | Sig_new_effect ({mname=eff_name}) ->  //AR: allow erasable on total effects
       if not (List.contains TotalEffect quals)
-      then raise_error r Errors.Fatal_QulifierListNotPermitted [
+      then raise_error r Errors.Fatal_QualifierListNotPermitted [
                text "Effect" ^/^ pp eff_name ^/^ text "is marked erasable but only total effects are allowed to be erasable."
              ]
 
     | _ ->
-      raise_error r Errors.Fatal_QulifierListNotPermitted [
+      raise_error r Errors.Fatal_QualifierListNotPermitted [
           text "Illegal attribute: \
           the `erasable` attribute is only permitted on inductive type definitions \
           and abbreviations for non-informative types.";
@@ -310,7 +353,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           | Tm_fvar fv -> S.fv_eq_lid fv FStarC.Parser.Const.tcinstance_lid
           | _ -> false)
   in
-  let check_instance_typ (ty:typ) : unit =
+  let check_instance_typ (ty:typ) : ML unit =
     let _, res = U.arrow_formals_comp ty in
     if not (U.is_total_comp res) then
       log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
@@ -352,10 +395,9 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
           text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 
-let check_sigelt_quals_post env se =
+let check_sigelt_quals_post env se : ML unit =
   let quals = se.sigquals in
   let r = se.sigrng in
   check_erasable env quals r se;
-  check_must_erase_attribute env se;
   check_typeclass_instance_attribute env r se;
   ()

@@ -462,7 +462,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
 [@@ remove_unused_type_parameters [0; 1; 2]]
-val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
+val contains (#a:Type) (s:seq a) (x:a) : Tot prop
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
   : Lemma (k < Seq.length s /\ Seq.index s k == x

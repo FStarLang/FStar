@@ -1,6 +1,6 @@
 /stage1/out
 /stage2/out
-/stage3
+/stage3/out
 /out
 /*.tar
 /*.tar.gz
@@ -55,7 +55,10 @@ tags
 *.checked
 *.checked.lax
 *.dump
-*.runlim
+*.ramon
 
 # devcontainer temp files
 /.devcontainer_build.log
+
+boot-diff/**
+__pycache__/

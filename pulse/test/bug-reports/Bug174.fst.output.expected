@@ -1,0 +1,8 @@
+* Info at Bug174.fst(15,10-15,37):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      Pulse.Lib.Reference.pts_to r (*?u173*)_
+  - In the context:
+      Pulse.Lib.Reference.pts_to r v
+

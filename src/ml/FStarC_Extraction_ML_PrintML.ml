@@ -1,13 +1,6 @@
 open List
-open Lexing
-open Ppxlib_ast
-open Parsetree
-open Location
-open Pprintast
-open Ast_helper
-open Ast
+open Ppxlib
 open Ppxlib.Ast_builder.Default
-open Longident
 
 open FStarC_Extraction_ML_Syntax
 
@@ -29,13 +22,15 @@ let no_location : Location.t =
 
 let no_attrs: attributes = []
 
+let loc = no_location
+
 
 (* functions for generating names and paths *)
 let mk_sym s: string Location.loc = {txt=s; loc=no_location}
 
 let mk_sym_lident s: Longident.t Location.loc = {txt=s; loc=no_location}
 
-let mk_lident name = Lident name |> mk_sym_lident
+let mk_lident name = Longident.Lident name |> mk_sym_lident
 
 let mk_typ_name s =
   (* remove an apostrophe from beginning of type name *)
@@ -77,12 +72,12 @@ let path_to_ident ((l, sym): mlpath): Longident.t Asttypes.loc =
           mk_lident sym
        else
          match prefix with
-         | [] ->  Ldot(Lident path_abbrev, sym) |> mk_sym_lident
+         | [] ->  Longident.Ldot(Longident.Lident path_abbrev, sym) |> mk_sym_lident
          | p_hd::p_tl ->
-            let q = fold_left (fun x y -> Ldot (x,y)) (Lident p_hd) p_tl in
+            let q = fold_left (fun x y -> Longident.Ldot (x,y)) (Longident.Lident p_hd) p_tl in
             (match path_abbrev with
-             | "" -> Ldot(q, sym) |> mk_sym_lident
-             | _ -> Ldot(Ldot(q, path_abbrev), sym) |> mk_sym_lident)
+             | "" -> Longident.Ldot(q, sym) |> mk_sym_lident
+             | _ -> Longident.Ldot(Longident.Ldot(q, path_abbrev), sym) |> mk_sym_lident)
 
 let mk_top_mllb (e: mlexpr): mllb =
   {mllb_name="_";
@@ -93,23 +88,22 @@ let mk_top_mllb (e: mlexpr): mllb =
    mllb_attrs=[];
    print_typ=false }
 
-(* Find the try_with in the default effect module. For instance this can be
-FStar.All.try_with (for most users) or FStarC.Effect.try_with (during
-bootstrapping with "--MLish --MLish_effect FStarC.Effect"). *)
-let try_with_ident () =
-  let lid = FStarC_Parser_Const.try_with_lid () in
-  let ns = FStarC_Ident.ns_of_lid lid in
-  let id = FStarC_Ident.ident_of_lid lid in
-  path_to_ident (List.map FStarC_Ident.string_of_id ns, FStarC_Ident.string_of_id id)
+(* Match try_with from any known effect module. At print time the per-file
+   --MLish option may no longer be active, so we match all known paths
+   rather than relying on the runtime option. *)
+let try_with_idents : Longident.t Asttypes.loc list = [
+  path_to_ident (["FStar"; "All"], "try_with");
+  path_to_ident (["FStarC"; "Effect"], "try_with");
+]
+let is_try_with_ident x = List.exists (fun tw -> x = tw) try_with_idents
 
-(* For integer constants (not 0/1) in this range we will use Prims.of_int
- * Outside this range we will use string parsing to allow arbitrary sized
- * integers.
- * Using int_zero/int_one removes int processing to create the int
- * Using of_int removes string processing to create the int
- *)
-let max_of_int_const = Z.of_int   65535
-let min_of_int_const = Z.of_int (-65536)
+(* For integer constants outside of this range we will use Prims.parse_int,
+ * to allow for arbitrary sized integers.
+ * For small integers, we prefer using of_int to avoid string parsing.
+ * OCaml guarantees a minimum width of 31 ( *not* 32), so we can generate
+ * literals safely for anything in [-2^30, 2^30 - 1]. *)
+let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
+let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
 
 let maybe_guts (s:string) : string =
   if FStarC_Options.codegen () = Some FStarC_Options.Plugin
@@ -117,7 +111,7 @@ let maybe_guts (s:string) : string =
   else s
 
 (* mapping functions from F* ML AST to Parsetree *)
-let build_constant (c: mlconstant): Parsetree.constant =
+let build_constant_expr (c: mlconstant) : expression =
   let stdint_module (s:FStarC_Const.signedness) (w:FStarC_Const.width) : string =
     let sign = match s with
       | FStarC_Const.Signed -> "Int"
@@ -128,73 +122,79 @@ let build_constant (c: mlconstant): Parsetree.constant =
     | FStarC_Const.Int16 -> with_w "16"
     | FStarC_Const.Int32 -> with_w "32"
     | FStarC_Const.Int64 -> with_w "64"
-    | FStarC_Const.Sizet -> with_w "64" in
+    | FStarC_Const.Sizet -> with_w "64"
+  in
   match c with
-  | MLC_Int (v, None) ->
-      let s = match Z.of_string v with
-        | x when x = Z.zero ->
-          maybe_guts "Prims.int_zero"
-        | x when x = Z.one ->
-          maybe_guts "Prims.int_one"
-        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
-            BatString.concat v ["(Prims.of_int ("; "))"]
-        | x ->
-            BatString.concat v ["(Prims.parse_int \""; "\")"] in
-      Const.integer s
+  | MLC_Unit -> pexp_construct ~loc (mk_lident "()") None
+  | MLC_Bool b ->
+     let id = if b then "true" else "false" in
+     pexp_construct ~loc (mk_lident id) None
   (* Special case for UInt8, as it's realized as OCaml built-in int type *)
   | MLC_Int (v, Some (FStarC_Const.Unsigned, FStarC_Const.Int8)) ->
-      Const.integer v
-  | MLC_Int (v, Some (s, w)) ->
-      let s = match Z.of_string v with
-        | x when x = Z.zero ->
-            BatString.concat "" [stdint_module s w; ".zero"]
-        | x when x = Z.one ->
-            BatString.concat "" [stdint_module s w; ".one"]
-        | x when (min_of_int_const < x) && (x < max_of_int_const) ->
-            BatString.concat "" ["("; stdint_module s w; ".of_int ("; v; "))"]
-        | x ->
-            BatString.concat "" ["("; stdint_module s w; ".of_string \""; v; "\")"] in
-      Const.integer s
-  | MLC_Float v -> Const.float (string_of_float v)
-  | MLC_Char v -> Const.int v
-  | MLC_String v -> Const.string v
+      pexp_constant ~loc @@ Pconst_integer (v, None)
+  | MLC_Int (v, None) -> (
+    (* Prims integers *)
+    match Z.of_string v with
+    | x when x = Z.zero -> pexp_ident ~loc (mk_lident "Prims.int_zero")
+    | x when x = Z.one  -> pexp_ident ~loc (mk_lident "Prims.int_one")
+    | x when min_of_int_const <= x && x <= max_of_int_const ->
+      let r = pexp_ident ~loc (mk_lident "Prims.of_int") in
+      let n = pexp_constant ~loc (Pconst_integer (v, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+    | x ->
+      let r = pexp_ident ~loc (mk_lident "Prims.parse_int") in
+      let n = pexp_constant ~loc (Pconst_string (v, no_location, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+  )
+  | MLC_Int (v, Some (s, w)) -> (
+    (* Machine integers. *)
+    match Z.of_string v with
+    | x when x = Z.zero -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".zero")
+    | x when x = Z.one  -> pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".one")
+    | x when min_of_int_const <= x && x <= max_of_int_const ->
+      let r = pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".of_int") in
+      let n = pexp_constant ~loc (Pconst_integer (v, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+    | x ->
+      let r = pexp_ident ~loc @@ mk_lident (stdint_module s w ^ ".of_string") in
+      let n = pexp_constant ~loc (Pconst_string (v, no_location, None)) in
+      pexp_apply ~loc r [(Nolabel, n)]
+  )
+  | MLC_Float v -> pexp_constant ~loc @@ Pconst_float (string_of_float v, None)
+  | MLC_Char v -> pexp_constant ~loc @@ Pconst_integer (string_of_int v, None)
+  | MLC_String v -> pexp_constant ~loc @@ Pconst_string (v, no_location, None)
   | _ -> failwith "Case not handled"
 
-let build_constant_expr (c: mlconstant): expression =
+let build_constant_pat (c: mlconstant): pattern =
   match c with
-  | MLC_Unit -> Exp.construct (mk_lident "()") None
+  | MLC_Unit -> ppat_construct ~loc (mk_lident "()") None
   | MLC_Bool b ->
      let id = if b then "true" else "false" in
-     Exp.construct (mk_lident id) None
-  | _ -> Exp.constant (build_constant c)
-
-let build_constant_pat (c: mlconstant): pattern_desc =
-  match c with
-  | MLC_Unit -> Ppat_construct (mk_lident "()", None)
-  | MLC_Bool b ->
-     let id = if b then "true" else "false" in
-     Ppat_construct (mk_lident id, None)
-  | _ -> Ppat_constant (build_constant c)
+     ppat_construct ~loc (mk_lident id) None
+  | MLC_Float v  -> ppat_constant ~loc @@ Pconst_float (string_of_float v, None)
+  | MLC_Char v   -> ppat_constant ~loc @@ Pconst_integer (string_of_int v, None)
+  | MLC_String v -> ppat_constant ~loc @@ Pconst_string (v, no_location, None)
+  | MLC_Int _ ->
+    failwith "PrintML: unexpected integer pattern, should have become a pattern guard"
 
 let rec build_pattern (p: mlpattern): pattern =
   match p with
-  | MLP_Wild -> Pat.any ()
-  | MLP_Const c -> build_constant_pat c |> Pat.mk
-  | MLP_Var sym -> Pat.var (mk_sym sym)
-  | MLP_CTor args -> build_constructor_pat args |> Pat.mk
+  | MLP_Wild -> ppat_any ~loc
+  | MLP_Const c -> build_constant_pat c
+  | MLP_Var sym -> ppat_var ~loc (mk_sym sym)
+  | MLP_CTor args -> build_constructor_pat args
   | MLP_Branch l ->
      (match l with
       | [pat] -> build_pattern pat
-      | (pat1::tl) -> Pat.or_ (build_pattern pat1) (build_pattern (MLP_Branch tl))
+      | (pat1::tl) -> ppat_or ~loc (build_pattern pat1) (build_pattern (MLP_Branch tl))
       | [] -> failwith "Empty branch shouldn't happen")
   | MLP_Record (path, l) ->
      let fs = map (fun (x,y) -> (path_to_ident (path, x), build_pattern y)) l in
-     Pat.record fs Open (* does the closed flag matter? *)
-  | MLP_Tuple l -> Pat.tuple (map build_pattern l)
+     ppat_record ~loc fs Open
+  | MLP_Tuple l -> ppat_tuple ~loc (map build_pattern l)
 
 and build_constructor_pat ((path, sym), p) =
   let (path', name) =
-    (* resugaring the Cons and Nil from Prims *)
     (match path with
      | ["Prims"]
      | ["Fstarcompiler.Prims"] ->
@@ -205,22 +205,21 @@ and build_constructor_pat ((path, sym), p) =
      | _ -> (path, sym)) in
   match p with
   | [] ->
-     Ppat_construct (path_to_ident (path', name), None)
+     ppat_construct ~loc (path_to_ident (path', name)) None
   | [pat] ->
-     Ppat_construct (path_to_ident (path', name), Some ([], build_pattern pat))
+     Latest.ppat_construct ~loc (path_to_ident (path', name)) (Some ([], build_pattern pat))
   | pats ->
-     let inner = Pat.tuple (map build_pattern pats) in
-     Ppat_construct (path_to_ident(path', name), Some ([], inner))
+     let inner = ppat_tuple ~loc (map build_pattern pats) in
+     Latest.ppat_construct ~loc (path_to_ident(path', name)) (Some ([], inner))
 
 let rec build_core_type ?(annots = []) (ty: mlty): core_type =
   let t =
   match ty with
-  | MLTY_Var sym -> Typ.mk (Ptyp_var (mk_typ_name sym))
+  | MLTY_Var sym -> ptyp_var ~loc (mk_typ_name sym)
   | MLTY_Fun (ty1, tag, ty2) ->
      let c_ty1 = build_core_type ty1 in
      let c_ty2 = build_core_type ty2 in
-     let label = Nolabel in
-     Typ.mk (Ptyp_arrow (label,c_ty1,c_ty2))
+     ptyp_arrow ~loc Nolabel c_ty1 c_ty2
   | MLTY_Named (tys, (path, sym)) ->
      (* Note: bypassing F* interface *)
      if FStarC_Parser_Const_Tuples.is_tuple_constructor_string (String.concat "." (path@[sym])) then
@@ -229,25 +228,24 @@ let rec build_core_type ?(annots = []) (ty: mlty): core_type =
         * VD: Should other types named "tupleXX" where XX does not represent
         * the arity of the tuple be added to FStar.Pervasives.Native,
         * the condition below might need to be more specific. *)
-       Typ.mk (Ptyp_tuple (map build_core_type tys))
+       ptyp_tuple ~loc (map build_core_type tys)
      else
        let c_tys = map build_core_type tys in
        let p = path_to_ident (path, sym) in
-       let ty = Typ.mk (Ptyp_constr (p, c_tys)) in
-       ty
-  | MLTY_Tuple tys -> Typ.mk (Ptyp_tuple (map build_core_type tys))
-  | MLTY_Top -> Typ.mk (Ptyp_constr (mk_lident "Obj.t", []))
-  | MLTY_Erased -> Typ.mk (Ptyp_constr (mk_lident "unit", []))
+       ptyp_constr ~loc p c_tys
+  | MLTY_Tuple tys -> ptyp_tuple ~loc (map build_core_type tys)
+  | MLTY_Top -> ptyp_constr ~loc (mk_lident "Obj.t") []
+  | MLTY_Erased -> ptyp_constr ~loc (mk_lident "unit") []
   in
   if annots = []
   then t
-  else Typ.mk (Ptyp_poly (annots, t))
+  else ptyp_poly ~loc annots t
 
 let build_binding_pattern ?ty (sym : mlident) : pattern =
-    let p = Pat.mk (Ppat_var (mk_sym sym)) in
+    let p = ppat_var ~loc (mk_sym sym) in
     match ty with
     | None -> p
-    | Some ty -> Pat.mk (Ppat_constraint (p, ty))
+    | Some ty -> ppat_constraint ~loc p ty
 
 let resugar_prims_ops path: expression =
   (match path with
@@ -274,7 +272,7 @@ let resugar_prims_ops path: expression =
     mk_lident "(mod)"
   | (["Prims"], "op_Minus") -> mk_lident "~-"
   | path -> path_to_ident path)
-  |> Exp.ident
+  |> pexp_ident ~loc
 
 let resugar_if_stmts ep cases =
   if List.length cases = 2 then
@@ -282,25 +280,25 @@ let resugar_if_stmts ep cases =
     let case2 = BatList.last cases in
     (match case1.pc_lhs.ppat_desc with
      | Ppat_construct({txt=Lident "true"}, None) ->
-         Exp.ifthenelse ep case1.pc_rhs (Some case2.pc_rhs)
-     | _ -> Exp.match_ ep cases)
+         pexp_ifthenelse ~loc ep case1.pc_rhs (Some case2.pc_rhs)
+     | _ -> pexp_match ~loc ep cases)
   else
-    Exp.match_ ep cases
+    pexp_match ~loc ep cases
 
 let rec build_expr (e: mlexpr): expression =
   match e.expr with
   | MLE_Const c -> build_constant_expr c
-  | MLE_Var sym -> Exp.ident (mk_lident sym)
+  | MLE_Var sym -> pexp_ident ~loc (mk_lident sym)
   | MLE_Name path ->
      (match path with
       | (["Prims"], op) -> resugar_prims_ops path
-      | _ -> Exp.ident (path_to_ident path))
+      | _ -> pexp_ident ~loc (path_to_ident path))
   | MLE_Let ((flavour, lbs), expr) ->
      let recf = match flavour with
        | Rec -> Recursive
        | NonRec -> Nonrecursive in
      let val_bindings = map (build_binding false recf) lbs in
-     Exp.let_ recf val_bindings (build_expr expr)
+     pexp_let ~loc recf val_bindings (build_expr expr)
    | MLE_App (e, es) ->
       let args = map (fun x -> (Nolabel, build_expr x)) es in
       let f = build_expr e in
@@ -313,29 +311,28 @@ let rec build_expr (e: mlexpr): expression =
       let cases = map build_case branches in
       resugar_if_stmts ep cases
    | MLE_Coerce (e, _, _) ->
-      let r = Exp.ident (mk_lident "Obj.magic") in
-      Exp.apply r [(Nolabel, build_expr e)]
+      let r = pexp_ident ~loc (mk_lident "Obj.magic") in
+      pexp_apply ~loc r [(Nolabel, build_expr e)]
    | MLE_CTor args -> build_constructor_expr args
    | MLE_Seq args -> build_seq args
-   | MLE_Tuple l -> Exp.tuple (map build_expr l)
+   | MLE_Tuple l -> pexp_tuple ~loc (map build_expr l)
    | MLE_Record (path, _, l) ->
       let fields = map (fun (x,y) -> (path_to_ident(path, x), build_expr y)) l in
-      Exp.record fields None
+      pexp_record ~loc fields None
    | MLE_Proj (e, path) ->
-      Exp.field (build_expr e) (path_to_ident (path))
-   (* MLE_If always desugared to match? *)
+      pexp_field ~loc (build_expr e) (path_to_ident (path))
    | MLE_If (e, e1, e2) ->
-      Exp.ifthenelse (build_expr e) (build_expr e1) (BatOption.map build_expr e2)
+      pexp_ifthenelse ~loc (build_expr e) (build_expr e1) (BatOption.map build_expr e2)
    | MLE_Raise (path, es) ->
-      let r = Exp.ident (mk_lident "raise") in
+      let r = pexp_ident ~loc (mk_lident "raise") in
       let args = map (fun x -> (Nolabel, build_expr x)) es in
-      Exp.apply r args
+      pexp_apply ~loc r args
    | MLE_Try (e, cs) ->
-      Exp.try_ (build_expr e) (map build_case cs)
+      pexp_try ~loc (build_expr e) (map build_case cs)
 
 and resugar_app f args es: expression =
   match f.pexp_desc with
-  | Pexp_ident x when x = try_with_ident () ->
+  | Pexp_ident x when is_try_with_ident x ->
     (* resugar try_with to a try...with
        try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a *)
     assert (length es == 2);
@@ -351,11 +348,11 @@ and resugar_app f args es: expression =
      * For the cases, we can't a similar trick, so we try to reverse-engineer
      * the shape of the term in order to obtain a proper set. See get_variants. *)
 
-    let body = Exp.apply (build_expr s) [(Nolabel, build_expr ml_unit)] in
+    let body = pexp_apply ~loc (build_expr s) [(Nolabel, build_expr ml_unit)] in
     let variants = get_variants cs in
-    Exp.try_ body variants
+    pexp_try ~loc body variants
 
-  | _ -> Exp.apply f args
+  | _ -> pexp_apply ~loc f args
 
 and get_variants (e : mlexpr) : Parsetree.case list =
     match e.expr with
@@ -371,7 +368,7 @@ and get_variants (e : mlexpr) : Parsetree.case list =
 and build_seq args =
   match args with
   | [hd] -> build_expr hd
-  | hd::tl -> Exp.sequence (build_expr hd) (build_seq tl)
+  | hd::tl -> pexp_sequence ~loc (build_expr hd) (build_seq tl)
   | [] -> failwith "Empty sequence should never happen"
 
 and build_constructor_expr ((path, sym), exp): expression =
@@ -383,17 +380,17 @@ and build_constructor_expr ((path, sym), exp): expression =
     | ["Fstarcompiler.Prims"], "Nil" -> ([], "[]")
     | path, x -> (path, x)) in
   match exp with
-  | [] -> Exp.construct (path_to_ident(path', name)) None
+  | [] -> pexp_construct ~loc (path_to_ident(path', name)) None
   | [e] ->
-     Exp.construct (path_to_ident(path', name)) (Some (build_expr e))
+     pexp_construct ~loc (path_to_ident(path', name)) (Some (build_expr e))
   | es ->
-      let inner = Exp.tuple (map build_expr es) in
-      Exp.construct (path_to_ident(path', name)) (Some inner)
+      let inner = pexp_tuple ~loc (map build_expr es) in
+      pexp_construct ~loc (path_to_ident(path', name)) (Some inner)
 
 and build_fun l e =
   let mk_binder {mlbinder_name=id; mlbinder_ty=ty} =
-    pparam_val ?loc:Location.none Nolabel None (build_binding_pattern id) in
-  pexp_function ?loc:Location.none (List.map mk_binder l) None (Pfunction_body (build_expr e))
+    pparam_val ~loc Nolabel None (build_binding_pattern id) in
+  pexp_function ~loc (List.map mk_binder l) None (Pfunction_body (build_expr e))
 
 and build_case ((lhs, guard, rhs): mlbranch): case =
   {pc_lhs = (build_pattern lhs);
@@ -410,19 +407,19 @@ and build_expr_with_type (e: mlexpr) (t: mlty) : expression =
     (* this breaks the typing information, but build_expr only looks at e.expr *)
     let e = { e with expr = MLE_Fun (ls, body) } in
     let argpat = build_binding_pattern ?ty:(Some (build_core_type mlbinder_ty)) mlbinder_name in
-    pexp_fun ?loc:Location.none Nolabel None argpat (build_expr_with_type e ty2)
+    pexp_fun ~loc Nolabel None argpat (build_expr_with_type e ty2)
   | _ ->
     let e = build_expr e in
     let ty = build_core_type t in
     (* Functions with no arguments are still printed as type ascriptions. *)
-    pexp_function ?loc:Location.none [] (Some (Pconstraint ty)) (Pfunction_body e)
+    pexp_function ~loc [] (Some (Pconstraint ty)) (Pfunction_body e)
 
 and build_binding (toplevel: bool) is_rec (lb: mllb): value_binding =
   let e, ty =
     match lb.mllb_tysc with
     | Some ((_::_) as vars, ty) when toplevel && is_rec = Recursive ->
       (* add type annotation for recursive binds to enable support for polymorphic recursion *)
-      let mk1 s = mkloc (String.sub s 1 (String.length s - 1)) none in
+      let mk1 s = {txt = String.sub s 1 (String.length s - 1); loc = Location.none} in
       let vars = List.map mk1 (ty_param_names vars) in
       build_expr lb.mllb_def, Some (build_core_type ~annots:vars ty)
    | Some (_vars, ty) when toplevel ->
@@ -430,16 +427,16 @@ and build_binding (toplevel: bool) is_rec (lb: mllb): value_binding =
       build_expr_with_type lb.mllb_def ty, None
     | _ ->
       build_expr lb.mllb_def, None in
-  Vb.mk (build_binding_pattern ?ty:ty lb.mllb_name) e
+  value_binding ~loc ~pat:(build_binding_pattern ?ty:ty lb.mllb_name) ~expr:e
 
 let build_label_decl (sym, ty): label_declaration =
-  Type.field (mk_sym sym) (build_core_type ty)
+  label_declaration ~loc ~name:(mk_sym sym) ~mutable_:Immutable ~type_:(build_core_type ty)
 
 let build_constructor_decl (sym, tys): constructor_declaration =
   let tys = List.map snd tys in
-  let args = if BatList.is_empty tys then None else
-    Some (Pcstr_tuple (map build_core_type tys)) in
-  Type.constructor ?args:args (mk_sym sym)
+  let args = if BatList.is_empty tys then Pcstr_tuple []
+    else Pcstr_tuple (map build_core_type tys) in
+  constructor_declaration ~loc ~name:(mk_sym sym) ~args ~res:None
 
 let build_ty_kind (b: mltybody): type_kind =
   match b with
@@ -467,7 +464,7 @@ let type_metadata (md : metadata): attributes option =
     let str = String.concat "," deriving in
     Some [ {
       attr_name = mk_sym "deriving";
-      attr_payload = PStr [Str.eval (Exp.ident (mk_lident str))];
+      attr_payload = PStr [pstr_eval ~loc (pexp_ident ~loc (mk_lident str)) []];
       attr_loc = no_location }
     ]
   else
@@ -476,10 +473,10 @@ let type_metadata (md : metadata): attributes option =
 let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_type option =
   match List.filter (function PpxDerivingShowConstant _ -> true | _ -> false) md with
   | [PpxDerivingShowConstant s] ->
-      let e = Exp.apply (Exp.ident (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, Exp.ident (mk_lident "fmt")); (Nolabel, Exp.constant (Const.string s))] in
+      let e = pexp_apply ~loc (pexp_ident ~loc (path_to_ident (["Format"], "pp_print_string"))) [(Nolabel, pexp_ident ~loc (mk_lident "fmt")); (Nolabel, pexp_constant ~loc (Pconst_string (s, no_location, None)))] in
       let deriving_const = {
         attr_name = mk_sym "printer";
-        attr_payload = PStr [Str.eval (Exp.fun_ Nolabel None (build_binding_pattern "fmt") (Exp.fun_ Nolabel None (Pat.any ()) e))];
+        attr_payload = PStr [pstr_eval ~loc (pexp_fun ~loc Nolabel None (build_binding_pattern "fmt") (pexp_fun ~loc Nolabel None (ppat_any ~loc) e)) []];
         attr_loc = no_location } in
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
@@ -492,58 +489,61 @@ let build_one_tydecl ({tydecl_name=x;
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
-  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) (ty_param_names tparams)) in
-  let (ptype_manifest: core_type option) =
+  let ptype_params = map (fun sym -> ptyp_var ~loc (mk_typ_name sym), (NoVariance, NoInjectivity)) (ty_param_names tparams) in
+  let ptype_manifest =
     BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
-  let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
-  let ptype_attrs = type_metadata attrs in
-  Type.mk ?params:ptype_params ?kind:ptype_kind ?manifest:ptype_manifest ?attrs:ptype_attrs ptype_name
+  let ptype_kind = BatOption.map_default build_ty_kind Ptype_abstract body in
+  let ptype_attrs = match type_metadata attrs with None -> [] | Some a -> a in
+  type_declaration ~loc ~name:ptype_name ~params:ptype_params ~cstrs:[]
+    ~kind:ptype_kind ~private_:Public ~manifest:ptype_manifest
+  |> fun td -> { td with ptype_attributes = ptype_attrs }
 
-let build_tydecl (td: mltydecl): structure_item_desc option =
+let build_tydecl (td: mltydecl): structure_item option =
   let recf = Recursive in
   let type_declarations = map build_one_tydecl td in
-  if type_declarations = [] then None else Some (Pstr_type (recf, type_declarations))
+  if type_declarations = [] then None else Some (pstr_type ~loc recf type_declarations)
 
 let build_exn (sym, tys): type_exception =
   let tys = List.map snd tys in
   let name = mk_sym sym in
-  let args = Some (Pcstr_tuple (map build_core_type tys)) in
-  let ctor = Te.decl ?args:args name in
-  Te.mk_exception ctor
+  let args = Pcstr_tuple (map build_core_type tys) in
+  let ctor = extension_constructor ~loc ~name ~kind:(Pext_decl ([], args, None)) in
+  type_exception ~loc ctor
 
 let build_module1 (m1: mlmodule1): structure_item option =
   match m1.mlmodule1_m with
   | MLM_Ty tydecl ->
      (match build_tydecl tydecl with
-      | Some t -> Some (Str.mk t)
+      | Some t -> Some t
       | None   -> None)
   | MLM_Let (flav, mllbs) ->
      let recf = match flav with | Rec -> Recursive | NonRec -> Nonrecursive in
      let bindings = map (build_binding true recf) mllbs in
-     Some (Str.value recf bindings)
-  | MLM_Exn exn -> Some (Str.exception_ (build_exn exn))
+     Some (pstr_value ~loc recf bindings)
+  | MLM_Exn exn -> Some (pstr_exception ~loc (build_exn exn))
   | MLM_Top expr ->
       let lb = mk_top_mllb expr in
       let binding = build_binding true Nonrecursive lb in
-      Some (Str.value Nonrecursive [binding])
+      Some (pstr_value ~loc Nonrecursive [binding])
   | MLM_Loc (p, f) -> None
+
+let mk_open name =
+  pstr_open ~loc (open_infos ~loc ~override:Fresh ~expr:(pmod_ident ~loc (mk_lident name)))
 
 let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
   | Some(_sig, m) ->
     let open_plugin_lib =
       if FStarC_Options.codegen () = Some FStarC_Options.Plugin (* NB: PluginNoLib does not open the library *)
-      then [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Fstar_pluginlib")))]
+      then [mk_open "Fstar_pluginlib"]
       else []
     in
     let open_guts =
       if FStarC_Options.codegen () = Some FStarC_Options.PluginNoLib
-      then [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Fstarcompiler")))]
+      then [mk_open "Fstarcompiler"]
       else []
     in
-    let open_prims =
-      [Str.open_ (Opn.mk ?override:(Some Fresh) (Mod.ident (mk_lident "Prims")))]
-    in
+    let open_prims = [mk_open "Prims"] in
     open_plugin_lib @ open_guts @ open_prims @ (map build_module1 m |> flatmap opt_to_list)
   | None -> []
 
@@ -555,7 +555,7 @@ let build_ast (modul : mlmodule) =
 
 let print_module (s: structure) : string =
   let fmt = Format.str_formatter in
-  structure fmt s;
+  Pprintast.structure fmt s;
   let res = Format.flush_str_formatter () in
   res
 

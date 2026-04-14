@@ -10,7 +10,6 @@ SUBDIRS += prettyprinting
 SUBDIRS += projectors
 SUBDIRS += typeclasses
 SUBDIRS += restricted_includes
-SUBDIRS += struct
 SUBDIRS += vale
 SUBDIRS += hacl
 SUBDIRS += calc

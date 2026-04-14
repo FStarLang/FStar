@@ -15,7 +15,7 @@ module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
-let should_unfold cfg should_reify fv qninfo : should_unfold_res =
+let should_unfold cfg should_reify fv qninfo : ML should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
       | None -> []
@@ -58,10 +58,10 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     in
     let res : bool & bool & bool & bool =
     match qninfo, selective_unfold with
-    // We unfold dm4f actions if and only if we are reifying
+    // We unfold effect actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
         let b = should_reify cfg in
-        log_unfolding cfg (fun () -> Format.print2 "should_unfold: For DM4F action %s, should_reify = %s\n"
+        log_unfolding cfg (fun () -> Format.print2 "should_unfold: For effect action %s, should_reify = %s\n"
                                                (show fv)
                                                (show b));
         if b then reif else no

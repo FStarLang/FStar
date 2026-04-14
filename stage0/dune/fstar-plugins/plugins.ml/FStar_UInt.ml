@@ -3,7 +3,7 @@ open Prims
 let max_int (n : Prims.nat) : Prims.int= (Prims.pow2 n) - Prims.int_one
 let min_int (n : Prims.nat) : Prims.int= Prims.int_zero
 let fits (x : Prims.int) (n : Prims.nat) : Prims.bool=
-  ((min_int n) <= x) && (x <= (max_int n))
+  if (min_int n) <= x then x <= (max_int n) else false
 type ('x, 'n) size = unit
 type 'n uint_t = Prims.int
 let zero (n : Prims.nat) : Obj.t uint_t= Prims.int_zero
@@ -103,6 +103,11 @@ let shift_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_left_vec n (to_vec n a) s)
 let shift_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_right_vec n (to_vec n a) s)
+let rotate_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t= from_vec n (FStar_BitVector.rotate_left_vec n (to_vec n a) s)
+let rotate_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t=
+  from_vec n (FStar_BitVector.rotate_right_vec n (to_vec n a) s)
 let msb (n : Prims.pos) (a : Obj.t uint_t) : Prims.bool=
   nth n a Prims.int_zero
 let zero_extend_vec (n : Prims.pos) (a : Obj.t FStar_BitVector.bv_t) :

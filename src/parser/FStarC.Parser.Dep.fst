@@ -26,6 +26,7 @@
 module FStarC.Parser.Dep
 
 open FStarC
+open FStarC.Effect
 open FStarC.List
 open FStarC.Parser.AST
 open FStarC.Const
@@ -55,7 +56,7 @@ let fly_deps_enabled () =
           if Some? <| Options.dep() //if we're doing dep, then we want a full scan now
           //dump_module: it's a debug feature, but Vale also depends on its output
           //so don't change that yet
-          || Options.any_dump_module() 
+          || Options.any_dump_module()
           then (
             if debug_fly_deps ()
             then (
@@ -77,14 +78,14 @@ let fly_deps_enabled () =
       fd_enabled := Some res;
       res
 
-let with_fly_deps_disabled (f: unit -> 'a) : 'a =
+let with_fly_deps_disabled (f: unit -> ML 'a) : ML 'a =
   let v = !fd_enabled in
   fd_enabled := Some false;
   FStarC.Util.finally (fun _ -> fd_enabled := v) f
 
 (* This is faster than the quadratic BU.remove_dups, since we can use
 the total order. *)
-let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : list a =
+let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : ML (list a) =
   let (acc, _) =
     List.fold_left (fun (acc, acc_set) x ->
       if mem x acc_set
@@ -95,12 +96,12 @@ let remove_dups_fast (#a:Type) {| ord a |} (xs : list a) : list a =
 
 let dbg              = Debug.get_toggle "Dep"
 let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
-let debug_print f    = if !dbg then f ()
+let debug_print (f: unit -> ML unit) : ML unit = if !dbg then f ()
 let profile f c = Profiling.profile f None c
 
 (* Meant to write to a file as an out_channel. If an exception is raised,
 the file is deleted. *)
-let with_file_outchannel (fn : string) (k : out_channel -> 'a) : 'a =
+let with_file_outchannel (fn : string) (k : out_channel -> ML 'a) : ML 'a =
   BU.maybe_create_parent fn;
   let outc = BU.open_file_for_writing fn in
   let r =
@@ -150,7 +151,7 @@ let all_file_suffixes () =
   let base = ".fst" :: lang_exts in
   base @ List.map (fun ext -> ext ^ "i") base
 
-let check_and_strip_suffix (f: string): option string =
+let check_and_strip_suffix (f: string): ML (option string) =
   let matches = List.map (fun ext ->
     let lext = String.length ext in
     let l = String.length f in
@@ -166,7 +167,7 @@ let check_and_strip_suffix (f: string): option string =
       None
 
 (* In public interface *)
-let is_interface (f: string): bool =
+let is_interface (f: string): ML bool =
   String.get f (String.length f - 1) = 'i'
 let implementation_of_file f =
   if is_interface f then 
@@ -269,7 +270,7 @@ instance showable_parsing_data : showable parsing_data = {
   show = str_of_parsing_data;
 }
 
-let friends (p:parsing_data) : list lident =
+let friends (p:parsing_data) : ML (list lident) =
   List.collect
     (function
       | P_dep (true, l) -> [l]
@@ -300,7 +301,7 @@ type deps = {
     parse_results:SMap.t parsing_data             //map from filenames to parsing_data
                                                 //callers (Universal.fs) use this to get the parsing data for caching purposes
 }
-let copy_deps (d:deps) : deps = { d with dep_graph = copy_dep_graph d.dep_graph; all_files=mk_ref (!d.all_files) }
+let copy_deps (d:deps) : ML deps = { d with dep_graph = copy_dep_graph d.dep_graph; all_files=mk_ref (!d.all_files) }
 let deps_try_find (Deps m) k = SMap.try_find m k
 let deps_add_dep (Deps m) k v =
   SMap.add m k v
@@ -324,7 +325,7 @@ let module_name_of_dep = function
     | FriendImplementation m -> m
 
 let resolve_module_name (file_system_map:files_for_module_name) (key:module_name)
-    : option module_name
+    : ML (option module_name)
     = match SMap.try_find file_system_map key with
       | Some (Some fn, _)
       | Some (_, Some fn) ->
@@ -332,23 +333,23 @@ let resolve_module_name (file_system_map:files_for_module_name) (key:module_name
       | _ -> None
 
 let interface_of_internal (file_system_map:files_for_module_name) (key:module_name)
-: option file_name 
+: ML (option file_name)
 = match SMap.try_find file_system_map key with
   | Some (Some iface, _) -> Some iface
   | _ -> None
 
 let implementation_of_internal (file_system_map:files_for_module_name) (key:module_name)
-: option file_name 
+: ML (option file_name)
 = match SMap.try_find file_system_map key with
   | Some (_, Some impl) -> Some impl
   | _ -> None
 
 let has_interface (file_system_map:files_for_module_name) (key:module_name)
-    : bool =
+    : ML bool =
     Some? (interface_of_internal file_system_map key)
 
 let has_implementation (file_system_map:files_for_module_name) (key:module_name)
-    : bool =
+    : ML bool =
     Some? (implementation_of_internal file_system_map key)
 
 
@@ -367,9 +368,9 @@ let cache_file_name =
       | Some path ->
         let expected_cache_file = Find.prepend_cache_dir cache_fn in
         if Some? (Options.dep()) //if we're in the dependence analysis
-        && not (Options.should_be_already_cached mname) //and checked file is in the
-        && (not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
-            || not (Filepath.paths_to_same_file path expected_cache_file))
+            && not (Options.should_be_already_cached mname) //and checked file is in the
+            && (not (Filepath.file_exists expected_cache_file) //wrong spot ... complain
+                || not (Filepath.paths_to_same_file path expected_cache_file))
         then (
           let open FStarC.Pprint in
           let open FStarC.Errors.Msg in
@@ -400,7 +401,7 @@ let cache_file_name =
         Find.prepend_cache_dir cache_fn
     in
     let memo = SMap.create 100 in
-    let memo f x =
+    let memo (f: string -> ML string) x =
       match SMap.try_find memo x with
       | Some res -> res
       | None ->
@@ -416,15 +417,14 @@ let file_of_dep_aux
                 (file_system_map:files_for_module_name)
                 (all_cmd_line_files:list file_name)
                 (d:dependence)
-    : file_name =
+    : ML file_name =
     // NB: calling this function can be very expensive. It'd be better to
     // precompute an RBSet of the lowercased implementations and just query it
     // here.
     let cmd_line_has_impl key =
         all_cmd_line_files
         |> BU.for_some (fun fn ->
-           is_implementation fn &&
-           key = lowercase_module_name fn)
+           is_implementation fn && key = lowercase_module_name fn)
     in
 
     let maybe_use_cache_of f = if use_checked_file then cache_file_name f else f in
@@ -478,7 +478,7 @@ let files_of_dependences
       (file_system_map:files_for_module_name)
       (all_cmd_line_files:list file_name)
       (deps:list dependence)
-: list file_name
+: ML (list file_name)
 = List.map (file_of_dep file_system_map all_cmd_line_files) deps
       |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
@@ -486,7 +486,7 @@ let dependences_of (file_system_map:files_for_module_name)
                    (deps:dependence_graph)
                    (all_cmd_line_files:list file_name)
                    (fn:file_name)
-    : list file_name =
+    : ML (list file_name) =
     match deps_try_find deps fn with
     | None -> empty_dependences
     | Some ({edges=deps}) -> files_of_dependences fn file_system_map all_cmd_line_files deps
@@ -494,7 +494,7 @@ let dependences_of (file_system_map:files_for_module_name)
 let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
   (file_system_map:files_for_module_name)
   (cmd_lined_files:list file_name)
- : unit
+ : ML unit
  =
   if not (Options.silent ()) then begin
     F.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
@@ -516,7 +516,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
   pr "}\n";
   fprint outc "%s" [FStarC.StringBuffer.contents sb]
 
-let safe_readdir_for_include (d:string) : list string =
+let safe_readdir_for_include (d:string) : ML (list string) =
   try Filepath.readdir d
   with
   | _ -> []
@@ -524,7 +524,7 @@ let safe_readdir_for_include (d:string) : list string =
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
-let build_inclusion_candidates_list (): list (string & string) =
+let build_inclusion_candidates_list (): ML (list (string & string)) =
   let include_directories = Find.full_include_path () in
   let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
@@ -547,7 +547,7 @@ let build_inclusion_candidates_list (): list (string & string) =
     all normalized to lowercase. The first component of the pair is the
     interface (if any). The second component of the pair is the implementation
     (if any). *)
-let build_map fs_map valid_ns_map (filenames: list string): unit =
+let build_map fs_map valid_ns_map (filenames: list string): ML unit =
   let add_fs_entry key full_path =
     match SMap.try_find fs_map key with
     | Some (intf, impl) ->
@@ -612,7 +612,7 @@ let lowercase_join_longident (l: lident) (last: bool) =
 let namespace_of_lid l =
   String.concat "_" (List.map string_of_id (ns_of_lid l))
 
-let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
+let check_module_declaration_against_filename (lid: lident) (filename: string): ML unit =
   let k' = string_of_lid lid true in
   if Option.must (check_and_strip_suffix (Filepath.basename filename)) <> k' then
     log_issue lid Errors.Error_ModuleFileNameMismatch [
@@ -640,7 +640,7 @@ let enter_namespace
   (original_map: files_for_module_name)
   (working_map: files_for_module_name)
   (sprefix: string)
-  (implicit_open:bool) : bool =
+  (implicit_open:bool) : ML bool =
   let found = mk_ref false in
   let sprefix = sprefix ^ "." in
   let suffix_exists mopt =
@@ -694,7 +694,7 @@ let peek_past_interfaces () =
   then false
   else not (Options.ide ())
 
-let collect_module_or_decls (filename:string) (m:either modul (list decl)) : parsing_data =
+let collect_module_or_decls (filename:string) (m:either modul (list decl)) : ML parsing_data =
   //parse the file and traverse the AST to collect parsing data
   let num_of_toplevelmods = mk_ref 0 in
   let pd : ref parsing_data = mk_ref empty_parsing_data in
@@ -708,7 +708,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
     pd := { !pd with no_prelude = b }
   in
 
-  let rec go = function
+  let rec go (x: either modul (list decl)) : ML unit = match x with
     | Inl (Module {no_prelude; mname; decls})
     | Inl (Interface {no_prelude; mname; decls}) ->
         set_no_prelude no_prelude;
@@ -719,7 +719,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
         set_no_prelude true;
         collect_decls decls
 
-  and collect_decls decls =
+  and collect_decls (decls: list decl) : ML unit =
     List.iter (fun x -> collect_decl x.d;
                         List.iter collect_term x.attrs;
                         match x.d with
@@ -728,7 +728,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
                         | _ -> ()
                         ) decls
 
-  and collect_decl d =
+  and collect_decl (d: decl') : ML unit =
     match d with
     | Include (lid, _)
     | Open (lid, _) ->
@@ -783,7 +783,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
         if (!num_of_toplevelmods > 1) then
           raise_error lid Errors.Fatal_OneModulePerFile
             (Format.fmt1 "Automatic dependency analysis demands one module per file (module %s not supported)" (string_of_lid lid true)) 
-  and collect_tycon = function
+  and collect_tycon (tc: tycon) : ML unit = match tc with
     | TyconAbstract (_, binders, k) ->
         collect_binders binders;
         Option.iter collect_term k
@@ -804,13 +804,13 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
                                             Option.iter collect_term t
                   ) (List.filter_map Mktuple3?._2 identterms)
 
-  and collect_tycon_record r = 
+  and collect_tycon_record (r: list (ident & aqual & attributes_ & term)) : ML unit =
     List.iter (fun (_, aq, attrs, t) ->
             collect_aqual aq;
             attrs |> List.iter collect_term;
             collect_term t) r
 
-  and collect_effect_decl = function
+  and collect_effect_decl (ed: effect_decl) : ML unit = match ed with
     | DefineEffect (_, binders, t, decls) ->
         collect_binders binders;
         collect_term t;
@@ -819,10 +819,10 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
         collect_binders binders;
         collect_term t
 
-  and collect_binders binders =
+  and collect_binders (binders: list binder) : ML unit =
     List.iter collect_binder binders
 
-  and collect_binder b =
+  and collect_binder (b: binder) : ML unit =
     collect_aqual b.aqual;
     b.battributes |> List.iter collect_term;
     match b with
@@ -830,15 +830,15 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
     | { b = NoName t } -> collect_term t
     | _ -> ()
 
-  and collect_aqual = function
+  and collect_aqual (aq: aqual) : ML unit = match aq with
     | Some (Meta t) -> collect_term t
     | Some TypeClassArg -> add_to_parsing_data (P_lid Const.tcresolve_lid)
     | _ -> ()
 
-  and collect_term t =
+  and collect_term (t: term) : ML unit =
     collect_term' t.tm
 
-  and collect_constant = function
+  and collect_constant (c: sconst) : ML unit = match c with
     | Const_int (_, Some (Unsigned, Sizet)) ->
         add_to_parsing_data (P_dep (false, ("fstar.sizeT" |> Ident.lid_of_str)))
     | Const_int (_, Some (signedness, width)) ->
@@ -858,7 +858,7 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
     | _ ->
         ()
 
-  and collect_term' = function
+  and collect_term' (t: term') : ML unit = match t with
     | Wild ->
         ()
     | Const c ->
@@ -1071,13 +1071,13 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
       add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Seq.Base")));
       List.iter collect_term ts
     
-  and collect_patterns ps =
+  and collect_patterns (ps: list pattern) : ML unit =
     List.iter collect_pattern ps
 
-  and collect_pattern p =
+  and collect_pattern (p: pattern) : ML unit =
     collect_pattern' p.pat
 
-  and collect_pattern' = function
+  and collect_pattern' (p: pattern') : ML unit = match p with
     | PatVar (_, aqual, attrs)
     | PatWild (aqual, attrs) ->
         collect_aqual aqual;
@@ -1109,15 +1109,16 @@ let collect_module_or_decls (filename:string) (m:either modul (list decl)) : par
         collect_term tac
 
 
-  and collect_branches bs =
+  and collect_branches (bs: list branch) : ML unit =
     List.iter collect_branch bs
 
-  and collect_branch (pat, t1, t2) =
+  and collect_branch (b: branch) : ML unit =
+    let (pat, t1, t2) = b in
     collect_pattern pat;
     Option.iter collect_term t1;
     collect_term t2
 
-  and collect_fieldname fn =
+  and collect_fieldname (fn: lident) : ML unit =
       if nsstr fn <> ""
       then add_to_parsing_data (P_dep (false, lid_of_ids (ns_of_lid fn)))
   in
@@ -1137,9 +1138,9 @@ let maybe_use_interface file_system_map file_name =
   *   or constructed after AST traversal of the module
   *)
 let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
-: list dependence & //direct dependences
+: ML (list dependence & //direct dependences
   bool &            //has inline for extraction
-  list dependence   //additional roots
+  list dependence)   //additional roots
 = 
   let deps     : ref (list dependence) = mk_ref [] in
   let has_inline_for_extraction = mk_ref false in
@@ -1291,7 +1292,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   in
 
   let begin_module lid =
-    if List.length (ns_of_lid lid) > 0 then (
+    if Cons? (ns_of_lid lid) then (
       if !dbg then Format.print1 "Begin module %s ..\n" (show lid);
       ignore (enter_namespace original_map working_map (String.lowercase (namespace_of_lid lid)))
     )
@@ -1346,11 +1347,11 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
 let collect_one
   (original_map: files_for_module_name)
   (filename: string)
-  (get_parsing_data_from_cache:string -> option parsing_data)
-  : parsing_data &
+  (get_parsing_data_from_cache:string -> ML (option parsing_data))
+  : ML (parsing_data &
     list dependence &  //direct dependence
     bool &  //has_inline_for_extraction
-    list dependence  //additional roots
+    list dependence)  //additional roots
                       //that used to be part of parsing_data earlier
                       //removing it from the cache (#1657)
                       //this always returns a single element, remove the list?
@@ -1384,7 +1385,7 @@ let collect_one
 let collect_one_cache : ref (SMap.t (list dependence & list dependence & bool)) =
   mk_ref (SMap.create 0)
 
-let set_collect_one_cache (cache: SMap.t (list dependence & list dependence & bool)) : unit =
+let set_collect_one_cache (cache: SMap.t (list dependence & list dependence & bool)) : ML unit =
   collect_one_cache := cache
 
 let dep_graph_copy dep_graph =
@@ -1421,13 +1422,15 @@ let topological_dependences_of'
         interfaces_needing_inlining
         root_files
         widened
-    : list file_name
-    & bool =
+    : ML (list file_name
+    & bool) =
     let rec all_friend_deps_1
             dep_graph
             (cycle:list file_name)
-            (all_friends, all_files)
-            filename =
+            (acc: list module_name & list string)
+            filename
+    : ML _ =
+    let (all_friends, all_files) = acc in
     let dep_node = Option.must (deps_try_find dep_graph filename) in
     match dep_node.color with
     | Gray ->
@@ -1461,7 +1464,7 @@ let topological_dependences_of'
          dep_node.edges
         @all_friends,
         filename :: all_files
-    and all_friend_deps dep_graph cycle all_friends filenames =
+    and all_friend_deps dep_graph cycle all_friends filenames : ML _ =
         List.fold_left
                 (fun all_friends k ->
                         all_friend_deps_1 dep_graph (k :: cycle) all_friends k)
@@ -1579,8 +1582,8 @@ let topological_dependences_of
         interfaces_needing_inlining
         root_files
         for_extraction
-    : list file_name
-    & bool =
+    : ML (list file_name
+    & bool) =
 
     let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
@@ -1599,8 +1602,8 @@ let build_dep_graph_for_files
       (file_system_map:_)
       (dep_graph:_)
       (parse_results:_)
-      (get_parsing_data_from_cache:string -> option parsing_data)
-: list string //interfaces needing inlining
+      (get_parsing_data_from_cache:string -> ML (option parsing_data))
+: ML (list string) //interfaces needing inlining
 = (* The dependency graph; keys are lowercased module names, values = list of
    * lowercased module names this file depends on. *)
   let interfaces_needing_inlining = mk_ref [] in
@@ -1610,7 +1613,7 @@ let build_dep_graph_for_files
   in
   (* discover: Do a graph traversal starting from file_name
    *           filling in dep_graph with the dependences *)
-  let rec discover_one (file_name:file_name) : unit =
+  let rec discover_one (file_name:file_name) : ML unit =
     if deps_try_find dep_graph file_name = None then
     begin
       let parsing_data, (deps, mo_roots, needs_interface_inlining) =
@@ -1651,8 +1654,8 @@ let build_dep_graph_for_files
 
 let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   (scope_pds: list parsing_data_elt)
-  (get_parsing_data_from_cache:string -> option parsing_data)
-: list file_name
+  (get_parsing_data_from_cache:string -> ML (option parsing_data))
+: ML (list file_name)
 = let roots =
     match ds with
     | {d=TopLevelModule l; attrs}::_ -> 
@@ -1692,13 +1695,40 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
  * get_parsing_data_from_cache is a callback passed by caller
  *   to read the parsing data from checked files
  *)
+
+(** Find all F* files in a directory, respecting fstar.include for subdirectory traversal.
+    Uses Find.expand_include_d to determine which subdirectories to visit. *)
+let all_fstar_files_in_dir (dir:string) : ML (list file_name) =
+  let dirs = Find.expand_include_d dir in
+  List.collect (fun d ->
+    let files = safe_readdir_for_include d in
+    List.collect (fun f ->
+      let full_path = Filepath.join_paths d f in
+      if not (Filepath.is_directory full_path)
+        && List.existsb (fun ext -> Util.ends_with f ext) (all_file_suffixes ())
+      then [full_path]
+      else []
+    ) files
+  ) dirs
+
+(** Expand any directories in the command line file list to their contained F* files. *)
+let expand_directories (files: list file_name) : ML (list file_name) =
+  files |> List.collect (fun f ->
+    if Filepath.is_directory f then
+      all_fstar_files_in_dir f
+    else
+      [f]
+  )
+
 (* In public interface *)
 let collect (all_cmd_line_files: list file_name)
-            (get_parsing_data_from_cache:string -> option parsing_data)
-    : list file_name
-    & deps //topologically sorted transitive dependences of all_cmd_line_files
+            (get_parsing_data_from_cache:string -> ML (option parsing_data))
+    : ML (list file_name
+    & deps) //topologically sorted transitive dependences of all_cmd_line_files
     =
   Stats.record "Parser.Dep.collect" fun () ->
+  (* Expand any directories to their contained F* files *)
+  let all_cmd_line_files = expand_directories all_cmd_line_files in
   let all_cmd_line_files =
     match all_cmd_line_files with
     | [] -> all_files_in_include_paths ()
@@ -1774,7 +1804,7 @@ let collect (all_cmd_line_files: list file_name)
     let mo_files : ref (list string)  = mk_ref [] in
 
 
-    let rec aux (cycle:list file_name) filename =
+    let rec aux (cycle:list file_name) (filename: string) : ML unit =
         let node =
             match deps_try_find dep_graph filename with
             | Some node -> node
@@ -1901,7 +1931,7 @@ let deps_of =
     SMap.add cache f res;
     res
 
-let deps_of_modul deps (m:module_name) : list module_name =
+let deps_of_modul deps (m:module_name) : ML (list module_name) =
   let aux (fopt:option string) =
     fopt |> Option.map (fun f -> f |> deps_of deps |> List.map module_name_of_file)
          |> Option.dflt []
@@ -1926,7 +1956,7 @@ let populate_parsing_data fn ast_modul deps =
     SMap.add deps.parse_results fn pd
   | Some _ -> ()
 
-let print_digest (dig:list (string & string)) : string = show dig
+let print_digest (dig:list (string & string)) : ML string = show dig
     // dig
     // |> List.map (fun (m, d) -> Format.fmt2 "%s:%s" m (BU.base64_encode d))
     // |> String.concat "\n"
@@ -1936,7 +1966,7 @@ let print_digest (dig:list (string & string)) : string = show dig
 
     Deprecated: this will print the dependences among the source files
   *)
-let print_make (outc : out_channel) deps : unit =
+let print_make (outc : out_channel) deps : ML unit =
     let file_system_map = deps.file_system_map in
     let all_cmd_line_files = deps.cmd_line_files in
     let deps = deps.dep_graph in
@@ -1966,7 +1996,7 @@ let print_raw (outc : out_channel) (deps:deps) =
      -- We also print dependences for producing .ml files from .checked files
         This takes care of renaming A.B.C.fst to A_B_C.ml
   *)
-let print_full (outc : out_channel) (deps:deps) : unit =
+let print_full (outc : out_channel) (deps:deps) : ML unit =
     let pre_tag = Options.Ext.get "dep_pretag" in
     //let (Mk (deps, file_system_map, all_cmd_line_files, all_files)) = deps in
     let sort_output_files (orig_output_file_map:SMap.t string) =
@@ -1988,7 +2018,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
             | None -> ()
             | Some ml_file -> order := ml_file :: !order
         in
-        let rec aux = function
+        let rec aux (ms: list string) : ML unit = match ms with
             | [] -> ()
             | lc_module_name::modules_to_extract ->
               let visit_file file_opt =
@@ -2020,7 +2050,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
     let sb = FStarC.StringBuffer.create 10000 in
     let pr str = ignore <| FStarC.StringBuffer.add str sb in
     let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
-    let print_entry (target : string) (all_deps : list string) : unit =
+    let print_entry (target : string) (all_deps : list string) : ML unit =
         (* Print a target with dependencies. *)
         pr target; pr ":";
         all_deps |> List.iter (fun f -> pr " \\\n\t" ; pr (norm_path f));
@@ -2034,7 +2064,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
         pr "\n\n"
     in
     let keys = deps_keys deps.dep_graph in
-    let no_fstar_stubs_file (s:string) : string =
+    let no_fstar_stubs_file (s:string) : ML string =
       (* If the original filename begins with FStar.Stubs, then remove that,
       consistent with what extraction will actually do.
 
@@ -2044,8 +2074,12 @@ let print_full (outc : out_channel) (deps:deps) : unit =
       let s1 = "FStar.Stubs." in
       let s2 = "FStar." in
       let l1 = String.length s1 in
-      if String.length s >= l1 && String.substring s 0 l1 = s1 then
-        s2 ^ String.substring s l1 (String.length s - l1)
+      if String.length s >= l1 then
+        let pfx = String.substring s 0 l1 in
+        if pfx = s1 then
+          s2 ^ String.substring s l1 (String.length s - l1)
+        else
+          s
       else
         s
     in
@@ -2192,8 +2226,10 @@ let print_full (outc : out_channel) (deps:deps) : unit =
                       all_fst_files_dep |>
                       List.filter
                         (fun df ->
-                           lowercase_module_name df <> lowercase_module_name file_name //avoid circular deps on f's own cmx
-                           && Options.should_extract (lowercase_module_name df) Options.OCaml)
+                           let mn_df = lowercase_module_name df in
+                           let mn_fn = lowercase_module_name file_name in
+                           mn_df <> mn_fn //avoid circular deps on f's own cmx
+                           && Options.should_extract mn_df Options.OCaml)
                   in
                   extracted_fst_files |> List.map output_cmx_file
               in
@@ -2280,16 +2316,262 @@ let print_full (outc : out_channel) (deps:deps) : unit =
 
     FStarC.StringBuffer.output_channel outc sb
 
-let do_print (outc : out_channel) (fn : string) deps : unit =
-  let pref () =
-    BU.fprint outc "# This .depend was generated by F* %s\n" [!Options._version];
-    BU.fprint outc "# Executable: %s\n" [show BU.exec_name];
-    BU.fprint outc "# Hash: %s\n" [!Options._commit];
-    BU.fprint outc "# Running in directory %s\n" [show (Filepath.normalize_file_path (BU.getcwd ()))];
-    BU.fprint outc "# Command line arguments: \"%s\"\n" [show (BU.get_cmd_args ())];
-    BU.fprint outc "\n" [];
-    ()
+(** Print the dependencies in dune format.
+    When --output_ext is set, controls what targets are emitted:
+    - Extensions ending in "checked": build/check rules (.fst → .fst.checked)
+    - Other extensions (ml, krml): extraction rules (.fst.checked → .ml)
+    When --output_ext is not set: mixed rules (backward compat).
+  *)
+let print_dune (outc : out_channel) (deps:deps) : ML unit =
+    let sb = FStarC.StringBuffer.create 10000 in
+    let pr str = ignore <| FStarC.StringBuffer.add str sb in
+    
+    let output_ext = Options.output_ext () in
+    
+    (* Is this an extraction phase? (output-ext is ml, krml, etc.) *)
+    let is_extract_phase =
+        match output_ext with
+        | Some ext -> not (BU.ends_with ext "checked" || BU.ends_with ext "checked.lax")
+        | None -> false
+    in
+    
+    (* Replace the F* source suffix (.fst/.fsti) with a new extension *)
+    let replace_suffix (f:string) (new_ext:string) : ML string =
+        let base = Filepath.basename f in
+        match check_and_strip_suffix base with
+        | Some stem -> stem ^ "." ^ new_ext
+        | None -> base ^ "." ^ new_ext
+    in
+    
+    (* Collect flags to forward into generated rules.
+       We take all argv flags except --dep/--already_cached/--output_ext and
+       positional file/directory arguments. *)
+    let forwarded_flags =
+        let args = BU.get_cmd_args () in
+        (* Drop the executable name *)
+        let args = match args with | _::tl -> tl | [] -> [] in
+        let rec collect acc = function
+          | [] -> List.rev acc
+          (* Skip --dep and its argument *)
+          | "--dep"::_::rest -> collect acc rest
+          (* Skip --already_cached and its argument *)
+          | "--already_cached"::_::rest -> collect acc rest
+          (* Skip --output_ext and its argument (both dash and underscore forms) *)
+          | "--output_ext"::_::rest -> collect acc rest
+          | "--output-ext"::_::rest -> collect acc rest
+          (* Keep flags and their arguments *)
+          | flag::rest when BU.starts_with flag "-" ->
+            begin match rest with
+            | arg::rest' when not (BU.starts_with arg "-") && arg <> "" ->
+              collect ((" " ^ arg)::(" " ^ flag)::acc) rest'
+            | _ ->
+              collect ((" " ^ flag)::acc) rest
+            end
+          (* Skip positional arguments (file/directory paths) *)
+          | _::rest -> collect acc rest
+        in
+        String.concat "" (collect [] args)
+    in
+    
+    let keys = deps_keys deps.dep_graph in
+    (* For dune: put checked files in current directory, not next to source *)
+    let local_cache_file (f:string) : ML string =
+        let base = Filepath.basename f in
+        if Options.lax() then base ^ ".checked.lax" else base ^ ".checked"
+    in
+    
+    (* Format a dep: all files become local basename *)
+    let format_dep (f:string) : ML string =
+        Filepath.basename f
+    in
+    
+    (* Compute the extraction target for a source file, if codegen is set.
+       Used only in default mixed mode (no --output_ext). *)
+    let extraction_target (source : string) : ML (option string) =
+        match Options.codegen () with
+        | Some Options.OCaml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".ml")
+            else None
+        | Some Options.Krml ->
+            let basename = Option.must (check_and_strip_suffix (Filepath.basename source)) in
+            let ml_base_name = replace_chars basename '.' "_" in
+            if is_implementation source then Some (ml_base_name ^ ".krml")
+            else None
+        | _ -> None
+    in
+    
+    (* Print a rule for default mixed mode: checking and optionally extracting *)
+    let print_mixed_rule (target : string) (source : string) (all_deps : list string) : ML unit =
+        let extra_target = extraction_target source in
+        pr "(rule\n";
+        pr " (targets "; pr target;
+        (match extra_target with | Some t -> pr " "; pr t | None -> ());
+        pr ")\n";
+        pr " (deps"; 
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    (* Print a rule for the build phase: source → checked *)
+    let print_build_rule (source : string) (all_deps : list string) : ML unit =
+        let ext = Option.must output_ext in
+        let target = replace_suffix source ext in
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps";
+        all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    (* Print a rule for the extraction phase: checked → ml/krml *)
+    let print_extract_rule (source : string) (all_deps : list string) : ML unit =
+        let ext = Option.must output_ext in
+        let target = replace_suffix source ext in
+        (* Convert all source deps to their checked versions *)
+        let checked_deps =
+            (source :: all_deps) |> List.map (fun f ->
+                let base = Filepath.basename f in
+                if BU.ends_with base ".checked" || BU.ends_with base ".checked.lax"
+                then base
+                else local_cache_file f
+            )
+        in
+        (* Deps: source file + checked source + checked transitive deps *)
+        let all_dep_strs = format_dep source :: checked_deps in
+        pr "(rule\n";
+        pr " (targets "; pr target; pr ")\n";
+        pr " (deps";
+        (remove_dups_fast all_dep_strs) |> List.iter (fun f -> pr " "; pr f);
+        pr ")\n";
+        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr forwarded_flags;
+        pr " --include . --already_cached \"*,\" -c ";
+        pr (Filepath.basename source); pr ")))\n\n"
+    in
+    
+    let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
+    
+    (* Collect all target files *)
+    let all_target_files =
+        keys |>
+        List.fold_left
+        (fun all_target_files file_name ->
+          let process_one_key () =
+            (* In extract phase, skip non-implementation files *)
+            if is_extract_phase && not (is_implementation file_name) then
+              all_target_files
+            else begin
+            let dep_node = deps_try_find deps.dep_graph file_name |> Option.must in
+            let iface_fn, iface_deps =
+                if is_interface file_name
+                then None, None
+                else match interface_of deps (lowercase_module_name file_name) with
+                     | None ->
+                       None, None
+                     | Some iface ->
+                       Some iface,
+                       Some ((Option.must (deps_try_find deps.dep_graph iface)).edges)
+            in
+            let iface_deps =
+                Option.map (List.filter
+                             (fun iface_dep ->
+                                not (BU.for_some (dep_subsumed_by iface_dep) dep_node.edges)))
+                           iface_deps
+            in
+            let files =
+              List.map
+                (file_of_dep_aux true deps.file_system_map deps.cmd_line_files)
+                dep_node.edges
+            in
+            let files =
+                match iface_deps with
+                | None -> files
+                | Some iface_deps ->
+                  let iface_files =
+                      List.map (file_of_dep_aux true deps.file_system_map deps.cmd_line_files) iface_deps
+                  in
+                  remove_dups_fast (files @ iface_files)
+            in
+            let files =
+              if iface_fn |> Some? then
+                let iface_fn = iface_fn |> Option.must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (local_cache_file iface_fn)::files)
+              else files in
+
+            (* Filter out deps on already-cached modules; fstar resolves them
+               at runtime via --already_cached, so dune need not track them. *)
+            let files =
+              files |> List.filter (fun f ->
+                let base = Filepath.basename f in
+                (* Strip .checked / .checked.lax suffix to recover source name *)
+                let src =
+                  if BU.ends_with base ".checked.lax" then String.substring base 0 (String.length base - 12)
+                  else if BU.ends_with base ".checked" then String.substring base 0 (String.length base - 8)
+                  else base
+                in
+                match check_and_strip_suffix src with
+                | Some mname -> not (Options.should_be_already_cached mname)
+                | None -> true (* keep non-module deps *)
+              )
+            in
+
+            let target_file =
+                match output_ext with
+                | Some ext -> replace_suffix file_name ext
+                | None -> local_cache_file file_name
+            in
+
+            let all_target_files =
+                if not (Options.should_be_already_cached (module_name_of_file file_name))
+                then begin
+                  if is_extract_phase then
+                    print_extract_rule file_name files
+                  else if Some? output_ext then
+                    print_build_rule file_name (file_name :: files)
+                  else
+                    print_mixed_rule (local_cache_file file_name) file_name (file_name :: files);
+                  target_file::all_target_files
+                end
+                else all_target_files
+            in
+
+            all_target_files
+            end
+          in
+          profile process_one_key "FStarC.Parser.Dep.print_dune.process_one_key")
+          []
+    in
+    
+    pr "; File lists (for reference)\n";
+    pr "; ALL_TARGET_FILES:";
+    all_target_files |> List.iter (fun f -> pr " "; pr f);
+    pr "\n";
+
+    FStarC.StringBuffer.output_channel outc sb
+
+let do_print (outc : out_channel) (fn : string) deps : ML unit =
+  let print_header (comment : string) (kind : string) =
+    let ver = BU.trim_string !Options._version in
+    BU.fprint outc (comment ^ " This %s was generated by F* %s\n") [kind; ver];
+    BU.fprint outc (comment ^ " Executable: %s\n") [show BU.exec_name];
+    BU.fprint outc (comment ^ " Hash: %s\n") [BU.trim_string !Options._commit];
+    BU.fprint outc (comment ^ " Running in directory %s\n") [show (Filepath.normalize_file_path (BU.getcwd ()))];
+    BU.fprint outc (comment ^ " Command line arguments: \"%s\"\n") [show (BU.get_cmd_args ())];
+    BU.fprint outc "\n" []
   in
+  let pref      () = print_header "#" ".depend" in
+  let dune_pref () = print_header ";" "dune file" in
   match Options.dep() with
   | Some "make" ->
       pref ();
@@ -2297,6 +2579,9 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
   | Some "full" ->
       pref ();
       profile (fun () -> print_full outc deps) "FStarC.Parser.Deps.print_full_deps"
+  | Some "dune" ->
+      dune_pref ();
+      profile (fun () -> print_dune outc deps) "FStarC.Parser.Deps.print_dune_deps"
   | Some "graph" ->
       print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->

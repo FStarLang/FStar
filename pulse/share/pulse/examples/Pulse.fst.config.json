@@ -1,0 +1,29 @@
+{
+  "fstar_exe": "../../../../out/bin/fstar.exe",
+  "options": [
+    "--query_cache",
+    "--cache_dir",
+    "_output/_cache",
+    "--warn_error", 
+    "-249",
+    "--ext",
+    "optimize_let_vc",
+    "--ext",
+    "fly_deps"
+  ],
+  "include_dirs": [
+    "by-example",
+    "parallel",
+    "c",
+    "dice",
+    "dice/cbor",
+    "dice/dpe",
+    "dice/l0",
+    "dice/engine",
+    "dice/external",
+    "dice/external/hacl",
+    "dice/external/l0",
+    "dice/cbor",
+    "dice/_output/cache"
+  ]
+}

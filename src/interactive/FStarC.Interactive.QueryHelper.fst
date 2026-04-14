@@ -28,13 +28,12 @@ open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.CompletionTable
 
 module U = FStarC.Util
-module PI = FStarC.Parser.ParseIt
 module DsEnv = FStarC.Syntax.DsEnv
 module TcErr = FStarC.TypeChecker.Err
 module TcEnv = FStarC.TypeChecker.Env
 module CTable = FStarC.Interactive.CompletionTable
 
-let with_printed_effect_args k =
+let with_printed_effect_args #a (k : unit -> ML a) : ML a =
   Options.with_saved_options
     (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
 
@@ -99,7 +98,7 @@ let mod_filter = function
   | pth, CTable.Module md ->
     Some (pth, CTable.Module ({ md with CTable.mod_name = CTable.mod_name md ^ "." }))
 
-let ck_completion (st: repl_state) (search_term: string) : list CTable.completion_result =
+let ck_completion (st: repl_state) (search_term: string) : ML (list CTable.completion_result) =
   let needle = U.split search_term "." in
   let mods_and_nss = CTable.autocomplete_mod_or_ns st.repl_names needle mod_filter in
   let lids = CTable.autocomplete_lid st.repl_names needle in

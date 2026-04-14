@@ -1,0 +1,5 @@
+_output/
+_cache/
+obj/
+bin/
+.depend

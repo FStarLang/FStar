@@ -1,0 +1,8 @@
+(lang dune 3.2)
+(name gen_cbor_test)
+(generate_opam_files false)
+(using menhir 2.1)
+(package
+  (name gen_cbor_test)
+  (synopsis "Generate CBOR tests")
+)

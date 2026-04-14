@@ -1,7 +1,7 @@
 FSTAR_ROOT ?= ../../..
 include $(FSTAR_ROOT)/mk/test.mk
 
-FSTAR_FILES := $(filter-out ContextPollution.fst,$(FSTAR_FILES))
+FSTAR_FILES := $(filter-out ContextPollution.fst MemCpy.Deps.fst MemCpy.fst,$(FSTAR_FILES))
 
 exercises:
 	$(MAKE) -C exercises

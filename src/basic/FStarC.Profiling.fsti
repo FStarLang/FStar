@@ -21,12 +21,12 @@ open FStarC.Effect
 // are both true, measure the execution time of f
 // and accumulate it in a profiling counter
 // associated with `component_name`
-val profile : f:(unit -> 'b)
+val profile : f:(unit -> ML 'b)
             -> module_name:option string
             -> component_name:string
-            -> 'b
+            -> ML 'b
 
 // Print the elapsed time from all profiling counters
 // Prefix the profiling report with the value of `tag`
 // And reset all of the profiling counters
-val report_and_clear: tag:string -> unit
+val report_and_clear: tag:string -> ML unit

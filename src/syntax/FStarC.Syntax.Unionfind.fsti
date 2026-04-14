@@ -24,38 +24,39 @@ module Range = FStarC.Range.Type
 module S = FStarC.Syntax.Syntax
 
 val uf : Type0
-val get : unit -> uf
-val set : uf -> unit
-val reset : unit -> unit
+val get : unit -> ML uf
 
 (* Set read-only mode *)
-val set_ro : unit -> unit
+val set_ro : unit -> ML unit
 
 (* Set read-write mode *)
-val set_rw : unit -> unit
+val set_rw : unit -> ML unit
 
 (* Run a function with rw mode enabled *)
-val with_uf_enabled : (unit -> 'a) -> 'a
+val with_uf_enabled : (unit -> ML 'a) -> ML 'a
+
+val set : uf -> ML unit
+val reset : unit -> ML unit
 
 val tx : Type0
-val new_transaction    : (unit -> tx)
-val rollback           : tx -> unit
+val new_transaction    : (unit -> ML tx)
+val rollback           : tx -> ML unit
 val commit             : tx -> unit
 val update_in_tx       : ref 'a -> 'a -> unit
 
-val fresh              : S.uvar_decoration -> Range.t -> S.uvar
-val uvar_id            : S.uvar -> int
-val uvar_unique_id     : S.uvar -> int
-val find               : S.uvar -> option S.term
-val find_decoration    : S.uvar -> S.uvar_decoration
-val change             : S.uvar -> S.term -> unit
-val change_decoration  : S.uvar -> S.uvar_decoration -> unit
-val equiv              : S.uvar -> S.uvar -> bool
-val union              : S.uvar -> S.uvar -> unit
+val fresh              : S.uvar_decoration -> Range.t -> ML S.uvar
+val uvar_id            : S.uvar -> ML int
+val uvar_unique_id     : S.uvar -> ML int
+val find               : S.uvar -> ML (option S.term)
+val find_decoration    : S.uvar -> ML S.uvar_decoration
+val change             : S.uvar -> S.term -> ML unit
+val change_decoration  : S.uvar -> S.uvar_decoration -> ML unit
+val equiv              : S.uvar -> S.uvar -> ML bool
+val union              : S.uvar -> S.uvar -> ML unit
 
-val univ_fresh         : Range.t -> S.universe_uvar
-val univ_uvar_id       : S.universe_uvar -> int
-val univ_find          : S.universe_uvar -> option S.universe
-val univ_change        : S.universe_uvar -> S.universe -> unit
-val univ_equiv         : S.universe_uvar -> S.universe_uvar -> bool
-val univ_union         : S.universe_uvar -> S.universe_uvar -> unit
+val univ_fresh         : Range.t -> ML S.universe_uvar
+val univ_uvar_id       : S.universe_uvar -> ML int
+val univ_find          : S.universe_uvar -> ML (option S.universe)
+val univ_change        : S.universe_uvar -> S.universe -> ML unit
+val univ_equiv         : S.universe_uvar -> S.universe_uvar -> ML bool
+val univ_union         : S.universe_uvar -> S.universe_uvar -> ML unit

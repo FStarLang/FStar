@@ -96,6 +96,29 @@ let int2bv_shr #n #x #y #z pf =
   int2bv_nat_lemma #n y;
   inverse_vec_lemma #n (bvshr #n (int2bv #n x) y)
 
+(* Rotate operations *)
+let bvrol' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.rotate_left_vec #n a (bv2int #n s)
+let bvrol (#n: pos) (a: bv_t n) (s: nat): bv_t n =
+  bvrol' #n a (int2bv_nat #n s)
+
+let int2bv_rol' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvrol' #n (int2bv #n x) (int2bv #n y))
+let int2bv_rol #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
+  inverse_vec_lemma #n (bvrol #n (int2bv #n x) y)
+
+let bvror' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.rotate_right_vec #n a (bv2int #n s)
+let bvror (#n: pos) (a: bv_t n) (s: nat): bv_t n =
+  bvror' #n a (int2bv_nat #n s)
+
+let int2bv_ror' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvror' #n (int2bv #n x) (int2bv #n y))
+let int2bv_ror #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
+  inverse_vec_lemma #n (bvror #n (int2bv #n x) y)
+
 
 
 let bvult #n a b = (bv2int #n a) < (bv2int #n b)

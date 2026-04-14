@@ -139,11 +139,11 @@ val pack_inspect_sigelt (se:R.sigelt)
           (ensures R.pack_sigelt (R.inspect_sigelt se) == se)
           [SMTPat (R.pack_sigelt (R.inspect_sigelt se))]
 
-val lookup_bvar (e:env) (x:int) : option term
+val lookup_bvar (e:env) (x:int) : GTot (option term)
 
-val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
+val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : GTot (option R.term)
 
-let lookup_fvar (e:env) (x:fv) : option term = lookup_fvar_uinst e x []
+let lookup_fvar (e:env) (x:fv) : GTot (option term) = lookup_fvar_uinst e x []
 
 let pp_name_t = FStar.Sealed.Inhabited.sealed "x"
 let pp_name_default : pp_name_t = FStar.Sealed.Inhabited.seal "x"
@@ -327,7 +327,7 @@ let open_with_var_elt (x:var) (i:nat) : subst_elt =
 let open_with_var (x:var) (i:nat) : subst = [open_with_var_elt x i]
 
 val subst_ctx_uvar_and_subst (c:ctx_uvar_and_subst) (ss:subst) 
-  : ctx_uvar_and_subst
+  : GTot ctx_uvar_and_subst
 
 let rec binder_offset_patterns (ps:list (pattern & bool))
   : nat
@@ -350,7 +350,7 @@ and binder_offset_pattern (p:pattern)
       binder_offset_patterns subpats
 
 let rec subst_term (t:term) (ss:subst)
-  : Tot term (decreases t)
+  : GTot term (decreases t)
   = match inspect_ln t with
     | Tv_UInst _ _
     | Tv_FVar _
@@ -413,7 +413,7 @@ let rec subst_term (t:term) (ss:subst)
                              b)
 
 and subst_binder (b:binder) (ss:subst)
-  : Tot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
+  : GTot (b':binder{binder_is_simple b ==> binder_is_simple b'}) (decreases b)
   = let bndr  = inspect_binder b in
     pack_binder {
       ppname = bndr.ppname;
@@ -423,7 +423,7 @@ and subst_binder (b:binder) (ss:subst)
     }
 
 and subst_comp (c:comp) (ss:subst)
-  : Tot comp (decreases c)
+  : GTot comp (decreases c)
   = match inspect_comp c with
     | C_Total t ->
       pack_comp (C_Total (subst_term t ss))
@@ -443,20 +443,20 @@ and subst_comp (c:comp) (ss:subst)
                        (subst_terms decrs ss))
 
 and subst_terms (ts:list term) (ss:subst)
-  : Tot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
+  : GTot (ts':list term{Nil? ts ==> Nil? ts'}) // property useful for subst_binder
         (decreases ts)
   = match ts with
     | [] -> []
     | t::ts -> subst_term t ss :: subst_terms ts ss
 
 and subst_args (ts:list argv) (ss:subst)
-  : Tot (list argv) (decreases ts)
+  : GTot (list argv) (decreases ts)
   = match ts with
     | [] -> []
     | (t,q)::ts -> (subst_term t ss,q) :: subst_args ts ss
 
 and subst_patterns (ps:list (pattern & bool)) (ss:subst) 
-  : Tot (list (pattern & bool))
+  : GTot (list (pattern & bool))
          (decreases ps)
   = match ps with
     | [] -> ps
@@ -467,7 +467,7 @@ and subst_patterns (ps:list (pattern & bool)) (ss:subst)
       (p,b)::ps
 
 and subst_pattern (p:pattern) (ss:subst) 
-  : Tot pattern
+  : GTot pattern
          (decreases p)
   = match p with
     | Pat_Constant _ -> p
@@ -486,7 +486,7 @@ and subst_pattern (p:pattern) (ss:subst)
 
     
 and subst_branch (br:branch) (ss:subst)
-  : Tot branch (decreases br)
+  : GTot branch (decreases br)
   = let p, t = br in
     let p = subst_pattern p ss in
     let j = binder_offset_pattern p in
@@ -494,13 +494,13 @@ and subst_branch (br:branch) (ss:subst)
     p, t
   
 and subst_branches (brs:list branch) (ss:subst)
-  : Tot (list branch) (decreases brs)
+  : GTot (list branch) (decreases brs)
   = match brs with
     | [] -> []
     | br::brs -> subst_branch br ss :: subst_branches brs ss
   
 and subst_match_returns (m:match_returns_ascription) (ss:subst)
-  : Tot match_returns_ascription (decreases m)
+  : GTot match_returns_ascription (decreases m)
   = let b, (ret, as_, eq) = m in
     let b = subst_binder b ss in
     let ret =
@@ -1055,16 +1055,16 @@ let is_non_informative_name (l:name) : bool =
 let is_non_informative_fv (f:fv) : bool =
   is_non_informative_name (inspect_fv f)
 
-let rec __close_term_vs (i:nat) (vs : list var) (t : term) : Tot term (decreases vs) =
+let rec __close_term_vs (i:nat) (vs : list var) (t : term) : GTot term (decreases vs) =
   match vs with
   | [] -> t
   | v::vs ->
     subst_term (__close_term_vs (i+1) vs t) [ND v i]
 
-let close_term_vs (vs : list var) (t : term) : term =
+let close_term_vs (vs : list var) (t : term) : GTot term =
   __close_term_vs 0 vs t
 
-let close_term_bs (bs : list binding) (t : term) : term =
+let close_term_bs (bs : list binding) (t : term) : GTot term =
   close_term_vs (List.Tot.map fst bs) t
 
 let bindings_to_refl_bindings (bs : list binding) : list R.binding =
@@ -1521,9 +1521,9 @@ val subtyping_token_renaming (g:env)
                              (t:term)
                              (t0 t1:term)
                              (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+  : GTot (subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
                       (rename t0 x y)
-                      (rename t1 x y)
+                      (rename t1 x y))
 
 val subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -1532,7 +1532,7 @@ val subtyping_token_weakening (g:env)
                               (t:term)
                               (t0 t1:term)
                               (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+  : GTot (subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
 
 let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
                   (d:typing g t (E_Total, tm_type (u_max u u)))
@@ -1738,16 +1738,16 @@ val equiv_arrow (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
   (eq:equiv (extend_env g x ty)
             (subst_term e1 (open_with_var x 0))
             (subst_term e2 (open_with_var x 0)))
-  : equiv g (mk_arrow ty q e1)
-            (mk_arrow ty q e2)
+  : GTot (equiv g (mk_arrow ty q e1)
+            (mk_arrow ty q e2))
 
 
 // the proof for this requires e1 and e2 to be ln
 val equiv_abs_close (#g:R.env) (#e1 #e2:R.term) (ty:R.typ) (q:R.aqualv)
   (x:var{None? (lookup_bvar g x)})
   (eq:equiv (extend_env g x ty) e1 e2)
-  : equiv g (mk_abs ty q (subst_term e1 [ ND x 0 ]))
-            (mk_abs ty q (subst_term e2 [ ND x 0 ]))
+  : GTot (equiv g (mk_abs ty q (subst_term e1 [ ND x 0 ]))
+            (mk_abs ty q (subst_term e2 [ ND x 0 ])))
 
 val open_with_gt_ln (e:term) (i:nat) (t:term) (j:nat)
   : Lemma
@@ -1863,10 +1863,10 @@ type dsl_tac_t =
   Tac (dsl_tac_result_t (fst gt) (snd gt))
 
 val if_complete_match (g:env) (t:term)
-  : match_complete_token g t bool_ty [
+  : GTot (match_complete_token g t bool_ty [
        Pat_Constant C_True;
        Pat_Constant C_False;
-    ] [[]; []]
+    ] [[]; []])
 
 // Derived rule for if
 
@@ -1910,4 +1910,4 @@ to call primitives that require a proof of typing, like
 they even be mentioned in that module due to dependencies.
 Probably the right thing to do is refactor and avoid this, though. *)
 val typing_to_token (#g:env) (#e:term) (#c:comp_typ)
-  : typing g e c -> typing_token g e c
+  : typing g e c -> GTot (typing_token g e c)

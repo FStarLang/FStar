@@ -186,3 +186,19 @@ let shift_right_lemma_2 #n a s i = ()
 let shift_arithmetic_right_lemma_1 #n a s i = ()
 
 let shift_arithmetic_right_lemma_2 #n a s i = ()
+
+(* Rotate operators lemmas *)
+
+let rotate_left_lemma #n a s i = ()
+
+let rotate_right_lemma #n a s i = ()
+
+let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
+
+let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
+
+#push-options "--split_queries always"
+let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
+
+let rotate_right_left_inverse #n a s = nth_lemma (rotate_left #n (rotate_right #n a s) s) a
+#pop-options

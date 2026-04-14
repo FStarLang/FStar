@@ -160,7 +160,7 @@ let udiv (#n:pos) (a:uint_t n) (b:uint_t n{b <> 0}) : Tot (c:uint_t n{b <> 0 ==>
 
 (* Modulo primitives *)
 let mod (#n:nat) (a:uint_t n) (b:uint_t n{b <> 0}) : Tot (uint_t n) =
-  a - ((a/b) * b)
+  a - ((a / b) * b)
 
 (* Comparison operators *)
 let eq  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)

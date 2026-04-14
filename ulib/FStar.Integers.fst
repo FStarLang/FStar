@@ -391,7 +391,7 @@ let ( / ) (#sw:signed_width{sw <> Unsigned W128})
           (y:int_t sw{0 <> (v y <: Prims.int) /\
                       (match sw with
                        | Unsigned _ -> within_bounds sw (v x / v y)
-                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash` v y))})
+                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash_Subtraction` v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x / y
@@ -415,7 +415,7 @@ let ( % ) (#sw:signed_width{sw <> Unsigned W128})
                        | Unsigned _ -> within_bounds sw (FStar.UInt.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))
                        | Signed Winfinite -> True
                        | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))) /\
-                       within_bounds sw (FStar.Int.op_Slash (v x) (v y))})
+                       within_bounds sw (FStar.Int.op_Slash_Subtraction (v x) (v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x % y

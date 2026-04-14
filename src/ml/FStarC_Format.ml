@@ -45,10 +45,34 @@ let print_string s = (!current_printer).printer_prinfo s
 let print_generic label to_string to_json a = (!current_printer).printer_prgeneric label (fun () -> to_string a) (fun () -> to_json a)
 let print_any s = (!current_printer).printer_prinfo (Marshal.to_string s [])
 
-(* restore pre-2.11 BatString.nsplit behavior,
-   see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
+(* Stack-safe replacement for BatString.split_on_string.
+   BatString.find_from is not tail-recursive and overflows on long strings. *)
 let batstring_nsplit s t =
-  if s = "" then [] else BatString.split_on_string t s
+  if s = "" then []
+  else if t = "" then invalid_arg "batstring_nsplit: empty separator"
+  else
+    let slen = String.length s in
+    let tlen = String.length t in
+    let find_sep start =
+      let result = ref (-1) in
+      let i = ref start in
+      while !i + tlen <= slen && !result = -1 do
+        if String.sub s !i tlen = t then result := !i
+        else i := !i + 1
+      done;
+      !result
+    in
+    let rec collect acc start =
+      if start > slen then List.rev acc
+      else if start = slen then List.rev ("" :: acc)
+      else
+        let p = find_sep start in
+        if p = -1 then List.rev (String.sub s start (slen - start) :: acc)
+        else
+          let tok = String.sub s start (p - start) in
+          collect (tok :: acc) (p + tlen)
+    in
+    collect [] 0
 
 let fmt (fmt:string) (args:string list) =
   let frags = batstring_nsplit fmt "%s" in

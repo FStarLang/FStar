@@ -20,7 +20,9 @@ jobs:
   pre:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
       - if: env.DRY_RUN != 'true' # don't check on a dry run.
         run: |
           git fetch --tags
@@ -43,15 +45,16 @@ jobs:
           git config --global user.name "Dzomo, the Everest Yak"
           git config --global user.email "24394600+dzomo@users.noreply.github.com"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
           # ^ Download all artifacts into the same dir.
           # Each of them is a single file, so no clashes happen.
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
+          submodules: true
           path: FStar
       - name: Rename packages to have version number
         run: |
