@@ -1,0 +1,91 @@
+; =============================================================================
+; build/dune — F* staged build system using dune
+; =============================================================================
+;
+; This dune project builds F* through its staged bootstrap:
+;   stage0 (separate --root) → fstar0.exe
+;   stage1-gen/ → fstar0.exe --dep dune generates extraction rules
+;   stage1/    → dynamic_include rules, builds fstar1.exe
+;
+; PREREQUISITE: stage0 must have been built and installed:
+;   dune build --root=../stage0/dune @install
+;   dune install --root=../stage0/dune --prefix=../stage0/out
+;
+; NOTE: stage0's fstar.exe must support --dep dune and --output_ext.
+; If it doesn't, stage0 needs to be bumped first.
+;
+; Usage:
+;   FSTAR_EXE=../stage0/out/bin/fstar.exe dune build @stage1
+
+(dirs stage1 stage1-gen)
+
+; =============================================================================
+; Stage 1 generator rules
+; =============================================================================
+; These rules invoke fstar0.exe --dep dune to generate .inc files
+; containing dune (rule ...) stanzas for checking and extracting.
+
+(subdir stage1-gen
+
+ ; FStarC bare compiler: build (verification) phase
+ (rule
+  (target fstarc.build.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe}
+         --dep dune --output_ext fst.checked.lax --lax
+         --warn_error -272
+         --include %{workspace_root}/../ulib
+         --include %{workspace_root}/../src/basic
+         --include %{workspace_root}/../src/class
+         --include %{workspace_root}/../src/data
+         --include %{workspace_root}/../src/extraction
+         --include %{workspace_root}/../src/fstar
+         --include %{workspace_root}/../src/interactive
+         --include %{workspace_root}/../src/parser
+         --include %{workspace_root}/../src/prettyprint
+         --include %{workspace_root}/../src/reflection
+         --include %{workspace_root}/../src/smtencoding
+         --include %{workspace_root}/../src/syntax
+         --include %{workspace_root}/../src/syntax/print
+         --include %{workspace_root}/../src/tactics
+         --include %{workspace_root}/../src/tosyntax
+         --include %{workspace_root}/../src/typechecker
+         --include %{workspace_root}/../src/tests
+         --extract FStarC
+         --extract +FStar.Pervasives
+         --extract -FStar.Pervasives.Native
+         --already_cached "Prims FStar"
+         %{workspace_root}/../src/fstar/FStarC.Main.fst))))
+
+ ; FStarC bare compiler: extract (codegen OCaml) phase
+ (rule
+  (target fstarc.extract.inc)
+  (deps (universe))
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR_EXE=fstar.exe}
+         --dep dune --output_ext ml --codegen OCaml --lax
+         --warn_error -272
+         --include %{workspace_root}/../ulib
+         --include %{workspace_root}/../src/basic
+         --include %{workspace_root}/../src/class
+         --include %{workspace_root}/../src/data
+         --include %{workspace_root}/../src/extraction
+         --include %{workspace_root}/../src/fstar
+         --include %{workspace_root}/../src/interactive
+         --include %{workspace_root}/../src/parser
+         --include %{workspace_root}/../src/prettyprint
+         --include %{workspace_root}/../src/reflection
+         --include %{workspace_root}/../src/smtencoding
+         --include %{workspace_root}/../src/syntax
+         --include %{workspace_root}/../src/syntax/print
+         --include %{workspace_root}/../src/tactics
+         --include %{workspace_root}/../src/tosyntax
+         --include %{workspace_root}/../src/typechecker
+         --include %{workspace_root}/../src/tests
+         --extract FStarC
+         --extract +FStar.Pervasives
+         --extract -FStar.Pervasives.Native
+         --already_cached "Prims FStar"
+         %{workspace_root}/../src/fstar/FStarC.Main.fst))))
+)

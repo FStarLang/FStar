@@ -189,7 +189,46 @@ Uses `rsync`, `tar`, `uname` — POSIX-only.
 
 The `examples/hello` pattern on master (using `--dep dune` + `--output_ext` +
 `dynamic_include`) is the blueprint. To make the full build portable:
-1. Apply this pattern to stages 1-3 extraction (replace `mk/lib.mk`, `mk/generic.mk`)
-2. Replace `packaging/dune` bash scripts with portable dune rules
-3. Eliminate all `ln -Tsf`, `find -exec`, `flock`, `env`, `sed -i`, `rsync`
-4. Use `--ocamlenv` for automatic OCAMLPATH setup
+1. **Bump stage0** so fstar0.exe has `--dep dune` and `--output_ext`
+   (the current stage0 snapshot predates these features)
+2. Apply the `dynamic_include` pattern to stages 1-3 extraction
+3. Replace `packaging/dune` bash scripts with portable dune rules
+4. Eliminate all `ln -Tsf`, `find -exec`, `flock`, `env`, `sed -i`, `rsync`
+5. Use `--ocamlenv` for automatic OCAMLPATH setup
+
+## Stage0 Bump Requirement
+
+**CRITICAL**: The current stage0 snapshot does NOT have `--dep dune` or
+`--output_ext`. These features are in master's F* source code but the
+stage0 OCaml snapshot predates their addition. A stage0 bump must be
+performed on Linux before the dune-based build can work:
+
+```bash
+# On Linux, from master:
+make bump-stage0
+git add stage0/ && git commit -m "Bump stage0 with --dep dune support"
+```
+
+## Dune Build Infrastructure (build/ directory)
+
+The `build/` directory contains a standalone dune project that builds F*
+through its staged bootstrap using `--dep dune`:
+
+```
+build/
+├── dune-project    # (lang dune 3.15)
+├── dune            # Generator rules in (subdir stage1-gen ...)
+├── stage1-gen/     # Generated .inc files (fstarc.build.inc, fstarc.extract.inc)
+└── stage1/         # Consumer: (dynamic_include), builds fstar1.exe
+    └── dune
+```
+
+Usage (after stage0 bump):
+```bash
+# 1. Build stage0
+dune build --root=stage0/dune @install
+dune install --root=stage0/dune --prefix=stage0/out
+
+# 2. Build stage1 using fstar0.exe
+FSTAR_EXE=stage0/out/bin/fstar.exe dune build --root=build @stage1
+```
