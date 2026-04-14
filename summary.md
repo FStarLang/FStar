@@ -200,12 +200,22 @@ The `examples/hello` pattern on master (using `--dep dune` + `--output_ext` +
 
 **CRITICAL**: The current stage0 snapshot does NOT have `--dep dune` or
 `--output_ext`. These features are in master's F* source code but the
-stage0 OCaml snapshot predates their addition. A stage0 bump must be
-performed on Linux before the dune-based build can work:
+stage0 OCaml snapshot predates their addition.
+
+**Recommended approach**: Bump stage0 on Linux. The Windows build system
+has several issues that make bumping on Windows impractical:
+1. Cygwin path encoding: Native Windows binaries (built by dune/mingw)
+   get garbled paths when env vars pass through Cygwin `env` command
+2. Symlinks: stage1/dune/ uses symlinks extensively, which break on Windows.
+   Must be replaced with file copies.
+3. `FSTAR_LIB`: The Makefile uses Cygwin-style absolute paths that native
+   Windows binaries can't parse. Fixed with `$(call cygpath,...)` wrapper.
+4. `--already_cached` + missing checked files: stage2 extraction expects
+   Prims to be pre-cached but the checked files aren't in the right location.
 
 ```bash
 # On Linux, from master:
-make bump-stage0
+make bump-stage0 ADMIT=1
 git add stage0/ && git commit -m "Bump stage0 with --dep dune support"
 ```
 
