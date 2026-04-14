@@ -3,6 +3,11 @@ export FSTAR_ROOT=$(CURDIR)
 # Do NOT rely on it in client code. It is not what FSTAR_HOME was.
 include mk/common.mk
 
+# Export FSTAR_LIB for Windows compatibility: native Windows binaries
+# built via dune/mingw cannot handle Cygwin-style paths (/cygdrive/...),
+# so we use cygpath -m to convert to Windows paths (C:/...).
+export FSTAR_LIB := $(call cygpath,$(CURDIR)/ulib)
+
 # NOTE: If you are changing any of install rules, run a macos build too.
 # The behavior of cp, find, etc, can differ in subtle ways from that of GNU tools.
 
@@ -154,7 +159,7 @@ $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 	touch -c $@
 
 stage1-unit-tests: $(TESTS1_EXE)
-	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
+	FSTAR_LIB=$(call cygpath,$(CURDIR)/ulib) $(TESTS1_EXE)
 
 .full1.src.touch: $(FSTAR1_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
@@ -219,7 +224,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
 	env \
 	  SRC=src/ \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage2/fstarc.checked/ \
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
@@ -233,7 +238,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  CACHE_DIR=stage2/tests.checked/ \
 	  OUTPUT_DIR=stage2/tests.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -255,7 +260,7 @@ $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 	touch -c $@
 
 stage2-unit-tests: $(TESTS2_EXE)
-	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
+	FSTAR_LIB=$(call cygpath,$(CURDIR)/ulib) $(TESTS2_EXE)
 
 .full2.src.touch: $(FSTAR2_BARE_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
@@ -352,7 +357,7 @@ boot-src-bare: $(FSTAR2_FULL_EXE) .force
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  CACHE_DIR=boot-diff/fstarc.checked/ \
 	  OUTPUT_DIR=boot-diff/fstarc.ml/ \
 	  CODEGEN=OCaml \
@@ -392,19 +397,19 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	$(call bold_msg, "CHECK", "PULSE CORE")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-common.mk
 	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-core.mk
 	$(call bold_msg, "CHECK", "PULSE LIB")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
+	  FSTAR_LIB=$(call cygpath,$(abspath ulib)) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  STAGE3=1 \
 	  $(MAKE) -C pulse/ -f mk/lib-pulse.mk
