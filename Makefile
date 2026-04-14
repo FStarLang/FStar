@@ -100,8 +100,7 @@ build: 3
 
 stage0/out/bin/fstar.exe: .stage0.touch
 	$(call bold_msg, "STAGE 0")
-	mkdir -p stage0/ulib/.cache # prevent warnings
-	$(MAKE) -C stage0 minimal # build: only fstar.exe and set-up lib sources
+	$(MAKE) -C stage0 install_bin # build: only fstar.exe
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
@@ -356,6 +355,12 @@ endif
 	touch $@
 
 .stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
+	touch $@
+
+.stage1-for-bump.src.touch: .bare1.src.touch .full1.src.touch .src.ml.touch
+	touch $@
+
+.stage2-for-bump.src.touch: .bare2.src.touch .full2.src.touch .src.ml.touch
 	touch $@
 
 .pulse-plugin.src.touch: stage2
@@ -622,22 +627,33 @@ ci: .force
 
 save: stage0_new
 
-stage0_new: TO=stage0_new
-stage0_new: .stage2.src.touch
+# Shared logic for creating a stage0 snapshot from a given stage.
+define do-stage0-snapshot
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
-	.scripts/src-install.sh "stage2" "$(TO)"
+	mkdir -p "$(1)"/ulib.ml "$(1)"/ulib.pluginml  # rsync fails with dangling symlinks
+	.scripts/src-install.sh "$(1)" "$(TO)"
 	# Trim it a bit...
 	rm -rf "$(TO)/src"            # no need for compiler F* sources
-	rm -rf "$(TO)/ulib/.hints"    # this library won't be checked
-	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
+	rm -rf "$(TO)/ulib"*          # stage0 does not need its own ulib copy
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 	rm -rf "$(TO)/dune/fstarc-bare" # no bare compiler
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages
+endef
 
-bump-stage0: stage0_new
+stage0_new: TO=stage0_new
+stage0_new: .stage2-for-bump.src.touch
+	$(call do-stage0-snapshot,stage2)
+
+# Faster alternative: snapshot from stage1 (only requires building stage1).
+stage0_new_from_stage1: TO=stage0_new
+stage0_new_from_stage1: .stage1-for-bump.src.touch
+	$(call do-stage0-snapshot,stage1)
+
+# Shared logic for finalizing a stage0 bump.
+define do-bump-stage0
 	$(call bold_msg, "BUMP!")
 	# Replace stage0
 	rm -rf stage0
@@ -645,22 +661,20 @@ bump-stage0: stage0_new
 	echo 'out' >> stage0/.gitignore
 	echo '** -diff -merge linguist-generated=true' >> stage0/.gitattributes
 	# Now that stage0 supports all features, we can return to a clean state
-	# where the 01 makefile is equal to the 12 makefile. Same for stage1
-	# support and config code, we just take it from the stage2.
+	# where the 01 makefile is equal to the 12 makefile.
 	rm -f mk/generic-0.mk
 	ln -sf generic-1.mk mk/generic-0.mk
 	cp mk/fstar-12.mk mk/fstar-01.mk
 	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
-	rm -rf stage1
-	cp -r stage2 stage1
-	rm -rf stage1/dune/_build
-	# Rename dune executables: stage1 must use fstarc1_*, not fstarc2_*
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-full/dune
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/tests/dune
-	mv stage1/dune/fstarc-full/fstarc2_full.ml stage1/dune/fstarc-full/fstarc1_full.ml
-	mv stage1/dune/tests/fstarc2_tests.ml      stage1/dune/tests/fstarc1_tests.ml
 	rm -f stage1/dune/fstar-guts/app
-	ln -Trsf stage0/ulib/ml/app stage1/dune/fstar-guts/app
+	ln -Trsf ulib/ml/app stage1/dune/fstar-guts/app
+endef
+
+bump-stage0: stage0_new
+	$(do-bump-stage0)
+
+bump-stage0-from-stage1: stage0_new_from_stage1
+	$(do-bump-stage0)
 
 # This rule brings a stage0 from an OLD fstar repo. Only useful for migrating.
 bring-stage0: .force
@@ -669,9 +683,6 @@ bring-stage0: .force
 	mkdir stage0
 	cp -r $(FROM)/ocaml -T stage0
 	ln -Tsrf mk/stage0.mk stage0/Makefile
-	cp -r $(FROM)/ulib -T stage0/ulib
-	find stage0/ulib -name '*.checked' -delete
-	find stage0/ulib -name '*.hints' -delete
 	echo '/lib' >> stage0/.gitignore
 	echo '** -diff -merge' >> stage0/.gitattributes
 	echo '** linguist-generated=true' >> stage0/.gitattributes
@@ -699,7 +710,6 @@ clean-depend: .force
 clean-0: .force
 	$(call bold_msg, "CLEAN", "STAGE 0")
 	$(MAKE) -C stage0 clean
-	rm -rf stage0/ulib/.cache # created only to prevent warnings, always empty
 
 define clean-stage
 	$(call bold_msg, "CLEAN", "STAGE $(1)")
