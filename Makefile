@@ -41,22 +41,16 @@ endif
 FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 
 # This is hardcoding some dune paths, with internal (non-public) names.
-# This is motivated by dune installing packages as a unit, so I could not
-# install simply the bare compiler and then use it to build the full compiler
-# without splitting into many packages, which complicates the namespaces.
 #
-# Also, when we want to extract src/ for stage 2, we must call FSTAR1_FULL_EXE,
+# When we want to extract src/ for stage 2, we must call FSTAR1_FULL_EXE,
 # but it's in a bad location (without a library next to it). So, we must
-# pass FSTAR_LIB explicitly. This is the only case where this is needed, the rest
-# of stages don't need a library. The alternative is to install it, and use
+# pass FSTAR_LIB explicitly. The alternative is to install it, and use
 # $(INSTALLED_FSTAR1_FULL_EXE), but that introduces a spurious dependency to the
 # stage 1 libraries for the stage 2, which does not need them at all (currently?).
 #
 # I'd love a better alternative.
-FSTAR1_BARE_EXE           := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
 FSTAR1_FULL_EXE           := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
 INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
-FSTAR2_BARE_EXE           := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
 FSTAR2_FULL_EXE           := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
 # Stage3 = Stage2 + Pulse
@@ -79,13 +73,11 @@ endif
 build: 3
 
 0: $(FSTAR0_EXE)
-1.bare:  $(FSTAR1_BARE_EXE)
 1.tests: $(TESTS1_EXE)
 1.full:  $(FSTAR1_FULL_EXE)
-2.bare:  $(FSTAR2_BARE_EXE)
 2.tests: $(TESTS2_EXE)
 2.full:  $(FSTAR2_FULL_EXE)
-# No tests or bare for stage3
+# No tests for stage3
 3.full:  $(FSTAR3_FULL_EXE)
 
 
@@ -113,7 +105,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
+	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC")
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
@@ -144,11 +136,6 @@ stage0/out/bin/fstar.exe: .stage0.touch
 .src.ml.touch: .force
 	[ -e $@ ] || touch $@
 	find -L src/ml -newer $@ -exec touch $@ \; -quit
-
-$(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
-	$(MAKE) -C stage1 fstarc-bare
-	touch -c $@
 
 $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 TESTS")
@@ -242,14 +229,6 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/tests-2.mk ocaml
-
-$(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
-	$(MAKE) -C stage2 fstarc-bare
-	touch -c $@
-	# ^ Note, even if we don't release fstar-bare itself,
-	# it is still part of the build of the full fstar, so
-	# we set the release flag to have a more incremental build.
 
 $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
@@ -551,15 +530,15 @@ package-src-3: .stage3.src.touch .tests2.src.touch .force
 package: package-3
 package-src: package-src-3
 
-test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
+test-1-bare: override FSTAR_EXE := $(abspath $(INSTALLED_FSTAR1_FULL_EXE))
 test-1-bare: override FSTAR_LIB := $(abspath ulib)
-test-1-bare: $(FSTAR1_BARE_EXE)
-	$(MAKE) -C bare-tests
+test-1-bare: stage1
+	$(MAKE) -C bare-tests FSTAR_EXE=$(FSTAR_EXE) FSTAR_LIB=$(FSTAR_LIB)
 
-test-2-bare: override FSTAR_EXE := $(abspath $(FSTAR2_BARE_EXE))
+test-2-bare: override FSTAR_EXE := $(abspath $(INSTALLED_FSTAR2_FULL_EXE))
 test-2-bare: override FSTAR_LIB := $(abspath ulib)
-test-2-bare: $(FSTAR2_BARE_EXE)
-	$(MAKE) -C bare-tests
+test-2-bare: stage2
+	$(MAKE) -C bare-tests FSTAR_EXE=$(FSTAR_EXE) FSTAR_LIB=$(FSTAR_LIB)
 
 test: test-3
 
@@ -654,6 +633,7 @@ stage0_new: .stage2.src.touch
 	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
+	rm -rf "$(TO)/dune/fstarc-bare" # no bare compiler
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages
 
@@ -675,10 +655,8 @@ bump-stage0: stage0_new
 	cp -r stage2 stage1
 	rm -rf stage1/dune/_build
 	# Rename dune executables: stage1 must use fstarc1_*, not fstarc2_*
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-bare/dune
 	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-full/dune
 	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/tests/dune
-	mv stage1/dune/fstarc-bare/fstarc2_bare.ml stage1/dune/fstarc-bare/fstarc1_bare.ml
 	mv stage1/dune/fstarc-full/fstarc2_full.ml stage1/dune/fstarc-full/fstarc1_full.ml
 	mv stage1/dune/tests/fstarc2_tests.ml      stage1/dune/tests/fstarc1_tests.ml
 	rm -f stage1/dune/fstar-guts/app
