@@ -20,10 +20,10 @@ let showable_psmap (uu___ : 'a FStarC_Class_Show.showable) :
 let triggers_as_triggers_set (ts : triggers) : triggers_set=
   FStarC_List.map
     (fun uu___ ->
-       (Obj.magic
-          (FStarC_Class_Setlike.from_list ()
-             (Obj.magic
-                (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+       Obj.magic
+         (FStarC_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
          uu___) ts
 type assumption_name = Prims.string
 type sym = {
@@ -299,10 +299,10 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
     let uu___ =
       FStarC_List.map
         (fun uu___1 ->
-           (Obj.magic
-              (FStarC_Class_Setlike.elems ()
-                 (Obj.magic
-                    (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+           Obj.magic
+             (FStarC_Class_Setlike.elems ()
+                (Obj.magic
+                   (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
              uu___1) triggers1 in
     FStarC_List.fold_left
       (FStarC_List.fold_left (add_trigger_to_assumption a)) p1 uu___ in
@@ -448,7 +448,7 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                    let uu___10 =
                      let uu___11 =
                        FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int (4))) in
+                         ((FStarC_String.length token) - (Prims.of_int 4)) in
                      Obj.magic
                        (FStarC_Class_Setlike.singleton ()
                           (Obj.magic
@@ -478,7 +478,7 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                    let uu___8 =
                      let uu___9 =
                        FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int (4))) in
+                         ((FStarC_String.length token) - (Prims.of_int 4)) in
                      Obj.magic
                        (FStarC_Class_Setlike.singleton ()
                           (Obj.magic
@@ -525,7 +525,7 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                    let uu___9 =
                      let uu___10 =
                        FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int (4))) in
+                         ((FStarC_String.length token) - (Prims.of_int 4)) in
                      Obj.magic
                        (FStarC_Class_Setlike.singleton ()
                           (Obj.magic
@@ -555,7 +555,7 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                    let uu___7 =
                      let uu___8 =
                        FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int (4))) in
+                         ((FStarC_String.length token) - (Prims.of_int 4)) in
                      Obj.magic
                        (FStarC_Class_Setlike.singleton ()
                           (Obj.magic
@@ -742,10 +742,10 @@ let remove_trigger_for_assumption (p : pruning_state) (trig : sym)
       let eligible =
         FStarC_Util.for_some
           (fun uu___ ->
-             (Obj.magic
-                (FStarC_Class_Setlike.is_empty ()
-                   (Obj.magic
-                      (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string))))
+             Obj.magic
+               (FStarC_Class_Setlike.is_empty ()
+                  (Obj.magic
+                     (FStarC_RBSet.setlike_rbset FStarC_Class_Ord.ord_string)))
                uu___) l1.remaining_triggers in
       ({
          defs_and_decls = (p.defs_and_decls);
@@ -776,11 +776,11 @@ let rec add_decl (d : FStarC_SMTEncoding_Term.decl) (p : pruning_state) :
         let uu___ =
           FStarC_List.map
             (fun uu___1 ->
-               (Obj.magic
-                  (FStarC_Class_Setlike.elems ()
-                     (Obj.magic
-                        (FStarC_RBSet.setlike_rbset
-                           FStarC_Class_Ord.ord_string)))) uu___1) triggers1 in
+               Obj.magic
+                 (FStarC_Class_Setlike.elems ()
+                    (Obj.magic
+                       (FStarC_RBSet.setlike_rbset
+                          FStarC_Class_Ord.ord_string))) uu___1) triggers1 in
         FStarC_List.fold_left
           (FStarC_List.fold_left (add_trigger_to_assumption a)) p uu___ in
       add_assumption_to_triggers a p1 triggers1

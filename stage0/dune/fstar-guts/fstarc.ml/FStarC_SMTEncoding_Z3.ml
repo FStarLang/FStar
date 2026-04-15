@@ -244,7 +244,7 @@ let z3_cmd_and_args (uu___ : unit) :
           (Obj.magic
              (FStarC_List.op_At
                 [FStarC_Errors_Msg.text "Z3 solver not found.";
-                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                   (FStarC_Errors_Msg.text "Required version: ")
                   (FStar_Pprint.doc_of_string ver)]
                 (FStarC_Find_Z3.z3_install_suggestion ver))) in
@@ -262,7 +262,7 @@ let warn_handler (suf : FStarC_Errors_Msg.error_message) (s : Prims.string) :
              (FStarC_Errors_Msg.text "Unexpected output from Z3:")
              (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline
                 (FStar_Pprint.op_Hat_Hat
-                   (FStar_Pprint.blank (Prims.of_int (2)))
+                   (FStar_Pprint.blank (Prims.of_int 2))
                    (FStar_Pprint.align
                       (FStar_Pprint.dquotes (FStar_Pprint.arbitrary_string s)))))]
           suf))
@@ -355,10 +355,10 @@ let new_z3proc (id : Prims.string)
                 let uu___5 =
                   let uu___6 = FStarC_Util.print_exn uu___ in
                   FStar_Pprint.arbitrary_string uu___6 in
-                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                   (FStarC_Errors_Msg.text "Exception:") uu___5 in
               [uu___4] in
-            (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+            (FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                (FStarC_Errors_Msg.text "Command:")
                (FStar_Pprint.squotes
                   (FStar_Pprint.arbitrary_string
@@ -717,7 +717,7 @@ let doZ3Exe (log_file : Prims.string FStar_Pervasives_Native.option)
           let s1 = FStarC_Util.trim_string (FStarC_String.concat " " s) in
           let s2 =
             FStarC_Util.substring s1 Prims.int_one
-              ((FStarC_String.length s1) - (Prims.of_int (2))) in
+              ((FStarC_String.length s1) - (Prims.of_int 2)) in
           if FStarC_Util.starts_with s2 "error"
           then FStar_Pervasives_Native.None
           else
@@ -764,7 +764,7 @@ let doZ3Exe (log_file : Prims.string FStar_Pervasives_Native.option)
                  (FStarC_String.length "(:reason-unknown \"") in
              let res =
                FStarC_String.substring reason Prims.int_zero
-                 ((FStarC_String.length reason) - (Prims.of_int (2))) in
+                 ((FStarC_String.length reason) - (Prims.of_int 2)) in
              res
            else ru) smt_output1.smt_reason_unknown in
     let status =

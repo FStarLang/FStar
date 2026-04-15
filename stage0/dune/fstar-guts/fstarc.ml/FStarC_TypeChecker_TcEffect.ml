@@ -2,11 +2,6 @@ open Prims
 let dbg : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "ED"
 let dbg_LayeredEffectsTc : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "LayeredEffectsTc"
-let dmff_cps_and_elaborate (env : FStarC_TypeChecker_Env.env)
-  (ed : FStarC_Syntax_Syntax.eff_decl) :
-  (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_Syntax_Syntax.eff_decl *
-    FStarC_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)=
-  FStarC_TypeChecker_DMFF.cps_and_elaborate env ed
 let check_and_gen (env : FStarC_TypeChecker_Env.env)
   (eff_name : Prims.string) (comb : Prims.string) (n : Prims.int)
   (us_t : (FStarC_Syntax_Syntax.univ_names * FStarC_Syntax_Syntax.term)) :
@@ -549,7 +544,7 @@ let bind_combinator_kind (env : FStarC_TypeChecker_Env.env)
                                          if has_range_binders
                                          then
                                            FStarC_List.splitAt
-                                             (Prims.of_int (2)) rest_bs3
+                                             (Prims.of_int 2) rest_bs3
                                          else ([], rest_bs3) in
                                        (match uu___9 with
                                         | (range_bs, rest_bs4) ->
@@ -557,13 +552,13 @@ let bind_combinator_kind (env : FStarC_TypeChecker_Env.env)
                                             op_let_Question
                                               (if
                                                  (FStarC_List.length rest_bs4)
-                                                   >= (Prims.of_int (2))
+                                                   >= (Prims.of_int 2)
                                                then
                                                  let uu___11 =
                                                    FStarC_List.splitAt
                                                      ((FStarC_List.length
                                                          rest_bs4)
-                                                        - (Prims.of_int (2)))
+                                                        - (Prims.of_int 2))
                                                      rest_bs4 in
                                                  match uu___11 with
                                                  | (rest_bs5, f_b::g_b::[])
@@ -974,7 +969,7 @@ let validate_indexed_effect_bind_shape (env : FStarC_TypeChecker_Env.env)
         | FStarC_Syntax_Syntax.Tm_arrow
             { FStarC_Syntax_Syntax.bs1 = bs;
               FStarC_Syntax_Syntax.comp = uu___2;_}
-            when (FStarC_List.length bs) >= (Prims.of_int (4)) ->
+            when (FStarC_List.length bs) >= (Prims.of_int 4) ->
             let uu___3 = FStarC_Syntax_Subst.open_binders bs in
             (match uu___3 with
              | { FStarC_Syntax_Syntax.binder_bv = a;
@@ -1011,7 +1006,7 @@ let validate_indexed_effect_bind_shape (env : FStarC_TypeChecker_Env.env)
                  FStarC_Syntax_Subst.subst_binders uu___10
                    (FStar_Pervasives_Native.fst
                       (FStarC_List.splitAt
-                         ((FStarC_List.length bs1) - (Prims.of_int (2))) bs1)))
+                         ((FStarC_List.length bs1) - (Prims.of_int 2)) bs1)))
         | uu___2 ->
             let uu___3 =
               let uu___4 =
@@ -1027,10 +1022,10 @@ let validate_indexed_effect_bind_shape (env : FStarC_TypeChecker_Env.env)
       let uu___1 =
         if has_range_binders
         then
-          (if (FStarC_List.length rest_bs) >= (Prims.of_int (2))
+          (if (FStarC_List.length rest_bs) >= (Prims.of_int 2)
            then
              FStarC_List.splitAt
-               ((FStarC_List.length rest_bs) - (Prims.of_int (2))) rest_bs
+               ((FStarC_List.length rest_bs) - (Prims.of_int 2)) rest_bs
            else
              (let uu___3 =
                 let uu___4 =
@@ -1320,7 +1315,7 @@ let subcomp_combinator_kind (env : FStarC_TypeChecker_Env.env)
                     match uu___4 with
                     | (f_bs, f_bs_kinds, rest_bs2) ->
                         op_let_Question
-                          (if (FStarC_List.length rest_bs2) >= Prims.int_one
+                          (if Prims.uu___is_Cons rest_bs2
                            then
                              let uu___5 =
                                FStarC_List.splitAt
@@ -1674,7 +1669,7 @@ let validate_indexed_effect_subcomp_shape (env : FStarC_TypeChecker_Env.env)
     | FStarC_Syntax_Syntax.Tm_arrow
         { FStarC_Syntax_Syntax.bs1 = bs;
           FStarC_Syntax_Syntax.comp = uu___1;_}
-        when (FStarC_List.length bs) >= (Prims.of_int (2)) ->
+        when (FStarC_List.length bs) >= (Prims.of_int 2) ->
         let uu___2 = FStarC_Syntax_Subst.open_binders bs in
         (match uu___2 with
          | { FStarC_Syntax_Syntax.binder_bv = a;
@@ -1928,12 +1923,12 @@ let ite_combinator_kind (env : FStarC_TypeChecker_Env.env)
                         op_let_Question
                           (if
                              (FStarC_List.length rest_bs2) >=
-                               (Prims.of_int (3))
+                               (Prims.of_int 3)
                            then
                              FStar_Pervasives_Native.Some
                                (FStarC_List.splitAt
                                   ((FStarC_List.length rest_bs2) -
-                                     (Prims.of_int (3))) rest_bs2)
+                                     (Prims.of_int 3)) rest_bs2)
                            else FStar_Pervasives_Native.None)
                           (fun uu___7 ->
                              match uu___7 with
@@ -2191,7 +2186,7 @@ let validate_indexed_effect_ite_shape (env : FStarC_TypeChecker_Env.env)
     | FStarC_Syntax_Syntax.Tm_arrow
         { FStarC_Syntax_Syntax.bs1 = bs;
           FStarC_Syntax_Syntax.comp = uu___1;_}
-        when (FStarC_List.length bs) >= (Prims.of_int (4)) ->
+        when (FStarC_List.length bs) >= (Prims.of_int 4) ->
         let uu___2 = FStarC_Syntax_Subst.open_binders bs in
         (match uu___2 with
          | { FStarC_Syntax_Syntax.binder_bv = a;
@@ -2210,7 +2205,7 @@ let validate_indexed_effect_ite_shape (env : FStarC_TypeChecker_Env.env)
              FStarC_Syntax_Subst.subst_binders uu___6
                (FStar_Pervasives_Native.fst
                   (FStarC_List.splitAt
-                     ((FStarC_List.length bs1) - (Prims.of_int (3))) bs1)))
+                     ((FStarC_List.length bs1) - (Prims.of_int 3)) bs1)))
     | uu___1 ->
         let uu___2 =
           let uu___3 =
@@ -2534,7 +2529,7 @@ let lift_combinator_kind (env : FStarC_TypeChecker_Env.env)
            match uu___3 with
            | (f_bs, f_bs_kinds, rest_bs1) ->
                op_let_Question
-                 (if (FStarC_List.length rest_bs1) >= Prims.int_one
+                 (if Prims.uu___is_Cons rest_bs1
                   then
                     let uu___4 =
                       FStarC_List.splitAt
@@ -2669,7 +2664,7 @@ let validate_indexed_effect_lift_shape (env : FStarC_TypeChecker_Env.env)
         match uu___2 with
         | FStarC_Syntax_Syntax.Tm_arrow
             { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
-            when (FStarC_List.length bs) >= (Prims.of_int (2)) ->
+            when (FStarC_List.length bs) >= (Prims.of_int 2) ->
             let uu___3 = FStarC_Syntax_Subst.open_binders bs in
             (match uu___3 with
              | { FStarC_Syntax_Syntax.binder_bv = a;
@@ -3092,7 +3087,7 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                               uu___11;_}
                                           when
                                           (FStarC_List.length bs) >=
-                                            (Prims.of_int (2))
+                                            (Prims.of_int 2)
                                           ->
                                           let uu___12 =
                                             FStarC_Syntax_Subst.open_binders
@@ -3143,7 +3138,7 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                  uu___19 uu___20)
                                       | uu___11 ->
                                           not_an_arrow_error "return"
-                                            (Prims.of_int (2)) ty r in
+                                            (Prims.of_int 2) ty r in
                                     let bs = a :: x_a :: rest_bs in
                                     let uu___10 =
                                       let uu___11 =
@@ -3186,7 +3181,7 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                        let r =
                          (FStar_Pervasives_Native.snd bind_repr_ts).FStarC_Syntax_Syntax.pos in
                        let uu___9 =
-                         check_and_gen1 "bind_repr" (Prims.of_int (2))
+                         check_and_gen1 "bind_repr" (Prims.of_int 2)
                            bind_repr_ts in
                        match uu___9 with
                        | (bind_us, bind_t, bind_ty) ->
@@ -3621,8 +3616,8 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                               ((FStarC_List.length
                                                                   bs1)
                                                                  -
-                                                                 (Prims.of_int (3)))
-                                                              bs1) in
+                                                                 (Prims.of_int
+                                                                    3)) bs1) in
                                                        match uu___22 with
                                                        | f::g::p::[] ->
                                                            (f, g, p) in
@@ -3985,7 +3980,7 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                   close_ts).FStarC_Syntax_Syntax.pos in
                                              let uu___14 =
                                                check_and_gen1 "close"
-                                                 (Prims.of_int (2)) close_ts in
+                                                 (Prims.of_int 2) close_ts in
                                              (match uu___14 with
                                               | (close_us, close_t, close_ty)
                                                   ->
@@ -5703,7 +5698,7 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                        FStarC_Syntax_Util.arrow uu___10
                                          uu___11 in
                                      check_and_gen' "bind_wp"
-                                       (Prims.of_int (2))
+                                       (Prims.of_int 2)
                                        FStar_Pervasives_Native.None
                                        (FStar_Pervasives_Native.fst
                                           (FStarC_Syntax_Util.get_bind_vc_combinator
@@ -5858,7 +5853,7 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                         (FStarC_Syntax_Util.get_wp_close_combinator
                                            ed2) in
                                     check_and_gen' "close_wp"
-                                      (Prims.of_int (2))
+                                      (Prims.of_int 2)
                                       FStar_Pervasives_Native.None uu___13
                                       (FStar_Pervasives_Native.Some k) in
                               log_combinator "close_wp" close_wp;
@@ -6153,25 +6148,7 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                          uu___19 uu___20
                                                          FStarC_Range_Type.dummyRange in
                                                      mk_repr b wp in
-                                                   let maybe_range_arg =
-                                                     let uu___19 =
-                                                       FStarC_Util.for_some
-                                                         (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                                            env
-                                                            FStarC_Syntax_Util.dm4f_bind_range_attr)
-                                                         ed2.FStarC_Syntax_Syntax.eff_attrs in
-                                                     if uu___19
-                                                     then
-                                                       let uu___20 =
-                                                         FStarC_Syntax_Syntax.null_binder
-                                                           FStarC_Syntax_Syntax.t_range in
-                                                       let uu___21 =
-                                                         let uu___22 =
-                                                           FStarC_Syntax_Syntax.null_binder
-                                                             FStarC_Syntax_Syntax.t_range in
-                                                         [uu___22] in
-                                                       uu___20 :: uu___21
-                                                     else [] in
+                                                   let maybe_range_arg = [] in
                                                    let k =
                                                      let uu___19 =
                                                        let uu___20 =
@@ -6399,7 +6376,7 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                             } in
                                                         check_and_gen'
                                                           "bind_repr"
-                                                          (Prims.of_int (2))
+                                                          (Prims.of_int 2)
                                                           env2 bind_repr_ts
                                                           (FStar_Pervasives_Native.Some
                                                              k1))) in
@@ -7161,10 +7138,6 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                          uu___14 ->
                                          FStarC_Syntax_Syntax.Primitive_eff
                                            combinators1
-                                     | FStarC_Syntax_Syntax.DM4F_eff uu___14
-                                         ->
-                                         FStarC_Syntax_Syntax.DM4F_eff
-                                           combinators1
                                      | uu___14 ->
                                          FStarC_Effect.failwith
                                            "Impossible! tc_eff_decl on a layered effect is not expected" in
@@ -7474,7 +7447,7 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                       FStarC_Effect.failwith "Impossible (parser)"
                   | (lift, FStar_Pervasives_Native.Some (uvs, lift_wp)) ->
                       let uu___6 =
-                        if (FStarC_List.length uvs) > Prims.int_zero
+                        if Prims.uu___is_Cons uvs
                         then
                           let uu___7 =
                             FStarC_Syntax_Subst.univ_var_opening uvs in
@@ -7490,7 +7463,7 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                       (match uu___6 with
                        | (env1, lift_wp1) ->
                            let lift_wp2 =
-                             if (FStarC_List.length uvs) = Prims.int_zero
+                             if Prims.uu___is_Nil uvs
                              then check_and_gen1 env1 lift_wp1 expected_k
                              else
                                (let lift_wp3 =
@@ -7501,81 +7474,10 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                                     lift_wp3 in
                                 (uvs, uu___8)) in
                            (lift, lift_wp2))
-                  | (FStar_Pervasives_Native.Some (what, lift),
+                  | (FStar_Pervasives_Native.Some uu___6,
                      FStar_Pervasives_Native.None) ->
-                      let uu___6 =
-                        if (FStarC_List.length what) > Prims.int_zero
-                        then
-                          let uu___7 =
-                            FStarC_Syntax_Subst.univ_var_opening what in
-                          match uu___7 with
-                          | (usubst, uvs) ->
-                              let uu___8 =
-                                FStarC_Syntax_Subst.subst usubst lift in
-                              (uvs, uu___8)
-                        else ([], lift) in
-                      (match uu___6 with
-                       | (uvs, lift1) ->
-                           ((let uu___8 = FStarC_Effect.op_Bang dbg in
-                             if uu___8
-                             then
-                               let uu___9 =
-                                 FStarC_Class_Show.show
-                                   FStarC_Syntax_Print.showable_term lift1 in
-                               FStarC_Format.print1 "Lift for free : %s\n"
-                                 uu___9
-                             else ());
-                            (let dmff_env =
-                               FStarC_TypeChecker_DMFF.empty env
-                                 (FStarC_TypeChecker_TcTerm.tc_constant env
-                                    FStarC_Range_Type.dummyRange) in
-                             let uu___8 =
-                               let uu___9 =
-                                 FStarC_TypeChecker_Env.push_univ_vars env
-                                   uvs in
-                               FStarC_TypeChecker_TcTerm.tc_term uu___9 lift1 in
-                             match uu___8 with
-                             | (lift2, comp, uu___9) ->
-                                 let uu___10 =
-                                   FStarC_TypeChecker_DMFF.star_expr dmff_env
-                                     lift2 in
-                                 (match uu___10 with
-                                  | (uu___11, lift_wp, lift_elab) ->
-                                      let lift_wp1 =
-                                        FStarC_TypeChecker_DMFF.recheck_debug
-                                          "lift-wp" env lift_wp in
-                                      let lift_elab1 =
-                                        FStarC_TypeChecker_DMFF.recheck_debug
-                                          "lift-elab" env lift_elab in
-                                      if
-                                        (FStarC_List.length uvs) =
-                                          Prims.int_zero
-                                      then
-                                        let uu___12 =
-                                          let uu___13 =
-                                            FStarC_TypeChecker_Generalize.generalize_universes
-                                              env lift_elab1 in
-                                          FStar_Pervasives_Native.Some
-                                            uu___13 in
-                                        let uu___13 =
-                                          FStarC_TypeChecker_Generalize.generalize_universes
-                                            env lift_wp1 in
-                                        (uu___12, uu___13)
-                                      else
-                                        (let uu___13 =
-                                           let uu___14 =
-                                             let uu___15 =
-                                               FStarC_Syntax_Subst.close_univ_vars
-                                                 uvs lift_elab1 in
-                                             (uvs, uu___15) in
-                                           FStar_Pervasives_Native.Some
-                                             uu___14 in
-                                         let uu___14 =
-                                           let uu___15 =
-                                             FStarC_Syntax_Subst.close_univ_vars
-                                               uvs lift_wp1 in
-                                           (uvs, uu___15) in
-                                         (uu___13, uu___14)))))) in
+                      FStarC_Effect.failwith
+                        "Sub-effect for free (DM4F) has been removed" in
                 (match uu___5 with
                  | (lift, lift_wp) ->
                      let env1 =
@@ -7769,9 +7671,7 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
                                      (match uu___8 with
                                       | (expected_k2, uu___9, uu___10) ->
                                           let lift4 =
-                                            if
-                                              (FStarC_List.length uvs) =
-                                                Prims.int_zero
+                                            if Prims.uu___is_Nil uvs
                                             then
                                               check_and_gen1 env2 lift3
                                                 expected_k2
@@ -7875,7 +7775,7 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
   | (lid, uvs, tps, c) ->
       let env0 = env in
       let uu___1 =
-        if (FStarC_List.length uvs) = Prims.int_zero
+        if Prims.uu___is_Nil uvs
         then (env, uvs, tps, c)
         else
           (let uu___3 = FStarC_Syntax_Subst.univ_var_opening uvs in
@@ -8116,7 +8016,7 @@ let tc_polymonadic_bind (env : FStarC_TypeChecker_Env.env)
   let r = (FStar_Pervasives_Native.snd ts).FStarC_Syntax_Syntax.pos in
   check_polymonadic_bind_for_erasable_effects env m n p r;
   (let uu___1 =
-     check_and_gen env eff_name "polymonadic_bind" (Prims.of_int (2)) ts in
+     check_and_gen env eff_name "polymonadic_bind" (Prims.of_int 2) ts in
    match uu___1 with
    | (us, t, ty) ->
        let uu___2 = FStarC_Syntax_Subst.open_univ_vars us ty in

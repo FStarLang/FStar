@@ -780,8 +780,8 @@ let rec mk_left_branches
         (FStar_Tactics_Effect.lift_div_tac
            (fun uu___ t ->
               FStar_Reflection_V2_Derived.mk_e_app
-                (FStar_Tactics_NamedView.pack
-                   (FStar_Tactics_NamedView.Tv_FVar
+                (FStarC_Reflection_V2_Builtins.pack_ln
+                   (FStarC_Reflection_V2_Data.Tv_FVar
                       (FStarC_Reflection_V2_Builtins.pack_fv
                          ["FStar"; "Pervasives"; "Inl"]))) [t]))
         (fun uu___ ->
@@ -790,8 +790,8 @@ let rec mk_left_branches
                 (fun ps ->
                    let x t =
                      FStar_Reflection_V2_Derived.mk_e_app
-                       (FStar_Tactics_NamedView.pack
-                          (FStar_Tactics_NamedView.Tv_FVar
+                       (FStarC_Reflection_V2_Builtins.pack_ln
+                          (FStarC_Reflection_V2_Data.Tv_FVar
                              (FStarC_Reflection_V2_Builtins.pack_fv
                                 ["FStar"; "Pervasives"; "Inr"]))) [t] in
                    let x1 = mk_left_branches (fun t -> ff (inl t)) ctors l ps in
@@ -936,7 +936,7 @@ let rec prove_left_right_aux (at : parsed_type)
               Obj.magic
                 (fun ps ->
                    FStar_Tactics_V2_Derived.guard
-                     ((FStar_List_Tot_Base.length cases) = (Prims.of_int (2)))
+                     ((FStar_List_Tot_Base.length cases) = (Prims.of_int 2))
                      ps;
                    (let x1 = FStar_Tactics_Util.zip cases [l; r] ps in
                     FStar_Tactics_Util.iter
@@ -975,7 +975,7 @@ let rec prove_left_right_aux (at : parsed_type)
                     match x1 with
                     | (uu___, n)::[] ->
                         (FStar_Tactics_V2_Derived.guard
-                           (n = (Prims.of_int (2))) ps;
+                           (n = (Prims.of_int 2)) ps;
                          (let x3 =
                             FStar_Tactics_Util.repeatn n
                               FStarC_Tactics_V2_Builtins.intro ps in
@@ -1001,7 +1001,7 @@ let prove_left_right (at : parsed_type) :
       FStar_Tactics_V2_Derived.trefl ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.PrettifyType.prove_left_right" (Prims.of_int (2))
+    "FStar.Tactics.PrettifyType.prove_left_right" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -1033,7 +1033,7 @@ let prove_right_left (uu___ : unit) :
                   FStar_Tactics_V2_Derived.qed () ps1)) x1 ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.PrettifyType.prove_right_left" (Prims.of_int (2))
+    "FStar.Tactics.PrettifyType.prove_right_left" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -1449,7 +1449,7 @@ let entry (pretty_tynm : Prims.string) (nm : Prims.string) :
                   FStar_List_Tot_Base.op_At x18 x19))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.PrettifyType.entry" (Prims.of_int (3))
+    "FStar.Tactics.PrettifyType.entry" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

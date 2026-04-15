@@ -154,9 +154,9 @@ let __proj__Mkvarops_t__item__reset_scope (projectee : varops_t) :
   | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
       next_id; mk_unique; reset_scope;_} -> reset_scope
 let varops : varops_t=
-  let initial_ctr = (Prims.of_int (100)) in
+  let initial_ctr = Prims.of_int 100 in
   let ctr = FStarC_Effect.mk_ref initial_ctr in
-  let new_scope uu___ = FStarC_SMap.create (Prims.of_int (100)) in
+  let new_scope uu___ = FStarC_SMap.create (Prims.of_int 100) in
   let scopes =
     let uu___ = let uu___1 = new_scope () in [uu___1] in
     FStarC_Effect.mk_ref uu___ in

@@ -1198,7 +1198,7 @@ let ctrl_rewrite (dir : FStarC_Tactics_Types.direction)
                                                                 FStarC_Syntax_Print.showable_term
                                                                 gt' in
                                                             FStarC_Format.print1
-                                                              "ctrl_rewrite seems to have succeded with %s\n"
+                                                              "ctrl_rewrite seems to have succeeded with %s\n"
                                                               uu___6))
                                                       (fun uu___5 ->
                                                          (fun uu___5 ->

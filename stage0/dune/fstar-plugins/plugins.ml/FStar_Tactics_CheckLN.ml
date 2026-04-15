@@ -174,7 +174,7 @@ let check_ln (t : FStar_Tactics_NamedView.term) :
   (Prims.bool, unit) FStar_Tactics_Effect.tac_repr= check t
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.CheckLN.check_ln" (Prims.of_int (2))
+    "FStar.Tactics.CheckLN.check_ln" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

@@ -1960,11 +1960,11 @@ let visible_at (d : delta_level) (q : FStarC_Syntax_Syntax.qualifier) :
   | (Unfold uu___, FStarC_Syntax_Syntax.Visible_default) -> true
   | (InliningDelta, FStarC_Syntax_Syntax.Inline_for_extraction) -> true
   | uu___ -> false
-let default_table_size : Prims.int= (Prims.of_int (200))
+let default_table_size : Prims.int= Prims.of_int 200
 let new_sigtab (uu___ : unit) : 'uuuuu FStarC_SMap.t=
   FStarC_SMap.create default_table_size
 let new_gamma_cache (uu___ : unit) : 'uuuuu FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (100))
+  FStarC_SMap.create (Prims.of_int 100)
 let initial_env (deps : FStarC_Parser_Dep.deps)
   (tc_term :
     env ->
@@ -1997,18 +1997,18 @@ let initial_env (deps : FStarC_Parser_Dep.deps)
   let uu___1 = new_sigtab () in
   let uu___2 = new_sigtab () in
   let uu___3 =
-    let uu___4 = FStarC_SMap.create (Prims.of_int (10)) in
+    let uu___4 = FStarC_SMap.create (Prims.of_int 10) in
     (FStar_Pervasives_Native.None, uu___4) in
-  let uu___4 = FStarC_SMap.create (Prims.of_int (20)) in
-  let uu___5 = FStarC_SMap.create (Prims.of_int (50)) in
+  let uu___4 = FStarC_SMap.create (Prims.of_int 20) in
+  let uu___5 = FStarC_SMap.create (Prims.of_int 50) in
   let uu___6 = FStarC_Options.using_facts_from () in
   let uu___7 =
     FStarC_Effect.mk_ref FStarC_TypeChecker_Common.id_info_table_empty in
   let uu___8 =
     let uu___9 = FStarC_Syntax_DsEnv.empty_env deps in
     FStarC_Syntax_DsEnv.set_current_module uu___9 module_lid in
-  let uu___9 = FStarC_SMap.create (Prims.of_int (20)) in
-  let uu___10 = FStarC_SMap.create (Prims.of_int (20)) in
+  let uu___9 = FStarC_SMap.create (Prims.of_int 20) in
+  let uu___10 = FStarC_SMap.create (Prims.of_int 20) in
   let uu___11 =
     Obj.magic
       (FStarC_Class_Setlike.empty ()
@@ -3773,7 +3773,14 @@ let fv_has_erasable_attr (env1 : env) (fv : FStarC_Syntax_Syntax.fv) :
     let uu___1 =
       fv_exists_and_has_attr env1 fv.FStarC_Syntax_Syntax.fv_name
         FStarC_Parser_Const.erasable_attr in
-    match uu___1 with | (ex, erasable) -> (ex, erasable) in
+    match uu___1 with
+    | (ex, erasable) ->
+        let uu___2 =
+          fv_exists_and_has_attr env1 fv.FStarC_Syntax_Syntax.fv_name
+            FStarC_Parser_Const.must_erase_for_extraction_attr in
+        (match uu___2 with
+         | (ex1, must_erase_for_extraction) ->
+             (ex1, (if erasable then true else must_erase_for_extraction))) in
   cache_in_fv_tab env1.erasable_types_tab fv f
 let fv_has_strict_args (env1 : env) (fv : FStarC_Syntax_Syntax.fv) :
   Prims.int Prims.list FStar_Pervasives_Native.option=
@@ -3961,6 +3968,10 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
   | FStarC_Syntax_Syntax.Tm_app
       { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_}
       -> non_informative env1 head
+  | FStarC_Syntax_Syntax.Tm_abs
+      { FStarC_Syntax_Syntax.bs = uu___1; FStarC_Syntax_Syntax.body = body;
+        FStarC_Syntax_Syntax.rc_opt = uu___2;_}
+      -> non_informative env1 body
   | FStarC_Syntax_Syntax.Tm_uinst (t1, uu___1) -> non_informative env1 t1
   | FStarC_Syntax_Syntax.Tm_arrow
       { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
@@ -3973,6 +3984,23 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
       if uu___2
       then true
       else is_erasable_effect env1 (FStarC_Syntax_Util.comp_effect_name c)
+  | FStarC_Syntax_Syntax.Tm_meta
+      { FStarC_Syntax_Syntax.tm2 = tm; FStarC_Syntax_Syntax.meta = uu___1;_}
+      -> non_informative env1 tm
+  | uu___1 -> false
+let rec non_informative_sort (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
+  let uu___ =
+    let uu___1 = FStarC_Syntax_Util.unrefine t in
+    uu___1.FStarC_Syntax_Syntax.n in
+  match uu___ with
+  | FStarC_Syntax_Syntax.Tm_fvar fv when
+      FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.prop_lid -> true
+  | FStarC_Syntax_Syntax.Tm_arrow
+      { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
+      -> non_informative_sort (FStarC_Syntax_Util.comp_result c)
+  | FStarC_Syntax_Syntax.Tm_meta
+      { FStarC_Syntax_Syntax.tm2 = tm; FStarC_Syntax_Syntax.meta = uu___1;_}
+      -> non_informative_sort tm
   | uu___1 -> false
 let num_effect_indices (env1 : env) (name : FStarC_Ident.lident)
   (r : FStarC_Range_Type.t) : Prims.int=
@@ -4257,7 +4285,7 @@ let num_inductive_uniform_ty_params (env1 : env) (lid : FStarC_Ident.lident)
                "Internal error: Inductive %s is not decorated with its uniform type parameters"
                uu___17 in
            FStarC_Errors.raise_error FStarC_Ident.hasrange_lident lid
-             FStarC_Errors_Codes.Fatal_UnexpectedInductivetype ()
+             FStarC_Errors_Codes.Fatal_UnexpectedInductiveType ()
              (Obj.magic FStarC_Errors_Msg.is_error_message_string)
              (Obj.magic uu___16)
        | FStar_Pervasives_Native.Some n -> FStar_Pervasives_Native.Some n)
@@ -4292,7 +4320,7 @@ let get_lid_valued_effect_attr (env1 : env) (eff_lid : FStarC_Ident.lident)
   match attr_args with
   | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
   | FStar_Pervasives_Native.Some args ->
-      if (FStarC_List.length args) = Prims.int_zero
+      if Prims.uu___is_Nil args
       then default_if_attr_has_no_arg
       else
         (match FStarC_List.hd args with
@@ -4659,7 +4687,7 @@ let effect_repr_aux (only_reifiable : 'uuuuu) (env1 : env)
              let uu___3 =
                FStarC_Class_Show.show FStarC_Class_Show.showable_int expected in
              FStarC_Format.fmt3
-               "Not enough arguments for effect %s, This usually happens when you use a partially applied DM4F effect, like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
+               "Not enough arguments for effect %s (given:%s, expected:%s)."
                (FStarC_Ident.string_of_lid eff_name) uu___2 uu___3 in
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
              FStarC_Errors_Codes.Fatal_NotEnoughArgumentsForEffect ()
@@ -4984,9 +5012,9 @@ let print_effects_graph (env1 : env) : Prims.string=
   let path_str path =
     let uu___ = FStarC_List.map eff_name path in
     FStarC_String.concat ";" uu___ in
-  let pbinds = FStarC_SMap.create (Prims.of_int (10)) in
-  let lifts = FStarC_SMap.create (Prims.of_int (20)) in
-  let psubcomps = FStarC_SMap.create (Prims.of_int (10)) in
+  let pbinds = FStarC_SMap.create (Prims.of_int 10) in
+  let lifts = FStarC_SMap.create (Prims.of_int 20) in
+  let psubcomps = FStarC_SMap.create (Prims.of_int 10) in
   FStarC_List.iter
     (fun uu___1 ->
        match uu___1 with
@@ -4996,7 +5024,7 @@ let print_effects_graph (env1 : env) : Prims.string=
              let uu___3 = FStarC_SMap.try_find lifts key in
              match uu___3 with
              | FStar_Pervasives_Native.None ->
-                 let m1 = FStarC_SMap.create (Prims.of_int (10)) in
+                 let m1 = FStarC_SMap.create (Prims.of_int 10) in
                  (FStarC_SMap.add lifts key m1; m1)
              | FStar_Pervasives_Native.Some m1 -> m1 in
            let uu___3 = FStarC_SMap.try_find m (eff_name tgt) in
@@ -5182,7 +5210,7 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
            (Obj.magic uu___2)
        else ()) order;
   (let joins =
-     let ubs = FStarC_SMap.create (Prims.of_int (10)) in
+     let ubs = FStarC_SMap.create (Prims.of_int 10) in
      let add_ub i j k ik jk =
        let key =
          Prims.strcat (FStarC_Ident.string_of_lid i)

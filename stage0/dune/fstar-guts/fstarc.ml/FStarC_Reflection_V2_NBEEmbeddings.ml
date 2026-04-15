@@ -34,7 +34,7 @@ let mk_lazy (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (obj : 'uuuuu)
   (kind : FStarC_Syntax_Syntax.lazy_kind) : FStarC_TypeChecker_NBETerm.t=
   let li =
     {
-      FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn obj);
+      FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn obj);
       FStarC_Syntax_Syntax.lkind = kind;
       FStarC_Syntax_Syntax.ltyp = ty;
       FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -60,8 +60,7 @@ let e_bv : FStarC_Syntax_Syntax.bv FStarC_TypeChecker_NBETerm.embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -86,8 +85,7 @@ let e_namedv :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -113,8 +111,7 @@ let e_binder :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -251,8 +248,7 @@ let e_fv : FStarC_Syntax_Syntax.fv FStarC_TypeChecker_NBETerm.embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -276,8 +272,7 @@ let e_comp : FStarC_Syntax_Syntax.comp FStarC_TypeChecker_NBETerm.embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -302,8 +297,7 @@ let e_env : FStarC_TypeChecker_Env.env FStarC_TypeChecker_NBETerm.embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -462,8 +456,7 @@ let e_universe :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -664,7 +657,7 @@ let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind)
       when
       FStarC_Class_Deq.op_Equals_Question FStarC_Syntax_Syntax.deq_lazy_kind
         k k'
-      -> FStarC_Dyn.undyn v
+      -> FStar_Dyn.undyn v
   | uu___ -> FStarC_Effect.failwith "Not a Lazy of the expected kind (NBE)"
 let e_ident : FStarC_Ident.ident FStarC_TypeChecker_NBETerm.embedding=
   let embed_ident cb se =
@@ -680,8 +673,7 @@ let e_ident : FStarC_Ident.ident FStarC_TypeChecker_NBETerm.embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -1971,8 +1963,7 @@ let e_sigelt :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =
             let uu___3 = FStarC_TypeChecker_NBETerm.t_to_string t in
@@ -2094,7 +2085,7 @@ let e_letbinding :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn lb in
+        let uu___3 = FStar_Dyn.undyn lb in
         FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 =

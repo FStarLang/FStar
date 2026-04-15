@@ -96,7 +96,7 @@ let generate_repr_typ (params : FStar_Tactics_NamedView.binders)
     x1
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.generate_repr_typ" (Prims.of_int (3))
+    "FStar.Tactics.TypeRepr.generate_repr_typ" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -162,7 +162,7 @@ let generate_down (uu___ : unit) :
       ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.generate_down" (Prims.of_int (2))
+    "FStar.Tactics.TypeRepr.generate_down" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -203,7 +203,7 @@ let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
                       else false)
                    then
                      (FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
-                       = (Prims.of_int (2))
+                       = (Prims.of_int 2)
                    else false) ps;
                 (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
@@ -235,7 +235,7 @@ let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
                       else false)
                    then
                      (FStar_Pervasives_Native.snd (FStar_List_Tot_Base.hd x2))
-                       = (Prims.of_int (2))
+                       = (Prims.of_int 2)
                    else false) ps;
                 (let x4 = FStarC_Tactics_V2_Builtins.intro () ps in
                  let x5 = FStarC_Tactics_V2_Builtins.intro () ps in
@@ -289,8 +289,7 @@ let rec generate_up_aux (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
            (fun cases ->
               Obj.magic
                 (fun ps ->
-                   if
-                     (FStar_List_Tot_Base.length cases) <> (Prims.of_int (2))
+                   if (FStar_List_Tot_Base.length cases) <> (Prims.of_int 2)
                    then
                      FStar_Tactics_V2_Derived.fail
                        "generate_up_aux: expected Inl/Inr???" ps
@@ -331,7 +330,7 @@ let generate_up (nm : Prims.string) (uu___ : unit) :
         generate_up_aux ctors x1 ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.generate_up" (Prims.of_int (3))
+    "FStar.Tactics.TypeRepr.generate_up" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -549,7 +548,7 @@ let entry (nm : Prims.string) :
         -> generate_all nm1 params ctors ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.TypeRepr.entry" (Prims.of_int (2))
+    "FStar.Tactics.TypeRepr.entry" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

@@ -3,7 +3,7 @@ let dbg : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "CheckedFiles"
 let debug (f : unit -> unit) : unit=
   let uu___ = FStarC_Effect.op_Bang dbg in if uu___ then f () else ()
-let cache_version_number : Prims.int= (Prims.of_int (76))
+let cache_version_number : Prims.int= Prims.of_int 76
 type tc_result =
   {
   checked_module: FStarC_Syntax_Syntax.modul ;
@@ -94,7 +94,7 @@ let uu___0 : tc_result_t FStarC_Class_Show.showable=
 type cache_t =
   (tc_result_t * (Prims.string, FStarC_Parser_Dep.parsing_data)
     FStar_Pervasives.either)
-let mcache : cache_t FStarC_SMap.t= FStarC_SMap.create (Prims.of_int (50))
+let mcache : cache_t FStarC_SMap.t= FStarC_SMap.create (Prims.of_int 50)
 let add_and_return (checked_fn : Prims.string) (elt : cache_t) : cache_t=
   FStarC_SMap.add mcache checked_fn elt; elt
 let try_find_in_cache (checked_fn : Prims.string) :
@@ -612,7 +612,7 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env)
                      [FStarC_Errors_Msg.text
                         (FStarC_Format.fmt1
                            "Checked file %s was not written." cache_file);
-                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                        (FStar_Pprint.doc_of_string "Reason:")
                        (FStarC_Errors_Msg.text msg)])))))
   else ()

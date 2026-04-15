@@ -2470,7 +2470,7 @@ let log_unfolding (cfg1 : cfg) (f : unit -> unit) : unit=
 let log_nbe (cfg1 : cfg) (f : unit -> unit) : unit=
   if (cfg1.debug).debug_nbe then f () else ()
 let primop_time_map : Prims.int FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (50))
+  FStarC_SMap.create (Prims.of_int 50)
 let primop_time_reset (uu___ : unit) : unit=
   FStarC_SMap.clear primop_time_map
 let primop_time_count (nm : Prims.string) (ns : Prims.int) : unit=
@@ -2501,8 +2501,8 @@ let primop_time_report (uu___ : unit) : Prims.string=
              let uu___3 =
                let uu___4 =
                  FStarC_Class_Show.show FStarC_Class_Show.showable_int
-                   (ns / (Prims.parse_int "1000000")) in
-               fixto (Prims.of_int (10)) uu___4 in
+                   (ns / (Prims.of_int 1000000)) in
+               fixto (Prims.of_int 10) uu___4 in
              FStarC_Format.fmt2 "%sms --- %s\n" uu___3 nm in
            FStarC_String.op_Hat uu___2 rest) pairs1 ""
 let extendable_primops_dirty : Prims.bool FStarC_Effect.ref=

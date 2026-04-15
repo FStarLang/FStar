@@ -2292,7 +2292,7 @@ let e_qualifiers :
   FStarC_Syntax_Embeddings.e_list e_qualifier
 let unfold_lazy_bv (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let bv = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let bv = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2305,7 +2305,7 @@ let unfold_lazy_bv (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_namedv (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let namedv1 = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let namedv1 = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2318,7 +2318,7 @@ let unfold_lazy_namedv (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_binder (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let binder = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let binder = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2331,7 +2331,7 @@ let unfold_lazy_binder (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_letbinding (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let lb = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let lb = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let lbv = FStarC_Reflection_V2_Builtins.inspect_lb lb in
   let uu___ =
     let uu___1 =
@@ -2366,7 +2366,7 @@ let unfold_lazy_letbinding (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_fvar (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let fv = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let fv = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2380,7 +2380,7 @@ let unfold_lazy_fvar (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_comp (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let comp = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let comp = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2397,7 +2397,7 @@ let unfold_lazy_optionstate (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term= FStarC_Syntax_Util.exp_unit
 let unfold_lazy_sigelt (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let sigelt = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let sigelt = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2410,7 +2410,7 @@ let unfold_lazy_sigelt (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_universe (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let u = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let u = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let uu___ =
     let uu___1 =
       let uu___2 =
@@ -2423,7 +2423,7 @@ let unfold_lazy_universe (i : FStarC_Syntax_Syntax.lazyinfo) :
     uu___ i.FStarC_Syntax_Syntax.rng
 let unfold_lazy_doc (i : FStarC_Syntax_Syntax.lazyinfo) :
   FStarC_Syntax_Syntax.term=
-  let d = FStarC_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
+  let d = FStar_Dyn.undyn i.FStarC_Syntax_Syntax.blob in
   let lid = FStarC_Ident.lid_of_str "FStar.Pprint.arbitrary_string" in
   let s = FStar_Pprint.render d in
   let uu___ = FStarC_Syntax_Syntax.fvar lid FStar_Pervasives_Native.None in

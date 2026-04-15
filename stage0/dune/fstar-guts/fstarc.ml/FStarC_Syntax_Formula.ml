@@ -65,13 +65,13 @@ let destruct_base_table :
   [(Prims.int_zero,
      [f FStarC_Parser_Const.true_lid; f FStarC_Parser_Const.false_lid]);
   (Prims.int_one, [f FStarC_Parser_Const.not_lid]);
-  ((Prims.of_int (2)),
+  ((Prims.of_int 2),
     [f FStarC_Parser_Const.and_lid;
     f FStarC_Parser_Const.or_lid;
     f FStarC_Parser_Const.imp_lid;
     f FStarC_Parser_Const.iff_lid;
     f FStarC_Parser_Const.eq2_lid]);
-  ((Prims.of_int (3)),
+  ((Prims.of_int 3),
     [f FStarC_Parser_Const.ite_lid; f FStarC_Parser_Const.eq2_lid])]
 let destruct_sq_base_table :
   (Prims.int * (FStarC_Ident.lident * FStarC_Ident.lident) Prims.list)
@@ -79,11 +79,11 @@ let destruct_sq_base_table :
   [(Prims.int_zero,
      [(FStarC_Parser_Const.c_true_lid, FStarC_Parser_Const.true_lid);
      (FStarC_Parser_Const.empty_type_lid, FStarC_Parser_Const.false_lid)]);
-  ((Prims.of_int (2)),
+  ((Prims.of_int 2),
     [(FStarC_Parser_Const.c_and_lid, FStarC_Parser_Const.and_lid);
     (FStarC_Parser_Const.c_or_lid, FStarC_Parser_Const.or_lid);
     (FStarC_Parser_Const.c_eq2_lid, FStarC_Parser_Const.eq2_lid)]);
-  ((Prims.of_int (3)),
+  ((Prims.of_int 3),
     [(FStarC_Parser_Const.c_eq2_lid, FStarC_Parser_Const.eq2_lid)])]
 let rec unmeta_monadic (f : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term=

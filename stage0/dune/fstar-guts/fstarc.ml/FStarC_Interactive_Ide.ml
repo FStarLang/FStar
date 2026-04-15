@@ -920,7 +920,7 @@ let fstar_options_list_cache : fstar_option Prims.list=
        FStarC_String.compare (FStarC_String.lowercase o1.opt_name)
          (FStarC_String.lowercase o2.opt_name)) uu___
 let fstar_options_map_cache : fstar_option FStarC_SMap.t=
-  let cache = FStarC_SMap.create (Prims.of_int (50)) in
+  let cache = FStarC_SMap.create (Prims.of_int 50) in
   FStarC_List.iter (fun opt -> FStarC_SMap.add cache opt.opt_name opt)
     fstar_options_list_cache;
   cache
@@ -2230,11 +2230,11 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
       let beg_quote = FStarC_Util.starts_with term1 "\"" in
       let end_quote = FStarC_Util.ends_with term1 "\"" in
       let strip_quotes str =
-        if (FStarC_String.length str) < (Prims.of_int (2))
+        if (FStarC_String.length str) < (Prims.of_int 2)
         then FStarC_Effect.raise (InvalidSearch "Empty search term")
         else
           FStarC_Util.substring str Prims.int_one
-            ((FStarC_String.length term1) - (Prims.of_int (2))) in
+            ((FStarC_String.length term1) - (Prims.of_int 2)) in
       let parsed =
         if beg_quote <> end_quote
         then

@@ -494,8 +494,8 @@ let equal_term (t1 : FStarC_Syntax_Syntax.term)
   FStarC_Profiling.profile (fun uu___ -> FStarC_Syntax_Hash.equal_term t1 t2)
     FStar_Pervasives_Native.None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table=
-  let uu___ = FStarC_Syntax_TermHashTable.create (Prims.parse_int "1048576") in
-  let uu___1 = FStarC_Syntax_TermHashTable.create (Prims.parse_int "1048576") in
+  let uu___ = FStarC_Syntax_TermHashTable.create (Prims.of_int 1048576) in
+  let uu___1 = FStarC_Syntax_TermHashTable.create (Prims.of_int 1048576) in
   let uu___2 = FStarC_Effect.mk_ref Prims.int_zero in
   { table = uu___; guard_table = uu___1; counter = uu___2 }
 type cache_stats_t = {

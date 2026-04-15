@@ -359,9 +359,7 @@ let convert_rlimit (r : Prims.int) : Prims.int=
   let uu___ =
     let uu___1 = FStarC_Options.z3_version () in
     FStarC_Misc.version_ge uu___1 "4.12.3" in
-  if uu___
-  then (Prims.parse_int "500000") * r
-  else (Prims.parse_int "544656") * r
+  if uu___ then (Prims.of_int 500000) * r else (Prims.of_int 544656) * r
 let with_fuel_and_diagnostics (settings : query_settings)
   (label_assumptions : FStarC_SMTEncoding_Term.decl Prims.list) :
   FStarC_SMTEncoding_Term.decl Prims.list=
@@ -754,7 +752,7 @@ let div_with_decimals (ndec : Prims.nat) (x : Prims.int) (y : Prims.int) :
     let rec aux n =
       if n = Prims.int_zero
       then Prims.int_one
-      else (Prims.of_int (10)) * (aux (n - Prims.int_one)) in
+      else (Prims.of_int 10) * (aux (n - Prims.int_one)) in
     aux ndec in
   let intg = x / y in
   let frac = (mod) ((mul * x) / y) mul in
@@ -926,7 +924,7 @@ let query_info (settings : query_settings)
                  (fun uu___3 ->
                     match () with
                     | () ->
-                        let decimals = (Prims.of_int (3)) in
+                        let decimals = Prims.of_int 3 in
                         let r0 =
                           let uu___4 =
                             let uu___5 =
@@ -1369,14 +1367,14 @@ let make_solver_configs (can_split : Prims.bool) (is_retry : Prims.bool)
              let uu___2 =
                let uu___3 =
                  let uu___4 = FStarC_Options.max_fuel () in
-                 uu___4 / (Prims.of_int (2)) in
+                 uu___4 / (Prims.of_int 2) in
                let uu___4 = FStarC_Options.initial_fuel () in uu___3 > uu___4 in
              if uu___2
              then
                let uu___3 =
                  let uu___4 =
                    let uu___5 = FStarC_Options.max_fuel () in
-                   uu___5 / (Prims.of_int (2)) in
+                   uu___5 / (Prims.of_int 2) in
                  let uu___5 = FStarC_Options.max_ifuel () in
                  {
                    query_env = (default_settings.query_env);
@@ -1749,10 +1747,10 @@ let ask_solver_recover (configs : query_settings Prims.list) : answer=
                   r1)
                else aux hs in
          aux
-           [IncreaseRLimit (Prims.of_int (2));
-           IncreaseRLimit (Prims.of_int (4));
-           IncreaseRLimit (Prims.of_int (8));
-           RestartAnd (IncreaseRLimit (Prims.of_int (8)))])))
+           [IncreaseRLimit (Prims.of_int 2);
+           IncreaseRLimit (Prims.of_int 4);
+           IncreaseRLimit (Prims.of_int 8);
+           RestartAnd (IncreaseRLimit (Prims.of_int 8))])))
   else ask_solver_quake configs
 let failing_query_ctr : Prims.int FStarC_Effect.ref=
   FStarC_Effect.mk_ref Prims.int_zero
@@ -1811,17 +1809,17 @@ let maybe_save_failing_query (env : FStarC_SMTEncoding_Env.env_t)
                           FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon
                             uu___13 in
                         FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                      FStar_Pprint.nest (Prims.of_int (2)) uu___10 in
+                      FStar_Pprint.nest (Prims.of_int 2) uu___10 in
                     FStar_Pprint.parens uu___9 in
                   FStar_Pprint.group uu___8) uu___7 in
-           FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+           FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
              (FStarC_Errors_Msg.text "Env =") uu___6 in
          let uu___6 =
            let uu___7 =
              let uu___8 =
                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
                  qs.query_term in
-             FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+             FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                (FStarC_Errors_Msg.text "VC =") uu___8 in
            [uu___7] in
          uu___5 :: uu___6 in
@@ -1960,7 +1958,7 @@ let report (env : FStarC_TypeChecker_Env.env)
                    let uu___9 =
                      FStarC_Class_Show.show FStarC_Class_Show.showable_int hi in
                    FStarC_Format.fmt6
-                     "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                     "Query %s failed the quake test, %s out of %s attempts succeeded, but the threshold was %s out of %s%s"
                      name uu___6 uu___7 uu___8 uu___9
                      (if total_ran < hi then " (early abort)" else "") in
                  FStarC_Errors_Msg.text uu___5 in
@@ -2232,16 +2230,16 @@ let do_solve (can_split : Prims.bool) (is_retry : Prims.bool)
                           FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon
                             uu___12 in
                         FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
-                      FStar_Pprint.nest (Prims.of_int (2)) uu___9 in
+                      FStar_Pprint.nest (Prims.of_int 2) uu___9 in
                     FStar_Pprint.parens uu___8 in
                   FStar_Pprint.group uu___7) uu___6 in
-           FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+           FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
              (FStarC_Errors_Msg.text "Env =") uu___5 in
          let uu___5 =
            let uu___6 =
              let uu___7 =
                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
-             FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+             FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                (FStarC_Errors_Msg.text "VC =") uu___7 in
            [uu___6] in
          uu___4 :: uu___5 in
@@ -2385,7 +2383,7 @@ let solve_sync
             let uu___6 =
               let uu___7 =
                 FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term q in
-              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+              FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                 (FStarC_Errors_Msg.text "Running synchronous SMT query. Q =")
                 uu___7 in
             [uu___6] in

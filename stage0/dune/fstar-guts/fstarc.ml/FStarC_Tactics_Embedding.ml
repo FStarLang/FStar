@@ -159,7 +159,7 @@ let e_ref_proofstate_nbe :
   let embed_ref_proofstate _cb ps =
     let li =
       {
-        FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn ps);
+        FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
         FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_ref_proofstate;
         FStarC_Syntax_Syntax.ltyp = (fstar_tactics_ref_proofstate.t);
         FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -184,8 +184,7 @@ let e_ref_proofstate_nbe :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___2
@@ -212,7 +211,7 @@ let e_proofstate_nbe :
   let embed_proofstate _cb ps =
     let li =
       {
-        FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn ps);
+        FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
         FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_proofstate;
         FStarC_Syntax_Syntax.ltyp = (fstar_tactics_proofstate.t);
         FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -236,8 +235,7 @@ let e_proofstate_nbe :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___2
@@ -264,7 +262,7 @@ let e_goal_nbe :
   let embed_goal _cb ps =
     let li =
       {
-        FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn ps);
+        FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
         FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_goal;
         FStarC_Syntax_Syntax.ltyp = (fstar_tactics_goal.t);
         FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -288,8 +286,7 @@ let e_goal_nbe :
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | uu___ ->
         ((let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___2
@@ -745,7 +742,7 @@ let e_tref (uu___ : unit) :
           FStarC_Syntax_Syntax.ltyp = uu___3;
           FStarC_Syntax_Syntax.rng = uu___4;_}
         ->
-        let uu___5 = FStarC_Dyn.undyn blob in
+        let uu___5 = FStar_Dyn.undyn blob in
         FStar_Pervasives_Native.Some uu___5
     | uu___3 -> FStar_Pervasives_Native.None in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___1 -> t_tref)
@@ -759,7 +756,7 @@ let e_tref_nbe (uu___ : unit) :
   let embed_tref _cb r =
     let li =
       {
-        FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn r);
+        FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn r);
         FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_tref;
         FStarC_Syntax_Syntax.ltyp = t_tref;
         FStarC_Syntax_Syntax.rng = FStarC_Range_Type.dummyRange
@@ -783,8 +780,7 @@ let e_tref_nbe (uu___ : unit) :
            FStarC_Syntax_Syntax.rng = uu___2;_},
          uu___3)
         ->
-        let uu___4 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___4
+        let uu___4 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___4
     | uu___1 ->
         ((let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___3

@@ -220,8 +220,7 @@ let e_lazy (k : FStarC_Syntax_Syntax.lazy_kind)
         FStarC_Class_Deq.op_Equals_Question
           FStarC_Syntax_Syntax.deq_lazy_kind lkind k
         ->
-        let uu___3 = FStarC_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
     | FStarC_Syntax_Syntax.Tm_lazy
         { FStarC_Syntax_Syntax.blob = b; FStarC_Syntax_Syntax.lkind = lkind;
           FStarC_Syntax_Syntax.ltyp = uu___1;
@@ -306,7 +305,7 @@ let lazy_unembed (pa : 'a printer) (et : FStarC_Syntax_Syntax.emb_typ)
           else ());
          res)
       else
-        (let a1 = FStarC_Dyn.undyn b in
+        (let a1 = FStar_Dyn.undyn b in
          (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___5
           then

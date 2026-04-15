@@ -166,19 +166,19 @@ let mktuple_n (ts : FStarC_Reflection_Types.term Prims.list) :
   | n ->
       let qn =
         match n with
-        | uu___ when uu___ = (Prims.of_int (2)) ->
+        | uu___ when uu___ = (Prims.of_int 2) ->
             FStar_Reflection_Const.mktuple2_qn
-        | uu___ when uu___ = (Prims.of_int (3)) ->
+        | uu___ when uu___ = (Prims.of_int 3) ->
             FStar_Reflection_Const.mktuple3_qn
-        | uu___ when uu___ = (Prims.of_int (4)) ->
+        | uu___ when uu___ = (Prims.of_int 4) ->
             FStar_Reflection_Const.mktuple4_qn
-        | uu___ when uu___ = (Prims.of_int (5)) ->
+        | uu___ when uu___ = (Prims.of_int 5) ->
             FStar_Reflection_Const.mktuple5_qn
-        | uu___ when uu___ = (Prims.of_int (6)) ->
+        | uu___ when uu___ = (Prims.of_int 6) ->
             FStar_Reflection_Const.mktuple6_qn
-        | uu___ when uu___ = (Prims.of_int (7)) ->
+        | uu___ when uu___ = (Prims.of_int 7) ->
             FStar_Reflection_Const.mktuple7_qn
-        | uu___ when uu___ = (Prims.of_int (8)) ->
+        | uu___ when uu___ = (Prims.of_int 8) ->
             FStar_Reflection_Const.mktuple8_qn in
       mk_e_app
         (FStarC_Reflection_V2_Builtins.pack_ln

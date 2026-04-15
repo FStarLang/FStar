@@ -174,7 +174,7 @@ let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit=
     | Bad culprit ->
         let uu___2 =
           let uu___3 = FStarC_Effect.op_Bang nwarn in
-          uu___3 < (Prims.of_int (5)) in
+          uu___3 < (Prims.of_int 5) in
         (if uu___2
          then
            ((let uu___4 = FStarC_Tactics_Types.goal_type g in

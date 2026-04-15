@@ -14,7 +14,7 @@ let pp_set (uu___ : 'a FStarC_Class_Ord.ord)
     FStarC_Class_PP.pp =
       (fun s ->
          let doclist ds =
-           FStar_Pprint.surround_separate (Prims.of_int (2)) Prims.int_zero
+           FStar_Pprint.surround_separate (Prims.of_int 2) Prims.int_zero
              (FStar_Pprint.doc_of_string "[]") FStar_Pprint.lbracket
              (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi
                 (FStar_Pprint.break_ Prims.int_one)) FStar_Pprint.rbracket ds in

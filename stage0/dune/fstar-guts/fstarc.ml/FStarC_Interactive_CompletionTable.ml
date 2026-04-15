@@ -116,7 +116,7 @@ let rec btree_from_list :
     if size = Prims.int_zero
     then (StrEmpty, nodes)
     else
-      (let lbt_size = size / (Prims.of_int (2)) in
+      (let lbt_size = size / (Prims.of_int 2) in
        let rbt_size = (size - lbt_size) - Prims.int_one in
        let uu___1 = btree_from_list nodes lbt_size in
        match uu___1 with

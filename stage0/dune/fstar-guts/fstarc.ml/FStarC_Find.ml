@@ -11,7 +11,7 @@ let _full_include :
   FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let find_file_cache :
   Prims.string FStar_Pervasives_Native.option FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (100))
+  FStarC_SMap.create (Prims.of_int 100)
 let clear (uu___ : unit) : unit=
   FStarC_SMap.clear find_file_cache;
   FStarC_Effect.op_Colon_Equals _full_include FStar_Pervasives_Native.None

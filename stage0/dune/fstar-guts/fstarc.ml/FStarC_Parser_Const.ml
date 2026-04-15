@@ -194,12 +194,11 @@ let bv_not_lid : FStarC_Ident.lident= bvconst "bvnot"
 let array_lid : FStarC_Ident.lident= p2l ["FStar"; "Array"; "array"]
 let array_of_list_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Array"; "of_list"]
-let st_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"]
-let write_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "write"]
-let read_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "read"]
-let alloc_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "alloc"]
-let op_ColonEq : FStarC_Ident.lident= p2l ["FStar"; "ST"; "op_Colon_Equals"]
-let ref_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "ref"]
+let write_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Colon_Equals"]
+let read_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Bang"]
+let alloc_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "alloc"]
+let op_ColonEq : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Colon_Equals"]
+let ref_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "ref"]
 let heap_addr_of_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "addr_of"]
 let set_empty : FStarC_Ident.lident= p2l ["FStar"; "Set"; "empty"]
 let set_singleton : FStarC_Ident.lident= p2l ["FStar"; "Set"; "singleton"]
@@ -280,7 +279,6 @@ let no_inline_let_attr : FStarC_Ident.lident= attr "no_inline_let"
 let rename_let_attr : FStarC_Ident.lident= attr "rename_let"
 let plugin_attr : FStarC_Ident.lident= attr "plugin"
 let tcnorm_attr : FStarC_Ident.lident= attr "tcnorm"
-let dm4f_bind_range_attr : FStarC_Ident.lident= attr "dm4f_bind_range"
 let must_erase_for_extraction_attr : FStarC_Ident.lident=
   attr "must_erase_for_extraction"
 let strict_on_arguments_attr : FStarC_Ident.lident=

@@ -20,7 +20,7 @@ let easy_fill (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     FStar_Tactics_V2_Derived.smt () ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Easy.easy_fill" (Prims.of_int (2))
+    "FStar.Tactics.Easy.easy_fill" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

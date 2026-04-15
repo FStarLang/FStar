@@ -442,7 +442,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
       let uu___2 =
         FStarC_Class_Monad.iterM
           (FStarC_Writer.monad_writer (FStarC_Class_Monoid.monoid_list ()))
-          () (fun uu___3 -> (Obj.magic bounded_arith_ops_for) uu___3)
+          () (fun uu___3 -> Obj.magic bounded_arith_ops_for uu___3)
           (Obj.magic FStarC_MachineInts.all_machint_kinds) in
       FStarC_Class_Monad.op_let_Bang
         (FStarC_Writer.monad_writer (FStarC_Class_Monoid.monoid_list ())) ()

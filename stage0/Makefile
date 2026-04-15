@@ -104,7 +104,12 @@ clean: trim
 	rm -rf pulse/common.checked
 	rm -rf pulse/pulse.checked
 
-all: install_lib install_fstarc install_pulse
+install_karamel:
+	$(call msg, "INSTALL KARAMEL")
+	mkdir -p out
+	$(MAKE) -C karamel install PREFIX=$(call cygpath,out) LOWSTAR=false
+
+all: install_lib install_fstarc install_pulse install_karamel
 
 install_fstarc: install_lib
 # ^ The windows build in Github actions seems to sporadically
@@ -178,5 +183,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2026-03-16 17:18:27 -0700
-export FSTAR_COMMIT=7dca050132a239d02361b33cb24c11240d81cf7e
+export FSTAR_COMMITDATE=2026-04-15 04:16:52 +0000
+export FSTAR_COMMIT=65001e690387fb6e8d7bc35bb1bb68cc877b312b

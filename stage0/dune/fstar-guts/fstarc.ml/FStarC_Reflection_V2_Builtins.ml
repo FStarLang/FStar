@@ -345,7 +345,7 @@ let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
       let pack_arg uu___ =
         match uu___ with | (a, q) -> let uu___1 = pack_aqual q in (a, uu___1) in
       let flags =
-        if (FStarC_List.length decrs) = Prims.int_zero
+        if Prims.uu___is_Nil decrs
         then []
         else
           [FStarC_Syntax_Syntax.DECREASES
@@ -1127,8 +1127,7 @@ let rec term_eq (t1 : FStarC_Syntax_Syntax.term)
      FStarC_Reflection_V2_Data.Tv_Let (r2, ats2, b2, m2, n2)) ->
       let uu___1 =
         let uu___2 =
-          let uu___3 =
-            if r1 = r2 then (eqlist ()) term_eq ats1 ats2 else false in
+          let uu___3 = if r1 = r2 then eqlist () term_eq ats1 ats2 else false in
           if uu___3 then binder_eq b1 b2 else false in
         if uu___2 then term_eq m1 m2 else false in
       if uu___1 then term_eq n1 n2 else false
@@ -1136,15 +1135,15 @@ let rec term_eq (t1 : FStarC_Syntax_Syntax.term)
      FStarC_Reflection_V2_Data.Tv_Match (h2, an2, brs2)) ->
       let uu___1 =
         let uu___2 = term_eq h1 h2 in
-        if uu___2 then (eqopt ()) match_ret_asc_eq an1 an2 else false in
-      if uu___1 then (eqlist ()) branch_eq brs1 brs2 else false
+        if uu___2 then eqopt () match_ret_asc_eq an1 an2 else false in
+      if uu___1 then eqlist () branch_eq brs1 brs2 else false
   | (FStarC_Reflection_V2_Data.Tv_AscribedT (e1, t11, topt1, eq1),
      FStarC_Reflection_V2_Data.Tv_AscribedT (e2, t21, topt2, eq2)) ->
       let uu___1 =
         let uu___2 =
           let uu___3 = term_eq e1 e2 in
           if uu___3 then term_eq t11 t21 else false in
-        if uu___2 then (eqopt ()) term_eq topt1 topt2 else false in
+        if uu___2 then eqopt () term_eq topt1 topt2 else false in
       if uu___1 then eq1 = eq2 else false
   | (FStarC_Reflection_V2_Data.Tv_AscribedC (e1, c1, topt1, eq1),
      FStarC_Reflection_V2_Data.Tv_AscribedC (e2, c2, topt2, eq2)) ->
@@ -1152,7 +1151,7 @@ let rec term_eq (t1 : FStarC_Syntax_Syntax.term)
         let uu___2 =
           let uu___3 = term_eq e1 e2 in
           if uu___3 then comp_eq c1 c2 else false in
-        if uu___2 then (eqopt ()) term_eq topt1 topt2 else false in
+        if uu___2 then eqopt () term_eq topt1 topt2 else false in
       if uu___1 then eq1 = eq2 else false
   | (FStarC_Reflection_V2_Data.Tv_Unknown,
      FStarC_Reflection_V2_Data.Tv_Unknown) -> true
@@ -1192,7 +1191,7 @@ and binder_eq (b1 : FStarC_Syntax_Syntax.binder)
     else false in
   if uu___
   then
-    (eqlist ()) term_eq bview1.FStarC_Reflection_V2_Data.attrs
+    eqlist () term_eq bview1.FStarC_Reflection_V2_Data.attrs
       bview2.FStarC_Reflection_V2_Data.attrs
   else false
 and bv_eq (bv1 : FStarC_Syntax_Syntax.bv) (bv2 : FStarC_Syntax_Syntax.bv) :
@@ -1221,12 +1220,12 @@ and comp_eq (c1 : FStarC_Syntax_Syntax.comp) (c2 : FStarC_Syntax_Syntax.comp)
             let uu___4 = univs_eq us1 us2 in
             if uu___4 then name1 = name2 else false in
           if uu___3 then term_eq t1 t2 else false in
-        if uu___2 then (eqlist ()) arg_eq args1 args2 else false in
-      if uu___1 then (eqlist ()) term_eq decrs1 decrs2 else false
+        if uu___2 then eqlist () arg_eq args1 args2 else false in
+      if uu___1 then eqlist () term_eq decrs1 decrs2 else false
   | uu___1 -> false
 and match_ret_asc_eq (a1 : FStarC_Syntax_Syntax.match_returns_ascription)
   (a2 : FStarC_Syntax_Syntax.match_returns_ascription) : Prims.bool=
-  (eqprod ()) binder_eq ascription_eq a1 a2
+  eqprod () binder_eq ascription_eq a1 a2
 and ascription_eq (asc1 : FStarC_Syntax_Syntax.ascription)
   (asc2 : FStarC_Syntax_Syntax.ascription) : Prims.bool=
   let uu___ = asc1 in
@@ -1242,11 +1241,11 @@ and ascription_eq (asc1 : FStarC_Syntax_Syntax.ascription)
                    term_eq t1 t2
                | (FStar_Pervasives.Inr c1, FStar_Pervasives.Inr c2) ->
                    comp_eq c1 c2 in
-             if uu___3 then (eqopt ()) term_eq topt1 topt2 else false in
+             if uu___3 then eqopt () term_eq topt1 topt2 else false in
            if uu___2 then eq1 = eq2 else false)
 and branch_eq (c1 : FStarC_Reflection_V2_Data.branch)
   (c2 : FStarC_Reflection_V2_Data.branch) : Prims.bool=
-  (eqprod ()) pattern_eq term_eq c1 c2
+  eqprod () pattern_eq term_eq c1 c2
 and pattern_eq (p1 : FStarC_Reflection_V2_Data.pattern)
   (p2 : FStarC_Reflection_V2_Data.pattern) : Prims.bool=
   match (p1, p2) with
@@ -1256,18 +1255,18 @@ and pattern_eq (p1 : FStarC_Reflection_V2_Data.pattern)
      FStarC_Reflection_V2_Data.Pat_Cons (fv2, us2, subpats2)) ->
       let uu___ =
         if FStarC_Syntax_Syntax.fv_eq fv1 fv2
-        then (eqopt ()) ((eqlist ()) univ_eq) us1 us2
+        then eqopt () (eqlist () univ_eq) us1 us2
         else false in
       if uu___
       then
-        (eqlist ()) ((eqprod ()) pattern_eq (fun b1 b2 -> b1 = b2)) subpats1
+        eqlist () (eqprod () pattern_eq (fun b1 b2 -> b1 = b2)) subpats1
           subpats2
       else false
   | (FStarC_Reflection_V2_Data.Pat_Var (uu___, uu___1),
      FStarC_Reflection_V2_Data.Pat_Var (uu___2, uu___3)) -> true
   | (FStarC_Reflection_V2_Data.Pat_Dot_Term topt1,
      FStarC_Reflection_V2_Data.Pat_Dot_Term topt2) ->
-      (eqopt ()) term_eq topt1 topt2
+      eqopt () term_eq topt1 topt2
   | uu___ -> false
 and const_eq (c1 : FStarC_Reflection_V2_Data.vconst)
   (c2 : FStarC_Reflection_V2_Data.vconst) : Prims.bool= c1 = c2
@@ -1276,7 +1275,7 @@ and univ_eq (u1 : FStarC_Syntax_Syntax.universe)
   FStarC_Syntax_Util.eq_univs u1 u2
 and univs_eq (us1 : FStarC_Syntax_Syntax.universe Prims.list)
   (us2 : FStarC_Syntax_Syntax.universe Prims.list) : Prims.bool=
-  (eqlist ()) univ_eq us1 us2
+  eqlist () univ_eq us1 us2
 let implode_qn (ns : Prims.string Prims.list) : Prims.string=
   FStarC_String.concat "." ns
 let explode_qn (s : Prims.string) : Prims.string Prims.list=

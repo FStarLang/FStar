@@ -29,8 +29,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
          FStarC_TypeChecker_Primops_Base.interpretation_nbe =
            (uu___.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
        })
-    [(FStarC_Parser_Const.map_seal_lid, (Prims.of_int (4)),
-       (Prims.of_int (2)),
+    [(FStarC_Parser_Const.map_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
        ((fun psc univs cbs args ->
            match args with
            | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
@@ -99,8 +98,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                     FStar_Pervasives_Native.Some uu___5
                 | uu___5 -> FStar_Pervasives_Native.None)
            | uu___ -> FStar_Pervasives_Native.None)));
-    (FStarC_Parser_Const.bind_seal_lid, (Prims.of_int (4)),
-      (Prims.of_int (2)),
+    (FStarC_Parser_Const.bind_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
       ((fun psc univs cbs args ->
           match args with
           | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->

@@ -38,7 +38,7 @@ let negopt3
      let r = g x y z in
      Obj.magic
        (FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option () ()
-          (fun uu___ -> (Obj.magic Prims.op_Negation) uu___) (Obj.magic r)))
+          (fun uu___ -> Obj.magic Prims.op_Negation uu___) (Obj.magic r)))
     uu___3 uu___2 uu___1 uu___
 let dec_eq_ops (env : FStarC_TypeChecker_Env.env_t) :
   FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
@@ -180,7 +180,7 @@ let prop_eq_ops (env : FStarC_TypeChecker_Env.env_t) :
      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
      FStarC_Syntax_Embeddings.e_abstract_term
      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term (s_eq2 env) (nbe_eq2 env);
-  FStarC_TypeChecker_Primops_Base.mk4' (Prims.of_int (2))
+  FStarC_TypeChecker_Primops_Base.mk4' (Prims.of_int 2)
     FStarC_Parser_Const.eq3_lid FStarC_Syntax_Embeddings.e_abstract_term
     FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
     FStarC_Syntax_Embeddings.e_abstract_term

@@ -86,7 +86,7 @@ let lazy_unembed (pa : 'a printer)
           else ());
          res)
       else
-        (let a1 = FStarC_Dyn.undyn b in
+        (let a1 = FStar_Dyn.undyn b in
          (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___5
           then
@@ -425,8 +425,8 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
          let proj i ab =
            let proj_1 =
              let uu___1 =
-               FStarC_Parser_Const_Tuples.mk_tuple_data_lid
-                 (Prims.of_int (2)) rng in
+               FStarC_Parser_Const_Tuples.mk_tuple_data_lid (Prims.of_int 2)
+                 rng in
              let uu___2 =
                FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
              FStarC_Syntax_Util.mk_field_projector_name uu___1 uu___2 i in
@@ -449,7 +449,7 @@ let e_tuple2 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
              uu___3 :: uu___4 in
            FStarC_Syntax_Syntax.mk_Tm_app uu___1 uu___2 rng in
          let shadow_a = map_shadow shadow (proj Prims.int_one) in
-         let shadow_b = map_shadow shadow (proj (Prims.of_int (2))) in
+         let shadow_b = map_shadow shadow (proj (Prims.of_int 2)) in
          let uu___1 =
            let uu___2 =
              FStarC_Syntax_Syntax.tdataconstr
@@ -568,7 +568,7 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                let proj_i =
                  let uu___2 =
                    FStarC_Parser_Const_Tuples.mk_tuple_data_lid
-                     (Prims.of_int (3)) rng in
+                     (Prims.of_int 3) rng in
                  let uu___3 =
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
@@ -596,8 +596,8 @@ let e_tuple3 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                  uu___4 :: uu___5 in
                FStarC_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
              let shadow_a = map_shadow shadow (proj Prims.int_one) in
-             let shadow_b = map_shadow shadow (proj (Prims.of_int (2))) in
-             let shadow_c = map_shadow shadow (proj (Prims.of_int (3))) in
+             let shadow_b = map_shadow shadow (proj (Prims.of_int 2)) in
+             let shadow_c = map_shadow shadow (proj (Prims.of_int 3)) in
              let uu___2 =
                let uu___3 =
                  FStarC_Syntax_Syntax.tdataconstr
@@ -749,7 +749,7 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                let proj_i =
                  let uu___2 =
                    FStarC_Parser_Const_Tuples.mk_tuple_data_lid
-                     (Prims.of_int (4)) rng in
+                     (Prims.of_int 4) rng in
                  let uu___3 =
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
@@ -783,9 +783,9 @@ let e_tuple4 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                  uu___4 :: uu___5 in
                FStarC_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
              let shadow_a = map_shadow shadow (proj Prims.int_one) in
-             let shadow_b = map_shadow shadow (proj (Prims.of_int (2))) in
-             let shadow_c = map_shadow shadow (proj (Prims.of_int (3))) in
-             let shadow_d = map_shadow shadow (proj (Prims.of_int (4))) in
+             let shadow_b = map_shadow shadow (proj (Prims.of_int 2)) in
+             let shadow_c = map_shadow shadow (proj (Prims.of_int 3)) in
+             let shadow_d = map_shadow shadow (proj (Prims.of_int 4)) in
              let uu___2 =
                let uu___3 =
                  FStarC_Syntax_Syntax.tdataconstr
@@ -974,7 +974,7 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                let proj_i =
                  let uu___2 =
                    FStarC_Parser_Const_Tuples.mk_tuple_data_lid
-                     (Prims.of_int (5)) rng in
+                     (Prims.of_int 5) rng in
                  let uu___3 =
                    FStarC_Syntax_Syntax.null_bv FStarC_Syntax_Syntax.tun in
                  FStarC_Syntax_Util.mk_field_projector_name uu___2 uu___3 i in
@@ -1014,10 +1014,10 @@ let e_tuple5 (ea : 'a FStarC_Syntax_Embeddings_Base.embedding)
                  uu___4 :: uu___5 in
                FStarC_Syntax_Syntax.mk_Tm_app uu___2 uu___3 rng in
              let shadow_a = map_shadow shadow (proj Prims.int_one) in
-             let shadow_b = map_shadow shadow (proj (Prims.of_int (2))) in
-             let shadow_c = map_shadow shadow (proj (Prims.of_int (3))) in
-             let shadow_d = map_shadow shadow (proj (Prims.of_int (4))) in
-             let shadow_e = map_shadow shadow (proj (Prims.of_int (5))) in
+             let shadow_b = map_shadow shadow (proj (Prims.of_int 2)) in
+             let shadow_c = map_shadow shadow (proj (Prims.of_int 3)) in
+             let shadow_d = map_shadow shadow (proj (Prims.of_int 4)) in
+             let shadow_e = map_shadow shadow (proj (Prims.of_int 5)) in
              let uu___2 =
                let uu___3 =
                  FStarC_Syntax_Syntax.tdataconstr
@@ -2618,7 +2618,7 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
                         FStarC_Syntax_Embeddings_Base.try_unembed ea a1 norm in
                       FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option
                         () ()
-                        (fun uu___5 -> (Obj.magic FStarC_Sealed.seal) uu___5)
+                        (fun uu___5 -> Obj.magic FStarC_Sealed.seal uu___5)
                         (Obj.magic uu___4)))
             | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
       uu___1 uu___ in

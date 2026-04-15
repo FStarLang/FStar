@@ -212,7 +212,7 @@ let json_of_issue (issue1 : issue) : FStarC_Json.json=
                 (FStarC_Class_Monad.op_Less_Dollar_Greater
                    FStarC_Class_Monad.monad_option () ()
                    (fun uu___8 ->
-                      (Obj.magic FStarC_Range_Type.json_of_range) uu___8)
+                      Obj.magic FStarC_Range_Type.json_of_range uu___8)
                    (Obj.magic uu___7)) in
             FStarC_Option.dflt FStarC_Json.JsonNull uu___6 in
           ("range", uu___5) in
@@ -478,7 +478,7 @@ let compare_issues (i1 : issue) (i2 : issue) : Prims.int=
   | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
       Prims.int_zero
   | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some uu___) ->
-      (Prims.of_int (-1))
+      Prims.of_int (-1)
   | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None) ->
       Prims.int_one
   | (FStar_Pervasives_Native.Some r1, FStar_Pervasives_Native.Some r2) ->
@@ -704,7 +704,7 @@ let uu___0 :
       -> unit)
     * (unit -> FStarC_Errors_Codes.error_setting Prims.list))=
   let parser_callback = FStarC_Effect.mk_ref FStar_Pervasives_Native.None in
-  let error_flags = FStarC_SMap.create (Prims.of_int (10)) in
+  let error_flags = FStarC_SMap.create (Prims.of_int 10) in
   let set_error_flags uu___ =
     let parse s =
       let uu___1 = FStarC_Effect.op_Bang parser_callback in
@@ -1049,7 +1049,7 @@ let uu___1 : unit=
            FStarC_Errors_Codes.Fatal_NotValidIncludeDirectory ()
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic
-              [FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+              [FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                  (FStarC_Errors_Msg.text "Not a valid include directory:")
                  (FStar_Pprint.doc_of_string s)])
        else ())

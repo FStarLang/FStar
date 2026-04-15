@@ -44,13 +44,13 @@ let __proj__Mkiface__item__iface_type_names (projectee : iface) :
 type extension_sigelt_extractor =
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Syntax_Syntax.sigelt ->
-      FStarC_Dyn.dyn ->
+      FStar_Dyn.dyn ->
         (FStarC_Extraction_ML_Syntax.mlmodule1 Prims.list, Prims.string)
           FStar_Pervasives.either
 type extension_sigelt_iface_extractor =
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Syntax_Syntax.sigelt ->
-      FStarC_Dyn.dyn ->
+      FStar_Dyn.dyn ->
         ((FStarC_Extraction_ML_UEnv.uenv * iface), Prims.string)
           FStar_Pervasives.either
 type extension_extractor =
@@ -66,7 +66,7 @@ let __proj__Mkextension_extractor__item__extract_sigelt_iface
   match projectee with
   | { extract_sigelt; extract_sigelt_iface;_} -> extract_sigelt_iface
 let extension_extractor_table : extension_extractor FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (20))
+  FStarC_SMap.create (Prims.of_int 20)
 let register_extension_extractor (ext : Prims.string)
   (callback : extension_extractor) : unit=
   FStarC_SMap.add extension_extractor_table ext callback
@@ -1613,7 +1613,7 @@ let rec extract_sigelt_iface (g : FStarC_Extraction_ML_UEnv.uenv)
                  ed.FStarC_Syntax_Syntax.mname in
              uu___4 = FStarC_Syntax_Syntax.Extract_reify in
            if uu___3
-           then FStarC_List.isEmpty ed.FStarC_Syntax_Syntax.binders
+           then Prims.uu___is_Nil ed.FStarC_Syntax_Syntax.binders
            else false in
          if uu___2
          then
@@ -1798,8 +1798,8 @@ let extract_bundle (env : FStarC_Extraction_ML_UEnv.uenv)
                                   ((FStar_Pervasives_Native.Some
                                       (FStarC_Extraction_ML_Syntax.MLTD_Record
                                          fields)), g)))
-                    | uu___6 when (FStarC_List.length ctors) = Prims.int_zero
-                        -> (FStar_Pervasives_Native.None, env2)
+                    | uu___6 when Prims.uu___is_Nil ctors ->
+                        (FStar_Pervasives_Native.None, env2)
                     | uu___6 ->
                         ((FStar_Pervasives_Native.Some
                             (FStarC_Extraction_ML_Syntax.MLTD_DType ctors)),

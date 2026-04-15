@@ -146,8 +146,8 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
            | (l, lst) ->
                let blob = FStar_ImmutableArray_Base.of_list lst in
                FStar_Pervasives_Native.Some
-                 (universes, elt_t, (l, (FStarC_Dyn.mkdyn blob)))) univs args in
-    (FStarC_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)),
+                 (universes, elt_t, (l, (FStar_Dyn.mkdyn blob)))) univs args in
+    (FStarC_Parser_Const.immutable_array_of_list_lid, (Prims.of_int 2),
       Prims.int_one,
       (mixed_binary_op
          (fun uu___ ->
@@ -200,7 +200,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
             | (l, lst) ->
                 let blob = FStar_ImmutableArray_Base.of_list lst in
                 FStar_Pervasives_Native.Some
-                  (universes, elt_t, (l, (FStarC_Dyn.mkdyn blob))))),
+                  (universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))),
       nbe_of_list) in
   let arg1_as_elt_t x =
     FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst x) in
@@ -240,7 +240,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
         FStarC_Syntax_Embeddings.e_int r i in
     let run_op blob =
       let uu___ =
-        let uu___1 = FStarC_Dyn.undyn blob in FStarC_Util.array_length uu___1 in
+        let uu___1 = FStar_Dyn.undyn blob in FStarC_Util.array_length uu___1 in
       FStar_Pervasives_Native.Some uu___ in
     let nbe_length _cbs univs args =
       FStarC_TypeChecker_NBETerm.mixed_binary_op
@@ -252,7 +252,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
            FStarC_TypeChecker_NBETerm.embed FStarC_TypeChecker_NBETerm.e_int
              bogus_cbs i) (fun _universes uu___ blob -> run_op blob) univs
         args in
-    (FStarC_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
+    (FStarC_Parser_Const.immutable_array_length_lid, (Prims.of_int 2),
       Prims.int_one,
       (mixed_binary_op arg1_as_elt_t arg2_as_blob embed_int
          (fun _r _universes uu___ blob -> run_op blob)), nbe_length) in
@@ -265,16 +265,16 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
         arg2_as_blob_nbe FStarC_TypeChecker_NBETerm.arg_as_int (fun tm -> tm)
         (fun _universes _t blob i ->
            let uu___ =
-             let uu___1 = FStarC_Dyn.undyn blob in
+             let uu___1 = FStar_Dyn.undyn blob in
              FStarC_Util.array_index uu___1 i in
            FStar_Pervasives_Native.Some uu___) univs args in
-    (FStarC_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)),
+    (FStarC_Parser_Const.immutable_array_index_lid, (Prims.of_int 3),
       Prims.int_one,
       (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int
          (fun r tm -> tm)
          (fun r _universes _t blob i ->
             let uu___ =
-              let uu___1 = FStarC_Dyn.undyn blob in
+              let uu___1 = FStar_Dyn.undyn blob in
               FStarC_Util.array_index uu___1 i in
             FStar_Pervasives_Native.Some uu___)), nbe_index) in
   let s1 = as_primitive_step true of_list_op in

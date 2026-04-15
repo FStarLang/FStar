@@ -24,8 +24,8 @@ let typo_candidates (x : Prims.string) (xs : Prims.string Prims.list) :
       (FStarC_Class_Ord.ord_tuple2 FStarC_Class_Ord.ord_int
          FStarC_Class_Ord.ord_string) uu___ in
   let cands2 =
-    takeWhileMax (Prims.of_int (5))
-      (fun uu___ -> match uu___ with | (d, uu___1) -> d < (Prims.of_int (3)))
+    takeWhileMax (Prims.of_int 5)
+      (fun uu___ -> match uu___ with | (d, uu___1) -> d < (Prims.of_int 3))
       cands1 in
   FStarC_List.map FStar_Pervasives_Native.snd cands2
 let rec list_sep2 : 'a . 'a -> 'a -> 'a Prims.list -> 'a Prims.list =
@@ -38,7 +38,7 @@ let rec list_sep2 : 'a . 'a -> 'a -> 'a Prims.list -> 'a Prims.list =
 let typo_msg (x : Prims.string) (xs : Prims.string Prims.list) :
   FStar_Pprint.document=
   let cands = typo_candidates x xs in
-  if (FStarC_List.length cands) = Prims.int_zero
+  if Prims.uu___is_Nil cands
   then FStar_Pprint.empty
   else
     (let uu___1 =
@@ -56,7 +56,7 @@ let typo_msg (x : Prims.string) (xs : Prims.string Prims.list) :
          FStar_Pprint.op_Hat_Hat uu___3 (FStar_Pprint.doc_of_string "?") in
        FStar_Pprint.op_Hat_Slash_Hat
          (FStarC_Errors_Msg.text "Hint: Did you mean") uu___2 in
-     FStar_Pprint.nest (Prims.of_int (2)) uu___1)
+     FStar_Pprint.nest (Prims.of_int 2) uu___1)
 let ugly_sigelt_to_string_hook :
   (FStarC_Syntax_Syntax.sigelt -> Prims.string) FStarC_Effect.ref=
   FStarC_Effect.mk_ref (fun uu___ -> "")
@@ -140,7 +140,7 @@ let __proj__Record_or_dc__item___0 (projectee : scope_mod) : record_or_dc=
 let namespace_scope_of_module (mname : FStarC_Ident.lident) :
   (FStarC_Ident.lident * FStarC_Syntax_Syntax.open_kind *
     FStarC_Syntax_Syntax.restriction) Prims.list=
-  if (FStarC_List.length (FStarC_Ident.ns_of_lid mname)) > Prims.int_zero
+  if Prims.uu___is_Cons (FStarC_Ident.ns_of_lid mname)
   then
     let uu___ =
       let uu___1 = FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid mname) in
@@ -756,7 +756,7 @@ let set_ds_hooks (env1 : env) (hooks : dsenv_hooks) : env=
     no_prelude = (env1.no_prelude)
   }
 let new_sigmap (uu___ : unit) : 'uuuuu FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (100))
+  FStarC_SMap.create (Prims.of_int 100)
 let empty_env (deps : FStarC_Parser_Dep.deps) : env=
   let uu___ = new_sigmap () in
   let uu___2 = new_sigmap () in
@@ -1153,10 +1153,7 @@ let shorten_module_path (env1 : env) (ids : FStarC_Ident.ident Prims.list)
          | FStar_Pervasives_Native.None -> ([], ids1)
          | FStar_Pervasives_Native.Some (stripped_ids, rev_kept_ids) ->
              (stripped_ids, (FStarC_List.rev rev_kept_ids))) in
-  if
-    (if is_full_path
-     then (FStarC_List.length ids) > Prims.int_zero
-     else false)
+  if (if is_full_path then Prims.uu___is_Cons ids else false)
   then
     let uu___ =
       let uu___2 = FStarC_Ident.lid_of_ids ids in
@@ -2981,8 +2978,7 @@ let elab_restriction
                            match nth with
                            | uu___6 when uu___6 = Prims.int_zero -> "first"
                            | uu___6 when uu___6 = Prims.int_one -> "second"
-                           | uu___6 when uu___6 = (Prims.of_int (2)) ->
-                               "third"
+                           | uu___6 when uu___6 = (Prims.of_int 2) -> "third"
                            | nth2 ->
                                let uu___6 =
                                  FStarC_Class_Show.show
@@ -2998,7 +2994,7 @@ let elab_restriction
                                Prims.strcat uu___9
                                  (Prims.strcat " "
                                     (Prims.strcat nth1
-                                       " occurence comes from this declaration")) in
+                                       " occurrence comes from this declaration")) in
                              FStarC_Errors_Msg.text uu___8 in
                            [uu___7] in
                          {
@@ -3109,39 +3105,51 @@ let push_include' (env1 : env) (ns : FStarC_Ident.lident)
   let uu___ = resolve_module_name env1 ns false in
   match uu___ with
   | FStar_Pervasives_Native.Some ns1 ->
-      ((env1.ds_hooks).ds_push_include_hook env1 ns1;
+      ((let uu___3 =
+          let uu___4 = current_module env1 in
+          FStarC_Ident.lid_equals ns1 uu___4 in
+        if uu___3
+        then
+          FStarC_Errors.raise_error FStarC_Ident.hasrange_lident ns1
+            FStarC_Errors_Codes.Fatal_CyclicDependence ()
+            (Obj.magic FStarC_Errors_Msg.is_error_message_string)
+            (Obj.magic
+               (FStarC_Format.fmt1 "include: Module %s cannot include itself"
+                  (FStarC_Ident.string_of_lid ns1)))
+        else ());
+       (env1.ds_hooks).ds_push_include_hook env1 ns1;
        (let env2 =
           push_scope_mod env1
             (Open_module_or_namespace
                ((ns1, FStarC_Syntax_Syntax.Open_module, restriction), false)) in
         let curmod =
-          let uu___3 = current_module env2 in
-          FStarC_Ident.string_of_lid uu___3 in
-        (let uu___4 = FStarC_SMap.try_find env2.includes curmod in
-         match uu___4 with
+          let uu___4 = current_module env2 in
+          FStarC_Ident.string_of_lid uu___4 in
+        (let uu___5 = FStarC_SMap.try_find env2.includes curmod in
+         match uu___5 with
          | FStar_Pervasives_Native.None -> ()
          | FStar_Pervasives_Native.Some incl ->
-             let uu___5 =
-               let uu___6 = FStarC_Effect.op_Bang incl in (ns1, restriction)
-                 :: uu___6 in
-             FStarC_Effect.op_Colon_Equals incl uu___5);
+             let uu___6 =
+               let uu___7 = FStarC_Effect.op_Bang incl in (ns1, restriction)
+                 :: uu___7 in
+             FStarC_Effect.op_Colon_Equals incl uu___6);
         (match () with
          | () ->
-             let uu___4 =
+             let uu___5 =
                get_trans_exported_id_set env2
                  (FStarC_Ident.string_of_lid ns1) in
-             (match uu___4 with
+             (match uu___5 with
               | FStar_Pervasives_Native.Some ns_trans_exports ->
-                  ((let uu___6 =
-                      let uu___7 = get_exported_id_set env2 curmod in
-                      let uu___8 = get_trans_exported_id_set env2 curmod in
-                      (uu___7, uu___8) in
-                    match uu___6 with
+                  ((let uu___7 =
+                      let uu___8 = get_exported_id_set env2 curmod in
+                      let uu___9 = get_trans_exported_id_set env2 curmod in
+                      (uu___8, uu___9) in
+                    match uu___7 with
                     | (FStar_Pervasives_Native.Some cur_exports,
                        FStar_Pervasives_Native.Some cur_trans_exports) ->
                         let update_exports k =
                           let ns_ex =
-                            let uu___7 =
+                            let uu___8 =
                               FStarC_Effect.op_Bang (ns_trans_exports k) in
                             Obj.magic
                               (FStarC_Class_Setlike.filter ()
@@ -3149,36 +3157,36 @@ let push_include' (env1 : env) (ns : FStarC_Ident.lident)
                                     (FStarC_RBSet.setlike_rbset
                                        FStarC_Class_Ord.ord_string))
                                  (fun id ->
-                                    let uu___8 =
+                                    let uu___9 =
                                       FStarC_Syntax_Syntax.is_ident_allowed_by_restriction
                                         (FStarC_Ident.id_of_text id)
                                         restriction in
                                     FStar_Pervasives_Native.uu___is_Some
-                                      uu___8) (Obj.magic uu___7)) in
+                                      uu___9) (Obj.magic uu___8)) in
                           let ex = cur_exports k in
-                          (let uu___8 =
-                             let uu___9 = FStarC_Effect.op_Bang ex in
+                          (let uu___9 =
+                             let uu___10 = FStarC_Effect.op_Bang ex in
                              Obj.magic
                                (FStarC_Class_Setlike.diff ()
                                   (Obj.magic
                                      (FStarC_RBSet.setlike_rbset
                                         FStarC_Class_Ord.ord_string))
-                                  (Obj.magic uu___9) (Obj.magic ns_ex)) in
-                           FStarC_Effect.op_Colon_Equals ex uu___8);
+                                  (Obj.magic uu___10) (Obj.magic ns_ex)) in
+                           FStarC_Effect.op_Colon_Equals ex uu___9);
                           (match () with
                            | () ->
                                let trans_ex = cur_trans_exports k in
-                               let uu___9 =
-                                 let uu___10 = FStarC_Effect.op_Bang trans_ex in
+                               let uu___10 =
+                                 let uu___11 = FStarC_Effect.op_Bang trans_ex in
                                  Obj.magic
                                    (FStarC_Class_Setlike.union ()
                                       (Obj.magic
                                          (FStarC_RBSet.setlike_rbset
                                             FStarC_Class_Ord.ord_string))
-                                      (Obj.magic uu___10) (Obj.magic ns_ex)) in
-                               FStarC_Effect.op_Colon_Equals trans_ex uu___9) in
+                                      (Obj.magic uu___11) (Obj.magic ns_ex)) in
+                               FStarC_Effect.op_Colon_Equals trans_ex uu___10) in
                         FStarC_List.iter update_exports all_exported_id_kinds
-                    | uu___7 -> ());
+                    | uu___8 -> ());
                    (match () with | () -> env2))
               | FStar_Pervasives_Native.None ->
                   FStarC_Errors.raise_error FStarC_Ident.hasrange_lident ns1
@@ -3858,7 +3866,7 @@ let fail_or (env1 : env)
              match uu___2 with
              | (lid1, uu___3) -> FStarC_Ident.string_of_lid lid1)
           env1.modules in
-      if (FStarC_List.length (FStarC_Ident.ns_of_lid lid)) = Prims.int_zero
+      if Prims.uu___is_Nil (FStarC_Ident.ns_of_lid lid)
       then
         ((let uu___3 = FStarC_Debug.any () in
           if uu___3
@@ -3873,7 +3881,7 @@ let fail_or (env1 : env)
          (let uu___3 =
             let uu___4 =
               let uu___5 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident lid in
-              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+              FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                 (FStarC_Errors_Msg.text "Identifier not found:") uu___5 in
             let uu___5 =
               let uu___6 =
@@ -3996,7 +4004,7 @@ let fail_or (env1 : env)
                                  let uu___16 =
                                    FStarC_Class_PP.pp
                                      FStarC_Ident.pretty_lident modul' in
-                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                 FStar_Pprint.prefix (Prims.of_int 2)
                                    Prims.int_one
                                    (FStarC_Errors_Msg.text "resolved to")
                                    uu___16 in
@@ -4031,7 +4039,7 @@ let fail_or2 (env1 : env)
       let uu___2 =
         let uu___3 =
           let uu___4 = FStarC_Class_PP.pp FStarC_Ident.pretty_ident id in
-          FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+          FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
             (FStarC_Errors_Msg.text "Identifier not found:") uu___4 in
         let uu___4 =
           let uu___5 =

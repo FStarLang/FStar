@@ -10,10 +10,9 @@ type var = FStarC_Ident.lident[@@deriving yojson,show]
 type sconst = FStarC_Const.sconst[@@deriving yojson,show]
 type 'a memo =
   (('a FStar_Pervasives_Native.option FStarC_Effect.ref)[@printer
-                                                          fun fmt ->
-                                                            fun _ ->
-                                                              Format.pp_print_string
-                                                                fmt "None"])
+                                                          fun fmt _ ->
+                                                            Format.pp_print_string
+                                                              fmt "None"])
 [@@deriving yojson,show]
 type emb_typ =
   | ET_abstract 
@@ -280,7 +279,6 @@ and cflag =
   | SOMETRIVIAL 
   | TRIVIAL_POSTCONDITION 
   | SHOULD_NOT_INLINE 
-  | CPS 
   | DECREASES of decreases_order 
 and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
@@ -341,7 +339,7 @@ and residual_comp =
   residual_flags: cflag Prims.list }
 and lazyinfo =
   {
-  blob: FStarC_Dyn.dyn ;
+  blob: FStar_Dyn.dyn ;
   lkind: lazy_kind ;
   ltyp: term' syntax ;
   rng: FStarC_Range_Type.range }
@@ -730,8 +728,6 @@ let uu___is_TRIVIAL_POSTCONDITION (projectee : cflag) : Prims.bool=
   match projectee with | TRIVIAL_POSTCONDITION -> true | uu___ -> false
 let uu___is_SHOULD_NOT_INLINE (projectee : cflag) : Prims.bool=
   match projectee with | SHOULD_NOT_INLINE -> true | uu___ -> false
-let uu___is_CPS (projectee : cflag) : Prims.bool=
-  match projectee with | CPS -> true | uu___ -> false
 let uu___is_DECREASES (projectee : cflag) : Prims.bool=
   match projectee with | DECREASES _0 -> true | uu___ -> false
 let __proj__DECREASES__item___0 (projectee : cflag) : decreases_order=
@@ -886,7 +882,7 @@ let __proj__Mkresidual_comp__item__residual_flags (projectee : residual_comp)
   : cflag Prims.list=
   match projectee with
   | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
-let __proj__Mklazyinfo__item__blob (projectee : lazyinfo) : FStarC_Dyn.dyn=
+let __proj__Mklazyinfo__item__blob (projectee : lazyinfo) : FStar_Dyn.dyn=
   match projectee with | { blob; lkind; ltyp; rng;_} -> blob
 let __proj__Mklazyinfo__item__lkind (projectee : lazyinfo) : lazy_kind=
   match projectee with | { blob; lkind; ltyp; rng;_} -> lkind
@@ -1017,6 +1013,7 @@ type pragma =
   | RestartSolver 
   | PrintEffectsGraph 
   | Check of term 
+  | Eval of term 
 let uu___is_ShowOptions (projectee : pragma) : Prims.bool=
   match projectee with | ShowOptions -> true | uu___ -> false
 let uu___is_SetOptions (projectee : pragma) : Prims.bool=
@@ -1043,6 +1040,10 @@ let uu___is_Check (projectee : pragma) : Prims.bool=
   match projectee with | Check _0 -> true | uu___ -> false
 let __proj__Check__item___0 (projectee : pragma) : term=
   match projectee with | Check _0 -> _0
+let uu___is_Eval (projectee : pragma) : Prims.bool=
+  match projectee with | Eval _0 -> true | uu___ -> false
+let __proj__Eval__item___0 (projectee : pragma) : term=
+  match projectee with | Eval _0 -> _0
 let pragma_to_string (p : pragma) : Prims.string=
   match p with
   | ShowOptions -> "#show-options"
@@ -1057,6 +1058,7 @@ let pragma_to_string (p : pragma) : Prims.string=
   | PrintEffectsGraph -> "#print-effects-graph"
   | PopOptions -> "#pop-options"
   | Check t -> "check _"
+  | Eval t -> "eval _"
 let showable_pragma : pragma FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = pragma_to_string }
 type freenames_l = bv Prims.list
@@ -1552,16 +1554,11 @@ let __proj__Mklayered_eff_combinators__item__l_close
       l_close
 type eff_combinators =
   | Primitive_eff of wp_eff_combinators 
-  | DM4F_eff of wp_eff_combinators 
   | Layered_eff of layered_eff_combinators 
 let uu___is_Primitive_eff (projectee : eff_combinators) : Prims.bool=
   match projectee with | Primitive_eff _0 -> true | uu___ -> false
 let __proj__Primitive_eff__item___0 (projectee : eff_combinators) :
   wp_eff_combinators= match projectee with | Primitive_eff _0 -> _0
-let uu___is_DM4F_eff (projectee : eff_combinators) : Prims.bool=
-  match projectee with | DM4F_eff _0 -> true | uu___ -> false
-let __proj__DM4F_eff__item___0 (projectee : eff_combinators) :
-  wp_eff_combinators= match projectee with | DM4F_eff _0 -> _0
 let uu___is_Layered_eff (projectee : eff_combinators) : Prims.bool=
   match projectee with | Layered_eff _0 -> true | uu___ -> false
 let __proj__Layered_eff__item___0 (projectee : eff_combinators) :
@@ -1670,7 +1667,7 @@ type sig_metadata =
   sigmeta_admit: Prims.bool ;
   sigmeta_spliced: Prims.bool ;
   sigmeta_already_checked: Prims.bool ;
-  sigmeta_extension_data: (Prims.string * FStarC_Dyn.dyn) Prims.list }
+  sigmeta_extension_data: (Prims.string * FStar_Dyn.dyn) Prims.list }
 let __proj__Mksig_metadata__item__sigmeta_active (projectee : sig_metadata) :
   Prims.bool=
   match projectee with
@@ -1699,7 +1696,7 @@ let __proj__Mksig_metadata__item__sigmeta_already_checked
       sigmeta_already_checked; sigmeta_extension_data;_} ->
       sigmeta_already_checked
 let __proj__Mksig_metadata__item__sigmeta_extension_data
-  (projectee : sig_metadata) : (Prims.string * FStarC_Dyn.dyn) Prims.list=
+  (projectee : sig_metadata) : (Prims.string * FStar_Dyn.dyn) Prims.list=
   match projectee with
   | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;
       sigmeta_already_checked; sigmeta_extension_data;_} ->

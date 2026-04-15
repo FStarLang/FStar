@@ -49,7 +49,7 @@ let new_counter (cid : Prims.string) : counter=
   let uu___2 = FStarC_Effect.mk_ref false in
   { cid; total_time = uu___; running = uu___1; undercount = uu___2 }
 let all_counters : counter FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (20))
+  FStarC_SMap.create (Prims.of_int 20)
 let create_or_lookup_counter (cid : Prims.string) : counter=
   let uu___ = FStarC_SMap.try_find all_counters cid in
   match uu___ with
@@ -107,7 +107,7 @@ let report_human (tag : Prims.string) (c : counter) : unit=
   let uu___ =
     let uu___1 =
       let uu___2 = FStarC_Effect.op_Bang c.total_time in
-      uu___2 / (Prims.parse_int "1000000") in
+      uu___2 / (Prims.of_int 1000000) in
     FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___1 in
   FStarC_Format.print4 "%s, profiled %s:\t %s ms%s\n" tag c.cid uu___ warn
 let report (tag : Prims.string) (c : counter) : unit=
