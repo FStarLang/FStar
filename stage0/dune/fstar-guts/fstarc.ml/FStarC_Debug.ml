@@ -79,26 +79,26 @@ let low (uu___ : unit) : Prims.bool=
 let medium (uu___ : unit) : Prims.bool=
   let uu___1 =
     let uu___2 = FStarC_Effect.op_Bang dbg_level in
-    uu___2 >= (Prims.of_int (2)) in
+    uu___2 >= (Prims.of_int 2) in
   if uu___1 then true else FStarC_Effect.op_Bang _debug_all
 let high (uu___ : unit) : Prims.bool=
   let uu___1 =
     let uu___2 = FStarC_Effect.op_Bang dbg_level in
-    uu___2 >= (Prims.of_int (3)) in
+    uu___2 >= (Prims.of_int 3) in
   if uu___1 then true else FStarC_Effect.op_Bang _debug_all
 let extreme (uu___ : unit) : Prims.bool=
   let uu___1 =
     let uu___2 = FStarC_Effect.op_Bang dbg_level in
-    uu___2 >= (Prims.of_int (4)) in
+    uu___2 >= (Prims.of_int 4) in
   if uu___1 then true else FStarC_Effect.op_Bang _debug_all
 let set_level_low (uu___ : unit) : unit=
   FStarC_Effect.op_Colon_Equals dbg_level Prims.int_one
 let set_level_medium (uu___ : unit) : unit=
-  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int (2))
+  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int 2)
 let set_level_high (uu___ : unit) : unit=
-  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int (3))
+  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int 3)
 let set_level_extreme (uu___ : unit) : unit=
-  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int (4))
+  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int 4)
 let enable_toggles (keys : Prims.string Prims.list) : unit=
   if Prims.uu___is_Cons keys then enable () else ();
   FStarC_List.iter
@@ -131,6 +131,6 @@ let disable_all (uu___ : unit) : unit=
      (fun k r -> FStarC_Effect.op_Colon_Equals r false))
 let set_debug_all (uu___ : unit) : unit=
   FStarC_Effect.op_Colon_Equals _debug_all true;
-  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int (4));
+  FStarC_Effect.op_Colon_Equals dbg_level (Prims.of_int 4);
   (let uu___3 = FStarC_Effect.op_Bang toggle_list in
    FStarC_PSMap.iter uu___3 (fun k r -> FStarC_Effect.op_Colon_Equals r true))

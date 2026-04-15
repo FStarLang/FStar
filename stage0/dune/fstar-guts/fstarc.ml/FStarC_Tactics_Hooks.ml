@@ -1605,7 +1605,7 @@ let splice : FStarC_TypeChecker_Env.splice_t=
                            (Obj.magic uu___6)
                        else
                          (let uu___7 =
-                            if (FStarC_List.length lids) = Prims.int_zero
+                            if Prims.uu___is_Nil lids
                             then
                               (FStar_Pervasives_Native.None,
                                 FStar_Pervasives_Native.None)
@@ -1899,7 +1899,7 @@ let splice : FStarC_TypeChecker_Env.splice_t=
                                                            | FStar_Pervasives_Native.Some
                                                                (s, blob) ->
                                                                [(s,
-                                                                  (FStarC_Dyn.mkdyn
+                                                                  (FStar_Dyn.mkdyn
                                                                     blob))]
                                                            | FStar_Pervasives_Native.None
                                                                -> []))
@@ -2186,8 +2186,7 @@ let splice : FStarC_TypeChecker_Env.splice_t=
                                                FStar_Pprint.arbitrary_string
                                                  uu___16 in
                                              FStar_Pprint.prefix
-                                               (Prims.of_int (2))
-                                               Prims.int_one
+                                               (Prims.of_int 2) Prims.int_one
                                                (FStarC_Errors_Msg.text
                                                   "It cannot be attached to spliced declaration:")
                                                uu___15 in

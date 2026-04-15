@@ -107,7 +107,7 @@ let mk_tac_step_2 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  set_auto_reflect (Prims.of_int (2))
+  set_auto_reflect (Prims.of_int 2)
     (FStarC_TypeChecker_Primops_Base.mk3' univ_arity lid uu___ uu___3 uu___1
        uu___4 FStarC_Tactics_Embedding.e_ref_proofstate
        FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___2 uu___5
@@ -130,7 +130,7 @@ let mk_tac_step_3 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nt3 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  set_auto_reflect (Prims.of_int (3))
+  set_auto_reflect (Prims.of_int 3)
     (FStarC_TypeChecker_Primops_Base.mk4' univ_arity lid uu___ uu___4 uu___1
        uu___5 uu___2 uu___6 FStarC_Tactics_Embedding.e_ref_proofstate
        FStarC_Tactics_Embedding.e_ref_proofstate_nbe uu___3 uu___7
@@ -155,7 +155,7 @@ let mk_tac_step_4 (univ_arity : Prims.int) (nm : Prims.string)
   (nbe_f : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nres FStarC_Tactics_Monad.tac) :
   FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  set_auto_reflect (Prims.of_int (4))
+  set_auto_reflect (Prims.of_int 4)
     (FStarC_TypeChecker_Primops_Base.mk5' univ_arity lid uu___ uu___5 uu___1
        uu___6 uu___2 uu___7 uu___3 uu___8
        FStarC_Tactics_Embedding.e_ref_proofstate
@@ -184,7 +184,7 @@ let mk_tac_step_5 (univ_arity : Prims.int) (nm : Prims.string)
     'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nres FStarC_Tactics_Monad.tac)
   : FStarC_TypeChecker_Primops_Base.primitive_step=
   let lid = builtin_lid nm in
-  set_auto_reflect (Prims.of_int (5))
+  set_auto_reflect (Prims.of_int 5)
     (FStarC_TypeChecker_Primops_Base.mk6' univ_arity lid uu___ uu___6 uu___1
        uu___7 uu___2 uu___8 uu___3 uu___9 uu___4 uu___10
        FStarC_Tactics_Embedding.e_ref_proofstate
@@ -196,7 +196,7 @@ let mk_tac_step_5 (univ_arity : Prims.int) (nm : Prims.string)
           let uu___12 =
             let uu___13 = nbe_f a b c d e in run_wrap nm uu___13 ps in
           FStar_Pervasives_Native.Some uu___12))
-let max_tac_arity : Prims.int= (Prims.of_int (20))
+let max_tac_arity : Prims.int= Prims.of_int 20
 let mk_tactic_interpretation_1 (name : Prims.string)
   (t : 't1 -> 'r FStarC_Tactics_Monad.tac)
   (e1 : 't1 FStarC_Syntax_Embeddings_Base.embedding)

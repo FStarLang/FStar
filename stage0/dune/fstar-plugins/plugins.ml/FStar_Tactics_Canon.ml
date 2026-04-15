@@ -273,7 +273,7 @@ let canon (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.pointwise canon_point_entry
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Canon.canon" (Prims.of_int (2))
+    "FStar.Tactics.Canon.canon" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

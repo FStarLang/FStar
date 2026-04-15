@@ -62,6 +62,4 @@ let uu___0 : unit=
     FStarC_TypeChecker_Normalize.unembed_binder_knot
     (FStar_Pervasives_Native.Some FStarC_Reflection_V2_Embeddings.e_binder);
   FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step
-    FStarC_Tactics_V1_Primops.ops;
-  FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step
     FStarC_Tactics_V2_Primops.ops

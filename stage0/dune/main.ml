@@ -27,4 +27,7 @@ let x =
       (* Tweak garbage collector parameters. *)
       Gc.set { (Gc.get()) with Gc.minor_heap_size = 1048576; Gc.major_heap_increment = 4194304; Gc.space_overhead = 150; };
 
+      (* Set up peak heap memory reporting (for benchmarking). *)
+      Fstarcompiler.FStarC_MemReport.setup ();
+
       Fstarcompiler.FStarC_Main.main ()

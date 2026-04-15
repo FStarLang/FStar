@@ -367,7 +367,7 @@ let lax_term_eq (t1 : FStarC_Reflection_Types.term)
   fun ps -> let x = term_eq t1 t2 ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.of_int (3))
+    "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -383,7 +383,7 @@ let lax_univ_eq (u1 : FStarC_Reflection_Types.universe)
   (Prims.bool, unit) FStar_Tactics_Effect.tac_repr= univ_eq u1 u2
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.of_int (3))
+    "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

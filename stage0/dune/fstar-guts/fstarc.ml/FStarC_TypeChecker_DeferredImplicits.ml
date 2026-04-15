@@ -680,7 +680,7 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
      match uu___1 with
      | (more, imps) ->
          let bucketize is =
-           let map = FStarC_SMap.create (Prims.of_int (17)) in
+           let map = FStarC_SMap.create (Prims.of_int 17) in
            FStarC_List.iter
              (fun uu___3 ->
                 match uu___3 with

@@ -57,9 +57,9 @@ let split_5 (s : 'a FStar_Seq_Base.seq) (i : Prims.nat) (j : Prims.nat) :
     (FStar_Seq_Base.upd
        (FStar_Seq_Base.upd
           (FStar_Seq_Base.upd
-             (FStar_Seq_Base.create (Prims.of_int (5)) frag_lo) Prims.int_one
-             frag_i) (Prims.of_int (2)) frag_mid) (Prims.of_int (3)) frag_j)
-    (Prims.of_int (4)) frag_hi
+             (FStar_Seq_Base.create (Prims.of_int 5) frag_lo) Prims.int_one
+             frag_i) (Prims.of_int 2) frag_mid) (Prims.of_int 3) frag_j)
+    (Prims.of_int 4) frag_hi
 type ('a, 's1, 's2) permutation = unit
 let splice (s1 : 'a FStar_Seq_Base.seq) (i : Prims.nat)
   (s2 : 'a FStar_Seq_Base.seq) (j : Prims.nat) : 'a FStar_Seq_Base.seq=

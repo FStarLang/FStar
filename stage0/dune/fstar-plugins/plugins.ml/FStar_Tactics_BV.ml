@@ -493,7 +493,7 @@ let arith_to_bv_tac (uu___ : unit) :
             FStar_Tactics_V2_Derived.fail x3 ps))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.BV.arith_to_bv_tac" (Prims.of_int (2))
+    "FStar.Tactics.BV.arith_to_bv_tac" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -526,7 +526,7 @@ let bv_tac (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
        FStar_Tactics_V2_Derived.smt () ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.BV.bv_tac" (Prims.of_int (2))
+    "FStar.Tactics.BV.bv_tac" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -558,7 +558,7 @@ let bv_tac_lt (n : Prims.int) : (unit, unit) FStar_Tactics_Effect.tac_repr=
        FStar_Tactics_V2_Derived.smt () ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.BV.bv_tac_lt" (Prims.of_int (2))
+    "FStar.Tactics.BV.bv_tac_lt" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -585,7 +585,7 @@ let to_bv_tac (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
        arith_to_bv_tac () ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.BV.to_bv_tac" (Prims.of_int (2))
+    "FStar.Tactics.BV.to_bv_tac" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

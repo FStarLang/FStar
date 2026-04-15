@@ -179,7 +179,7 @@ let goal_to_doc (kind : Prims.string)
                             (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
                       FStar_Pprint.parens uu___5 in
-                    FStar_Pprint.hang (Prims.of_int (2)) uu___4 in
+                    FStar_Pprint.hang (Prims.of_int 2) uu___4 in
                   FStar_Pprint.group uu___3 in
                 let uu___3 =
                   let uu___4 =
@@ -208,7 +208,7 @@ let goal_to_doc (kind : Prims.string)
                     (FStar_Pprint.group
                        (FStar_Pprint.op_Hat_Slash_Hat
                           (FStar_Pprint.doc_of_string kind) num)) uu___4 in
-                FStar_Pprint.hang (Prims.of_int (2)) uu___3))
+                FStar_Pprint.hang (Prims.of_int 2) uu___3))
 let goal_to_string (kind : Prims.string)
   (maybe_num : (Prims.int * Prims.int) FStar_Pervasives_Native.option)
   (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) :

@@ -28,7 +28,7 @@ let name_appears_in (nm : FStarC_Reflection_Types.name)
         Obj.magic (Obj.repr (FStarC_Tactics_V2_Builtins.raise_core e ps))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Names.name_appears_in" (Prims.of_int (3))
+    "FStar.Tactics.Names.name_appears_in" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

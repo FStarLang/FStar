@@ -1566,7 +1566,7 @@ let tadmit_t (t : FStarC_Syntax_Syntax.term) : unit FStarC_Tactics_Monad.tac=
                                   FStarC_Tactics_Printing.goal_to_string ""
                                     FStar_Pervasives_Native.None ps g in
                                 FStar_Pprint.arbitrary_string uu___7 in
-                              FStar_Pprint.prefix (Prims.of_int (2))
+                              FStar_Pprint.prefix (Prims.of_int 2)
                                 Prims.int_one (FStarC_Errors_Msg.text "Goal")
                                 uu___6 in
                             [uu___5] in
@@ -3046,7 +3046,8 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     (FStarC_Tactics_Types.goal_env
                                                                     goal) t1 in
                                                                     FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "Term")
@@ -3055,13 +3056,15 @@ let __exact_now (set_expected_typ : Prims.bool)
                                                                     uu___11
                                                                     (FStar_Pprint.op_Hat_Slash_Hat
                                                                     (FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "of type")
                                                                     typ1)
                                                                     (FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "does not exactly solve the goal")
@@ -3231,13 +3234,13 @@ let try_unify_by_application
                                    let uu___3 =
                                      let uu___4 =
                                        let uu___5 = ttd e ty11 in
-                                       FStar_Pprint.prefix (Prims.of_int (2))
+                                       FStar_Pprint.prefix (Prims.of_int 2)
                                          Prims.int_one
                                          (FStarC_Errors_Msg.text
                                             "Could not instantiate") uu___5 in
                                      let uu___5 =
                                        let uu___6 = ttd e ty2 in
-                                       FStar_Pprint.prefix (Prims.of_int (2))
+                                       FStar_Pprint.prefix (Prims.of_int 2)
                                          Prims.int_one
                                          (FStarC_Errors_Msg.text "to") uu___6 in
                                      FStar_Pprint.op_Hat_Slash_Hat uu___4
@@ -3356,7 +3359,7 @@ let apply_implicits_as_goals (uu___2 : FStarC_TypeChecker_Env.env)
          uu___ in
      Obj.magic
        (FStarC_Class_Monad.mapM FStarC_Tactics_Monad.monad_tac () ()
-          (fun uu___ -> (Obj.magic one_implicit_as_goal) uu___)
+          (fun uu___ -> Obj.magic one_implicit_as_goal uu___)
           (Obj.magic imps))) uu___2 uu___1 uu___
 let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
   (tc_resolved_uvars : Prims.bool) (tm : FStarC_Syntax_Syntax.term) :
@@ -3972,7 +3975,9 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Print.pretty_comp
                                                                     comp in
                                                                   FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (
+                                                                    Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (
                                                                     FStarC_Errors_Msg.text
@@ -4275,7 +4280,8 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Print.pretty_term
                                                                     tm1 in
                                                                     FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "Cannot instantiate lemma:")
@@ -4290,7 +4296,8 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     env1
                                                                     post1 in
                                                                     FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "with postcondition:")
@@ -4307,7 +4314,8 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Print.pretty_term
                                                                     uu___19 in
                                                                     FStar_Pprint.prefix
-                                                                    (Prims.of_int (2))
+                                                                    (Prims.of_int
+                                                                    2)
                                                                     Prims.int_one
                                                                     (FStarC_Errors_Msg.text
                                                                     "to match goal:")
@@ -9046,7 +9054,7 @@ let exn_to_issue (e : Prims.exn) : FStarC_Errors.issue=
     FStarC_Errors.issue_level = FStarC_Errors.EError;
     FStarC_Errors.issue_range = FStar_Pervasives_Native.None;
     FStarC_Errors.issue_number =
-      (FStar_Pervasives_Native.Some (Prims.of_int (17)));
+      (FStar_Pervasives_Native.Some (Prims.of_int 17));
     FStarC_Errors.issue_ctx = uu___1
   }
 let __refl_typing_builtin_wrapper
@@ -9095,7 +9103,7 @@ let __refl_typing_builtin_wrapper
                       (FStarC_TypeChecker_Tc.compress_and_norm
                          ps.FStarC_Tactics_Types.main_context);
                     FStarC_Syntax_Unionfind.rollback tx;
-                    if (FStarC_List.length errs) > Prims.int_zero
+                    if Prims.uu___is_Cons errs
                     then
                       Obj.magic
                         (FStarC_Class_Monad.return
@@ -9168,7 +9176,8 @@ let __refl_typing_builtin_wrapper
                                                               :: uu___8 in
                                                           let issue_number =
                                                             FStar_Pervasives_Native.Some
-                                                              (Prims.of_int (17)) in
+                                                              (Prims.of_int
+                                                                 17) in
                                                           let iss =
                                                             let uu___8 =
                                                               FStarC_Errors.issue_of_exn

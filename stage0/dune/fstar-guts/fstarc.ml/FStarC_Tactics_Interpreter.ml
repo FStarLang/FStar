@@ -146,7 +146,7 @@ let unembed_tactic_0 (eb : 'b FStarC_Syntax_Embeddings_Base.embedding)
             let uu___2 =
               let uu___3 =
                 FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term h_result in
-              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+              FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                 (FStar_Pprint.doc_of_string "Reduction stopped at:") uu___3 in
             [uu___2; maybe_admit_tip] in
           (FStar_Pprint.doc_of_string "Tactic got stuck!") :: uu___1 in

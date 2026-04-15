@@ -689,10 +689,7 @@ let rec sigelt_to_string_short (x : FStarC_Syntax_Syntax.sigelt) :
       let kw =
         if FStarC_Syntax_Util.is_layered ed
         then "layered_effect"
-        else
-          if FStarC_Syntax_Util.is_dm4f ed
-          then "new_effect_for_free"
-          else "new_effect" in
+        else "new_effect" in
       let uu___ =
         FStarC_Class_Show.show FStarC_Ident.showable_lident
           ed.FStarC_Syntax_Syntax.mname in
@@ -806,7 +803,6 @@ let cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
   | FStarC_Syntax_Syntax.TRIVIAL_POSTCONDITION -> "trivial_postcondition"
   | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE -> "should_not_inline"
   | FStarC_Syntax_Syntax.LEMMA -> "lemma"
-  | FStarC_Syntax_Syntax.CPS -> "cps"
   | FStarC_Syntax_Syntax.DECREASES do1 ->
       let uu___ = FStarC_Class_Show.show showable_decreases_order do1 in
       Prims.strcat "decreases " uu___

@@ -44,7 +44,7 @@ let mk_one_projector (unf : Prims.string Prims.list) (np : Prims.nat)
      | uu___ -> FStar_Tactics_V2_Derived.fail "proj: more than one case?" ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.MkProjectors.mk_one_projector" (Prims.of_int (4))
+    "FStar.Tactics.MkProjectors.mk_one_projector" (Prims.of_int 4)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -83,7 +83,7 @@ let mk_one_method (proj : Prims.string) (np : Prims.nat) :
                 FStarC_Reflection_V2_Data.Q_Explicit)])) ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.MkProjectors.mk_one_method" (Prims.of_int (3))
+    "FStar.Tactics.MkProjectors.mk_one_method" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -518,7 +518,7 @@ let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
                | uu___ -> FStar_Tactics_V2_Derived.fail "not an inductive" ps)))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.MkProjectors.mk_projs" (Prims.of_int (3))
+    "FStar.Tactics.MkProjectors.mk_projs" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

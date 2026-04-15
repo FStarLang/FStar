@@ -280,11 +280,7 @@ let rec prefix_with_iface_decls (iface : FStarC_Parser_AST.decl Prims.list)
               let def_ids = definition_lids impl in
               let defines_x = FStarC_Util.for_some (id_eq_lid x) def_ids in
               if defines_x
-              then
-                (match impl.FStarC_Parser_AST.d with
-                 | FStarC_Parser_AST.DeclToBeDesugared uu___6 ->
-                     (iface_tl, [impl])
-                 | uu___6 -> (iface_tl, [iface_hd; impl]))
+              then (iface_tl, [iface_hd; impl])
               else
                 (let uu___7 = prefix_with_iface_decls iface_tl impl in
                  match uu___7 with

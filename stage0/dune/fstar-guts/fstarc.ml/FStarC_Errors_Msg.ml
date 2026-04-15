@@ -33,14 +33,14 @@ let sublist (h : FStar_Pprint.document)
         vconcat uu___3 in
       FStar_Pprint.align uu___2 in
     FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___1 in
-  FStar_Pprint.nest (Prims.of_int (2)) uu___
+  FStar_Pprint.nest (Prims.of_int 2) uu___
 let bulleted (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
   sublist (FStar_Pprint.doc_of_string "- ") ds
 let mkmsg (s : Prims.string) : error_message=
   [FStar_Pprint.arbitrary_string s]
 let renderdoc (d : FStar_Pprint.document) : Prims.string=
   let one = FStarC_Util.float_of_string "1.0" in
-  FStarC_Pprint.pretty_string one (Prims.of_int (80)) d
+  FStarC_Pprint.pretty_string one (Prims.of_int 80) d
 let backtrace_doc (uu___ : unit) : FStar_Pprint.document=
   let s = FStarC_Util.stack_dump () in
   FStar_Pprint.op_Hat_Slash_Hat (text "Stack trace:")
@@ -52,7 +52,7 @@ let subdoc' (indent : Prims.bool) (d : FStar_Pprint.document) :
   else
     FStar_Pprint.op_Hat_Hat
       (if indent
-       then FStar_Pprint.blank (Prims.of_int (2))
+       then FStar_Pprint.blank (Prims.of_int 2)
        else FStar_Pprint.empty)
       (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "-")
          (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank Prims.int_one)

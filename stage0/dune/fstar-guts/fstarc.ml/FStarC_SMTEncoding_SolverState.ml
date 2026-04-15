@@ -232,7 +232,7 @@ let filter_using_facts_from
                          using_facts_from1 lid
                    | uu___2 -> false)
                 a.FStarC_SMTEncoding_Term.assumption_fact_ids in
-      let already_given_map = FStarC_SMap.create (Prims.of_int (1000)) in
+      let already_given_map = FStarC_SMap.create (Prims.of_int 1000) in
       let add_assumption a =
         FStarC_SMap.add already_given_map
           a.FStarC_SMTEncoding_Term.assumption_name true in
@@ -580,8 +580,8 @@ let compare_decls (d0 : FStarC_SMTEncoding_Term.decl)
        FStarC_SMTEncoding_Term.assumption_fact_ids = uu___6;
        FStarC_SMTEncoding_Term.assumption_free_names = uu___7;_})
       -> FStarC_Util.compare a0 a1
-  | (FStarC_SMTEncoding_Term.DeclFun uu___, uu___1) -> (Prims.of_int (-1))
-  | (FStarC_SMTEncoding_Term.DefineFun uu___, uu___1) -> (Prims.of_int (-1))
+  | (FStarC_SMTEncoding_Term.DeclFun uu___, uu___1) -> Prims.of_int (-1)
+  | (FStarC_SMTEncoding_Term.DefineFun uu___, uu___1) -> Prims.of_int (-1)
   | uu___ -> FStarC_Effect.failwith "Unexpected decl in compare decls"
 let prune_level (roots : FStarC_SMTEncoding_Term.decl Prims.list)
   (hd : decls_at_level) (s : solver_state) : decls_at_level=

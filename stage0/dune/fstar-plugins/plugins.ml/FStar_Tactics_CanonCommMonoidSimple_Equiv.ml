@@ -485,11 +485,11 @@ let canon_monoid (eq : FStar_Tactics_NamedView.term)
               let x3 = FStar_Tactics_V2_SyntaxHelpers.collect_app rel_xy1 ps in
               (match x3 with
                | (rel, xy) ->
-                   if (FStar_List_Tot_Base.length xy) >= (Prims.of_int (2))
+                   if (FStar_List_Tot_Base.length xy) >= (Prims.of_int 2)
                    then
                      (match ((FStar_List_Tot_Base.index xy
                                 ((FStar_List_Tot_Base.length xy) -
-                                   (Prims.of_int (2)))),
+                                   (Prims.of_int 2))),
                               (FStar_List_Tot_Base.index xy
                                  ((FStar_List_Tot_Base.length xy) -
                                     Prims.int_one)))
@@ -510,8 +510,7 @@ let canon_monoid (eq : FStar_Tactics_NamedView.term)
                 "Goal should be squash applied to a binary relation" ps))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid"
-    (Prims.of_int (3))
+    "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

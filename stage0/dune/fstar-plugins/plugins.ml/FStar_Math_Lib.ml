@@ -1,8 +1,8 @@
 open Fstarcompiler
 open Prims
 let rec log_2 (x : Prims.pos) : Prims.nat=
-  if x >= (Prims.of_int (2))
-  then Prims.int_one + (log_2 (x / (Prims.of_int (2))))
+  if x >= (Prims.of_int 2)
+  then Prims.int_one + (log_2 (x / (Prims.of_int 2)))
   else Prims.int_zero
 let rec powx (x : Prims.int) (n : Prims.nat) : Prims.int=
   match n with

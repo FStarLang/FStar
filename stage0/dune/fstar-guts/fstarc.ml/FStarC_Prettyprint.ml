@@ -39,11 +39,11 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
                     FStarC_Util.append_to_file f
                       (FStarC_Pprint.pretty_string
                          (FStarC_Util.float_of_string "1.0")
-                         (Prims.of_int (100)) doc)
+                         (Prims.of_int 100) doc)
                 | FStar_Pervasives_Native.None ->
                     FStarC_Pprint.pretty_out_channel
-                      (FStarC_Util.float_of_string "1.0")
-                      (Prims.of_int (100)) doc FStarC_Util.stdout);
+                      (FStarC_Util.float_of_string "1.0") (Prims.of_int 100)
+                      doc FStarC_Util.stdout);
                comments2) in
         let left_over_doc =
           if Prims.op_Negation (FStarC_List.isEmpty leftover_comments)
@@ -67,12 +67,12 @@ let generate (m : printing_mode) (filenames : Prims.string Prims.list) :
         (match outf with
          | FStar_Pervasives_Native.None ->
              FStarC_Pprint.pretty_out_channel
-               (FStarC_Util.float_of_string "1.0") (Prims.of_int (100))
+               (FStarC_Util.float_of_string "1.0") (Prims.of_int 100)
                left_over_doc FStarC_Util.stdout
          | FStar_Pervasives_Native.Some outf1 ->
              (FStarC_Util.append_to_file outf1
                 (FStarC_Pprint.pretty_string
-                   (FStarC_Util.float_of_string "1.0") (Prims.of_int (100))
+                   (FStarC_Util.float_of_string "1.0") (Prims.of_int 100)
                    left_over_doc);
               FStarC_Util.close_out_channel outf1)) in
   FStarC_List.iter (parse_and_prettyprint m) filenames

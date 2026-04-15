@@ -1,5 +1,5 @@
 open Prims
-let interleave_hack : Prims.int= (Prims.of_int (123))
+let interleave_hack : Prims.int= Prims.of_int 123
 type var = FStarC_Syntax_Syntax.bv
 type sort = Prims.int
 type constant =
@@ -85,8 +85,8 @@ and t' =
   | Reflect of t 
   | Quote of (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.quoteinfo) 
   | Lazy of ((FStarC_Syntax_Syntax.lazyinfo,
-  (FStarC_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either *
-  t FStarC_Thunk.t) 
+  (FStar_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * t
+  FStarC_Thunk.t) 
   | Meta of (t * FStarC_Syntax_Syntax.metadata FStarC_Thunk.t) 
   | TopLevelLet of (FStarC_Syntax_Syntax.letbinding * Prims.int * (t *
   FStarC_Syntax_Syntax.aqual) Prims.list) 
@@ -123,7 +123,6 @@ and cflag =
   | TRIVIAL_POSTCONDITION 
   | SHOULD_NOT_INLINE 
   | LEMMA 
-  | CPS 
   | DECREASES_lex of t Prims.list 
   | DECREASES_wf of (t * t) 
 let uu___is_Var (projectee : atom) : Prims.bool=
@@ -240,8 +239,8 @@ let uu___is_Lazy (projectee : t') : Prims.bool=
   match projectee with | Lazy _0 -> true | uu___ -> false
 let __proj__Lazy__item___0 (projectee : t') :
   ((FStarC_Syntax_Syntax.lazyinfo,
-    (FStarC_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either
-    * t FStarC_Thunk.t)=
+    (FStar_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either *
+    t FStarC_Thunk.t)=
   match projectee with | Lazy _0 -> _0
 let uu___is_Meta (projectee : t') : Prims.bool=
   match projectee with | Meta _0 -> true | uu___ -> false
@@ -335,8 +334,6 @@ let uu___is_SHOULD_NOT_INLINE (projectee : cflag) : Prims.bool=
   match projectee with | SHOULD_NOT_INLINE -> true | uu___ -> false
 let uu___is_LEMMA (projectee : cflag) : Prims.bool=
   match projectee with | LEMMA -> true | uu___ -> false
-let uu___is_CPS (projectee : cflag) : Prims.bool=
-  match projectee with | CPS -> true | uu___ -> false
 let uu___is_DECREASES_lex (projectee : cflag) : Prims.bool=
   match projectee with | DECREASES_lex _0 -> true | uu___ -> false
 let __proj__DECREASES_lex__item___0 (projectee : cflag) : t Prims.list=
@@ -827,7 +824,7 @@ let lazy_embed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : 'a)
    then f ()
    else
      (let thunk = FStarC_Thunk.mk f in
-      let li = let uu___3 = et () in ((FStarC_Dyn.mkdyn x), uu___3) in
+      let li = let uu___3 = et () in ((FStar_Dyn.mkdyn x), uu___3) in
       mk_t (Lazy ((FStar_Pervasives.Inr li), thunk))))
 let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
   (f : t -> 'a FStar_Pervasives_Native.option) :
@@ -859,7 +856,7 @@ let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
           else ());
          res)
       else
-        (let a1 = FStarC_Dyn.undyn b in
+        (let a1 = FStar_Dyn.undyn b in
          (let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
           if uu___3
           then
@@ -888,7 +885,7 @@ let lazy_unembed_lazy_kind (k : FStarC_Syntax_Syntax.lazy_kind) (x : t) :
   | Lazy (FStar_Pervasives.Inl li, uu___) ->
       if li.FStarC_Syntax_Syntax.lkind = k
       then
-        let uu___1 = FStarC_Dyn.undyn li.FStarC_Syntax_Syntax.blob in
+        let uu___1 = FStar_Dyn.undyn li.FStarC_Syntax_Syntax.blob in
         FStar_Pervasives_Native.Some uu___1
       else FStar_Pervasives_Native.None
   | uu___ -> FStar_Pervasives_Native.None
@@ -1599,7 +1596,7 @@ let e_sealed (ea : 'a embedding) : 'a FStarC_Sealed.sealed embedding=
                      (let uu___2 = unembed ea cb a1 in
                       FStarC_Class_Monad.fmap FStarC_Class_Monad.monad_option
                         () ()
-                        (fun uu___3 -> (Obj.magic FStarC_Sealed.seal) uu___3)
+                        (fun uu___3 -> Obj.magic FStarC_Sealed.seal uu___3)
                         (Obj.magic uu___2)))
             | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
            uu___) in
@@ -1617,7 +1614,7 @@ let e_issue : FStarC_Errors.issue embedding=
     FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue in
   let li blob rng =
     {
-      FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn blob);
+      FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_issue;
       FStarC_Syntax_Syntax.ltyp = t_issue;
       FStarC_Syntax_Syntax.rng = rng
@@ -1639,7 +1636,7 @@ let e_issue : FStarC_Errors.issue embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn blob in
+        let uu___3 = FStar_Dyn.undyn blob in
         FStar_Pervasives_Native.Some uu___3
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
@@ -1651,7 +1648,7 @@ let e_document : FStar_Pprint.document embedding=
     FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document in
   let li blob rng =
     {
-      FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn blob);
+      FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       FStarC_Syntax_Syntax.lkind = FStarC_Syntax_Syntax.Lazy_doc;
       FStarC_Syntax_Syntax.ltyp = t_document;
       FStarC_Syntax_Syntax.rng = rng
@@ -1673,7 +1670,7 @@ let e_document : FStar_Pprint.document embedding=
            FStarC_Syntax_Syntax.rng = uu___1;_},
          uu___2)
         ->
-        let uu___3 = FStarC_Dyn.undyn blob in
+        let uu___3 = FStar_Dyn.undyn blob in
         FStar_Pervasives_Native.Some uu___3
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1

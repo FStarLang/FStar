@@ -68,15 +68,15 @@ let rec to_vec (n : Prims.nat) (num : Obj.t uint_t) :
   then FStar_Seq_Base.empty ()
   else
     FStar_Seq_Base.append
-      (to_vec (n - Prims.int_one) (num / (Prims.of_int (2))))
+      (to_vec (n - Prims.int_one) (num / (Prims.of_int 2)))
       (FStar_Seq_Base.create Prims.int_one
-         (((mod) num (Prims.of_int (2))) = Prims.int_one))
+         (((mod) num (Prims.of_int 2)) = Prims.int_one))
 let rec from_vec (n : Prims.nat) (vec : Obj.t FStar_BitVector.bv_t) :
   Obj.t uint_t=
   if n = Prims.int_zero
   then Prims.int_zero
   else
-    ((Prims.of_int (2)) *
+    ((Prims.of_int 2) *
        (from_vec (n - Prims.int_one)
           (FStar_Seq_Base.slice vec Prims.int_zero (n - Prims.int_one))))
       +

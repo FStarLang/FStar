@@ -2964,7 +2964,7 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                         let uu___6 =
                           FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
                             t0 in
-                        FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                           (FStarC_Errors_Msg.text
                              "Losing precision when encoding a function literal:")
                           uu___6 in
@@ -3640,7 +3640,7 @@ and encode_formula (phi : FStarC_Syntax_Syntax.typ)
                       FStarC_Syntax_Syntax.aqual_attributes = uu___1;_}
                     -> false
                 | uu___1 -> true)) args in
-    if (FStarC_List.length rf) <> (Prims.of_int (2))
+    if (FStarC_List.length rf) <> (Prims.of_int 2)
     then
       let uu___ =
         let uu___1 =

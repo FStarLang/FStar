@@ -211,10 +211,10 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
       FStarC_TypeChecker_NBETerm.e_real of_int in
   let s2 =
     as_primitive_step true FStarC_Parser_Const.real_op_Addition
-      (Prims.of_int (2)) Prims.int_zero add_op add_op_nbe in
+      (Prims.of_int 2) Prims.int_zero add_op add_op_nbe in
   let s3 =
     as_primitive_step true FStarC_Parser_Const.real_op_Multiply
-      (Prims.of_int (2)) Prims.int_zero mul_op mul_op_nbe in
+      (Prims.of_int 2) Prims.int_zero mul_op mul_op_nbe in
   [s1; s2; s3]
 let simplify_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   [FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero

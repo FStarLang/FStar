@@ -92,16 +92,16 @@ let eq_const (c1 : sconst) (c2 : sconst) : Prims.bool=
 let rec pow2 (x : Prims.int) : Prims.int=
   if x = Prims.int_zero
   then Prims.int_one
-  else (Prims.of_int (2)) * (pow2 (x - Prims.int_one))
+  else (Prims.of_int 2) * (pow2 (x - Prims.int_one))
 let bounds (signedness1 : signedness) (width1 : width) :
   (Prims.int * Prims.int)=
   let n =
     match width1 with
-    | Int8 -> (Prims.of_int (8))
-    | Int16 -> (Prims.of_int (16))
-    | Int32 -> (Prims.of_int (32))
-    | Int64 -> (Prims.of_int (64))
-    | Sizet -> (Prims.of_int (16)) in
+    | Int8 -> Prims.of_int 8
+    | Int16 -> Prims.of_int 16
+    | Int32 -> Prims.of_int 32
+    | Int64 -> Prims.of_int 64
+    | Sizet -> Prims.of_int 16 in
   let uu___ =
     match signedness1 with
     | Unsigned -> (Prims.int_zero, ((pow2 n) - Prims.int_one))
