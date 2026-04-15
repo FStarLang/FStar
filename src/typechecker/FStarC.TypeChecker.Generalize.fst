@@ -261,7 +261,7 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : ML (option (list 
      Some ecs
 
 let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : ML (list (lbname&univ_names&term&comp&list binder)) =
-  assert (List.for_all (fun (l, _, _) -> Inr? l) lecs); //only generalize top-level lets
+  // assert (List.for_all (fun (l, _, _) -> Inr? l) lecs); //only generalize top-level lets
   if Debug.low () then
      Format.print1 "Generalizing: %s\n"
        (show <| List.map (fun (lb, _, _) -> show lb) lecs);
