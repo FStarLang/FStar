@@ -661,8 +661,7 @@ define do-bump-stage0
 	echo '** -diff -merge linguist-generated=true' >> stage0/.gitattributes
 	# Now that stage0 supports all features, we can return to a clean state
 	# where the 01 makefile is equal to the 12 makefile.
-	rm -f mk/generic-0.mk
-	ln -sf generic-1.mk mk/generic-0.mk
+	cp mk/generic-1.mk mk/generic-0.mk
 	cp mk/fstar-12.mk mk/fstar-01.mk
 	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
 	rm -f stage1/dune/fstar-guts/app
