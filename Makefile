@@ -638,7 +638,6 @@ define do-stage0-snapshot
 	rm -rf "$(TO)/ulib"*          # stage0 does not need its own ulib copy
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
-	rm -rf "$(TO)/dune/fstarc-bare" # no bare compiler
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages
 endef
