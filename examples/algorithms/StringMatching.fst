@@ -124,7 +124,7 @@ let lemma_mod_add_3 (a b c:int) (p:pos)
 = lemma_mod_add_distr_l (a + b) c p;
   lemma_mod_add_distr_l (a + c) b p
 
-#push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2 --split_queries always"
 #restart-solver
 // This is the main utility lemma on the hash function
 // It allows inverting the hash to inspect the most significant digit

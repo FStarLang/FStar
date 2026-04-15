@@ -41,22 +41,16 @@ endif
 FSTAR0_EXE ?= stage0/out/bin/fstar.exe
 
 # This is hardcoding some dune paths, with internal (non-public) names.
-# This is motivated by dune installing packages as a unit, so I could not
-# install simply the bare compiler and then use it to build the full compiler
-# without splitting into many packages, which complicates the namespaces.
 #
-# Also, when we want to extract src/ for stage 2, we must call FSTAR1_FULL_EXE,
+# When we want to extract src/ for stage 2, we must call FSTAR1_FULL_EXE,
 # but it's in a bad location (without a library next to it). So, we must
-# pass FSTAR_LIB explicitly. This is the only case where this is needed, the rest
-# of stages don't need a library. The alternative is to install it, and use
+# pass FSTAR_LIB explicitly. The alternative is to install it, and use
 # $(INSTALLED_FSTAR1_FULL_EXE), but that introduces a spurious dependency to the
 # stage 1 libraries for the stage 2, which does not need them at all (currently?).
 #
 # I'd love a better alternative.
-FSTAR1_BARE_EXE           := stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe
 FSTAR1_FULL_EXE           := stage1/dune/_build/default/fstarc-full/fstarc1_full.exe
 INSTALLED_FSTAR1_FULL_EXE := stage1/out/bin/fstar.exe
-FSTAR2_BARE_EXE           := stage2/dune/_build/default/fstarc-bare/fstarc2_bare.exe
 FSTAR2_FULL_EXE           := stage2/dune/_build/default/fstarc-full/fstarc2_full.exe
 INSTALLED_FSTAR2_FULL_EXE := stage2/out/bin/fstar.exe
 # Stage3 = Stage2 + Pulse
@@ -79,13 +73,11 @@ endif
 build: 3
 
 0: $(FSTAR0_EXE)
-1.bare:  $(FSTAR1_BARE_EXE)
 1.tests: $(TESTS1_EXE)
 1.full:  $(FSTAR1_FULL_EXE)
-2.bare:  $(FSTAR2_BARE_EXE)
 2.tests: $(TESTS2_EXE)
 2.full:  $(FSTAR2_FULL_EXE)
-# No tests or bare for stage3
+# No tests for stage3
 3.full:  $(FSTAR3_FULL_EXE)
 
 
@@ -108,15 +100,15 @@ build: 3
 
 stage0/out/bin/fstar.exe: .stage0.touch
 	$(call bold_msg, "STAGE 0")
-	mkdir -p stage0/ulib/.cache # prevent warnings
-	$(MAKE) -C stage0 minimal # build: only fstar.exe and set-up lib sources
+	$(MAKE) -C stage0 install_bin # build: only fstar.exe
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
 .bare1.src.touch: $(FSTAR0_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC-BARE")
+	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC")
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
 	  CODEGEN=OCaml \
@@ -129,6 +121,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR0_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/tests.checked/ \
 	  OUTPUT_DIR=stage1/tests.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -143,11 +136,6 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	[ -e $@ ] || touch $@
 	find -L src/ml -newer $@ -exec touch $@ \; -quit
 
-$(FSTAR1_BARE_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 1 FSTARC-BARE")
-	$(MAKE) -C stage1 fstarc-bare
-	touch -c $@
-
 $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 TESTS")
 	$(MAKE) -C stage1 tests BUILD_FSTAR_OCAML_TESTS=true
@@ -156,11 +144,11 @@ $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 stage1-unit-tests: $(TESTS1_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
 
-.full1.src.touch: $(FSTAR1_BARE_EXE) .force
+.full1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR1_BARE_EXE) \
+	  FSTAR_EXE=$(FSTAR0_EXE) \
 	  CACHE_DIR=stage1/plugins.checked/ \
 	  OUTPUT_DIR=stage1/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -241,14 +229,6 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/tests-2.mk ocaml
 
-$(FSTAR2_BARE_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 2 FSTARC-BARE")
-	$(MAKE) -C stage2 fstarc-bare
-	touch -c $@
-	# ^ Note, even if we don't release fstar-bare itself,
-	# it is still part of the build of the full fstar, so
-	# we set the release flag to have a more incremental build.
-
 $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 TESTS")
 	$(MAKE) -C stage2 tests BUILD_FSTAR_OCAML_TESTS=true
@@ -257,11 +237,12 @@ $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 stage2-unit-tests: $(TESTS2_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
-.full2.src.touch: $(FSTAR2_BARE_EXE) .force
+.full2.src.touch: $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
 	env \
 	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR2_BARE_EXE) \
+	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
+	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage2/plugins.checked/ \
 	  OUTPUT_DIR=stage2/plugins.ml/ \
 	  CODEGEN=PluginNoLib \
@@ -374,6 +355,12 @@ endif
 	touch $@
 
 .stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
+	touch $@
+
+.stage1-for-bump.src.touch: .bare1.src.touch .full1.src.touch .src.ml.touch
+	touch $@
+
+.stage2-for-bump.src.touch: .bare2.src.touch .full2.src.touch .src.ml.touch
 	touch $@
 
 .pulse-plugin.src.touch: stage2
@@ -548,15 +535,15 @@ package-src-3: .stage3.src.touch .tests2.src.touch .force
 package: package-3
 package-src: package-src-3
 
-test-1-bare: override FSTAR_EXE := $(abspath $(FSTAR1_BARE_EXE))
+test-1-bare: override FSTAR_EXE := $(abspath $(INSTALLED_FSTAR1_FULL_EXE))
 test-1-bare: override FSTAR_LIB := $(abspath ulib)
-test-1-bare: $(FSTAR1_BARE_EXE)
-	$(MAKE) -C bare-tests
+test-1-bare: stage1
+	$(MAKE) -C bare-tests FSTAR_EXE=$(FSTAR_EXE) FSTAR_LIB=$(FSTAR_LIB)
 
-test-2-bare: override FSTAR_EXE := $(abspath $(FSTAR2_BARE_EXE))
+test-2-bare: override FSTAR_EXE := $(abspath $(INSTALLED_FSTAR2_FULL_EXE))
 test-2-bare: override FSTAR_LIB := $(abspath ulib)
-test-2-bare: $(FSTAR2_BARE_EXE)
-	$(MAKE) -C bare-tests
+test-2-bare: stage2
+	$(MAKE) -C bare-tests FSTAR_EXE=$(FSTAR_EXE) FSTAR_LIB=$(FSTAR_LIB)
 
 test: test-3
 
@@ -640,21 +627,32 @@ ci: .force
 
 save: stage0_new
 
-stage0_new: TO=stage0_new
-stage0_new: .stage2.src.touch
+# Shared logic for creating a stage0 snapshot from a given stage.
+define do-stage0-snapshot
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
-	.scripts/src-install.sh "stage2" "$(TO)"
+	mkdir -p "$(1)"/ulib.ml "$(1)"/ulib.pluginml  # rsync fails with dangling symlinks
+	.scripts/src-install.sh "$(1)" "$(TO)"
 	# Trim it a bit...
 	rm -rf "$(TO)/src"            # no need for compiler F* sources
-	rm -rf "$(TO)/ulib/.hints"    # this library won't be checked
-	rm -rf "$(TO)/ulib.pluginml"  # we won't build plugins against stage0
+	rm -rf "$(TO)/ulib"*          # stage0 does not need its own ulib copy
 	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages
+endef
 
-bump-stage0: stage0_new
+stage0_new: TO=stage0_new
+stage0_new: .stage2-for-bump.src.touch
+	$(call do-stage0-snapshot,stage2)
+
+# Faster alternative: snapshot from stage1 (only requires building stage1).
+stage0_new_from_stage1: TO=stage0_new
+stage0_new_from_stage1: .stage1-for-bump.src.touch
+	$(call do-stage0-snapshot,stage1)
+
+# Shared logic for finalizing a stage0 bump.
+define do-bump-stage0
 	$(call bold_msg, "BUMP!")
 	# Replace stage0
 	rm -rf stage0
@@ -662,24 +660,20 @@ bump-stage0: stage0_new
 	echo 'out' >> stage0/.gitignore
 	echo '** -diff -merge linguist-generated=true' >> stage0/.gitattributes
 	# Now that stage0 supports all features, we can return to a clean state
-	# where the 01 makefile is equal to the 12 makefile. Same for stage1
-	# support and config code, we just take it from the stage2.
+	# where the 01 makefile is equal to the 12 makefile.
 	rm -f mk/generic-0.mk
 	ln -sf generic-1.mk mk/generic-0.mk
 	cp mk/fstar-12.mk mk/fstar-01.mk
 	sed -i 's,include mk/generic-1.mk,include mk/generic-0.mk,' mk/fstar-01.mk
-	rm -rf stage1
-	cp -r stage2 stage1
-	rm -rf stage1/dune/_build
-	# Rename dune executables: stage1 must use fstarc1_*, not fstarc2_*
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-bare/dune
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/fstarc-full/dune
-	sed -i 's/fstarc2_/fstarc1_/g' stage1/dune/tests/dune
-	mv stage1/dune/fstarc-bare/fstarc2_bare.ml stage1/dune/fstarc-bare/fstarc1_bare.ml
-	mv stage1/dune/fstarc-full/fstarc2_full.ml stage1/dune/fstarc-full/fstarc1_full.ml
-	mv stage1/dune/tests/fstarc2_tests.ml      stage1/dune/tests/fstarc1_tests.ml
 	rm -f stage1/dune/fstar-guts/app
-	ln -Trsf stage0/ulib/ml/app stage1/dune/fstar-guts/app
+	ln -Trsf ulib/ml/app stage1/dune/fstar-guts/app
+endef
+
+bump-stage0: stage0_new
+	$(do-bump-stage0)
+
+bump-stage0-from-stage1: stage0_new_from_stage1
+	$(do-bump-stage0)
 
 # This rule brings a stage0 from an OLD fstar repo. Only useful for migrating.
 bring-stage0: .force
@@ -688,9 +682,6 @@ bring-stage0: .force
 	mkdir stage0
 	cp -r $(FROM)/ocaml -T stage0
 	ln -Tsrf mk/stage0.mk stage0/Makefile
-	cp -r $(FROM)/ulib -T stage0/ulib
-	find stage0/ulib -name '*.checked' -delete
-	find stage0/ulib -name '*.hints' -delete
 	echo '/lib' >> stage0/.gitignore
 	echo '** -diff -merge' >> stage0/.gitattributes
 	echo '** linguist-generated=true' >> stage0/.gitattributes
@@ -718,7 +709,6 @@ clean-depend: .force
 clean-0: .force
 	$(call bold_msg, "CLEAN", "STAGE 0")
 	$(MAKE) -C stage0 clean
-	rm -rf stage0/ulib/.cache # created only to prevent warnings, always empty
 
 define clean-stage
 	$(call bold_msg, "CLEAN", "STAGE $(1)")
