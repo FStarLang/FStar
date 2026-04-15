@@ -75,4 +75,4 @@ ROOTS += ../ulib/FStar.Tactics.Visit.fst
 ROOTS += ../ulib/FStar.Tactics.PrettifyType.fst
 ROOTS += ../ulib/FStar.Tactics.LaxTermEq.fst
 
-include mk/generic-1.mk
+include $(GENERIC_MK)

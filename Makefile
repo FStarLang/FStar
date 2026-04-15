@@ -154,6 +154,7 @@ stage1-unit-tests: $(TESTS1_EXE)
 	  CODEGEN=PluginNoLib \
 	  TAG=plugins \
 	  TOUCH=$@ \
+	  GENERIC_MK=mk/generic-0.mk \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
 $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE)
@@ -248,6 +249,7 @@ stage2-unit-tests: $(TESTS2_EXE)
 	  CODEGEN=PluginNoLib \
 	  TAG=plugins \
 	  TOUCH=$@ \
+	  GENERIC_MK=mk/generic-1.mk \
 	  $(MAKE) -f mk/plugins.mk ocaml
 
 $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE)
