@@ -2335,12 +2335,23 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         | None -> false
     in
     
-    (* Replace the F* source suffix (.fst/.fsti) with a new extension *)
+    (* Replace the F* source suffix (.fst/.fsti) with a new extension.
+       For checked targets (build phase), we append to the full basename to
+       preserve the .fst/.fsti distinction: Foo.fsti → Foo.fsti.checked.lax.
+       For extraction targets, we strip the suffix and replace dots with
+       underscores to match OCaml naming: Foo.Bar.fst → Foo_Bar.ml. *)
     let replace_suffix (f:string) (new_ext:string) : ML string =
         let base = Filepath.basename f in
-        match check_and_strip_suffix base with
-        | Some stem -> stem ^ "." ^ new_ext
-        | None -> base ^ "." ^ new_ext
+        let is_build_phase = BU.ends_with new_ext "checked" || BU.ends_with new_ext "checked.lax" in
+        if is_build_phase then
+          (* Append checked extension to full basename, like local_cache_file *)
+          let suffix = if BU.ends_with new_ext "checked.lax" then ".checked.lax" else ".checked" in
+          base ^ suffix
+        else
+          (* For extraction, strip .fst/.fsti, replace dots with underscores, and add .ml etc *)
+          match check_and_strip_suffix base with
+          | Some stem -> replace_chars stem '.' "_" ^ "." ^ new_ext
+          | None -> base ^ "." ^ new_ext
     in
     
     (* Collect flags to forward into generated rules.
@@ -2359,6 +2370,11 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
           (* Skip --output_ext and its argument (both dash and underscore forms) *)
           | "--output_ext"::_::rest -> collect acc rest
           | "--output-ext"::_::rest -> collect acc rest
+          (* Known flags that always take one argument (even if it starts with -) *)
+          | flag::arg::rest when BU.starts_with flag "--" &&
+              (flag = "--extract" || flag = "--include" || flag = "--codegen" ||
+               flag = "--warn_error" || flag = "--odir" || flag = "--cache_dir") ->
+            collect ((" " ^ arg)::(" " ^ flag)::acc) rest
           (* Keep flags and their arguments *)
           | flag::rest when BU.starts_with flag "-" ->
             begin match rest with
@@ -2418,6 +2434,15 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         pr (Filepath.basename source); pr ")))\n\n"
     in
     
+    (* The fstar executable to embed in generated rules.
+       We use the actual path that was used to run --dep dune, not an env var,
+       to avoid cross-stage env var conflicts in a shared dune project. *)
+    let fstar_exe_for_rules =
+        let exe = show BU.exec_name in
+        (* Quote the path for dune *)
+        if BU.contains exe " " then "\"" ^ exe ^ "\"" else exe
+    in
+
     (* Print a rule for the build phase: source → checked *)
     let print_build_rule (source : string) (all_deps : list string) : ML unit =
         let ext = Option.must output_ext in
@@ -2427,36 +2452,22 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
         pr " (deps";
         all_deps |> List.iter (fun f -> pr " "; pr (format_dep f));
         pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
+        pr " (action (run "; pr fstar_exe_for_rules;
         pr forwarded_flags;
         pr " --include . --already_cached \"*,\" -c ";
         pr (Filepath.basename source); pr ")))\n\n"
     in
     
-    (* Print a rule for the extraction phase: checked → ml/krml *)
-    let print_extract_rule (source : string) (all_deps : list string) : ML unit =
+    (* For extraction, we collect all extractable files and emit a SINGLE rule
+       that runs F* once per file in topological order. This avoids:
+       (a) parallel side-effect write conflicts (F* may re-extract inlined deps)
+       (b) read-only file clobbering in dune's _build directory
+       The rule declares ALL .ml targets and uses (progn ...) to extract them. *)
+    let extract_targets : ref (list (string & string)) = mk_ref [] in
+    let collect_extract_target (source : string) : ML unit =
         let ext = Option.must output_ext in
         let target = replace_suffix source ext in
-        (* Convert all source deps to their checked versions *)
-        let checked_deps =
-            (source :: all_deps) |> List.map (fun f ->
-                let base = Filepath.basename f in
-                if BU.ends_with base ".checked" || BU.ends_with base ".checked.lax"
-                then base
-                else local_cache_file f
-            )
-        in
-        (* Deps: source file + checked source + checked transitive deps *)
-        let all_dep_strs = format_dep source :: checked_deps in
-        pr "(rule\n";
-        pr " (targets "; pr target; pr ")\n";
-        pr " (deps";
-        (remove_dups_fast all_dep_strs) |> List.iter (fun f -> pr " "; pr f);
-        pr ")\n";
-        pr " (action (run %{env:FSTAR_EXE=fstar.exe}";
-        pr forwarded_flags;
-        pr " --include . --already_cached \"*,\" -c ";
-        pr (Filepath.basename source); pr ")))\n\n"
+        extract_targets := (target, Filepath.basename source) :: !extract_targets
     in
     
     let widened, dep_graph = phase1 deps.file_system_map deps.dep_graph deps.interfaces_with_inlining true in
@@ -2535,13 +2546,24 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
             let all_target_files =
                 if not (Options.should_be_already_cached (module_name_of_file file_name))
                 then begin
-                  if is_extract_phase then
-                    print_extract_rule file_name files
-                  else if Some? output_ext then
-                    print_build_rule file_name (file_name :: files)
-                  else
-                    print_mixed_rule (local_cache_file file_name) file_name (file_name :: files);
-                  target_file::all_target_files
+                  if is_extract_phase then begin
+                    (* Only emit extraction rules for modules that will actually
+                       produce output. The --extract flags control this. *)
+                    let mname = module_name_of_file file_name in
+                    let tgt = Option.must (Options.codegen ()) in
+                    if Options.should_extract mname tgt then begin
+                      collect_extract_target file_name;
+                      target_file::all_target_files
+                    end else
+                      all_target_files
+                  end
+                  else begin
+                    if Some? output_ext then
+                      print_build_rule file_name (file_name :: files)
+                    else
+                      print_mixed_rule (local_cache_file file_name) file_name (file_name :: files);
+                    target_file::all_target_files
+                  end
                 end
                 else all_target_files
             in
@@ -2553,6 +2575,47 @@ let print_dune (outc : out_channel) (deps:deps) : ML unit =
           []
     in
     
+    (* For build phases, emit an alias that depends on all targets.
+       Extraction rules can depend on this alias to ensure all checked
+       files exist before extraction begins. *)
+    if not is_extract_phase && all_target_files <> [] then begin
+      pr "(alias\n";
+      pr " (name all-checked)\n";
+      pr " (deps";
+      all_target_files |> List.iter (fun f -> pr " "; pr f);
+      pr "))\n\n"
+    end;
+    
+    (* For extraction phases, emit a single rule with all targets.
+       F* may write side-effect .ml files for inlined deps, so we need all
+       targets declared so dune allows the writes. The (progn ...) action
+       runs F* once per source file in the topological order from --dep. *)
+    if is_extract_phase then begin
+      let targets = List.rev !extract_targets in
+      if targets <> [] then begin
+        pr "(rule\n";
+        pr " (targets";
+        targets |> List.iter (fun (target, _) -> pr " "; pr target);
+        pr ")\n";
+        pr " (deps (alias all-checked))\n";
+        pr " (action (progn\n";
+        targets |> List.iter (fun (_, source) ->
+          pr "  (run "; pr fstar_exe_for_rules;
+          pr forwarded_flags;
+          pr " --include . --already_cached \"*,\" -c ";
+          pr source;
+          pr ")\n"
+        );
+        pr ")))\n\n";
+        (* Also emit an alias *)
+        pr "(alias\n";
+        pr " (name all-extracted)\n";
+        pr " (deps";
+        targets |> List.iter (fun (target, _) -> pr " "; pr target);
+        pr "))\n\n"
+      end
+    end;
+
     pr "; File lists (for reference)\n";
     pr "; ALL_TARGET_FILES:";
     all_target_files |> List.iter (fun f -> pr " "; pr f);
