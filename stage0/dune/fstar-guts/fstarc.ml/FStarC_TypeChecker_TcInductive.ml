@@ -2002,7 +2002,7 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env_t)
                "Mutually defined type contains a non-inductive element")
         else ());
        (let univs =
-          if (FStarC_List.length tys) = Prims.int_zero
+          if Prims.uu___is_Nil tys
           then []
           else
             (match (FStarC_List.hd tys).FStarC_Syntax_Syntax.sigel with
@@ -2092,7 +2092,7 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env_t)
                         uu___7
                     else ());
                    FStarC_TypeChecker_Rel.force_trivial_guard env0 g3;
-                   if (FStarC_List.length univs) = Prims.int_zero
+                   if Prims.uu___is_Nil univs
                    then generalize_and_inst_within env0 tcs datas1
                    else
                      (let uu___8 =
@@ -2138,7 +2138,7 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env_t)
                                      uu___7 :: uu___8 in
                                    FStarC_Errors.raise_error
                                      FStarC_Syntax_Syntax.has_range_sigelt se
-                                     FStarC_Errors_Codes.Fatal_UnexpectedInductivetype
+                                     FStarC_Errors_Codes.Fatal_UnexpectedInductiveType
                                      ()
                                      (Obj.magic
                                         FStarC_Errors_Msg.is_error_message_list_doc)
@@ -2184,7 +2184,7 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env_t)
                                      FStarC_Errors.raise_error
                                        FStarC_Syntax_Syntax.has_range_sigelt
                                        se
-                                       FStarC_Errors_Codes.Fatal_UnexpectedInductivetype
+                                       FStarC_Errors_Codes.Fatal_UnexpectedInductiveType
                                        ()
                                        (Obj.magic
                                           FStarC_Errors_Msg.is_error_message_string)
@@ -2203,7 +2203,7 @@ let check_inductive_well_typedness (env : FStarC_TypeChecker_Env.env_t)
                                                  FStarC_Errors.raise_error
                                                    FStarC_Syntax_Syntax.hasRange_binder
                                                    b
-                                                   FStarC_Errors_Codes.Fatal_UnexpectedInductivetype
+                                                   FStarC_Errors_Codes.Fatal_UnexpectedInductiveType
                                                    ()
                                                    (Obj.magic
                                                       FStarC_Errors_Msg.is_error_message_string)

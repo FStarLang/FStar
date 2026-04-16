@@ -114,8 +114,8 @@ let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
             let uu___3 =
               FStarC_Class_Show.show FStarC_Class_Show.showable_bool b in
             FStarC_Format.print2
-              "should_unfold: For DM4F action %s, should_reify = %s\n" uu___2
-              uu___3);
+              "should_unfold: For effect action %s, should_reify = %s\n"
+              uu___2 uu___3);
        if b then reif else no)
     else
       if

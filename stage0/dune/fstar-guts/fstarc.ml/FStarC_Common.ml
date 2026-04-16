@@ -59,7 +59,7 @@ let __string_of_list (delim : Prims.string) (f : 'a -> Prims.string)
   match l with
   | [] -> "[]"
   | x::xs ->
-      let strb = FStarC_StringBuffer.create (Prims.of_int (80)) in
+      let strb = FStarC_StringBuffer.create (Prims.of_int 80) in
       ((let uu___1 =
           let uu___2 = f x in
           let uu___3 = FStarC_StringBuffer.add "[" strb in

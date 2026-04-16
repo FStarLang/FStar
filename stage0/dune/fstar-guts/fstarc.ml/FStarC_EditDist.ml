@@ -1,6 +1,6 @@
 open Prims
 let edit_distance (s1 : Prims.string) (s2 : Prims.string) : Prims.int=
-  let cache = FStarC_IMap.create (Prims.of_int (10)) in
+  let cache = FStarC_IMap.create (Prims.of_int 10) in
   let lookup i j =
     let uu___ = FStarC_IMap.try_find cache i in
     match uu___ with
@@ -11,8 +11,7 @@ let edit_distance (s1 : Prims.string) (s2 : Prims.string) : Prims.int=
       let uu___ = FStarC_IMap.try_find cache i in
       match uu___ with
       | FStar_Pervasives_Native.Some m1 -> m1
-      | FStar_Pervasives_Native.None ->
-          FStarC_IMap.create (Prims.of_int (10)) in
+      | FStar_Pervasives_Native.None -> FStarC_IMap.create (Prims.of_int 10) in
     FStarC_IMap.add m j d; FStarC_IMap.add cache i m in
   let l1 = FStarC_String.length s1 in
   let l2 = FStarC_String.length s2 in

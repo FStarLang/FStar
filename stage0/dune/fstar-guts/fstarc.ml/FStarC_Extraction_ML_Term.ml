@@ -44,18 +44,6 @@ let err_ill_typed_application (env : FStarC_Extraction_ML_UEnv.uenv)
   FStarC_Errors.raise_error (FStarC_Syntax_Syntax.has_range_syntax ()) t
     FStarC_Errors_Codes.Fatal_IllTyped ()
     (Obj.magic FStarC_Errors_Msg.is_error_message_string) (Obj.magic uu___)
-let err_ill_typed_erasure (env : FStarC_Extraction_ML_UEnv.uenv)
-  (pos : FStarC_Range_Type.t) (ty : FStarC_Extraction_ML_Syntax.mlty) :
-  'uuuuu=
-  let uu___ =
-    let uu___1 =
-      FStarC_Extraction_ML_Code.string_of_mlty
-        (FStarC_Extraction_ML_UEnv.current_module_of_uenv env) ty in
-    FStarC_Format.fmt1
-      "Erased value found where a value of type %s was expected" uu___1 in
-  FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range pos
-    FStarC_Errors_Codes.Fatal_IllTyped ()
-    (Obj.magic FStarC_Errors_Msg.is_error_message_string) (Obj.magic uu___)
 let err_value_restriction (t : FStarC_Syntax_Syntax.term) : 'uuuuu=
   let uu___ =
     let uu___1 =
@@ -75,7 +63,7 @@ let err_unexpected_eff (env : FStarC_Extraction_ML_UEnv.uenv)
     let uu___1 =
       let uu___2 =
         let uu___3 = FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t in
-        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+        FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
           (FStarC_Errors_Msg.text "For expression") uu___3 in
       let uu___3 =
         let uu___4 =
@@ -83,16 +71,16 @@ let err_unexpected_eff (env : FStarC_Extraction_ML_UEnv.uenv)
             FStarC_Extraction_ML_Code.string_of_mlty
               (FStarC_Extraction_ML_UEnv.current_module_of_uenv env) ty in
           FStar_Pprint.arbitrary_string uu___5 in
-        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+        FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
           (FStarC_Errors_Msg.text "of type") uu___4 in
       FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
     [uu___1;
     FStar_Pprint.op_Hat_Slash_Hat
-      (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+      (FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
          (FStarC_Errors_Msg.text "Expected effect")
          (FStar_Pprint.arbitrary_string
             (FStarC_Extraction_ML_Util.eff_to_string f0)))
-      (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+      (FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
          (FStarC_Errors_Msg.text "got effect")
          (FStar_Pprint.arbitrary_string
             (FStarC_Extraction_ML_Util.eff_to_string f1)))] in
@@ -118,7 +106,7 @@ let get_extraction_mode (env : FStarC_TypeChecker_Env.env)
 let effect_as_etag :
   FStarC_Extraction_ML_UEnv.uenv ->
     FStarC_Ident.lident -> FStarC_Extraction_ML_Syntax.e_tag=
-  let cache = FStarC_SMap.create (Prims.of_int (20)) in
+  let cache = FStarC_SMap.create (Prims.of_int 20) in
   let rec delta_norm_eff g l =
     let uu___ = FStarC_SMap.try_find cache (FStarC_Ident.string_of_lid l) in
     match uu___ with
@@ -484,7 +472,7 @@ let check_pats_for_ite
     FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option)=
   let def =
     (false, FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) in
-  if (FStarC_List.length l) <> (Prims.of_int (2))
+  if (FStarC_List.length l) <> (Prims.of_int 2)
   then def
   else
     (let uu___1 = FStarC_List.hd l in

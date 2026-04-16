@@ -548,7 +548,7 @@ let query_needs_current_module (q : query') : Prims.bool=
   | Lookup uu___ -> true
   | Compute uu___ -> true
   | Search uu___ -> true
-let interactive_protocol_vernum : Prims.int= (Prims.of_int (3))
+let interactive_protocol_vernum : Prims.int= Prims.of_int 3
 let interactive_protocol_features : Prims.string Prims.list=
   ["autocomplete";
   "autocomplete/context";

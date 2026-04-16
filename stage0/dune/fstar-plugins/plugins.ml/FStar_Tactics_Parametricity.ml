@@ -634,7 +634,7 @@ let param (t : FStar_Tactics_NamedView.term) :
   fun ps -> let x = param' init_param_state t ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.param" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.param" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -830,7 +830,7 @@ let paramd (nm : Prims.string) :
         x4
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.paramd" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.paramd" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -849,7 +849,7 @@ let paramds (nms : Prims.string Prims.list) :
     FStar_List_Tot_Base.flatten x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.paramds" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.paramds" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

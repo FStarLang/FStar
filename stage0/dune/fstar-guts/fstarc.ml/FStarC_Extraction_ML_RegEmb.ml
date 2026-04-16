@@ -171,7 +171,7 @@ let not_implemented_warning (r : FStarC_Range_Type.t) (t : Prims.string)
         FStar_Pprint.op_Hat_Hat (FStarC_Errors_Msg.text "Use --warn_error -")
           uu___3 in
       [uu___2] in
-    (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+    (FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
        (FStarC_Errors_Msg.text
           (FStarC_Format.fmt1 "Plugin `%s' can not run natively because:" t))
        (FStarC_Errors_Msg.text msg))
@@ -323,14 +323,14 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                       let uu___20 =
                         let uu___21 =
                           FStarC_Parser_Const_Tuples.mk_tuple_lid
-                            (Prims.of_int (2)) FStarC_Range_Type.dummyRange in
+                            (Prims.of_int 2) FStarC_Range_Type.dummyRange in
                         let uu___22 =
                           let uu___23 = syn_emb_lid "e_tuple2" in
                           let uu___24 =
                             let uu___25 = nbe_emb_lid "e_tuple2" in
                             FStar_Pervasives_Native.Some uu___25 in
                           {
-                            arity = (Prims.of_int (2));
+                            arity = (Prims.of_int 2);
                             syn_emb = uu___23;
                             nbe_emb = uu___24
                           } in
@@ -339,14 +339,14 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                         let uu___22 =
                           let uu___23 =
                             FStarC_Parser_Const_Tuples.mk_tuple_lid
-                              (Prims.of_int (3)) FStarC_Range_Type.dummyRange in
+                              (Prims.of_int 3) FStarC_Range_Type.dummyRange in
                           let uu___24 =
                             let uu___25 = syn_emb_lid "e_tuple3" in
                             let uu___26 =
                               let uu___27 = nbe_emb_lid "e_tuple3" in
                               FStar_Pervasives_Native.Some uu___27 in
                             {
-                              arity = (Prims.of_int (3));
+                              arity = (Prims.of_int 3);
                               syn_emb = uu___25;
                               nbe_emb = uu___26
                             } in
@@ -359,7 +359,7 @@ let builtin_embeddings : (FStarC_Ident.lident * embedding_data) Prims.list=
                                 let uu___28 = nbe_emb_lid "e_either" in
                                 FStar_Pervasives_Native.Some uu___28 in
                               {
-                                arity = (Prims.of_int (2));
+                                arity = (Prims.of_int 2);
                                 syn_emb = uu___26;
                                 nbe_emb = uu___27
                               } in
@@ -1915,7 +1915,7 @@ let __do_handle_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
               FStarC_Syntax_Syntax.ds = uu___6;
               FStarC_Syntax_Syntax.injective_type_params = uu___7;_}
             ->
-            (if (FStarC_List.length ps) > Prims.int_zero
+            (if Prims.uu___is_Cons ps
              then FStarC_Effect.raise (Unsupported "parameters on inductive")
              else ();
              (let ns = FStarC_Ident.ns_of_lid tlid in

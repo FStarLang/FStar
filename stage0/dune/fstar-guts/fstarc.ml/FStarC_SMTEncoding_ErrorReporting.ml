@@ -658,7 +658,7 @@ let detail_errors (hint_replay : Prims.bool)
           (FStarC_TypeChecker_Env.get_range env) in
       let uu___2 =
         FStarC_Class_Show.show FStarC_Class_Show.showable_int
-          (Prims.of_int (5)) in
+          (Prims.of_int 5) in
       let uu___3 =
         FStarC_Class_Show.show FStarC_Class_Show.showable_nat
           (FStarC_List.length all_labels) in
@@ -753,8 +753,7 @@ let detail_errors (hint_replay : Prims.bool)
                linear_check (hd :: eliminated) errors tl
            | uu___2 -> linear_check eliminated (hd :: errors) tl))) in
   print_banner ();
-  FStarC_Options.set_option "z3rlimit"
-    (FStarC_Options.Int (Prims.of_int (5)));
+  FStarC_Options.set_option "z3rlimit" (FStarC_Options.Int (Prims.of_int 5));
   (let res = linear_check [] [] all_labels in
    FStarC_Format.print_string "\n";
    FStarC_List.iter print_result res;

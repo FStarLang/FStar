@@ -149,7 +149,7 @@ let mk_nbe_interp1 (uu___2 : 'a FStarC_TypeChecker_NBETerm.embedding)
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Dollar_Greater
                       FStarC_Class_Monad.monad_option () ()
-                      (fun uu___5 -> (Obj.magic f) uu___5) (Obj.magic uu___4)) in
+                      (fun uu___5 -> Obj.magic f uu___5) (Obj.magic uu___4)) in
                FStarC_Class_Monad.op_let_Bang FStarC_Class_Monad.monad_option
                  () () (Obj.magic uu___3)
                  (fun uu___4 ->
@@ -179,8 +179,7 @@ let mk_interp2 (uu___3 : 'a FStarC_Syntax_Embeddings_Base.embedding)
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Dollar_Greater
                         FStarC_Class_Monad.monad_option () ()
-                        (fun uu___8 -> (Obj.magic f) uu___8)
-                        (Obj.magic uu___7)) in
+                        (fun uu___8 -> Obj.magic f uu___8) (Obj.magic uu___7)) in
                  let uu___7 = try_unembed_simple uu___1 b1 in
                  Obj.magic
                    (FStarC_Class_Monad.op_Less_Star_Greater
@@ -214,8 +213,7 @@ let mk_nbe_interp2 (uu___3 : 'a FStarC_TypeChecker_NBETerm.embedding)
                    Obj.magic
                      (FStarC_Class_Monad.op_Less_Dollar_Greater
                         FStarC_Class_Monad.monad_option () ()
-                        (fun uu___8 -> (Obj.magic f) uu___8)
-                        (Obj.magic uu___7)) in
+                        (fun uu___8 -> Obj.magic f uu___8) (Obj.magic uu___7)) in
                  let uu___7 =
                    FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs b1 in
                  Obj.magic
@@ -253,7 +251,7 @@ let mk_interp3 (uu___4 : 'a FStarC_Syntax_Embeddings_Base.embedding)
                      Obj.magic
                        (FStarC_Class_Monad.op_Less_Dollar_Greater
                           FStarC_Class_Monad.monad_option () ()
-                          (fun uu___11 -> (Obj.magic f) uu___11)
+                          (fun uu___11 -> Obj.magic f uu___11)
                           (Obj.magic uu___10)) in
                    let uu___10 = try_unembed_simple uu___1 b1 in
                    Obj.magic
@@ -296,7 +294,7 @@ let mk_nbe_interp3 (uu___4 : 'a FStarC_TypeChecker_NBETerm.embedding)
                      Obj.magic
                        (FStarC_Class_Monad.op_Less_Dollar_Greater
                           FStarC_Class_Monad.monad_option () ()
-                          (fun uu___11 -> (Obj.magic f) uu___11)
+                          (fun uu___11 -> Obj.magic f uu___11)
                           (Obj.magic uu___10)) in
                    let uu___10 =
                      FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs b1 in
@@ -343,7 +341,7 @@ let mk_interp4 (uu___5 : 'a FStarC_Syntax_Embeddings_Base.embedding)
                        Obj.magic
                          (FStarC_Class_Monad.op_Less_Dollar_Greater
                             FStarC_Class_Monad.monad_option () ()
-                            (fun uu___14 -> (Obj.magic f) uu___14)
+                            (fun uu___14 -> Obj.magic f uu___14)
                             (Obj.magic uu___13)) in
                      let uu___13 = try_unembed_simple uu___1 b1 in
                      Obj.magic
@@ -393,7 +391,7 @@ let mk_nbe_interp4 (uu___5 : 'a FStarC_TypeChecker_NBETerm.embedding)
                        Obj.magic
                          (FStarC_Class_Monad.op_Less_Dollar_Greater
                             FStarC_Class_Monad.monad_option () ()
-                            (fun uu___14 -> (Obj.magic f) uu___14)
+                            (fun uu___14 -> Obj.magic f uu___14)
                             (Obj.magic uu___13)) in
                      let uu___13 =
                        FStarC_TypeChecker_NBETerm.unembed (solve uu___1) cbs
@@ -450,7 +448,7 @@ let mk_interp5 (uu___6 : 'a FStarC_Syntax_Embeddings_Base.embedding)
                          Obj.magic
                            (FStarC_Class_Monad.op_Less_Dollar_Greater
                               FStarC_Class_Monad.monad_option () ()
-                              (fun uu___17 -> (Obj.magic f) uu___17)
+                              (fun uu___17 -> Obj.magic f uu___17)
                               (Obj.magic uu___16)) in
                        let uu___16 = try_unembed_simple uu___1 b1 in
                        Obj.magic
@@ -508,7 +506,7 @@ let mk_nbe_interp5 (uu___6 : 'a FStarC_TypeChecker_NBETerm.embedding)
                          Obj.magic
                            (FStarC_Class_Monad.op_Less_Dollar_Greater
                               FStarC_Class_Monad.monad_option () ()
-                              (fun uu___17 -> (Obj.magic f) uu___17)
+                              (fun uu___17 -> Obj.magic f uu___17)
                               (Obj.magic uu___16)) in
                        let uu___16 =
                          FStarC_TypeChecker_NBETerm.unembed (solve uu___1)
@@ -571,7 +569,7 @@ let mk2 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   let interp = mk_interp2 uu___ uu___2 uu___4 f in
   let nbe_interp = mk_nbe_interp2 uu___1 uu___3 uu___5 f in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (2)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 2), u_arity, interp, nbe_interp)
 let mk3 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
@@ -585,7 +583,7 @@ let mk3 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   let interp = mk_interp3 uu___ uu___2 uu___4 uu___6 f in
   let nbe_interp = mk_nbe_interp3 uu___1 uu___3 uu___5 uu___7 f in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (3)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 3), u_arity, interp, nbe_interp)
 let mk4 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
@@ -601,7 +599,7 @@ let mk4 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   let interp = mk_interp4 uu___ uu___2 uu___4 uu___6 uu___8 f in
   let nbe_interp = mk_nbe_interp4 uu___1 uu___3 uu___5 uu___7 uu___9 f in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (4)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 4), u_arity, interp, nbe_interp)
 let mk5 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'a FStarC_TypeChecker_NBETerm.embedding)
@@ -620,7 +618,7 @@ let mk5 (u_arity : Prims.int) (name : FStarC_Ident.lid)
   let nbe_interp =
     mk_nbe_interp5 uu___1 uu___3 uu___5 uu___7 uu___9 uu___11 f in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (5)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 5), u_arity, interp, nbe_interp)
 let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
@@ -834,7 +832,7 @@ let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                            uu___10))) uu___10))) uu___9)))
     | uu___6 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (2)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 2), u_arity, interp, nbe_interp)
 let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
@@ -948,7 +946,7 @@ let mk3' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                 uu___13))) uu___12)))
     | uu___8 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (3)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 3), u_arity, interp, nbe_interp)
 let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
@@ -1099,7 +1097,7 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                 uu___16))) uu___15)))
     | uu___10 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (4)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 4), u_arity, interp, nbe_interp)
 let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
@@ -1300,7 +1298,7 @@ let mk5' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                 uu___19))) uu___18)))
     | uu___12 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (5)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 5), u_arity, interp, nbe_interp)
 let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
   (uu___ : 'a FStarC_Syntax_Embeddings_Base.embedding)
   (uu___1 : 'na FStarC_TypeChecker_NBETerm.embedding)
@@ -1547,4 +1545,4 @@ let mk6' (u_arity : Prims.int) (name : FStarC_Ident.lid)
                                 uu___22))) uu___21)))
     | uu___14 -> Obj.magic (Obj.repr (FStarC_Effect.failwith "arity")) in
   as_primitive_step_nbecbs true
-    (name, (Prims.of_int (6)), u_arity, interp, nbe_interp)
+    (name, (Prims.of_int 6), u_arity, interp, nbe_interp)

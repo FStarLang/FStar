@@ -39,7 +39,7 @@ let do_dynlink (fname : Prims.string) : unit=
                     uu___7 in
                 FStarC_Errors_Msg.text uu___6 in
               [uu___5] in
-            (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+            (FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                (FStarC_Errors_Msg.text "Reason:") (FStarC_Errors_Msg.text e))
               :: uu___4 in
           (FStarC_Errors_Msg.text
@@ -86,11 +86,11 @@ let load_plugins_dir (dir : Prims.string) : unit=
       let uu___2 = FStarC_Filepath.readdir dir in
       FStarC_List.filter
         (fun s ->
-           if (FStarC_String.length s) >= (Prims.of_int (5))
+           if (FStarC_String.length s) >= (Prims.of_int 5)
            then
              (FStar_String.sub s
-                ((FStarC_String.length s) - (Prims.of_int (5)))
-                (Prims.of_int (5)))
+                ((FStarC_String.length s) - (Prims.of_int 5))
+                (Prims.of_int 5))
                = ".cmxs"
            else false) uu___2 in
     FStarC_List.map (fun s -> Prims.strcat dir (Prims.strcat "/" s)) uu___1 in

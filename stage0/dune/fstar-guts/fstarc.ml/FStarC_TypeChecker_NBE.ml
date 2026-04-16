@@ -63,7 +63,7 @@ let __proj__Mkconfig__item__fv_cache (projectee : config) :
   FStarC_TypeChecker_NBETerm.t FStarC_SMap.t=
   match projectee with | { core_cfg; fv_cache;_} -> fv_cache
 let new_config (cfg : FStarC_TypeChecker_Cfg.cfg) : config=
-  let uu___ = FStarC_SMap.create (Prims.of_int (51)) in
+  let uu___ = FStarC_SMap.create (Prims.of_int 51) in
   { core_cfg = cfg; fv_cache = uu___ }
 let reifying_false (cfg : config) : config=
   if (cfg.core_cfg).FStarC_TypeChecker_Cfg.reifying
@@ -2026,7 +2026,6 @@ and translate_flag (cfg : config)
   | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE ->
       FStarC_TypeChecker_NBETerm.SHOULD_NOT_INLINE
   | FStarC_Syntax_Syntax.LEMMA -> FStarC_TypeChecker_NBETerm.LEMMA
-  | FStarC_Syntax_Syntax.CPS -> FStarC_TypeChecker_NBETerm.CPS
   | FStarC_Syntax_Syntax.DECREASES (FStarC_Syntax_Syntax.Decreases_lex l) ->
       let uu___ = FStarC_List.map (translate cfg bs) l in
       FStarC_TypeChecker_NBETerm.DECREASES_lex uu___
@@ -2051,7 +2050,6 @@ and readback_flag (cfg : config) (f : FStarC_TypeChecker_NBETerm.cflag) :
   | FStarC_TypeChecker_NBETerm.SHOULD_NOT_INLINE ->
       FStarC_Syntax_Syntax.SHOULD_NOT_INLINE
   | FStarC_TypeChecker_NBETerm.LEMMA -> FStarC_Syntax_Syntax.LEMMA
-  | FStarC_TypeChecker_NBETerm.CPS -> FStarC_Syntax_Syntax.CPS
   | FStarC_TypeChecker_NBETerm.DECREASES_lex l ->
       let uu___ =
         let uu___1 = FStarC_List.map (readback cfg) l in
@@ -2112,37 +2110,7 @@ and translate_monadic
                          FStarC_Syntax_Syntax.rc_opt =
                            (FStar_Pervasives_Native.Some body_rc)
                        }) body.FStarC_Syntax_Syntax.pos in
-                let maybe_range_arg =
-                  let uu___2 =
-                    FStarC_Util.for_some
-                      (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                         (cfg.core_cfg).FStarC_TypeChecker_Cfg.tcenv
-                         FStarC_Syntax_Util.dm4f_bind_range_attr)
-                      ed.FStarC_Syntax_Syntax.eff_attrs in
-                  if uu___2
-                  then
-                    let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
-                          FStarC_TypeChecker_Primops_Base.embed_simple
-                            FStarC_Syntax_Embeddings.e_range
-                            lb.FStarC_Syntax_Syntax.lbpos
-                            lb.FStarC_Syntax_Syntax.lbpos in
-                        translate cfg [] uu___5 in
-                      (uu___4, FStar_Pervasives_Native.None) in
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          let uu___7 =
-                            FStarC_TypeChecker_Primops_Base.embed_simple
-                              FStarC_Syntax_Embeddings.e_range
-                              body.FStarC_Syntax_Syntax.pos
-                              body.FStarC_Syntax_Syntax.pos in
-                          translate cfg [] uu___7 in
-                        (uu___6, FStar_Pervasives_Native.None) in
-                      [uu___5] in
-                    uu___3 :: uu___4
-                  else [] in
+                let maybe_range_arg = [] in
                 let t =
                   let uu___2 =
                     let uu___3 =

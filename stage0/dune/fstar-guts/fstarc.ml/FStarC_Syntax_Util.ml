@@ -151,35 +151,6 @@ let name_function_binders (t : FStarC_Syntax_Syntax.term) :
         FStarC_Syntax_Syntax.Tm_arrow uu___1 in
       FStarC_Syntax_Syntax.mk uu___ t.FStarC_Syntax_Syntax.pos
   | uu___ -> t
-let null_binders_of_tks
-  (tks : (FStarC_Syntax_Syntax.typ * FStarC_Syntax_Syntax.bqual) Prims.list)
-  : FStarC_Syntax_Syntax.binders=
-  FStarC_List.map
-    (fun uu___ ->
-       match uu___ with
-       | (t, imp) ->
-           let uu___1 = FStarC_Syntax_Syntax.null_binder t in
-           {
-             FStarC_Syntax_Syntax.binder_bv =
-               (uu___1.FStarC_Syntax_Syntax.binder_bv);
-             FStarC_Syntax_Syntax.binder_qual = imp;
-             FStarC_Syntax_Syntax.binder_positivity =
-               (uu___1.FStarC_Syntax_Syntax.binder_positivity);
-             FStarC_Syntax_Syntax.binder_attrs =
-               (uu___1.FStarC_Syntax_Syntax.binder_attrs)
-           }) tks
-let binders_of_tks
-  (tks : (FStarC_Syntax_Syntax.typ * FStarC_Syntax_Syntax.bqual) Prims.list)
-  : FStarC_Syntax_Syntax.binders=
-  FStarC_List.map
-    (fun uu___ ->
-       match uu___ with
-       | (t, imp) ->
-           let uu___1 =
-             FStarC_Syntax_Syntax.new_bv
-               (FStar_Pervasives_Native.Some (t.FStarC_Syntax_Syntax.pos)) t in
-           FStarC_Syntax_Syntax.mk_binder_with_attrs uu___1 imp
-             FStar_Pervasives_Native.None []) tks
 let mk_subst (s : 'uuuuu) : 'uuuuu Prims.list= [s]
 let subst_of_list (formals : FStarC_Syntax_Syntax.binders)
   (actuals : FStarC_Syntax_Syntax.args) : FStarC_Syntax_Syntax.subst_t=
@@ -259,10 +230,8 @@ let rec univ_kernel (u : FStarC_Syntax_Syntax.universe) :
           let uu___3 =
             FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
           Prims.strcat uu___3 ")" in
-        Prims.strcat "Imposible: univ_kernel (U_bvar " uu___2 in
+        Prims.strcat "Impossible: univ_kernel (U_bvar " uu___2 in
       FStarC_Effect.failwith uu___1
-let constant_univ_as_nat (u : FStarC_Syntax_Syntax.universe) : Prims.int=
-  let uu___ = univ_kernel u in FStar_Pervasives_Native.snd uu___
 let rec compare_univs (u1 : FStarC_Syntax_Syntax.universe)
   (u2 : FStarC_Syntax_Syntax.universe) : Prims.int=
   let rec compare_kernel uk1 uk2 =
@@ -280,22 +249,22 @@ let rec compare_univs (u1 : FStarC_Syntax_Syntax.universe)
         FStarC_Effect.failwith "Impossible: compare_kernel succ"
     | (FStarC_Syntax_Syntax.U_unknown, FStarC_Syntax_Syntax.U_unknown) ->
         Prims.int_zero
-    | (FStarC_Syntax_Syntax.U_unknown, uu___1) -> (Prims.of_int (-1))
+    | (FStarC_Syntax_Syntax.U_unknown, uu___1) -> Prims.of_int (-1)
     | (uu___1, FStarC_Syntax_Syntax.U_unknown) -> Prims.int_one
     | (FStarC_Syntax_Syntax.U_zero, FStarC_Syntax_Syntax.U_zero) ->
         Prims.int_zero
-    | (FStarC_Syntax_Syntax.U_zero, uu___1) -> (Prims.of_int (-1))
+    | (FStarC_Syntax_Syntax.U_zero, uu___1) -> Prims.of_int (-1)
     | (uu___1, FStarC_Syntax_Syntax.U_zero) -> Prims.int_one
     | (FStarC_Syntax_Syntax.U_name u11, FStarC_Syntax_Syntax.U_name u21) ->
         FStarC_String.compare (FStarC_Ident.string_of_id u11)
           (FStarC_Ident.string_of_id u21)
-    | (FStarC_Syntax_Syntax.U_name uu___1, uu___2) -> (Prims.of_int (-1))
+    | (FStarC_Syntax_Syntax.U_name uu___1, uu___2) -> Prims.of_int (-1)
     | (uu___1, FStarC_Syntax_Syntax.U_name uu___2) -> Prims.int_one
     | (FStarC_Syntax_Syntax.U_unif u11, FStarC_Syntax_Syntax.U_unif u21) ->
         let uu___1 = FStarC_Syntax_Unionfind.univ_uvar_id u11 in
         let uu___2 = FStarC_Syntax_Unionfind.univ_uvar_id u21 in
         uu___1 - uu___2
-    | (FStarC_Syntax_Syntax.U_unif uu___1, uu___2) -> (Prims.of_int (-1))
+    | (FStarC_Syntax_Syntax.U_unif uu___1, uu___2) -> Prims.of_int (-1)
     | (uu___1, FStarC_Syntax_Syntax.U_unif uu___2) -> Prims.int_one
     | (FStarC_Syntax_Syntax.U_max us1, FStarC_Syntax_Syntax.U_max us2) ->
         let n1 = FStarC_List.length us1 in
@@ -760,7 +729,7 @@ let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind)
         FStarC_Class_Deq.op_Equals_Question
           FStarC_Syntax_Syntax.deq_lazy_kind k k' in
       if uu___3
-      then FStarC_Dyn.undyn v
+      then FStar_Dyn.undyn v
       else
         (let uu___5 =
            let uu___6 =
@@ -782,7 +751,7 @@ let mk_lazy (t : 'a) (typ : FStarC_Syntax_Syntax.typ)
     | FStar_Pervasives_Native.None -> FStarC_Range_Type.dummyRange in
   let i =
     {
-      FStarC_Syntax_Syntax.blob = (FStarC_Dyn.mkdyn t);
+      FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn t);
       FStarC_Syntax_Syntax.lkind = k;
       FStarC_Syntax_Syntax.ltyp = typ;
       FStarC_Syntax_Syntax.rng = rng
@@ -1654,8 +1623,6 @@ let t_false : FStarC_Syntax_Syntax.term=
 let t_true : FStarC_Syntax_Syntax.term=
   fvar_const FStarC_Parser_Const.true_lid
 let tac_opaque_attr : FStarC_Syntax_Syntax.term= exp_string "tac_opaque"
-let dm4f_bind_range_attr : FStarC_Syntax_Syntax.term=
-  fvar_const FStarC_Parser_Const.dm4f_bind_range_attr
 let tcdecltime_attr : FStarC_Syntax_Syntax.term=
   fvar_const FStarC_Parser_Const.tcdecltime_attr
 let inline_let_attr : FStarC_Syntax_Syntax.term=
@@ -2387,21 +2354,6 @@ let is_unknown (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   match uu___ with
   | FStarC_Syntax_Syntax.Tm_unknown -> true
   | uu___1 -> false
-let rec apply_last :
-  'uuuuu . ('uuuuu -> 'uuuuu) -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
-  fun f l ->
-    match l with
-    | [] -> FStarC_Effect.failwith "apply_last: got empty list"
-    | a::[] -> [f a]
-    | x::xs -> let uu___ = apply_last f xs in x :: uu___
-let dm4f_lid (ed : FStarC_Syntax_Syntax.eff_decl) (name : Prims.string) :
-  FStarC_Ident.lident=
-  let p = FStarC_Ident.path_of_lid ed.FStarC_Syntax_Syntax.mname in
-  let p' =
-    apply_last
-      (fun s ->
-         Prims.strcat "_dm4f_" (Prims.strcat s (Prims.strcat "_" name))) p in
-  FStarC_Ident.lid_of_path p' FStarC_Range_Type.dummyRange
 let mk_list (typ : FStarC_Syntax_Syntax.term) (rng : FStarC_Range_Type.range)
   (l : FStarC_Syntax_Syntax.term Prims.list) : FStarC_Syntax_Syntax.term=
   let ctor l1 =
@@ -3242,7 +3194,8 @@ let process_pragma (p : FStarC_Syntax_Syntax.pragma)
            (Obj.magic "Cannot #pop-options, stack would become empty")
        else ()
    | FStarC_Syntax_Syntax.PrintEffectsGraph -> ()
-   | FStarC_Syntax_Syntax.Check uu___1 -> ())
+   | FStarC_Syntax_Syntax.Check uu___1 -> ()
+   | FStarC_Syntax_Syntax.Eval uu___1 -> ())
 let rec unbound_variables (tm : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.bv Prims.list=
   let t = FStarC_Syntax_Subst.compress tm in
@@ -3575,7 +3528,7 @@ let destruct_lemma_with_smt_patterns (t : FStarC_Syntax_Syntax.term) :
                let uu___3 =
                  let uu___4 =
                    let uu___5 = ttd p1 in
-                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                   FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                      (FStarC_Errors_Msg.text "Not an atomic SMT pattern:")
                      uu___5 in
                  [uu___4;
@@ -3721,10 +3674,6 @@ let is_layered (ed : FStarC_Syntax_Syntax.eff_decl) : Prims.bool=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Layered_eff uu___ -> true
   | uu___ -> false
-let is_dm4f (ed : FStarC_Syntax_Syntax.eff_decl) : Prims.bool=
-  match ed.FStarC_Syntax_Syntax.combinators with
-  | FStarC_Syntax_Syntax.DM4F_eff uu___ -> true
-  | uu___ -> false
 let apply_wp_eff_combinators
   (f : FStarC_Syntax_Syntax.tscheme -> FStarC_Syntax_Syntax.tscheme)
   (combs : FStarC_Syntax_Syntax.wp_eff_combinators) :
@@ -3785,9 +3734,6 @@ let apply_eff_combinators
   | FStarC_Syntax_Syntax.Primitive_eff combs1 ->
       let uu___ = apply_wp_eff_combinators f combs1 in
       FStarC_Syntax_Syntax.Primitive_eff uu___
-  | FStarC_Syntax_Syntax.DM4F_eff combs1 ->
-      let uu___ = apply_wp_eff_combinators f combs1 in
-      FStarC_Syntax_Syntax.DM4F_eff uu___
   | FStarC_Syntax_Syntax.Layered_eff combs1 ->
       let uu___ = apply_layered_eff_combinators f combs1 in
       FStarC_Syntax_Syntax.Layered_eff uu___
@@ -3817,15 +3763,12 @@ let get_wp_close_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.close_wp)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
-      FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.close_wp)
   | uu___ -> FStar_Pervasives_Native.None
 let get_eff_repr (ed : FStarC_Syntax_Syntax.eff_decl) :
   FStarC_Syntax_Syntax.tscheme FStar_Pervasives_Native.option=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       combs.FStarC_Syntax_Syntax.repr
-  | FStarC_Syntax_Syntax.DM4F_eff combs -> combs.FStarC_Syntax_Syntax.repr
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       FStar_Pervasives_Native.Some
         (FStar_Pervasives_Native.fst combs.FStarC_Syntax_Syntax.l_repr)
@@ -3835,8 +3778,6 @@ let get_bind_vc_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
     FStar_Pervasives_Native.option)=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      ((combs.FStarC_Syntax_Syntax.bind_wp), FStar_Pervasives_Native.None)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
       ((combs.FStarC_Syntax_Syntax.bind_wp), FStar_Pervasives_Native.None)
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
@@ -3848,15 +3789,12 @@ let get_return_vc_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       combs.FStarC_Syntax_Syntax.ret_wp
-  | FStarC_Syntax_Syntax.DM4F_eff combs -> combs.FStarC_Syntax_Syntax.ret_wp
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       FStar_Pervasives_Native.snd combs.FStarC_Syntax_Syntax.l_return
 let get_bind_repr (ed : FStarC_Syntax_Syntax.eff_decl) :
   FStarC_Syntax_Syntax.tscheme FStar_Pervasives_Native.option=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      combs.FStarC_Syntax_Syntax.bind_repr
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
       combs.FStarC_Syntax_Syntax.bind_repr
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       FStar_Pervasives_Native.Some
@@ -3867,8 +3805,6 @@ let get_return_repr (ed : FStarC_Syntax_Syntax.eff_decl) :
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       combs.FStarC_Syntax_Syntax.return_repr
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
-      combs.FStarC_Syntax_Syntax.return_repr
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       FStar_Pervasives_Native.Some
         (FStar_Pervasives_Native.fst combs.FStarC_Syntax_Syntax.l_return)
@@ -3876,8 +3812,6 @@ let get_wp_trivial_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
   FStarC_Syntax_Syntax.tscheme FStar_Pervasives_Native.option=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.trivial)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
       FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.trivial)
   | uu___ -> FStar_Pervasives_Native.None
 let get_layered_if_then_else_combinator (ed : FStarC_Syntax_Syntax.eff_decl)
@@ -3898,15 +3832,11 @@ let get_wp_if_then_else_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.if_then_else)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
-      FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.if_then_else)
   | uu___ -> FStar_Pervasives_Native.None
 let get_wp_ite_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
   FStarC_Syntax_Syntax.tscheme FStar_Pervasives_Native.option=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.ite_wp)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
       FStar_Pervasives_Native.Some (combs.FStarC_Syntax_Syntax.ite_wp)
   | uu___ -> FStar_Pervasives_Native.None
 let get_stronger_vc_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
@@ -3915,8 +3845,6 @@ let get_stronger_vc_combinator (ed : FStarC_Syntax_Syntax.eff_decl) :
     FStar_Pervasives_Native.option)=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
-      ((combs.FStarC_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
-  | FStarC_Syntax_Syntax.DM4F_eff combs ->
       ((combs.FStarC_Syntax_Syntax.stronger), FStar_Pervasives_Native.None)
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       ((FStar_Pervasives_Native.__proj__Mktuple3__item___2
@@ -3927,7 +3855,6 @@ let get_stronger_repr (ed : FStarC_Syntax_Syntax.eff_decl) :
   FStarC_Syntax_Syntax.tscheme FStar_Pervasives_Native.option=
   match ed.FStarC_Syntax_Syntax.combinators with
   | FStarC_Syntax_Syntax.Primitive_eff uu___ -> FStar_Pervasives_Native.None
-  | FStarC_Syntax_Syntax.DM4F_eff uu___ -> FStar_Pervasives_Native.None
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       FStar_Pervasives_Native.Some
         (FStar_Pervasives_Native.__proj__Mktuple3__item___1

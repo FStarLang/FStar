@@ -1,30 +1,30 @@
 open Prims
 let tuple_table : (Prims.int * Prims.string * Prims.string) Prims.list=
-  [((Prims.of_int (2)), "FStar.Pervasives.Native.tuple2",
+  [((Prims.of_int 2), "FStar.Pervasives.Native.tuple2",
      "FStar.Pervasives.Native.Mktuple2");
-  ((Prims.of_int (3)), "FStar.Pervasives.Native.tuple3",
+  ((Prims.of_int 3), "FStar.Pervasives.Native.tuple3",
     "FStar.Pervasives.Native.Mktuple3");
-  ((Prims.of_int (4)), "FStar.Pervasives.Native.tuple4",
+  ((Prims.of_int 4), "FStar.Pervasives.Native.tuple4",
     "FStar.Pervasives.Native.Mktuple4");
-  ((Prims.of_int (5)), "FStar.Pervasives.Native.tuple5",
+  ((Prims.of_int 5), "FStar.Pervasives.Native.tuple5",
     "FStar.Pervasives.Native.Mktuple5");
-  ((Prims.of_int (6)), "FStar.Pervasives.Native.tuple6",
+  ((Prims.of_int 6), "FStar.Pervasives.Native.tuple6",
     "FStar.Pervasives.Native.Mktuple6");
-  ((Prims.of_int (7)), "FStar.Pervasives.Native.tuple7",
+  ((Prims.of_int 7), "FStar.Pervasives.Native.tuple7",
     "FStar.Pervasives.Native.Mktuple7");
-  ((Prims.of_int (8)), "FStar.Pervasives.Native.tuple8",
+  ((Prims.of_int 8), "FStar.Pervasives.Native.tuple8",
     "FStar.Pervasives.Native.Mktuple8");
-  ((Prims.of_int (9)), "FStar.Pervasives.Native.tuple9",
+  ((Prims.of_int 9), "FStar.Pervasives.Native.tuple9",
     "FStar.Pervasives.Native.Mktuple9");
-  ((Prims.of_int (10)), "FStar.Pervasives.Native.tuple10",
+  ((Prims.of_int 10), "FStar.Pervasives.Native.tuple10",
     "FStar.Pervasives.Native.Mktuple10");
-  ((Prims.of_int (11)), "FStar.Pervasives.Native.tuple11",
+  ((Prims.of_int 11), "FStar.Pervasives.Native.tuple11",
     "FStar.Pervasives.Native.Mktuple11");
-  ((Prims.of_int (12)), "FStar.Pervasives.Native.tuple12",
+  ((Prims.of_int 12), "FStar.Pervasives.Native.tuple12",
     "FStar.Pervasives.Native.Mktuple12");
-  ((Prims.of_int (13)), "FStar.Pervasives.Native.tuple13",
+  ((Prims.of_int 13), "FStar.Pervasives.Native.tuple13",
     "FStar.Pervasives.Native.Mktuple13");
-  ((Prims.of_int (14)), "FStar.Pervasives.Native.tuple14",
+  ((Prims.of_int 14), "FStar.Pervasives.Native.tuple14",
     "FStar.Pervasives.Native.Mktuple14")]
 let lookup_tuple (n : Prims.int) : (Prims.int * Prims.string * Prims.string)=
   let uu___ =
@@ -83,12 +83,12 @@ let is_tuple_data_lid (f : FStarC_Ident.lident) (n : Prims.int) : Prims.bool=
 let is_tuple_datacon_lid (lid : FStarC_Ident.lident) : Prims.bool=
   is_tuple_datacon_string (FStarC_Ident.string_of_lid lid)
 let dtuple_table : (Prims.int * Prims.string * Prims.string) Prims.list=
-  [((Prims.of_int (2)), "Prims.dtuple2", "Prims.Mkdtuple2");
-  ((Prims.of_int (3)), "FStar.Pervasives.dtuple3",
+  [((Prims.of_int 2), "Prims.dtuple2", "Prims.Mkdtuple2");
+  ((Prims.of_int 3), "FStar.Pervasives.dtuple3",
     "FStar.Pervasives.Mkdtuple3");
-  ((Prims.of_int (4)), "FStar.Pervasives.dtuple4",
+  ((Prims.of_int 4), "FStar.Pervasives.dtuple4",
     "FStar.Pervasives.Mkdtuple4");
-  ((Prims.of_int (5)), "FStar.Pervasives.dtuple5",
+  ((Prims.of_int 5), "FStar.Pervasives.dtuple5",
     "FStar.Pervasives.Mkdtuple5")]
 let lookup_dtuple (n : Prims.int) :
   (Prims.int * Prims.string * Prims.string)=
@@ -150,20 +150,20 @@ let is_dtuple_data_lid (f : FStarC_Ident.lident) (n : Prims.int) :
 let is_dtuple_datacon_lid (f : FStarC_Ident.lident) : Prims.bool=
   is_dtuple_datacon_string (FStarC_Ident.string_of_lid f)
 let lid_tuple2 : FStarC_Ident.lident=
-  mk_tuple_lid (Prims.of_int (2)) FStarC_Range_Type.dummyRange
+  mk_tuple_lid (Prims.of_int 2) FStarC_Range_Type.dummyRange
 let lid_tuple3 : FStarC_Ident.lident=
-  mk_tuple_lid (Prims.of_int (3)) FStarC_Range_Type.dummyRange
+  mk_tuple_lid (Prims.of_int 3) FStarC_Range_Type.dummyRange
 let lid_tuple4 : FStarC_Ident.lident=
-  mk_tuple_lid (Prims.of_int (4)) FStarC_Range_Type.dummyRange
+  mk_tuple_lid (Prims.of_int 4) FStarC_Range_Type.dummyRange
 let lid_tuple5 : FStarC_Ident.lident=
-  mk_tuple_lid (Prims.of_int (5)) FStarC_Range_Type.dummyRange
+  mk_tuple_lid (Prims.of_int 5) FStarC_Range_Type.dummyRange
 let lid_Mktuple2 : FStarC_Ident.lident=
-  mk_tuple_data_lid (Prims.of_int (2)) FStarC_Range_Type.dummyRange
+  mk_tuple_data_lid (Prims.of_int 2) FStarC_Range_Type.dummyRange
 let lid_Mktuple3 : FStarC_Ident.lident=
-  mk_tuple_data_lid (Prims.of_int (3)) FStarC_Range_Type.dummyRange
+  mk_tuple_data_lid (Prims.of_int 3) FStarC_Range_Type.dummyRange
 let lid_Mktuple4 : FStarC_Ident.lident=
-  mk_tuple_data_lid (Prims.of_int (4)) FStarC_Range_Type.dummyRange
+  mk_tuple_data_lid (Prims.of_int 4) FStarC_Range_Type.dummyRange
 let lid_Mktuple5 : FStarC_Ident.lident=
-  mk_tuple_data_lid (Prims.of_int (5)) FStarC_Range_Type.dummyRange
+  mk_tuple_data_lid (Prims.of_int 5) FStarC_Range_Type.dummyRange
 let lid_dtuple2 : FStarC_Ident.lident=
-  mk_dtuple_lid (Prims.of_int (2)) FStarC_Range_Type.dummyRange
+  mk_dtuple_lid (Prims.of_int 2) FStarC_Range_Type.dummyRange

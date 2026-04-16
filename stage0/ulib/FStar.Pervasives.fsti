@@ -141,7 +141,7 @@ let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
     Use [intro_ambient t] for that.
     See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none *)
 [@@ remove_unused_type_parameters [0; 1;]]
-val ambient (#a: Type) (x: a) : Type0
+val ambient (#a: Type) (x: a) : prop
 
 (** cf. [ambient], above *)
 val intro_ambient (#a: Type) (x: a) : Tot (squash (ambient x))
@@ -280,7 +280,7 @@ effect EXT (a: Type) = Dv a
 /// Note, [STATE_h] is itself not a computation type in F*, since it
 /// is parameterized by the type of heap. However, instantiations of
 /// [STATE_h] with specific types of the heap are computation
-/// types. See, e.g., [FStar.ST] for such instantiations.
+/// types. See, e.g., [FStar.All] for such instantiations.
 ///
 /// Weakest preconditions for stateful computations transform
 /// [st_post_h] postconditions to [st_pre_h] preconditions. Both are
@@ -569,7 +569,7 @@ new_effect {
  setting. If used unwisely, this can lead to very poor SMT solver
  performance.  *)
 [@@ remove_unused_type_parameters [0]]
-val inversion (a: Type) : Type0
+val inversion (a: Type) : prop
 
 (** To introduce [inversion t] in the SMT solver's context, call
     [allow_inversion t]. *)

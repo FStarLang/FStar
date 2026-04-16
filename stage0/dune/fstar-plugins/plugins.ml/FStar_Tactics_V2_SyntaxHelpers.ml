@@ -34,7 +34,7 @@ let collect_arr_bs (t : FStarC_Reflection_Types.typ) :
     match x with | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -61,7 +61,7 @@ let collect_arr (t : FStarC_Reflection_Types.typ) :
                (fun b -> b.FStar_Tactics_NamedView.sort) bs)), c)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -92,7 +92,7 @@ let collect_abs (t : FStar_Tactics_NamedView.term) :
     match x with | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_abs" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.collect_abs" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -142,7 +142,7 @@ let rec mk_arr (uu___1 : FStar_Tactics_NamedView.binder Prims.list)
     uu___1 uu___
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.mk_arr" (Prims.of_int (3))
+    "FStar.Tactics.V2.SyntaxHelpers.mk_arr" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -178,7 +178,7 @@ let rec mk_tot_arr (uu___1 : FStar_Tactics_NamedView.binder Prims.list)
     uu___1 uu___
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr" (Prims.of_int (3))
+    "FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -207,7 +207,7 @@ let lookup_lb (lbs : FStar_Tactics_NamedView.letbinding Prims.list)
         fail "lookup_letbinding: Name not in let group" ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.lookup_lb" (Prims.of_int (3))
+    "FStar.Tactics.V2.SyntaxHelpers.lookup_lb" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -232,7 +232,7 @@ let rec inspect_unascribe (t : FStar_Tactics_NamedView.term) :
     | tv -> tv
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.inspect_unascribe" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -260,7 +260,7 @@ let collect_app :
   collect_app' []
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -294,7 +294,7 @@ let hua (t : FStar_Tactics_NamedView.term) :
          | uu___ -> FStar_Pervasives_Native.None)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.SyntaxHelpers.hua" (Prims.of_int (2))
+    "FStar.Tactics.V2.SyntaxHelpers.hua" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

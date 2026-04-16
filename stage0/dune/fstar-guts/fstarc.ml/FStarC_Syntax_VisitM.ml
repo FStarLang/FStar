@@ -124,7 +124,7 @@ let f_aqual (uu___ : 'm lvm) (aq : FStarC_Syntax_Syntax.arg_qualifier) :
       FStarC_Syntax_Syntax.aqual_attributes = attrs;_} ->
       let uu___2 =
         FStarC_Class_Monad.mapM (_lvm_monad uu___) () ()
-          (fun uu___3 -> (Obj.magic (f_term uu___)) uu___3) (Obj.magic attrs) in
+          (fun uu___3 -> Obj.magic (f_term uu___) uu___3) (Obj.magic attrs) in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad uu___) () () uu___2
         (fun uu___3 ->
            (fun attrs1 ->
@@ -147,7 +147,7 @@ let on_sub_arg (uu___ : 'm lvm) (a : FStarC_Syntax_Syntax.arg) : 'm=
               let t1 = Obj.magic t1 in
               let uu___3 =
                 FStarC_Class_Monad.map_optM (_lvm_monad uu___) () ()
-                  (fun uu___4 -> (Obj.magic (f_aqual uu___)) uu___4)
+                  (fun uu___4 -> Obj.magic (f_aqual uu___) uu___4)
                   (Obj.magic q) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad uu___) () ()
@@ -177,7 +177,7 @@ let f_args (uu___1 : 'm lvm) (uu___ : FStarC_Syntax_Syntax.arg Prims.list) :
   (fun d ->
      Obj.magic
        (FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___ -> (Obj.magic (f_arg d)) uu___))) uu___1 uu___
+          (fun uu___ -> Obj.magic (f_arg d) uu___))) uu___1 uu___
 let f_tscheme (uu___ : 'm lvm) : FStarC_Syntax_Syntax.tscheme -> 'm=
   on_sub_tscheme (_lvm_monad uu___) uu___
 let on_sub_meta (d : 'm lvm) (md : FStarC_Syntax_Syntax.metadata) : 'm=
@@ -185,14 +185,14 @@ let on_sub_meta (d : 'm lvm) (md : FStarC_Syntax_Syntax.metadata) : 'm=
   | FStarC_Syntax_Syntax.Meta_pattern (pats, args) ->
       let uu___ =
         FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> (Obj.magic (f_term d)) uu___1) (Obj.magic pats) in
+          (fun uu___1 -> Obj.magic (f_term d) uu___1) (Obj.magic pats) in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
            (fun pats1 ->
               let pats1 = Obj.magic pats1 in
               let uu___1 =
                 FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                  (fun uu___2 -> (Obj.magic (f_args d)) uu___2)
+                  (fun uu___2 -> Obj.magic (f_args d) uu___2)
                   (Obj.magic args) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -262,7 +262,7 @@ let on_sub_letbinding (uu___ : 'm lvm) (lb : FStarC_Syntax_Syntax.letbinding)
                      let lbeff = lb.FStarC_Syntax_Syntax.lbeff in
                      let uu___3 =
                        FStarC_Class_Monad.mapM (_lvm_monad uu___) () ()
-                         (fun uu___4 -> (Obj.magic (f_term uu___)) uu___4)
+                         (fun uu___4 -> Obj.magic (f_term uu___) uu___4)
                          (Obj.magic lb.FStarC_Syntax_Syntax.lbattrs) in
                      Obj.magic
                        (FStarC_Class_Monad.op_let_Bang (_lvm_monad uu___) ()
@@ -329,7 +329,7 @@ let on_sub_ascription (uu___ : 'm lvm) (a : FStarC_Syntax_Syntax.ascription)
               let tc1 = Obj.magic tc1 in
               let uu___3 =
                 FStarC_Class_Monad.map_optM (_lvm_monad uu___) () ()
-                  (fun uu___4 -> (Obj.magic (f_term uu___)) uu___4)
+                  (fun uu___4 -> Obj.magic (f_term uu___) uu___4)
                   (Obj.magic tacopt) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad uu___) () ()
@@ -380,8 +380,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
               let f1 = Obj.magic f1 in
               let uu___1 =
                 FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                  (fun uu___2 -> (Obj.magic (f_univ d)) uu___2)
-                  (Obj.magic us) in
+                  (fun uu___2 -> Obj.magic (f_univ d) uu___2) (Obj.magic us) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
                    (fun uu___2 ->
@@ -411,8 +410,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
               let hd1 = Obj.magic hd1 in
               let uu___1 =
                 FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                  (fun uu___2 -> (Obj.magic (f_arg d)) uu___2)
-                  (Obj.magic args) in
+                  (fun uu___2 -> Obj.magic (f_arg d) uu___2) (Obj.magic args) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
                    (fun uu___2 ->
@@ -434,7 +432,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
       ->
       let uu___ =
         FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> (Obj.magic (f_binder d)) uu___1) (Obj.magic bs) in
+          (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic bs) in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
            (fun bs1 ->
@@ -448,7 +446,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                          let uu___2 =
                            FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
                              (fun uu___3 ->
-                                (Obj.magic (f_residual_comp d)) uu___3)
+                                Obj.magic (f_residual_comp d) uu___3)
                              (Obj.magic rc_opt) in
                          Obj.magic
                            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) ()
@@ -473,7 +471,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
       { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_} ->
       let uu___ =
         FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> (Obj.magic (f_binder d)) uu___1) (Obj.magic bs) in
+          (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic bs) in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
            (fun bs1 ->
@@ -557,7 +555,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                          let asc_opt1 = Obj.magic asc_opt1 in
                          let uu___2 =
                            FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                             (fun uu___3 -> (Obj.magic (f_br d)) uu___3)
+                             (fun uu___3 -> Obj.magic (f_br d) uu___3)
                              (Obj.magic brs) in
                          Obj.magic
                            (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) ()
@@ -569,7 +567,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
                                       FStarC_Class_Monad.map_optM
                                         (_lvm_monad d) () ()
                                         (fun uu___4 ->
-                                           (Obj.magic (f_residual_comp d))
+                                           Obj.magic (f_residual_comp d)
                                              uu___4) (Obj.magic rc_opt) in
                                     Obj.magic
                                       (FStarC_Class_Monad.op_let_Bang
@@ -629,7 +627,7 @@ let on_sub_term (d : 'm lvm) (tm : FStarC_Syntax_Syntax.term) : 'm=
       ->
       let uu___ =
         FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> (Obj.magic (on_sub_letbinding d)) uu___1)
+          (fun uu___1 -> Obj.magic (on_sub_letbinding d) uu___1)
           (Obj.magic lbs) in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
         (fun uu___1 ->
@@ -744,7 +742,7 @@ let on_sub_binder (d : 'm lvm) (b : FStarC_Syntax_Syntax.binder) : 'm=
                        b.FStarC_Syntax_Syntax.binder_positivity in
                      let uu___2 =
                        FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                         (fun uu___3 -> (Obj.magic (f_term d)) uu___3)
+                         (fun uu___3 -> Obj.magic (f_term d) uu___3)
                          (Obj.magic b.FStarC_Syntax_Syntax.binder_attrs) in
                      Obj.magic
                        (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
@@ -780,9 +778,9 @@ let rec on_sub_pat : 'm . 'm lvm -> FStarC_Syntax_Syntax.pat -> 'm =
         let uu___ =
           FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
             (fun uu___1 ->
-               (Obj.magic
-                  (FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                     (fun uu___1 -> (Obj.magic (f_univ d)) uu___1))) uu___1)
+               Obj.magic
+                 (FStarC_Class_Monad.mapM (_lvm_monad d) () ()
+                    (fun uu___1 -> Obj.magic (f_univ d) uu___1)) uu___1)
             (Obj.magic us) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -837,7 +835,7 @@ let rec on_sub_pat : 'm . 'm lvm -> FStarC_Syntax_Syntax.pat -> 'm =
     | FStarC_Syntax_Syntax.Pat_dot_term t ->
         let uu___ =
           FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (f_term d)) uu___1) (Obj.magic t) in
+            (fun uu___1 -> Obj.magic (f_term d) uu___1) (Obj.magic t) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
              (fun t1 ->
@@ -861,7 +859,7 @@ let on_sub_br (d : 'm lvm)
               let pat1 = Obj.magic pat1 in
               let uu___2 =
                 FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-                  (fun uu___3 -> (Obj.magic (f_term d)) uu___3)
+                  (fun uu___3 -> Obj.magic (f_term d) uu___3)
                   (Obj.magic wopt) in
               Obj.magic
                 (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___2
@@ -884,7 +882,7 @@ let on_sub_comp_typ (d : 'm lvm) (ct : FStarC_Syntax_Syntax.comp_typ) :
   'm=
   let uu___ =
     FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-      (fun uu___1 -> (Obj.magic (f_univ d)) uu___1)
+      (fun uu___1 -> Obj.magic (f_univ d) uu___1)
       (Obj.magic ct.FStarC_Syntax_Syntax.comp_univs) in
   FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
     (fun uu___1 ->
@@ -899,7 +897,7 @@ let on_sub_comp_typ (d : 'm lvm) (ct : FStarC_Syntax_Syntax.comp_typ) :
                      let result_typ = Obj.magic result_typ in
                      let uu___2 =
                        FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                         (fun uu___3 -> (Obj.magic (f_arg d)) uu___3)
+                         (fun uu___3 -> Obj.magic (f_arg d) uu___3)
                          (Obj.magic ct.FStarC_Syntax_Syntax.effect_args) in
                      Obj.magic
                        (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
@@ -964,7 +962,7 @@ let __on_decreases (d : 'm lvm) (f : FStarC_Syntax_Syntax.term -> 'm)
       let uu___ =
         let uu___1 =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___2 -> (Obj.magic f) uu___2) (Obj.magic l) in
+            (fun uu___2 -> Obj.magic f uu___2) (Obj.magic l) in
         FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
           (fun uu___2 ->
              (fun uu___2 ->
@@ -1010,7 +1008,7 @@ let on_sub_residual_comp (d : 'm lvm)
   let residual_effect = rc.FStarC_Syntax_Syntax.residual_effect in
   let uu___ =
     FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-      (fun uu___1 -> (Obj.magic (f_term d)) uu___1)
+      (fun uu___1 -> Obj.magic (f_term d) uu___1)
       (Obj.magic rc.FStarC_Syntax_Syntax.residual_typ) in
   FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
     (fun uu___1 ->
@@ -1018,7 +1016,7 @@ let on_sub_residual_comp (d : 'm lvm)
           let residual_typ = Obj.magic residual_typ in
           let uu___1 =
             FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-              (fun uu___2 -> (Obj.magic (__on_decreases d (f_term d))) uu___2)
+              (fun uu___2 -> Obj.magic (__on_decreases d (f_term d)) uu___2)
               (Obj.magic rc.FStarC_Syntax_Syntax.residual_flags) in
           Obj.magic
             (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -1042,7 +1040,7 @@ let on_sub_univ (d : 'm lvm) (u : FStarC_Syntax_Syntax.universe) : 'm=
   | FStarC_Syntax_Syntax.U_max us ->
       let uu___ =
         FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-          (fun uu___1 -> (Obj.magic (f_univ d)) uu___1) (Obj.magic us) in
+          (fun uu___1 -> Obj.magic (f_univ d) uu___1) (Obj.magic us) in
       FStarC_Class_Monad.op_Less_Dollar_Greater (_lvm_monad d) () ()
         (fun uu___1 ->
            (fun uu___1 ->
@@ -1145,10 +1143,9 @@ let on_sub_wp_eff_combinators (d : 'm lvm)
                                                                     d) () ()
                                                                     (fun
                                                                     uu___8 ->
-                                                                    (Obj.magic
+                                                                    Obj.magic
                                                                     (f_tscheme
-                                                                    d))
-                                                                    uu___8)
+                                                                    d) uu___8)
                                                                     (Obj.magic
                                                                     wpcs.FStarC_Syntax_Syntax.repr) in
                                                                     Obj.magic
@@ -1171,10 +1168,9 @@ let on_sub_wp_eff_combinators (d : 'm lvm)
                                                                     d) () ()
                                                                     (fun
                                                                     uu___9 ->
-                                                                    (Obj.magic
+                                                                    Obj.magic
                                                                     (f_tscheme
-                                                                    d))
-                                                                    uu___9)
+                                                                    d) uu___9)
                                                                     (Obj.magic
                                                                     wpcs.FStarC_Syntax_Syntax.return_repr) in
                                                                     Obj.magic
@@ -1199,9 +1195,9 @@ let on_sub_wp_eff_combinators (d : 'm lvm)
                                                                     (fun
                                                                     uu___10
                                                                     ->
-                                                                    (Obj.magic
+                                                                    Obj.magic
                                                                     (f_tscheme
-                                                                    d))
+                                                                    d)
                                                                     uu___10)
                                                                     (Obj.magic
                                                                     wpcs.FStarC_Syntax_Syntax.bind_repr) in
@@ -1305,8 +1301,8 @@ let on_sub_layered_eff_combinators (d : 'm lvm)
                      let uu___2 =
                        mapTuple3 (_lvm_monad d) (f_tscheme d) (f_tscheme d)
                          (fun uu___3 ->
-                            (Obj.magic
-                               (FStarC_Class_Monad.return (_lvm_monad d) ()))
+                            Obj.magic
+                              (FStarC_Class_Monad.return (_lvm_monad d) ())
                               uu___3) lecs.FStarC_Syntax_Syntax.l_bind in
                      Obj.magic
                        (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () ()
@@ -1318,9 +1314,9 @@ let on_sub_layered_eff_combinators (d : 'm lvm)
                                   mapTuple3 (_lvm_monad d) (f_tscheme d)
                                     (f_tscheme d)
                                     (fun uu___4 ->
-                                       (Obj.magic
-                                          (FStarC_Class_Monad.return
-                                             (_lvm_monad d) ())) uu___4)
+                                       Obj.magic
+                                         (FStarC_Class_Monad.return
+                                            (_lvm_monad d) ()) uu___4)
                                     lecs.FStarC_Syntax_Syntax.l_subcomp in
                                 Obj.magic
                                   (FStarC_Class_Monad.op_let_Bang
@@ -1333,9 +1329,9 @@ let on_sub_layered_eff_combinators (d : 'm lvm)
                                              mapTuple3 (_lvm_monad d)
                                                (f_tscheme d) (f_tscheme d)
                                                (fun uu___5 ->
-                                                  (Obj.magic
-                                                     (FStarC_Class_Monad.return
-                                                        (_lvm_monad d) ()))
+                                                  Obj.magic
+                                                    (FStarC_Class_Monad.return
+                                                       (_lvm_monad d) ())
                                                     uu___5)
                                                lecs.FStarC_Syntax_Syntax.l_if_then_else in
                                            Obj.magic
@@ -1351,14 +1347,14 @@ let on_sub_layered_eff_combinators (d : 'm lvm)
                                                           (_lvm_monad d) ()
                                                           ()
                                                           (fun uu___6 ->
-                                                             (Obj.magic
-                                                                (mapTuple2
-                                                                   (_lvm_monad
+                                                             Obj.magic
+                                                               (mapTuple2
+                                                                  (_lvm_monad
                                                                     d)
-                                                                   (f_tscheme
+                                                                  (f_tscheme
                                                                     d)
-                                                                   (f_tscheme
-                                                                    d)))
+                                                                  (f_tscheme
+                                                                    d))
                                                                uu___6)
                                                           (Obj.magic
                                                              lecs.FStarC_Syntax_Syntax.l_close) in
@@ -1410,15 +1406,6 @@ let on_sub_combinators (d : 'm lvm)
                 (FStarC_Class_Monad.return (_lvm_monad d) ()
                    (Obj.magic (FStarC_Syntax_Syntax.Primitive_eff wpcs1))))
              uu___1)
-  | FStarC_Syntax_Syntax.DM4F_eff wpcs ->
-      let uu___ = on_sub_wp_eff_combinators d wpcs in
-      FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-        (fun uu___1 ->
-           (fun wpcs1 ->
-              let wpcs1 = Obj.magic wpcs1 in
-              Obj.magic
-                (FStarC_Class_Monad.return (_lvm_monad d) ()
-                   (Obj.magic (FStarC_Syntax_Syntax.DM4F_eff wpcs1)))) uu___1)
   | FStarC_Syntax_Syntax.Layered_eff lecs ->
       let uu___ = on_sub_layered_eff_combinators d lecs in
       FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
@@ -1460,7 +1447,7 @@ let on_sub_action (d : 'm lvm) (a : FStarC_Syntax_Syntax.action) : 'm=
   let action_univs = a.FStarC_Syntax_Syntax.action_univs in
   let uu___ =
     FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-      (fun uu___1 -> (Obj.magic (f_binder d)) uu___1)
+      (fun uu___1 -> Obj.magic (f_binder d) uu___1)
       (Obj.magic a.FStarC_Syntax_Syntax.action_params) in
   FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
     (fun uu___1 ->
@@ -1510,8 +1497,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         ->
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (f_binder d)) uu___1)
-            (Obj.magic params) in
+            (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic params) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
              (fun params1 ->
@@ -1544,7 +1530,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         ->
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (on_sub_sigelt d)) uu___1)
+            (fun uu___1 -> Obj.magic (on_sub_sigelt d) uu___1)
             (Obj.magic ses) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -1612,7 +1598,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         ->
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (on_sub_letbinding d)) uu___1)
+            (fun uu___1 -> Obj.magic (on_sub_letbinding d) uu___1)
             (Obj.magic lbs) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -1650,7 +1636,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         let univs = ed.FStarC_Syntax_Syntax.univs in
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (f_binder d)) uu___1)
+            (fun uu___1 -> Obj.magic (f_binder d) uu___1)
             (Obj.magic ed.FStarC_Syntax_Syntax.binders) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -1676,7 +1662,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                         FStarC_Class_Monad.mapM
                                           (_lvm_monad d) () ()
                                           (fun uu___4 ->
-                                             (Obj.magic (on_sub_action d))
+                                             Obj.magic (on_sub_action d)
                                                uu___4)
                                           (Obj.magic
                                              ed.FStarC_Syntax_Syntax.actions) in
@@ -1691,7 +1677,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                                                    FStarC_Class_Monad.mapM
                                                      (_lvm_monad d) () ()
                                                      (fun uu___5 ->
-                                                        (Obj.magic (f_term d))
+                                                        Obj.magic (f_term d)
                                                           uu___5)
                                                      (Obj.magic
                                                         ed.FStarC_Syntax_Syntax.eff_attrs) in
@@ -1746,7 +1732,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         let target = se1.FStarC_Syntax_Syntax.target in
         let uu___ =
           FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (f_tscheme d)) uu___1)
+            (fun uu___1 -> Obj.magic (f_tscheme d) uu___1)
             (Obj.magic se1.FStarC_Syntax_Syntax.lift_wp) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -1754,7 +1740,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                 let lift_wp = Obj.magic lift_wp in
                 let uu___1 =
                   FStarC_Class_Monad.map_optM (_lvm_monad d) () ()
-                    (fun uu___2 -> (Obj.magic (f_tscheme d)) uu___2)
+                    (fun uu___2 -> Obj.magic (f_tscheme d) uu___2)
                     (Obj.magic se1.FStarC_Syntax_Syntax.lift) in
                 Obj.magic
                   (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -1781,7 +1767,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         ->
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (f_binder d)) uu___1) (Obj.magic bs) in
+            (fun uu___1 -> Obj.magic (f_binder d) uu___1) (Obj.magic bs) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
              (fun binders ->
@@ -1795,7 +1781,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                            let uu___2 =
                              FStarC_Class_Monad.mapM (_lvm_monad d) () ()
                                (fun uu___3 ->
-                                  (Obj.magic (__on_decreases d (f_term d)))
+                                  Obj.magic (__on_decreases d (f_term d))
                                     uu___3) (Obj.magic cflags) in
                            Obj.magic
                              (FStarC_Class_Monad.op_let_Bang (_lvm_monad d)
@@ -1832,6 +1818,17 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
                      (Obj.magic
                         (FStarC_Syntax_Syntax.Sig_pragma
                            (FStarC_Syntax_Syntax.Check t1))))) uu___1)
+    | FStarC_Syntax_Syntax.Sig_pragma (FStarC_Syntax_Syntax.Eval t) ->
+        let uu___ = f_term d t in
+        FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
+          (fun uu___1 ->
+             (fun t1 ->
+                let t1 = Obj.magic t1 in
+                Obj.magic
+                  (FStarC_Class_Monad.return (_lvm_monad d) ()
+                     (Obj.magic
+                        (FStarC_Syntax_Syntax.Sig_pragma
+                           (FStarC_Syntax_Syntax.Eval t1))))) uu___1)
     | FStarC_Syntax_Syntax.Sig_pragma uu___ ->
         FStarC_Class_Monad.return (_lvm_monad d) () (Obj.magic se)
     | FStarC_Syntax_Syntax.Sig_polymonadic_bind
@@ -1899,7 +1896,7 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt' -> 'm =
         ->
         let uu___ =
           FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-            (fun uu___1 -> (Obj.magic (on_sub_sigelt d)) uu___1)
+            (fun uu___1 -> Obj.magic (on_sub_sigelt d) uu___1)
             (Obj.magic ses) in
         FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
           (fun uu___1 ->
@@ -1947,7 +1944,7 @@ and on_sub_sigelt : 'm . 'm lvm -> FStarC_Syntax_Syntax.sigelt -> 'm =
             let sigmeta = se.FStarC_Syntax_Syntax.sigmeta in
             let uu___1 =
               FStarC_Class_Monad.mapM (_lvm_monad d) () ()
-                (fun uu___2 -> (Obj.magic (f_term d)) uu___2)
+                (fun uu___2 -> Obj.magic (f_term d) uu___2)
                 (Obj.magic se.FStarC_Syntax_Syntax.sigattrs) in
             Obj.magic
               (FStarC_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___1
@@ -1987,45 +1984,45 @@ let tie_bu (md : 'm FStarC_Class_Monad.monad) (d : 'm lvm) : 'm lvm=
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in on_sub_term uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_term d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_term d) uu___4) uu___3);
        f_binder =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in on_sub_binder uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_binder d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_binder d) uu___4) uu___3);
        f_binding_bv =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in
               on_sub_binding_bv uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_binding_bv d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_binding_bv d) uu___4) uu___3);
        f_br =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in on_sub_br uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_br d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_br d) uu___4) uu___3);
        f_comp =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in on_sub_comp uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_comp d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_comp d) uu___4) uu___3);
        f_residual_comp =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in
               on_sub_residual_comp uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_residual_comp d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_residual_comp d) uu___4) uu___3);
        f_univ =
          (fun x ->
             let uu___3 =
               let uu___4 = FStarC_Effect.op_Bang r in on_sub_univ uu___4 x in
             op_Less_Less_Bar md () ()
-              (fun uu___4 -> (Obj.magic (f_univ d)) uu___4) uu___3);
+              (fun uu___4 -> Obj.magic (f_univ d) uu___4) uu___3);
        proc_quotes = (d.proc_quotes)
      } in
    FStarC_Effect.op_Colon_Equals r uu___1);
@@ -2053,7 +2050,7 @@ let visitM_term (md : 'm FStarC_Class_Monad.monad)
   (proc_quotes1 : Prims.bool) (vt : FStarC_Syntax_Syntax.term -> 'm)
   (tm : FStarC_Syntax_Syntax.term) : 'm=
   visitM_term_univs md true vt
-    (fun uu___ -> (Obj.magic (FStarC_Class_Monad.return md ())) uu___) tm
+    (fun uu___ -> Obj.magic (FStarC_Class_Monad.return md ()) uu___) tm
 let visitM_sigelt (md : 'm FStarC_Class_Monad.monad)
   (proc_quotes1 : Prims.bool) (vt : FStarC_Syntax_Syntax.term -> 'm)
   (vu : FStarC_Syntax_Syntax.universe -> 'm)

@@ -788,6 +788,7 @@ type pragma =
   | RestartSolver 
   | PrintEffectsGraph 
   | Check of term 
+  | Eval of term 
 let uu___is_ShowOptions (projectee : pragma) : Prims.bool=
   match projectee with | ShowOptions -> true | uu___ -> false
 let uu___is_SetOptions (projectee : pragma) : Prims.bool=
@@ -814,6 +815,10 @@ let uu___is_Check (projectee : pragma) : Prims.bool=
   match projectee with | Check _0 -> true | uu___ -> false
 let __proj__Check__item___0 (projectee : pragma) : term=
   match projectee with | Check _0 -> _0
+let uu___is_Eval (projectee : pragma) : Prims.bool=
+  match projectee with | Eval _0 -> true | uu___ -> false
+let __proj__Eval__item___0 (projectee : pragma) : term=
+  match projectee with | Eval _0 -> _0
 type dep_scan_callbacks =
   {
   scan_term: term -> unit ;
@@ -849,17 +854,17 @@ let __proj__Mkdep_scan_callbacks__item__add_open
 type to_be_desugared =
   {
   lang_name: Prims.string ;
-  blob: FStarC_Dyn.dyn ;
+  blob: FStar_Dyn.dyn ;
   idents: FStarC_Ident.ident Prims.list ;
-  to_string: FStarC_Dyn.dyn -> Prims.string ;
-  eq: FStarC_Dyn.dyn -> FStarC_Dyn.dyn -> Prims.bool ;
-  dep_scan: dep_scan_callbacks -> FStarC_Dyn.dyn -> unit }
+  to_string: FStar_Dyn.dyn -> Prims.string ;
+  eq: FStar_Dyn.dyn -> FStar_Dyn.dyn -> Prims.bool ;
+  dep_scan: dep_scan_callbacks -> FStar_Dyn.dyn -> unit }
 let __proj__Mkto_be_desugared__item__lang_name (projectee : to_be_desugared)
   : Prims.string=
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> lang_name
 let __proj__Mkto_be_desugared__item__blob (projectee : to_be_desugared) :
-  FStarC_Dyn.dyn=
+  FStar_Dyn.dyn=
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> blob
 let __proj__Mkto_be_desugared__item__idents (projectee : to_be_desugared) :
@@ -867,15 +872,15 @@ let __proj__Mkto_be_desugared__item__idents (projectee : to_be_desugared) :
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> idents
 let __proj__Mkto_be_desugared__item__to_string (projectee : to_be_desugared)
-  : FStarC_Dyn.dyn -> Prims.string=
+  : FStar_Dyn.dyn -> Prims.string=
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> to_string
 let __proj__Mkto_be_desugared__item__eq (projectee : to_be_desugared) :
-  FStarC_Dyn.dyn -> FStarC_Dyn.dyn -> Prims.bool=
+  FStar_Dyn.dyn -> FStar_Dyn.dyn -> Prims.bool=
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> eq
 let __proj__Mkto_be_desugared__item__dep_scan (projectee : to_be_desugared) :
-  dep_scan_callbacks -> FStarC_Dyn.dyn -> unit=
+  dep_scan_callbacks -> FStar_Dyn.dyn -> unit=
   match projectee with
   | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> dep_scan
 type decl' =
@@ -1164,6 +1169,9 @@ let consTerm (r : FStarC_Range_Type.range) (hd : term) (tl : term) :
     r Expr
 let unit_const (r : FStarC_Range_Type.range) : term=
   mk_term (Const FStarC_Const.Const_unit) r Expr
+let unit_type (r : FStarC_Range_Type.range) : term=
+  let uu___ = let uu___1 = FStarC_Ident.lid_of_str "Prims.unit" in Var uu___1 in
+  mk_term uu___ r Expr
 let ml_comp (t : term) : term=
   let lid = FStarC_Parser_Const.effect_ML_lid () in
   let ml = mk_term (Name lid) t.range Expr in
@@ -1524,9 +1532,9 @@ let compile_op (arity : Prims.int) (s : Prims.string)
         then
           let uu___2 =
             let uu___3 =
-              FStarC_Util.substring s Prims.int_zero (Prims.of_int (3)) in
+              FStarC_Util.substring s Prims.int_zero (Prims.of_int 3) in
             Prims.strcat uu___3 "_" in
-          let uu___3 = FStarC_Util.substring_from s (Prims.of_int (3)) in
+          let uu___3 = FStarC_Util.substring_from s (Prims.of_int 3) in
           (uu___2, uu___3)
         else
           if
@@ -1536,9 +1544,9 @@ let compile_op (arity : Prims.int) (s : Prims.string)
           then
             (let uu___3 =
                let uu___4 =
-                 FStarC_Util.substring s Prims.int_zero (Prims.of_int (6)) in
+                 FStarC_Util.substring s Prims.int_zero (Prims.of_int 6) in
                Prims.strcat uu___4 "_" in
-             let uu___4 = FStarC_Util.substring_from s (Prims.of_int (6)) in
+             let uu___4 = FStarC_Util.substring_from s (Prims.of_int 6) in
              (uu___3, uu___4))
           else ("", s) in
       (match uu___1 with
@@ -1564,27 +1572,27 @@ let string_to_op (s : Prims.string) :
         FStar_Pervasives_Native.Some ("@", FStar_Pervasives_Native.None)
     | "Plus" ->
         FStar_Pervasives_Native.Some
-          ("+", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+          ("+", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
     | "Minus" ->
         FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
     | "Subtraction" ->
         FStar_Pervasives_Native.Some
-          ("-", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+          ("-", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
     | "Tilde" ->
         FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
     | "Slash" ->
         FStar_Pervasives_Native.Some
-          ("/", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+          ("/", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
     | "Backslash" ->
         FStar_Pervasives_Native.Some ("\\", FStar_Pervasives_Native.None)
     | "Less" ->
         FStar_Pervasives_Native.Some
-          ("<", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+          ("<", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
     | "Equals" ->
         FStar_Pervasives_Native.Some ("=", FStar_Pervasives_Native.None)
     | "Greater" ->
         FStar_Pervasives_Native.Some
-          (">", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
+          (">", (FStar_Pervasives_Native.Some (Prims.of_int 2)))
     | "Underscore" ->
         FStar_Pervasives_Native.Some ("_", FStar_Pervasives_Native.None)
     | "Bar" ->
@@ -2255,6 +2263,7 @@ let string_of_pragma (p : pragma) : Prims.string=
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
   | Check t -> let uu___ = term_to_string t in Prims.strcat "check " uu___
+  | Eval t -> let uu___ = term_to_string t in Prims.strcat "eval " uu___
 let restriction_to_string (r : FStarC_Syntax_Syntax.restriction) :
   Prims.string=
   match r with
@@ -2279,8 +2288,8 @@ let restriction_to_string (r : FStarC_Syntax_Syntax.restriction) :
           FStarC_String.concat ", " uu___2 in
         Prims.strcat uu___1 "}" in
       Prims.strcat " {" uu___
-let decl_to_string (d : decl) : Prims.string=
-  match d.d with
+let decl'_to_string (d : decl') : Prims.string=
+  match d with
   | TopLevelModule l -> Prims.strcat "module " (FStarC_Ident.string_of_lid l)
   | Open (l, r) ->
       let uu___ =
@@ -2362,6 +2371,7 @@ let decl_to_string (d : decl) : Prims.string=
       Prims.strcat "(to_be_desugared: " uu___
   | UseLangDecls str -> FStarC_Format.fmt1 "#lang-%s" str
   | Unparseable -> "unparseable"
+let decl_to_string (d : decl) : Prims.string= decl'_to_string d.d
 let modul_to_string (m : modul) : Prims.string=
   match m with
   | Module { no_prelude = uu___; mname = uu___1; decls;_} ->
@@ -2431,6 +2441,8 @@ let showable_quote_kind : quote_kind FStarC_Class_Show.showable=
       (fun uu___ ->
          match uu___ with | Static -> "Static" | Dynamic -> "Dynamic")
   }
+let showable_decl' : decl' FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = decl'_to_string }
 let showable_decl : decl FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = decl_to_string }
 let showable_term : term FStarC_Class_Show.showable=
@@ -2519,7 +2531,7 @@ let pretty_quote_kind : quote_kind FStarC_Class_PP.pretty=
   }
 let ctor (n : Prims.string) (args : FStar_Pprint.document Prims.list) :
   FStar_Pprint.document=
-  FStar_Pprint.nest (Prims.of_int (2))
+  FStar_Pprint.nest (Prims.of_int 2)
     (FStar_Pprint.group
        (FStar_Pprint.parens
           (FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
@@ -3423,8 +3435,8 @@ let pp_tycon (tc : tycon) : FStar_Pprint.document=
       ctor "TyconVariant" uu___
 let pretty_tycon : tycon FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = pp_tycon }
-let pp_decl (d : decl) : FStar_Pprint.document=
-  match d.d with
+let pp_decl' (d : decl') : FStar_Pprint.document=
+  match d with
   | TopLevelModule l ->
       let uu___ =
         let uu___1 = FStarC_Class_PP.pp FStarC_Ident.pretty_lident l in
@@ -3575,6 +3587,9 @@ let pp_decl (d : decl) : FStar_Pprint.document=
       ctor "DeclToBeDesugared" uu___
   | UseLangDecls str -> ctor "UseLangDecls" [FStar_Pprint.doc_of_string str]
   | Unparseable -> ctor "Unparseable" []
+let pp_decl (d : decl) : FStar_Pprint.document= pp_decl' d.d
+let pretty_decl' : decl' FStarC_Class_PP.pretty=
+  { FStarC_Class_PP.pp = pp_decl' }
 let pretty_decl : decl FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = pp_decl }
 let pp_modul (m : modul) : FStar_Pprint.document=

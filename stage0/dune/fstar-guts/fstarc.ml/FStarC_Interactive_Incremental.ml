@@ -477,7 +477,7 @@ let format_code (st : FStarC_Interactive_Ide_Types.repl_state)
       (decls, comments, FStar_Pervasives_Native.None) ->
       let doc_to_string doc =
         FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0")
-          (Prims.of_int (100)) doc in
+          (Prims.of_int 100) doc in
       let uu___ =
         FStarC_List.fold_left
           (fun uu___1 uu___2 ->

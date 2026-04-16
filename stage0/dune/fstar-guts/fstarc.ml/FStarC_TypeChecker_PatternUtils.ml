@@ -375,7 +375,7 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
                       (FStarC_Syntax_Syntax.lid_of_fv fv) in
                   match uu___3 with
                   | (us, uu___4) ->
-                      if (FStarC_List.length us) = Prims.int_zero
+                      if Prims.uu___is_Nil us
                       then (hd, (FStar_Pervasives_Native.Some []))
                       else
                         (let uu___6 = FStarC_Syntax_Syntax.mk_Tm_uinst hd us in

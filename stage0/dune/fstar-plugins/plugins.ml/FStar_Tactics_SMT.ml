@@ -6,7 +6,7 @@ let smt_sync (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     FStarC_Tactics_V2_Builtins.t_smt_sync x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.smt_sync" (Prims.of_int (2))
+    "FStar.Tactics.SMT.smt_sync" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -61,7 +61,7 @@ let smt_sync' (fuel : Prims.nat) (ifuel : Prims.nat) :
     FStarC_Tactics_V2_Builtins.t_smt_sync x1 ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.smt_sync'" (Prims.of_int (3))
+    "FStar.Tactics.SMT.smt_sync'" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -79,7 +79,7 @@ let get_rlimit (uu___ : unit) :
     x.FStarC_VConfig.z3rlimit
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.get_rlimit" (Prims.of_int (2))
+    "FStar.Tactics.SMT.get_rlimit" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -133,7 +133,7 @@ let set_rlimit (v : Prims.int) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_rlimit" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_rlimit" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -150,7 +150,7 @@ let get_initial_fuel (uu___ : unit) :
     x.FStarC_VConfig.initial_fuel
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.get_initial_fuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.get_initial_fuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -168,7 +168,7 @@ let get_initial_ifuel (uu___ : unit) :
     x.FStarC_VConfig.initial_ifuel
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.get_initial_ifuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.get_initial_ifuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -186,7 +186,7 @@ let get_max_fuel (uu___ : unit) :
     x.FStarC_VConfig.max_fuel
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.get_max_fuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.get_max_fuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -203,7 +203,7 @@ let get_max_ifuel (uu___ : unit) :
     x.FStarC_VConfig.max_ifuel
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.get_max_ifuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.get_max_ifuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -259,7 +259,7 @@ let set_initial_fuel (v : Prims.int) :
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_initial_fuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_initial_fuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -315,7 +315,7 @@ let set_initial_ifuel (v : Prims.int) :
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_initial_ifuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_initial_ifuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -371,7 +371,7 @@ let set_max_fuel (v : Prims.int) :
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_max_fuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_max_fuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -426,7 +426,7 @@ let set_max_ifuel (v : Prims.int) :
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_max_ifuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_max_ifuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -480,7 +480,7 @@ let set_fuel (v : Prims.int) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_fuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_fuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -534,7 +534,7 @@ let set_ifuel (v : Prims.int) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.SMT.set_ifuel" (Prims.of_int (2))
+    "FStar.Tactics.SMT.set_ifuel" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

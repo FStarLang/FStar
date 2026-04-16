@@ -48,16 +48,16 @@ let is_signed (k : machint_kind) : Prims.bool=
   Prims.op_Negation (is_unsigned k)
 let width (k : machint_kind) : Prims.int=
   match k with
-  | Int8 -> (Prims.of_int (8))
-  | Int16 -> (Prims.of_int (16))
-  | Int32 -> (Prims.of_int (32))
-  | Int64 -> (Prims.of_int (64))
-  | UInt8 -> (Prims.of_int (8))
-  | UInt16 -> (Prims.of_int (16))
-  | UInt32 -> (Prims.of_int (32))
-  | UInt64 -> (Prims.of_int (64))
-  | UInt128 -> (Prims.of_int (128))
-  | SizeT -> (Prims.of_int (64))
+  | Int8 -> Prims.of_int 8
+  | Int16 -> Prims.of_int 16
+  | Int32 -> Prims.of_int 32
+  | Int64 -> Prims.of_int 64
+  | UInt8 -> Prims.of_int 8
+  | UInt16 -> Prims.of_int 16
+  | UInt32 -> Prims.of_int 32
+  | UInt64 -> Prims.of_int 64
+  | UInt128 -> Prims.of_int 128
+  | SizeT -> Prims.of_int 64
 let module_name_for (k : machint_kind) : Prims.string=
   match k with
   | Int8 -> "Int8"
@@ -72,13 +72,13 @@ let module_name_for (k : machint_kind) : Prims.string=
   | SizeT -> "SizeT"
 let mask (k : machint_kind) : Prims.int=
   match width k with
-  | uu___ when uu___ = (Prims.of_int (8)) -> (Prims.of_int (0xff))
-  | uu___ when uu___ = (Prims.of_int (16)) -> (Prims.parse_int "0xffff")
-  | uu___ when uu___ = (Prims.of_int (32)) -> (Prims.parse_int "0xffffffff")
-  | uu___ when uu___ = (Prims.of_int (64)) ->
-      (Prims.parse_int "0xffffffffffffffff")
-  | uu___ when uu___ = (Prims.of_int (128)) ->
-      (Prims.parse_int "0xffffffffffffffffffffffffffffffff")
+  | uu___ when uu___ = (Prims.of_int 8) -> Prims.of_int 0xff
+  | uu___ when uu___ = (Prims.of_int 16) -> Prims.of_int 0xffff
+  | uu___ when uu___ = (Prims.of_int 32) -> Prims.parse_int "0xffffffff"
+  | uu___ when uu___ = (Prims.of_int 64) ->
+      Prims.parse_int "0xffffffffffffffff"
+  | uu___ when uu___ = (Prims.of_int 128) ->
+      Prims.parse_int "0xffffffffffffffffffffffffffffffff"
 let int_to_t_lid_for (k : machint_kind) : FStarC_Ident.lid=
   let path =
     ["FStar";

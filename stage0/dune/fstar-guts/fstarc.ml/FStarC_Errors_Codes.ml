@@ -29,7 +29,7 @@ type error_code =
   | Error_TooManyFiles 
   | Error_TypeCheckerFailToProve 
   | Error_TypeError 
-  | Error_UncontrainedUnificationVar 
+  | Error_UnconstrainedUnificationVar 
   | Error_UnexpectedGTotComputation 
   | Error_UnexpectedInstance 
   | Error_UnknownFatal_AssertionFailure 
@@ -54,12 +54,12 @@ type error_code =
   | Fatal_ConstructorArgLengthMismatch 
   | Fatal_ConstructorFailedCheck 
   | Fatal_ConstructorNotFound 
-  | Fatal_ConstsructorBuildWrongType 
+  | Fatal_ConstructorBuildWrongType 
   | Fatal_CycleInRecTypeAbbreviation 
-  | Fatal_DataContructorNotFound 
+  | Fatal_DataConstructorNotFound 
   | Fatal_DefaultQualifierNotAllowedOnEffects 
   | Fatal_DefinitionNotFound 
-  | Fatal_DisjuctivePatternVarsMismatch 
+  | Fatal_DisjunctivePatternVarsMismatch 
   | Fatal_DivergentComputationCannotBeIncludedInTotal 
   | Fatal_DuplicateInImplementation 
   | Fatal_DuplicateModuleOrInterface 
@@ -151,7 +151,7 @@ type error_code =
   | Fatal_MultipleLetBinding 
   | Fatal_NameNotFound 
   | Fatal_NameSpaceNotFound 
-  | Fatal_NegativeUniverseConstFatal_NotSupported 
+  | Fatal_NegativeUniverseConstNotSupported 
   | Fatal_NoFileProvided 
   | Fatal_NonInductiveInMutuallyDefinedType 
   | Fatal_NonLinearPatternNotPermitted 
@@ -176,9 +176,9 @@ type error_code =
   | Fatal_ParseErrors 
   | Fatal_ParseItError 
   | Fatal_PolyTypeExpected 
-  | Fatal_PossibleInfiniteTyp 
+  | Fatal_PossibleInfiniteType 
   | Fatal_PreModuleMismatch 
-  | Fatal_QulifierListNotPermitted 
+  | Fatal_QualifierListNotPermitted 
   | Fatal_RecursiveFunctionLiteral 
   | Fatal_ReflectOnlySupportedOnEffects 
   | Fatal_ReservedPrefix 
@@ -189,14 +189,14 @@ type error_code =
   | Fatal_TacticGotStuck 
   | Fatal_TcOneFragmentFailed 
   | Fatal_TermOutsideOfDefLanguage 
-  | Fatal_ToManyArgumentToFunction 
+  | Fatal_TooManyArgumentsToFunction 
   | Fatal_TooManyOrTooFewFileMatch 
   | Fatal_TooManyPatternArguments 
   | Fatal_TooManyUniverse 
   | Fatal_TypeMismatch 
   | Fatal_TypeWithinPatternsAllowedOnVariablesOnly 
   | Fatal_UnableToReadFile 
-  | Fatal_UnepxectedOrUnboundOperator 
+  | Fatal_UnexpectedOrUnboundOperator 
   | Fatal_UnexpectedBinder 
   | Fatal_UnexpectedBindShape 
   | Fatal_UnexpectedChar 
@@ -213,14 +213,14 @@ type error_code =
   | Fatal_UnexpectedIdentifier 
   | Fatal_UnexpectedImplicitArgument 
   | Fatal_UnexpectedImplictArgument 
-  | Fatal_UnexpectedInductivetype 
+  | Fatal_UnexpectedInductiveType 
   | Fatal_UnexpectedLetBinding 
   | Fatal_UnexpectedModuleDeclaration 
   | Fatal_UnexpectedNumberOfUniverse 
   | Fatal_UnexpectedNumericLiteral 
   | Fatal_UnexpectedPattern 
   | Fatal_UnexpectedPosition 
-  | Fatal_UnExpectedPreCondition 
+  | Fatal_UnexpectedPreCondition 
   | Fatal_UnexpectedReturnShape 
   | Fatal_UnexpectedSignatureForMonad 
   | Fatal_UnexpectedTerm 
@@ -241,7 +241,7 @@ type error_code =
   | Fatal_UnrecognizedExtension 
   | Fatal_UnresolvedPatternVar 
   | Fatal_UnsupportedConstant 
-  | Fatal_UnsupportedDisjuctivePatterns 
+  | Fatal_UnsupportedDisjunctivePatterns 
   | Fatal_UnsupportedQualifier 
   | Fatal_UserTacticFailure 
   | Fatal_ValueRestriction 
@@ -330,7 +330,6 @@ type error_code =
   | Error_BadClassDecl 
   | Error_BadInductiveParam 
   | Error_FieldShadow 
-  | Error_UnexpectedDM4FType 
   | Fatal_EffectAbbreviationResultTypeMismatch 
   | Error_AlreadyCachedAssertionFailure 
   | Error_MustEraseMissing 
@@ -415,10 +414,10 @@ let uu___is_Error_TypeCheckerFailToProve (projectee : error_code) :
   | uu___ -> false
 let uu___is_Error_TypeError (projectee : error_code) : Prims.bool=
   match projectee with | Error_TypeError -> true | uu___ -> false
-let uu___is_Error_UncontrainedUnificationVar (projectee : error_code) :
+let uu___is_Error_UnconstrainedUnificationVar (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Error_UncontrainedUnificationVar -> true
+  | Error_UnconstrainedUnificationVar -> true
   | uu___ -> false
 let uu___is_Error_UnexpectedGTotComputation (projectee : error_code) :
   Prims.bool=
@@ -513,20 +512,20 @@ let uu___is_Fatal_ConstructorFailedCheck (projectee : error_code) :
   | uu___ -> false
 let uu___is_Fatal_ConstructorNotFound (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_ConstructorNotFound -> true | uu___ -> false
-let uu___is_Fatal_ConstsructorBuildWrongType (projectee : error_code) :
+let uu___is_Fatal_ConstructorBuildWrongType (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_ConstsructorBuildWrongType -> true
+  | Fatal_ConstructorBuildWrongType -> true
   | uu___ -> false
 let uu___is_Fatal_CycleInRecTypeAbbreviation (projectee : error_code) :
   Prims.bool=
   match projectee with
   | Fatal_CycleInRecTypeAbbreviation -> true
   | uu___ -> false
-let uu___is_Fatal_DataContructorNotFound (projectee : error_code) :
+let uu___is_Fatal_DataConstructorNotFound (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_DataContructorNotFound -> true
+  | Fatal_DataConstructorNotFound -> true
   | uu___ -> false
 let uu___is_Fatal_DefaultQualifierNotAllowedOnEffects
   (projectee : error_code) : Prims.bool=
@@ -535,10 +534,10 @@ let uu___is_Fatal_DefaultQualifierNotAllowedOnEffects
   | uu___ -> false
 let uu___is_Fatal_DefinitionNotFound (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_DefinitionNotFound -> true | uu___ -> false
-let uu___is_Fatal_DisjuctivePatternVarsMismatch (projectee : error_code) :
+let uu___is_Fatal_DisjunctivePatternVarsMismatch (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_DisjuctivePatternVarsMismatch -> true
+  | Fatal_DisjunctivePatternVarsMismatch -> true
   | uu___ -> false
 let uu___is_Fatal_DivergentComputationCannotBeIncludedInTotal
   (projectee : error_code) : Prims.bool=
@@ -893,10 +892,10 @@ let uu___is_Fatal_NameNotFound (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_NameNotFound -> true | uu___ -> false
 let uu___is_Fatal_NameSpaceNotFound (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_NameSpaceNotFound -> true | uu___ -> false
-let uu___is_Fatal_NegativeUniverseConstFatal_NotSupported
-  (projectee : error_code) : Prims.bool=
+let uu___is_Fatal_NegativeUniverseConstNotSupported (projectee : error_code)
+  : Prims.bool=
   match projectee with
-  | Fatal_NegativeUniverseConstFatal_NotSupported -> true
+  | Fatal_NegativeUniverseConstNotSupported -> true
   | uu___ -> false
 let uu___is_Fatal_NoFileProvided (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_NoFileProvided -> true | uu___ -> false
@@ -971,14 +970,14 @@ let uu___is_Fatal_ParseItError (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_ParseItError -> true | uu___ -> false
 let uu___is_Fatal_PolyTypeExpected (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_PolyTypeExpected -> true | uu___ -> false
-let uu___is_Fatal_PossibleInfiniteTyp (projectee : error_code) : Prims.bool=
-  match projectee with | Fatal_PossibleInfiniteTyp -> true | uu___ -> false
+let uu___is_Fatal_PossibleInfiniteType (projectee : error_code) : Prims.bool=
+  match projectee with | Fatal_PossibleInfiniteType -> true | uu___ -> false
 let uu___is_Fatal_PreModuleMismatch (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_PreModuleMismatch -> true | uu___ -> false
-let uu___is_Fatal_QulifierListNotPermitted (projectee : error_code) :
+let uu___is_Fatal_QualifierListNotPermitted (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_QulifierListNotPermitted -> true
+  | Fatal_QualifierListNotPermitted -> true
   | uu___ -> false
 let uu___is_Fatal_RecursiveFunctionLiteral (projectee : error_code) :
   Prims.bool=
@@ -1009,10 +1008,10 @@ let uu___is_Fatal_TermOutsideOfDefLanguage (projectee : error_code) :
   match projectee with
   | Fatal_TermOutsideOfDefLanguage -> true
   | uu___ -> false
-let uu___is_Fatal_ToManyArgumentToFunction (projectee : error_code) :
+let uu___is_Fatal_TooManyArgumentsToFunction (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_ToManyArgumentToFunction -> true
+  | Fatal_TooManyArgumentsToFunction -> true
   | uu___ -> false
 let uu___is_Fatal_TooManyOrTooFewFileMatch (projectee : error_code) :
   Prims.bool=
@@ -1035,10 +1034,10 @@ let uu___is_Fatal_TypeWithinPatternsAllowedOnVariablesOnly
   | uu___ -> false
 let uu___is_Fatal_UnableToReadFile (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnableToReadFile -> true | uu___ -> false
-let uu___is_Fatal_UnepxectedOrUnboundOperator (projectee : error_code) :
+let uu___is_Fatal_UnexpectedOrUnboundOperator (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_UnepxectedOrUnboundOperator -> true
+  | Fatal_UnexpectedOrUnboundOperator -> true
   | uu___ -> false
 let uu___is_Fatal_UnexpectedBinder (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnexpectedBinder -> true | uu___ -> false
@@ -1100,10 +1099,10 @@ let uu___is_Fatal_UnexpectedImplictArgument (projectee : error_code) :
   match projectee with
   | Fatal_UnexpectedImplictArgument -> true
   | uu___ -> false
-let uu___is_Fatal_UnexpectedInductivetype (projectee : error_code) :
+let uu___is_Fatal_UnexpectedInductiveType (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_UnexpectedInductivetype -> true
+  | Fatal_UnexpectedInductiveType -> true
   | uu___ -> false
 let uu___is_Fatal_UnexpectedLetBinding (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnexpectedLetBinding -> true | uu___ -> false
@@ -1126,10 +1125,10 @@ let uu___is_Fatal_UnexpectedPattern (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnexpectedPattern -> true | uu___ -> false
 let uu___is_Fatal_UnexpectedPosition (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnexpectedPosition -> true | uu___ -> false
-let uu___is_Fatal_UnExpectedPreCondition (projectee : error_code) :
+let uu___is_Fatal_UnexpectedPreCondition (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_UnExpectedPreCondition -> true
+  | Fatal_UnexpectedPreCondition -> true
   | uu___ -> false
 let uu___is_Fatal_UnexpectedReturnShape (projectee : error_code) :
   Prims.bool=
@@ -1200,10 +1199,10 @@ let uu___is_Fatal_UnresolvedPatternVar (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnresolvedPatternVar -> true | uu___ -> false
 let uu___is_Fatal_UnsupportedConstant (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnsupportedConstant -> true | uu___ -> false
-let uu___is_Fatal_UnsupportedDisjuctivePatterns (projectee : error_code) :
+let uu___is_Fatal_UnsupportedDisjunctivePatterns (projectee : error_code) :
   Prims.bool=
   match projectee with
-  | Fatal_UnsupportedDisjuctivePatterns -> true
+  | Fatal_UnsupportedDisjunctivePatterns -> true
   | uu___ -> false
 let uu___is_Fatal_UnsupportedQualifier (projectee : error_code) : Prims.bool=
   match projectee with | Fatal_UnsupportedQualifier -> true | uu___ -> false
@@ -1500,8 +1499,6 @@ let uu___is_Error_BadInductiveParam (projectee : error_code) : Prims.bool=
   match projectee with | Error_BadInductiveParam -> true | uu___ -> false
 let uu___is_Error_FieldShadow (projectee : error_code) : Prims.bool=
   match projectee with | Error_FieldShadow -> true | uu___ -> false
-let uu___is_Error_UnexpectedDM4FType (projectee : error_code) : Prims.bool=
-  match projectee with | Error_UnexpectedDM4FType -> true | uu___ -> false
 let uu___is_Fatal_EffectAbbreviationResultTypeMismatch
   (projectee : error_code) : Prims.bool=
   match projectee with
@@ -1645,368 +1642,365 @@ type error_setting = (error_code * error_flag * Prims.int)
 let default_settings : error_setting Prims.list=
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
   (Error_IDETooManyPops, CAlwaysError, Prims.int_one);
-  (Error_IDEUnrecognized, CAlwaysError, (Prims.of_int (2)));
+  (Error_IDEUnrecognized, CAlwaysError, (Prims.of_int 2));
   (Error_InductiveTypeNotSatisfyPositivityCondition, CAlwaysError,
-    (Prims.of_int (3)));
-  (Error_InvalidUniverseVar, CAlwaysError, (Prims.of_int (4)));
-  (Error_MissingFileName, CAlwaysError, (Prims.of_int (5)));
-  (Error_ModuleFileNameMismatch, CAlwaysError, (Prims.of_int (6)));
-  (Error_OpPlusInUniverse, CAlwaysError, (Prims.of_int (7)));
-  (Error_OutOfRange, CAlwaysError, (Prims.of_int (8)));
-  (Error_ProofObligationFailed, CError, (Prims.of_int (9)));
-  (Error_TooManyFiles, CAlwaysError, (Prims.of_int (10)));
-  (Error_TypeCheckerFailToProve, CAlwaysError, (Prims.of_int (11)));
-  (Error_TypeError, CAlwaysError, (Prims.of_int (12)));
-  (Error_UncontrainedUnificationVar, CAlwaysError, (Prims.of_int (13)));
-  (Error_UnexpectedGTotComputation, CAlwaysError, (Prims.of_int (14)));
-  (Error_UnexpectedInstance, CAlwaysError, (Prims.of_int (15)));
-  (Error_UnknownFatal_AssertionFailure, CError, (Prims.of_int (16)));
-  (Error_Z3InvocationError, CAlwaysError, (Prims.of_int (17)));
-  (Error_IDEAssertionFailure, CAlwaysError, (Prims.of_int (18)));
-  (Error_Z3SolverError, CError, (Prims.of_int (19)));
-  (Fatal_AbstractTypeDeclarationInInterface, CFatal, (Prims.of_int (20)));
-  (Fatal_ActionMustHaveFunctionType, CFatal, (Prims.of_int (21)));
-  (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal, (Prims.of_int (22)));
-  (Fatal_ArgumentLengthMismatch, CFatal, (Prims.of_int (23)));
-  (Fatal_AssertionFailure, CFatal, (Prims.of_int (24)));
-  (Fatal_AssignToImmutableValues, CFatal, (Prims.of_int (25)));
-  (Fatal_AssumeValInInterface, CFatal, (Prims.of_int (26)));
-  (Fatal_BadlyInstantiatedSynthByTactic, CFatal, (Prims.of_int (27)));
-  (Fatal_BadSignatureShape, CFatal, (Prims.of_int (28)));
-  (Fatal_BinderAndArgsLengthMismatch, CFatal, (Prims.of_int (29)));
-  (Fatal_BothValAndLetInInterface, CFatal, (Prims.of_int (30)));
-  (Fatal_CardinalityConstraintViolated, CFatal, (Prims.of_int (31)));
-  (Fatal_ComputationNotTotal, CFatal, (Prims.of_int (32)));
-  (Fatal_ComputationTypeNotAllowed, CFatal, (Prims.of_int (33)));
-  (Fatal_ComputedTypeNotMatchAnnotation, CFatal, (Prims.of_int (34)));
-  (Fatal_ConstructorArgLengthMismatch, CFatal, (Prims.of_int (35)));
-  (Fatal_ConstructorFailedCheck, CFatal, (Prims.of_int (36)));
-  (Fatal_ConstructorNotFound, CFatal, (Prims.of_int (37)));
-  (Fatal_ConstsructorBuildWrongType, CFatal, (Prims.of_int (38)));
-  (Fatal_CycleInRecTypeAbbreviation, CFatal, (Prims.of_int (39)));
-  (Fatal_DataContructorNotFound, CFatal, (Prims.of_int (40)));
-  (Fatal_DefaultQualifierNotAllowedOnEffects, CFatal, (Prims.of_int (41)));
-  (Fatal_DefinitionNotFound, CFatal, (Prims.of_int (42)));
-  (Fatal_DisjuctivePatternVarsMismatch, CFatal, (Prims.of_int (43)));
+    (Prims.of_int 3));
+  (Error_InvalidUniverseVar, CAlwaysError, (Prims.of_int 4));
+  (Error_MissingFileName, CAlwaysError, (Prims.of_int 5));
+  (Error_ModuleFileNameMismatch, CAlwaysError, (Prims.of_int 6));
+  (Error_OpPlusInUniverse, CAlwaysError, (Prims.of_int 7));
+  (Error_OutOfRange, CAlwaysError, (Prims.of_int 8));
+  (Error_ProofObligationFailed, CAlwaysError, (Prims.of_int 9));
+  (Error_TooManyFiles, CAlwaysError, (Prims.of_int 10));
+  (Error_TypeCheckerFailToProve, CAlwaysError, (Prims.of_int 11));
+  (Error_TypeError, CAlwaysError, (Prims.of_int 12));
+  (Error_UnconstrainedUnificationVar, CAlwaysError, (Prims.of_int 13));
+  (Error_UnexpectedGTotComputation, CAlwaysError, (Prims.of_int 14));
+  (Error_UnexpectedInstance, CAlwaysError, (Prims.of_int 15));
+  (Error_UnknownFatal_AssertionFailure, CAlwaysError, (Prims.of_int 16));
+  (Error_Z3InvocationError, CAlwaysError, (Prims.of_int 17));
+  (Error_IDEAssertionFailure, CAlwaysError, (Prims.of_int 18));
+  (Error_Z3SolverError, CAlwaysError, (Prims.of_int 19));
+  (Fatal_AbstractTypeDeclarationInInterface, CFatal, (Prims.of_int 20));
+  (Fatal_ActionMustHaveFunctionType, CFatal, (Prims.of_int 21));
+  (Fatal_AlreadyDefinedTopLevelDeclaration, CFatal, (Prims.of_int 22));
+  (Fatal_ArgumentLengthMismatch, CFatal, (Prims.of_int 23));
+  (Fatal_AssertionFailure, CFatal, (Prims.of_int 24));
+  (Fatal_AssignToImmutableValues, CFatal, (Prims.of_int 25));
+  (Fatal_AssumeValInInterface, CFatal, (Prims.of_int 26));
+  (Fatal_BadlyInstantiatedSynthByTactic, CFatal, (Prims.of_int 27));
+  (Fatal_BadSignatureShape, CFatal, (Prims.of_int 28));
+  (Fatal_BinderAndArgsLengthMismatch, CFatal, (Prims.of_int 29));
+  (Fatal_BothValAndLetInInterface, CFatal, (Prims.of_int 30));
+  (Fatal_CardinalityConstraintViolated, CFatal, (Prims.of_int 31));
+  (Fatal_ComputationNotTotal, CFatal, (Prims.of_int 32));
+  (Fatal_ComputationTypeNotAllowed, CFatal, (Prims.of_int 33));
+  (Fatal_ComputedTypeNotMatchAnnotation, CFatal, (Prims.of_int 34));
+  (Fatal_ConstructorArgLengthMismatch, CFatal, (Prims.of_int 35));
+  (Fatal_ConstructorFailedCheck, CFatal, (Prims.of_int 36));
+  (Fatal_ConstructorNotFound, CFatal, (Prims.of_int 37));
+  (Fatal_ConstructorBuildWrongType, CFatal, (Prims.of_int 38));
+  (Fatal_CycleInRecTypeAbbreviation, CFatal, (Prims.of_int 39));
+  (Fatal_DataConstructorNotFound, CFatal, (Prims.of_int 40));
+  (Fatal_DefaultQualifierNotAllowedOnEffects, CFatal, (Prims.of_int 41));
+  (Fatal_DefinitionNotFound, CFatal, (Prims.of_int 42));
+  (Fatal_DisjunctivePatternVarsMismatch, CFatal, (Prims.of_int 43));
   (Fatal_DivergentComputationCannotBeIncludedInTotal, CFatal,
-    (Prims.of_int (44)));
-  (Fatal_DuplicateInImplementation, CFatal, (Prims.of_int (45)));
-  (Fatal_DuplicateModuleOrInterface, CFatal, (Prims.of_int (46)));
-  (Fatal_DuplicateTopLevelNames, CFatal, (Prims.of_int (47)));
-  (Fatal_DuplicateTypeAnnotationAndValDecl, CFatal, (Prims.of_int (48)));
-  (Fatal_EffectCannotBeReified, CFatal, (Prims.of_int (49)));
-  (Fatal_EffectConstructorNotFullyApplied, CFatal, (Prims.of_int (50)));
-  (Fatal_EffectfulAndPureComputationMismatch, CFatal, (Prims.of_int (51)));
-  (Fatal_EffectNotFound, CFatal, (Prims.of_int (52)));
-  (Fatal_EffectsCannotBeComposed, CFatal, (Prims.of_int (53)));
-  (Fatal_ErrorInSolveDeferredConstraints, CFatal, (Prims.of_int (54)));
-  (Fatal_ErrorsReported, CFatal, (Prims.of_int (55)));
-  (Fatal_EscapedBoundVar, CFatal, (Prims.of_int (56)));
-  (Fatal_ExpectedArrowAnnotatedType, CFatal, (Prims.of_int (57)));
-  (Fatal_ExpectedGhostExpression, CFatal, (Prims.of_int (58)));
-  (Fatal_ExpectedPureExpression, CFatal, (Prims.of_int (59)));
-  (Fatal_ExpectNormalizedEffect, CFatal, (Prims.of_int (60)));
-  (Fatal_ExpectTermGotFunction, CFatal, (Prims.of_int (61)));
-  (Fatal_ExpectTrivialPreCondition, CFatal, (Prims.of_int (62)));
-  (Fatal_FailToExtractNativeTactic, CFatal, (Prims.of_int (63)));
-  (Fatal_FailToCompileNativeTactic, CFatal, (Prims.of_int (64)));
-  (Fatal_FailToProcessPragma, CFatal, (Prims.of_int (65)));
-  (Fatal_FailToResolveImplicitArgument, CFatal, (Prims.of_int (66)));
-  (Fatal_FailToSolveUniverseInEquality, CFatal, (Prims.of_int (67)));
-  (Fatal_FieldsNotBelongToSameRecordType, CFatal, (Prims.of_int (68)));
-  (Fatal_ForbiddenReferenceToCurrentModule, CFatal, (Prims.of_int (69)));
-  (Fatal_FreeVariables, CFatal, (Prims.of_int (70)));
-  (Fatal_FunctionTypeExpected, CFatal, (Prims.of_int (71)));
-  (Fatal_IdentifierNotFound, CFatal, (Prims.of_int (72)));
-  (Fatal_IllAppliedConstant, CFatal, (Prims.of_int (73)));
-  (Fatal_IllegalCharInByteArray, CFatal, (Prims.of_int (74)));
-  (Fatal_IllegalCharInOperatorName, CFatal, (Prims.of_int (75)));
-  (Fatal_IllTyped, CFatal, (Prims.of_int (76)));
-  (Fatal_ImpossibleAbbrevLidBundle, CFatal, (Prims.of_int (77)));
-  (Fatal_ImpossibleAbbrevRenameBundle, CFatal, (Prims.of_int (78)));
-  (Fatal_ImpossibleInductiveWithAbbrev, CFatal, (Prims.of_int (79)));
-  (Fatal_ImpossiblePrePostAbs, CFatal, (Prims.of_int (80)));
-  (Fatal_ImpossiblePrePostArrow, CFatal, (Prims.of_int (81)));
-  (Fatal_ImpossibleToGenerateDMEffect, CFatal, (Prims.of_int (82)));
-  (Fatal_ImpossibleTypeAbbrevBundle, CFatal, (Prims.of_int (83)));
-  (Fatal_ImpossibleTypeAbbrevSigeltBundle, CFatal, (Prims.of_int (84)));
-  (Fatal_IncludeModuleNotPrepared, CFatal, (Prims.of_int (85)));
-  (Fatal_IncoherentInlineUniverse, CFatal, (Prims.of_int (86)));
-  (Fatal_IncompatibleKinds, CFatal, (Prims.of_int (87)));
-  (Fatal_IncompatibleNumberOfTypes, CFatal, (Prims.of_int (88)));
-  (Fatal_IncompatibleSetOfUniverse, CFatal, (Prims.of_int (89)));
-  (Fatal_IncompatibleUniverse, CFatal, (Prims.of_int (90)));
-  (Fatal_InconsistentImplicitArgumentAnnotation, CFatal, (Prims.of_int (91)));
-  (Fatal_InconsistentImplicitQualifier, CFatal, (Prims.of_int (92)));
-  (Fatal_InconsistentQualifierAnnotation, CFatal, (Prims.of_int (93)));
-  (Fatal_InferredTypeCauseVarEscape, CFatal, (Prims.of_int (94)));
-  (Fatal_InlineRenamedAsUnfold, CFatal, (Prims.of_int (95)));
-  (Fatal_InsufficientPatternArguments, CFatal, (Prims.of_int (96)));
-  (Fatal_InterfaceAlreadyProcessed, CFatal, (Prims.of_int (97)));
-  (Fatal_InterfaceNotImplementedByModule, CError, (Prims.of_int (98)));
-  (Fatal_InterfaceWithTypeImplementation, CFatal, (Prims.of_int (99)));
-  (Fatal_InvalidFloatingPointNumber, CFatal, (Prims.of_int (100)));
-  (Fatal_InvalidFSDocKeyword, CFatal, (Prims.of_int (101)));
-  (Fatal_InvalidIdentifier, CFatal, (Prims.of_int (102)));
-  (Fatal_InvalidLemmaArgument, CFatal, (Prims.of_int (103)));
-  (Fatal_InvalidNumericLiteral, CFatal, (Prims.of_int (104)));
-  (Fatal_InvalidRedefinitionOfLexT, CFatal, (Prims.of_int (105)));
-  (Fatal_InvalidUnicodeInStringLiteral, CFatal, (Prims.of_int (106)));
-  (Fatal_InvalidUTF8Encoding, CFatal, (Prims.of_int (107)));
-  (Fatal_InvalidWarnErrorSetting, CFatal, (Prims.of_int (108)));
-  (Fatal_LetBoundMonadicMismatch, CFatal, (Prims.of_int (109)));
-  (Fatal_LetMutableForVariablesOnly, CFatal, (Prims.of_int (110)));
-  (Fatal_LetOpenModuleOnly, CFatal, (Prims.of_int (111)));
-  (Fatal_LetRecArgumentMismatch, CFatal, (Prims.of_int (112)));
-  (Fatal_MalformedActionDeclaration, CFatal, (Prims.of_int (113)));
-  (Fatal_MismatchedPatternType, CFatal, (Prims.of_int (114)));
-  (Fatal_MismatchUniversePolymorphic, CFatal, (Prims.of_int (115)));
-  (Fatal_MissingDataConstructor, CFatal, (Prims.of_int (116)));
-  (Fatal_MissingExposeInterfacesOption, CFatal, (Prims.of_int (117)));
-  (Fatal_MissingFieldInRecord, CFatal, (Prims.of_int (118)));
-  (Fatal_MissingImplementation, CFatal, (Prims.of_int (119)));
-  (Fatal_MissingImplicitArguments, CFatal, (Prims.of_int (120)));
-  (Fatal_MissingInterface, CFatal, (Prims.of_int (121)));
-  (Fatal_MissingNameInBinder, CFatal, (Prims.of_int (122)));
-  (Fatal_MissingPrimsModule, CFatal, (Prims.of_int (123)));
-  (Fatal_MissingQuantifierBinder, CFatal, (Prims.of_int (124)));
-  (Fatal_ModuleExpected, CFatal, (Prims.of_int (125)));
-  (Fatal_ModuleFileNotFound, CFatal, (Prims.of_int (126)));
-  (Fatal_ModuleFirstStatement, CFatal, (Prims.of_int (127)));
-  (Fatal_ModuleNotFound, CFatal, (Prims.of_int (128)));
-  (Fatal_ModuleOrFileNotFound, CFatal, (Prims.of_int (129)));
-  (Fatal_MonadAlreadyDefined, CFatal, (Prims.of_int (130)));
-  (Fatal_MoreThanOneDeclaration, CFatal, (Prims.of_int (131)));
-  (Fatal_MultipleLetBinding, CFatal, (Prims.of_int (132)));
-  (Fatal_NameNotFound, CFatal, (Prims.of_int (133)));
-  (Fatal_NameSpaceNotFound, CFatal, (Prims.of_int (134)));
-  (Fatal_NegativeUniverseConstFatal_NotSupported, CFatal,
-    (Prims.of_int (135)));
-  (Fatal_NoFileProvided, CFatal, (Prims.of_int (136)));
-  (Fatal_NonInductiveInMutuallyDefinedType, CFatal, (Prims.of_int (137)));
-  (Fatal_NonLinearPatternNotPermitted, CFatal, (Prims.of_int (138)));
-  (Fatal_NonLinearPatternVars, CFatal, (Prims.of_int (139)));
-  (Fatal_NonSingletonTopLevel, CFatal, (Prims.of_int (140)));
-  (Fatal_NonSingletonTopLevelModule, CFatal, (Prims.of_int (141)));
-  (Error_NonTopRecFunctionNotFullyEncoded, CAlwaysError,
-    (Prims.of_int (142)));
-  (Fatal_NonTrivialPreConditionInPrims, CFatal, (Prims.of_int (143)));
-  (Fatal_NonVariableInductiveTypeParameter, CFatal, (Prims.of_int (144)));
-  (Fatal_NotApplicationOrFv, CFatal, (Prims.of_int (145)));
-  (Fatal_NotEnoughArgsToEffect, CFatal, (Prims.of_int (146)));
-  (Fatal_NotEnoughArgumentsForEffect, CFatal, (Prims.of_int (147)));
-  (Fatal_NotFunctionType, CFatal, (Prims.of_int (148)));
-  (Fatal_NotSupported, CFatal, (Prims.of_int (149)));
-  (Fatal_NotTopLevelModule, CFatal, (Prims.of_int (150)));
-  (Fatal_NotValidFStarFile, CFatal, (Prims.of_int (151)));
-  (Fatal_NotValidIncludeDirectory, CWarning, (Prims.of_int (152)));
-  (Fatal_OneModulePerFile, CFatal, (Prims.of_int (153)));
-  (Fatal_OpenGoalsInSynthesis, CFatal, (Prims.of_int (154)));
-  (Fatal_OptionsNotCompatible, CFatal, (Prims.of_int (155)));
-  (Fatal_OutOfOrder, CFatal, (Prims.of_int (156)));
-  (Fatal_ParseErrors, CFatal, (Prims.of_int (157)));
-  (Fatal_ParseItError, CFatal, (Prims.of_int (158)));
-  (Fatal_PolyTypeExpected, CFatal, (Prims.of_int (159)));
-  (Fatal_PossibleInfiniteTyp, CFatal, (Prims.of_int (160)));
-  (Fatal_PreModuleMismatch, CFatal, (Prims.of_int (161)));
-  (Fatal_QulifierListNotPermitted, CFatal, (Prims.of_int (162)));
-  (Fatal_RecursiveFunctionLiteral, CFatal, (Prims.of_int (163)));
-  (Fatal_ReflectOnlySupportedOnEffects, CFatal, (Prims.of_int (164)));
-  (Fatal_ReservedPrefix, CFatal, (Prims.of_int (165)));
-  (Fatal_SMTOutputParseError, CFatal, (Prims.of_int (166)));
-  (Fatal_SMTSolverError, CFatal, (Prims.of_int (167)));
-  (Fatal_SyntaxError, CFatal, (Prims.of_int (168)));
-  (Fatal_SynthByTacticError, CFatal, (Prims.of_int (169)));
-  (Fatal_TacticGotStuck, CFatal, (Prims.of_int (170)));
-  (Fatal_TcOneFragmentFailed, CFatal, (Prims.of_int (171)));
-  (Fatal_TermOutsideOfDefLanguage, CFatal, (Prims.of_int (172)));
-  (Fatal_ToManyArgumentToFunction, CFatal, (Prims.of_int (173)));
-  (Fatal_TooManyOrTooFewFileMatch, CFatal, (Prims.of_int (174)));
-  (Fatal_TooManyPatternArguments, CFatal, (Prims.of_int (175)));
-  (Fatal_TooManyUniverse, CFatal, (Prims.of_int (176)));
-  (Fatal_TypeMismatch, CFatal, (Prims.of_int (177)));
+    (Prims.of_int 44));
+  (Fatal_DuplicateInImplementation, CFatal, (Prims.of_int 45));
+  (Fatal_DuplicateModuleOrInterface, CFatal, (Prims.of_int 46));
+  (Fatal_DuplicateTopLevelNames, CFatal, (Prims.of_int 47));
+  (Fatal_DuplicateTypeAnnotationAndValDecl, CFatal, (Prims.of_int 48));
+  (Fatal_EffectCannotBeReified, CFatal, (Prims.of_int 49));
+  (Fatal_EffectConstructorNotFullyApplied, CFatal, (Prims.of_int 50));
+  (Fatal_EffectfulAndPureComputationMismatch, CFatal, (Prims.of_int 51));
+  (Fatal_EffectNotFound, CFatal, (Prims.of_int 52));
+  (Fatal_EffectsCannotBeComposed, CFatal, (Prims.of_int 53));
+  (Fatal_ErrorInSolveDeferredConstraints, CFatal, (Prims.of_int 54));
+  (Fatal_ErrorsReported, CFatal, (Prims.of_int 55));
+  (Fatal_EscapedBoundVar, CFatal, (Prims.of_int 56));
+  (Fatal_ExpectedArrowAnnotatedType, CFatal, (Prims.of_int 57));
+  (Fatal_ExpectedGhostExpression, CFatal, (Prims.of_int 58));
+  (Fatal_ExpectedPureExpression, CFatal, (Prims.of_int 59));
+  (Fatal_ExpectNormalizedEffect, CFatal, (Prims.of_int 60));
+  (Fatal_ExpectTermGotFunction, CFatal, (Prims.of_int 61));
+  (Fatal_ExpectTrivialPreCondition, CFatal, (Prims.of_int 62));
+  (Fatal_FailToExtractNativeTactic, CFatal, (Prims.of_int 63));
+  (Fatal_FailToCompileNativeTactic, CFatal, (Prims.of_int 64));
+  (Fatal_FailToProcessPragma, CFatal, (Prims.of_int 65));
+  (Fatal_FailToResolveImplicitArgument, CFatal, (Prims.of_int 66));
+  (Fatal_FailToSolveUniverseInEquality, CFatal, (Prims.of_int 67));
+  (Fatal_FieldsNotBelongToSameRecordType, CFatal, (Prims.of_int 68));
+  (Fatal_ForbiddenReferenceToCurrentModule, CFatal, (Prims.of_int 69));
+  (Fatal_FreeVariables, CFatal, (Prims.of_int 70));
+  (Fatal_FunctionTypeExpected, CFatal, (Prims.of_int 71));
+  (Fatal_IdentifierNotFound, CFatal, (Prims.of_int 72));
+  (Fatal_IllAppliedConstant, CFatal, (Prims.of_int 73));
+  (Fatal_IllegalCharInByteArray, CFatal, (Prims.of_int 74));
+  (Fatal_IllegalCharInOperatorName, CFatal, (Prims.of_int 75));
+  (Fatal_IllTyped, CFatal, (Prims.of_int 76));
+  (Fatal_ImpossibleAbbrevLidBundle, CFatal, (Prims.of_int 77));
+  (Fatal_ImpossibleAbbrevRenameBundle, CFatal, (Prims.of_int 78));
+  (Fatal_ImpossibleInductiveWithAbbrev, CFatal, (Prims.of_int 79));
+  (Fatal_ImpossiblePrePostAbs, CFatal, (Prims.of_int 80));
+  (Fatal_ImpossiblePrePostArrow, CFatal, (Prims.of_int 81));
+  (Fatal_ImpossibleToGenerateDMEffect, CFatal, (Prims.of_int 82));
+  (Fatal_ImpossibleTypeAbbrevBundle, CFatal, (Prims.of_int 83));
+  (Fatal_ImpossibleTypeAbbrevSigeltBundle, CFatal, (Prims.of_int 84));
+  (Fatal_IncludeModuleNotPrepared, CFatal, (Prims.of_int 85));
+  (Fatal_IncoherentInlineUniverse, CFatal, (Prims.of_int 86));
+  (Fatal_IncompatibleKinds, CFatal, (Prims.of_int 87));
+  (Fatal_IncompatibleNumberOfTypes, CFatal, (Prims.of_int 88));
+  (Fatal_IncompatibleSetOfUniverse, CFatal, (Prims.of_int 89));
+  (Fatal_IncompatibleUniverse, CFatal, (Prims.of_int 90));
+  (Fatal_InconsistentImplicitArgumentAnnotation, CFatal, (Prims.of_int 91));
+  (Fatal_InconsistentImplicitQualifier, CFatal, (Prims.of_int 92));
+  (Fatal_InconsistentQualifierAnnotation, CFatal, (Prims.of_int 93));
+  (Fatal_InferredTypeCauseVarEscape, CFatal, (Prims.of_int 94));
+  (Fatal_InlineRenamedAsUnfold, CFatal, (Prims.of_int 95));
+  (Fatal_InsufficientPatternArguments, CFatal, (Prims.of_int 96));
+  (Fatal_InterfaceAlreadyProcessed, CFatal, (Prims.of_int 97));
+  (Fatal_InterfaceNotImplementedByModule, CError, (Prims.of_int 98));
+  (Fatal_InterfaceWithTypeImplementation, CFatal, (Prims.of_int 99));
+  (Fatal_InvalidFloatingPointNumber, CFatal, (Prims.of_int 100));
+  (Fatal_InvalidFSDocKeyword, CFatal, (Prims.of_int 101));
+  (Fatal_InvalidIdentifier, CFatal, (Prims.of_int 102));
+  (Fatal_InvalidLemmaArgument, CFatal, (Prims.of_int 103));
+  (Fatal_InvalidNumericLiteral, CFatal, (Prims.of_int 104));
+  (Fatal_InvalidRedefinitionOfLexT, CFatal, (Prims.of_int 105));
+  (Fatal_InvalidUnicodeInStringLiteral, CFatal, (Prims.of_int 106));
+  (Fatal_InvalidUTF8Encoding, CFatal, (Prims.of_int 107));
+  (Fatal_InvalidWarnErrorSetting, CFatal, (Prims.of_int 108));
+  (Fatal_LetBoundMonadicMismatch, CFatal, (Prims.of_int 109));
+  (Fatal_LetMutableForVariablesOnly, CFatal, (Prims.of_int 110));
+  (Fatal_LetOpenModuleOnly, CFatal, (Prims.of_int 111));
+  (Fatal_LetRecArgumentMismatch, CFatal, (Prims.of_int 112));
+  (Fatal_MalformedActionDeclaration, CFatal, (Prims.of_int 113));
+  (Fatal_MismatchedPatternType, CFatal, (Prims.of_int 114));
+  (Fatal_MismatchUniversePolymorphic, CFatal, (Prims.of_int 115));
+  (Fatal_MissingDataConstructor, CFatal, (Prims.of_int 116));
+  (Fatal_MissingExposeInterfacesOption, CFatal, (Prims.of_int 117));
+  (Fatal_MissingFieldInRecord, CFatal, (Prims.of_int 118));
+  (Fatal_MissingImplementation, CFatal, (Prims.of_int 119));
+  (Fatal_MissingImplicitArguments, CFatal, (Prims.of_int 120));
+  (Fatal_MissingInterface, CFatal, (Prims.of_int 121));
+  (Fatal_MissingNameInBinder, CFatal, (Prims.of_int 122));
+  (Fatal_MissingPrimsModule, CFatal, (Prims.of_int 123));
+  (Fatal_MissingQuantifierBinder, CFatal, (Prims.of_int 124));
+  (Fatal_ModuleExpected, CFatal, (Prims.of_int 125));
+  (Fatal_ModuleFileNotFound, CFatal, (Prims.of_int 126));
+  (Fatal_ModuleFirstStatement, CFatal, (Prims.of_int 127));
+  (Fatal_ModuleNotFound, CFatal, (Prims.of_int 128));
+  (Fatal_ModuleOrFileNotFound, CFatal, (Prims.of_int 129));
+  (Fatal_MonadAlreadyDefined, CFatal, (Prims.of_int 130));
+  (Fatal_MoreThanOneDeclaration, CFatal, (Prims.of_int 131));
+  (Fatal_MultipleLetBinding, CFatal, (Prims.of_int 132));
+  (Fatal_NameNotFound, CFatal, (Prims.of_int 133));
+  (Fatal_NameSpaceNotFound, CFatal, (Prims.of_int 134));
+  (Fatal_NegativeUniverseConstNotSupported, CFatal, (Prims.of_int 135));
+  (Fatal_NoFileProvided, CFatal, (Prims.of_int 136));
+  (Fatal_NonInductiveInMutuallyDefinedType, CFatal, (Prims.of_int 137));
+  (Fatal_NonLinearPatternNotPermitted, CFatal, (Prims.of_int 138));
+  (Fatal_NonLinearPatternVars, CFatal, (Prims.of_int 139));
+  (Fatal_NonSingletonTopLevel, CFatal, (Prims.of_int 140));
+  (Fatal_NonSingletonTopLevelModule, CFatal, (Prims.of_int 141));
+  (Error_NonTopRecFunctionNotFullyEncoded, CAlwaysError, (Prims.of_int 142));
+  (Fatal_NonTrivialPreConditionInPrims, CFatal, (Prims.of_int 143));
+  (Fatal_NonVariableInductiveTypeParameter, CFatal, (Prims.of_int 144));
+  (Fatal_NotApplicationOrFv, CFatal, (Prims.of_int 145));
+  (Fatal_NotEnoughArgsToEffect, CFatal, (Prims.of_int 146));
+  (Fatal_NotEnoughArgumentsForEffect, CFatal, (Prims.of_int 147));
+  (Fatal_NotFunctionType, CFatal, (Prims.of_int 148));
+  (Fatal_NotSupported, CFatal, (Prims.of_int 149));
+  (Fatal_NotTopLevelModule, CFatal, (Prims.of_int 150));
+  (Fatal_NotValidFStarFile, CFatal, (Prims.of_int 151));
+  (Fatal_NotValidIncludeDirectory, CWarning, (Prims.of_int 152));
+  (Fatal_OneModulePerFile, CFatal, (Prims.of_int 153));
+  (Fatal_OpenGoalsInSynthesis, CFatal, (Prims.of_int 154));
+  (Fatal_OptionsNotCompatible, CFatal, (Prims.of_int 155));
+  (Fatal_OutOfOrder, CFatal, (Prims.of_int 156));
+  (Fatal_ParseErrors, CFatal, (Prims.of_int 157));
+  (Fatal_ParseItError, CFatal, (Prims.of_int 158));
+  (Fatal_PolyTypeExpected, CFatal, (Prims.of_int 159));
+  (Fatal_PossibleInfiniteType, CFatal, (Prims.of_int 160));
+  (Fatal_PreModuleMismatch, CFatal, (Prims.of_int 161));
+  (Fatal_QualifierListNotPermitted, CFatal, (Prims.of_int 162));
+  (Fatal_RecursiveFunctionLiteral, CFatal, (Prims.of_int 163));
+  (Fatal_ReflectOnlySupportedOnEffects, CFatal, (Prims.of_int 164));
+  (Fatal_ReservedPrefix, CFatal, (Prims.of_int 165));
+  (Fatal_SMTOutputParseError, CFatal, (Prims.of_int 166));
+  (Fatal_SMTSolverError, CFatal, (Prims.of_int 167));
+  (Fatal_SyntaxError, CFatal, (Prims.of_int 168));
+  (Fatal_SynthByTacticError, CFatal, (Prims.of_int 169));
+  (Fatal_TacticGotStuck, CFatal, (Prims.of_int 170));
+  (Fatal_TcOneFragmentFailed, CFatal, (Prims.of_int 171));
+  (Fatal_TermOutsideOfDefLanguage, CFatal, (Prims.of_int 172));
+  (Fatal_TooManyArgumentsToFunction, CFatal, (Prims.of_int 173));
+  (Fatal_TooManyOrTooFewFileMatch, CFatal, (Prims.of_int 174));
+  (Fatal_TooManyPatternArguments, CFatal, (Prims.of_int 175));
+  (Fatal_TooManyUniverse, CFatal, (Prims.of_int 176));
+  (Fatal_TypeMismatch, CFatal, (Prims.of_int 177));
   (Fatal_TypeWithinPatternsAllowedOnVariablesOnly, CFatal,
-    (Prims.of_int (178)));
-  (Fatal_UnableToReadFile, CFatal, (Prims.of_int (179)));
-  (Fatal_UnepxectedOrUnboundOperator, CFatal, (Prims.of_int (180)));
-  (Fatal_UnexpectedBinder, CFatal, (Prims.of_int (181)));
-  (Fatal_UnexpectedBindShape, CFatal, (Prims.of_int (182)));
-  (Fatal_UnexpectedChar, CFatal, (Prims.of_int (183)));
-  (Fatal_UnexpectedComputationTypeForLetRec, CFatal, (Prims.of_int (184)));
-  (Fatal_UnexpectedConstructorType, CFatal, (Prims.of_int (185)));
-  (Fatal_UnexpectedDataConstructor, CFatal, (Prims.of_int (186)));
-  (Fatal_UnexpectedEffect, CFatal, (Prims.of_int (187)));
-  (Fatal_UnexpectedEmptyRecord, CFatal, (Prims.of_int (188)));
-  (Fatal_UnexpectedExpressionType, CFatal, (Prims.of_int (189)));
-  (Fatal_UnexpectedFunctionParameterType, CFatal, (Prims.of_int (190)));
-  (Fatal_UnexpectedGeneralizedUniverse, CFatal, (Prims.of_int (191)));
-  (Fatal_UnexpectedGTotForLetRec, CFatal, (Prims.of_int (192)));
-  (Fatal_UnexpectedGuard, CFatal, (Prims.of_int (193)));
-  (Fatal_UnexpectedIdentifier, CFatal, (Prims.of_int (194)));
-  (Fatal_UnexpectedImplicitArgument, CFatal, (Prims.of_int (195)));
-  (Fatal_UnexpectedImplictArgument, CFatal, (Prims.of_int (196)));
-  (Fatal_UnexpectedInductivetype, CFatal, (Prims.of_int (197)));
-  (Fatal_UnexpectedLetBinding, CFatal, (Prims.of_int (198)));
-  (Fatal_UnexpectedModuleDeclaration, CFatal, (Prims.of_int (199)));
-  (Fatal_UnexpectedNumberOfUniverse, CFatal, (Prims.of_int (200)));
-  (Fatal_UnexpectedNumericLiteral, CFatal, (Prims.of_int (201)));
-  (Fatal_UnexpectedPattern, CFatal, (Prims.of_int (203)));
-  (Fatal_UnexpectedPosition, CFatal, (Prims.of_int (204)));
-  (Fatal_UnExpectedPreCondition, CFatal, (Prims.of_int (205)));
-  (Fatal_UnexpectedReturnShape, CFatal, (Prims.of_int (206)));
-  (Fatal_UnexpectedSignatureForMonad, CFatal, (Prims.of_int (207)));
-  (Fatal_UnexpectedTerm, CFatal, (Prims.of_int (208)));
-  (Fatal_UnexpectedTermInUniverse, CFatal, (Prims.of_int (209)));
-  (Fatal_UnexpectedTermType, CFatal, (Prims.of_int (210)));
-  (Fatal_UnexpectedTermVQuote, CFatal, (Prims.of_int (211)));
-  (Fatal_UnexpectedUniversePolymorphicReturn, CFatal, (Prims.of_int (212)));
-  (Fatal_UnexpectedUniverseVariable, CFatal, (Prims.of_int (213)));
-  (Fatal_UnfoldableDeprecated, CFatal, (Prims.of_int (214)));
-  (Fatal_UnificationNotWellFormed, CFatal, (Prims.of_int (215)));
-  (Fatal_Uninstantiated, CFatal, (Prims.of_int (216)));
-  (Error_UninstantiatedUnificationVarInTactic, CError, (Prims.of_int (217)));
-  (Fatal_UninstantiatedVarInTactic, CFatal, (Prims.of_int (218)));
-  (Fatal_UniverseMightContainSumOfTwoUnivVars, CFatal, (Prims.of_int (219)));
-  (Fatal_UniversePolymorphicInnerLetBound, CFatal, (Prims.of_int (220)));
-  (Fatal_UnknownAttribute, CFatal, (Prims.of_int (221)));
-  (Fatal_UnknownToolForDep, CFatal, (Prims.of_int (222)));
-  (Fatal_UnrecognizedExtension, CFatal, (Prims.of_int (223)));
-  (Fatal_UnresolvedPatternVar, CFatal, (Prims.of_int (224)));
-  (Fatal_UnsupportedConstant, CFatal, (Prims.of_int (225)));
-  (Fatal_UnsupportedDisjuctivePatterns, CFatal, (Prims.of_int (226)));
-  (Fatal_UnsupportedQualifier, CFatal, (Prims.of_int (227)));
-  (Fatal_UserTacticFailure, CFatal, (Prims.of_int (228)));
-  (Fatal_ValueRestriction, CFatal, (Prims.of_int (229)));
-  (Fatal_VariableNotFound, CFatal, (Prims.of_int (230)));
-  (Fatal_WrongBodyTypeForReturnWP, CFatal, (Prims.of_int (231)));
-  (Fatal_WrongDataAppHeadFormat, CFatal, (Prims.of_int (232)));
-  (Fatal_WrongDefinitionOrder, CFatal, (Prims.of_int (233)));
-  (Fatal_WrongResultTypeAfterConstrutor, CFatal, (Prims.of_int (234)));
-  (Fatal_WrongTerm, CFatal, (Prims.of_int (235)));
-  (Fatal_WhenClauseNotSupported, CFatal, (Prims.of_int (236)));
-  (Unused01, CFatal, (Prims.of_int (237)));
-  (Warning_PluginNotImplemented, CError, (Prims.of_int (238)));
-  (Warning_AddImplicitAssumeNewQualifier, CWarning, (Prims.of_int (239)));
-  (Error_AdmitWithoutDefinition, CError, (Prims.of_int (240)));
-  (Warning_CachedFile, CWarning, (Prims.of_int (241)));
-  (Warning_DefinitionNotTranslated, CWarning, (Prims.of_int (242)));
-  (Warning_DependencyFound, CWarning, (Prims.of_int (243)));
-  (Warning_DeprecatedEqualityOnBinder, CWarning, (Prims.of_int (244)));
-  (Warning_DeprecatedOpaqueQualifier, CWarning, (Prims.of_int (245)));
-  (Warning_DocOverwrite, CWarning, (Prims.of_int (246)));
-  (Warning_FileNotWritten, CWarning, (Prims.of_int (247)));
-  (Warning_Filtered, CWarning, (Prims.of_int (248)));
-  (Warning_FunctionLiteralPrecisionLoss, CWarning, (Prims.of_int (249)));
-  (Warning_FunctionNotExtacted, CWarning, (Prims.of_int (250)));
-  (Warning_HintFailedToReplayProof, CWarning, (Prims.of_int (251)));
-  (Warning_HitReplayFailed, CWarning, (Prims.of_int (252)));
-  (Warning_IDEIgnoreCodeGen, CWarning, (Prims.of_int (253)));
-  (Warning_IllFormedGoal, CWarning, (Prims.of_int (254)));
-  (Warning_InaccessibleArgument, CWarning, (Prims.of_int (255)));
-  (Warning_IncoherentImplicitQualifier, CWarning, (Prims.of_int (256)));
+    (Prims.of_int 178));
+  (Fatal_UnableToReadFile, CFatal, (Prims.of_int 179));
+  (Fatal_UnexpectedOrUnboundOperator, CFatal, (Prims.of_int 180));
+  (Fatal_UnexpectedBinder, CFatal, (Prims.of_int 181));
+  (Fatal_UnexpectedBindShape, CFatal, (Prims.of_int 182));
+  (Fatal_UnexpectedChar, CFatal, (Prims.of_int 183));
+  (Fatal_UnexpectedComputationTypeForLetRec, CFatal, (Prims.of_int 184));
+  (Fatal_UnexpectedConstructorType, CFatal, (Prims.of_int 185));
+  (Fatal_UnexpectedDataConstructor, CFatal, (Prims.of_int 186));
+  (Fatal_UnexpectedEffect, CFatal, (Prims.of_int 187));
+  (Fatal_UnexpectedEmptyRecord, CFatal, (Prims.of_int 188));
+  (Fatal_UnexpectedExpressionType, CFatal, (Prims.of_int 189));
+  (Fatal_UnexpectedFunctionParameterType, CFatal, (Prims.of_int 190));
+  (Fatal_UnexpectedGeneralizedUniverse, CFatal, (Prims.of_int 191));
+  (Fatal_UnexpectedGTotForLetRec, CFatal, (Prims.of_int 192));
+  (Fatal_UnexpectedGuard, CFatal, (Prims.of_int 193));
+  (Fatal_UnexpectedIdentifier, CFatal, (Prims.of_int 194));
+  (Fatal_UnexpectedImplicitArgument, CFatal, (Prims.of_int 195));
+  (Fatal_UnexpectedImplictArgument, CFatal, (Prims.of_int 196));
+  (Fatal_UnexpectedInductiveType, CFatal, (Prims.of_int 197));
+  (Fatal_UnexpectedLetBinding, CFatal, (Prims.of_int 198));
+  (Fatal_UnexpectedModuleDeclaration, CFatal, (Prims.of_int 199));
+  (Fatal_UnexpectedNumberOfUniverse, CFatal, (Prims.of_int 200));
+  (Fatal_UnexpectedNumericLiteral, CFatal, (Prims.of_int 201));
+  (Fatal_UnexpectedPattern, CFatal, (Prims.of_int 203));
+  (Fatal_UnexpectedPosition, CFatal, (Prims.of_int 204));
+  (Fatal_UnexpectedPreCondition, CFatal, (Prims.of_int 205));
+  (Fatal_UnexpectedReturnShape, CFatal, (Prims.of_int 206));
+  (Fatal_UnexpectedSignatureForMonad, CFatal, (Prims.of_int 207));
+  (Fatal_UnexpectedTerm, CFatal, (Prims.of_int 208));
+  (Fatal_UnexpectedTermInUniverse, CFatal, (Prims.of_int 209));
+  (Fatal_UnexpectedTermType, CFatal, (Prims.of_int 210));
+  (Fatal_UnexpectedTermVQuote, CFatal, (Prims.of_int 211));
+  (Fatal_UnexpectedUniversePolymorphicReturn, CFatal, (Prims.of_int 212));
+  (Fatal_UnexpectedUniverseVariable, CFatal, (Prims.of_int 213));
+  (Fatal_UnfoldableDeprecated, CFatal, (Prims.of_int 214));
+  (Fatal_UnificationNotWellFormed, CFatal, (Prims.of_int 215));
+  (Fatal_Uninstantiated, CFatal, (Prims.of_int 216));
+  (Error_UninstantiatedUnificationVarInTactic, CError, (Prims.of_int 217));
+  (Fatal_UninstantiatedVarInTactic, CFatal, (Prims.of_int 218));
+  (Fatal_UniverseMightContainSumOfTwoUnivVars, CFatal, (Prims.of_int 219));
+  (Fatal_UniversePolymorphicInnerLetBound, CFatal, (Prims.of_int 220));
+  (Fatal_UnknownAttribute, CFatal, (Prims.of_int 221));
+  (Fatal_UnknownToolForDep, CFatal, (Prims.of_int 222));
+  (Fatal_UnrecognizedExtension, CFatal, (Prims.of_int 223));
+  (Fatal_UnresolvedPatternVar, CFatal, (Prims.of_int 224));
+  (Fatal_UnsupportedConstant, CFatal, (Prims.of_int 225));
+  (Fatal_UnsupportedDisjunctivePatterns, CFatal, (Prims.of_int 226));
+  (Fatal_UnsupportedQualifier, CFatal, (Prims.of_int 227));
+  (Fatal_UserTacticFailure, CFatal, (Prims.of_int 228));
+  (Fatal_ValueRestriction, CFatal, (Prims.of_int 229));
+  (Fatal_VariableNotFound, CFatal, (Prims.of_int 230));
+  (Fatal_WrongBodyTypeForReturnWP, CFatal, (Prims.of_int 231));
+  (Fatal_WrongDataAppHeadFormat, CFatal, (Prims.of_int 232));
+  (Fatal_WrongDefinitionOrder, CFatal, (Prims.of_int 233));
+  (Fatal_WrongResultTypeAfterConstrutor, CFatal, (Prims.of_int 234));
+  (Fatal_WrongTerm, CFatal, (Prims.of_int 235));
+  (Fatal_WhenClauseNotSupported, CFatal, (Prims.of_int 236));
+  (Unused01, CFatal, (Prims.of_int 237));
+  (Warning_PluginNotImplemented, CError, (Prims.of_int 238));
+  (Warning_AddImplicitAssumeNewQualifier, CWarning, (Prims.of_int 239));
+  (Error_AdmitWithoutDefinition, CError, (Prims.of_int 240));
+  (Warning_CachedFile, CWarning, (Prims.of_int 241));
+  (Warning_DefinitionNotTranslated, CWarning, (Prims.of_int 242));
+  (Warning_DependencyFound, CWarning, (Prims.of_int 243));
+  (Warning_DeprecatedEqualityOnBinder, CWarning, (Prims.of_int 244));
+  (Warning_DeprecatedOpaqueQualifier, CWarning, (Prims.of_int 245));
+  (Warning_DocOverwrite, CWarning, (Prims.of_int 246));
+  (Warning_FileNotWritten, CWarning, (Prims.of_int 247));
+  (Warning_Filtered, CWarning, (Prims.of_int 248));
+  (Warning_FunctionLiteralPrecisionLoss, CWarning, (Prims.of_int 249));
+  (Warning_FunctionNotExtacted, CWarning, (Prims.of_int 250));
+  (Warning_HintFailedToReplayProof, CWarning, (Prims.of_int 251));
+  (Warning_HitReplayFailed, CWarning, (Prims.of_int 252));
+  (Warning_IDEIgnoreCodeGen, CWarning, (Prims.of_int 253));
+  (Warning_IllFormedGoal, CWarning, (Prims.of_int 254));
+  (Warning_InaccessibleArgument, CWarning, (Prims.of_int 255));
+  (Warning_IncoherentImplicitQualifier, CWarning, (Prims.of_int 256));
   (Warning_IrrelevantQualifierOnArgumentToReflect, CWarning,
-    (Prims.of_int (257)));
+    (Prims.of_int 257));
   (Warning_IrrelevantQualifierOnArgumentToReify, CWarning,
-    (Prims.of_int (258)));
-  (Warning_MalformedWarnErrorList, CWarning, (Prims.of_int (259)));
-  (Warning_MetaAlienNotATmUnknown, CWarning, (Prims.of_int (260)));
-  (Warning_MultipleAscriptions, CWarning, (Prims.of_int (261)));
-  (Warning_NondependentUserDefinedDataType, CWarning, (Prims.of_int (262)));
-  (Warning_NonListLiteralSMTPattern, CWarning, (Prims.of_int (263)));
-  (Warning_NormalizationFailure, CWarning, (Prims.of_int (264)));
-  (Warning_NotDependentArrow, CWarning, (Prims.of_int (265)));
-  (Warning_NotEmbedded, CWarning, (Prims.of_int (266)));
-  (Warning_PatternMissingBoundVar, CWarning, (Prims.of_int (267)));
-  (Warning_RecursiveDependency, CWarning, (Prims.of_int (268)));
-  (Warning_RedundantExplicitCurrying, CWarning, (Prims.of_int (269)));
-  (Warning_SMTPatTDeprecated, CWarning, (Prims.of_int (270)));
-  (Warning_SMTPatternIllFormed, CWarning, (Prims.of_int (271)));
-  (Warning_TopLevelEffect, CWarning, (Prims.of_int (272)));
-  (Warning_UnboundModuleReference, CWarning, (Prims.of_int (273)));
-  (Warning_UnexpectedFile, CWarning, (Prims.of_int (274)));
-  (Warning_UnexpectedFsTypApp, CWarning, (Prims.of_int (275)));
-  (Warning_UnexpectedZ3Output, CError, (Prims.of_int (276)));
-  (Warning_UnprotectedTerm, CWarning, (Prims.of_int (277)));
-  (Warning_UnrecognizedAttribute, CWarning, (Prims.of_int (278)));
-  (Warning_UpperBoundCandidateAlreadyVisited, CWarning, (Prims.of_int (279)));
-  (Warning_UseDefaultEffect, CWarning, (Prims.of_int (280)));
-  (Warning_WrongErrorLocation, CWarning, (Prims.of_int (281)));
-  (Warning_Z3InvocationWarning, CWarning, (Prims.of_int (282)));
-  (Warning_MissingInterfaceOrImplementation, CWarning, (Prims.of_int (283)));
-  (Warning_ConstructorBuildsUnexpectedType, CWarning, (Prims.of_int (284)));
-  (Warning_ModuleOrFileNotFoundWarning, CWarning, (Prims.of_int (285)));
-  (Error_NoLetMutable, CAlwaysError, (Prims.of_int (286)));
-  (Error_BadImplicit, CAlwaysError, (Prims.of_int (287)));
-  (Warning_DeprecatedDefinition, CWarning, (Prims.of_int (288)));
-  (Fatal_SMTEncodingArityMismatch, CFatal, (Prims.of_int (289)));
-  (Warning_Defensive, CWarning, (Prims.of_int (290)));
-  (Warning_CantInspect, CWarning, (Prims.of_int (291)));
-  (Warning_NilGivenExplicitArgs, CWarning, (Prims.of_int (292)));
-  (Warning_ConsAppliedExplicitArgs, CWarning, (Prims.of_int (293)));
-  (Warning_UnembedBinderKnot, CWarning, (Prims.of_int (294)));
-  (Fatal_TacticProofRelevantGoal, CFatal, (Prims.of_int (295)));
-  (Warning_TacAdmit, CWarning, (Prims.of_int (296)));
-  (Fatal_IncoherentPatterns, CFatal, (Prims.of_int (297)));
-  (Error_NoSMTButNeeded, CAlwaysError, (Prims.of_int (298)));
-  (Fatal_UnexpectedAntiquotation, CFatal, (Prims.of_int (299)));
-  (Fatal_SplicedUndef, CFatal, (Prims.of_int (300)));
-  (Fatal_SpliceUnembedFail, CFatal, (Prims.of_int (301)));
-  (Warning_ExtractionUnexpectedEffect, CWarning, (Prims.of_int (302)));
-  (Error_DidNotFail, CError, (Prims.of_int (303)));
-  (Warning_UnappliedFail, CWarning, (Prims.of_int (304)));
-  (Warning_QuantifierWithoutPattern, CSilent, (Prims.of_int (305)));
-  (Error_EmptyFailErrs, CAlwaysError, (Prims.of_int (306)));
-  (Warning_logicqualifier, CWarning, (Prims.of_int (307)));
-  (Fatal_CyclicDependence, CFatal, (Prims.of_int (308)));
-  (Error_InductiveAnnotNotAType, CError, (Prims.of_int (309)));
-  (Fatal_FriendInterface, CFatal, (Prims.of_int (310)));
-  (Error_CannotRedefineConst, CError, (Prims.of_int (311)));
-  (Error_BadClassDecl, CError, (Prims.of_int (312)));
-  (Error_BadInductiveParam, CFatal, (Prims.of_int (313)));
-  (Error_FieldShadow, CFatal, (Prims.of_int (314)));
-  (Error_UnexpectedDM4FType, CFatal, (Prims.of_int (315)));
-  (Fatal_EffectAbbreviationResultTypeMismatch, CFatal, (Prims.of_int (316)));
-  (Error_AlreadyCachedAssertionFailure, CFatal, (Prims.of_int (317)));
-  (Error_MustEraseMissing, CWarning, (Prims.of_int (318)));
-  (Warning_EffectfulArgumentToErasedFunction, CWarning, (Prims.of_int (319)));
-  (Fatal_EmptySurfaceLet, CFatal, (Prims.of_int (320)));
-  (Warning_UnexpectedCheckedFile, CWarning, (Prims.of_int (321)));
-  (Fatal_ExtractionUnsupported, CFatal, (Prims.of_int (322)));
-  (Warning_SMTErrorReason, CWarning, (Prims.of_int (323)));
-  (Warning_CoercionNotFound, CWarning, (Prims.of_int (324)));
-  (Error_QuakeFailed, CError, (Prims.of_int (325)));
-  (Error_IllSMTPat, CError, (Prims.of_int (326)));
-  (Error_IllScopedTerm, CError, (Prims.of_int (327)));
-  (Warning_UnusedLetRec, CWarning, (Prims.of_int (328)));
-  (Fatal_Effects_Ordering_Coherence, CError, (Prims.of_int (329)));
-  (Warning_BleedingEdge_Feature, CWarning, (Prims.of_int (330)));
-  (Warning_IgnoredBinding, CWarning, (Prims.of_int (331)));
-  (Warning_CouldNotReadHints, CWarning, (Prims.of_int (333)));
-  (Fatal_BadUvar, CFatal, (Prims.of_int (334)));
-  (Warning_WarnOnUse, CSilent, (Prims.of_int (335)));
-  (Warning_DeprecatedAttributeSyntax, CSilent, (Prims.of_int (336)));
-  (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)));
-  (Error_BadSplice, CError, (Prims.of_int (338)));
-  (Error_UnexpectedUnresolvedUvar, CAlwaysError, (Prims.of_int (339)));
-  (Warning_UnfoldPlugin, CWarning, (Prims.of_int (340)));
-  (Error_LayeredMissingAnnot, CAlwaysError, (Prims.of_int (341)));
-  (Error_CallToErased, CError, (Prims.of_int (342)));
-  (Error_ErasedCtor, CError, (Prims.of_int (343)));
-  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (344)));
-  (Warning_NoMagicInFSharp, CWarning, (Prims.of_int (345)));
-  (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int (346)));
-  (Error_UnexpectedTypeclassInstance, CAlwaysError, (Prims.of_int (347)));
-  (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int (348)));
-  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int (349)));
-  (Warning_DeprecatedLightDoNotation, CWarning, (Prims.of_int (350)));
-  (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int (351)));
-  (Warning_Adhoc_IndexedEffect_Combinator, CWarning, (Prims.of_int (352)));
-  (Error_PluginDynlink, CError, (Prims.of_int (353)));
-  (Error_InternalQualifier, CAlwaysError, (Prims.of_int (354)));
-  (Warning_NameEscape, CWarning, (Prims.of_int (355)));
-  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)));
-  (Warning_SolverMismatch, CError, (Prims.of_int (357)));
-  (Warning_SolverVersionMismatch, CError, (Prims.of_int (358)));
-  (Warning_ProofRecovery, CWarning, (Prims.of_int (359)));
-  (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int (360)));
-  (Error_MissingPopOptions, CWarning, (Prims.of_int (361)))]
+    (Prims.of_int 258));
+  (Warning_MalformedWarnErrorList, CWarning, (Prims.of_int 259));
+  (Warning_MetaAlienNotATmUnknown, CWarning, (Prims.of_int 260));
+  (Warning_MultipleAscriptions, CWarning, (Prims.of_int 261));
+  (Warning_NondependentUserDefinedDataType, CWarning, (Prims.of_int 262));
+  (Warning_NonListLiteralSMTPattern, CWarning, (Prims.of_int 263));
+  (Warning_NormalizationFailure, CWarning, (Prims.of_int 264));
+  (Warning_NotDependentArrow, CWarning, (Prims.of_int 265));
+  (Warning_NotEmbedded, CWarning, (Prims.of_int 266));
+  (Warning_PatternMissingBoundVar, CWarning, (Prims.of_int 267));
+  (Warning_RecursiveDependency, CWarning, (Prims.of_int 268));
+  (Warning_RedundantExplicitCurrying, CWarning, (Prims.of_int 269));
+  (Warning_SMTPatTDeprecated, CWarning, (Prims.of_int 270));
+  (Warning_SMTPatternIllFormed, CWarning, (Prims.of_int 271));
+  (Warning_TopLevelEffect, CWarning, (Prims.of_int 272));
+  (Warning_UnboundModuleReference, CWarning, (Prims.of_int 273));
+  (Warning_UnexpectedFile, CWarning, (Prims.of_int 274));
+  (Warning_UnexpectedFsTypApp, CWarning, (Prims.of_int 275));
+  (Warning_UnexpectedZ3Output, CError, (Prims.of_int 276));
+  (Warning_UnprotectedTerm, CWarning, (Prims.of_int 277));
+  (Warning_UnrecognizedAttribute, CWarning, (Prims.of_int 278));
+  (Warning_UpperBoundCandidateAlreadyVisited, CWarning, (Prims.of_int 279));
+  (Warning_UseDefaultEffect, CWarning, (Prims.of_int 280));
+  (Warning_WrongErrorLocation, CWarning, (Prims.of_int 281));
+  (Warning_Z3InvocationWarning, CWarning, (Prims.of_int 282));
+  (Warning_MissingInterfaceOrImplementation, CWarning, (Prims.of_int 283));
+  (Warning_ConstructorBuildsUnexpectedType, CWarning, (Prims.of_int 284));
+  (Warning_ModuleOrFileNotFoundWarning, CWarning, (Prims.of_int 285));
+  (Error_NoLetMutable, CAlwaysError, (Prims.of_int 286));
+  (Error_BadImplicit, CAlwaysError, (Prims.of_int 287));
+  (Warning_DeprecatedDefinition, CWarning, (Prims.of_int 288));
+  (Fatal_SMTEncodingArityMismatch, CFatal, (Prims.of_int 289));
+  (Warning_Defensive, CWarning, (Prims.of_int 290));
+  (Warning_CantInspect, CWarning, (Prims.of_int 291));
+  (Warning_NilGivenExplicitArgs, CWarning, (Prims.of_int 292));
+  (Warning_ConsAppliedExplicitArgs, CWarning, (Prims.of_int 293));
+  (Warning_UnembedBinderKnot, CWarning, (Prims.of_int 294));
+  (Fatal_TacticProofRelevantGoal, CFatal, (Prims.of_int 295));
+  (Warning_TacAdmit, CWarning, (Prims.of_int 296));
+  (Fatal_IncoherentPatterns, CFatal, (Prims.of_int 297));
+  (Error_NoSMTButNeeded, CAlwaysError, (Prims.of_int 298));
+  (Fatal_UnexpectedAntiquotation, CFatal, (Prims.of_int 299));
+  (Fatal_SplicedUndef, CFatal, (Prims.of_int 300));
+  (Fatal_SpliceUnembedFail, CFatal, (Prims.of_int 301));
+  (Warning_ExtractionUnexpectedEffect, CWarning, (Prims.of_int 302));
+  (Error_DidNotFail, CError, (Prims.of_int 303));
+  (Warning_UnappliedFail, CWarning, (Prims.of_int 304));
+  (Warning_QuantifierWithoutPattern, CSilent, (Prims.of_int 305));
+  (Error_EmptyFailErrs, CAlwaysError, (Prims.of_int 306));
+  (Warning_logicqualifier, CWarning, (Prims.of_int 307));
+  (Fatal_CyclicDependence, CFatal, (Prims.of_int 308));
+  (Error_InductiveAnnotNotAType, CError, (Prims.of_int 309));
+  (Fatal_FriendInterface, CFatal, (Prims.of_int 310));
+  (Error_CannotRedefineConst, CError, (Prims.of_int 311));
+  (Error_BadClassDecl, CError, (Prims.of_int 312));
+  (Error_BadInductiveParam, CFatal, (Prims.of_int 313));
+  (Error_FieldShadow, CFatal, (Prims.of_int 314));
+  (Fatal_EffectAbbreviationResultTypeMismatch, CFatal, (Prims.of_int 316));
+  (Error_AlreadyCachedAssertionFailure, CFatal, (Prims.of_int 317));
+  (Error_MustEraseMissing, CWarning, (Prims.of_int 318));
+  (Warning_EffectfulArgumentToErasedFunction, CWarning, (Prims.of_int 319));
+  (Fatal_EmptySurfaceLet, CFatal, (Prims.of_int 320));
+  (Warning_UnexpectedCheckedFile, CWarning, (Prims.of_int 321));
+  (Fatal_ExtractionUnsupported, CFatal, (Prims.of_int 322));
+  (Warning_SMTErrorReason, CWarning, (Prims.of_int 323));
+  (Warning_CoercionNotFound, CWarning, (Prims.of_int 324));
+  (Error_QuakeFailed, CError, (Prims.of_int 325));
+  (Error_IllSMTPat, CError, (Prims.of_int 326));
+  (Error_IllScopedTerm, CError, (Prims.of_int 327));
+  (Warning_UnusedLetRec, CWarning, (Prims.of_int 328));
+  (Fatal_Effects_Ordering_Coherence, CError, (Prims.of_int 329));
+  (Warning_BleedingEdge_Feature, CWarning, (Prims.of_int 330));
+  (Warning_IgnoredBinding, CWarning, (Prims.of_int 331));
+  (Warning_CouldNotReadHints, CWarning, (Prims.of_int 333));
+  (Fatal_BadUvar, CFatal, (Prims.of_int 334));
+  (Warning_WarnOnUse, CSilent, (Prims.of_int 335));
+  (Warning_DeprecatedAttributeSyntax, CSilent, (Prims.of_int 336));
+  (Warning_DeprecatedGeneric, CWarning, (Prims.of_int 337));
+  (Error_BadSplice, CError, (Prims.of_int 338));
+  (Error_UnexpectedUnresolvedUvar, CAlwaysError, (Prims.of_int 339));
+  (Warning_UnfoldPlugin, CWarning, (Prims.of_int 340));
+  (Error_LayeredMissingAnnot, CAlwaysError, (Prims.of_int 341));
+  (Error_CallToErased, CError, (Prims.of_int 342));
+  (Error_ErasedCtor, CError, (Prims.of_int 343));
+  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int 344));
+  (Warning_NoMagicInFSharp, CWarning, (Prims.of_int 345));
+  (Error_BadLetOpenRecord, CAlwaysError, (Prims.of_int 346));
+  (Error_UnexpectedTypeclassInstance, CAlwaysError, (Prims.of_int 347));
+  (Warning_AmbiguousResolveImplicitsHook, CWarning, (Prims.of_int 348));
+  (Warning_SplitAndRetryQueries, CWarning, (Prims.of_int 349));
+  (Warning_DeprecatedLightDoNotation, CWarning, (Prims.of_int 350));
+  (Warning_FailedToCheckInitialTacticGoal, CSilent, (Prims.of_int 351));
+  (Warning_Adhoc_IndexedEffect_Combinator, CWarning, (Prims.of_int 352));
+  (Error_PluginDynlink, CError, (Prims.of_int 353));
+  (Error_InternalQualifier, CAlwaysError, (Prims.of_int 354));
+  (Warning_NameEscape, CWarning, (Prims.of_int 355));
+  (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int 356));
+  (Warning_SolverMismatch, CError, (Prims.of_int 357));
+  (Warning_SolverVersionMismatch, CError, (Prims.of_int 358));
+  (Warning_ProofRecovery, CWarning, (Prims.of_int 359));
+  (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int 360));
+  (Error_MissingPopOptions, CWarning, (Prims.of_int 361))]

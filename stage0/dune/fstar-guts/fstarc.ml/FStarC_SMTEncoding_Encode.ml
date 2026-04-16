@@ -1581,7 +1581,7 @@ let encode_free_var (uninterpreted : Prims.bool)
         (let uu___3 = prims.is lid in
          if uu___3
          then
-           (if (FStarC_List.length us) <> Prims.int_zero
+           (if Prims.uu___is_Cons us
             then
               FStarC_Effect.failwith
                 "Impossible: unexpected universe-polymorphic primitive function"
@@ -1901,9 +1901,7 @@ let encode_free_var (uninterpreted : Prims.bool)
                               if
                                 (if
                                    (if (FStarC_Ident.nsstr lid) <> "Prims"
-                                    then
-                                      (FStarC_List.length us) =
-                                        Prims.int_zero
+                                    then Prims.uu___is_Nil us
                                     else false)
                                  then
                                    Prims.op_Negation
@@ -4495,9 +4493,7 @@ let encode_sig_inductive (env : FStarC_SMTEncoding_Env.env_t)
                                       match uu___10 with
                                       | (k2, decls1) ->
                                           let karr =
-                                            if
-                                              (FStarC_List.length formals) >
-                                                Prims.int_zero
+                                            if Prims.uu___is_Cons formals
                                             then
                                               let uu___11 =
                                                 let uu___12 =
@@ -6934,7 +6930,7 @@ and encode_sigelt' (env : FStarC_SMTEncoding_Env.env_t)
        when FStarC_Ident.lid_equals lid FStarC_Parser_Const.precedes_lid ->
        let uu___3 =
          FStarC_SMTEncoding_Env.new_term_constant_and_tok_from_lid env lid
-           (Prims.of_int (4)) (Prims.of_int (2)) in
+           (Prims.of_int 4) (Prims.of_int 2) in
        (match uu___3 with | (tname, ttok, env1) -> ([], env1))
    | FStarC_Syntax_Syntax.Sig_declare_typ
        { FStarC_Syntax_Syntax.lid2 = lid; FStarC_Syntax_Syntax.us2 = us;
@@ -7605,7 +7601,7 @@ let last_env : FStarC_SMTEncoding_Env.env_t Prims.list FStarC_Effect.ref=
 let init_env (tcenv : FStarC_TypeChecker_Env.env) : unit=
   let uu___ =
     let uu___1 =
-      let uu___2 = FStarC_SMap.create (Prims.of_int (100)) in
+      let uu___2 = FStarC_SMap.create (Prims.of_int 100) in
       {
         FStarC_SMTEncoding_Env.bvar_bindings = (FStarC_PSMap.empty ());
         FStarC_SMTEncoding_Env.fvar_bindings = ((FStarC_PSMap.empty ()), []);

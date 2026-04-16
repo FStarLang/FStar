@@ -490,8 +490,6 @@ let no_fstar_stubs_ns (ns : FStarC_Extraction_ML_Syntax.mlsymbol Prims.list)
   | "FStar"::"NormSteps"::rest when plug () -> "Fstarcompiler.FStarC" ::
       "NormSteps" :: rest
   | "FStar"::"Stubs"::rest when plug_no_lib () -> "FStarC" :: rest
-  | "FStar"::"Stubs"::"Tactics"::"V1"::"Builtins"::[] when plug () ->
-      ["FStarC"; "Tactics"; "V1"; "Builtins"]
   | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
       ["FStarC"; "Tactics"; "V2"; "Builtins"]
   | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->

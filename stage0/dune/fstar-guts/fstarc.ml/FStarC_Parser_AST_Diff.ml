@@ -617,6 +617,8 @@ let eq_pragma (t1 : FStarC_Parser_AST.pragma) (t2 : FStarC_Parser_AST.pragma)
      FStarC_Parser_AST.PrintEffectsGraph) -> true
   | (FStarC_Parser_AST.Check t11, FStarC_Parser_AST.Check t21) ->
       eq_term t11 t21
+  | (FStarC_Parser_AST.Eval t11, FStarC_Parser_AST.Eval t21) ->
+      eq_term t11 t21
   | uu___ -> false
 let eq_qualifier (t1 : FStarC_Parser_AST.qualifier)
   (t2 : FStarC_Parser_AST.qualifier) : Prims.bool=

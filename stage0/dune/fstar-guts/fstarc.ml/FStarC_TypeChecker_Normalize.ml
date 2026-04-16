@@ -1251,7 +1251,7 @@ let is_fext_on_domain (t : FStarC_Syntax_Syntax.term) :
        | FStarC_Syntax_Syntax.Tm_fvar fv when
            let uu___2 = is_on_dom fv in
            if uu___2
-           then (FStarC_List.length args) = (Prims.of_int (3))
+           then (FStarC_List.length args) = (Prims.of_int 3)
            else false ->
            let f =
              FStar_Pervasives_Native.fst
@@ -1798,7 +1798,7 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
        let uu___6 =
          FStarC_Class_Show.show
            (FStarC_Class_Show.show_list showable_stack_elt)
-           (FStar_Pervasives_Native.fst (firstn (Prims.of_int (4)) stack2)) in
+           (FStar_Pervasives_Native.fst (firstn (Prims.of_int 4) stack2)) in
        FStarC_Format.print5
          ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
          uu___2 uu___3 uu___4 uu___5 uu___6);
@@ -3222,7 +3222,7 @@ and handle_norm_request (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
      let uu___2 =
        FStarC_Class_Show.show
          (FStarC_Class_Show.show_list showable_stack_elt)
-         (FStar_Pervasives_Native.fst (firstn (Prims.of_int (5)) stack1)) in
+         (FStar_Pervasives_Native.fst (firstn (Prims.of_int 5) stack1)) in
      FStarC_Format.print2 "handle_norm_request %s, stack = %s\n" uu___1
        uu___2)
   else ();
@@ -3960,8 +3960,8 @@ and do_reify_monadic (fallback : unit -> FStarC_Syntax_Syntax.term)
                                        FStarC_Parser_Const.bind_has_range_args_attr in
                                    let num_fixed_binders =
                                      if bind_has_range_args
-                                     then (Prims.of_int (4))
-                                     else (Prims.of_int (2)) in
+                                     then Prims.of_int 4
+                                     else Prims.of_int 2 in
                                    let unit_args =
                                      let uu___10 =
                                        let uu___11 =
@@ -4048,34 +4048,7 @@ and do_reify_monadic (fallback : unit -> FStarC_Syntax_Syntax.term)
                                            [FStarC_Syntax_Syntax.as_arg f_arg;
                                            FStarC_Syntax_Syntax.as_arg body2]))
                                  else
-                                   (let maybe_range_arg =
-                                      let uu___11 =
-                                        FStarC_Util.for_some
-                                          (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                             cfg.FStarC_TypeChecker_Cfg.tcenv
-                                             FStarC_Syntax_Util.dm4f_bind_range_attr)
-                                          ed.FStarC_Syntax_Syntax.eff_attrs in
-                                      if uu___11
-                                      then
-                                        let uu___12 =
-                                          let uu___13 =
-                                            FStarC_TypeChecker_Primops_Base.embed_simple
-                                              FStarC_Syntax_Embeddings.e_range
-                                              lb.FStarC_Syntax_Syntax.lbpos
-                                              lb.FStarC_Syntax_Syntax.lbpos in
-                                          FStarC_Syntax_Syntax.as_arg uu___13 in
-                                        let uu___13 =
-                                          let uu___14 =
-                                            let uu___15 =
-                                              FStarC_TypeChecker_Primops_Base.embed_simple
-                                                FStarC_Syntax_Embeddings.e_range
-                                                body2.FStarC_Syntax_Syntax.pos
-                                                body2.FStarC_Syntax_Syntax.pos in
-                                            FStarC_Syntax_Syntax.as_arg
-                                              uu___15 in
-                                          [uu___14] in
-                                        uu___12 :: uu___13
-                                      else [] in
+                                   (let maybe_range_arg = [] in
                                     FStarC_List.op_At
                                       [FStarC_Syntax_Syntax.as_arg
                                          lb.FStarC_Syntax_Syntax.lbtyp;
@@ -5713,7 +5686,7 @@ and rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
         let uu___6 =
           FStarC_Class_Show.show
             (FStarC_Class_Show.show_list showable_stack_elt)
-            (FStar_Pervasives_Native.fst (firstn (Prims.of_int (4)) stack1)) in
+            (FStar_Pervasives_Native.fst (firstn (Prims.of_int 4) stack1)) in
         FStarC_Format.print4
           ">>> %s\nRebuild %s with %s env elements and top of the stack %s\n"
           uu___3 uu___4 uu___5 uu___6);
@@ -6815,11 +6788,33 @@ let non_info_norm (env1 : FStarC_TypeChecker_Env.env)
     [FStarC_TypeChecker_Env.UnfoldUntil FStarC_Syntax_Syntax.delta_constant;
     FStarC_TypeChecker_Env.AllowUnboundUniverses;
     FStarC_TypeChecker_Env.EraseUniverses;
+    FStarC_TypeChecker_Env.Primops;
+    FStarC_TypeChecker_Env.Beta;
+    FStarC_TypeChecker_Env.Iota;
     FStarC_TypeChecker_Env.HNF;
     FStarC_TypeChecker_Env.Unascribe;
     FStarC_TypeChecker_Env.ForExtraction] in
   let uu___ = normalize steps env1 t in
   FStarC_TypeChecker_Env.non_informative env1 uu___
+let non_info_sort_norm (env1 : FStarC_TypeChecker_Env.env)
+  (t : FStarC_Syntax_Syntax.term) : Prims.bool=
+  let steps =
+    let uu___ =
+      let uu___1 =
+        FStarC_TypeChecker_Env.delta_depth_of_fv env1
+          (FStarC_Syntax_Syntax.fvconst FStarC_Parser_Const.prop_lid) in
+      FStarC_TypeChecker_Env.UnfoldUntil uu___1 in
+    [uu___;
+    FStarC_TypeChecker_Env.AllowUnboundUniverses;
+    FStarC_TypeChecker_Env.EraseUniverses;
+    FStarC_TypeChecker_Env.Primops;
+    FStarC_TypeChecker_Env.Beta;
+    FStarC_TypeChecker_Env.Iota;
+    FStarC_TypeChecker_Env.HNF;
+    FStarC_TypeChecker_Env.Unascribe;
+    FStarC_TypeChecker_Env.ForExtraction] in
+  let uu___ = normalize steps env1 t in
+  FStarC_TypeChecker_Env.non_informative_sort uu___
 let maybe_promote_t (env1 : FStarC_TypeChecker_Env.env)
   (non_informative_only : Prims.bool) (t : FStarC_Syntax_Syntax.term) :
   Prims.bool=

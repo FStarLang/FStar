@@ -34,33 +34,25 @@ let __proj__Infix__item___0 (projectee : fixity) : assoc=
   match projectee with | Infix _0 -> _0
 type opprec = (Prims.int * fixity)
 type level = (opprec * assoc)
-let t_prio_fun : (Prims.int * fixity)= ((Prims.of_int (10)), (Infix Right))
-let t_prio_tpl : (Prims.int * fixity)=
-  ((Prims.of_int (20)), (Infix NonAssoc))
-let t_prio_name : (Prims.int * fixity)= ((Prims.of_int (30)), Postfix)
-let e_bin_prio_lambda : (Prims.int * fixity)= ((Prims.of_int (5)), Prefix)
-let e_bin_prio_if : (Prims.int * fixity)= ((Prims.of_int (15)), Prefix)
-let e_bin_prio_letin : (Prims.int * fixity)= ((Prims.of_int (19)), Prefix)
-let e_bin_prio_or : (Prims.int * fixity)= ((Prims.of_int (20)), (Infix Left))
-let e_bin_prio_and : (Prims.int * fixity)=
-  ((Prims.of_int (25)), (Infix Left))
+let t_prio_fun : (Prims.int * fixity)= ((Prims.of_int 10), (Infix Right))
+let t_prio_tpl : (Prims.int * fixity)= ((Prims.of_int 20), (Infix NonAssoc))
+let t_prio_name : (Prims.int * fixity)= ((Prims.of_int 30), Postfix)
+let e_bin_prio_lambda : (Prims.int * fixity)= ((Prims.of_int 5), Prefix)
+let e_bin_prio_if : (Prims.int * fixity)= ((Prims.of_int 15), Prefix)
+let e_bin_prio_letin : (Prims.int * fixity)= ((Prims.of_int 19), Prefix)
+let e_bin_prio_or : (Prims.int * fixity)= ((Prims.of_int 20), (Infix Left))
+let e_bin_prio_and : (Prims.int * fixity)= ((Prims.of_int 25), (Infix Left))
 let e_bin_prio_eq : (Prims.int * fixity)=
-  ((Prims.of_int (27)), (Infix NonAssoc))
+  ((Prims.of_int 27), (Infix NonAssoc))
 let e_bin_prio_order : (Prims.int * fixity)=
-  ((Prims.of_int (29)), (Infix NonAssoc))
-let e_bin_prio_op1 : (Prims.int * fixity)=
-  ((Prims.of_int (30)), (Infix Left))
-let e_bin_prio_op2 : (Prims.int * fixity)=
-  ((Prims.of_int (40)), (Infix Left))
-let e_bin_prio_op3 : (Prims.int * fixity)=
-  ((Prims.of_int (50)), (Infix Left))
-let e_bin_prio_op4 : (Prims.int * fixity)=
-  ((Prims.of_int (60)), (Infix Left))
-let e_bin_prio_comb : (Prims.int * fixity)=
-  ((Prims.of_int (70)), (Infix Left))
-let e_bin_prio_seq : (Prims.int * fixity)=
-  ((Prims.of_int (100)), (Infix Left))
-let e_app_prio : (Prims.int * fixity)= ((Prims.of_int (10000)), (Infix Left))
+  ((Prims.of_int 29), (Infix NonAssoc))
+let e_bin_prio_op1 : (Prims.int * fixity)= ((Prims.of_int 30), (Infix Left))
+let e_bin_prio_op2 : (Prims.int * fixity)= ((Prims.of_int 40), (Infix Left))
+let e_bin_prio_op3 : (Prims.int * fixity)= ((Prims.of_int 50), (Infix Left))
+let e_bin_prio_op4 : (Prims.int * fixity)= ((Prims.of_int 60), (Infix Left))
+let e_bin_prio_comb : (Prims.int * fixity)= ((Prims.of_int 70), (Infix Left))
+let e_bin_prio_seq : (Prims.int * fixity)= ((Prims.of_int 100), (Infix Left))
+let e_app_prio : (Prims.int * fixity)= ((Prims.of_int 10000), (Infix Left))
 let min_op_prec : (Prims.int * fixity)=
   ((Prims.of_int (-1)), (Infix NonAssoc))
 let max_op_prec : (Prims.int * fixity)=
@@ -151,7 +143,7 @@ let ptsym_of_symbol (s : FStarC_Extraction_ML_Syntax.mlsymbol) :
 let ptsym (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   (mlp : FStarC_Extraction_ML_Syntax.mlpath) :
   FStarC_Extraction_ML_Syntax.mlsymbol=
-  if FStarC_List.isEmpty (FStar_Pervasives_Native.fst mlp)
+  if Prims.uu___is_Nil (FStar_Pervasives_Native.fst mlp)
   then ptsym_of_symbol (FStar_Pervasives_Native.snd mlp)
   else
     (let uu___1 = mlpath_of_mlpath currentModule mlp in
@@ -330,10 +322,10 @@ let string_of_mlconstant (sctt : FStarC_Extraction_ML_Syntax.mlconstant) :
          Prims.strcat uu___2
            (if
               (if
-                 (if nc >= (Prims.of_int (32))
-                  then nc = (Prims.of_int (127))
+                 (if nc >= (Prims.of_int 32)
+                  then nc = (Prims.of_int 127)
                   else false)
-               then nc < (Prims.of_int (34))
+               then nc < (Prims.of_int 34)
                else false)
             then
               Prims.strcat " (*"
@@ -1081,7 +1073,7 @@ let doc_of_mltydecl (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
              combine hardline uu___3) in
   let doc1 = FStarC_List.map for1 decls in
   let doc2 =
-    if (FStarC_List.length doc1) > Prims.int_zero
+    if Prims.uu___is_Cons doc1
     then
       let uu___ =
         let uu___1 = let uu___2 = combine (text " \n and ") doc1 in [uu___2] in

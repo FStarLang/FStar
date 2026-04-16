@@ -935,7 +935,6 @@ and cflag_to_string (c : FStarC_Syntax_Syntax.cflag) : Prims.string=
   | FStarC_Syntax_Syntax.TRIVIAL_POSTCONDITION -> "trivial_postcondition"
   | FStarC_Syntax_Syntax.SHOULD_NOT_INLINE -> "should_not_inline"
   | FStarC_Syntax_Syntax.LEMMA -> "lemma"
-  | FStarC_Syntax_Syntax.CPS -> "cps"
   | FStarC_Syntax_Syntax.DECREASES uu___ -> ""
 and cflags_to_string (fs : FStarC_Syntax_Syntax.cflag Prims.list) :
   Prims.string= FStarC_Common.string_of_list cflag_to_string fs
@@ -1085,7 +1084,6 @@ let eff_combinators_to_string (x : FStarC_Syntax_Syntax.eff_combinators) :
   match x with
   | FStarC_Syntax_Syntax.Primitive_eff combs ->
       wp_eff_combinators_to_string combs
-  | FStarC_Syntax_Syntax.DM4F_eff combs -> wp_eff_combinators_to_string combs
   | FStarC_Syntax_Syntax.Layered_eff combs ->
       layered_eff_combinators_to_string combs
 let eff_extraction_mode_to_string
@@ -1259,11 +1257,8 @@ let rec sigelt_to_string (x : FStarC_Syntax_Syntax.sigelt) : Prims.string=
         FStarC_Format.fmt3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
           uu___1 uu___2 uu___3
     | FStarC_Syntax_Syntax.Sig_new_effect ed ->
-        let uu___ =
-          let uu___1 = quals_to_string' x.FStarC_Syntax_Syntax.sigquals in
-          let uu___2 = eff_decl_to_string ed in Prims.strcat uu___1 uu___2 in
-        Prims.strcat
-          (if FStarC_Syntax_Util.is_dm4f ed then "(* DM4F *)" else "") uu___
+        let uu___ = quals_to_string' x.FStarC_Syntax_Syntax.sigquals in
+        let uu___1 = eff_decl_to_string ed in Prims.strcat uu___ uu___1
     | FStarC_Syntax_Syntax.Sig_sub_effect se -> sub_eff_to_string se
     | FStarC_Syntax_Syntax.Sig_effect_abbrev
         { FStarC_Syntax_Syntax.lid4 = l; FStarC_Syntax_Syntax.us4 = univs;

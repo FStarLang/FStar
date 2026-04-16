@@ -34,7 +34,7 @@ let uu___0 : stat FStarC_Class_Monoid.monoid=
          })
   }
 let st : (Prims.bool FStarC_Effect.ref * stat) FStarC_SMap.t=
-  FStarC_SMap.create (Prims.of_int (10))
+  FStarC_SMap.create (Prims.of_int 10)
 let stack : Prims.string Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
 let r_running (k : Prims.string) : Prims.bool FStarC_Effect.ref=
@@ -147,7 +147,7 @@ let print_all (uu___ : unit) : Prims.string=
     FStarC_List.fold_left
       (fun acc uu___1 ->
          match uu___1 with | (k, uu___2) -> max acc (FStarC_String.length k))
-      (Prims.of_int (20)) points1 in
+      (Prims.of_int 20) points1 in
   let pr1 p =
     let uu___1 = p in
     match uu___1 with
@@ -156,30 +156,30 @@ let print_all (uu___ : unit) : Prims.string=
         let uu___3 =
           let uu___4 =
             FStarC_Class_Show.show FStarC_Class_Show.showable_int st1.ncalls in
-          lpad (Prims.of_int (8)) uu___4 in
+          lpad (Prims.of_int 8) uu___4 in
         let uu___4 =
           let uu___5 =
             FStarC_Class_Show.show FStarC_Class_Show.showable_int
-              (st1.ns_tree / (Prims.parse_int "1000000")) in
-          lpad (Prims.of_int (6)) uu___5 in
+              (st1.ns_tree / (Prims.of_int 1000000)) in
+          lpad (Prims.of_int 6) uu___5 in
         let uu___5 =
           let uu___6 =
             FStarC_Class_Show.show FStarC_Class_Show.showable_int
-              ((st1.ns_tree - st1.ns_sub) / (Prims.parse_int "1000000")) in
-          lpad (Prims.of_int (6)) uu___6 in
+              ((st1.ns_tree - st1.ns_sub) / (Prims.of_int 1000000)) in
+          lpad (Prims.of_int 6) uu___6 in
         let uu___6 =
           let uu___7 =
             FStarC_Class_Show.show FStarC_Class_Show.showable_int
-              (st1.ns_exn / (Prims.parse_int "1000000")) in
-          lpad (Prims.of_int (6)) uu___7 in
+              (st1.ns_exn / (Prims.of_int 1000000)) in
+          lpad (Prims.of_int 6) uu___7 in
         FStarC_Format.fmt5 "  %s  %s %s ms %s ms %s ms" uu___2 uu___3 uu___4
           uu___5 uu___6 in
   let uu___1 =
     let uu___2 = lpad longest_key "key" in
-    let uu___3 = lpad (Prims.of_int (8)) "calls" in
-    let uu___4 = lpad (Prims.of_int (9)) "tree" in
-    let uu___5 = lpad (Prims.of_int (9)) "point" in
-    let uu___6 = lpad (Prims.of_int (9)) "exn" in
+    let uu___3 = lpad (Prims.of_int 8) "calls" in
+    let uu___4 = lpad (Prims.of_int 9) "tree" in
+    let uu___5 = lpad (Prims.of_int 9) "point" in
+    let uu___6 = lpad (Prims.of_int 9) "exn" in
     FStarC_Format.fmt5 "  %s  %s %s %s %s" uu___2 uu___3 uu___4 uu___5 uu___6 in
   let uu___2 =
     let uu___3 =

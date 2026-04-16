@@ -5,7 +5,7 @@ let packaged_z3_versions : Prims.string Prims.list=
 let z3_install_suggestion (v : Prims.string) :
   FStar_Pprint.document Prims.list=
   [FStar_Pprint.op_Hat_Slash_Hat
-     (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+     (FStar_Pprint.prefix (Prims.of_int 4) Prims.int_one
         (FStarC_Errors_Msg.text
            (FStarC_Format.fmt1 "Please download version %s of Z3 from" v))
         (FStar_Pprint.url z3url))
@@ -98,7 +98,7 @@ let do_locate_z3 (v : Prims.string) :
    else ());
   path
 let locate_z3 : Prims.string -> Prims.string FStar_Pervasives_Native.option=
-  let cache = FStarC_SMap.create (Prims.of_int (5)) in
+  let cache = FStarC_SMap.create (Prims.of_int 5) in
   fun v ->
     let find_or k f =
       let uu___ = FStarC_SMap.try_find cache k in

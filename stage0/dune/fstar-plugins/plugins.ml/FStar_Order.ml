@@ -46,7 +46,7 @@ let order_from_int (i : Prims.int) : order=
   if i < Prims.int_zero then Lt else if i = Prims.int_zero then Eq else Gt
 let int_of_order (uu___ : order) : Prims.int=
   match uu___ with
-  | Lt -> (Prims.of_int (-1))
+  | Lt -> Prims.of_int (-1)
   | Eq -> Prims.int_zero
   | Gt -> Prims.int_one
 let compare_int (i : Prims.int) (j : Prims.int) : order=

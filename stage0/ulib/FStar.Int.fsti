@@ -49,8 +49,8 @@ type int_t (n:pos) = x:int{size x n}
 
 /// Multiplicative operator semantics, see C11 6.5.5
 
-(* Truncation towards zero division *)
-let op_Slash (a:int) (b:int{b <> 0}) : Tot int = 
+(* Truncation towards zero division: (/-) *)
+let op_Slash_Subtraction (a:int) (b:int{b <> 0}) : Tot int =
   if (a >= 0 && b < 0) || (a < 0 && b >= 0) then - (abs a / abs b)
   else abs a / abs b
 
@@ -88,14 +88,6 @@ let decr (#n:pos) (a:int_t n)
       (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
   = a - 1
 
-val incr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
-  (requires (b2t (a < max_int n)))
-  (ensures (fun b -> a + 1 = b))
-
-val decr_underspec: #n:pos -> a:int_t n -> Pure (int_t n)
-  (requires (b2t (a > min_int n)))
-  (ensures (fun b -> a - 1 = b))
-
 let incr_mod (#n:pos) (a:int_t n) : Tot (int_t n) =
   (a + 1) % (pow2 (n-1))
 
@@ -109,11 +101,6 @@ let add (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))
   = a + b
 
-val add_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a + b) n ==> a + b = c))
-
 #push-options "--fuel 1"
 
 let add_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
@@ -126,11 +113,6 @@ let sub (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))    
   = a - b
 
-val sub_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a - b) n ==> a - b = c))
-
 let sub_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a - b) @% (pow2 n)
 
@@ -141,40 +123,30 @@ let mul (#n:pos) (a:int_t n) (b:int_t n)
       (ensures (fun _ -> True))
   = a * b
 
-val mul_underspec: #n:pos -> a:int_t n -> b:int_t n -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    size (a * b) n ==> a * b = c))
-
 let mul_mod (#n:pos) (a:int_t n) (b:int_t n) : Tot (int_t n) =
   (a * b) @% (pow2 n)
 
 #pop-options
 
-(* Division primitives *)
+(* Division primitives. Truncates towards zero. *)
 let div (#n:pos) (a:int_t n) (b:int_t n{b <> 0})
     : Pure (int_t n)
-      (requires (size (a / b) n))
-      (ensures (fun c -> b <> 0 ==> a / b = c))
-= a / b
-
-val div_underspec: #n:pos -> a:int_t n -> b:int_t n{b <> 0} -> Pure (int_t n)
-  (requires True)
-  (ensures (fun c ->
-    (b <> 0 /\ size (a / b) n) ==> a / b = c))
+      (requires (size (a /- b) n))
+      (ensures (fun c -> b <> 0 ==> a /- b = c))
+= a /- b
 
 val div_size: #n:pos -> a:int_t n{min_int n < a} -> b:int_t n{b <> 0} ->
   Lemma (requires (size a n)) (ensures (size (a / b) n))
 
 let udiv (#n:pos) (a:int_t n{min_int n < a}) (b:int_t n{b <> 0})
-    : Tot (c:int_t n{b <> 0 ==> a / b = c})
+    : Tot (c:int_t n{b <> 0 ==> a /- b = c})
   = div_size #n a b;
-    a / b
+    a /- b
 
-
-(* Modulo primitives *)
+(* Remainder primitives (NOT modulo, division truncates towards zero
+   and remainders have the same sign as the dividend) *)
 let mod (#n:pos) (a:int_t n) (b:int_t n{b <> 0}) : Tot (int_t n) =
-  a - ((a/b) * b)
+  a - ((a /- b) * b)
 
 (* Comparison operators *)
 let eq  #n (a:int_t n) (b:int_t n) : Tot bool = a = b

@@ -23,7 +23,7 @@ let hashable_bool : Prims.bool hashable=
       (fun b ->
          if b
          then FStarC_Hash.of_int Prims.int_one
-         else FStarC_Hash.of_int (Prims.of_int (2)))
+         else FStarC_Hash.of_int (Prims.of_int 2))
   }
 let hashable_list (uu___ : 'a hashable) : 'a Prims.list hashable=
   {

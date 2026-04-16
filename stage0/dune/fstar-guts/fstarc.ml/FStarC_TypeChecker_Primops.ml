@@ -235,10 +235,10 @@ let short_circuit_ops :
   let nbe_and _cb _us args = FStarC_TypeChecker_NBETerm.and_op args in
   let nbe_or _cb _us args = FStarC_TypeChecker_NBETerm.or_op args in
   let s1 =
-    as_primitive_step true FStarC_Parser_Const.op_And (Prims.of_int (2))
+    as_primitive_step true FStarC_Parser_Const.op_And (Prims.of_int 2)
       Prims.int_zero and_op nbe_and in
   let s2 =
-    as_primitive_step true FStarC_Parser_Const.op_Or (Prims.of_int (2))
+    as_primitive_step true FStarC_Parser_Const.op_Or (Prims.of_int 2)
       Prims.int_zero or_op nbe_or in
   [s1; s2]
 let built_in_primitive_steps_list :
