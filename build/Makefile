@@ -2,9 +2,10 @@
 # build/Makefile — Thin portable orchestrator for F* staged dune build
 # ============================================================================
 #
-# Orchestrates sequential dune invocations. Each stage uses a unique env var
-# for its generator (FSTAR0_EXE, FSTAR1_EXE, etc.) to avoid cross-stage
-# interference. The generated .inc rules use FSTAR_EXE for actual F* calls.
+# Chain: make → opam install deps → dune build (staged)
+#
+# Each stage uses a unique env var for its generator to avoid cross-stage
+# interference. The generated .inc rules hardcode the fstar.exe path.
 
 FSROOT := $(abspath ..)
 
@@ -23,14 +24,22 @@ FSTARC1_FULL := $(abspath _build/default/stage1-plugins-ocaml/fstarc1_full$(EXE)
 FSTARC2_BARE := $(abspath _build/default/stage2-ocaml/fstarc2_bare$(EXE))
 FSTARC2_FULL := $(abspath _build/default/stage2-plugins-ocaml/fstarc2_full$(EXE))
 
-.PHONY: all stage0 stage1-bare stage1-full stage2-bare stage2-full clean
+.PHONY: all deps stage0 stage1-bare stage1-full stage2-bare stage2-full clean
 
 .DEFAULT_GOAL := stage2-full
+
+# === Opam dependencies ===
+# Install all opam deps (from fstar.opam) once, stamp to avoid re-running.
+.opam-deps.stamp:
+	opam install --deps-only $(FSROOT) --yes
+	@touch $@
+
+deps: .opam-deps.stamp
 
 # === Stage 0 ===
 stage0: $(FSTAR0)
 
-$(FSTAR0):
+$(FSTAR0): .opam-deps.stamp
 	$(DUNE) build --root=$(FSROOT)/stage0/dune
 	$(DUNE) install --root=$(FSROOT)/stage0/dune --prefix=$(FSROOT)/stage0/out
 
@@ -75,3 +84,4 @@ all: stage2-full
 
 clean:
 	$(DUNE) clean $(DUNE_FLAGS)
+	rm -f .opam-deps.stamp
