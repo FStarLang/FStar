@@ -32,10 +32,10 @@ the binaries directly in your system.
 Creating a Github Codespace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To do so, go to the `this
+To do so, go to `this
 repository <https://github.com/FStarLang/pulse-tutorial-24>`_ and click on the
 '<>Code' button, then select 'Create codespace on main'. This will use
-the Dev Container definition in the `.devcontainer` directory to set up
+the Dev Container definition in the `.devcontainer` directory to set up a
 container where F* and Pulse can run in a reproducible manner.
 
 .. image:: img/create.png
@@ -84,7 +84,7 @@ Using a Pulse release
 
 A release of Pulse, including related F* tools, `is available here
 <https://github.com/FStarLang/pulse/releases/>`_. Uncompress
-the archive and add follow the instructions in the README.md, notably
+the archive and follow the instructions in the README.md, notably
 setting the recommended environment variables.
 
 We also recommend installing VS Code and the fstar-vscode-assistant,

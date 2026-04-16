@@ -35,7 +35,7 @@ support typeclasses that are similar in spirit to what F* also
 provides.
 
 Typeclasses in F* are actually defined mostly by a "user-space"
-metaprogam (relying on general support for metaprogramming in `Meta-F*
+metaprogram (relying on general support for metaprogramming in `Meta-F*
 <http://fstar-lang.org/papers/metafstar/>`_), making them very
 flexible (e.g., multi-parameter classes, overlapping instances,
 etc. are easily supported).

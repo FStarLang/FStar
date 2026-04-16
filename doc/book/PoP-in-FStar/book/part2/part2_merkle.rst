@@ -258,7 +258,7 @@ evidence.
 The proof is a simple proof by induction on the height of the tree, or
 equivalently, the length of the resource id.
 
-In other words, evidence constructed by a honest prover is accepted by
+In other words, evidence constructed by an honest prover is accepted by
 our verifier.
 
 Security
@@ -298,7 +298,7 @@ We look at its cases in detail:
    * In the base case, it's easy to construct a hash collision
      directly from the differing resources.
 
-   * Otherwise, we recompute the hash associate with the current node
+   * Otherwise, we recompute the hash associated with the current node
      from the tail of the evidence presented, and the two cases of the
      left and right subtrees are symmetric.
 
@@ -310,7 +310,7 @@ We look at its cases in detail:
        ``String.concat_injective``, a lemma from the library stating
        that the concatenation of two pairs of equal length strings are
        equal only if their components are. Knowing that ``h' <> h1``
-       (or, symmetically, ``h' <> h2``) this allows us to prove that
+       (or, symmetrically, ``h' <> h2``) this allows us to prove that
        the concatenations are unequal, although their hashes are, by
        assumption, equal.
 
@@ -380,6 +380,6 @@ F* in the following papers.
   updates.
 
 * `FastVer <https://dl.acm.org/doi/10.1145/3448016.3457312>`_
-  describes the design and use of hybrid authenticated data strutures,
-  including sparse Merkle trees, for applications such as verificable
+  describes the design and use of hybrid authenticated data structures,
+  including sparse Merkle trees, for applications such as verifiable
   key-value stores.

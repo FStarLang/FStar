@@ -14,7 +14,7 @@ use of user-defined predicates. For example, see this section for
 Fold and Unfold with Diagonal Pairs
 ...................................
 
-A simple example of a user-defined abstraction is show below.
+A simple example of a user-defined abstraction is shown below.
 
 .. literalinclude:: ../code/pulse/PulseTutorial.UserDefinedPredicates.fst
    :language: pulse

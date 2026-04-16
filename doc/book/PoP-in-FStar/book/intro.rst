@@ -5,7 +5,7 @@ Introduction
 A Capsule Summary of F*
 -----------------------
 
-F* is a dependently type programming language that aims to play
+F* is a dependently typed programming language that aims to play
 several roles:
 
 * A general purpose programming language, which encourages
@@ -60,7 +60,7 @@ abstraction or for specific programming tasks, and for the embedded
 language to be engineered with domain-specific reasoning, proof
 automation, and compilation backends. Some examples include:
 
-* Low*, an shallowly embedded DSL for sequential programming against a
+* Low*, a shallowly embedded DSL for sequential programming against a
   C-like memory model including explicit memory management on the
   stack and heap; a Hoare logic for partial correctness based on
   implicit dynamic frames; and a custom backend (Karamel) to compile

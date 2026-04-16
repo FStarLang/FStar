@@ -499,7 +499,7 @@ We can start by lifting the F* operations on integers and functions to
    :start-after: //SNIPPET_START: lift_int$
    :end-before: //SNIPPET_END: lift_int$
 
-We also encode provide operations to compare dyn-typed integers and to
+We also provide operations to compare dyn-typed integers and to
 branch on them, treating ``0`` as ``false``.
 
 .. literalinclude:: ../code/Divergence.fst

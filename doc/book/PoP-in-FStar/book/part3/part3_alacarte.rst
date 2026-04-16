@@ -262,7 +262,7 @@ expression. Given a function ``alg`` to map an ``f a`` to a result value ``a``,
 ``fold_expr`` traverses an ``expr f`` accumulating the results of ``alg``
 applied to each node in the tree. Here we see why it was important to refine the
 type of ``fmap`` with the precondition ``x << t``: the recursive call to
-``fold_expr`` terminates only because the argument ``x`` is guarantee to precede
+``fold_expr`` terminates only because the argument ``x`` is guaranteed to precede
 ``t`` in F*'s built-in well-founded order.
 
 .. literalinclude:: ../code/Part3.DataTypesALaCarte.fst
@@ -334,7 +334,7 @@ previously <Part3_monadic_syntax>`.
    :end-before: //SNIPPET_END: error_monad$
 
 Next, in order to define our rewrite rules for each case, we define what we
-expect to be true for the expression evaluator for an expession tree that has
+expect to be true for the expression evaluator for an expression tree that has
 that case.
 
 For instance, if we're evaluating an ``Add`` node, then we expect the result to
@@ -460,7 +460,7 @@ Write a function ``lift`` with the following signature
    : expr g
 
 Use it to reuse an expression defined for one type to another, so that the
-assertion below success
+assertion below succeeds
 
 .. code-block:: fstar
 

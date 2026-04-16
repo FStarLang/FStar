@@ -193,7 +193,7 @@ sugar.
   instead of ``tup3 a b c``; and so on, up to arity 14.
 
 * You can write ``x, y`` instead of ``Tup2 x y``; ``x, y, z`` instead
-  of ``Tup3 x y z``; an so on, up to arity 14.
+  of ``Tup3 x y z``; and so on, up to arity 14.
 
 * You can write ``x._1``, ``x._2``, ``x._3``, etc. to project the
   field ``i`` of a tuple whose arity is at least ``i``.
@@ -346,7 +346,7 @@ the length of a list.
 The ``length`` function is recursive and implicitly polymorphic in a
 type ``a``. For any list ``l : list a``, ``length l`` returns a
 ``nat``. The definition pattern matches on the list and calls
-``length`` recursively on the tail of list, until the ``[]`` case is
+``length`` recursively on the tail of the list, until the ``[]`` case is
 reached.
 
 .. _Part1_inductives_append:

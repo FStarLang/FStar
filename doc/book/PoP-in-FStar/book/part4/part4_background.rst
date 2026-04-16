@@ -5,7 +5,7 @@ Computation Types to Track Dependences
 
 A main goal for F*'s effect system is to *track dependences* among the
 various parts of a program. For example, the effect system needs to
-ensures that the total part of a program that is proven to always
+ensure that the total part of a program that is proven to always
 terminate never calls a function in the divergent fragment (since that
 function call may loop forever). Or, that the runtime behavior of a
 compiled program does not depend on ghost computations that get erased

@@ -438,8 +438,8 @@ Universal Quantification
 
 Whereas implication is represented by the non-dependent arrow ``p ->
 q``, universal quantification corresponds to the dependent arrow ``x:t
--> q x``. Its classical form in ``forall (x:t). q x``, and is defined
-in as shown below:
+-> q x``. Its classical form is ``forall (x:t). q x``, and is defined
+as shown below:
 
 .. code-block:: fstar
 
@@ -447,7 +447,7 @@ in as shown below:
 
 .. note::
 
-   As with ``==>``, in ``Prims`` uses ``x:t -> GTot (q x)``, a ghost
+   As with ``==>``, ``Prims`` uses ``x:t -> GTot (q x)``, a ghost
    arrow, though the difference is not yet significant.
 
 Introduction
@@ -496,7 +496,7 @@ quantified hypothesis ``f`` with ``a``.
    :end-before: //SNIPPET_END: forall_elim_1$
 
 But, F* also provides syntactic sugar to explicitly trigger quantifier
-insantiation (as shown below), where the terms provided on the
+instantiation (as shown below), where the terms provided on the
 ``with`` line are instantiations for each of the binders on the
 ``eliminate`` line.
 

@@ -13,7 +13,7 @@ then use a mixture of Pulse and F* syntax, as shown below.
    :end-before: //SNIPPET_END
 
 This program starts with a bit of regular F* defining ``fstar_five``
-followed by an a Pulse function ``five`` that references that F*
+followed by a Pulse function ``five`` that references that F*
 definition and proves that it always returns the constant
 ``5``. Finally, we have a bit of regular F* referencing the ``five``
 defined in Pulse. This is a really simple program, but it already
@@ -43,7 +43,7 @@ section <Part4_Floyd_Hoare>`, separation logic comes in two parts.
 
 **Separation Logic Propositions** First, we have a language of propositions that
 describe properties about program resources, e.g., the heap. These propositions
-have the type ``slprop`` in Pulse, and, under the covers in the PulselCore
+have the type ``slprop`` in Pulse, and, under the covers in the PulseCore
 semantics of Pulse, a ``slprop = state -> prop``, where ``state`` represents the
 state of a program, e.g., the contents of memory. It is useful (at least at
 first) to think of a ``slprop`` as a memory property, though we will eventually
@@ -183,7 +183,7 @@ this is equivalent:
    :start-after: //incr_explicit_i$
    :end-before: //end incr_explicit_i$
    
-**Other slprop connectives** In addition the separating conjunction,
+**Other slprop connectives** In addition to the separating conjunction,
 Pulse, like other separation logics, provides other ways to combine
 ``slprops``. We'll look at these in detail in the subsequent chapters,
 but we list the most common other connectives below just to give you a

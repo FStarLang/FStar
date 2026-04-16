@@ -88,7 +88,7 @@ function that allows us to gather the permission back when we need it.
 In the implementation, we define an auxiliary ghost function that
 corresponds to the eliminator for ``pts_to x #one_half 'v @==> pts_to x
 'v``---it's just a ``gather``. Then, we split ``pts_to x 'v`` into
-halves, call ``I.intro`` passing the eliminator, and the fold it into
+halves, call ``I.intro`` passing the eliminator, and then fold it into
 a ``regain_half``. All ``regain_half`` has done is to package the
 ghost function ``aux``, together the half permission on ``x``, and put
 it into a ``slprop``.

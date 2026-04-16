@@ -32,7 +32,7 @@ equality is a congruence, in the sense that within any context
 when :math:`n` and :math:`m` are definitionally equal.
 
 Since definitionally equal terms are identical, all type theories,
-including F*, will implicit allow treating a term ``v:t`` as if it had
+including F*, will implicitly allow treating a term ``v:t`` as if it had
 type ``t'``, provided ``t`` and ``t'`` are definitionally equal.
 
 Let's look at a few examples, starting again with our type of
@@ -43,7 +43,7 @@ length-indexed vectors.
    :start-after: //SNIPPET_START: vec$
    :end-before: //SNIPPET_END: vec$
 
-As the two examples below show a ``v:vec a n`` is also has type ``vec
+As the two examples below show a ``v:vec a n`` also has type ``vec
 a m`` when ``n`` and ``m`` are definitionally equal.
 
 .. literalinclude:: ../code/ProvableEquality.fst
@@ -82,9 +82,9 @@ Propositional Equality
 ......................
 
 Definitional equality is so primitive in the language that there is no
-way to even state within the terms that two terms are definitional
+way to even state within the terms that two terms are definitionally
 equal, i.e., there is no way to state within the logic that two terms
-are related to each other by reduction. The closest one can get
+are related to each other by reduction. The closest one can get to
 stating that two terms are equal is through a notion called a
 *provable equality* or propositional equality.
 
@@ -95,15 +95,15 @@ the theorem ``t``. So, one might ask, what type corresponds to the
 equality proposition and how are proofs of equality represented?
 
 The listing below shows the definition of an inductive type ``equals
-#a x y`` representing the equality proposotion between ``x:a`` and
-``y:a`` . Its single constructor ``Reflexivity`` is an equality proof.
+#a x y`` representing the equality proposition between ``x:a`` and
+``y:a``. Its single constructor ``Reflexivity`` is an equality proof.
 
 .. literalinclude:: ../code/ProvableEquality.fst
    :language: fstar
    :start-after: //SNIPPET_START: equals$
    :end-before: //SNIPPET_END: equals$
 
-Its easy to construct some simple equality proofs. In the second case,
+It's easy to construct some simple equality proofs. In the second case,
 just as with our vector examples, F* accepts ``Reflexivity #_ #6`` as
 having type ``equals (factorial 3) 6``, since ``equals 6 6`` is
 definitionally equal to ``equals (factorial 3) 6``.
@@ -113,7 +113,7 @@ definitionally equal to ``equals (factorial 3) 6``.
    :start-after: //SNIPPET_START: sample_equals_proofs$
    :end-before: //SNIPPET_END: sample_equals_proofs$
 
-Although the only constructor of ``equals`` is ``Reflexivity``, as the
+Although the only constructor of ``equals`` is ``Reflexivity``, as
 the following code shows, ``equals`` is actually an equivalence
 relation, satisfying (in addition to reflexivity) the laws of symmetry
 and transitivity.
@@ -123,13 +123,13 @@ and transitivity.
    :start-after: //SNIPPET_START: equivalence_relation$
    :end-before: //SNIPPET_END: equivalence_relation$
 
-This might seem like magic: how is it is that we can derive symmetry
+This might seem like magic: how is it that we can derive symmetry
 and transitivity from reflexivity alone? The answer lies in how F*
 interprets inductive type definitions.
 
 In particular, given an inductive type definition of type
 :math:`T~\overline{p}`, where :math:`\overline{p}` is a list of
-parameters and, F* includes an axiom stating that any value :math:`v:
+parameters, F* includes an axiom stating that any value :math:`v:
 T~\overline{p}` must be an application of one of the constructors of
 :math:`T`, :math:`D~\overline{v} : T~\overline{p'}`, such that
 :math:`\overline{p} = \overline{p'}`.
@@ -188,9 +188,9 @@ Equality Reflection
 What makes F* an *extensional* type theory (and unlike the
 *intensional* type theories implemented by Coq, Lean, Agda, etc.) is a
 feature known as equality reflection. Whereas intensional type
-theories treat definitional and provable equalities separate, in F*
+theories treat definitional and provable equalities separately, in F*
 terms that are provably equal are also considered definitionally
-equal. That is, if in a given context ``x == y`` is derivable, the
+equal. That is, if in a given context ``x == y`` is derivable, then
 ``x`` is also definitionally equal to ``y``. This has some
 wide-reaching consequences.
 
@@ -201,7 +201,7 @@ Recall from the start of the chapter that ``v:vec a ((fun x -> x) 0)``
 is implicitly convertible to the type ``vec a 0``, since the two types
 are related by congruence and reduction. However, as the examples
 below show, if ``a == b`` is derivable in the context, then
-``v:a`` can be implicity converted to the type ``b``.
+``v:a`` can be implicitly converted to the type ``b``.
 
 .. literalinclude:: ../code/ProvableEquality.fst
    :language: fstar
@@ -263,7 +263,7 @@ reduce infinitely, and as a corollary, there are no closed proofs of
 
 F* includes various heuristics to avoid getting stuck in an infinite
 loop when reducing open terms, but one can craft examples to make F*'s
-reduction macinery loop forever. As such, deciding if possibly open
+reduction machinery loop forever. As such, deciding if possibly open
 terms have the same normal form is also undecidable in F*.
 
 .. _Part2_funext:
@@ -346,8 +346,8 @@ Exercise
 ........
 
 Leibniz equality ``leq x y``, relates two terms ``x:a`` and ``y:a`` if
-for all predicates ``p:a -> Type``, ``p a`` implies ``p b``. That is,
-if no predicate can distinguish ``x`` and ``y``, the they must be
+for all predicates ``p:a -> Type``, ``p x`` implies ``p y``. That is,
+if no predicate can distinguish ``x`` and ``y``, then they must be
 equal.
 
 Define Leibniz equality and prove that it is an equivalence relation.
@@ -388,7 +388,7 @@ from the F* module ``Prims``.
 
    val ( = ) (#a:eqtype) (x y:a) : bool
 
-On ``eqtype``, i.e., ``a:Type{hasEq a}``, decidable quality ``(=)``
+On ``eqtype``, i.e., ``a:Type{hasEq a}``, decidable equality ``(=)``
 and provable equality coincide, as shown below.
 
 .. literalinclude:: ../code/ProvableEquality.fst
@@ -410,19 +410,19 @@ type. If so, the type is considered an ``eqtype`` and uses of the ``(
 values provided by the target language chosen, e.g., OCaml, F\#, or C.
 
 The criterion used to determine whether or not the type supports
-equality decidable is the following.
+decidable equality is the following.
 
 Given an inductive type definition of :math:`T` with parameters
 :math:`\overline{p}` and indexes :math:`~\overline{q}`, for each
 constructor of :math:`D` with arguments :math:`\overline{v:t_v}`,
 
-1. Assume, or every type parameter :math:`t \in \overline{p}`, :math:`\mathsf{hasEq}~t`.
+1. Assume, for every type parameter :math:`t \in \overline{p}`, :math:`\mathsf{hasEq}~t`.
 
 2. Assume, for recursive types, for all :math:`\overline{q}`, :math:`\mathsf{hasEq}~(T~\overline{p}~\overline{q})`.
 
 3. For all arguments :math:`\overline{v:t_v}`, prove :math:`\mathsf{hasEq}~t_v`.
 
-If the proof in step 3 suceeds for all constructors, then F*
+If the proof in step 3 succeeds for all constructors, then F*
 introduces an axiom
 :math:`\forall~\overline{p}~\overline{q}. (\forall t \in \overline{p}. \mathsf{hasEq}~t) \Rightarrow \mathsf{hasEq}~(T~\overline{p}~\overline{q})`.
 
@@ -431,7 +431,7 @@ which the user can address by adding one of two qualifiers to the type.
 
 1. ``noeq``: This qualifier instructs F* to consider that the type
    does not support decidable equality, e.g., if one of the
-   constructors contains a function, as show below.
+   constructors contains a function, as shown below.
 
    .. literalinclude:: ../code/ProvableEquality.fst
       :language: fstar

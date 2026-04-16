@@ -4,7 +4,7 @@ A First Model of Computational Effects
 ======================================
 
 As a final chapter in this section, we show how inductive types can be
-used model not just data, but also *computations*, including
+used to model not just data, but also *computations*, including
 computations with side effects, like mutable state and shared-memory
 concurrency. This is meant to also give a taste of the next section in
 this book, which deals with modeling and proving properties of
@@ -77,7 +77,7 @@ The main idea with the state monad is to structure stateful programs
 by abstracting out all the plumbing related to manipulating the state,
 eliminating some of the tedium and possibilities for errors.
 
-The way this works is by defining a functions to read and write the
+The way this works is by defining functions to read and write the
 state, plus a couple of functions to return a pure value without
 reading or writing the state (a kind of an identity function that's a
 noop on the state); and a function to sequentially compose a pair of
@@ -158,8 +158,8 @@ With ``let!`` in scope, the following syntactic sugar becomes available:
 * Instead of writing ``bind f (fun x -> e)`` you can write ``let! x = f in e``.
 
 * Instead of writing ``bind f (fun _ -> e)`` you can write ``f ;!
-  e``, i.e., a semicolon followed the sequence of operator characters
-  uses in the monadic let-binding operator.
+  e``, i.e., a semicolon followed by the sequence of operator characters
+  used in the monadic let-binding operator.
 
 * Instead of writing ``bind f (fun x -> match x with ...)``, you can
   write ``match! f with ...``
@@ -169,7 +169,7 @@ With ``let!`` in scope, the following syntactic sugar becomes available:
 
 See this file `MonadicLetBindings.fst
 <https://github.com/FStarLang/FStar/blob/master/examples/misc/MonadicLetBindings.fst>`_
-for more details an examples of the syntactic sugar.
+for more details and examples of the syntactic sugar.
 
 Using this syntactic sugar, we come to our final version of
 ``read_and_increment``, where now, hopefully, the imperative-looking
@@ -210,7 +210,7 @@ equivalence relation on ``m a``
   * Right identity: ``bind f return ~ f``
   * Associativity: ``bind f1 (fun x -> bind (f2 x) f3) ~ bind (bind f1 f2) f3``
 
-Its easy to prove that ``st``, ``return``, and ``bind`` satisfy these
+It's easy to prove that ``st``, ``return``, and ``bind`` satisfy these
 laws in F*, where we pick the equivalence relation to equate functions
 that take equal arguments to equal results.
 
@@ -390,7 +390,7 @@ prove the monad laws once and for all.
 To prove the monad laws, we first need to define an equivalence
 relation on trees---this relation is not quite just ``==``, since each
 continuation in the tree is function which itself returns a tree. So,
-we define ``equiv`` blow, relating trees that are both ``Returns``, or
+we define ``equiv`` below, relating trees that are both ``Returns``, or
 when they both begin with the same action and have
 pointwise-equivalent continuations.
 
@@ -417,7 +417,7 @@ here a use of the syntactic sugar for logical connectives,
    :start-after: //SNIPPET_START: equiv is an equivalence$
    :end-before: //SNIPPET_END: equiv is an equivalence$
 
-Now, we can prove that ``tree`` satisifies the monad laws with respect
+Now, we can prove that ``tree`` satisfies the monad laws with respect
 to ``equiv``.
 
 .. literalinclude:: ../code/Part2.Free.fst
@@ -452,7 +452,7 @@ as a state-passing function.
 .. note::
 
    A main difference between what we've shown here with ``interp`` and
-   a general treament of algebraic effects is that rather than
+   a general treatment of algebraic effects is that rather than
    "bake-in" the interpretation of the individual actions in
    ``interp``, we can also abstract the semantics of the actions using
    an idea similar to exception handling, allowing the context to
@@ -557,7 +557,7 @@ There's quite a lot going on here, so let's break it down a bit:
     execute first (if any are left); while ``r_par f g`` is
     right-biased, picking an action from ``g`` to execute first.
 
-  * Consider the ``DoThen`` case in ``l_par``: if picks the head
+  * Consider the ``DoThen`` case in ``l_par``: it picks the head
     action ``a`` from ``f`` and the recurses in the continuation with
     ``r_par (k x) g``, to prefer executing first an action from ``g``
     rather than ``k x``. The ``DoThen`` case of ``r_par`` is
@@ -588,7 +588,7 @@ semantics, we don't actually increment the state twice.
 
 To check, let's define an interpretation function to run our
 computations. Since we need to resolve the non-deterministic choice in
-the ``Or`` nodes, we'll parameterize our intepreter by a source of
+the ``Or`` nodes, we'll parameterize our interpreter by a source of
 "randomness", an infinite stream of booleans.
 
 .. literalinclude:: ../code/Part2.Par.fst
@@ -609,9 +609,9 @@ check that the result is equivalent to ``True``.
 
 .. note::
 
-   F*'s emacs mode ``fstar-mode.el`` provides some utilites to allow
+   F*'s emacs mode ``fstar-mode.el`` provides some utilities to allow
    reducing terms of F*'s abstract machine and showing the results to
-   the user. F*'s tactics also also allow evaluating terms and viewing
+   the user. F*'s tactics also allow evaluating terms and viewing
    the results---we leave further discussion of these features to a
    future chapter.
 

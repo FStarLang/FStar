@@ -194,7 +194,7 @@ And F* will figure out instantiations for the missing first argument
 to ``id``.
 
 In some cases, it may be useful to actually provide an implicit
-argument explicitly, rather than relying on the F* to pick one. For
+argument explicitly, rather than relying on F* to pick one. For
 example, one could write the following:
 
 .. literalinclude:: ../code/Part1.Poly2.fst

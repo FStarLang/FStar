@@ -27,7 +27,7 @@ plugins.
     <https://github.com/FStarLang/fstar-vscode-assistant>`_, which
     also provides interactive editing and checking support in VS Code.
 
-The main benefit to using these IDE plugins is that they allow you to
+The main benefit of using these IDE plugins is that they allow you to
 incrementally check just the changing suffix of an F* file, rather
 than rechecking the entire file in batch mode. They also provide
 standard things like jumping to definitions, type of a symbol etc.
@@ -296,7 +296,7 @@ programs. In the core of F*, functions behave like functions in
 maths. In other words, they are defined on their entire domain (i.e.,
 they are total functions and always return a result) and their only
 observable behavior is the result they return (i.e., they don't have
-any side effect, like looping forever, or printing a message etc.).
+any side effects, like looping forever, or printing a message etc.).
 
 Functions are first-class values in F*, e.g., they can be passed as
 arguments to other functions and returned as results. While F*
@@ -513,8 +513,8 @@ You have several options to try out these examples.
 
 To get started and for trying small exercises, the easiest way is via
 the `online tutorial <http://fstar-lang.org/tutorial>`_. If that's
-where you're reading this, you can just use the in-browser editor
-alongside which communicates with an F* instance running in the
+where you're reading this, you can just use the in-browser editor,
+which communicates with an F* instance running in the
 cloud. Just click `on this link
 <../code/exercises/Part1.GettingOffTheGround.fst>`_ to load the
 code of an exercise in the editor.
@@ -535,7 +535,7 @@ Once you have a local installation, to check a program you can run the
 
   $ fstar Sample.fst
 
-In response ``fstar`` should output::
+In response, ``fstar`` should output::
 
   Verified module: Sample
   All verification conditions discharged successfully
@@ -560,7 +560,7 @@ Many types for ``incr``
 Here are some types for ``incr``, including some types that are valid
 and some others that are not.
 
-This type claims that ``incr`` result is
+This type claims that ``incr``'s result is
 greater than its argument and F* agrees—remember, the ``int`` type is
 unbounded, so there's no danger of the addition overflowing.
 

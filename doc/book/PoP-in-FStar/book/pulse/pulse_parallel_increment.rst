@@ -118,7 +118,7 @@ function a precise postcondition.
    In this section, we use an implementation of spin locks from the
    Pulse library, Pulse.Lib.SpinLock. Unlike the version we developed
    in the previous chapter, these locks use a fraction-indexed
-   permission, ``lock_alive l #f p``. The also provide a predicate,
+   permission, ``lock_alive l #f p``. They also provide a predicate,
    ``lock_acquired l``, that indicates when the lock has been
    taken. With full-permission to the lock, and ``lock_acquired l``,
    the lock can be freed---reclaiming the underlying

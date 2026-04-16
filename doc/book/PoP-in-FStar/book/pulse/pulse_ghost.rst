@@ -22,7 +22,7 @@ functions, except they are specified using ``slprops``); and *ghost
 state* (think of these as the analog of F* erased types, except ghost
 state is mutable, though still computationally irrelevant). Ghost
 computations are used everywhere in Pulse---we've already seen a few
-example. Ghost state is especially useful in proofs of concurrent
+examples. Ghost state is especially useful in proofs of concurrent
 programs.
 
 
@@ -174,7 +174,7 @@ structures. Since a ``slprop`` is just a regular type, one can also
 define ``slprops`` by recursion in F*. Working with these recursive
 predicates in Pulse usually involves writing recursive ghost functions
 as lemmas. We'll look at a simple example of this here and revisit in
-subsequent chapters as look at programming unbounded structures, like
+subsequent chapters as we look at programming unbounded structures, like
 linked lists.
 
 Say you have a list of references and want to describe that they all

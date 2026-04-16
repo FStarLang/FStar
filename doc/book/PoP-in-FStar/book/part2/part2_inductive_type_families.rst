@@ -93,7 +93,7 @@ This definition is strictly positive when
  * :math:`T` does not appear to the left of any arrow in any
    :math:`s \in (s_0, ..., s_k)[\overline{v}/\overline{p}]`.
 
-Our type ``dyn`` violates this condition, since the defined typed
+Our type ``dyn`` violates this condition, since the defined type
 ``dyn`` appears to the left of an arrow type in the ``dyn ->
 dyn``-typed field of the ``Function`` constructor.
 
@@ -141,7 +141,7 @@ as the next example shows.
    :end-before: //SNIPPET_END: non_positive$
 
 This example is very similar to ``dyn``, except ``NP`` stores a
-non-positive function that returns ``False``, which allows use to
+non-positive function that returns ``False``, which allows us to
 prove ``ff : False``, i.e., in this example, not only does the
 violation of strict positivity lead to an infinite loop at runtime, it
 also renders the entire proof system of F* useless, since one can
@@ -179,7 +179,7 @@ in ``also_non_pos`` above.
 
 For example, the definition below introduces a type ``free f a``, a 
 form of a tree whose leaf nodes contain ``a`` values, and whose
-internal nodes branch according the type function ``f``. 
+internal nodes branch according to the type function ``f``.
 
 .. literalinclude:: ../code/Part2.Positivity.fst
    :language: fstar
@@ -198,7 +198,7 @@ strictly positive when they are used at higher order.
    :start-after: //SNIPPET_START: free_instances$
    :end-before: //SNIPPET_END: free_instances$
 
-However, we should only be allowed to instantate ``f`` with type
+However, we should only be allowed to instantiate ``f`` with type
 functions that are strictly positive in their argument, since otherwise
 we can build a proof of ``False``, as we did with
 ``also_non_pos``. The ``@@@strictly_positive`` attribute on the
@@ -223,7 +223,7 @@ Unused Annotations
 
 Sometimes one indexes a type by another type, though the index has no
 semantic meaning. For example, in several F* developments that model
-mutable state, the a heap reference is just a natural number modeling
+mutable state, a heap reference is just a natural number modeling
 its address in the heap. However, one might use the type ``let ref
 (a:Type) = nat`` to represent the type of a reference, even though the
 type ``a`` is not used in the definition. In such cases, it can be

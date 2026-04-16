@@ -65,7 +65,7 @@ Some syntactic shorthands for Lemmas
 ....................................
 
 Lemmas are so common in F* that it's convenient to have special syntax
-for them. Here's another take at our proof of ``factorial x > 0``
+for them. Here's another take on our proof of ``factorial x > 0``
 
 .. literalinclude:: ../code/Part1.Lemmas.fst
    :language: fstar
@@ -409,7 +409,7 @@ Prove that reverse is injective, i.e., prove the following lemma.
        :start-after: SNIPPET_START: def rev_injective
        :end-before: SNIPPET_END: def rev_injective
 
-    That's quite a tedious proof, isn't it. Here's a simpler proof.
+    That's quite a tedious proof, isn't it? Here's a simpler proof.
 
     .. literalinclude:: ../code/Part1.Lemmas.fst
        :language: fstar
@@ -564,7 +564,7 @@ Prove the following lemma:
 
     .. container:: header
 
-       Hint: This proof is a level harder from what we've done so far.
+       Hint: This proof is a level harder than what we've done so far.
              You will need to strengthen the induction hypothesis, and
              possibly to prove that ``append`` is associative and that
              ``append l [] == l``.

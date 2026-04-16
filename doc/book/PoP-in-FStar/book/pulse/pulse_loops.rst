@@ -98,7 +98,7 @@ infinitely looping variant of our program is also accepted:
    :start-after: //count_down_loopy$
    :end-before: //end count_down_loopy$
 
-This program increments instead of decrement ``x``, but it still
+This program increments instead of decrementing ``x``, but it still
 satisfies the same invariant as before, since it always loops forever.
 
 We do have a fragment of the Pulse logic, notably the logic of
@@ -140,7 +140,7 @@ Summing the first ``N`` numbers
 +++++++++++++++++++++++++++++++
 
 This next example shows a Pulse program that sums the first ``n``
-natural numbers. It illustrates how Pulse programs can developed along
+natural numbers. It illustrates how Pulse programs can be developed along
 with pure F* specifications and lemmas.
 
 We start with a specification of ``sum``, a simple recursive function
