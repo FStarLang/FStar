@@ -38,7 +38,7 @@ Some background and resources:
   * Michal Moskal's `Programming with Triggers
     <https://moskal.me/pdf/prtrig.pdf>`_ describes how to pick
     triggers for quantifier instantiation and how to debug and profile
-    the SMT solver, in the context of Vcc and the relation Hypervisor
+    the SMT solver, in the context of Vcc and the related Hypervisor
     Verification project.
 
   * Leonardo de Moura and Nikolaj Bjorner `describe how E-matching is
@@ -203,7 +203,7 @@ SMT2 file with the following rough shape.
 
 .. code-block:: smt2
 
-   ;; Some basic scaffoling
+   ;; Some basic scaffolding
 
    (declare-sort Term)
    ...
@@ -499,7 +499,7 @@ Recursive functions and fuel
 ............................
 
 Non-recursive functions are similar to macro definitions---F* just
-encodes encodes their semantics to the SMT solver as a rewrite
+encodes their semantics to the SMT solver as a rewrite
 rule. However, recursive functions, since they could be unfolded
 indefinitely, are not so simple. Let's look at the encoding of the
 ``factorial`` function shown below.
@@ -549,7 +549,7 @@ the argument ``(HasType @x1 Prims.nat)``, since the recursive function
 in F* is only well-founded on ``nat``, not on all terms. The
 ``:weight`` annotation is an SMT2 detail: setting it to zero ensures
 that the SMT solver can instantiate this quantifier as often as
-needed, so long as the the fuel instrumentation argument is non-zero.
+needed, so long as the fuel instrumentation argument is non-zero.
 Notice that the equation peels off one application of ``SFuel``, so
 that the quantifier cannot be repeatedly instantiated infinitely.
 
@@ -724,7 +724,7 @@ were to use ``(HasTypeFuel @u0 @x1 SMTEncoding.unat)`` as the pattern,
 this would lead to an infinite quantifier instantiation loop, since
 every each instantiation would lead a new, larger active term that
 could instantiate the quantifier again.  Note, using the introduction
-form does not vary the fuel parameter, since the the number of
+form does not vary the fuel parameter, since the number of
 applications of the constructor ``S`` decreases at each instantiation
 anyway.
 
@@ -1136,7 +1136,7 @@ are themselves matching candidates. To be explicit, with a single
 active term ``mem x s``, the solver would derive ``mem x (union s
 s)``, ``mem x (union s (union s s))``, and so on.  This is called a
 matching loop and can be disastrous for solver performance. So,
-carefully chosing the patterns on quantifiers and lemmas with
+carefully choosing the patterns on quantifiers and lemmas with
 ``SMTPat`` annotations is important.
 
 Finally, to complete our interface, we provide two lemmas to
@@ -1790,7 +1790,7 @@ via various implicitly chosen patterns and artificial triggers.
    :start-after: //SNIPPET_START: explicit_exists$
    :end-before: //SNIPPET_END: explicit_exists$
 
-Here is `a link to the the full file <../code/AlexOpaque.fst>`_ with
+Here is `a link to the full file <../code/AlexOpaque.fst>`_ with
 all the variations we have explored.
 
 Overhead due to a Large Context

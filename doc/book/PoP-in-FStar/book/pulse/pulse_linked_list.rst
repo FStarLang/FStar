@@ -217,7 +217,7 @@ Now, for the proof. The main part is the loop invariant, which says:
   * ``cur`` holds a list pointer, ``ll`` where ``ll`` contains the
     list represented by ``suffix``;
 
-  * ``n`` is the the length of the prefix of the list traversed so far;
+  * ``n`` is the length of the prefix of the list traversed so far;
 
   * the loop continues as long as ``b`` is true, i.e., the list
     pointer ``l`` is not ``None``;

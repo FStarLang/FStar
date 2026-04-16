@@ -153,8 +153,7 @@ some common types in ``Type u#0``.
 
 
 **Universe of an arrow type**: In general, the universe of an arrow
-type ``x:t -> t'`` is the the maximum of the universe of ``t`` and
-``t'``.
+type ``x:t -> t'`` is the maximum of the universe of ``t`` and ``t'``.
       
 This means that functions that are type-polymorphic live in higher
 universes. For example, the polymorphic identity function that we saw

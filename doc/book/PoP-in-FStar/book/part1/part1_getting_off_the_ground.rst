@@ -261,7 +261,7 @@ The other direction is a bit more subtle: ``x:t{ p }`` is only a
 subtype of ``p``, for those terms ``e`` that validate ``p``. You're
 probably also wondering about how to prove that ``p[e/x]`` evaluates
 to ``true``---we will look at this in detail later. But, the short
-version is that F*, by default, uses an SMT solver to prove such fact,
+version is that F*, by default, uses an SMT solver to prove such facts,
 though you can also use tactics and other techniques to do so.
 
 An example
@@ -346,7 +346,7 @@ result type of a named function definition.
 .. note::
 
    In addition to decorating the types of parameters and the results
-   of function, F* allows annotating any term ``e`` with its expected
+   of functions, F* allows annotating any term ``e`` with its expected
    type ``t`` by writing ``e <: t``. This is called a *type
    ascription*. An ascription instructs F* to check that the
    term ``e`` has the type ``t``. For example, we could have written
@@ -367,7 +367,7 @@ the ``let rec`` syntax, as shown below.
    :start-after: SNIPPET_START: factorial
    :end-before: SNIPPET_END: factorial
 
-This syntax defines a function names ``factorial`` with a single
+This syntax defines a function named ``factorial`` with a single
 parameter ``n:nat``, returning a ``nat``. The definition of factorial
 is allowed to use the ``factorial`` recursively—as we'll see in a
 later chapter, ensuring that the recursion is well-founded (i.e., all

@@ -31,7 +31,7 @@ In this section, we look at F*'s effect system which allows users to
     the scenes, for reasoning and execution purposes, programs are
     elaborated into the semantic model
 
-Aside from user-defined effects, F*'s also supports the following
+Aside from user-defined effects, F* also supports the following
 *primitive* effects:
 
   * **Ghost**: An effect which describes which parts of a program have

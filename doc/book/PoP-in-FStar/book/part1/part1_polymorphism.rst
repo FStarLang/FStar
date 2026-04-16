@@ -157,7 +157,7 @@ with an underscore ``_``.
    :start-after: //SNIPPET_START: implicit id applications
    :end-before: //SNIPPET_END: implicit id applications
 
-The underscore symbol is a wildcard, or a hole in program, and it's
+The underscore symbol is a wildcard, or a hole in the program, and it's
 the job of the F* typechecker to fill in the hole.
 
 .. note::

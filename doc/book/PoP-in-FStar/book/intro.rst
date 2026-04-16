@@ -277,7 +277,7 @@ where ``pow2`` is the recursive function shown below.
 An easy way to convince F* of this fact is to ask it (using
 ``normalize_term_spec``) to simply compute the result of ``pow2 12``
 on an interpreter that's part of the F* toolchain, which it can do
-instantly, rather than relying on an SMT solvers expensive equational
+instantly, rather than relying on an SMT solver's expensive equational
 machinery to encode the reduction of a recursive function.
 
 This reduction machinery (called the *normalizer*) is capable not only

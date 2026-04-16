@@ -165,7 +165,7 @@ This program is quite similar to ``multiply_by_repeated_addition``,
 but with a couple of differences:
 
   * The invariant says that the current value of the accumulator holds
-    the sum of the the first ``c`` numbers, i.e., we prove that the
+    the sum of the first ``c`` numbers, i.e., we prove that the
     loop refines the recursive implementation of ``sum``, without
     relying on any properties of non-linear arithmetic---notice, we
     have disabled non-linear arithmetic in Z3 with a pragma.

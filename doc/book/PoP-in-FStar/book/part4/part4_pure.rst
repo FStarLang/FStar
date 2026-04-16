@@ -447,7 +447,7 @@ The first main difference in adapting the Hoare triples and weakest
 precondition computations that we saw earlier to the setting of F*'s
 functional language is that there are no global variables or mutable
 state (we'll see about how model mutable state in F*'s effect system
-later). Instead, each pure expression in F*'s *returns* a value and
+later). Instead, each pure expression in F* *returns* a value and
 the postconditions that we will manipulate are predicates about these
 values, rather than state predicates.
 
@@ -790,6 +790,5 @@ automation---a :ref:`later chapter <UTH_smt>` covers that in detail.
 
 Finally, notice the type of the ``post``, which assumes ``squash pre``
 as an argument--this is what allows the ``ensures`` clause of a
-``Lemma`` to assume that what was specified in the ```requires``
-clause.
+``Lemma`` to assume what was specified in the ```requires`` clause.
 
