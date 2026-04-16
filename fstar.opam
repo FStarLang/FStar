@@ -23,7 +23,6 @@ depends: [
   "ppx_deriving_yojson" {build}
   # Inherited from karamel:
   "uucp"
-  "visitors"
   "wasm"
   "fix"
 ]
