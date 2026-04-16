@@ -398,7 +398,7 @@ recursive: its subterms have type ``term`` rather than ``term_view``.
       | Tv_Arrow  : bv:binder -> c:comp -> term_view
       ...
 
-The ``inspect`` primitives "peels away" one level of the abstraction
+The ``inspect`` primitive "peels away" one level of the abstraction
 layer, giving access to the top-level shape of the term.
 
 The ``Tv_FVar`` node above represents (an occurrence of) a global name.
