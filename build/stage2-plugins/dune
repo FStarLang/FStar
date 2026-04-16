@@ -1,0 +1,10 @@
+; Stage 2 plugin extraction
+(copy_files %{project_root}/../ulib/*.fst)
+(copy_files %{project_root}/../ulib/*.fsti)
+
+(dynamic_include ../stage2-plugins-gen/plugins.build.inc)
+(dynamic_include ../stage2-plugins-gen/plugins.extract.inc)
+
+(alias
+ (name stage2-plugins)
+ (deps (alias all-extracted)))

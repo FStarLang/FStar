@@ -1,0 +1,23 @@
+; Stage 2 plugin compilation: compile into fstar_plugins2 + fstarc2_full
+(env (_ (bin_annot false) (flags (:standard -w -A))))
+(include_subdirs unqualified)
+
+(copy_files %{project_root}/stage2-plugins/*.ml)
+(copy_files %{project_root}/../stage0/dune/fstar-plugins/plugin/*.ml)
+
+(library
+ (name fstar_plugins2)
+ (libraries fstarcompiler2)
+ (modules :standard \ fstarc2_full)
+ (modes native)
+ (wrapped false)
+ (flags (:standard -open Fstarcompiler2))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))
+
+(executable
+ (name fstarc2_full)
+ (modules fstarc2_full)
+ (libraries fstarcompiler2 fstar_plugins2 memtrace)
+ (link_flags "-linkall")
+ (modes (native exe))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))

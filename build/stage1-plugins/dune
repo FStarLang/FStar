@@ -1,0 +1,10 @@
+; Stage 1 plugin extraction: check + extract plugin modules from ulib/
+(copy_files %{project_root}/../ulib/*.fst)
+(copy_files %{project_root}/../ulib/*.fsti)
+
+(dynamic_include ../stage1-plugins-gen/plugins.build.inc)
+(dynamic_include ../stage1-plugins-gen/plugins.extract.inc)
+
+(alias
+ (name stage1-plugins)
+ (deps (alias all-extracted)))

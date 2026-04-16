@@ -1,0 +1,50 @@
+; Stage 2 OCaml compilation: extracted ML → fstarc2_bare
+(env (_ (bin_annot false) (flags (:standard -w -A))))
+(include_subdirs unqualified)
+
+(copy_files %{project_root}/stage2/*.ml)
+(copy_files %{project_root}/../src/ml/*.ml)
+(copy_files %{project_root}/../stage0/ulib/ml/app/*.ml)
+(copy_files %{project_root}/../stage0/ulib/ml/app/ints/mk_int_file.sh)
+(copy_files %{project_root}/../stage0/ulib/ml/app/ints/FStar_Ints.ml.body)
+(copy_files %{project_root}/../src/ml/FStarC_Parser_Parse.mly)
+(copy_files %{project_root}/../src/ml/FStarC_Parser_WarnError.mly)
+(copy_files %{project_root}/../stage1/dune/fstar-guts/make_fstar_version.sh)
+
+(rule
+  (target FStarC_Version.ml)
+  (deps (:script make_fstar_version.sh) (:version %{project_root}/../version.txt))
+  (action (progn (copy %{version} version.txt)
+                 (with-stdout-to FStarC_Version.ml (run bash %{script})))))
+
+(rule (target FStar_UInt16.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} U 16))))
+(rule (target FStar_UInt32.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} U 32))))
+(rule (target FStar_UInt64.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} U 64))))
+(rule (target FStar_Int8.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} S 8))))
+(rule (target FStar_Int16.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} S 16))))
+(rule (target FStar_Int32.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} S 32))))
+(rule (target FStar_Int64.ml) (deps (:s mk_int_file.sh) (:b FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{s} S 64))))
+
+(menhir (modules FStarC_Parser_Parse))
+(menhir (modules FStarC_Parser_WarnError))
+
+(library
+ (name fstarcompiler2)
+ (libraries batteries zarith stdint yojson ppxlib dynlink menhirLib pprint process sedlex mtime.clock)
+ (modules :standard \ fstarc2_bare)
+ (modes native)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))
+
+(executable
+ (name fstarc2_bare)
+ (modules fstarc2_bare)
+ (libraries fstarcompiler2 memtrace)
+ (link_flags "-linkall")
+ (modes (native exe)))

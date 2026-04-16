@@ -1,0 +1,126 @@
+; Disable all OCaml warnings for extracted code
+(env
+  (_
+    (bin_annot false)
+    (flags (:standard -w -A))))
+
+; =============================================================================
+; build/stage1-ocaml/dune — Compile extracted ML into fstarc1_bare
+; =============================================================================
+;
+; This directory compiles the OCaml code extracted in build/stage1/ into the
+; fstarc1_bare executable. Sources come from three places:
+;   1. Extracted .ml files from build/stage1/ (produced by --dep dune)
+;   2. Hand-written .ml files from src/ml/ (platform support, parser, etc.)
+;   3. App support .ml files from stage0/ulib/ml/app/ (runtime library)
+;
+; Uses (include_subdirs unqualified) to collect all .ml files in this dir.
+
+(include_subdirs unqualified)
+
+; --- Copy extracted ML files from the extraction phase ---
+(copy_files %{project_root}/stage1/*.ml)
+
+; --- Copy hand-written ML support files ---
+(copy_files %{project_root}/../src/ml/*.ml)
+
+; --- Copy app support ML files (runtime library stubs) ---
+(copy_files %{project_root}/../stage0/ulib/ml/app/*.ml)
+
+; --- Copy int generation support ---
+(copy_files %{project_root}/../stage0/ulib/ml/app/ints/mk_int_file.sh)
+(copy_files %{project_root}/../stage0/ulib/ml/app/ints/FStar_Ints.ml.body)
+
+; --- Copy parser .mly files ---
+(copy_files %{project_root}/../src/ml/FStarC_Parser_Parse.mly)
+(copy_files %{project_root}/../src/ml/FStarC_Parser_WarnError.mly)
+
+; --- Copy version generation script ---
+(copy_files %{project_root}/../stage1/dune/fstar-guts/make_fstar_version.sh)
+
+; --- Generate FStarC_Version.ml ---
+(rule
+  (target FStarC_Version.ml)
+  (deps (:script make_fstar_version.sh)
+        (:version %{project_root}/../version.txt))
+  (action
+    (progn
+      (copy %{version} version.txt)
+      (with-stdout-to
+        FStarC_Version.ml
+        (run bash %{script})))))
+
+; --- Generate integer module files ---
+(rule
+  (target FStar_UInt16.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} U 16))))
+
+(rule
+  (target FStar_UInt32.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} U 32))))
+
+(rule
+  (target FStar_UInt64.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} U 64))))
+
+(rule
+  (target FStar_Int8.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} S 8))))
+
+(rule
+  (target FStar_Int16.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} S 16))))
+
+(rule
+  (target FStar_Int32.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} S 32))))
+
+(rule
+  (target FStar_Int64.ml)
+  (deps (:script mk_int_file.sh) (:body FStar_Ints.ml.body))
+  (action (with-stdout-to %{target} (run bash %{script} S 64))))
+
+; --- Parser generation ---
+(menhir
+ (modules FStarC_Parser_Parse))
+(menhir
+ (modules FStarC_Parser_WarnError))
+
+; --- The fstarcompiler library (all extracted + hand-written ML) ---
+(library
+ (name fstarcompiler)
+ (libraries
+    batteries
+    zarith
+    stdint
+    yojson
+    ppxlib
+    dynlink
+    menhirLib
+    pprint
+    process
+    sedlex
+    mtime.clock
+ )
+ (modules :standard \ fstarc1_bare)
+ (modes native)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+)
+
+; --- The bare compiler executable ---
+(executable
+ (name fstarc1_bare)
+ (modules fstarc1_bare)
+ (libraries
+   fstarcompiler
+   memtrace
+ )
+ (link_flags "-linkall")
+ (modes (native exe))
+)

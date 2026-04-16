@@ -1,0 +1,29 @@
+; Stage 1 plugin compilation: compile extracted plugin ML into fstar_plugins library
+; and build the full compiler fstarc1_full
+
+(env (_ (bin_annot false) (flags (:standard -w -A))))
+
+(include_subdirs unqualified)
+
+; Copy extracted plugin ML from extraction phase
+(copy_files %{project_root}/stage1-plugins/*.ml)
+
+; Copy hand-written plugin support files
+(copy_files %{project_root}/../stage0/dune/fstar-plugins/plugin/*.ml)
+
+(library
+ (name fstar_plugins)
+ (libraries fstarcompiler)
+ (modules :standard \ fstarc1_full)
+ (modes native)
+ (wrapped false)
+ (flags (:standard -open Fstarcompiler))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))
+
+(executable
+ (name fstarc1_full)
+ (modules fstarc1_full)
+ (libraries fstarcompiler fstar_plugins memtrace)
+ (link_flags "-linkall")
+ (modes (native exe))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx)))

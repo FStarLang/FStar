@@ -2,90 +2,396 @@
 ; build/dune — F* staged build system using dune
 ; =============================================================================
 ;
-; This dune project builds F* through its staged bootstrap:
-;   stage0 (separate --root) → fstar0.exe
-;   stage1-gen/ → fstar0.exe --dep dune generates extraction rules
-;   stage1/    → dynamic_include rules, builds fstar1.exe
+; Multi-stage bootstrap orchestrated by a thin Makefile.
+; Each phase is a separate `dune build` invocation with different FSTAR_EXE.
 ;
-; PREREQUISITE: stage0 must have been built and installed:
-;   dune build --root=../stage0/dune @install
-;   dune install --root=../stage0/dune --prefix=../stage0/out
+; %{workspace_root}/../../.. escapes _build/default/<subdir>/ → FStar root.
 ;
-; NOTE: stage0's fstar.exe must support --dep dune and --output_ext.
-; If it doesn't, stage0 needs to be bumped first.
-;
-; Usage:
-;   FSTAR_EXE=../stage0/out/bin/fstar.exe dune build @stage1
+; Phase 1: FSTAR_EXE=fstar0      dune build @stage1         (check+extract FStarC)
+; Phase 2:                        dune build @stage1-ocaml   (compile fstarc1_bare)
+; Phase 3: FSTAR_EXE=fstarc1bare dune build @stage1-plugins (extract plugins)
+; Phase 4:                        dune build @stage1-full    (compile fstarc1_full)
+; Phase 5: FSTAR_EXE=fstarc1full dune build @stage2         (check+extract FStarC)
+; Phase 6:                        dune build @stage2-ocaml   (compile fstarc2_bare)
+; Phase 7: FSTAR_EXE=fstarc2bare dune build @stage2-plugins (extract plugins)
+; Phase 8:                        dune build @stage2-full    (compile fstarc2_full)
 
-(dirs stage1 stage1-gen)
+(dirs stage1 stage1-gen stage1-ocaml
+      stage1-plugins stage1-plugins-gen stage1-plugins-ocaml
+      stage2 stage2-gen stage2-ocaml
+      stage2-plugins stage2-plugins-gen stage2-plugins-ocaml)
 
 ; =============================================================================
-; Stage 1 generator rules
+; Stage 1: FStarC extraction (using fstar0)
 ; =============================================================================
-; These rules invoke fstar0.exe --dep dune to generate .inc files
-; containing dune (rule ...) stanzas for checking and extracting.
 
 (subdir stage1-gen
 
- ; FStarC bare compiler: build (verification) phase
  (rule
   (target fstarc.build.inc)
-  (deps (universe))
+  (deps)
   (action (with-stdout-to %{target}
-    (run %{env:FSTAR_EXE=fstar.exe}
+    (run %{env:FSTAR0_EXE=fstar.exe}
          --dep dune --output_ext fst.checked.lax --lax
          --warn_error -272
-         --include %{workspace_root}/../ulib
-         --include %{workspace_root}/../src/basic
-         --include %{workspace_root}/../src/class
-         --include %{workspace_root}/../src/data
-         --include %{workspace_root}/../src/extraction
-         --include %{workspace_root}/../src/fstar
-         --include %{workspace_root}/../src/interactive
-         --include %{workspace_root}/../src/parser
-         --include %{workspace_root}/../src/prettyprint
-         --include %{workspace_root}/../src/reflection
-         --include %{workspace_root}/../src/smtencoding
-         --include %{workspace_root}/../src/syntax
-         --include %{workspace_root}/../src/syntax/print
-         --include %{workspace_root}/../src/tactics
-         --include %{workspace_root}/../src/tosyntax
-         --include %{workspace_root}/../src/typechecker
-         --include %{workspace_root}/../src/tests
+         --include %{workspace_root}/../../../ulib
+         --include %{workspace_root}/../../../src/basic
+         --include %{workspace_root}/../../../src/class
+         --include %{workspace_root}/../../../src/data
+         --include %{workspace_root}/../../../src/extraction
+         --include %{workspace_root}/../../../src/fstar
+         --include %{workspace_root}/../../../src/interactive
+         --include %{workspace_root}/../../../src/parser
+         --include %{workspace_root}/../../../src/prettyprint
+         --include %{workspace_root}/../../../src/reflection
+         --include %{workspace_root}/../../../src/smtencoding
+         --include %{workspace_root}/../../../src/syntax
+         --include %{workspace_root}/../../../src/syntax/print
+         --include %{workspace_root}/../../../src/tactics
+         --include %{workspace_root}/../../../src/tosyntax
+         --include %{workspace_root}/../../../src/typechecker
+         --include %{workspace_root}/../../../src/tests
          --extract FStarC
          --extract +FStar.Pervasives
          --extract -FStar.Pervasives.Native
-         --already_cached "Prims FStar"
-         %{workspace_root}/../src/fstar/FStarC.Main.fst))))
+         %{workspace_root}/../../../src/fstar/FStarC.Main.fst))))
 
- ; FStarC bare compiler: extract (codegen OCaml) phase
  (rule
   (target fstarc.extract.inc)
-  (deps (universe))
+  (deps)
   (action (with-stdout-to %{target}
-    (run %{env:FSTAR_EXE=fstar.exe}
+    (run %{env:FSTAR0_EXE=fstar.exe}
          --dep dune --output_ext ml --codegen OCaml --lax
          --warn_error -272
-         --include %{workspace_root}/../ulib
-         --include %{workspace_root}/../src/basic
-         --include %{workspace_root}/../src/class
-         --include %{workspace_root}/../src/data
-         --include %{workspace_root}/../src/extraction
-         --include %{workspace_root}/../src/fstar
-         --include %{workspace_root}/../src/interactive
-         --include %{workspace_root}/../src/parser
-         --include %{workspace_root}/../src/prettyprint
-         --include %{workspace_root}/../src/reflection
-         --include %{workspace_root}/../src/smtencoding
-         --include %{workspace_root}/../src/syntax
-         --include %{workspace_root}/../src/syntax/print
-         --include %{workspace_root}/../src/tactics
-         --include %{workspace_root}/../src/tosyntax
-         --include %{workspace_root}/../src/typechecker
-         --include %{workspace_root}/../src/tests
+         --include %{workspace_root}/../../../ulib
+         --include %{workspace_root}/../../../src/basic
+         --include %{workspace_root}/../../../src/class
+         --include %{workspace_root}/../../../src/data
+         --include %{workspace_root}/../../../src/extraction
+         --include %{workspace_root}/../../../src/fstar
+         --include %{workspace_root}/../../../src/interactive
+         --include %{workspace_root}/../../../src/parser
+         --include %{workspace_root}/../../../src/prettyprint
+         --include %{workspace_root}/../../../src/reflection
+         --include %{workspace_root}/../../../src/smtencoding
+         --include %{workspace_root}/../../../src/syntax
+         --include %{workspace_root}/../../../src/syntax/print
+         --include %{workspace_root}/../../../src/tactics
+         --include %{workspace_root}/../../../src/tosyntax
+         --include %{workspace_root}/../../../src/typechecker
+         --include %{workspace_root}/../../../src/tests
          --extract FStarC
          --extract +FStar.Pervasives
          --extract -FStar.Pervasives.Native
-         --already_cached "Prims FStar"
-         %{workspace_root}/../src/fstar/FStarC.Main.fst))))
+         %{workspace_root}/../../../src/fstar/FStarC.Main.fst))))
+)
+
+; =============================================================================
+; Stage 1: Plugin extraction (using fstarc1_bare)
+; =============================================================================
+
+(subdir stage1-plugins-gen
+
+ (rule
+  (target plugins.build.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR1_EXE=fstar.exe}
+         --dep dune --output_ext fst.checked.lax --lax
+         --no_default_includes
+         --include %{workspace_root}/../../../ulib
+         --extract ",*"
+         --extract -Prims
+         --extract -FStar.Pervasives.Native
+         --extract -FStar.All
+         --extract -FStar.Ghost
+         --extract -FStar.Heap
+         --extract -FStar.Bytes
+         --extract -FStar.Char
+         --extract -FStar.Dyn
+         --extract -FStar.Exn
+         --extract -FStar.Float
+         --extract -FStar.Int16
+         --extract -FStar.Int32
+         --extract -FStar.Int64
+         --extract -FStar.Int8
+         --extract +FStar.Int.Cast.Full
+         --extract -FStar.List
+         --extract +FStar.List.Pure.Base
+         --extract +FStar.List.Tot.Properties
+         --extract -FStar.Monotonic.Heap
+         --extract -FStar.HyperStack.ST
+         --extract -FStar.Option
+         --extract -FStar.Printf
+         --extract -FStar.Range
+         --extract -FStar.ST
+         --extract -FStar.String
+         --extract -FStar.TSet
+         --extract -FStar.UInt16
+         --extract -FStar.UInt32
+         --extract -FStar.UInt64
+         --extract -FStar.UInt8
+         --extract -FStar.Util
+         %{workspace_root}/../../../ulib/FStar.Tactics.Effect.fsti
+         %{workspace_root}/../../../ulib/FStar.Order.fst
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.Simple.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Compare.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Formula.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.BV.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CanonCommMonoidSimple.Equiv.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CheckLN.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Easy.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MApply0.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MkProjectors.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.NamedView.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Names.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Parametricity.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Print.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.SMT.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Typeclasses.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.TypeRepr.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.Logic.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Visit.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.PrettifyType.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.LaxTermEq.fst))))
+
+ (rule
+  (target plugins.extract.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR1_EXE=fstar.exe}
+         --dep dune --output_ext ml --codegen PluginNoLib --lax
+         --no_default_includes
+         --include %{workspace_root}/../../../ulib
+         --extract ",*"
+         --extract -Prims
+         --extract -FStar.Pervasives.Native
+         --extract -FStar.All
+         --extract -FStar.Ghost
+         --extract -FStar.Heap
+         --extract -FStar.Bytes
+         --extract -FStar.Char
+         --extract -FStar.Dyn
+         --extract -FStar.Exn
+         --extract -FStar.Float
+         --extract -FStar.Int16
+         --extract -FStar.Int32
+         --extract -FStar.Int64
+         --extract -FStar.Int8
+         --extract +FStar.Int.Cast.Full
+         --extract -FStar.List
+         --extract +FStar.List.Pure.Base
+         --extract +FStar.List.Tot.Properties
+         --extract -FStar.Monotonic.Heap
+         --extract -FStar.HyperStack.ST
+         --extract -FStar.Option
+         --extract -FStar.Printf
+         --extract -FStar.Range
+         --extract -FStar.ST
+         --extract -FStar.String
+         --extract -FStar.TSet
+         --extract -FStar.UInt16
+         --extract -FStar.UInt32
+         --extract -FStar.UInt64
+         --extract -FStar.UInt8
+         --extract -FStar.Util
+         %{workspace_root}/../../../ulib/FStar.Tactics.Effect.fsti
+         %{workspace_root}/../../../ulib/FStar.Order.fst
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.Simple.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Compare.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Formula.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.BV.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CanonCommMonoidSimple.Equiv.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CheckLN.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Easy.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MApply0.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MkProjectors.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.NamedView.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Names.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Parametricity.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Print.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.SMT.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Typeclasses.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.TypeRepr.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.Logic.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Visit.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.PrettifyType.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.LaxTermEq.fst))))
+)
+
+; =============================================================================
+; Stage 2: FStarC extraction (using fstarc1_full) — same as Stage 1
+; =============================================================================
+
+(subdir stage2-gen
+
+ (rule
+  (target fstarc.build.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR1F_EXE=fstar.exe}
+         --dep dune --output_ext fst.checked.lax --lax
+         --warn_error -272
+         --include %{workspace_root}/../../../ulib
+         --include %{workspace_root}/../../../src/basic
+         --include %{workspace_root}/../../../src/class
+         --include %{workspace_root}/../../../src/data
+         --include %{workspace_root}/../../../src/extraction
+         --include %{workspace_root}/../../../src/fstar
+         --include %{workspace_root}/../../../src/interactive
+         --include %{workspace_root}/../../../src/parser
+         --include %{workspace_root}/../../../src/prettyprint
+         --include %{workspace_root}/../../../src/reflection
+         --include %{workspace_root}/../../../src/smtencoding
+         --include %{workspace_root}/../../../src/syntax
+         --include %{workspace_root}/../../../src/syntax/print
+         --include %{workspace_root}/../../../src/tactics
+         --include %{workspace_root}/../../../src/tosyntax
+         --include %{workspace_root}/../../../src/typechecker
+         --include %{workspace_root}/../../../src/tests
+         --extract FStarC
+         --extract +FStar.Pervasives
+         --extract -FStar.Pervasives.Native
+         %{workspace_root}/../../../src/fstar/FStarC.Main.fst))))
+
+ (rule
+  (target fstarc.extract.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR1F_EXE=fstar.exe}
+         --dep dune --output_ext ml --codegen OCaml --lax
+         --warn_error -272
+         --include %{workspace_root}/../../../ulib
+         --include %{workspace_root}/../../../src/basic
+         --include %{workspace_root}/../../../src/class
+         --include %{workspace_root}/../../../src/data
+         --include %{workspace_root}/../../../src/extraction
+         --include %{workspace_root}/../../../src/fstar
+         --include %{workspace_root}/../../../src/interactive
+         --include %{workspace_root}/../../../src/parser
+         --include %{workspace_root}/../../../src/prettyprint
+         --include %{workspace_root}/../../../src/reflection
+         --include %{workspace_root}/../../../src/smtencoding
+         --include %{workspace_root}/../../../src/syntax
+         --include %{workspace_root}/../../../src/syntax/print
+         --include %{workspace_root}/../../../src/tactics
+         --include %{workspace_root}/../../../src/tosyntax
+         --include %{workspace_root}/../../../src/typechecker
+         --include %{workspace_root}/../../../src/tests
+         --extract FStarC
+         --extract +FStar.Pervasives
+         --extract -FStar.Pervasives.Native
+         %{workspace_root}/../../../src/fstar/FStarC.Main.fst))))
+)
+
+; Stage 2 plugin extraction generator is identical to Stage 1
+(subdir stage2-plugins-gen
+
+ (rule
+  (target plugins.build.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR2_EXE=fstar.exe}
+         --dep dune --output_ext fst.checked.lax --lax
+         --no_default_includes
+         --include %{workspace_root}/../../../ulib
+         --extract ",*"
+         --extract -Prims
+         --extract -FStar.Pervasives.Native
+         --extract -FStar.All --extract -FStar.Ghost --extract -FStar.Heap
+         --extract -FStar.Bytes --extract -FStar.Char --extract -FStar.Dyn
+         --extract -FStar.Exn --extract -FStar.Float
+         --extract -FStar.Int16 --extract -FStar.Int32
+         --extract -FStar.Int64 --extract -FStar.Int8
+         --extract +FStar.Int.Cast.Full --extract -FStar.List
+         --extract +FStar.List.Pure.Base --extract +FStar.List.Tot.Properties
+         --extract -FStar.Monotonic.Heap --extract -FStar.HyperStack.ST
+         --extract -FStar.Option --extract -FStar.Printf --extract -FStar.Range
+         --extract -FStar.ST --extract -FStar.String --extract -FStar.TSet
+         --extract -FStar.UInt16 --extract -FStar.UInt32
+         --extract -FStar.UInt64 --extract -FStar.UInt8 --extract -FStar.Util
+         %{workspace_root}/../../../ulib/FStar.Tactics.Effect.fsti
+         %{workspace_root}/../../../ulib/FStar.Order.fst
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.Simple.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Compare.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Formula.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.BV.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CanonCommMonoidSimple.Equiv.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CheckLN.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Easy.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MApply0.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MkProjectors.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.NamedView.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Names.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Parametricity.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Print.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.SMT.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Typeclasses.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.TypeRepr.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.Logic.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Visit.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.PrettifyType.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.LaxTermEq.fst))))
+
+ (rule
+  (target plugins.extract.inc)
+  (deps)
+  (action (with-stdout-to %{target}
+    (run %{env:FSTAR2_EXE=fstar.exe}
+         --dep dune --output_ext ml --codegen PluginNoLib --lax
+         --no_default_includes
+         --include %{workspace_root}/../../../ulib
+         --extract ",*"
+         --extract -Prims
+         --extract -FStar.Pervasives.Native
+         --extract -FStar.All --extract -FStar.Ghost --extract -FStar.Heap
+         --extract -FStar.Bytes --extract -FStar.Char --extract -FStar.Dyn
+         --extract -FStar.Exn --extract -FStar.Float
+         --extract -FStar.Int16 --extract -FStar.Int32
+         --extract -FStar.Int64 --extract -FStar.Int8
+         --extract +FStar.Int.Cast.Full --extract -FStar.List
+         --extract +FStar.List.Pure.Base --extract +FStar.List.Tot.Properties
+         --extract -FStar.Monotonic.Heap --extract -FStar.HyperStack.ST
+         --extract -FStar.Option --extract -FStar.Printf --extract -FStar.Range
+         --extract -FStar.ST --extract -FStar.String --extract -FStar.TSet
+         --extract -FStar.UInt16 --extract -FStar.UInt32
+         --extract -FStar.UInt64 --extract -FStar.UInt8 --extract -FStar.Util
+         %{workspace_root}/../../../ulib/FStar.Tactics.Effect.fsti
+         %{workspace_root}/../../../ulib/FStar.Order.fst
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.TermEq.Simple.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Compare.fsti
+         %{workspace_root}/../../../ulib/FStar.Reflection.V2.Formula.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.BV.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CanonCommMonoidSimple.Equiv.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Canon.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.CheckLN.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Easy.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MApply0.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.MkProjectors.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.NamedView.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Names.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Parametricity.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Print.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.SMT.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.Typeclasses.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.TypeRepr.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.Logic.fsti
+         %{workspace_root}/../../../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.Visit.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.PrettifyType.fst
+         %{workspace_root}/../../../ulib/FStar.Tactics.LaxTermEq.fst))))
 )
