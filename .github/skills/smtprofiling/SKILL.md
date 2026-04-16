@@ -55,7 +55,7 @@ instantiation explicitly.
 ### More information on SMT profiling
 
 Find the directory PoP-in-FStar on the local machine, or locate it here:
-https://github.com/FStarLang/PoP-in-FStar
+https://github.com/FStarLang/FStar/tree/master/doc/book/PoP-in-FStar
 
 The section under_the_hood/uth_smt.rst contains information about F*'s SMT
 encoding and how to profile.

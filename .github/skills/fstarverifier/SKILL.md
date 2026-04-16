@@ -114,7 +114,7 @@ fstar.exe --include <PULSE_HOME>/out/lib/pulse --query_stats --split_queries alw
 ## Additional resources
 
 Find the directory PoP-in-FStar on the local machine, or locate it
-here: https://github.com/FStarLang/PoP-in-FStar
+here: https://github.com/FStarLang/FStar/tree/master/doc/book/PoP-in-FStar
 
 This contains the sources to the Proof-oriented Programming in F* 
 book. You can search through the book for various explanations, 
