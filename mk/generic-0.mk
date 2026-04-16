@@ -1,1 +1,1 @@
-generic-1.mk
+include mk/generic-1.mk
