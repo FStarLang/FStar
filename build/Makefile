@@ -2,16 +2,26 @@
 # build/Makefile — Thin portable orchestrator for F* staged dune build
 # ============================================================================
 #
-# Chain: make → opam install deps → dune build (staged)
+# Entry point for building F*. Works on Linux, macOS, and Windows.
 #
-# Each stage uses a unique env var for its generator to avoid cross-stage
-# interference. The generated .inc rules hardcode the fstar.exe path.
+# Usage:
+#   opam install .              # installs deps + builds + installs F*
+#   make -C build               # just build (assumes deps installed)
+#   make -C build ADMIT=1       # skip SMT verification
+#   make -C build install PREFIX=/usr/local
+#
+# Chain: opam deps → make → dune build (staged)
 
 FSROOT := $(abspath ..)
 
 EXE := .exe
 DUNE := dune
 DUNE_FLAGS := --root=.
+
+# Pass ADMIT=1 to skip verification (admit all SMT queries)
+ifeq ($(ADMIT),1)
+export FSTAR_ADMIT := --admit_smt_queries true
+endif
 
 # Stage 0: pre-built compiler
 FSTAR0 := $(FSROOT)/stage0/out/bin/fstar$(EXE)
@@ -24,28 +34,18 @@ FSTARC1_FULL := $(abspath _build/default/stage1-plugins-ocaml/fstarc1_full$(EXE)
 FSTARC2_BARE := $(abspath _build/default/stage2-ocaml/fstarc2_bare$(EXE))
 FSTARC2_FULL := $(abspath _build/default/stage2-plugins-ocaml/fstarc2_full$(EXE))
 
-.PHONY: all deps stage0 stage1-bare stage1-full stage2-bare stage2-full clean
+.PHONY: all stage0 stage1-bare stage1-full stage2-bare stage2-full install clean
 
 .DEFAULT_GOAL := stage2-full
-
-# === Opam dependencies ===
-# Install all opam deps (from fstar.opam) once, stamp to avoid re-running.
-.opam-deps.stamp:
-	opam install --deps-only $(FSROOT) --yes
-	@touch $@
-
-deps: .opam-deps.stamp
 
 # === Stage 0 ===
 stage0: $(FSTAR0)
 
-$(FSTAR0): .opam-deps.stamp
+$(FSTAR0):
 	$(DUNE) build --root=$(FSROOT)/stage0/dune
 	$(DUNE) install --root=$(FSROOT)/stage0/dune --prefix=$(FSROOT)/stage0/out
 
 # === Stage 1: bare compiler ===
-# FSTAR0_EXE drives the stage1-gen generator rules
-# FSTAR_EXE drives the generated check/extract rules inside .inc files
 stage1-bare: $(FSTARC1_BARE)
 
 $(FSTARC1_BARE): $(FSTAR0)
@@ -78,6 +78,14 @@ $(FSTARC2_FULL): $(FSTARC2_BARE)
 	FSTAR0_EXE=$(FSTAR0) FSTAR1_EXE=$(FSTARC1_BARE) \
 	FSTAR1F_EXE=$(FSTARC1_FULL) FSTAR2_EXE=$(FSTARC2_BARE) \
 	  $(DUNE) build $(DUNE_FLAGS) @stage2-plugins stage2-plugins-ocaml/fstarc2_full$(EXE)
+
+# === Install ===
+PREFIX ?= /usr/local
+install: stage2-full
+	mkdir -p $(PREFIX)/bin
+	cp $(FSTARC2_FULL) $(PREFIX)/bin/fstar$(EXE)
+	mkdir -p $(PREFIX)/lib/fstar
+	cp -r $(FSROOT)/ulib $(PREFIX)/lib/fstar/ulib
 
 # === Convenience ===
 all: stage2-full
