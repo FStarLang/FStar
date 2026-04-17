@@ -193,7 +193,7 @@ let prim_types (uu___ : unit) : 'uuuuu Prims.list= []
 let prim_constructors : (Prims.string * Prims.string) Prims.list=
   [("Some", "Some"); ("None", "None"); ("Nil", "[]"); ("Cons", "::")]
 let is_prims_ns (ns : FStarC_Extraction_ML_Syntax.mlsymbol Prims.list) :
-  Prims.bool= if ns = ["Prims"] then true else ns = ["Fstarcompiler.Prims"]
+  Prims.bool= (ns = ["Prims"]) || (ns = ["Fstarcompiler.Prims"])
 let as_bin_op (uu___ : FStarC_Extraction_ML_Syntax.mlpath) :
   (FStarC_Extraction_ML_Syntax.mlsymbol * (Prims.int * fixity) *
     Prims.string) FStar_Pervasives_Native.option=
@@ -255,15 +255,14 @@ let maybe_paren (uu___ : ((Prims.int * fixity) * assoc))
                     | (Postfix, Left) -> true
                     | (Prefix, Right) -> true
                     | (Infix (Left), Left) ->
-                        if pi = po then fo = (Infix Left) else false
+                        (pi = po) && (fo = (Infix Left))
                     | (Infix (Right), Right) ->
-                        if pi = po then fo = (Infix Right) else false
+                        (pi = po) && (fo = (Infix Right))
                     | (Infix (Left), ILeft) ->
-                        if pi = po then fo = (Infix Left) else false
+                        (pi = po) && (fo = (Infix Left))
                     | (Infix (Right), IRight) ->
-                        if pi = po then fo = (Infix Right) else false
-                    | (uu___3, NonAssoc) ->
-                        if pi = po then fi = fo else false
+                        (pi = po) && (fo = (Infix Right))
+                    | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
                     | (uu___3, uu___4) -> false)) in
       if noparens inner outer side then doc1 else parens doc1
 let escape_byte_hex (x : FStarC_BaseTypes.byte) : Prims.string=
@@ -321,12 +320,8 @@ let string_of_mlconstant (sctt : FStarC_Extraction_ML_Syntax.mlconstant) :
            FStarC_Class_Show.show FStarC_Class_Show.showable_nat nc in
          Prims.strcat uu___2
            (if
-              (if
-                 (if nc >= (Prims.of_int 32)
-                  then nc = (Prims.of_int 127)
-                  else false)
-               then nc < (Prims.of_int 34)
-               else false)
+              ((nc >= (Prims.of_int 32)) && (nc = (Prims.of_int 127))) &&
+                (nc < (Prims.of_int 34))
             then
               Prims.strcat " (*"
                 (Prims.strcat (FStarC_Util.string_of_char c) "*)")
@@ -561,13 +556,11 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
                                                            FStarC_Extraction_ML_Syntax.loc
                                                              = uu___6;_}::[])
            when
-           if
-             (FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-               "FStarC.Effect.try_with"
-           then true
-           else
-             (FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
-               "FStar.All.try_with"
+           ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
+              "FStarC.Effect.try_with")
+             ||
+             ((FStarC_Extraction_ML_Syntax.string_of_mlpath p) =
+                "FStar.All.try_with")
            ->
            let branches =
              match possible_match with
@@ -917,10 +910,7 @@ and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
                 (let uu___6 =
                    let uu___7 = FStarC_Extraction_ML_Util.codegen_fsharp () in
                    if uu___7
-                   then
-                     (if rec_ = FStarC_Extraction_ML_Syntax.Rec
-                      then true
-                      else top_level)
+                   then (rec_ = FStarC_Extraction_ML_Syntax.Rec) || top_level
                    else false in
                  if uu___6
                  then

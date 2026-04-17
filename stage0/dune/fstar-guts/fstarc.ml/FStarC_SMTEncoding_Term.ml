@@ -978,7 +978,7 @@ let mkBvRol (sz : Prims.int) (uu___ : (term * term))
                 (Var box,
                  { tm = Integer n; freevars = uu___1; rng = uu___2;_}::[]);
               freevars = uu___3; rng = uu___4;_}::[])
-           when if proj = "BoxInt_proj_0" then box = "BoxInt" else false ->
+           when (proj = "BoxInt_proj_0") && (box = "BoxInt") ->
            let uu___5 =
              let uu___6 =
                let uu___7 = FStarC_Util.int_of_string n in BvRol uu___7 in
@@ -1009,7 +1009,7 @@ let mkBvRor (sz : Prims.int) (uu___ : (term * term))
                 (Var box,
                  { tm = Integer n; freevars = uu___1; rng = uu___2;_}::[]);
               freevars = uu___3; rng = uu___4;_}::[])
-           when if proj = "BoxInt_proj_0" then box = "BoxInt" else false ->
+           when (proj = "BoxInt_proj_0") && (box = "BoxInt") ->
            let uu___5 =
              let uu___6 =
                let uu___7 = FStarC_Util.int_of_string n in BvRor uu___7 in
@@ -1325,7 +1325,7 @@ let inst (tms : term Prims.list) (t : term) : term=
     | Real uu___ -> t1
     | FreeV uu___ -> t1
     | BoundV i ->
-        if (if Prims.int_zero <= (i - shift) then (i - shift) < n else false)
+        if (Prims.int_zero <= (i - shift)) && ((i - shift) < n)
         then FStarC_List.nth tms1 (i - shift)
         else t1
     | App (op1, tms2) ->
@@ -1878,7 +1878,7 @@ let termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document=
                binder "let" (form_core binders1) uu___1)
     and aux depth n names t1 =
       let s = aux' depth n names t1 in
-      if (if print_ranges then t1.rng <> norng else false)
+      if print_ranges && (t1.rng <> norng)
       then
         let uu___ =
           let uu___1 =
@@ -2211,7 +2211,7 @@ let mk_Term_unit : term= mkApp ("Tm_unit", []) norng
 let elim_box (cond : Prims.bool) (u : Prims.string) (v : Prims.string)
   (t : term) : term=
   match t.tm with
-  | App (Var v', t1::[]) when if v = v' then cond else false -> t1
+  | App (Var v', t1::[]) when (v = v') && cond -> t1
   | uu___ -> mkApp (u, [t]) t.rng
 let maybe_elim_box (u : Prims.string) (v : Prims.string) (t : term) : 
   term=

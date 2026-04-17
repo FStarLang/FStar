@@ -280,10 +280,9 @@ let destruct_eq' (typ : FStarC_Syntax_Syntax.typ) :
        uu___1::(e1, FStar_Pervasives_Native.None)::(e2,
                                                     FStar_Pervasives_Native.None)::[]))
       when
-      if FStarC_Ident.lid_equals l FStarC_Parser_Const.eq2_lid
-      then true
-      else FStarC_Ident.lid_equals l FStarC_Parser_Const.c_eq2_lid ->
-      FStar_Pervasives_Native.Some (e1, e2)
+      (FStarC_Ident.lid_equals l FStarC_Parser_Const.eq2_lid) ||
+        (FStarC_Ident.lid_equals l FStarC_Parser_Const.c_eq2_lid)
+      -> FStar_Pervasives_Native.Some (e1, e2)
   | uu___1 ->
       let uu___2 = FStarC_Syntax_Util.unb2t typ1 in
       (match uu___2 with
@@ -877,12 +876,10 @@ let tc_unifier_solved_implicits (env1 : FStarC_TypeChecker_Env.env)
                    (env1.FStarC_TypeChecker_Env.missing_decl)
                } in
              let must_tot1 =
-               if must_tot
-               then
-                 Prims.op_Negation
-                   (FStarC_Syntax_Syntax.uu___is_Allow_ghost
-                      dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)
-               else false in
+               must_tot &&
+                 (Prims.op_Negation
+                    (FStarC_Syntax_Syntax.uu___is_Allow_ghost
+                       dec.FStarC_Syntax_Syntax.uvar_decoration_should_check)) in
              let uu___2 =
                let uu___3 = FStarC_Syntax_Util.ctx_uvar_typ u in
                core_check env2 sol uu___3 must_tot1 in
@@ -3765,9 +3762,8 @@ let lemma_or_sq (c : FStarC_Syntax_Syntax.comp) :
              FStar_Pervasives_Native.Some (pre, post1))
       else
         if
-          (if FStarC_Syntax_Util.is_pure_effect eff_name
-           then true
-           else FStarC_Syntax_Util.is_ghost_effect eff_name)
+          (FStarC_Syntax_Util.is_pure_effect eff_name) ||
+            (FStarC_Syntax_Util.is_ghost_effect eff_name)
         then
           (let uu___2 = FStarC_Syntax_Util.un_squash res in
            FStarC_Option.map (fun post -> (FStarC_Syntax_Util.t_true, post))

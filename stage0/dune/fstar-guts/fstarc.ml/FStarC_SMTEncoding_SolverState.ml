@@ -341,23 +341,19 @@ let give_delay_assumptions (resetting : Prims.bool)
           let uu___3 =
             FStarC_List.partition
               (fun d ->
-                 if FStarC_SMTEncoding_Term.uu___is_DeclFun d
-                 then true
-                 else FStarC_SMTEncoding_Term.uu___is_DefineFun d) rest in
+                 (FStarC_SMTEncoding_Term.uu___is_DeclFun d) ||
+                   (FStarC_SMTEncoding_Term.uu___is_DefineFun d)) rest in
           match uu___3 with
           | (decls_and_defs, rest1) ->
               let uu___4 =
                 FStarC_List.filter
                   (fun d ->
                      Prims.op_Negation
-                       (if
-                          (if FStarC_SMTEncoding_Term.uu___is_Caption d
-                           then true
-                           else FStarC_SMTEncoding_Term.uu___is_EmptyLine d)
-                        then true
-                        else
-                          FStarC_SMTEncoding_Term.uu___is_RetainAssumptions d))
-                  rest1 in
+                       (((FStarC_SMTEncoding_Term.uu___is_Caption d) ||
+                           (FStarC_SMTEncoding_Term.uu___is_EmptyLine d))
+                          ||
+                          (FStarC_SMTEncoding_Term.uu___is_RetainAssumptions
+                             d))) rest1 in
               (decls_and_defs, uu___4)
         else ([], rest) in
       (match uu___1 with
@@ -742,9 +738,8 @@ let flush (s : solver_state) :
            given_decl_names = (level.given_decl_names);
            all_decls_at_level_rev = (level.all_decls_at_level_rev);
            given_some_decls =
-             (if level.given_some_decls
-              then true
-              else Prims.uu___is_Cons level.to_flush_rev);
+             (level.given_some_decls ||
+                (Prims.uu___is_Cons level.to_flush_rev));
            to_flush_rev = [];
            named_assumptions = (level.named_assumptions);
            pruning_roots = (level.pruning_roots)

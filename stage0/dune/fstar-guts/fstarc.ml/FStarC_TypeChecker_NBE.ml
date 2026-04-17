@@ -357,11 +357,9 @@ let should_reduce_recursive_definition
     | ([], uu___::uu___1) -> (false, acc, [])
     | (t::ts1, in_decreases_clause::bs) ->
         if
-          (if in_decreases_clause
-           then
-             FStarC_TypeChecker_NBETerm.isAccu
-               (FStar_Pervasives_Native.fst t)
-           else false)
+          in_decreases_clause &&
+            (FStarC_TypeChecker_NBETerm.isAccu
+               (FStar_Pervasives_Native.fst t))
         then (false, (FStarC_List.rev_append ts1 acc), [])
         else aux ts1 bs (t :: acc) in
   aux arguments formals_in_decreases []
@@ -585,11 +583,9 @@ let rec translate (cfg : config)
    | FStarC_Syntax_Syntax.Tm_refine
        { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = tm;_} ->
        if
-         (if
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-          then true
-          else
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine)
+         ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+           ||
+           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine
        then translate cfg bs bv.FStarC_Syntax_Syntax.sort
        else
          mk_t1
@@ -789,11 +785,9 @@ let rec translate (cfg : config)
              FStarC_Syntax_Syntax.hash_code = uu___4;_};
          FStarC_Syntax_Syntax.args = uu___5::[];_}
        when
-       if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.assert_lid
-       then true
-       else
-         FStarC_Syntax_Syntax.fv_eq_lid fv
-           FStarC_Parser_Const.assert_norm_lid
+       (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.assert_lid) ||
+         (FStarC_Syntax_Syntax.fv_eq_lid fv
+            FStarC_Parser_Const.assert_norm_lid)
        ->
        (debug1
           (fun uu___7 -> FStarC_Format.print_string "Eliminated assertion\n");
@@ -803,14 +797,10 @@ let rec translate (cfg : config)
    | FStarC_Syntax_Syntax.Tm_app
        { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = args;_}
        when
-       if
-         (if
-            (FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg).FStarC_TypeChecker_Env.erase_erasable_args
-          then true
-          else
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
-       then true
-       else
+       ((FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg).FStarC_TypeChecker_Env.erase_erasable_args
+          ||
+          ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
+         ||
          ((cfg.core_cfg).FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args
        ->
        let uu___2 = translate cfg bs head in
@@ -1162,12 +1152,10 @@ let rec translate (cfg : config)
          FStarC_Syntax_Syntax.body1 = body;_}
        ->
        if
-         (if
-            Prims.op_Negation
-              ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
-          then
-            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations
-          else false)
+         (Prims.op_Negation
+            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)
+           &&
+           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.pure_subterms_within_computations
        then
          let vars =
            FStarC_List.map
@@ -1577,7 +1565,7 @@ and translate_fv (cfg : config)
     FStarC_TypeChecker_Env.lookup_qname
       (FStarC_TypeChecker_Cfg.cfg_env cfg.core_cfg)
       (FStarC_Syntax_Syntax.lid_of_fv fvar) in
-  if (if is_constr qninfo then true else is_constr_fv fvar)
+  if (is_constr qninfo) || (is_constr_fv fvar)
   then FStarC_TypeChecker_NBETerm.mkConstruct fvar [] []
   else
     (let uu___1 =
@@ -1748,10 +1736,8 @@ and translate_fv (cfg : config)
                    match lbm with
                    | FStar_Pervasives_Native.Some lb ->
                        if
-                         (if is_rec
-                          then
-                            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
-                          else false)
+                         is_rec &&
+                           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
                        then
                          let uu___9 = let_rec_arity lb in
                          (match uu___9 with
@@ -1819,10 +1805,8 @@ and translate_fv (cfg : config)
                    match lbm with
                    | FStar_Pervasives_Native.Some lb ->
                        if
-                         (if is_rec
-                          then
-                            ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
-                          else false)
+                         is_rec &&
+                           ((cfg.core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta
                        then
                          let uu___9 = let_rec_arity lb in
                          (match uu___9 with
@@ -2296,9 +2280,8 @@ and translate_monadic_lift
   | (msrc, mtgt, ty) ->
       let e1 = FStarC_Syntax_Util.unascribe e in
       if
-        (if FStarC_Syntax_Util.is_pure_effect msrc
-         then true
-         else FStarC_Syntax_Util.is_div_effect msrc)
+        (FStarC_Syntax_Util.is_pure_effect msrc) ||
+          (FStarC_Syntax_Util.is_div_effect msrc)
       then
         let ed =
           let uu___1 =

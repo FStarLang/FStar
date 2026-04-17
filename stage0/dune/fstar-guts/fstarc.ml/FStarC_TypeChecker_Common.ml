@@ -601,12 +601,10 @@ let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
            FStarC_Syntax_Syntax.fv_eq_lid tc FStarC_Parser_Const.true_lid ->
            Trivial
        | (FStarC_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) when
-           if
-             FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid
-           then true
-           else
-             FStarC_Syntax_Syntax.fv_eq_lid sq
-               FStarC_Parser_Const.auto_squash_lid
+           (FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid)
+             ||
+             (FStarC_Syntax_Syntax.fv_eq_lid sq
+                FStarC_Parser_Const.auto_squash_lid)
            ->
            let uu___3 = check_trivial v in
            (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
@@ -753,10 +751,9 @@ let is_total_lcomp (c : lcomp) : Prims.bool=
          | uu___1 -> false) c.cflags
 let is_tot_or_gtot_lcomp (c : lcomp) : Prims.bool=
   if
-    (if FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid
-     then true
-     else
-       FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid)
+    (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_Tot_lid)
+      ||
+      (FStarC_Ident.lid_equals c.eff_name FStarC_Parser_Const.effect_GTot_lid)
   then true
   else
     FStarC_Util.for_some

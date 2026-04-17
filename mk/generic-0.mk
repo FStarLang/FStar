@@ -18,9 +18,8 @@ endif
 
 maybe_touch=$(if $(TOUCH), touch $(TOUCH))
 
-# This is to support both --lax and non --lax clients.
-EXTENSION := $(if $(findstring --lax,$(FSTAR_OPTIONS)),.checked.lax,.checked)
-MSG := $(if $(findstring --lax,$(FSTAR_OPTIONS)),LAXCHECK,CHECK)
+EXTENSION := .checked
+MSG := CHECK
 
 ifeq ($(CODEGEN),FSharp)
 EEXT=fs

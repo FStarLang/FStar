@@ -302,84 +302,89 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
             let uu___2 = load_tc_result' checked_fn in
             (match uu___2 with
              | (deps_dig, tc_result1) ->
-                 if deps_dig = deps_dig'
+                 let module_name = FStarC_Parser_Dep.module_name_of_file fn in
+                 let uu___3 =
+                   if deps_dig = deps_dig'
+                   then true
+                   else FStarC_Options.should_be_already_cached module_name in
+                 if uu___3
                  then
                    let elt1 =
-                     let uu___3 =
-                       let uu___4 = FStarC_Util.digest_of_file checked_fn in
-                       Valid uu___4 in
-                     (uu___3, parsing_data) in
-                   let uu___3 = add_and_return checked_fn elt1 in
-                   let validate_iface_cache uu___4 =
+                     let uu___4 =
+                       let uu___5 = FStarC_Util.digest_of_file checked_fn in
+                       Valid uu___5 in
+                     (uu___4, parsing_data) in
+                   let uu___4 = add_and_return checked_fn elt1 in
+                   let validate_iface_cache uu___5 =
                      let iface =
-                       let uu___5 =
+                       let uu___6 =
                          FStarC_Parser_Dep.lowercase_module_name fn in
-                       FStarC_Parser_Dep.interface_of deps uu___5 in
+                       FStarC_Parser_Dep.interface_of deps uu___6 in
                      match iface with
                      | FStar_Pervasives_Native.None -> ()
                      | FStar_Pervasives_Native.Some iface1 ->
                          (try
-                            (fun uu___5 ->
+                            (fun uu___6 ->
                                match () with
                                | () ->
                                    let iface_checked_fn =
                                      FStarC_Parser_Dep.cache_file_name iface1 in
-                                   let uu___6 =
+                                   let uu___7 =
                                      try_find_in_cache iface_checked_fn in
-                                   (match uu___6 with
+                                   (match uu___7 with
                                     | FStar_Pervasives_Native.Some
                                         (Unknown, parsing_data1) ->
-                                        let uu___7 =
-                                          let uu___8 =
-                                            let uu___9 =
-                                              let uu___10 =
+                                        let uu___8 =
+                                          let uu___9 =
+                                            let uu___10 =
+                                              let uu___11 =
                                                 FStarC_Util.digest_of_file
                                                   iface_checked_fn in
-                                              Valid uu___10 in
-                                            (uu___9, parsing_data1) in
+                                              Valid uu___11 in
+                                            (uu___10, parsing_data1) in
                                           add_and_return iface_checked_fn
-                                            uu___8 in
+                                            uu___9 in
                                         ()
-                                    | uu___7 -> ())) ()
-                          with | uu___5 -> ()) in
+                                    | uu___8 -> ())) ()
+                          with | uu___6 -> ()) in
                    (validate_iface_cache (); FStar_Pervasives.Inr tc_result1)
                  else
                    (debug
-                      (fun uu___5 ->
-                         (let uu___7 =
+                      (fun uu___6 ->
+                         (let uu___8 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_nat
                               (FStarC_List.length deps_dig') in
-                          let uu___8 =
-                            FStarC_Parser_Dep.print_digest deps_dig' in
                           let uu___9 =
+                            FStarC_Parser_Dep.print_digest deps_dig' in
+                          let uu___10 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_nat
                               (FStarC_List.length deps_dig) in
-                          let uu___10 =
+                          let uu___11 =
                             FStarC_Parser_Dep.print_digest deps_dig in
                           FStarC_Format.print4
                             "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
-                            uu___7 uu___8 uu___9 uu___10);
+                            uu___8 uu___9 uu___10 uu___11);
                          if
                            (FStarC_List.length deps_dig) =
                              (FStarC_List.length deps_dig')
                          then
                            FStarC_List.iter2
-                             (fun uu___7 uu___8 ->
-                                match (uu___7, uu___8) with
+                             (fun uu___8 uu___9 ->
+                                match (uu___8, uu___9) with
                                 | ((x, y), (x', y')) ->
-                                    if (if x <> x' then true else y <> y')
+                                    if (x <> x') || (y <> y')
                                     then
-                                      let uu___9 =
+                                      let uu___10 =
                                         FStarC_Parser_Dep.print_digest
                                           [(x, y)] in
-                                      let uu___10 =
+                                      let uu___11 =
                                         FStarC_Parser_Dep.print_digest
                                           [(x', y')] in
                                       FStarC_Format.print2
                                         "Differ at: Expected %s\n Got %s\n"
-                                        uu___9 uu___10
+                                        uu___10 uu___11
                                     else ()) deps_dig deps_dig'
                          else ());
                     (let msg =
@@ -387,7 +392,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                          "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
                          checked_fn in
                      let elt1 = ((Invalid msg), (FStar_Pervasives.Inl msg)) in
-                     let uu___5 = add_and_return checked_fn elt1 in
+                     let uu___6 = add_and_return checked_fn elt1 in
                      FStar_Pervasives.Inl msg)))))
 let load_parsing_data_from_cache (file_name : Prims.string) :
   FStarC_Parser_Dep.parsing_data FStar_Pervasives_Native.option=

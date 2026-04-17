@@ -114,9 +114,8 @@ let rec unmeta_div_results (t : FStarC_Syntax_Syntax.term) :
           (src, dst, uu___1);_}
       ->
       if
-        (if FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid
-         then FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid
-         else false)
+        (FStarC_Ident.lid_equals src FStarC_Parser_Const.effect_PURE_lid) &&
+          (FStarC_Ident.lid_equals dst FStarC_Parser_Const.effect_DIV_lid)
       then unmeta_div_results t'
       else t
   | FStarC_Syntax_Syntax.Tm_meta

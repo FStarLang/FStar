@@ -2863,12 +2863,10 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
           FStarC_Format.print1 "Typechecking layered effect: \n\t%s\n" uu___3
         else ());
        if
-         (if
-            (FStarC_List.length ed.FStarC_Syntax_Syntax.univs) <>
-              Prims.int_zero
-          then true
-          else
-            (FStarC_List.length ed.FStarC_Syntax_Syntax.binders) <>
+         ((FStarC_List.length ed.FStarC_Syntax_Syntax.univs) <>
+            Prims.int_zero)
+           ||
+           ((FStarC_List.length ed.FStarC_Syntax_Syntax.binders) <>
               Prims.int_zero)
        then
          FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
@@ -5124,20 +5122,14 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                             (match uu___15 with
                                              | (uu___16, r) ->
                                                  if
-                                                   (if
-                                                      (if r
-                                                       then
-                                                         FStarC_Syntax_Syntax.uu___is_Substitutive_combinator
-                                                           bind_kind
-                                                       else false)
-                                                    then
-                                                      (if is_reifiable
-                                                       then true
-                                                       else
-                                                         FStarC_Ident.lid_equals
+                                                   (r &&
+                                                      (FStarC_Syntax_Syntax.uu___is_Substitutive_combinator
+                                                         bind_kind))
+                                                     &&
+                                                     (is_reifiable ||
+                                                        (FStarC_Ident.lid_equals
                                                            ed.FStarC_Syntax_Syntax.mname
-                                                           FStarC_Parser_Const.effect_TAC_lid)
-                                                    else false)
+                                                           FStarC_Parser_Const.effect_TAC_lid))
                                                  then
                                                    FStarC_Syntax_Syntax.Extract_reify
                                                  else
@@ -7326,11 +7318,9 @@ let check_lift_for_erasable_effects (env : FStarC_TypeChecker_Env.env)
     (let m1_erasable = FStarC_TypeChecker_Env.is_erasable_effect env m11 in
      let m2_erasable = FStarC_TypeChecker_Env.is_erasable_effect env m2 in
      if
-       (if (if m2_erasable then Prims.op_Negation m1_erasable else false)
-        then
-          Prims.op_Negation
-            (FStarC_Ident.lid_equals m11 FStarC_Parser_Const.effect_PURE_lid)
-        else false)
+       (m2_erasable && (Prims.op_Negation m1_erasable)) &&
+         (Prims.op_Negation
+            (FStarC_Ident.lid_equals m11 FStarC_Parser_Const.effect_PURE_lid))
      then
        err
          "cannot lift a non-erasable effect to an erasable effect unless the non-erasable effect is PURE"
@@ -7365,9 +7355,8 @@ let tc_lift (env : FStarC_TypeChecker_Env.env)
       FStarC_TypeChecker_Env.get_effect_decl env
         sub.FStarC_Syntax_Syntax.target in
     if
-      (if FStarC_Syntax_Util.is_layered ed_src
-       then true
-       else FStarC_Syntax_Util.is_layered ed_tgt)
+      (FStarC_Syntax_Util.is_layered ed_src) ||
+        (FStarC_Syntax_Util.is_layered ed_tgt)
     then tc_layered_lift (FStarC_TypeChecker_Env.set_range env r) sub
     else
       (let uu___3 =
@@ -7819,9 +7808,8 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                                   FStarC_Syntax_Syntax.binder_attrs = uu___9;_}::tl
                                   ->
                                   (if
-                                     (if is_default_effect
-                                      then Prims.op_Negation (tl = [])
-                                      else false)
+                                     is_default_effect &&
+                                       (Prims.op_Negation (tl = []))
                                    then
                                      FStarC_Errors.raise_error
                                        FStarC_Class_HasRange.hasRange_range r
@@ -7964,9 +7952,8 @@ let check_polymonadic_bind_for_erasable_effects
   let m1 = FStarC_TypeChecker_Env.norm_eff_name env m in
   let n1 = FStarC_TypeChecker_Env.norm_eff_name env n in
   if
-    (if FStarC_Ident.lid_equals m1 FStarC_Parser_Const.effect_GHOST_lid
-     then true
-     else FStarC_Ident.lid_equals n1 FStarC_Parser_Const.effect_GHOST_lid)
+    (FStarC_Ident.lid_equals m1 FStarC_Parser_Const.effect_GHOST_lid) ||
+      (FStarC_Ident.lid_equals n1 FStarC_Parser_Const.effect_GHOST_lid)
   then
     err
       "GHOST computations are not allowed to be composed using user-defined polymonadic binds"
@@ -7977,12 +7964,10 @@ let check_polymonadic_bind_for_erasable_effects
      if p_erasable
      then
        (if
-          (if Prims.op_Negation m_erasable
-           then
-             Prims.op_Negation
+          (Prims.op_Negation m_erasable) &&
+            (Prims.op_Negation
                (FStarC_Ident.lid_equals m1
-                  FStarC_Parser_Const.effect_PURE_lid)
-           else false)
+                  FStarC_Parser_Const.effect_PURE_lid))
         then
           err
             (FStarC_Format.fmt1
@@ -7990,12 +7975,10 @@ let check_polymonadic_bind_for_erasable_effects
                (FStarC_Ident.string_of_lid m1))
         else
           if
-            (if Prims.op_Negation n_erasable
-             then
-               Prims.op_Negation
+            (Prims.op_Negation n_erasable) &&
+              (Prims.op_Negation
                  (FStarC_Ident.lid_equals n1
-                    FStarC_Parser_Const.effect_PURE_lid)
-             else false)
+                    FStarC_Parser_Const.effect_PURE_lid))
           then
             err
               (FStarC_Format.fmt1

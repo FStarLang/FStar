@@ -1526,9 +1526,8 @@ let compile_op (arity : Prims.int) (s : Prims.string)
   | uu___ ->
       let uu___1 =
         if
-          (if FStarC_Util.starts_with s "let"
-           then true
-           else FStarC_Util.starts_with s "and")
+          (FStarC_Util.starts_with s "let") ||
+            (FStarC_Util.starts_with s "and")
         then
           let uu___2 =
             let uu___3 =
@@ -1538,9 +1537,8 @@ let compile_op (arity : Prims.int) (s : Prims.string)
           (uu___2, uu___3)
         else
           if
-            (if FStarC_Util.starts_with s "exists"
-             then true
-             else FStarC_Util.starts_with s "forall")
+            (FStarC_Util.starts_with s "exists") ||
+              (FStarC_Util.starts_with s "forall")
           then
             (let uu___3 =
                let uu___4 =

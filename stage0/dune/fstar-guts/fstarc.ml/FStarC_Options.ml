@@ -2453,6 +2453,8 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     ((fun
                                                                     uu___52
                                                                     ->
+                                                                    set_admit_smt_queries
+                                                                    true;
                                                                     if
                                                                     warn_unsafe
                                                                     then
@@ -2925,8 +2927,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                            match uu___10 with
                            | Path s -> (FStarC_Find.set_cache_dir s; Unset)),
                          (PathStr "dir"))),
-                    (text
-                       "Read and write .checked and .checked.lax in directory dir"))
+                    (text "Read and write .checked files in directory dir"))
                     :: uu___9 in
                 (99, "cache_checked_modules", (Const (Bool true)),
                   (text
@@ -3018,6 +3019,7 @@ let settable (uu___ : Prims.string) : Prims.bool=
   | "ide_id_info_off" -> true
   | "keep_query_captions" -> true
   | "lang_extensions" -> true
+  | "lax" -> true
   | "load" -> true
   | "load_cmxs" -> true
   | "log_queries" -> true
@@ -3234,7 +3236,12 @@ let should_check (m : Prims.string) : Prims.bool=
   let l = get_verify_module () in
   FStarC_List.contains (FStarC_String.lowercase m) l
 let should_verify (m : Prims.string) : Prims.bool=
-  let uu___ = let uu___3 = get_lax () in Prims.op_Negation uu___3 in
+  let uu___ =
+    let uu___3 =
+      let uu___4 = get_admit_smt_queries () in Prims.op_Negation uu___4 in
+    if uu___3
+    then let uu___4 = get_lax () in Prims.op_Negation uu___4
+    else false in
   if uu___ then should_check m else false
 let should_check_file (fn : Prims.string) : Prims.bool=
   let uu___ = module_name_of_file_name fn in should_check uu___
@@ -3444,7 +3451,6 @@ let initial_ifuel (uu___ : unit) : Prims.int=
   let uu___4 = get_max_ifuel () in Prims.min uu___3 uu___4
 let lang_extensions (uu___ : unit) : Prims.string Prims.list=
   get_lang_extensions ()
-let lax (uu___ : unit) : Prims.bool= get_lax ()
 let load (uu___ : unit) : Prims.string Prims.list= get_load ()
 let load_cmxs (uu___ : unit) : Prims.string Prims.list= get_load_cmxs ()
 let log_queries (uu___ : unit) : Prims.bool= get_log_queries ()
@@ -3629,9 +3635,7 @@ let module_matches_namespace_filter (m : Prims.string)
     match (m_components1, path) with
     | (uu___, []) -> true
     | (m2::ms, p::ps) ->
-        if m2 = (FStarC_String.lowercase p)
-        then matches_path ms ps
-        else false
+        (m2 = (FStarC_String.lowercase p)) && (matches_path ms ps)
     | uu___ -> false in
   let uu___ =
     FStarC_Util.try_find

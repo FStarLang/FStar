@@ -56,7 +56,7 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
     then
       let n1 = FStarC_List.length args1 in
       let n2 = FStarC_List.length args2 in
-      (if (if n1 = n2 then n_parms <= n1 else false)
+      (if (n1 = n2) && (n_parms <= n1)
        then
          let uu___ = FStarC_List.splitAt n_parms args1 in
          match uu___ with
@@ -102,9 +102,9 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
              (match uu___2 with
               | (FStarC_Syntax_Syntax.Tm_fvar f, FStarC_Syntax_Syntax.Tm_fvar
                  g) when
-                  if qual_is_inj f.FStarC_Syntax_Syntax.fv_qual
-                  then qual_is_inj g.FStarC_Syntax_Syntax.fv_qual
-                  else false ->
+                  (qual_is_inj f.FStarC_Syntax_Syntax.fv_qual) &&
+                    (qual_is_inj g.FStarC_Syntax_Syntax.fv_qual)
+                  ->
                   let uu___3 =
                     FStarC_TypeChecker_Env.num_datacon_non_injective_ty_params
                       env (FStarC_Syntax_Syntax.lid_of_fv f) in
@@ -174,12 +174,11 @@ let rec eq_tm (env : FStarC_TypeChecker_Env.env_t)
       (match uu___ with
        | (FStarC_Syntax_Syntax.Tm_fvar f1, FStarC_Syntax_Syntax.Tm_fvar f2)
            when
-           if FStarC_Syntax_Syntax.fv_eq f1 f2
-           then
-             FStarC_List.mem
-               (FStarC_Ident.string_of_lid
-                  (FStarC_Syntax_Syntax.lid_of_fv f1)) injectives
-           else false -> equal_data f1 args1 f2 args2 Prims.int_zero
+           (FStarC_Syntax_Syntax.fv_eq f1 f2) &&
+             (FStarC_List.mem
+                (FStarC_Ident.string_of_lid
+                   (FStarC_Syntax_Syntax.lid_of_fv f1)) injectives)
+           -> equal_data f1 args1 f2 args2 Prims.int_zero
        | uu___1 ->
            let uu___2 = eq_tm env h1 h2 in
            eq_and uu___2 (fun uu___3 -> eq_args env args1 args2))
@@ -488,15 +487,10 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
         -> clearly_inhabited (FStarC_Syntax_Util.comp_result c)
     | FStarC_Syntax_Syntax.Tm_fvar fv ->
         let l = FStarC_Syntax_Syntax.lid_of_fv fv in
-        if
-          (if
-             (if FStarC_Ident.lid_equals l FStarC_Parser_Const.int_lid
-              then true
-              else FStarC_Ident.lid_equals l FStarC_Parser_Const.bool_lid)
-           then true
-           else FStarC_Ident.lid_equals l FStarC_Parser_Const.string_lid)
-        then true
-        else FStarC_Ident.lid_equals l FStarC_Parser_Const.exn_lid
+        (((FStarC_Ident.lid_equals l FStarC_Parser_Const.int_lid) ||
+            (FStarC_Ident.lid_equals l FStarC_Parser_Const.bool_lid))
+           || (FStarC_Ident.lid_equals l FStarC_Parser_Const.string_lid))
+          || (FStarC_Ident.lid_equals l FStarC_Parser_Const.exn_lid)
     | uu___1 -> false in
   let simplify1 arg =
     let uu___ = simp_t (FStar_Pervasives_Native.fst arg) in (uu___, arg) in

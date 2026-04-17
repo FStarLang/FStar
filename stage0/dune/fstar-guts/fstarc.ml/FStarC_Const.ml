@@ -82,9 +82,8 @@ let __proj__Const_reflect__item___0 (projectee : sconst) : FStarC_Ident.lid=
 let eq_const (c1 : sconst) (c2 : sconst) : Prims.bool=
   match (c1, c2) with
   | (Const_int (s1, o1), Const_int (s2, o2)) ->
-      if (FStarC_Util.ensure_decimal s1) = (FStarC_Util.ensure_decimal s2)
-      then o1 = o2
-      else false
+      ((FStarC_Util.ensure_decimal s1) = (FStarC_Util.ensure_decimal s2)) &&
+        (o1 = o2)
   | (Const_string (a, uu___), Const_string (b, uu___1)) -> a = b
   | (Const_reflect l1, Const_reflect l2) -> FStarC_Ident.lid_equals l1 l2
   | (Const_reify uu___, Const_reify uu___1) -> true
@@ -115,4 +114,4 @@ let within_bounds (repr : Prims.string) (signedness1 : signedness)
   match uu___ with
   | (lower, upper) ->
       let value = FStarC_Util.int_of_string (FStarC_Util.ensure_decimal repr) in
-      if lower <= value then value <= upper else false
+      (lower <= value) && (value <= upper)

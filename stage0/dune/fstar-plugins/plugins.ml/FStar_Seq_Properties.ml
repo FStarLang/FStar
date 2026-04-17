@@ -40,9 +40,7 @@ let rec sorted :
     then true
     else
       (let hd = head s in
-       if f hd (FStar_Seq_Base.index s Prims.int_one)
-       then sorted f (tail s)
-       else false)
+       (f hd (FStar_Seq_Base.index s Prims.int_one)) && (sorted f (tail s)))
 type ('a, 'f) total_order = unit
 type 'a tot_ord = 'a -> 'a -> Prims.bool
 let split_5 (s : 'a FStar_Seq_Base.seq) (i : Prims.nat) (j : Prims.nat) :

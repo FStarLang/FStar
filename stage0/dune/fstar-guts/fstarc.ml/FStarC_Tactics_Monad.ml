@@ -733,7 +733,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
      let uu___2 =
        if env.FStarC_TypeChecker_Env.phase1
        then true
-       else FStarC_Options.lax () in
+       else FStarC_Options.admit_smt_queries () in
      if uu___2
      then ()
      else

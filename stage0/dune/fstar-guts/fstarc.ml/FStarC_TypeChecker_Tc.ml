@@ -572,8 +572,7 @@ let tc_decls_knot :
        (FStarC_Syntax_Syntax.sigelt Prims.list * FStarC_TypeChecker_Env.env))
     FStar_Pervasives_Native.option FStarC_Effect.ref=
   FStarC_Effect.mk_ref FStar_Pervasives_Native.None
-let do_two_phases (env : 'uuuuu) : Prims.bool=
-  let uu___ = FStarC_Options.lax () in Prims.op_Negation uu___
+let do_two_phases (env : 'uuuuu) : Prims.bool= true
 let run_phase1 (f : unit -> 'a) : 'a=
   FStarC_TypeChecker_Core.clear_memo_table ();
   (let r = f () in FStarC_TypeChecker_Core.clear_memo_table (); r)
@@ -711,9 +710,8 @@ let check_quals_eq (r : FStarC_Range_Type.t) (l : FStarC_Ident.lident)
         FStarC_List.filter
           (fun x ->
              Prims.op_Negation
-               (if FStarC_Syntax_Syntax.uu___is_Logic x
-                then true
-                else FStarC_Syntax_Syntax.uu___is_Irreducible x)) in
+               ((FStarC_Syntax_Syntax.uu___is_Logic x) ||
+                  (FStarC_Syntax_Syntax.uu___is_Irreducible x))) in
       let val_q1 = drop_logic_and_irreducible val_q in
       let q'0 = q' in
       let q'1 = drop_logic_and_irreducible q' in
@@ -914,11 +912,9 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.t)
                               })
                            (lb.FStarC_Syntax_Syntax.lbdef).FStarC_Syntax_Syntax.pos in
                    (if
-                      (if lb.FStarC_Syntax_Syntax.lbunivs <> []
-                       then
-                         (FStarC_List.length lb.FStarC_Syntax_Syntax.lbunivs)
-                           <> (FStarC_List.length uvs)
-                       else false)
+                      (lb.FStarC_Syntax_Syntax.lbunivs <> []) &&
+                        ((FStarC_List.length lb.FStarC_Syntax_Syntax.lbunivs)
+                           <> (FStarC_List.length uvs))
                     then
                       FStarC_Errors.raise_error
                         FStarC_Class_HasRange.hasRange_range r
@@ -3475,11 +3471,9 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env)
                 FStarC_List.map
                   (fun se3 ->
                      if
-                       (if env.FStarC_TypeChecker_Env.is_iface
-                        then
-                          FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
-                            se3.FStarC_Syntax_Syntax.sigel
-                        else false)
+                       env.FStarC_TypeChecker_Env.is_iface &&
+                         (FStarC_Syntax_Syntax.uu___is_Sig_declare_typ
+                            se3.FStarC_Syntax_Syntax.sigel)
                      then
                        let uu___4 =
                          let uu___5 =
@@ -4982,10 +4976,7 @@ let add_sigelt_to_env (env : FStarC_TypeChecker_Env.env)
                })
         | FStarC_Syntax_Syntax.Sig_pragma
             (FStarC_Syntax_Syntax.RestartSolver) ->
-            if
-              (if from_cache
-               then true
-               else env1.FStarC_TypeChecker_Env.flychecking)
+            if from_cache || env1.FStarC_TypeChecker_Env.flychecking
             then env1
             else
               ((env1.FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh

@@ -279,9 +279,8 @@ let is_true_pat (p : FStarC_Syntax_Syntax.pat) : Prims.bool=
   | FStarC_Syntax_Syntax.Pat_constant (FStarC_Const.Const_bool true) -> true
   | uu___ -> false
 let is_tuple_constructor_lid (lid : FStarC_Ident.lident) : Prims.bool=
-  if FStarC_Parser_Const_Tuples.is_tuple_datacon_lid lid
-  then true
-  else FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid lid
+  (FStarC_Parser_Const_Tuples.is_tuple_datacon_lid lid) ||
+    (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid lid)
 let may_shorten (lid : FStarC_Ident.lident) : Prims.bool=
   let uu___ = FStarC_Options.print_real_names () in
   if uu___
@@ -549,12 +548,9 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
             else
               (let uu___5 =
                  if
-                   (if
-                      FStarC_Ident.lid_equals a
-                        FStarC_Parser_Const.assert_lid
-                    then true
-                    else
-                      FStarC_Ident.lid_equals a
+                   (FStarC_Ident.lid_equals a FStarC_Parser_Const.assert_lid)
+                     ||
+                     (FStarC_Ident.lid_equals a
                         FStarC_Parser_Const.assume_lid)
                  then true
                  else
@@ -731,12 +727,10 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                  FStarC_Syntax_Syntax.pos = uu___4;
                  FStarC_Syntax_Syntax.vars = uu___5;
                  FStarC_Syntax_Syntax.hash_code = uu___6;_} ->
-                 if
-                   FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide
-                 then true
-                 else
-                   FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.reveal
+                 (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide)
+                   ||
+                   (FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.reveal)
              | uu___4 -> false in
            let rec last l =
              match l with
@@ -1255,30 +1249,18 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                                resugar_as_app e args1
                            | FStar_Pervasives_Native.Some (op, uu___10) when
                                if
-                                 (if
-                                    (if
-                                       (if
-                                          (if
-                                             (if
-                                                (if op = "="
-                                                 then true
-                                                 else op = "==")
-                                              then true
-                                              else op = "===")
-                                           then true
-                                           else op = "@")
-                                        then true
-                                        else op = ":=")
-                                     then true
-                                     else op = "|>")
-                                  then true
-                                  else op = "<<")
+                                 ((((((op = "=") || (op = "==")) ||
+                                       (op = "==="))
+                                      || (op = "@"))
+                                     || (op = ":="))
+                                    || (op = "|>"))
+                                   || (op = "<<")
                                then FStarC_Options.print_implicits ()
                                else false -> resugar_as_app e args1
                            | FStar_Pervasives_Native.Some (op, uu___10) when
-                               if FStarC_Util.starts_with op "forall"
-                               then true
-                               else FStarC_Util.starts_with op "exists" ->
+                               (FStarC_Util.starts_with op "forall") ||
+                                 (FStarC_Util.starts_with op "exists")
+                               ->
                                let rec uncurry xs pats t2 flavor_matches =
                                  match t2.FStarC_Parser_AST.tm with
                                  | FStarC_Parser_AST.QExists
@@ -1755,9 +1737,8 @@ let rec resugar_term_base' (env : FStarC_Syntax_DsEnv.env)
                    let uu___4 =
                      FStarC_List.partition
                        (fun a ->
-                          if is_inline_let_attr a
-                          then true
-                          else is_inline_let_vc_attr a) attrs in
+                          (is_inline_let_attr a) || (is_inline_let_vc_attr a))
+                       attrs in
                    match uu___4 with
                    | (inline_attrs, rest) ->
                        let uu___5 =
@@ -2218,13 +2199,11 @@ and resugar_comp' (env : FStarC_Syntax_DsEnv.env)
                | uu___ -> aux l tl) in
         aux [] fl in
       if
-        (if
-           FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
-             FStarC_Parser_Const.effect_Lemma_lid
-         then
-           (FStarC_List.length c1.FStarC_Syntax_Syntax.effect_args) =
-             (Prims.of_int 3)
-         else false)
+        (FStarC_Ident.lid_equals c1.FStarC_Syntax_Syntax.effect_name
+           FStarC_Parser_Const.effect_Lemma_lid)
+          &&
+          ((FStarC_List.length c1.FStarC_Syntax_Syntax.effect_args) =
+             (Prims.of_int 3))
       then
         let args =
           FStarC_List.map

@@ -18,8 +18,7 @@ let remove_dups (l : labels) : labels=
   FStarC_Util.remove_dups
     (fun uu___ uu___1 ->
        match (uu___, uu___1) with
-       | ((uu___2, m1, r1), (uu___3, m2, r2)) ->
-           if r1 = r2 then m1 = m2 else false) l
+       | ((uu___2, m1, r1), (uu___3, m2, r2)) -> (r1 = r2) && (m1 = m2)) l
 type msg = (Prims.string * FStarC_Range_Type.t)
 type ranges =
   (Prims.string FStar_Pervasives_Native.option * FStarC_Range_Type.t)

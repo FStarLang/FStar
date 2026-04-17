@@ -299,9 +299,8 @@ let uu___is_Tv_Unknown (projectee : term_view) : Prims.bool=
 let uu___is_Tv_Unsupp (projectee : term_view) : Prims.bool=
   match projectee with | Tv_Unsupp -> true | uu___ -> false
 let notAscription (tv : term_view) : Prims.bool=
-  if Prims.op_Negation (uu___is_Tv_AscribedT tv)
-  then Prims.op_Negation (uu___is_Tv_AscribedC tv)
-  else false
+  (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
+    (Prims.op_Negation (uu___is_Tv_AscribedC tv))
 type comp_view =
   | C_Total of FStarC_Syntax_Syntax.typ 
   | C_GTotal of FStarC_Syntax_Syntax.typ 

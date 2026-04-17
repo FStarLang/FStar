@@ -1345,9 +1345,8 @@ let get_noextract_to (se : FStarC_Syntax_Syntax.sigelt)
                     FStarC_Syntax_Embeddings_Base.id_norm_cb in
                 (match uu___4 with
                  | FStar_Pervasives_Native.Some s ->
-                     if FStar_Pervasives_Native.uu___is_Some backend
-                     then (FStarC_Options.parse_codegen s) = backend
-                     else false
+                     (FStar_Pervasives_Native.uu___is_Some backend) &&
+                       ((FStarC_Options.parse_codegen s) = backend)
                  | FStar_Pervasives_Native.None -> false)
             | uu___3 -> false)) se.FStarC_Syntax_Syntax.sigattrs
 let sigelt_has_noextract (se : FStarC_Syntax_Syntax.sigelt) : Prims.bool=
@@ -1359,9 +1358,8 @@ let sigelt_has_noextract (se : FStarC_Syntax_Syntax.sigelt) : Prims.bool=
   let uu___ = FStarC_Options.codegen () in
   match uu___ with
   | FStar_Pervasives_Native.Some (FStarC_Options.Krml) ->
-      if has_noextract_qualifier then has_noextract_attribute else false
-  | uu___1 ->
-      if has_noextract_qualifier then true else has_noextract_attribute
+      has_noextract_qualifier && has_noextract_attribute
+  | uu___1 -> has_noextract_qualifier || has_noextract_attribute
 let karamel_fixup_qual (se : FStarC_Syntax_Syntax.sigelt) :
   FStarC_Syntax_Syntax.sigelt=
   let uu___ =
@@ -2665,14 +2663,11 @@ let extract' (g : FStarC_Extraction_ML_UEnv.uenv)
              let uu___3 = FStarC_Options.codegen () in
              uu___3 = (FStar_Pervasives_Native.Some FStarC_Options.Krml) in
            if
-             (if
-                (FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) <>
-                  "Prims"
-              then
-                (if is_karamel
-                 then true
-                 else Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface)
-              else false)
+             ((FStarC_Ident.string_of_lid m.FStarC_Syntax_Syntax.name) <>
+                "Prims")
+               &&
+               (is_karamel ||
+                  (Prims.op_Negation m.FStarC_Syntax_Syntax.is_interface))
            then
              ((let uu___4 =
                  let uu___5 = FStarC_Options.silent () in

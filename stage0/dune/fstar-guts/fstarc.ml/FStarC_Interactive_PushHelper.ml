@@ -41,7 +41,7 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env_t)
   let uu___ =
     if check_kind = FStarC_Interactive_Ide_Types.LaxCheck
     then true
-    else FStarC_Options.lax () in
+    else FStarC_Options.admit_smt_queries () in
   {
     FStarC_TypeChecker_Env.solver = (env.FStarC_TypeChecker_Env.solver);
     FStarC_TypeChecker_Env.range = (env.FStarC_TypeChecker_Env.range);

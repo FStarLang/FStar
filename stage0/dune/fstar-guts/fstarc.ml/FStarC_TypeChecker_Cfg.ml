@@ -2739,11 +2739,9 @@ let should_reduce_local_let (cfg1 : cfg)
            if uu___5
            then true
            else
-             if FStarC_Syntax_Util.is_ghost_effect n
-             then
-               Prims.op_Negation
-                 (cfg1.steps).pure_subterms_within_computations
-             else false)))
+             (FStarC_Syntax_Util.is_ghost_effect n) &&
+               (Prims.op_Negation
+                  (cfg1.steps).pure_subterms_within_computations))))
 let translate_norm_step (s : FStarC_NormSteps.norm_step) :
   FStarC_TypeChecker_Env.step Prims.list=
   match s with

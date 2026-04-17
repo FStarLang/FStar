@@ -3,7 +3,7 @@ open Prims
 let max_int (n : Prims.nat) : Prims.int= (Prims.pow2 n) - Prims.int_one
 let min_int (n : Prims.nat) : Prims.int= Prims.int_zero
 let fits (x : Prims.int) (n : Prims.nat) : Prims.bool=
-  if (min_int n) <= x then x <= (max_int n) else false
+  ((min_int n) <= x) && (x <= (max_int n))
 type ('x, 'n) size = unit
 type 'n uint_t = Prims.int
 let zero (n : Prims.nat) : Obj.t uint_t= Prims.int_zero

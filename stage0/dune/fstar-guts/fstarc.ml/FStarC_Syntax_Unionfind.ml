@@ -165,12 +165,10 @@ let chk_v_t (su : FStarC_Syntax_Syntax.uvar) :
         Prims.strcat "?" uu___1 in
       let expected = get_version () in
       if
-        (if
-           v.FStarC_Syntax_Syntax.major = expected.FStarC_Syntax_Syntax.major
-         then
-           v.FStarC_Syntax_Syntax.minor <=
-             expected.FStarC_Syntax_Syntax.minor
-         else false)
+        (v.FStarC_Syntax_Syntax.major = expected.FStarC_Syntax_Syntax.major)
+          &&
+          (v.FStarC_Syntax_Syntax.minor <=
+             expected.FStarC_Syntax_Syntax.minor)
       then u
       else
         (let uu___2 =
@@ -278,12 +276,10 @@ let chk_v_u
         Prims.strcat "?" uu___1 in
       let expected = get_version () in
       if
-        (if
-           v.FStarC_Syntax_Syntax.major = expected.FStarC_Syntax_Syntax.major
-         then
-           v.FStarC_Syntax_Syntax.minor <=
-             expected.FStarC_Syntax_Syntax.minor
-         else false)
+        (v.FStarC_Syntax_Syntax.major = expected.FStarC_Syntax_Syntax.major)
+          &&
+          (v.FStarC_Syntax_Syntax.minor <=
+             expected.FStarC_Syntax_Syntax.minor)
       then u
       else
         (let uu___2 =

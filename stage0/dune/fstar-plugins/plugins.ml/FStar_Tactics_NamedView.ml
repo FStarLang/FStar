@@ -1057,9 +1057,8 @@ let uu___is_Tv_Unsupp (projectee : named_term_view) : Prims.bool=
   match projectee with | Tv_Unsupp -> true | uu___ -> false
 type ('v1, 'v2) ctor_matches = Obj.t
 let notAscription (tv : named_term_view) : Prims.bool=
-  if Prims.op_Negation (uu___is_Tv_AscribedT tv)
-  then Prims.op_Negation (uu___is_Tv_AscribedC tv)
-  else false
+  (Prims.op_Negation (uu___is_Tv_AscribedT tv)) &&
+    (Prims.op_Negation (uu___is_Tv_AscribedC tv))
 type letbinding =
   {
   lb_fv: FStarC_Reflection_Types.fv ;
