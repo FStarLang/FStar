@@ -537,11 +537,14 @@ val op_BarBar: bool -> bool -> Tot bool
 assume
 val op_Negation: bool -> Tot bool
 
-(** Integer multiplication, no special symbol. See FStar.Mul *)
+(** [*] integer multiplication *)
 
 [@@ smt_theory_symbol]
 assume
 val op_Multiply: int -> int -> Tot int
+
+(* op_Multiply is not an actual operator name. *)
+unfold let ( * ) = op_Multiply
 
 (** [-] integer subtraction *)
 
