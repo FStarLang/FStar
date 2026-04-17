@@ -570,8 +570,8 @@ let rec maybe_weakly_reduced tm :  ML bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
-val decide_unfolding : cfg -> stack -> fv -> qninfo -> ML (option (option cfg * stack))
-let decide_unfolding cfg stack fv qninfo (* : option (option cfg * stack) *) =
+val decide_unfolding : cfg -> stack -> fv -> qninfo -> ML (option (option cfg & stack))
+let decide_unfolding cfg stack fv qninfo =
     let res =
         should_unfold false cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
