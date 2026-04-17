@@ -1761,6 +1761,7 @@ let settable = function
     | "ide_id_info_off"
     | "keep_query_captions"
     | "lang_extensions"
+    | "lax"
     | "load"
     | "load_cmxs"
     | "log_queries"

@@ -2,7 +2,7 @@ module Admit
 
 open FStar.Tactics.V2
 
-#push-options "--admit_smt_queries true"
+#push-options "--lax"
 let test () : squash False =
   _ by (
     ()
