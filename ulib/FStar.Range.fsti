@@ -56,4 +56,4 @@ val join_range (r1 r2 : range) : Tot range
 irreducible
 let labeled (r : range) (msg: string) (b: Type) : Type = b
 
-val explode (r : __range) : Tot (string * int * int * int * int)
+val explode (r : __range) : Tot (string & int & int & int & int)
