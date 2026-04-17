@@ -245,7 +245,7 @@ let math_opfv (o : op) : string =
   match o with
   | Add -> `%(+)
   | Sub -> `%(-)
-  | Mul -> `%( Prims.op_Multiply )
+  | Mul -> `%( * )
   | Div -> `%(/)
   | Rem -> `%(%)
 
