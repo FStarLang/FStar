@@ -254,7 +254,7 @@ let lift_ghost
       (f:erased (ghost_action_except a p q))
 : ghost_action_except a p q
 = fun frame m0 ->
-    let xm1 : erased (a * full_mem) = 
+    let xm1 : erased (a & full_mem) =
         let ff = reveal f in
         let x, m1 = ff frame m0 in
         hide (x, m1)
