@@ -96,7 +96,7 @@ error:
    Expected expression of type "Type0"; got expression "Type0" of type "Type u#1"
 
 The restriction that prevents a ``Type`` from being an inhabitant of
-itself if sometimes called *predicativity*. The opposite,
+itself is sometimes called *predicativity*. The opposite,
 *impredicativity*, if not suitably restricted, usually leads to
 logical inconsistency. F* provides a limited form of impredicativity
 through the use of ``squash`` types, which we'll see towards the end
@@ -127,10 +127,10 @@ etc., F* definitions can be *universe polymorphic*. Below, we define
    :end-before: //SNIPPET_END: ty_poly$
 
 One way to think of ``ty_poly`` is as a "definition template"
-parameterized by the by the universe-variable ``a``. One can
+parameterized by the universe-variable ``a``. One can
 instantiate ``ty_poly`` with a specific universe level ``l`` (by
 writing ``ty_poly u#l``) and obtain a copy of its definition
-specialized to level ``l``. F* can prove that instantiation of
+specialized to level ``l``. F* can prove that instantiations of
 ``ty_poly`` are equal to the non-polymorphic definitions we had
 earlier. As the last example shows, F* can usually infer the universe
 instantiation, so you often don't need to write it.
@@ -167,7 +167,7 @@ actually also polymorphic in the universe level of its type argument.
 
 That is, the type of the identity function ``id`` is ``id_t`` or
 ``a:Type u#i -> a -> a``---meaning, for all types ``a`` in
-universe ``Type u#i``, ``id a`` is function of type ``a -> a``.
+universe ``Type u#i``, ``id a`` is a function of type ``a -> a``.
 
 Now, ``id_t`` is itself a type in universe ``Type u#(i + 1)``, and
 since the ``id`` function can be applied to types in any universe, it
@@ -463,7 +463,7 @@ F* would be unsound.
 Refinement types, FStar.Squash, ``prop``, and Impredicativity
 -------------------------------------------------------------
 
-We've seen how universes levels are computed for arrow types and
+We've seen how universe levels are computed for arrow types and
 inductive type definitions. The other way in which types can be formed
 in F* is with refinement types: ``x:t{p}``. As we've seen previously,
 a value ``v`` of type ``x:t{p}`` is just a ``v:t`` where ``p[v/x]`` is

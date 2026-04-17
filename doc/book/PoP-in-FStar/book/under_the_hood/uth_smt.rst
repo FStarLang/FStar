@@ -4,7 +4,7 @@ Understanding how F* uses Z3
 ============================
 
 As we have seen throughout, F* relies heavily on the Z3 SMT
-(Satifiability Modulo Theories) solver for proof automation. Often, on
+(Satisfiability Modulo Theories) solver for proof automation. Often, on
 standalone examples at the scale covered in earlier chapters, the
 automation just works out of the box, but as one builds larger
 developments, proof automation can start becoming slower or
@@ -229,7 +229,7 @@ SMT2 file with the following rough shape.
    ;; Followed by some instrumentation for error reporting
    ;; in case the check-sat call fails (i.e., does not return unsat)
 
-That was just just to give you a rough idea---the details of F*'s
+That was just to give you a rough idea---the details of F*'s
 actual SMT encoding are a bit different, as we'll see below.
 
 To inspect F*'s SMT encoding, we'll work through several small
@@ -278,7 +278,7 @@ the module and its length in characters.
 .............
 
 Despite SMT2 being a multi-sorted logic, aside from the pervasive use
-the SMT sort ``Bool``, F*'s encoding to SMT (mostly) uses just a
+of the SMT sort ``Bool``, F*'s encoding to SMT (mostly) uses just a
 single sort: every pure (or ghost) F* term is encoded to the SMT
 solver as an instance of an uninterpreted SMT sort called
 ``Term``. This allows the encoding to be very general, handling F*'s
@@ -1170,7 +1170,7 @@ shown below:
 
    val from_fun (#a:eqtype) (f: a -> bool) : Tot (set a)
 
-and prove a lemma that shows that a an element ``x`` is in ``from_fun
+and prove a lemma that shows that an element ``x`` is in ``from_fun
 f`` if and only if ``f x = true``, decorating the lemma with the
 appropriate SMT pattern.
 
@@ -1620,7 +1620,7 @@ as much as the current rlimit.
 If the single query with several conjunct fails without Z3 reporting
 any further information that F* can reconstruct into a localized error
 message, F* splits the query into its conjuncts and tries each of
-them in isolation, so as to isolate the failing conjunct it
+them in isolation, so as to isolate the failing conjunct if
 any. However, sometimes, when tried in this mode, the proof of all
 conjuncts can succeed.
 

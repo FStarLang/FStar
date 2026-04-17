@@ -120,7 +120,7 @@ Compiling an OCaml library
 Our extracted code provides several top-level functions (e.g.,
 ``sort``) but not ``main``. So, we can only compile it as a library.
 
-For simple uses, one can compile the generated code into a OCaml
+For simple uses, one can compile the generated code into an OCaml
 native code library (a cmxa file) with ``ocamlbuild``, as shown below
 
 .. code-block::
@@ -142,7 +142,7 @@ Some points to note:
     the corresponding ``.ml`` file, but with the ``.cmxa`` extension
     to indicate that we want to compile it as a library.
 
-Your can use the resulting .cmxa file in your other OCaml projects.
+You can use the resulting .cmxa file in your other OCaml projects.
 
 
 Adding a 'main'
@@ -155,7 +155,7 @@ functions suitable for use in libraries, but to write a top-level
 driver program that can print some output (i.e., a ``main``), we need
 to write functions that actually have some effects.
 
-We'll learn a lot more about F*'s support for effectful program in a
+We'll learn a lot more about F*'s support for effectful programs in a
 later section, but for now we'll just provide a glimpse of it by
 showing (below) a ``main`` program that calls into our Quicksort
 library.
@@ -163,7 +163,7 @@ library.
 .. literalinclude:: ../code/Part1.Quicksort.Main.fst
        :language: fstar
 
-There are few things to note here:
+There are a few things to note here:
 
   * This time, rather than calling ``Q.sort`` from unverified OCaml
     code, we are calling it from F*, which requires us to prove all

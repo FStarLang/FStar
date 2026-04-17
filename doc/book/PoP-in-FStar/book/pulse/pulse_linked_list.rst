@@ -35,7 +35,7 @@ The predicate ``is_list x l`` is a recursive predicate:
 
   * When ``l == []``, the reference ``x`` must be null.
 
-  * Otherwise, ``l == head :: tl``, ``x`` must contains a valid
+  * Otherwise, ``l == head :: tl``, ``x`` must contain a valid
     reference ``p``, where ``p`` points to ``{ head; tail }`` and,
     recursively , we have ``is_list tail tl``.
 
@@ -62,7 +62,7 @@ Case analyzing a nullable pointer
 When working with a linked list, the first thing we'll do, typically,
 is to check whether a given ``x:llist t`` is null or not. However, the
 ``is_list x l`` predicate is defined by case analyzing ``l:list t``
-rather than ``x:llist t``, since that is makes it possible to write
+rather than ``x:llist t``, since that makes it possible to write
 the predicate by recursing on the tail of ``l``. So, below, we have a
 predicate ``is_list_cases x l`` that inverts ``is_list x l`` predicate
 based on whether or not ``x`` is null.
@@ -171,8 +171,8 @@ cons cell, return a pointer to its tail. Here's a small diagram:
 
 We're given a pointer ``x`` to the cons cell at the head of a list,
 and we want to return ``tl``, the pointer to the next cell (or
-``None``, of x this is the end of the list). But, if we want to return
-a pointer to ``tl``, we a permission accounting problem:
+``None``, if this is the end of the list). But, if we want to return
+a pointer to ``tl``, we have a permission accounting problem:
 
   * We cannot return permission to ``x`` to the caller, since then we
     would have two *aliases* pointing to the next cell in the list:
@@ -287,7 +287,7 @@ to set ``y`` as the ``next`` pointer of this last element.
    :start-after: //append_iter$
    :end-before: //end append_iter$
 
-There are few interesting points to note.
+There are a few interesting points to note.
 
   * The main part is the quantified trade in the invariant, which, as
     we traverse the list, encapsulates the ghost code that we need to
@@ -328,7 +328,7 @@ There are few interesting points to note.
     traversed the list.
 
 Perhaps the lesson from all this is that recursive programs are much
-easier to write and prove correct that iterative ones? That's one
+easier to write and prove correct than iterative ones? That's one
 takeaway. But, hopefully, you've seen how trades and quantifiers work
 and can be useful in some proofs---of course, we'll use them not just
 for rewriting recursive as iterative code.
@@ -336,7 +336,7 @@ for rewriting recursive as iterative code.
 Exercise 3
 ++++++++++
 
-Write a function to insert an element in a list and a specific
+Write a function to insert an element in a list at a specific
 position.
 
 

@@ -97,7 +97,7 @@ The combinator ``fix_F`` shown below illustrates this at work:
    :end-before: //SNIPPET_END: fix_F$
 
 If ``f`` is a function such that every recursive call in the
-definition of ``f x`` is on an argument ``y``, such that that ``y`` is
+definition of ``f x`` is on an argument ``y``, such that ``y`` is
 smaller than ``x`` according to some relation ``r``; and if starting
 from some argument ``x0``, we have a proof of accessibility ``acc r
 x0`` (i.e., no infinite descending ``r``-chains starting at ``x0``),
@@ -119,7 +119,7 @@ well-founded, i.e., ``r`` is accessible for all elements ``x:a``.
 Some Well-founded Relations
 ---------------------------
 
-We show how to buid some basic well-founded relations here. For
+We show how to build some basic well-founded relations here. For
 starters, since F* already internalizes that the ``<`` ordering on
 natural numbers as part of its termination check, it is easy to prove
 that ``<`` is well-founded.
@@ -171,7 +171,7 @@ ordering on dependent pairs.
    :start-after: //SNIPPET_START: lexicographic_order$
    :end-before: //SNIPPET_END: lexicographic_order$
 
-This order, defined as a ``binrel (x:a & b x)``, and is paramterized
+This order, defined as a ``binrel (x:a & b x)``, is parameterized
 by a binary relation (``r_a``) on ``a`` and a family of relations
 (``r_b``) on ``b x``, one for each ``x:a``. It has two cases:
 
@@ -197,7 +197,7 @@ functions with our own well-founded orders.
 
 To illustrate, let's define the ``ackermann`` function again (we saw
 it first :ref:`here <Part1_lexicographic_orderings>`), this time using
-accessibilty and well-founded relations, rather than the built-in
+accessibility and well-founded relations, rather than the built-in
 ``precedes`` relation.
 
 .. literalinclude:: ../code/Part2.WellFounded.fst

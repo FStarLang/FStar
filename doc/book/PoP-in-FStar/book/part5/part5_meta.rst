@@ -25,7 +25,7 @@ single piece (though :ref:`SMT queries can be split via an option
 unwieldy rapidly, particularly when the solver is being pushed to its
 limits.
 
-The first ability Meta-F* provides is allowing to attach specific
+The first ability Meta-F* provides is allowing one to attach specific
 tactics to assertions. These tactics operate on the "goal" that we
 want to prove, and can "massage" the assertion by simplifying it,
 splitting it into several sub-goals, tweaking particular SMT options,

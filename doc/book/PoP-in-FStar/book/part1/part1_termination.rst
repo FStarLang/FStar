@@ -155,7 +155,7 @@ the following lexicographic ordering::
 is also well-founded. In fact, it is possible to prove in F* that this
 ordering is well-founded, provided ``<<`` is itself well-founded.
 
-Lexicographic ordering are common enough that F* provides special
+Lexicographic orderings are common enough that F* provides special
 support to make it convenient to use them. In particular, the
 notation::
 
@@ -235,7 +235,7 @@ That is, the default decreases clause for ``ackermann`` is exactly
 ``decreases %[a; l]`` (which is equivalent to ``decreases l``). So, you
 needn't write it.
 
-On the other hand, it you were to flip the order of arguments to
+On the other hand, if you were to flip the order of arguments to
 ``ackermann``, then the default choice of the measure would not be
 correct—so, you'll have to write it explicitly, as shown below.
 

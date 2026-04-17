@@ -80,7 +80,7 @@ Implementing ``partition``
 Here's an implementation of ``partition``. It's a :ref:`higher-order
 function <Part1_higher_order_functions>`, where ``partition f l``
 returns a pair of lists ``l₁`` and ``l₂``, a partitioning of the
-elements in ``l`` such that the every element in ``l₁`` satisfies
+elements in ``l`` such that every element in ``l₁`` satisfies
 ``f`` and the elements in ``l₂`` do not.
 
 .. literalinclude:: ../code/Part1.Quicksort.fst
@@ -286,7 +286,7 @@ functions–will this introduce any runtime overhead when executing
 ``sort_intrinsic``? Thankfully, the answer to that is "no".
 
 As we'll learn in the section on :ref:`effects <effects>`, F* supports
-of notion of *erasure*—terms that can be proven to not contribute to
+the notion of *erasure*—terms that can be proven to not contribute to
 the observable behavior of a computation will be erased by the
 compiler before execution. In this case, the three lemma invocations
 are total functions returning unit, i.e., these are functions that
@@ -326,7 +326,7 @@ that is parameterized by any total order over the list elements,
 rather than specializing ``sort`` to work on integer lists only. Of
 course, we want to prove our implementations correct. So, let's do it
 in two ways, both intrinsically and extrinsically. Your goal is to
-remove the all the occurrences of ``admit`` in the development below.
+remove all the occurrences of ``admit`` in the development below.
 
 .. literalinclude:: ../code/exercises/Part1.Quicksort.Generic.fst
        :language: fstar

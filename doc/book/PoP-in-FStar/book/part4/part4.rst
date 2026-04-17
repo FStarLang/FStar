@@ -57,7 +57,7 @@ Aside from user-defined effects, F* also supports the following
        computer, they do exhibit various side effects, including
        consuming resources like time, power, and memory. Although
        these side effects are clearly observable to an external
-       observer of a running F* program, the resourse-usage side
+       observer of a running F* program, the resource-usage side
        effects of one component of a pure F* program are not visible
        to another component of the same program.
 

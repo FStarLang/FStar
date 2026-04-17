@@ -184,7 +184,7 @@ Exercise
 ........
 
 Redesign the lock API to prevent double releases. One way to do this
-is when acquiring to lock to give out a permission to release it, and
+is when acquiring the lock to give out a permission to release it, and
 for ``release`` to require and consume that permission.
 
 Exercise

@@ -54,7 +54,7 @@ This style of enriching a type definition with indexes to state
 properties of the type is reminiscent of what we learned earlier about
 :ref:`intrinsic versus extrinsic proofs
 <Part1_intrinsic_extrinsic>`. Rather than defining a single type
-``list a`` for all lists and then separatately (i.e., extrinsically)
+``list a`` for all lists and then separately (i.e., extrinsically)
 defining a function ``length`` to compute the length of a list, with
 ``vec`` we've enriched the type of the list intrinsically, so that
 type of ``vec`` immediately tells you its length.

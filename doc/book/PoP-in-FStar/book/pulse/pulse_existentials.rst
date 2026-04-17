@@ -30,7 +30,7 @@ Some simple examples
 
 Looking back to the ``assign`` example from the previous chapter
 (shown below), you may have wondered why we bothered to bind a logical
-variable ``'v`` in precondition of the specification, since it is
+variable ``'v`` in the precondition of the specification, since it is
 never actually used in any other predicate.
 
 .. literalinclude:: ../code/pulse/PulseTutorial.Ref.fst
@@ -67,7 +67,7 @@ postcondition.
 
 However, existential quantification often appears in postconditions,
 e.g., in order to abstract the behavior of function by underspecifying
-it. To illustrate, consider the function ``make_even`` below. It's
+it. To illustrate, consider the function ``make_even`` below. Its
 type states that it sets the contents of ``x`` to some even number
 ``w1``, without specifying ``w1`` exactly. It also uses an existential
 quantification in its precondition, since its postcondition does not

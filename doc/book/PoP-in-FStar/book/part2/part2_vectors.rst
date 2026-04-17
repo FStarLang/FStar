@@ -10,11 +10,11 @@ with indexes that carry information about the list's length.
 Even and Odd-lengthed Lists
 ...........................
 
-Our first example is bit artifical, but helps illustrate a usage of
+Our first example is a bit artificial, but helps illustrate a usage of
 mutually inductive types.
 
-Here, we're defining two types constructors called ``even`` and
-``odd``, (i.e, just :math:`T_1` and :math:`T_2` from our formal
+Here, we're defining two type constructors called ``even`` and
+``odd``, (i.e., just :math:`T_1` and :math:`T_2` from our formal
 definition), both with a single parameter ``(a:Type)``, for the type
 of the lists' elements, and no indexes.
 
@@ -46,7 +46,7 @@ Note, we can prove that the length of an ``even a`` and ``odd a`` are
 really even and odd.
 
 Now, say, you wanted to map a function over an ``even a``, you'd have
-to write a pair of mutually recursive functions to map simultaneoulsy
+to write a pair of mutually recursive functions to map simultaneously
 over them both. This can get tedious quickly. Instead of rolling out
 several mutually inductive but distinct types, one can instead use an
 *indexed* type to group related types in the same inductive family of
@@ -86,7 +86,7 @@ odd number otherwise.
    the index argument ``b`` decreases on the recursive call, which it
    does not.
 
-This is our first type with with both parameters and indices. But why
+This is our first type with both parameters and indices. But why
 stop at just indexing to distinguish even and odd-lengthed lists? We
 can index a list by its length itself.
 
@@ -102,7 +102,7 @@ Let's look again at the definition of the ``vec`` type, first shown in
    :end-before: //SNIPPET_END: vec
 
 Here, we're defining just a single type constructor called ``vec``
-(i.e, just :math:`T_1`), which a single parameter ``(a:Type)`` and one
+(i.e., just :math:`T_1`), with a single parameter ``(a:Type)`` and one
 index ``nat``.
 
 ``vec`` has two data constructors: ``Nil`` builds an instance of ``vec
@@ -115,7 +115,7 @@ different indexes (``0`` and ``n + 1``).
 .. note::
 
    Datatypes in many languages in the ML family, including OCaml and
-   F#, have parameters but no indexes. So, all the data construtors
+   F#, have parameters but no indexes. So, all the data constructors
    construct the same instance of the type constructor. Further, all
    data constructors take at most one argument. If your datatype
    happens to be simple enough to fit these restrictions, you can use
@@ -212,7 +212,7 @@ below, where ``tl : vec a m``.
    | Cons #m hd tl ->
 
 F* typechecks the branch in a context that includes the equation that
-``v == Cons #m hd tl``, which lets the solve conclude that ``n == m +
+``v == Cons #m hd tl``, which lets the solver conclude that ``n == m +
 1``, from the type of ``Cons``.
 
 If ``i=0``, we've found the element we want and return it.

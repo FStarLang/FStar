@@ -31,7 +31,7 @@ The library provides a points-to predicate ``pts_to arr #p s`` with
 the interpretation that in the current memory, the contents of ``arr``
 are same as the (functional) sequence ``s:FStar.Seq.seq t``. Like the
 ``pts_to`` predicate on reference, it is also indexed by an implicit
-fractional permission ``p``, which distinguished shared, read-only
+fractional permission ``p``, which distinguishes shared, read-only
 access from exclusive read/write access.
 
 In the arguments of ``read_i``, the argument ```s`` is erased, since
@@ -42,7 +42,7 @@ Arrays can be read and written-to using indexes of type
 the index is within the array bounds---the refinement ``SZ.v i <
 Seq.length s`` enforces that the index is in bounds, where ``module SZ
 = FStar.SizeT``. The function returns the ``i``-th element of the
-array, the asserted by the postcondition slprop ``pure (x == Seq.index
+array, as asserted by the postcondition slprop ``pure (x == Seq.index
 s (SZ.v i))``. The body of the function uses the array read operator
 ``arr.(i)``.
 
@@ -155,7 +155,7 @@ Stack allocated arrays
 Stack arrays can be allocated using the expression ``[| v; n |]``. It
 allocates an array of size ``n``, with all the array elements
 initialized to ``v``. The size ``n`` must be compile-time constant.
-It provides the postcondition that the newly create array points to a
+It provides the postcondition that the newly created array points to a
 length ``n`` sequence of ``v``. The following example allocates two
 arrays on the stack and compares them using the ``compare`` function
 above.

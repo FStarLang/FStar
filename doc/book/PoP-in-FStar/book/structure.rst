@@ -37,7 +37,7 @@ this part, since some elements are quite specific to F*.
 We turn next to inductive type definitions, the main mechanism by
 which a user can define new data types. F*'s indexed inductive types
 allow one to capture useful properties of data structures, and
-dependently types functions over these indexed types can be proven to
+dependently typed functions over these indexed types can be proven to
 respect several kinds of invariants. Beyond their use for data
 structures, inductive data types are used at the core of F*'s logic to
 model fundamental notions like equality and termination proofs, and

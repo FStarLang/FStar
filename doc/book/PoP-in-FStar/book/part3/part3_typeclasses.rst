@@ -67,7 +67,7 @@ use. This is the original motivation of typeclasses---to provide a
 principled approach to operator overloading.
 
 For instance, we can now write ``printb`` and ``printi`` and use
-``to_string`` to print both booleans and integers, since we shown that
+``to_string`` to print both booleans and integers, since we have shown that
 they are instances of the class ``printable``.
 
 .. literalinclude:: ../code/Typeclasses.fst
@@ -173,7 +173,7 @@ easily and completes the derivation of ``printable (list int)``.
 
 This backwards, goal-directed search for typeclass resolution is a
 kind of logic programming. An interesting implementation detail is
-that most of the typeclass machinery is defined as a metaprogran in
+that most of the typeclass machinery is defined as a metaprogram in
 ``FStar.Tactics.Typeclasses``, outside of the core of F*'s
 compiler. As such, the behavior of typeclass resolution is entirely
 user-customizable, simply by revising the metaprogram in use. Some
@@ -193,7 +193,7 @@ that you understand how things work. This is exercise should also
 convey that typeclasses do not increase the expressive power in any
 way---whatever is expressible with typeclasses, is also expressible by
 explicitly passing records that contain the operations needed on
-specific type parameters. However, expliciting passing this operations
+specific type parameters. However, explicitly passing these operations
 can quickly become overwhelming---typeclass inference keeps this
 complexity in check and makes it possible to build programs in an
 generic, abstract style without too much pain.

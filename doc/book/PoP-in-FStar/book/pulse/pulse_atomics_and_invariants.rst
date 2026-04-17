@@ -422,7 +422,7 @@ Timeless Predicates
 All predicates ``p:slprop`` are hereditary, meaning that ``p`` implies ``later
 p``. Some predicates, including many common predicates like ``pts_to`` are also
 **timeless**, meaning that ``later p`` implies ``p``. Combining timeless
-predicates with ``**`` or exisentially quantifying over timeless predicates
+predicates with ``**`` or existentially quantifying over timeless predicates
 yields a timeless predicate.
 
 All of the following are available in Pulse.Lib.Core:

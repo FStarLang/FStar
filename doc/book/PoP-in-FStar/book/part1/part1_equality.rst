@@ -18,13 +18,13 @@ defining ``factorial``). This is the *boolean* equality
 operator. Given two terms ``e₁ : t`` and ``e₂ : t``, so long as ``t``
 supports a notion of decidable equality, ``(e₁ = e₂) : bool``.
 
-To see why not all types support decidably equality, consider ``t`` to
+To see why not all types support decidable equality, consider ``t`` to
 be a function type, like ``int -> int``. To decide if two functions
 ``f₁, f₂ : int -> int`` are equal, we'd have to apply them to all the
 infinitely many integers and compare their results—clearly, this is
 not decidable.
 
-The type ``eqtype`` is the type of types that support decidably
+The type ``eqtype`` is the type of types that support decidable
 equality. That is, given ``e₁ : t`` and ``e₂ : t``, it is only
 permissible to compare ``e₁ = e₂`` if ``t : eqtype``.
 

@@ -54,7 +54,7 @@ and their semantics. To set the goal posts, we want to
   2. Define a type ``term t``, to represent well-typed STLC
      terms whose type is ``t:typ``
 
-  3. Give an intepretation of STLC terms in to F* terms of the
+  3. Give an interpretation of STLC terms into F* terms of the
      suitable type, i.e., define a function ``denote_term (#t:typ)
      (e:term t) : denote_typ t``, proving that every well-typed STLC
      term at type ``t`` can be represented in F* as a function of type
@@ -71,7 +71,7 @@ model their semantics.
 Denotation of types
 +++++++++++++++++++
 
-Step 1 in our roadmap is to give an interpreration of STLC types
+Step 1 in our roadmap is to give an interpretation of STLC types
 ``typ`` into F* types. This is easily done, as shown below.
 
 .. literalinclude:: ../code/Part2.HOAS.fst
@@ -80,7 +80,7 @@ Step 1 in our roadmap is to give an interpreration of STLC types
    :end-before: //SNIPPET_END: denote_typ$
 
 We have here a recursive function that computes a *Type* from its
-argument. This is may seem odd at first, but it's perfectly legal in a
+argument. This may seem odd at first, but it's perfectly legal in a
 dependently typed language like F*.
 
 The function ``denote_typ`` The interpretation of ``Bool`` and ``Int``
@@ -97,7 +97,7 @@ language with lambda-like variable-binding structure), is the question
 of how to represent variables and their binders.
 
 In the deep embedding of the previous chapter, our answer to this
-questions was very syntactic---variables are de Bruijn indexes, where,
+question was very syntactic---variables are de Bruijn indexes, where,
 at each occurrence, the index used for a variable counts the number of
 lambdas to traverse to reach the binder for that variable.
 
@@ -117,7 +117,7 @@ explain briefly.
 
 First, the ``term`` type represents both the abstract syntax of the
 STLC as well as its typing rules. We'll see in detail how this works,
-but notice already that ``term`` is is indexed by a ``t:typ``, which
+but notice already that ``term`` is indexed by a ``t:typ``, which
 describes the type of encoded STLC term. The indexing structure
 encodes the typing rules of STLC, ensuring that only well-typed STLC
 terms can be constructed.
@@ -130,7 +130,7 @@ represented by F* variables and binders of the corresponding F* type
   * ``Var`` : Variables are represented as ``Var #t n : term t``,
     where ``n`` is a term of type ``denote_typ t``.
 
-  * ``TT`` and ``FF``: The two boolean constansts are represented by
+  * ``TT`` and ``FF``: The two boolean constants are represented by
     these constructors, both of type ``term  Bool``, where the index
     indicates that they have type ``Bool``.
 
@@ -147,7 +147,7 @@ represented by F* variables and binders of the corresponding F* type
     ``f`` is represented by an F* function from arguments of type
     ``denote_typ t1``, to terms of type ``term t``. The ``Lam`` case
     includes a function-typed field, but the type of that field,
-    ``denote_typ t1 -> term t2`` is strictly positive---unlike the the
+    ``denote_typ t1 -> term t2`` is strictly positive---unlike the
     ``dyn`` type, :ref:`shown earlier <Part2_strict_positivity>`.
 
 

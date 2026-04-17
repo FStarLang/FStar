@@ -3,7 +3,7 @@
 Interfaces
 ==========
 
-Look through the F* standard libary (in the ``ulib`` folder) and
+Look through the F* standard library (in the ``ulib`` folder) and
 you'll find many files with ``.fsti`` extensions. Each of these is an
 interface file that pairs with a module implementation in a
 corresponding ``.fst`` file.
@@ -35,7 +35,7 @@ to a "big integer", implemented by OCaml's `ZArith package
 <https://opam.ocaml.org/packages/zarith/>`_. However, the ``int`` type
 can be inefficient and in some scenarios (e.g., when compiling F*
 to C) one may want to work with bounded integers that can always be
-represented in machine word. ``FStar.UInt32.t`` and ``FStar.UInt64.t``
+represented in a machine word. ``FStar.UInt32.t`` and ``FStar.UInt64.t``
 are types from the standard library whose values can always be
 represented as 32- and 64-bit unsigned integers, respectively.
 
@@ -50,7 +50,7 @@ reason about bounded integer terms without using modular arithmetic.
 
    Although we don't discuss them here, F*'s libraries also provide
    signed integer types that can be compiled to the corresponding
-   signed integters in C. Avoiding overflow on signed integer
+   signed integers in C. Avoiding overflow on signed integer
    arithmetic is not just a matter of ease of reasoning, since signed
    integer overflow is undefined behavior in C.
 
@@ -68,7 +68,7 @@ module's name. Although this could be inferred from the name of the file
                 
 ``UInt32`` provides one abstract type ``val t : eqtype``, the type of
 our bounded integer. Its type says that it supports decidable
-equality, but no definition of ``t`` is revaled in the interface.
+equality, but no definition of ``t`` is revealed in the interface.
 
 The operations on ``t`` are specified in terms of a logical model that
 relates ``t`` to bounded mathematical integers, in particular
@@ -230,7 +230,7 @@ details).
 Meanwhile, the main thing to keep in mind when implementing interfaces
 is the following:
 
-  * The order of definitions in an implementation much match the order
+  * The order of definitions in an implementation must match the order
     of ``val`` declarations in the interface. E.g., if the interface
     contains ``val f : tf`` followed by ``val g : tg``, then the
     implementation of ``f`` must precede the implementation of ``g``.

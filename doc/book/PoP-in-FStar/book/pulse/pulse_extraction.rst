@@ -49,7 +49,7 @@ The loop invariant for the first phase specifies majority constraints *within* t
 prefix of the array that the loop has visited so far. The second phase loop invariant
 is a simple counting invariant.
 
-Pulse automatically proves the program, with an hint for the behavior of the ``count``
+Pulse automatically proves the program, with a hint for the behavior of the ``count``
 function as we increment the loop counter, the following ``count_until_next`` lemma
 captures the behavior, and we invoke the lemma in both the while loops:
 

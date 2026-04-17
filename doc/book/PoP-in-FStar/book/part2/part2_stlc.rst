@@ -40,7 +40,7 @@ This can be read as follows: a program :math:`e` is either
   * a variable :math:`x`;
 
   * a lambda term :math:`\lambda x:t. e_0` associating a variable
-    :math:`x` to a type :math:`t` and a some sub-program :math:`e_0`;
+    :math:`x` to a type :math:`t` and some sub-program :math:`e_0`;
 
   * or, the application of the sub-program :math:`e_0` to another
     sub-program :math:`e_1`.
@@ -73,7 +73,7 @@ ignoring the type annotations, in the term
 :math:`\lambda x. (\lambda x. x)` the inner lambda binds *a different*
 :math:`x` than the outer one, i.e., the term is equivalent to
 :math:`\lambda x. (\lambda y. y)` and our representation of programs
-must respect this this convention. We'll use a technique called de
+must respect this convention. We'll use a technique called de
 Bruijn indices, where the names of the variables are no longer
 significant and instead each variable is represented by a natural
 number describing the number of :math:`\lambda` binders that one must
@@ -134,7 +134,7 @@ This says that when a :math:`\lambda` literal is applied to an
 argument :math:`e_1` the program takes a single step of computation to
 the body of the lambda literal :math:`e_0` with every occurrence of
 the bound variable :math:`x` replaced by the argument :math:`e_1`. The
-substituion has to be careful to avoid "name capture", i.e.,
+substitution has to be careful to avoid "name capture", i.e.,
 substituting a term in a context that re-binds its free variables. For
 example, when substituting :math:`y \mapsto x` in
 :math:`\lambda x. y`, one must make sure that the resulting term is
@@ -245,7 +245,7 @@ The function ``subst s e`` applies the substitution ``s`` to ``e``:
 * In the ``EApp`` case, we apply the substitution to each sub-term.
 
 * The ``ELam`` case is the most interesting. To apply the substitution
-  ``s`` to the body ``e1``, we have to traverse a binder. The mutally
+  ``s`` to the body ``e1``, we have to traverse a binder. The mutually
   recursive function ``sub_elam0 s`` adjusts ``s`` to account for this
   new binder, which has de Bruijn index ``0`` in the body ``e1`` (at
   least until another binder is encountered).
@@ -365,8 +365,8 @@ see why this order works.
 
   - The final recursive call to ``subst`` terminates for similar
     reasons to the recursive calls in the ``EApp`` case, since the
-    type of ``sub_elam`` guarantees that ``sub_elam s`` is renaming if
-    an only of ``s`` is (so the ``r`` bit does not change).
+    type of ``sub_elam`` guarantees that ``sub_elam s`` is a renaming if
+    and only if ``s`` is (so the ``r`` bit does not change).
 
 * Cases of ``sub_elam``, in the recursive call to ``subst sub_inc (s
   (y - 1))``, we have already proven that ``sub_inc`` is a
@@ -377,8 +377,8 @@ see why this order works.
     which clearly precedes ``1``, the first component of the decreases
     clause of ``subst_elam``.
 
-  - Otherwwise, ``s (y - 1)`` is not a variable, so ``s`` is
-    definitely not a renaming while ``sub_inc`` is. So, the second
+  - Otherwise, ``s (y - 1)`` is not a variable, so ``s`` is
+    definitely not a renaming while ``sub_inc`` is. So, the
     second component of the decreases clause decreases while the first
     component is unchanged.
 
@@ -388,7 +388,7 @@ only if ``s`` is. For this, we need two things:
 * First, strengthen the type of ``subst s`` to show that it maps
   variables to variables if and only if ``r`` is a renaming,
 
-* Second, we need to instantiate an exisential quantifier in
+* Second, we need to instantiate an existential quantifier in
   ``sub_elam``, to show that if ``s`` is not a renaming, then it must
   map some ``x`` to a non-variable and, hence, ``sub_elam s (x + 1)``
   is a non-variable too. One way to do this is by asserting this fact,
@@ -400,7 +400,7 @@ In summary, using indexed types combined with well-founded recursion
 on lexicographic orderings, we were able to prove our definitions
 total. That said, coming up with such orderings is non-trivial and
 requires some ingenuity, but once you do, it allows for relatively
-compact definitions that handle both substiutions and renamings.
+compact definitions that handle both substitutions and renamings.
 
 Exercise
 ^^^^^^^^
@@ -458,7 +458,7 @@ introduces the existential quantifier.
 Type system
 +++++++++++
 
-If when running a program, if one ends up with an term like
+If, when running a program, one ends up with a term like like
 :math:`()~e` (i.e., some non-function term like :math:`()` being used
 as if it were a function) then a runtime error has occurred and the
 program crashes. A type system for the simply-typed lambda calculus is
@@ -488,7 +488,7 @@ or ``None``.
 
 * The ``empty`` environment maps all variables to ``None``.
 
-* Extending an an environment ``g`` associating a type ``t`` with a
+* Extending an environment ``g`` associating a type ``t`` with a
   new variable at index ``0`` involves shifting up the indexes of all
   other variables in ``g`` by ``1``.
 
@@ -525,7 +525,7 @@ derivation, or a proof, that ``e`` has type ``t`` in the environment
   t t'`` in environment ``g``, when the body of the function ``e1``
   has type ``t'`` in an environment that extends ``g`` with a binding
   for the new variable at type ``t`` (while shifting and retaining all
-  other ariables).
+  other variables).
 
 * Finally, ``TyApp`` allows applying ``e1`` to ``e2`` only when ``e1``
   has an arrow type and the argument ``e2`` has the type of the formal
@@ -591,7 +591,7 @@ The substitution lemma follows:
    :end-before: //SNIPPET_END: substitution$
 
 It starts with a notion of typability of substitutions, ``subst_typing
-s g1 g2``, which that if a variable ``x`` has type ``g1 x``, then ``s
+s g1 g2``, which says that if a variable ``x`` has type ``g1 x``, then ``s
 x`` must have that same type in ``g2``.
 
 The substitution lemma lifts this notion to expressions, stating that

@@ -56,7 +56,7 @@ a user-provided specification of the form ``Tot t'``.
 In this chapter, we look into how these ``Pure`` specifications work,
 starting with a primer on Floyd-Hoare Logic and weakest precondition
 calculi. If the reader is familiar with these, they may safely skip
-the next subsections, though even if you are an expert, if may be of
+the next subsections, though even if you are an expert, it may be of
 interest to see how such program logics can be formalized in F*.
 
 .. _Part4_Floyd_Hoare:
