@@ -37,7 +37,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
           eval $(opam env) && fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           eval $(opam env) && fstar.exe B.fst

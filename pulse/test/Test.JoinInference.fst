@@ -1,7 +1,6 @@
 module Test.JoinInference
 #lang-pulse
 open Pulse
-open FStar.Mul
 
 
 fn do_something (x:ref int) (#v:int)

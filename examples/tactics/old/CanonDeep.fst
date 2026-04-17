@@ -18,7 +18,6 @@ module CanonDeep
 open FStar.Tactics.V2
 open FStar.Reflection.V2
 open FStar.Reflection.Arith
-open FStar.Mul
 module O = FStar.Order
 
 (* Only dump when debugging is on *)

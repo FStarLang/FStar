@@ -41,7 +41,6 @@ unfold let n = 32
 /// https://github.com/FStarLang/FStar/issues/1757
 
 open FStar.UInt
-open FStar.Mul
 
 (** Abstract type of machine integers, with an underlying
     representation using a bounded mathematical integer *)

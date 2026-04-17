@@ -18,7 +18,6 @@
 module OPLSS2021.ValeVC
 open OPLSS2021.Vale
 open FStar.FunctionalExtensionality
-open FStar.Mul
 
 /////////////////////////////////////////////////////////////////
 // Now, we're going to define a verification-condition generator

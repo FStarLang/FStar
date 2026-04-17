@@ -266,7 +266,6 @@ let op_Minus
     | W64 -> FStar.Int64.(0L -^ x)
     | W128 -> FStar.Int128.(int_to_t 0 -^ x)
 
-open FStar.Mul
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract

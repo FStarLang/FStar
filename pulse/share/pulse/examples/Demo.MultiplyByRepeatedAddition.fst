@@ -20,7 +20,6 @@ open Pulse.Lib.Pervasives
 open FStar.UInt32
 
 module U32 = FStar.UInt32
-open FStar.Mul
 let rec multiply (x y:nat) : z:nat { z == x * y} =
     if x = 0 then 0
     else multiply (x - 1) y + y

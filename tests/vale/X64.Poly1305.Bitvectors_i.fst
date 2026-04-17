@@ -18,7 +18,6 @@ open FStar.BV
 open FStar.Tactics.V2
 open FStar.Tactics.Derived
 open FStar.Tactics.BV
-open FStar.Mul
 open FStar.UInt
 
 // tweak options?

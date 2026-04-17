@@ -1,6 +1,5 @@
 module StringMatching
 open FStar.Seq
-open FStar.Mul
 #set-options " --ext context_pruning_no_ambients"
 (* Some basic notions *)
 

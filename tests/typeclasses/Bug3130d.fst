@@ -2,7 +2,6 @@ module Bug3130d
 
 (* Taken from Comparse *)
 
-open FStar.Mul
 
 type nat_lbytes (sz:nat) = n:nat{n < normalize_term (pow2 (8*sz))}
 

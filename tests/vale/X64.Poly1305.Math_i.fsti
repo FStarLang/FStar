@@ -15,7 +15,6 @@
 *)
 module X64.Poly1305.Math_i
 
-open FStar.Mul
 open X64.Machine_s   // needed for nat64
 open X64.Vale.Decls  // needed for shift_right64, logand64
 open X64.Poly1305.Spec_s // for modp

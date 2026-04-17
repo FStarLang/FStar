@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module OPLSS2021.Basic
-open FStar.Mul
 
 /// A refinement type
 let nat = x:int{ x >= 0 }

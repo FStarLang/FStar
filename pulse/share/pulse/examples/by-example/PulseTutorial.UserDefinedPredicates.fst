@@ -17,7 +17,6 @@
 module PulseTutorial.UserDefinedPredicates
 #lang-pulse
 open Pulse.Lib.Pervasives
-open FStar.Mul
 //pts_to_diag$
 let pts_to_diag 
         (#a:Type0)

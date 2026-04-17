@@ -1,6 +1,5 @@
 module Lib.IntTypes
 
-open FStar.Mul
 
 #set-options "--fuel 0 --max_ifuel 1 --z3rlimit 20"
 

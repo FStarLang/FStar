@@ -25,7 +25,7 @@ let contains (s:t) (x:ref int) : GTot Type0 =
   (exists (i:nat{i < length s}). index s i == x)
 
 let foo (s:t) (x:ref int{s `contains` x}) :
-  GTot (unit * seq (ref int))
+  GTot (unit & seq (ref int))
     (decreases (length s)) // This decreases turns the GTot into GHOST internally, exposing the bug
   = (), s
 

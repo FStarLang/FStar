@@ -18,7 +18,6 @@ module CanonDeep
 open FStar.Tactics.V2
 open FStar.Reflection.V2
 open FStar.Reflection.V2.Arith
-open FStar.Mul
 module O = FStar.Order
 
 (* TODO: The implementation from FStar.Tactics.Canon seems *very* naive:

@@ -16,7 +16,6 @@
 module Poly2
 
 open FStar.Tactics.CanonCommSemiring
-open FStar.Mul
 
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)
 assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)

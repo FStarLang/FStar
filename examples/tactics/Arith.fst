@@ -20,7 +20,6 @@ module Arith
 open FStar.Tactics.V2
 open FStar.Tactics.Arith
 open FStar.List
-open FStar.Mul
 
 let lem0 (x:int) =
     assert (op_Multiply 2 (x + 3) == 6 + (op_Multiply 3 x) - x)

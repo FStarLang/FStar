@@ -17,7 +17,6 @@ module __MODULE__
 
 open FStar.Tactics.CanonCommSemiring
 open FStar.Tactics.V2
-open FStar.Mul
 
 // These assumptions are proven in https://github.com/project-everest/vale/blob/fstar/src/lib/math/Math.Lemmas.Int_i.fsti
 assume val modulo_addition_lemma (a:int) (n:pos) (b:int) : Lemma ((a + b * n) % n = a % n)

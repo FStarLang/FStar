@@ -30,7 +30,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(672,18-672,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
@@ -59,7 +59,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(672,18-672,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
   - Expected failure:
@@ -78,7 +78,7 @@
     details.
   - See also FStar.Classical.Sugar.fsti(66,22-66,41)
 
-* Info at TestErrorLocations.fst(97,28-97,33):
+* Info at TestErrorLocations.fst(96,28-96,33):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (forall (x: Prims.nat). x = 0)
@@ -86,23 +86,23 @@
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
 
-* Info at TestErrorLocations.fst(102,12-102,13):
+* Info at TestErrorLocations.fst(101,12-101,13):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also TestErrorLocations.fst(101,19-101,20)
+  - See also TestErrorLocations.fst(100,19-100,20)
 
-* Info at TestErrorLocations.fst(108,17-108,18):
+* Info at TestErrorLocations.fst(107,17-107,18):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p /\ q) got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also TestErrorLocations.fst(107,21-107,22)
+  - See also TestErrorLocations.fst(106,21-106,22)
 
-* Info at TestErrorLocations.fst(114,12-114,18):
+* Info at TestErrorLocations.fst(113,12-113,18):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (p \/ q) got type Prims.unit
@@ -122,7 +122,7 @@
   - TestErrorLocations.test5 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at TestErrorLocations.fst(113,0-117,17):
+* Warning 240 at TestErrorLocations.fst(112,0-116,17):
   - Missing definitions in module TestErrorLocations:
       test5
       test6

@@ -181,7 +181,7 @@ jobs:
           cd fstar-*
           .\fstar\bin\fstar.exe fstar\lib\fstar\ulib\Prims.fst -f
           $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8' # Make sure we write UTF-8 files
-          echo "module A`nopen FStar.Mul`nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo "module A`nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           .\fstar\bin\fstar.exe --already_cached *,-A A.fst
           echo "module B`n#lang-pulse`nopen Pulse`nfn test (x:int) returns int { (x+1); }" > B.fst
           .\fstar\bin\fstar.exe B.fst

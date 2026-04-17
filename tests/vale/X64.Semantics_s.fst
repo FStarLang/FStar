@@ -78,7 +78,6 @@ unfold let eval_mem (ptr:int) (s:state) : uint64 = s.mem.[ptr]
 
 let eval_maddr (m:maddr) (s:state) : int =
   let open FStar.UInt64 in
-  let open FStar.Mul in
     match m with
     | MConst n -> n
     | MReg reg offset -> v (eval_reg reg s) + offset
@@ -132,7 +131,7 @@ let update_cf (flags:uint64) (new_cf:bool) : (new_flags:uint64{cf new_flags == n
 
 
 
-let st (a:Type) = state -> a * state
+let st (a:Type) = state -> a & state
 
 unfold
 let return (#a:Type) (x:a) :st a =
@@ -301,7 +300,6 @@ val mul_div64: a:uint64 -> b:uint64 -> Pure uint64
 let mul_div64 a b = admit()
 
 let eval_ins (ins:ins) : st unit =
-  let open FStar.Mul in
   s <-- get;
   match ins with
   | Mov64 dst src ->

@@ -23,7 +23,7 @@ Unexpected error; please file a bug report, ideally with a minimized version of 
 Invalid_argument("for_all2: Different_list_size")
 *)
 
-val f2 : int * int -> Tot unit
+val f2 : int & int -> Tot unit
 [@@expect_failure [297]]
 let f2 p = match p with
 | x,y

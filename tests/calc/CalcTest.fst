@@ -1,6 +1,5 @@
 module CalcTest
 
-open FStar.Mul
 open FStar.Calc
 
 let lem1 (a : pos) : Lemma (2 * a > a) = ()

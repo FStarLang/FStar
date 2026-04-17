@@ -15,7 +15,6 @@
 *)
 module FStar.Math.Lemmas
 
-open FStar.Mul
 open FStar.Math.Lib
 
 #set-options "--fuel 0 --ifuel 0"

@@ -19,7 +19,7 @@
   - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(672,18-672,24)
 
 * Info at Test.FunctionalExtensionality.fst(142,57-142,58):
   - Expected failure:

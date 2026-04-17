@@ -18,7 +18,6 @@ module FStar.UInt
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fsti], which is mostly
  * a copy-paste of this module. *)
 
-open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 

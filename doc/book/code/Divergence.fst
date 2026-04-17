@@ -1,7 +1,6 @@
 module Divergence
 open FStar.List.Tot
 module L = FStar.List.Tot
-open FStar.Mul
 
 //SNIPPET_START: collatz$
 (* You can program a function to compute Collatz sequences

@@ -15,7 +15,6 @@
 *)
 module FStar.Tactics.Canon.Lemmas
 
-open FStar.Mul
 
 val distr : (#x : int) -> (#y : int) -> (#z : int) -> Lemma (x * (y + z) == x * y + x * z)
 

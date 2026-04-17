@@ -19,13 +19,11 @@ open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Math.Lemmas
 open FStar.Math.Lib
-open FStar.Mul
 open Calc
 open X64.Vale.State_i   // needed for mem
 open X64.Poly1305.Bitvectors_i
 
 (*
-open FStar.Mul
 open FStar.UInt
 open Semantics
 lemma_BitwiseAdd64()

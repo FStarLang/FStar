@@ -15,7 +15,6 @@
 *)
 module FStar.Math.Lib
 
-open FStar.Mul
 
 (* Definition of the division operator *)
 val lemma_div_def: a:nat -> b:pos -> Lemma (a = b * (a/b) + a % b)

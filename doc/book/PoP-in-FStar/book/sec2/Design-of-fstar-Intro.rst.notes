@@ -158,10 +158,7 @@ and the following primitive operators:
 * ``+``: Addition (infix)
 * ``/``: Euclidean division (infix)
 * ``%``: Euclidean modulus (infix)
-* ``op_Multiply``: Unfortunately, the traditional multiplication symbol
-  ``*`` is reserved by default for the :ref:`tuple<tuples>` type
-  constructor. Use the module ``FStar.Mul`` to treat ``*`` as integer
-  multiplication---see :ref:`this note<tuples>`.
+* ``*``: Multiplication (infix)
 * ``<`` : Less than (infix)
 * ``<=``: Less than or equal (infix)
 * ``>`` : Greater than (infix)

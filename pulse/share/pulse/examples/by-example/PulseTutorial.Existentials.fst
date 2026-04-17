@@ -17,7 +17,6 @@
 module PulseTutorial.Existentials
 #lang-pulse
 open Pulse.Lib.Pervasives
-open FStar.Mul
 
 //assign$
 fn assign (#a: Type0) (x:ref a) (v:a)

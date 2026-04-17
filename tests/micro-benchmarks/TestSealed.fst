@@ -1,6 +1,5 @@
 module TestSealed
 
-open FStar.Mul
 open FStar.Sealed
 open FStar.Tactics.V2
 

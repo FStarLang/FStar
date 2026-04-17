@@ -506,7 +506,6 @@ indefinitely, are not so simple. Let's look at the encoding of the
 
 .. code-block:: fstar
                 
-   open FStar.Mul
    let rec factorial (n:nat) : nat =
      if n = 0 then 1
      else n * factorial (n - 1)

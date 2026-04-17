@@ -107,7 +107,6 @@ let tup3_third #a #b #c (x:tup3 a b c)
     | Tup3 _ _ thd -> thd
 //SNIPPET_END: proj_handrolled
 
-open FStar.Mul
 //SNIPPET_START: point
 type point3D = { x:int; y:int; z:int}
 
