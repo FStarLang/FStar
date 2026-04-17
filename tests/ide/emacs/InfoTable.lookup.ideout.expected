@@ -1,6 +1,6 @@
 {"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "- Expected expression of type int got expression string of type eqtype\n", "number": 189, "ranges": [{"beg": [5, 11], "end": [5, 17], "fname": "InfoTable.fst"}]}], "status": "failure"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "- Expected expression of type int got expression nat of type Type0\n", "number": 189, "ranges": [{"beg": [6, 11], "end": [6, 14], "fname": "InfoTable.fst"}]}], "status": "failure"}
 {"kind": "response", "query-id": "3", "response": "No such symbol, module, or namespace.", "status": "failure"}
 {"kind": "response", "query-id": "4", "response": "No such symbol, module, or namespace.", "status": "failure"}
 {"kind": "response", "query-id": "5", "response": "No such symbol, module, or namespace.", "status": "failure"}

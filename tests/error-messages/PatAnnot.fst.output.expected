@@ -34,12 +34,12 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
   - Type annotation on parameter incompatible with the expected type
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 

@@ -30,7 +30,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
@@ -59,7 +59,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
   - Expected failure:

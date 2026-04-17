@@ -18,7 +18,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at Coercions.fst(74,49-74,57):
   - Expected failure:
@@ -26,7 +26,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at Coercions.fst(76,55-76,56):
   - Expected failure:
@@ -34,7 +34,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at Coercions.fst(78,50-78,51):
   - Expected failure:
@@ -42,7 +42,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
 * Info at Coercions.fst(80,51-80,52):
   - Expected failure:
@@ -50,5 +50,5 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(672,18-672,24)
+  - See also Prims.fst(669,18-669,24)
 
