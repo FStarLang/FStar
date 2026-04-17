@@ -287,8 +287,7 @@ let is_binop (s:string) : option binop =
           s = "FStar.UInt32.sub" ||
           s = "FStar.UInt64.sub"
   then Some Sub
-  else if s = "Prims.op_Multiply" ||
-          s = "Prims.op_Star" ||
+  else if s = "Prims.op_Star" ||
           s = "FStar.UInt8.mul" ||
           s = "FStar.UInt16.mul" ||
           s = "FStar.UInt32.mul" ||

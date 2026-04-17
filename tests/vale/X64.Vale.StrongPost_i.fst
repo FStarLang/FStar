@@ -105,7 +105,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
       else
   	  None
   | IMul64 (OReg dst) src ->
-      let a = s0.regs dst `op_Multiply` eval_operand_norm src s0 in
+      let a = s0.regs dst * eval_operand_norm src s0 in
       if dst <> Rsp && valid_operand_norm src s0 && a < nat64_max then
         let (bM, sM) = va_lemma_IMul64 b0 s0 sN (OReg dst) src in
   	  Some sM

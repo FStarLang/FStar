@@ -31,8 +31,6 @@ lemma_BitwiseMul64()
 *)
 
 
-// private unfold let op_Star = op_Multiply
-
 // GM 2024-07-17: this file is rather particular with options. It had
 // #reset-options pragmas everywher, but no real explanations. I've changed
 // it to use push/pop, where the push only states the difference instead

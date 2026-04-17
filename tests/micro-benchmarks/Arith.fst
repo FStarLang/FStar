@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Arith
-unfold let op_Star = Prims.op_Multiply
 
 #reset-options "--z3cliopt smt.arith.nl=false --smtencoding.elim_box true --smtencoding.nl_arith_repr native --smtencoding.l_arith_repr native"
 irreducible

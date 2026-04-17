@@ -79,18 +79,18 @@ assume val return_ten : unit -> Pure int (requires True) (ensures (fun x -> x ==
 (*           rewrite_eqs_from_context (); *)
 (*           trivial ()) *)
 
-assume val mul_comm : x:nat -> y:nat -> Tot (op_Multiply x y == op_Multiply y x)
-val lemma_mul_comm : x:nat -> y:nat -> Lemma (op_Multiply x y == op_Multiply y x)
+assume val mul_comm : x:nat -> y:nat -> Tot (x * y == y * x)
+val lemma_mul_comm : x:nat -> y:nat -> Lemma (x * y == y * x)
 let lemma_mul_comm x y = ()
 
 let sqintro (x:'a) : squash 'a = ()
 
 let test_exact (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x)
+  assert (x * y == y * x)
       by (exact (quote (sqintro (mul_comm x y))))
 
 let test_apply (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x)
+  assert (x * y == y * x)
       by (apply_lemma (quote lemma_mul_comm))
 
 let mul_commute_ascription () : Tac unit =
@@ -102,13 +102,13 @@ let mul_commute_ascription () : Tac unit =
         fail "Not an equality"
 
 let test_apply_ascription (x:nat) (y:nat) =
-  (assert (op_Multiply x y == op_Multiply y x))
+  (assert (x * y == y * x))
   <: Tot unit
   by ()
 
 (* this fails, rightfully, since the top-level goal is not *)
 (* let test_apply_ascription_fail (x:nat) (y:nat) = *)
-(*   assert (op_Multiply x y == op_Multiply y x) *)
+(*   assert (x * y == y * x) *)
 (*   <: Tot unit *)
 (*   by (apply_lemma (quote lemma_mul_comm)) *)
 

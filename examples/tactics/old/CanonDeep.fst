@@ -152,8 +152,6 @@ let rec expr_to_term (e:expr) : Tot term =
   | Plus l r -> mk_e_app (pack_fv' add_qn) [expr_to_term l; expr_to_term r]
   | Minus l r -> mk_e_app (pack_fv' minus_qn) [expr_to_term l; expr_to_term r]
   | Mult l r -> mk_e_app (pack_fv' mult_qn) [expr_to_term l; expr_to_term r]
-                (* <- TODO this has some chance of not round-tripping well
-                           since there is also mult'_qn *)
   | Neg l -> mk_e_app (pack_fv' neg_qn) [expr_to_term l]
     (* TODO all the ones below also have implicit arguments that have to be *)
     (*      passed too (number of bits); just how am I supposed to know them? *)

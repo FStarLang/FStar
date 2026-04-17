@@ -514,8 +514,8 @@ let lemma_lognot_zero_ext #n a =
   let eav = Seq.append hd0 av in
 
   append_lemma #1 #n hd0 av;
-  assert (from_vec #(n+1) eav = op_Multiply (from_vec #1 hd0) (pow2 n) + from_vec av);
-  assert (op_Multiply (from_vec #1 hd0) (pow2 n) = 0);
+  assert (from_vec #(n+1) eav = from_vec #1 hd0 * pow2 n + from_vec av);
+  assert (from_vec #1 hd0 * pow2 n = 0);
   assert (from_vec #(n+1) eav = from_vec #n av);
   assert (from_vec #(n+1) eav < pow2 n);
 
@@ -523,8 +523,8 @@ let lemma_lognot_zero_ext #n a =
   let neav_r = BitVector.lognot_vec #(n+1) eav in
   let neav_l = Seq.append hd1 nav in
   append_lemma #1 #n hd1 nav;
-  assert (from_vec #(n+1) neav_l = (op_Multiply (from_vec #1 hd1) (pow2 n)) + (from_vec #n nav));
-  assert (op_Multiply (from_vec #1 hd1) (pow2 n) = pow2 n);
+  assert (from_vec #(n+1) neav_l = (from_vec #1 hd1 * pow2 n) + (from_vec #n nav));
+  assert (from_vec #1 hd1 * pow2 n = pow2 n);
   assert (from_vec #(n+1) neav_l = pow2 n + from_vec #n nav);
   assert (pow2 n + from_vec #n nav = rhs);
 
@@ -560,12 +560,11 @@ let rec lemma_lognot_value_mod #n a =
       let tl = from_vec #(n-1) (Seq.slice (to_vec a) 1 n) in
 
       assert (hd = 0 || hd = 1);
-      let hdpow = op_Multiply hd (pow2 (n-1)) in
+      let hdpow = hd * pow2 (n-1) in
 
       from_vec_propriety (to_vec a) 1;
-      assert (from_vec av = (op_Multiply
-                              (from_vec #1     (Seq.slice av 0 1)) (pow2 (n-1))) +
-                              (from_vec #(n-1) (Seq.slice av 1 n)));
+      assert (from_vec av = (from_vec #1     (Seq.slice av 0 1) * pow2 (n-1)) +
+                             from_vec #(n-1) (Seq.slice av 1 n));
 
       let ntl = lognot tl in
       lemma_lognot_value_mod #(n-1) tl;

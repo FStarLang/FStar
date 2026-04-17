@@ -560,7 +560,7 @@ that the quantifier cannot be repeatedly instantiated infinitely.
                                       (let ((@lb2 (Prims.op_Equality Prims.int @x1 (BoxInt 0))))
                                            (ite (= @lb2 (BoxBool true))
                                                 (BoxInt 1)
-                                                (Prims.op_Multiply
+                                                (Prims.op_Star
                                                        @x1
                                                        (SMTEncoding.factorial.fuel_instrumented
                                                             @u0
@@ -967,7 +967,7 @@ example above, the encoding of ``x + 1 + 2`` becomes:
   
 This option controls the representation of non-linear arithmetic
 functions (``*, /, mod``) in the SMT encoding. The default is
-``boxwrap`` which uses the encoding of ``Prims.op_Multiply,
+``boxwrap`` which uses the encoding of ``Prims.op_Star,
 Prims.op_Division, Prims.op_Modulus`` analogous to
 ``Prims.op_Addition``.
 
@@ -1503,7 +1503,7 @@ let's see how to pin down which quantifier is to blame.
           [quantifier_instances] @fuel_correspondence_SMTEncoding.factorial.fuel_instrumented :   5746 :  10 : 11
           [quantifier_instances] Prims_pretyping_ae567c2fb75be05905677af440075565 :   5835 :  11 : 12
           [quantifier_instances] projection_inverse_BoxInt_proj_0 :   6337 :  10 : 11
-          [quantifier_instances] primitive_Prims.op_Multiply :   6394 :  10 : 11
+          [quantifier_instances] primitive_Prims.op_Star :   6394 :  10 : 11
           [quantifier_instances] primitive_Prims.op_Subtraction :   6394 :  10 : 11
           [quantifier_instances] token_correspondence_SMTEncoding.factorial.fuel_instrumented :   7629 :  10 : 11
           [quantifier_instances] @fuel_irrelevance_SMTEncoding.factorial.fuel_instrumented :   9249 :  10 : 11

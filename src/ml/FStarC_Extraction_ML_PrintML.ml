@@ -251,7 +251,7 @@ let resugar_prims_ops path: expression =
   (match path with
   | (["Prims"], "op_Addition") -> mk_lident "+"
   | (["Prims"], "op_Subtraction") -> mk_lident "-"
-  | (["Prims"], "op_Multiply") -> mk_lident "*"
+  | (["Prims"], "op_Star") -> mk_lident "*"
   | (["Prims"], "op_Division") -> mk_lident "/"
   | (["Prims"], "op_Equality") -> mk_lident "="
   | (["Prims"], "op_Colon_Equals") -> mk_lident ":="

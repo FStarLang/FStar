@@ -210,7 +210,7 @@ let () =
    "▹", PIPE_RIGHT;
    "÷", OPINFIX3L "÷";
    "‖", OPINFIX0a "||";
-   "×", IDENT "op_Multiply";
+   "×", IDENT "op_Star";
    "∗", OPINFIX3L "*";
    "⇒", OPINFIX0c "=>";
    "≥", OPINFIX0c ">=";

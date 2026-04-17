@@ -25,4 +25,4 @@ val code_length : ss:(list (symbol & pos)) -> cs:(list nat) -> Pure nat
 [@@expect_failure [19]] // Fails unless we annotate (c:nat)
 let code_length ss cs =
   fold_left2 (fun (a:nat) (sw:symbol&pos) c ->
-              let (s,w) = sw in a + w `op_Multiply` c) 0 ss cs
+              let (s,w) = sw in a + w * c) 0 ss cs

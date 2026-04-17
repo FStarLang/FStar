@@ -541,10 +541,7 @@ val op_Negation: bool -> Tot bool
 
 [@@ smt_theory_symbol]
 assume
-val op_Multiply: int -> int -> Tot int
-
-(* op_Multiply is not an actual operator name. *)
-unfold let ( * ) = op_Multiply
+val op_Star: int -> int -> Tot int
 
 (** [-] integer subtraction *)
 
@@ -700,7 +697,7 @@ val op_Division: int -> nonzero -> Tot int
 let rec pow2 (x: nat) : Tot pos =
   match x with
   | 0 -> 1
-  | _ -> 2 `op_Multiply` (pow2 (x - 1))
+  | _ -> 2 * pow2 (x - 1)
 
 (** [min] computes the minimum of two [int]s *)
 let min x y = if x <= y then x else y

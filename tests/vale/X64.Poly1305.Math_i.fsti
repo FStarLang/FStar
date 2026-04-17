@@ -24,12 +24,12 @@ open Opaque_i
 module F = FStar.FunctionalExtensionality
 
 let lowerUpper128 (l:nat64) (u:nat64) : nat128 =
-    0x10000000000000000 `op_Multiply` u + l
+    0x10000000000000000 * u + l
 
 let lowerUpper128_opaque = make_opaque lowerUpper128
 
 let lowerUpper192 (l:nat128) (u:nat64) : int =
-    0x100000000000000000000000000000000 `op_Multiply` u + l
+    0x100000000000000000000000000000000 * u + l
 
 let lowerUpper192_opaque = make_opaque lowerUpper192
 

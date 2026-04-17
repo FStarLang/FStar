@@ -74,8 +74,8 @@ let pqueue t {| total_order t |} = rvec t
 // Index functions
 //
 let parent_idx (i:nat{i > 0}) : nat = (i - 1) / 2
-let left_idx (i:nat) : nat = op_Multiply 2 i + 1
-let right_idx (i:nat) : nat = op_Multiply 2 i + 2
+let left_idx (i:nat) : nat = 2 * i + 1
+let right_idx (i:nat) : nat = 2 * i + 2
 
 // Index relationship lemmas
 let left_idx_parent_of (i:nat{i > 0}) : Lemma (left_idx (parent_idx i) = i \/ right_idx (parent_idx i) = i) = ()
@@ -1078,7 +1078,7 @@ let grandparent_after_swap #t {| total_order t |}
 #push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 
-                          SZ.fits (op_Multiply 2 (Seq.length s) + 2)})
+                          SZ.fits (2 * Seq.length s + 2)})
   (#cap:erased nat)
   requires is_rvec pq s cap
   requires pure (almost_heap_sift_down s (SZ.v idx) /\
@@ -1309,7 +1309,7 @@ fn peek_min (#t:Type0) {| total_order t |} (pq:pqueue t)
 }
 
 fn extract_min (#t:eqtype) {| total_order t |} (pq:pqueue t)
-  (#s0:erased (Seq.seq t){Seq.length s0 > 0 /\ SZ.fits (op_Multiply 2 (Seq.length s0) + 2)})
+  (#s0:erased (Seq.seq t){Seq.length s0 > 0 /\ SZ.fits (2 * Seq.length s0 + 2)})
   (#cap:erased nat)
   requires is_pqueue pq s0 cap
   returns x:t

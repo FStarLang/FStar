@@ -80,25 +80,25 @@ irreducible val va_irreducible_lemma_poly1305_multiply : va_b0:va_codes -> va_s0
   va_sN:va_state -> r1:nat64
   -> Ghost ((va_bM:va_codes) * (va_sM:va_state) * (hh:int))
   (requires ((va_require va_b0 (va_code_poly1305_multiply ()) va_s0 va_sN) /\ (va_get_ok va_s0) /\
-    (let n = nat64_max in let p = n `op_Multiply` n `op_Multiply` 4 - 5 in let r = r1 `op_Multiply`
-    n + (va_get_reg R11 va_s0) in let h = (va_get_reg Rbp va_s0) `op_Multiply` (n `op_Multiply` n)
-    + (va_get_reg Rbx va_s0) `op_Multiply` n + (va_get_reg R14 va_s0) in r1 `op_Modulus` 4 == 0 /\
+    (let n = nat64_max in let p = n * n * 4 - 5 in let r = r1 *
+    n + (va_get_reg R11 va_s0) in let h = (va_get_reg Rbp va_s0) * (n * n)
+    + (va_get_reg Rbx va_s0) * n + (va_get_reg R14 va_s0) in r1 `op_Modulus` 4 == 0 /\
     (eq_int (va_get_reg R13 va_s0) (r1 + r1 `op_Division` 4)) /\ (va_get_reg Rbp va_s0)
-    `op_Multiply` (va_get_reg R11 va_s0) < 7 `op_Multiply` (n `op_Division` 16) /\ (va_get_reg R14
-    va_s0) `op_Multiply` r1 < n `op_Multiply` (n `op_Division` 16) /\ (va_get_reg Rbx va_s0)
-    `op_Multiply` (va_get_reg R11 va_s0) < n `op_Multiply` (n `op_Division` 16) /\ (va_get_reg Rbp
-    va_s0) `op_Multiply` (va_get_reg R13 va_s0) < n `op_Multiply` (n `op_Division` 8) /\
-    (va_get_reg R14 va_s0) `op_Multiply` (va_get_reg R11 va_s0) < n `op_Multiply` (n `op_Division`
-    16) /\ (va_get_reg Rbx va_s0) `op_Multiply` (va_get_reg R13 va_s0) < n `op_Multiply` (n
-    `op_Division` 8) /\ (va_get_reg Rbp va_s0) `op_Multiply` (va_get_reg R13 va_s0) < 7
-    `op_Multiply` (5 `op_Multiply` n `op_Division` 64) /\ (va_get_reg Rax va_s0) == r1)))
+    * (va_get_reg R11 va_s0) < 7 * (n `op_Division` 16) /\ (va_get_reg R14
+    va_s0) * r1 < n * (n `op_Division` 16) /\ (va_get_reg Rbx va_s0)
+    * (va_get_reg R11 va_s0) < n * (n `op_Division` 16) /\ (va_get_reg Rbp
+    va_s0) * (va_get_reg R13 va_s0) < n * (n `op_Division` 8) /\
+    (va_get_reg R14 va_s0) * (va_get_reg R11 va_s0) < n * (n `op_Division`
+    16) /\ (va_get_reg Rbx va_s0) * (va_get_reg R13 va_s0) < n * (n
+    `op_Division` 8) /\ (va_get_reg Rbp va_s0) * (va_get_reg R13 va_s0) < 7
+    * (5 * n `op_Division` 64) /\ (va_get_reg Rax va_s0) == r1)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (hh:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (va_get_ok va_sM) /\ (let n = nat64_max in let p = n `op_Multiply` n
-    `op_Multiply` 4 - 5 in let r = r1 `op_Multiply` n + (va_get_reg R11 va_s0) in let h =
-    (va_get_reg Rbp va_s0) `op_Multiply` (n `op_Multiply` n) + (va_get_reg Rbx va_s0) `op_Multiply`
-    n + (va_get_reg R14 va_s0) in hh == n `op_Multiply` n `op_Multiply` (va_get_reg R10 va_sM) + n
-    `op_Multiply` (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ h `op_Multiply` r `op_Modulus`
-    p == hh `op_Modulus` p /\ (va_get_reg R10 va_sM) `op_Division` 4 `op_Multiply` 4 + (va_get_reg
+    va_sM va_sN) /\ (va_get_ok va_sM) /\ (let n = nat64_max in let p = n * n
+    * 4 - 5 in let r = r1 * n + (va_get_reg R11 va_s0) in let h =
+    (va_get_reg Rbp va_s0) * (n * n) + (va_get_reg Rbx va_s0) *
+    n + (va_get_reg R14 va_s0) in hh == n * n * (va_get_reg R10 va_sM) + n
+    * (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ h * r `op_Modulus`
+    p == hh `op_Modulus` p /\ (va_get_reg R10 va_sM) `op_Division` 4 * 4 + (va_get_reg
     R10 va_sM) `op_Division` 4 < 18446744073709551616 /\ (va_get_reg Rax va_sM) ==
     18446744073709551612) /\ (va_state_eq va_sM (va_update_flags va_sM (va_update_reg Rdx va_sM
     (va_update_reg Rax va_sM (va_update_reg Rbp va_sM (va_update_reg Rbx va_sM (va_update_reg R14
@@ -110,25 +110,25 @@ irreducible let va_irreducible_lemma_poly1305_multiply va_b0 va_s0 va_sN r1 =
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   let (va_b1:va_codes) = (va_get_block va_cM) in
   let n = nat64_max in
-  let p = (n `op_Multiply` n `op_Multiply` 4 - 5) in
-  let r = (r1 `op_Multiply` n + (va_get_reg R11 va_s0)) in
-  let h = ((va_get_reg Rbp va_s0) `op_Multiply` (n `op_Multiply` n) + (va_get_reg Rbx va_s0)
-    `op_Multiply` n + (va_get_reg R14 va_s0)) in
-  assert ((va_get_reg R14 va_s0) `op_Multiply` r1 == r1 `op_Multiply` (va_get_reg R14 va_s0));
-  assert ((va_get_reg R11 va_s0) `op_Multiply` (va_get_reg R14 va_s0) == (va_get_reg R14 va_s0)
-    `op_Multiply` (va_get_reg R11 va_s0));
-  assert ((va_get_reg R11 va_s0) `op_Multiply` (va_get_reg Rbx va_s0) == (va_get_reg Rbx va_s0)
-    `op_Multiply` (va_get_reg R11 va_s0));
-  assert ((va_get_reg R13 va_s0) `op_Multiply` (va_get_reg Rbx va_s0) == (va_get_reg Rbx va_s0)
-    `op_Multiply` (va_get_reg R13 va_s0));
-  let gd0 = ((va_get_reg R14 va_s0) `op_Multiply` (va_get_reg R11 va_s0) + (va_get_reg Rbx va_s0)
-    `op_Multiply` (va_get_reg R13 va_s0)) in
-  let gd1 = ((va_get_reg R14 va_s0) `op_Multiply` r1 + (va_get_reg Rbx va_s0) `op_Multiply`
-    (va_get_reg R11 va_s0) + (va_get_reg Rbp va_s0) `op_Multiply` (va_get_reg R13 va_s0)) in
-  let gd2 = ((va_get_reg Rbp va_s0) `op_Multiply` (va_get_reg R11 va_s0)) in
+  let p = (n * n * 4 - 5) in
+  let r = (r1 * n + (va_get_reg R11 va_s0)) in
+  let h = ((va_get_reg Rbp va_s0) * (n * n) + (va_get_reg Rbx va_s0)
+    * n + (va_get_reg R14 va_s0)) in
+  assert ((va_get_reg R14 va_s0) * r1 == r1 * (va_get_reg R14 va_s0));
+  assert ((va_get_reg R11 va_s0) * (va_get_reg R14 va_s0) == (va_get_reg R14 va_s0)
+    * (va_get_reg R11 va_s0));
+  assert ((va_get_reg R11 va_s0) * (va_get_reg Rbx va_s0) == (va_get_reg Rbx va_s0)
+    * (va_get_reg R11 va_s0));
+  assert ((va_get_reg R13 va_s0) * (va_get_reg Rbx va_s0) == (va_get_reg Rbx va_s0)
+    * (va_get_reg R13 va_s0));
+  let gd0 = ((va_get_reg R14 va_s0) * (va_get_reg R11 va_s0) + (va_get_reg Rbx va_s0)
+    * (va_get_reg R13 va_s0)) in
+  let gd1 = ((va_get_reg R14 va_s0) * r1 + (va_get_reg Rbx va_s0) *
+    (va_get_reg R11 va_s0) + (va_get_reg Rbp va_s0) * (va_get_reg R13 va_s0)) in
+  let gd2 = ((va_get_reg Rbp va_s0) * (va_get_reg R11 va_s0)) in
   let (va_s21, va_c21, va_b21) = (va_lemma_block va_b1 va_s0 va_sM) in
   (va_lemma_weakest_pre_norm (va_ins_1_poly1305_multiply ()) va_s0 va_s21);
-  let hh = (n `op_Multiply` n `op_Multiply` (va_get_reg R10 va_s21) + n `op_Multiply` (va_get_reg
+  let hh = (n * n * (va_get_reg R10 va_s21) + n * (va_get_reg
     Rbx va_s21) + (va_get_reg R14 va_s21)) in
   (lemma_poly_multiply n p r h (va_get_reg R11 va_s21) r1 (va_get_reg R14 va_old_s) (va_get_reg Rbx
     va_old_s) (va_get_reg Rbp va_old_s) (va_get_reg R13 va_s21) gd0 gd1 gd2 hh);
@@ -157,14 +157,14 @@ irreducible val va_irreducible_lemma_poly1305_reduce : va_b0:va_codes -> va_s0:v
     (va_is_dst_dst_operand_uint64 d3 va_s0) /\ (va_is_dst_dst_operand_uint64 h0 va_s0) /\
     (va_is_dst_dst_operand_uint64 h1 va_s0) /\ (va_is_dst_dst_operand_uint64 h2 va_s0) /\
     (va_get_ok va_s0) /\ d3 == (OReg R10) /\ h0 == (OReg R14) /\ h1 == (OReg Rbx) /\ h2 == (OReg
-    Rbp) /\ p == n `op_Multiply` n `op_Multiply` 4 - 5 /\ hd == n `op_Multiply` n `op_Multiply`
-    (va_eval_dst_operand_uint64 va_s0 d3) + n `op_Multiply` (va_eval_dst_operand_uint64 va_s0 h1) +
+    Rbp) /\ p == n * n * 4 - 5 /\ hd == n * n *
+    (va_eval_dst_operand_uint64 va_s0 d3) + n * (va_eval_dst_operand_uint64 va_s0 h1) +
     (va_eval_dst_operand_uint64 va_s0 h0) /\ (va_eval_dst_operand_uint64 va_s0 d3) `op_Division` 4
-    `op_Multiply` 4 + (va_eval_dst_operand_uint64 va_s0 d3) `op_Division` 4 < 18446744073709551616
+    * 4 + (va_eval_dst_operand_uint64 va_s0 d3) `op_Division` 4 < 18446744073709551616
     /\ (va_get_reg Rax va_s0) == 18446744073709551612))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (hh:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n `op_Multiply` n `op_Multiply`
-    (va_eval_dst_operand_uint64 va_sM h2) + n `op_Multiply` (va_eval_dst_operand_uint64 va_sM h1) +
+    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n * n *
+    (va_eval_dst_operand_uint64 va_sM h2) + n * (va_eval_dst_operand_uint64 va_sM h1) +
     (va_eval_dst_operand_uint64 va_sM h0) /\ hd `op_Modulus` p == hh `op_Modulus` p /\
     (va_eval_dst_operand_uint64 va_sM h2) < 5 /\ (va_state_eq va_sM (va_update_flags va_sM
     (va_update_reg Rax va_sM (va_update_ok va_sM (va_update_dst_operand h2 va_sM
@@ -187,10 +187,10 @@ irreducible let va_irreducible_lemma_poly1305_reduce va_b0 va_s0 va_sN d3 h0 h1 
   let (va_b8, va_s8) = (va_lemma_Add64Wrap va_b7 va_s7 va_sM h0 (va_op_operand_reg Rax)) in
   let (va_b9, va_s9) = (va_lemma_Adc64Wrap va_b8 va_s8 va_sM h1 (va_const_operand 0)) in
   let (va_b10, va_s10) = (va_lemma_Adc64Wrap va_b9 va_s9 va_sM h2 (va_const_operand 0)) in
-  let h10 = (n `op_Multiply` (va_eval_dst_operand_uint64 va_old_s h1) + (va_eval_dst_operand_uint64
+  let h10 = (n * (va_eval_dst_operand_uint64 va_old_s h1) + (va_eval_dst_operand_uint64
     va_old_s h0)) in
   let hh = (h10 + (va_get_reg Rax va_s10) + (va_eval_dst_operand_uint64 va_old_s d3) `op_Modulus` 4
-    `op_Multiply` (n `op_Multiply` n)) in
+    * (n * n)) in
   (lemma_poly_reduce n p hd (va_eval_dst_operand_uint64 va_old_s d3) h10 (va_get_reg Rax va_s10)
     hh);
   let va_sM = (va_lemma_empty va_s10 va_sM) in
@@ -214,13 +214,13 @@ irreducible val va_irreducible_lemma_poly1305_reduce_regs : va_b0:va_codes -> va
   va_sN:va_state -> hd:int -> p:int
   -> Ghost ((va_bM:va_codes) * (va_sM:va_state) * (hh:int))
   (requires ((va_require va_b0 (va_code_poly1305_reduce_regs ()) va_s0 va_sN) /\ (va_get_ok va_s0)
-    /\ p == n `op_Multiply` n `op_Multiply` 4 - 5 /\ hd == n `op_Multiply` n `op_Multiply`
-    (va_get_reg R10 va_s0) + n `op_Multiply` (va_get_reg Rbx va_s0) + (va_get_reg R14 va_s0) /\
-    (va_get_reg R10 va_s0) `op_Division` 4 `op_Multiply` 4 + (va_get_reg R10 va_s0) `op_Division` 4
+    /\ p == n * n * 4 - 5 /\ hd == n * n *
+    (va_get_reg R10 va_s0) + n * (va_get_reg Rbx va_s0) + (va_get_reg R14 va_s0) /\
+    (va_get_reg R10 va_s0) `op_Division` 4 * 4 + (va_get_reg R10 va_s0) `op_Division` 4
     < 18446744073709551616 /\ (va_get_reg Rax va_s0) == 18446744073709551612))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (hh:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n `op_Multiply` n `op_Multiply` (va_get_reg
-    Rbp va_sM) + n `op_Multiply` (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ hd `op_Modulus`
+    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n * n * (va_get_reg
+    Rbp va_sM) + n * (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ hd `op_Modulus`
     p == hh `op_Modulus` p /\ (va_get_reg Rbp va_sM) < 5 /\ (va_state_eq va_sM (va_update_reg Rbp
     va_sM (va_update_reg Rbx va_sM (va_update_reg R14 va_sM (va_update_reg R10 va_sM
     (va_update_flags va_sM (va_update_reg Rax va_sM (va_update_ok va_sM va_s0)))))))))))
@@ -246,9 +246,9 @@ irreducible let va_irreducible_lemma_poly1305_reduce_regs va_b0 va_s0 va_sN hd p
     (va_const_operand 0)) in
   let (va_b10, va_s10) = (va_lemma_Adc64Wrap va_b9 va_s9 va_sM (va_op_dst_operand_reg Rbp)
     (va_const_operand 0)) in
-  let rbx0 = (n `op_Multiply` (va_get_reg Rbx va_old_s) + (va_get_reg R14 va_old_s)) in
-  let hh = (rbx0 + (va_get_reg Rax va_s10) + (va_get_reg R10 va_old_s) `op_Modulus` 4 `op_Multiply`
-    (n `op_Multiply` n)) in
+  let rbx0 = (n * (va_get_reg Rbx va_old_s) + (va_get_reg R14 va_old_s)) in
+  let hh = (rbx0 + (va_get_reg Rax va_s10) + (va_get_reg R10 va_old_s) `op_Modulus` 4 *
+    (n * n)) in
   (lemma_poly_reduce n p hd (va_get_reg R10 va_old_s) rbx0 (va_get_reg Rax va_s10) hh);
   let va_sM = (va_lemma_empty va_s10 va_sM) in
   (va_bM, va_sM, hh)
@@ -281,13 +281,13 @@ irreducible val va_irreducible_lemma_poly1305_reduce_regs_fast_block : va_b0:va_
   va_s0:va_state -> va_sN:va_state -> hd:int -> p:int
   -> Ghost ((va_bM:va_codes) * (va_sM:va_state) * (hh:int))
   (requires ((va_require va_b0 (va_code_poly1305_reduce_regs_fast_block ()) va_s0 va_sN) /\
-    (va_get_ok va_s0) /\ p == n `op_Multiply` n `op_Multiply` 4 - 5 /\ hd == n `op_Multiply` n
-    `op_Multiply` (va_get_reg R10 va_s0) + n `op_Multiply` (va_get_reg Rbx va_s0) + (va_get_reg R14
-    va_s0) /\ (va_get_reg R10 va_s0) `op_Division` 4 `op_Multiply` 4 + (va_get_reg R10 va_s0)
+    (va_get_ok va_s0) /\ p == n * n * 4 - 5 /\ hd == n * n
+    * (va_get_reg R10 va_s0) + n * (va_get_reg Rbx va_s0) + (va_get_reg R14
+    va_s0) /\ (va_get_reg R10 va_s0) `op_Division` 4 * 4 + (va_get_reg R10 va_s0)
     `op_Division` 4 < 18446744073709551616 /\ (va_get_reg Rax va_s0) == 18446744073709551612))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (hh:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n `op_Multiply` n `op_Multiply` (va_get_reg
-    Rbp va_sM) + n `op_Multiply` (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ hd `op_Modulus`
+    va_sM va_sN) /\ (va_get_ok va_sM) /\ p > 0 /\ hh == n * n * (va_get_reg
+    Rbp va_sM) + n * (va_get_reg Rbx va_sM) + (va_get_reg R14 va_sM) /\ hd `op_Modulus`
     p == hh `op_Modulus` p /\ (va_get_reg Rbp va_sM) < 5 /\ (va_state_eq va_sM (va_update_reg Rbp
     va_sM (va_update_reg Rbx va_sM (va_update_reg R14 va_sM (va_update_reg R10 va_sM
     (va_update_flags va_sM (va_update_reg Rax va_sM (va_update_ok va_sM va_s0)))))))))))
@@ -299,9 +299,9 @@ irreducible let va_irreducible_lemma_poly1305_reduce_regs_fast_block va_b0 va_s0
   (lemma_poly_bits64 ());
   let (va_s3, va_c3, va_b3) = (va_lemma_block va_b1 va_s0 va_sM) in
   (va_lemma_weakest_pre_norm (va_ins_1_poly1305_reduce_regs_fast_block ()) va_s0 va_s3);
-  let rbx0 = (n `op_Multiply` (va_get_reg Rbx va_old_s) + (va_get_reg R14 va_old_s)) in
-  let hh = (rbx0 + (va_get_reg Rax va_s3) + (va_get_reg R10 va_old_s) `op_Modulus` 4 `op_Multiply`
-    (n `op_Multiply` n)) in
+  let rbx0 = (n * (va_get_reg Rbx va_old_s) + (va_get_reg R14 va_old_s)) in
+  let hh = (rbx0 + (va_get_reg Rax va_s3) + (va_get_reg R10 va_old_s) `op_Modulus` 4 *
+    (n * n)) in
   (lemma_poly_reduce n p hd (va_get_reg R10 va_old_s) rbx0 (va_get_reg Rax va_s3) hh);
   let va_sM = (va_lemma_empty va_s3 va_sM) in
   (va_bM, va_sM, hh)
@@ -325,26 +325,26 @@ irreducible val va_irreducible_lemma_poly1305_iteration : va_b0:va_codes -> va_s
     (va_is_dst_dst_operand_uint64 d3 va_s0) /\ (va_is_src_operand_uint64 r0 va_s0) /\
     (va_is_src_operand_uint64 s1 va_s0) /\ (va_is_dst_dst_operand_uint64 h0 va_s0) /\
     (va_is_dst_dst_operand_uint64 h1 va_s0) /\ (va_is_dst_dst_operand_uint64 h2 va_s0) /\
-    (va_get_ok va_s0) /\ (let p = n `op_Multiply` n `op_Multiply` 4 - 5 in let r = r1 `op_Multiply`
+    (va_get_ok va_s0) /\ (let p = n * n * 4 - 5 in let r = r1 *
     n + (va_eval_operand_uint64 va_s0 r0) in let h = (va_eval_dst_operand_uint64 va_s0 h2)
-    `op_Multiply` (n `op_Multiply` n) + (va_eval_dst_operand_uint64 va_s0 h1) `op_Multiply` n +
+    * (n * n) + (va_eval_dst_operand_uint64 va_s0 h1) * n +
     (va_eval_dst_operand_uint64 va_s0 h0) in d1 == (OReg R8) /\ d2 == (OReg R9) /\ d3 == (OReg R10)
     /\ r0 == (OReg R11) /\ s1 == (OReg R13) /\ h0 == (OReg R14) /\ h1 == (OReg Rbx) /\ h2 == (OReg
-    Rbp)) /\ (let p = n `op_Multiply` n `op_Multiply` 4 - 5 in let r = r1 `op_Multiply` n +
+    Rbp)) /\ (let p = n * n * 4 - 5 in let r = r1 * n +
     (va_eval_operand_uint64 va_s0 r0) in let h = (va_eval_dst_operand_uint64 va_s0 h2)
-    `op_Multiply` (n `op_Multiply` n) + (va_eval_dst_operand_uint64 va_s0 h1) `op_Multiply` n +
+    * (n * n) + (va_eval_dst_operand_uint64 va_s0 h1) * n +
     (va_eval_dst_operand_uint64 va_s0 h0) in (va_eval_operand_uint64 va_s0 r0) < n `op_Division` 16
     /\ r1 < n `op_Division` 16 /\ r1 `op_Modulus` 4 == 0 /\ (va_eval_operand_uint64 va_s0 s1) == r1
     + r1 `op_Division` 4 /\ (va_eval_dst_operand_uint64 va_s0 h2) < 7 /\ (va_get_reg Rax va_s0) ==
     r1)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (hh:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (va_get_ok va_sM) /\ (let p = n `op_Multiply` n `op_Multiply` 4 - 5 in let r =
-    r1 `op_Multiply` n + (va_eval_operand_uint64 va_s0 r0) in let h = (va_eval_dst_operand_uint64
-    va_s0 h2) `op_Multiply` (n `op_Multiply` n) + (va_eval_dst_operand_uint64 va_s0 h1)
-    `op_Multiply` n + (va_eval_dst_operand_uint64 va_s0 h0) in p > 0 /\ hh == n `op_Multiply` n
-    `op_Multiply` (va_eval_dst_operand_uint64 va_sM h2) + n `op_Multiply`
+    va_sM va_sN) /\ (va_get_ok va_sM) /\ (let p = n * n * 4 - 5 in let r =
+    r1 * n + (va_eval_operand_uint64 va_s0 r0) in let h = (va_eval_dst_operand_uint64
+    va_s0 h2) * (n * n) + (va_eval_dst_operand_uint64 va_s0 h1)
+    * n + (va_eval_dst_operand_uint64 va_s0 h0) in p > 0 /\ hh == n * n
+    * (va_eval_dst_operand_uint64 va_sM h2) + n *
     (va_eval_dst_operand_uint64 va_sM h1) + (va_eval_dst_operand_uint64 va_sM h0) /\ (modp (h
-    `op_Multiply` r)) == (modp hh) /\ (va_eval_dst_operand_uint64 va_sM h2) < 5) /\ (va_state_eq
+    * r)) == (modp hh) /\ (va_eval_dst_operand_uint64 va_sM h2) < 5) /\ (va_state_eq
     va_sM (va_update_flags va_sM (va_update_reg Rdx va_sM (va_update_reg Rax va_sM (va_update_reg
     Rbp va_sM (va_update_reg Rbx va_sM (va_update_reg R14 va_sM (va_update_reg R10 va_sM
     (va_update_reg R9 va_sM (va_update_reg R8 va_sM (va_update_ok va_sM (va_update_dst_operand h2
@@ -356,10 +356,10 @@ irreducible let va_irreducible_lemma_poly1305_iteration va_b0 va_s0 va_sN d1 d2 
   let (va_old_s:va_state) = va_s0 in
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   let (va_b1:va_codes) = (va_get_block va_cM) in
-  let p = (n `op_Multiply` n `op_Multiply` 4 - 5) in
-  let r = (r1 `op_Multiply` n + (va_eval_operand_uint64 va_s0 r0)) in
-  let h = ((va_eval_dst_operand_uint64 va_s0 h2) `op_Multiply` (n `op_Multiply` n) +
-    (va_eval_dst_operand_uint64 va_s0 h1) `op_Multiply` n + (va_eval_dst_operand_uint64 va_s0 h0))
+  let p = (n * n * 4 - 5) in
+  let r = (r1 * n + (va_eval_operand_uint64 va_s0 r0)) in
+  let h = ((va_eval_dst_operand_uint64 va_s0 h2) * (n * n) +
+    (va_eval_dst_operand_uint64 va_s0 h1) * n + (va_eval_dst_operand_uint64 va_s0 h0))
     in
   (lemma_mul_strict_upper_bound (va_eval_dst_operand_uint64 va_s0 h2) 7 (va_eval_operand_uint64
     va_s0 r0) (n `op_Division` 16));
@@ -373,13 +373,13 @@ irreducible let va_irreducible_lemma_poly1305_iteration va_b0 va_s0 va_sN d1 d2 
   (lemma_mul_strict_upper_bound (va_eval_dst_operand_uint64 va_s0 h1) n (va_eval_operand_uint64
     va_s0 s1) (n `op_Division` 8));
   (lemma_mul_strict_upper_bound (va_eval_dst_operand_uint64 va_s0 h2) 7 (va_eval_operand_uint64
-    va_s0 s1) (5 `op_Multiply` n `op_Division` 64));
+    va_s0 s1) (5 * n `op_Division` 64));
   let (va_b12, va_s12, hd) = (va_lemma_poly1305_multiply va_b1 va_s0 va_sM r1) in
   let (va_b14, va_s14, hh) = (va_lemma_poly1305_reduce va_b12 va_s12 va_sM d3 h0 h1 h2 hd p) in
   (reveal_opaque modp');
-  assert (hh == n `op_Multiply` n `op_Multiply` (va_eval_dst_operand_uint64 va_s14 h2) + n
-    `op_Multiply` (va_eval_dst_operand_uint64 va_s14 h1) + (va_eval_dst_operand_uint64 va_s14 h0)
-    /\ h `op_Multiply` r `op_Modulus` p == hh `op_Modulus` p);
+  assert (hh == n * n * (va_eval_dst_operand_uint64 va_s14 h2) + n
+    * (va_eval_dst_operand_uint64 va_s14 h1) + (va_eval_dst_operand_uint64 va_s14 h0)
+    /\ h * r `op_Modulus` p == hh `op_Modulus` p);
   let va_sM = (va_lemma_empty va_s14 va_sM) in
   (va_bM, va_sM, hh)
 let va_lemma_poly1305_iteration = va_irreducible_lemma_poly1305_iteration
@@ -435,25 +435,25 @@ irreducible val va_irreducible_lemma_poly1305_blocks : va_b0:va_codes -> va_s0:v
   va_sN:va_state -> r:int -> h_in:int
   -> Ghost ((va_bM:va_codes) * (va_sM:va_state) * (h:int))
   (requires ((va_require va_b0 (va_code_poly1305_blocks ()) va_s0 va_sN) /\ (let p = n
-    `op_Multiply` n `op_Multiply` 4 - 5 in (va_get_ok va_s0)) /\ (let p = n `op_Multiply` n
-    `op_Multiply` 4 - 5 in (va_get_reg Rdx va_s0) `op_Modulus` 16 == 0 /\ (va_get_reg Rsi va_s0) +
-    (va_get_reg Rdx va_s0) < nat64_max /\ (disjoint (va_get_reg Rdi va_s0) (24 `op_Multiply` 8)
+    * n * 4 - 5 in (va_get_ok va_s0)) /\ (let p = n * n
+    * 4 - 5 in (va_get_reg Rdx va_s0) `op_Modulus` 16 == 0 /\ (va_get_reg Rsi va_s0) +
+    (va_get_reg Rdx va_s0) < nat64_max /\ (disjoint (va_get_reg Rdi va_s0) (24 * 8)
     (va_get_reg Rsi va_s0) (va_get_reg Rdx va_s0)) /\ (validSrcAddrs (va_get_mem va_s0) (va_get_reg
-    Rdi va_s0) 64 (24 `op_Multiply` 8)) /\ (validSrcAddrs (va_get_mem va_s0) (va_get_reg Rsi va_s0)
+    Rdi va_s0) 64 (24 * 8)) /\ (validSrcAddrs (va_get_mem va_s0) (va_get_reg Rsi va_s0)
     64 (va_get_reg Rdx va_s0)) /\ (let h0_in = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi
     va_s0) + 0)) in let h1_in = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 8)) in
     let h2_in = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 16)) in let r0_in =
     (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 24)) in let r1_in = (va_subscript
-    (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 32)) in h_in == h2_in `op_Multiply` (n
-    `op_Multiply` n) + h1_in `op_Multiply` n + h0_in /\ r == r1_in `op_Multiply` n + r0_in /\ r0_in
+    (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 32)) in h_in == h2_in * (n
+    * n) + h1_in * n + h0_in /\ r == r1_in * n + r0_in /\ r0_in
     < n `op_Division` 16 /\ r1_in < n `op_Division` 16 /\ r1_in `op_Modulus` 4 == 0 /\ h2_in < 5 /\
     (va_get_reg Rcx va_s0) < 2))))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (h:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (let p = n `op_Multiply` n `op_Multiply` 4 - 5 in (va_get_ok va_sM)) /\ (let p
-    = n `op_Multiply` n `op_Multiply` 4 - 5 in (va_get_reg Rbp va_sM) < 5 /\ (validSrcAddrs
-    (va_get_mem va_sM) (va_get_reg Rdi va_sM) 64 (24 `op_Multiply` 8)) /\ (validSrcAddrs
+    va_sM va_sN) /\ (let p = n * n * 4 - 5 in (va_get_ok va_sM)) /\ (let p
+    = n * n * 4 - 5 in (va_get_reg Rbp va_sM) < 5 /\ (validSrcAddrs
+    (va_get_mem va_sM) (va_get_reg Rdi va_sM) 64 (24 * 8)) /\ (validSrcAddrs
     (va_get_mem va_sM) (va_get_reg Rsi va_s0) 64 (va_get_reg Rdx va_s0)) /\ (memModified
-    (va_get_mem va_s0) (va_get_mem va_sM) (va_get_reg Rdi va_s0) (3 `op_Multiply` 8)) /\
+    (va_get_mem va_s0) (va_get_mem va_sM) (va_get_reg Rdi va_s0) (3 * 8)) /\
     (va_get_reg R14 va_sM) == (va_subscript (va_get_mem va_sM) ((va_get_reg Rdi va_sM) + 0)) /\
     (va_get_reg Rbx va_sM) == (va_subscript (va_get_mem va_sM) ((va_get_reg Rdi va_sM) + 8)) /\
     (va_get_reg Rbp va_sM) == (va_subscript (va_get_mem va_sM) ((va_get_reg Rdi va_sM) + 16)) /\
@@ -462,15 +462,15 @@ irreducible val va_irreducible_lemma_poly1305_blocks : va_b0:va_codes -> va_s0:v
     (va_get_reg R13 va_sM) == (va_get_reg R12 va_sM) + (va_get_reg R12 va_sM) `op_Division` 4 /\
     (va_get_reg Rsi va_sM) == (va_get_reg Rsi va_s0) + (va_get_reg Rdx va_s0) /\ (va_get_reg Rcx
     va_sM) == (va_get_reg Rcx va_s0) /\ (va_get_reg Rdi va_sM) == (va_get_reg Rdi va_s0) /\ (forall
-    i . (va_get_reg Rdi va_sM) + 24 <= i /\ i < (va_get_reg Rdi va_sM) + 24 `op_Multiply` 8 /\ (i -
+    i . (va_get_reg Rdi va_sM) + 24 <= i /\ i < (va_get_reg Rdi va_sM) + 24 * 8 /\ (i -
     (va_get_reg Rdi va_sM)) `op_Modulus` 8 == 0 ==> (va_subscript (va_get_mem va_sM) i) ==
     (va_subscript (va_get_mem va_s0) i)) /\ (let r0_in = (va_subscript (va_get_mem va_sM)
     ((va_get_reg Rdi va_sM) + 24)) in let r1_in = (va_subscript (va_get_mem va_sM) ((va_get_reg Rdi
-    va_sM) + 32)) in h == (va_get_reg Rbp va_sM) `op_Multiply` (nat64_max `op_Multiply` nat64_max)
-    + (va_get_reg Rbx va_sM) `op_Multiply` nat64_max + (va_get_reg R14 va_sM) /\ ((va_get_reg Rsi
+    va_sM) + 32)) in h == (va_get_reg Rbp va_sM) * (nat64_max * nat64_max)
+    + (va_get_reg Rbx va_sM) * nat64_max + (va_get_reg R14 va_sM) /\ ((va_get_reg Rsi
     va_s0) + (va_get_reg Rdx va_s0) - (va_get_reg Rsi va_s0)) `op_Modulus` 16 == 0 /\
     (validSrcAddrs (va_get_mem va_sM) (va_get_reg Rsi va_s0) 64 (va_get_reg Rdx va_s0)) /\ (modp h)
-    == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_sM) `op_Multiply` n `op_Multiply` n) r
+    == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_sM) * n * n) r
     (va_get_mem va_sM) (va_get_reg Rsi va_s0) ((va_get_reg Rsi va_s0) + (va_get_reg Rdx
     va_s0))))))))
 irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
@@ -478,7 +478,7 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
   let (va_old_s:va_state) = va_s0 in
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   let (va_b1:va_codes) = (va_get_block va_cM) in
-  let p = (n `op_Multiply` n `op_Multiply` 4 - 5) in
+  let p = (n * n * 4 - 5) in
   let h = 0 in
   (lemma_poly_bits64 ());
   let length = (va_get_reg Rdx va_s0) in
@@ -489,12 +489,12 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
   let h = h_in in
   let va_forall_lemma () : Lemma
   (requires True)
-  (ensures ((modp h) == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s20) `op_Multiply` n
-    `op_Multiply` n) r (va_get_mem va_s20) (va_get_reg Rsi va_old_s) (va_get_reg Rsi va_s20))))
+  (ensures ((modp h) == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s20) * n
+    * n) r (va_get_mem va_s20) (va_get_reg Rsi va_old_s) (va_get_reg Rsi va_s20))))
   =
   (
     (reveal_opaque modp');
-    (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s20) `op_Multiply` n `op_Multiply`
+    (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s20) * n *
       n) r (va_get_mem va_s20) (va_get_reg Rsi va_old_s) (va_get_reg Rsi va_s20));
     ()
   ) in va_forall_lemma ();
@@ -507,51 +507,51 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
     let rec va_while (h:int) (va_n24:va_int) (va_sW24:va_state) : Ghost ((h:int) * (va_n24:va_int)
       * (va_sW24:va_state))
       (requires ((va_whileInv va_sC24 va_sB24 va_n24 va_sW24 va_s23) /\ (va_get_ok va_sW24) /\ n ==
-        18446744073709551616 /\ r == (va_get_reg R12 va_sW24) `op_Multiply` n + (va_get_reg R11
-        va_sW24) /\ h == (va_get_reg Rbp va_sW24) `op_Multiply` (nat64_max `op_Multiply` nat64_max)
-        + (va_get_reg Rbx va_sW24) `op_Multiply` nat64_max + (va_get_reg R14 va_sW24) /\
+        18446744073709551616 /\ r == (va_get_reg R12 va_sW24) * n + (va_get_reg R11
+        va_sW24) /\ h == (va_get_reg Rbp va_sW24) * (nat64_max * nat64_max)
+        + (va_get_reg Rbx va_sW24) * nat64_max + (va_get_reg R14 va_sW24) /\
         (va_get_reg R11 va_sW24) < n `op_Division` 16 /\ (va_get_reg R12 va_sW24) < n `op_Division`
         16 /\ (va_get_reg R12 va_sW24) `op_Modulus` 4 == 0 /\ (va_get_reg R13 va_sW24) ==
         (va_get_reg R12 va_sW24) + (va_get_reg R12 va_sW24) `op_Division` 4 /\ (va_get_reg Rbp
         va_sW24) < 5 /\ (va_get_reg Rax va_sW24) == (va_get_reg R12 va_sW24) /\ (va_get_reg Rsi
-        va_sW24) + 16 `op_Multiply` (va_get_reg R15 va_sW24) == (va_get_reg Rsi va_old_s) + length
-        /\ length == (va_get_reg Rdx va_old_s) /\ (va_get_reg R15 va_sW24) `op_Multiply` 16 <=
+        va_sW24) + 16 * (va_get_reg R15 va_sW24) == (va_get_reg Rsi va_old_s) + length
+        /\ length == (va_get_reg Rdx va_old_s) /\ (va_get_reg R15 va_sW24) * 16 <=
         length /\ (va_get_reg Rcx va_sW24) < 2 /\ (validSrcAddrs (va_get_mem va_sW24) (va_get_reg
-        Rdi va_sW24) 64 (24 `op_Multiply` 8)) /\ (validSrcAddrs (va_get_mem va_sW24) (va_get_reg
+        Rdi va_sW24) 64 (24 * 8)) /\ (validSrcAddrs (va_get_mem va_sW24) (va_get_reg
         Rsi va_old_s) 64 length) /\ (va_get_reg Rdi va_sW24) == (va_get_reg Rdi va_old_s) /\
         (va_get_reg Rcx va_sW24) == (va_get_reg Rcx va_old_s) /\ (forall i . ((va_get_reg Rdi
-        va_sW24) + 24 <= i /\ i < (va_get_reg Rdi va_sW24) + 24 `op_Multiply` 8) /\ (i -
+        va_sW24) + 24 <= i /\ i < (va_get_reg Rdi va_sW24) + 24 * 8) /\ (i -
         (va_get_reg Rdi va_sW24)) `op_Modulus` 8 == 0 ==> (va_subscript (va_get_mem va_sW24) i) ==
         (va_subscript (va_get_mem va_old_s) i)) /\ ((va_get_reg Rsi va_sW24) - (va_get_reg Rsi
         va_old_s)) `op_Modulus` 16 == 0 /\ (validSrcAddrs (va_get_mem va_sW24) (va_get_reg Rsi
         va_old_s) 64 ((va_get_reg Rsi va_sW24) - (va_get_reg Rsi va_old_s))) /\ (modp h) ==
-        (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_sW24) `op_Multiply` n `op_Multiply`
+        (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_sW24) * n *
         n) r (va_get_mem va_sW24) (va_get_reg Rsi va_old_s) (va_get_reg Rsi va_sW24)) /\
         (memModified (va_get_mem va_old_s) (va_get_mem va_sW24) (va_get_reg Rdi va_old_s) (3
-        `op_Multiply` 8))))
+        * 8))))
       (ensures (fun (h, va_n24, va_sW24) -> ((va_whileInv va_sC24 va_sB24 va_n24 va_sW24 va_s23) /\
         (va_get_ok va_sW24) /\ n == 18446744073709551616 /\ r == (va_get_reg R12 va_sW24)
-        `op_Multiply` n + (va_get_reg R11 va_sW24) /\ h == (va_get_reg Rbp va_sW24) `op_Multiply`
-        (nat64_max `op_Multiply` nat64_max) + (va_get_reg Rbx va_sW24) `op_Multiply` nat64_max +
+        * n + (va_get_reg R11 va_sW24) /\ h == (va_get_reg Rbp va_sW24) *
+        (nat64_max * nat64_max) + (va_get_reg Rbx va_sW24) * nat64_max +
         (va_get_reg R14 va_sW24) /\ (va_get_reg R11 va_sW24) < n `op_Division` 16 /\ (va_get_reg
         R12 va_sW24) < n `op_Division` 16 /\ (va_get_reg R12 va_sW24) `op_Modulus` 4 == 0 /\
         (va_get_reg R13 va_sW24) == (va_get_reg R12 va_sW24) + (va_get_reg R12 va_sW24)
         `op_Division` 4 /\ (va_get_reg Rbp va_sW24) < 5 /\ (va_get_reg Rax va_sW24) == (va_get_reg
-        R12 va_sW24) /\ (va_get_reg Rsi va_sW24) + 16 `op_Multiply` (va_get_reg R15 va_sW24) ==
+        R12 va_sW24) /\ (va_get_reg Rsi va_sW24) + 16 * (va_get_reg R15 va_sW24) ==
         (va_get_reg Rsi va_old_s) + length /\ length == (va_get_reg Rdx va_old_s) /\ (va_get_reg
-        R15 va_sW24) `op_Multiply` 16 <= length /\ (va_get_reg Rcx va_sW24) < 2 /\ (validSrcAddrs
-        (va_get_mem va_sW24) (va_get_reg Rdi va_sW24) 64 (24 `op_Multiply` 8)) /\ (validSrcAddrs
+        R15 va_sW24) * 16 <= length /\ (va_get_reg Rcx va_sW24) < 2 /\ (validSrcAddrs
+        (va_get_mem va_sW24) (va_get_reg Rdi va_sW24) 64 (24 * 8)) /\ (validSrcAddrs
         (va_get_mem va_sW24) (va_get_reg Rsi va_old_s) 64 length) /\ (va_get_reg Rdi va_sW24) ==
         (va_get_reg Rdi va_old_s) /\ (va_get_reg Rcx va_sW24) == (va_get_reg Rcx va_old_s) /\
         (forall i . ((va_get_reg Rdi va_sW24) + 24 <= i /\ i < (va_get_reg Rdi va_sW24) + 24
-        `op_Multiply` 8) /\ (i - (va_get_reg Rdi va_sW24)) `op_Modulus` 8 == 0 ==> (va_subscript
+        * 8) /\ (i - (va_get_reg Rdi va_sW24)) `op_Modulus` 8 == 0 ==> (va_subscript
         (va_get_mem va_sW24) i) == (va_subscript (va_get_mem va_old_s) i)) /\ ((va_get_reg Rsi
         va_sW24) - (va_get_reg Rsi va_old_s)) `op_Modulus` 16 == 0 /\ (validSrcAddrs (va_get_mem
         va_sW24) (va_get_reg Rsi va_old_s) 64 ((va_get_reg Rsi va_sW24) - (va_get_reg Rsi
         va_old_s))) /\ (modp h) == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_sW24)
-        `op_Multiply` n `op_Multiply` n) r (va_get_mem va_sW24) (va_get_reg Rsi va_old_s)
+        * n * n) r (va_get_mem va_sW24) (va_get_reg Rsi va_old_s)
         (va_get_reg Rsi va_sW24)) /\ (memModified (va_get_mem va_old_s) (va_get_mem va_sW24)
-        (va_get_reg Rdi va_old_s) (3 `op_Multiply` 8)))))
+        (va_get_reg Rdi va_old_s) (3 * 8)))))
       (decreases ((va_get_reg R15 va_sW24)))
       =
       if (va_n24 > 0) then
@@ -562,7 +562,7 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
           let va_b26 = (va_get_block va_sB24) in
           let hp = h in
           let old_mem = (va_get_mem va_s24) in
-          let h = (h + n `op_Multiply` n `op_Multiply` (va_get_reg Rcx va_s24) + n `op_Multiply`
+          let h = (h + n * n * (va_get_reg Rcx va_s24) + n *
             (va_subscript (va_get_mem va_s24) ((va_get_reg Rsi va_s24) + 8)) + (va_subscript
             (va_get_mem va_s24) (va_get_reg Rsi va_s24))) in
           let hq = h in
@@ -572,8 +572,8 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
             Rsi) (va_op_operand_reg Rsi) (va_const_operand 16)) in
           let (va_b33, va_s33) = (va_lemma_Adc64Wrap va_b32 va_s32 va_sW25 (va_op_dst_operand_reg
             Rbp) (va_op_operand_reg Rcx)) in
-          let old_h = ((va_get_reg Rbp va_s33) `op_Multiply` (n `op_Multiply` n) + (va_get_reg Rbx
-            va_s33) `op_Multiply` n + (va_get_reg R14 va_s33)) in
+          let old_h = ((va_get_reg Rbp va_s33) * (n * n) + (va_get_reg Rbx
+            va_s33) * n + (va_get_reg R14 va_s33)) in
           assert (old_h == hq);
           let (va_b36, va_s36, h) = (va_lemma_poly1305_iteration va_b33 va_s33 va_sW25
             (va_op_dst_operand_reg R8) (va_op_dst_operand_reg R9) (va_op_dst_operand_reg R10)
@@ -586,15 +586,15 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
           let va_forall_lemma () : Lemma
           (requires True)
           (ensures ((modp h) == (poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s39)
-            `op_Multiply` n `op_Multiply` n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s)
+            * n * n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s)
             (va_get_reg Rsi va_s39))))
           =
           (
-            (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s39) `op_Multiply` n
-              `op_Multiply` n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s) (va_get_reg Rsi
+            (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s39) * n
+              * n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s) (va_get_reg Rsi
               va_s39));
-            (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s39) `op_Multiply` n
-              `op_Multiply` n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s) ((va_get_reg Rsi
+            (reveal_poly1305_heap_blocks (modp h_in) ((va_get_reg Rcx va_s39) * n
+              * n) r (va_get_mem va_s39) (va_get_reg Rsi va_old_s) ((va_get_reg Rsi
               va_s39) - 16));
             (reveal_opaque modp');
             (lemma_poly_demod p hp (hq - hp) r);
@@ -611,7 +611,7 @@ irreducible let va_irreducible_lemma_poly1305_blocks va_b0 va_s0 va_sN r h_in =
   ) in
   let va_s23 = (va_lemma_whileFalse va_sC24 va_sB24 va_sW24 va_s23) in
   (lemma_heap_blocks_preserved (va_get_mem va_s23) (modp h_in) ((va_get_reg Rcx va_s23)
-    `op_Multiply` n `op_Multiply` n) r (va_get_reg Rdi va_s23) (24 `op_Multiply` 8) (va_get_reg Rsi
+    * n * n) r (va_get_reg Rdi va_s23) (24 * 8) (va_get_reg Rsi
     va_old_s) (va_get_reg Rsi va_s23));
   let (va_b42, va_s42) = (va_lemma_Store64 va_b23 va_s23 va_sM (va_op_reg_operand_reg Rdi)
     (va_op_operand_reg R14) 0) in
@@ -665,7 +665,7 @@ irreducible val va_irreducible_lemma_poly1305_last_block : va_b0:va_codes -> va_
     (va_is_dst_dst_operand_uint64 h2 va_s0) /\ (va_is_src_operand_uint64 r0 va_s0) /\
     (va_is_src_operand_uint64 s1 va_s0) /\ (va_is_src_operand_uint64 nExtra va_s0) /\ (va_get_ok
     va_s0) /\ h0 == (OReg R14) /\ h1 == (OReg Rbx) /\ h2 == (OReg Rbp) /\ r0 == (OReg R11) /\ s1 ==
-    (OReg R13) /\ nExtra == (OReg R15) /\ p == n `op_Multiply` n `op_Multiply` 4 - 5 /\
+    (OReg R13) /\ nExtra == (OReg R15) /\ p == n * n * 4 - 5 /\
     (va_eval_dst_operand_uint64 va_s0 h2) < 5 /\ hBlocks == (lowerUpper192_opaque
     (lowerUpper128_opaque (va_eval_dst_operand_uint64 va_s0 h0) (va_eval_dst_operand_uint64 va_s0
     h1)) (va_eval_dst_operand_uint64 va_s0 h2)) /\ r == (lowerUpper128_opaque
@@ -676,10 +676,10 @@ irreducible val va_irreducible_lemma_poly1305_last_block : va_b0:va_codes -> va_
     (va_eval_operand_uint64 va_s0 nExtra) /\ (va_eval_operand_uint64 va_s0 nExtra) < 16)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state)) -> ((va_ensure va_b0 va_bM va_s0 va_sM va_sN)
     /\ (va_get_ok va_sM) /\ (va_eval_dst_operand_uint64 va_sM h2) < 5 /\ (let padLast = (pow2
-    ((va_eval_operand_uint64 va_sM nExtra) `op_Multiply` 8)) in let hLast = (lowerUpper192_opaque
+    ((va_eval_operand_uint64 va_sM nExtra) * 8)) in let hLast = (lowerUpper192_opaque
     (lowerUpper128_opaque (va_eval_dst_operand_uint64 va_sM h0) (va_eval_dst_operand_uint64 va_sM
     h1)) (va_eval_dst_operand_uint64 va_sM h2)) in (modp hLast) == (modp (((modp hBlocks) + padLast
-    + inpLast `op_Modulus` padLast) `op_Multiply` r))) /\ (va_state_eq va_sM (va_update_flags va_sM
+    + inpLast `op_Modulus` padLast) * r))) /\ (va_state_eq va_sM (va_update_flags va_sM
     (va_update_reg R9 va_sM (va_update_reg Rdx va_sM (va_update_reg Rcx va_sM (va_update_reg Rax
     va_sM (va_update_reg Rbp va_sM (va_update_reg Rbx va_sM (va_update_reg R14 va_sM (va_update_reg
     R10 va_sM (va_update_reg R9 va_sM (va_update_reg R8 va_sM (va_update_ok va_sM
@@ -691,7 +691,7 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
   let (va_old_s:va_state) = va_s0 in
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   let (va_b1:va_codes) = (va_get_block va_cM) in
-  let padLast = (pow2 ((va_eval_operand_uint64 va_s0 nExtra) `op_Multiply` 8)) in
+  let padLast = (pow2 ((va_eval_operand_uint64 va_s0 nExtra) * 8)) in
   let (va_s3, va_c3, va_b3) = (va_lemma_block va_b1 va_s0 va_sM) in
   let (va_cond_c3, (va_s4:va_state)) = (va_lemma_ifElse (va_get_ifCond va_c3) (va_get_ifTrue va_c3)
     (va_get_ifFalse va_c3) va_s0 va_s3) in
@@ -715,7 +715,7 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
         (shift_left64 1 (shift_left64 (va_eval_operand_uint64 va_s10 nExtra) 3)));
       assert (padLast == (shift_left64 1 (shift_left64 (va_eval_operand_uint64 va_s10 nExtra) 3)));
       (lemma_mod_power2_lo (va_get_reg R8 va_s10) (va_get_reg R9 va_s10) (va_eval_operand_uint64
-        va_s10 nExtra) (pow2 ((va_eval_operand_uint64 va_s10 nExtra) `op_Multiply` 8)));
+        va_s10 nExtra) (pow2 ((va_eval_operand_uint64 va_s10 nExtra) * 8)));
       let (va_b16, va_s16) = (va_lemma_Mov64 va_b10 va_s10 va_s3 (va_op_dst_operand_reg Rcx)
         (va_op_operand_reg Rdx)) in
       let (va_b17, va_s17) = (va_lemma_Sub64 va_b16 va_s16 va_s3 (va_op_dst_operand_reg Rcx)
@@ -755,12 +755,12 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
       (ensures (padLast == (lowerUpper128_opaque 0 (va_get_reg Rdx va_s34))))
       =
       (
-        (lemma_power2_add64 (8 `op_Multiply` (va_eval_operand_uint64 va_s34 nExtra) - 64));
+        (lemma_power2_add64 (8 * (va_eval_operand_uint64 va_s34 nExtra) - 64));
         (reveal_opaque lowerUpper128);
         ()
       ) in va_forall_lemma ();
       (lemma_bytes_and_mod (va_get_reg R9 va_s34) ((va_eval_operand_uint64 va_s34 nExtra) - 8));
-      (lemma_mod_hi (va_get_reg R8 va_s34) (va_get_reg R9 va_s34) (pow2 (8 `op_Multiply`
+      (lemma_mod_hi (va_get_reg R8 va_s34) (va_get_reg R9 va_s34) (pow2 (8 *
         ((va_eval_operand_uint64 va_s34 nExtra) - 8))));
       let (va_b38, va_s38) = (va_lemma_Mov64 va_b34 va_s34 va_s3 (va_op_dst_operand_reg Rcx)
         (va_op_operand_reg Rdx)) in
@@ -783,8 +783,8 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
   let h = (hBlocks + inpLast `op_Modulus` padLast + padLast) in
   let va_forall_lemma () : Lemma
   (requires True)
-  (ensures (h == (va_eval_dst_operand_uint64 va_s3 h2) `op_Multiply` (n `op_Multiply` n) +
-    (va_eval_dst_operand_uint64 va_s3 h1) `op_Multiply` n + (va_eval_dst_operand_uint64 va_s3 h0)))
+  (ensures (h == (va_eval_dst_operand_uint64 va_s3 h2) * (n * n) +
+    (va_eval_dst_operand_uint64 va_s3 h1) * n + (va_eval_dst_operand_uint64 va_s3 h0)))
   =
   (
     (reveal_opaque lowerUpper192);
@@ -793,7 +793,7 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
   ) in va_forall_lemma ();
   let va_forall_lemma () : Lemma
   (requires True)
-  (ensures (r == r1 `op_Multiply` n + (va_eval_operand_uint64 va_s3 r0)))
+  (ensures (r == r1 * n + (va_eval_operand_uint64 va_s3 r0)))
   =
   (
     (reveal_opaque lowerUpper128);
@@ -816,7 +816,7 @@ irreducible let va_irreducible_lemma_poly1305_last_block va_b0 va_s0 va_sN h0 h1
   let va_forall_lemma () : Lemma
   (requires True)
   (ensures ((modp hLast) == (modp (((modp hBlocks) + padLast + inpLast `op_Modulus` padLast)
-    `op_Multiply` r))))
+    * r))))
   =
   (
     (reveal_opaque modp');
@@ -1037,24 +1037,24 @@ irreducible val va_irreducible_lemma_poly1305_impl : va_b0:va_codes -> va_s0:va_
   va_sN:va_state -> key_r:nat128 -> key_s:nat128
   -> Ghost ((va_bM:va_codes) * (va_sM:va_state) * (h:int))
   (requires ((va_require va_b0 (va_code_poly1305_impl ()) va_s0 va_sN) /\ (let n = nat64_max in let
-    p = n `op_Multiply` n `op_Multiply` 4 - 5 in (va_get_ok va_s0)) /\ (let n = nat64_max in let p
-    = n `op_Multiply` n `op_Multiply` 4 - 5 in (disjoint (va_get_reg Rdi va_s0) (24 `op_Multiply`
-    8) (va_get_reg Rsi va_s0) (((va_get_reg Rdx va_s0) + 15) `op_Division` 16 `op_Multiply` 16)) /\
-    (validSrcAddrs (va_get_mem va_s0) (va_get_reg Rdi va_s0) 64 (24 `op_Multiply` 8)) /\
+    p = n * n * 4 - 5 in (va_get_ok va_s0)) /\ (let n = nat64_max in let p
+    = n * n * 4 - 5 in (disjoint (va_get_reg Rdi va_s0) (24 *
+    8) (va_get_reg Rsi va_s0) (((va_get_reg Rdx va_s0) + 15) `op_Division` 16 * 16)) /\
+    (validSrcAddrs (va_get_mem va_s0) (va_get_reg Rdi va_s0) 64 (24 * 8)) /\
     (validSrcAddrs (va_get_mem va_s0) (va_get_reg Rsi va_s0) 64 (((va_get_reg Rdx va_s0) + 15)
-    `op_Division` 16 `op_Multiply` 16)) /\ (va_get_reg Rsi va_s0) + (va_get_reg Rdx va_s0) <
+    `op_Division` 16 * 16)) /\ (va_get_reg Rsi va_s0) + (va_get_reg Rdx va_s0) <
     nat64_max /\ (let key_r0 = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 24)) in
     let key_r1 = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 32)) in let key_s0 =
     (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 40)) in let key_s1 = (va_subscript
     (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 48)) in key_r == (lowerUpper128_opaque key_r0
     key_r1) /\ key_s == (lowerUpper128_opaque key_s0 key_s1)))))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (h:int)) -> ((va_ensure va_b0 va_bM va_s0
-    va_sM va_sN) /\ (let n = nat64_max in let p = n `op_Multiply` n `op_Multiply` 4 - 5 in
-    (va_get_ok va_sM)) /\ (let n = nat64_max in let p = n `op_Multiply` n `op_Multiply` 4 - 5 in
-    (validSrcAddrs (va_get_mem va_sM) (va_get_reg Rdi va_sM) 64 (24 `op_Multiply` 8)) /\
+    va_sM va_sN) /\ (let n = nat64_max in let p = n * n * 4 - 5 in
+    (va_get_ok va_sM)) /\ (let n = nat64_max in let p = n * n * 4 - 5 in
+    (validSrcAddrs (va_get_mem va_sM) (va_get_reg Rdi va_sM) 64 (24 * 8)) /\
     (validSrcAddrs (va_get_mem va_sM) (va_get_reg Rsi va_s0) 64 (((va_get_reg Rdx va_s0) + 15)
-    `op_Division` 16 `op_Multiply` 16)) /\ (memModified (va_get_mem va_s0) (va_get_mem va_sM)
-    (va_get_reg Rdi va_s0) (9 `op_Multiply` 8)) /\ h == (lowerUpper128_opaque (va_get_reg R14
+    `op_Division` 16 * 16)) /\ (memModified (va_get_mem va_s0) (va_get_mem va_sM)
+    (va_get_reg Rdi va_s0) (9 * 8)) /\ h == (lowerUpper128_opaque (va_get_reg R14
     va_sM) (va_get_reg Rbx va_sM)) /\ (let inp_mem = (heapletTo128 (va_get_mem va_sM) (va_get_reg
     Rsi va_s0) (va_get_reg Rdx va_s0)) in h == (poly1305_hash key_r key_s inp_mem (va_get_reg Rsi
     va_s0) (va_get_reg Rdx va_s0)) /\ (va_get_reg Rdi va_sM) == (va_get_reg Rdi va_s0))))))
@@ -1064,7 +1064,7 @@ irreducible let va_irreducible_lemma_poly1305_impl va_b0 va_s0 va_sN key_r key_s
   let (va_sM, (va_cM:va_code), va_bM) = (va_lemma_block va_b0 va_s0 va_sN) in
   let (va_b1:va_codes) = (va_get_block va_cM) in
   let n = nat64_max in
-  let p = (n `op_Multiply` n `op_Multiply` 4 - 5) in
+  let p = (n * n * 4 - 5) in
   let inp_in = (va_get_reg Rsi va_s0) in
   let len_in = (va_get_reg Rdx va_s0) in
   let key_r0 = (va_subscript (va_get_mem va_s0) ((va_get_reg Rdi va_s0) + 24)) in
@@ -1075,7 +1075,7 @@ irreducible let va_irreducible_lemma_poly1305_impl va_b0 va_s0 va_sN key_r key_s
   let (r:nat128) = (lowerUpper128_opaque (va_get_reg R11 va_s17) (va_get_reg R12 va_s17)) in
   let va_forall_lemma () : Lemma
   (requires True)
-  (ensures (r == (va_get_reg R11 va_s17) + n `op_Multiply` (va_get_reg R12 va_s17)))
+  (ensures (r == (va_get_reg R11 va_s17) + n * (va_get_reg R12 va_s17)))
   =
   (
     (reveal_opaque lowerUpper128);
@@ -1102,8 +1102,8 @@ irreducible let va_irreducible_lemma_poly1305_impl va_b0 va_s0 va_sN key_r key_s
     (modp_0 ());
     ()
   ) in va_forall_lemma ();
-  (lemma_poly1305_heap_hash_blocks 0 (n `op_Multiply` n) r (va_get_mem va_s22) inp_in (inp_in +
-    len_in `op_Division` 16 `op_Multiply` 16) len_in);
+  (lemma_poly1305_heap_hash_blocks 0 (n * n) r (va_get_mem va_s22) inp_in (inp_in +
+    len_in `op_Division` 16 * 16) len_in);
   (reveal_logand128 key_r 21267647620597763993911028882763415551);
   assert (r == (bare_r key_r));
   let va_forall_lemma () : Lemma
@@ -1244,19 +1244,19 @@ irreducible val va_irreducible_lemma_poly1305 : va_b0:va_codes -> va_s0:va_state
   (requires ((va_require va_b0 (va_code_poly1305 win) va_s0 va_sN) /\ (va_get_ok va_s0) /\ (ctx_in
     == (if win then (va_get_reg Rcx va_s0) else (va_get_reg Rdi va_s0)) /\ inp_in == (if win then
     (va_get_reg Rdx va_s0) else (va_get_reg Rsi va_s0)) /\ len_in == (if win then (va_get_reg R8
-    va_s0) else (va_get_reg Rdx va_s0)) /\ p == n `op_Multiply` n `op_Multiply` 4 - 5 /\ (disjoint
-    ctx_in (24 `op_Multiply` 8) inp_in ((len_in + 15) `op_Division` 16 `op_Multiply` 16)) /\
-    (validSrcAddrs (va_get_mem va_s0) ctx_in 64 (24 `op_Multiply` 8)) /\ (validSrcAddrs (va_get_mem
-    va_s0) inp_in 64 ((len_in + 15) `op_Division` 16 `op_Multiply` 16)) /\ inp_in + len_in <
+    va_s0) else (va_get_reg Rdx va_s0)) /\ p == n * n * 4 - 5 /\ (disjoint
+    ctx_in (24 * 8) inp_in ((len_in + 15) `op_Division` 16 * 16)) /\
+    (validSrcAddrs (va_get_mem va_s0) ctx_in 64 (24 * 8)) /\ (validSrcAddrs (va_get_mem
+    va_s0) inp_in 64 ((len_in + 15) `op_Division` 16 * 16)) /\ inp_in + len_in <
     nat64_max /\ (let key_r0 = (va_subscript (va_get_mem va_s0) (ctx_in + 24)) in let key_r1 =
     (va_subscript (va_get_mem va_s0) (ctx_in + 32)) in let key_s0 = (va_subscript (va_get_mem
     va_s0) (ctx_in + 40)) in let key_s1 = (va_subscript (va_get_mem va_s0) (ctx_in + 48)) in key_r
     == (lowerUpper128_opaque key_r0 key_r1) /\ key_s == (lowerUpper128_opaque key_s0 key_s1)))))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state), (h:int)) -> ((va_ensure va_b0 va_bM va_s0
     va_sM va_sN) /\ (va_get_ok va_sM) /\ ((validSrcAddrs (va_get_mem va_sM) ctx_in 64 (24
-    `op_Multiply` 8)) /\ (validSrcAddrs (va_get_mem va_sM) inp_in 64 ((len_in + 15) `op_Division`
-    16 `op_Multiply` 16)) /\ (memModified (va_get_mem va_s0) (va_get_mem va_sM) ctx_in (24
-    `op_Multiply` 8)) /\ (let h0_out = (va_subscript (va_get_mem va_sM) ctx_in) in let h1_out =
+    * 8)) /\ (validSrcAddrs (va_get_mem va_sM) inp_in 64 ((len_in + 15) `op_Division`
+    16 * 16)) /\ (memModified (va_get_mem va_s0) (va_get_mem va_sM) ctx_in (24
+    * 8)) /\ (let h0_out = (va_subscript (va_get_mem va_sM) ctx_in) in let h1_out =
     (va_subscript (va_get_mem va_sM) (ctx_in + 8)) in h == (lowerUpper128_opaque h0_out h1_out) /\
     (let inp_mem = (heapletTo128 (va_get_mem va_sM) inp_in len_in) in h == (poly1305_hash key_r
     key_s inp_mem inp_in len_in) /\ (va_get_reg Rbx va_sM) == (va_get_reg Rbx va_s0) /\ (va_get_reg
@@ -1302,7 +1302,7 @@ irreducible let va_irreducible_lemma_poly1305 va_b0 va_s0 va_sN win key_r key_s 
   let old_inp = (va_get_reg Rsi va_s19) in
   let old_len = (va_get_reg Rdx va_s19) in
   let (va_b22, va_s22, h) = (va_lemma_poly1305_impl va_b19 va_s19 va_sM key_r key_s) in
-  (heapletTo128_all_preserved (va_get_mem va_s22) (va_get_reg Rdi va_s22) (9 `op_Multiply` 8)
+  (heapletTo128_all_preserved (va_get_mem va_s22) (va_get_reg Rdi va_s22) (9 * 8)
     old_inp old_len);
   let (va_s25, va_c25, va_b25) = (va_lemma_block va_b22 va_s22 va_sM) in
   (va_lemma_weakest_pre_norm (va_ins_2_poly1305 win) va_s22 va_s25);

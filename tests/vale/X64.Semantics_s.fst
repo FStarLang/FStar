@@ -290,12 +290,12 @@ let sub_mod64 a b = a -%^ b
 
 val mul_mod64: a:uint64 -> b:uint64 -> Pure uint64
   (requires True)
-  (ensures (fun c -> (v a `op_Multiply` v b) % nat64_max = v c))
+  (ensures (fun c -> (v a * v b) % nat64_max = v c))
 let mul_mod64 a b = a *%^ b
 
 val mul_div64: a:uint64 -> b:uint64 -> Pure uint64
   (requires True)
-  (ensures (fun c -> v a `op_Multiply` v b >= 0 /\ (v a `op_Multiply` v b) / nat64_max = v c))
+  (ensures (fun c -> v a * v b >= 0 /\ (v a * v b) / nat64_max = v c))
 // This used to be implemented as a */^ b, using the mul_div operator, but that was removed
 let mul_div64 a b = admit()
 
