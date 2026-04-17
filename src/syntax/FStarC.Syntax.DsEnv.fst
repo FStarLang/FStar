@@ -1335,7 +1335,7 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
       (* A (precomputed) associated list that maps a constructors to
          types that comes from a "record-on-a-variant" desugar. E.g. `A`
          is mapped to `Mka__A__payload` for a `type a = | A {x:int}`. *)
-      let constructor_lid_to_desugared_record_lids: list (ident * ident) =
+      let constructor_lid_to_desugared_record_lids: list (ident & ident) =
         begin let! (_, {declarations}) = env.modules in
               let! sigelt = declarations in
               let! sigelt = match sigelt.sigel with | Sig_bundle {ses} -> ses | _ -> [] in

@@ -43,6 +43,6 @@ val existsb (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool
 
 val for_all (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool
 
-val partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a * clist a)
+val partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a & clist a)
 
 val collect : ('a -> ML (clist 'b)) -> clist 'a -> ML (clist 'b)

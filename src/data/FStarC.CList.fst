@@ -86,7 +86,7 @@ let rec for_all (#a : Type0) (p : a -> ML bool) (l : clist a) : ML bool =
   | CCons x xs -> p x && for_all p xs
   | CCat xs ys -> for_all p xs && for_all p ys
 
-let rec partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a * clist a) =
+let rec partition (#a : Type0) (p : a -> ML bool) (l : clist a) : ML (clist a & clist a) =
   match l with
   | CNil -> (CNil, CNil)
   | CCons x xs ->
