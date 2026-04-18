@@ -620,12 +620,10 @@ let check_no_index_occurrences_in_arities (env : FStarC_TypeChecker_Env.env)
             | (FStarC_Syntax_Syntax.Tm_fvar fv1, _td::_tr::(f, uu___3)::[])
                 ->
                 if
-                  (if
-                     FStarC_Syntax_Syntax.fv_eq_lid fv1
-                       FStarC_Parser_Const.fext_on_domain_lid
-                   then true
-                   else
-                     FStarC_Syntax_Syntax.fv_eq_lid fv1
+                  (FStarC_Syntax_Syntax.fv_eq_lid fv1
+                     FStarC_Parser_Const.fext_on_domain_lid)
+                    ||
+                    (FStarC_Syntax_Syntax.fv_eq_lid fv1
                        FStarC_Parser_Const.fext_on_domain_g_lid)
                 then f
                 else index1
@@ -873,9 +871,8 @@ let already_unfolded (ilid : FStarC_Ident.lident)
        match uu___1 with
        | (lid, l, n) ->
            if
-             (if FStarC_Ident.lid_equals lid ilid
-              then (FStarC_List.length args) >= n
-              else false)
+             (FStarC_Ident.lid_equals lid ilid) &&
+               ((FStarC_List.length args) >= n)
            then
              let args1 =
                FStar_Pervasives_Native.fst (FStarC_List.splitAt n args) in

@@ -284,9 +284,8 @@ let rec type_leq_c (unfold_ty : unfold_t)
            if uu___2
            then
              (if
-                (if f = FStarC_Extraction_ML_Syntax.E_PURE
-                 then f' = FStarC_Extraction_ML_Syntax.E_ERASABLE
-                 else false)
+                (f = FStarC_Extraction_ML_Syntax.E_PURE) &&
+                  (f' = FStarC_Extraction_ML_Syntax.E_ERASABLE)
               then
                 let uu___3 = type_leq unfold_ty t2 t2' in
                 (if uu___3

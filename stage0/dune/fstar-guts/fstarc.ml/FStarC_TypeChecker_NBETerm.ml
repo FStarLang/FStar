@@ -451,7 +451,7 @@ let rec term_eq (t1 : t) (t2 : t) : Prims.bool=
   match ((t1.nbe_t), (t2.nbe_t)) with
   | (Lam { interp = interp1; shape = uu___; arity = arity1;_}, Lam
      { interp = interp2; shape = uu___1; arity = arity2;_}) ->
-      if interp1 = interp2 then arity1 = arity2 else false
+      (interp1 = interp2) && (arity1 = arity2)
   | (Accu (a1, as1), Accu (a2, as2)) -> atom_eq a1 a2
   | (Construct (fv1, us1, args1), Construct (fv2, us2, args2)) ->
       let uu___ =

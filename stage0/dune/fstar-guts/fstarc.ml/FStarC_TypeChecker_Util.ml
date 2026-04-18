@@ -963,9 +963,8 @@ let is_ghost_effect (env : FStarC_TypeChecker_Env.env)
 let is_pure_or_ghost_effect (env : FStarC_TypeChecker_Env.env)
   (l : FStarC_Ident.lident) : Prims.bool=
   let l1 = FStarC_TypeChecker_Env.norm_eff_name env l in
-  if FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_PURE_lid
-  then true
-  else FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GHOST_lid
+  (FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_PURE_lid) ||
+    (FStarC_Ident.lid_equals l1 FStarC_Parser_Const.effect_GHOST_lid)
 let close_wp_comp (env : FStarC_TypeChecker_Env.env)
   (bvs : FStarC_Syntax_Syntax.bv Prims.list) (c : FStarC_Syntax_Syntax.comp)
   : FStarC_Syntax_Syntax.comp=
@@ -2283,7 +2282,7 @@ let strengthen_precondition
        let uu___2 = FStarC_TypeChecker_Common.lcomp_comp lc in
        match uu___2 with
        | (c, g_c) ->
-           let uu___3 = FStarC_Options.lax () in
+           let uu___3 = FStarC_Options.admit_smt_queries () in
            if uu___3
            then (c, g_c)
            else
@@ -3880,18 +3879,12 @@ let maybe_lift (env : FStarC_TypeChecker_Env.env)
   let m1 = FStarC_TypeChecker_Env.norm_eff_name env c1 in
   let m2 = FStarC_TypeChecker_Env.norm_eff_name env c2 in
   if
-    (if
-       (if FStarC_Ident.lid_equals m1 m2
-        then true
-        else
-          if FStarC_Syntax_Util.is_pure_effect c1
-          then FStarC_Syntax_Util.is_ghost_effect c2
-          else false)
-     then true
-     else
-       if FStarC_Syntax_Util.is_pure_effect c2
-       then FStarC_Syntax_Util.is_ghost_effect c1
-       else false)
+    ((FStarC_Ident.lid_equals m1 m2) ||
+       ((FStarC_Syntax_Util.is_pure_effect c1) &&
+          (FStarC_Syntax_Util.is_ghost_effect c2)))
+      ||
+      ((FStarC_Syntax_Util.is_pure_effect c2) &&
+         (FStarC_Syntax_Util.is_ghost_effect c1))
   then e
   else
     FStarC_Syntax_Syntax.mk
@@ -4156,13 +4149,10 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
        let is_head_defined t =
          let h = head_of t in
          let h1 = FStarC_Syntax_Subst.compress h in
-         if
-           (if FStarC_Syntax_Syntax.uu___is_Tm_fvar h1.FStarC_Syntax_Syntax.n
-            then true
-            else
-              FStarC_Syntax_Syntax.uu___is_Tm_uinst h1.FStarC_Syntax_Syntax.n)
-         then true
-         else FStarC_Syntax_Syntax.uu___is_Tm_type h1.FStarC_Syntax_Syntax.n in
+         ((FStarC_Syntax_Syntax.uu___is_Tm_fvar h1.FStarC_Syntax_Syntax.n) ||
+            (FStarC_Syntax_Syntax.uu___is_Tm_uinst h1.FStarC_Syntax_Syntax.n))
+           ||
+           (FStarC_Syntax_Syntax.uu___is_Tm_type h1.FStarC_Syntax_Syntax.n) in
        let head_unfold env1 t =
          FStarC_TypeChecker_Normalize.unfold_whnf'
            [FStarC_TypeChecker_Env.Unascribe;
@@ -4555,19 +4545,12 @@ let maybe_coerce_lc (env : FStarC_TypeChecker_Env.env)
         FStarC_Syntax_Syntax.fv_eq fv0 fv1
     | uu___1 -> false in
   let should_coerce =
-    let uu___ =
-      let uu___1 =
-        if env.FStarC_TypeChecker_Env.phase1
-        then true
-        else FStarC_Options.lax () in
-      if uu___1
-      then Prims.op_Negation env.FStarC_TypeChecker_Env.nocoerce
-      else false in
-    if uu___
+    if
+      env.FStarC_TypeChecker_Env.phase1 &&
+        (Prims.op_Negation env.FStarC_TypeChecker_Env.nocoerce)
     then
-      let uu___1 =
-        head_types_equal lc.FStarC_TypeChecker_Common.res_typ exp_t in
-      Prims.op_Negation uu___1
+      let uu___ = head_types_equal lc.FStarC_TypeChecker_Common.res_typ exp_t in
+      Prims.op_Negation uu___
     else false in
   if Prims.op_Negation should_coerce
   then
@@ -4658,10 +4641,8 @@ let maybe_coerce_lc (env : FStarC_TypeChecker_Env.env)
                          else false in
                        if uu___8
                        then
-                         (if aq_e = FStar_Pervasives_Native.None
-                          then true
-                          else
-                            Prims.op_Negation
+                         (aq_e = FStar_Pervasives_Native.None) ||
+                           (Prims.op_Negation
                               (FStar_Pervasives_Native.__proj__Some__item__v
                                  aq_e).FStarC_Syntax_Syntax.aqual_implicit)
                        else false -> FStar_Pervasives_Native.Some e2
@@ -4725,7 +4706,7 @@ let weaken_result_typ (env : FStarC_TypeChecker_Env.env)
        uu___4 uu___5
    else ());
   (let use_eq1 =
-     if (if use_eq then true else env.FStarC_TypeChecker_Env.use_eq_strict)
+     if use_eq || env.FStarC_TypeChecker_Env.use_eq_strict
      then true
      else
        (let uu___1 =
@@ -5082,12 +5063,10 @@ let pure_or_ghost_pre_and_post (env : FStarC_TypeChecker_Env.env)
          FStarC_Effect.failwith "Impossible"
      | FStarC_Syntax_Syntax.Comp ct ->
          if
-           (if
-              FStarC_Ident.lid_equals ct.FStarC_Syntax_Syntax.effect_name
-                FStarC_Parser_Const.effect_Pure_lid
-            then true
-            else
-              FStarC_Ident.lid_equals ct.FStarC_Syntax_Syntax.effect_name
+           (FStarC_Ident.lid_equals ct.FStarC_Syntax_Syntax.effect_name
+              FStarC_Parser_Const.effect_Pure_lid)
+             ||
+             (FStarC_Ident.lid_equals ct.FStarC_Syntax_Syntax.effect_name
                 FStarC_Parser_Const.effect_Ghost_lid)
          then
            (match ct.FStarC_Syntax_Syntax.effect_args with

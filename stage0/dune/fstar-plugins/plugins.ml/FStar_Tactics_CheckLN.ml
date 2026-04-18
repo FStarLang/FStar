@@ -157,15 +157,10 @@ and check_comp (c : FStar_Tactics_NamedView.comp) :
                                                                  uu___7 ->
                                                                  Prims.op_Negation
                                                                    uu___6)))
-                                                        (fun uu___6 ->
+                                                        (fun uu___6 uu___7 ->
                                                            if uu___6
-                                                           then
-                                                             fun uu___7 ->
-                                                               false
-                                                           else
-                                                             FStar_Tactics_Effect.lift_div_tac
-                                                               (fun uu___8 ->
-                                                                  true)))))
+                                                           then false
+                                                           else true))))
                                              uu___4)))) uu___2)))) uu___)
 and check_br (b : FStar_Tactics_NamedView.branch) :
   (Prims.bool, unit) FStar_Tactics_Effect.tac_repr=

@@ -315,9 +315,8 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                      let uu___3 = Obj.magic uu___3 in
                      let uu___4 =
                        if
-                         (if FStarC_MachineInts.is_unsigned k
-                          then k <> FStarC_MachineInts.SizeT
-                          else false)
+                         (FStarC_MachineInts.is_unsigned k) &&
+                           (k <> FStarC_MachineInts.SizeT)
                        then
                          let uu___5 =
                            let uu___6 =
@@ -387,12 +386,9 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                                 let uu___5 = Obj.magic uu___5 in
                                 let uu___6 =
                                   if
-                                    (if FStarC_MachineInts.is_unsigned k
-                                     then
-                                       (if k <> FStarC_MachineInts.SizeT
-                                        then k <> FStarC_MachineInts.UInt128
-                                        else false)
-                                     else false)
+                                    (FStarC_MachineInts.is_unsigned k) &&
+                                      ((k <> FStarC_MachineInts.SizeT) &&
+                                         (k <> FStarC_MachineInts.UInt128))
                                   then
                                     let uu___7 =
                                       let uu___8 =

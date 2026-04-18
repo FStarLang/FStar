@@ -267,7 +267,7 @@ let module_name_of_file (f : Prims.string) : Prims.string=
            (FStarC_List.op_At
               [FStarC_Errors_Msg.text
                  (FStarC_Format.fmt1 "Not a valid FStar file: '%s'" f)]
-              (if (if FStarC_Platform.windows then f = ".." else false)
+              (if FStarC_Platform.windows && (f = "..")
                then
                  [FStarC_Errors_Msg.text
                     "Note: In Windows-compiled versions of F*, a literal\n          asterisk as argument will be expanded to a list of files,\n          **even if quoted**. It is possible you provided such an\n          argument which got expanded to the list of all files in this\n          directory, causing spurious arguments that F* attempts to interpret as files.";
@@ -400,16 +400,15 @@ let parsing_data_elt_eq (e1 : parsing_data_elt) (e2 : parsing_data_elt) :
   match (e1, e2) with
   | (P_begin_module l1, P_begin_module l2) -> FStarC_Ident.lid_equals l1 l2
   | (P_open (b1, l1), P_open (b2, l2)) ->
-      if b1 = b2 then FStarC_Ident.lid_equals l1 l2 else false
+      (b1 = b2) && (FStarC_Ident.lid_equals l1 l2)
   | (P_implicit_open_module_or_namespace (k1, l1),
      P_implicit_open_module_or_namespace (k2, l2)) ->
-      if k1 = k2 then FStarC_Ident.lid_equals l1 l2 else false
+      (k1 = k2) && (FStarC_Ident.lid_equals l1 l2)
   | (P_dep (b1, l1), P_dep (b2, l2)) ->
-      if b1 = b2 then FStarC_Ident.lid_equals l1 l2 else false
+      (b1 = b2) && (FStarC_Ident.lid_equals l1 l2)
   | (P_alias (i1, l1), P_alias (i2, l2)) ->
-      if (FStarC_Ident.string_of_id i1) = (FStarC_Ident.string_of_id i2)
-      then FStarC_Ident.lid_equals l1 l2
-      else false
+      ((FStarC_Ident.string_of_id i1) = (FStarC_Ident.string_of_id i2)) &&
+        (FStarC_Ident.lid_equals l1 l2)
   | (P_lid l1, P_lid l2) -> FStarC_Ident.lid_equals l1 l2
   | (P_inline_for_extraction, P_inline_for_extraction) -> true
   | (uu___, uu___1) -> false
@@ -549,11 +548,7 @@ let has_implementation (file_system_map : files_for_module_name)
   FStar_Pervasives_Native.uu___is_Some uu___
 let cache_file_name : Prims.string -> Prims.string=
   let checked_file_and_exists_flag fn =
-    let cache_fn =
-      let lax = FStarC_Options.lax () in
-      if lax
-      then Prims.strcat fn ".checked.lax"
-      else Prims.strcat fn ".checked" in
+    let cache_fn = Prims.strcat fn ".checked" in
     let mname = module_name_of_file fn in
     let uu___ = FStarC_Find.find_file (FStarC_Filepath.basename cache_fn) in
     match uu___ with
@@ -983,9 +978,8 @@ let enter_namespace (original_map : files_for_module_name)
     match mopt with
     | FStar_Pervasives_Native.None -> false
     | FStar_Pervasives_Native.Some (intf, impl) ->
-        if FStar_Pervasives_Native.uu___is_Some intf
-        then true
-        else FStar_Pervasives_Native.uu___is_Some impl in
+        (FStar_Pervasives_Native.uu___is_Some intf) ||
+          (FStar_Pervasives_Native.uu___is_Some impl) in
   FStarC_SMap.iter original_map
     (fun k _fn ->
        if FStarC_Util.starts_with k sprefix1
@@ -995,10 +989,7 @@ let enter_namespace (original_map : files_for_module_name)
              ((FStarC_String.length k) - (FStarC_String.length sprefix1)) in
          ((let suffix_filename = FStarC_SMap.try_find original_map suffix in
            let uu___2 =
-             if
-               (if implicit_open
-                then suffix_exists suffix_filename
-                else false)
+             if implicit_open && (suffix_exists suffix_filename)
              then
                let uu___3 =
                  let uu___4 = FStarC_Effect.op_Bang warned_about in
@@ -1753,8 +1744,7 @@ let deps_from_parsing_data (pd : parsing_data)
   let record_open_namespace lid implicit_open =
     let key = lowercase_join_longident lid true in
     let r = enter_namespace original_map working_map key implicit_open in
-    if
-      (if Prims.op_Negation r then Prims.op_Negation implicit_open else false)
+    if (Prims.op_Negation r) && (Prims.op_Negation implicit_open)
     then
       let uu___ =
         let uu___1 = string_of_lid lid true in
@@ -1856,11 +1846,8 @@ let deps_from_parsing_data (pd : parsing_data)
       match pd.elts with
       | (P_open (false, fstar_lid))::(P_open (false, prelude_lid'))::rest
           when
-          (if
-             FStarC_Ident.lid_equals FStarC_Parser_Const.fstar_ns_lid
-               fstar_lid
-           then FStarC_Ident.lid_equals prelude_lid prelude_lid'
-           else false)
+          (FStarC_Ident.lid_equals FStarC_Parser_Const.fstar_ns_lid fstar_lid)
+            && (FStarC_Ident.lid_equals prelude_lid prelude_lid')
           ->
           FStarC_List.op_At ((P_open (false, fstar_lid)) ::
             (P_open (false, prelude_lid)) :: auto_open) rest
@@ -2929,9 +2916,7 @@ let print_full (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                              then
                                let uu___8 =
                                  let uu___9 = FStarC_Options.cmi () in
-                                 if uu___9
-                                 then (if widened1 then true else true)
-                                 else false in
+                                 if uu___9 then widened1 || true else false in
                                (if uu___8
                                 then
                                   let uu___9 = output_krml_file file_name1 in
@@ -3026,10 +3011,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
   let is_extract_phase =
     match output_ext with
     | FStar_Pervasives_Native.Some ext ->
-        Prims.op_Negation
-          (if FStarC_Util.ends_with ext "checked"
-           then true
-           else FStarC_Util.ends_with ext "checked.lax")
+        Prims.op_Negation (FStarC_Util.ends_with ext "checked")
     | FStar_Pervasives_Native.None -> false in
   let replace_suffix f new_ext =
     let base = FStarC_Filepath.basename f in
@@ -3052,9 +3034,9 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       | flag::rest when FStarC_Util.starts_with flag "-" ->
           (match rest with
            | arg::rest' when
-               if Prims.op_Negation (FStarC_Util.starts_with arg "-")
-               then arg <> ""
-               else false ->
+               (Prims.op_Negation (FStarC_Util.starts_with arg "-")) &&
+                 (arg <> "")
+               ->
                collect1 ((Prims.strcat " " arg) :: (Prims.strcat " " flag) ::
                  acc) rest'
            | uu___1 -> collect1 ((Prims.strcat " " flag) :: acc) rest)
@@ -3062,11 +3044,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
     FStarC_String.concat "" (collect1 [] args1) in
   let keys = deps_keys deps1.dep_graph in
   let local_cache_file f =
-    let base = FStarC_Filepath.basename f in
-    let uu___ = FStarC_Options.lax () in
-    if uu___
-    then Prims.strcat base ".checked.lax"
-    else Prims.strcat base ".checked" in
+    let base = FStarC_Filepath.basename f in Prims.strcat base ".checked" in
   let format_dep f = FStarC_Filepath.basename f in
   let extraction_target source =
     let uu___ = FStarC_Options.codegen () in
@@ -3133,10 +3111,7 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
       FStarC_List.map
         (fun f ->
            let base = FStarC_Filepath.basename f in
-           if
-             (if FStarC_Util.ends_with base ".checked"
-              then true
-              else FStarC_Util.ends_with base ".checked.lax")
+           if FStarC_Util.ends_with base ".checked"
            then base
            else local_cache_file f) (source :: all_deps) in
     let all_dep_strs = let uu___ = format_dep source in uu___ :: checked_deps in
@@ -3238,19 +3213,12 @@ let print_dune (outc : FStarC_Util.out_channel) (deps1 : deps) : unit=
                           (fun f ->
                              let base = FStarC_Filepath.basename f in
                              let src =
-                               if FStarC_Util.ends_with base ".checked.lax"
+                               if FStarC_Util.ends_with base ".checked"
                                then
                                  FStarC_String.substring base Prims.int_zero
                                    ((FStarC_String.length base) -
-                                      (Prims.of_int 12))
-                               else
-                                 if FStarC_Util.ends_with base ".checked"
-                                 then
-                                   FStarC_String.substring base
-                                     Prims.int_zero
-                                     ((FStarC_String.length base) -
-                                        (Prims.of_int 8))
-                                 else base in
+                                      (Prims.of_int 8))
+                               else base in
                              let uu___5 = check_and_strip_suffix src in
                              match uu___5 with
                              | FStar_Pervasives_Native.Some mname ->

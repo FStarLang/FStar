@@ -180,7 +180,7 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
          (let timestamped_task =
             FStarC_Interactive_PushHelper.update_task_timestamps task in
           let push_kind =
-            let uu___3 = FStarC_Options.lax () in
+            let uu___3 = FStarC_Options.admit_smt_queries () in
             if uu___3
             then FStarC_Interactive_Ide_Types.LaxCheck
             else FStarC_Interactive_Ide_Types.FullCheck in
@@ -1600,7 +1600,7 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state)
         | (success, st2) ->
             let st3 = set_flychecking_flag st2 false in
             let status =
-              if (if success then true else peek_only)
+              if success || peek_only
               then FStarC_Interactive_Ide_Types.QueryOK
               else FStarC_Interactive_Ide_Types.QueryNOK in
             let errs = collect_errors () in

@@ -37,8 +37,7 @@ let mix (f : FStarC_Hash.hash_code mm) (g : FStarC_Hash.hash_code mm) :
     match uu___ with
     | (x, b0) ->
         let uu___1 = g b in
-        (match uu___1 with
-         | (y, b1) -> ((FStarC_Hash.mix x y), (if b0 then b1 else false)))
+        (match uu___1 with | (y, b1) -> ((FStarC_Hash.mix x y), (b0 && b1)))
 let nil_hc : FStarC_Hash.hash_code mm= of_int (Prims.of_int 1229)
 let cons_hc : FStarC_Hash.hash_code mm= of_int (Prims.of_int 1231)
 let mix_list (l : FStarC_Hash.hash_code mm Prims.list) :
@@ -942,7 +941,7 @@ and equal_constant (c1 : FStarC_Syntax_Syntax.sconst)
      | (FStarC_Const.Const_unit, FStarC_Const.Const_unit) -> true
      | (FStarC_Const.Const_bool b1, FStarC_Const.Const_bool b2) -> b1 = b2
      | (FStarC_Const.Const_int (s1, o1), FStarC_Const.Const_int (s2, o2)) ->
-         if s1 = s2 then o1 = o2 else false
+         (s1 = s2) && (o1 = o2)
      | (FStarC_Const.Const_char c11, FStarC_Const.Const_char c21) ->
          c11 = c21
      | (FStarC_Const.Const_real s1, FStarC_Const.Const_real s2) -> s1 = s2
@@ -1048,9 +1047,7 @@ and equal_meta (m1 : FStarC_Syntax_Syntax.metadata)
       -> FStarC_Ident.lid_equals l1 l2
   | (FStarC_Syntax_Syntax.Meta_labeled (s1, r1, uu___),
      FStarC_Syntax_Syntax.Meta_labeled (s2, r2, uu___1)) ->
-      if s1 = s2
-      then (FStarC_Range_Ops.compare r1 r2) = Prims.int_zero
-      else false
+      (s1 = s2) && ((FStarC_Range_Ops.compare r1 r2) = Prims.int_zero)
   | (FStarC_Syntax_Syntax.Meta_desugared msi1,
      FStarC_Syntax_Syntax.Meta_desugared msi2) -> msi1 = msi2
   | (FStarC_Syntax_Syntax.Meta_monadic (m11, t1),
@@ -1058,10 +1055,7 @@ and equal_meta (m1 : FStarC_Syntax_Syntax.metadata)
       if FStarC_Ident.lid_equals m11 m21 then equal_term t1 t2 else false
   | (FStarC_Syntax_Syntax.Meta_monadic_lift (m11, n1, t1),
      FStarC_Syntax_Syntax.Meta_monadic_lift (m21, n2, t2)) ->
-      if
-        (if FStarC_Ident.lid_equals m11 m21
-         then FStarC_Ident.lid_equals n1 n2
-         else false)
+      if (FStarC_Ident.lid_equals m11 m21) && (FStarC_Ident.lid_equals n1 n2)
       then equal_term t1 t2
       else false
   | uu___ -> false
@@ -1072,11 +1066,9 @@ and equal_lazyinfo (l1 : FStarC_Syntax_Syntax.lazyinfo)
 and equal_quoteinfo (q1 : FStarC_Syntax_Syntax.quoteinfo)
   (q2 : FStarC_Syntax_Syntax.quoteinfo) : Prims.bool=
   if
-    (if q1.FStarC_Syntax_Syntax.qkind = q2.FStarC_Syntax_Syntax.qkind
-     then
-       (FStar_Pervasives_Native.fst q1.FStarC_Syntax_Syntax.antiquotations) =
-         (FStar_Pervasives_Native.fst q2.FStarC_Syntax_Syntax.antiquotations)
-     else false)
+    (q1.FStarC_Syntax_Syntax.qkind = q2.FStarC_Syntax_Syntax.qkind) &&
+      ((FStar_Pervasives_Native.fst q1.FStarC_Syntax_Syntax.antiquotations) =
+         (FStar_Pervasives_Native.fst q2.FStarC_Syntax_Syntax.antiquotations))
   then
     equal_list equal_term
       (FStar_Pervasives_Native.snd q1.FStarC_Syntax_Syntax.antiquotations)
@@ -1151,7 +1143,7 @@ and equal_subst_elt (s1 : FStarC_Syntax_Syntax.subst_elt)
   | (FStarC_Syntax_Syntax.UN (i1, u1), FStarC_Syntax_Syntax.UN (i2, u2)) ->
       if i1 = i2 then equal_universe u1 u2 else false
   | (FStarC_Syntax_Syntax.UD (un1, i1), FStarC_Syntax_Syntax.UD (un2, i2)) ->
-      if i1 = i2 then FStarC_Ident.ident_equals un1 un2 else false
+      (i1 = i2) && (FStarC_Ident.ident_equals un1 un2)
   | (FStarC_Syntax_Syntax.DT (i1, t1), FStarC_Syntax_Syntax.DT (i2, t2)) ->
       if i1 = i2 then equal_term t1 t2 else false
   | uu___ -> false

@@ -303,7 +303,7 @@ let elim_tydef (env : env_t) (name : Prims.string)
                 else ();
                 ((i + Prims.int_one), (param :: params), (Retain :: entry1)))
              else
-               if (if can_eliminate i then true else must_eliminate i)
+               if (can_eliminate i) || (must_eliminate i)
                then ((i + Prims.int_one), params, (Omit :: entry1))
                else
                  (let uu___5 =

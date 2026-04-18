@@ -86,13 +86,11 @@ let load_plugins_dir (dir : Prims.string) : unit=
       let uu___2 = FStarC_Filepath.readdir dir in
       FStarC_List.filter
         (fun s ->
-           if (FStarC_String.length s) >= (Prims.of_int 5)
-           then
-             (FStar_String.sub s
-                ((FStarC_String.length s) - (Prims.of_int 5))
-                (Prims.of_int 5))
-               = ".cmxs"
-           else false) uu___2 in
+           ((FStarC_String.length s) >= (Prims.of_int 5)) &&
+             ((FStar_String.sub s
+                 ((FStarC_String.length s) - (Prims.of_int 5))
+                 (Prims.of_int 5))
+                = ".cmxs")) uu___2 in
     FStarC_List.map (fun s -> Prims.strcat dir (Prims.strcat "/" s)) uu___1 in
   load_plugins uu___
 let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :

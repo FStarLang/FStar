@@ -26,7 +26,7 @@ let eq_sconst (c1 : FStarC_Const.sconst) (c2 : FStarC_Const.sconst) :
   | (FStarC_Const.Const_unit, FStarC_Const.Const_unit) -> true
   | (FStarC_Const.Const_bool b1, FStarC_Const.Const_bool b2) -> b1 = b2
   | (FStarC_Const.Const_int (s1, sw1), FStarC_Const.Const_int (s2, sw2)) ->
-      if s1 = s2 then sw1 = sw2 else false
+      (s1 = s2) && (sw1 = sw2)
   | (FStarC_Const.Const_char c11, FStarC_Const.Const_char c21) -> c11 = c21
   | (FStarC_Const.Const_string (s1, uu___), FStarC_Const.Const_string
      (s2, uu___1)) -> s1 = s2
@@ -142,9 +142,7 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') :
       FStarC_Ident.lid_equals l1 l2
   | (FStarC_Parser_AST.Projector (l1, i1), FStarC_Parser_AST.Projector
      (l2, i2)) ->
-      if FStarC_Ident.lid_equals l1 l2
-      then FStarC_Ident.ident_equals i1 i2
-      else false
+      (FStarC_Ident.lid_equals l1 l2) && (FStarC_Ident.ident_equals i1 i2)
   | (FStarC_Parser_AST.Construct (l1, args1), FStarC_Parser_AST.Construct
      (l2, args2)) ->
       if FStarC_Ident.lid_equals l1 l2 then eq_args args1 args2 else false
@@ -584,9 +582,8 @@ let eq_lid : FStarC_Ident.lident -> FStarC_Ident.lident -> Prims.bool=
 let eq_lift (t1 : FStarC_Parser_AST.lift) (t2 : FStarC_Parser_AST.lift) :
   Prims.bool=
   if
-    (if eq_lid t1.FStarC_Parser_AST.msource t2.FStarC_Parser_AST.msource
-     then eq_lid t1.FStarC_Parser_AST.mdest t2.FStarC_Parser_AST.mdest
-     else false)
+    (eq_lid t1.FStarC_Parser_AST.msource t2.FStarC_Parser_AST.msource) &&
+      (eq_lid t1.FStarC_Parser_AST.mdest t2.FStarC_Parser_AST.mdest)
   then
     match ((t1.FStarC_Parser_AST.lift_op), (t2.FStarC_Parser_AST.lift_op))
     with
@@ -696,9 +693,7 @@ let rec eq_decl' (d1 : FStarC_Parser_AST.decl')
       else false
   | (FStarC_Parser_AST.Tycon (b1, b2, tcs1), FStarC_Parser_AST.Tycon
      (b3, b4, tcs2)) ->
-      if (if b1 = b3 then b2 = b4 else false)
-      then eq_list eq_tycon tcs1 tcs2
-      else false
+      if (b1 = b3) && (b2 = b4) then eq_list eq_tycon tcs1 tcs2 else false
   | (FStarC_Parser_AST.Val (i1, t1), FStarC_Parser_AST.Val (i2, t2)) ->
       let uu___ = eq_ident i1 i2 in if uu___ then eq_term t1 t2 else false
   | (FStarC_Parser_AST.Exception (i1, t1), FStarC_Parser_AST.Exception
@@ -713,15 +708,12 @@ let rec eq_decl' (d1 : FStarC_Parser_AST.decl')
       eq_lift l1 l2
   | (FStarC_Parser_AST.Polymonadic_bind (lid1, lid2, lid3, t1),
      FStarC_Parser_AST.Polymonadic_bind (lid4, lid5, lid6, t2)) ->
-      if
-        (if (if eq_lid lid1 lid4 then eq_lid lid2 lid5 else false)
-         then eq_lid lid3 lid6
-         else false)
+      if ((eq_lid lid1 lid4) && (eq_lid lid2 lid5)) && (eq_lid lid3 lid6)
       then eq_term t1 t2
       else false
   | (FStarC_Parser_AST.Polymonadic_subcomp (lid1, lid2, t1),
      FStarC_Parser_AST.Polymonadic_subcomp (lid3, lid4, t2)) ->
-      if (if eq_lid lid1 lid3 then eq_lid lid2 lid4 else false)
+      if (eq_lid lid1 lid3) && (eq_lid lid2 lid4)
       then eq_term t1 t2
       else false
   | (FStarC_Parser_AST.Pragma p1, FStarC_Parser_AST.Pragma p2) ->
@@ -735,7 +727,7 @@ let rec eq_decl' (d1 : FStarC_Parser_AST.decl')
       if uu___ then eq_term t1 t2 else false
   | (FStarC_Parser_AST.DeclSyntaxExtension (s1, t1, uu___, uu___1),
      FStarC_Parser_AST.DeclSyntaxExtension (s2, t2, uu___2, uu___3)) ->
-      if s1 = s2 then t1 = t2 else false
+      (s1 = s2) && (t1 = t2)
   | (FStarC_Parser_AST.UseLangDecls p1, FStarC_Parser_AST.UseLangDecls p2) ->
       p1 = p2
   | (FStarC_Parser_AST.DeclToBeDesugared tbs1,

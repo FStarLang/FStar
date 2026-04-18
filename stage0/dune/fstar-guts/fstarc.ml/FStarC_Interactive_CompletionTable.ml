@@ -234,8 +234,7 @@ let btree_find_prefix (bt : 'a btree) (prefix : Prims.string) :
     | StrBranch (k, v, lbt, rbt) ->
         let cmp = string_compare k prefix1 in
         let include_middle = FStarC_Util.starts_with k prefix1 in
-        let explore_right =
-          if cmp <= Prims.int_zero then true else include_middle in
+        let explore_right = (cmp <= Prims.int_zero) || include_middle in
         let explore_left = cmp > Prims.int_zero in
         let matches = if explore_right then aux rbt prefix1 acc else acc in
         let matches1 =

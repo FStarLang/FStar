@@ -42,8 +42,7 @@ let lookup_error_range (settings : ('uuuuu * 'uuuuu1 * Prims.int) Prims.list)
       let uu___1 =
         FStarC_List.partition
           (fun uu___2 ->
-             match uu___2 with
-             | (uu___3, uu___4, i) -> if l <= i then i <= h else false)
+             match uu___2 with | (uu___3, uu___4, i) -> (l <= i) && (i <= h))
           settings in
       (match uu___1 with | (matches, uu___2) -> matches)
 let error_number (uu___ : FStarC_Errors_Codes.error_setting) : Prims.int=
@@ -323,10 +322,7 @@ let issue_to_doc' (print_hdr : Prims.bool) (issue1 : issue) :
       let level_header =
         FStar_Pprint.doc_of_string (string_of_issue_level issue1.issue_level) in
       let num_opt =
-        if
-          (if issue1.issue_level = EError
-           then true
-           else issue1.issue_level = EWarning)
+        if (issue1.issue_level = EError) || (issue1.issue_level = EWarning)
         then
           let uu___ =
             optional_def
@@ -363,13 +359,11 @@ let issue_to_doc' (print_hdr : Prims.bool) (issue1 : issue) :
   let seealso =
     match r with
     | FStar_Pervasives_Native.Some r1 when
-        if
-          (FStarC_Range_Type.def_range r1) <>
-            (FStarC_Range_Type.use_range r1)
-        then
-          (FStarC_Range_Type.def_range r1) <>
-            (FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange)
-        else false ->
+        ((FStarC_Range_Type.def_range r1) <> (FStarC_Range_Type.use_range r1))
+          &&
+          ((FStarC_Range_Type.def_range r1) <>
+             (FStarC_Range_Type.def_range FStarC_Range_Type.dummyRange))
+        ->
         let uu___ =
           let uu___1 =
             let uu___2 = FStarC_Range_Ops.string_of_range r1 in

@@ -13,9 +13,8 @@ let windows : Prims.bool=
 let cygwin : Prims.bool=
   FStarC_Platform_Base.system = FStarC_Platform_Base.Cygwin
 let unix : Prims.bool=
-  if FStarC_Platform_Base.system = FStarC_Platform_Base.Unix
-  then true
-  else FStarC_Platform_Base.system = FStarC_Platform_Base.Cygwin
+  (FStarC_Platform_Base.system = FStarC_Platform_Base.Unix) ||
+    (FStarC_Platform_Base.system = FStarC_Platform_Base.Cygwin)
 let exe (s : Prims.string) : Prims.string=
   if windows then Prims.strcat s ".exe" else s
 let ocamlpath_sep : Prims.string= if windows then ";" else ":"

@@ -1430,13 +1430,11 @@ let entry (pretty_tynm : Prims.string) (nm : Prims.string) :
                               Obj.magic
                                 (fun uu___2 ->
                                    Prims.op_Negation
-                                     (if
-                                        FStarC_Reflection_V2_Data.uu___is_Noeq
-                                          q
-                                      then true
-                                      else
-                                        FStarC_Reflection_V2_Data.uu___is_Unopteq
-                                          q))) uu___2) x ps1 in
+                                     ((FStarC_Reflection_V2_Data.uu___is_Noeq
+                                         q)
+                                        ||
+                                        (FStarC_Reflection_V2_Data.uu___is_Unopteq
+                                           q)))) uu___2) x ps1 in
                     FStarC_Reflection_V2_Builtins.set_sigelt_attrs
                       (FStar_List_Tot_Base.op_At x1
                          [FStarC_Reflection_V2_Builtins.pack_ln

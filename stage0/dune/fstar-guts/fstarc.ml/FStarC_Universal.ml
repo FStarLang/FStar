@@ -757,15 +757,11 @@ let needs_interleaving (intf : Prims.string) (impl : Prims.string) :
   Prims.bool=
   let m1 = FStarC_Parser_Dep.lowercase_module_name intf in
   let m2 = FStarC_Parser_Dep.lowercase_module_name impl in
-  if
-    (if m1 = m2
-     then
-       FStarC_List.mem (FStarC_Filepath.get_file_extension intf)
-         ["fsti"; "fsi"]
-     else false)
-  then
-    FStarC_List.mem (FStarC_Filepath.get_file_extension impl) ["fst"; "fs"]
-  else false
+  ((m1 = m2) &&
+     (FStarC_List.mem (FStarC_Filepath.get_file_extension intf)
+        ["fsti"; "fsi"]))
+    &&
+    (FStarC_List.mem (FStarC_Filepath.get_file_extension impl) ["fst"; "fs"])
 let rec tc_one_file_internal (fly_deps : Prims.bool)
   (env : FStarC_Extraction_ML_UEnv.uenv)
   (interface_fn : Prims.string FStar_Pervasives_Native.option)
@@ -825,14 +821,7 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
           | (mname, fmod, env1) ->
               let check_mod uu___4 =
                 let check env2 =
-                  (let uu___6 =
-                     let uu___7 = FStarC_Options.lax () in
-                     Prims.op_Negation uu___7 in
-                   if uu___6
-                   then
-                     FStarC_SMTEncoding_Z3.refresh
-                       FStar_Pervasives_Native.None
-                   else ());
+                  FStarC_SMTEncoding_Z3.refresh FStar_Pervasives_Native.None;
                   (let uu___6 =
                      if fly_deps
                      then
@@ -856,15 +845,9 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                    | (modul, env3) ->
                        (restore_opts ();
                         (let smt_decls =
-                           let uu___8 =
-                             let uu___9 = FStarC_Options.lax () in
-                             Prims.op_Negation uu___9 in
-                           if uu___8
-                           then
-                             FStarC_SMTEncoding_Encode.encode_modul
-                               (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3)
-                               modul
-                           else ([], []) in
+                           FStarC_SMTEncoding_Encode.encode_modul
+                             (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3)
+                             modul in
                          ((modul, smt_decls), env3)))) in
                 let uu___5 =
                   FStarC_Profiling.profile (fun uu___6 -> check env1)
@@ -998,13 +981,9 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                           uu___9 = Prims.int_zero in
                         if uu___8
                         then
-                          let uu___9 = FStarC_Options.lax () in
-                          (if uu___9
-                           then true
-                           else
-                             FStarC_Options.should_verify
-                               (FStarC_Ident.string_of_lid
-                                  (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name))
+                          FStarC_Options.should_check
+                            (FStarC_Ident.string_of_lid
+                               (tc_result.FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name)
                         else false in
                       if uu___7
                       then
@@ -1041,14 +1020,13 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                         FStarC_TypeChecker_Tc.load_checked_module tcenv1
                           tcmod1 in
                       (restore_opts ();
-                       (let uu___8 =
-                          let uu___9 = FStarC_Options.lax () in
-                          Prims.op_Negation uu___9 in
-                        if uu___8
-                        then
-                          FStarC_SMTEncoding_Encode.encode_modul_from_cache
-                            env1 tcmod1 smt_decls
-                        else ());
+                       if
+                         ((FStar_Pervasives_Native.fst smt_decls) <> []) ||
+                           ((FStar_Pervasives_Native.snd smt_decls) <> [])
+                       then
+                         FStarC_SMTEncoding_Encode.encode_modul_from_cache
+                           env1 tcmod1 smt_decls
+                       else ();
                        ((), env1)) in
                 let env1 =
                   FStarC_Profiling.profile
@@ -1071,11 +1049,9 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                                tcmod.FStarC_Syntax_Syntax.name) tgt in
                         if uu___6
                         then
-                          (if
-                             Prims.op_Negation
-                               tcmod.FStarC_Syntax_Syntax.is_interface
-                           then true
-                           else tgt = FStarC_Options.Krml)
+                          (Prims.op_Negation
+                             tcmod.FStarC_Syntax_Syntax.is_interface)
+                            || (tgt = FStarC_Options.Krml)
                         else false in
                       if uu___5
                       then
@@ -1633,34 +1609,30 @@ let load_fly_deps_and_tc_one_fragment (filename : Prims.string)
                   (FStarC_List.flatten filenames_l))))
 let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env=
   let solver =
-    let uu___ = FStarC_Options.lax () in
-    if uu___
-    then FStarC_SMTEncoding_Solver.dummy
-    else
-      {
-        FStarC_TypeChecker_Env.init =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.init);
-        FStarC_TypeChecker_Env.snapshot =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.snapshot);
-        FStarC_TypeChecker_Env.rollback =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.rollback);
-        FStarC_TypeChecker_Env.encode_sig =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.encode_sig);
-        FStarC_TypeChecker_Env.preprocess = FStarC_Tactics_Hooks.preprocess;
-        FStarC_TypeChecker_Env.spinoff_strictly_positive_goals =
-          (FStar_Pervasives_Native.Some
-             FStarC_Tactics_Hooks.spinoff_strictly_positive_goals);
-        FStarC_TypeChecker_Env.handle_smt_goal =
-          FStarC_Tactics_Hooks.handle_smt_goal;
-        FStarC_TypeChecker_Env.solve =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.solve);
-        FStarC_TypeChecker_Env.solve_sync =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.solve_sync);
-        FStarC_TypeChecker_Env.finish =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.finish);
-        FStarC_TypeChecker_Env.refresh =
-          (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.refresh)
-      } in
+    {
+      FStarC_TypeChecker_Env.init =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.init);
+      FStarC_TypeChecker_Env.snapshot =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.snapshot);
+      FStarC_TypeChecker_Env.rollback =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.rollback);
+      FStarC_TypeChecker_Env.encode_sig =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.encode_sig);
+      FStarC_TypeChecker_Env.preprocess = FStarC_Tactics_Hooks.preprocess;
+      FStarC_TypeChecker_Env.spinoff_strictly_positive_goals =
+        (FStar_Pervasives_Native.Some
+           FStarC_Tactics_Hooks.spinoff_strictly_positive_goals);
+      FStarC_TypeChecker_Env.handle_smt_goal =
+        FStarC_Tactics_Hooks.handle_smt_goal;
+      FStarC_TypeChecker_Env.solve =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.solve);
+      FStarC_TypeChecker_Env.solve_sync =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.solve_sync);
+      FStarC_TypeChecker_Env.finish =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.finish);
+      FStarC_TypeChecker_Env.refresh =
+        (FStarC_SMTEncoding_Solver.solver.FStarC_TypeChecker_Env.refresh)
+    } in
   let env =
     let uu___ =
       let uu___1 = FStarC_Tactics_Interpreter.primitive_steps () in

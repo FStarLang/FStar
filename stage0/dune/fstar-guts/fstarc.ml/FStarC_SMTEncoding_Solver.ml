@@ -78,22 +78,18 @@ let rec merge_hints (prev : FStarC_Hints.hints) (next : FStarC_Hints.hints) :
   | ((FStar_Pervasives_Native.Some p)::prev1, (FStar_Pervasives_Native.Some
      n)::next1) ->
       if
-        (if
-           (FStarC_String.compare p.FStarC_Hints.hint_name
-              n.FStarC_Hints.hint_name)
-             < Prims.int_zero
-         then true
-         else
-           if p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name
-           then p.FStarC_Hints.hint_index < n.FStarC_Hints.hint_index
-           else false)
+        ((FStarC_String.compare p.FStarC_Hints.hint_name
+            n.FStarC_Hints.hint_name)
+           < Prims.int_zero)
+          ||
+          ((p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name) &&
+             (p.FStarC_Hints.hint_index < n.FStarC_Hints.hint_index))
       then (FStar_Pervasives_Native.Some p) ::
         (merge_hints prev1 ((FStar_Pervasives_Native.Some n) :: next1))
       else
         if
-          (if p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name
-           then p.FStarC_Hints.hint_index = n.FStarC_Hints.hint_index
-           else false)
+          (p.FStarC_Hints.hint_name = n.FStarC_Hints.hint_name) &&
+            (p.FStarC_Hints.hint_index = n.FStarC_Hints.hint_index)
         then (FStar_Pervasives_Native.Some n) :: (merge_hints prev1 next1)
         else (FStar_Pervasives_Native.Some n) ::
           (merge_hints ((FStar_Pervasives_Native.Some p) :: prev1) next1)
@@ -440,9 +436,9 @@ let get_hint_for (qname : Prims.string) (qindex : Prims.int) :
         (fun uu___1 ->
            match uu___1 with
            | FStar_Pervasives_Native.Some hint when
-               if hint.FStarC_Hints.hint_name = qname
-               then hint.FStarC_Hints.hint_index = qindex
-               else false -> FStar_Pervasives_Native.Some hint
+               (hint.FStarC_Hints.hint_name = qname) &&
+                 (hint.FStarC_Hints.hint_index = qindex)
+               -> FStar_Pervasives_Native.Some hint
            | uu___2 -> FStar_Pervasives_Native.None)
   | uu___1 -> FStar_Pervasives_Native.None
 let query_errors (settings : query_settings)
@@ -556,12 +552,9 @@ let errors_to_report (tried_recovery : Prims.bool)
                     then ((ic + Prims.int_one), cc, uc, bc)
                     else
                       if
-                        (if
-                           (if FStarC_Util.starts_with err1 "canceled"
-                            then true
-                            else FStarC_Util.starts_with err1 "(resource")
-                         then true
-                         else FStarC_Util.starts_with err1 "timeout")
+                        ((FStarC_Util.starts_with err1 "canceled") ||
+                           (FStarC_Util.starts_with err1 "(resource"))
+                          || (FStarC_Util.starts_with err1 "timeout")
                       then (ic, (cc + Prims.int_one), uc, bc)
                       else
                         if
@@ -1282,7 +1275,7 @@ let make_solver_configs (can_split : Prims.bool) (is_retry : Prims.bool)
                      core;
                    FStarC_Hints.query_elapsed_time = uu___6;
                    FStarC_Hints.hash = h;_} ->
-                   let between i1 j1 k = if i1 <= k then k <= j1 else false in
+                   let between i1 j1 k = (i1 <= k) && (k <= j1) in
                    let uu___7 =
                      let uu___8 =
                        let uu___9 = FStarC_Options.initial_fuel () in
@@ -1516,7 +1509,7 @@ let ask_solver_quake (configs : query_settings Prims.list) : answer=
                  let uu___4 = FStarC_Options.quake_keep () in
                  Prims.op_Negation uu___4 in
                if uu___3
-               then (if nsucc >= lo1 then true else nfail > (hi1 - lo1))
+               then (nsucc >= lo1) || (nfail > (hi1 - lo1))
                else false in
              if uu___2
              then (nsucc, nfail, rs)

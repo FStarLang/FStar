@@ -2627,7 +2627,7 @@ let mk_discriminator_and_indexed_projectors
                           let b =
                             FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
                               imp in
-                          if (if b then j < ntps else false)
+                          if b && (j < ntps)
                           then
                             ((pos
                                 (FStarC_Syntax_Syntax.Pat_dot_term
@@ -2870,7 +2870,7 @@ let mk_discriminator_and_indexed_projectors
                                        (FStarC_Syntax_Syntax.Pat_var
                                           projection)), b)
                                  else
-                                   if (if b then j < ntps else false)
+                                   if b && (j < ntps)
                                    then
                                      ((pos
                                          (FStarC_Syntax_Syntax.Pat_dot_term

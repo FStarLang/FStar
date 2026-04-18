@@ -417,12 +417,9 @@ let is_tot_or_gtot_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
     FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GTot_lid
       (comp_effect_name c)
 let is_pure_effect (l : FStarC_Ident.lident) : Prims.bool=
-  if
-    (if FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Tot_lid
-     then true
-     else FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_PURE_lid)
-  then true
-  else FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Pure_lid
+  ((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Tot_lid) ||
+     (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_PURE_lid))
+    || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Pure_lid)
 let is_pure_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   match c.FStarC_Syntax_Syntax.n with
   | FStarC_Syntax_Syntax.Total uu___ -> true
@@ -442,24 +439,18 @@ let is_pure_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
              | FStarC_Syntax_Syntax.LEMMA -> true
              | uu___2 -> false) ct.FStarC_Syntax_Syntax.flags
 let is_ghost_effect (l : FStarC_Ident.lident) : Prims.bool=
-  if
-    (if FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GTot_lid l
-     then true
-     else FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GHOST_lid l)
-  then true
-  else FStarC_Ident.lid_equals FStarC_Parser_Const.effect_Ghost_lid l
+  ((FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GTot_lid l) ||
+     (FStarC_Ident.lid_equals FStarC_Parser_Const.effect_GHOST_lid l))
+    || (FStarC_Ident.lid_equals FStarC_Parser_Const.effect_Ghost_lid l)
 let is_div_effect (l : FStarC_Ident.lident) : Prims.bool=
-  if
-    (if FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_DIV_lid
-     then true
-     else FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Div_lid)
-  then true
-  else FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Dv_lid
+  ((FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_DIV_lid) ||
+     (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Div_lid))
+    || (FStarC_Ident.lid_equals l FStarC_Parser_Const.effect_Dv_lid)
 let is_pure_or_ghost_comp (c : FStarC_Syntax_Syntax.comp) : Prims.bool=
   let uu___ = is_pure_comp c in
   if uu___ then true else is_ghost_effect (comp_effect_name c)
 let is_pure_or_ghost_effect (l : FStarC_Ident.lident) : Prims.bool=
-  if is_pure_effect l then true else is_ghost_effect l
+  (is_pure_effect l) || (is_ghost_effect l)
 let is_pure_or_ghost_function (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
   let uu___ =
     let uu___1 = FStarC_Syntax_Subst.compress t in
@@ -793,14 +784,11 @@ let rec is_unit (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ = let uu___1 = unrefine t in uu___1.FStarC_Syntax_Syntax.n in
   match uu___ with
   | FStarC_Syntax_Syntax.Tm_fvar fv ->
-      if
-        (if FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid
-         then true
-         else
-           FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid)
-      then true
-      else
-        FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.auto_squash_lid
+      ((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid) ||
+         (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid))
+        ||
+        (FStarC_Syntax_Syntax.fv_eq_lid fv
+           FStarC_Parser_Const.auto_squash_lid)
   | FStarC_Syntax_Syntax.Tm_app
       { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_}
       -> is_unit head
@@ -1010,9 +998,8 @@ let qualifier_equal (q1 : FStarC_Syntax_Syntax.qualifier)
      FStarC_Syntax_Syntax.Discriminator l2) -> FStarC_Ident.lid_equals l1 l2
   | (FStarC_Syntax_Syntax.Projector (l1a, l1b),
      FStarC_Syntax_Syntax.Projector (l2a, l2b)) ->
-      if FStarC_Ident.lid_equals l1a l2a
-      then (FStarC_Ident.string_of_id l1b) = (FStarC_Ident.string_of_id l2b)
-      else false
+      (FStarC_Ident.lid_equals l1a l2a) &&
+        ((FStarC_Ident.string_of_id l1b) = (FStarC_Ident.string_of_id l2b))
   | (FStarC_Syntax_Syntax.RecordType (ns1, f1),
      FStarC_Syntax_Syntax.RecordType (ns2, f2)) ->
       let uu___ =
@@ -1509,7 +1496,7 @@ let is_forall (lid : FStarC_Ident.lident) : Prims.bool=
 let is_exists (lid : FStarC_Ident.lident) : Prims.bool=
   FStarC_Ident.lid_equals lid FStarC_Parser_Const.exists_lid
 let is_qlid (lid : FStarC_Ident.lident) : Prims.bool=
-  if is_forall lid then true else is_exists lid
+  (is_forall lid) || (is_exists lid)
 let lid_is_connective : FStarC_Ident.lident -> Prims.bool=
   let lst =
     [FStarC_Parser_Const.and_lid;
@@ -1838,6 +1825,19 @@ let mk_decidable_eq (t : FStarC_Syntax_Syntax.term)
            FStarC_Syntax_Syntax.as_arg e1;
            FStarC_Syntax_Syntax.as_arg e2]
        }) uu___
+let b_or : FStarC_Syntax_Syntax.term= fvar_const FStarC_Parser_Const.op_Or
+let mk_or (e1 : FStarC_Syntax_Syntax.term) (e2 : FStarC_Syntax_Syntax.term) :
+  FStarC_Syntax_Syntax.term=
+  let uu___ =
+    FStarC_Range_Ops.union_ranges e1.FStarC_Syntax_Syntax.pos
+      e2.FStarC_Syntax_Syntax.pos in
+  FStarC_Syntax_Syntax.mk
+    (FStarC_Syntax_Syntax.Tm_app
+       {
+         FStarC_Syntax_Syntax.hd = b_or;
+         FStarC_Syntax_Syntax.args =
+           [FStarC_Syntax_Syntax.as_arg e1; FStarC_Syntax_Syntax.as_arg e2]
+       }) uu___
 let b_and : FStarC_Syntax_Syntax.term= fvar_const FStarC_Parser_Const.op_And
 let mk_and (e1 : FStarC_Syntax_Syntax.term) (e2 : FStarC_Syntax_Syntax.term)
   : FStarC_Syntax_Syntax.term=
@@ -2107,100 +2107,59 @@ let is_sub_singleton (t : FStarC_Syntax_Syntax.term) : Prims.bool=
         let uu___3 = un_uinst head in uu___3.FStarC_Syntax_Syntax.n in
       (match uu___2 with
        | FStarC_Syntax_Syntax.Tm_fvar fv ->
-           if
-             (if
-                (if
-                   (if
-                      (if
-                         (if
-                            (if
-                               (if
-                                  (if
-                                     (if
-                                        (if
-                                           (if
-                                              (if
-                                                 (if
-                                                    (if
-                                                       (if
-                                                          (if
-                                                             FStarC_Syntax_Syntax.fv_eq_lid
-                                                               fv
-                                                               FStarC_Parser_Const.unit_lid
-                                                           then true
-                                                           else
-                                                             FStarC_Syntax_Syntax.fv_eq_lid
-                                                               fv
-                                                               FStarC_Parser_Const.squash_lid)
-                                                        then true
-                                                        else
-                                                          FStarC_Syntax_Syntax.fv_eq_lid
-                                                            fv
-                                                            FStarC_Parser_Const.auto_squash_lid)
-                                                     then true
-                                                     else
-                                                       FStarC_Syntax_Syntax.fv_eq_lid
-                                                         fv
-                                                         FStarC_Parser_Const.and_lid)
-                                                  then true
-                                                  else
-                                                    FStarC_Syntax_Syntax.fv_eq_lid
-                                                      fv
-                                                      FStarC_Parser_Const.or_lid)
-                                               then true
-                                               else
-                                                 FStarC_Syntax_Syntax.fv_eq_lid
-                                                   fv
-                                                   FStarC_Parser_Const.not_lid)
-                                            then true
-                                            else
-                                              FStarC_Syntax_Syntax.fv_eq_lid
-                                                fv
-                                                FStarC_Parser_Const.imp_lid)
-                                         then true
-                                         else
-                                           FStarC_Syntax_Syntax.fv_eq_lid fv
-                                             FStarC_Parser_Const.iff_lid)
-                                      then true
-                                      else
-                                        FStarC_Syntax_Syntax.fv_eq_lid fv
-                                          FStarC_Parser_Const.ite_lid)
-                                   then true
-                                   else
-                                     FStarC_Syntax_Syntax.fv_eq_lid fv
-                                       FStarC_Parser_Const.exists_lid)
-                                then true
-                                else
-                                  FStarC_Syntax_Syntax.fv_eq_lid fv
-                                    FStarC_Parser_Const.forall_lid)
-                             then true
-                             else
-                               FStarC_Syntax_Syntax.fv_eq_lid fv
-                                 FStarC_Parser_Const.true_lid)
-                          then true
-                          else
-                            FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.false_lid)
-                       then true
-                       else
-                         FStarC_Syntax_Syntax.fv_eq_lid fv
-                           FStarC_Parser_Const.eq2_lid)
-                    then true
-                    else
-                      FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.b2t_lid)
-                 then true
-                 else
-                   FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.haseq_lid)
-              then true
-              else
-                FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.has_type_lid)
-           then true
-           else
-             FStarC_Syntax_Syntax.fv_eq_lid fv
-               FStarC_Parser_Const.precedes_lid
+           (((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
+                              FStarC_Parser_Const.unit_lid)
+                             ||
+                             (FStarC_Syntax_Syntax.fv_eq_lid fv
+                                FStarC_Parser_Const.squash_lid))
+                            ||
+                            (FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.auto_squash_lid))
+                           ||
+                           (FStarC_Syntax_Syntax.fv_eq_lid fv
+                              FStarC_Parser_Const.and_lid))
+                          ||
+                          (FStarC_Syntax_Syntax.fv_eq_lid fv
+                             FStarC_Parser_Const.or_lid))
+                         ||
+                         (FStarC_Syntax_Syntax.fv_eq_lid fv
+                            FStarC_Parser_Const.not_lid))
+                        ||
+                        (FStarC_Syntax_Syntax.fv_eq_lid fv
+                           FStarC_Parser_Const.imp_lid))
+                       ||
+                       (FStarC_Syntax_Syntax.fv_eq_lid fv
+                          FStarC_Parser_Const.iff_lid))
+                      ||
+                      (FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.ite_lid))
+                     ||
+                     (FStarC_Syntax_Syntax.fv_eq_lid fv
+                        FStarC_Parser_Const.exists_lid))
+                    ||
+                    (FStarC_Syntax_Syntax.fv_eq_lid fv
+                       FStarC_Parser_Const.forall_lid))
+                   ||
+                   (FStarC_Syntax_Syntax.fv_eq_lid fv
+                      FStarC_Parser_Const.true_lid))
+                  ||
+                  (FStarC_Syntax_Syntax.fv_eq_lid fv
+                     FStarC_Parser_Const.false_lid))
+                 ||
+                 (FStarC_Syntax_Syntax.fv_eq_lid fv
+                    FStarC_Parser_Const.eq2_lid))
+                ||
+                (FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Parser_Const.b2t_lid))
+               ||
+               (FStarC_Syntax_Syntax.fv_eq_lid fv
+                  FStarC_Parser_Const.haseq_lid))
+              ||
+              (FStarC_Syntax_Syntax.fv_eq_lid fv
+                 FStarC_Parser_Const.has_type_lid))
+             ||
+             (FStarC_Syntax_Syntax.fv_eq_lid fv
+                FStarC_Parser_Const.precedes_lid)
        | uu___3 -> false)
 let arrow_one_ln (t : FStarC_Syntax_Syntax.typ) :
   (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.comp)
@@ -3042,13 +3001,11 @@ and aqual_eq_dbg (dbg : Prims.bool) (a1 : FStarC_Syntax_Syntax.aqual)
   match (a1, a2) with
   | (FStar_Pervasives_Native.Some a11, FStar_Pervasives_Native.Some a21) ->
       if
-        (if
-           a11.FStarC_Syntax_Syntax.aqual_implicit =
-             a21.FStarC_Syntax_Syntax.aqual_implicit
-         then
-           (FStarC_List.length a11.FStarC_Syntax_Syntax.aqual_attributes) =
-             (FStarC_List.length a21.FStarC_Syntax_Syntax.aqual_attributes)
-         else false)
+        (a11.FStarC_Syntax_Syntax.aqual_implicit =
+           a21.FStarC_Syntax_Syntax.aqual_implicit)
+          &&
+          ((FStarC_List.length a11.FStarC_Syntax_Syntax.aqual_attributes) =
+             (FStarC_List.length a21.FStarC_Syntax_Syntax.aqual_attributes))
       then
         FStarC_List.fold_left2
           (fun out t1 t2 ->

@@ -742,11 +742,9 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
              let lbt = subst' s lb.FStarC_Syntax_Syntax.lbtyp in
              let lbd =
                if
-                 (if is_rec
-                  then
-                    FStar_Pervasives.uu___is_Inl
-                      lb.FStarC_Syntax_Syntax.lbname
-                  else false)
+                 is_rec &&
+                   (FStar_Pervasives.uu___is_Inl
+                      lb.FStarC_Syntax_Syntax.lbname)
                then subst' sn lb.FStarC_Syntax_Syntax.lbdef
                else subst' s lb.FStarC_Syntax_Syntax.lbdef in
              let lbname =

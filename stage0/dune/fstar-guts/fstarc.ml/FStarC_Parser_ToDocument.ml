@@ -147,9 +147,8 @@ let is_meta_qualifier
   | FStar_Pervasives_Native.Some (FStarC_Parser_AST.Meta uu___) -> true
   | uu___ -> false
 let is_joinable_binder (b : FStarC_Parser_AST.binder) : Prims.bool=
-  if Prims.op_Negation (is_tc_binder b)
-  then Prims.op_Negation (is_meta_qualifier b.FStarC_Parser_AST.aqual)
-  else false
+  (Prims.op_Negation (is_tc_binder b)) &&
+    (Prims.op_Negation (is_meta_qualifier b.FStarC_Parser_AST.aqual))
 let separate_map_last (sep : FStar_Pprint.document)
   (f : Prims.bool -> 'uuuuu -> FStar_Pprint.document)
   (es : 'uuuuu Prims.list) : FStar_Pprint.document=
@@ -232,9 +231,8 @@ let is_array (e : FStarC_Parser_AST.term) : Prims.bool=
          FStarC_Parser_AST.range = uu___; FStarC_Parser_AST.level = uu___1;_},
        l, FStarC_Parser_AST.Nothing)
       ->
-      if FStarC_Ident.lid_equals lid FStarC_Parser_Const.array_of_list_lid
-      then FStarC_Parser_AST.uu___is_ListLiteral l.FStarC_Parser_AST.tm
-      else false
+      (FStarC_Ident.lid_equals lid FStarC_Parser_Const.array_of_list_lid) &&
+        (FStarC_Parser_AST.uu___is_ListLiteral l.FStarC_Parser_AST.tm)
   | uu___ -> false
 let rec is_ref_set (e : FStarC_Parser_AST.term) : Prims.bool=
   match e.FStarC_Parser_AST.tm with
@@ -253,13 +251,11 @@ let rec is_ref_set (e : FStarC_Parser_AST.term) : Prims.bool=
          FStarC_Parser_AST.level = uu___5;_},
        FStarC_Parser_AST.Nothing)
       ->
-      if
-        FStarC_Ident.lid_equals maybe_singleton_lid
-          FStarC_Parser_Const.set_singleton
-      then
-        FStarC_Ident.lid_equals maybe_addr_of_lid
-          FStarC_Parser_Const.heap_addr_of_lid
-      else false
+      (FStarC_Ident.lid_equals maybe_singleton_lid
+         FStarC_Parser_Const.set_singleton)
+        &&
+        (FStarC_Ident.lid_equals maybe_addr_of_lid
+           FStarC_Parser_Const.heap_addr_of_lid)
   | FStarC_Parser_AST.App
       ({
          FStarC_Parser_AST.tm = FStarC_Parser_AST.App
@@ -271,14 +267,9 @@ let rec is_ref_set (e : FStarC_Parser_AST.term) : Prims.bool=
          FStarC_Parser_AST.level = uu___3;_},
        e2, FStarC_Parser_AST.Nothing)
       ->
-      if
-        (if
-           FStarC_Ident.lid_equals maybe_union_lid
-             FStarC_Parser_Const.set_union
-         then is_ref_set e1
-         else false)
-      then is_ref_set e2
-      else false
+      ((FStarC_Ident.lid_equals maybe_union_lid FStarC_Parser_Const.set_union)
+         && (is_ref_set e1))
+        && (is_ref_set e2)
   | uu___ -> false
 let rec extract_from_ref_set (e : FStarC_Parser_AST.term) :
   FStarC_Parser_AST.term Prims.list=
@@ -317,19 +308,15 @@ let rec extract_from_ref_set (e : FStarC_Parser_AST.term) :
         FStarC_Format.fmt1 "Not a ref set %s" uu___2 in
       FStarC_Effect.failwith uu___1
 let is_general_application (e : FStarC_Parser_AST.term) : Prims.bool=
-  Prims.op_Negation (if is_array e then true else is_ref_set e)
+  Prims.op_Negation ((is_array e) || (is_ref_set e))
 let is_general_construction (e : FStarC_Parser_AST.term) : Prims.bool=
   Prims.op_Negation
     (FStarC_Parser_AST.uu___is_ListLiteral e.FStarC_Parser_AST.tm)
 let is_general_prefix_op (op : FStarC_Ident.ident) : Prims.bool=
   let op_starting_char =
     FStarC_Util.char_at (FStarC_Ident.string_of_id op) Prims.int_zero in
-  if (if op_starting_char = 33 then true else op_starting_char = 63)
-  then true
-  else
-    if op_starting_char = 126
-    then (FStarC_Ident.string_of_id op) <> "~"
-    else false
+  ((op_starting_char = 33) || (op_starting_char = 63)) ||
+    ((op_starting_char = 126) && ((FStarC_Ident.string_of_id op) <> "~"))
 let head_and_args (e : FStarC_Parser_AST.term) :
   (FStarC_Parser_AST.term * (FStarC_Parser_AST.term * FStarC_Parser_AST.imp)
     Prims.list)=
@@ -567,8 +554,7 @@ let all_binders_annot (e : FStarC_Parser_AST.term) : Prims.bool=
     | uu___ -> (true, (l + Prims.int_one)) in
   let uu___ = all_binders e Prims.int_zero in
   match uu___ with
-  | (b, l) ->
-      if (if b then l > Prims.int_one else false) then true else false
+  | (b, l) -> if b && (l > Prims.int_one) then true else false
 type catf =
   FStar_Pprint.document -> FStar_Pprint.document -> FStar_Pprint.document
 let cat_with_colon (x : FStar_Pprint.document) (y : FStar_Pprint.document) :
@@ -696,12 +682,12 @@ let rec place_comments_until_pos (k : Prims.int) (lbegin : Prims.int)
         (let lnum = (FStarC_Range_Ops.line_of_pos pos) - lbegin in
          let lnum1 = min (Prims.of_int 3) lnum in
          let lnum2 =
-           if (if meta_decl.has_qs then true else meta_decl.has_attrs)
+           if meta_decl.has_qs || meta_decl.has_attrs
            then lnum1 - Prims.int_one
            else lnum1 in
          let lnum3 = max k lnum2 in
          let lnum4 =
-           if (if meta_decl.has_qs then meta_decl.has_attrs else false)
+           if meta_decl.has_qs && meta_decl.has_attrs
            then Prims.of_int 2
            else lnum3 in
          let lnum5 = if init then Prims.of_int 2 else lnum4 in
@@ -1764,8 +1750,7 @@ and is_typ_tuple (e : FStarC_Parser_AST.term) : Prims.bool=
 and p_binder (is_atomic : Prims.bool) (b : FStarC_Parser_AST.binder) :
   FStar_Pprint.document=
   let is_tc = is_tc_binder b in
-  let uu___ =
-    p_binder' false (if is_atomic then Prims.op_Negation is_tc else false) b in
+  let uu___ = p_binder' false (is_atomic && (Prims.op_Negation is_tc)) b in
   match uu___ with
   | (b', t') ->
       let d =
@@ -1824,12 +1809,9 @@ and p_binder' (no_pars : Prims.bool) (is_atomic : Prims.bool)
        | (b', t') ->
            let catf1 =
              if
-               (if is_atomic
-                then true
-                else
-                  if is_meta_qualifier b.FStarC_Parser_AST.aqual
-                  then Prims.op_Negation no_pars
-                  else false)
+               is_atomic ||
+                 ((is_meta_qualifier b.FStarC_Parser_AST.aqual) &&
+                    (Prims.op_Negation no_pars))
              then
                fun x y ->
                  FStar_Pprint.group
@@ -2238,7 +2220,7 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
             FStar_Pprint.op_Hat_Slash_Hat (str "with") uu___4 in
           FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
         FStar_Pprint.group uu___1 in
-      let uu___1 = paren_if (if ps then true else pb) in uu___1 uu___
+      let uu___1 = paren_if (ps || pb) in uu___1 uu___
   | FStarC_Parser_AST.Match (e1, op_opt, ret_opt, branches) ->
       let match_doc =
         let uu___ =
@@ -2283,7 +2265,7 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
         let uu___2 =
           separate_map_last FStar_Pprint.hardline p_patternBranch branches in
         FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
-      let uu___1 = paren_if (if ps then true else pb) in uu___1 uu___
+      let uu___1 = paren_if (ps || pb) in uu___1 uu___
   | FStarC_Parser_AST.LetOpen (uid, e1) ->
       let uu___ =
         let uu___1 =
@@ -2917,7 +2899,7 @@ and collapse_pats
              let uu___1 = hd in
              (match uu___1 with
               | (b2s, t2, tc2, j2) ->
-                  if (if (if t1 = t2 then j1 else false) then j2 else false)
+                  if ((t1 = t2) && j1) && j2
                   then ((FStarC_List.op_At b2s [b1]), t1, false, true) :: tl
                   else ([b1], t1, tc1, j1) :: hd :: tl)) in
   let p_collapsed_binder cb =
@@ -2979,9 +2961,7 @@ and pats_as_binders_if_possible (pats : FStarC_Parser_AST.pattern Prims.list)
                  FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
                let uu___3 = p_tmEqNoRefinement t in
                (uu___2, uu___3, is_tc,
-                 (if Prims.op_Negation is_tc
-                  then Prims.op_Negation is_meta
-                  else false)) in
+                 ((Prims.op_Negation is_tc) && (Prims.op_Negation is_meta))) in
              FStar_Pervasives_Native.Some uu___1
          | uu___ -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None in
@@ -3037,7 +3017,7 @@ and p_simpleTerm (ps : Prims.bool) (pb : Prims.bool)
             separate_map_last FStar_Pprint.hardline p_patternBranch branches in
           FStar_Pprint.op_Hat_Slash_Hat (str "function") uu___3 in
         FStar_Pprint.group uu___2 in
-      let uu___2 = paren_if (if ps then true else pb) in uu___2 uu___1
+      let uu___2 = paren_if (ps || pb) in uu___2 uu___1
   | FStarC_Parser_AST.Abs (pats, e1) ->
       let uu___ = p_term_sep false pb e1 in
       (match uu___ with
@@ -3186,17 +3166,13 @@ and format_sig (style : annotation_style)
   match uu___ with
   | (n, last_n, sep, last_op) ->
       let last_op1 =
-        if
-          (if Prims.uu___is_Cons terms
-           then Prims.op_Negation no_last_op
-           else false)
+        if (Prims.uu___is_Cons terms) && (Prims.op_Negation no_last_op)
         then last_op
         else FStar_Pprint.empty in
       let one_line_space =
         if
-          (if Prims.op_Negation (ret_d = FStar_Pprint.empty)
-           then true
-           else Prims.op_Negation no_last_op)
+          (Prims.op_Negation (ret_d = FStar_Pprint.empty)) ||
+            (Prims.op_Negation no_last_op)
         then FStar_Pprint.space
         else FStar_Pprint.empty in
       let single_line_arg_indent = FStar_Pprint.repeat n FStar_Pprint.space in
@@ -3290,9 +3266,7 @@ and collapse_binders (style : annotation_style)
                   (match (t1, t2) with
                    | (FStar_Pervasives_Native.Some (typ1, catf1),
                       FStar_Pervasives_Native.Some (typ2, uu___2)) when
-                       if (if typ1 = typ2 then j1 else false)
-                       then j2
-                       else false ->
+                       ((typ1 = typ2) && j1) && j2 ->
                        ((FStarC_List.op_At b2s [b1]), t1, false, true) :: tl
                    | uu___2 -> ([b1], t1, tc1, j1) :: bs))) in
   let p_collapsed_binder cb =
@@ -3381,9 +3355,8 @@ and p_tmEqWith' (p_X : FStarC_Parser_AST.term -> FStar_Pprint.document)
   | FStarC_Parser_AST.Op (op, e1::e2::[]) when
       if
         Prims.op_Negation
-          (if (FStarC_Ident.string_of_id op) = "==>"
-           then true
-           else (FStarC_Ident.string_of_id op) = "<==>")
+          (((FStarC_Ident.string_of_id op) = "==>") ||
+             ((FStarC_Ident.string_of_id op) = "<==>"))
       then
         let uu___ =
           let uu___1 = is_operatorInfix0ad12 op in

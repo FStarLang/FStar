@@ -2699,10 +2699,7 @@ let head_matches_delta (env : FStarC_TypeChecker_Env.env)
           (FStarC_Syntax_Syntax.Delta_equational_at_level i),
           FStar_Pervasives_Native.Some
           (FStarC_Syntax_Syntax.Delta_equational_at_level j))
-         when
-         if (if i > Prims.int_zero then true else j > Prims.int_zero)
-         then i <> j
-         else false ->
+         when ((i > Prims.int_zero) || (j > Prims.int_zero)) && (i <> j) ->
          reduce_one_and_try_again
            (FStarC_Syntax_Syntax.Delta_equational_at_level i)
            (FStarC_Syntax_Syntax.Delta_equational_at_level j)
@@ -2784,7 +2781,7 @@ let rank_leq (r1 : FStarC_TypeChecker_Common.rank_t)
   (rank_t_num r1) <= (rank_t_num r2)
 let rank_less_than (r1 : FStarC_TypeChecker_Common.rank_t)
   (r2 : FStarC_TypeChecker_Common.rank_t) : Prims.bool=
-  if r1 <> r2 then (rank_t_num r1) <= (rank_t_num r2) else false
+  (r1 <> r2) && ((rank_t_num r1) <= (rank_t_num r2))
 let compress_tprob (wl : worklist)
   (p : FStarC_Syntax_Syntax.typ FStarC_TypeChecker_Common.problem) :
   FStarC_Syntax_Syntax.term FStarC_TypeChecker_Common.problem=
@@ -4344,14 +4341,10 @@ let rec solve (probs : worklist) : solution=
                   else tp1 in
                 let tp1 = maybe_expand tp in
                 if
-                  (if rank1 = FStarC_TypeChecker_Common.Rigid_rigid
-                   then true
-                   else
-                     if
-                       tp1.FStarC_TypeChecker_Common.relation =
-                         FStarC_TypeChecker_Common.EQ
-                     then rank1 <> FStarC_TypeChecker_Common.Flex_flex
-                     else false)
+                  (rank1 = FStarC_TypeChecker_Common.Rigid_rigid) ||
+                    ((tp1.FStarC_TypeChecker_Common.relation =
+                        FStarC_TypeChecker_Common.EQ)
+                       && (rank1 <> FStarC_TypeChecker_Common.Flex_flex))
                 then solve_t' tp1 probs1
                 else
                   if probs1.defer_ok = DeferAny
@@ -4592,7 +4585,7 @@ and maybe_defer_to_user_tac (prob : tprob) (reason : Prims.string)
            let uu___1 = should_defer_tac prob.FStarC_TypeChecker_Common.rhs in
            (match uu___1 with
             | (l2, r2) ->
-                if (if l1 then true else l2)
+                if l1 || l2
                 then
                   defer_to_user_tac (FStarC_TypeChecker_Common.TProb prob)
                     (Prims.strcat r1 (Prims.strcat ", " r2)) wl
@@ -6813,15 +6806,9 @@ and solve_t_flex_flex (env : FStarC_TypeChecker_Env.env_t)
              (Prims.strcat ", " (flex_reason rhs))) wl
       else
         if
-          (if
-             (if wl.defer_ok = DeferAny
-              then true
-              else wl.defer_ok = DeferFlexFlexOnly)
-           then
-             (if Prims.op_Negation (is_flex_pat lhs)
-              then true
-              else Prims.op_Negation (is_flex_pat rhs))
-           else false)
+          ((wl.defer_ok = DeferAny) || (wl.defer_ok = DeferFlexFlexOnly)) &&
+            ((Prims.op_Negation (is_flex_pat lhs)) ||
+               (Prims.op_Negation (is_flex_pat rhs)))
         then
           (let uu___2 = FStarC_Thunk.mkv "flex-flex non-pattern" in
            giveup_or_defer_flex_flex orig wl
@@ -7674,19 +7661,12 @@ and solve_t' (problem : tprob) (wl : worklist) : solution=
                                        FStarC_Syntax_Util.is_fvar
                                          FStarC_Parser_Const.reveal head2 in
                                    if
-                                     (if
-                                        (if
-                                           (if
-                                              FStar_Pervasives_Native.uu___is_Some
-                                                d
-                                            then wl1.smt_ok
-                                            else false)
-                                         then
-                                           Prims.op_Negation
-                                             treat_as_injective
-                                         else false)
-                                      then true
-                                      else is_reveal)
+                                     (((FStar_Pervasives_Native.uu___is_Some
+                                          d)
+                                         && wl1.smt_ok)
+                                        &&
+                                        (Prims.op_Negation treat_as_injective))
+                                       || is_reveal
                                    then
                                      try_solve_without_smt_or_else wl1
                                        solve_sub_probs_no_smt
@@ -8826,16 +8806,12 @@ and solve_t' (problem : tprob) (wl : worklist) : solution=
                                          (Obj.magic uu___13) in
                                      Prims.op_Negation uu___12) in
                                 if
-                                  (if
-                                     problem.FStarC_TypeChecker_Common.relation
-                                       = FStarC_TypeChecker_Common.EQ
-                                   then true
-                                   else
-                                     if
-                                       Prims.op_Negation
-                                         env.FStarC_TypeChecker_Env.uvar_subtyping
-                                     then has_uvars
-                                     else false)
+                                  (problem.FStarC_TypeChecker_Common.relation
+                                     = FStarC_TypeChecker_Common.EQ)
+                                    ||
+                                    ((Prims.op_Negation
+                                        env.FStarC_TypeChecker_Env.uvar_subtyping)
+                                       && has_uvars)
                                 then
                                   let uu___11 =
                                     mk_t_problem wl1
@@ -8886,21 +8862,15 @@ and solve_t' (problem : tprob) (wl : worklist) : solution=
                                             (FStarC_Syntax_Unionfind.rollback
                                                tx;
                                              if
-                                               (if
-                                                  (if
-                                                     (if
-                                                        Prims.op_Negation
-                                                          env.FStarC_TypeChecker_Env.uvar_subtyping
-                                                      then has_uvars
-                                                      else false)
-                                                   then true
-                                                   else
-                                                     Prims.op_Negation
-                                                       wl2.smt_ok)
-                                                then
-                                                  Prims.op_Negation
-                                                    env.FStarC_TypeChecker_Env.unif_allow_ref_guards
-                                                else false)
+                                               (((Prims.op_Negation
+                                                    env.FStarC_TypeChecker_Env.uvar_subtyping)
+                                                   && has_uvars)
+                                                  ||
+                                                  (Prims.op_Negation
+                                                     wl2.smt_ok))
+                                                 &&
+                                                 (Prims.op_Negation
+                                                    env.FStarC_TypeChecker_Env.unif_allow_ref_guards)
                                              then giveup wl2 msg prob
                                              else fallback ())
                                         | Success
@@ -11636,9 +11606,8 @@ and solve_c
     match uu___ with
     | (c12, c22) ->
         if
-          (if Prims.op_Negation wl.repr_subcomp_allowed
-           then Prims.op_Negation (FStarC_Ident.lid_equals c12 c22)
-           else false)
+          (Prims.op_Negation wl.repr_subcomp_allowed) &&
+            (Prims.op_Negation (FStarC_Ident.lid_equals c12 c22))
         then FStarC_TypeChecker_Env.is_reifiable_effect wl.tcenv c22
         else false in
   let solve_layered_sub c11 c21 =
@@ -12111,7 +12080,7 @@ and solve_c
                           let uu___7 = attempt [prob] wl2 in solve uu___7)
                    else
                      (let g =
-                        let uu___7 = FStarC_Options.lax () in
+                        let uu___7 = FStarC_Options.admit_smt_queries () in
                         if uu___7
                         then FStarC_Syntax_Util.t_true
                         else
@@ -13196,14 +13165,13 @@ let try_solve_deferred_constraints (defer_ok : defer_ok_t)
                let uu___3 = solve_and_commit wl fail in
                match uu___3 with
                | FStar_Pervasives_Native.Some (deferred, uu___4, uu___5) when
-                   if
-                     FStarC_Class_Listlike.uu___is_VCons
-                       (Obj.magic
-                          (FStarC_Class_Listlike.view ()
-                             (Obj.magic (FStarC_CList.listlike_clist ()))
-                             (Obj.magic deferred)))
-                   then defer_ok = NoDefer
-                   else false ->
+                   (FStarC_Class_Listlike.uu___is_VCons
+                      (Obj.magic
+                         (FStarC_Class_Listlike.view ()
+                            (Obj.magic (FStarC_CList.listlike_clist ()))
+                            (Obj.magic deferred))))
+                     && (defer_ok = NoDefer)
+                   ->
                    FStarC_Effect.failwith
                      "Impossible: Unexpected deferred constraints remain"
                | FStar_Pervasives_Native.Some (deferred, defer_to_tac, imps)
@@ -13314,10 +13282,11 @@ let do_discharge_vc
       let uu___1 = FStarC_Effect.op_Bang dbg_Rel in
       if uu___1 then true else FStarC_Effect.op_Bang dbg_SMTQuery in
     if uu___ then true else FStarC_Effect.op_Bang dbg_Discharge in
-  let diag uu___1 uu___ =
+  let diag uu___ =
     Obj.magic
       (FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
-         (FStarC_TypeChecker_Env.get_range env) ()) uu___1 uu___ in
+         (FStarC_TypeChecker_Env.get_range env) ()
+         (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)) uu___ in
   let vcs =
     let uu___ = FStarC_Options.use_tactics () in
     if uu___
@@ -13330,7 +13299,7 @@ let do_discharge_vc
                 env vc in
             match uu___3 with
             | (did_anything, vcs1) ->
-                (if (if debug then did_anything else false)
+                (if debug && did_anything
                  then
                    (let uu___5 =
                       let uu___6 =
@@ -13344,7 +13313,7 @@ let do_discharge_vc
                           (FStarC_Errors_Msg.text
                              "Tactic preprocessing produced") uu___7 in
                       [uu___6] in
-                    diag FStarC_Errors_Msg.is_error_message_list_doc uu___5)
+                    diag uu___5)
                  else ();
                  (let vcs2 =
                     FStarC_List.map
@@ -13384,7 +13353,6 @@ let do_discharge_vc
                                   (if debug
                                    then
                                      diag
-                                       FStarC_Errors_Msg.is_error_message_list_doc
                                        [FStarC_Errors_Msg.text
                                           "Goal completely solved by tactic\n"]
                                    else ();
@@ -13427,10 +13395,11 @@ let discharge_guard'
        let uu___2 = FStarC_Effect.op_Bang dbg_Rel in
        if uu___2 then true else FStarC_Effect.op_Bang dbg_SMTQuery in
      if uu___1 then true else FStarC_Effect.op_Bang dbg_Discharge in
-   let diag uu___2 uu___1 =
+   let diag uu___1 =
      Obj.magic
        (FStarC_Errors.diag FStarC_Class_HasRange.hasRange_range
-          (FStarC_TypeChecker_Env.get_range env) ()) uu___2 uu___1 in
+          (FStarC_TypeChecker_Env.get_range env) ()
+          (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)) uu___1 in
    let ret_g =
      {
        FStarC_TypeChecker_Common.guard_f = FStarC_TypeChecker_Common.Trivial;
@@ -13446,15 +13415,11 @@ let discharge_guard'
    if env.FStarC_TypeChecker_Env.admit
    then
      (if
-        (if
-           (if debug
-            then
-              Prims.op_Negation
-                (FStarC_TypeChecker_Common.uu___is_Trivial
-                   g1.FStarC_TypeChecker_Common.guard_f)
-            else false)
-         then Prims.op_Negation env.FStarC_TypeChecker_Env.phase1
-         else false)
+        (debug &&
+           (Prims.op_Negation
+              (FStarC_TypeChecker_Common.uu___is_Trivial
+                 g1.FStarC_TypeChecker_Common.guard_f)))
+          && (Prims.op_Negation env.FStarC_TypeChecker_Env.phase1)
       then
         (let uu___2 =
            let uu___3 =
@@ -13467,7 +13432,7 @@ let discharge_guard'
            (FStarC_Errors_Msg.text
               "Skipping VC because verification is disabled.")
              :: uu___3 in
-         diag FStarC_Errors_Msg.is_error_message_list_doc uu___2)
+         diag uu___2)
       else ();
       FStar_Pervasives_Native.Some ret_g)
    else
@@ -13487,7 +13452,7 @@ let discharge_guard'
                     (FStarC_Errors_Msg.text "Cannot solve without SMT:")
                     uu___5 in
                 [uu___4] in
-              diag FStarC_Errors_Msg.is_error_message_list_doc uu___3)
+              diag uu___3)
            else ();
            FStar_Pervasives_Native.None)
       | FStarC_TypeChecker_Common.NonTrivial vc ->
@@ -13862,29 +13827,21 @@ let check_implicit_solution_and_discharge_guard
           FStarC_Errors.with_ctx "While checking implicit solution"
             (fun uu___3 ->
                let skip_core =
-                 if
-                   (if
-                      (if env1.FStarC_TypeChecker_Env.phase1
-                       then true
-                       else env1.FStarC_TypeChecker_Env.admit)
-                    then true
-                    else
-                      FStarC_Syntax_Syntax.uu___is_Allow_untyped
-                        uvar_should_check)
-                 then true
-                 else
-                   FStarC_Syntax_Syntax.uu___is_Already_checked
-                     uvar_should_check in
+                 ((env1.FStarC_TypeChecker_Env.phase1 ||
+                     env1.FStarC_TypeChecker_Env.admit)
+                    ||
+                    (FStarC_Syntax_Syntax.uu___is_Allow_untyped
+                       uvar_should_check))
+                   ||
+                   (FStarC_Syntax_Syntax.uu___is_Already_checked
+                      uvar_should_check) in
                let must_tot =
                  Prims.op_Negation
-                   (if
-                      (if env1.FStarC_TypeChecker_Env.phase1
-                       then true
-                       else env1.FStarC_TypeChecker_Env.admit)
-                    then true
-                    else
-                      FStarC_Syntax_Syntax.uu___is_Allow_ghost
-                        uvar_should_check) in
+                   ((env1.FStarC_TypeChecker_Env.phase1 ||
+                       env1.FStarC_TypeChecker_Env.admit)
+                      ||
+                      (FStarC_Syntax_Syntax.uu___is_Allow_ghost
+                         uvar_should_check)) in
                if skip_core
                then
                  (if is_tac
@@ -14374,10 +14331,7 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
                                    else
                                      gamma_has_free_uvars
                                        ctx_u.FStarC_Syntax_Syntax.ctx_uvar_gamma in
-                                 if
-                                   (if defer_open_metas
-                                    then is_open
-                                    else false)
+                                 if defer_open_metas && is_open
                                  then
                                    ((let uu___8 =
                                        let uu___9 =
@@ -14462,16 +14416,12 @@ let resolve_implicits' (env : FStarC_TypeChecker_Env.env)
                                   defer_open_metas) tl
                             else
                               if
-                                (if
-                                   (if
-                                      FStarC_Syntax_Syntax.uu___is_Allow_untyped
-                                        uvar_decoration_should_check
-                                    then true
-                                    else
-                                      FStarC_Syntax_Syntax.uu___is_Already_checked
-                                        uvar_decoration_should_check)
-                                 then true
-                                 else is_gen)
+                                ((FStarC_Syntax_Syntax.uu___is_Allow_untyped
+                                    uvar_decoration_should_check)
+                                   ||
+                                   (FStarC_Syntax_Syntax.uu___is_Already_checked
+                                      uvar_decoration_should_check))
+                                  || is_gen
                               then
                                 until_fixpoint (out, true, defer_open_metas)
                                   tl
