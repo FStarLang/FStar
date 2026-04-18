@@ -511,6 +511,20 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                   | _ -> [])
               in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
+              let guards =
+                // Special typing rule for /\ and ==> where we assume validity of the lhs for typing the rhs
+                if lid_equals lid Const.and_lid || lid_equals lid Const.imp_lid then
+                  let [x; y] = vars in
+                  let prop_ty = lookup_free_var env Const.prop_lid in
+                  [
+                    mk_HasType (mkFreeV x) prop_ty;
+                    mkImp(
+                      mkApp("Valid", [mkFreeV x]),
+                      mk_HasType (mkFreeV y) prop_ty)
+                  ]
+                else
+                  guards
+              in
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
@@ -910,15 +924,18 @@ let encode_top_level_let :
                                          (univ_terms @ List.map mkFreeV vars)
                 in
                 let is_logical =
-                  match (SS.compress t_body).n with
-                  | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.logical_lid -> true
-                  | _ -> false
+                  // match (SS.compress t_body).n with
+                  // | Tm_fvar fv when S.fv_eq_lid fv FStarC.Parser.Const.prop_lid -> true
+                  // | _ -> false
+
+                  // GE: this is a cute idea, but the formula axiom shouldn't
+                  // replace the default equation axiom, so disabling this for now
+                  false
                 in
                 let is_smt_theory_symbol =
                     let fv = Inr?.v lbn in
                     Env.fv_has_attr env.tcenv fv FStarC.Parser.Const.smt_theory_symbol_attr_lid
                 in
-                let is_sub_singleton = U.is_sub_singleton body in
                 let should_encode_logical =
                     not is_smt_theory_symbol
                     && (quals |> List.contains Logic || is_logical)
@@ -938,27 +955,8 @@ let encode_top_level_let :
                     else "equation"
                   in
                   let basic_eqn, decls =
-                    let app_is_prop = Term.mk_subtype_of_unit app in
-                    if should_encode_logical
-                    then (
-                      if is_sub_singleton && not (Options.Ext.enabled "retain_old_prop_typing")
-                      then (
-                        Util.mkAssume(mkForall (S.range_of_lbname lbn)
-                                            ([[app_is_prop]], vars, mkImp(mk_and_l binder_guards, mk_Valid <| app_is_prop)),
-                                      Some (Format.fmt1 "Prop-typing for %s" (string_of_lid flid)),
-                                    (basic_eqn_name ^ "_" ^ fvb.smt_id)),
-                        []
-                      )
-                      else (
-                        let body, decls = encode_term body env' in
-                        make_eqn basic_eqn_name app_is_prop app body,
-                        decls
-                      )
-                    )
-                    else (
-                      let body, decls = encode_term body env' in
-                      make_eqn basic_eqn_name app app body, decls
-                    )
+                    let body, decls = encode_term body env' in
+                    make_eqn basic_eqn_name app app body, decls
                   in
                   if should_encode_logical
                   then let pat, app, (body, decls2) =
@@ -1490,8 +1488,8 @@ let encode_datacon (env:env_t) (se:sigelt)
                           else
                             let t = U.unrefine (U.comp_result c) in
                             let t = norm t in
-                            if is_type t || U.is_sub_singleton t
-                            then None //ordering on Type and squashed values is not useful
+                            if is_type t
+                            then None //ordering on Type is not useful
                             else (
                               let head, _ = U.head_and_args_full t in
                               match (U.un_uinst head).n with
@@ -1835,6 +1833,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
        let b2t_x = mkApp("Prims.b2t", [x]) in
        let valid_b2t_x = mkApp("Valid", [b2t_x]) in //NS: Explicitly avoid the Vaild(b2t t) inlining
        let bool_ty = lookup_free_var env Const.bool_lid in
+       let prop_ty = lookup_free_var env Const.prop_lid in
        let decls = [Term.DeclFun(tname, [Term_sort], Term_sort, None);
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkEq(valid_b2t_x, mkApp(snd boxBoolFun, [x]))),
@@ -1842,7 +1841,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
                                 "b2t_def");
                     Util.mkAssume(mkForall (S.range_of_fv b2t) ([[b2t_x]], [xx],
                                            mkImp(mk_HasType x bool_ty,
-                                                 mk_HasType b2t_x (mk_Term_type mk_U_zero))),
+                                                 mk_HasType b2t_x prop_ty)),
                                 Some "b2t typing",
                                 "b2t_typing")] in
        decls |> mk_decls_trivial, env

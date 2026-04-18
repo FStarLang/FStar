@@ -884,6 +884,7 @@ val tconst          : lident -> ML term
 val tabbrev         : lident -> ML term
 val tdataconstr     : lident -> ML term
 val t_unit          : term
+val t_prop          : term
 val t_bool          : term
 val t_int           : term
 val t_string        : term

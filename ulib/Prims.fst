@@ -621,7 +621,7 @@ let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
 (** [as_ensures] turns a WP into a postcondition, relying on a kind of
     double negation translation. *)
 unfold
-let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> (y =!= x)))
+let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> y =!= x))
 
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property

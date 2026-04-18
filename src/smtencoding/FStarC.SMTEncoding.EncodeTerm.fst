@@ -1130,10 +1130,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
             encode_BitVector_term env head args_e
 
         | Tm_fvar fv, [(arg, _)]
-        | Tm_uinst({n=Tm_fvar fv}, _), [(arg, _)]
             when
-             (S.fv_eq_lid fv Const.squash_lid
-              || S.fv_eq_lid fv Const.auto_squash_lid)
+             S.fv_eq_lid fv Const.squash_lid
               && Some? (Syntax.Formula.destruct_typ_as_formula arg) ->
           let dummy = S.new_bv None t_unit in
           let t = U.refine dummy arg in (* so that `squash f`, when f is a formula, benefits from shallow embedding *)
@@ -1759,8 +1757,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
               end
 
             | Tm_fvar fv, [(t, _)]
-              when S.fv_eq_lid fv Const.squash_lid
-                 || S.fv_eq_lid fv Const.auto_squash_lid ->
+              when S.fv_eq_lid fv Const.squash_lid ->
               encode_formula t env
 
             | _ ->

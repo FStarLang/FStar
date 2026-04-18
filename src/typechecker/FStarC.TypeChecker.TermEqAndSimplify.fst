@@ -336,12 +336,8 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
         if debug then
             Format.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
         match is_squash t with
-
-        | Some (_, t') -> is_applied bs t'
-        | _ -> begin match is_auto_squash t with
-               | Some (_, t') -> is_applied bs t'
-               | _ -> is_applied bs t
-               end
+        | Some t' -> is_applied bs t'
+        | _ -> is_applied bs t
     in
     let is_const_match (phi : term) : ML (option bool) =
         match (SS.compress phi).n with
@@ -361,25 +357,27 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
         | _ -> None
     in
     let maybe_auto_squash t =
-        if U.is_sub_singleton t
-        then t
-        else U.mk_auto_squash U_zero t
+        // if U.is_sub_singleton t
+        // then t
+        // else U.mk_auto_squash U_zero t
+        t
     in
     let squashed_head_un_auto_squash_args t =
         //The head of t is already a squashed operator, e.g. /\ etc.
         //no point also squashing its arguments if they're already in U_zero
-        let maybe_un_auto_squash_arg (t,q) =
-            match U.is_auto_squash t with
-            | Some (U_zero, t) ->
-             //if we're squashing from U_zero to U_zero
-             // then just remove it
-              t, q
-            | _ ->
-              t,q
-        in
-        let head, args = U.head_and_args t in
-        let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args t.pos
+        // let maybe_un_auto_squash_arg (t,q) =
+        //     match U.is_auto_squash t with
+        //     | Some (U_zero, t) ->
+        //      //if we're squashing from U_zero to U_zero
+        //      // then just remove it
+        //       t, q
+        //     | _ ->
+        //       t,q
+        // in
+        // let head, args = U.head_and_args t in
+        // let args = List.map maybe_un_auto_squash_arg args in
+        // S.mk_Tm_app head args t.pos
+        t
     in
     let rec clearly_inhabited (ty : typ) : ML bool =
         match (U.unmeta ty).n with
@@ -537,12 +535,12 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
            | _ -> tm
       else
       begin
-        match U.is_auto_squash tm with
-        | Some (U_zero, t)
-             when U.is_sub_singleton t ->
-             //remove redundant auto_squashes
-             t
-        | _ ->
+        // match U.is_auto_squash tm with
+        // | Some (U_zero, t)
+        //      when U.is_sub_singleton t ->
+        //      //remove redundant auto_squashes
+        //      t
+        // | _ ->
              tm
       end
     | Tm_refine {b=bv; phi=t} ->

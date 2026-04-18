@@ -693,7 +693,7 @@ let wrap_guard_with_tactic_opt topt g : ML _ =
      (* We use always_map_guard so the annotation is there even for trivial
       * guards. If the user writes (a <: b by fail ""), we should fail. *)
      Env.always_map_guard g (fun g ->
-     Common.mk_by_tactic tactic (U.mk_squash U_zero g)) //guards are in U_zero
+     Common.mk_by_tactic tactic (U.mk_squash g)) //guards have type prop
 
 
 (*
@@ -850,8 +850,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     mk (Tm_meta {tm=e; meta=Meta_desugared Meta_smt_pat}) top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
 
   | Tm_meta {tm=e; meta=Meta_pattern(names, pats)} ->
-    let t, u = U.type_u () in
-    let e, c, g = tc_check_tot_or_gtot_term env e t None in
+    let e, c, g = tc_check_tot_or_gtot_term env e t_prop None in
     //NS: PATTERN INFERENCE
     //if `pats` is empty (that means the user did not annotate a pattern).
     //In that case try to infer a pattern by
@@ -1879,8 +1878,7 @@ and tc_value env (e:term) : ML (term
     if Debug.high ()
     then Format.print3 "(%s) Checking refinement formula %s; binder is %s\n"
         (Range.string_of_range top.pos) (show phi) (show x.binder_bv);
-    let t_phi, _ = U.type_u () in
-    let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi
+    let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_prop
       (Some "refinement formula must be pure or ghost") in
     let e = {U.refine x.binder_bv phi with pos=top.pos} in
     let t = mk (Tm_type u) top.pos in
@@ -2247,7 +2245,8 @@ and tc_abs_check_binders env bs bs_expected use_eq
              *)
           | _ ->
             if Debug.high () then Format.print1 "Checking binder %s\n" (show hd);
-            let t, _, g1_env = tc_tot_or_gtot_term env hd.sort in
+            let tu, u = U.type_u () in
+            let t, _, g1_env = tc_check_tot_or_gtot_term env hd.sort tu None in
             let g2_env =
               let label_guard g =
                 TcUtil.label_guard

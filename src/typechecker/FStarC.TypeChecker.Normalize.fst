@@ -683,17 +683,6 @@ let is_applied cfg (bs:binders) (t : term) : ML (option bv) =
         Some bv
     | _ -> None
 
-(* As above accounting for squashes *)
-let is_applied_maybe_squashed cfg (bs : binders) (t : term) : ML (option bv) =
-  if cfg.debug.wpe then
-      Format.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
-  match is_squash t with
-  | Some (_, t') -> is_applied cfg bs t'
-  | _ -> begin match is_auto_squash t with
-         | Some (_, t') -> is_applied cfg bs t'
-         | _ -> is_applied cfg bs t
-         end
-
 let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
     let open FStarC.Syntax.Formula in
     let open FStarC.Class.Monad in
@@ -765,7 +754,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
           | Some (QAll (bs, pats, phi)) when types_match bs ->
               begin match destruct_typ_as_formula phi with
               | None ->
-                  let! bv' = is_applied_maybe_squashed cfg bs phi in
+                  let! bv' = is_applied cfg bs phi in
                   guard (S.bv_eq bv bv');!
                   (* Case 3 *)
                   if cfg.debug.wpe then
@@ -774,7 +763,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
                   guard chgd;! (* If nothing triggered, do not rewrite to itself to avoid infinite loops *)
                   Some q'
               | Some (BaseConn (lid, [(p, _)])) when Ident.lid_equals lid PC.not_lid ->
-                  let! bv' = is_applied_maybe_squashed cfg bs p in
+                  let! bv' = is_applied cfg bs p in
                   guard (S.bv_eq bv bv');!
                   if cfg.debug.wpe then
                     Format.print_string "WPE> Case 4\n";
@@ -2040,27 +2029,6 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             r
         | _ -> None
     in
-    let maybe_auto_squash t =
-        if U.is_sub_singleton t
-        then t
-        else U.mk_auto_squash U_zero t
-    in
-    let squashed_head_un_auto_squash_args t =
-        //The head of t is already a squashed operator, e.g. /\ etc.
-        //no point also squashing its arguments if they're already in U_zero
-        let maybe_un_auto_squash_arg (t,q) =
-            match U.is_auto_squash t with
-            | Some (U_zero, t) ->
-             //if we're squashing from U_zero to U_zero
-             // then just remove it
-              t, q
-            | _ ->
-              t,q
-        in
-        let head, args = U.head_and_args t in
-        let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args t.pos, false
-    in
     let rec clearly_inhabited (ty : typ) : ML bool =
         match (U.unmeta ty).n with
         | Tm_uinst (t, _) -> clearly_inhabited t
@@ -2085,32 +2053,30 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
     match (SS.compress tm).n with
     | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
     | Tm_app {hd={n=Tm_fvar fv}; args} ->
-      if S.fv_eq_lid fv PC.squash_lid
-      then squashed_head_un_auto_squash_args tm
-      else if S.fv_eq_lid fv PC.and_lid
+      if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg, false
+           | [(_, (arg, _)); (Some true, _)] -> arg, false
            | [(Some false, _); _]
            | [_; (Some false, _)] -> w U.t_false, false
-           | _ -> squashed_head_un_auto_squash_args tm
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.or_lid
       then match args |> List.map simplify with
            | [(Some true, _); _]
            | [_; (Some true, _)] -> w U.t_true, false
            | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> maybe_auto_squash arg, false
-           | _ -> squashed_head_un_auto_squash_args tm
+           | [(_, (arg, _)); (Some false, _)] -> arg, false
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.imp_lid
       then match args |> List.map simplify with
            | [_; (Some true, _)]
            | [(Some false, _); _] -> w U.t_true, false
-           | [(Some true, _); (_, (arg, _))] -> maybe_auto_squash arg, false
+           | [(Some true, _); (_, (arg, _))] -> arg, false
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true, false
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
+             else tm, false
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.iff_lid
       then match args |> List.map simplify with
            | [(Some true, _)  ; (Some true, _)]
@@ -2118,19 +2084,19 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
            | [(Some true, _)  ; (Some false, _)]
            | [(Some false, _) ; (Some true, _)]  -> w U.t_false, false
            | [(_, (arg, _))   ; (Some true, _)]
-           | [(Some true, _)  ; (_, (arg, _))]   -> maybe_auto_squash arg, false
+           | [(Some true, _)  ; (_, (arg, _))]   -> arg, false
            | [(_, (arg, _))   ; (Some false, _)]
-           | [(Some false, _) ; (_, (arg, _))]   -> maybe_auto_squash (U.mk_neg arg), false
+           | [(Some false, _) ; (_, (arg, _))]   -> U.mk_neg arg, false
            | [(_, (p, _)); (_, (q, _))] ->
              if U.term_eq p q
              then w U.t_true, false
-             else squashed_head_un_auto_squash_args tm
-           | _ -> squashed_head_un_auto_squash_args tm
+             else tm, false
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.not_lid
       then match args |> List.map simplify with
            | [(Some true, _)] ->  w U.t_false, false
            | [(Some false, _)] -> w U.t_true, false
-           | _ -> squashed_head_un_auto_squash_args tm
+           | _ -> tm, false
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
            (* Simplify ∀x. True to True *)
@@ -2215,28 +2181,8 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             | _ -> tm, false
         else tm, false
       end
-      else if S.fv_eq_lid fv PC.subtype_of_lid
-      then begin
-        let is_unit ty = 
-          match (SS.compress ty).n with
-          | Tm_fvar fv -> S.fv_eq_lid fv PC.unit_lid
-          | _ -> false
-        in
-        match args with
-        | [(t, _); (ty, _)]
-          when is_unit ty && U.is_sub_singleton t ->
-          w U.t_true, false
-        | _ -> tm, false
-      end
-      else begin
-           match U.is_auto_squash tm with
-           | Some (U_zero, t)
-             when U.is_sub_singleton t ->
-             //remove redundant auto_squashes
-             t, false
-           | _ ->
-             reduce_equality (norm_cb cfg) cfg env tm
-      end
+      else
+        reduce_equality (norm_cb cfg) cfg env tm
     | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with
         | Some true -> bv.sort, false
@@ -2808,21 +2754,6 @@ let non_info_norm env t =
                ]
   in
   non_informative env (normalize steps env t)
-
-let non_info_sort_norm env t =
-  let steps = [UnfoldUntil (Env.delta_depth_of_fv env (S.fvconst PC.prop_lid)); // do not unfold prop
-               AllowUnboundUniverses;
-               EraseUniverses;
-               Primops;
-               Beta; Iota;
-               HNF;
-               (* We could use Weak too were it not that we need
-                * to descend in the codomain of arrows. *)
-               Unascribe;   //remove ascriptions
-               ForExtraction //and refinement types
-               ]
-  in
-  non_informative_sort (normalize steps env t)
 
 (*
  * Ghost T to Pure T promotion

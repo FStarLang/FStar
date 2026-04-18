@@ -254,10 +254,7 @@ let check_erasable env quals (r:Range.t) se =
       if has_iface_val && Some? val_decl then
         let _, body, _ = U.abs_formals lb.lbdef in
           let Some ((us, t), _) = val_decl in
-        let known_to_be_erasable =
-          let env = Env.push_univ_vars env us in
-          N.non_info_sort_norm env t in
-        if not known_to_be_erasable && non_info_norm_weak env body then
+        if non_info_norm_weak env body then
           log_issue lbname Error_MustEraseMissing [
             text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
                   but its interface hides this fact." (show lbname));

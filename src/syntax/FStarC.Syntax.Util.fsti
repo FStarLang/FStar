@@ -444,17 +444,14 @@ val if_then_else (b t1 t2 : term) : ML term
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
-val mk_squash (u:universe) (p:term) : ML term
-
-val mk_auto_squash (u:universe) (p:term) : ML term
+val mk_squash (p:term) : ML term
 
 val un_squash (t:term) : ML (option term)
 
-val is_squash (t:term) : ML (option (universe & term))
+val is_squash (t:term) : ML (option term)
 
-val is_auto_squash (t:term) : ML (option (universe & term))
-
-val is_sub_singleton (t:term) : ML bool
+val mk_b2t (t: term) : ML term
+val mk_t2b (t: term) : ML term
 
 val arrow_one_ln (t:typ) : ML (option (binder & comp))
 val arrow_one (t:typ) : ML (option (binder & comp))
