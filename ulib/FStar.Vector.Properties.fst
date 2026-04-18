@@ -42,7 +42,7 @@ let ok
     (op:int -> int -> int)
     (l1:len_t)
     (l2:len_t)
-  : Type
+  : prop
   = UInt.size U32.(op (v l1) (v l2)) U32.n
 
 /// Most lemmas from FStar.Seq.Properties can just be lifted

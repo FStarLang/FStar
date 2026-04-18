@@ -26,7 +26,7 @@ let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
 let idempotence_on_domain #a #b f
   = assert_norm (on_domain a f == (on_domain a (on_domain a f)))
 
-let quantifier_as_lemma (#a:Type) (#b: a -> Type)
+let quantifier_as_lemma (#a:Type) (#b: a -> prop)
                         (f:squash (forall (x:a). b x))
                         (x:a)
     : Lemma (b x)

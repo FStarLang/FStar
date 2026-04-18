@@ -270,9 +270,9 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
   let tmult: term = norm_term [delta;zeta;iota] tmult in
   let tunit: term = norm_term [delta;zeta;iota] tunit in
   let ts   = Tactics.Util.map (norm_term [delta;zeta;iota]) ts in
-  // dump ("mult = " ^ term_to_string mult ^
-  //     "; unit = " ^ term_to_string unit ^
-  //     ";  t   = " ^ term_to_string t);
+  // dump ("tmult = " ^ term_to_string tmult ^
+  //     "; tunit = " ^ term_to_string tunit ^
+  //     ";  ts   = " ^ Util.string_of_list term_to_string ts);
   let (es,_, vm) =
     Tactics.Util.fold_left
       (fun (es,vs,vm) t ->
@@ -366,7 +366,7 @@ let canon_monoid_aux
           //   (quote (xsdenote m vm (canon vm p r1) ==
           //           xsdenote m vm (canon vm p r2)))));
           // mapply0 (quote (monoid_reflect #a #b p pc));
-          mapply0 (mk_app (`monoid_reflect) [(ta, Q_Implicit);
+          apply_lemma (mk_app (`monoid_reflect) [(ta, Q_Implicit);
                                             (tb, Q_Implicit);
                                             (tp, Q_Explicit);
                                             (tpc, Q_Explicit)]);

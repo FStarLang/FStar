@@ -349,17 +349,6 @@ val primitive_extraction : unit
  *)
 val extract_as_impure_effect : unit
 
-
-(** A binder in a definition/declaration may optionally be annotated as strictly_positive
-    When the let definition is used in a data constructor type in an inductive
-    definition, this annotation is used to check the positivity of the inductive
-
-    Further F* checks that the binder is actually positive in the let definition
-
-    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
-  *)
-val strictly_positive : unit
-
 (** A binder in a definition/declaration may optionally be annotated as unused.
     This is used in the strict positivity checker. E.g., a type such as the one
     below is accepted

@@ -54,6 +54,6 @@ val join_range (r1 r2 : range) : Tot range
 (** [labeled] is used internally to the SMT encoding to associate a
     source-code location with an assertion. *)
 irreducible
-let labeled (r : range) (msg: string) (b: Type) : Type = b
+let labeled (r : range) (msg: string) (b: prop) : prop = b
 
 val explode (r : __range) : Tot (string & int & int & int & int)

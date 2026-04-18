@@ -57,7 +57,7 @@ let rec map_dec #a #b
   | [] -> []
   | x::xs -> f x :: map_dec xs f
 
-let rec zip2prop #a #b (f : a -> b -> Type0) (xs : list a) (ys : list b) : Type0 =
+let rec zip2prop #a #b (f : a -> b -> prop) (xs : list a) (ys : list b) : prop =
   match xs, ys with
   | [], [] -> True
   | x::xx, y::yy -> f x y /\ zip2prop f xx yy
@@ -1120,12 +1120,12 @@ type non_informative : env -> term -> Type0 =
     squash (non_informative_token g t) ->
     non_informative g t
 
-val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
+val bindings_ok_for_pat : env -> list R.binding -> pattern -> prop
 
 val bindings_ok_pat_constant :
   g:env -> c:R.vconst -> Lemma (bindings_ok_for_pat g [] (Pat_Constant c))
 
-let bindings_ok_for_branch (g:env) (bs : list R.binding) (br : branch) : Type0 =
+let bindings_ok_for_branch (g:env) (bs : list R.binding) (br : branch) : prop =
   bindings_ok_for_pat g bs (fst br)
 
 let bindings_ok_for_branch_N (g:env) (bss : list (list R.binding)) (brs : list branch) =
@@ -1770,6 +1770,8 @@ type fstar_top_env = g:fstar_env {
   forall x. None? (lookup_bvar g x )
 }
 
+open FStar.Nonempty
+
 // Note: even though the sigelt_typing judgement takes a list of universe
 // parameters, there is no way to exhibit typing judgements of terms
 // containing universe variables yet (without invoking admit).
@@ -1784,7 +1786,7 @@ type sigelt_typing : env -> sigelt -> Type0 =
     us: list R.univ_name ->
     ty : R.typ ->
     tm : R.term ->
-    squash (typing g tm (E_Total, ty)) ->
+    nonempty (typing g tm (E_Total, ty)) ->
     sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = tm })]))
 
   | ST_Let_Opaque :
@@ -1793,7 +1795,7 @@ type sigelt_typing : env -> sigelt -> Type0 =
     us: list R.univ_name ->
     ty : R.typ ->
     (* no tm: only a proof of existence *)
-    squash (exists (tm:R.term). typing g tm (E_Total, ty)) ->
+    squash (exists (tm:R.term). nonempty (typing g tm (E_Total, ty))) ->
     sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) })]))
 
 (**
@@ -1844,7 +1846,7 @@ let sigelt_has_type (s:R.sigelt) (t:option R.term) : prop =
 let sigelt_for (g:env) (t:option R.typ) =
   tup:(bool & sigelt & option blob) {
     let (checked, se, _) = tup in
-    checked ==> (sigelt_typing g se /\ sigelt_has_type se t)
+    checked ==> (nonempty (sigelt_typing g se) /\ sigelt_has_type se t)
   }
 
 //
@@ -1887,14 +1889,12 @@ val mkif
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
 
 (* Helper to return a single let definition in a splice_t tactic. *)
-let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (E_Total, ty)})
+let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ{nonempty (typing g tm (E_Total, ty))})
   : sigelt_for g (Some ty) =
   let fv = pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
-  let pf : sigelt_typing g se =
-    ST_Let g fv [] ty tm ()
-  in
+  nonempty_intro (ST_Let g fv [] ty tm () <: sigelt_typing g se);
   ( true, se, None )
 
 let mk_unchecked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ)

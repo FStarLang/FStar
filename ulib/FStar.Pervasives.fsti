@@ -109,21 +109,21 @@ type eqtype_u = a:Type{hasEq a}
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+effect Lemma (a: eqtype_u) (pre: prop) (post: (squash pre -> prop)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
     spawned off into a separate SMT query *)
-val spinoff (p: Type0) : Type0
+val spinoff (p: prop) : prop
 
-val spinoff_eq (p:Type0) : Lemma (spinoff p == p)
+val spinoff_eq (p:prop) : Lemma (spinoff p == p)
 
-val spinoff_equiv (p:Type0) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
+val spinoff_equiv (p:prop) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
 
 (** Logically equivalent to assert, but spins off separate query *)
-val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+val assert_spinoff (p: prop) : Pure unit (requires (spinoff p)) (ensures (fun x -> p))
 
 (** The polymorphic identity function *)
 unfold
@@ -158,7 +158,7 @@ val normalize_term (#a: Type) (x: a) : Tot a
 (** In any invocation of the F* normalizer, every occurrence of
     [normalize e] is reduced to the full normal for of [e]. *)
 noextract
-val normalize (a: Type0) : Type0
+val normalize (a: prop) : prop
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
@@ -167,14 +167,14 @@ val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
 
 (** [assert_norm p] reduces [p] as much as possible and then asks the
     SMT solver to prove the reduct, concluding [p] *)
-val assert_norm (p: Type) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+val assert_norm (p: prop) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 
 (** Sometimes it is convenient to introduce an equation between a term
     and its normal form in the context. *)
 val normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x)
 
 (** Like [normalize_term_spec], but specialized to [Type0] *)
-val normalize_spec (a: Type0) : Lemma (normalize a == a)
+val normalize_spec (a: prop) : Lemma (normalize a == a)
 
 (** Like [normalize_term_spec], but with specific normalization steps *)
 val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
@@ -197,7 +197,7 @@ let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (
   pure_bind_wp0 a b wp1 wp2
 
 unfold
-let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
+let pure_if_then_else (a:Type) (p: prop) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_if_then_else0 a p wp_then wp_else
 
@@ -218,13 +218,13 @@ let pure_null_wp (a:Type) : Tot (pure_wp a) =
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp (p:Type) : Tot (pure_wp unit) =
+let pure_assert_wp (p:prop) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assert_wp0 p
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
+let pure_assume_wp (p:prop) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assume_wp0 p
 
@@ -288,12 +288,12 @@ effect EXT (a: Type) = Dv a
 /// [heap:Type] variable.
 
 (** Preconditions are predicates on the [heap] *)
-let st_pre_h (heap: Type) = heap -> GTot Type0
+let st_pre_h (heap: Type) = heap -> prop
 
 (** Postconditions relate [a]-typed results to the final [heap], here
     refined by some pure proposition [pre], typically instantiated to
     the precondition applied to the initial [heap] *)
-let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
+let st_post_h' (heap a: Type) (pre: prop) = a -> _: heap{pre} -> prop
 
 (** Postconditions without refinements *)
 let st_post_h (heap a: Type) = st_post_h' heap a True
@@ -311,7 +311,7 @@ let st_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: st_wp_h heap a)
-      (wp2: (a -> GTot (st_wp_h heap b)))
+      (wp2: (a -> st_wp_h heap b))
       (p: st_post_h heap b)
       (h0: heap)
      = wp1 (fun a h1 -> wp2 a p h1) h0
@@ -319,7 +319,7 @@ let st_bind_wp
 (** Branching for stateful WPs *)
 unfold
 let st_if_then_else
-      (heap a p: Type)
+      (heap a: Type) (p: prop)
       (wp_then wp_else: st_wp_h heap a)
       (post: st_post_h heap a)
       (h0: heap)
@@ -376,26 +376,26 @@ type result (a: Type) =
   | Err : msg: string -> result a
 
 (** Exceptional preconditions are just propositions *)
-let ex_pre = Type0
+let ex_pre = prop
 
 (** Postconditions on results refined by a precondition *)
-let ex_post' (a pre: Type) = _: result a {pre} -> GTot Type0
+let ex_post' (a: Type) (pre: prop) = _: result a {pre} -> prop
 
 (** Postconditions on results *)
 let ex_post (a: Type) = ex_post' a True
 
 (** Exceptions WP-predicate transformers *)
-let ex_wp (a: Type) = ex_post a -> GTot ex_pre
+let ex_wp (a: Type) = ex_post a -> ex_pre
 
 (** Returning a value [x] normally promotes it to the [V x] result *)
 unfold
-let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
+let ex_return (a: Type) (x: a) (p: ex_post a) : prop = p (V x)
 
 (** Sequential composition of exception-raising code requires case analysing
     the result of the first computation before "running" the second one *)
 unfold
-let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
-    : GTot Type0 =
+let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> (ex_wp b))) (p: ex_post b)
+    : prop =
   forall (k: ex_post b).
     (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
     (wp1 (function
@@ -406,7 +406,7 @@ let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_po
 (** As for other effects, branching in [ex_wp] appears in two forms.
     First, a simple case analysis on [p] *)
 unfold
-let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
+let ex_if_then_else (a: Type) (p: prop) (wp_then wp_else: ex_wp a) (post: ex_post a) =
   wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
@@ -471,16 +471,16 @@ effect Ex (a: Type) = Exn a True (fun v -> True)
 /// instantiation with a specific type of [heap] (in FStar.All) is.
 
 (** [all_pre_h] is a predicate on the initial state *)
-let all_pre_h (h: Type) = h -> GTot Type0
+let all_pre_h (h: Type) = h -> prop
 
 (** Postconditions relate [result]s to final [heap]s refined by a precondition *)
-let all_post_h' (h a pre: Type) = result a -> _: h{pre} -> GTot Type0
+let all_post_h' (h a: Type) (pre: prop) = result a -> _: h{pre} -> prop
 
 (** A variant of [all_post_h'] without the precondition refinement *)
 let all_post_h (h a: Type) = all_post_h' h a True
 
 (** WP predicate transformers for the [All_h] effect template *)
-let all_wp_h (h a: Type) = all_post_h h a -> Tot (all_pre_h h)
+let all_wp_h (h a: Type) = all_post_h h a -> all_pre_h h
 
 (** Returning a value [x] normally promotes it to the [V x] result
     without touching the [heap] *)
@@ -494,10 +494,10 @@ let all_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: all_wp_h heap a)
-      (wp2: (a -> GTot (all_wp_h heap b)))
+      (wp2: (a -> (all_wp_h heap b)))
       (p: all_post_h heap b)
       (h0: heap)
-    : GTot Type0 =
+    : prop =
   wp1 (fun ra h1 ->
         (match ra with
           | V v -> wp2 v p h1
@@ -508,7 +508,7 @@ let all_bind_wp
 (** Case analysis in [ALL_h] *)
 unfold
 let all_if_then_else
-      (heap a p: Type)
+      (heap a: Type) (p: prop)
       (wp_then wp_else: all_wp_h heap a)
       (post: all_post_h heap a)
       (h0: heap)

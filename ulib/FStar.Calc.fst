@@ -18,9 +18,10 @@
 
 module FStar.Calc
 
-open FStar.Squash
 open FStar.Preorder
+open FStar.Nonempty
 
+[@@erasable]
 noeq
 type calc_chain #a : list (relation a) -> a -> a -> Type =
   | CalcRefl : #x:a -> calc_chain [] x x
@@ -37,9 +38,11 @@ let rec elim_calc_chain #a (rs:list (relation a)) (#x #y:a) (pf:calc_chain rs x 
     | CalcRefl -> ()
     | CalcStep tl pf _ -> elim_calc_chain tl pf
 
+let calc_pack rs x y = nonempty (calc_chain rs x y)
+
 let _calc_init (#a:Type) (x:a) : calc_chain [] x x = CalcRefl
 
-let calc_init #a x = return_squash (_calc_init x) 
+let calc_init #a x = nonempty_intro (_calc_init x) 
 
 let _calc_step (#t:Type) (#rs:list (relation t)) (#x #y:t)
   (p:relation t)
@@ -50,14 +53,15 @@ let _calc_step (#t:Type) (#rs:list (relation t)) (#x #y:t)
   = CalcStep rs pf j
 
 let calc_step #a #x #y p z #rs pf j =
-  bind_squash (pf ()) (fun pk -> return_squash (_calc_step p z pk (j ())))
+  let pk = nonempty_elim' (pf ()) in 
+  nonempty_intro (_calc_step p z pk (j ()))
 
 let calc_finish #a p #x #y #rs pf =
   let unfold steps = [delta_only [`%calc_chain_related]; iota; zeta] in
   let t = norm steps (calc_chain_related rs x y) in
   norm_spec steps (calc_chain_related rs x y);
-  let _ : squash (p x y) = bind_squash (pf ()) (fun pk -> elim_calc_chain rs pk) in
-  ()
+  let pk = nonempty_elim' (pf ()) in
+  elim_calc_chain rs pk
 
 let calc_push_impl #p #q f =
   Classical.arrow_to_impl f

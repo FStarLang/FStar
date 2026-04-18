@@ -57,13 +57,13 @@ let equal_refl (#key: eqtype) (#value: (key -> Tot Type)) (m: t key value) = ()
 let equal_elim (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value) =
   F.extensionality key value m1.mappings m2.mappings
 
-let restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> Tot Type0)) (m: t key value) =
+let restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> prop)) (m: t key value) =
   { mappings = F.on_domain (k: key{p k}) m.mappings }
 
 let sel_restrict
       (#key: eqtype)
       (#value: (key -> Tot Type))
-      (p: (key -> Tot Type0))
+      (p: (key -> prop))
       (m: t key value)
       (k: key{p k})
      = ()

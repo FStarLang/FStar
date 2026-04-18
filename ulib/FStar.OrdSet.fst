@@ -20,14 +20,14 @@ type ordset a f = l:(list a){sorted f l}
 
 let hasEq_ordset _ _ = ()
     
-let rec simple_induction #t #f (p: ordset t f -> Type0) (x: ordset t f)
+let rec simple_induction #t #f (p: ordset t f -> prop) (x: ordset t f)
   : Lemma (requires p [] /\ (forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l))
           (ensures p x) = match x with
   | [] -> ()
   | ph::pt -> simple_induction p pt;
             assert (p (Cons?.tl (ph::pt)))
   
-let rec base_induction #t #f (p: ordset t f -> Type0) (x: ordset t f)
+let rec base_induction #t #f (p: ordset t f -> prop) (x: ordset t f)
   : Lemma (requires (forall (l: ordset t f{List.Tot.Base.length l < 2}). p l) 
                   /\ (forall (l: ordset t f{Cons? l}). p (Cons?.tl l) ==> p l))
           (ensures p x) 
