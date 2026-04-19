@@ -59,7 +59,7 @@ let anchor_rel : FRAP.anchor_rel p_st =
   fun (x y : task_state) ->
     match x, y with
     | Ready, Claimed -> False
-    | x, y -> squash (p_st x y)
+    | x, y -> p_st x y
 
 let anchor_rel_refl (x:task_state) :
   Lemma (anchor_rel x x) [SMTPat (anchor_rel x x)]
@@ -400,8 +400,6 @@ fn recall_handle_spotted
   hide t
 }
 
-module SEM = FStar.StrongExcludedMiddle
-
 ghost
 fn rec extract_state_pred
   (p : pool) (t : task_t)
@@ -417,8 +415,8 @@ fn rec extract_state_pred
       unreachable ()
     }
     t' :: ts' -> {
-      let b = SEM.strong_excluded_middle (t == t');
-      if not b {
+      let b: bool = t =!= t';
+      if b {
         take_one_h11 t' ts';
         extract_state_pred p t #ts';
 
@@ -730,7 +728,7 @@ let rec all_tasks_done (ts : list task_t) =
 
 noextract
 let slprop_equiv_refl (v1 v2 : slprop) (_ : squash (v1 == v2)) 
-  : slprop_equiv v1 v2 = slprop_equiv_refl _
+  : slprop_equiv v1 v2 = slprop_equiv_refl v1
 
 let helper_tac () : Tac unit =
   apply (`slprop_equiv_refl);
@@ -789,7 +787,7 @@ fn rec all_tasks_done_inst (t : task_t) (ts : list task_t)
       unreachable();
     }
     t' :: ts' -> {
-      let b = SEM.strong_excluded_middle (t == t');
+      let b: bool = t == t';
       if b {
         rewrite each t' as t;
         let st = unfold_all_tasks_done_cons t ts';
@@ -928,7 +926,7 @@ fn rec pool_done_task_done_aux
       unreachable();
     }
     t' :: ts' -> {
-      let b = SEM.strong_excluded_middle (t == t');
+      let b: bool = t == t';
       if b {
         rewrite each t' as t;
         let st = unfold_all_tasks_done_cons t ts';

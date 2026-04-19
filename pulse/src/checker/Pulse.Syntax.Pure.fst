@@ -256,13 +256,13 @@ let is_fvar_app_tm_app (t:term)
 let is_squash (t: typ) : option typ =
   let hd, args = R.collect_app_ln t in
   match R.inspect_ln hd, args with
-  | R.Tv_UInst hd _, [t, _] ->
+  | R.Tv_FVar hd, [t, _] ->
     if R.inspect_fv hd <> R.squash_qn then None else
     Some t
   | _ -> None
 
-let mk_squash (u:universe) (t:term) : term =
-  tm_pureapp (tm_uinst (as_fv R.squash_qn) [u]) None t
+let mk_squash (t:term) : term =
+  tm_pureapp (tm_fvar (as_fv R.squash_qn)) None t
 
 //
 // A separation logic specific view of pure F* terms
@@ -324,7 +324,7 @@ let pack_term_view (top:term_view) (r:range)
       else w (mk_forall u t abs)
 
     | Tm_WithPure pred n body ->
-      let abs = mk_abs_with_name n.name (mk_squash u0 pred) R.Q_Explicit body in
+      let abs = mk_abs_with_name n.name (mk_squash pred) R.Q_Explicit body in
       w (mk_with_pure pred abs)
 
     | Tm_Inames ->

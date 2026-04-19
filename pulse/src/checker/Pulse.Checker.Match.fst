@@ -308,7 +308,7 @@ let maybe_weaken_branch_tags
     | [] -> (| STT_Ghost, [] |)
     | hd::tl ->
       let ct = ctag_of_br hd in
-      let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
+      let checked_brs = T.map #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc) #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
       (| ct, checked_brs |)
 #pop-options
 

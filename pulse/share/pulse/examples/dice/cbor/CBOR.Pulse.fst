@@ -424,7 +424,7 @@ let rec list_ghost_assoc
 = match m with
   | [] -> None
   | (k', v') :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+    if (k == k')
     then Some v'
     else list_ghost_assoc k m'
 

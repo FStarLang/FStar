@@ -2,12 +2,13 @@ module Pulse.Lib.Forall
 #lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core
+open FStar.Nonempty
 module F = FStar.FunctionalExtensionality
 
 let token (v:slprop) = v
 
 let is_forall #a (v:slprop) (p:a -> slprop) =
-  squash (forall_f p #v)
+  nonempty (forall_f p #v)
 
 let uquant (#a:Type u#a) (p: a -> slprop)
 : slprop
@@ -16,25 +17,9 @@ let uquant (#a:Type u#a) (p: a -> slprop)
     token v
 let ( forall* ) (#a:Type u#a) (p:a -> slprop) = uquant #a (F.on_dom a p)
 
-let extract_q #a (v:slprop) (p:a -> slprop) (pf:squash (is_forall v p))
+let extract_q #a (v:slprop) (p:a -> slprop) (pf:is_forall v p)
 : forall_f p #v
-= let f
-    : squash (forall_f p #v)
-    = FStar.Squash.join_squash pf
-  in
-  let f : squash (exists (x: forall_f p #v). True)
-    = FStar.Squash.bind_squash f
-        (fun x -> 
-          (introduce exists (x: forall_f p #v). True
-           with x
-           and ()))
-  in
-  let x:Ghost.erased (forall_f p #v) = 
-    FStar.IndefiniteDescription.indefinite_description_tot
-      (forall_f p #v)
-      (fun x -> True)
-  in
-  Ghost.reveal x
+= nonempty_elim' pf
 
 
 ghost
@@ -62,7 +47,7 @@ fn intro_forall u#a
 {
   let f_elim : forall_f (F.on_dom a (fun x -> p x)) #v =
     (fun x -> f_elim x);
-  Squash.return_squash f_elim;
+  nonempty_intro f_elim;
   fold token v;
   fold uquant (F.on_dom a (fun x -> p x));
   fold (forall* x. p x);

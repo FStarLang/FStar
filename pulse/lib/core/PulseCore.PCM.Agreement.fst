@@ -45,5 +45,5 @@ let pcm_agreement #a : pcm (agreement a) = {
 }
 
 let full_values_compatible (#a:Type u#a) (x:a)
-: Lemma (compatible pcm_agreement (Some x) (Some x))
-= ()
+: (compatible pcm_agreement (Some x) (Some x))
+= assert compose (Some x) None == Some x

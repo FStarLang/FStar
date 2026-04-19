@@ -19,17 +19,15 @@ module Pulse.Lib.Shift
 open FStar.Ghost
 open Pulse.Class.Duplicable
 open Pulse.Lib.Pervasives
-
+open FStar.Nonempty
 
 let shift_elim_t is hyp extra concl : Type u#5 =
   unit -> shift_f #is hyp #extra concl
 
-let psquash (a:Type u#a) : prop = squash a
-
 let shift_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
-  pure (squash (shift_elim_t is hyp extra concl))
+  pure (nonempty (shift_elim_t is hyp extra concl))
 
-let extra_duplicable (p:slprop) = pure (squash (duplicable p))
+let extra_duplicable (p:slprop) = pure (nonempty (duplicable p))
 
 let shift (#is:inames) (hyp concl:slprop) =
   exists* (extra:slprop). extra ** shift_elim_exists is hyp extra concl ** extra_duplicable extra
@@ -49,11 +47,13 @@ fn intro_shift
   (#[T.exact (`emp_inames)] is:inames)
   (hyp concl:slprop)
   (extra:slprop)
-  {| duplicable extra |}
+  {| inst : duplicable extra |}
   (f_elim: unit -> shift_f #is hyp #extra concl)
   requires extra
   ensures  shift #is hyp concl
 {
+  nonempty_intro inst;
+  nonempty_intro (f_elim <: shift_elim_t is hyp extra concl);
   fold (shift_elim_exists is hyp extra concl);
   fold (extra_duplicable extra);
   fold (shift #is hyp concl)
@@ -73,33 +73,13 @@ instance introducable_shift (t: Type u#a) is is'
   { intro_aux = introducable_shift_aux t is is' hyp extra concl }
 
 
-let sqeq (p : Type) (_ : squash p) : erased p =
-  FStar.IndefiniteDescription.elim_squash #p ()
-
-
-
-ghost
-fn pextract (a:Type u#5) (pf:squash a)
-returns i:a
-{
-  let pf = elim_pure_explicit (psquash a);
-  let pf : squash a = FStar.Squash.join_squash pf;
-  let i = sqeq a pf;
-  let i = reveal i;
-  i
-}
-
 ghost
 fn extract_eliminator (is:inames) (extra hyp concl: slprop)
 preserves shift_elim_exists is hyp (reveal extra) concl
 returns i : shift_elim_t is hyp (reveal extra) concl
 {
   unfold (shift_elim_exists is hyp (reveal extra) concl);
-  let pf : squash (psquash (shift_elim_t is hyp (reveal extra) concl)) =
-    elim_pure_explicit (psquash (shift_elim_t is hyp (reveal extra) concl));
-  let pf : squash (shift_elim_t is hyp (reveal extra) concl) =
-    FStar.Squash.join_squash pf;
-  let f = pextract (shift_elim_t is hyp (reveal extra) concl) pf;
+  let f = nonempty_elim (shift_elim_t is hyp (reveal extra) concl);
   fold (shift_elim_exists is hyp (reveal extra) concl);
   f
 }
@@ -111,11 +91,7 @@ preserves extra_duplicable extra
 returns d : duplicable extra
 {
   unfold (extra_duplicable extra);
-  let pf : squash (psquash (duplicable extra)) =
-    elim_pure_explicit (psquash (duplicable extra));
-  let pf : squash (duplicable extra) =
-    FStar.Squash.join_squash pf;
-  let f = pextract (duplicable extra) ();
+  let f = nonempty_elim (duplicable extra);
   fold (extra_duplicable extra);
   f
 }
@@ -184,7 +160,8 @@ fn dup_extra_duplicable (extra:slprop)
 preserves extra_duplicable extra
 ensures extra_duplicable extra
 {
-  let d = extract_duplicator extra;
+  unfold (extra_duplicable extra);
+  fold (extra_duplicable extra);
   fold (extra_duplicable extra);
 }
 
@@ -193,7 +170,8 @@ fn dup_shift_elim_exists #is #extra hyp concl
 preserves shift_elim_exists is hyp extra concl
 ensures shift_elim_exists is hyp extra concl
 {
-  let d = extract_eliminator _ _ _ _;
+  unfold (shift_elim_exists is hyp extra concl);
+  fold (shift_elim_exists is hyp extra concl);
   fold (shift_elim_exists is hyp extra concl);
 }
 

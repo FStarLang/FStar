@@ -17,7 +17,7 @@ preserves x |-> v1
 preserves y |-> v2
 ensures pure (x =!= y)
 {
-  let b:bool = FStar.StrongExcludedMiddle.strong_excluded_middle (x == y);
+  let b:bool = x == y;
   if (b)
   { 
     rewrite each y as x;

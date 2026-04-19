@@ -98,7 +98,7 @@ let unpack (x: premem) : premem2 = {
 let update_timeless_mem m p =
   pack (level m) { unpack m with timeless_heap = p }
 
-let update_credits m c =
+let update_credits_ m c =
   pack (level m) { unpack m with saved_credits = c }
 
 let update_loc m c =
@@ -242,15 +242,13 @@ let join_premem_associative
   mem_ext (join_premem is0 (join_premem is1 is2)) (join_premem (join_premem is0 is1) is2) (fun a -> ())
 #pop-options
 
-open FStar.IndefiniteDescription { indefinite_description_ghost, strong_excluded_middle }
-
 #push-options "--z3rlimit 10"
 let mem_le_iff (w1 w2: premem) :
     Lemma (mem_le w1 w2 <==> exists w3. join_premem w1 w3 == w2) =
   reveal_mem_le ();
   introduce mem_le w1 w2 ==> exists w3. join_premem w1 w3 == w2 with _. (
     assert timeless_heap_le (timeless_heap_of w1) (timeless_heap_of w2);
-    let ph3 = indefinite_description_ghost _ fun ph3 ->
+    let ph3 = indefinite_description fun ph3 ->
       (timeless_heap_of w2) == B.join_mem (timeless_heap_of w1) ph3 in
     let sc3: nat = credits_ w2 - credits_ w1 in
     let w3 = pack (level_ w2) {
@@ -284,8 +282,8 @@ let star_ (p1 p2: mem_pred) : mem_pred =
 irreducible
 let indefinite_description_ghost2 (a b: Type) (p: (a -> b -> prop) { exists x y. p x y })
   : GTot (x: (a&b) { p x._1 x._2 }) =
-  let x = indefinite_description_ghost a fun x -> exists y. p x y in
-  let y = indefinite_description_ghost b fun y -> p x y in
+  let x = indefinite_description fun x -> exists y. p x y in
+  let y = indefinite_description fun y -> p x y in
   (x, y)
 
 let star__elim (p1 p2: mem_pred) (w: premem { star_ p1 p2 w }) :
@@ -338,7 +336,7 @@ let star (p1 p2:slprop) : slprop =
   reveal_slprop_ok ();
   introduce forall a b. mem_le a b /\ star_ p1 p2 a ==> star_ p1 p2 b with introduce _ ==> _ with _. (
     mem_le_iff a b;
-    let c = indefinite_description_ghost _ fun c -> b == join_premem a c in
+    let c = indefinite_description fun c -> b == join_premem a c in
     let (a1, a2) = star__elim p1 p2 a in
     assert b == join_premem (join_premem a1 a2) c;
     join_premem_commutative (join_premem a1 a2) c; 
@@ -358,14 +356,21 @@ let star (p1 p2:slprop) : slprop =
   );
   star_ p1 p2
 
+irreducible
 let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
     GTot (w':(premem & premem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   star__elim p1 p2 w
 
+#restart-solver
+#push-options "--split_queries always"
+irreducible
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
   let w1, w2 = star_elim p1 p2 w in
+  assert hogs_bounded w1;
+  assert hogs_bounded w2;
   w1, w2
+#pop-options
 
 let star_intro (p1 p2: slprop) (w w1 w2: premem) :
     Lemma (requires disjoint_mem w1 w2 /\ w == join_premem w1 w2 /\ p1 w1 /\ p2 w2)
@@ -650,7 +655,8 @@ let timeless_star p q =
       star__intro p q m m1 m2
     )
 
-let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x)) = ()
+let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x)) =
+  introduce forall (m: premem). level_ m > 0 /\ later (exists* x. f x) m ==> exists x. later (f x) m with ()
 
 let timeless_exists (#t: Type) (f: t->slprop) :
     Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x)) =
@@ -913,8 +919,6 @@ let inv (i:iref) (p:slprop) : slprop =
 
 module GS = Pulse.Lib.GhostSet
 
-let deq_iref = GS.decide_eq_f
-
 let lower_inames i = GS.empty
 
 let hogs_iname_ok (i: iref) (is: premem) =
@@ -957,7 +961,7 @@ let rec hogs_invariant__congr (ex: inames) (m: mem) (f1 f2: (f:address { fresh_a
     ()
 
 irreducible let some_fresh_addr (is: mem) : a:address { fresh_addr is a } =
-  indefinite_description_ghost address fun a -> fresh_addr is a
+  indefinite_description fun a -> fresh_addr is a
 
 let hogs_invariant (ex: inames) (is: mem) : slprop =
   hogs_invariant_ ex is (some_fresh_addr is)
@@ -1023,10 +1027,8 @@ let read_inv_intro i m p =
 let read_inv_intro' i m p =
   destruct_star (somewhere (later p)) (inv i p) m;
   let Inv p' = read m i in
-  assert somewhere (later p) m;
-  assert_norm (somewhere (later p') m == exists l. on l (later p') m);
-  assert_norm (somewhere (later p) m == exists l. on l (later p) m);
-  assert somewhere (later p') m
+  let l = indefinite_description fun l -> on l (later p) m in
+  assert on l (later p') m
 
 let read_inv_elim i m p =
   destruct_star (read_inv i m) (inv i p) m;
@@ -1103,7 +1105,7 @@ let read_inv_age f' (is: mem { level_ is > 0 /\ iname_ok f' is }) (w: premem { 1
   let Inv p' = read (age1 is) f' in
   assert eq_at (level_ is - 1) p p';
   assert_norm (somewhere (later p) w == exists l. on l (later p) w);
-  let l = IndefiniteDescription.indefinite_description_ghost _ (fun l -> on l (later p) w) in
+  let l = indefinite_description fun l -> on l (later p) w in
   assert p (age1_ (set_loc_ w l)); reveal_slprop_ok (); assert p (age1_ (age1_ (set_loc_ w l)));
   eq_at_elim (level_ is - 1) p p' (age1_ (age1_ (set_loc_ w l)));
   assert_norm (somewhere (later p') (age1_ w) == exists l. on l (later p') (age1_ w));
@@ -1310,10 +1312,13 @@ let hogs_fresh_inv (p: slprop) (is: mem) (a: iref { None? (read is a) }) :
   hogs_single_invariant (level_ is) (current_loc_ is) a p;
   is'
 
+let update_credits (m: mem) (c: erased nat) : mem = update_credits_ m c
+
 let buy1_mem m =
   PM.ghost_action_preorder ();
   join_empty m;
   let m' = update_credits (empty_for m) 1 in
+  introduce forall i. read m i == read (join_mem m' m) i with ();
   introduce forall (e: inames). mem_invariant e m == mem_invariant e (join_mem m' m) with
     hogs_invariant_congr2 e m (join_mem m' m);
   m'
@@ -1338,7 +1343,7 @@ let inames_live_union (e1 e2:inames)
       )
 
 let inames_live_inv (i:iref) (p:slprop) (m:mem)
-: Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton deq_iref i) m)
+: Lemma ((inv i p) m ==> inames_live (FStar.GhostSet.singleton i) m)
 = ()
 
 let rec max_inames (xs: list iref) : y:iref { forall x. List.memP x xs ==> reveal x <= y } =
@@ -1347,7 +1352,7 @@ let rec max_inames (xs: list iref) : y:iref { forall x. List.memP x xs ==> revea
   | x::xs -> max x (max_inames xs)
 
 let fresh_inv_name (m:mem) (ctx:inames { GS.is_finite ctx }) : i:iref { None? (read m i) /\ not (GS.mem i ctx) } =
-  let i = IndefiniteDescription.indefinite_description_ghost iref fun f ->
+  let i = indefinite_description fun f ->
     fresh_addr m f in
   let ctx = GS.is_finite_elim ctx in
   max i (max_inames ctx + 1)
@@ -1414,7 +1419,7 @@ let hogs_invariant_single_slprop_pts_to ex (n: nat) l i p :
   hogs_invariant__single_slprop_pts_to ex n l i p (some_fresh_addr (single_slprop_pts_to n l i p))
 
 let fresh_slprop_ref p m =
-  let i = indefinite_description_ghost slprop_ref fun i -> fresh_addr m i in
+  let i = indefinite_description fun i -> fresh_addr m i in
   let m' = single_slprop_pts_to (level_ m) (current_loc_ m) i p in
   assert slprop_ref_pts_to i p m';
   let _: squash (slprop_ref_pts_to i p `star` mem_invariant GS.empty m' == slprop_ref_pts_to i p) =

@@ -58,27 +58,19 @@ let later_credit_zero () = later_credit_zero()
 let iref = iref
 let inv i p = inv i p
 
-let prop_squash_idem (p:prop)
-  : Tot (squash (p == squash p))
-  = FStar.PropositionalExtensionality.apply p (squash p)
-
 let slprop_equiv p q = p == q
 
 let return_slprop_equiv (p q:slprop) (_:squash (p == q))
 : slprop_equiv p q
-= FStar.Squash.join_squash #(equals p p) ()
+= ()
 
-let unsquash (p:squash (slprop_equiv 'p 'q)) : slprop_equiv 'p 'q =
-    prop_squash_idem (slprop_equiv 'p 'q);
-    coerce_eq () p
-    
 let slprop_equiv_refl p = return_slprop_equiv p p ()
     
 let slprop_equiv_elim p q = ()
 
-let slprop_equiv_unit p = unsquash ()
-let slprop_equiv_comm p1 p2 = unsquash ()
-let slprop_equiv_assoc p1 p2 p3 = unsquash ()
+let slprop_equiv_unit p = ()
+let slprop_equiv_comm p1 p2 = ()
+let slprop_equiv_assoc p1 p2 p3 = ()
 let slprop_equiv_exists 
     (#a:Type)
     (p q: a -> slprop)
@@ -121,8 +113,8 @@ let conv (#a:Type u#a)
          (pre2:slprop)
          (post1:a -> slprop)
          (post2:a -> slprop)
-         (pf1:slprop_equiv pre1 pre2)
-         (pf2:slprop_post_equiv post1 post2)
+         (pf1:squash (slprop_equiv pre1 pre2))
+         (pf2:squash (slprop_post_equiv post1 post2))
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 = slprop_equiv_elim pre1 pre2;
   introduce forall (x:a). post1 x == post2 x
@@ -135,8 +127,8 @@ let sub (#a:Type u#a)
         (pre2:slprop)
         (#post1:a -> slprop)
         (post2:a -> slprop)
-        (pf1:slprop_equiv pre1 pre2)
-        (pf2:slprop_post_equiv post1 post2)
+        (pf1:squash (slprop_equiv pre1 pre2))
+        (pf2:squash (slprop_post_equiv post1 post2))
         (e:stt a pre1 post1)
 : stt a pre2 post2
 = coerce_eq (conv pre1 pre2 post1 post2 pf1 pf2) e

@@ -122,26 +122,26 @@ let lookup_repr_index #kt #vt (repr : repr_t kt vt) (k : kt)
 type spec_submap_repr #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
-: Type0
+: prop
 = forall k. Some? (lookup_spec spec k) ==> lookup_repr repr k == lookup_spec spec k
 
 type repr_submap_spec #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
-: Type0
+: prop
 = forall k. Some? (lookup_repr repr k) ==> lookup_repr repr k == lookup_spec spec k
 
 type unique_keys #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
-: Type0
+: prop
 = forall i k v. repr @@ i == Used k v ==> lookup_repr_index repr k == Some (v, i)
 
 // FIXME: missing a bunch more interesting properties
-type pht_models #kt #vt
+let pht_models #kt #vt
   (spec : spec_t kt vt)
   (repr : repr_t kt vt)
-: Type0
+: prop
 = spec_submap_repr spec repr /\
   repr_submap_spec spec repr /\
   unique_keys spec repr
@@ -540,7 +540,7 @@ let lemma_del #kt #vt #sz spec (repr : repr_t_sz kt vt sz) idx k v
     Classical.forall_intro (Classical.move_requires aux2);
     Classical.forall_intro_3 (Classical.move_requires_3 aux3)
 
-let not_full #kt #vt (r:repr_t kt vt) : Type0 =
+let not_full #kt #vt (r:repr_t kt vt) : prop =
   exists i. ~(Used? (r @@ i ))
 
 #set-options "--split_queries always"

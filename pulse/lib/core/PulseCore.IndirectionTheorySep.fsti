@@ -263,7 +263,6 @@ val iref : Type0
 
 val inv (i:iref) (p:slprop) : slprop
 
-val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
@@ -350,7 +349,7 @@ val spend_disjoint (m0 m1:mem)
     disjoint (spend m0) m1 /\
     spend (join m0 m1) == join (spend m0) m1)
 
-let single (i:iref) : inames = FStar.GhostSet.singleton deq_iref i
+let single (i:iref) : inames = FStar.GhostSet.singleton i
 let add_inv (e:inames) (i:iref)
 : inames
 = FStar.GhostSet.(union (single i) e)

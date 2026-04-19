@@ -21,6 +21,7 @@ module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
+open FStar.Nonempty
 
 let u_two = RT.(u_succ (u_succ u_zero))
 let u_three = RT.(u_succ (u_succ (u_succ u_zero)))
@@ -146,9 +147,9 @@ let uone = R.pack_universe (R.Uv_Succ uzero)
 let pulse_lib_reference = ["Pulse"; "Lib"; "Reference"]
 let mk_pulse_lib_reference_lid s = pulse_lib_reference@[s]
 
-let mk_squash (u:R.universe) (ty:R.term) : R.term =
+let mk_squash (ty:R.term) : R.term =
   let open R in
-  let t = pack_ln (Tv_UInst (pack_fv R.squash_qn) [u]) in
+  let t = pack_ln (Tv_FVar (pack_fv R.squash_qn)) in
   pack_ln (Tv_App t (ty, Q_Explicit))
 
 let mk_eq2 (u:R.universe) (ty e1 e2:R.term) : R.term =
@@ -742,14 +743,12 @@ let mk_szv (n:R.term) =
   let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
   pack_ln (Tv_App t (n, Q_Explicit))
 
-let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{RT.typing g tm (T.E_Total, ty)})
+let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{nonempty (RT.typing g tm (T.E_Total, ty))})
   : T.Tac (RT.sigelt_for g (Some ty)) =
   let fv = R.pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
-  let pf : RT.sigelt_typing g se =
-    RT.ST_Let_Opaque g fv us ty ()
-  in
+  nonempty_intro (RT.ST_Let_Opaque g fv us ty () <: RT.sigelt_typing g se);
   (true, se, None)
 
 let mk_observability_lid l = ["PulseCore"; "Observability"; l]

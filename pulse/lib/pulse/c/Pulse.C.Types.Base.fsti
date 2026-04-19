@@ -119,7 +119,7 @@ val pts_to (#t: Type) (#td: typedef t) ([@@@mkey]r: ref td) (v: Ghost.erased t) 
 
 let pts_to_or_null
   (#t: Type) (#td: typedef t) ([@@@mkey]p: ptr td) (v: Ghost.erased t) : slprop
-= if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
+= if p == null _
   then emp
   else pts_to p v
 
@@ -270,7 +270,7 @@ let freeable_or_null
   (#td: typedef t)
   (r: ptr td)
 : Tot slprop
-= if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
+= if r == null _
   then emp
   else freeable r
 
@@ -283,7 +283,7 @@ let freeable_or_null_dup
 : SteelGhostT slprop opened
     (freeable_or_null r)
     (fun _ -> freeable_or_null r ** freeable_or_null r)
-= if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
+= if r == null _
   then ()
   else freeable r
 *)

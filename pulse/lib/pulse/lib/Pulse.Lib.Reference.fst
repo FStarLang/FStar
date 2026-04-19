@@ -44,7 +44,7 @@ let pts_to (#a: Type u#a) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) =
 let is_send_pts_to r n = Tactics.Typeclasses.solve
 let is_send_pts_to_uninit r = Tactics.Typeclasses.solve
 
-let pts_to_timeless r p n = assert_norm (timeless (pts_to r #p n))
+let pts_to_timeless #a r p n = assert_norm (timeless (pts_to r #p n))
 let pts_to_uninit_timeless r = assert_norm (timeless (pts_to_uninit r))
 
 let is_full_ref = A.is_full_array

@@ -360,8 +360,7 @@ ensures
   unfold (seq_seq_match p s1 s2 i (i + 1));
   on_range_singleton_elim ();
   // unfold (seq_seq_match_item p s1 s2 i);
-  let b = StrongExcludedMiddle.strong_excluded_middle (i < Seq.length s1 && i < Seq.length s2);
-  if b {
+  if (i < Seq.length s1 && i < Seq.length s2) {
     assert (pure (i < Seq.length s1 && i < Seq.length s2));
     rewrite seq_seq_match_item p s1 s2 i as p (Seq.index s1 i) (Seq.index s2 i);
     ()
