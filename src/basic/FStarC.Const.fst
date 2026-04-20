@@ -17,7 +17,6 @@ module FStarC.Const
 open FStarC.Effect
 
 open FStar.Char
-open FStar.Mul
 
 let eq_const c1 c2 =
     match c1, c2 with

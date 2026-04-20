@@ -149,7 +149,7 @@ let ptctor (currentModule : mlsymbol) (mlp : mlpath) : ML mlsymbol =
 let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
-    ("op_Multiply"       , e_bin_prio_op1   , "*" );
+    ("op_Star"           , e_bin_prio_op1   , "*" );
     ("op_Division"       , e_bin_prio_op1   , "/" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
     ("op_Colon_Equals"   , e_bin_prio_eq    , ":=");

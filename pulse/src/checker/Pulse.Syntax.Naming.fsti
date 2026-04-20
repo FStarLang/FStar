@@ -473,10 +473,10 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | WILD
     | SHOW_PROOF_STATE _ -> ht
 
-let open_term_pairs' (t:list (term * term)) (v:term) (i:index) =
+let open_term_pairs' (t:list (term & term)) (v:term) (i:index) =
   subst_term_pairs t [RT.DT i v]
 
-let close_term_pairs' (t:list (term * term)) (x:var) (i:index) =
+let close_term_pairs' (t:list (term & term)) (x:var) (i:index) =
   subst_term_pairs t [RT.ND x i]
 
 let open_proof_hint'  (ht:proof_hint_type) (v:term) (i:index) =

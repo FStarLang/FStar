@@ -19,7 +19,6 @@ module Pulse.Lib.PriorityQueue
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.TotalOrder
-open FStar.Mul
 
 module Seq = FStar.Seq
 module SZ = FStar.SizeT

@@ -192,8 +192,6 @@ let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. memP x 
       then x
       else pick_from xs
 
-let ( * ) = op_Multiply
-
 let pyths () : ND (int & int & int) (as_pure_wp (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
   let l = [1;2;3;4;5;6;7;8;9;10] in
   let x = pick_from l in

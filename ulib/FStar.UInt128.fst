@@ -15,7 +15,6 @@
 *)
 module FStar.UInt128
 
-open FStar.Mul
 
 module UInt = FStar.UInt
 module Seq = FStar.Seq

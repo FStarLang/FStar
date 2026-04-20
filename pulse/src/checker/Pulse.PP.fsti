@@ -72,24 +72,24 @@ instance val printable_post_hint_t : printable post_hint_t
 
 instance val printable_tuple2 (a b:Type)
           (_:printable a) (_:printable b)
-        : printable (a * b)
+        : printable (a & b)
   
 instance val printable_tuple3 (a b c:Type)
           (_:printable a) (_:printable b) (_:printable c)
-        : printable (a * b * c)
+        : printable (a & b & c)
   
 instance val printable_tuple4 (a b c d:Type)
           (_:printable a) (_:printable b) (_:printable c) (_:printable d)
-        : printable (a * b * c * d)
+        : printable (a & b & c & d)
 
 instance val printable_tuple5 (a b c d e:Type)
           (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e)
-        : printable (a * b * c * d * e)
+        : printable (a & b & c & d & e)
         
 instance val printable_tuple6 (a b c d e f:Type)
           (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e) (_:printable f)
-        : printable (a * b * c * d * e * f)
+        : printable (a & b & c & d & e & f)
         
 instance val printable_tuple7 (a b c d e f g:Type)
           (_:printable a) (_:printable b) (_:printable c) (_:printable d) (_:printable e) (_:printable f) (_:printable g)
-        : printable (a * b * c * d * e * f * g)
+        : printable (a & b & c & d & e & f & g)

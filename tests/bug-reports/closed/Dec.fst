@@ -81,7 +81,6 @@ let test_inner_let_rec (x y:nat)
     aux x y
 
 
-open FStar.Mul
 val factorial_tail (acc:nat) (n:nat) : Tot nat
 let rec factorial_tail acc n : Tot _ (decreases n) =
   if n = 0 then acc

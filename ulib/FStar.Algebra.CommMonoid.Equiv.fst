@@ -15,7 +15,6 @@
 *)
 module FStar.Algebra.CommMonoid.Equiv
 
-open FStar.Mul
 
 unopteq
 type equiv (a:Type) =

@@ -1147,7 +1147,7 @@ let is_interpreted (env:env) head : ML bool =
         Const.op_Subtraction;
         Const.op_Minus;
         Const.op_Addition;
-        Const.op_Multiply;
+        Const.op_Star;
         Const.op_Division;
         Const.op_Modulus;
         Const.op_And;

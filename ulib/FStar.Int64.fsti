@@ -20,7 +20,6 @@ module FStar.Int64
 unfold let n = 64
 
 open FStar.Int
-open FStar.Mul
 
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)

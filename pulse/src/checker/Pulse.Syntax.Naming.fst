@@ -87,7 +87,7 @@ let rec close_open_inverse_list' (t:list term)
       close_open_inverse_list' tl x i
 
 
-let rec close_open_inverse_pairs' (t:list (term * term))
+let rec close_open_inverse_pairs' (t:list (term & term))
                                   (x:var { ~(x `Set.mem` freevars_pairs t) })
                                   (i:index)
   : Lemma (ensures close_term_pairs' (open_term_pairs' t (U.term_of_no_name_var x) i) x i == t)

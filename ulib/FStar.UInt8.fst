@@ -18,7 +18,6 @@ module FStar.UInt8
 (**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.UInt
-open FStar.Mul
 
 #set-options "--fuel 0 --ifuel 0"
 

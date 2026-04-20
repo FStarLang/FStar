@@ -49,7 +49,6 @@
 
     <Compile Link="FStar_NormSteps.fs" Include="extracted\FStar_NormSteps.fs" />
     <Compile Link="FStar_Pervasives.fs" Include="extracted\FStar_Pervasives.fs" />
-    <Compile Include="extracted/FStar_Mul.fs" Link="FStar_Mul.fs" />
 
     <Compile Link="FStar_Preorder.fs" Include="extracted\FStar_Preorder.fs" />
     <Compile Link="FStar_Squash.fs" Include="extracted\FStar_Squash.fs" />

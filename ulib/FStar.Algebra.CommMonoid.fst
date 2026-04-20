@@ -15,7 +15,6 @@
 *)
 module FStar.Algebra.CommMonoid
 
-open FStar.Mul
 
 unopteq
 type cm (a:Type) =

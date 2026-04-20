@@ -3,7 +3,6 @@ module CanonCommSemiring.Test
 open FStar.Algebra.CommMonoid
 open CanonCommSemiring
 open FStar.Tactics.V2
-open FStar.Mul
 
 #set-options "--fuel 0 --ifuel 0 --z3rlimit 10 --tactics_info"
 
@@ -14,7 +13,6 @@ open FStar.Mul
 #push-options "--no_smt --tactic_trace_d 0" // Look, no SMT!
 
 let test (a:int) =
-  let open FStar.Mul in
   assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())
 
 [@@tcdecltime]

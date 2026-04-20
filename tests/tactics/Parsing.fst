@@ -15,10 +15,10 @@ let equals (#t: Type) (v: t) (#[term_to_string_to_term #t v] v': t) (): Type0
 
 let _ = assert (equals 42 ())
 
-let _ = assert (equals (unit * unit) ())
-let _ = assert (equals (unit * (unit * unit)) ())
-let _ = assert (equals ((unit * unit) * unit) ())
-let _ = assert (equals (unit * unit * unit) ())
+let _ = assert (equals (unit & unit) ())
+let _ = assert (equals (unit & (unit & unit)) ())
+let _ = assert (equals ((unit & unit) & unit) ())
+let _ = assert (equals (unit & unit & unit) ())
 
 let _ = assert (equals (fun x -> x + 3) ())
 

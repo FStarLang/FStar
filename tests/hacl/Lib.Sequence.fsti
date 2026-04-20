@@ -1,6 +1,5 @@
 module Lib.Sequence
 
-open FStar.Mul
 open Lib.IntTypes
 
 #set-options "--z3rlimit 30 --fuel 0 --ifuel 0 --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence'"

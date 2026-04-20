@@ -2,7 +2,6 @@ module Bug267
 
 #lang-pulse
 open Pulse
-open FStar.Mul
 
 (* Complains that 'v is ghost, good. *)
 [@@expect_failure [228]]

@@ -151,13 +151,13 @@ let rec wp_code (inss : list ins) (post: state -> Type0) (s0:state) : Type0 =
       | (Mul64Wrap src) ->
 	(valid_operand_norm src s0) /\
 	(forall (rax:nat64) (rdx:nat64) (f:nat64).
-	  nat64_max `op_Multiply` rdx + rax == 
-		    s0.regs Rax `op_Multiply` eval_operand_norm src s0 ==>
+	  nat64_max * rdx + rax ==
+		    s0.regs Rax * eval_operand_norm src s0 ==>
 	    wp_code inss post (update_reg Rdx rdx (update_reg Rax rax 
 							      ({s0 with flags = f}))))
       | (IMul64 (OReg Rsp) _) -> False
       | (IMul64 (OReg dst) src) ->
-	let a = s0.regs dst `op_Multiply` eval_operand_norm src s0 in
+	let a = s0.regs dst * eval_operand_norm src s0 in
 	  (valid_operand_norm src s0) /\
 	  (a < nat64_max) /\ //TODO:label this
 	  (forall (x:nat64) (f:nat64).

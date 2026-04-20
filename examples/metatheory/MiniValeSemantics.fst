@@ -944,7 +944,6 @@ let inst_Triple : with_wps codes_Triple = //A typeclass instance for our program
   ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 open FStar.FunctionalExtensionality
-open FStar.Mul
 
 (*
 procedure Triple()

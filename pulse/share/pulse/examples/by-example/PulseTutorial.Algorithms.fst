@@ -17,7 +17,6 @@
 module PulseTutorial.Algorithms
 #lang-pulse
 
-open FStar.Mul
 open FStar.SizeT
 
 open Pulse.Lib.Pervasives

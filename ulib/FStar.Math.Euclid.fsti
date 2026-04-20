@@ -1,6 +1,5 @@
 module FStar.Math.Euclid
 
-open FStar.Mul
 
 ///
 /// Divides relation

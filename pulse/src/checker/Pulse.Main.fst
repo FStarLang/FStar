@@ -289,7 +289,6 @@ let join_smt_goals () : Tac unit =
   Default rlimit is 5, so this is "saving" 3 rlimit units per joined
   goal. *)
   if not (Nil? (goals ())) then (
-    let open FStar.Mul in
     let rlimit = get_rlimit() + (n-1)*2 in
     set_rlimit rlimit
   );

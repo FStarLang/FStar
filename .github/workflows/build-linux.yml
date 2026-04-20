@@ -102,7 +102,7 @@ jobs:
       - name: Smoke test
         run: |
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\nopen FStar.Mul\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true B.fst

@@ -30,7 +30,6 @@ module S = FStar.Seq
 [@@ noextract_to "krml"]
 type bytes = S.seq U8.t
 
-open FStar.Mul
 
 
 /// Definition of little and big-endianness

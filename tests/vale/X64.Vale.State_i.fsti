@@ -53,7 +53,6 @@ unfold let eval_reg (r:reg) (s:state) : nat64 = s.regs r
 unfold let eval_mem (ptr:int) (s:state) : nat64 = Map.sel s.mem ptr
 
 let eval_maddr (m:maddr) (s:state) : int =
-  let open FStar.Mul in
     match m with
     | MConst n -> n
     | MReg reg offset -> eval_reg reg s + offset

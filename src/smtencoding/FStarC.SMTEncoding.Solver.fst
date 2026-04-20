@@ -241,7 +241,6 @@ are only very roughly correlated to time, and having this very non-round
 number makes reading SMT query dumps pretty confusing. So, for new
 solvers, we now just make it 500k. *)
 let convert_rlimit (r : int) : ML int =
-  let open FStar.Mul in
   if Misc.version_ge (Options.z3_version ()) "4.12.3" then
     500000 * r
   else
@@ -534,7 +533,6 @@ let mk_unique_string_accumulator ()
 
 let div_with_decimals (ndec : nat) (x y : int) : ML string =
   // Format.print2 "div_with_decimals: %s / %s\n" (show x) (show y);
-  let open FStar.Mul in
   let mul =
     (* no power function in F* sources? *)
     let rec aux (n:nat) =
@@ -677,7 +675,6 @@ let query_info settings z3result =
             else "" in
         let used_rlimit_str =
           try
-            let open FStar.Mul in
             let decimals = 3 in
             let r0 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
             let r1 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
@@ -867,7 +864,6 @@ let make_solver_configs
     in
     let default_settings, next_hint =
         let rlimit =
-            let open FStar.Mul in
             Options.z3_rlimit_factor () * Options.z3_rlimit ()
         in
         let next_hint = get_hint_for qname index in
@@ -1144,7 +1140,6 @@ let ask_solver_recover
       ];
 
       let try_factor (n:int) : ML answer =
-        let open FStar.Mul in
         Errors.diag cfg.query_range [text "Retrying query with rlimit factor" ^/^ pp n];
         let cfg = { cfg with query_rlimit = n * cfg.query_rlimit } in
         ask_solver_quake [cfg]

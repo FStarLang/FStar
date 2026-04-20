@@ -40,7 +40,7 @@ let normal #a (e:a) =
   FStar.Pervasives.norm 
            [zeta;
             iota;
-            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
+            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%Prims.op_Star]; 
             delta_attr [`%unfold_defs];
             primops
   ] e

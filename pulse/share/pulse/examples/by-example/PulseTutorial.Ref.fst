@@ -112,7 +112,6 @@ ensures pts_to r ('v + n)
 //end add$
 
 
-open FStar.Mul //can we include this in Pulse.Lib.Pervasives
 
 
  //quadruple$

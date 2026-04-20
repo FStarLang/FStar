@@ -119,7 +119,6 @@ let rec foldr #a #n #acc
 //SNIPPET_END: foldr
 
 //SNIPPET_START: norm_spec
-open FStar.Mul
 
 let rec pow2 (n:nat) : nat =
   if n = 0 then 1

@@ -24,7 +24,7 @@ type eq (t:Type{hasEq t}) = p:(double t){R?.l p = R?.r p}
 val rel_map2 : ('a -> 'b -> Tot 'c) -> (double 'a) -> (double 'b) -> Tot (double 'c)
 let rel_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 
-type shared (secret:double int) = s:double (int*int)
+type shared (secret:double int) = s:double (int&int)
                                     {fst(R?.l s) = fst(R?.r s)
                                   /\  (fst(R?.l s)) + (snd(R?.l s)) = R?.l secret
                                   /\  (fst(R?.r s)) + (snd(R?.r s)) = R?.r secret}

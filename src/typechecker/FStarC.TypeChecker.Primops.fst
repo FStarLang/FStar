@@ -73,7 +73,7 @@ let simple_ops : list primitive_step = [
   mk1 0 PC.op_Minus        (fun x -> -x);
   mk2 0 PC.op_Addition     (+);
   mk2 0 PC.op_Subtraction  (-);
-  mk2 0 PC.op_Multiply     ( op_Multiply );
+  mk2 0 PC.op_Star         ( * );
   mk2 0 PC.op_LT           (<);
   mk2 0 PC.op_LTE          (<=);
   mk2 0 PC.op_GT           (>);

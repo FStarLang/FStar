@@ -174,7 +174,7 @@ let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 let rec fact_aux (n acc : nat) : Tot nat =
     if n = 0
     then acc
-    else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
+    else let acc' = acc * n in fact_aux (n - 1) acc'
 
 let fact (n : nat) : Tot nat = fact_aux n 1
 

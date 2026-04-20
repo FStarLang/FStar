@@ -1,6 +1,5 @@
 module FStar.Math.Fermat
 
-open FStar.Mul
 open FStar.Math.Lemmas
 open FStar.Math.Euclid
 

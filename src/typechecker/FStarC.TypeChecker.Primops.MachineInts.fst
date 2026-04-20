@@ -23,7 +23,6 @@ let bounded_arith_ops_for (k : machint_kind) : ML (mymon unit) =
   let mod_name = module_name_for k in
   let nm s = (PC.p2l ["FStar"; module_name_for k; s]) in
   (* Operators common to all *)
-  let open FStar.Mul in
   emit [
     mk1 0 (nm "v") (v #k);
 

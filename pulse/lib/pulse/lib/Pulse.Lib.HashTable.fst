@@ -50,7 +50,7 @@ fn alloc
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
   (hashf:(k -> SZ.t)) (l:pos_us)
-  requires pure (SZ.fits (2 `op_Multiply` SZ.v l))
+  requires pure (SZ.fits (2 * SZ.v l))
   returns ht:ht_t k v
   ensures exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l)
 {

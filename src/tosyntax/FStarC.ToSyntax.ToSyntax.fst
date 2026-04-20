@@ -989,24 +989,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let e = mk_term (Op(Ident.mk_ident ("==", r), args)) top.range top.level in
       desugar_term_aq env (mk_term(Op(Ident.mk_ident ("~",r), [e])) top.range top.level)
 
-    (* if op_Star has not been rebound, then it's reserved for tuples *)
-    | Op(op_star, [lhs;rhs]) when
-      (Ident.string_of_id op_star = "*" &&
-       op_as_term env 2 op_star |> None?) ->
-      (* See the comment in parse.mly to understand why this implicitly relies
-       * on the presence of a Paren node in the AST. *)
-      let rec flatten t : ML _ = match t.tm with
-        // * is left-associative
-        | Op(id, [t1;t2]) when
-           string_of_id id = "*" && None? (op_as_term env 2 op_star) ->
-          flatten t1 @ [ t2 ]
-        | _ -> [t]
-      in
-      let terms = flatten lhs in
-      //make the surface syntax for a non-dependent tuple
-      let t = {top with tm=Sum(List.map Inr terms, rhs)} in
-      desugar_term_maybe_top top_level env t
-
     | Uvar u ->
       raise_error top Errors.Fatal_UnexpectedUniverseVariable
           ("Unexpected universe variable " ^
