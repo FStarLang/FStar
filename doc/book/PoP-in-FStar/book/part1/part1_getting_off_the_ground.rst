@@ -138,10 +138,7 @@ precedence.
 * ``+``: Addition (infix)
 * ``/``: Euclidean division (infix)
 * ``%``: Euclidean modulus (infix)
-* ``op_Multiply``: Unfortunately, the traditional multiplication
-  symbol ``*`` is reserved by default for the tuple type
-  constructor. Use the module ``FStar.Mul`` to treat ``*`` as integer
-  multiplication.
+* ``*``: Multiplication (infix)
 * ``<`` : Less than (infix)
 * ``<=``: Less than or equal (infix)
 * ``>`` : Greater than (infix)
@@ -373,12 +370,6 @@ is allowed to use the ``factorial`` recursively—as we'll see in a
 later chapter, ensuring that the recursion is well-founded (i.e., all
 recursive calls terminate) is key to F*'s soundness. However, in this
 case, the proof of termination is automatic.
-
-.. note::
-
-   Notice the use of `open FStar.Mul` in the example above. This
-   brings the module `FStar.Mul` into scope and resolves the symbol
-   ``*`` to integer multiplication.
 
 F* also supports mutual recursion. We'll see that later.
 

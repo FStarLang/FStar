@@ -157,7 +157,7 @@ let rec resugar_term_as_op (t:S.term) : ML (option (string&expected_arity)) =
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
     (C.op_Minus       , "-" );
-    (C.op_Multiply    , "*" );
+    (C.op_Star        , "*" );
     (C.op_Division    , "/" );
     (C.op_Modulus     , "%" );
     (C.read_lid       , "!" );

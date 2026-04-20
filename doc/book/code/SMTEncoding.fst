@@ -1,5 +1,4 @@
 module SMTEncoding
-open FStar.Mul
 #push-options "--log_queries"
 let false_boolean = false
 let true_boolean = true

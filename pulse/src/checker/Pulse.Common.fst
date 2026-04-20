@@ -55,7 +55,7 @@ let rec zipWith (f : 'a -> 'b -> Tac 'c) (l : list 'a) (m : list 'b)
   | _ -> fail "zipWith: length mismatch"
   
 val zip : (#a:Type) -> (#b:Type) -> l1:list a -> l2:list b ->
-  Tot (l:list (a * b){L.length l == min (L.length l1) (L.length l2)})
+  Tot (l:list (a & b){L.length l == min (L.length l1) (L.length l2)})
 let rec zip #a #b l1 l2 = match l1, l2 with
     | x::xs, y::ys -> (x,y) :: (zip xs ys)
     | _ -> []

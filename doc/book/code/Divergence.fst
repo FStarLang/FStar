@@ -1,7 +1,6 @@
 module Divergence
 open FStar.List.Tot
 module L = FStar.List.Tot
-open FStar.Mul
 
 //SNIPPET_START: collatz$
 (* You can program a function to compute Collatz sequences
@@ -182,7 +181,7 @@ let lift (op: int -> int -> int) (n m:dyn) : dyn
   = match n, m with
     | DInt i, DInt j -> DInt (op i j)
     | _ -> DErr "Expected integers"
-let mul = lift op_Multiply
+let mul = lift op_Star
 let sub = lift op_Subtraction
 let add = lift op_Addition
 let div (n m:dyn)

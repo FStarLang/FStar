@@ -1,6 +1,5 @@
 module SeqCalc
 
-open FStar.Mul
 open FStar.Calc
 open FStar.Preorder
 open FStar.Seq

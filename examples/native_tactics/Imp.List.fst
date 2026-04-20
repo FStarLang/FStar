@@ -15,7 +15,6 @@
 *)
 module Imp.List
 //#set-options "--debug SMTQuery"
-open FStar.Mul
 module R = Registers.List
 
 type rval   = int

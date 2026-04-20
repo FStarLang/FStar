@@ -24,7 +24,6 @@ module FStar.BitVector
 ///
 /// TODO: We might rename this module to FStar.Seq.Boolean?
 
-open FStar.Mul
 open FStar.Seq
 
 (** [logand] defined in terms of its indexing behavior *)

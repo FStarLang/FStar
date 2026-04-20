@@ -1,5 +1,4 @@
 module FactorialTailRec
-open FStar.Mul
 open FStar.Ghost
 
 //SNIPPET_START: factorial$

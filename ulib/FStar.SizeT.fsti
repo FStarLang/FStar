@@ -1,6 +1,5 @@
 module FStar.SizeT
 
-open FStar.Mul
 
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
@@ -133,7 +132,6 @@ val div (a:t) (b:t{v b <> 0}) : Pure t
 (** Modulo specification, similar to FStar.UInt.mod *)
 
 let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
-  let open FStar.Mul in
   let res = a - ((a/b) * b) in
   fits_lte res a;
   res

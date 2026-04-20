@@ -1,5 +1,4 @@
 module OPLSS2021.Factorial
-open FStar.Mul
 
 let rec factorial (n:nat)
   : nat

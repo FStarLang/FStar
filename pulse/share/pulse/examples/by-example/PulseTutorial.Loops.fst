@@ -100,7 +100,6 @@ ensures  R.pts_to x 0
 }
 //end count_down_loopy$
 
-open FStar.Mul
 
 //multiply_by_repeated_addition$
 fn multiply_by_repeated_addition (x y:nat)

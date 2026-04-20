@@ -48,7 +48,7 @@ let models #kt #vt ([@@@mkey]ht: ht_t kt vt) (pht:pht_t kt vt) : slprop =
   V.pts_to ht.contents pht.repr.seq **
   pure (related ht pht /\
         V.is_full_vec ht.contents /\
-        SZ.fits (2 `op_Multiply` SZ.v ht.sz))
+        SZ.fits (2 * SZ.v ht.sz))
 
 val models_timeless #kt #vt ([@@@mkey] ht:ht_t kt vt) (pht:pht_t kt vt)
 : Lemma (timeless (models ht pht))
@@ -65,7 +65,7 @@ val alloc
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
   (hashf:(k -> SZ.t)) (l:pos_us)
 : stt (ht_t k v)
-    (requires pure (SZ.fits (2 `op_Multiply` SZ.v l)))
+    (requires pure (SZ.fits (2 * SZ.v l)))
     (ensures fun ht -> exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l))
 
 val dealloc

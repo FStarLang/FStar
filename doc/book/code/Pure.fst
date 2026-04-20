@@ -1,7 +1,6 @@
 module Pure
 
 //SNIPPET_START: factorial$
-open FStar.Mul
 let rec factorial (x:int)
   : Pure int (requires x >= 0) (ensures fun r -> r >= 1)
   = if x = 0
@@ -71,7 +70,6 @@ let associativity (a b c:Type) (wp1:mwp a) (wp2:a -> mwp b) (wp3:b -> mwp c)
   = ()
 //SNIPPET_END: mwp_laws$
 
-open FStar.Mul
 
 open FStar.Monotonic.Pure
 

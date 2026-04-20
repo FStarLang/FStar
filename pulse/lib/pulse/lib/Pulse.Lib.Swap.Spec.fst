@@ -1,7 +1,6 @@
 module Pulse.Lib.Swap.Spec
 #lang-pulse
 open FStar.Math.Lemmas
-open FStar.Mul
 
 let lemma_mod_lt
   (a:int)

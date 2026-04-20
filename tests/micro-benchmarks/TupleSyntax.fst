@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module TupleSyntax
-open FStar.Mul
 
 (* non-dependent tuples: (t & t') *)
 let f1 (x: int & int) : int = fst x

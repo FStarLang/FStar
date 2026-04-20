@@ -24,7 +24,6 @@ open FStar.Seq.Properties
 open FStar.Seq.Permutation
 
 open FStar.IntegerIntervals
-open FStar.Mul  
 
 
 (* Here we define the notion for big sums and big products for 

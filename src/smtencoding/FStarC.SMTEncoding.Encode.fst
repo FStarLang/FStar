@@ -155,7 +155,7 @@ let prims =
         (Const.op_Subtraction, (quant Eq xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
         (Const.op_Minus,       (quant Eq qx  (boxInt  <| mkMinus(unboxInt x))));
         (Const.op_Addition,    (quant Eq xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
-        (Const.op_Multiply,    (quant Eq xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
+        (Const.op_Star,        (quant Eq xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
         (Const.op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
         (Const.op_Modulus,     (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkMod(unboxInt x, unboxInt y))));
         //real ops

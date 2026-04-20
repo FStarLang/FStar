@@ -15,7 +15,6 @@
 *)
 module FStar.Tactics.Canon.Lemmas
 
-open FStar.Mul
 
 let distr #x #y #z = ()
 let distl #x #y #z = ()

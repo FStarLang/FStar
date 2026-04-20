@@ -1,6 +1,5 @@
 module Calc
 
-open FStar.Mul
 open FStar.Calc
 open FStar.Tactics.V2
 

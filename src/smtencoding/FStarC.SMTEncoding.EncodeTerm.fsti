@@ -43,7 +43,7 @@ val maybe_curry_fvb : rng:Range.t -> head:fvar_binding -> args:list term -> ML t
 
 val curried_arrow_formals_comp : k:Syntax.term -> ML (Syntax.binders & comp)
 
-val encode_univ_name : Syntax.univ_name -> ML (fv * term)
+val encode_univ_name : Syntax.univ_name -> ML (fv & term)
 val encode_universe : Syntax.universe -> ML term
 
 val encode_binders : fuel_opt:option term

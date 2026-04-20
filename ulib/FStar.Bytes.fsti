@@ -159,7 +159,7 @@ val split:
 unfold let split_ b (k:nat{FStar.UInt.size k U32.n /\ k < length b}) = split b (U32.uint_to_t k)
 
 (** Interpret a sequence of bytes as a mathematical integer encoded in big endian **)
-let fits_in_k_bytes (n:nat) (k:nat) = FStar.UInt.size n (op_Multiply 8 k)
+let fits_in_k_bytes (n:nat) (k:nat) = FStar.UInt.size n (8 * k)
 type uint_k (k:nat) = n:nat{fits_in_k_bytes n k}
 
 (** repr_bytes n: The number of bytes needed to represent a nat **)
@@ -269,7 +269,7 @@ val xor_idempotent:
 
 val utf8_encode:
     s:string{Str.maxlen s (pow2 30)}
-  -> b:bytes{length b <= op_Multiply 4 (Str.length s)}
+  -> b:bytes{length b <= 4 * Str.length s}
 
 val iutf8_opt:
     m:bytes

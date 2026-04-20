@@ -17,7 +17,6 @@ module Canon
 
 open FStar.Tactics.V2
 open FStar.Tactics.Canon
-open FStar.Mul
 
 // Testing the canonicalizer, it should be the only thing needed for this file
 let check_canon () =

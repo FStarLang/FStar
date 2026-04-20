@@ -1,6 +1,5 @@
 module Test.CanonCommSemiring
 
-open FStar.Mul
 open FStar.Tactics.V2
 open FStar.Tactics.CanonCommSemiring
 

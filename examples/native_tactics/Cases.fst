@@ -18,7 +18,6 @@ module Cases
 (* *)
 
 open FStar.Tactics.V2
-open FStar.Mul
 
 assume val p : Type0
 assume val q : Type0

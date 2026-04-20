@@ -1,6 +1,5 @@
 module Lib.Vec.Lemmas
 
-open FStar.Mul
 open Lib.IntTypes
 open Lib.Sequence
 open Lib.Sequence.Lemmas

@@ -24,7 +24,6 @@ module FStar.BitVector
 ///
 /// TODO: We might rename this module to FStar.Seq.Boolean?
 
-open FStar.Mul
 open FStar.Seq.Base
 
 (** [bv_t n] is just a sequence of booleans of length [n] *)

@@ -23,7 +23,7 @@ effect P (a:Type) (wp:pure_wp a) = PURE a wp
 
 #push-options "--admit_smt_queries true" // avoid dealing with monotonicity
 type m (a:Type) (wp:wP a) =
-  i0:int -> P (a * int) (fun 'q -> wp (fun a i -> 'q (a, i)) i0)
+  i0:int -> P (a & int) (fun 'q -> wp (fun a i -> 'q (a, i)) i0)
 #pop-options
 
 val works : #a:Type -> #wp1:wP a -> f:m a wp1 -> Tot bool

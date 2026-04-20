@@ -258,8 +258,7 @@ let rec fold f l b =
   | h::t -> f h (fold f t b)
 
 val fold_example1 : unit -> Lemma
-      (ensures (let open FStar.Mul in
-	        fold (fun x y -> x * y) [1;2;3;4] 1 = 24))
+      (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 = 24))
 let fold_example1 () = ()
 
 val fold_example2 : unit -> Lemma

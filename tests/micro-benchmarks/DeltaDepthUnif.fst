@@ -4,7 +4,6 @@ module DeltaDepthUnif
 
 open FStar.Reflection.V2
 open FStar.Reflection.Typing
-open FStar.Mul
 
 assume val tyc : term -> Type0
 

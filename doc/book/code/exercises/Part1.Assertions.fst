@@ -1,6 +1,5 @@
 module Part1.Assertions
 
-open FStar.Mul
 let sqr_is_nat (x:int) : unit = assert (x * x >= 0)
 
 [@@expect_failure[19]]

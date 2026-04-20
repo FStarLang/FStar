@@ -27,7 +27,6 @@ let rec sum_i (#l:dim) (v:vector int l) (i:knat l)
 
 let sum (#l:dim) (v:vector int l) = sum_i v 0
 
-open FStar.Mul
 
 // vector product (dot product)
 private

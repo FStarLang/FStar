@@ -46,7 +46,6 @@ open FStar.MarkovsPrinciple
 open FStar.Math.Lemmas
 open FStar.Math.Lib
 open FStar.Matrix2
-open FStar.Mul
 open FStar.Option
 open FStar.Order
 open FStar.OrdMap

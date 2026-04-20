@@ -150,7 +150,6 @@ type dpe_cmd = {
 
 #push-options "--z3rlimit 128" // to let z3 cope with CDDL specs
 #restart-solver
-#push-options "--retry 2"
 let destruct_spec_command_message
   (v: raw_data_item)
 : Lemma
@@ -160,7 +159,12 @@ let destruct_spec_command_message
     | Array [Int64 _ cid'; vargs'] -> True
     | _ -> False))
   [SMTPat (Spec.command_message v)]
-= assert_norm (Spec.command_message v)
+= match v with
+  | Array [Int64 _ cid'; vargs'] -> ()
+  | _ ->
+    assert_norm (Spec.command_message v);
+    assert False
+
 noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_args_postcond
   (cid: U64.t)
@@ -175,7 +179,7 @@ let parse_dpe_cmd_args_postcond
     vargs == vargs'
   ) /\
   Seq.length rem == 0
-#pop-options  
+
 noextract [@@noextract_to "krml"]
 let parse_dpe_cmd_postcond
   (sid: U64.t)

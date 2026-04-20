@@ -18,7 +18,6 @@ module FStar.Tactics.Canon
 open FStar.Reflection.V2
 open FStar.Tactics.V2.Bare
 open FStar.Reflection.V2.Arith
-open FStar.Mul
 module O = FStar.Order
 open FStar.Tactics.Canon.Lemmas
 
@@ -42,7 +41,7 @@ let rec canon_point e =
         Lit (a + b)
 
     | Mult (Lit a) (Lit b) ->
-        norm [delta; primops]; // Need delta to turn op_Star into op_Multiply, as there's no primop for it
+        norm [primops];
         trefl ();
         Lit (a * b)
 

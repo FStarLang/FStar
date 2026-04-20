@@ -3,7 +3,6 @@ module Misc.Norm2
 (* During PR https://github.com/FStarLang/FStar/pull/3385, this once
 triggered a failwith in the normalizer due to not respecting erase_universes. *)
 
-open FStar.Mul
 
 type comm_monoid (t:Type) = {
   one: t;
