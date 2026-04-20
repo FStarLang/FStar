@@ -10,7 +10,13 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    strategy:
+      matrix:
+        os:
+          - macos-14
+          - macos-15-intel
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@master
         with:
@@ -56,7 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           path: fstar-*
-          name: package-mac
+          name: package-mac-${{ matrix.os }}
 
   smoke_test:
     needs: build
@@ -66,14 +72,16 @@ jobs:
           - macos-14
           - macos-15
           - macos-latest
+          - macos-15-intel
     runs-on: ${{ matrix.os }}
     steps:
       - name: Get fstar package
         uses: actions/download-artifact@v8
         with:
-          name: package-mac
+          pattern: package-mac-*
+          merge-multiple: true
 
-      - run: tar xzf fstar*.tar.gz
+      - run: tar xzf fstar-Darwin-$(uname -m).tar.gz
 
       - name: Smoke test
         run: |
