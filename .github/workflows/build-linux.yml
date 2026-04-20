@@ -18,6 +18,7 @@ defaults:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os:
           # We prefer slightly older Ubuntu so we get binaries that work on
@@ -39,7 +40,6 @@ jobs:
 
       - name: Prepare
         run: |
-          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
           opam install --deps-only ./fstar.opam
 
@@ -66,7 +66,7 @@ jobs:
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
           export FSTAR_TAG=-$KERNEL-$ARCH
-          make -skj$(nproc) package
+          make -skj$(nproc) package ADMIT=1
           # Currently creating the source package in a separate job
           # make -skj$(nproc) package-src FSTAR_TAG=
           # # ^ no tag in source package
@@ -83,6 +83,7 @@ jobs:
   smoke_test:
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
@@ -102,7 +103,7 @@ jobs:
       - name: Smoke test
         run: |
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true B.fst
