@@ -39,7 +39,6 @@ jobs:
 
       - name: Prepare
         run: |
-          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
           opam install --deps-only ./fstar.opam
 
@@ -66,7 +65,7 @@ jobs:
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
           export FSTAR_TAG=-$KERNEL-$ARCH
-          make -skj$(nproc) package
+          make -skj$(nproc) package ADMIT=1
           # Currently creating the source package in a separate job
           # make -skj$(nproc) package-src FSTAR_TAG=
           # # ^ no tag in source package

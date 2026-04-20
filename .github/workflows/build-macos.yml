@@ -24,7 +24,6 @@ jobs:
       - name: Prepare
         run: |
           brew install opam bash gnu-getopt coreutils gnu-sed make
-          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
           opam install --deps-only ./fstar.opam
 
@@ -52,7 +51,7 @@ jobs:
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
           export FSTAR_TAG=-$KERNEL-$ARCH
-          gmake -skj$(nproc) package
+          gmake -skj$(nproc) package ADMIT=1
 
       - uses: actions/upload-artifact@v7
         with:
@@ -69,10 +68,6 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: cda-tum/setup-z3@main
-        with:
-          version: 4.13.3
-
       - name: Get fstar package
         uses: actions/download-artifact@v8
         with:
