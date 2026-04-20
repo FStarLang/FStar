@@ -2936,7 +2936,10 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 (******************************************************************************)
 and maybe_elaborate_short_circuit_args env0 head args
   : ML (option (term & lcomp & guard_t))
-  = match (U.un_uinst head).n with
+  = (* Make sure to collect args in the head. *)
+    let head, args' = U.head_and_args head in
+    let args = args'@args in
+    match (U.un_uinst head).n with
     | Tm_fvar fv when S.fv_eq_lid fv Const.op_And || S.fv_eq_lid fv Const.op_Or ->
       begin match args with
       | [(e1, _aq1); (e2, _aq2)] ->
@@ -2945,7 +2948,6 @@ and maybe_elaborate_short_circuit_args env0 head args
         let env1 = Env.set_expected_typ env0 U.t_bool in
         let e1, c1, g1 = tc_term env1 e1 in
         let e2, c2, g2 = tc_term env1 e2 in
-        let is_pure = TcComm.is_tot_or_gtot_lcomp c1 || TcComm.is_tot_or_gtot_lcomp c2 in
         let c = TcUtil.bind r false env0 (Some e1) c1 (None, c2) in
         let c = TcComm.set_result_typ_lc c U.t_bool in
         if not (TcComm.is_tot_or_gtot_lcomp c1) then
