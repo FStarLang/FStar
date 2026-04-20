@@ -2950,7 +2950,7 @@ and maybe_elaborate_short_circuit_args env0 head args
         let e2, c2, g2 = tc_term env1 e2 in
         let c = TcUtil.bind r false env0 (Some e1) c1 (None, c2) in
         let c = TcComm.set_result_typ_lc c U.t_bool in
-        if not (TcComm.is_tot_or_gtot_lcomp c1) then
+        if not (TcComm.is_pure_or_ghost_lcomp c1) then
           let x1 = S.new_bv None U.t_bool in
           let e =
             let x1 = S.bv_to_name x1 in
@@ -2962,7 +2962,7 @@ and maybe_elaborate_short_circuit_args env0 head args
           let e = mk (Tm_let {lbs=(false, [lb]); body=SS.close [S.mk_binder x1] e}) e.pos in
           // TODO: maybe_lift??
           Some (e, c, g1 ++ g2)
-        else if not (TcComm.is_tot_or_gtot_lcomp c2) then
+        else if not (TcComm.is_pure_or_ghost_lcomp c2) then
           let e =
             if is_and
             then U.if_then_else e1 e2 U.exp_false_bool
