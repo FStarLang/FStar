@@ -2216,76 +2216,132 @@ let mk_fv_app g lid u args r : ML _ =
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
-let rec solve (probs :worklist) : ML solution =
-//    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
-    if !dbg_Rel
-    then Format.print1 "solve:\n\t%s\n" (wl_to_string probs);
-    if !dbg_ImplicitTrace then
-      Format.print1 "solve: wl_implicits = %s\n" (show probs.wl_implicits);
 
-    match next_prob probs with
-    | Some (hd, tl, rank) ->
-      let probs = {probs with attempting=tl} in
-      def_check_prob "solve,hd" hd;
-      begin match hd with
-      | CProb cp ->
-            solve_c (maybe_invert cp) probs
+// Rather than a giant mutually recursive nest, we break the mutual recursion
+// with these mutable refs, and tie the knot at the end
+let solve_ref : ref (worklist -> ML solution) = alloc (fun _ -> failwith "No solver attached")
+let solve_c_ref : ref (cprob -> worklist -> ML solution) = alloc (fun _ _ -> failwith "No solver attached")
+let solve_t'_ref : ref (tprob -> worklist -> ML solution) = alloc (fun _ _ -> failwith "No solver attached")
+let init_refs solve solve_c solve_t' =
+  solve_ref := solve;
+  solve_c_ref := solve_c;
+  solve_t'_ref := solve_t'
 
-      | TProb tp ->
-        if BU.physical_equality tp.lhs tp.rhs then solve (solve_prob hd None [] probs) else
-        let is_expand_uvar (t:term) : ML bool =
-          match (SS.compress t).n with
-          | Tm_uvar (ctx_u, _) -> (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_should_unrefine
-          | _ -> false
-        in
-        let maybe_expand (tp:tprob) : ML tprob =
-          if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
-          then
-            let lhs = tp.lhs in
-            let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
-            if Tm_refine? (SS.compress lhs_norm).n then
-              (* It is indeed a refinement, normalize again to remove them. *)
-              let lhs' = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]; Env.Unrefine] (p_env probs hd) lhs_norm in
-              if !dbg_Rel then
-                Format.print3 "GGG widening uvar %s! RHS %s ~> %s\n"
-                  (show tp.rhs) (show lhs) (show lhs');
-              { tp with lhs = lhs' }
-            else
-              tp
-          else tp
-        in
+let solve wl = !solve_ref wl
+let solve_c cp wl = !solve_c_ref cp wl
+let solve_t' tp wl = !solve_t'_ref tp wl
+// End of the knot-tying boilerplate
 
-        let tp = maybe_expand tp in
+// Some general utilities
+let solve_t (problem:tprob) (wl:worklist) : ML solution =
+    def_check_prob "solve_t" (TProb problem);
+    solve_t' (compress_tprob wl problem) wl
 
-        if rank=Rigid_rigid
-        || (tp.relation = EQ && rank <> Flex_flex)
-        then solve_t' tp probs
-        else if probs.defer_ok = DeferAny
-        then maybe_defer_to_user_tac tp "deferring flex_rigid or flex_flex subtyping" probs
-        else if rank=Flex_flex
-        then solve_t' ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
-        else solve_rigid_flex_or_flex_rigid_subtyping rank tp probs
-      end
+let defer_to_user_tac (orig:prob) reason (wl:worklist) : ML solution =
+  if !dbg_Rel then
+    Format.print1 "\n\t\tDeferring %s to a tactic\n" (prob_to_string wl.tcenv orig);
+  let wl = solve_prob orig None [] wl in
+  let wl = {wl with wl_deferred_to_tac=cons (wl.ctr, Deferred_to_user_tac, Thunk.mkv reason, orig)  wl.wl_deferred_to_tac} in
+  solve wl
 
-    | None ->
-         begin
-         match view probs.wl_deferred with
-         | VNil ->
-           Success (empty, as_deferred probs.wl_deferred_to_tac, probs.wl_implicits) //Yay ... done!
+let maybe_defer_to_user_tac prob reason wl : ML solution =
+  match prob.relation with
+  | EQ ->
+    let should_defer_tac t =
+      let head, _ = U.head_and_args t in
+      match (SS.compress head).n with
+      | Tm_uvar(uv, _) ->
+        DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
+      | _ -> false, ""
+    in
+    let l1, r1 = should_defer_tac prob.lhs in
+    let l2, r2 = should_defer_tac prob.rhs in
+    if l1 || l2
+    then defer_to_user_tac (TProb prob) (r1 ^ ", " ^ r2) wl
+    else solve (defer_lit Deferred_flex reason (TProb prob) wl)
+  | _ -> solve (defer_lit Deferred_flex reason (TProb prob) wl)
 
-         | VCons _ _ ->
-           let attempt, rest = probs.wl_deferred |> CList.partition (fun (c, _, _, _) -> c < probs.ctr) in
-           match view attempt with
-            | VNil -> //can't solve yet; defer the rest
-              Success(as_deferred probs.wl_deferred,
-                      as_deferred probs.wl_deferred_to_tac,
-                      probs.wl_implicits)
+let giveup_or_defer (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : ML solution =
+    if wl.defer_ok = DeferAny
+    then begin
+        if !dbg_Rel then
+            Format.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string wl.tcenv orig) (Thunk.force msg);
+        solve (defer reason msg orig wl)
+    end
+    else giveup wl msg orig
 
-            | _ ->
-              solve ({probs with attempting=attempt |> to_list |> List.map (fun (_, _, _, y) -> y); wl_deferred=rest})
-         end
+let giveup_or_defer_flex_flex (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : ML solution =
+    if wl.defer_ok <> NoDefer
+    then begin
+        if !dbg_Rel then
+            Format.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string wl.tcenv orig) (Thunk.force msg);
+        solve (defer reason msg orig wl)
+    end
+    else giveup wl msg orig
 
-and solve_one_universe_eq (orig:prob) (u1:universe) (u2:universe) (wl:worklist) : ML solution =
+let try_solve_probs_without_smt
+      (wl:worklist)
+      (probs:worklist -> ML (probs & worklist))
+  : ML (either worklist lstring)
+  = let probs, wl' = probs wl in
+    let wl' = {wl with defer_ok=NoDefer;
+                       smt_ok=false;
+                       umax_heuristic_ok=false;
+                       attempting=probs;
+                       wl_deferred=empty;
+                       wl_implicits=Listlike.empty} in
+    match solve wl' with
+    | Success (_, defer_to_tac, imps) ->
+      let wl = extend_wl wl empty defer_to_tac imps in
+      Inl wl
+
+    | Failed (_, ls) -> 
+      Inr ls
+
+let try_solve_without_smt_or_else
+        (wl:worklist)
+        (try_solve:  worklist -> ML solution)
+        (else_solve: worklist -> (prob & lstring) -> ML solution)
+    : ML solution =
+    let wl' = {wl with defer_ok=NoDefer;
+                       smt_ok=false;
+                       umax_heuristic_ok=false;
+                       attempting=[];
+                       wl_deferred=empty;
+                       wl_implicits=Listlike.empty} in
+    let tx = UF.new_transaction () in
+    match try_solve wl' with
+    | Success (_, defer_to_tac, imps) ->
+      UF.commit tx;
+      let wl = extend_wl wl empty defer_to_tac imps in
+      solve wl
+    | Failed (p, s) ->
+      UF.rollback tx;
+      else_solve wl (p,s)
+
+let try_solve_then_or_else
+        (wl:worklist)
+        (try_solve:  worklist -> ML solution)
+        (then_solve: worklist -> ML solution)
+        (else_solve: worklist -> ML solution)
+    : ML solution =
+    let empty_wl =
+      {wl with defer_ok=NoDefer;
+               attempting=[];
+               wl_deferred=empty;
+               wl_implicits=empty} in
+    let tx = UF.new_transaction () in
+    match try_solve empty_wl with
+    | Success (_, defer_to_tac, imps) ->
+      UF.commit tx;
+      let wl = extend_wl wl empty defer_to_tac imps in
+      then_solve wl
+    | Failed (p, s) ->
+      UF.rollback tx;
+      else_solve wl
+
+// Solving universe equalities
+let solve_one_universe_eq (orig:prob) (u1:universe) (u2:universe) (wl:worklist) : ML solution =
     match solve_universe_eq (p_pid orig) wl u1 u2 with
     | USolved wl ->
       solve (solve_prob orig None [] wl)
@@ -2296,7 +2352,7 @@ and solve_one_universe_eq (orig:prob) (u1:universe) (u2:universe) (wl:worklist) 
     | UDeferred wl ->
       solve (defer_lit Deferred_univ_constraint "" orig wl)
 
-and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : ML univ_eq_sol =
+let solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : ML univ_eq_sol =
     let rec aux wl us1 us2 : ML _ = match us1, us2 with
         | [], [] -> USolved wl
 
@@ -2336,47 +2392,71 @@ and solve_maybe_uinsts (orig:prob) (t1:term) (t2:term) (wl:worklist) : ML univ_e
     in
     inspect true t1 t2
 
-and giveup_or_defer (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : ML solution =
-    if wl.defer_ok = DeferAny
-    then begin
-        if !dbg_Rel then
-            Format.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string wl.tcenv orig) (Thunk.force msg);
-        solve (defer reason msg orig wl)
-    end
-    else giveup wl msg orig
+// The main cases of the unifier:
+// * imitation for arrows
+// * solving flex-flex, flex-rigid, rigid-rigid problems
+let imitate_arrow (orig:prob) (wl:worklist)
+                  (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
+                  (rel:rel)
+                  (arrow:term) : ML solution =
+  let bs_lhs_args = List.map (fun ({binder_bv=x;binder_qual=i}) -> S.bv_to_name x, i) bs_lhs in
+  let (Flex (_, u_lhs, _)) = lhs in
+  let imitate_comp bs bs_terms c wl =
+      let imitate_tot_or_gtot t (f:term -> ML comp) wl : ML _ =
+        let k, _ = U.type_u () in
+        let _, u, wl = copy_uvar u_lhs (bs_lhs@bs) k wl in
+        f u, wl
+      in
+      match c.n with
+      | Total t ->
+        imitate_tot_or_gtot t S.mk_Total wl
+      | GTotal t ->
+        imitate_tot_or_gtot t S.mk_GTotal wl
+      | Comp ct ->
+        let out_args, wl =
+          List.fold_right
+            (fun (a, i) (out_args, wl) ->
+              let _, t_a, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+              let _, a', wl = copy_uvar u_lhs bs t_a wl in
+              (a',i)::out_args, wl)
+            ((S.as_arg ct.result_typ)::ct.effect_args)
+            ([], wl)
+        in
+        (* Drop the decreases flag, it is not needed and
+        * wouldn't be properly scoped either. *)
+        let nodec flags = List.filter (function DECREASES _ -> false
+                                                | _ -> true) flags in
+        let ct' = {ct with result_typ=fst (List.hd out_args);
+                          effect_args=List.tl out_args;
+                          flags=nodec ct.flags} in
+        {c with n=Comp ct'}, wl
+  in
+  let formals, c = U.arrow_formals_comp arrow in
+  let rec aux (bs:binders) (bs_terms:list arg) (formals:binders) wl : ML _ =
+      match formals with
+      | [] ->
+        let c', wl = imitate_comp bs bs_terms c wl in
+        let lhs' = U.arrow bs c' in
+        let sol = TERM (u_lhs, U.abs bs_lhs lhs' (Some (U.residual_tot t_res_lhs))) in
+        let sub_prob, wl =
+            mk_t_problem wl [] orig lhs' rel arrow None "arrow imitation"
+        in
+        //printfn "Arrow imitation: %s =?= %s" (show lhs') (show rhs);
+        solve (attempt [sub_prob] (solve_prob orig None [sol] wl))
 
-and giveup_or_defer_flex_flex (orig:prob) (wl:worklist) (reason:deferred_reason) (msg:lstring) : ML solution =
-    if wl.defer_ok <> NoDefer
-    then begin
-        if !dbg_Rel then
-            Format.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string wl.tcenv orig) (Thunk.force msg);
-        solve (defer reason msg orig wl)
-    end
-    else giveup wl msg orig
-
-and defer_to_user_tac (orig:prob) reason (wl:worklist) : ML solution =
-  if !dbg_Rel then
-    Format.print1 "\n\t\tDeferring %s to a tactic\n" (prob_to_string wl.tcenv orig);
-  let wl = solve_prob orig None [] wl in
-  let wl = {wl with wl_deferred_to_tac=cons (wl.ctr, Deferred_to_user_tac, Thunk.mkv reason, orig)  wl.wl_deferred_to_tac} in
-  solve wl
-
-and maybe_defer_to_user_tac prob reason wl : ML solution =
-  match prob.relation with
-  | EQ ->
-    let should_defer_tac t =
-      let head, _ = U.head_and_args t in
-      match (SS.compress head).n with
-      | Tm_uvar(uv, _) ->
-        DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
-      | _ -> false, ""
+      | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
+        let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
+        //printfn "Generated formal %s where %s" (show t_y) (show ctx_u_x);
+        let y = S.new_bv (Some (S.range_of_bv x)) u_x in
+        let b = S.mk_binder_with_attrs y imp pqual attrs in
+        aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
     in
-    let l1, r1 = should_defer_tac prob.lhs in
-    let l2, r2 = should_defer_tac prob.rhs in
-    if l1 || l2
-    then defer_to_user_tac (TProb prob) (r1 ^ ", " ^ r2) wl
-    else solve (defer_lit Deferred_flex reason (TProb prob) wl)
-  | _ -> solve (defer_lit Deferred_flex reason (TProb prob) wl)
+    let _, occurs_ok, msg = occurs_check u_lhs arrow in
+    if not occurs_ok
+    then giveup_or_defer orig wl
+          Deferred_occur_check_failed
+          (mklstr (fun () -> "occurs-check failed: " ^ (Option.must msg)))
+    else aux [] [] formals wl
 
 (******************************************************************************************************)
 (* The case where t1 < u, ..., tn < u: we solve this by taking u=t1\/...\/tn                          *)
@@ -2385,7 +2465,7 @@ and maybe_defer_to_user_tac prob reason wl : ML solution =
 (* This will go through the worklist to find problems for the same uvar u and compute the composite   *)
 (* constraint as shown above.                                                                         *)
 (******************************************************************************************************)
-and solve_rigid_flex_or_flex_rigid_subtyping
+let solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (tp:tprob) (wl:worklist) : ML solution =
     def_check_prob "solve_rigid_flex_or_flex_rigid_subtyping" (TProb tp);
@@ -2718,216 +2798,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
     end
   end
 
-and imitate_arrow (orig:prob) (wl:worklist)
-                  (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
-                  (rel:rel)
-                  (arrow:term)
-        : ML solution =
-        let bs_lhs_args = List.map (fun ({binder_bv=x;binder_qual=i}) -> S.bv_to_name x, i) bs_lhs in
-        let (Flex (_, u_lhs, _)) = lhs in
-        let imitate_comp bs bs_terms c wl =
-           let imitate_tot_or_gtot t (f:term -> ML comp) wl : ML _ =
-              let k, _ = U.type_u () in
-              let _, u, wl = copy_uvar u_lhs (bs_lhs@bs) k wl in
-              f u, wl
-           in
-           match c.n with
-           | Total t ->
-             imitate_tot_or_gtot t S.mk_Total wl
-           | GTotal t ->
-             imitate_tot_or_gtot t S.mk_GTotal wl
-           | Comp ct ->
-             let out_args, wl =
-               List.fold_right
-                 (fun (a, i) (out_args, wl) ->
-                   let _, t_a, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
-                   let _, a', wl = copy_uvar u_lhs bs t_a wl in
-                   (a',i)::out_args, wl)
-                 ((S.as_arg ct.result_typ)::ct.effect_args)
-                 ([], wl)
-             in
-             (* Drop the decreases flag, it is not needed and
-              * wouldn't be properly scoped either. *)
-             let nodec flags = List.filter (function DECREASES _ -> false
-                                                     | _ -> true) flags in
-             let ct' = {ct with result_typ=fst (List.hd out_args);
-                                effect_args=List.tl out_args;
-                                flags=nodec ct.flags} in
-             {c with n=Comp ct'}, wl
-        in
-        let formals, c = U.arrow_formals_comp arrow in
-        let rec aux (bs:binders) (bs_terms:list arg) (formals:binders) wl : ML _ =
-            match formals with
-            | [] ->
-              let c', wl = imitate_comp bs bs_terms c wl in
-              let lhs' = U.arrow bs c' in
-              let sol = TERM (u_lhs, U.abs bs_lhs lhs' (Some (U.residual_tot t_res_lhs))) in
-              let sub_prob, wl =
-                  mk_t_problem wl [] orig lhs' rel arrow None "arrow imitation"
-              in
-              //printfn "Arrow imitation: %s =?= %s" (show lhs') (show rhs);
-              solve (attempt [sub_prob] (solve_prob orig None [sol] wl))
-
-            | ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_attrs=attrs})::formals ->
-              let _ctx_u_x, u_x, wl = copy_uvar u_lhs (bs_lhs@bs) (U.type_u() |> fst) wl in
-              //printfn "Generated formal %s where %s" (show t_y) (show ctx_u_x);
-              let y = S.new_bv (Some (S.range_of_bv x)) u_x in
-              let b = S.mk_binder_with_attrs y imp pqual attrs in
-              aux (bs@[b]) (bs_terms@[U.arg_of_non_null_binder b]) formals wl
-         in
-         let _, occurs_ok, msg = occurs_check u_lhs arrow in
-         if not occurs_ok
-         then giveup_or_defer orig wl
-                Deferred_occur_check_failed
-                (mklstr (fun () -> "occurs-check failed: " ^ (Option.must msg)))
-         else aux [] [] formals wl
-
-and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
-                  (rhs:worklist -> binders -> list subst_elt -> ML (prob & worklist)) : ML solution =
-
-   if !dbg_Rel
-   then Format.print3 "solve_binders\n\t%s\n%s\n\t%s\n"
-                       (show bs1)
-                       (rel_to_string (p_rel orig))
-                       (show bs2);
-
-   let eq_bqual a1 a2 =
-       match a1, a2 with
-       | Some (Implicit b1), Some (Implicit b2) ->
-         true //we don't care about comparing the dot qualifier in this context
-       | Some Equality, None | None, Some Equality ->
-         true // also don't care about the equality qualifier
-       | _ ->
-         U.eq_bqual a1 a2
-   in
-
-   let compat_positivity_qualifiers (p1 p2:option positivity_qualifier) : bool =
-      match p_rel orig with
-      | EQ ->
-        FStarC.TypeChecker.Common.check_positivity_qual false p1 p2
-      | SUB ->
-        FStarC.TypeChecker.Common.check_positivity_qual true p1 p2
-      | SUBINV ->
-        FStarC.TypeChecker.Common.check_positivity_qual true p2 p1
-   in
-  (*
-    * AR: adding env to the return type
-    *
-    *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
-    *       so that subsequent binders are solved in the right env
-    *     when all the binders are solved, it creates the rhs problem and returns it
-    *     the problem was that this rhs problem was getting solved in the original env,
-    *       since `aux` never returned the env with all the binders
-    *     so far it was fine, but with layered effects, we have to be really careful about the env
-    *     so now we return the updated env, and the rhs is solved in that final env
-    *     (see how `aux` is called after its definition below)
-    *)
-   let rec aux wl scope subst (xs:binders) (ys:binders) : ML (either (probs & formula) string & worklist) =
-        match xs, ys with
-        | [], [] ->
-          let rhs_prob, wl = rhs wl scope subst in
-          if !dbg_Rel
-          then Format.print1 "rhs_prob = %s\n" (prob_to_string (p_env wl rhs_prob) rhs_prob);
-          let formula = p_guard rhs_prob in
-          Inl ([rhs_prob], formula), wl
-
-        | x::xs, y::ys 
-          when (eq_bqual x.binder_qual y.binder_qual &&
-                compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
-           let hd1, imp = x.binder_bv, x.binder_qual in
-           let hd2, imp' = y.binder_bv, y.binder_qual in
-           let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
-           let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in
-           let prob, wl = mk_t_problem wl scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
-           let hd1 = freshen_bv hd1 in
-           let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
-           begin
-           match aux wl (scope @ [{x with binder_bv=hd1}]) subst xs ys with
-           | Inl (sub_probs, phi), wl ->
-             let phi =
-                 U.mk_conj (p_guard prob)
-                           (close_forall (p_env wl prob) [{x with binder_bv=hd1}] phi) in
-             if !dbg_Rel
-             then Format.print2 "Formula is %s\n\thd1=%s\n" (show phi) (show hd1);
-             Inl (prob::sub_probs, phi), wl
-
-           | fail -> fail
-           end
-
-        | _ -> Inr "arity or argument-qualifier mismatch", wl in
-
-   match aux wl [] [] bs1 bs2 with
-   | Inr msg, wl -> giveup_lit wl msg orig
-   | Inl (sub_probs, phi), wl ->
-     let wl = solve_prob orig (Some phi) [] wl in
-     solve (attempt sub_probs wl)
-
-and try_solve_without_smt_or_else
-        (wl:worklist)
-        (try_solve:  worklist -> ML solution)
-        (else_solve: worklist -> (prob & lstring) -> ML solution)
-    : ML solution =
-    let wl' = {wl with defer_ok=NoDefer;
-                       smt_ok=false;
-                       umax_heuristic_ok=false;
-                       attempting=[];
-                       wl_deferred=empty;
-                       wl_implicits=Listlike.empty} in
-    let tx = UF.new_transaction () in
-    match try_solve wl' with
-    | Success (_, defer_to_tac, imps) ->
-      UF.commit tx;
-      let wl = extend_wl wl empty defer_to_tac imps in
-      solve wl
-    | Failed (p, s) ->
-      UF.rollback tx;
-      else_solve wl (p,s)
-
-and try_solve_then_or_else
-        (wl:worklist)
-        (try_solve:  worklist -> ML solution)
-        (then_solve: worklist -> ML solution)
-        (else_solve: worklist -> ML solution)
-    : ML solution =
-    let empty_wl =
-      {wl with defer_ok=NoDefer;
-               attempting=[];
-               wl_deferred=empty;
-               wl_implicits=empty} in
-    let tx = UF.new_transaction () in
-    match try_solve empty_wl with
-    | Success (_, defer_to_tac, imps) ->
-      UF.commit tx;
-      let wl = extend_wl wl empty defer_to_tac imps in
-      then_solve wl
-    | Failed (p, s) ->
-      UF.rollback tx;
-      else_solve wl
-
-and try_solve_probs_without_smt
-      (wl:worklist)
-      (probs:worklist -> ML (probs & worklist))
-  : ML (either worklist lstring)
-  = let probs, wl' = probs wl in
-    let wl' = {wl with defer_ok=NoDefer;
-                       smt_ok=false;
-                       umax_heuristic_ok=false;
-                       attempting=probs;
-                       wl_deferred=empty;
-                       wl_implicits=Listlike.empty} in
-    match solve wl' with
-    | Success (_, defer_to_tac, imps) ->
-      let wl = extend_wl wl empty defer_to_tac imps in
-      Inl wl
-
-    | Failed (_, ls) -> 
-      Inr ls
-      
-and solve_t (problem:tprob) (wl:worklist) : ML solution =
-    def_check_prob "solve_t" (TProb problem);
-    solve_t' (compress_tprob wl problem) wl
-
-and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
+let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     : ML solution =
     if !dbg_Rel then (
       Format.print1 "solve_t_flex_rigid_eq rhs=%s\n"
@@ -3405,7 +3276,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
                If yes, run that meta program, solve the uvar, and try again
                If not, coerce both sides to patterns and solve
 *)
-and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
+let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
     let should_run_meta_arg_tac (flex:flex_t) =
       (* If this flex has a meta-arg, and the problem is fully
       defined (no uvars in env/typ), then we can run it now. *)
@@ -3544,8 +3415,94 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
 
           | _ ->
             giveup_or_defer orig wl Deferred_flex_flex_nonpattern (Thunk.mkv "flex-flex: non-patterns")
+// End imitation, flex-rigid, and flex-flex
 
-and solve_t' (problem:tprob) (wl:worklist) : ML solution =
+let solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
+                  (rhs:worklist -> binders -> list subst_elt -> ML (prob & worklist)) : ML solution =
+
+   if !dbg_Rel
+   then Format.print3 "solve_binders\n\t%s\n%s\n\t%s\n"
+                       (show bs1)
+                       (rel_to_string (p_rel orig))
+                       (show bs2);
+
+   let eq_bqual a1 a2 =
+       match a1, a2 with
+       | Some (Implicit b1), Some (Implicit b2) ->
+         true //we don't care about comparing the dot qualifier in this context
+       | Some Equality, None | None, Some Equality ->
+         true // also don't care about the equality qualifier
+       | _ ->
+         U.eq_bqual a1 a2
+   in
+
+   let compat_positivity_qualifiers (p1 p2:option positivity_qualifier) : bool =
+      match p_rel orig with
+      | EQ ->
+        FStarC.TypeChecker.Common.check_positivity_qual false p1 p2
+      | SUB ->
+        FStarC.TypeChecker.Common.check_positivity_qual true p1 p2
+      | SUBINV ->
+        FStarC.TypeChecker.Common.check_positivity_qual true p2 p1
+   in
+  (*
+    * AR: adding env to the return type
+    *
+    *     `aux` solves the binders problems xs REL ys, and keeps on adding the binders to env
+    *       so that subsequent binders are solved in the right env
+    *     when all the binders are solved, it creates the rhs problem and returns it
+    *     the problem was that this rhs problem was getting solved in the original env,
+    *       since `aux` never returned the env with all the binders
+    *     so far it was fine, but with layered effects, we have to be really careful about the env
+    *     so now we return the updated env, and the rhs is solved in that final env
+    *     (see how `aux` is called after its definition below)
+    *)
+   let rec aux wl scope subst (xs:binders) (ys:binders) : ML (either (probs & formula) string & worklist) =
+        match xs, ys with
+        | [], [] ->
+          let rhs_prob, wl = rhs wl scope subst in
+          if !dbg_Rel
+          then Format.print1 "rhs_prob = %s\n" (prob_to_string (p_env wl rhs_prob) rhs_prob);
+          let formula = p_guard rhs_prob in
+          Inl ([rhs_prob], formula), wl
+
+        | x::xs, y::ys 
+          when (eq_bqual x.binder_qual y.binder_qual &&
+                compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
+           let hd1, imp = x.binder_bv, x.binder_qual in
+           let hd2, imp' = y.binder_bv, y.binder_qual in
+           let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
+           let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in
+           let prob, wl = mk_t_problem wl scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
+           let hd1 = freshen_bv hd1 in
+           let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
+           begin
+           match aux wl (scope @ [{x with binder_bv=hd1}]) subst xs ys with
+           | Inl (sub_probs, phi), wl ->
+             let phi =
+                 U.mk_conj (p_guard prob)
+                           (close_forall (p_env wl prob) [{x with binder_bv=hd1}] phi) in
+             if !dbg_Rel
+             then Format.print2 "Formula is %s\n\thd1=%s\n" (show phi) (show hd1);
+             Inl (prob::sub_probs, phi), wl
+
+           | fail -> fail
+           end
+
+        | _ -> Inr "arity or argument-qualifier mismatch", wl in
+
+   match aux wl [] [] bs1 bs2 with
+   | Inr msg, wl -> giveup_lit wl msg orig
+   | Inl (sub_probs, phi), wl ->
+     let wl = solve_prob orig (Some phi) [] wl in
+     solve (attempt sub_probs wl)
+
+
+////////////////////////////////////////////////////////////////////
+// Implementation of the main functions that are then 
+// used to tie the recursive knot
+////////////////////////////////////////////////////////////////////
+let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
     def_check_prob "solve_t'.1" (TProb problem);
     let giveup_or_defer orig msg = giveup_or_defer orig wl msg in
 
@@ -4440,7 +4397,7 @@ and solve_t' (problem:tprob) (wl:worklist) : ML solution =
 
       | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ tag_of t1 ^ " vs " ^ tag_of t2)) orig
 
-and solve_c (problem:problem comp) (wl:worklist) : ML solution =
+let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
     let c1 = problem.lhs in
     let c2 = problem.rhs in
     let orig = CProb problem in
@@ -4813,6 +4770,76 @@ and solve_c (problem:problem comp) (wl:worklist) : ML solution =
                         solve_sub c1 edge c2
                  end
 
+let solve_aux (probs :worklist) : ML solution =
+//    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
+    if !dbg_Rel
+    then Format.print1 "solve:\n\t%s\n" (wl_to_string probs);
+    if !dbg_ImplicitTrace then
+      Format.print1 "solve: wl_implicits = %s\n" (show probs.wl_implicits);
+
+    match next_prob probs with
+    | Some (hd, tl, rank) ->
+      let probs = {probs with attempting=tl} in
+      def_check_prob "solve,hd" hd;
+      begin match hd with
+      | CProb cp ->
+            solve_c (maybe_invert cp) probs
+
+      | TProb tp ->
+        if BU.physical_equality tp.lhs tp.rhs then solve (solve_prob hd None [] probs) else
+        let is_expand_uvar (t:term) : ML bool =
+          match (SS.compress t).n with
+          | Tm_uvar (ctx_u, _) -> (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_should_unrefine
+          | _ -> false
+        in
+        let maybe_expand (tp:tprob) : ML tprob =
+          if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
+          then
+            let lhs = tp.lhs in
+            let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
+            if Tm_refine? (SS.compress lhs_norm).n then
+              (* It is indeed a refinement, normalize again to remove them. *)
+              let lhs' = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]; Env.Unrefine] (p_env probs hd) lhs_norm in
+              if !dbg_Rel then
+                Format.print3 "GGG widening uvar %s! RHS %s ~> %s\n"
+                  (show tp.rhs) (show lhs) (show lhs');
+              { tp with lhs = lhs' }
+            else
+              tp
+          else tp
+        in
+
+        let tp = maybe_expand tp in
+
+        if rank=Rigid_rigid
+        || (tp.relation = EQ && rank <> Flex_flex)
+        then solve_t' tp probs
+        else if probs.defer_ok = DeferAny
+        then maybe_defer_to_user_tac tp "deferring flex_rigid or flex_flex subtyping" probs
+        else if rank=Flex_flex
+        then solve_t' ({tp with relation=EQ}) probs //turn flex_flex subtyping into flex_flex eq
+        else solve_rigid_flex_or_flex_rigid_subtyping rank tp probs
+      end
+
+    | None ->
+         begin
+         match view probs.wl_deferred with
+         | VNil ->
+           Success (empty, as_deferred probs.wl_deferred_to_tac, probs.wl_implicits) //Yay ... done!
+
+         | VCons _ _ ->
+           let attempt, rest = probs.wl_deferred |> CList.partition (fun (c, _, _, _) -> c < probs.ctr) in
+           match view attempt with
+            | VNil -> //can't solve yet; defer the rest
+              Success(as_deferred probs.wl_deferred,
+                      as_deferred probs.wl_deferred_to_tac,
+                      probs.wl_implicits)
+
+            | _ ->
+              solve ({probs with attempting=attempt |> to_list |> List.map (fun (_, _, _, y) -> y); wl_deferred=rest})
+         end
+
+let _ = init_refs solve_aux solve_c_aux solve_t'_aux
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
