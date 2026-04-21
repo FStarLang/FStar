@@ -307,11 +307,12 @@ this "squashing" a type. This is so common, that F* provides two
 mechanisms to support this:
 
 1. All the propositional connectives, like ``p /\ q`` are designed so
-   that both ``p`` and ``q`` can be types (i.e., ``p,q : Type``),
-   rather than propositions, and they implicitly squash their types.
+   that both ``p`` and ``q`` must be of type ``prop``. F* will
+   automatically coerce ``squash``-typed expressions to ``prop``
+   when needed.
 
-2. The standard library, ``FStar.Squash``, provides several utilities
-   for manipulating squashed types.
+2. The standard library module ``FStar.Classical`` provides several
+   utilities for manipulating squashed propositions.
 
 .. _Part1_ch2_assertions:
 

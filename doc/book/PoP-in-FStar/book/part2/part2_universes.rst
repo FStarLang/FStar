@@ -460,8 +460,8 @@ The upshot, however, is that without the stratification of universes,
 F* would be unsound.
 
 
-Refinement types, FStar.Squash, ``prop``, and Impredicativity
--------------------------------------------------------------
+Refinement types, ``squash``, ``prop``, and Impredicativity
+-----------------------------------------------------------
 
 We've seen how universe levels are computed for arrow types and
 inductive type definitions. The other way in which types can be formed
@@ -470,76 +470,57 @@ a value ``v`` of type ``x:t{p}`` is just a ``v:t`` where ``p[v/x]`` is
 derivable in the current scope in F*'s SMT-assisted classical
 logic—there is no way to extract a proof of ``p`` from a proof of
 ``x:t{p}``, i.e., refinement types are F*'s mechanism for proof
-irrelevance.
+irrelevance. The refinement formula ``p`` must have type ``prop``.
 
 **Universe of a refinement type**: The universe of a refinement type ``x:t{p}`` is the universe of ``t``.
 
 Since the universe of a refinement type does not depend on ``p``, it
 enables a limited form of impredicativity, and we can define the
-following type (summarized here from the F* standard library
-``FStar.Squash``):
+following type (defined in ``Prims``):
 
 .. code-block:: fstar
 
-   let squash (p:Type u#p) : Type u#0 = _:unit { p }
-   let return_squash (p:Type u#p) (x:p) : squash p = ()
+   let squash (p:prop) : Type u#0 = _:unit { p }
 
-This is a lot like the ``lower`` and ``inject`` assumptions that we
-saw in the previous section, but, importantly, there is no ``project``
-operation to invert an ``inject``. In fact, ``FStar.Squash`` proves
-that ``squash p`` is proof irrelevant, meaning that all proofs of
-``squash p`` are equal.
+Note that ``squash`` takes a ``prop`` (not an arbitrary ``Type``) and
+produces a ``Type u#0``. Given a proof ``x`` of some ``p : prop``, one
+can introduce a ``squash p`` simply by returning unit:
 
 .. code-block:: fstar
 
-   val proof_irrelevance (p: Type u#p) (x y: squash p) : squash (x == y)
+   let return_squash (#p:prop) (x:p) : squash p = ()
 
-``FStar.Squash`` does provide a limited way to manipulate a proof of
-``p`` given a ``squash p``, using the combinator ``bind_squash`` shown
-below, which states that if ``f`` can build a proof ``squash b`` from any
-proof of ``a``, then it can do so from the one and only proof of ``a``
-that is witnessed by ``x:squash a``. 
+``squash p`` is proof irrelevant, meaning that all proofs of
+``squash p`` are equal:
 
 .. code-block:: fstar
 
-   val bind_squash (#a: Type u#a) (#b: Type u#b) (x: squash a) (f: (a -> squash b)) : squash b
-   
-It is important that ``bind_squash`` return a ``squash b``,
-maintaining the proof-irrelevance of the ``squash`` type. Otherwise,
-if one could extract a proof of ``a`` from ``squash a``, we would be
-perilously close to the unsound ``project`` axiom which enables
-paradoxes.
-
-This restriction is similar to Coq's restriction on its ``Prop`` type,
-forbidding functions that match on ``Prop`` to return results outside
-``Prop``.
+   val proof_irrelevance (p: prop) (x y: squash p) : squash (x == y)
 
 The F* type ``prop`` (which we saw first :ref:`here <Part1_prop>`) is
-defined primitively as type of all squashed types, i.e., the only
-types in ``prop`` are types of the form ``squash p``; or,
-equivalently, every type ``t : prop``, is a subtype of ``unit``. Being
-the type of a class of types, ``prop`` in F* lives in ``u#1``
+an opaque ``Type u#0`` representing the type of all propositions.
+Every type ``t : prop`` is a subtype of ``unit``, meaning that
+propositions are proof-irrelevant. Being an opaque ``Type u#0``,
+``prop`` offers a strong form of impredicativity:
 
 .. literalinclude:: ../code/Universes.fst
    :language: fstar
    :start-after: //SNIPPET_START: prop$
    :end-before: //SNIPPET_END: prop$
 
-However, ``prop`` still offers a form of impredicativity, e.g., you
-can quantify over all ``prop`` while remaining in ``prop``.
+You can quantify over all ``prop`` while remaining in ``prop``:
 
 .. literalinclude:: ../code/Universes.fst
    :language: fstar
    :start-after: //SNIPPET_START: prop impredicative$
    :end-before: //SNIPPET_END: prop impredicative$
 
-* The first line above shows that, as usual, an arrow type is in a
-  universe that is the maximum of the universes of its argument and
-  result types. In this case, since it has an argument ``prop : Type
-  u#1`` the arrow itself is in ``u#1``.
+* The first line above shows that an arrow from ``prop`` to a
+  ``prop``-valued type remains in ``Type u#0``, since ``prop : Type
+  u#0``.
 
-* The second line shows that by squashing the arrow type, we can bring
-  it back to ``u#0``
+* The second line shows that ``squash`` of such an arrow also remains
+  in ``Type u#0``.
 
 * The third line shows the more customary way of doing this in F*,
   where ``forall (a:prop). a`` is just syntactic sugar for ``squash

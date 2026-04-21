@@ -144,7 +144,7 @@ follows:
 
 .. code-block::
 
-   let ( /\ ) (p q:Type) = squash (pair p q)
+   let ( /\ ) (p q:prop) = squash (pair p q)
 
 Introduction
 ++++++++++++
@@ -235,7 +235,7 @@ squashed version of ``sum``.
 
 .. code-block:: fstar
 
-   let ( \/ ) (p q: Type) = squash (sum p q)
+   let ( \/ ) (p q: prop) = squash (sum p q)
 
 Introduction
 ++++++++++++
@@ -296,7 +296,7 @@ connective ``==>``. Its definition is shown below:
 
 .. code-block:: fstar
 
-   let ( ==> ) (p q : Type) = squash (p -> q)
+   let ( ==> ) (p q : prop) = squash (p -> q)
 
 That is, ``==>`` is just the squashed version of the non-dependent
 arrow type ``->``.
@@ -305,7 +305,8 @@ arrow type ``->``.
 
    In ``Prims``, the definition of ``p ==> q`` is actually ``squash (p
    -> GTot q)``, a **ghost** function from ``p`` to ``q``. We'll learn
-   about this more when we encounter effects.
+   about this more when we encounter effects. Note that both ``p`` and
+   ``q`` must be of type ``prop``.
 
 Introduction
 ++++++++++++
@@ -320,7 +321,7 @@ library, as shown below:
 
 .. code-block:: fstar
 
-   val impl_intro_tot (#p #q: Type) (f: (p -> q)) : (p ==> q)
+   val impl_intro_tot (#p #q: prop) (f: (p -> q)) : (p ==> q)
 
 However, this form is seldom used in F*. Instead, one often works with
 functions between squashed propositions, or Lemmas, turning them into
@@ -338,14 +339,14 @@ desugaring, shown below.
 
 .. code-block:: fstar
 
-   let implies_intro_1 (#p #q:Type) (pq: (squash p -> squash q))
+   let implies_intro_1 (#p #q:prop) (pq: (squash p -> squash q))
      : squash (p ==> q)
      = FStar.Classical.Sugar.implies_intro
               p
               (fun (_: squash p) -> q)
               (fun (pf_p: squash p) -> pq pf_p)
 
-``FStar.Squash`` and ``FStar.Classical`` provide the basic building
+``FStar.Classical`` provides the basic building
 blocks and the sugar packages it into a more convenient form for use.
 
 Elimination
@@ -443,12 +444,13 @@ as shown below:
 
 .. code-block:: fstar
 
-   let ( forall ) #t (q:t -> Type) = squash (x:t -> q x)
+   let ( forall ) #t (q:t -> prop) = squash (x:t -> q x)
 
 .. note::
 
    As with ``==>``, ``Prims`` uses ``x:t -> GTot (q x)``, a ghost
-   arrow, though the difference is not yet significant.
+   arrow, though the difference is not yet significant. The body
+   ``q x`` must have type ``prop``.
 
 Introduction
 ++++++++++++
@@ -537,7 +539,7 @@ of the dependent pair:
 
 .. code-block:: fstar
 
-   let ( exists ) (#a:Type) (#b:a -> Type) = squash (x:a & b x)
+   let ( exists ) (#a:Type) (#b:a -> prop) = squash (x:a & b x)
 
 Introduction
 ++++++++++++
