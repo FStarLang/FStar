@@ -3170,7 +3170,8 @@ let short_circuit (head:term) (seen_args:args) : ML guard_formula =
         | _ -> Trivial
 
 let short_circuit_head l : ML _ =
-    match (U.un_uinst l).n with
+    let hd, _ = U.head_and_args l in
+    match (U.un_uinst hd).n with
         | Tm_fvar fv ->
            BU.for_some (S.fv_eq_lid fv)
                    [C.op_And;
