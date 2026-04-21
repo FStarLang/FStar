@@ -51,9 +51,8 @@ let rec tauto (): Tac unit =
 assume val p: prop
 
 // This one exercises matching on squash p
-let _ =
-  assume p;
-  assert p by smt ()
+let ex1 (h: squash p) =
+  assert p by tauto ()
 
 // This one exercises matching on p (without the squash)
 let _ =

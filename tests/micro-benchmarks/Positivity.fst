@@ -217,13 +217,14 @@ type bad =
   | Bad : nonempty (bad → GTot ⊥) → bad
 #pop-options
 
-let loop' (s:bad) : GTot (nonempty ⊥) =
-  let Bad sf =s in
-  magic ()
+let loop' (s:bad) : GTot ⊥ =
+  let Bad sf = s in
+  let f = nonempty_elim' sf in
+  f s
   
-let loop'' : nonempty (bad → GTot ⊥) = magic ()
-let loop : nonempty bad = magic ()
-let ff (_:unit) : nonempty ⊥ = magic ()
+let loop'' : nonempty (bad → GTot ⊥) = nonempty_intro loop'
+let loop : nonempty bad = nonempty_intro (Bad loop'')
+let ff (_:unit) : nonempty ⊥ = nonempty_intro (loop' (Bad loop''))
 
 
 irreducible

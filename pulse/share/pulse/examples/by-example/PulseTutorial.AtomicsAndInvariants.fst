@@ -27,7 +27,6 @@ let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
 //owns_timeless$
 let owns_timeless (x:ref U32.t)
 : squash (timeless (owns x))
-by T.(smt ())
 = ()
 //end owns_timeless$
 

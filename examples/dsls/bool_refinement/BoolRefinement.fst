@@ -6,7 +6,7 @@ module L = FStar.List.Tot
 open FStar.List.Tot
 
 // Helpers replacing removed FStar.Squash operations
-let map_squash (#a #b: prop) (s: squash a) (f: (a -> GTot b)) : squash b = magic ()
+let map_squash (#a #b: prop) (s: squash a) (f: (a -> GTot b)) : squash b = f ()
 
 #set-options "--z3smtopt '(set-option :smt.qi.eager_threshold 20)' --z3smtopt '(set-option :smt.arith.nl false)'"
 let var = nat

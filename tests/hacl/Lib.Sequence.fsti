@@ -537,22 +537,6 @@ val unfold_generate_blocks:
             let (acc',s') = f i acc in
             (acc',Seq.append s s')))
 
-#push-options "--admit_smt_queries true"
-val index_generate_blocks:
-    #t:Type0
-  -> len:size_pos
-  -> max:nat
-  -> n:pos{n <= max}
-  -> f:(i:nat{i < max} -> unit -> unit & s:seq t{length s == len})
-  -> i:nat{i < n * len}
-  -> Lemma (Math.Lemmas.lemma_mult_le_right len n max;
-           div_mul_lt len i max;
-           let a_spec (i:nat{i <= max}) = unit in
-           let _,s1 = generate_blocks len max n a_spec f () in
-           let _,s2 = f (i / len) () in
-           Seq.index s1 i == Seq.index s2 (i % len))
-#pop-options
-
 #push-options "--using_facts_from '+FStar.UInt.pow2_values'"
 
 val create2: #a:Type -> x0:a -> x1:a -> lseq a 2
