@@ -84,9 +84,8 @@ let _ : Type u#0 = prop
 
 //SNIPPET_START: prop impredicative$
 let _ : Type u#0 = a:prop -> a
-let _ : Type u#0 = a:prop -> squash a
 let _ : prop = forall (a:prop). a
-let _ : prop = exists (a:prop). a
+let _ : prop = forall (t: Type u#999). t == t
 //SNIPPET_END: prop impredicative$
 
 //SNIPPET_START: id_top_level$

@@ -468,15 +468,11 @@ inductive type definitions. The other way in which types can be formed
 in F* is with refinement types: ``x:t{p}``. As we've seen previously,
 a value ``v`` of type ``x:t{p}`` is just a ``v:t`` where ``p[v/x]`` is
 derivable in the current scope in F*'s SMT-assisted classical
-logic—there is no way to extract a proof of ``p`` from a proof of
-``x:t{p}``, i.e., refinement types are F*'s mechanism for proof
-irrelevance. The refinement formula ``p`` must have type ``prop``.
+logic.  The refinement formula ``p`` must have type ``prop``.
 
 **Universe of a refinement type**: The universe of a refinement type ``x:t{p}`` is the universe of ``t``.
 
-Since the universe of a refinement type does not depend on ``p``, it
-enables a limited form of impredicativity, and we can define the
-following type (defined in ``Prims``):
+We can define the following type (defined in ``Prims``):
 
 .. code-block:: fstar
 
@@ -499,8 +495,12 @@ can introduce a ``squash p`` simply by returning unit:
 
 The F* type ``prop`` (which we saw first :ref:`here <Part1_prop>`) is
 an opaque ``Type u#0`` representing the type of all propositions.
-Every type ``t : prop`` is a subtype of ``unit``, meaning that
-propositions are proof-irrelevant. Being an opaque ``Type u#0``,
+The type ``prop`` has exactly two elements (``True`` and ``False``),
+and we can put it into bijection with ``bool`` using the
+``t2b: prop -> GTot bool`` and ``b2t: bool -> prop`` functions.
+The type ``squash p`` is a subtype of ``unit``, which means that any two
+elements ``h g: squash p`` are equal (a form of proof irrelevance).
+Being an opaque ``Type u#0``,
 ``prop`` offers a strong form of impredicativity:
 
 .. literalinclude:: ../code/Universes.fst
@@ -515,19 +515,15 @@ You can quantify over all ``prop`` while remaining in ``prop``:
    :start-after: //SNIPPET_START: prop impredicative$
    :end-before: //SNIPPET_END: prop impredicative$
 
-* The first line above shows that an arrow from ``prop`` to a
-  ``prop``-valued type remains in ``Type u#0``, since ``prop : Type
-  u#0``.
+* The first line above shows that an arrow from ``prop`` to ``squash p`` is in
+  ``Type u#0`` (note that the ``squash`` is automatically inserted as a
+  coercion).
 
-* The second line shows that ``squash`` of such an arrow also remains
-  in ``Type u#0``.
+* The second line shows that quantification over propositions is still a proposition.
+  (In systems with predicative proofs-as-types, this would already raise the universe level.)
 
-* The third line shows the more customary way of doing this in F*,
-  where ``forall (a:prop). a`` is just syntactic sugar for ``squash
-  (a:prop -> a)``. Since this is a ``squash`` type, not only does it
-  live in ``Type u#0``, it is itself a ``prop``.
-
-* The fourth line shows that the same is true for ``exists``.
+* The third line shows that ``prop`` is closed even under quantification over
+  very large types, such as ``Type u#999`` in this case.
 
 .. _Part2_Universes_raising:
 

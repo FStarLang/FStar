@@ -302,17 +302,17 @@ description of this to a later section, but, for now, we'll just
 remark that another way to form an atomic proposition is to convert a
 type to a proposition.
 
-For any type ``t : Type``, the type ``_:unit { t } : prop``. We call
-this "squashing" a type. This is so common, that F* provides two
-mechanisms to support this:
+For any proposition ``p: prop``, the type ``_:unit { p }`` called `squash p`.
+This lifts a proposition to a type, such that the type is inhabited if and only
+if the proposition is true.
 
 1. All the propositional connectives, like ``p /\ q`` are designed so
    that both ``p`` and ``q`` must be of type ``prop``. F* will
-   automatically coerce ``squash``-typed expressions to ``prop``
-   when needed.
+   automatically coerce ``prop``-typed expressions to ``Type0``
+   when needed, inserting the `squash` coercion.
 
 2. The standard library module ``FStar.Classical`` provides several
-   utilities for manipulating squashed propositions.
+   utilities for manipulating propositions.
 
 .. _Part1_ch2_assertions:
 
