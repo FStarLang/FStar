@@ -30,6 +30,12 @@ jobs:
         with:
           name: fstar.tar.gz
 
+      # Install Z3. Note: the packages built by build-packages.yml
+      # don't include Z3.
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.13.3
+
       - run: tar xzf fstar.tar.gz
 
       - name: Smoke test
