@@ -81,7 +81,7 @@ let xx = C1 (function
 
 open FStar.FunctionalExtensionality
 
-let q_as_lem (#a:Type) (#b:a -> Type) (p:squash (forall x. b x)) (x:a)
+let q_as_lem (#a:Type) (#b:a -> prop) (p:squash (forall x. b x)) (x:a)
   : Lemma (b x)
   = ()
 

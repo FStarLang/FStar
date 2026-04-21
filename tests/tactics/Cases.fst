@@ -19,9 +19,9 @@ module Cases
 
 open FStar.Tactics.V2
 
-assume val p : Type0
-assume val q : Type0
-assume val r : Type0
+assume val p : prop
+assume val q : prop
+assume val r : prop
 
 assume val f : unit -> Lemma (p ==> r)
 assume val g : unit -> Lemma (q ==> r)
@@ -35,10 +35,9 @@ let test_cases (h : (p \/ q)) : Lemma r =
             qed ())
 
 // Taking a squashed hypothesis, we can unsquash it as we're in an irrelevant context
-let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
+let test_cases_unsquash (h : (p \/ q)) : Lemma r =
     assert r
         by (let t = quote h in
-            let t = unsquash t in
             cases_or t;
             apply_lemma (quote f);
             apply_lemma (quote g);
@@ -62,7 +61,7 @@ let test_cases_unsquash (h : squash (p \/ q)) : Lemma r =
 (*             apply_lemma (quote gg); exact (h_npp); *)
 (*             qed ()) *)
 
-assume val pred : bool -> Type
+assume val pred : bool -> prop
 assume val pred_true  : squash (pred true)
 assume val pred_false : squash (pred false)
 

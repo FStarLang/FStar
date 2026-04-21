@@ -30,15 +30,15 @@ type vk = data
 
 type tag = data
 
-assume new type verified : vk -> data -> Type
-type vkey (p:(data -> Type)) = k:vk{verified k == p}
+assume new type verified : vk -> data -> prop
+type vkey (p:(data -> prop)) = k:vk{verified k == p}
 
-assume val verify: p:(data -> Type) -> v:vkey p -> d:data -> tag -> Tot (b:bool{b ==> p d})
+assume val verify: p:(data -> prop) -> v:vkey p -> d:data -> tag -> Tot (b:bool{b ==> p d})
 
 assume val format : list data -> Tot data
 assume val parse : d:data -> Tot (s : list data {format s = d})
 
-assume new type certified (d:data)
+assume new type certified : data -> prop
 assume Certified:
     (forall k. {:pattern (format [k])}
             certified (format [k]) <==> verified k == certified )

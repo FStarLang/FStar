@@ -83,7 +83,7 @@ unfold
 let minint (t:inttype) =
   if unsigned t then 0 else -(pow2 (bits t - 1))
 
-let range (n:int) (t:inttype) : Type0 =
+let range (n:int) (t:inttype) : prop =
   minint t <= n /\ n <= maxint t
 
 unfold

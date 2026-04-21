@@ -103,7 +103,7 @@ let rec list_subterm_ordering_lemma #a #b l bound x = match l with
   | hd::tl -> list_subterm_ordering_lemma tl bound x
 
 val move_refinement:  #a:eqtype
-                   -> #p:(a -> Type)
+                   -> #p:(a -> prop)
                    -> l:list a{forall z. mem z l ==> p z}
                    -> Tot (list (x:a{p x}))
 let rec move_refinement #a #p l = match l with

@@ -79,7 +79,7 @@ fn finish (c:cbor_read_t)
 }
 
 
-assume Fits_u64 : squash (SZ.fits_u64)
+assume Fits_u64 : SZ.fits_u64
 
 #push-options "--z3rlimit 20"
 

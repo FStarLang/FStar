@@ -29,7 +29,7 @@ let bad t = VSucc t
 (* Hard to keep this one in the suite since the program fails to check even with --admit_smt_queries true *)
 (* Update 2024/06/29: This now works and seems totally fine. *)
 
-assume val good : int -> Type
+assume val good : int -> prop
 assume val enc: plain:int -> c:unit{good plain}
 assume val repr : int -> int
 

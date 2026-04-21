@@ -19,7 +19,6 @@ module Bug237
    The others only appear in tinyfstar-new.fst *)
 
 open FStar.Classical
-open FStar.StrongExcludedMiddle
 
 type var = nat
 
@@ -41,7 +40,7 @@ type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
-let is_trenaming s = (if strong_excluded_middle (trenaming s) then 0 else 1)
+let is_trenaming s = (if t2b (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
 let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
@@ -94,7 +93,7 @@ type renaming (s:sub) = (trenaming (Sub?.ts s))
 
 val is_renaming : s:sub -> GTot (n:int{(  renaming s  ==> n=0) /\
                                        (~(renaming s) ==> n=1)})
-let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if t2b (renaming s) then 0 else 1)
 
 val tsubst : s:sub -> t:typ -> Pure typ (requires True)
       (ensures (fun t' -> renaming s /\ TVar? t ==> TVar? t'))

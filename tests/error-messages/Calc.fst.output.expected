@@ -3,7 +3,7 @@
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Calc.fsti(47,50-47,55)
+  - See also FStar.Calc.fsti(43,50-43,55)
 
 * Info at Calc.fst(21,2-27,3):
   - Expected failure:

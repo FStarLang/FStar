@@ -55,18 +55,18 @@ noeq type gc_state = {
   fields: field_map
 }
 
-type ptr_lifts gc_state (ptr:mem_addr) : Type =
+type ptr_lifts gc_state (ptr:mem_addr) : prop =
   b2t (valid (gc_state.to_abs ptr))
 
-type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : Type =
+type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : prop =
   valid abs
   /\ gc_state.to_abs ptr = abs
 
-type obj_inv gc_state (i:mem_addr) =
+type obj_inv gc_state (i:mem_addr) : prop =
   valid (gc_state.to_abs i)
   ==> (forall f. ptr_lifts_to gc_state (gc_state.fields (i, f)) (gc_state.abs_fields (gc_state.to_abs i, f)))
 
-unfold type inv gc_state (color_invariant:mem_addr -> Type) =
+unfold type inv gc_state (color_invariant:mem_addr -> prop) : prop =
     to_abs_inj gc_state.to_abs
     /\ (forall (i:mem_addr).{:pattern (trigger i)}
 	trigger i ==>
@@ -83,23 +83,23 @@ type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
 
 new_effect GC_STATE = STATE_h gc_state
-let gc_post (a:Type) = a -> gc_state -> Type0
+let gc_post (a:Type) = a -> gc_state -> prop
 sub_effect
   DIV   ~> GC_STATE = fun (a:Type) (wp:pure_wp a) (p:gc_post a) (gc:gc_state) -> wp (fun a -> p a gc)
 
-effect GC (a:Type) (pre:gc_state -> Type0) (post: gc_state -> Tot (gc_post a)) =
+effect GC (a:Type) (pre:gc_state -> prop) (post: gc_state -> Tot (gc_post a)) =
        GC_STATE a
              (fun (p:gc_post a) (gc:gc_state) ->
                   pre gc /\ (forall a gc'. (pre gc /\ post gc a gc') ==> p a gc')) (* WP *)
 
-effect GCMut (res:Type) (req:gc_state -> Type0) (ens:gc_state -> Tot (gc_post res)) =
+effect GCMut (res:Type) (req:gc_state -> prop) (ens:gc_state -> Tot (gc_post res)) =
        GC res (fun gc -> req gc /\ mutator_inv gc)
               (fun gc res gc' -> ens gc res gc' /\ mutator_inv gc')
 	      
 assume val get : unit -> GC gc_state (fun gc -> True) (fun gc res gc' -> gc==gc' /\ res==gc')
 assume val set : g:gc_state -> GC unit (fun gc -> True) (fun _ _ gc' -> g==gc')
 
-type init_invariant (ptr:mem_addr) (gc:gc_state) =
+type init_invariant (ptr:mem_addr) (gc:gc_state) : prop =
   forall i. mem_lo <= i /\ i < ptr
         ==> not(valid (gc.to_abs i))
          /\ gc.color i = Unalloc

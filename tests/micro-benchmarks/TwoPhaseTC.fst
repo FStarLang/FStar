@@ -71,7 +71,7 @@ assume val f7: #n:nat{n > 0} -> f6 n -> Tot unit
 
 let f8 (k:nat) (x:f6 k) = if k > 0 then f7 x else ()
 
-assume val f9 : int -> Type0
+assume val f9 : int -> prop
 let f10 = x:int{f9 x}
 
 assume val f11 : x:f10 -> squash (f9 x)
@@ -86,15 +86,15 @@ let rec f13 (a:Type u#a) (x:nat) :nat = if x = 0 then 0 else x + f13 a (x - 1)
 let f14 (a:Type u#a) = assert_norm (f13 a 2 = 3)
 
 (* SMTPats are still lax checked *)
-assume type f15: Type0
+assume type f15: prop
 
 assume val f16 (x:int{f15}) :Tot unit
 
 let f17 (x:int) :Lemma (requires True) (ensures f15) [SMTPat (f16 x)] = admit ()
 
 (* We were dropping the comp from the ascription in the second phase, this testcase tests the fix *)
-let f18 (p:int -> Type0) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
-  = FStar.Classical.forall_intro #int #p (fun (x:int) -> (FStar.Classical.give_witness_from_squash (f x) <: Lemma (p x)))
+let f18 (p:int -> prop) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
+  = FStar.Classical.forall_intro #int #p (fun (x:int) -> (f x <: Lemma (p x)))
 
 (*
  * This tests the type annotations on the dependent patterns.
@@ -150,7 +150,7 @@ assume val calc_1124: #a:Type -> es:list (e:(a&a) & (solve_1124 (fst e) (snd e))
 (*
  * #754
  *)
-assume type good_754 : list nat -> Type0
+assume type good_754 : list nat -> prop
 
 //Adding this line (i.e., moving to Type0), makes everything work fine
 //type eqtype = a:Type0{hasEq a}

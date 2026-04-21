@@ -1,8 +1,9 @@
 module BugRaise
 #set-options "--print_implicits --print_universes"
+open FStar.Nonempty
 
 // [raisable u#a u#b] iff [u#a <= u#b]
-assume val raisable : p:prop { Type u#(max a b) } // hack to specify universe parameters for raisable
+assume val raisable : p:prop { nonempty (Type u#(max a b)) } // hack to specify universe parameters for raisable
 
 // (** [raise_t a] is an isomorphic copy of [a] (living in universe a) in universe [b] **)
 assume val raise_t (t : Type u#a { raisable u#a u#b }) : Type u#b

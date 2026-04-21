@@ -79,7 +79,7 @@ val of_list_index:
   Lemma (index (of_list l) i == List.Tot.index l i)
     [SMTPat (index (of_list l) i)]
 
-val equal (#a:Type) (#len:size_nat) (s1:lseq a len) (s2:lseq a len) : Type0
+val equal (#a:Type) (#len:size_nat) (s1:lseq a len) (s2:lseq a len) : prop
 
 val eq_intro: #a:Type -> #len:size_nat -> s1:lseq a len -> s2:lseq a len ->
   Lemma
@@ -537,6 +537,7 @@ val unfold_generate_blocks:
             let (acc',s') = f i acc in
             (acc',Seq.append s s')))
 
+#push-options "--admit_smt_queries true"
 val index_generate_blocks:
     #t:Type0
   -> len:size_pos
@@ -550,6 +551,7 @@ val index_generate_blocks:
            let _,s1 = generate_blocks len max n a_spec f () in
            let _,s2 = f (i / len) () in
            Seq.index s1 i == Seq.index s2 (i % len))
+#pop-options
 
 #push-options "--using_facts_from '+FStar.UInt.pow2_values'"
 

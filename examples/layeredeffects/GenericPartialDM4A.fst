@@ -39,7 +39,7 @@ assume val interp_bind (#a #b:Type)
   : Lemma (interp (m_bind c f) `equiv` w_bind (interp c) (fun x -> interp (f x)))
 
 (* Note the #57-like trick *)
-let repr (a : Type) (pre:Type0) (w: squash pre -> w a) =
+let repr (a : Type) (pre:prop) (w: squash pre -> w a) =
   squash pre -> c:(m a){w () `stronger` interp c}
 
 let return (a:Type) (x:a) : repr a True (fun _ -> w_return x) =
@@ -49,12 +49,10 @@ let return (a:Type) (x:a) : repr a True (fun _ -> w_return x) =
 
 let and_elim_2 (s : squash ('p /\ 'q)) : squash 'q = ()
 let fa_elim #a #p (s : squash (forall x. p x)) (x:a) : squash (p x) =
-  Squash.bind_squash s (fun (f : (forall x. p x)) ->
-  Squash.bind_squash f (fun (f : (x:a -> GTot (p x))) ->
-  Squash.return_squash (f x)))
+  ()
 
 let iw_bind (#a : Type) (#b : Type)
-  (pre_v : Type0) (pre_f : a -> Type0)
+  (pre_v : prop) (pre_f : a -> prop)
   (wp_v : squash pre_v -> w a) (wp_f: (x:a -> squash (pre_f x) -> w b))
   : squash (pre_v /\ (forall x. pre_f x)) -> w b
   = fun pf -> w_bind (wp_v ()) (fun x -> let pf' = and_elim_2 pf in
@@ -62,8 +60,8 @@ let iw_bind (#a : Type) (#b : Type)
                                    wp_f x ())
 
 let bind (a : Type) (b : Type)
-  (pre_v : Type0) (wp_v : squash pre_v -> w a)
-  (pre_f : a -> Type0)
+  (pre_v : prop) (wp_v : squash pre_v -> w a)
+  (pre_f : a -> prop)
   (wp_f: (x:a -> (squash (pre_f x) -> w b)))
   (v : repr a pre_v wp_v)
   (f : (x:a -> repr b (pre_f x) (wp_f x)))
@@ -87,16 +85,16 @@ let bind (a : Type) (b : Type)
 
 
 private
-let weaken (t1 t2 : Type) (s : squash t1)
+let weaken (t1 t2 : prop) (s : squash t1)
   : Pure (squash t2)
          (requires (t1 ==> t2))
          (ensures (fun _ -> True))
   = ()
 
 let subcomp (a:Type)
-  (p1 : Type0)
+  (p1 : prop)
   (w1 : squash p1 -> w a)
-  (p2 : Type0)
+  (p2 : prop)
   (w2 : squash p2 -> w a)
   (f : repr a p1 w1)
   : Pure (repr a p2 w2)
@@ -105,7 +103,7 @@ let subcomp (a:Type)
   = fun _ -> f ()
 
 let if_then_else (a : Type)
-  (p1 : Type0) // FIXME: should take a p2 as well
+  (p1 : prop) // FIXME: should take a p2 as well
   (w1 : squash p1 -> w a)
   (w2 : squash p1 -> w a)
   (f : repr a p1 w1)
@@ -119,7 +117,7 @@ total
 reifiable
 reflectable
 effect {
-  DM4A (a:Type) (pre:Type0) (_:squash pre -> w a)
+  DM4A (a:Type) (pre:prop) (_:squash pre -> w a)
   with {repr; return; bind; subcomp; if_then_else}
 }
 #pop-options

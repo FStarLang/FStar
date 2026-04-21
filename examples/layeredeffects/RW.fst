@@ -9,7 +9,7 @@ type idx =
  | RO
  | RW
  
-val flows : idx -> idx -> Type0
+val flows : idx -> idx -> prop
 let flows i1 i2 =
   match i1, i2 with
   | RW, RO -> False
@@ -24,15 +24,15 @@ let join i1 i2 =
 // Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
-type st_pre = heap -> Type0
-type st_post (a:Type) = a -> heap -> Type0
-type st_bpost (a:Type) = heap -> a -> heap -> Type0
+type st_pre = heap -> prop
+type st_post (a:Type) = a -> heap -> prop
+type st_bpost (a:Type) = heap -> a -> heap -> prop
 
 unfold
 let ro_post #a (post : st_bpost a) : st_bpost a =
   fun h0 x h1 -> post h0 x h1 /\ h1 == h0
 
-let is_ro_post #a (post : st_bpost a) : Type =
+let is_ro_post #a (post : st_bpost a) : prop =
   forall h0 x h1. post h0 x h1 ==> h0 == h1
 
 let ro_sanity_check #a (post : st_bpost a) =
@@ -102,7 +102,7 @@ let subcomp (a:Type) (i1:idx) (pre : st_pre)  (post  : st_bpost a)
   = fun () -> f ()
 
 unfold
-let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
+let ite (p q r : prop) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
   (a : Type) (i1:idx) 
@@ -193,10 +193,10 @@ let labs (n:int) : RWI nat RO (fun _ -> True) (fun h0 _ h1 -> True) =
   then -n
   else n
 
-let rwi_assert (p:Type0) : RWI unit RO (fun _ -> p) (fun h0 () h1 -> h0 == h1) =
+let rwi_assert (p:prop) : RWI unit RO (fun _ -> p) (fun h0 () h1 -> h0 == h1) =
   RWI?.reflect (fun () -> assert p)
   
-let rwi_assume (p:Type0) : RWI unit RO (fun _ -> True) (fun h0 () h1 -> h0 == h1 /\ p) =
+let rwi_assume (p:prop) : RWI unit RO (fun _ -> True) (fun h0 () h1 -> h0 == h1 /\ p) =
   RWI?.reflect (fun () -> assume p)
 
 let test_abs0 (n:int) : RWI int RO (fun _ -> True) (fun h0 r h1 -> r >= 0) =

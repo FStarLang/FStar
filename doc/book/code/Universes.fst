@@ -79,12 +79,12 @@ type top : Type u#(a + 1) =
 
 
 //SNIPPET_START: prop$
-let _ : Type u#1 = prop
+let _ : Type u#0 = prop
 //SNIPPET_END: prop$
 
 //SNIPPET_START: prop impredicative$
-let _ : Type u#1 = a:prop -> a
-let _ : Type u#0 = squash (a:prop -> a)
+let _ : Type u#0 = a:prop -> a
+let _ : Type u#0 = a:prop -> squash a
 let _ : prop = forall (a:prop). a
 let _ : prop = exists (a:prop). a
 //SNIPPET_END: prop impredicative$

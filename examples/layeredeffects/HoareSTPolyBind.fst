@@ -25,8 +25,8 @@ open ExampleST
 
 #set-options "--fuel 0 --ifuel 0"
 
-type pre_t = heap -> Type0
-type post_t (a:Type) = heap -> a -> heap -> Type0
+type pre_t = heap -> prop
+type post_t (a:Type) = heap -> a -> heap -> prop
 
 type repr (a:Type) (pre:pre_t) (post:post_t a) : Type =
   unit -> ExST a (fun p h -> pre h /\ (forall (x:a) (h1:heap). post h x h1 ==> p x h1))

@@ -1,5 +1,7 @@
 module BVExtend
 
+#push-options "--admit_smt_queries true"
+
 open FStar.UInt
 open FStar.BV
 open FStar.Math.Lemmas

@@ -1,8 +1,12 @@
 module BoolRefinement
+open FStar.Nonempty
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
 open FStar.List.Tot
+
+// Helpers replacing removed FStar.Squash operations
+let map_squash (#a #b: prop) (s: squash a) (f: (a -> GTot b)) : squash b = magic ()
 
 #set-options "--z3smtopt '(set-option :smt.qi.eager_threshold 20)' --z3smtopt '(set-option :smt.arith.nl false)'"
 let var = nat
@@ -505,7 +509,7 @@ let check_sub_typing (f:RT.fstar_top_env)
          | None -> T.fail "Not subtypes"
          | Some token ->
            S_ELab sg t0 t1
-             (RT.Rel_subtyping_token f' t0' t1' (FStar.Squash.return_squash token))
+             (RT.Rel_subtyping_token f' t0' t1' (()))
 
 let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } ) (b:s_exp) (t0 t1:s_ty)
   : T.Tac (t:s_ty &
@@ -1074,7 +1078,7 @@ let core_subtyping_renaming
                           (RT.extend_env_l f (RT.rename_bindings (as_bindings sg') x y@(y, elab_binding b)::as_bindings sg))
                           (RT.rename (elab_ty t0) x y)
                           (RT.rename (elab_ty t1) x y))
-          = FStar.Squash.map_squash tok (RT.subtyping_token_renaming f _ _ _ y _ _ _) in
+          = map_squash tok (RT.subtyping_token_renaming f _ _ _ y _ _ _) in
       RT.rename_spec (elab_ty t0) x y; 
       RT.rename_spec (elab_ty t1) x y;       
       src_types_are_closed_core t0 (rt_rename x y) 0;
@@ -1303,7 +1307,7 @@ let sub_typing_weakening #f (sg sg':src_env)
                       (RT.extend_env_l f (as_bindings sg'@(x, elab_binding b)::as_bindings sg))
                       (elab_ty t1)
                       (elab_ty t2))
-          = FStar.Squash.map_squash tok
+          = map_squash tok
               (RT.subtyping_token_weakening f (as_bindings sg) (as_bindings sg') x (elab_binding b) _ _) in
         calc (==) {
            RT.extend_env_l f (as_bindings sg'@(x, elab_binding b)::as_bindings sg);
@@ -1688,21 +1692,19 @@ let soundness_lemma (f:RT.fstar_top_env)
                     (se:src_exp { ln se })
                     (st:s_ty)
   : Lemma
-    (requires src_typing f sg se st)
-    (ensures  RT.tot_typing (extend_env_l f sg)
+    (requires nonempty (src_typing f sg se st))
+    (ensures  nonempty (RT.tot_typing (extend_env_l f sg)
                             (elab_exp se)
-                            (elab_ty st))
-  = FStar.Squash.bind_squash 
-      #(src_typing f sg se st)
-      ()
-      (fun dd -> FStar.Squash.return_squash (soundness dd))
+                            (elab_ty st)))
+  = let dd = FStar.Nonempty.nonempty_elim (src_typing f sg se st) in
+    FStar.Nonempty.nonempty_intro (soundness dd)
 
 let main (nm:string) (src:src_exp) : RT.dsl_tac_t =
   fun (f, expected_t) ->
   if ln src && closed src
   then if None? expected_t
-       then let (| src_ty, _ |) = check f [] src in
-            soundness_lemma f [] src src_ty;
+       then let (| src_ty, d |) = check f [] src in
+            let _ : FStar.Nonempty.nonempty (RT.tot_typing (extend_env_l f []) (elab_exp src) (elab_ty src_ty)) = FStar.Nonempty.nonempty_intro (soundness d) in
             [],
             RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
             []

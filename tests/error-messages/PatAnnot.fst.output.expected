@@ -11,14 +11,14 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Prims.fst(463,77-463,89)
+  - Also see: Prims.fst(427,77-427,89)
 
 * Info at PatAnnot.fst(33,0-35,14):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: Prims.fst(463,77-463,89)
+  - Also see: Prims.fst(427,77-427,89)
 
 * Info at PatAnnot.fst(39,10-39,12):
   - Expected failure:
@@ -34,12 +34,12 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(642,18-642,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
   - Type annotation on parameter incompatible with the expected type
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(642,18-642,24)
 

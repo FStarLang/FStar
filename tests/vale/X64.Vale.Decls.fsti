@@ -161,19 +161,19 @@ unfold let va_get_whileCond (c:va_code{While? c}) : ocmp = While?.whileCond c
 unfold let va_get_whileBody (c:va_code{While? c}) : va_code = While?.whileBody c
 
 
-val eval_code : c:va_code -> s0:va_state -> s1:va_state -> Type0
-val eval_while : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> s1:va_state -> Type0
+val eval_code : c:va_code -> s0:va_state -> s1:va_state -> prop
+val eval_while : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> s1:va_state -> prop
 
 (* ok for now but no need to actually expose the definition.
    instead expose lemmas about it *)
-let va_state_eq (s0:va_state) (s1:va_state) : Type0 = state_eq s0 s1
+let va_state_eq (s0:va_state) (s1:va_state) : prop = state_eq s0 s1
 
-let va_require (block:va_codes) (c:va_code) (s0:va_state) (s1:va_state) : Type0 =
+let va_require (block:va_codes) (c:va_code) (s0:va_state) (s1:va_state) : prop =
   Cons? block /\
   Cons?.hd block == c /\
   eval_code (va_Block block) s0 s1
 
-let va_ensure (b0:va_codes) (b1:va_codes) (s0:va_state) (s1:va_state) (sN:va_state) : Type0 =
+let va_ensure (b0:va_codes) (b1:va_codes) (s0:va_state) (s1:va_state) (sN:va_state) : prop =
   Cons? b0 /\
   Cons?.tl b0 == b1 /\
   eval_code (Cons?.hd b0) s0 s1 /\

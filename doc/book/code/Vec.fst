@@ -142,17 +142,14 @@ let partially_reduce_fold_right f more
   =  _ by (T.trefl())
 //SNIPPET_END: trefl
 
-private val imp_intro_lem : (#a:Type) -> (#b : Type) ->
-                            (a -> squash b) ->
-                            Lemma (a ==> b)
-let imp_intro_lem #a #b f =
-  FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
+private let imp_intro_lem (#a:prop) (#b:prop)
+                         (f: a -> squash b)
+  : Lemma (a ==> b)
+  = let _ : (a ==> b) = FStar.Classical.arrow_to_impl f in ()
 
-let lem #a #b (f:a -> b) : (a ==> b) =
-  imp_intro_lem (fun x -> FStar.Squash.return_squash (f x));
-  assert (a ==> b);
-  let x : squash (a ==> b) = () in
-  FStar.Squash.join_squash x
+let lem (#a #b:prop) (f:a -> squash b) : (a ==> b) =
+  imp_intro_lem f;
+  ()
 
 open FStar.Tactics
 let implies_intro () : Tac binder =
@@ -160,14 +157,13 @@ let implies_intro () : Tac binder =
   intro()
 
 
-private val split_lem : (#a:Type) -> (#b:Type) ->
+private val split_lem : (#a:prop) -> (#b:prop) ->
                         squash a -> squash b -> Lemma (a /\ b)
 let split_lem #a #b sa sb = ()
 
-let split_lem' (#a:Type) (#b:Type) (x:a) (y:b) : (a /\ b) =
+let split_lem' (#a:prop) (#b:prop) (x:squash a) (y:squash b) : (a /\ b) =
   assert (a /\ b);
-  let x : squash (a /\ b) = () in
-  FStar.Squash.join_squash x
+  ()
 
 let split () : Tac unit =
   apply (`split_lem')

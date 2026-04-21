@@ -27,7 +27,6 @@ assume val l : unit -> Lemma (p == r)
 assume val l2 : unit -> Lemma (requires r) (ensures q)
 
 let assumption' () : Tac unit =
-    apply_raw (`FStar.Squash.return_squash);
     assumption ()
 
 let tau () : Tac unit =
@@ -49,7 +48,8 @@ let tau () : Tac unit =
     | [_;_;_;b] ->
         let t = b.sort in
         let t = norm_term [] t in // contains uvar redexes.
-        if FStar.Order.ne (compare_term t rr)
+        let rr' = norm_term [] (`(squash r)) in
+        if FStar.Order.ne (compare_term t rr')
         then fail "binder was not retyped?"
         else ();
 

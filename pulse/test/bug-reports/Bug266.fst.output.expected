@@ -11,12 +11,12 @@
   - Current context:
       emp
   - In typing environment:
-      __#66 : squash (__ == my_intro l_False)
-      __#65 :
+      __#67 : squash (__ == my_intro l_False)
+      __#66 :
         ghost fn
           requires pure l_False
           ensures post ()
-      uu___0#50 : unit
+      uu___0#53 : unit
 
-      goto _return#54 requires emp
+      goto _return#57 requires emp
 

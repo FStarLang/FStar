@@ -26,6 +26,6 @@ let test () =
   // ... to have `pre ...` in the global scope, with no fuel. Hooray!
   assert(pre v1)
 
-assume val p : Type0
+assume val p : prop
 let test2 (x : squash (p /\ True)) : squash p = ()
 #pop-options
