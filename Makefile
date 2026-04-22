@@ -449,6 +449,7 @@ install: export FSTAR_LINK_LIBDIRS=0 # default is false, but set anyway
 install:
 	$(call bold_msg, "INSTALL", "STAGE 3")
 	$(MAKE) -C stage3 install FSTAR_DUNE_RELEASE=1
+	$(MAKE) -C karamel install LOWSTAR=false
 
 __do-install-stage1:
 	$(call bold_msg, "INSTALL", "STAGE 1")

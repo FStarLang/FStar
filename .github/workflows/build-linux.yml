@@ -107,3 +107,5 @@ jobs:
           ./fstar/bin/fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true B.fst
+          # Check that karamel is there
+          ./fstar/bin/krml -version
