@@ -51,10 +51,8 @@
     <Compile Link="FStar_Pervasives.fs" Include="extracted\FStar_Pervasives.fs" />
 
     <Compile Link="FStar_Preorder.fs" Include="extracted\FStar_Preorder.fs" />
-    <Compile Link="FStar_Squash.fs" Include="extracted\FStar_Squash.fs" />
     <Compile Link="FStar_Classical.fs" Include="extracted\FStar_Classical.fs" />
     <Compile Link="FStar_FunctionalExtensionality.fs" Include="extracted\FStar_FunctionalExtensionality.fs" />
-    <Compile Link="FStar_StrongExcludedMiddle.fs" Include="extracted\FStar_StrongExcludedMiddle.fs" />
     <Compile Link="FStar_PropositionalExtensionality.fs" Include="extracted\FStar_PropositionalExtensionality.fs" />
     <Compile Link="FStar_PredicateExtensionality.fs" Include="extracted\FStar_PredicateExtensionality.fs" />
     <!-- TODO: (Warning 341) Expected parameter 'state of witnessed to be unused in its definition and eliminated -->
