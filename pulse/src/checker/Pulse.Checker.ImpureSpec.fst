@@ -111,7 +111,10 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty =
+      if changed1 then fst (tc_type_phase1 g b_ty)
+      else b_ty
+    in
     debug g (fun _ -> [text "symb eval subterms abs 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -129,7 +132,10 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty =
+      if changed1 then fst (tc_type_phase1 g b_ty)
+      else b_ty
+    in
     debug g (fun _ -> [text "symb eval subterms refine 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -280,11 +286,12 @@ let is_literally (t: term) : option term =
   | _ -> None
 
 let tc_term_phase1_with_type_twice g t ty =
-  // If we call phase1 TC only once, then the universe instantiation in
-  // coercion-inserted reveal calls remains a uvar.
   let t, eff = tc_term_phase1_with_type g t ty in
-  let t, eff = tc_term_phase1_with_type g t ty in
-  t, eff
+  // If the first TC left unresolved uvars/univars (e.g., universe instantiation
+  // in coercion-inserted reveal calls), run TC again to resolve them.
+  if RU.no_uvars_in_term t
+  then t, eff
+  else let t, eff = tc_term_phase1_with_type g t ty in t, eff
 
 let or_emp (t: option slprop) : slprop =
   match t with Some t -> t | None -> tm_emp
@@ -403,15 +410,24 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let ctxt = { ctxt; in_old = false } in
   let t = purify_spec_core g' ctxt [t] |> or_emp in
   // TODO: check that xs is not free in t
-  // If we call phase1 TC only once, then the universe instantiation in
-  // op_Exists_Star can remain unresolved.
-  let t, _ = tc_term_phase1_with_type g t tm_slprop in
+  // Only run the final tc_term_phase1_with_type if there are unresolved
+  // uvars or universe variables (e.g., in op_Exists_Star when universe
+  // annotations are missing). In most cases, per-atom TC in purify_spec_core
+  // has already fully elaborated the term.
+  let t =
+    if RU.no_uvars_in_term t
+    then t
+    else let t, _ = tc_term_phase1_with_type g t tm_slprop in t
+  in
   debug g (fun _ -> [ text "purified" ^/^ pp t0; text "to" ^/^ pp t ]);
   t
 
 let purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) =
-  // purify_spec already elaborates the term via tc_term_phase1_with_type,
-  // so we only need the core checker for validation (skip instantiate_term_implicits)
   let t = purify_spec g ctxt t in
-  check_slprop_with_core g t;
+  // Use structural check: purify_spec already core-checked each atom via
+  // tc_term_phase1_with_type. The structural check avoids re-walking the
+  // full term tree through the kernel for slprop-typed AST nodes
+  // (Star, ExistsSL, ForallSL, etc.), only calling core_check_term on
+  // opaque Tm_FStar leaves.
+  check_slprop_with_core_structural g t;
   t
