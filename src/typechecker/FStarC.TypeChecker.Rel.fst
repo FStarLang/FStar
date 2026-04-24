@@ -1043,11 +1043,11 @@ let rec may_relate_with_logical_guard env is_eq head : ML _
 let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) head
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
-let destruct_flex_t' t : ML flex_t =
+let destruct_flex_t' t : ML (flex_t & (subst_ts & term))=
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
     | Tm_uvar (uv, s) ->
-      Flex (t, uv, args)
+      Flex (t, uv, args), (s,t)
     | _ -> failwith "Not a flex-uvar"
 
 (* Destruct a term into its uvar head and arguments. The wl is only
@@ -1059,7 +1059,7 @@ let destruct_flex_t (t:term) wl : ML (flex_t & worklist) =
   (* If there's any substitution on the head of t, it must
    * have been made trivial by the call above, so
    * calling destruct_flex_t' is fine. *)
-  destruct_flex_t' t, wl
+  fst (destruct_flex_t' t), wl
 
 (* ------------------------------------------------ *)
 (* <solving problems>                               *)
@@ -2785,15 +2785,15 @@ let solve_rigid_flex_or_flex_rigid_subtyping
     end
   end
 
-let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
+let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts & term))) (rhs:term)
     : ML solution =
     if !dbg_Rel then (
       Format.print1 "solve_t_flex_rigid_eq rhs=%s\n"
         (show rhs)
     );
 
-    if should_defer_flex_to_user_tac wl lhs
-    then defer_to_user_tac orig (flex_reason lhs) wl
+    if should_defer_flex_to_user_tac wl (fst lhs)
+    then defer_to_user_tac orig (flex_reason (fst lhs)) wl
     else
 
     (*
@@ -3030,7 +3030,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
 
        If the RHS is an arrow (xi:ti -> C): imitate_arrow
     *)
-        let imitate (orig:prob) (env:Env.env) (wl:worklist)
+    let imitate (orig:prob) (env:Env.env) (wl:worklist)
                 (lhs:flex_t) (rhs:term)
         : ML solution =
         if !dbg_Rel then
@@ -3184,7 +3184,24 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
       else solve_t_flex_rigid_eq (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
+      let Flex(_, ctx_uv, _), (lhs_subst, lhs_t_orig) = lhs in
+      //See PR#https://github.com/FStarLang/FStar/pull/4215
+      //If the substitution has no effect on the RHS, we can skip it
+      //and avoid abstracting over the binders in the uvar,
+      //which leads to big perf wins in some cases (esp. in Pulse)
+      let is_subst_noop (subst:subst_ts) rhs =
+        match fst subst with
+        | [] | [[]] -> true
+        | _ -> 
+          Free.names rhs `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders &&
+          FStarC.Syntax.Util.term_eq rhs (SS.subst' subst rhs)
+      in
+      let lhs, wl =
+        if is_subst_noop lhs_subst rhs
+        then fst lhs, wl
+        else destruct_flex_t lhs_t_orig wl
+      in
+      let Flex (_t1, ctx_uv, args_lhs) = lhs in
       let env = p_env wl orig in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
@@ -4145,14 +4162,14 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
          * ensure_no_uvar_subst call. In that case, we get a nested application
          * in t2, and the call below would raise an error. *)
         let t2, wl = ensure_no_uvar_subst env t2 wl in
-        let f1 = destruct_flex_t' t1 in
-        let f2 = destruct_flex_t' t2 in
+        let f1, _ = destruct_flex_t' t1 in
+        let f2, _ = destruct_flex_t' t2 in
         solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
       | Tm_uvar _, _
       | Tm_app {hd={n=Tm_uvar _}}, _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
-        let f1, wl = destruct_flex_t t1 wl in
+        let f1 = destruct_flex_t' t1 in
         solve_t_flex_rigid_eq orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
@@ -4188,7 +4205,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             | Inr not_abs, Inl t_abs ->
               if is_flex not_abs //if it's a pattern and the free var check succeeds, then unify it with the abstraction in one step
               && p_rel orig = EQ
-              then let flex, wl = destruct_flex_t not_abs wl in
+              then let flex = destruct_flex_t' not_abs in
                     solve_t_flex_rigid_eq orig wl flex t_abs
               else begin
                 match head_matches_delta env false wl.smt_ok not_abs t_abs with
