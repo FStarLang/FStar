@@ -285,7 +285,7 @@ Top-level effects can be problematic for a few reasons:
 
      .. code-block :: fstar
 
-         let _  = let _ = FStar.Squash.return_squash inconsistent in
+         let _  = let _ : squash False = inconsistent in
                   assert false
 
 Nevertheless, when used carefully, top-level effects can be useful,

@@ -30,7 +30,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(642,18-642,24)
 
 * Info at TestErrorLocations.fst(48,14-48,19):
   - Expected failure:
@@ -44,14 +44,14 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(455,90-455,102)
+  - See also Prims.fst(419,90-419,102)
 
 * Info at TestErrorLocations.fst(62,15-62,17):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(455,90-455,102)
+  - See also Prims.fst(419,90-419,102)
 
 * Info at TestErrorLocations.fst(66,27-66,28):
   - Expected failure:
@@ -59,7 +59,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(669,18-669,24)
+  - See also Prims.fst(642,18-642,24)
 
 * Info at TestErrorLocations.fst(70,25-70,34):
   - Expected failure:
@@ -76,7 +76,7 @@
     got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also FStar.Classical.Sugar.fsti(66,22-66,41)
+  - See also FStar.Classical.Sugar.fsti(66,21-66,40)
 
 * Info at TestErrorLocations.fst(96,28-96,33):
   - Expected failure:

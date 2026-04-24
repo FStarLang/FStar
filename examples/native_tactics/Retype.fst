@@ -23,11 +23,10 @@ assume val p : prop
 assume val q : prop
 assume val r : prop
 
-assume val l : unit -> Lemma (p == r)
+assume val l : unit -> Lemma (squash p == squash r)
 assume val l2 : unit -> Lemma (requires r) (ensures q)
 
 let assumption' () : Tac unit =
-    apply_raw (`FStar.Squash.return_squash);
     assumption ()
 
 [@@plugin]
@@ -37,13 +36,13 @@ let tau () : Tac unit =
     let _ = implies_intro () in
     let b = implies_intro () in
 
-    var_retype b; // call retype, get a goal `p == ?u`
-    let pp = `p in
-    let rr = `r in
-    grewrite pp rr; // rewrite p to q, get `q == ?u`
-    trefl (); // unify
+    var_retype b;
+    let pp = `(squash p) in
+    let rr = `(squash r) in
+    grewrite pp rr;
+    trefl ();
 
-    apply_lemma (`l); //prove (p == q), asked by grewrite
+    apply_lemma (`l);
 
     let e = cur_env () in
     match vars_of_env e with

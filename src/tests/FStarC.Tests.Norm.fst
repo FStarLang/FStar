@@ -311,7 +311,7 @@ let run_all () : ML unit =
 
   let whnf_tests =
       let _ = Pars.pars_and_tc_fragment "assume val def : Type0" in
-      let _ = Pars.pars_and_tc_fragment "assume val pred : Type0" in
+      let _ = Pars.pars_and_tc_fragment "assume val pred : prop" in
       let _ = Pars.pars_and_tc_fragment "let def0 (y:int) = def" in
       let _ = Pars.pars_and_tc_fragment "unfold let def1 (y:int) = x:def0 y { pred }" in
       let def_def1 = tc "x:def0 17 { pred }" in

@@ -5,7 +5,7 @@ open Pulse.Lib.GhostPCMReference
 open FStar.Preorder
 module GR = Pulse.Lib.GhostPCMReference
 module MR = Pulse.Lib.MonotonicGhostRef
-let as_prop (p:Type) = p <==> True
+let as_prop (p:prop) = p <==> True
 // A tiny db
 type db = {
   inventory:nat;

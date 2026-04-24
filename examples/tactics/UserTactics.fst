@@ -61,7 +61,7 @@ let simple_equality_assertions_within_a_function () =
 let local_let_bindings =
   assert (let x = 10 in x + 0 == 10) by trivial ()
 
-assume type pred_1 : int -> Type0
+assume type pred_1 : int -> prop
 assume Pred1_saturated: forall x. pred_1 x
 let partially_solved_using_smt =
   assert ((forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y)) /\ //proven by tactic
@@ -83,7 +83,7 @@ assume val mul_comm : x:nat -> y:nat -> Tot (x * y == y * x)
 val lemma_mul_comm : x:nat -> y:nat -> Lemma (x * y == y * x)
 let lemma_mul_comm x y = ()
 
-let sqintro (x:'a) : squash 'a = ()
+let sqintro (#a:prop) (x:squash a) : squash a = ()
 
 let test_exact (x:nat) (y:nat) =
   assert (x * y == y * x)

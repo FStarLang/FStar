@@ -99,7 +99,7 @@ let subcomp (a:Type)
          (ensures (fun _ -> True))
   = f
 
-let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
+let ite (p q r : prop) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
   (a : Type)

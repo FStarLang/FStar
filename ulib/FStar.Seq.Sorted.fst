@@ -17,7 +17,7 @@ module FStar.Seq.Sorted
 
 open FStar.Seq
 
-type sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a) : Type0 =
+let sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a) : prop =
   forall (i j: (k:nat{k<length s})). i <= j ==> f (index s i) (index s j)
 
 val sorted_pred_tail :
@@ -44,12 +44,9 @@ let intro_sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a)
   ($g:(i:nat{i < length s} -> j:nat{j < length s} -> Lemma (requires (i <= j)) (ensures (f (index s i) (index s j)))))
   : Lemma (sorted_pred #a f s)
 = let aux (i j : (k:nat{k < length s})) (p:squash (i <= j)) : GTot (squash (f (index s i) (index s j))) =
-    FStar.Squash.give_proof p ;
-    g i j ;
-    FStar.Squash.get_proof (f (index s i) (index s j))
-  in
+    g i j in
   FStar.Classical.forall_intro_2 (fun (i j:(k:nat{k < length s})) ->
-    FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (aux i j)) <: Lemma (i <= j ==> f (index s i) (index s j)))
+    (FStar.Classical.arrow_to_impl (aux i j)) <: Lemma (i <= j ==> f (index s i) (index s j)))
 
 val sorted_pred_cons_lemma :
   #a:eqtype ->

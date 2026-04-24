@@ -97,7 +97,7 @@ let update (#ty: Type) (s: seq ty) (i: nat{i < length s}) (v: ty) : seq ty =
 ///
 /// function Seq#Contains<T>(Seq T, T): bool;
 
-let contains (#ty: Type) (s: seq ty) (v: ty) : Type0 =
+let contains (#ty: Type) (s: seq ty) (v: ty) : prop =
   FLT.memP v s
 
 /// We represent the Dafny function `Seq#Take` with `take`:
@@ -120,7 +120,7 @@ let drop (#ty: Type) (s: seq ty) (howMany: nat{howMany <= length s}) : seq ty =
 ///
 /// function Seq#Equal<T>(Seq T, Seq T): bool;
 
-let equal (#ty: Type) (s0: seq ty) (s1: seq ty) : Type0 =
+let equal (#ty: Type) (s0: seq ty) (s1: seq ty) : prop =
   length s0 == length s1 /\
     (forall j.{:pattern index s0 j \/ index s1 j}
       0 <= j && j < length s0 ==> index s0 j == index s1 j)
@@ -131,7 +131,7 @@ let equal (#ty: Type) (s0: seq ty) (s1: seq ty) : Type0 =
 ///
 /// function Seq#SameUntil<T>(Seq T, Seq T, int): bool;
 
-let is_prefix (#ty: Type) (s0: seq ty) (s1: seq ty) : Type0 =
+let is_prefix (#ty: Type) (s0: seq ty) (s1: seq ty) : prop =
     length s0 <= length s1
   /\ (forall (j: nat).{:pattern index s0 j \/ index s1 j}
      j < length s0 ==> index s0 j == index s1 j)

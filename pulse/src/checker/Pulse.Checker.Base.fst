@@ -378,7 +378,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
          | Some tok, _ ->
            let d_equiv
              : RT.equiv _ cres ret_ty =
-             RT.Rel_eq_token _ _ _ (FStar.Squash.return_squash tok) in
+             RT.Rel_eq_token _ _ _ tok in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
 

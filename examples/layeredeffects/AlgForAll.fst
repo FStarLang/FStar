@@ -9,9 +9,9 @@ open Alg
 type rwtree a = Alg.tree a [Read; Write]
 let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> Alg.bind _ _ c f
 
-let st_wp0 (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+let st_wp0 (a:Type) : Type = state -> (a & state -> prop) -> prop
 
-let st_monotonic #a (w : st_wp0 a) : Type0 =
+let st_monotonic #a (w : st_wp0 a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
@@ -51,7 +51,7 @@ let interp_as_wp2 #a (t : rwtree a) : Alg (st_wp a) [] =
 
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)
-val stronger : (#a:Type) -> st_wp a -> st_wp a -> Type0
+val stronger : (#a:Type) -> st_wp a -> st_wp a -> prop
 let stronger w1 w2 = forall p s. w1 p s ==> w2 p s
 
 let equiv #a (w1 w2 : st_wp a) = w1 `stronger` w2 /\ w2 `stronger` w1
@@ -61,7 +61,7 @@ let (<<=) = stronger
 val interp_ret (#a:Type) (x:a) : Lemma (return_wp x `stronger` interp_as_wp (Return x))
 let interp_ret x = ()
 
-let wp_is_monotonic #a (wp : st_wp a) : Type0 =
+let wp_is_monotonic #a (wp : st_wp a) : prop =
   forall p1 p2 s0. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> wp s0 p1 ==> wp s0 p2
 
 let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
@@ -85,7 +85,7 @@ let rec interp_monotonic #a (c:rwtree a) : Lemma (wp_is_monotonic (interp_as_wp 
     Classical.forall_intro aux;
     bind_preserves_mon (write_wp s) (fun x -> interp_as_wp (k x))
 
-let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> Type0)) (s0:state)
+let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> prop)) (s0:state)
   : Lemma (requires (w1 <<= w2))
           (ensures w1 s0 p ==> w2 s0 p)
   = ()
@@ -119,7 +119,7 @@ val interp_bind (#a #b:Type)
   : Lemma (requires w1 <<= interp_as_wp c /\ (forall x. w2 x <<= interp_as_wp (f x)))
           (ensures bind_wp w1 w2 `stronger` interp_as_wp (tbind c f))
 let interp_bind #a #b c f w1 w2 =
-  let aux (p: (b & state -> Type0)) (s0:state) : Lemma (bind_wp w1 w2 s0 p ==> interp_as_wp (tbind c f) s0 p) =
+  let aux (p: (b & state -> prop)) (s0:state) : Lemma (bind_wp w1 w2 s0 p ==> interp_as_wp (tbind c f) s0 p) =
     calc (==>) {
       bind_wp w1 w2 s0 p;
       ==> {}

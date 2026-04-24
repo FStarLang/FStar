@@ -34,18 +34,18 @@ let lemma_update_reg_equal (r:reg) (v:nat64) (s1:state) (s2:state) : Lemma
   (ensures ((update_reg r v s1).regs == s2.regs)) =
   ()
 
-let assert_from_norm' (p:Type0): Lemma
+let assert_from_norm' (p:prop): Lemma
   (requires (norm [delta_only wp_code_delta; zeta; iota; primops] p))
   (ensures p)
   = ()
 
-let assert_to_norm' (p:Type0): Lemma
+let assert_to_norm' (p:prop): Lemma
   (requires p)
   (ensures (norm [delta_only wp_code_delta; zeta; iota; primops] p))
   = ()
 
 let lemma_weak_pre_ins (i:ins) (inss:list ins) 
-			       (s0:state) (sN:state) (post: unit -> Type) :
+			       (s0:state) (sN:state) (post: unit -> prop) :
   Ghost (option state)
          (requires (s0.ok /\
 		    eval_code (va_Block (inss_to_codes (i::inss))) s0 sN) /\
@@ -60,7 +60,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
   let b0 = inss_to_codes (i::inss) in
   (* this results in:
    Not an embedded list: X64.Vale.StrongPost_i.wp_code_delta")
-  let some_pre (sM:state) (p:Type0) : Ghost (option state)
+  let some_pre (sM:state) (p:prop) : Ghost (option state)
     (requires p)
     (ensures fun _ -> norm [delta_only wp_code_delta; zeta; iota; primops] p) =
     assert_to_norm' p;
@@ -135,7 +135,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
   | _ -> None
 
 
- let rec lemma_weak_pre (inss:list ins) (s0:state) (sN:state) (post: unit -> Type0) : Lemma
+ let rec lemma_weak_pre (inss:list ins) (s0:state) (sN:state) (post: unit -> prop) : Lemma
   (requires
     eval_code (va_Block (inss_to_codes inss)) s0 sN /\
     s0.ok /\
@@ -158,7 +158,7 @@ let lemma_weak_pre_ins (i:ins) (inss:list ins)
       | Some sM -> lemma_weak_pre inss sM sN post
     )
 
-let lemma_weakest_pre_norm' (inss: list ins) (s0: state) (sN:state) (#post:unit -> Type0) :
+let lemma_weakest_pre_norm' (inss: list ins) (s0: state) (sN:state) (#post:unit -> prop) :
   Lemma (requires
 	  (forall ok0 regs0 flags0 mem0.
      	    ok0 == s0.ok /\

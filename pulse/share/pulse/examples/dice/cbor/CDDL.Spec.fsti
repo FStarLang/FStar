@@ -74,7 +74,7 @@ let t_choice_simpl
 let t_always_false : typ = (fun _ -> false)
 
 let t_literal (i: Cbor.raw_data_item) : typ =
-  (fun x -> FStar.StrongExcludedMiddle.strong_excluded_middle (x == i))
+  (fun x -> (x == i))
 
 // Appendix D
 let any : typ = (fun _ -> true)
@@ -663,7 +663,7 @@ let rec list_ghost_assoc_for_all
 = match m with
   | [] -> ()
   | (k', _) :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+    if (k == k')
     then ()
     else list_ghost_assoc_for_all p k m'
 
@@ -680,7 +680,7 @@ let rec list_assoc_none_for_all_map_key_neq
 let rec filter_ghost #t (p: t->prop) (xs: list t) : GTot (list t) =
   match xs with
   | [] -> []
-  | x::xs -> if StrongExcludedMiddle.strong_excluded_middle (p x) then x::filter_ghost p xs else filter_ghost p xs
+  | x::xs -> if (p x) then x::filter_ghost p xs else filter_ghost p xs
 
 let rec memP_filter_ghost #t (p: t->prop) (xs: list t) (y: t) :
     Lemma (List.Tot.memP y (filter_ghost p xs) <==> (p y /\ List.Tot.memP y xs))
@@ -843,7 +843,7 @@ let bstr_cbor
 : typ = fun x ->
   Cbor.String? x &&
   Cbor.String?.typ x = Cbor.cbor_major_type_byte_string &&
-  FStar.StrongExcludedMiddle.strong_excluded_middle (
+  (
     exists y . Cbor.serialize_cbor y == Cbor.String?.v x /\
     Cbor.data_item_wf data_item_order y /\
     ty y == true

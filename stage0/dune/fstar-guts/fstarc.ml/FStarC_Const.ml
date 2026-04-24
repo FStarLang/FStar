@@ -91,7 +91,7 @@ let eq_const (c1 : sconst) (c2 : sconst) : Prims.bool=
 let rec pow2 (x : Prims.int) : Prims.int=
   if x = Prims.int_zero
   then Prims.int_one
-  else (Prims.of_int 2) * (pow2 (x - Prims.int_one))
+  else Prims.op_Star (Prims.of_int 2) (pow2 (x - Prims.int_one))
 let bounds (signedness1 : signedness) (width1 : width) :
   (Prims.int * Prims.int)=
   let n =

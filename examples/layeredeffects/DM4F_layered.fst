@@ -24,12 +24,12 @@ open FStar.Tactics.V2
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
 type post_t st a =
-  a -> st -> Type0
+  a -> st -> prop
 
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
-  st -> post_t st a -> Type0
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
+  st -> post_t st a -> prop
 
-let st_monotonic #st #a (w : wp0 st a) : Type0 =
+let st_monotonic #st #a (w : wp0 st a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
@@ -53,23 +53,11 @@ let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
   fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
 
-let squash_lem a : Lemma (a ==> squash a) = ()
+(* squash_lem and wp_squash_lem no longer needed since post_t returns prop *)
 
 let elim_mon #a #st (w : wp st a) (p1 p2 : post_t st a) (s0:st)
  : Lemma (requires (forall x s1. p1 x s1 ==> p2 x s1))
          (ensures w s0 p1 ==> w s0 p2) = ()
-
-(* All of this is needed due to an auto_squash popping up in the VC *)
-
-let wp_squash_lem #a #st (w : wp st a) (p : post_t st a) (s0:st)
-  : Lemma (requires w s0 p) (ensures w s0 (fun x y -> squash (p x y)))
-  = calc (==>) {
-      w s0 p;
-      ==> {}
-      w s0 (fun x y -> p x y);
-      ==> { elim_mon w (fun x y -> p x y) (fun x y -> squash (p x y)) s0 } // grr
-      w s0 (fun x y -> squash (p x y));
-    }
     
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
@@ -77,10 +65,6 @@ let bind (a:Type) (b:Type) (st:Type0)
   (c : repr a st wp_c)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st (bind_wp wp_c wp_f)
-   by (explode ();
-       let w = nth_var 3 in
-       apply_lemma (`(wp_squash_lem (`#(binding_to_term w))));
-       dump "")
 = fun s0 ->
       let (y, s1) = c s0 in
       f y s1
@@ -101,7 +85,7 @@ let if_then_else
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp

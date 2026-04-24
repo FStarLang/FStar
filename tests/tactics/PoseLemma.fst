@@ -2,7 +2,7 @@ module PoseLemma
 
 open FStar.Tactics.V2
 
-assume val pred : int -> int -> Type0
+assume val pred : int -> int -> prop
 assume val lem1 : x:int -> y:int -> Lemma (requires (x < 0)) (ensures (pred x y))
 assume val lem2 : x:int -> y:int -> Lemma (requires True) (ensures (pred x y))
 

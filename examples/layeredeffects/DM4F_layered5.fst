@@ -26,12 +26,12 @@ let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b 
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
-type post_t st a = a -> st -> Type0
+type post_t st a = a -> st -> prop
 
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
-  st -> post_t st a -> Type0
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
+  st -> post_t st a -> prop
 
-let st_monotonic #st #a (w : wp0 st a) : Type0 =
+let st_monotonic #st #a (w : wp0 st a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
@@ -40,7 +40,7 @@ type wp st a = w:(wp0 st a){st_monotonic w}
 
 open FStar.Monotonic.Pure
 
-type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
+type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
   s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
 
 unfold
@@ -85,7 +85,7 @@ let if_then_else
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp

@@ -136,6 +136,7 @@ fn gather u#a
   with inst0. assert C.ghost_pcm_pts_to r (U.raise_val #a #inst0 v0);
   with inst1. assert C.ghost_pcm_pts_to r (U.raise_val #a #inst1 v1);
   drop_ (small_token inst1);
+  U.raisable_subsingleton inst0 inst1;
   rewrite each inst1 as inst0;
   C.ghost_gather #(U.raise_t #inst0 a) r (U.raise_val v0) (U.raise_val v1)
 }

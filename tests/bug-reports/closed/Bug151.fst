@@ -17,7 +17,7 @@ module Bug151
 
 open FStar.Seq
 
-assume new type p: int -> nat -> Type
+assume new type p: int -> nat -> prop
 
 type int_1 = x:int{ p x 1 }
 type int_2 = x:int{ p x 2 }

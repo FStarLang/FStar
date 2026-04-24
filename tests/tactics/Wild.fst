@@ -28,17 +28,17 @@ let id x = x
 
 (* A more elaborate test *)
 
-val exists_weaken: #a:Type -> p:(a -> Type) -> q:(a -> Type) -> h:(forall (x:a{p x}). q x) -> x:a{p x}
+val exists_weaken: #a:Type -> p:(a -> prop) -> q:(a -> prop) -> h:(forall (x:a{p x}). q x) -> x:a{p x}
   -> GTot (squash (exists x. q x))
 let exists_weaken #a p q h x = exists_intro q x
 
 val a : Type0
 let a = unit
 
-val p : a -> Type0
+val p : a -> prop
 let p x = True
 
-val q : a -> Type0
+val q : a -> prop
 let q x = False
 
 [@@(expect_failure [19])]

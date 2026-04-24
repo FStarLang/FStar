@@ -19,7 +19,7 @@ module FStarC.Effect
 new_effect ALL = ALL_h unit
 
 let all_pre = all_pre_h unit
-let all_post' (a : Type) (pre:Type) = all_post_h' unit a pre
+let all_post' (a : Type) (pre:prop) = all_post_h' unit a pre
 let all_post (a : Type) = all_post_h unit a
 let all_wp (a : Type) = all_wp_h unit a
 

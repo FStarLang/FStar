@@ -578,9 +578,7 @@ let mk_irrelevant_goal (reason : Prims.string)
   (label : Prims.string) : FStarC_Tactics_Types.goal tac=
   bind (ret ())
     (fun uu___ ->
-       let typ =
-         let uu___1 = env.FStarC_TypeChecker_Env.universe_of env phi in
-         FStarC_Syntax_Util.mk_squash uu___1 phi in
+       let typ = FStarC_Syntax_Util.mk_squash phi in
        bind (new_uvar reason env typ sc_opt [] rng)
          (fun uu___1 ->
             match uu___1 with

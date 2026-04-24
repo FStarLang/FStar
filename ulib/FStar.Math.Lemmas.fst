@@ -428,15 +428,15 @@ let modulo_distributivity a b c =
 
 let lemma_div_le a b d =
   calc (==>) {
-    (a <= b) <: Type0;
+    (a <= b) <: prop;
     ==> { lemma_div_mod a d; lemma_div_mod b d }
-    d * (a/d) + a%d <= d * (b/d) + b%d;
+    d * (a/d) + a%d <= d * (b/d) + b%d <: prop;
     ==> {}
-    d * (a/d) - d * (b/d) <= b%d - a%d;
+    d * (a/d) - d * (b/d) <= b%d - a%d <: prop;
     ==> {}
-    d * (a/d - b/d) <= b%d - a%d;
+    d * (a/d - b/d) <= b%d - a%d <: prop;
     ==> { (* a%d >= 0, and b%d < d*) }
-    d * (a/d - b/d) < d;
+    d * (a/d - b/d) < d <: prop;
     ==> {}
     a/d - b/d <= 0;
   }

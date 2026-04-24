@@ -18,7 +18,7 @@ type test_sum (bytes:Type0) {|bytes_like bytes|} =
   | Ctor_1: unit -> test_sum bytes
   | Ctor_2: unit -> test_sum bytes
 
-val arrow_to_forall: #a:Type -> p:(a -> Type0) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
+val arrow_to_forall: #a:Type -> p:(a -> prop) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
 let arrow_to_forall #a p _ x =
   ()
 

@@ -83,7 +83,7 @@ let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder
   | Tm_WithPure p n t ->
     let x = fresh g in
     let px = n, x in
-    let x_ty = mk_squash u0 p in
+    let x_ty = mk_squash p in
     let g = push_binding g x (fst px) x_ty in
     let t = open_term_nv t px in
     let g, bs, t = exists_as_binders g t in

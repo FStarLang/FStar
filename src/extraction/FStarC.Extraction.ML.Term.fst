@@ -376,12 +376,10 @@ let check_pats_for_ite (l:list (pat & option term & term)) : (bool   //if l is p
         let (p1, w1, e1) = List.hd l in
         let (p2, w2, e2) = List.hd (List.tl l) in
         match (w1, w2, p1.v, p2.v) with
+            | (None, None, Pat_constant (Const_bool true), Pat_var _)
             | (None, None, Pat_constant (Const_bool true), Pat_constant (Const_bool false)) -> true, Some e1, Some e2
+            | (None, None, Pat_constant (Const_bool false), Pat_var _)
             | (None, None, Pat_constant (Const_bool false), Pat_constant (Const_bool true)) -> true, Some e2, Some e1
-//            | (None, None, Pat_constant (Const_bool false), Pat_wild _)
-//            | (None, None, Pat_constant (Const_bool false), Pat_var _)
-//            | (None, None, Pat_constant (Const_bool true), Pat_wild _)
-//            | (None, None, Pat_constant (Const_bool true), Pat_var _)
             | _ -> def
 
 
@@ -681,10 +679,6 @@ let head_of_type_is_extract_as_impure_effect g t =
   match (U.un_uinst hd).n with
   | Tm_fvar fv -> has_extract_as_impure_effect g fv
   | _ -> false
-
-exception NotSupportedByExtension
-
-let translate_typ_t = g:uenv -> t:term -> ML mlty
 
 (* See below for register_pre_translate_typ *)
 let ref_translate_term_to_mlty : ref translate_typ_t =
@@ -1193,7 +1187,6 @@ let maybe_promote_effect ml_e tag t =
     | E_PURE, MLTY_Erased -> ml_unit, E_PURE
     | _ -> ml_e, tag
 
-let translate_t = g:uenv -> t:term -> ML (mlexpr & e_tag & mlty)
 let ref_term_as_mlexpr : ref translate_t =
   mk_ref (fun _ _ -> raise NotSupportedByExtension)
 

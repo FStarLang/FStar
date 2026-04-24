@@ -55,7 +55,7 @@ assume val g1: nat -> Tot unit
 let h1 = f1 (fun x -> g1 x) //should fail; x is not nat
 
 assume type phi_1510 :Type0
-[@@(expect_failure [309])]
+[@@(expect_failure [189])]
 type t (a:Type) :(_:Type0{phi_1510})=
   | C: x:a -> t a
 

@@ -17,11 +17,11 @@
 module Pulse.Lib.GhostSet
 open FStar.List.Tot { (@) }
 
-let rec mem_as_set' f x = function
+let rec mem_as_set' x = function
   | [] -> ()
-  | y::l -> mem_as_set' f x l
+  | y::l -> mem_as_set' x l
 
-let decide_eq_f x y = IndefiniteDescription.strong_excluded_middle (x == y)
+let decide_eq_f x y = (x == y)
 
 let is_finite x = exists l. x == as_set l
 let is_finite_prop x = ()
@@ -31,15 +31,15 @@ let is_finite_elim x =
 let is_finite_empty t =
   lemma_equal_intro (empty #t) (as_set [])
 
-let is_finite_singleton f x =
-  lemma_equal_intro (singleton f x) (as_set [x])
+let is_finite_singleton x =
+  lemma_equal_intro (singleton x) (as_set [x])
 
 let rec list_filterP #t (p: t->prop) (xs: list t) :
     GTot (ys:list t { forall x. List.memP x ys <==> p x /\ List.memP x xs }) =
   match xs with
   | [] -> []
   | x::xs ->
-    if IndefiniteDescription.strong_excluded_middle (p x) then
+    if p x then
       x :: list_filterP p xs
     else
       list_filterP p xs

@@ -17,8 +17,8 @@ module ApplyLemma
 
 open FStar.Tactics.V2
 
-assume val p : Type0
-assume val q : Type0
+assume val p : prop
+assume val q : prop
 assume val x : p
 
 assume val lem1 : p -> Lemma q

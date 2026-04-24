@@ -3937,7 +3937,9 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
   | FStarC_Syntax_Syntax.Tm_type uu___1 -> true
   | FStarC_Syntax_Syntax.Tm_fvar fv ->
       if
-        ((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid) ||
+        (((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid) ||
+            (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.prop_lid))
+           ||
            (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid))
           ||
           (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid)
@@ -3965,20 +3967,6 @@ let rec non_informative (env1 : env) (t : FStarC_Syntax_Syntax.typ) :
   | FStarC_Syntax_Syntax.Tm_meta
       { FStarC_Syntax_Syntax.tm2 = tm; FStarC_Syntax_Syntax.meta = uu___1;_}
       -> non_informative env1 tm
-  | uu___1 -> false
-let rec non_informative_sort (t : FStarC_Syntax_Syntax.typ) : Prims.bool=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Util.unrefine t in
-    uu___1.FStarC_Syntax_Syntax.n in
-  match uu___ with
-  | FStarC_Syntax_Syntax.Tm_fvar fv when
-      FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.prop_lid -> true
-  | FStarC_Syntax_Syntax.Tm_arrow
-      { FStarC_Syntax_Syntax.bs1 = uu___1; FStarC_Syntax_Syntax.comp = c;_}
-      -> non_informative_sort (FStarC_Syntax_Util.comp_result c)
-  | FStarC_Syntax_Syntax.Tm_meta
-      { FStarC_Syntax_Syntax.tm2 = tm; FStarC_Syntax_Syntax.meta = uu___1;_}
-      -> non_informative_sort tm
   | uu___1 -> false
 let num_effect_indices (env1 : env) (name : FStarC_Ident.lident)
   (r : FStarC_Range_Type.t) : Prims.int=
@@ -4147,7 +4135,7 @@ let is_interpreted (env1 : env) (head : FStarC_Syntax_Syntax.term) :
     FStarC_Parser_Const.op_Subtraction;
     FStarC_Parser_Const.op_Minus;
     FStarC_Parser_Const.op_Addition;
-    FStarC_Parser_Const.op_Multiply;
+    FStarC_Parser_Const.op_Star;
     FStarC_Parser_Const.op_Division;
     FStarC_Parser_Const.op_Modulus;
     FStarC_Parser_Const.op_And;

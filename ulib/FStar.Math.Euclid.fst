@@ -44,9 +44,9 @@ let divides_transitive a b c =
 
 let divide_antisym a b =
   if a <> 0 then
-    Classical.exists_elim (a = b \/ a = -b) (Squash.get_proof (exists q1. b = q1 * a))
+    Classical.exists_elim (a = b \/ a = -b) (() <: squash (exists q1. b = q1 * a))
       (fun q1 ->
-        Classical.exists_elim (a = b \/ a = -b) (Squash.get_proof (exists q2. a = q2 * b))
+        Classical.exists_elim (a = b \/ a = -b) (() <: squash (exists q2. a = q2 * b))
           (fun q2 ->
             assert (b = q1 * a);
             assert (a = q2 * b);
@@ -62,18 +62,18 @@ let divides_1 a = ()
 
 let divides_minus a b =
   Classical.exists_elim (a `divides` (-b))
-    (Squash.get_proof (a `divides` b))
+    (() <: squash (a `divides` b))
     (fun q -> Classical.exists_intro (fun q' -> -b = q' * a) (-q))
 
 let divides_opp a b =
   Classical.exists_elim ((-a) `divides` b)
-    (Squash.get_proof (a `divides` b))
+    (() <: squash (a `divides` b))
     (fun q -> Classical.exists_intro (fun q' -> b = q' * (-a)) (-q))
 
 let divides_plus a b d =
-  Classical.exists_elim (d `divides` (a + b)) (Squash.get_proof (exists q1. a = q1 * d))
+  Classical.exists_elim (d `divides` (a + b)) (() <: squash (exists q1. a = q1 * d))
     (fun q1 ->
-      Classical.exists_elim (d `divides` (a + b)) (Squash.get_proof (exists q2. b = q2 * d))
+      Classical.exists_elim (d `divides` (a + b)) (() <: squash (exists q2. b = q2 * d))
         (fun q2 ->
           assert (a + b = q1 * d + q2 * d);
           distributivity_add_left q1 q2 d;
@@ -84,7 +84,7 @@ let divides_sub a b d =
   divides_plus a (-b) d
 
 let divides_mult_right a b d =
-  Classical.exists_elim (d `divides` (a * b)) (Squash.get_proof (d `divides` b))
+  Classical.exists_elim (d `divides` (a * b)) (() <: squash (d `divides` b))
     (fun q ->
       paren_mul_right a q d;
       Classical.exists_intro (fun r -> a * b = r * d) (a * q))
@@ -97,7 +97,7 @@ let mod_divides a b =
   Classical.exists_intro (fun q -> a = q * b) (a / b)
 
 let divides_mod a b =
-  Classical.exists_elim (a % b = 0) (Squash.get_proof (b `divides` a))
+  Classical.exists_elim (a % b = 0) (() <: squash (b `divides` a))
     (fun q -> cancel_mul_div q b)
 
 let is_gcd_unique a b c d =

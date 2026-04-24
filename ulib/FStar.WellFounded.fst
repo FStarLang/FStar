@@ -24,7 +24,7 @@ module FStar.WellFounded
 
 #set-options "--warn_error -242" //inner let recs not encoded to SMT; ok
 
-let binrel (a:Type) = a -> a -> Type
+let binrel (a:Type) = a -> a -> prop
 
 (*
  * The accessibility relation
@@ -34,14 +34,14 @@ let binrel (a:Type) = a -> a -> Type
  *)
 [@@ erasable]
 noeq
-type acc (#a:Type u#a) (r:binrel u#a u#r a) (x:a) : Type u#(max a r) =
-  | AccIntro : access_smaller:(y:a -> r y x -> acc r y) -> acc r x
+type acc (#a:Type u#a) (r:binrel u#a a) (x:a) : Type u#a =
+  | AccIntro : access_smaller:(y:a -> squash (r y x) -> acc r y) -> acc r x
 
 (*
  * A binrel r is well-founded if every element is accessible
  *)
 [@@ erasable]
-let well_founded (#a:Type u#a) (r:binrel u#a u#r a) = x:a -> acc r x
+let well_founded (#a:Type u#a) (r:binrel u#a a) = x:a -> acc r x
 
 (*
  * Accessibility predicates can be used for implementing
@@ -59,21 +59,21 @@ let fix (#aa:Type) (#r:binrel aa) (rwf:well_founded r)
   : p x
   = fix_F f x (rwf x)
 
+open FStar.Nonempty
+
 let is_well_founded (#a:Type) (rel:binrel a) =
-  forall (x:a). squash (acc rel x)
+  forall (x:a). nonempty (acc rel x)
 
 let well_founded_relation (a:Type) = rel:binrel a{is_well_founded rel}
 
 unfold
 let as_well_founded (#a:Type u#a)
-                    (#rel:binrel u#a u#r a)
+                    (#rel:binrel u#a a)
                     (f:well_founded rel)
   : well_founded_relation a
-  = introduce forall (x:a). squash (acc rel x)
-    with FStar.Squash.return_squash (FStar.Squash.return_squash (f x));
+  = introduce forall (x:a). nonempty (acc rel x)
+    with nonempty_intro (f x);
     rel
-
-open FStar.IndefiniteDescription
 
 (*
  * Proofs that subrelation and inverse image commute with well-foundedness
@@ -92,41 +92,46 @@ let subrelation_wf (#a:Type) (#r #sub_r:binrel a)
     fun x -> aux x (r_wf x)
 
 let subrelation_squash_wf (#a:Type u#a)
-                          (#r:binrel u#a u#r a)
-                          (#sub_r:binrel u#a u#sr a)
-                          (sub_w:(x:a -> y:a -> sub_r x y -> squash (r x y)))
+                          (#r:binrel u#a a)
+                          (#sub_r:binrel u#a a)
+                          (sub_w:(x:a -> y:a -> sub_r x y -> r x y))
                           (r_wf:well_founded r)
   : Lemma (is_well_founded sub_r)
-  = introduce forall (x:a). squash (acc sub_r x)
+  = introduce forall (x:a). nonempty (acc sub_r x)
     with (
       let rec acc_y (x:a) (acc_r:acc r x) (y:a) (p:sub_r y x)
         : Tot (acc sub_r y)
               (decreases acc_r)
         = AccIntro (acc_y y (acc_r.access_smaller
                                    y
-                                   (elim_squash (sub_w y x p))))
+                                   (sub_w y x p)))
       in
-      FStar.Squash.return_squash (FStar.Squash.return_squash (AccIntro (acc_y x (r_wf x))))
+      nonempty_intro (AccIntro (acc_y x (r_wf x)))
     )
 
+let is_well_founded_of_well_founded #a (#r: binrel u#a a) (r_wf: well_founded r) :
+    Lemma (is_well_founded r) =
+  subrelation_squash_wf #a #r #r (fun _ _ _ -> ()) r_wf
+
 unfold
-let subrelation_as_wf (#a:Type u#a) (#r #sub_r:binrel u#a u#r a)
+let subrelation_as_wf (#a:Type u#a) (#r #sub_r:binrel u#a a)
   (sub_w:(x:a -> y:a -> sub_r x y -> squash (r x y)))
   (r_wf:well_founded r)
   : well_founded_relation a
   = subrelation_squash_wf sub_w r_wf;
     sub_r
 
-let inverse_image (#a:Type u#a) (#b:Type u#b) (r_b:binrel u#b u#r b) (f:a -> b) : binrel u#a u#r a =
+let inverse_image (#a:Type u#a) (#b:Type u#b) (r_b:binrel u#b b) (f:a -> b) : binrel u#a a =
   fun x y -> r_b (f x) (f y)
 
-let inverse_image_wf (#a:Type u#a) (#b:Type u#b) (#r_b:binrel u#b u#r b)
+let inverse_image_wf (#a:Type u#a) (#b:Type u#b) (#r_b:binrel u#b b)
   (f:a -> b)
   (r_b_wf:well_founded r_b)
   : well_founded (inverse_image r_b f)
   = let rec aux (x:a) (acc_r_b:acc r_b (f x))
       : Tot (acc (inverse_image r_b f) x)
             (decreases acc_r_b) =
-      AccIntro (fun y p -> aux y (acc_r_b.access_smaller (f y) p))
+      AccIntro #_ #(inverse_image r_b f) fun y p ->
+        aux y (acc_r_b.access_smaller (f y) p)
     in
     fun x -> aux x (r_b_wf (f x))

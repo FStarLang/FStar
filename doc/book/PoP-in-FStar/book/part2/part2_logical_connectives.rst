@@ -15,8 +15,8 @@ utilities to manipulate them in proofs.
 Every logical connective comes in two flavors. First, in its most
 primitive form, it is defined as an inductive or arrow type, giving a
 constructive interpretation to the connective. Second, and more
-commonly used in F*, is a *squashed*, or proof-irrelevant, variant of
-the same connective---the squashed variant is classical rather than
+commonly used in F*, is a propositional variant of
+the same connective---the propositional variant is classical rather than
 constructive and its proofs are typically derived by writing partial
 proof terms with the SMT filling in the missing parts.
 
@@ -45,12 +45,16 @@ This definition might look odd at first: it defines an inductive type
 with *zero* constructors. This is perfectly legal in F*, unlike in
 languages like OCaml or F#.
 
-The squashed variant of ``empty`` is called ``False`` and is defined
+The propositional variant of ``empty`` is called ``False`` and is defined
 as shown below:
 
 .. code-block:: fstar
 
-   let False = squash empty
+   assume val l_False : prop
+
+(The connective is indeed just assumed without any definition!  Its entire
+meaning is determined by the SMT encoding, which translates this connective to
+SMT's false.)
 
 Introduction
 ++++++++++++
@@ -96,16 +100,16 @@ The ``trivial`` inductive type has just a single proof, ``T``.
    represent trivial proofs. In the future, it is likely that
    ``trivial`` will just be replaced by ``unit``.
 
-The squashed form of ``trivial`` is written ``True`` and is defined as:
+The propositional form of ``trivial`` is written ``True`` and is defined as:
 
 .. code-block::
 
-   let True = squash trivial
+   assume val l_True : prop
 
 Introduction
 ++++++++++++
 
-The introduction forms for both the constructive and squashed variants
+The introduction forms for both the constructive and propositional variants
 are trivial.
 
 .. code-block::
@@ -139,12 +143,12 @@ proofs of ``p`` and ``q``, respectively.
    future, it is likely that ``pair`` will just be replaced by the
    regular tuple type.
 
-The squashed form of conjunction is written ``/\`` and is defined as
+The propositional form of conjunction is written ``/\`` and is defined as
 follows:
 
 .. code-block::
 
-   let ( /\ ) (p q:Type) = squash (pair p q)
+   assume val ( /\ ) (p q:prop) : prop
 
 Introduction
 ++++++++++++
@@ -156,7 +160,7 @@ Introducing a conjunction simply involves constructing a pair.
    :start-after: //SNIPPET_START: and_intro$
    :end-before: //SNIPPET_END: and_intro$
 
-To introduce the squashed version, there are two options. One can
+To introduce the propositional version, there are two options. One can
 either rely entirely on the SMT solver to discover a proof of ``p /\
 q`` from proofs of ``p`` and ``q``, which it is usually very capable
 of doing.
@@ -184,6 +188,8 @@ follows:
    with proof_of_p  //proof_of_p : squash p
    and  proof_of_q  //proof_of_q : squash q
 
+(In most cases you can just write `()` instead of the above!)
+
 Elimination
 +++++++++++
 
@@ -195,7 +201,7 @@ projecting each component of the pair.
    :start-after: //SNIPPET_START: and_elim$
    :end-before: //SNIPPET_END: and_elim$
 
-For the squashed version, we again have two styles, the first relying
+For the propositional version, we again have two styles, the first relying
 on the SMT solver.
 
 .. literalinclude:: ../code/Connectives.fst
@@ -230,12 +236,11 @@ The constructors ``Left`` and ``Right`` inject proofs of ``p`` or
    Just like before, this type is isomorphic to the type ``either p q``
    from ``FStar.Pervasives``.
 
-The classical connective ``\/`` described previously is just a
-squashed version of ``sum``.
+The classical connective ``\/`` described previously is declared as follows:
 
 .. code-block:: fstar
 
-   let ( \/ ) (p q: Type) = squash (sum p q)
+   assume val ( \/ ) (p q: prop) : prop
 
 Introduction
 ++++++++++++
@@ -243,7 +248,7 @@ Introduction
 As with the other connectives, introducing a constructive disjunction
 is just a matter of using the ``Left`` or ``Right`` constructor.
 
-To introduce the squashed version ``\/``, one can either rely on the
+To introduce the propositional version ``\/``, one can either rely on the
 SMT solver, as shown below.
 
 .. literalinclude:: ../code/Connectives.fst
@@ -274,7 +279,7 @@ by applying a suitable goal-producing hypothesis.
    :start-after: //SNIPPET_START: sum_elim$
    :end-before: //SNIPPET_END: sum_elim$
 
-The squashed version is similar, except the case analysis can either
+The propositional version is similar, except the case analysis can either
 be automated by SMT or explicitly handled using the syntactic
 sugar.
 
@@ -296,16 +301,7 @@ connective ``==>``. Its definition is shown below:
 
 .. code-block:: fstar
 
-   let ( ==> ) (p q : Type) = squash (p -> q)
-
-That is, ``==>`` is just the squashed version of the non-dependent
-arrow type ``->``.
-
-.. note::
-
-   In ``Prims``, the definition of ``p ==> q`` is actually ``squash (p
-   -> GTot q)``, a **ghost** function from ``p`` to ``q``. We'll learn
-   about this more when we encounter effects.
+   assume val (==>) (p q : prop) : prop
 
 Introduction
 ++++++++++++
@@ -320,11 +316,9 @@ library, as shown below:
 
 .. code-block:: fstar
 
-   val impl_intro_tot (#p #q: Type) (f: (p -> q)) : (p ==> q)
+   val impl_intro_tot (#p #q: prop) (f: (p -> q)) : (p ==> q)
 
-However, this form is seldom used in F*. Instead, one often works with
-functions between squashed propositions, or Lemmas, turning them into
-implications when needed. We show a few styles below.
+We can also use the `introduce` syntax:
 
 .. literalinclude:: ../code/Connectives.fst
    :language: fstar
@@ -338,14 +332,14 @@ desugaring, shown below.
 
 .. code-block:: fstar
 
-   let implies_intro_1 (#p #q:Type) (pq: (squash p -> squash q))
+   let implies_intro_1 (#p #q:prop) (pq: (squash p -> squash q))
      : squash (p ==> q)
      = FStar.Classical.Sugar.implies_intro
               p
               (fun (_: squash p) -> q)
               (fun (pf_p: squash p) -> pq pf_p)
 
-``FStar.Squash`` and ``FStar.Classical`` provide the basic building
+``FStar.Classical`` provides the basic building
 blocks and the sugar packages it into a more convenient form for use.
 
 Elimination
@@ -358,7 +352,7 @@ Of course, the elimination form for a constructive implication, i.e.,
 
    let arrow_elim #p #q (f:p -> q) (x:p) : q = f x
 
-The elimination rule for the squashed form is the classical logical
+The elimination rule for the propositional form is the classical logical
 rule *modus ponens*, which is usually very well automated by SMT, as
 shown in ``implies_elim`` below. We also provide syntactic sugar for
 it, for completeness, though it is seldom used in practice.
@@ -436,19 +430,14 @@ rather than just SMT only.
 Universal Quantification
 ........................
 
-Whereas implication is represented by the non-dependent arrow ``p ->
+Whereas implication corresponds to the non-dependent arrow ``p ->
 q``, universal quantification corresponds to the dependent arrow ``x:t
--> q x``. Its classical form is ``forall (x:t). q x``, and is defined
+-> q x``. Its propositional form is ``forall (x:t). q x``, and is defined
 as shown below:
 
 .. code-block:: fstar
 
-   let ( forall ) #t (q:t -> Type) = squash (x:t -> q x)
-
-.. note::
-
-   As with ``==>``, ``Prims`` uses ``x:t -> GTot (q x)``, a ghost
-   arrow, though the difference is not yet significant.
+   assume val ( forall ) #t (q:t -> prop) : prop
 
 Introduction
 ++++++++++++
@@ -456,7 +445,7 @@ Introduction
 Introducing a dependent function type ``x:t -> p x`` is just like
 introducing a non-dependent one: use a lambda literal.
 
-For the squashed form, F* provides sugar for use with several styles,
+For the propositional form, F* provides sugar for use with several styles,
 where names corresponding to each of the ``forall``-bound variables on
 the ``introduce`` line are in scope for the proof term on the ``with``
 line.
@@ -479,7 +468,7 @@ application.
 
    let dep_arrow_elim #t #q (f:(x:t -> q x)) (x:t) : q x = f x
 
-For the squashed version, eliminating a ``forall`` quantifier amounts
+For the propositional version, eliminating a ``forall`` quantifier amounts
 to instantiating the quantifier for a given term. Automating proofs
 that require quantifier instantiation is a large topic in its own
 right, as we'll cover in a later section---this `wiki page
@@ -532,12 +521,12 @@ As with ``tuple2``, F* offers specialized syntax for ``dtuple2``:
 
    * Instead of writing ``Mkdtuple2 x y``, one writes ``(| x, y |)``.
 
-The existential quantifier ``exists (x:t). p x`` is a squashed version
+The existential quantifier ``exists (x:t). p x`` is a propositional version
 of the dependent pair:
 
 .. code-block:: fstar
 
-   let ( exists ) (#a:Type) (#b:a -> Type) = squash (x:a & b x)
+   assume val ( exists ) (#a:Type) (#b:a -> prop) : prop
 
 Introduction
 ++++++++++++
@@ -550,7 +539,7 @@ of using the constructor---we show a concrete instance below.
    :start-after: //SNIPPET_START: dtuple2_intro$
    :end-before: //SNIPPET_END: dtuple2_intro$
 
-For the squashed version, introducing an ``exists (x:t). p x``
+For the propositional version, introducing an ``exists (x:t). p x``
 automatically using the SMT solver requires finding an instance ``a``
 for the quantifier such that ``p a`` is derivable---this is the dual
 problem of quantifier instantiation mentioned with universal

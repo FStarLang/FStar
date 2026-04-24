@@ -552,10 +552,9 @@ itself a monad, as shown below by a proof of the monad laws:
    :end-before: //SNIPPET_END: mwp_laws$                 
 
 
-.. [#] It is also possible to define ``post a = a -> prop`` and ``pre
-       = prop``. However, the F* libraries for pure WPs using
-       ``Type0`` instead of ``prop``, so we remain faithful to that
-       here.
+.. [#] In F*, ``post a = a -> prop`` and ``pre = prop``, i.e., WPs
+       use ``prop`` rather than ``Type0``. The type ``pure_wp a``
+       is ``(a -> prop) -> prop``.
                 
 .. [#] Dijkstra monads are also related to the continuation
        monad. Continuation monad models `Continuation Passing Style
@@ -570,9 +569,8 @@ itself a monad, as shown below by a proof of the monad laws:
           :end-before: //SNIPPET_END: cont$                 
 
        If we squint a bit, we can see that the ``wp`` monad we defined
-       earlier, is nothing but a continuation into ``Type0``, i.e.,
-       ``wp a = cont Type0 a`` (or ``cont prop a``, if one prefers to
-       use ``prop``).
+       earlier, is nothing but a continuation into ``prop``, i.e.,
+       ``wp a = cont prop a``.
                 
 ``PURE`` and ``Tot``
 ---------------------

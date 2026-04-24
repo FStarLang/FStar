@@ -94,8 +94,6 @@ let rec concatMap_flatten_map #a #b (f:a -> list b) l :
    This version may answer some of the questions above. *)
 
 (* These utilities are better moved to the squash library *)
-let bind = FStar.Squash.bind_squash
-let return = FStar.Squash.return_squash
 let pure_as_squash (#a:Type) 
                    (#p:_)
                    (#q:_)
@@ -107,26 +105,24 @@ let rec memP_append_aux #a (x: a) (l: list a) :
   Lemma
     (requires (List.memP x l))
     (ensures (exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12))
-    =  let goal = exists l12. l == fst l12 @ x :: snd l12 in
-       let x : squash goal =
-         match l with
-         | [] -> ()
-         | h :: t ->
-           let pf : squash (x == h \/ List.memP x t) = () in
-           p <-- FStar.Squash.join_squash pf ;
-           match p with 
-           | Prims.Left x_eq_h -> 
-             let l12 = [], t in
-             assert (l == (fst l12) @ (x :: snd l12)) //trigger
-           | Prims.Right mem_x_t -> 
-             FStar.Classical.exists_elim 
-                 goal
-                 (pure_as_squash (memP_append_aux x) t)
-                 (fun l12' -> 
-                   let l12 = h::fst l12', snd l12' in
-                   assert (l == (fst l12) @ (x :: snd l12))) //trigger
-       in
-       FStar.Squash.give_proof x
+    =  match l with
+       | [] -> ()
+       | h :: t ->
+         FStar.Classical.or_elim
+           #(x == h)
+           #(List.memP x t)
+           #(fun () -> exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12)
+           (fun (_:squash (x == h)) ->
+             let l12 = ([], t) in
+             assert (l == (fst l12) @ (x :: snd l12)))
+           (fun (_:squash (List.memP x t)) ->
+             memP_append_aux x t;
+             FStar.Classical.exists_elim
+               (exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12)
+               (pure_as_squash (memP_append_aux x) t)
+               (fun l12' ->
+                 let l12 = (h::fst l12', snd l12') in
+                 assert (l == (fst l12) @ (x :: snd l12))))
 
 let memP_append #a (x: a) (l: list a) :
   Lemma
@@ -174,50 +170,28 @@ let memP_flatten_intro #a (x: a) (l: list a) (ls: list (list a)) :
   Lemma (List.memP x l ==>
          List.memP l ls ==>
          List.memP x (List.Tot.flatten ls)) =
-    FStar.Classical.arrow_to_impl
-      #(List.memP x l)
-      #(List.memP l ls ==>
-        List.memP x (List.Tot.flatten ls))
-      (fun memP_x_l_proof ->
-         FStar.Classical.arrow_to_impl
-           #(List.memP l ls)
-           #(List.memP x (List.Tot.flatten ls))
-           (fun memP_l_ls_proof ->
-              memP_append x l;
-              FStar.Squash.bind_squash
-                (FStar.Squash.get_proof (List.memP x l ==>
-                                         (exists l12. l == (fst l12) @ (x :: (snd l12)))))
-                (fun memP_x_l_split ->
-                   let l_split_pr = FStar.Classical.impl_to_arrow
-                                      #(List.memP x l)
-                                      #(exists l12. l == (fst l12) @ (x :: (snd l12)))
-                                      memP_x_l_split memP_x_l_proof in
-                   FStar.Classical.exists_elim
-                     (List.memP x (List.Tot.flatten ls))
-                     #_
-                     #(fun l12 -> l == (fst l12) @ (x :: (snd l12)))
-                     l_split_pr
-                     (fun l12 -> memP_append l ls;
-                              FStar.Squash.bind_squash
-                                (FStar.Squash.get_proof (List.memP l ls ==>
-                                                         (exists ls12. ls == (fst ls12) @ (l :: (snd ls12)))))
-                                (fun memP_l_ls_split ->
-                                   let ls_split_pr = FStar.Classical.impl_to_arrow
-                                                      #(List.memP l ls)
-                                                      #(exists ls12. ls == (fst ls12) @ (l :: (snd ls12)))
-                                                      memP_l_ls_split memP_l_ls_proof in
-                                   FStar.Classical.exists_elim
-                                     (List.memP x (List.Tot.flatten ls))
-                                     #_
-                                     #(fun ls12 -> ls == (fst ls12) @ (l :: (snd ls12)))
-                                     ls_split_pr
-                                     (fun ls12 ->
-                                        let (l1, l2) = l12 in
-                                        let (ls1, ls2) = ls12 in
-                                        flatten_app ls1 (l :: ls2);
-                                        memP_app_intro_r x (flatten ls1) ((l1 @ x :: l2) @ flatten ls2);
-                                        memP_app_intro_l x (l1 @ x :: l2) (flatten ls2);
-                                        memP_app_intro_r x l1 (x :: l2)))))))
+    introduce List.memP x l ==> (List.memP l ls ==> List.memP x (List.Tot.flatten ls))
+    with memP_x_l_proof. introduce List.memP l ls ==> List.memP x (List.Tot.flatten ls)
+    with memP_l_ls_proof. begin
+      memP_append_aux x l;
+      eliminate exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12
+      returns List.memP x (List.Tot.flatten ls)
+      with _. begin
+        memP_append_aux l ls;
+        eliminate exists (ls12: (list (list a) & list (list a))). ls == fst ls12 @ l :: snd ls12
+        returns List.memP x (List.Tot.flatten ls)
+        with _. begin
+          let l1 = fst l12 in
+          let l2 = snd l12 in
+          let ls1 = fst ls12 in
+          let ls2 = snd ls12 in
+          flatten_app #a ls1 (l :: ls2);
+          memP_app_intro_r x (flatten ls1) ((l1 @ x :: l2) @ flatten ls2);
+          memP_app_intro_l x (l1 @ x :: l2) (flatten ls2);
+          memP_app_intro_r x l1 (x :: l2)
+        end
+      end
+    end
 
 let memP_concatMap_intro #a #b (x: a) (y: b) (f:a -> list b) (l: list a) :
   Lemma (List.memP x l ==>

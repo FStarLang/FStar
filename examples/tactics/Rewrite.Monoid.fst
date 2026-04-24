@@ -84,8 +84,8 @@ let rewrite_int (everywhere:bool) =
 let elim_implies #p #q  (_:(p ==> q)) (_:p) : squash q = ()
 let apply_imp (h:binding) =
     mapply (mk_app (`elim_implies) [(pack (Tv_Var (binding_to_namedv h)), Q_Explicit)])
-let refl (#a:Type) (x:a) : (x==x) = FStar.Squash.return_squash Refl
-let test (a b : int) (p:Type) =
+let refl (#a:Type) (x:a) : (x==x) = ()
+let test (a b : int) (p:prop) =
     assert ((((a + b + 0) == (a + b)) ==> p) ==> p)
         by (norm [];
             rewrite_int true;

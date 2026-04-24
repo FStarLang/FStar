@@ -11,16 +11,14 @@ let test (x : tyc bool_ty)
  : tyc (binder_sort (mk_binder (Sealed.seal "x") bool_ty Q_Explicit))
  = x
 
-open FStar.Squash
-
-assume val p : Type0
+assume val p : prop
 
 val test1 : (~p)
-let test1 = return_squash (magic ())
+let test1 = magic ()
 
 assume val f : p -> False
 val test2 : (~p)
-let test2 = return_squash f
+let test2 = ()
 
 assume
 val ty : int -> Type

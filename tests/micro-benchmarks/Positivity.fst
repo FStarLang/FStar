@@ -15,6 +15,7 @@
 *)
 module Positivity
 open FStar.All
+open FStar.Nonempty
  
 let option_is_some ([@@@strictly_positive] a:Type) = o:option a { Some? o }
 
@@ -202,26 +203,28 @@ type free_inst1 = free (fun t -> t -> False) int
 
 [@@expect_failure [3]]
 type sdyn =
-  | S : squash (sdyn → GTot ⊥) → sdyn
+  | S : nonempty (sdyn → GTot ⊥) → sdyn
+
+[@@expect_failure [3]]
+type sdyn =
+  | S : (nonempty sdyn ==> False) → sdyn
 
 (* If we don't enforce positivity in refinements,
    things become inconsistent *)
 
 #push-options "--__no_positivity"
 type bad =
-  | Bad : squash (bad → GTot ⊥) → bad
+  | Bad : nonempty (bad → GTot ⊥) → bad
 #pop-options
 
-open FStar.Squash
-
-let loop' (s:bad) : GTot (squash ⊥) =
-  let Bad sf =s in
-  bind_squash sf (λ f →
-  return_squash (f s))
+let loop' (s:bad) : GTot ⊥ =
+  let Bad sf = s in
+  let f = nonempty_elim' sf in
+  f s
   
-let loop'' : squash (bad → GTot ⊥) = FStar.Squash.squash_double_arrow (FStar.Squash.return_squash loop')
-let loop : squash bad = bind_squash loop'' (λ f → f (Bad loop''))
-let ff (_:unit) : squash ⊥ = bind_squash loop loop'
+let loop'' : nonempty (bad → GTot ⊥) = nonempty_intro loop'
+let loop : nonempty bad = nonempty_intro (Bad loop'')
+let ff (_:unit) : nonempty ⊥ = nonempty_intro (loop' (Bad loop''))
 
 
 irreducible

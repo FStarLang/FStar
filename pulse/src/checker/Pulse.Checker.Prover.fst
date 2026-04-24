@@ -409,7 +409,7 @@ let intro_with_pure (g: env) (frame: slprop) (p: term) (n: ppname) (v: term) :
  // implied by t2_typing
   let pv = check_prop_validity g p in
  // implied by t2_typing
-  let ty = mk_squash u0 p in
+  let ty = mk_squash p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=tm_unit; pre=v; post=tm_with_pure p n v } in
 
@@ -603,9 +603,9 @@ let unpack_and_norm_ctxt (g: penv) (ctxt: slprop_view) :
   | _ -> None
 
 let elim_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd x) (dom g)) })
-    (g': env { g' == push_binding g (snd x) (fst x) (mk_squash u0 p) }) :
+    (g': env { g' == push_binding g (snd x) (fst x) (mk_squash p) }) :
     continuation_elaborator g (frame `tm_star` tm_pure p) g' frame = fun post t ->
-  let ty = mk_squash u0 p in
+  let ty = mk_squash p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_pure p; post=tm_emp } in
 
@@ -620,7 +620,7 @@ let elim_pure_step (g: env) (ctxt: slprop_view) :
   match ctxt with
   | Pure p ->
     let x = ppname_default, fresh g in
-    let ty = mk_squash u0 p in
+    let ty = mk_squash p in
     let g' = push_binding g (snd x) (fst x) ty in
     Some (| g', [], [], [], fun g'' ->
       (fun frame ->
@@ -632,10 +632,10 @@ let elim_pure_step (g: env) (ctxt: slprop_view) :
   | _ -> None
 
 let elim_with_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd x) (dom g)) }) (v: term)
-    (g': env { g' == push_binding g (snd x) (fst x) (mk_squash u0 p) }) :
+    (g': env { g' == push_binding g (snd x) (fst x) (mk_squash p) }) :
     continuation_elaborator g (frame `tm_star` tm_with_pure p (fst x) v) g'
       (frame `tm_star` v) = fun post t ->
-  let ty = mk_squash u0 p in
+  let ty = mk_squash p in
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_with_pure p (fst x) v; post=v } in
   assume open_term v (snd x) == v; // no loose bvars
@@ -651,7 +651,7 @@ let elim_with_pure_step (g: env) (ctxt: slprop_view) :
   match ctxt with
   | WithPure p n v ->
     let x = n, fresh g in
-    let ty = mk_squash u0 p in
+    let ty = mk_squash p in
     let g' = push_binding g (snd x) (fst x) ty in
     Some (| g', [Unknown v], [], [], fun g'' ->
       (fun frame ->

@@ -19,6 +19,7 @@
 *)
 
 module Part2.WellFounded
+open FStar.Nonempty
 
 (*
  * The accessibility relation
@@ -35,7 +36,7 @@ type acc (#a:Type) (r:binrel a) (x0:a) : Type =
  *)
 //SNIPPET_START: well_founded$
 let well_founded (#a:Type) (r:binrel a) = x:a -> acc r x
-let is_well_founded (#a:Type) (r:binrel a) = forall x. squash (acc r x)
+let is_well_founded (#a:Type) (r:binrel a) = forall x. nonempty (acc r x)
 //SNIPPET_END: well_founded$
 
 //SNIPPET_START: fix_F$
@@ -188,13 +189,15 @@ let ackermann : nat_pair -> nat = fix lex_order_nat_pair_wf (fun _ -> nat) acker
 
 //SNIPPET_START: coercions$
 module W = FStar.WellFounded
-let rec coerce #a #r #x (p:acc #a r x)
-  : Tot (W.acc r x) (decreases p)
-  = W.AccIntro (fun y r -> coerce (p.access_smaller y r))
 
-let coerce_wf #a #r (p: (x:a -> acc r x))
-  : x:a -> W.acc r x
-  = fun x -> coerce (p x)
+(* A prop-valued version of lt_nat for the library's well_founded *)
+let lt_nat_prop (x y:nat) : prop = x < y == true
+
+let lt_nat_prop_wf : W.well_founded lt_nat_prop =
+  let rec aux (x:nat)
+    : W.acc lt_nat_prop x
+    = W.AccIntro (fun y _ -> aux y) in
+  aux
 //SNIPPET_END: coercions$
 
 //SNIPPET_START: ackermann_wf$
@@ -203,7 +206,7 @@ let rec ackermann_wf (m n:nat)
    : Tot nat 
      (decreases 
        {:well-founded 
-         L.lex (coerce_wf wf_lt_nat) (fun _ -> (coerce_wf wf_lt_nat)) (| m, n |) 
+         L.lex lt_nat_prop_wf (fun _ -> lt_nat_prop_wf) (| m, n |) 
        })
   = if m = 0 then n + 1
     else if n = 0 then ackermann_wf (m - 1) 1

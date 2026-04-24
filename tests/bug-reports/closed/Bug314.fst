@@ -28,8 +28,8 @@ val escape : lnat -> Tot nat
 let escape l = l
 
 
-assume new type request : string -> Type
-assume new type response : string -> string -> Type
+assume new type request : string -> prop
+assume new type response : string -> string -> prop
 
 (* the meaning of MACs, as used in RPC *)
 

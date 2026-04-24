@@ -106,13 +106,13 @@ let nat_refine_equiv (n:nat)
   : Lemma ((i:nat{i <= n}) == (i:nat{0<=i /\ i<=n})) 
   = let b2t_prop (b:bool) 
       : Lemma ((b2t b) `subtype_of` unit) 
-      = assert_norm (b2t b == squash (equals b true))
+      = ()
     in
     refine_eq nat (fun (i:nat) -> b2t_prop (i <= n); b2t (i <= n)) (fun (i:nat) -> 0 <= i /\ i <= n) ()
 
-let a' (#a:Type) (n:nat) (pred:(i:nat{i <= n} -> a -> Type)) = fun (i:nat{i<=n}) -> x:a{pred i x}
+let a' (#a:Type) (n:nat) (pred:(i:nat{i <= n} -> a -> prop)) = fun (i:nat{i<=n}) -> x:a{pred i x}
 
-let repeati_repeat_left_rewrite_type (#a:Type) (n:nat) (pred:(i:nat{i <= n} -> a -> Type))
+let repeati_repeat_left_rewrite_type (#a:Type) (n:nat) (pred:(i:nat{i <= n} -> a -> prop))
                                      (f:repeatable #a #n pred)
                                      (x0:a{pred 0 x0})
   : Lemma (repeati_inductive n pred f x0 ==

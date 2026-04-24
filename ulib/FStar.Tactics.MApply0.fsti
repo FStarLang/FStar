@@ -4,12 +4,12 @@ open FStar.Stubs.Reflection.Types
 open FStar.Tactics.Effect
 
 (* Used by mapply, must be exposed, but not to be used directly *)
-private val push1 : (#p:Type) -> (#q:Type) ->
+private val push1 : (#p:prop) -> (#q:prop) ->
                         squash (p ==> q) ->
                         squash p ->
                         squash q
-private val push1' : (#p:Type) -> (#q:Type) ->
-                         (p ==> q) ->
+private val push1' : (#p:prop) -> (#q:prop) ->
+                         squash (p ==> q) ->
                          squash p ->
                          squash q
 

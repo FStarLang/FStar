@@ -67,10 +67,23 @@ val unrefine : attribute
 assume
 val do_not_unrefine : attribute
 
+(** A binder in a definition/declaration may optionally be annotated as strictly_positive
+    When the let definition is used in a data constructor type in an inductive
+    definition, this annotation is used to check the positivity of the inductive
+
+    Further F* checks that the binder is actually positive in the let definition
+
+    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
+  *)
+assume val strictly_positive : attribute
+
+(** The type of propositions. *)
+assume val prop : Type0
+
 (** A predicate to express when a type supports decidable equality
     The type-checker emits axioms for [hasEq] for each inductive type *)
 assume
-type hasEq : Type -> GTot Type0 
+type hasEq : Type -> GTot prop
 
 (** A convenient abbreviation, [eqtype] is the type of types in
     universe 0 which support decidable equality *)
@@ -118,31 +131,7 @@ type unit : eqtype
     See FStar.Squash for various ways of manipulating squashed
     types. *)
 [@@ tac_opaque]
-type squash (p: Type) : Type0 = x: unit{p}
-
-(** [auto_squash] is equivalent to [squash]. However, F* will
-    automatically insert `auto_squash` when simplifying terms,
-    converting terms of the form `p /\ True` to `auto_squash p`.
-
-    We distinguish these automatically inserted squashes from explicit,
-    user-written squashes.
-
-    A user should not have to manipulate [auto_squash] at all, except
-    in rare circumstances when writing tactics to process proofs that
-    have already been partially simplified by F*'s simplifier.
-*)
-let auto_squash (p: Type) = squash p
-
-(** The [logical] type is transitionary. It is just an abbreviation
-    for [Type0], but is used to classify uses of the basic squashed
-    logical connectives that follow. Some day, we plan to remove the
-    [logical] type, replacing it with [prop] (also defined below).
-
-    The type is marked [private] to intentionally prevent user code
-    from referencing this type, hopefully easing the removal of
-    [logical] in the future. *)
-private
-type logical = Type0
+type squash (p: prop) : Type0 = x: unit{p}
 
 (** An attribute indicating that a symbol is an smt theory symbol and
     hence may not be used in smt patterns.  The typechecker warns if
@@ -150,17 +139,13 @@ type logical = Type0
 assume
 val smt_theory_symbol:attribute
 
-(** [l_True] has a special bit of syntactic sugar. It is written just
-    as "True" and rendered in the ide as [True]. It is a squashed version
-    of constructive truth, [trivial]. *)
-[@@ tac_opaque; smt_theory_symbol]
-let l_True:logical = squash trivial
+(** Written with the `True` syntax, `l_True` is the true proposition. *)
+[@@ smt_theory_symbol]
+assume val l_True : prop
 
-(** [l_False] has a special bit of syntactic sugar. It is written just
-    as "False" and rendered in the ide as [False]. It is a squashed version
-    of constructive falsehood, the empty type. *)
-[@@ tac_opaque; smt_theory_symbol]
-let l_False:logical = squash empty
+(** Written with the `False` syntax, `l_False` is the false proposition. *)
+[@@ smt_theory_symbol]
+assume val l_False : prop
 
 (** The type of provable equalities, defined as the usual inductive
     type with a single constructor for reflexivity.  As with the other
@@ -168,62 +153,52 @@ let l_False:logical = squash empty
     equality, below. *)
 type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
 
-(** [eq2] is the squashed version of [equals]. It's a proof
-   irrelevant, homogeneous equality in Type#0 and is written with
-   an infix binary [==].
+(** `eq2` is propositional equality, usually written with the `==` syntax. *)
+//    TODO: instead of hard-wiring the == syntax,
+//          we should just rename eq2 to op_Equals_Equals
+[@@ smt_theory_symbol]
+assume val eq2 (#[@@@unrefine] a: Type) (x: a) (y: a) : prop
 
-   TODO: instead of hard-wiring the == syntax,
-         we should just rename eq2 to op_Equals_Equals
-*)
-[@@ tac_opaque; smt_theory_symbol]
-type eq2 (#[@@@unrefine] a: Type) (x: a) (y: a) : logical = squash (equals x y)
-
-(** bool-to-type coercion: This is often automatically inserted type,
+(** bool-to-prop coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
     occasionally, one may have to write [b2t] explicitly *)
-type b2t (b: bool) : logical = (b == true)
+let b2t (b: bool) : prop = (b == true)
 
 (** constructive conjunction *)
 type pair (p: Type) (q: Type) = | Pair : _1:p -> _2:q -> pair p q
 
-(** squashed conjunction, specialized to [Type0], written with an
-    infix binary [/\] *)
-[@@ tac_opaque; smt_theory_symbol]
-type l_and (p: logical) (q: logical) : logical = squash (pair p q)
+(** Written with the `/\` syntax, `l_and` is the propositional conjunction. *)
+[@@ smt_theory_symbol]
+assume val l_and ([@@@strictly_positive] p: prop) ([@@@strictly_positive] q: prop) : prop
 
 (** constructive disjunction *)
 type sum (p: Type) (q: Type) =
   | Left : v:p -> sum p q
   | Right : v:q -> sum p q
 
-(** squashed disjunction, specialized to [Type0], written with an
-    infix binary [\/] *)
-[@@ tac_opaque; smt_theory_symbol]
-type l_or (p: logical) (q: logical) : logical = squash (sum p q)
-
-(** squashed (non-dependent) implication, specialized to [Type0],
-    written with an infix binary [==>]. Note, [==>] binds weaker than
-    [/\] and [\/] *)
-[@@ tac_opaque; smt_theory_symbol]
-type l_imp (p: logical) (q: logical) : logical = squash (p -> GTot q)
-(* ^^^ NB: The GTot effect is primitive;            *)
-(*         elaborated using GHOST a few lines below *)
-
-(** squashed double implication, infix binary [<==>] *)
+(** Written with the `\/` syntax, `l_or` is the propositional disjunction. *)
 [@@ smt_theory_symbol]
-type l_iff (p: logical) (q: logical) : logical = (p ==> q) /\ (q ==> p)
+assume val l_or ([@@@strictly_positive] p: prop) ([@@@strictly_positive] q: prop) : prop
 
-(** squashed negation, prefix unary [~] *)
+(** Written with the `==>` syntax, `l_imp` is the propositional implication.
+    Note, [==>] binds weaker than [/\] and [\/] *)
 [@@ smt_theory_symbol]
-type l_not (p: logical) : logical = l_imp p False
+assume val l_imp (p: prop) ([@@@strictly_positive] q: prop) : prop
 
-(** l_ITE is a weak form of if-then-else at the level of
-    logical formulae. It's not much used.
+(** double implication, infix binary [<==>] *)
+[@@ smt_theory_symbol]
+let l_iff (p: prop) (q: prop) : prop = (p ==> q) /\ (q ==> p)
+
+(** negation, prefix unary [~] *)
+[@@ smt_theory_symbol]
+type l_not (p: prop) : prop = p ==> False
+
+(** l_ITE is a form of if-then-else at the level of
+    propositions. It's not used much.
 
     TODO: Can we remove it *)
 unfold
-type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p ==> r)
-
+let l_ITE (p: prop) (q: prop) (r: prop) : prop = (p ==> q) /\ (~p ==> r)
 
 (** One of the main axioms provided by prims is [precedes], a
     built-in well-founded partial order over all terms. It's typically
@@ -236,7 +211,7 @@ type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p =
           arguments include a ghost or total function returning a t *)
 
 assume
-type precedes : #a: Type -> #b: Type -> a -> b -> Type0
+type precedes : #a: Type -> #b: Type -> a -> b -> prop
 
 (** The type of primitive strings of characters; See FStar.String *)
 assume new
@@ -282,12 +257,11 @@ val deprecated (s: string) : Tot unit
 [@@deprecated "'has_type' is intended for internal use and debugging purposes only; \
                 do not rely on it for your proofs"]
 assume
-type has_type : #a: Type -> a -> Type -> Type0 
+type has_type : #a: Type -> a -> Type -> prop 
 
-(** Squashed universal quantification, or dependent products, written
-    [forall (x:a). p x], specialized to Type0 *)
+(** Universal quantification, written [forall (x:a). p x] *)
 [@@ tac_opaque; smt_theory_symbol]
-type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot (p x))
+assume val l_Forall (#a: Type) ([@@@strictly_positive] p: (a -> GTot prop)) : prop
 
 #push-options "--warn_error -288" 
 (** [p1 `subtype_of` p2] when every element of [p1] is also an element
@@ -295,28 +269,16 @@ type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot
 let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
 #pop-options
 
-(** The type of squashed types.
-
-    Note, the [prop] type is a work in progress in F*. In particular,
-    we would like in the future to more systematically use [prop] for
-    proof-irrelevant propositions throughout the libraries. However,
-    we still use [Type0] in many places. 
-
-    See https://github.com/FStarLang/FStar/issues/1048 for more
-    details and the current status of the work.
-    *)
-type prop = a: Type0{a `subtype_of` unit}
-
 (**** The PURE effect *)
 
 (** The type of pure preconditions *)
-let pure_pre = Type0
+let pure_pre = prop
 
 (** Pure postconditions, predicates on [a], on which the precondition
     [pre] is also valid. This provides a way for postcondition formula
     to be typed in a context where they can assume the validity of the
     precondition. This is discussed extensively in Issue #57 *)
-let pure_post' (a pre: Type) = _: a{pre} -> GTot Type0
+let pure_post' (a: Type) (pre: prop) = _: a{pre} -> prop
 let pure_post (a: Type) = pure_post' a True
 
 (** A pure weakest precondition transforms postconditions on [a]-typed
@@ -326,7 +288,7 @@ let pure_post (a: Type) = pure_post' a True
     property over the postconditions
     To enforce it, we first define a vanilla wp type,
     and then refine it with the monotonicity condition *)
-let pure_wp' (a: Type) = pure_post a -> GTot pure_pre
+let pure_wp' (a: Type) = pure_post a -> pure_pre
 
 (** The monotonicity predicate is marked opaque_to_smt,
     meaning that its definition is hidden from the SMT solver,
@@ -347,7 +309,7 @@ let pure_wp (a: Type) = wp:pure_wp' a{pure_wp_monotonic a wp}
     guards. This is safe to use only when the quantifier serves to
     introduce a local macro---use with caution. *)
 assume
-type guard_free : Type0 -> Type0 
+type guard_free : prop -> prop 
 
 (** The return combinator for the PURE effect requires
     proving the postcondition only on [x]
@@ -388,7 +350,7 @@ let pure_bind_wp0
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_if_then_else *)
 unfold
-let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) : pure_wp a =
+let pure_if_then_else0 (a: Type) (p: prop) (wp_then wp_else: pure_wp a) : pure_wp a =
   fun (post: pure_post a) ->
   wp_then post /\ (~p ==> wp_else post)
 
@@ -403,18 +365,20 @@ let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) : pure_wp a =
 unfold
 let pure_ite_wp0 (a: Type) (wp: pure_wp a) : pure_wp a =
   fun (post: pure_post a) ->
-  forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
+    forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
 
 (** Subsumption for the PURE effect *)
 unfold
-let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 p ==> wp2 p
+let pure_stronger (a: Type) (wp1 wp2: pure_wp a) =
+    forall (p: pure_post a). wp1 p ==> wp2 p
 
 (** Closing a PURE WP under a binder for [b]
    
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_close_wp *)
 unfold
-let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
+let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a =
+    fun (p: pure_post a) -> forall (b: b). wp b p
 
 (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
@@ -440,7 +404,7 @@ new_effect {
     
     Note the type of post, which allows to assume the precondition
     for the well-formedness of the postcondition. c.f. #57 *)
-effect Pure (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
+effect Pure (a: Type) (pre: prop) (post: pure_post' a pre) =
   PURE a
     (fun (p: pure_post a) -> pre /\ (forall (pure_result: a). post pure_result ==> p pure_result))
 
@@ -460,12 +424,12 @@ effect Tot (a: Type) = PURE a (pure_null_wp0 a)
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p /\ post ()
+let pure_assert_wp0 (p: prop) : pure_wp unit = fun (post: pure_post unit) -> p /\ post ()
 
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p ==> post ()
+let pure_assume_wp0 (p: prop) : pure_wp unit = fun (post: pure_post unit) -> p ==> post ()
 
 (**** The [GHOST] effect *)
 
@@ -484,7 +448,7 @@ let purewp_id (a: Type) (wp: pure_wp a) = wp
 sub_effect PURE ~> GHOST { lift_wp = purewp_id }
 
 (** [Ghost] is a the Hoare-style counterpart of [GHOST] *)
-effect Ghost (a: Type) (pre: Type) (post: pure_post' a pre) =
+effect Ghost (a: Type) (pre: prop) (post: pure_post' a pre) =
   GHOST a
     (fun (p: pure_post a) -> pre /\ (forall (ghost_result: a). post ghost_result ==> p ghost_result)
     )
@@ -499,7 +463,7 @@ effect GTot (a: Type) = GHOST a (pure_null_wp0 a)
 (** This point onward, F* fully verifies all the definitions *)
 
 (** [===] heterogeneous equality *)
-let ( === ) (#a #b: Type) (x: a) (y: b) : logical = a == b /\ x == y
+let ( === ) (#a #b: Type) (x: a) (y: b) : prop = a == b /\ x == y
 
 (** Dependent pairs [dtuple2] in concrete syntax is [x:a & b x].
     Its values can be constructed with the concrete syntax [(| x, y |)] *)
@@ -509,8 +473,8 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) =
 
 (** Squashed existential quantification, or dependent sums,
     are written [exists (x:a). p x] : specialized to Type0 *)
-[@@ tac_opaque; smt_theory_symbol]
-type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
+[@@ smt_theory_symbol]
+assume val l_Exists (#a: Type) ([@@@strictly_positive] p: (a -> GTot prop)) : prop
 
 (** Primitive type of mathematical integers, mapped to zarith in OCaml
     extraction and to the SMT sort of integers *)
@@ -616,19 +580,19 @@ type list (a: Type) =
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
-let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
+let as_requires (#a: Type) (wp: pure_wp a) : prop = wp (fun x -> True)
 
 (** [as_ensures] turns a WP into a postcondition, relying on a kind of
     double negation translation. *)
 unfold
-let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> (y =!= x)))
+let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> y =!= x))
 
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
 [@@ warn_on_use "Uses an axiom"]
 assume
-val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
+val _assume (p: prop) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
@@ -650,20 +614,29 @@ let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
-(** [admitP]: TODO: Unused ... remove? *)
-[@@ warn_on_use "Uses an axiom"]
-assume
-val admitP (p: Type) : Pure unit True (fun x -> p)
-
 (** The keyword term-level keyword [assert] is desugared to [_assert].
     It force a proof of a property [p], then assuming [p] for the
     continuation. *)
-val _assert (p: Type) : Pure unit (requires p) (ensures (fun x -> p))
+val _assert (p: prop) : Pure unit (requires p) (ensures (fun x -> p))
 let _assert p = ()
 
 (** Logically equivalent to assert; TODO remove? *)
-val cut (p: Type) : Pure unit (requires p) (fun x -> p)
+val cut (p: prop) : Pure unit (requires p) (fun x -> p)
 let cut p = ()
+
+(** Indefinite description is an axiom that allows picking a witness for an existential quantifier
+
+For some background on the axiom, see:
+  https://github.com/coq/coq/wiki/CoqAndAxioms#indefinite-description--hilberts-epsilon-operator
+  https://en.wikipedia.org/wiki/Theory_of_descriptions#Indefinite_descriptions *)
+assume val indefinite_description (#a: Type) (p: (a -> prop) { exists x. p x })
+  : GTot (x: a { p x })
+
+(* prop-to-bool coercion *)
+irreducible let t2b (p: prop) : GTot (b:bool { b <==> p }) =
+  let f (b: bool) = b <==> p in
+  assert f true \/ f false;
+  indefinite_description f
 
 (** The type of non-negative integers *)
 type nat = i: int{i >= 0}

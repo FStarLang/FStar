@@ -18,6 +18,7 @@
 
 module FStar.WellFounded.Util
 open FStar.WellFounded
+open FStar.Nonempty
 (** Provides some utilities related to well-founded relations *)
 
 (* 1. Given a well-founded relation `r:binrel a`
@@ -37,7 +38,7 @@ let lift_binrel (#a:Type)
                 (r:binrel a)
     : binrel top
     = fun (t0 t1:top) ->
-        (_:(dfst t0==a /\ dfst t1==a) & r (dsnd t0) (dsnd t1))
+        dfst t0==a /\ dfst t1==a /\ r (dsnd t0) (dsnd t1)
 
 val intro_lift_binrel (#a:Type) (r:binrel a) (y:a) (x:a)
   : Lemma
@@ -57,62 +58,10 @@ val lower_binrel (#a:Type)
 
 
 val lift_binrel_well_founded (#a:Type u#a)
-                             (#r:binrel u#a u#r a)
+                             (#r:binrel u#a a)
                              (wf_r:well_founded r)
   : well_founded (lift_binrel r)
 
-let lift_binrel_as_well_founded_relation (#a:Type u#a) (#r:binrel u#a u#r a) (wf_r:well_founded r)
-  : well_founded_relation u#(a + 1) u#r (top u#a)
+let lift_binrel_as_well_founded_relation (#a:Type u#a) (#r:binrel u#a a) (wf_r:well_founded r)
+  : well_founded_relation u#(a + 1) (top u#a)
   = as_well_founded #top #(lift_binrel r) (lift_binrel_well_founded wf_r)
-
-
-(* 2. Given a well-founded relation `r:binrel a`
-      turn it into a *squashed* well-founded relation on `binrel top`,
-      by construction a relation that only relates `top` elements
-      in `a` by `r`
-
-      This is very similar to 1, but uses squashed types,
-      which leads to slightly better SMT automation at use sites.
-
-      See tests/micro-benchmarks/TestWellFoundedRecursion.rel_poly
-
-*)
-let lift_binrel_squashed (#a:Type u#a)
-                         (r:binrel u#a u#r a)
-    : binrel top
-    = fun (t0 t1:top) ->
-        (dfst t0==a /\ dfst t1==a /\ squash (r (dsnd t0) (dsnd t1)))
-
-val lower_binrel_squashed (#a:Type u#a)
-                          (#r:binrel u#a u#r a)
-                          (x y:top u#a)
-                          (p:lift_binrel_squashed r x y)
-  : squash (r (dsnd x) (dsnd y))
-
-
-let squash_binrel (#a:Type) (r:binrel u#a u#r a) (x y:a) = squash (r x y)
-
-val lift_binrel_squashed_well_founded (#a:Type u#a)
-                                      (#r:binrel u#a u#r a)
-                                      (wf_r:well_founded (squash_binrel r))
-  : well_founded (lift_binrel_squashed r)
-
-
-let lift_binrel_squashed_as_well_founded_relation (#a:Type u#a)
-                                                  (#r:binrel u#a u#r a)
-                                                  (wf_r:well_founded (squash_binrel r))
-  : well_founded_relation u#(a + 1) u#0 top
-  = as_well_founded #top #(lift_binrel_squashed r) (lift_binrel_squashed_well_founded wf_r)
-
-val lift_binrel_squashed_intro (#a:Type)
-                               (#r:binrel a)
-                               (wf_r:well_founded (squash_binrel r))
-                               (x y:a)
-                               (sqr:squash (r x y))
-  : Lemma
-    (ensures lift_binrel_squashed r (|a, x|) (|a, y|))
-
-(* If a squashed relation is well-founded, then so is its unsquashed counterpart.
-   The converse is not true, i.e., the well-founded proof is in contravariant position here *)
-val unsquash_well_founded (#a:Type u#a) (r:binrel u#a u#r a) (wf_r:well_founded (squash_binrel r))
-  : well_founded u#a u#r r

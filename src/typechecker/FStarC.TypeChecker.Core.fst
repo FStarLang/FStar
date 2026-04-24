@@ -509,7 +509,6 @@ let is_type (g:env) (t:term)
         (aux t)
         (fun _ -> aux (U.unrefine (N.unfold_whnf g.tcenv t))))
 
-
 let rec is_arrow (g:env) (t:term)
   : result (binder & tot_or_ghost & typ)
   = let rec aux t : ML _ =
@@ -1509,6 +1508,10 @@ and check_subtype (g:env) (e:option term) (t0 t1:typ)
       None
       "FStarC.TypeChecker.Core.check_subtype"
 
+and is_prop (g:env) (t:term) : ML (result unit) =
+  with_context "is_prop" (Some (CtxTerm t)) fun _ ->
+    check_subtype g None t t_prop
+
 and memo_check (g:env) (e:term)
   : ML (result (tot_or_ghost & typ))
   = let check_then_memo g e =
@@ -1544,7 +1547,7 @@ and check (msg:string) (g:env) (e:term)
   = if !dbg
     then (
       fun ctx cache -> 
-        Format.print1 "{About to check %s\n" (show e);
+        Format.print2 "{About to check %s %s\n" msg (show e);
         let res = check' msg g e ctx cache in
         match res with
         | Error err -> Error err
@@ -1636,7 +1639,7 @@ and do_check (g:env) (e:term)
     let g', x, phi = open_term g (S.mk_binder x) phi in
     with_binders g [x] [u] (
       let! _, t' = check "refinement formula" g' phi in
-      is_type g' t';!
+      is_prop g' t';!
       return (E_Total, t)
     )
 
@@ -1670,7 +1673,7 @@ and do_check (g:env) (e:term)
     in
     let hd, args = U.head_and_args_full e in
     match args with
-    | [(t1, None); (t2, None)] when TcUtil.short_circuit_head hd ->
+    | [(t1, _); (t2, _)] when TcUtil.short_circuit_head hd ->
       let! eff_hd, t_hd = check "app head" g hd in
       let! x, eff_arr1, s1 = is_arrow g t_hd in
       let! eff_arg1, t_t1 = check "app arg" g t1 in

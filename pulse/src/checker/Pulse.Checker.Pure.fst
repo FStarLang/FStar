@@ -96,7 +96,7 @@ let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
   | u -> u, []
   
 
-let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
+let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (squash (subtyping_token g t1 t2))) =
   debug g (fun _ ->
     Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
         (show (RU.range_of_term t1))
@@ -136,34 +136,22 @@ let rtb_core_check_term_at_type g f e t =
   let res = RU.with_context (get_context g) (fun _ -> RTB.core_check_term_at_type f e t) in
   res
 
-let mk_squash0 t =
-  let sq : R.term = pack_ln (Tv_UInst (pack_fv squash_qn) [u_zero]) in
-  mk_e_app sq [t]
-
-let squash_prop_validity_token f p (t:prop_validity_token f (mk_squash0 p))
-  : prop_validity_token f p
-  = admit(); t
-
 let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) =
-  let _ : squash (typing_token f p (E_Total, tm_prop)) =
-    magic ()
-  in
+  let _ : squash (typing_token f p (E_Total, (`prop))) = magic () in
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (show (RU.range_of_term p))
           (show p));
-  let sp = mk_squash0 p in
-  let _ : squash (typing_token f sp (E_Total, (`prop))) = magic () in //squash typing
   let res, issues = 
     RU.with_context (get_context g) 
     (fun _ -> 
       if sync
-      then T.with_policy T.ForceSMT (fun _ -> RTB.check_prop_validity f sp)
-      else RTB.check_prop_validity f sp)
+      then T.with_policy T.ForceSMT (fun _ -> RTB.check_prop_validity f p)
+      else RTB.check_prop_validity f p)
   in
   match res with
   | None -> None, issues
-  | Some tok -> Some (squash_prop_validity_token f p tok), issues
+  | Some tok -> Some tok, issues
 
 let exn_as_issue (e:exn) : FStar.Issue.issue = 
   FStar.Issue.mk_issue "Error" (RU.print_exn e) None None []
@@ -312,9 +300,7 @@ let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
       | Some ru ->
-        let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) =
-            FStar.Squash.get_proof _
-        in
+        let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) = () in
         let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
         ru
     in
@@ -332,7 +318,7 @@ let tc_meta_callback g (f:R.env) (e:R.term)
       | None, issues ->
         None, issues
       | Some (e, (eff, t)), issues ->
-        Some (| e, eff, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), 
+        Some (| e, eff, t, RT.T_Token _ _ _ () |), 
         issues
     in
     res
@@ -416,7 +402,7 @@ let tc_with_core g (f:R.env) (e:R.term)
     match ropt with
     | None -> None, issues
     | Some (eff, t) ->
-      Some (| eff, t, RT.T_Token _ _ _ (FStar.Squash.get_proof _) |), issues
+      Some (| eff, t, RT.T_Token _ _ _ () |), issues
   in
   RU.record_stats "Pulse.tc_with_core" aux
 
@@ -523,7 +509,7 @@ let check_slprop_with_core (g:env)
 
 let non_informative_class_typing
   (g:env) (u:universe) (ty:typ)
-  : my_erased (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u)))
+  : my_erased (squash (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u))))
   = E (magic())
 
 let non_info_tac_tm : term =
@@ -556,7 +542,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
     let r_env = elab_env g in
     let constraint_typing = non_informative_class_typing g u ty in
     let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
-      match constraint_typing with | E tok -> Squash.return_squash tok
+      match constraint_typing with | E tok -> ()
     in
     let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) =
       assume (typing_token r_env r (E_Total, goal));

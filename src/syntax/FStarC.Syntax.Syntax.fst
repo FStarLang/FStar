@@ -472,6 +472,7 @@ let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
 let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l None)) Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
+let t_prop      = tconst PC.prop_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
 let t_string    = tconst PC.string_lid

@@ -15,14 +15,17 @@
 *)
 module Pulse.Lib.Raise
 open Pulse.Lib.NonInformative
+open FStar.Nonempty
 open FStar.ExtractAs
 
 [@@Tactics.Typeclasses.tcclass; erasable]
-val raisable : p:prop { Type u#(max a b) } // hack to specify universe parameters
+val raisable : p:Type0 { nonempty (Type u#(max a b)) } // hack to specify universe parameters
+
+val raisable_subsingleton (x y: raisable u#a u#b) : x == y
 
 inline_for_extraction noextract
 let raisable_non_info : non_informative (raisable u#a u#b) =
-  { reveal = ((fun p -> p) <: Ghost.erased (raisable u#a u#b) -> raisable u#a u#b) }
+  { reveal = ((fun p -> Ghost.reveal p) <: revealer (raisable u#a u#b)) }
 
 [@@Tactics.Typeclasses.tcinstance]
 val raisable_inst : raisable u#a u#(max a b)

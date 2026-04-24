@@ -26,10 +26,9 @@ let rec canon_point (e : FStar_Reflection_V2_Arith.expr) :
     | FStar_Reflection_V2_Arith.Mult
         (FStar_Reflection_V2_Arith.Lit a, FStar_Reflection_V2_Arith.Lit b) ->
         (FStarC_Tactics_V2_Builtins.norm
-           [Fstarcompiler.FStarC_NormSteps.delta;
-           Fstarcompiler.FStarC_NormSteps.primops] ps;
+           [Fstarcompiler.FStarC_NormSteps.primops] ps;
          FStar_Tactics_V2_Derived.trefl () ps;
-         FStar_Reflection_V2_Arith.Lit (a * b))
+         FStar_Reflection_V2_Arith.Lit (Prims.op_Star a b))
     | FStar_Reflection_V2_Arith.Neg e1 ->
         (step_lemma
            (FStarC_Reflection_V2_Builtins.pack_ln

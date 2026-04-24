@@ -8,8 +8,8 @@ let sel (s:store) (l:loc) : int = Map.sel s l
 open FStar.Set
 
 (*** A basic Hoare state monad ***)
-let pre = store -> Type0
-let post a = store -> a -> store -> Type0
+let pre = store -> prop
+let post a = store -> a -> store -> prop
 let hst a (p:pre) (q:post a) = s0:store{p s0} -> r:(a & store){q s0 (fst r) (snd r)}
 
 let return_hst a (x:a) : hst a (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) = fun s -> x,s
@@ -612,11 +612,11 @@ let consequence (a:Type) (r0 w0:label) p q p' q' (fs0:flows) (f:hifc a r0 w0 fs0
     g
 
 (* A couple of utils *)
-let norm_spec (p:Type)
+let norm_spec (p:prop)
   : Lemma (requires (norm [delta;iota;zeta] p))
           (ensures p)
   = ()
-let norm_spec_inv (p:Type)
+let norm_spec_inv (p:prop)
   : Lemma (requires p)
           (ensures (norm [delta;iota;zeta] p))
   = ()

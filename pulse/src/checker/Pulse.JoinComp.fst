@@ -44,7 +44,7 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
     )
   in
   let maybe_elim_rewrites_to pr (post:term) : T.Tac term =
-    let n, _, property = pr in
+    let n, property = pr in
     let open R in
     let hd, args = T.collect_app_ln property in
     match T.inspect_ln hd, args with
@@ -78,9 +78,9 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       match T.inspect_ln ty with
       | Tv_App hd (p, Q_Explicit) -> (
         match T.inspect_ln hd with
-        | Tv_UInst fv [u]->
-          if inspect_fv fv = ["Prims"; "squash"]
-          then close_post tl (maybe_elim_rewrites_to (n, u, p) post)
+        | Tv_FVar fv ->
+          if inspect_fv fv = R.squash_qn
+          then close_post tl (maybe_elim_rewrites_to (n, p) post)
           else close_post tl (maybe_close (n,y,ty) post)
         | _ -> close_post tl (maybe_close (n,y,ty) post)
       )
@@ -140,8 +140,7 @@ let infer_post' (g:env) (g':env { g' `env_extends` g })
 
 let mk_imp lhs rhs =
   let open R in
-  let implies_lid = ["Prims"; "l_imp"] in
-  let hd = R.pack_ln (Tv_FVar (R.pack_fv implies_lid)) in
+  let hd = R.pack_ln (Tv_FVar (R.pack_fv R.imp_qn)) in
   R.mk_app hd [(lhs, Q_Explicit); (rhs, Q_Explicit)]
 
 let rec guard_pures then_ b (ps:list slprop) 

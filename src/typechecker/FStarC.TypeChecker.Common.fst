@@ -251,8 +251,7 @@ let rec check_trivial (t:term) : ML guard_formula =
       Trivial
       
     | Tm_fvar sq, [v, _]
-      when S.fv_eq_lid sq PC.squash_lid 
-         || S.fv_eq_lid sq PC.auto_squash_lid ->         
+      when S.fv_eq_lid sq PC.squash_lid ->         
       (match check_trivial v with
        | Trivial -> Trivial
        | _ -> NonTrivial t)

@@ -28,8 +28,8 @@ let _ = assert_norm (True \/ True)
 
 (* This needs the validity axioms to succeed *)
 #push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
-val l2 : (a : Type) -> Lemma (squash a ==> a)
-let l2 a = assert_norm (squash a ==> a)
+val l2 : (a : prop) -> Lemma (a ==> a)
+let l2 a = assert_norm (a ==> a)
 #pop-options
 
 

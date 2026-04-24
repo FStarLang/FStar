@@ -52,7 +52,8 @@ let ptest1 (p1 p2 p3 : path) (_ : squash (prefix p1 p2)) (_ : squash (prefix p2 
 let ptest2 (p1 p2 p3 : path) (_ : (prefix p1 p2)) (_ : (prefix p2 p3)) =
   assert (prefix p1 p3)
 
-let sklem0 #a (#p : a -> prop) (_ : squash ((x:a & p x))) (phi:prop) :
+open FStar.Nonempty
+let sklem0 #a (#p : a -> prop) (_ : squash (exists (x:a). p x)) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
 
@@ -69,6 +70,7 @@ let sklem3 #a (#p : a -> prop) (_ : squash (exists (x:a). p x)) (phi:prop) :
         (ensures phi) = ()
 
 let id (a:Type) = a
-let sklem3' #a (#p : a -> prop) (_ : squash (exists (x:a). id (p x))) (phi:prop) :
+let id_prop (a:prop) : prop = a
+let sklem3' #a (#p : a -> prop) (_ : squash (exists (x:a). id_prop (p x))) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()

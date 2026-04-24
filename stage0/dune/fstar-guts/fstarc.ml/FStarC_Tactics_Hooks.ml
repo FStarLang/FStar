@@ -103,20 +103,23 @@ let by_tactic_interp (pol1 : pol) (e : FStarC_TypeChecker_Env.env)
            (match pol1 with
             | StrictlyPositive ->
                 let uu___2 =
+                  let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
                   run_tactic_on_typ tactic.FStarC_Syntax_Syntax.pos
-                    assertion.FStarC_Syntax_Syntax.pos tactic e assertion in
+                    assertion.FStarC_Syntax_Syntax.pos tactic e uu___3 in
                 (match uu___2 with
                  | (gs, uu___3) -> Simplified (FStarC_Syntax_Util.t_true, gs))
             | Pos ->
                 let uu___2 =
+                  let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
                   run_tactic_on_typ tactic.FStarC_Syntax_Syntax.pos
-                    assertion.FStarC_Syntax_Syntax.pos tactic e assertion in
+                    assertion.FStarC_Syntax_Syntax.pos tactic e uu___3 in
                 (match uu___2 with
                  | (gs, uu___3) -> Simplified (FStarC_Syntax_Util.t_true, gs))
             | Both ->
                 let uu___2 =
+                  let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
                   run_tactic_on_typ tactic.FStarC_Syntax_Syntax.pos
-                    assertion.FStarC_Syntax_Syntax.pos tactic e assertion in
+                    assertion.FStarC_Syntax_Syntax.pos tactic e uu___3 in
                 (match uu___2 with
                  | (gs, uu___3) ->
                      Dual (assertion, FStarC_Syntax_Util.t_true, gs))
@@ -129,7 +132,8 @@ let by_tactic_interp (pol1 : pol) (e : FStarC_TypeChecker_Env.env)
             | StrictlyPositive ->
                 let g =
                   let uu___2 =
-                    FStarC_Tactics_Types.goal_of_goal_ty e assertion in
+                    let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
+                    FStarC_Tactics_Types.goal_of_goal_ty e uu___3 in
                   FStar_Pervasives_Native.fst uu___2 in
                 let g1 =
                   FStarC_Tactics_Types.set_label "spun-off assertion" g in
@@ -137,7 +141,8 @@ let by_tactic_interp (pol1 : pol) (e : FStarC_TypeChecker_Env.env)
             | Pos ->
                 let g =
                   let uu___2 =
-                    FStarC_Tactics_Types.goal_of_goal_ty e assertion in
+                    let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
+                    FStarC_Tactics_Types.goal_of_goal_ty e uu___3 in
                   FStar_Pervasives_Native.fst uu___2 in
                 let g1 =
                   FStarC_Tactics_Types.set_label "spun-off assertion" g in
@@ -145,7 +150,8 @@ let by_tactic_interp (pol1 : pol) (e : FStarC_TypeChecker_Env.env)
             | Both ->
                 let g =
                   let uu___2 =
-                    FStarC_Tactics_Types.goal_of_goal_ty e assertion in
+                    let uu___3 = FStarC_Syntax_Util.mk_squash assertion in
+                    FStarC_Tactics_Types.goal_of_goal_ty e uu___3 in
                   FStar_Pervasives_Native.fst uu___2 in
                 let g1 =
                   FStarC_Tactics_Types.set_label "spun-off assertion" g in
@@ -172,8 +178,7 @@ let by_tactic_interp (pol1 : pol) (e : FStarC_TypeChecker_Env.env)
                 let u = e.FStarC_TypeChecker_Env.universe_of e typ in
                 let goal =
                   let uu___5 = FStarC_Syntax_Util.mk_eq2 u typ tm uvtm in
-                  FStarC_Syntax_Util.mk_squash FStarC_Syntax_Syntax.U_zero
-                    uu___5 in
+                  FStarC_Syntax_Util.mk_squash uu___5 in
                 let uu___5 =
                   run_tactic_on_typ tactic.FStarC_Syntax_Syntax.pos
                     tm.FStarC_Syntax_Syntax.pos tactic e goal in
@@ -602,17 +607,14 @@ let rec traverse_for_spinoff (pol1 : pol)
             uu___2.FStarC_Syntax_Syntax.n in
           match uu___1 with
           | FStarC_Syntax_Syntax.Tm_fvar fv ->
-              ((((FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.and_lid)
-                   ||
-                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.imp_lid))
+              (((FStarC_Syntax_Syntax.fv_eq_lid fv
+                   FStarC_Parser_Const.and_lid)
                   ||
                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.forall_lid))
+                     FStarC_Parser_Const.imp_lid))
                  ||
                  (FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.auto_squash_lid))
+                    FStarC_Parser_Const.forall_lid))
                 ||
                 (FStarC_Syntax_Syntax.fv_eq_lid fv
                    FStarC_Parser_Const.squash_lid)
@@ -640,14 +642,7 @@ let rec traverse_for_spinoff (pol1 : pol)
             | (uu___2, FStar_Pervasives_Native.Some (msg, r)) ->
                 FStarC_TypeChecker_Util.label msg r t2
             | uu___2 -> t2 in
-          let t4 =
-            let uu___1 = FStarC_Syntax_Util.is_sub_singleton t3 in
-            if uu___1
-            then t3
-            else
-              FStarC_Syntax_Util.mk_auto_squash FStarC_Syntax_Syntax.U_zero
-                t3 in
-          let uu___1 = FStarC_Tactics_Types.goal_of_goal_ty env t4 in
+          let uu___1 = FStarC_Tactics_Types.goal_of_goal_ty env t3 in
           FStar_Pervasives_Native.fst uu___1 in
     let spinoff t2 =
       match pol2 with
@@ -1460,9 +1455,7 @@ let handle_smt_goal (env : FStarC_TypeChecker_Env.env)
                "While handling an SMT goal with a tactic"
                (fun uu___2 ->
                   let uu___3 =
-                    let uu___4 =
-                      FStarC_Syntax_Util.mk_squash
-                        FStarC_Syntax_Syntax.U_zero goal1 in
+                    let uu___4 = FStarC_Syntax_Util.mk_squash goal1 in
                     run_tactic_on_typ tau.FStarC_Syntax_Syntax.pos
                       (FStarC_TypeChecker_Env.get_range env) tau env uu___4 in
                   match uu___3 with
@@ -2225,8 +2218,7 @@ let postprocess (env : FStarC_TypeChecker_Env.env)
               let u = env.FStarC_TypeChecker_Env.universe_of env typ in
               let goal =
                 let uu___4 = FStarC_Syntax_Util.mk_eq2 u typ tm uvtm in
-                FStarC_Syntax_Util.mk_squash FStarC_Syntax_Syntax.U_zero
-                  uu___4 in
+                FStarC_Syntax_Util.mk_squash uu___4 in
               let uu___4 =
                 run_tactic_on_typ tau.FStarC_Syntax_Syntax.pos
                   tm.FStarC_Syntax_Syntax.pos tau env goal in

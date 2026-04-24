@@ -50,16 +50,15 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 # include .depend
 
-.PHONY: %.test
 .PRECIOUS: %.ml
 
 %.test: %.fst %.ml
 	$(FSTAR) $*.fst --load $*
-	touch -c $@
+	touch $@
 
 %.sep.test: %.fst %.ml
 	$(FSTAR) $*.Test.fst --load $*
-	touch -c $@
+	touch $@
 
 %.fst.checked: %.fst
 	$(FSTAR) $< --cache_checked_modules

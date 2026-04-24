@@ -148,7 +148,7 @@ let check_fndefn
 
   let mk_main_decl
     (refl_t:typ)
-    (_:squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t)) =
+    (_:squash (Nonempty.nonempty (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t))) =
     let nm = fst (inspect_ident id) in
     Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm us (RU.magic #R.term ()) refl_t
   in
@@ -162,7 +162,7 @@ let check_fndefn
     //
     // So, nothing to be done for expected type here
     //
-    let main_decl = mk_main_decl refl_t (FStar.Squash.return_squash (RU.magic ())) in
+    let main_decl = mk_main_decl refl_t (RU.magic ()) in
     let main_decl : RT.sigelt_for (elab_env g) None = main_decl in
     let (chk, se, _) = main_decl in
     let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
@@ -180,29 +180,18 @@ let check_fndefn
     // For the non-recursive case,
     //   we need to check that the computed type is a subtype of the expected type
     //
-    let (| refl_t, _ |) :
-      refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
-      squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t) =
+    let refl_t : refl_t:term { Some? expected_t ==> Some refl_t == expected_t } =
 
       match expected_t with
-      | None -> (| refl_t, FStar.Squash.return_squash (RU.magic ()) |)
+      | None -> refl_t
 
       | Some t ->
         let tok = Pulse.Checker.Pure.check_subtyping g refl_t t in
-        let refl_t_typing
-          : squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t) = FStar.Squash.return_squash (RU.magic ()) in
-        let sq : squash (RT.tot_typing (elab_env g) (RU.magic #R.term ()) t) =
-          FStar.Squash.bind_squash refl_t_typing (fun refl_t_typing ->
-            FStar.Squash.return_squash (
-              RT.T_Sub _ _ _ _
-                refl_t_typing
-                (RT.Relc_typ _ _ _ _ RT.R_Sub
-                   (RT.Rel_subtyping_token _ _ _ (FStar.Squash.return_squash tok))))) in
 
-        (| t, sq |)
+        t
     in
 
-    let main_decl = mk_main_decl refl_t (FStar.Squash.return_squash (RU.magic ())) in
+    let main_decl = mk_main_decl refl_t (RU.magic ()) in
     let chk, se, _ = main_decl in
     let main_decl = chk, se, Some blob in
     [], maybe_add_impl (Some refl_t) main_decl, []
@@ -336,7 +325,7 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   res
 
 let check_pulse_core 
-        (as_decl: unit -> Tac (either Pulse.Syntax.decl (option (string & R.range))))
+        (as_decl: unit -> Tac (either Pulse.Syntax.decl (option (list Pprint.document & R.range))))
   : RT.dsl_tac_t
   = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then
@@ -349,10 +338,7 @@ let check_pulse_core
         T.fail "Pulse parser failed"
 
       | Inr (Some (msg, range)) ->
-        T.fail_doc_at [
-          PP.text "Pulse parser failed";
-          Pprint.prefix 2 1 (text "Error:") (text msg);
-        ] (Some range)
+        T.fail_doc_at (PP.text "Pulse parser failed" :: msg) (Some range)
 
 [@@plugin]
 let check_pulse (namespaces:list string)

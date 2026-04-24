@@ -174,7 +174,6 @@ let slprop_equivs ()
 [@@ erasable]
 val iname : Type0
 // val storable_iname (i:iname) : GTot bool
-val deq_iname : FStar.GhostSet.decide_eq iname
 instance val non_informative_iname
   : NonInformative.non_informative iname
 
@@ -185,16 +184,16 @@ let emp_inames : inames = GhostSet.empty
 let join_inames (is1 is2 : inames) : inames =
   GhostSet.union is1 is2
 
-let inames_subset (is1 is2 : inames) : Type0 =
+let inames_subset (is1 is2 : inames) : prop =
   GhostSet.subset is1 is2
 
-let (/!) (is1 is2 : inames) : Type0 =
+let (/!) (is1 is2 : inames) : prop =
   GhostSet.disjoint is1 is2
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
-let single (i:iname) : inames = GhostSet.singleton deq_iname i
+let single (i:iname) : inames = GhostSet.singleton i
 let add_inv (e:inames) (i:iname) : inames = GhostSet.union (single i) e
 let remove_inv (e:inames) (i:iname) : inames = FStar.GhostSet.(intersect (complement (single i)) e)
 let all_inames : inames = GhostSet.complement GhostSet.empty

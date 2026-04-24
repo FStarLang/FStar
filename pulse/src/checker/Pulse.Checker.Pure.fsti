@@ -113,10 +113,10 @@ val core_check_tot_term (g:env) (e:term) (t:typ)
   : T.Tac unit
 
 val is_non_informative (g:env) (c:comp)
-  : T.Tac (option (T.non_informative_token (elab_env g) (elab_comp c)))
+  : T.Tac (option (squash (T.non_informative_token (elab_env g) (elab_comp c))))
 
 val check_subtyping (g:env) (t1 t2 : term)
-  : T.Tac (subtyping_token g t1 t2)
+  : T.Tac (squash (subtyping_token g t1 t2))
 
 
 val norm_well_typed_term

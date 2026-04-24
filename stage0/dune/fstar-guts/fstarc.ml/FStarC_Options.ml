@@ -1333,7 +1333,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     FStarC_Errors_Msg.bulleted
                                                                     [
                                                                     text
-                                                                    "if 'boxwrap' use 'Prims.op_Multiply, Prims.op_Division, Prims.op_Modulus'";
+                                                                    "if 'boxwrap' use 'Prims.op_Star, Prims.op_Division, Prims.op_Modulus'";
                                                                     text
                                                                     "if 'native' use '*, div, mod'";
                                                                     text

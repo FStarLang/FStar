@@ -27,9 +27,6 @@ let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
 //owns_timeless$
 let owns_timeless (x:ref U32.t)
 : squash (timeless (owns x))
-by T.(norm [delta_only [`%owns; `%auto_squash]]; 
-      mapply (`FStar.Squash.return_squash);
-      mapply (`timeless_exists))
 = ()
 //end owns_timeless$
 

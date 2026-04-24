@@ -389,7 +389,9 @@ val balanceRB_preserves_sort : #h:nat -> #c:color -> a:rbnode h c -> x:int -> b:
   Lemma 
   (requires sorted a /\ almostNode_sorted b /\ chain (max a) x (almostNode_min b))
   (ensures  hiddenTree_sorted (balanceRB a x b))
+#push-options "--retry 3"
 let balanceRB_preserves_sort #h #c a x right = ()
+#pop-options
 
 val balanceLR_preserves_sort : #h:nat -> #c:color -> a:hiddenTree h -> x:int -> b:rbnode h c ->
   Lemma 

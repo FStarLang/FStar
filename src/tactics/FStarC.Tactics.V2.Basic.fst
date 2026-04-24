@@ -1151,12 +1151,11 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
       let uvs = List.rev uvs in
       let pre  = SS.subst subst pre in
       let post = SS.subst subst post in
-      let post_u = env.universe_of env post in
       let! b =
         let must_tot = false in
-        let r = (if noinst then do_match must_tot env (goal_type goal) (U.mk_squash post_u post)
-                 else if noinst_lhs then do_match_on_lhs must_tot env (goal_type goal) (U.mk_squash post_u post)
-                 else do_unify must_tot env (goal_type goal) (U.mk_squash post_u post))
+        let r = (if noinst then do_match must_tot env (goal_type goal) (U.mk_squash post)
+                 else if noinst_lhs then do_match_on_lhs must_tot env (goal_type goal) (U.mk_squash post)
+                 else do_unify must_tot env (goal_type goal) (U.mk_squash post))
         in r
       in
       if not b
@@ -1201,7 +1200,6 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         in
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         proc_guard "apply_lemma guard" env guard None (Some goal_sc) (rangeof goal) ;!
-        let pre_u = env.universe_of env pre in
         (match Env.check_trivial (Rel.simplify_vc false env pre) with
          | Trivial -> return ()
          | NonTrivial _ -> add_irrelevant_goal goal "apply_lemma precondition" env pre (Some goal_sc)) ;!//AR: should we use the normalized pre instead?
@@ -1989,7 +1987,7 @@ let t_destruct (s_tm : term) : ML (tac (list (fv & int))) = wrap_err "destruct" 
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
                         let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with admit = true }) s_ty pat in
-                        let eq_b = S.gen_bv "breq" None (U.mk_squash S.U_zero (U.mk_eq2 equ s_ty s_tm pat_t)) in
+                        let eq_b = S.gen_bv "breq" None (U.mk_squash (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
                         let nty = U.arrow bs (mk_Total cod) in
@@ -2264,13 +2262,6 @@ let exn_to_issue (e:exn)  : ML (Errors.issue) =
     issue_number = (Some 17);
     issue_ctx = get_ctx ()
   })
-
-let uvar_solution = bv & term
-let remaining_uvar_t = bv & typ
-let remaining_uvars_t = list remaining_uvar_t
-let issues = list FStarC.Errors.issue
-
-let refl_tac (a : Type) = tac (option a & issues)
 
 let __refl_typing_builtin_wrapper (f:unit -> ML ('a & list refl_guard_and_tok_t))  : ML (tac (option 'a & issues)) =
   (* We ALWAYS rollback the state. This wrapper is meant to ensure that

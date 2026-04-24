@@ -382,7 +382,7 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   assert (pure (Seq.length s2 == r._2 - r._1));
   assert (pure (Seq.length s3 == hi - r._2));
   
-  assert pure (squash (permutation s0 (Seq.append s1 (Seq.append s2 s3))));
+  assert pure (permutation s0 (Seq.append s1 (Seq.append s2 s3)));
   
   transfer_smaller_slice s lo lo r._1 r._3;
   assert (pure (between_bounds s1 lb r._3));

@@ -1688,7 +1688,7 @@ let canon_semiring_aux
       trefl ()
     | _ -> fail "Unexpected"
     end
-  | _ -> fail "Goal should be an equality")
+  | _ -> fail ("Goal should be an equality: " ^ term_to_string g))
 
 let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
   canon_semiring_aux a

@@ -63,10 +63,10 @@ let h9 (x:int) (y:bool) =
   let id (#a:Type) (x:a) = x in
   id x, id y
 
-type my_squash (t:Type0) = squash t
+type my_squash (t:prop) = squash t
 assume val f10: int -> Dv int
 assume val g10: int -> GTot int
-assume val h10: int -> my_squash int
+assume val h10: int -> my_squash (FStar.Nonempty.nonempty int)
 let test (x:int) =
   let _ =
     let y = g10 x in

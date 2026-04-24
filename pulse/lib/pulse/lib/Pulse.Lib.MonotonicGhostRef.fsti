@@ -4,8 +4,6 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.GhostPCMReference
 open FStar.Preorder
 
-let as_prop (t:Type0) = t <==> True
-
 [@@erasable]
 val mref (#t:Type0) (p:preorder t) : Type0
 
@@ -68,7 +66,7 @@ ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   preserves pts_to r #f v
   requires snapshot r u
-  ensures pure (as_prop (p u v))
+  ensures pure (p u v)
 
 ghost
 fn snapshots_related (#t:Type0) (#p:preorder t) (r:mref p) (#u #v:t)
@@ -81,5 +79,5 @@ instance val duplicable_snapshot #t #p r u : duplicable (snapshot #t #p r u)
 ghost
 fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)
   requires pts_to r #1.0R u
-  requires pure (as_prop (p u v))
+  requires pure (p u v)
   ensures pts_to r #1.0R v

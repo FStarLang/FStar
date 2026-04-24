@@ -30,13 +30,13 @@ val ref_equal_addr : #a:Type0 -> #b:Type0 -> r1:ref a -> r2:ref b ->
   Lemma (ref_equal r1 r2 <==> addr_of r1 = addr_of r2)
 
 (** Whether a ref is contained (allocated) in a heap *)
-val contains : #a:Type0 -> heap -> ref a -> Type0
+val contains : #a:Type0 -> heap -> ref a -> prop
 
 (** Whether an address is unused in a heap *)
-val addr_unused_in : nat -> heap -> Type0
+val addr_unused_in : nat -> heap -> prop
 
 (** A ref is unused iff its addr is unused *)
-val unused_in : #a:Type0 -> ref a -> heap -> Type0
+val unused_in : #a:Type0 -> ref a -> heap -> prop
 
 let fresh (#a:Type0) (r:ref a) (h0 h1:heap) =
   r `unused_in` h0 /\ h1 `contains` r

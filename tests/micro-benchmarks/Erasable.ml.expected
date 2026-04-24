@@ -4,7 +4,7 @@ type ('a, 'uuuuu) repr = 'a
 let return (x : 'a) : ('a, Obj.t) repr= x
 let bind (f : ('a, Obj.t) repr) (g : 'a -> ('b, Obj.t) repr) :
   ('b, Obj.t) repr= g f
-let lift_PURE_MPURE (f : unit -> 'a) : ('a, Obj.t) repr= f ()
+let lift_PURE_MPURE (wp : unit) (f : unit -> 'a) : ('a, Obj.t) repr= f ()
 let f_mpure (uu___ : unit) : Prims.int=
   failwith "Not yet implemented: Erasable.f_mpure"
 let eff_test1 (uu___ : unit) : Prims.int= f_mpure ()
@@ -23,7 +23,7 @@ let lift_MGHOST_MDIV (f : ('a, Obj.t) repr) : ('a, Obj.t) repr= f
 let f_mdiv (uu___ : unit) : Prims.int=
   failwith "Not yet implemented: Erasable.f_mdiv"
 let eff_test7 (uu___ : unit) : Prims.int= f_mdiv ()
-let bind_PURE_M1 (f : unit -> 'a) (g : 'a -> ('b, Obj.t) repr) :
+let bind_PURE_M1 (wp : unit) (f : unit -> 'a) (g : 'a -> ('b, Obj.t) repr) :
   ('b, Obj.t) repr= g (f ())
 let f_m1 (uu___ : unit) : Prims.int=
   failwith "Not yet implemented: Erasable.f_m1"

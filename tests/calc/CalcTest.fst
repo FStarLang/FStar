@@ -16,9 +16,9 @@ let calc0 (a : pos) : Lemma (a + a > a) =
 (* The lemma above, desugared. F* eta-expands and ascribes <: Type in
  * order to treat boolean operators such as (>) as `relation`s. *)
 let calc0_desugared (a : pos) : Lemma (a + a > a) =
-  calc_finish (fun x y -> (>) x y <: Type) (fun () ->
-    calc_step (fun x y -> (>) x y <: Type) a (fun () ->
-      calc_step (fun x y -> (==) x y <: Type) (2 * a) (fun () ->
+  calc_finish (fun x y -> (>) x y <: prop) (fun () ->
+    calc_step (fun x y -> (>) x y <: prop) a (fun () ->
+      calc_step (fun x y -> (==) x y <: prop) (2 * a) (fun () ->
         calc_init (a + a)
       ) (fun () -> ())
     ) (fun () -> lem1 a)

@@ -3,7 +3,7 @@ module FStar.Tactics.BreakVC
 open FStar.Tactics
 
 let break_wp' : tac_wp_t0 unit =
-  fun p -> spinoff (squash (p ()))
+  fun p -> spinoff (p ())
 
 val mono_lem () : Lemma (tac_wp_monotonic #unit break_wp')
 

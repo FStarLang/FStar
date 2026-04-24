@@ -39,9 +39,9 @@ let async_joinable #a #post h =
 let eta_post #a #b #pre #post (f : (x:a -> stt b (pre x) (post x)))
   : x:a -> stt b (pre x) (fun y -> post x y)
   = fun x ->
-      sub_stt _ _
-        (slprop_equiv_refl _)
-        (intro_slprop_post_equiv _ _ (fun y -> slprop_equiv_refl _))
+      sub_stt #b #(pre x) (pre x) #(post x) (fun y -> post x y)
+        (slprop_equiv_refl (pre x))
+        (intro_slprop_post_equiv (post x) (fun y -> post x y) (fun y -> slprop_equiv_refl (post x y)))
         (f x)
 
 

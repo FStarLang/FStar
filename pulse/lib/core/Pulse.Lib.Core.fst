@@ -61,44 +61,34 @@ let timeless_exists #a p =
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
-let prop_squash_idem (p:prop)
-  : Tot (squash (squash p == p))
-  = FStar.PropositionalExtensionality.apply p (squash p)
 
 let intro_slprop_post_equiv
        (#t:Type u#a) 
        (p q: t -> slprop)
        (pf: (x:t -> slprop_equiv (p x) (q x)))
   : slprop_post_equiv p q
-  = let pf : squash (forall x. slprop_equiv (p x) (q x)) = 
-        introduce forall x. slprop_equiv (p x) (q x)
-        with FStar.Squash.return_squash (pf x)
-    in
-    coerce_eq (prop_squash_idem _) pf
+  = 
+    introduce forall x. slprop_equiv (p x) (q x) with pf x
 
 let elim_slprop_post_equiv (#t:Type u#a)
                           (p q: t -> slprop) 
-                          (pf:slprop_post_equiv p q)
+                          (pf:squash (slprop_post_equiv p q))
                           (x:t) 
 : slprop_equiv (p x) (q x)
-= let pf
-    : squash (slprop_equiv (p x) (q x))
-    = eliminate forall x. slprop_equiv (p x) (q x) with x
-  in
-  coerce_eq (prop_squash_idem _) pf
+= eliminate forall x. slprop_equiv (p x) (q x) with x
 
 let slprop_equiv_refl (v0:slprop) 
   : slprop_equiv v0 v0
   = slprop_equiv_refl v0
 
-let slprop_equiv_sym (v0 v1:slprop) (p:slprop_equiv v0 v1)
+let slprop_equiv_sym (v0 v1:slprop) (p:squash (slprop_equiv v0 v1))
   : slprop_equiv v1 v0
   = slprop_equiv_elim v0 v1; p
 
 let slprop_equiv_trans
       (v0 v1 v2:slprop)
-      (p:slprop_equiv v0 v1)
-      (q:slprop_equiv v1 v2)
+      (p:squash (slprop_equiv v0 v1))
+      (q:squash (slprop_equiv v1 v2))
   : slprop_equiv v0 v2
   = slprop_equiv_elim v0 v1;
     slprop_equiv_elim v1 v2;
@@ -122,8 +112,8 @@ let slprop_equiv_exists (#a:Type) (p q : a -> slprop)
   = slprop_equiv_exists p q ()
 
 let slprop_equiv_cong (p1 p2 p3 p4:slprop)
-                     (f: slprop_equiv p1 p3)
-                     (g: slprop_equiv p2 p4)
+                     (f: squash (slprop_equiv p1 p3))
+                     (g: squash (slprop_equiv p2 p4))
   : slprop_equiv (p1 ** p2) (p3 ** p4)
   = slprop_equiv_elim p1 p3;
     slprop_equiv_elim p2 p4;
@@ -135,7 +125,6 @@ let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 module Act = PulseCore.Action
 
 let iname = Act.iref
-let deq_iname = Sep.deq_iref
 instance non_informative_iname = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iname;
 }
@@ -285,7 +274,7 @@ let fork_core pre #l f =
   let l' = l in // TODO
   PulseCore.Action.fork l l' (f l')
 
-let rewrite p q (pf:slprop_equiv p q)
+let rewrite p q (pf:squash (slprop_equiv p q))
   : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
@@ -296,7 +285,6 @@ let rewrite_by (p:slprop) (q:slprop)
                (_:unit { T.with_tactic t (slprop_equiv p q) })
   : stt_ghost unit emp_inames p (fun _ -> q)
   = let pf : squash (slprop_equiv p q) = T.by_tactic_seman t (slprop_equiv p q) in
-    prop_squash_idem (slprop_equiv p q);
     rewrite p q (coerce_eq () pf)
 #pop-options
 

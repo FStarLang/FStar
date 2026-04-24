@@ -30,7 +30,7 @@ let retain_only (nss:list string) : Tac unit =
   let _ig = map addns nss in //add back only things in nss
   ()
 
-let unrefine_eq_lem (#a:Type) (#p : (a -> Type)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
+let unrefine_eq_lem (#a:Type) (#p : (a -> prop)) (x y : (z:a{p z})) (s : squash (eq2 #a x y)) : Lemma (eq2 #(z:a{p z}) x y) =
     ()
 
 let prune_for_seq () : Tac unit =

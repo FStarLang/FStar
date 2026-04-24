@@ -21,19 +21,19 @@ open FStar.Stubs.Reflection.V2.Data
 open FStar.Reflection.V2.Collect
 open FStar.List.Tot
 
-let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
+let rec forall_list (p:'a -> prop) (l:list 'a) : prop =
     match l with
     | [] -> True
     | x::xs -> p x /\ forall_list p xs
 
-let forallP (p: 'a -> Type) (l: list 'a): Type
+let forallP (p: 'a -> prop) (l: list 'a): prop
   = forall (x: 'a). memP x l ==> p x
 // Precedence relation on the element of a list
 unfold let (<<:) (l: list 'a) (r: 'r)
   = forallP (fun x -> x << r) l
 
 // A glorified `id`
-val list_ref : (#a:Type) -> (#p:(a -> Type)) -> (l:list a) ->
+val list_ref : (#a:Type) -> (#p:(a -> prop)) -> (l:list a) ->
                     Pure (list (x:a{p x}))
                          (requires (forallP p l))
                          (ensures (fun _ -> True))

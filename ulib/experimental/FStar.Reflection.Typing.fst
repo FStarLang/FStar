@@ -974,7 +974,7 @@ let mkif
   in
   T_Match g u_zero bool_ty scrutinee E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
     [[]; []]
-    (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
+    (MC_Tok g scrutinee bool_ty _ _ (if_complete_match g scrutinee))
     (brty ())
 
 let typing_to_token (#g:env) (#e:term) (#c:comp_typ) (_ : typing g e c) = magic()

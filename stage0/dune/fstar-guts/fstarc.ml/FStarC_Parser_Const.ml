@@ -16,7 +16,6 @@ let fstar_ns_lid : FStarC_Ident.lident= p2l ["FStar"]
 let bool_lid : FStarC_Ident.lident= pconst "bool"
 let unit_lid : FStarC_Ident.lident= pconst "unit"
 let squash_lid : FStarC_Ident.lident= pconst "squash"
-let auto_squash_lid : FStarC_Ident.lident= pconst "auto_squash"
 let string_lid : FStarC_Ident.lident= pconst "string"
 let bytes_lid : FStarC_Ident.lident= pconst "bytes"
 let int_lid : FStarC_Ident.lident= pconst "int"
@@ -61,7 +60,6 @@ let real_lid : FStarC_Ident.lident= p2l ["FStar"; "Real"; "real"]
 let float_lid : FStarC_Ident.lident= p2l ["FStar"; "Float"; "float"]
 let char_lid : FStarC_Ident.lident= p2l ["FStar"; "Char"; "char"]
 let heap_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "heap"]
-let logical_lid : FStarC_Ident.lident= pconst "logical"
 let prop_lid : FStarC_Ident.lident= pconst "prop"
 let smt_theory_symbol_attr_lid : FStarC_Ident.lident=
   pconst "smt_theory_symbol"
@@ -77,6 +75,7 @@ let exists_lid : FStarC_Ident.lident= pconst "l_Exists"
 let forall_lid : FStarC_Ident.lident= pconst "l_Forall"
 let haseq_lid : FStarC_Ident.lident= pconst "hasEq"
 let b2t_lid : FStarC_Ident.lident= pconst "b2t"
+let t2b_lid : FStarC_Ident.lident= pconst "t2b"
 let admit_lid : FStarC_Ident.lident= pconst "admit"
 let magic_lid : FStarC_Ident.lident= pconst "magic"
 let has_type_lid : FStarC_Ident.lident= pconst "has_type"
@@ -146,13 +145,12 @@ let op_GTE : FStarC_Ident.lident= pconst "op_GreaterThanOrEqual"
 let op_Subtraction : FStarC_Ident.lident= pconst "op_Subtraction"
 let op_Minus : FStarC_Ident.lident= pconst "op_Minus"
 let op_Addition : FStarC_Ident.lident= pconst "op_Addition"
-let op_Multiply : FStarC_Ident.lident= pconst "op_Multiply"
+let op_Star : FStarC_Ident.lident= pconst "op_Star"
 let op_Division : FStarC_Ident.lident= pconst "op_Division"
 let op_Modulus : FStarC_Ident.lident= pconst "op_Modulus"
 let op_And : FStarC_Ident.lident= pconst "op_AmpAmp"
 let op_Or : FStarC_Ident.lident= pconst "op_BarBar"
 let op_Negation : FStarC_Ident.lident= pconst "op_Negation"
-let subtype_of_lid : FStarC_Ident.lident= pconst "subtype_of"
 let real_const (s : Prims.string) : FStarC_Ident.lident=
   p2l ["FStar"; "Real"; s]
 let real_op_LT : FStarC_Ident.lident= real_const "op_Less_Dot"
@@ -314,7 +312,7 @@ let bind_has_range_args_attr : FStarC_Ident.lident=
 let primitive_extraction_attr : FStarC_Ident.lident=
   attr "primitive_extraction"
 let binder_strictly_positive_attr : FStarC_Ident.lident=
-  attr "strictly_positive"
+  pconst "strictly_positive"
 let binder_unused_attr : FStarC_Ident.lident= attr "unused"
 let no_auto_projectors_decls_attr : FStarC_Ident.lident=
   attr "no_auto_projectors_decls"

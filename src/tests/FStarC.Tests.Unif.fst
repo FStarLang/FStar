@@ -49,13 +49,11 @@ let fail msg : ML unit =
     success := false
 
 let guard_eq (i : int) g g' : ML unit =
-    let b, g, g' = match g, g' with
-        | Trivial, Trivial -> true, g, g'
+    let b = match g, g' with
+        | Trivial, Trivial -> true
         | NonTrivial f, NonTrivial f' ->
-          let f = N.normalize  [Env.EraseUniverses] (tcenv()) f in
-          let f' = N.normalize [Env.EraseUniverses] (tcenv()) f' in
-          term_eq f f', NonTrivial f, NonTrivial f'
-        | _ -> false, g, g' in
+          Rel.teq_nosmt_force (tcenv ()) f f'
+        | _ -> false in
     if not b
     then fail <| Format.fmt3 "Test %s failed:\n\t\
                         Expected guard %s;\n\t\
@@ -151,7 +149,7 @@ let run_all () : ML bool =
     unify 0 [x_bv] x x Trivial;
 
     //different names, equal with a guard
-    unify 1 [x_bv;y_bv] x y (NonTrivial (U.mk_eq2 U_zero U.t_bool x y));
+    unify 1 [x_bv;y_bv] x y (NonTrivial (U.mk_eq2 U_zero S.t_int x y));
 
     //equal after some reduction
     let id = tc "fun (x:bool) -> x" in

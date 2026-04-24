@@ -17,19 +17,19 @@ module Cut
 
 open FStar.Tactics.V2
 
-assume val phi : Type
-assume val psi : Type
+assume val phi : prop
+assume val psi : prop
 
-assume val p1 : psi
-assume val p2 : psi -> squash phi
+assume val p1 : squash psi
+assume val p2 : squash psi -> squash phi
 
 [@@plugin]
 let tau =
         (fun () ->
-             let psi' = `psi in
+             let psi' = `(squash psi) in
              let _ = tcut psi' in
              flip ();
-             exact (`p1); // TODO: kinda pointless example
+             exact (`p1);
              apply (`p2);
              exact (`p1))
 

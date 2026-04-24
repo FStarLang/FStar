@@ -4187,11 +4187,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     FStarC_Syntax_Subst.subst
                                                                     subst
                                                                     post in
-                                                                    let post_u
-                                                                    =
-                                                                    env1.FStarC_TypeChecker_Env.universe_of
-                                                                    env1
-                                                                    post1 in
                                                                     let uu___11
                                                                     =
                                                                     let must_tot
@@ -4206,7 +4201,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     let uu___13
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
-                                                                    post_u
                                                                     post1 in
                                                                     do_match
                                                                     must_tot
@@ -4224,7 +4218,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     let uu___14
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
-                                                                    post_u
                                                                     post1 in
                                                                     do_match_on_lhs
                                                                     must_tot
@@ -4239,7 +4232,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     let uu___15
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
-                                                                    post_u
                                                                     post1 in
                                                                     do_unify
                                                                     must_tot
@@ -4503,10 +4495,6 @@ let t_apply_lemma (noinst : Prims.bool) (noinst_lhs : Prims.bool)
                                                                     =
                                                                     Obj.magic
                                                                     uu___17 in
-                                                                    let pre_u
-                                                                    =
-                                                                    env1.FStarC_TypeChecker_Env.universe_of
-                                                                    env1 pre1 in
                                                                     let uu___18
                                                                     =
                                                                     let uu___19
@@ -8083,7 +8071,6 @@ let t_destruct (s_tm : FStarC_Syntax_Syntax.term) :
                                                                     s_tm1
                                                                     pat_t in
                                                                     FStarC_Syntax_Util.mk_squash
-                                                                    FStarC_Syntax_Syntax.U_zero
                                                                     uu___41 in
                                                                     FStarC_Syntax_Syntax.gen_bv
                                                                     "breq"

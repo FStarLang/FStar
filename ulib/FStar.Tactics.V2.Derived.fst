@@ -140,7 +140,7 @@ let trivial () : Tac unit =
 (* Another hook to just run a tactic without goals, just by reusing `with_tactic` *)
 let run_tactic (t:unit -> Tac unit)
   : Pure unit
-         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) (squash True)) (range_of t)))
+         (requires (set_range_of (with_tactic (fun () -> trivial (); t ()) True) (range_of t)))
          (ensures (fun _ -> True))
   = ()
 
@@ -591,8 +591,6 @@ let rec __assumption_aux (xs : list binding) : Tac unit =
         fail "no assumption matches goal"
     | b::bs ->
         try exact b with | _ ->
-        try (apply (`FStar.Squash.return_squash);
-             exact b) with | _ ->
         __assumption_aux bs
 
 let assumption () : Tac unit =
@@ -698,7 +696,7 @@ let __grewrite_derived (t1 t2 : term) : Tac unit =
     )
 
 private
-let __un_sq_eq (#a:Type) (x y : a) (_ : (x == y)) : Lemma (x == y) = ()
+let __un_sq_eq (#a:Type) (x y : a) (_ : squash (x == y)) : Lemma (x == y) = ()
 
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
 let grewrite_eq (b:binding) : Tac unit =

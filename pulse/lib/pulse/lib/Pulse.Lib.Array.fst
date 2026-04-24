@@ -27,8 +27,6 @@ module U8 = FStar.UInt8
 open Pulse.Lib.BoundedIntegers
 module A = Pulse.Lib.Array.Core
 
-#set-options "--print_implicits"
-
 fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   requires pts_to a1 #p1 's1
         ** pts_to a2 #p2 's2

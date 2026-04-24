@@ -17,8 +17,8 @@ module MApply
 
 open FStar.Tactics.V2
 
-assume val p : Type0
-assume val q : Type0
+assume val p : prop
+assume val q : prop
 assume val x : squash p
 
 assume val lem     : unit -> Lemma (requires p) (ensures q)

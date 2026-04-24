@@ -274,17 +274,6 @@ let resugar_prims_ops path: expression =
   | path -> path_to_ident path)
   |> pexp_ident ~loc
 
-let resugar_if_stmts ep cases =
-  if List.length cases = 2 then
-    let case1 = List.hd cases in
-    let case2 = BatList.last cases in
-    (match case1.pc_lhs.ppat_desc with
-     | Ppat_construct({txt=Lident "true"}, None) ->
-         pexp_ifthenelse ~loc ep case1.pc_rhs (Some case2.pc_rhs)
-     | _ -> pexp_match ~loc ep cases)
-  else
-    pexp_match ~loc ep cases
-
 let rec build_expr (e: mlexpr): expression =
   match e.expr with
   | MLE_Const c -> build_constant_expr c
@@ -309,7 +298,7 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
       let cases = map build_case branches in
-      resugar_if_stmts ep cases
+      pexp_match ~loc ep cases
    | MLE_Coerce (e, _, _) ->
       let r = pexp_ident ~loc (mk_lident "Obj.magic") in
       pexp_apply ~loc r [(Nolabel, build_expr e)]

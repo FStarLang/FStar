@@ -115,8 +115,7 @@ let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
   tc_type_common env ts (U.type_u () |> fst) r
 
 let tc_assume (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
-  //AR: this might seem same as tc_declare_typ but come prop, this will change
-  tc_type_common env ts (U.type_u () |> fst) r
+  tc_type_common env ts t_prop r
 
 let tc_decl_attributes env se =
   // [Substitute] (defined in Pervasives), is added as attribute by
