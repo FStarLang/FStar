@@ -25,7 +25,7 @@ open FStarC.Class.Show
 
 let z3url = "https://github.com/Z3Prover/z3/releases"
 
-let packaged_z3_versions = ["4.8.5"; "4.13.3"; "4.15.3"]
+let packaged_z3_versions = ["4.8.5"; "4.13.3"; "4.15.3"; "4.16.0"]
 
 let z3_install_suggestion (v : string) : list Pprint.document =
   let open FStarC.Errors.Msg in
