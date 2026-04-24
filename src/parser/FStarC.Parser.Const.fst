@@ -353,6 +353,7 @@ let unification_tag_lid = attr "defer_to"
 
 let comment_attr = attr "Comment"
 let c_inline_attr = attr "CInline"
+let c_noinline_attr = attr "CNoInline"
 let attr_substitute_lid =  attr "Substitute"
 let normalize_for_extraction_lid = psconst "normalize_for_extraction"
 let normalize_for_extraction_type_lid = psconst "normalize_for_extraction_type"
