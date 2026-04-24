@@ -108,9 +108,11 @@ let slprop = p:mem_pred { slprop_ok p }
 let mk_slprop (p: premem -> prop { slprop_ok' p }) : slprop =
   reveal_slprop_ok (); F.on_dom _ p
 
+#push-options "--z3rlimit 30"
 let age_to (m: mem) (n: erased nat) : mem =
   reveal_mem_le (); reveal_slprop_ok ();
   age_to_ m n
+#pop-options
 
 irreducible [@@"opaque_to_smt"]
 let reveal_mem (m: erased premem) (h: B.mem { h == timeless_heap_of m }) : m': premem { m' == reveal m } =
@@ -362,7 +364,7 @@ let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
   star__elim p1 p2 w
 
 #restart-solver
-#push-options "--split_queries always"
+#push-options "--split_queries always --z3rlimit 20"
 irreducible
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =
