@@ -1211,13 +1211,12 @@ type lb_sig =
      & (S.binders //the erased type binders
         & mltyscheme)) //translation of the source type t as a ML type scheme
   & bool   //whether or not to add a unit argument
-  & bool   //whether this was marked CInline
+  & list term // attributes (as F* terms)
   & term   //the term e, maybe after some type binders have been erased
 
 let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option term)) : ML (list lb_sig) =
     let maybe_generalize (orig_lbdef: option term) (lb_rec:letbinding) : ML lb_sig =
               let {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} = lb_rec in
-              let has_c_inline = U.has_attribute lbattrs PC.c_inline_attr in
               // begin match lbattrs with
               // | [] -> ()
               // | _ ->
@@ -1236,10 +1235,10 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
                   let expected_t = term_as_mlty g lbtyp in
-                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, has_c_inline, lbdef)
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbattrs, lbdef)
               in
               if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp
-              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbattrs, lbdef)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (show lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
                 | Tm_arrow {bs; comp=c} when (List.hd bs |> is_type_binder g) ->
@@ -1315,7 +1314,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                 else polytype
                              in
                              let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, lbattrs, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1336,7 +1335,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app {hd=lbdef; args}) lbdef.pos in
-                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, has_c_inline, e)
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, lbattrs, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1986,7 +1985,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
           in
 
           let check_lb env (nm_sig : mlident & lb_sig) =
-              let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
+              let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, attrs, e)) = nm_sig in
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
@@ -1997,7 +1996,15 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
-              let meta = if has_c_inline || Options.Ext.get "extraction_inline_all" <> "" then CInline :: meta else meta in
+              let meta =
+                if Options.Ext.get "extraction_inline_all" <> ""
+                   || U.has_attribute attrs PC.c_inline_attr then
+                  CInline :: meta
+                else if U.has_attribute attrs PC.c_noinline_attr then
+                  CNoInline :: meta
+                else
+                  meta
+              in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let orig_lbdefs = if top_level then List.map (fun lb -> Some lb.lbdef) orig_lbs else [] in
