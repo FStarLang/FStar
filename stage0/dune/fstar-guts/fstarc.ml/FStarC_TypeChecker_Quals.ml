@@ -421,15 +421,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                      let uu___9 = val_decl in
                      (match uu___9 with
                       | FStar_Pervasives_Native.Some ((us, t), uu___10) ->
-                          let known_to_be_erasable =
-                            let env1 =
-                              FStarC_TypeChecker_Env.push_univ_vars env us in
-                            FStarC_TypeChecker_Normalize.non_info_sort_norm
-                              env1 t in
-                          let uu___11 =
-                            if Prims.op_Negation known_to_be_erasable
-                            then non_info_norm_weak env body
-                            else false in
+                          let uu___11 = non_info_norm_weak env body in
                           if uu___11
                           then
                             let uu___12 =

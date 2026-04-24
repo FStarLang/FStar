@@ -355,7 +355,9 @@ let convert_rlimit (r : Prims.int) : Prims.int=
   let uu___ =
     let uu___1 = FStarC_Options.z3_version () in
     FStarC_Misc.version_ge uu___1 "4.12.3" in
-  if uu___ then (Prims.of_int 500000) * r else (Prims.of_int 544656) * r
+  if uu___
+  then Prims.op_Star (Prims.of_int 500000) r
+  else Prims.op_Star (Prims.of_int 544656) r
 let with_fuel_and_diagnostics (settings : query_settings)
   (label_assumptions : FStarC_SMTEncoding_Term.decl Prims.list) :
   FStarC_SMTEncoding_Term.decl Prims.list=
@@ -745,10 +747,10 @@ let div_with_decimals (ndec : Prims.nat) (x : Prims.int) (y : Prims.int) :
     let rec aux n =
       if n = Prims.int_zero
       then Prims.int_one
-      else (Prims.of_int 10) * (aux (n - Prims.int_one)) in
+      else Prims.op_Star (Prims.of_int 10) (aux (n - Prims.int_one)) in
     aux ndec in
   let intg = x / y in
-  let frac = (mod) ((mul * x) / y) mul in
+  let frac = (mod) ((Prims.op_Star mul x) / y) mul in
   let frac1 =
     let len =
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int frac in
@@ -1219,7 +1221,8 @@ let make_solver_configs (can_split : Prims.bool) (is_retry : Prims.bool)
       let uu___1 =
         let rlimit =
           let uu___2 = FStarC_Options.z3_rlimit_factor () in
-          let uu___3 = FStarC_Options.z3_rlimit () in uu___2 * uu___3 in
+          let uu___3 = FStarC_Options.z3_rlimit () in
+          Prims.op_Star uu___2 uu___3 in
         let next_hint = get_hint_for qname index in
         let default_settings =
           let uu___2 = FStarC_Options.initial_fuel () in
@@ -1679,7 +1682,7 @@ let ask_solver_recover (configs : query_settings Prims.list) : answer=
                 query_range = (cfg.query_range);
                 query_fuel = (cfg.query_fuel);
                 query_ifuel = (cfg.query_ifuel);
-                query_rlimit = (n * cfg.query_rlimit);
+                query_rlimit = (Prims.op_Star n cfg.query_rlimit);
                 query_hint = (cfg.query_hint);
                 query_errors = (cfg.query_errors);
                 query_all_labels = (cfg.query_all_labels);

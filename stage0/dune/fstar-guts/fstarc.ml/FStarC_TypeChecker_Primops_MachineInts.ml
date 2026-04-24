@@ -53,7 +53,8 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                 (FStarC_MachineInts.nbe_machint k)
                 (fun x y ->
                    FStarC_MachineInts.make_as k x
-                     ((FStarC_MachineInts.v k x) * (FStarC_MachineInts.v k y))) in
+                     (Prims.op_Star (FStarC_MachineInts.v k x)
+                        (FStarC_MachineInts.v k y))) in
             let uu___9 =
               let uu___10 =
                 let uu___11 = nm "gt" in
@@ -364,7 +365,8 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                                    (fun x y ->
                                       FStarC_MachineInts.make_as k x
                                         (mod1
-                                           ((FStarC_MachineInts.v k x) *
+                                           (Prims.op_Star
+                                              (FStarC_MachineInts.v k x)
                                               (FStarC_MachineInts.v k y)))) in
                                [uu___10] in
                              uu___8 :: uu___9 in
@@ -404,8 +406,9 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : unit mymon=
                                           (fun x y ->
                                              FStarC_MachineInts.make_as k x
                                                (mod1
-                                                  ((FStarC_MachineInts.v k x)
-                                                     *
+                                                  (Prims.op_Star
+                                                     (FStarC_MachineInts.v k
+                                                        x)
                                                      (FStarC_MachineInts.v k
                                                         y)))) in
                                       [uu___8] in

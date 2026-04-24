@@ -643,7 +643,7 @@ let primops : FStarC_Ident.lident Prims.list=
   FStarC_Parser_Const.op_Subtraction;
   FStarC_Parser_Const.op_Minus;
   FStarC_Parser_Const.op_Addition;
-  FStarC_Parser_Const.op_Multiply;
+  FStarC_Parser_Const.op_Star;
   FStarC_Parser_Const.op_Division;
   FStarC_Parser_Const.op_Modulus;
   FStarC_Parser_Const.op_And;
@@ -784,11 +784,8 @@ let rec is_unit (t : FStarC_Syntax_Syntax.term) : Prims.bool=
   let uu___ = let uu___1 = unrefine t in uu___1.FStarC_Syntax_Syntax.n in
   match uu___ with
   | FStarC_Syntax_Syntax.Tm_fvar fv ->
-      ((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid) ||
-         (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid))
-        ||
-        (FStarC_Syntax_Syntax.fv_eq_lid fv
-           FStarC_Parser_Const.auto_squash_lid)
+      (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.unit_lid) ||
+        (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid)
   | FStarC_Syntax_Syntax.Tm_app
       { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = uu___1;_}
       -> is_unit head
@@ -1995,20 +1992,11 @@ let if_then_else (b : FStarC_Syntax_Syntax.term)
          FStarC_Syntax_Syntax.brs = [then_branch; else_branch];
          FStarC_Syntax_Syntax.rc_opt1 = FStar_Pervasives_Native.None
        }) uu___
-let mk_squash (u : FStarC_Syntax_Syntax.universe)
-  (p : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
+let mk_squash (p : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let sq =
     FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.squash_lid
       FStar_Pervasives_Native.None in
-  let uu___ = FStarC_Syntax_Syntax.mk_Tm_uinst sq [u] in
-  mk_app uu___ [FStarC_Syntax_Syntax.as_arg p]
-let mk_auto_squash (u : FStarC_Syntax_Syntax.universe)
-  (p : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
-  let sq =
-    FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.auto_squash_lid
-      FStar_Pervasives_Native.None in
-  let uu___ = FStarC_Syntax_Syntax.mk_Tm_uinst sq [u] in
-  mk_app uu___ [FStarC_Syntax_Syntax.as_arg p]
+  mk_app sq [FStarC_Syntax_Syntax.as_arg p]
 let un_squash (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   let uu___ = head_and_args_full t in
@@ -2055,8 +2043,7 @@ let un_squash (t : FStarC_Syntax_Syntax.term) :
             | uu___2 -> FStar_Pervasives_Native.None)
        | uu___2 -> FStar_Pervasives_Native.None)
 let is_squash (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.term)
-    FStar_Pervasives_Native.option=
+  FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   let uu___ = head_and_args t in
   match uu___ with
   | (head, args) ->
@@ -2066,101 +2053,20 @@ let is_squash (t : FStarC_Syntax_Syntax.term) :
           uu___3.FStarC_Syntax_Syntax.n in
         (uu___2, args) in
       (match uu___1 with
-       | (FStarC_Syntax_Syntax.Tm_uinst
-          ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
-             FStarC_Syntax_Syntax.pos = uu___2;
-             FStarC_Syntax_Syntax.vars = uu___3;
-             FStarC_Syntax_Syntax.hash_code = uu___4;_},
-           u::[]),
-          (t1, uu___5)::[]) when
+       | (FStarC_Syntax_Syntax.Tm_fvar fv, (t1, uu___2)::[]) when
            FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid
-           -> FStar_Pervasives_Native.Some (u, t1)
+           -> FStar_Pervasives_Native.Some t1
        | uu___2 -> FStar_Pervasives_Native.None)
-let is_auto_squash (t : FStarC_Syntax_Syntax.term) :
-  (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.term)
-    FStar_Pervasives_Native.option=
-  let uu___ = head_and_args t in
-  match uu___ with
-  | (head, args) ->
-      let uu___1 =
-        let uu___2 =
-          let uu___3 = FStarC_Syntax_Subst.compress head in
-          uu___3.FStarC_Syntax_Syntax.n in
-        (uu___2, args) in
-      (match uu___1 with
-       | (FStarC_Syntax_Syntax.Tm_uinst
-          ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
-             FStarC_Syntax_Syntax.pos = uu___2;
-             FStarC_Syntax_Syntax.vars = uu___3;
-             FStarC_Syntax_Syntax.hash_code = uu___4;_},
-           u::[]),
-          (t1, uu___5)::[]) when
-           FStarC_Syntax_Syntax.fv_eq_lid fv
-             FStarC_Parser_Const.auto_squash_lid
-           -> FStar_Pervasives_Native.Some (u, t1)
-       | uu___2 -> FStar_Pervasives_Native.None)
-let is_sub_singleton (t : FStarC_Syntax_Syntax.term) : Prims.bool=
-  let uu___ = let uu___1 = unmeta t in head_and_args uu___1 in
-  match uu___ with
-  | (head, uu___1) ->
-      let uu___2 =
-        let uu___3 = un_uinst head in uu___3.FStarC_Syntax_Syntax.n in
-      (match uu___2 with
-       | FStarC_Syntax_Syntax.Tm_fvar fv ->
-           (((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.unit_lid)
-                             ||
-                             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                FStarC_Parser_Const.squash_lid))
-                            ||
-                            (FStarC_Syntax_Syntax.fv_eq_lid fv
-                               FStarC_Parser_Const.auto_squash_lid))
-                           ||
-                           (FStarC_Syntax_Syntax.fv_eq_lid fv
-                              FStarC_Parser_Const.and_lid))
-                          ||
-                          (FStarC_Syntax_Syntax.fv_eq_lid fv
-                             FStarC_Parser_Const.or_lid))
-                         ||
-                         (FStarC_Syntax_Syntax.fv_eq_lid fv
-                            FStarC_Parser_Const.not_lid))
-                        ||
-                        (FStarC_Syntax_Syntax.fv_eq_lid fv
-                           FStarC_Parser_Const.imp_lid))
-                       ||
-                       (FStarC_Syntax_Syntax.fv_eq_lid fv
-                          FStarC_Parser_Const.iff_lid))
-                      ||
-                      (FStarC_Syntax_Syntax.fv_eq_lid fv
-                         FStarC_Parser_Const.ite_lid))
-                     ||
-                     (FStarC_Syntax_Syntax.fv_eq_lid fv
-                        FStarC_Parser_Const.exists_lid))
-                    ||
-                    (FStarC_Syntax_Syntax.fv_eq_lid fv
-                       FStarC_Parser_Const.forall_lid))
-                   ||
-                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                      FStarC_Parser_Const.true_lid))
-                  ||
-                  (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.false_lid))
-                 ||
-                 (FStarC_Syntax_Syntax.fv_eq_lid fv
-                    FStarC_Parser_Const.eq2_lid))
-                ||
-                (FStarC_Syntax_Syntax.fv_eq_lid fv
-                   FStarC_Parser_Const.b2t_lid))
-               ||
-               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.haseq_lid))
-              ||
-              (FStarC_Syntax_Syntax.fv_eq_lid fv
-                 FStarC_Parser_Const.has_type_lid))
-             ||
-             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.precedes_lid)
-       | uu___3 -> false)
+let mk_b2t (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
+  let uu___ =
+    FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.b2t_lid
+      FStar_Pervasives_Native.None in
+  mk_app uu___ [FStarC_Syntax_Syntax.as_arg t]
+let mk_t2b (t : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
+  let uu___ =
+    FStarC_Syntax_Syntax.fvar_with_dd FStarC_Parser_Const.t2b_lid
+      FStar_Pervasives_Native.None in
+  mk_app uu___ [FStarC_Syntax_Syntax.as_arg t]
 let arrow_one_ln (t : FStarC_Syntax_Syntax.typ) :
   (FStarC_Syntax_Syntax.binder * FStarC_Syntax_Syntax.comp)
     FStar_Pervasives_Native.option=

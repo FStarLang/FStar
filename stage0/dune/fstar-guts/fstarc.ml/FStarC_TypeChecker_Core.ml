@@ -4012,6 +4012,20 @@ and check_subtype (g : env)
            } in
          let uu___1 = check_relation g rel t0 t1 in uu___1 ctx1 cache)
       FStar_Pervasives_Native.None "FStarC.TypeChecker.Core.check_subtype"
+and is_prop (g : env) (t : FStarC_Syntax_Syntax.term) : unit result=
+  fun ctx cache ->
+    let ctx1 =
+      {
+        no_guard = (ctx.no_guard);
+        unfolding_ok = (ctx.unfolding_ok);
+        error_context =
+          (("is_prop", (FStar_Pervasives_Native.Some (CtxTerm t))) ::
+          (ctx.error_context))
+      } in
+    let uu___ =
+      check_subtype g FStar_Pervasives_Native.None t
+        FStarC_Syntax_Syntax.t_prop in
+    uu___ ctx1 cache
 and memo_check (g : env) (e : FStarC_Syntax_Syntax.term) :
   (tot_or_ghost * FStarC_Syntax_Syntax.typ) result=
   let check_then_memo g1 e1 =
@@ -4079,7 +4093,7 @@ and check (msg : Prims.string) (g : env) (e : FStarC_Syntax_Syntax.term) :
     fun ctx cache ->
       ((let uu___2 =
           FStarC_Class_Show.show FStarC_Syntax_Print.showable_term e in
-        FStarC_Format.print1 "{About to check %s\n" uu___2);
+        FStarC_Format.print2 "{About to check %s %s\n" msg uu___2);
        (let res = let uu___2 = check' msg g e in uu___2 ctx cache in
         match res with
         | Error err -> Error err
@@ -4241,45 +4255,47 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                               let uu___13 =
                                                 match x4 with
                                                 | (uu___14, t') ->
+                                                    let uu___15 =
+                                                      is_prop g' t' in
                                                     (fun ctx03 cache03 ->
-                                                       let uu___15 =
-                                                         is_type g' t' ctx03
+                                                       let uu___16 =
+                                                         uu___15 ctx03
                                                            cache03 in
-                                                       match uu___15 with
+                                                       match uu___16 with
                                                        | Success
                                                            ((x5, g13),
                                                             cache13)
                                                            ->
-                                                           let uu___16 =
-                                                             let uu___17
-                                                               uu___18 cache
+                                                           let uu___17 =
+                                                             let uu___18
+                                                               uu___19 cache
                                                                =
                                                                Success
                                                                  (((E_Total,
                                                                     t),
                                                                     FStar_Pervasives_Native.None),
                                                                    cache) in
-                                                             uu___17 ctx03
+                                                             uu___18 ctx03
                                                                cache13 in
-                                                           (match uu___16
+                                                           (match uu___17
                                                             with
                                                             | Success
                                                                 ((y, g2),
                                                                  cache2)
                                                                 ->
-                                                                let uu___17 =
-                                                                  let uu___18
+                                                                let uu___18 =
+                                                                  let uu___19
                                                                     =
-                                                                    let uu___19
+                                                                    let uu___20
                                                                     =
                                                                     and_pre
                                                                     g13 g2 in
                                                                     (y,
-                                                                    uu___19) in
-                                                                  (uu___18,
+                                                                    uu___20) in
+                                                                  (uu___19,
                                                                     cache2) in
                                                                 Success
-                                                                  uu___17
+                                                                  uu___18
                                                             | err -> err)
                                                        | Error err ->
                                                            Error err) in
@@ -4614,42 +4630,41 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
       (match uu___1 with
        | (hd, args) ->
            (match args with
-            | (t1, FStar_Pervasives_Native.None)::(t2,
-                                                   FStar_Pervasives_Native.None)::[]
-                when FStarC_TypeChecker_Util.short_circuit_head hd ->
-                let uu___2 = check "app head" g hd in
+            | (t1, uu___2)::(t2, uu___3)::[] when
+                FStarC_TypeChecker_Util.short_circuit_head hd ->
+                let uu___4 = check "app head" g hd in
                 (fun ctx0 cache0 ->
-                   let uu___3 = uu___2 ctx0 cache0 in
-                   match uu___3 with
+                   let uu___5 = uu___4 ctx0 cache0 in
+                   match uu___5 with
                    | Success ((x, g1), cache1) ->
-                       let uu___4 =
-                         let uu___5 =
+                       let uu___6 =
+                         let uu___7 =
                            match x with
                            | (eff_hd, t_hd) ->
                                (fun ctx01 cache01 ->
-                                  let uu___6 = is_arrow g t_hd ctx01 cache01 in
-                                  match uu___6 with
+                                  let uu___8 = is_arrow g t_hd ctx01 cache01 in
+                                  match uu___8 with
                                   | Success ((x1, g11), cache11) ->
-                                      let uu___7 =
-                                        let uu___8 =
+                                      let uu___9 =
+                                        let uu___10 =
                                           match x1 with
                                           | (x2, eff_arr1, s1) ->
-                                              let uu___9 =
+                                              let uu___11 =
                                                 check "app arg" g t1 in
                                               (fun ctx02 cache02 ->
-                                                 let uu___10 =
-                                                   uu___9 ctx02 cache02 in
-                                                 match uu___10 with
+                                                 let uu___12 =
+                                                   uu___11 ctx02 cache02 in
+                                                 match uu___12 with
                                                  | Success
                                                      ((x3, g12), cache12) ->
-                                                     let uu___11 =
-                                                       let uu___12 =
+                                                     let uu___13 =
+                                                       let uu___14 =
                                                          match x3 with
                                                          | (eff_arg1, t_t1)
                                                              ->
                                                              (fun ctx03
                                                                 cache03 ->
-                                                                let uu___13 =
+                                                                let uu___15 =
                                                                   let ctx =
                                                                     {
                                                                     no_guard
@@ -4665,25 +4680,25 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     ::
                                                                     (ctx03.error_context))
                                                                     } in
-                                                                  let uu___14
+                                                                  let uu___16
                                                                     =
                                                                     check_subtype
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     t1) t_t1
                                                                     (x2.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                                  uu___14 ctx
+                                                                  uu___16 ctx
                                                                     cache03 in
-                                                                match uu___13
+                                                                match uu___15
                                                                 with
                                                                 | Success
                                                                     ((x4,
                                                                     g13),
                                                                     cache13)
                                                                     ->
-                                                                    let uu___14
+                                                                    let uu___16
                                                                     =
-                                                                    let uu___15
+                                                                    let uu___17
                                                                     =
                                                                     let s11 =
                                                                     FStarC_Syntax_Subst.subst
@@ -4694,13 +4709,13 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     fun ctx04
                                                                     cache04
                                                                     ->
-                                                                    let uu___16
+                                                                    let uu___18
                                                                     =
                                                                     is_arrow
                                                                     g s11
                                                                     ctx04
                                                                     cache04 in
-                                                                    match uu___16
+                                                                    match uu___18
                                                                     with
                                                                     | 
                                                                     Success
@@ -4708,9 +4723,9 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     g14),
                                                                     cache14)
                                                                     ->
-                                                                    let uu___17
+                                                                    let uu___19
                                                                     =
-                                                                    let uu___18
+                                                                    let uu___20
                                                                     =
                                                                     match x5
                                                                     with
@@ -4736,9 +4751,9 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     gf ->
                                                                     push_hypothesis
                                                                     g gf in
-                                                                    let uu___19
+                                                                    let uu___21
                                                                     =
-                                                                    let uu___20
+                                                                    let uu___22
                                                                     =
                                                                     check
                                                                     "app arg"
@@ -4746,17 +4761,17 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     weaken_with_guard_formula
                                                                     g
                                                                     guard_formula
-                                                                    uu___20 in
+                                                                    uu___22 in
                                                                     (fun
                                                                     ctx05
                                                                     cache05
                                                                     ->
-                                                                    let uu___20
+                                                                    let uu___22
                                                                     =
-                                                                    uu___19
+                                                                    uu___21
                                                                     ctx05
                                                                     cache05 in
-                                                                    match uu___20
+                                                                    match uu___22
                                                                     with
                                                                     | 
                                                                     Success
@@ -4764,9 +4779,9 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     g15),
                                                                     cache15)
                                                                     ->
-                                                                    let uu___21
+                                                                    let uu___23
                                                                     =
-                                                                    let uu___22
+                                                                    let uu___24
                                                                     =
                                                                     match x6
                                                                     with
@@ -4777,7 +4792,7 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     ctx06
                                                                     cache06
                                                                     ->
-                                                                    let uu___23
+                                                                    let uu___25
                                                                     =
                                                                     let ctx =
                                                                     {
@@ -4794,17 +4809,17 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     ::
                                                                     (ctx06.error_context))
                                                                     } in
-                                                                    let uu___24
+                                                                    let uu___26
                                                                     =
                                                                     check_subtype
                                                                     g'
                                                                     (FStar_Pervasives_Native.Some
                                                                     t2) t_t2
                                                                     (y.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                                                    uu___24
+                                                                    uu___26
                                                                     ctx
                                                                     cache06 in
-                                                                    match uu___23
+                                                                    match uu___25
                                                                     with
                                                                     | 
                                                                     Success
@@ -4812,13 +4827,13 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     g16),
                                                                     cache16)
                                                                     ->
-                                                                    let uu___24
-                                                                    =
-                                                                    let uu___25
-                                                                    =
                                                                     let uu___26
                                                                     =
                                                                     let uu___27
+                                                                    =
+                                                                    let uu___28
+                                                                    =
+                                                                    let uu___29
                                                                     =
                                                                     FStarC_Syntax_Subst.subst
                                                                     [
@@ -4831,38 +4846,38 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     eff_arr2;
                                                                     eff_arg1;
                                                                     eff_arg2]),
-                                                                    uu___27) in
+                                                                    uu___29) in
                                                                     fun
-                                                                    uu___27
+                                                                    uu___29
                                                                     cache ->
                                                                     Success
-                                                                    ((uu___26,
+                                                                    ((uu___28,
                                                                     FStar_Pervasives_Native.None),
                                                                     cache) in
-                                                                    uu___25
+                                                                    uu___27
                                                                     ctx06
                                                                     cache16 in
-                                                                    (match uu___24
+                                                                    (match uu___26
                                                                     with
                                                                     | 
                                                                     Success
                                                                     ((y1, g2),
                                                                     cache2)
                                                                     ->
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
                                                                     let uu___27
+                                                                    =
+                                                                    let uu___28
+                                                                    =
+                                                                    let uu___29
                                                                     =
                                                                     and_pre
                                                                     g16 g2 in
                                                                     (y1,
-                                                                    uu___27) in
-                                                                    (uu___26,
+                                                                    uu___29) in
+                                                                    (uu___28,
                                                                     cache2) in
                                                                     Success
-                                                                    uu___25
+                                                                    uu___27
                                                                     | 
                                                                     err ->
                                                                     err)
@@ -4870,30 +4885,30 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     Error err
                                                                     ->
                                                                     Error err) in
-                                                                    uu___22
+                                                                    uu___24
                                                                     ctx05
                                                                     cache15 in
-                                                                    (match uu___21
+                                                                    (match uu___23
                                                                     with
                                                                     | 
                                                                     Success
                                                                     ((y1, g2),
                                                                     cache2)
                                                                     ->
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
                                                                     let uu___24
+                                                                    =
+                                                                    let uu___25
+                                                                    =
+                                                                    let uu___26
                                                                     =
                                                                     and_pre
                                                                     g15 g2 in
                                                                     (y1,
-                                                                    uu___24) in
-                                                                    (uu___23,
+                                                                    uu___26) in
+                                                                    (uu___25,
                                                                     cache2) in
                                                                     Success
-                                                                    uu___22
+                                                                    uu___24
                                                                     | 
                                                                     err ->
                                                                     err)
@@ -4901,30 +4916,30 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     Error err
                                                                     ->
                                                                     Error err) in
-                                                                    uu___18
+                                                                    uu___20
                                                                     ctx04
                                                                     cache14 in
-                                                                    (match uu___17
+                                                                    (match uu___19
                                                                     with
                                                                     | 
                                                                     Success
                                                                     ((y, g2),
                                                                     cache2)
                                                                     ->
-                                                                    let uu___18
-                                                                    =
-                                                                    let uu___19
-                                                                    =
                                                                     let uu___20
+                                                                    =
+                                                                    let uu___21
+                                                                    =
+                                                                    let uu___22
                                                                     =
                                                                     and_pre
                                                                     g14 g2 in
                                                                     (y,
-                                                                    uu___20) in
-                                                                    (uu___19,
+                                                                    uu___22) in
+                                                                    (uu___21,
                                                                     cache2) in
                                                                     Success
-                                                                    uu___18
+                                                                    uu___20
                                                                     | 
                                                                     err ->
                                                                     err)
@@ -4932,70 +4947,70 @@ and do_check (g : env) (e : FStarC_Syntax_Syntax.term) :
                                                                     Error err
                                                                     ->
                                                                     Error err in
-                                                                    uu___15
+                                                                    uu___17
                                                                     ctx03
                                                                     cache13 in
-                                                                    (match uu___14
+                                                                    (match uu___16
                                                                     with
                                                                     | 
                                                                     Success
                                                                     ((y, g2),
                                                                     cache2)
                                                                     ->
-                                                                    let uu___15
-                                                                    =
-                                                                    let uu___16
-                                                                    =
                                                                     let uu___17
+                                                                    =
+                                                                    let uu___18
+                                                                    =
+                                                                    let uu___19
                                                                     =
                                                                     and_pre
                                                                     g13 g2 in
                                                                     (y,
-                                                                    uu___17) in
-                                                                    (uu___16,
+                                                                    uu___19) in
+                                                                    (uu___18,
                                                                     cache2) in
                                                                     Success
-                                                                    uu___15
+                                                                    uu___17
                                                                     | 
                                                                     err ->
                                                                     err)
                                                                 | Error err
                                                                     ->
                                                                     Error err) in
-                                                       uu___12 ctx02 cache12 in
-                                                     (match uu___11 with
+                                                       uu___14 ctx02 cache12 in
+                                                     (match uu___13 with
                                                       | Success
                                                           ((y, g2), cache2)
                                                           ->
-                                                          let uu___12 =
-                                                            let uu___13 =
-                                                              let uu___14 =
+                                                          let uu___14 =
+                                                            let uu___15 =
+                                                              let uu___16 =
                                                                 and_pre g12
                                                                   g2 in
-                                                              (y, uu___14) in
-                                                            (uu___13, cache2) in
-                                                          Success uu___12
+                                                              (y, uu___16) in
+                                                            (uu___15, cache2) in
+                                                          Success uu___14
                                                       | err -> err)
                                                  | Error err -> Error err) in
-                                        uu___8 ctx01 cache11 in
-                                      (match uu___7 with
+                                        uu___10 ctx01 cache11 in
+                                      (match uu___9 with
                                        | Success ((y, g2), cache2) ->
-                                           let uu___8 =
-                                             let uu___9 =
-                                               let uu___10 = and_pre g11 g2 in
-                                               (y, uu___10) in
-                                             (uu___9, cache2) in
-                                           Success uu___8
+                                           let uu___10 =
+                                             let uu___11 =
+                                               let uu___12 = and_pre g11 g2 in
+                                               (y, uu___12) in
+                                             (uu___11, cache2) in
+                                           Success uu___10
                                        | err -> err)
                                   | Error err -> Error err) in
-                         uu___5 ctx0 cache1 in
-                       (match uu___4 with
+                         uu___7 ctx0 cache1 in
+                       (match uu___6 with
                         | Success ((y, g2), cache2) ->
-                            let uu___5 =
-                              let uu___6 =
-                                let uu___7 = and_pre g1 g2 in (y, uu___7) in
-                              (uu___6, cache2) in
-                            Success uu___5
+                            let uu___7 =
+                              let uu___8 =
+                                let uu___9 = and_pre g1 g2 in (y, uu___9) in
+                              (uu___8, cache2) in
+                            Success uu___7
                         | err -> err)
                    | Error err -> Error err)
             | uu___2 -> check_app hd args))

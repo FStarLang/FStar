@@ -934,70 +934,86 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
            { FStarC_Syntax_Syntax.tm2 = t;
              FStarC_Syntax_Syntax.meta = uu___5;_}
            -> ty_strictly_positive_in_type env mutuals t unfolded
-       | FStarC_Syntax_Syntax.Tm_app
-           { FStarC_Syntax_Syntax.hd = t; FStarC_Syntax_Syntax.args = args;_}
-           ->
-           let fv_or_name_opt = term_as_fv_or_name t in
-           (match fv_or_name_opt with
-            | FStar_Pervasives_Native.None ->
-                (debug_positivity env
-                   (fun uu___6 ->
-                      let uu___7 = string_of_lids mutuals in
-                      let uu___8 =
-                        FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term t in
-                      FStarC_Format.fmt2
-                        "Failed to check positivity of %s in a term with head %s"
-                        uu___7 uu___8);
-                 false)
-            | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr x) ->
-                let uu___5 = FStarC_TypeChecker_Env.lookup_bv env x in
-                (match uu___5 with
-                 | (head_ty, _pos) ->
+       | FStarC_Syntax_Syntax.Tm_app uu___5 ->
+           let uu___6 = FStarC_Syntax_Util.head_and_args_full in_type1 in
+           (match uu___6 with
+            | (t, args) ->
+                let fv_or_name_opt = term_as_fv_or_name t in
+                (match fv_or_name_opt with
+                 | FStar_Pervasives_Native.None ->
                      (debug_positivity env
-                        (fun uu___7 ->
-                           let uu___8 =
-                             FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_term in_type1 in
-                           let uu___9 =
-                             FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_bv x in
+                        (fun uu___8 ->
+                           let uu___9 = string_of_lids mutuals in
                            let uu___10 =
                              FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_term head_ty in
-                           FStarC_Format.fmt3
-                             "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
-                             uu___8 uu___9 uu___10);
-                      ty_strictly_positive_in_args env mutuals head_ty args
-                        unfolded))
-            | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl (fv, us)) ->
-                let uu___5 =
-                  FStarC_List.existsML
-                    (FStarC_Ident.lid_equals fv.FStarC_Syntax_Syntax.fv_name)
-                    mutuals in
-                if uu___5
-                then
-                  (debug_positivity env
-                     (fun uu___7 ->
-                        FStarC_Format.fmt1
-                          "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
-                          (FStarC_Ident.string_of_lid
-                             fv.FStarC_Syntax_Syntax.fv_name));
-                   FStarC_List.for_all
-                     (fun uu___7 ->
-                        match uu___7 with
-                        | (t1, uu___8) -> mutuals_unused_in_type mutuals t1)
-                     args)
-                else
-                  (debug_positivity env
-                     (fun uu___8 ->
-                        let uu___9 = string_of_lids mutuals in
-                        FStarC_Format.fmt1
-                          "Checking strict positivity in the Tm_app node, head lid is not in %s, so checking nested positivity"
-                          uu___9);
-                   ty_strictly_positive_in_arguments_to_fvar env mutuals
-                     in_type1 fv.FStarC_Syntax_Syntax.fv_name us args
-                     unfolded))
+                               FStarC_Syntax_Print.showable_term t in
+                           FStarC_Format.fmt2
+                             "Failed to check positivity of %s in a term with head %s"
+                             uu___9 uu___10);
+                      false)
+                 | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr x) ->
+                     let uu___7 = FStarC_TypeChecker_Env.lookup_bv env x in
+                     (match uu___7 with
+                      | (head_ty, _pos) ->
+                          (debug_positivity env
+                             (fun uu___9 ->
+                                let uu___10 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Syntax_Print.showable_term
+                                    in_type1 in
+                                let uu___11 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Syntax_Print.showable_bv x in
+                                let uu___12 =
+                                  FStarC_Class_Show.show
+                                    FStarC_Syntax_Print.showable_term head_ty in
+                                FStarC_Format.fmt3
+                                  "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
+                                  uu___10 uu___11 uu___12);
+                           ty_strictly_positive_in_args env mutuals head_ty
+                             args unfolded))
+                 | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                     (hd, u::[])) when
+                     FStarC_Syntax_Syntax.fv_eq_lid hd
+                       FStarC_Parser_Const.eq2_lid
+                     ->
+                     let uu___7 =
+                       let uu___8 =
+                         let uu___9 =
+                           FStarC_Syntax_Util.fvar_const
+                             FStarC_Parser_Const.c_eq2_lid in
+                         FStarC_Syntax_Syntax.mk_Tm_uinst uu___9 [u] in
+                       FStarC_Syntax_Util.mk_app uu___8 args in
+                     ty_strictly_positive_in_type env mutuals uu___7 unfolded
+                 | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
+                     (fv, us)) ->
+                     let uu___7 =
+                       FStarC_List.existsML
+                         (FStarC_Ident.lid_equals
+                            fv.FStarC_Syntax_Syntax.fv_name) mutuals in
+                     if uu___7
+                     then
+                       (debug_positivity env
+                          (fun uu___9 ->
+                             FStarC_Format.fmt1
+                               "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
+                               (FStarC_Ident.string_of_lid
+                                  fv.FStarC_Syntax_Syntax.fv_name));
+                        FStarC_List.for_all
+                          (fun uu___9 ->
+                             match uu___9 with
+                             | (t1, uu___10) ->
+                                 mutuals_unused_in_type mutuals t1) args)
+                     else
+                       (debug_positivity env
+                          (fun uu___10 ->
+                             let uu___11 = string_of_lids mutuals in
+                             FStarC_Format.fmt1
+                               "Checking strict positivity in the Tm_app node, head lid is not in %s, so checking nested positivity"
+                               uu___11);
+                        ty_strictly_positive_in_arguments_to_fvar env mutuals
+                          in_type1 fv.FStarC_Syntax_Syntax.fv_name us args
+                          unfolded)))
        | FStarC_Syntax_Syntax.Tm_arrow
            { FStarC_Syntax_Syntax.bs1 = uu___5;
              FStarC_Syntax_Syntax.comp = c;_}

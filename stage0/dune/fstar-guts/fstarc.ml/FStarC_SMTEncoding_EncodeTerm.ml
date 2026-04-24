@@ -436,7 +436,7 @@ let is_arithmetic_primitive
                       FStarC_Parser_Const.op_Subtraction))
                   ||
                   (FStarC_Syntax_Syntax.fv_eq_lid fv
-                     FStarC_Parser_Const.op_Multiply))
+                     FStarC_Parser_Const.op_Star))
                  ||
                  (FStarC_Syntax_Syntax.fv_eq_lid fv
                     FStarC_Parser_Const.op_Division))
@@ -763,7 +763,7 @@ and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t)
         (FStarC_Parser_Const.op_Subtraction,
           (sub FStarC_SMTEncoding_Term.boxInt
              FStarC_SMTEncoding_Term.unboxInt));
-        (FStarC_Parser_Const.op_Multiply,
+        (FStarC_Parser_Const.op_Star,
           (mul FStarC_SMTEncoding_Term.boxInt
              FStarC_SMTEncoding_Term.unboxInt "_mul"));
         (FStarC_Parser_Const.op_Division,
@@ -2346,43 +2346,13 @@ and encode_term (t : FStarC_Syntax_Syntax.typ)
                        | (FStarC_Syntax_Syntax.Tm_fvar fv, (arg, uu___6)::[])
                            when
                            if
-                             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                FStarC_Parser_Const.squash_lid)
-                               ||
-                               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                  FStarC_Parser_Const.auto_squash_lid)
+                             FStarC_Syntax_Syntax.fv_eq_lid fv
+                               FStarC_Parser_Const.squash_lid
                            then
                              let uu___7 =
                                FStarC_Syntax_Formula.destruct_typ_as_formula
                                  arg in
                              FStar_Pervasives_Native.uu___is_Some uu___7
-                           else false ->
-                           let dummy =
-                             FStarC_Syntax_Syntax.new_bv
-                               FStar_Pervasives_Native.None
-                               FStarC_Syntax_Syntax.t_unit in
-                           let t2 = FStarC_Syntax_Util.refine dummy arg in
-                           encode_term t2 env
-                       | (FStarC_Syntax_Syntax.Tm_uinst
-                          ({
-                             FStarC_Syntax_Syntax.n =
-                               FStarC_Syntax_Syntax.Tm_fvar fv;
-                             FStarC_Syntax_Syntax.pos = uu___6;
-                             FStarC_Syntax_Syntax.vars = uu___7;
-                             FStarC_Syntax_Syntax.hash_code = uu___8;_},
-                           uu___9),
-                          (arg, uu___10)::[]) when
-                           if
-                             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                FStarC_Parser_Const.squash_lid)
-                               ||
-                               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                                  FStarC_Parser_Const.auto_squash_lid)
-                           then
-                             let uu___11 =
-                               FStarC_Syntax_Formula.destruct_typ_as_formula
-                                 arg in
-                             FStar_Pervasives_Native.uu___is_Some uu___11
                            else false ->
                            let dummy =
                              FStarC_Syntax_Syntax.new_bv
@@ -3732,11 +3702,7 @@ and encode_formula (phi : FStarC_Syntax_Syntax.typ)
                   fallback phi3
               | uu___5 -> fallback phi2)
          | (FStarC_Syntax_Syntax.Tm_fvar fv, (t, uu___1)::[]) when
-             (FStarC_Syntax_Syntax.fv_eq_lid fv
-                FStarC_Parser_Const.squash_lid)
-               ||
-               (FStarC_Syntax_Syntax.fv_eq_lid fv
-                  FStarC_Parser_Const.auto_squash_lid)
+             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.squash_lid
              -> encode_formula t env
          | uu___1 ->
              let encode_valid uu___2 =

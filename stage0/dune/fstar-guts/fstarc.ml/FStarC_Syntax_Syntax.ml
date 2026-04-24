@@ -2542,6 +2542,7 @@ let tabbrev (l : FStarC_Ident.lident) : term=
 let tdataconstr (l : FStarC_Ident.lident) : term=
   fv_to_tm (lid_and_dd_as_fv l (FStar_Pervasives_Native.Some Data_ctor))
 let t_unit : term= tconst FStarC_Parser_Const.unit_lid
+let t_prop : term= tconst FStarC_Parser_Const.prop_lid
 let t_bool : term= tconst FStarC_Parser_Const.bool_lid
 let t_int : term= tconst FStarC_Parser_Const.int_lid
 let t_string : term= tconst FStarC_Parser_Const.string_lid

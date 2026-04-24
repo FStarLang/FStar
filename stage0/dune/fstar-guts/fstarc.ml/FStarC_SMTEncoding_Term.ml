@@ -2386,8 +2386,6 @@ let mk_Valid (t : term) : term=
       { tm = (uu___.tm); freevars = (uu___.freevars); rng = (t.rng) }
   | uu___ -> mkApp ("Valid", [t]) t.rng
 let mk_unit_type : term= mkApp ("Prims.unit", []) norng
-let mk_subtype_of_unit (v : term) : term=
-  mkApp ("Prims.subtype_of", [mk_U_zero; mk_U_zero; v; mk_unit_type]) v.rng
 let mk_HasType (v : term) (t : term) : term= mkApp ("HasType", [v; t]) t.rng
 let mk_HasTypeZ (v : term) (t : term) : term=
   mkApp ("HasTypeZ", [v; t]) t.rng

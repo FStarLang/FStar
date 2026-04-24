@@ -4146,6 +4146,24 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                FStarC_Syntax_Syntax.phi = uu___2;_}
              -> head_of b.FStarC_Syntax_Syntax.sort
          | uu___2 -> t in
+       let is_prop t =
+         let uu___1 =
+           let uu___2 =
+             let uu___3 = head_of t in FStarC_Syntax_Subst.compress uu___3 in
+           uu___2.FStarC_Syntax_Syntax.n in
+         match uu___1 with
+         | FStarC_Syntax_Syntax.Tm_fvar fv ->
+             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.prop_lid
+         | uu___2 -> false in
+       let is_bool t =
+         let uu___1 =
+           let uu___2 =
+             let uu___3 = head_of t in FStarC_Syntax_Subst.compress uu___3 in
+           uu___2.FStarC_Syntax_Syntax.n in
+         match uu___1 with
+         | FStarC_Syntax_Syntax.Tm_fvar fv ->
+             FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bool_lid
+         | uu___2 -> false in
        let is_head_defined t =
          let h = head_of t in
          let h1 = FStarC_Syntax_Subst.compress h in
@@ -4183,6 +4201,44 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                      if
                        FStarC_Syntax_Syntax.fv_eq_lid fv
                          FStarC_Parser_Const.bool_lid
+                     then is_prop exp_t1
+                     else false ->
+                     let lc2 =
+                       let uu___5 =
+                         FStarC_Syntax_Syntax.mk_Total
+                           FStarC_Syntax_Syntax.t_prop in
+                       FStarC_TypeChecker_Common.lcomp_of_comp uu___5 in
+                     let lc_res =
+                       bind e.FStarC_Syntax_Syntax.pos false env
+                         (FStar_Pervasives_Native.Some e) checked
+                         (FStar_Pervasives_Native.None, lc2) in
+                     let uu___5 =
+                       let uu___6 = FStarC_Syntax_Util.mk_b2t e in
+                       (uu___6, lc_res, FStarC_TypeChecker_Env.trivial_guard) in
+                     FStar_Pervasives_Native.Some uu___5
+                 | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
+                     if
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.prop_lid
+                     then is_type1 exp_t1
+                     else false ->
+                     let lc2 =
+                       let uu___5 =
+                         FStarC_Syntax_Syntax.mk_Total
+                           FStarC_Syntax_Util.ktype0 in
+                       FStarC_TypeChecker_Common.lcomp_of_comp uu___5 in
+                     let lc_res =
+                       bind e.FStarC_Syntax_Syntax.pos false env
+                         (FStar_Pervasives_Native.Some e) checked
+                         (FStar_Pervasives_Native.None, lc2) in
+                     let uu___5 =
+                       let uu___6 = FStarC_Syntax_Util.mk_squash e in
+                       (uu___6, lc_res, FStarC_TypeChecker_Env.trivial_guard) in
+                     FStar_Pervasives_Native.Some uu___5
+                 | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
+                     if
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.bool_lid
                      then is_type1 exp_t1
                      else false ->
                      let lc2 =
@@ -4196,12 +4252,27 @@ let find_coercion (env : FStarC_TypeChecker_Env.env)
                          (FStar_Pervasives_Native.None, lc2) in
                      let uu___5 =
                        let uu___6 =
-                         let uu___7 =
-                           FStarC_Syntax_Syntax.fvar
-                             FStarC_Parser_Const.b2t_lid
-                             FStar_Pervasives_Native.None in
-                         FStarC_Syntax_Util.mk_app uu___7
-                           [FStarC_Syntax_Syntax.as_arg e] in
+                         let uu___7 = FStarC_Syntax_Util.mk_b2t e in
+                         FStarC_Syntax_Util.mk_squash uu___7 in
+                       (uu___6, lc_res, FStarC_TypeChecker_Env.trivial_guard) in
+                     FStar_Pervasives_Native.Some uu___5
+                 | (FStarC_Syntax_Syntax.Tm_fvar fv, []) when
+                     if
+                       FStarC_Syntax_Syntax.fv_eq_lid fv
+                         FStarC_Parser_Const.prop_lid
+                     then is_bool exp_t1
+                     else false ->
+                     let lc2 =
+                       let uu___5 =
+                         FStarC_Syntax_Syntax.mk_GTotal
+                           FStarC_Syntax_Util.t_bool in
+                       FStarC_TypeChecker_Common.lcomp_of_comp uu___5 in
+                     let lc_res =
+                       bind e.FStarC_Syntax_Syntax.pos false env
+                         (FStar_Pervasives_Native.Some e) checked
+                         (FStar_Pervasives_Native.None, lc2) in
+                     let uu___5 =
+                       let uu___6 = FStarC_Syntax_Util.mk_t2b e in
                        (uu___6, lc_res, FStarC_TypeChecker_Env.trivial_guard) in
                      FStar_Pervasives_Native.Some uu___5
                  | uu___5 ->
@@ -5761,19 +5832,22 @@ let short_circuit (head : FStarC_Syntax_Syntax.term)
        | FStar_Pervasives_Native.Some g -> g)
   | uu___ -> FStarC_TypeChecker_Common.Trivial
 let short_circuit_head (l : FStarC_Syntax_Syntax.term) : Prims.bool=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Util.un_uinst l in
-    uu___1.FStarC_Syntax_Syntax.n in
+  let uu___ = FStarC_Syntax_Util.head_and_args l in
   match uu___ with
-  | FStarC_Syntax_Syntax.Tm_fvar fv ->
-      FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv)
-        [FStarC_Parser_Const.op_And;
-        FStarC_Parser_Const.op_Or;
-        FStarC_Parser_Const.and_lid;
-        FStarC_Parser_Const.or_lid;
-        FStarC_Parser_Const.imp_lid;
-        FStarC_Parser_Const.ite_lid]
-  | uu___1 -> false
+  | (hd, uu___1) ->
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Util.un_uinst hd in
+        uu___3.FStarC_Syntax_Syntax.n in
+      (match uu___2 with
+       | FStarC_Syntax_Syntax.Tm_fvar fv ->
+           FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv)
+             [FStarC_Parser_Const.op_And;
+             FStarC_Parser_Const.op_Or;
+             FStarC_Parser_Const.and_lid;
+             FStarC_Parser_Const.or_lid;
+             FStarC_Parser_Const.imp_lid;
+             FStarC_Parser_Const.ite_lid]
+       | uu___3 -> false)
 let maybe_add_implicit_binders (env : FStarC_TypeChecker_Env.env)
   (bs : FStarC_Syntax_Syntax.binders) : FStarC_Syntax_Syntax.binders=
   let is_implicit_binder b =
