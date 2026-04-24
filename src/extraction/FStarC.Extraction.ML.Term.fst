@@ -376,12 +376,10 @@ let check_pats_for_ite (l:list (pat & option term & term)) : (bool   //if l is p
         let (p1, w1, e1) = List.hd l in
         let (p2, w2, e2) = List.hd (List.tl l) in
         match (w1, w2, p1.v, p2.v) with
+            | (None, None, Pat_constant (Const_bool true), Pat_var _)
             | (None, None, Pat_constant (Const_bool true), Pat_constant (Const_bool false)) -> true, Some e1, Some e2
+            | (None, None, Pat_constant (Const_bool false), Pat_var _)
             | (None, None, Pat_constant (Const_bool false), Pat_constant (Const_bool true)) -> true, Some e2, Some e1
-//            | (None, None, Pat_constant (Const_bool false), Pat_wild _)
-//            | (None, None, Pat_constant (Const_bool false), Pat_var _)
-//            | (None, None, Pat_constant (Const_bool true), Pat_wild _)
-//            | (None, None, Pat_constant (Const_bool true), Pat_var _)
             | _ -> def
 
 
