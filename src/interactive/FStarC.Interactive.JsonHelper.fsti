@@ -28,6 +28,7 @@ type assoct = list (string & json)
 
 val try_assoc : string -> assoct -> ML (option json)
 
+// All exceptions are guaranteed to be caught in the LSP server implementation
 exception InvalidQuery of string
 exception UnexpectedJsonType of string & json
 

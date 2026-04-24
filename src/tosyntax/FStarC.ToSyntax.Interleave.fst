@@ -237,29 +237,6 @@ let rec prefix_with_iface_decls
         (* Don't interleave pragmas on interface into implementation *)
         prefix_with_iface_decls iface_tl impl
 
-     | Exception(id, _) ->
-       (* If impl also defines the same exception, skip the iface declaration *)
-       begin match impl.d with
-       | Exception(id', _) when (string_of_id id) = (string_of_id id') ->
-         iface_tl, [impl]
-       | _ ->
-         let iface, ds = prefix_with_iface_decls iface_tl impl in
-         iface, iface_hd::ds
-       end
-
-     | TopLevelLet(_, defs) when iface_hd.attrs = [] ->
-       (* If impl also defines the same names, skip the iface let definition.
-          But only when the iface let has no attributes—an [@@expect_failure] let
-          is a test, not a real definition, so it should be kept. *)
-       let iface_lids = lids_of_let defs in
-       let impl_lids = definition_lids impl in
-       if iface_lids |> Util.for_some (fun l ->
-            impl_lids |> Util.for_some (fun l' -> id_eq_lid (ident_of_lid l) l'))
-       then iface_tl, [impl]
-       else
-         let iface, ds = prefix_with_iface_decls iface_tl impl in
-         iface, iface_hd::ds
-
      | _ ->
        let iface, ds = prefix_with_iface_decls iface_tl impl in
        iface, iface_hd::ds
@@ -359,43 +336,6 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
         let impls = impls@iface_lets in
-        (* Remove .fst TopLevelLet/Exception entries that duplicate .fsti entries.
-           This handles the case where both .fsti and .fst define the same let binding
-           (e.g., operator aliases in FStarC.Class.Monad) or the same exception
-           (e.g., SkipResugar in FStarC.Syntax.Resugar). The interleaver
-           emits .fsti TopLevelLets/Exceptions as prefix material; the .fst copies are redundant. *)
-        let impls =
-            let iface_let_names =
-              List.collect (fun (d:decl) ->
-                if not d.interleaved then []
-                (* Don't count attributed iface lets (e.g., [@@expect_failure])
-                   as duplicates—they are tests, not real definitions *)
-                else if not (Nil? d.attrs) then []
-                else match d.d with
-                | TopLevelLet(_, defs) ->
-                  lids_of_let defs |> List.map (fun l -> string_of_id (ident_of_lid l))
-                | _ -> []) impls
-            in
-            let iface_exn_names =
-              List.collect (fun (d:decl) ->
-                if not d.interleaved then []
-                else match d.d with
-                | Exception(id, _) -> [string_of_id id]
-                | _ -> []) impls
-            in
-            if Nil? iface_let_names && Nil? iface_exn_names then impls
-            else
-              List.filter (fun (d:decl) ->
-                if d.interleaved then true
-                else match d.d with
-                | TopLevelLet(_, defs) ->
-                  let fst_lids = lids_of_let defs |> List.map (fun l -> string_of_id (ident_of_lid l)) in
-                  if Nil? fst_lids then true
-                  else not (fst_lids |> Util.for_all (fun n -> iface_let_names |> Util.for_some (fun m -> n = m)))
-                | Exception(id, _) ->
-                  not (iface_exn_names |> Util.for_some (fun m -> (string_of_id id) = m))
-                | _ -> true) impls
-        in
         let env =
             if Options.interactive()
             then E.set_iface_decls env l remaining_iface_vals
