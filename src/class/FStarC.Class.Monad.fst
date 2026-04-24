@@ -8,10 +8,6 @@ instance monad_option : monad option = {
   bind   = (fun o f -> match o with | None -> None | Some v -> f v);
 }
 
-(* Aliases. Need to declare a very precise type for them. *)
-let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
-let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
-
 instance monad_list : monad list = {
   return = (fun x -> [x]);
   bind   = (fun l f -> List.concatMap f l)
