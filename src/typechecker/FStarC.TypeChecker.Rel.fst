@@ -2785,7 +2785,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
     end
   end
 
-let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts & term))) (rhs:term) //(lhs:flex_t) (rhs:term)
+let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts & term))) (rhs:term)
     : ML solution =
     if !dbg_Rel then (
       Format.print1 "solve_t_flex_rigid_eq rhs=%s\n"
@@ -3185,6 +3185,10 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
 
     | EQ ->
       let Flex(_, ctx_uv, _), (lhs_subst, lhs_t_orig) = lhs in
+      //See PR#https://github.com/FStarLang/FStar/pull/4215
+      //If the substitution has no effect on the RHS, we can skip it
+      //and avoid abstracting over the binders in the uvar,
+      //which leads to big perf wins in some cases (esp. in Pulse)
       let is_subst_noop (subst:subst_ts) rhs =
         match fst subst with
         | [] | [[]] -> true
