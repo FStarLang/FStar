@@ -41,10 +41,10 @@ let emp_inames : inames = GhostSet.empty
 let join_inames (is1 is2 : inames) : inames =
   GhostSet.union is1 is2
 
-let inames_subset (is1 is2 : inames) : Type0 =
+let inames_subset (is1 is2 : inames) : prop =
   GhostSet.subset is1 is2
 
-let (/!) (is1 is2 : inames) : Type0 =
+let (/!) (is1 is2 : inames) : prop =
   GhostSet.disjoint is1 is2
 
 unfold

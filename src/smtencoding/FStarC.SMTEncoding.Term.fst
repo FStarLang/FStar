@@ -1222,7 +1222,6 @@ let mk_Valid t        = match t.tm with
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_unit_type = mkApp("Prims.unit", []) norng
-let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [mk_U_zero;mk_U_zero;v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng

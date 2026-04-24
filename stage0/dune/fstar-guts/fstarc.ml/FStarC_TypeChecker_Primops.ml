@@ -98,10 +98,10 @@ let simple_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int (-);
   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
-    FStarC_Parser_Const.op_Multiply FStarC_Syntax_Embeddings.e_int
+    FStarC_Parser_Const.op_Star FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int
-    FStarC_TypeChecker_NBETerm.e_int ( * );
+    FStarC_TypeChecker_NBETerm.e_int Prims.op_Star;
   FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero
     FStarC_Parser_Const.op_LT FStarC_Syntax_Embeddings.e_int
     FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int

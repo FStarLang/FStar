@@ -59,7 +59,7 @@ let rec list_sorted_map_entry_order_lt_tail
   (ensures (key_order (fst a) k))
   (decreases l)
 = let b :: q = l in
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (k == fst b)
+  if (k == fst b)
   then ()
   else list_sorted_map_entry_order_lt_tail key_order b q k
 
@@ -123,7 +123,7 @@ let rec list_ghost_assoc
 = match m with
   | [] -> None
   | (k', v') :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+    if (k == k')
     then Some v'
     else list_ghost_assoc k m'
 
@@ -141,7 +141,7 @@ let rec list_ghost_assoc_append
 = match l1 with
 | [] -> ()
 | (k1, _ ) :: q1 ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k1)
+    if (k == k1)
     then ()
     else list_ghost_assoc_append k q1 l2
 
@@ -155,7 +155,7 @@ let rec list_ghost_assoc_mem_intro
   (ensures (List.Tot.memP (k, v) l))
   (decreases l)
 = let (k', v') :: l' = l in
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+  if (k == k')
   then ()
   else list_ghost_assoc_mem_intro k v l'
 
@@ -173,9 +173,9 @@ let rec list_ghost_assoc_no_repeats_mem_elim
   (decreases l)
 = List.Tot.memP_map_intro fst (k, v) l;
   let (k', v') :: l' = l in
-  if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+  if (k == k')
   then
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (v == v')
+    if (v == v')
     then ()
     else List.Tot.memP_map_intro fst (k, v) l'
   else list_ghost_assoc_no_repeats_mem_elim k v l'

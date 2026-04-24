@@ -50,8 +50,8 @@ let check_bind_fn
     let x = fresh g in
     let b = { binder with binder_ty = comp_res c } in
     let g' = push_binding g x (binder.binder_ppname) b.binder_ty in
-    let r = check g' _ post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
-    let body_typing = apply_checker_result_k #_ #_ #(PostHint?.v post_hint) r res_ppname in
+    let r = check g' ctxt post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
+    let body_typing = apply_checker_result_k #g' #ctxt #(PostHint?.v post_hint) r res_ppname in
     let k = Pulse.Checker.Base.continuation_elaborator_with_bind_fn ctxt t c b (binder.binder_ppname, x) in
     let d = k post_hint body_typing in
     checker_result_for_st_typing d res_ppname

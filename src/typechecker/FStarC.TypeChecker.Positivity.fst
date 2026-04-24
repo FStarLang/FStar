@@ -784,7 +784,8 @@ let rec ty_strictly_positive_in_type (env:env)
       | Tm_meta {tm=t} ->
         ty_strictly_positive_in_type env mutuals t unfolded
 
-      | Tm_app {hd=t; args} ->  //the binder type is an application
+      | Tm_app _ ->  //the binder type is an application
+        let t, args = U.head_and_args_full in_type in
         let fv_or_name_opt = term_as_fv_or_name t in
         begin
         match fv_or_name_opt with
@@ -809,7 +810,11 @@ let rec ty_strictly_positive_in_type (env:env)
           //The check depends on the strict positivity annotations on the type of the name
           ty_strictly_positive_in_args env mutuals head_ty args unfolded
           end
-          
+
+        | Some (Inl (hd, [u])) when fv_eq_lid hd C.eq2_lid ->
+          // translate eq2 ~~> equals
+          ty_strictly_positive_in_type env mutuals (U.mk_app (mk_Tm_uinst (U.fvar_const C.c_eq2_lid) [u]) args) unfolded
+
         | Some (Inl (fv, us)) ->
           begin
           if FStarC.List.existsML (Ident.lid_equals fv.fv_name) mutuals

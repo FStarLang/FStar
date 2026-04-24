@@ -41,11 +41,11 @@ let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
 
 
 /// A postcondition is a predicate relating a result and final state
-let post_t (s:Type0) (a:Type) = a & s -> Type0
+let post_t (s:Type0) (a:Type) = a & s -> prop
 
 /// A precondition is a predicate on the initial state (we don't
 /// really use this type in what follows)
-let pre_t (s:Type) = s -> Type0
+let pre_t (s:Type) = s -> prop
 
 /// Although we usually write WPs as transformers from post-conditions
 /// to preconditions, I've swapped the order of arguments here since
@@ -59,7 +59,7 @@ let pre_t (s:Type) = s -> Type0
 /// states `s`. See FStar.FunctionalExtensionality for more
 /// explanations, but it is only on these domain-restricted functions
 /// that that functional extensionality axiom is available
-let wp_t (s:Type0) (a:Type) = s ^-> (post_t s a -> Type0)
+let wp_t (s:Type0) (a:Type) = s ^-> (post_t s a -> prop)
 
 /// Here's the WP of a Put action;
 /// (Notice that it has to be domain-restricted, that's the `F.on`)
@@ -163,7 +163,7 @@ let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m 
       assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
            by (T.norm [zeta; iota; delta];
                let x = T.forall_intro () in
-               T.mapply (quote (eta u#(max bb 1) u#1)))
+               T.mapply (quote (eta u#bb u#0)))
 
     | Put s k ->
       bind_wp_lem' k g;
@@ -305,7 +305,7 @@ sub_effect PURE ~> IFST = lift_pure_ifst
 
 /// We define an abbreviation for specification is a more familiar
 /// Hoare style
-effect IFst (a:Type) (s:Type) (pre:s -> Type) (post: s -> a -> s -> Type)
+effect IFst (a:Type) (s:Type) (pre:s -> prop) (post: s -> a -> s -> prop)
   = IFST a s (F.on _ (fun s0 k -> pre s0 /\ (forall x s1. post s0 x s1 ==> k (x, s1))))
 
 /// And here's a function in the Ifst effect.

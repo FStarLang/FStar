@@ -7,7 +7,7 @@ let rec factorial (n:nat) : nat =
   if n = 0 then 1
   else n * factorial (n - 1)
 
-let id (x:Type0) = x
+let id (x:prop) = x
 let force_a_query = assert (id True)
 
 

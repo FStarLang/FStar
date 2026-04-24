@@ -316,8 +316,8 @@ let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (optio
       let x = fresh g in
       let px = n, x in
       let _, p = symb_eval_subterms g ctxt p in
-      let p, _ = tc_type_phase1 g p in
-      let x_ty = mk_squash u0 p in
+      let p, _ = tc_term_phase1_with_type g p tm_prop in
+      let x_ty = mk_squash p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
       let body = purify_spec_core g' ctxt (body :: ts) |> or_emp in
@@ -364,8 +364,8 @@ and extrude (g: env) (ctxt: ctxt') (todo: list slprop) (ts: list slprop) : T.Tac
     | Tm_WithPure p n body ->
       let x = fresh g in
       let px = n, x in
-      let p, _ = tc_type_phase1 g p in
-      let x_ty = mk_squash u0 p in
+      let p, _ = tc_term_phase1_with_type g p tm_prop in
+      let x_ty = mk_squash p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
       let body = extrude g' ctxt (body::todo) ts |> or_emp in

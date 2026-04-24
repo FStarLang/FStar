@@ -21,7 +21,7 @@ module HoareDiv
 
 open FStar.Monotonic.Pure
 
-type repr (a:Type) (req:Type0) (ens:a -> Type0) =
+type repr (a:Type) (req:prop) (ens:a -> prop) =
   unit -> DIV a (as_pure_wp (fun p -> req /\ (forall (x:a). ens x ==> p x)))
 
 let return (a:Type) (x:a)
@@ -29,8 +29,8 @@ let return (a:Type) (x:a)
 = fun _ -> x
 
 let bind (a:Type) (b:Type)
-  (req_f:Type0) (ens_f:a -> Type0)
-  (req_g:a -> Type0) (ens_g:a -> (b -> Type0))
+  (req_f:prop) (ens_f:a -> prop)
+  (req_g:a -> prop) (ens_g:a -> (b -> prop))
   (f:repr a req_f ens_f) (g:(x:a -> repr b (req_g x) (ens_g x)))
 : repr b
   (req_f /\ (forall (x:a). ens_f x ==> req_g x))
@@ -42,8 +42,8 @@ let bind (a:Type) (b:Type)
 //the implicit markers on req_f and req_g don't mean much,
 //just testing that we support marking some arguments as implicit
 let subcomp (a:Type)
-  (#req_f:Type0) (ens_f:a -> Type0)
-  (#req_g:Type0) (ens_g:a -> Type0)
+  (#req_f:prop) (ens_f:a -> prop)
+  (#req_g:prop) (ens_g:a -> prop)
   (f:repr a req_f ens_f)
 : Pure (repr a req_g ens_g)
   (requires
@@ -53,8 +53,8 @@ let subcomp (a:Type)
 = f
 
 let if_then_else (a:Type)
-  (req_then:Type0) (ens_then:a -> Type0)
-  (req_else:Type0) (ens_else:a -> Type0)
+  (req_then:prop) (ens_then:a -> prop)
+  (req_else:prop) (ens_else:a -> prop)
   (f:repr a req_then ens_then) (g:repr a req_else ens_else)
   (p:bool)
 : Type
@@ -66,7 +66,7 @@ let if_then_else (a:Type)
 reifiable
 reflectable
 effect {
-  HoareDiv (a:Type) (req:Type0) (ens:a -> Type0)
+  HoareDiv (a:Type) (req:prop) (ens:a -> prop)
   with {repr; return; bind; subcomp; if_then_else}
 }
 

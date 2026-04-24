@@ -182,7 +182,7 @@ let rec resugar_term_as_op (t : FStarC_Syntax_Syntax.term) :
     [(FStarC_Parser_Const.op_Addition, "+");
     (FStarC_Parser_Const.op_Subtraction, "-");
     (FStarC_Parser_Const.op_Minus, "-");
-    (FStarC_Parser_Const.op_Multiply, "*");
+    (FStarC_Parser_Const.op_Star, "*");
     (FStarC_Parser_Const.op_Division, "/");
     (FStarC_Parser_Const.op_Modulus, "%");
     (FStarC_Parser_Const.read_lid, "!");

@@ -2486,6 +2486,16 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
       | Tm_refine {b} -> head_of b.sort
       | _ -> t
   in
+  let is_prop t : ML bool =
+    match (SS.compress (head_of t)).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv C.prop_lid
+    | _ -> false
+  in
+  let is_bool t : ML bool =
+    match (SS.compress (head_of t)).n with
+    | Tm_fvar fv -> S.fv_eq_lid fv C.bool_lid
+    | _ -> false
+  in
   let is_head_defined t =
     let h = head_of t in
     let h = SS.compress h in
@@ -2507,10 +2517,28 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   match (U.un_uinst head).n, args with
   (* b2t is primitive... for now *)
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_prop exp_t ->
+    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total S.t_prop in
+    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
+    Some (U.mk_b2t e, lc_res, Env.trivial_guard)
+
+  (* squash *)
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.prop_lid && is_type exp_t ->
+    let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
+    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
+    Some (U.mk_squash e, lc_res, Env.trivial_guard)
+  
+  (* squash + b2t *)
   | Tm_fvar fv, [] when S.fv_eq_lid fv C.bool_lid && is_type exp_t ->
     let lc2 = TcComm.lcomp_of_comp <| S.mk_Total U.ktype0 in
     let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
-    Some (U.mk_app (S.fvar C.b2t_lid None) [S.as_arg e], lc_res, Env.trivial_guard)
+    Some (U.mk_squash (U.mk_b2t e), lc_res, Env.trivial_guard)
+
+  (* t2b *)
+  | Tm_fvar fv, [] when S.fv_eq_lid fv C.prop_lid && is_bool exp_t ->
+    let lc2 = TcComm.lcomp_of_comp <| S.mk_GTotal U.t_bool in
+    let lc_res = bind e.pos false env (Some e) checked (None, lc2) in
+    Some (U.mk_t2b e, lc_res, Env.trivial_guard)
 
   (* user coercions, find candidates with the @@coercion attribute and try. *)
   |  _ ->

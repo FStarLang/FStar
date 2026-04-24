@@ -507,7 +507,6 @@ let rec is_unit t =
     | Tm_fvar fv ->
       fv_eq_lid fv PC.unit_lid
       || fv_eq_lid fv PC.squash_lid
-      || fv_eq_lid fv PC.auto_squash_lid
     | Tm_app {hd=head} -> is_unit head
     | Tm_uinst (t, _) -> is_unit t
     | _ -> false
@@ -1114,13 +1113,9 @@ let if_then_else b t1 t2 =
 //////////////////////////////////////////////////////////////////////////////////////
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
-let mk_squash u p =
+let mk_squash p =
     let sq = fvar_with_dd PC.squash_lid None in
-    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
-
-let mk_auto_squash u p =
-    let sq = fvar_with_dd PC.auto_squash_lid None in
-    mk_app (mk_Tm_uinst sq [u]) [as_arg p]
+    mk_app sq [as_arg p]
 
 let un_squash t =
     let head, args = head_and_args_full t in
@@ -1150,45 +1145,14 @@ let un_squash t =
 let is_squash t =
     let head, args = head_and_args t in
     match (Subst.compress head).n, args with
-    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
+    | Tm_fvar fv, [(t, _)]
         when Syntax.fv_eq_lid fv PC.squash_lid ->
-        Some (u, t)
+        Some t
     | _ -> None
 
 
-let is_auto_squash t =
-    let head, args = head_and_args t in
-    match (Subst.compress head).n, args with
-    | Tm_uinst({n=Tm_fvar fv}, [u]), [(t, _)]
-        when Syntax.fv_eq_lid fv PC.auto_squash_lid ->
-        Some (u, t)
-    | _ -> None
-
-let is_sub_singleton t =
-    let head, _ = head_and_args (unmeta t) in
-    match (un_uinst head).n with
-    | Tm_fvar fv ->
-          Syntax.fv_eq_lid fv PC.unit_lid
-        || Syntax.fv_eq_lid fv PC.squash_lid
-        || Syntax.fv_eq_lid fv PC.auto_squash_lid
-        || Syntax.fv_eq_lid fv PC.and_lid
-        || Syntax.fv_eq_lid fv PC.or_lid
-        || Syntax.fv_eq_lid fv PC.not_lid
-        || Syntax.fv_eq_lid fv PC.imp_lid
-        || Syntax.fv_eq_lid fv PC.iff_lid
-        || Syntax.fv_eq_lid fv PC.ite_lid
-        || Syntax.fv_eq_lid fv PC.exists_lid
-        || Syntax.fv_eq_lid fv PC.forall_lid
-        || Syntax.fv_eq_lid fv PC.true_lid
-        || Syntax.fv_eq_lid fv PC.false_lid
-        || Syntax.fv_eq_lid fv PC.eq2_lid
-        || Syntax.fv_eq_lid fv PC.b2t_lid
-        //these are an uninterpreted predicates
-        //which we are better off treating as sub-singleton
-        || Syntax.fv_eq_lid fv PC.haseq_lid
-        || Syntax.fv_eq_lid fv PC.has_type_lid
-        || Syntax.fv_eq_lid fv PC.precedes_lid
-    | _ -> false
+let mk_b2t t = mk_app (fvar_with_dd PC.b2t_lid None) [as_arg t]
+let mk_t2b t = mk_app (fvar_with_dd PC.t2b_lid None) [as_arg t]
 
 let arrow_one_ln (t:typ) : ML (option (binder & comp)) =
     match (compress t).n with

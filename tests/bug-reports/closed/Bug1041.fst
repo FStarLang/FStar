@@ -19,5 +19,5 @@ module Bug1041
 let f x : Lemma (True ==> x == x) = ()
 
 // Fails
-[@@expect_failure [19]] // This should be a better error
+[@@expect_failure [189]] // This should be a better error
 let f' x : Lemma (True -> x == x) = ()

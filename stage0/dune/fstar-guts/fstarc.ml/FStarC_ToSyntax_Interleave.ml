@@ -287,32 +287,6 @@ let rec prefix_with_iface_decls (iface : FStarC_Parser_AST.decl Prims.list)
                  | (iface1, ds) -> ((iface_hd :: iface1), ds))
           | FStarC_Parser_AST.Pragma uu___1 ->
               prefix_with_iface_decls iface_tl impl
-          | FStarC_Parser_AST.Exception (id, uu___1) ->
-              (match impl.FStarC_Parser_AST.d with
-               | FStarC_Parser_AST.Exception (id', uu___2) when
-                   (FStarC_Ident.string_of_id id) =
-                     (FStarC_Ident.string_of_id id')
-                   -> (iface_tl, [impl])
-               | uu___2 ->
-                   let uu___3 = prefix_with_iface_decls iface_tl impl in
-                   (match uu___3 with
-                    | (iface1, ds) -> (iface1, (iface_hd :: ds))))
-          | FStarC_Parser_AST.TopLevelLet (uu___1, defs) when
-              iface_hd.FStarC_Parser_AST.attrs = [] ->
-              let iface_lids = FStarC_Parser_AST.lids_of_let defs in
-              let impl_lids = definition_lids impl in
-              let uu___2 =
-                FStarC_Util.for_some
-                  (fun l ->
-                     FStarC_Util.for_some
-                       (fun l' -> id_eq_lid (FStarC_Ident.ident_of_lid l) l')
-                       impl_lids) iface_lids in
-              if uu___2
-              then (iface_tl, [impl])
-              else
-                (let uu___4 = prefix_with_iface_decls iface_tl impl in
-                 match uu___4 with
-                 | (iface1, ds) -> (iface1, (iface_hd :: ds)))
           | uu___1 ->
               let uu___2 = prefix_with_iface_decls iface_tl impl in
               (match uu___2 with | (iface1, ds) -> (iface1, (iface_hd :: ds)))))
@@ -492,84 +466,6 @@ let interleave_module (a : FStarC_Parser_AST.modul)
                   (match uu___2 with
                    | (iface_lets, remaining_iface_vals) ->
                        let impls2 = FStarC_List.op_At impls1 iface_lets in
-                       let impls3 =
-                         let iface_let_names =
-                           FStarC_List.collect
-                             (fun d ->
-                                if
-                                  Prims.op_Negation
-                                    d.FStarC_Parser_AST.interleaved
-                                then []
-                                else
-                                  if
-                                    Prims.op_Negation
-                                      (Prims.uu___is_Nil
-                                         d.FStarC_Parser_AST.attrs)
-                                  then []
-                                  else
-                                    (match d.FStarC_Parser_AST.d with
-                                     | FStarC_Parser_AST.TopLevelLet
-                                         (uu___5, defs) ->
-                                         let uu___6 =
-                                           FStarC_Parser_AST.lids_of_let defs in
-                                         FStarC_List.map
-                                           (fun l1 ->
-                                              FStarC_Ident.string_of_id
-                                                (FStarC_Ident.ident_of_lid l1))
-                                           uu___6
-                                     | uu___5 -> [])) impls2 in
-                         let iface_exn_names =
-                           FStarC_List.collect
-                             (fun d ->
-                                if
-                                  Prims.op_Negation
-                                    d.FStarC_Parser_AST.interleaved
-                                then []
-                                else
-                                  (match d.FStarC_Parser_AST.d with
-                                   | FStarC_Parser_AST.Exception (id, uu___4)
-                                       -> [FStarC_Ident.string_of_id id]
-                                   | uu___4 -> [])) impls2 in
-                         if
-                           (Prims.uu___is_Nil iface_let_names) &&
-                             (Prims.uu___is_Nil iface_exn_names)
-                         then impls2
-                         else
-                           FStarC_List.filter
-                             (fun d ->
-                                if d.FStarC_Parser_AST.interleaved
-                                then true
-                                else
-                                  (match d.FStarC_Parser_AST.d with
-                                   | FStarC_Parser_AST.TopLevelLet
-                                       (uu___5, defs) ->
-                                       let fst_lids =
-                                         let uu___6 =
-                                           FStarC_Parser_AST.lids_of_let defs in
-                                         FStarC_List.map
-                                           (fun l1 ->
-                                              FStarC_Ident.string_of_id
-                                                (FStarC_Ident.ident_of_lid l1))
-                                           uu___6 in
-                                       if Prims.uu___is_Nil fst_lids
-                                       then true
-                                       else
-                                         (let uu___7 =
-                                            FStarC_Util.for_all
-                                              (fun n ->
-                                                 FStarC_Util.for_some
-                                                   (fun m -> n = m)
-                                                   iface_let_names) fst_lids in
-                                          Prims.op_Negation uu___7)
-                                   | FStarC_Parser_AST.Exception (id, uu___5)
-                                       ->
-                                       let uu___6 =
-                                         FStarC_Util.for_some
-                                           (fun m ->
-                                              (FStarC_Ident.string_of_id id)
-                                                = m) iface_exn_names in
-                                       Prims.op_Negation uu___6
-                                   | uu___5 -> true)) impls2 in
                        let env1 =
                          let uu___3 = FStarC_Options.interactive () in
                          if uu___3
@@ -582,7 +478,7 @@ let interleave_module (a : FStarC_Parser_AST.modul)
                            {
                              FStarC_Parser_AST.no_prelude = no_prelude;
                              FStarC_Parser_AST.mname = l;
-                             FStarC_Parser_AST.decls = impls3
+                             FStarC_Parser_AST.decls = impls2
                            } in
                        (match remaining_iface_vals with
                         | uu___3::uu___4 when expect_complete_modul ->

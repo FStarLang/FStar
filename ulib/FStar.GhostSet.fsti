@@ -20,8 +20,6 @@ module FStar.GhostSet
 [@@erasable]
 val set (a: Type u#a) : Type u#a
 
-let decide_eq a = x:a -> y:a -> GTot (b:bool { b <==> (x==y) })
-
 val equal (#a:Type) (s1:set a) (s2:set a) : prop
 
 (* destructors *)
@@ -30,7 +28,7 @@ val mem : #a:Type -> a -> set a -> GTot bool
 
 (* constructors *)
 val empty      : #a:Type -> Tot (set a)
-val singleton  : #a:Type -> f:decide_eq a -> a -> Tot (set a)
+val singleton  : #a:Type -> a -> Tot (set a)
 val union      : #a:Type -> set a -> set a -> Tot (set a)
 val intersect  : #a:Type -> set a -> set a -> Tot (set a)
 val complement : #a:Type -> set a -> Tot (set a)
@@ -50,10 +48,10 @@ val mem_empty: #a:Type -> x:a -> Lemma
    (ensures (not (mem x empty)))
    [SMTPat (mem x empty)]
 
-val mem_singleton: #a:Type -> #f:decide_eq a -> x:a -> y:a -> Lemma
+val mem_singleton: #a:Type -> x:a -> y:a -> Lemma
    (requires True)
-   (ensures (mem y (singleton f x) <==> (x==y)))
-   [SMTPat (mem y (singleton f x))]
+   (ensures (mem y (singleton x) <==> (x==y)))
+   [SMTPat (mem y (singleton x))]
 
 val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
    (requires True)
@@ -115,10 +113,10 @@ let disjoint_not_in_both (a:Type) (s1:set a) (s2:set a) :
 
 (* Converting lists to sets *)
 
-let rec as_set' (#a:Type) (f:decide_eq a) (l:list a) : set a = 
+let rec as_set' (#a:Type) (l:list a) : set a = 
   match l with
   | [] -> empty
-  | hd::tl -> union (singleton f hd) (as_set' f tl)
+  | hd::tl -> union (singleton hd) (as_set' tl)
 
 let lemma_disjoint_subset (#a:Type) (s1:set a) (s2:set a) (s3:set a)
   : Lemma (requires (disjoint s1 s2 /\ subset s3 s1))

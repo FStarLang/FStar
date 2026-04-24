@@ -302,10 +302,7 @@ let tc_declare_typ (env : FStarC_TypeChecker_Env.env)
 let tc_assume (env : FStarC_TypeChecker_Env.env)
   (ts : FStarC_Syntax_Syntax.tscheme) (r : FStarC_Range_Type.t) :
   FStarC_Syntax_Syntax.tscheme=
-  let uu___ =
-    let uu___1 = FStarC_Syntax_Util.type_u () in
-    FStar_Pervasives_Native.fst uu___1 in
-  tc_type_common env ts uu___ r
+  tc_type_common env ts FStarC_Syntax_Syntax.t_prop r
 let tc_decl_attributes (env : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
   let uu___ =

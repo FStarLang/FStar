@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2026 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,7 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.StrongExcludedMiddle
+module FStar.Nonempty
 
-let strong_excluded_middle : p:Type0 -> GTot (b:bool{b = true <==> p}) =
-  IndefiniteDescription.strong_excluded_middle
+let tag #a (x: a) = True
+
+let nonempty (a: Type) : prop = exists (x: a). tag x
+
+let nonempty_intro #a (x: a) : nonempty a = assert tag x
+
+// The axiom of choice.
+let nonempty_elim (a: Type { nonempty a }) : GTot a =
+    indefinite_description fun (_: a) -> True

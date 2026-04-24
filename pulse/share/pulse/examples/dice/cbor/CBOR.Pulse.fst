@@ -83,7 +83,7 @@ val stick_weaken_hyp_l
     ((hl' @==> hl) ** ((hl ** hr) @==> c))
     (fun _ -> (hl' ** hr) @==> c)
 
-assume Fits_u64 : squash (SZ.fits_u64)
+assume Fits_u64 : SZ.fits_u64
 
 module U8 = FStar.UInt8
 module U64 = FStar.UInt64
@@ -424,7 +424,7 @@ let rec list_ghost_assoc
 = match m with
   | [] -> None
   | (k', v') :: m' ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (k == k')
+    if (k == k')
     then Some v'
     else list_ghost_assoc k m'
 

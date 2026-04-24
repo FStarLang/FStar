@@ -14,11 +14,12 @@ let t4 (x:int) = pure (x == 0 \/ 0 == x)
 let t5 (x:int) = pure (~(x == 0))
 let t6 = pure (forall (x:int). x == 0 \/ x =!= 0)
 let t7 = pure (exists (x:int). x == 0 \/ x =!= 0)
-let t8 = pure unit
+let t8 = pure True  // unit is no longer prop
 let t9 = pure True
 let t10 = pure False
-let t11 (a:Type) = pure (squash a)
-let t12 (b:bool) = pure b
+// squash a is Type0, not prop (squash : prop -> Type0)
+let t11 (a:prop) = pure a
+let t12 (b:bool) = pure (b2t b)  // bool is not prop, use b2t
 let t12_1 (b:bool) = pure (b2t b)
 let t13 (a:Type) = pure (hasEq a)
 let t14 (a:Type) (x y:a) = pure (x << y)

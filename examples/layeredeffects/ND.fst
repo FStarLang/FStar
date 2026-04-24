@@ -21,10 +21,10 @@ let m_bind l f = concatMap f l
 // w is an ordered (w_ord) monad with conjunction (w_conj) and actions from prop (w_act_prop)
 // In this example, good ol' continuations into prop
 
-val w (a : Type u#a) : Type u#(max 1 a)
+val w (a : Type u#a) : Type u#a
 let w a = pure_wp a
 
-val w_ord (#a : Type) : w a -> w a -> Type0
+val w_ord (#a : Type) : w a -> w a -> prop
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 
 open FStar.Monotonic.Pure
@@ -63,13 +63,13 @@ let rec concatmaplemma #a #b l f x =
     concatmaplemma t f x
 
 let dm (a : Type) (wp : w a) : Type = 
-  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
+  p:(a -> prop) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
   
 let irepr (a : Type) (wp: w a) = dm a wp
 
 let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ _ -> [x]
 
-let rec pmap #a #b #pre (#post:b->Type0)
+let rec pmap #a #b #pre (#post:b->prop)
   (f : (x:a -> Pure b (requires (pre x)) (ensures post)))
   (l : list a)
   : Pure (list (v:b{post v}))

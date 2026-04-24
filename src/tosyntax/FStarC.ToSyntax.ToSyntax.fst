@@ -1784,7 +1784,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         mk_term (Abs (pats,
             mk_term (Ascribed (
                 mkApp rel [(xt, Nothing); (yt, Nothing)] rel.range,
-                mk_term (Name (Ident.lid_of_str "Type0")) rel.range Expr,
+                mk_term (Name C.prop_lid) rel.range Expr,
                 None, false)) rel.range Expr)) rel.range Expr
       in
       let rel = eta_and_annot rel in
@@ -1843,7 +1843,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let rec aux bs : ML _ =
         match bs with
         | [] ->
-          let sq_p = U.mk_squash U_unknown p in
+          let sq_p = U.mk_squash p in
           U.ascribe e (Inl sq_p, None, false)
 
         | b::bs ->
@@ -1976,7 +1976,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let env', bs = desugar_binders env binders in
       let p = desugar_term env' p in
       let q = desugar_term env q in
-      let sq_q = U.mk_squash U_unknown q in
+      let sq_q = U.mk_squash q in
       let env'', [b_pf_p] = desugar_binders env' [binder] in
       let e = desugar_term env'' e in
       let rec mk_exists bs p : ML _ =
@@ -1996,6 +1996,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         let head = S.fv_to_tm (S.lid_and_dd_as_fv C.exists_elim_lid None) in
         let args = [(t, S.as_aqual_implicit true);
                     (x_p, S.as_aqual_implicit true);
+                    (q, S.as_aqual_implicit true);
                     (s_ex_p, None);
                     (f, None)] in
         mk_Tm_app head args r

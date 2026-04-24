@@ -120,11 +120,11 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
         begin match pol with
         | StrictlyPositive
         | Pos ->
-            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e (U.mk_squash assertion) in
             Simplified (FStarC.Syntax.Util.t_true, gs)
 
         | Both ->
-            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e (U.mk_squash assertion) in
             Dual (assertion, FStarC.Syntax.Util.t_true, gs)
 
         | Neg ->
@@ -139,12 +139,12 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
         begin  match pol with
         | StrictlyPositive
         | Pos ->
-          let g = fst <| goal_of_goal_ty e assertion in
+          let g = fst <| goal_of_goal_ty e (U.mk_squash assertion) in
           let g = set_label "spun-off assertion" g in
           Simplified (FStarC.Syntax.Util.t_true, [g])
 
         | Both ->
-          let g = fst <| goal_of_goal_ty e assertion in
+          let g = fst <| goal_of_goal_ty e (U.mk_squash assertion) in
           let g = set_label "spun-off assertion" g in
           Dual (assertion, FStarC.Syntax.Util.t_true, [g])
 
@@ -160,8 +160,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
         let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Strict None false in
 
         let u = e.universe_of e typ in
-        // eq2 is squashed already, so it's in Type0
-        let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+        let goal = U.mk_squash (U.mk_eq2 u typ tm uvtm) in
         let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
 
         // abort if the uvar was not solved
@@ -378,7 +377,6 @@ let rec traverse_for_spinoff
             S.fv_eq_lid fv PC.and_lid ||
             S.fv_eq_lid fv PC.imp_lid ||
             S.fv_eq_lid fv PC.forall_lid ||
-            S.fv_eq_lid fv PC.auto_squash_lid ||
             S.fv_eq_lid fv PC.squash_lid
 
           | Tm_meta _
@@ -402,11 +400,6 @@ let rec traverse_for_spinoff
               | Tm_meta {meta=Meta_labeled _}, _ -> t
               | _, Some (msg, r) -> TcUtil.label msg r t
               | _ -> t
-            in
-            let t =
-              if U.is_sub_singleton t
-              then t
-              else U.mk_auto_squash U_zero t
             in
             fst (goal_of_goal_ty env t)
         in
@@ -791,7 +784,7 @@ let handle_smt_goal env goal : ML _ =
      let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
 
         (* Executing the tactic on the goal. *)
-        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
+        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash goal) in
         // Check that all goals left are irrelevant and provable
         gs |> List.map (fun g ->
             match getprop (goal_env g) (goal_type g) with
@@ -1032,7 +1025,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : ML term =
 
     let u = env.universe_of env typ in
     // eq2 is squashed already, so it's in Type0
-    let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+    let goal = U.mk_squash (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
     // see comment in `synthesize`
     List.iter (fun g ->

@@ -33,8 +33,8 @@ type locals_t = m:locals_t'{
   forall (i:nat). i >= m.next ==> not (M.contains m.m i)
 }
 
-type pre_t = locals_t -> Type0
-type post_t (a:Type) = a -> locals_t -> Type0
+type pre_t = locals_t -> prop
+type post_t (a:Type) = a -> locals_t -> prop
 type wp_t0 (a:Type) = post_t a -> pre_t
 
 unfold
@@ -98,7 +98,7 @@ let lift_pure_lvars (a:Type)
 
 sub_effect PURE ~> LVARS = lift_pure_lvars
 
-effect LV (a:Type) (pre:locals_t -> Type0) (post:locals_t -> a -> locals_t -> Type0) =
+effect LV (a:Type) (pre:locals_t -> prop) (post:locals_t -> a -> locals_t -> prop) =
   LVARS a (fun p m -> pre m /\ (forall x m1. post m x m1 ==> p x m1))
 
 
@@ -153,7 +153,7 @@ let run_with_locals_aux (#a:Type) (#wp:wp_t a) (f:repr a wp)
   = fst (f emp_locals)
 
 let run_with_locals (#a:Type)
-  (#pre:locals_t -> Type0) (#post:locals_t -> a -> locals_t -> Type0)
+  (#pre:locals_t -> prop) (#post:locals_t -> a -> locals_t -> prop)
   ($f:unit -> LV a pre post)
 : Pure a
   (requires pre emp_locals)

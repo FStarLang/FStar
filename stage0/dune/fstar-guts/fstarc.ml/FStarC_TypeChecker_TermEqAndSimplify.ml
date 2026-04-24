@@ -420,12 +420,8 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
     else ();
     (let uu___1 = FStarC_Syntax_Util.is_squash t in
      match uu___1 with
-     | FStar_Pervasives_Native.Some (uu___2, t') -> is_applied bs t'
-     | uu___2 ->
-         let uu___3 = FStarC_Syntax_Util.is_auto_squash t in
-         (match uu___3 with
-          | FStar_Pervasives_Native.Some (uu___4, t') -> is_applied bs t'
-          | uu___4 -> is_applied bs t)) in
+     | FStar_Pervasives_Native.Some t' -> is_applied bs t'
+     | uu___2 -> is_applied bs t) in
   let is_const_match phi =
     let uu___ =
       let uu___1 = FStarC_Syntax_Subst.compress phi in
@@ -457,25 +453,8 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                    else FStar_Pervasives_Native.None in
              r)
     | uu___1 -> FStar_Pervasives_Native.None in
-  let maybe_auto_squash t =
-    let uu___ = FStarC_Syntax_Util.is_sub_singleton t in
-    if uu___
-    then t
-    else FStarC_Syntax_Util.mk_auto_squash FStarC_Syntax_Syntax.U_zero t in
-  let squashed_head_un_auto_squash_args t =
-    let maybe_un_auto_squash_arg uu___ =
-      match uu___ with
-      | (t1, q) ->
-          let uu___1 = FStarC_Syntax_Util.is_auto_squash t1 in
-          (match uu___1 with
-           | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.U_zero, t2)
-               -> (t2, q)
-           | uu___2 -> (t1, q)) in
-    let uu___ = FStarC_Syntax_Util.head_and_args t in
-    match uu___ with
-    | (head, args) ->
-        let args1 = FStarC_List.map maybe_un_auto_squash_arg args in
-        FStarC_Syntax_Syntax.mk_Tm_app head args1 t.FStarC_Syntax_Syntax.pos in
+  let maybe_auto_squash t = t in
+  let squashed_head_un_auto_squash_args t = t in
   let rec clearly_inhabited ty =
     let uu___ =
       let uu___1 = FStarC_Syntax_Util.unmeta ty in
@@ -811,14 +790,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                   | NotEqual -> w FStarC_Syntax_Util.t_false
                                   | uu___22 -> tm)
                              | uu___18 -> tm)
-                          else
-                            (let uu___19 =
-                               FStarC_Syntax_Util.is_auto_squash tm in
-                             match uu___19 with
-                             | FStar_Pervasives_Native.Some
-                                 (FStarC_Syntax_Syntax.U_zero, t) when
-                                 FStarC_Syntax_Util.is_sub_singleton t -> t
-                             | uu___20 -> tm)
+                          else tm
   | FStarC_Syntax_Syntax.Tm_app
       {
         FStarC_Syntax_Syntax.hd =
@@ -1125,14 +1097,7 @@ let simplify (debug : Prims.bool) (env : FStarC_TypeChecker_Env.env_t)
                                   | NotEqual -> w FStarC_Syntax_Util.t_false
                                   | uu___18 -> tm)
                              | uu___14 -> tm)
-                          else
-                            (let uu___15 =
-                               FStarC_Syntax_Util.is_auto_squash tm in
-                             match uu___15 with
-                             | FStar_Pervasives_Native.Some
-                                 (FStarC_Syntax_Syntax.U_zero, t) when
-                                 FStarC_Syntax_Util.is_sub_singleton t -> t
-                             | uu___16 -> tm)
+                          else tm
   | FStarC_Syntax_Syntax.Tm_refine
       { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t;_} ->
       let uu___1 = simp_t t in

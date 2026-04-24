@@ -20,16 +20,16 @@ let m_return x = [x]
 val m_bind (#a #b : Type) : m a -> (a -> m b) -> m b
 let m_bind l f = concatMap f l
 
-val w0 (a : Type u#a) : Type u#(max 1 a)
-let w0 a = (a -> Type0) -> Type0
+val w0 (a : Type u#a) : Type u#a
+let w0 a = (a -> prop) -> prop
 
 let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
-val w (a : Type u#a) : Type u#(max 1 a)
+val w (a : Type u#a) : Type u#a
 let w a = pure_wp a
 
-val w_ord (#a : Type) : w a -> w a -> Type0
+val w_ord (#a : Type) : w a -> w a -> prop
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 
 unfold
@@ -66,13 +66,13 @@ let rec concatmaplemma #a #b l f x =
     concatmaplemma t f x
 
 let dm (a : Type) (wp : w a) : Type =
-  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
+  p:(a -> prop) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
 
 let irepr (a : Type) (wp: w a) = dm a wp
 
 let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ _ -> [x]
 
-let rec pmap #a #b #pre (#post:b->Type0)
+let rec pmap #a #b #pre (#post:b->prop)
   (f : (x:a -> Pure b (requires (pre x)) (ensures post)))
   (l : list a)
   : Pure (list (v:b{post v}))

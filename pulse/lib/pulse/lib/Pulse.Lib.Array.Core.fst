@@ -97,7 +97,7 @@ let mk_carrier #elt (off: nat) (len: nat) (f: perm) (v: Seq.seq (option elt)) (m
 
 irreducible let pull_mask (f: nat -> prop) (len: nat) : Ghost (nat -> bool) (requires True)
     (ensures fun res -> forall i. res i <==> i >= len \/ f i) =
-  let s = Seq.init_ghost len fun i -> IndefiniteDescription.strong_excluded_middle (f i) in
+  let s = Seq.init_ghost len fun i -> (f i <: bool) in
   fun i -> if i < len then Seq.index s i else true
 
 let mk_carrier' #t (a: array t) (f: perm) (v: Seq.seq (option t)) (mask: nat -> prop) (l: loc_id) : GTot (carrier t a.base_len) =
@@ -137,11 +137,14 @@ ghost fn is_send_pts_to_mask' u#a (#t: Type u#a) a #f v mask : is_send (pts_to_m
 }
 let is_send_pts_to_mask = is_send_pts_to_mask'
 
+let aux #t (a: array t) f (v: Seq.seq (option t)) mask =
+  (Seq.length v == reveal a.length /\ (mask_nonempty mask a.length ==> f <=. 1.0R))
 let pts_to_mask_timeless #t a f v mask =
   assert_norm (pts_to_mask #t a #f v mask ==
     exists* l. loc l **
     pcm_pts_to (lptr_of a) (mk_carrier' a f v mask (a.vis l)) **
-    pure (Seq.length v == reveal a.length /\ (mask_nonempty mask a.length ==> f <=. 1.0R)))
+    pure (aux a f v mask));
+  assert (timeless (pts_to_mask #t a #f v mask))
 
 ghost
 fn pts_to_mask_props u#a (#t: Type u#a) (a:array t) (#p:perm) #x #mask
@@ -263,11 +266,9 @@ fn mask_free u#a (#elt: Type u#a) (a: array elt) (#s: erased _) #mask
   drop_ (pts_to_mask a s mask);
 }
 
+irreducible
 let get_mask_idx (m: nat->prop) (l: nat) : GTot (i: nat { mask_nonempty m l ==> i < l /\ m i }) =
-  if IndefiniteDescription.strong_excluded_middle (mask_nonempty m l) then
-    IndefiniteDescription.indefinite_description_ghost nat fun i -> i < l /\ m i
-  else
-    0
+  indefinite_description fun i -> mask_nonempty m l ==> i < l /\ m i
 
 ghost fn pcm_rw u#a (#t: Type u#a)
     (a1: array t) p1 s1 m1
@@ -333,39 +334,29 @@ ghost fn pcm_share u#a (#t: Type u#a) #l
 
 ghost fn pcm_gather u#a (#t: Type u#a) #l
     (a: array t) p s m
-    (a1: array t) p1 s1 m1
-    (a2: array t) p2 s2 m2
+    p1 s1 m1
+    p2 s2 m2
   requires loc l
   requires pure (Seq.length s == a.length)
   requires pure (
-    a1.base_len == a.base_len /\ a2.base_len == a.base_len /\
-    a1.base_ref == a.base_ref /\ a2.base_ref == a.base_ref /\
-    (composable (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l)) ==>
-    compose (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l))
-      `Map.equal` mk_carrier' a p s m (a.vis l))
+    composable (mk_carrier' a p1 s1 m1 (a.vis l)) (mk_carrier' a p2 s2 m2 (a.vis l)) ==>
+    compose (mk_carrier' a p1 s1 m1 (a.vis l)) (mk_carrier' a p2 s2 m2 (a.vis l))
+      `Map.equal` mk_carrier' a p s m (a.vis l)
   )
-  requires pts_to_mask a1 #p1 s1 m1
-  requires pts_to_mask a2 #p2 s2 m2
+  requires pts_to_mask a #p1 s1 m1
+  requires pts_to_mask a #p2 s2 m2
   ensures pts_to_mask a #p s m
   ensures pure (
-    a1.base_len == a.base_len /\ a2.base_len == a.base_len /\
-    a1.base_ref == a.base_ref /\ a2.base_ref == a.base_ref /\
-    composable (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l)) /\
-    compose (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l))
+    composable (mk_carrier' a p1 s1 m1 (a.vis l)) (mk_carrier' a p2 s2 m2 (a.vis l)) /\
+    compose (mk_carrier' a p1 s1 m1 (a.vis l)) (mk_carrier' a p2 s2 m2 (a.vis l))
       `Map.equal` mk_carrier' a p s m (a.vis l)
   )
 {
-  unfold pts_to_mask a1 #p1 s1 m1; with l'. _;
+  unfold pts_to_mask a #p1 s1 m1; with l'. _;
   loc_gather l #l'; rewrite each l' as l;
-  unfold pts_to_mask a2 #p2 s2 m2; with l'. _;
+  unfold pts_to_mask a #p2 s2 m2; with l'. _;
   loc_gather l #l'; rewrite each l' as l;
-  rewrite
-    pcm_pts_to (lptr_of a1) (mk_carrier' a1 p1 s1 m1 (a1.vis l)) as
-    pcm_pts_to (lptr_of a) (mk_carrier' a1 p1 s1 m1 (a1.vis l));
-  rewrite
-    pcm_pts_to (lptr_of a2) (mk_carrier' a2 p2 s2 m2 (a2.vis l)) as
-    pcm_pts_to (lptr_of a) (mk_carrier' a2 p2 s2 m2 (a2.vis l));
-  gather (lptr_of a) (mk_carrier' a1 p1 s1 m1 (a1.vis l)) (mk_carrier' a2 p2 s2 m2 (a2.vis l));
+  gather (lptr_of a) (mk_carrier' a p1 s1 m1 (a.vis l)) (mk_carrier' a p2 s2 m2 (a.vis l));
   let i = get_mask_idx m (length a);
   assert pure (mask_nonempty m a.length ==>
     Map.sel (mk_carrier' a p s m (a.vis l)) (i + a.offset) == Some ((Seq.index s i, a.vis l), p));
@@ -411,8 +402,8 @@ ghost fn mask_gather u#a (#t: Type u#a) (arr: array t) #p1 #p2 #s1 #s2 #mask1 #m
   pts_to_mask_props arr #p2 #s2 #mask1;
   pcm_gather
     arr (p1 +. p2) s1 mask1
-    arr p1 s1 mask1
-    arr p2 s2 mask1;
+    p1 s1 mask1
+    p2 s2 mask1;
   assert pure (forall (i: nat). (i < Seq.length s1 /\ mask1 i) ==>
     Map.sel (mk_carrier' arr p1 s1 mask1 (process_of l)) (i + arr.offset) ==
       Some ((Seq.index s1 i, process_of l), p1));
@@ -437,7 +428,7 @@ let mix #t (v1: Seq.seq t) (v2: Seq.seq t { Seq.length v1 == Seq.length v2 }) (m
         (mask i ==> Seq.index res i == Seq.index v1 i) /\
         (~(mask i) ==> Seq.index res i == Seq.index v2 i)) }) =
   Seq.init_ghost (Seq.length v1) fun i ->
-    if IndefiniteDescription.strong_excluded_middle (mask i) then Seq.index v1 i else Seq.index v2 i
+    if mask i then Seq.index v1 i else Seq.index v2 i
 
 [@@allow_ambiguous]
 ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
@@ -458,8 +449,8 @@ ghost fn join_mask u#a (#t: Type u#a) (arr: array t) #f #v1 #v2 #mask1 #mask2
   with mask. assert pure (mask == (fun i -> mask1 i \/ mask2 i));
   pcm_gather
     arr f v mask
-    arr f v1 mask1
-    arr f v2 mask2;
+    f v1 mask1
+    f v2 mask2;
 }
 
 [@@allow_ambiguous]

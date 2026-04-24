@@ -18,13 +18,13 @@ module Pulse.Lib.Trade
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-
+open FStar.Nonempty
 
 let trade_elim_t is hyp extra concl : Type u#5 =
   unit -> trade_f #is hyp #extra concl
 
 let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
-  pure (squash (trade_elim_t is hyp extra concl))
+  pure (nonempty (trade_elim_t is hyp extra concl))
 
 let trade (#is:inames) (hyp concl:slprop) =
   exists* extra. extra ** trade_elim_exists is hyp extra concl
@@ -38,6 +38,7 @@ fn intro_trade
   requires extra
   ensures trade #is hyp concl
 {
+  nonempty_intro (f_elim <: trade_elim_t is hyp extra concl);
   fold (trade_elim_exists is hyp extra concl);
   assert (extra ** trade_elim_exists is hyp extra concl);
   fold (trade #is hyp concl)
@@ -61,24 +62,6 @@ instance introducable_trade' (t: Type u#a) is
     introducable is extra (hyp @==> concl) t =
   { intro_aux = introducable_trade_aux t is emp_inames hyp extra concl }
 
-let sqeq (p : Type) (_ : squash p) : erased p =
-  FStar.IndefiniteDescription.elim_squash #p ()
-
-let psquash (a:Type u#a) : prop = squash a
-
-ghost
-fn pextract (a:Type u#5) (_:squash a)
-  returns i:a
-{
-  let pf = elim_pure_explicit (psquash a);
-  let pf : squash a = FStar.Squash.join_squash pf;
-  let i = sqeq a pf;
-  let i = reveal i;
-  i
-}
-
-
-
 ghost
 fn deconstruct_trade (is:inames) (hyp concl: slprop)
   requires trade #is hyp concl
@@ -88,11 +71,7 @@ fn deconstruct_trade (is:inames) (hyp concl: slprop)
   unfold (trade #is hyp concl);
   with extra. assert (extra ** trade_elim_exists is hyp extra concl);
   unfold (trade_elim_exists is hyp (reveal extra) concl);
-  let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
-    elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
-  let pf : squash (trade_elim_t is hyp (reveal extra) concl) =
-    FStar.Squash.join_squash pf;
-  let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
+  let f = nonempty_elim (trade_elim_t is hyp (reveal extra) concl);
   let res =
     (| (extra <: erased slprop), f |) <: (p:erased slprop & trade_elim_t is hyp (reveal p) concl);
   rewrite (reveal extra) as (reveal (dfst res));

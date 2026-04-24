@@ -1,5 +1,5 @@
 (*
-   Copyright 2023 Microsoft Research
+   Copyright 2026 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,26 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+module FStar.Nonempty
 
-module Pulse.Lib.GhostWitness
-#lang-pulse
+val nonempty (a: Type) : prop
 
-open Pulse.Lib.Pervasives
+val nonempty_intro #a (x: a) : nonempty a
 
-ghost
-fn ghost_witness (a:Type u#0) (_ : squash a)
-  returns  a
+// The axiom of choice.
+val nonempty_elim (a: Type { nonempty a }) : GTot a
 
-ghost
-fn ghost_witness2 (a:Type u#4) (_ : squash a)
-  returns  a
-
-ghost
-fn ghost_witness_exists (a:Type u#0)
-  requires pure (exists (x:a). True)
-  returns  a
-
-ghost
-fn ghost_witness_exists2 (a:Type u#4)
-  requires pure (exists (x:a). True)
-  returns  a
+let nonempty_elim' #a (h: nonempty a) : GTot a = nonempty_elim a

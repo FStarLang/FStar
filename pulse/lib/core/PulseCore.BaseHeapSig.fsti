@@ -24,7 +24,7 @@ let ref (a:Type u#a) (p:pcm a) = core_ref
 let core_ghost_ref : Type u#0 = H2.core_ghost_ref
 let core_ghost_ref_null = H2.core_ghost_ref_null
 let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref
-let add (#a:Type) (f:Set.decide_eq a) (x:a) (y:Set.set a) = Set.union (Set.singleton f x) y
+let add (#a:Type) (x:a) (y:Set.set a) = Set.union (Set.singleton x) y
 
 let full_mem_pred m = H2.full_heap_pred m
 

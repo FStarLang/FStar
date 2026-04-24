@@ -13,16 +13,24 @@ instance non_informative_mref t p = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer (mref p);
 }
 
+let pts_to_pred (#t:Type)
+           (#p:preorder t) 
+           (f:perm)
+           (v:t)
+           (h:PulseCore.Preorder.vhist p)
+: prop =
+    (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v)
+
 [@@pulse_unfold]
 let pts_to' (#t:Type)
            (#p:preorder t) 
            (r:mref p)
            (#f:perm)
            (v:t)
-: timeless_slprop
-= exists* h.
+: timeless_slprop =
+  exists* h.
     GR.pts_to r (Some f, h) **
-    pure (f <=. 1.0R /\ Cons? h /\ PulseCore.Preorder.curval h == v)
+    pure (pts_to_pred f v h)
 
 let pts_to = pts_to'
 let placeless_pts_to r v = Tactics.Typeclasses.solve
@@ -33,8 +41,8 @@ let snapshot' (#t:Type)
               (#p:preorder t) 
               (r:mref p)
               (v:t)
-: timeless_slprop
-= exists* h.
+: timeless_slprop =
+  exists* h.
     GR.pts_to r (None, h) **
     pure (Cons? h /\ PulseCore.Preorder.curval h == v)
 let snapshot #t #p r v = snapshot' #t #p r v
@@ -119,7 +127,7 @@ ghost
 fn recall_snapshot (#t:Type) (#p:preorder t) (r:mref p) (#f:perm) (#v #u:t)
   preserves pts_to r #f v
   requires snapshot r u
-  ensures pure (as_prop (p u v))
+  ensures pure (p u v)
 {
   unfold pts_to;
   with h. assert (GR.pts_to r (Some f, h));
@@ -170,7 +178,7 @@ fn snapshots_related (#t:Type0) (#p:preorder t) (r:mref p) (#u #v:t)
 ghost
 fn update (#t:Type) (#p:preorder t) (r:mref p) (#u:t) (v:t)
   requires pts_to r #1.0R u
-  requires pure (as_prop (p u v))
+  requires pure (p u v)
   ensures pts_to r #1.0R v
 {
   unfold pts_to;

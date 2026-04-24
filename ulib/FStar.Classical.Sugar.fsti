@@ -53,7 +53,7 @@ module FStar.Classical.Sugar
 (** Eliminate a universal quantifier by providing an instantiation *)
 val forall_elim
        (#a:Type)
-       (#p:a -> Type)
+       (#p:a -> prop)
        (v:a)
        (f:squash (forall (x:a). p x))
   : Tot (squash (p v))
@@ -61,17 +61,17 @@ val forall_elim
 (** Eliminate an existential quantifier into a proof of a goal [q] *)
 val exists_elim
      (#t:Type)
-     (#p:t -> Type)
-     (#q:Type)
-     ($s_ex_p: squash (exists (x:t). p x))
+     (#p:t -> prop)
+     (#q:prop)
+     (s_ex_p: squash (exists (x:t). p x))
      (f: (x:t -> squash (p x) -> Tot (squash q)))
   : Tot (squash q)
 
 (** Eliminate an implication, by providing a proof of the hypothesis
     Note, the proof is thunked *)
 let implies_elim
-        (p:Type)
-        (q:Type)
+        (p:prop)
+        (q:prop)
         (_:squash (p ==> q))
         (f:unit -> Tot (squash p))
   : squash q
@@ -82,9 +82,9 @@ let implies_elim
     - The right proof can assume both ~p and q
 *)
 val or_elim
-        (p:Type)
-        (q:squash (~p) -> Type)
-        (r:Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
+        (r:prop)
         (p_or:squash (p \/ q()))
         (left:squash p -> Tot (squash r))
         (right:squash (~p) -> squash (q()) -> Tot (squash r))
@@ -94,9 +94,9 @@ val or_elim
     - The type of q can depend on p
 *)
 val and_elim
-        (p:Type)
-        (q:squash p -> Type)
-        (r:Type)
+        (p:prop)
+        (q:squash p -> prop)
+        (r:prop)
         (_:squash (p /\ q()))
         (f:squash p -> squash (q()) -> Tot (squash r))
   : Tot (squash r)
@@ -104,14 +104,14 @@ val and_elim
 (** Introduce a universal quantifier *)
 val forall_intro
       (a:Type)
-      (p:a -> Type)
+      (p:a -> prop)
       (f: (x:a -> Tot (squash (p x))))
   : Tot (squash (forall x. p x))
 
 (** Introduce an existential quantifier *)
 val exists_intro
         (a:Type)
-        (p:a -> Type)
+        (p:a -> prop)
         (v:a)
         (x: unit -> Tot (squash (p v)))
   : Tot (squash (exists x. p x))
@@ -120,8 +120,8 @@ val exists_intro
     - The type of q can depend on p
   *)
 val implies_intro
-        (p:Type)
-        (q:squash p -> Type)
+        (p:prop)
+        (q:squash p -> prop)
         (f:(squash p -> Tot (squash (q()))))
   : Tot (squash (p ==> q()))
 
@@ -130,8 +130,8 @@ val implies_intro
     - The proof is thunked to avoid polluting the continuation
   *)
 val or_intro_left
-        (p:Type)
-        (q:squash (~p) -> Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
         (f:unit -> Tot (squash p))
   : Tot (squash (p \/ q()))
 
@@ -140,8 +140,8 @@ val or_intro_left
     - The proof can assume ~p too
   *)
 val or_intro_right
-        (p:Type)
-        (q:squash (~p) -> Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
         (f:squash (~p) -> Tot (squash (q())))
   : Tot (squash (p \/ q()))
 
@@ -150,8 +150,8 @@ val or_intro_right
     - The proof in the right case can also assume p
   *)
 val and_intro
-        (p:Type)
-        (q:squash p -> Type)
+        (p:prop)
+        (q:squash p -> prop)
         (left:unit -> Tot (squash p))
         (right:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))

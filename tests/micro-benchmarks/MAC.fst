@@ -44,15 +44,15 @@ let sha1verify k txt tag = eq (sha1 k txt) tag
    used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
-assume type key_prop : key -> text -> Type0
-type pkey (p:(text -> Type)) = k:key{key_prop k == p}
+assume type key_prop : key -> text -> prop
+type pkey (p:(text -> prop)) = k:key{key_prop k == p}
 
 assume val leak: k:key { forall t. key_prop k t } -> ML bytes
 assume val leaked: k:key -> ML (b:bool { b ==> (forall t. key_prop k t) })
 
 (* this function returns the key bytes, and marks the key as corrupted *)
 
-assume val keygen: p:(text -> Type) -> ML (pkey p)
+assume val keygen: p:(text -> prop) -> ML (pkey p)
 
 val mac:    k:key -> t:text{key_prop k t} -> ML tag
 val verify: k:key -> t:text -> tag -> ML (b:bool{b ==> key_prop k t})

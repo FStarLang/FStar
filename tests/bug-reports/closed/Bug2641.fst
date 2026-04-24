@@ -22,7 +22,7 @@ let rec free_bind (#a:Type u#a) (#b:Type u#b) (l:free a) (k: a -> free b) : free
 (** monotonicity seems relevant **)
 let hist a = wp:(pure_wp' a){pure_wp_monotonic0 a wp}
 
-val hist_ord (#a : Type) : hist a -> hist a -> Type0
+val hist_ord (#a : Type) : hist a -> hist a -> prop
 let hist_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 
 let hist_return (x:'a) : hist 'a =

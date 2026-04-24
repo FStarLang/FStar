@@ -2557,19 +2557,6 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   let env = p_env wl (TProb tp) in
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
-                  (*
-                   * AR: before applying op, we need to squash phi if required
-                   *     refinement formulas in F* may be in higher universe,
-                   *       meaning that if we apply op (l_and or l_or) directly, we may be
-                   *       unifying the universe of phi to zero, leading to errors
-                   *)
-                  let apply_op env (op:term -> term -> ML term) phi1 phi2 : ML _ =
-                    let squash phi : ML _ =
-                      match env.universe_of env phi with
-                      | U_zero -> phi
-                      | u -> U.mk_squash u phi in
-                    op (squash phi1) (squash phi2)
-                  in
                   let combine_refinements t_base p1_opt p2_opt : ML _ =
                     match op with
                     | None -> t_base
@@ -2585,7 +2572,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                         let phi1 = SS.subst subst phi1 in
                         let phi2 = SS.subst subst phi2 in
                         let env_x = Env.push_bv env x in
-                        refine x (apply_op env_x op phi1 phi2)
+                        refine x (op phi1 phi2)
 
                       | None, Some (x, phi)
                       | Some(x, phi), None ->
@@ -2593,7 +2580,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                         let subst = [DB(0, x)] in
                         let phi = SS.subst subst phi in
                         let env_x = Env.push_bv env x in
-                        refine x (apply_op env_x op U.t_true phi)
+                        refine x (op U.t_true phi)
 
                       | _ ->
                         t_base
@@ -4112,6 +4099,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
              match solve ({wl with defer_ok=NoDefer;
                                    wl_implicits=Listlike.empty;
                                    attempting=[ref_prob];
+                                   smt_ok=false;
                                    wl_deferred=empty}) with
              | Failed (prob, msg) ->
                UF.rollback tx;

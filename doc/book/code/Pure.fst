@@ -13,8 +13,8 @@ let fact (x:nat) : pos = factorial x
 //SNIPPET_END: fact$
 
 //SNIPPET_START: wp$
-let pre = Type0
-let post (a:Type) = a -> Type0
+let pre = prop
+let post (a:Type) = a -> prop
 let wp (a:Type) = post a -> pre
 //SNIPPET_END: wp$
 
@@ -113,7 +113,7 @@ let maybe_incr_tot (b:bool) (x:int)
 //SNIPPET_END: maybe_incr_tot$
 
 //SNIPPET_START: assert_wp$
-let assert_wp (#a:Type) (w:wp a) (p: a -> Type0) 
+let assert_wp (#a:Type) (w:wp a) (p: a -> prop) 
   : wp (x:a{ p x })
   = fun post -> w (fun (x:a) -> p x /\ post x)
 //SNIPPET_END: assert_wp$

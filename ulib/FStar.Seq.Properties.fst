@@ -448,11 +448,10 @@ private let intro_append_contains_from_disjunction (#a:Type) (s1:seq a) (s2:seq 
     : Lemma (requires s1 `contains` x \/ s2 `contains` x)
             (ensures (append s1 s2) `contains` x)
     = let open FStar.Classical in
-      let open FStar.Squash in
       or_elim #(s1 `contains` x) #(s2 `contains` x) #(fun _ -> (append s1 s2) `contains` x)
         (fun _ -> ())
-	(fun _ -> let s = append s1 s2 in
-               exists_elim (s `contains` x) (get_proof (s2 `contains` x)) (fun k ->
+        (fun _ -> let s = append s1 s2 in
+               exists_elim (s `contains` x) (() <: squash (s2 `contains` x)) (fun k ->
                assert (Seq.index s (Seq.length s1 + k) == x)))
 
 let append_contains_equiv #_ s1 s2 x

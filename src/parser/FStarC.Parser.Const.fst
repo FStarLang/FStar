@@ -39,7 +39,6 @@ let fstar_ns_lid          = p2l ["FStar"]
 let bool_lid         = pconst "bool"
 let unit_lid         = pconst "unit"
 let squash_lid       = pconst "squash"
-let auto_squash_lid  = pconst "auto_squash"
 let string_lid       = pconst "string"
 let bytes_lid        = pconst "bytes"
 let int_lid          = pconst "int"
@@ -88,7 +87,6 @@ let char_lid  = p2l ["FStar"; "Char"; "char"]
 
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
-let logical_lid = pconst "logical"
 let prop_lid    = pconst "prop"
 
 let smt_theory_symbol_attr_lid = pconst "smt_theory_symbol"
@@ -104,7 +102,8 @@ let ite_lid    = pconst "l_ITE"
 let exists_lid = pconst "l_Exists"
 let forall_lid = pconst "l_Forall"
 let haseq_lid  = pconst "hasEq"
-let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
+let b2t_lid    = pconst "b2t" (* coercion from boolean to prop *)
+let t2b_lid    = pconst "t2b" (* coercion from prop to boolean *)
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 let has_type_lid = pconst "has_type"
@@ -189,7 +188,6 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
-let subtype_of_lid     = pconst "subtype_of"
 
 let real_const  s        = p2l ["FStar";"Real";s]
 let real_op_LT           = real_const "op_Less_Dot"
@@ -369,7 +367,7 @@ let top_level_effect_attr = attr "top_level_effect"
 let effect_parameter_attr = attr "effect_param"
 let bind_has_range_args_attr = attr "bind_has_range_args"
 let primitive_extraction_attr = attr "primitive_extraction"
-let binder_strictly_positive_attr = attr "strictly_positive"
+let binder_strictly_positive_attr = pconst "strictly_positive"
 let binder_unused_attr = attr "unused"
 let no_auto_projectors_decls_attr = attr "no_auto_projectors_decls"
 let no_auto_projectors_attr = attr "no_auto_projectors"

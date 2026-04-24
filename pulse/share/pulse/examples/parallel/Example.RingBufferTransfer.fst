@@ -8,7 +8,7 @@ module MR = Pulse.Lib.MonotonicGhostRef
 module GR = Pulse.Lib.GhostReference
 module R = FStar.ReflexiveTransitiveClosure
 module L = Pulse.Lib.SpinLock
-let as_prop (p:Type) = p <==> True
+let as_prop (p:prop) = p <==> True
 
 [@@erasable]
 noeq

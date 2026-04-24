@@ -72,46 +72,6 @@ instance introducable_trade' (t: Type u#a) is
     introducable is extra (hyp @==> concl) t =
   { intro_aux = introducable_trade_aux t is emp_inames hyp extra concl }
 
-let sqeq (p : Type) (_ : squash p) : erased p =
-  FStar.IndefiniteDescription.elim_squash #p ()
-
-let psquash (a:Type u#a) : prop = squash a
-
-ghost
-fn pextract (a:Type u#5) (_:squash a)
-  returns i:a
-{
-  let pf = elim_pure_explicit (psquash a);
-  let pf : squash a = FStar.Squash.join_squash pf;
-  let i = sqeq a pf;
-  let i = reveal i;
-  i
-}
-
-
-
-// ghost
-// fn deconstruct_trade (is:inames) (hyp concl: slprop)
-//   requires trade #is hyp concl
-//   returns res:(extra:slprop & is_send extra & trade_elim_t is hyp (reveal extra) concl)
-//   ensures (let (| extra, inst, _ |) = res in extra)
-// {
-//   unfold (trade #is hyp concl);
-//   with extra inst. assert (extra ** trade_elim_exists is hyp extra concl inst);
-//   unfold (trade_elim_exists is hyp (reveal extra) concl);
-//   let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
-//     elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
-//   let pf : squash (trade_elim_t is hyp (reveal extra) concl) =
-//     FStar.Squash.join_squash pf;
-//   let f: trade_elim_t is hyp extra concl = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
-//   ((| extra, inst, f |) <:
-//     (extra:slprop & is_send extra & trade_elim_t is hyp (reveal extra) concl))
-//   // let res =
-//   //   (| (extra <: erased slprop), f |) <: (p:erased slprop & trade_elim_t is hyp (reveal p) concl);
-//   // rewrite (reveal extra) as (reveal (dfst res));
-//   // res
-// }
-
 let call #t #is #req #ens (h: unit -> stt_ghost is t req (fun x -> ens x)) = h
 
 ghost

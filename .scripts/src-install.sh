@@ -35,6 +35,7 @@ rsync -r --copy-links                   \
   --filter="- **/*.*depend*"            \
   --filter="- /out"                     \
   --filter="- /.gitignore"              \
+  --filter="- /.fstarlock"              \
   "${BROOT}/" "${PREFIX}/"
 
 cp LICENSE* "${PREFIX}"

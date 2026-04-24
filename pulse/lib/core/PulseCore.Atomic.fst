@@ -36,8 +36,7 @@ let pure_equiv (p q:prop) (_:squash (p <==> q))
 
 let equiv (#p #q:slprop) (pf:slprop_equiv p q)
 : squash (p == q)
-= let _ : squash (slprop_equiv p q) = FStar.Squash.return_squash pf in
-  I.slprop_equiv_elim p q
+= I.slprop_equiv_elim p q
 
 let pure_trivial (p:prop) (_:squash p)
   : squash (pure p == emp)
@@ -139,8 +138,8 @@ let sub_atomic
     (pre2:slprop)
     (#post1:a -> slprop)
     (post2:a -> slprop)
-    (pf1 : slprop_equiv pre1 pre2)
-    (pf2 : slprop_post_equiv post1 post2)
+    (pf1 : squash (slprop_equiv pre1 pre2))
+    (pf2 : squash (slprop_post_equiv post1 post2))
     (e:stt_atomic a #obs opens pre1 post1)
 : stt_atomic a #obs opens pre2 post2
 = A.sub pre2 post2 e
@@ -278,9 +277,8 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   A.with_invariant #(erased a) #Ghost #fp #(as_ghost_post fp') #f_opens #p i (fun _ -> f)
 
 let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> squash (p x == q x))) : slprop_post_equiv p q =
-  IndefiniteDescription.elim_squash
-    (introduce forall x. slprop_equiv (p x) (q x) with
-      (h x; Squash.return_squash (slprop_equiv_refl (p x))))
+  introduce forall x. slprop_equiv (p x) (q x) with
+    (h x; slprop_equiv_refl (p x))
 
 let invariant_name_identifies_invariant p q i j =
   sub_ghost _ _ (slprop_equiv_refl _) (slprop_post_equiv_intro (fun x -> ()))

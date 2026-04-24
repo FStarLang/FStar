@@ -30,7 +30,7 @@ module L = FStar.List.Tot
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
 
-let rec no_repeats (l:list var) : Type0 =
+let rec no_repeats (l:list var) : prop =
   match l with
   | [] -> True
   | x::tl -> (~ (L.memP x tl)) /\ no_repeats tl  
@@ -44,7 +44,7 @@ type ss_map = m:Map.t var term {
 let remove_map (m:ss_map) (x:var) =
   Map.restrict (Set.complement (Set.singleton x)) (Map.upd m x tm_unknown)
 
-let rec is_dom (l:ss_dom) (m:ss_map) : Type0 =
+let rec is_dom (l:ss_dom) (m:ss_map) : prop =
   match l with
   | [] -> Set.equal (Map.domain m) Set.empty
   | x::tl ->

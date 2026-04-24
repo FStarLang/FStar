@@ -192,8 +192,8 @@ val emp : slprop u#a
 (** "Points to" allows to talk about the heap contents *)
 val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#[@@@strictly_positive] a:Type u#b)
-             ([@@@strictly_positive]  f: (a -> slprop u#a))
+val h_exists (#a:Type u#b)
+             (f: (a -> slprop u#a))
   : slprop u#a
 
 (***** Basic properties of separation logic *)

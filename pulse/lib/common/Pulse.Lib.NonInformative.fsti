@@ -12,7 +12,7 @@ class non_informative (a:Type u#aa) : Type u#aa = {
 instance val non_informative_unit : non_informative unit
 instance val non_informative_prop : non_informative prop
 instance val non_informative_erased (a:Type) : non_informative (erased a)
-instance val non_informative_squash (a:Type) : non_informative (squash a)
+instance val non_informative_squash (a:prop) : non_informative (squash a)
 
 instance val non_informative_tuple2
   (a b : Type)

@@ -4,15 +4,9 @@
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also Prims.fst(77,23-77,30)
+  - See also Prims.fst(90,23-90,30)
 
-* Info at ArrowRanges.fst(8,10-8,28):
+* Info at ArrowRanges.fst(10,29-10,38):
   - Expected failure:
-  - Failed to prove that the type
-    'ArrowRanges.ppof'
-    supports decidable equality because of this argument.
-  - Add either the 'noeq' or 'unopteq' qualifier
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also ArrowRanges.fst(7,0-11,1)
+  - Expected type Prims.prop but gho_p x y has type Type
 

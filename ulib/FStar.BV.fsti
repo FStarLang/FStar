@@ -57,7 +57,7 @@ val bv_t (n: nat) : eqtype
 
 (** Extending a bit vector of length [n] to a larger vector of size
     [m+n], filling the extra bits with 0 *)
-val bv_uext (#n #m: pos) (a: bv_t n) : Tot (normalize (bv_t (m + n)))
+val bv_uext (#n #m: pos) (a: bv_t n) : Tot (bv_t (m + n))
 
 (**** Relating unsigned integers to bitvectors *)
 

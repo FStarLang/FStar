@@ -420,7 +420,8 @@ let new_invariant (e:inames) (p:slprop)
 = fun frame s0 -> 
     sep_laws ();
     inames_live_empty ();
-    fresh_invariant e p (GhostSet.empty) frame s0
+    let i, s1 = fresh_invariant e p (GhostSet.empty) frame s0 in
+    i, s1
 
 let inames_live_inv (e:inames) (i:iref) (p:slprop)
 : ghost_act unit e (inv i p) (fun _ -> inv i p `star` inames_live (single i))

@@ -98,11 +98,11 @@ let rec inss_to_codes (inss:list ins) : list va_code =
   | (Sub64 (OReg dst) src)::inss -> (va_code_Sub64 (OReg dst) src)::(inss_to_codes inss)
   | _ -> []
 
-let augment (st : state) (post: unit -> Type0) (final_state: state) : Type0 =
+let augment (st : state) (post: unit -> prop) (final_state: state) : prop =
  final_state == st ==> post ()
 
 [@"opaque_to_smt"]
-let rec wp_code (inss : list ins) (post: state -> Type0) (s0:state) : Type0 =
+let rec wp_code (inss : list ins) (post: state -> prop) (s0:state) : prop =
   match inss with
   | [] ->
        (forall okN regsN flagsN memN.
@@ -206,7 +206,7 @@ let wp_code_delta = [
   ]
 
 let va_lemma_weakest_pre_norm_wp (inss:list ins) (s0:state) (sN:state) : pure_wp unit =
-  let wp = fun (post:(unit -> Type)) ->
+  let wp = fun (post:(unit -> prop)) ->
      forall ok0 regs0 flags0 mem0.
         ok0 == s0.ok /\
         regs0 == s0.regs /\

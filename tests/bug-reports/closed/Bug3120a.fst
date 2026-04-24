@@ -9,7 +9,7 @@ open FStar.Monotonic.Pure
 (** Precondition decoding **)
 
 type decode_pre (code : Type u#a) =
-  code -> Type0
+  code -> prop
 
 (* Basically unit *)
 type ret_code : Type u#a =
@@ -32,7 +32,7 @@ let bind_decode #a #ac ad (#bc : a -> Type0) (bd : (x:a -> decode_pre (bc x))) :
 
 let req_code = ret_code
 
-let req_decode (pre : Type0) : decode_pre req_code =
+let req_decode (pre : prop) : decode_pre req_code =
   function
   | Triv -> pre
 
@@ -60,7 +60,7 @@ let rec m_bind #a #b #ac #ad (#bc : a -> _) (#bd : a -> _) (u : m #ac #ad a) (f 
   | Ret x -> m_lift (f x)
   | Req c k -> Req (BL c) (fun z -> m_bind (k ()) f)
 
-let m_req (p : Type0) : m #req_code #(req_decode p) (squash p) =
+let m_req (p : prop) : m #req_code #(req_decode p) (squash p) =
   Req Triv (fun h -> Ret h)
 
 (** Specification monad **)
@@ -74,8 +74,8 @@ type trace = list event
 let hist_append (tr : trace) (hist : trace) : trace =
   tr @ rev hist
 
-let wpre = trace -> Type0
-let wpost a = trace -> a -> Type0
+let wpre = trace -> prop
+let wpost a = trace -> a -> prop
 
 let wp a = wpost a -> wpre
 
@@ -100,8 +100,8 @@ let _w_bind #a #b (w : wp a) (wf : a -> wp b) : wp b =
 let w_bind #a #b (w : wp a) (wf : a -> wp b) : wp b =
   _w_bind w wf
 
-let w_req (p : Type0) : wp (squash p) =
-  fun post hist -> p /\ post [] (Squash.get_proof p)
+let w_req (p : prop) : wp (squash p) =
+  fun post hist -> p /\ post [] ()
 
 (** Effect observation **)
 
@@ -130,7 +130,7 @@ let d_bind #ac #ad #a #bc (#bd : a -> _) #b #w (#wf : a -> wp b)
   assume (theta (m_bind u f) `wle` w_bind w wf) ;
   m_bind u f
 
-let d_req (p : Type0) : dm (squash p) (w_req p) =
+let d_req (p : prop) : dm (squash p) (w_req p) =
   m_req p
 
 let d_subcomp #ac #ad #a #w1 #w2 (u : dm #ac #ad a w1) :

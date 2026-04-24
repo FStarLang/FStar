@@ -69,16 +69,16 @@ let update_reg (r:reg) (v:nat64) (s:state) : state =
 
 let update_mem (ptr:int) (v:nat64) (s:state) : state = { s with mem = Map.upd s.mem ptr v }
 
-let valid_maddr (m:maddr) (s:state) : Type0 =
+let valid_maddr (m:maddr) (s:state) : prop =
   s.mem `Map.contains` (eval_maddr m s)
 
-let valid_operand (o:operand) (s:state) : Type0 =
+let valid_operand (o:operand) (s:state) : prop =
   match o with
   | OConst n -> 0 <= n /\ n < nat64_max
   | OReg r -> True
   | OMem m -> valid_maddr m s
 
-let state_eq (s0:state) (s1:state) : Type0 = 
+let state_eq (s0:state) (s1:state) : prop = 
   s0.ok == s1.ok /\
   Regs_i.equal s0.regs s1.regs /\
   s0.flags == s1.flags /\

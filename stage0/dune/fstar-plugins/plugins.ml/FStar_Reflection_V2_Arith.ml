@@ -333,11 +333,7 @@ let rec as_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
              else
                if qn = FStar_Reflection_Const.mult_qn
                then liftM2 (fun uu___3 uu___4 -> Mult (uu___3, uu___4)) ll rr
-               else
-                 if qn = FStar_Reflection_Const.mult'_qn
-                 then
-                   liftM2 (fun uu___4 uu___5 -> Mult (uu___4, uu___5)) ll rr
-                 else atom t
+               else atom t
        | (FStarC_Reflection_V2_Data.Tv_FVar fv,
           (l, FStarC_Reflection_V2_Data.Q_Implicit)::(r,
                                                       FStarC_Reflection_V2_Data.Q_Explicit)::[])

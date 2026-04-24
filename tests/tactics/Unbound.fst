@@ -20,10 +20,10 @@ open FStar.Tactics.V2
 let tau () : Tac unit =
     split ();
     let x = binding_to_namedv (implies_intro ()) in
-    squash_intro (); exact (pack (Tv_Var x));
+    exact (pack (Tv_Var x));
     // `x` is unbound in this environment, we should fail
     // (if it succeeds: is the use_bv_sorts flag on? it should be off)
-    squash_intro (); exact (pack (Tv_Var x))
+    exact (pack (Tv_Var x))
 
 [@@(expect_failure [230])]
 let _ = assert ((False ==> False) /\ False) by tau ()

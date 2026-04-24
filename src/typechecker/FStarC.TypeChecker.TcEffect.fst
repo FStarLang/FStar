@@ -1642,7 +1642,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
         | None -> fml  |> NonTrivial |> Env.guard_of_guard_formula
         | Some attr ->
           let _, _, g = Env.new_implicit_var_aux "tc_layered_effect_decl.g_precondition" r env
-            (U.mk_squash S.U_zero fml)
+            (U.mk_squash fml)
             Strict
             (Ctx_uvar_meta_attr attr |> Some)
             false
@@ -1658,7 +1658,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
       | _ -> None in
 
     let _check_then =
-      let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
+      let env = Env.push_bv env (S.new_bv None (U.mk_squash (p_t |> U.b2t))) in
       ignore (check_branch env f_b.binder_bv.sort ite_soundness_tac_attr) in
 
     let _check_else =
@@ -2108,18 +2108,17 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
 
   let stronger =
     let a, wp_sort_a = fresh_a_and_wp () in
-    let t, _ = U.type_u() in
     let k = U.arrow [
       S.mk_binder a;
       S.null_binder wp_sort_a;
-      S.null_binder wp_sort_a ] (S.mk_Total t) in
+      S.null_binder wp_sort_a ] (S.mk_Total t_prop) in
     check_and_gen' "stronger" 1 None (ed |> U.get_stronger_vc_combinator |> fst) (Some k) in
 
   log_combinator "stronger" stronger;
 
   let if_then_else =
     let a, wp_sort_a = fresh_a_and_wp () in
-    let p = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
+    let p = S.new_bv (Some (range_of_lid ed.mname)) t_prop in
     let k = U.arrow [
       S.mk_binder a;
       S.mk_binder p;
@@ -2149,8 +2148,7 @@ Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_
 
   let trivial =
     let a, wp_sort_a = fresh_a_and_wp () in
-    let t, _ = U.type_u () in
-    let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t) in
+    let k = U.arrow [S.mk_binder a; S.null_binder wp_sort_a] (S.mk_GTotal t_prop) in
     let trivial = check_and_gen' "trivial" 1 None (ed |> U.get_wp_trivial_combinator |> Option.must) (Some k) in
 
     log_combinator "trivial" trivial;

@@ -21,7 +21,7 @@ open FStar.All
 
 type t = (s:seq (ref int){length s > 0})
 
-let contains (s:t) (x:ref int) : GTot Type0 =
+let contains (s:t) (x:ref int) : GTot prop =
   (exists (i:nat{i < length s}). index s i == x)
 
 let foo (s:t) (x:ref int{s `contains` x}) :

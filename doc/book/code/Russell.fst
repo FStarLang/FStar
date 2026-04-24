@@ -51,8 +51,8 @@ let x_not_mem_x_x_mem_delta (x:set) (x_not_mem_x:x `not_mem` x)
   : x `mem` delta
   = let v : (s:set & not_mem s s) = (| x, x_not_mem_x |) in //an element of the domain set of delta_big
     inj_proj delta_big; // the unsound axiom now lets us relate it to delta
-    let s : (x == (project delta).f v) = //and prove that projecting delta's comprehension and applying to v return x`
-        FStar.Squash.return_squash Refl
+    let s : (x == (project delta).f v) =
+        ()
     in
     (| v,  s |)
 

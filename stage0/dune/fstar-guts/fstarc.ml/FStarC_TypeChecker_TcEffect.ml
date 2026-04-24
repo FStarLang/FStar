@@ -3876,7 +3876,6 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                                     let uu___21
                                                                     =
                                                                     FStarC_Syntax_Util.mk_squash
-                                                                    FStarC_Syntax_Syntax.U_zero
                                                                     fml in
                                                                     FStarC_TypeChecker_Env.new_implicit_var_aux
                                                                     "tc_layered_effect_decl.g_precondition"
@@ -3923,7 +3922,6 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                                                    FStarC_Syntax_Util.b2t
                                                                     p_t in
                                                                  FStarC_Syntax_Util.mk_squash
-                                                                   FStarC_Syntax_Syntax.U_zero
                                                                    uu___21 in
                                                                FStarC_Syntax_Syntax.new_bv
                                                                  FStar_Pervasives_Native.None
@@ -5701,48 +5699,41 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                              let uu___9 = fresh_a_and_wp () in
                              match uu___9 with
                              | (a, wp_sort_a) ->
-                                 let uu___10 = FStarC_Syntax_Util.type_u () in
-                                 (match uu___10 with
-                                  | (t, uu___11) ->
-                                      let k =
-                                        let uu___12 =
-                                          let uu___13 =
-                                            let uu___14 =
-                                              FStarC_Syntax_Syntax.null_binder
-                                                wp_sort_a in
-                                            let uu___15 =
-                                              let uu___16 =
-                                                FStarC_Syntax_Syntax.null_binder
-                                                  wp_sort_a in
-                                              [uu___16] in
-                                            uu___14 :: uu___15 in
-                                          (FStarC_Syntax_Syntax.mk_binder a)
-                                            :: uu___13 in
-                                        let uu___13 =
-                                          FStarC_Syntax_Syntax.mk_Total t in
-                                        FStarC_Syntax_Util.arrow uu___12
-                                          uu___13 in
-                                      check_and_gen' "stronger" Prims.int_one
-                                        FStar_Pervasives_Native.None
-                                        (FStar_Pervasives_Native.fst
-                                           (FStarC_Syntax_Util.get_stronger_vc_combinator
-                                              ed2))
-                                        (FStar_Pervasives_Native.Some k)) in
+                                 let k =
+                                   let uu___10 =
+                                     let uu___11 =
+                                       let uu___12 =
+                                         FStarC_Syntax_Syntax.null_binder
+                                           wp_sort_a in
+                                       let uu___13 =
+                                         let uu___14 =
+                                           FStarC_Syntax_Syntax.null_binder
+                                             wp_sort_a in
+                                         [uu___14] in
+                                       uu___12 :: uu___13 in
+                                     (FStarC_Syntax_Syntax.mk_binder a) ::
+                                       uu___11 in
+                                   let uu___11 =
+                                     FStarC_Syntax_Syntax.mk_Total
+                                       FStarC_Syntax_Syntax.t_prop in
+                                   FStarC_Syntax_Util.arrow uu___10 uu___11 in
+                                 check_and_gen' "stronger" Prims.int_one
+                                   FStar_Pervasives_Native.None
+                                   (FStar_Pervasives_Native.fst
+                                      (FStarC_Syntax_Util.get_stronger_vc_combinator
+                                         ed2))
+                                   (FStar_Pervasives_Native.Some k) in
                            log_combinator "stronger" stronger;
                            (let if_then_else =
                               let uu___10 = fresh_a_and_wp () in
                               match uu___10 with
                               | (a, wp_sort_a) ->
                                   let p =
-                                    let uu___11 =
-                                      let uu___12 =
-                                        FStarC_Syntax_Util.type_u () in
-                                      FStar_Pervasives_Native.fst uu___12 in
                                     FStarC_Syntax_Syntax.new_bv
                                       (FStar_Pervasives_Native.Some
                                          (FStarC_Ident.range_of_lid
                                             ed2.FStarC_Syntax_Syntax.mname))
-                                      uu___11 in
+                                      FStarC_Syntax_Syntax.t_prop in
                                   let k =
                                     let uu___11 =
                                       let uu___12 =
@@ -5853,37 +5844,30 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
                                  let uu___13 = fresh_a_and_wp () in
                                  match uu___13 with
                                  | (a, wp_sort_a) ->
-                                     let uu___14 =
-                                       FStarC_Syntax_Util.type_u () in
-                                     (match uu___14 with
-                                      | (t, uu___15) ->
-                                          let k =
-                                            let uu___16 =
-                                              let uu___17 =
-                                                let uu___18 =
-                                                  FStarC_Syntax_Syntax.null_binder
-                                                    wp_sort_a in
-                                                [uu___18] in
-                                              (FStarC_Syntax_Syntax.mk_binder
-                                                 a)
-                                                :: uu___17 in
-                                            let uu___17 =
-                                              FStarC_Syntax_Syntax.mk_GTotal
-                                                t in
-                                            FStarC_Syntax_Util.arrow uu___16
-                                              uu___17 in
-                                          let trivial1 =
-                                            let uu___16 =
-                                              FStarC_Option.must
-                                                (FStarC_Syntax_Util.get_wp_trivial_combinator
-                                                   ed2) in
-                                            check_and_gen' "trivial"
-                                              Prims.int_one
-                                              FStar_Pervasives_Native.None
-                                              uu___16
-                                              (FStar_Pervasives_Native.Some k) in
-                                          (log_combinator "trivial" trivial1;
-                                           trivial1)) in
+                                     let k =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           let uu___16 =
+                                             FStarC_Syntax_Syntax.null_binder
+                                               wp_sort_a in
+                                           [uu___16] in
+                                         (FStarC_Syntax_Syntax.mk_binder a)
+                                           :: uu___15 in
+                                       let uu___15 =
+                                         FStarC_Syntax_Syntax.mk_GTotal
+                                           FStarC_Syntax_Syntax.t_prop in
+                                       FStarC_Syntax_Util.arrow uu___14
+                                         uu___15 in
+                                     let trivial1 =
+                                       let uu___14 =
+                                         FStarC_Option.must
+                                           (FStarC_Syntax_Util.get_wp_trivial_combinator
+                                              ed2) in
+                                       check_and_gen' "trivial" Prims.int_one
+                                         FStar_Pervasives_Native.None uu___14
+                                         (FStar_Pervasives_Native.Some k) in
+                                     (log_combinator "trivial" trivial1;
+                                      trivial1) in
                                let uu___13 =
                                  match FStarC_Syntax_Util.get_eff_repr ed2
                                  with

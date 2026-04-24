@@ -19,8 +19,8 @@ type annot = eff_label -> bool
 // as its type and the effect definition fails for some reason.
 type state : Type = int
 
-type pre_t    = state -> Type0
-type post_t a = state -> option a -> state -> Type0
+type pre_t    = state -> prop
+type post_t a = state -> option a -> state -> prop
 
 // this repr doesn't seem to work too well
 type repr0 (a:Type u#aa)
@@ -29,7 +29,7 @@ type repr0 (a:Type u#aa)
            : Type u#aa =
   s0:state{pre s0} -> Tot (r:(option a & state){post s0 (fst r) (snd r)})
 
-let abides #a #pre #post (f : repr0 a pre post) (ann:annot) : Type0 =
+let abides #a #pre #post (f : repr0 a pre post) (ann:annot) : prop =
     (ann RD  = false ==> (forall s0 s1. fst (f s0) == fst (f s1)))
   /\ (ann WR  = false ==> (forall s0. snd (f s0) == s0))
   /\ (ann EXN = false ==> (forall s0. Some? (fst (f s0))))
@@ -78,7 +78,7 @@ type repr (a:Type u#aa)
   =
   r:(repr0 a pre post){abides r (interp labs)}
 
-let ann_le (ann1 ann2 : annot) : Type0 =
+let ann_le (ann1 ann2 : annot) : prop =
   forall x. ann1 x ==> ann2 x
   
 let return (a:Type u#aa) (x:a)
@@ -141,7 +141,7 @@ let subcomp (a:Type)
   = f
 
 unfold
-let ite (p q r : Type0) = (p ==> q) /\ ((~p) ==> r)
+let ite (p q r : prop) = (p ==> q) /\ ((~p) ==> r)
 
 let if_then_else
   (a : Type)

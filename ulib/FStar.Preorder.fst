@@ -17,9 +17,9 @@ module FStar.Preorder
 
 (* Preordered relations and stable predicates *)
 
-type relation (a:Type) = a -> a -> Type0
+type relation (a:Type) = a -> a -> prop
 
-type predicate (a:Type) = a -> Type0
+type predicate (a:Type) = a -> prop
 
 let reflexive (#a:Type) (rel:relation a) =
   forall (x:a). rel x x

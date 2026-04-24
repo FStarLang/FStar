@@ -277,7 +277,8 @@ let new_uvar (reason:string) (env:env) (typ:typ)
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.t) opts label : tac goal =
     bind (ret ()) (fun () ->
-    let typ = U.mk_squash (env.universe_of env phi) phi in
+    // TODO
+    let typ = U.mk_squash phi in
     bind (new_uvar reason env typ sc_opt [] rng) (fun (_, ctx_uvar) ->
     let goal = mk_goal env ctx_uvar opts false label in
     ret goal))

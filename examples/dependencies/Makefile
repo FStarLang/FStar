@@ -27,7 +27,6 @@ FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 .PHONY: all test clean run
 
 all:
-	rm -f .depend && $(MAKE) .depend # Always re-generate dependencies
 	+$(MAKE) test
 
 # 1. Extract .ml files

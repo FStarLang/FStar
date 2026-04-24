@@ -48,10 +48,10 @@ irreducible
 let qattr = ()
 
 [@@qattr]
-let t_post = state -> Type0
+let t_post = state -> prop
 
 [@@qattr]
-let t_pre = state -> Type0
+let t_pre = state -> prop
 
 /// t_wp: The type of weakest preconditions
 let t_wp = t_post -> t_pre
@@ -67,7 +67,7 @@ let has_wp (c:code) (wp:t_wp) : Type =
       k sM) //and the post-condition is true on sM
 
 /// An abbreviation for a thunked lemma
-let t_lemma (pre:Type0) (post:Type0) =
+let t_lemma (pre:prop) (post:prop) =
   unit -> Lemma (requires pre) (ensures post)
 
 /// `with_wp` : A typeclass for code packaged with its wp
@@ -91,15 +91,15 @@ type with_wps : list code -> Type =
 
 | QLemma: //augmenting an instruction sequence with a lemma
    #cs:list code ->
-   pre:Type0 ->
-   post:Type0 ->
+   pre:prop ->
+   post:prop ->
    t_lemma pre post ->
    with_wps cs ->
    with_wps cs
 
 [@@qattr]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
-  : Tot (state -> Tot Type0 (decreases qcs))
+  : Tot (state -> Tot prop (decreases qcs))
   =
   fun s0 ->
   match qcs with
@@ -119,7 +119,7 @@ let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
 /// The vc-generator is sound
 let rec vc_sound (cs:list code)
                  (qcs:with_wps cs)
-                 (k:state -> Type0)
+                 (k:state -> prop)
                  (s0:state)
   : Pure (state & fuel)
     (requires vc_gen cs qcs k s0)
@@ -147,15 +147,15 @@ let vc_sound' (cs:list code) (qcs:with_wps cs)
 //Instance for Mov
 ////////////////////////////////////////////////////////////////////////////////
 [@@qattr]
-let wp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state)
-  : Type0
+let wp_Move (dst:operand) (src:operand) (k:state -> prop) (s0:state)
+  : prop
   = OReg? dst /\
     (forall (x:nat64).
       let sM = update_reg s0 (OReg?.r dst) x in
       eval_operand dst sM == eval_operand src s0 ==> k sM
     )
 
-let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state)
+let hasWp_Move (dst:operand) (src:operand) (k:state -> prop) (s0:state)
   : Pure (state & fuel)
     (requires wp_Move dst src k s0)
     (ensures fun (sM, f0) -> eval_code (Ins (Mov64 dst src)) f0 s0 == Some sM /\ k sM)
@@ -169,14 +169,14 @@ let inst_Move (dst:operand) (src:operand) : with_wp (Ins (Mov64 dst src)) =
 //Instance for Add
 ////////////////////////////////////////////////////////////////////////////////
 [@@qattr]
-let wp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
+let wp_Add (dst:operand) (src:operand) (k:state -> prop) (s0:state) : prop =
   OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64 /\
   (forall (x:nat64).
     let sM = update_reg s0 (OReg?.r dst) x in
     eval_operand dst sM == eval_operand dst s0 + eval_operand src s0 ==> k sM
   )
 
-let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state)
+let hasWp_Add (dst:operand) (src:operand) (k:state -> prop) (s0:state)
   : Pure (state & fuel)
     (requires wp_Add dst src k s0)
     (ensures fun (sM, f0) -> eval_code (Ins (Add64 dst src)) f0 s0 == Some sM /\ k sM)
@@ -201,7 +201,7 @@ let normal_steps : list string =
   ]
 
 unfold
-let normal (x:Type0) : Type0 =
+let normal (x:prop) : prop =
   norm [nbe;
         iota;
         zeta;
@@ -213,7 +213,7 @@ let normal (x:Type0) : Type0 =
 let vc_sound_norm
      (cs:list code)
      (qcs:with_wps cs)
-     (k:state -> Type0)
+     (k:state -> prop)
      (s0:state)
   : Pure (state & fuel)
     (requires
@@ -248,7 +248,7 @@ procedure Triple()
 *)
 
 [@@qattr]
-let state_eq (s0 s1:state) : Pure Type0
+let state_eq (s0 s1:state) : Pure prop
   (requires True)
   (ensures fun b -> b ==> s0 `feq` s1)
   =

@@ -44,11 +44,11 @@ and content0 : Type0 =
 /// Then we define predicates by recursion, carving out the
 /// valid elements of the indexing
 
-let rec vdl_valid (l:vdl0) : Tot Type0 (decreases l) = match l with
+let rec vdl_valid (l:vdl0) : Tot prop (decreases l) = match l with
   | Nil -> True
   | Cons tl x -> content_valid tl x
 
-and content_valid (l:vdl0) (x:content0) : Tot Type0 (decreases x) = match x with
+and content_valid (l:vdl0) (x:content0) : Tot prop (decreases x) = match x with
  | Z -> l == Nil
  | S tl x -> vdl_valid tl /\ content_valid tl x /\ l == Cons tl x
 
@@ -125,12 +125,12 @@ and u_mem0 : Type0 =
 
 /// Then the validity predicate
 
-let rec ctx_valid (g0:ctx0) : Tot Type0 (decreases g0) =
+let rec ctx_valid (g0:ctx0) : Tot prop (decreases g0) =
   match g0 with
   | EmptyCtx -> True
   | ConsCtx g a -> ctx_valid g /\ valid_typ_valid a g
 
-and valid_typ_valid (a:valid_typ0) (g0:ctx0) : Tot Type0 (decreases a)=
+and valid_typ_valid (a:valid_typ0) (g0:ctx0) : Tot prop (decreases a)=
   match a with
   | Unit g -> g0 == g /\ ctx_valid g
   | Bool g -> g0 == g /\ ctx_valid g
@@ -138,7 +138,7 @@ and valid_typ_valid (a:valid_typ0) (g0:ctx0) : Tot Type0 (decreases a)=
   | U g -> g0 == g /\ ctx_valid g
   | Var g w -> g0 == g /\ ctx_valid g /\ u_mem_valid w g
 
-and u_mem_valid (w:u_mem0) (g0:ctx0) : Tot Type0 (decreases w) =
+and u_mem_valid (w:u_mem0) (g0:ctx0) : Tot prop (decreases w) =
   match w with
   | UHere g -> g0 == ConsCtx g (U g) /\ ctx_valid g
   | UNext g a w -> g0 == ConsCtx g a /\ ctx_valid g /\ valid_typ_valid a g /\ u_mem_valid w g

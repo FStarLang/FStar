@@ -7,7 +7,7 @@ let rec log_2 (x : Prims.pos) : Prims.nat=
 let rec powx (x : Prims.int) (n : Prims.nat) : Prims.int=
   match n with
   | uu___ when uu___ = Prims.int_zero -> Prims.int_one
-  | n1 -> x * (powx x (n1 - Prims.int_one))
+  | n1 -> Prims.op_Star x (powx x (n1 - Prims.int_one))
 let abs (x : Prims.int) : Prims.int= if x >= Prims.int_zero then x else - x
 let max (x : Prims.int) (y : Prims.int) : Prims.int= if x >= y then x else y
 let min (x : Prims.int) (y : Prims.int) : Prims.int= if x >= y then y else x
@@ -23,7 +23,7 @@ let div_non_eucl (a : Prims.int) (b : Prims.pos) : Prims.int=
   then Prims.int_zero - ((Prims.int_zero - a) / b)
   else a / b
 let shift_left (v : Prims.int) (i : Prims.nat) : Prims.int=
-  v * (Prims.pow2 i)
+  Prims.op_Star v (Prims.pow2 i)
 let arithmetic_shift_right (v : Prims.int) (i : Prims.nat) : Prims.int=
   div v (Prims.pow2 i)
 let signed_modulo (v : Prims.int) (p : Prims.pos) : Prims.int=

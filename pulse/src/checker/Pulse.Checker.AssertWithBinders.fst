@@ -274,9 +274,9 @@ let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:ter
       pp ty;
     ]
   | Some u, _ ->
-    let goal = mk_squash u0 (RT.eq2 u ty lhs rhs) in
+    let goal = mk_squash (RT.eq2 u ty lhs rhs) in
     let goal_typing 
-      : my_erased (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0)))
+      : my_erased (squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))))
       = magic()
     in
     let goal_typing_tok : squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))) =

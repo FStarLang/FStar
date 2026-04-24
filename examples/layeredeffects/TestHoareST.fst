@@ -118,7 +118,7 @@ let test8 (l:list int)
 assume val st_reify (#a:Type) (#pre:_) (#post:_) ($e:unit -> HoareST a pre post)
   : HoareST.repr a pre post
 
-assume val some_pred : Type0
+assume val some_pred : prop
 
 assume val proof_of_pred : unit -> Tot (squash some_pred)
 assume val test10 : unit -> Pure unit (requires some_pred) (ensures fun _ -> True)

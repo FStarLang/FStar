@@ -93,7 +93,7 @@ let lemma_ContainsDom #key #value m k      = ()
 let lemma_UpdDomain #key #value m k v      = ()
 let lemma_map_literal #key #value f        = ()
 
-let equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) : Type0 =
+let equal (#key:eqtype) (#value:Type) (m1:t key value) (m2:t key value) : prop =
     F.feq m1.mappings m2.mappings /\
     S.equal m1.domain m2.domain
 

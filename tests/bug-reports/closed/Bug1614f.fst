@@ -1,22 +1,21 @@
 module Bug1614f
 
-let w (p:Type) : Type = p
+// With prop refactoring, squash p : Type0 (not prop),
+// so it can't be used directly where prop is expected.
+// Test that p (which is prop) works directly in requires/ensures.
 
-[@@expect_failure]
-let test1 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()
+let test1 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()
 
 #push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
- let test2 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()
+ let test2 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()
 
  #restart-solver
  
- let test3 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()
+ let test3 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()
 #pop-options
 
-[@@expect_failure]
-let test4 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()
+let test4 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()
 
 #restart-solver
  
-[@@expect_failure]
-let test5 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()
+let test5 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()

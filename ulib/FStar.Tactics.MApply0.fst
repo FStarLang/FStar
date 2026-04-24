@@ -21,7 +21,7 @@ val apply_squash_or_lem : d:nat -> term -> Tac unit
 let rec apply_squash_or_lem d t =
     (* Before anything, try a vanilla apply and apply_lemma *)
     try apply t with | _ ->
-    try apply (`FStar.Squash.return_squash); apply t with | _ ->
+    // try apply (`FStar.Squash.return_squash); apply t with | _ ->
     try apply_lemma t with | _ ->
 
     // Fuel cutoff, just in case.
@@ -72,7 +72,7 @@ let rec apply_squash_or_lem d t =
              apply_squash_or_lem (d-1) t
 
          | _ ->
-             apply (`FStar.Squash.return_squash);
+            //  apply (`FStar.Squash.return_squash);
              apply t
          end
        end

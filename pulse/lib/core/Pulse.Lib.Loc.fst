@@ -16,7 +16,7 @@
 
 module Pulse.Lib.Loc
 
-[@@erased]
+[@@erasable]
 noeq type loc_id = {
   process: nat;
   thread: nat;

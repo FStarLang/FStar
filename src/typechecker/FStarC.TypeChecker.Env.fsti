@@ -449,11 +449,6 @@ val is_erasable_effect     : env -> lident -> ML (bool)
    i.e., any `x: t ...` can be erased to `()`. *)
 val non_informative        : env -> typ -> ML bool
 
-(* `non_informative_sort t` is `true` if the type family `t: ... -> Type` only ranges over noninformative types,
-   i.e., any `x: s ...` such that `s ... : t ...` can be erased.
-   (practically, this means that `t` is of the form `... -> prop`) *)
-val non_informative_sort   : typ -> ML bool
-
 val num_effect_indices     : env -> lident -> Range.t -> ML (int)
 
 val lookup_effect_quals    : env -> lident -> ML (list qualifier)

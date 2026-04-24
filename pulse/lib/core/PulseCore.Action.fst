@@ -113,8 +113,6 @@ let stt_of_action4 (#a:Type u#4) #ak #pre #post (m:ITA._act_except a ak GhostSet
 
 let maybe_ghost (r:reifiability) = r = Ghost
 
-let deq_iref = deq_iref
-
 let as_action_kind : reifiability -> ITA.action_kind = function
   | Ghost -> ITA.GHOST
   | Atomic -> ITA.ATOMIC
@@ -386,7 +384,6 @@ let new_invariant p = lift_pre_act0_act fun #ictx -> ITA.new_invariant ictx p
 let exists_equiv (#a:_) (#p:a -> slprop)
   : squash (op_exists_Star p == (exists* x. p x))
   = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
-    let pf = FStar.Squash.return_squash pf in
     I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
  
 let fresh_invariant ctx p = lift_pre_act0_act fun #ictx -> ITA.fresh_invariant ictx p ctx

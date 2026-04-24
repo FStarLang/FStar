@@ -24,9 +24,9 @@ type node_data (a b: Type) = {
 let kv_tree (a: Type) (b: Type) = tree (node_data a b)
 
 type cmp (a: Type) = compare: (a -> a -> int){
-  squash (forall x. compare x x == 0) /\
-  squash (forall x y. compare x y > 0 <==> compare y x < 0) /\
-  squash (forall x y z. compare x y >= 0 /\ compare y z >= 0 ==> compare x z >= 0)
+  (forall x. compare x x == 0) /\
+  (forall x y. compare x y > 0 <==> compare y x < 0) /\
+  (forall x y z. compare x y >= 0 /\ compare y z >= 0 ==> compare x z >= 0)
 }
 
 let rec forall_keys (#a: Type) (t: tree a) (cond: a -> bool) : bool =

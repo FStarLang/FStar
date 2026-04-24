@@ -3,17 +3,17 @@
   - Current context:
       some_pred x v
   - In typing environment:
-      __#492 : squash (_v_5 == v)
-      _v_5#491 : erased int
-      __#370 : squash (v == v)
-      v#245 : erased int
-      x#239 : R.ref int
+      __#494 : squash (_v_5 == v)
+      _v_5#493 : erased int
+      __#372 : squash (v == v)
+      v#248 : erased int
+      x#242 : R.ref int
 
-      goto _return#289 requires emp
+      goto _return#292 requires emp
 
 * Info at ExistsErasedAndPureEqualities.fst(66,32-68,5):
   - Expected failure:
-  - Ill-typed term: pure (v == (*?u102*)_)
+  - Ill-typed term: pure (v == (*?u105*)_)
   - Expected a term of type slprop
   - Cannot check relation with uvars.
 

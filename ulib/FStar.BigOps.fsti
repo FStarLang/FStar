@@ -85,31 +85,18 @@ val map_op'_cons
 
 (** [big_and' f l] = [/\_{x in l} f x] *)
 [@@ __reduce__]
-let big_and' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_and f l True
+let big_and' #a (f: (a -> prop)) (l: list a) : prop = map_op' l_and f l True
 
 (** Equations for [big_and'] showing it to be trivial over the empty list *)
-val big_and'_nil (#a: Type) (f: (a -> Type)) : Lemma (big_and' f [] == True)
+val big_and'_nil (#a: Type) (f: (a -> prop)) : Lemma (big_and' f [] == True)
 
 (** Equations for [big_and'] showing it to be a fold over a list with [/\] *)
-val big_and'_cons (#a: Type) (f: (a -> Type)) (hd: a) (tl: list a)
+val big_and'_cons (#a: Type) (f: (a -> prop)) (hd: a) (tl: list a)
     : Lemma (big_and' f (hd :: tl) == (f hd /\ big_and' f tl))
-
-(** [big_and' f l] is a [prop], i.e., it is proof irrelevant.
-
-   Note: defining `big_and'` to intrinsically be in `prop`
-   is also possible, but it's much more tedious in proofs.
-
-   This is in part because the [/\] is not defined in prop,
-   though one can prove that [a /\ b] is a prop.
-
-   The discrepancy means that I preferred to prove these
-   operators in [prop] extrinsically.
-*)
-val big_and'_prop (#a: Type) (f: (a -> Type)) (l: list a) : Lemma ((big_and' f l) `subtype_of` unit)
 
 (** Interpreting the finite conjunction [big_and f l]
     as an infinite conjunction [forall] *)
-val big_and'_forall (#a: Type) (f: (a -> Type)) (l: list a)
+val big_and'_forall (#a: Type) (f: (a -> prop)) (l: list a)
     : Lemma (big_and' f l <==> (forall x. L.memP x l ==> f x))
 
 (** [big_and f l] is an implicitly reducing variant of [big_and']
@@ -117,30 +104,25 @@ val big_and'_forall (#a: Type) (f: (a -> Type)) (l: list a)
 
 [@@ __reduce__]
 unfold
-let big_and #a (f: (a -> Type)) (l: list a) : prop =
-  big_and'_prop f l;
+let big_and #a (f: (a -> prop)) (l: list a) : prop =
   normal (big_and' f l)
 
 (**** Disjunction *)
 
 (** [big_or f l] = [\/_{x in l} f x] *)
 [@@ __reduce__]
-let big_or' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_or f l False
+let big_or' #a (f: (a -> prop)) (l: list a) : prop = map_op' l_or f l False
 
 (** Equations for [big_or] showing it to be [False] on the empty list *)
-val big_or'_nil (#a: Type) (f: (a -> Type)) : Lemma (big_or' f [] == False)
+val big_or'_nil (#a: Type) (f: (a -> prop)) : Lemma (big_or' f [] == False)
 
 (** Equations for [big_or] showing it to fold over a list *)
-val big_or'_cons (#a: Type) (f: (a -> Type)) (hd: a) (tl: list a)
+val big_or'_cons (#a: Type) (f: (a -> prop)) (hd: a) (tl: list a)
     : Lemma (big_or' f (hd :: tl) == (f hd \/ big_or' f tl))
-
-(** [big_or f l] is a `prop`
-     See the remark above on the style of proof for prop *)
-val big_or'_prop (#a: Type) (f: (a -> Type)) (l: list a) : Lemma ((big_or' f l) `subtype_of` unit)
 
 (** Interpreting the finite disjunction [big_or f l]
     as an infinite disjunction [exists] *)
-val big_or'_exists (#a: Type) (f: (a -> Type)) (l: list a)
+val big_or'_exists (#a: Type) (f: (a -> prop)) (l: list a)
     : Lemma (big_or' f l <==> (exists x. L.memP x l /\ f x))
 
 (** [big_or f l] is an implicitly reducing variant of [big_or']
@@ -148,8 +130,7 @@ val big_or'_exists (#a: Type) (f: (a -> Type)) (l: list a)
 
 [@@ __reduce__]
 unfold
-let big_or #a (f: (a -> Type)) (l: list a) : prop =
-  big_or'_prop f l;
+let big_or #a (f: (a -> prop)) (l: list a) : prop =
   normal (big_or' f l)
 
 (**** Pairwise operators *)
@@ -180,13 +161,13 @@ let rec pairwise_op' #a #b (op: (b -> b -> GTot b)) (f: (a -> a -> b)) (l: list 
   | hd :: tl -> (map_op' op (f hd) tl z) `op` (pairwise_op' op f tl z)
 
 (** [f] is a symmetric relation *)
-let symmetric (#a: Type) (f: (a -> a -> Type)) = forall x y. f x y <==> f y x
+let symmetric (#a: Type) (f: (a -> a -> prop)) = forall x y. f x y <==> f y x
 
 (** [f] is a reflexive relation *)
-let reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. f x x
+let reflexive (#a: Type) (f: (a -> a -> prop)) = forall x. f x x
 
 (** [f] is a anti-reflexive relation *)
-let anti_reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. ~(f x x)
+let anti_reflexive (#a: Type) (f: (a -> a -> prop)) = forall x. ~(f x x)
 
 (**** Pairwise conjunction *)
 
@@ -195,29 +176,24 @@ let anti_reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. ~(f x x)
 
       {[ pairwise_and f [a; b; c] = f a b /\ f a c /\ f b c ]} *)
 [@@ __reduce__]
-let pairwise_and' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' l_and f l True
+let pairwise_and' #a (f: (a -> a -> prop)) (l: list a) : prop = pairwise_op' l_and f l True
 
 (** Equations for [pairwise_and] showing it to be a fold with [big_and] *)
-val pairwise_and'_nil (#a: Type) (f: (a -> a -> Type0)) : Lemma (pairwise_and' f [] == True)
+val pairwise_and'_nil (#a: Type) (f: (a -> a -> prop)) : Lemma (pairwise_and' f [] == True)
 
 (** Equations for [pairwise_and] showing it to be a fold with [big_and] *)
-val pairwise_and'_cons (#a: Type) (f: (a -> a -> Type0)) (hd: a) (tl: list a)
+val pairwise_and'_cons (#a: Type) (f: (a -> a -> prop)) (hd: a) (tl: list a)
     : Lemma (pairwise_and' f (hd :: tl) == (big_and' (f hd) tl /\ pairwise_and' f tl))
-
-(** [pairwise_and' f l] is a prop
-    See the remark above on the style of proof for prop *)
-val pairwise_and'_prop (#a: Type) (f: (a -> a -> Type)) (l: list a)
-    : Lemma ((pairwise_and' f l) `subtype_of` unit)
 
 (** [pairwise_and' f l] for symmetric reflexive relations [f]
     is interpreted as universal quantification over pairs of list elements **)
-val pairwise_and'_forall (#a: Type) (f: (a -> a -> Type)) (l: list a)
+val pairwise_and'_forall (#a: Type) (f: (a -> a -> prop)) (l: list a)
     : Lemma (requires symmetric f /\ reflexive f)
       (ensures (pairwise_and' f l <==> (forall x y. L.memP x l /\ L.memP y l ==> f x y)))
 
 (** [pairwise_and' f l] for symmetric relations [f] interpreted as
     universal quantification over pairs of list of unique elements *)
-val pairwise_and'_forall_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
+val pairwise_and'_forall_no_repeats (#a: Type) (f: (a -> a -> prop)) (l: list a)
     : Lemma (requires symmetric f /\ L.no_repeats_p l)
       (ensures (pairwise_and' f l <==> (forall x y. L.memP x l /\ L.memP y l /\ x =!= y ==> f x y)))
 
@@ -226,8 +202,7 @@ val pairwise_and'_forall_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
 
 [@@ __reduce__]
 unfold
-let pairwise_and #a (f: (a -> a -> Type)) (l: list a) : prop =
-  pairwise_and'_prop f l;
+let pairwise_and #a (f: (a -> a -> prop)) (l: list a) : prop =
   normal (pairwise_and' f l)
 
 (**** Pairwise disjunction *)
@@ -235,31 +210,26 @@ let pairwise_and #a (f: (a -> a -> Type)) (l: list a) : prop =
 (** [pairwise_or f l] disjoins [f] on all pairs excluding the diagonal
     i.e., [pairwise_or f [a; b; c] = f a b \/ f a c \/ f b c] *)
 [@@ __reduce__]
-let pairwise_or' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' l_or f l False
+let pairwise_or' #a (f: (a -> a -> prop)) (l: list a) : prop = pairwise_op' l_or f l False
 
 (** Equations for [pairwise_or'] showing it to be a fold with [big_or'] *)
-val pairwise_or'_nil (#a: Type) (f: (a -> a -> Type0)) : Lemma (pairwise_or' f [] == False)
+val pairwise_or'_nil (#a: Type) (f: (a -> a -> prop)) : Lemma (pairwise_or' f [] == False)
 
 (** Equations for [pairwise_or'] showing it to be a fold with [big_or'] *)
-val pairwise_or'_cons (#a: Type) (f: (a -> a -> Type0)) (hd: a) (tl: list a)
+val pairwise_or'_cons (#a: Type) (f: (a -> a -> prop)) (hd: a) (tl: list a)
     : Lemma (pairwise_or' f (hd :: tl) == (big_or' (f hd) tl \/ pairwise_or' f tl))
-
-(** [pairwise_or' f l] is a prop
-    See the remark above on the style of proof for prop *)
-val pairwise_or'_prop (#a: Type) (f: (a -> a -> Type)) (l: list a)
-    : Lemma ((pairwise_or' f l) `subtype_of` unit)
 
 (** [pairwise_or' f l] for symmetric, anti-reflexive relations [f]
     interpreted as existential quantification over
     pairs of list elements *)
-val pairwise_or'_exists (#a: Type) (f: (a -> a -> Type)) (l: list a)
+val pairwise_or'_exists (#a: Type) (f: (a -> a -> prop)) (l: list a)
     : Lemma (requires symmetric f /\ anti_reflexive f)
       (ensures (pairwise_or' f l <==> (exists x y. L.memP x l /\ L.memP y l /\ f x y)))
 
 (** [pairwise_or' f l] for symmetric, anti-reflexive relations [f]
     interpreted as existential quantification over
     pairs of list elements *)
-val pairwise_or'_exists_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
+val pairwise_or'_exists_no_repeats (#a: Type) (f: (a -> a -> prop)) (l: list a)
     : Lemma (requires symmetric f /\ L.no_repeats_p l)
       (ensures (pairwise_or' f l <==> (exists x y. L.memP x l /\ L.memP y l /\ x =!= y /\ f x y)))
 
@@ -268,7 +238,6 @@ val pairwise_or'_exists_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
 
 [@@ __reduce__]
 unfold
-let pairwise_or #a (f: (a -> a -> Type)) (l: list a) : prop =
-  pairwise_or'_prop f l;
+let pairwise_or #a (f: (a -> a -> prop)) (l: list a) : prop =
   normal (pairwise_or' f l)
 

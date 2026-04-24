@@ -74,7 +74,7 @@ let mk_sq_eq2 (u:universe)
               (e0 e1:term) 
   : term
   = let eq = mk_eq2 u t e0 e1 in
-    (tm_pureapp (tm_uinst (as_fv R.squash_qn) [u_zero]) None eq)
+    (tm_pureapp (tm_fvar (as_fv R.squash_qn)) None eq)
 
 let mk_slprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_slprop e0 e1
@@ -86,7 +86,7 @@ let mk_sq_rewrites_to_p u t x y =
   let hd = pack_fv rewrites_to_p_lid in
   let hd = pack_ln (Tv_UInst hd [u]) in
   let args = [(t, Q_Implicit); (x, Q_Explicit); (y, Q_Explicit)] in
-  mk_squash u_zero (R.mk_app hd args)
+  mk_squash (R.mk_app hd args)
 
 
 let mk_ref (t:term) : term = tm_pureapp (tm_uinst (as_fv ref_lid) [u0]) None t

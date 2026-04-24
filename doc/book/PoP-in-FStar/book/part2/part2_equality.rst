@@ -172,14 +172,14 @@ of what makes F* an extensional type theory.
 
 The F* module ``Prims``, the very first module in every program's
 dependence graph, defines the ``equals`` type as shown here. The
-provable equality predicate ``(==)`` that we've used in several
-examples already is just a squashed equality proof, as shown below.
+propositional equality predicate ``(==)`` that we've used in several
+examples already is shown below.
 
 .. code-block:: fstar
 
-   let ( == ) #a (x y : a) = squash (equals x y)
+   val ( == ) #a (x y : a) : prop
 
-In what follows, we'll mostly use squashed equalities, except where we
+In what follows, we'll mostly use propositional equalities, except where we
 wish to emphasize the reflexivity proofs.
 
 Equality Reflection

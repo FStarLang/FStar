@@ -18,11 +18,13 @@ module U = FStar.Universe
 
 type punit : Type u#a = | PUnit
 
-let raisable : p:prop { Type u#(max a b) } =
+let raisable : p:Type0 { nonempty (Type u#(max a b)) } =
   squash (
-    Squash.return_squash (punit u#(max a b));
+    nonempty_intro (punit u#(max a b));
     subtype_of (Type u#(max a b)) (Type u#b)
   )
+
+let raisable_subsingleton x y = ()
 
 let raisable_inst = ()
 

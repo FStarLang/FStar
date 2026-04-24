@@ -601,10 +601,7 @@ let rec check_trivial (t : FStarC_Syntax_Syntax.term) : guard_formula=
            FStarC_Syntax_Syntax.fv_eq_lid tc FStarC_Parser_Const.true_lid ->
            Trivial
        | (FStarC_Syntax_Syntax.Tm_fvar sq, (v, uu___2)::[]) when
-           (FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid)
-             ||
-             (FStarC_Syntax_Syntax.fv_eq_lid sq
-                FStarC_Parser_Const.auto_squash_lid)
+           FStarC_Syntax_Syntax.fv_eq_lid sq FStarC_Parser_Const.squash_lid
            ->
            let uu___3 = check_trivial v in
            (match uu___3 with | Trivial -> Trivial | uu___4 -> NonTrivial t)
