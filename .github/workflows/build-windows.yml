@@ -185,3 +185,5 @@ jobs:
           .\fstar\bin\fstar.exe --already_cached *,-A A.fst
           echo "module B`n#lang-pulse`nopen Pulse`nfn test (x:int) returns int { (x+1); }" > B.fst
           .\fstar\bin\fstar.exe B.fst
+          # Check that karamel is there
+          .\fstar\bin\krml -version

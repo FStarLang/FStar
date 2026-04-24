@@ -30,12 +30,18 @@ jobs:
         with:
           name: fstar.tar.gz
 
+      # Install Z3. Note: the packages built by build-packages.yml
+      # don't include Z3.
+      - uses: cda-tum/setup-z3@main
+        with:
+          version: 4.13.3
+
       - run: tar xzf fstar.tar.gz
 
       - name: Smoke test
         run: |
           ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./fstar/bin/fstar.exe B.fst
@@ -74,7 +80,7 @@ jobs:
       - name: Smoke test
         run: |
           ./out/bin/fstar.exe out/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./out/bin/fstar.exe A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./out/bin/fstar.exe B.fst

@@ -10,7 +10,14 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-14
+          - macos-15-intel
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@master
         with:
@@ -24,7 +31,6 @@ jobs:
       - name: Prepare
         run: |
           brew install opam bash gnu-getopt coreutils gnu-sed make
-          ./.scripts/get_fstar_z3.sh $HOME/bin
           echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
           opam install --deps-only ./fstar.opam
 
@@ -52,38 +58,39 @@ jobs:
           KERNEL=$(uname -s)
           ARCH=$(uname -m)
           export FSTAR_TAG=-$KERNEL-$ARCH
-          gmake -skj$(nproc) package
+          gmake -skj$(nproc) package ADMIT=1
 
       - uses: actions/upload-artifact@v7
         with:
           path: fstar-*
-          name: package-mac
+          name: package-mac-${{ matrix.os }}
 
   smoke_test:
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         os:
           - macos-14
           - macos-15
           - macos-latest
+          - macos-15-intel
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: cda-tum/setup-z3@main
-        with:
-          version: 4.13.3
-
       - name: Get fstar package
         uses: actions/download-artifact@v8
         with:
-          name: package-mac
+          pattern: package-mac-*
+          merge-multiple: true
 
-      - run: tar xzf fstar*.tar.gz
+      - run: tar xzf fstar-Darwin-$(uname -m).tar.gz
 
       - name: Smoke test
         run: |
           ./fstar/bin/fstar.exe --admit_smt_queries true fstar/lib/fstar/ulib/Prims.fst -f
-          echo -e "module A\let _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          echo -e "module A\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true A.fst
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./fstar/bin/fstar.exe --admit_smt_queries true B.fst
+          # Check that karamel is there
+          ./fstar/bin/krml -version
