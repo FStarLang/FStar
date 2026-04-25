@@ -30,6 +30,9 @@ jobs:
           path: FStar
           submodules: true
 
+      - name: Install Z3 from script
+        run: sudo ./FStar/.scripts/get_fstar_z3.sh /usr/local/bin
+
       - name: Run CI
         run: make -skj$(nproc) ci
         working-directory: FStar
