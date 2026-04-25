@@ -84,8 +84,9 @@ let set_level_medium  () = dbg_level := 2
 let set_level_high    () = dbg_level := 3
 let set_level_extreme () = dbg_level := 4
 
+// As an exception, SMTFail does not enable normal verbose mode.
 let enable_toggles (keys : list string) =
-  if Cons? keys then
+  if Cons? keys && keys <> ["SMTFail"] then
     enable ();
   keys |> List.iter (fun k ->
     match k with
