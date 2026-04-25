@@ -11,37 +11,34 @@ esac
 arch="$(uname -m)"
 case "$arch" in
   arm64) arch=aarch64 ;;
+  # ^ normalize macOS arm64 to Linux's aarch64
 esac
 
-release_url=(
-  "Linux-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip"
-  "Darwin-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-osx-10.14.2.zip"
-  "Windows-x86_64-4.8.5":"https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-win.zip"
-  "Linux-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-glibc-2.35.zip"
-  "Linux-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-glibc-2.34.zip"
-  "Darwin-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-osx-13.7.zip"
-  "Darwin-aarch64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-arm64-osx-13.7.zip"
-  "Windows-x86_64-4.13.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.13.3/z3-4.13.3-x64-win.zip"
-  "Linux-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-glibc-2.39.zip"
-  "Linux-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-glibc-2.34.zip"
-  "Darwin-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-osx-13.7.6.zip"
-  "Darwin-aarch64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-arm64-osx-13.7.6.zip"
-  "Windows-x86_64-4.15.3":"https://github.com/Z3Prover/z3/releases/download/z3-4.15.3/z3-4.15.3-x64-win.zip"
-  "Linux-x86_64-4.16.0":"https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-glibc-2.39.zip"
-  "Linux-aarch64-4.16.0":"https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-arm64-glibc-2.38.zip"
-  "Darwin-x86_64-4.16.0":"https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-osx-15.7.3.zip"
-  "Darwin-aarch64-4.16.0":"https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-arm64-osx-15.7.3.zip"
-  "Windows-x86_64-4.16.0":"https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-win.zip"
-)
-
 get_url() {
-  local key elem
-  key="$1"
+  local version="$1" z3_arch os_pattern
 
-  for elem in "${release_url[@]}"; do
-    if [ "${elem%%:*}" = "$key" ]; then
-      echo -n "${elem#*:}"
-      break
+  case "$arch" in
+    x86_64)  z3_arch="x64" ;;
+    aarch64) z3_arch="arm64" ;;
+    *)       z3_arch="$arch" ;;
+  esac
+
+  case "$kernel" in
+    Linux)   os_pattern="(glibc|ubuntu)" ;;
+    Darwin)  os_pattern="osx" ;;
+    Windows) os_pattern="win" ;;
+    *)       return ;;
+  esac
+
+  local tag url
+  for tag in "z3-$version" "Z3-$version"; do
+    url=$(curl -s "https://api.github.com/repos/Z3Prover/z3/releases/tags/$tag" \
+      | grep -oP '"browser_download_url":\s*"\K[^"]+' \
+      | grep -E "z3-${version}-${z3_arch}-${os_pattern}[^/]*\.zip$" \
+      | tail -1)
+    if [ -n "$url" ]; then
+      echo -n "$url"
+      return
     fi
   done
 }
@@ -158,8 +155,7 @@ for z3_ver in 4.13.3 4.15.3 4.16.0; do
   if [ -f "$destination_file_name" ]; then
     echo ">>> Z3 $z3_ver already downloaded to $destination_file_name"
   else
-    key="$kernel-$arch-$z3_ver"
-    url="$(get_url "$key")"
+    url="$(get_url "$z3_ver")"
 
     if [ -z "$url" ]; then
       echo ">>> Z3 $z3_ver not available for this architecture, skipping..."
