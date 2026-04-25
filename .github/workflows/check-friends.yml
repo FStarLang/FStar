@@ -9,76 +9,6 @@ defaults:
     shell: bash
 
 jobs:
-  build-krml:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - name: Checkout karamel
-        uses: actions/checkout@master
-        with:
-          path: karamel/
-          repository: FStarLang/karamel
-
-      - name: Build krml (minimal)
-        run: make -C karamel -skj$(nproc) minimal
-
-      # krml is a symlink to _build/default/src/Karamel.exe, but we want to exclude _build.
-      # So, overwrite the link with the actual file.
-      - name: Fix for symlink
-        run: |
-          cp --remove-destination $(realpath karamel/krml) karamel/krml
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: karamel
-          extra: --exclude=karamel/_build
-          hometag: KRML
-
-  test-krml:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
-    if: false # No karamel test since it needs a full build (and Low*)
-    needs:
-      - build-krml
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-
-      # krml test needs node
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 16
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      # node is needed for the wasm tests, skip them for now
-      - name: Test
-        run: make -C karamel -skj$(nproc) test
-
   build-steel:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
@@ -93,6 +23,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
@@ -113,7 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
     needs:
-      - build-krml
       - build-steel
     steps:
       - name: Cleanup
@@ -126,11 +56,8 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery --z3version 4.15.3" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
 
       - uses: mtzguido/gci-download@master
         with:
@@ -143,7 +70,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
     needs:
-      - build-krml
       - build-steel
     steps:
       - name: Cleanup
@@ -156,11 +82,8 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
 
       - uses: mtzguido/gci-download@master
         with:
@@ -169,72 +92,9 @@ jobs:
       - name: Test
         run: make -C steel -skj$(nproc) test
 
-  build-pulse:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - name: Checkout pulse
-        uses: actions/checkout@master
-        with:
-          path: pulse/
-          repository: FStarLang/pulse
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - name: Build (after setting up cargo env)
-        run: . $HOME/.cargo/env && make -C pulse -skj$(nproc)
-
-      - uses: mtzguido/gci-upload@master
-        with:
-          name: pulse
-          hometag: PULSE
-
-  test-pulse:
-    runs-on: ubuntu-latest
-    container: mtzguido/dev-base:v2
-    needs:
-      - build-krml
-      - build-pulse
-    steps:
-      - name: Cleanup
-        run: sudo find . -delete
-      - run: echo "HOME=/home/user" >> $GITHUB_ENV
-      - uses: mtzguido/set-opam-env@master
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: fstar.tar.gz
-      - run: tar -xzf fstar.tar.gz
-      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: pulse
-
-      - name: Test
-        run: . $HOME/.cargo/env && make -C pulse -skj$(nproc) test
-
   build-everparse:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
-    if: false # Currently needs Low*
-    needs:
-      - build-krml
-      - build-pulse
     steps:
       - name: Cleanup
         run: sudo find . -delete
@@ -251,33 +111,21 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: pulse
-
-      # everparse expects PULSE_HOME to be the root of the installation,
-      # not the root of the repo
-      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
 
       # everparse expects more environment variables to opt out of
       # in-tree dependencies
       - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
-      - run: echo "EVERPARSE_USE_KRML_HOME=1" >> $GITHUB_ENV
-      - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_KRML_EXE=1" >> $GITHUB_ENV
 
       - name: Checkout everparse
         uses: actions/checkout@master
         with:
-          path: everparse/
-          ref: _nik_smt_univs_2025
           repository: project-everest/everparse
+          path: everparse/
+          ref: fstar2
 
       - name: Build
         run: make -C everparse -skj$(nproc) all
@@ -290,7 +138,6 @@ jobs:
   test-everparse:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
-    if: false # Currently needs Low*
     needs:
       - build-everparse
     steps:
@@ -309,18 +156,8 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: pulse
-      # everparse expects PULSE_HOME to be the root of the installation,
-      # not the root of the repo
-      - run: echo "PULSE_HOME=$PULSE_HOME/out" >> $GITHUB_ENV
 
       - uses: mtzguido/gci-download@master
         with:
@@ -330,8 +167,15 @@ jobs:
       # in-tree dependencies
       - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
       - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
-      - run: echo "EVERPARSE_USE_KRML_HOME=1" >> $GITHUB_ENV
-      - run: echo "EVERPARSE_USE_PULSE_HOME=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_KRML_EXE=1" >> $GITHUB_ENV
+
+      # Everparse test needs the DICE/DPE files from the F* repo.
+      # Clone the repo here and point Everparse to it.
+      - uses: actions/checkout@master
+        with:
+          path: /tmp/FStar
+          submodules: true
+      - run: echo "DICE_HOME=/tmp/FStar/pulse/share/pulse/examples/dice" >> $GITHUB_ENV
 
       - name: Test
         # NOTE: We do not check against the expected C/Rust
@@ -343,7 +187,6 @@ jobs:
     runs-on: ubuntu-latest
     container: mtzguido/dev-base:v2
     needs:
-      - build-krml
       - build-steel
     steps:
       - name: Cleanup
@@ -356,6 +199,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - name: Checkout steel
@@ -364,9 +208,6 @@ jobs:
           path: starmalloc/
           repository: Inria-Prosecco/starmalloc
 
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
       - uses: mtzguido/gci-download@master
         with:
           name: steel
@@ -390,6 +231,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
@@ -416,6 +258,7 @@ jobs:
           name: fstar.tar.gz
       - run: tar -xzf fstar.tar.gz
       - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
       - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
