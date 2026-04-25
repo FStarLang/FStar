@@ -151,7 +151,7 @@ fi
 
 mkdir -p "$dest_dir"
 
-for z3_ver in 4.8.5 4.13.3 4.15.3 4.16.0; do
+for z3_ver in 4.13.3 4.15.3 4.16.0; do
   destination_file_name="$dest_dir/z3-$z3_ver"
   if [ "$kernel" = Windows ]; then destination_file_name="$destination_file_name.exe"; fi
 
@@ -159,18 +159,6 @@ for z3_ver in 4.8.5 4.13.3 4.15.3 4.16.0; do
     echo ">>> Z3 $z3_ver already downloaded to $destination_file_name"
   else
     key="$kernel-$arch-$z3_ver"
-
-    case "$key" in
-      Linux-aarch64-4.8.5)
-        echo ">>> Z3 4.8.5 is not available for aarch64, downloading x86_64 version.  You need to install qemu-user (and shared libraries) to execute it."
-        key="$kernel-x86_64-$z3_ver"
-        ;;
-      Darwin-aarch64-4.8.5)
-        echo ">>> Z3 4.8.5 is not available for aarch64, downloading x86_64 version.  You need to install Rosetta 2 to execute it."
-        key="$kernel-x86_64-$z3_ver"
-        ;;
-    esac
-
     url="$(get_url "$key")"
 
     if [ -z "$url" ]; then
