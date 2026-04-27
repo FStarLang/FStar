@@ -271,3 +271,47 @@ jobs:
 
       - name: Verify and build case study
         run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) build
+
+  c2pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Install clang/LLVM 20
+      - name: Install clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsb-release wget software-properties-common gnupg
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+          sudo apt-get install -y clang-20 libclang-cpp20-dev g++ clang-tools-20 libclang-20-dev clang-format-20
+          sudo ln -s /usr/bin/clang-format-20 /usr/local/bin/clang-format
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      # c2pulse's Makefile hardcodes FSTAR_EXE = fstar.exe, so we
+      # add fstar/bin to PATH instead of setting FSTAR_EXE.
+      - run: echo "$(pwd)/fstar/bin" >> $GITHUB_PATH
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout c2pulse
+        uses: actions/checkout@master
+        with:
+          path: c2pulse/
+          repository: FStarLang/c2pulse
+
+      - name: Build
+        run: make -C c2pulse -j$(nproc)
+
+      - name: Test
+        run: make -C c2pulse -j$(nproc) test
