@@ -166,59 +166,80 @@ esac
 
 arch="$(uname -m)"
 
-# --- Resolve the release ---
+# --- Construct download URL ---
+#
+# When a specific version is given, we construct the URL directly from the
+# known naming scheme, avoiding GitHub API calls (which are rate-limited).
+# The API is only needed for --version latest (to discover the latest tag)
+# and for --list.
 
-resolve_release() {
-  local release_json=""
+# Build the asset filename for a given tag.
+asset_filename() {
+  local tag="$1"
+  local ext="tar.gz"
+  [[ "$kernel" == "Windows_NT" ]] && ext="zip"
 
   case "$SOURCE" in
     release)
-      if [[ "$VERSION" == "latest" ]]; then
-        release_json=$(gh_curl "https://api.github.com/repos/$RELEASE_REPO/releases/latest")
-      else
-        release_json=$(gh_curl "https://api.github.com/repos/$RELEASE_REPO/releases/tags/$VERSION")
-      fi
+      # e.g. fstar-v2026.04.17-Linux-x86_64.tar.gz
+      echo "fstar-${tag}-${kernel}-${arch}.${ext}"
       ;;
     nightly)
-      if [[ "$VERSION" == "latest" ]]; then
-        release_json=$(gh_curl "https://api.github.com/repos/$NIGHTLY_REPO/releases/latest")
-      else
-        local tag="nightly-$VERSION"
-        release_json=$(gh_curl "https://api.github.com/repos/$NIGHTLY_REPO/releases/tags/$tag")
-      fi
+      # e.g. fstar-Linux-x86_64.tar.gz  (no version in filename)
+      echo "fstar-${kernel}-${arch}.${ext}"
       ;;
   esac
+}
 
-  echo "$release_json"
+# Build the full download URL for a given tag.
+asset_url() {
+  local tag="$1"
+  local repo filename
+  case "$SOURCE" in
+    release)  repo="$RELEASE_REPO" ;;
+    nightly)  repo="$NIGHTLY_REPO" ;;
+  esac
+  filename=$(asset_filename "$tag")
+  echo "https://github.com/${repo}/releases/download/${tag}/${filename}"
+}
+
+resolve_tag_and_url() {
+  if [[ "$VERSION" != "latest" ]]; then
+    # Construct the tag and URL directly — no API call needed.
+    case "$SOURCE" in
+      release)  TAG="$VERSION" ;;
+      nightly)  TAG="nightly-$VERSION" ;;
+    esac
+    ASSET_URL=$(asset_url "$TAG")
+  else
+    # We need the API only for "latest".
+    local release_json repo
+    case "$SOURCE" in
+      release)  repo="$RELEASE_REPO" ;;
+      nightly)  repo="$NIGHTLY_REPO" ;;
+    esac
+    release_json=$(gh_curl "https://api.github.com/repos/$repo/releases/latest")
+    TAG=$(echo "$release_json" | json_field "tag_name")
+    if [[ -z "$TAG" ]]; then
+      echo "Error: could not find the latest release." >&2
+      local msg
+      msg=$(echo "$release_json" | json_field "message")
+      if [[ -n "$msg" ]]; then
+        echo "GitHub API: $msg" >&2
+      fi
+      exit 1
+    fi
+    ASSET_URL=$(asset_url "$TAG")
+  fi
 }
 
 echo "Looking for F* $SOURCE${VERSION:+ ($VERSION)}..."
 
-RELEASE_JSON=$(resolve_release)
-
-TAG=$(echo "$RELEASE_JSON" | json_field "tag_name")
-if [[ -z "$TAG" ]]; then
-  echo "Error: could not find a matching release." >&2
-  msg=$(echo "$RELEASE_JSON" | json_field "message")
-  if [[ -n "$msg" ]]; then
-    echo "GitHub API: $msg" >&2
-  fi
-  exit 1
-fi
+TAG=""
+ASSET_URL=""
+resolve_tag_and_url
 
 echo "Found: $TAG"
-
-# --- Find the matching asset ---
-
-ASSET_URL=$(echo "$RELEASE_JSON" | json_fields "browser_download_url" \
-  | grep "$kernel" | grep "$arch" | head -1 || true)
-
-if [[ -z "$ASSET_URL" ]]; then
-  echo "Error: no matching binary asset for $kernel/$arch." >&2
-  echo "Available assets:" >&2
-  echo "$RELEASE_JSON" | json_fields "browser_download_url" | sed 's|.*/||' >&2
-  exit 1
-fi
 
 ASSET_NAME=$(basename "$ASSET_URL")
 echo "Downloading $ASSET_NAME..."
