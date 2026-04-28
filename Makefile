@@ -377,19 +377,23 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	$(MAKE) -C stage3 fstarc-full FSTAR_DUNE_RELEASE=1
 	touch $@
 
-.pulse-lib.touch: $(FSTAR3_FULL_EXE)
+.pulse-common.touch: $(FSTAR3_FULL_EXE)
 	$(call bold_msg, "CHECK", "PULSE CORE")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
 	  FSTAR_LIB=$(abspath ulib) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+
+.pulse-core.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
 	  FSTAR_LIB=$(abspath ulib) \
 	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
 	  $(MAKE) -C pulse/ -f mk/lib-core.mk
+
+.pulse-lib.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE LIB")
 	env \
 	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
@@ -398,7 +402,7 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	  STAGE3=1 \
 	  $(MAKE) -C pulse/ -f mk/lib-pulse.mk
 
-.stage3.src.touch: .stage2.src.touch .pulse-plugin.src.touch .pulse-lib.touch
+.stage3.src.touch: .stage2.src.touch .pulse-plugin.src.touch .pulse-core.touch .pulse-lib.touch
 	touch $@
 
 define install-stage
