@@ -34,7 +34,7 @@ jobs:
       # don't include Z3.
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.16.0
 
       - run: tar xzf fstar.tar.gz
 
@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: cda-tum/setup-z3@main
         with:
-          version: 4.13.3
+          version: 4.16.0
 
       - name: Get fstar package
         uses: actions/download-artifact@v8

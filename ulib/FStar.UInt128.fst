@@ -181,6 +181,7 @@ let carry (a b: U64.t) : Pure U64.t
 let carry_sum_ok (a b:U64.t) :
   Lemma (U64.v (carry (U64.add_mod a b) b) == (U64.v a + U64.v b) / (pow2 64)) = ()
 
+#push-options "--z3rlimit 20"
 let add (a b: t) : Pure t
   (requires (v a + v b < pow2 128))
   (ensures (fun r -> v a + v b = v r)) =
@@ -188,6 +189,7 @@ let add (a b: t) : Pure t
   carry_sum_ok a.low b.low;
   { low = l;
     high = U64.add (U64.add a.high b.high) (carry l b.low); }
+#pop-options
 
 let add_underspec (a b: t) =
     let l = U64.add_mod a.low b.low in

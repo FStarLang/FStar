@@ -28,14 +28,14 @@ using the [online F\* editor] that's part of the [F\* tutorial].
 
 F\* requires specific versions of Z3 to work correctly,
 and will refuse to run if the version string does not match.
-You should have `z3-4.8.5` and `z3-4.13.3` in your `$PATH`:
+You should have `z3-4.13.3` and `z3-4.16.0` in your `$PATH`:
 
 ```
-❯ z3-4.8.5 --version
-Z3 version 4.8.5 - 64 bit
-
 ❯ z3-4.13.3 --version
 Z3 version 4.13.3 - 64 bit
+
+❯ z3-4.16.0 --version
+Z3 version 4.16.0 - 64 bit
 ```
 
 On Linux you can install these two versions with the following command:
@@ -93,8 +93,8 @@ need to perform the following step before your first use:
         compiler=OCaml 4.14.0
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
-        $ z3-4.13.3 --version
-        Z3 version 4.13.3 - 64 bit
+        $ z3-4.16.0 --version
+        Z3 version 4.16.0 - 64 bit
 
    Note: if you are using the binary package and extracted it to, say, the
    `/path/to/fstar` directory, then both `fstar.exe` and the right version of

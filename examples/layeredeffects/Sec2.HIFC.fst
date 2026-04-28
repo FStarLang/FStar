@@ -837,8 +837,10 @@ let test8 (l:lref) (h:href)
     write l (x + 1)
 
 effect IFC (a:Type) (w r:label) (fs:flows) = HIFC a w r fs (fun _ -> True) (fun _ _ _ -> True)
+
 let test_cond (l:lref) (h:href) (b:bool)
   : IFC unit (union (single h) (single l)) (single l) [single h, single l]
+    by (Tactics.compute()) // Weird that this is now needed
   = if b then write l (read h) else write l (read l + 1)
 
 //But, using the Hoare refinements, we can recover precision and remove
