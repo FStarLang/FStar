@@ -1,21 +1,18 @@
 %{
 (*
- Menhir reports the following warnings:
+ This parser should be conflict-free (0 shift/reduce, 0 reduce/reduce).
 
-   Warning: 5 states have shift/reduce conflicts.
-   Warning: 6 shift/reduce conflicts were arbitrarily resolved.
-   Warning: 221 end-of-stream conflicts were arbitrarily resolved.
+ Shift/reduce conflicts that naturally arise in an ML-style language
+ (dangling BAR in match/function/try, FUN body extent, etc.) are
+ resolved via precedence declarations: chain rules are annotated with
+ %prec below_op so that binary operators and delimiters always shift
+ into the body of the enclosing construct.
 
- If you're editing this file, be sure to not increase the warnings,
- except if you have a really good reason.
-
- The shift-reduce conflicts are natural in an ML-style language. E.g.,
- there are S-R conflicts with dangling elses, with a non-delimited match where
- the BAR is dangling etc.
+ If you're editing this file, be sure to not introduce new conflicts.
 
  Note: Some symbols are marked public, so that we can reuse this parser from
  the parser for the Pulse DSL in FStarLang/steel.
- 
+
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
@@ -205,13 +202,31 @@ let rec pat_names (bs : pattern list) : ident list =
 /* These are artificial */
 %token EOF
 
+(* Lowest precedence — used for chain rules that should always
+   lose to any operator/delimiter, so that the body of FUN,
+   quantifiers, match, function, and try extends as far right
+   as possible (standard "maximal munch" for ML-like languages). *)
+%nonassoc below_op
+
 %nonassoc THEN
 %nonassoc ELSE
+
+%nonassoc SEMICOLON SEMICOLON_OP
 
 %nonassoc ASSERT
 %nonassoc EQUALTYPE
 %nonassoc SUBTYPE
 %nonassoc BY
+
+%nonassoc LBRACK
+%nonassoc BAR
+
+%nonassoc IFF
+%nonassoc IMPLIES
+%nonassoc RARROW
+%nonassoc DISJUNCTION
+%nonassoc CONJUNCTION
+%nonassoc COMMA
 
 %right COLON_COLON
 %right AMP
@@ -721,7 +736,7 @@ letqualifier:
  *)
 aqual:
   | HASH LBRACK t=thunk(term) RBRACK { mk_meta_tac t }
-  | HASH      { Implicit }
+  | HASH      %prec below_op { Implicit }
   | DOLLAR    { Equality }
 
 binderAttributes:
@@ -957,6 +972,7 @@ kind:
 
 term:
   | e=noSeqTerm
+      %prec below_op
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Seq(e1, e2)) (rr2 $loc(e1) $loc(e2)) Expr }
@@ -988,7 +1004,7 @@ localletqualifier:
 
 %public
 noSeqTerm:
-  | t=typ  { t }
+  | t=typ  %prec below_op { t }
   | e=tmIff SUBTYPE t=tmIff
       { mk_term (Ascribed(e,{t with level=Expr},None,false)) (rr $loc(e)) Expr }
   | e=tmIff SUBTYPE t=tmIff BY tactic=thunk(typ)
@@ -1043,11 +1059,13 @@ noSeqTerm:
         mk_term (If(e1, op, ret_opt, e2, e3)) (rr2 $loc(op) $loc(e2)) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
+      %prec below_op
       {
          let branches = focusBranches (pbs) (rr2 $loc($1) $loc(pbs)) in
          mk_term (TryWith(e1, branches)) (rr2 $loc($1) $loc(pbs)) Expr
       }
   | op=matchMaybeOp e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+      %prec below_op
       {
         let branches = focusBranches pbs (rr2 $loc(op) $loc(pbs)) in
         mk_term (Match(e, op, ret_opt, branches)) (rr2 $loc(op) $loc(pbs)) Expr
@@ -1081,6 +1099,7 @@ noSeqTerm:
 			   , e)) (rr2 $loc(op) $loc(e)) Expr
     }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
+      %prec below_op
       {
         let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
         mk_function branches (rr $loc) (rr2 $loc($1) $loc(pbs))
@@ -1131,7 +1150,7 @@ noSeqTerm:
         else mk_term (IntroExists(bs, p, vs, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
-   | INTRO p=tmFormula IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
+   | INTRO p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
      {
         mk_term (IntroImplies(p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
@@ -1161,7 +1180,7 @@ noSeqTerm:
         mk_term (ElimExists(bs, p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
-   | ELIM p=tmFormula IMPLIES q=tmFormula WITH e=noSeqTerm
+   | ELIM p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH e=noSeqTerm
      {
         mk_term (ElimImplies(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
@@ -1221,8 +1240,9 @@ typ:
     }
 
 %public
+%inline
 trigger:
-  |   { [] }
+  | { [] }
   | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
 
 disjunctivePats:
@@ -1257,12 +1277,13 @@ patternBranch:
 tmIff:
   | e1=tmImplies tok=IFF e2=tmIff
       { mk_term (Op(mk_ident("<==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
-  | e=tmImplies { e }
+  | e=tmImplies %prec below_op { e }
 
 tmImplies:
   | e1=tmArrow(tmFormula) tok=IMPLIES e2=tmImplies
       { mk_term (Op(mk_ident("==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmArrow(tmFormula)
+      %prec below_op
       { e }
 
 
@@ -1277,7 +1298,7 @@ tmArrow(Tm):
        in
        mk_term (Product([b], tgt)) (rr2 $loc(dom) $loc(tgt))  Un
      }
-  | e=Tm { e }
+  | e=Tm %prec below_op { e }
 
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
@@ -1305,7 +1326,7 @@ simpleArrowDomain:
 tmFormula:
   | e1=tmFormula tok=DISJUNCTION e2=tmConjunction
       { mk_term (Op(mk_ident("\\/", rr $loc(tok)), [e1;e2])) (rr2 $loc(e1) $loc(e2)) Formula }
-  | e=tmConjunction { e }
+  | e=tmConjunction %prec below_op { e }
 
 tmConjunction:
   | e1=tmConjunction tok=CONJUNCTION e2=tmTuple
@@ -1313,13 +1334,16 @@ tmConjunction:
   | e=tmTuple { e }
 
 tmTuple:
-  | el=separated_nonempty_list(COMMA, tmEq)
-      {
-        match el with
-          | [x] -> x
-          | components -> mkTuple components (rr2 $loc(el) $loc(el))
-      }
+  | e=tmEq %prec below_op
+      { e }
+  | e=tmEq COMMA rest=commaTmEqList
+      { mkTuple (e :: rest) (rr $loc(e)) }
 
+commaTmEqList:
+  | e=tmEq %prec below_op
+      { [e] }
+  | e=tmEq COMMA rest=commaTmEqList
+      { e :: rest }
 
 
 %public
@@ -1354,6 +1378,7 @@ tmEqWith(X):
   | BACKTICK_HASH e=atomicTerm
       { mk_term (Antiquote e) (rr $loc) Un }
   | e=tmNoEqWith(X)
+      %prec below_op
       { e }
 
 %inline recordTerm:
@@ -1424,7 +1449,7 @@ tmEqNoRefinement:
 
 %public
 tmEq:
-  | e=tmEqWith(tmRefinement)  { e }
+  | e=tmEqWith(tmRefinement) %prec below_op { e }
 
 tmNoEq:
   | e=tmNoEqWith(tmRefinement) { e }
@@ -1537,7 +1562,7 @@ atomicTermQUident:
     }
 
 atomicTermNotQUident:
-  | UNDERSCORE { mk_term Wild (rr $loc) Un }
+  | UNDERSCORE %prec below_op { mk_term Wild (rr $loc) Un }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
@@ -1712,6 +1737,7 @@ right_flexible_nonempty_list(SEP, X):
 
 reverse_left_flexible_list(delim, X):
 | (* nothing *)
+   %prec below_op
    { [] }
 | x = X
    { [x] }

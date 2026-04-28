@@ -667,7 +667,11 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
     )
 
     | LetBinding _ ->
-      fail "Terminal let binding" s.range
+      // desugar terminal `let ...` to `let ...; ()`
+      desugar_stmt' env (mk_stmt (Sequence {
+        s1 = s;
+        s2 = mk_stmt (Expr { e = A.unit_const s.range; args = [] }) s.range;
+      }) s.range)
 
     | PragmaSetOptions { options; body } ->
       FStarC.Syntax.Util.process_pragma (S.PushOptions <| Some options) s.range;
