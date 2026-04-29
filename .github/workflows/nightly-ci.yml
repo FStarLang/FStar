@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Z3
         # Note: the packages built by build-packages.yml don't include Z3.
-        run: sudo ./fstar/get_fstar_z3.sh /usr/local/bin
+        run: curl -fsSL https://raw.githubusercontent.com/FStarLang/FStar/refs/heads/master/.scripts/get_fstar_z3.sh | sudo bash -s -- /usr/local/bin
 
       - name: Smoke test
         run: |
