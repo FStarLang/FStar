@@ -30,13 +30,11 @@ jobs:
         with:
           name: fstar.tar.gz
 
-      # Install Z3. Note: the packages built by build-packages.yml
-      # don't include Z3.
-      - uses: cda-tum/setup-z3@main
-        with:
-          version: 4.13.3
-
       - run: tar xzf fstar.tar.gz
+
+      - name: Install Z3
+        # Note: the packages built by build-packages.yml don't include Z3.
+        run: sudo ./fstar/get_fstar_z3.sh /usr/local/bin
 
       - name: Smoke test
         run: |
@@ -57,15 +55,14 @@ jobs:
           - ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: cda-tum/setup-z3@main
-        with:
-          version: 4.13.3
-
       - name: Get fstar package
         uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.pak }}
       - run: tar xzf ${{ matrix.pak }}
+
+      - name: Install Z3
+        run: sudo ./fstar/get_fstar_z3.sh /usr/local/bin
 
       - name: Set-up OCaml
         uses: ocaml/setup-ocaml@v3
