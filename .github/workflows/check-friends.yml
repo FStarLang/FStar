@@ -315,3 +315,62 @@ jobs:
 
       - name: Test
         run: make -C c2pulse -j$(nproc) test
+
+  algostar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      # AlgoStar uses $(PULSE_ROOT)/mk/test.mk for its build system.
+      # Checkout FStar source (sparse) to provide pulse/mk/.
+      - uses: actions/checkout@master
+        with:
+          path: fstar-src/
+          sparse-checkout: pulse/mk
+      - run: echo "PULSE_ROOT=$(pwd)/fstar-src/pulse" >> $GITHUB_ENV
+
+      - name: Checkout AlgoStar
+        uses: actions/checkout@master
+        with:
+          path: algostar/
+          repository: FStarLang/AlgoStar
+
+      - name: Build
+        run: make -C algostar -skj$(nproc)
+
+  pulse-verified-gc:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_HOME=$(pwd)/fstar" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout pulse-verified-gc
+        uses: actions/checkout@master
+        with:
+          path: pulse-verified-gc/
+          repository: FStarLang/pulse-verified-gc
+
+      - name: Build
+        run: make -C pulse-verified-gc -j$(nproc)
