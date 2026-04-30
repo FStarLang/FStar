@@ -12,9 +12,12 @@ FSTAR_DEFAULT_GOAL ?= build
 all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
+karamel/Makefile:
+	$(error Error: $@ not found. Run `git submodule init && git submodule update` if you haven't)
+
 # This file is touched whenever any file in karamel/ changes, to trigger a
 # rebuild only then.
-.krml.src.touch: .force
+.krml.src.touch: .force karamel/Makefile
 	[ -f $@ ] || touch $@
 	find karamel -type f -newer $@ -exec touch $@ \; -quit
 
