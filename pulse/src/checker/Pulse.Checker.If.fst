@@ -24,6 +24,7 @@ open Pulse.Checker.Base
 
 module T = FStar.Tactics.V2
 module J = Pulse.JoinComp
+module RU = Pulse.RuntimeUtils
 #set-options "--z3rlimit 40"
 
 
@@ -66,6 +67,7 @@ let check
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
   : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
   =
+    let branch_range = br.range in
     let br =
       let t =
         mk_term (Tm_ProofHintWithBinders {
@@ -78,7 +80,8 @@ let check
     in
 
     let ppname = mk_ppname_no_range "_if_br" in
-    let r = check (g_with_eq eq_v) pre post_hint ppname br in
+    let r = RU.with_error_bound branch_range (fun () ->
+      check (g_with_eq eq_v) pre post_hint ppname br) in
     r
   in
 

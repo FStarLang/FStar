@@ -927,13 +927,22 @@ let prove_atom_result (g: env)
     T.Tac (prover_result g ctxt0 [goal]) =
   let Atom _ dup _ _ = ctxt in
   let goal = elab_slprop goal in
+  let saved_bound = RU.get_error_bound () in
   (| g, (if dup then rest_ctxt@[ctxt] else rest_ctxt), [], [ctxt], fun g' ->
-    let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop ctxt) goal in
-    (if dup then
-      // Check that we can indeed synthesize a duplicable instance
-      ignore (compute_term_type g
-        (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
-          [elab_slprop ctxt, R.Q_Explicit; unit_const, R.Q_Explicit])));
+    // Restore the error bound that was active when the prover matched this atom.
+    // This closure may be evaluated lazily (via cont_elab_thunk) after the
+    // original with_error_bound scope has exited.
+    let do_check () =
+      let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop ctxt) goal in
+      (if dup then
+        ignore (compute_term_type g
+          (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
+            [elab_slprop ctxt, R.Q_Explicit; unit_const, R.Q_Explicit])));
+      ()
+    in
+    (match saved_bound with
+     | Some r -> RU.with_error_bound r do_check
+     | None -> do_check ());
     cont_elab_refl _ _ _, cont_elab_refl _ _ _ <: T.Tac _ |)
 
 // this matches atoms when they're the only unifiable pair
