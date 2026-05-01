@@ -2,13 +2,10 @@ name: Update KaRaMeL submodule
 
 # Automated weekly update of the karamel submodule.
 #
-# Creates a PR to fast-forward the submodule to upstream master,
-# enables auto-merge, and lets CI gate the change.
-#
-# Requirements:
-#   - "Allow auto-merge" must be enabled in repo settings
-#   - Branch protection must not require PR reviews (or the bot must
-#     be able to satisfy them)
+# Creates a PR to fast-forward the submodule to upstream master
+# and lets CI gate the change. If auto-merge is enabled in repo
+# settings, the PR will be squash-merged automatically once CI
+# passes; otherwise it waits for a human to merge.
 
 on:
   schedule:
@@ -36,6 +33,7 @@ jobs:
         id: update
         run: |
           cd karamel
+          git fetch --unshallow  # need full history for --ff-only
           git pull --ff-only origin master
           cd ..
 
@@ -82,4 +80,4 @@ jobs:
             --base master \
             --head "$BRANCH"
 
-          gh pr merge "$BRANCH" --auto --squash
+          gh pr merge "$BRANCH" --auto --squash || echo "Auto-merge not available, PR requires manual merge."
