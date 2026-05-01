@@ -44,10 +44,6 @@ let check
   let res
     : c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c post_hint }
     = match post, post_hint with
-      | None, NoHint
-      | None, TypeHint _ ->
-        fail g None "could not find a post annotation on admit, please add one"
-
       | Some post1, PostHint post2 ->
         fail g None
           (Printf.sprintf "found two post annotations on admit: %s and %s, please remove one"
@@ -69,7 +65,15 @@ let check
          | STT_Ghost -> C_STGhost tm_emp_inames s
          | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
 
-      | _, PostHint post -> Pulse.Typing.Combinators.comp_for_post_hint g pre post x
+      | None, _ ->
+        let post = match post_hint with
+          | PostHint post -> post
+          | _ ->
+            let ty = match post_hint with
+              | NoHint -> None
+              | TypeHint ty -> Some ty in
+            intro_post_hint g (EffectAnnotAtomicOrGhost { opens = tm_emp_inames }) ty tm_is_unreachable in
+        Pulse.Typing.Combinators.comp_for_post_hint g pre post x
   in
   let c = res in
   let admit_st = wtag (Some (ctag_of_comp_st c))
