@@ -248,12 +248,7 @@ insert__size_t_Example_Hashtable_data(
   size_t off = (size_t)0U;
   size_t idx = (size_t)0U;
   bool _break = false;
-  bool cond;
-  if (_break)
-    cond = false;
-  else
-    cond = true;
-  while (cond)
+  while (!_break)
   {
     size_t voff = off;
     size_t sum = cidx + voff;
@@ -334,12 +329,6 @@ insert__size_t_Example_Hashtable_data(
         "unreachable (pattern matches are exhaustive in F*)");
       KRML_HOST_EXIT(255U);
     }
-    bool ite;
-    if (_break)
-      ite = false;
-    else
-      ite = true;
-    cond = ite;
   }
   size_t __anf0 = idx;
   write_ref__Pulse_Lib_HashTable_Spec_cell_size_t_Example_Hashtable_data(&contents,

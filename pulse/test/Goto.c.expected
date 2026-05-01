@@ -6,7 +6,7 @@
 void Goto_test1(int32_t *r)
 {
   bool fail = false;
-  *r = (int32_t)42;
+  *r = 42;
   uint32_t x;
   x = 1U;
   fail = true;
@@ -29,7 +29,7 @@ size_t Goto_find_zero(int32_t *a, size_t sz)
   {
     size_t __anf01 = i;
     int32_t __anf1 = a[__anf01];
-    if (__anf1 == (int32_t)0)
+    if (__anf1 == 0)
     {
       size_t __anf02 = i;
       _return = __anf02;
@@ -62,9 +62,9 @@ void Goto_test2_alt(int32_t *r)
   bool _return = false;
   bool fail = false;
   int32_t __anf0 = *r;
-  if (__anf0 == (int32_t)67)
+  if (__anf0 == 67)
   {
-    *r = (int32_t)42;
+    *r = 42;
     _return = true;
   }
   bool _return1 = _return;
@@ -72,6 +72,6 @@ void Goto_test2_alt(int32_t *r)
     fail = true;
   bool _return10 = _return;
   if (!_return10)
-    *r = (int32_t)17;
+    *r = 17;
 }
 
