@@ -4,7 +4,7 @@ name: Weekly release
 #
 # Creates a PR to bump version.txt and fstar.opam to the current date,
 # enables auto-merge, waits for CI to pass and the PR to merge, then
-# dispatches the release workflow.
+# dispatches the release workflow on the exact merge commit.
 #
 # Requirements:
 #   - "Allow auto-merge" must be enabled in repo settings
@@ -15,6 +15,10 @@ on:
   schedule:
     - cron: '0 12 * * 0' # Every Sunday at noon UTC
   workflow_dispatch:
+
+concurrency:
+  group: weekly-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -33,7 +37,7 @@ jobs:
       - name: Compute new version
         id: version
         run: |
-          NEW_VERSION=$(date +%Y.%m.%d)
+          NEW_VERSION=$(date -u +%Y.%m.%d)
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
           git fetch --tags
@@ -84,15 +88,19 @@ jobs:
 
       - name: Wait for PR merge
         if: steps.version.outputs.skip != 'true'
+        id: merged
         timeout-minutes: 180
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           BRANCH="auto/bump-v${{ steps.version.outputs.new_version }}"
           while true; do
-            STATE=$(gh pr view "$BRANCH" --json state -q .state)
+            PR_JSON=$(gh pr view "$BRANCH" --json state,mergeCommit)
+            STATE=$(echo "$PR_JSON" | jq -r '.state')
             if [[ "$STATE" == "MERGED" ]]; then
-              echo "PR merged successfully"
+              MERGE_SHA=$(echo "$PR_JSON" | jq -r '.mergeCommit.oid')
+              echo "PR merged at $MERGE_SHA"
+              echo "merge_sha=$MERGE_SHA" >> "$GITHUB_OUTPUT"
               break
             elif [[ "$STATE" == "CLOSED" ]]; then
               echo "::error::PR was closed without merging"
@@ -106,4 +114,7 @@ jobs:
         if: steps.version.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run release.yml
+        run: |
+          MERGE_SHA="${{ steps.merged.outputs.merge_sha }}"
+          echo "Dispatching release.yml for commit $MERGE_SHA"
+          gh workflow run release.yml -f target_sha="$MERGE_SHA"

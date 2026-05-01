@@ -7,13 +7,26 @@ on:
         description: 'Dry run: just build, do not publish'
         default: false
         type: boolean
+      target_sha:
+        description: 'Commit SHA to release (default: HEAD of default branch)'
+        default: ''
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
 
 env:
   DRY_RUN: ${{ github.event.inputs.dry_run || false }}
+  # Use the provided SHA, or fall back to the SHA that triggered the workflow.
+  TARGET_SHA: ${{ github.event.inputs.target_sha || github.sha }}
 
 jobs:
-  # Bump version number beforehand? I don't think the action can push
-  # that to master (easily). Just remember to do so manually.
+  # Bump version number beforehand, or use the weekly-release workflow
+  # which automates the bump + release cycle.
 
   # At least check for it, so we don't run this whole thing and fail
   # for an existing tag.
@@ -22,6 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ env.TARGET_SHA }}
           submodules: true
       - if: env.DRY_RUN != 'true' # don't check on a dry run.
         run: |
@@ -35,6 +49,8 @@ jobs:
   build-all:
     needs: pre
     uses: ./.github/workflows/build-all.yml
+    with:
+      ref: ${{ github.event.inputs.target_sha || '' }}
 
   publish:
     runs-on: ubuntu-latest
@@ -54,6 +70,7 @@ jobs:
 
       - uses: actions/checkout@v6
         with:
+          ref: ${{ env.TARGET_SHA }}
           submodules: true
           path: FStar
       - name: Rename packages to have version number
@@ -80,7 +97,7 @@ jobs:
 
           TAG="v$V"
           # Create and push annotated tag to repo.
-          git tag -a -m "F* version $V" "$TAG" "${{github.sha}}"
+          git tag -a -m "F* version $V" "$TAG" "${{ env.TARGET_SHA }}"
           git push origin "$TAG"
 
           # Create github release.
