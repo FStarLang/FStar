@@ -1,0 +1,85 @@
+name: Update KaRaMeL submodule
+
+# Automated weekly update of the karamel submodule.
+#
+# Creates a PR to fast-forward the submodule to upstream master,
+# enables auto-merge, and lets CI gate the change.
+#
+# Requirements:
+#   - "Allow auto-merge" must be enabled in repo settings
+#   - Branch protection must not require PR reviews (or the bot must
+#     be able to satisfy them)
+
+on:
+  schedule:
+    # Every Wednesday at noon UTC
+    - cron: '0 12 * * 3'
+  workflow_dispatch:
+
+concurrency:
+  group: update-karamel
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-karamel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Fast-forward karamel to upstream master
+        id: update
+        run: |
+          cd karamel
+          git pull --ff-only origin master
+          cd ..
+
+          git add karamel
+          if git diff --cached --quiet; then
+            echo "karamel submodule is already up to date."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            NEW_SHA=$(git -C karamel rev-parse --short HEAD)
+            echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Close stale auto-update PRs
+        if: steps.update.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr list --state open --json number,headRefName \
+            -q '.[] | select(.headRefName | startswith("auto/update-karamel-")) | .number' \
+          | while read -r pr; do
+            echo "Closing stale karamel update PR #$pr"
+            gh pr close "$pr" --comment "Superseded by update to karamel ${{ steps.update.outputs.new_sha }}."
+          done
+
+      - name: Create PR
+        if: steps.update.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_SHA: ${{ steps.update.outputs.new_sha }}
+        run: |
+          BRANCH="auto/update-karamel-$NEW_SHA"
+
+          git config user.name "Dzomo, the Everest Yak"
+          git config user.email "24394600+dzomo@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          git commit -m "Update karamel submodule to $NEW_SHA"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "Update karamel submodule to $NEW_SHA" \
+            --body "Automated weekly fast-forward of the karamel submodule to upstream master ($NEW_SHA)." \
+            --base master \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash
