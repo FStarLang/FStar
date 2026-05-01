@@ -348,7 +348,7 @@ jobs:
           repository: FStarLang/AlgoStar
 
       - name: Build
-        run: make -C algostar -skj$(nproc)
+        run: make -C algostar -j$(nproc)
 
   pulse-verified-gc:
     runs-on: ubuntu-latest
