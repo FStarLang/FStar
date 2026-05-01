@@ -534,6 +534,7 @@ typars:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
     { record_field_decls }
 
+
 typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
   | EQUALS t=typ
@@ -905,6 +906,7 @@ path(Id):
   | id=Id { [id] }
   | uid=uident DOT p=path(Id) { uid::p }
 
+%public
 ident:
   | x=lident { x }
   | x=uident  { x }
@@ -1220,7 +1222,7 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-%inline
+%public
 typ:
   | t=simpleTerm { t }
 
@@ -1300,6 +1302,7 @@ tmArrow(Tm):
      }
   | e=Tm %prec below_op { e }
 
+%public
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
@@ -1420,6 +1423,7 @@ tmNoEqNoRecordWith(X):
       { mk_term (Op(mk_ident (op, rr $loc(op)), [e])) (rr $loc) Formula }
   | e=X { e }
 
+%public
 tmNoEqWith(X):
   | e=tmNoEqNoRecordWith(X) { e }
   | e=recordTerm { e }
