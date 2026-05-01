@@ -8,10 +8,10 @@ int32_t BangBang_modify_nested_ptr(int32_t **x)
   int32_t *__anf2 = *x;
   int32_t *__anf01 = *x;
   int32_t __anf1 = *__anf01;
-  *__anf2 = __anf1 + (int32_t)2;
+  *__anf2 = __anf1 + 2;
   int32_t *__anf03 = *x;
   int32_t __anf11 = *__anf03;
-  return __anf11 + (int32_t)1;
+  return __anf11 + 1;
 }
 
 void BangBang_decr_uint(void)
