@@ -264,17 +264,25 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_while tm inv body }
   | INTRO p=pulseSLProp WITH ws=nonempty_list(indexingTerm)
     { PulseSyntaxExtension_Sugar.mk_intro p ws }
-  | bs=withBindersOpt REWRITE body=rewriteBody
-    {
-        PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body bs
-    }
-  | bs=withBindersOpt ASSERT p=pulseSLProp
+  | REWRITE body=rewriteBody
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body [] }
+  | bs=withBinders REWRITE body=rewriteBody
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body bs }
+  | ASSERT p=pulseSLProp
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) [] }
+  | bs=withBinders ASSERT p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) bs }
-  | bs=withBindersOpt ASSUME p=pulseSLProp
+  | ASSUME p=pulseSLProp
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSUME p) [] }
+  | bs=withBinders ASSUME p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSUME p) bs }
-  | bs=withBindersOpt UNFOLD ns=optionalNames p=pulseSLProp
+  | UNFOLD ns=optionalNames p=pulseSLProp
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) [] }
+  | bs=withBinders UNFOLD ns=optionalNames p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
-  | bs=withBindersOpt FOLD ns=optionalNames p=pulseSLProp
+  | FOLD ns=optionalNames p=pulseSLProp
+    { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) [] }
+  | bs=withBinders FOLD ns=optionalNames p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
   | bs=withBinders UNDERSCORE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
@@ -345,11 +353,6 @@ optionalNames:
 withBinders:
   | WITH bs=nonempty_list(multiBinder) DOT
     { List.flatten bs }
-
-withBindersOpt:
-  | w=withBinders
-    { w }
-  | { [] }
 
 ensuresSLProp:
   | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseSLProp maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
