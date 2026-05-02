@@ -9,6 +9,6 @@ fn seq_error (r1 r2: ref int)
   ensures pts_to r1 1 ** pts_to r2 1
 {
   r1 := 1;
-  r2 := 2;  // ERROR: should point here, post expects pts_to r2 1
-  ()
+  r2 := 2;
+  ()  // ERROR: postcondition pts_to r2 1 checked here, but context has pts_to r2 2
 }

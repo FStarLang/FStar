@@ -11,5 +11,5 @@ fn nested_block (r: ref int)
   // {
     assert (pts_to r 1);  // ERROR: r is 0, not 1
   // };
-  () //FIX! error is 
+  ()
 }

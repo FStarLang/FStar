@@ -1,8 +1,8 @@
-* Info at NestedBlock.fst(14,2-14,4):
+* Info at NestedBlock.fst(12,4-12,22):
   - Expected failure:
   - Could not prove equality of:
-  - Pulse.Lib.Reference.pts_to r 1
   - Pulse.Lib.Reference.pts_to r 0
+  - Pulse.Lib.Reference.pts_to r 1
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
