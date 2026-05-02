@@ -9,5 +9,6 @@ fn atomic_fn (r: ref int)
   requires pts_to r 0
   ensures pts_to r 1
 {
-  r := 1  // Might error if := is not atomic-compatible
+  r := 1;  // Might error if := is not atomic-compatible
+  ()
 }

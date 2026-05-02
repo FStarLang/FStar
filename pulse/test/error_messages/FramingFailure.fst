@@ -9,5 +9,6 @@ fn framing_fail (r1 r2: ref int)
   ensures pts_to r1 1
 {
   let v = !r2;
-  r1 := 1
+  r1 := 1;
+  ()
 }

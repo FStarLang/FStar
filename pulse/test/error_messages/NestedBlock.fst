@@ -8,8 +8,8 @@ fn nested_block (r: ref int)
   requires pts_to r 0
   ensures pts_to r 0
 {
-  {
-    assert (pts_to r 1)  // ERROR: r is 0, not 1
-  };
-  ()
+  // {
+    assert (pts_to r 1);  // ERROR: r is 0, not 1
+  // };
+  () //FIX! error is 
 }

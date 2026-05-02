@@ -10,5 +10,6 @@ fn inv_payload_fail (r: ref int)
   requires pts_to r 0
   ensures my_pred r
 {
-  fold my_pred r  // ERROR: can't prove v > 0 with v = 0
+  fold my_pred r;  // ERROR: can't prove v > 0 with v = 0
+  ()
 }

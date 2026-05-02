@@ -1,5 +1,6 @@
 * Info at LambdaArg.fst(18,2-18,11):
   - Expected failure:
+  - Ill-typed term: takes_two 1 2 3
   - Expected a function.
   - Got an expression of type:
       fn

@@ -8,5 +8,6 @@ fn bad_if_cond (x: int)
   requires emp
   ensures emp
 {
-  if x { () } else { () }
+  if x { () } else { () };
+  ()
 }

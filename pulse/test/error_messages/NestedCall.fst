@@ -15,5 +15,6 @@ fn outer (r: ref int)
   requires pts_to r 5
   ensures pts_to r 1
 {
-  inner r  // ERROR: precondition mismatch (pts_to r 5 vs pts_to r 0)
+  inner r;  // ERROR: precondition mismatch (pts_to r 5 vs pts_to r 0)
+  ()
 }

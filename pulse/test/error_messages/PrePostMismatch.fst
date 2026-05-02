@@ -8,5 +8,6 @@ fn pre_post_mismatch (r: ref int)
   requires pts_to r 0
   ensures pts_to r 42
 {
-  r := 1
+  r := 1;
+  ()
 }

@@ -10,5 +10,6 @@ fn fold_fail (r: ref int)
   requires pts_to r (-1)
   ensures my_inv r (-1)
 {
-  fold (my_inv r (-1))  // ERROR: pure (v >= 0) not satisfiable with v = -1
+  fold (my_inv r (-1));  // ERROR: pure (v >= 0) not satisfiable with v = -1
+  ()
 }

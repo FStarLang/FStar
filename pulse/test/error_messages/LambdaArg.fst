@@ -15,5 +15,6 @@ fn wrong_args ()
   requires emp
   ensures emp
 {
-  takes_two 1 2 3  // ERROR: too many arguments
+  takes_two 1 2 3;  // ERROR: too many arguments
+  ()
 }

@@ -15,5 +15,6 @@ fn caller (x: int)
   requires emp
   ensures emp
 {
-  callee x
+  callee x;
+  ()
 }

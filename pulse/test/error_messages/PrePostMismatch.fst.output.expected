@@ -1,4 +1,4 @@
-* Info at PrePostMismatch.fst(11,2-11,6):
+* Info at PrePostMismatch.fst(12,2-12,4):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to r 1
@@ -6,5 +6,4 @@
   - Assertion failed
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also PrePostMismatch.fst(11,2-11,8)
 
