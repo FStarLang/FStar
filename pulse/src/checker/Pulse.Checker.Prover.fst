@@ -387,9 +387,18 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
     if pure_eq_unif g p skip_eq_uvar then None else begin
     debug_prover g (fun _ -> Printf.sprintf "prove_pure p=%s success" (show p));
 
+    let saved_bound = RU.get_error_bound () in
     Some (| g, ctxt, [], [], fun g'' ->
  // implied by t2_typing
-      let pv = check_prop_validity g'' p in
+      // Restore the error bound that was active when this pure goal was matched.
+      // This closure is evaluated lazily (via cont_elab_thunk) after the
+      // original with_error_bound scope has exited.
+      let pv =
+        let do_check () = check_prop_validity g'' p in
+        match saved_bound with
+        | Some r -> RU.with_error_bound r do_check
+        | None -> do_check ()
+      in
       cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
 
@@ -424,12 +433,19 @@ let prove_with_pure (g: env) (ctxt: list slprop_view) skip_eq_uvar (goal: slprop
   | WithPure p n v ->
     if pure_eq_unif g p skip_eq_uvar then None else
 
+    let saved_bound = RU.get_error_bound () in
     Some (| g, ctxt, [Unknown v], [], fun g'' ->
       cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
 
 
-        k_elab_equiv (elab_slprops (frame @ [Unknown v] @ [])) (elab_slprops (frame @ [goal])) (intro_with_pure g'' (elab_slprops frame) p n v))
+        k_elab_equiv (elab_slprops (frame @ [Unknown v] @ [])) (elab_slprops (frame @ [goal]))
+          (let do_intro post t =
+            (match saved_bound with
+             | Some r -> RU.with_error_bound r (fun () -> intro_with_pure g'' (elab_slprops frame) p n v post t)
+             | None -> intro_with_pure g'' (elab_slprops frame) p n v post t)
+          in
+          do_intro))
       <: T.Tac _ |)
   | _ -> None
 
