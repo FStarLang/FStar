@@ -1,0 +1,6 @@
+* Info at MissingPost.fst(12,2-12,4):
+  - Expected failure:
+  - Tactic failed
+  - Leftover resources: Pulse.Lib.Reference.pts_to r 1
+  - Did you forget to free these resources?
+

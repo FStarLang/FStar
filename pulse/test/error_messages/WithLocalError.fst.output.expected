@@ -1,0 +1,7 @@
+* Info at WithLocalError.fst(13,21-13,22):
+  - Expected failure:
+  - Ill-typed term: pure (x == 0)
+  - Expected expression of type Pulse.Lib.Reference.ref Prims.int
+    got expression 0
+    of type Prims.int
+

@@ -1,0 +1,10 @@
+* Info at WhileInvPreservation.fst(15,4-15,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to i 2
+  - Pulse.Lib.Reference.pts_to i 0
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also WhileInvPreservation.fst(15,4-15,13)
+

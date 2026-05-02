@@ -1,0 +1,12 @@
+* Info at SubtypingFailure.fst(18,2-18,10):
+  - Expected failure:
+  - Ill-typed term: callee x
+  - Expected a term of type
+      fn
+        requires emp
+        ensures emp
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(642,18-642,24)
+

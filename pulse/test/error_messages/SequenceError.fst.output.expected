@@ -1,0 +1,9 @@
+* Info at SequenceError.fst(13,2-13,4):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to r2 2
+  - Pulse.Lib.Reference.pts_to r2 1
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+

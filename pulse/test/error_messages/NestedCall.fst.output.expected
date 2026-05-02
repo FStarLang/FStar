@@ -1,0 +1,9 @@
+* Info at NestedCall.fst(18,2-18,9):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to r 5
+  - Pulse.Lib.Reference.pts_to r 0
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+

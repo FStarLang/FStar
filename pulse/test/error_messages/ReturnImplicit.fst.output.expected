@@ -1,0 +1,9 @@
+* Info at ReturnImplicit.fst(12,2-12,4):
+  - Expected failure:
+  - Ill-typed term: - 1
+  - Expected a term of type nat
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: Prims.fst(642,18-642,24)
+

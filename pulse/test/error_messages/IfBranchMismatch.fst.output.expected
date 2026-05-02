@@ -1,0 +1,10 @@
+* Info at IfBranchMismatch.fst(14,4-14,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to r 2
+  - Pulse.Lib.Reference.pts_to r 1
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also IfBranchMismatch.fst(14,4-14,10)
+

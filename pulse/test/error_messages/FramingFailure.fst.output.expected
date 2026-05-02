@@ -1,0 +1,8 @@
+* Info at FramingFailure.fst(11,10-11,13):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      Pulse.Lib.Reference.pts_to r2 (*?u298*)_
+  - In the context:
+      Pulse.Lib.Reference.pts_to r1 0
+

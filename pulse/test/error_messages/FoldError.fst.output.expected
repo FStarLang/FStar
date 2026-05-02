@@ -1,0 +1,7 @@
+* Info at FoldError.fst(13,2-13,22):
+  - Expected failure:
+  - Failed to prove pure property: false
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+

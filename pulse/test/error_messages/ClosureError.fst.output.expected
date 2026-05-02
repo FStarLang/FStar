@@ -1,0 +1,10 @@
+* Info at ClosureError.fst(17,2-17,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to r 0
+  - Pulse.Lib.Reference.pts_to r 1
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also ClosureError.fst(17,2-18,4)
+

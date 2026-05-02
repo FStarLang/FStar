@@ -1,0 +1,7 @@
+* Info at AssertExtraContext.fst(11,7-11,43):
+  - Expected failure:
+  - Failed to prove pure property: 0 > 0
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
