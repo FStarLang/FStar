@@ -45,7 +45,6 @@ module PC = FStarC.Parser.Const
 module U  = FStarC.Syntax.Util
 module EMB = FStarC.Syntax.Embeddings
 module TcComm = FStarC.TypeChecker.Common
-module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module PO = FStarC.TypeChecker.Primops
 module Print = FStarC.Syntax.Print //bring into scope for show instances
 open FStarC.TypeChecker.Normalize.Unfolding

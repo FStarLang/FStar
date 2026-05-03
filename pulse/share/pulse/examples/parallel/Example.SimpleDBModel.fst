@@ -3,7 +3,6 @@ module Example.SimpleDBModel
 open Pulse.Lib.Pervasives
 open Pulse.Lib.GhostPCMReference
 open FStar.Preorder
-module GR = Pulse.Lib.GhostPCMReference
 module MR = Pulse.Lib.MonotonicGhostRef
 let as_prop (p:prop) = p <==> True
 // A tiny db
