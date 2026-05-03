@@ -63,7 +63,7 @@ jobs:
       - name: Bump version and create PR
         if: steps.version.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
           NEW_VERSION: ${{ steps.version.outputs.new_version }}
         run: |
           BRANCH="auto/bump-v$NEW_VERSION"
@@ -76,7 +76,9 @@ jobs:
           sed -i 's/^version: ".*"/version: "'"$NEW_VERSION"'~dev"/' fstar.opam
           git add version.txt fstar.opam
           git commit -m "Bump version to $NEW_VERSION"
-          git push origin "$BRANCH"
+
+          # Push with PAT so that CI triggers on the PR
+          git push "https://${{ secrets.DZOMO_GITHUB_TOKEN }}@github.com/${{ github.repository }}" "$BRANCH"
 
           gh pr create \
             --title "Bump version to $NEW_VERSION" \
@@ -109,6 +111,14 @@ jobs:
             echo "PR state: $STATE, waiting..."
             sleep 60
           done
+
+      - name: Delete bump branch
+        if: steps.version.outputs.skip != 'true' && steps.merged.outputs.merge_sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="auto/bump-v${{ steps.version.outputs.new_version }}"
+          git push origin --delete "$BRANCH" || true
 
       - name: Trigger release
         if: steps.version.outputs.skip != 'true'
