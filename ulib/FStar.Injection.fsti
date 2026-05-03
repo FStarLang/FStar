@@ -2,7 +2,6 @@ module FStar.Injection
 
 open FStar.Fin
 open FStar.Functions
-module SZ = FStar.SizeT
 open FStar.SizeT { (/^), (%^), (+^), (-^), ( *^ )  }
 open FStar.Tactics.Easy
 

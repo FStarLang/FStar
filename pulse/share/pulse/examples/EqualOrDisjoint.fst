@@ -1,8 +1,6 @@
 module EqualOrDisjoint
 #lang-pulse
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
-module TR = Pulse.Lib.Trade
 open Pulse.Lib.Trade
 open Pulse.Lib.Forall.Util
 

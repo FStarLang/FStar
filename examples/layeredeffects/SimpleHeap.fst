@@ -3,7 +3,6 @@
 *)
 module SimpleHeap
 
-module S = FStar.Set
 module F = FStar.FunctionalExtensionality
 
 (** Internal cell type: stores a typed value *)
