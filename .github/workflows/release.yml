@@ -101,7 +101,7 @@ jobs:
           git push origin "$TAG"
 
           # Create github release.
-          gh release create --prerelease \
+          gh release create --latest \
             --generate-notes \
             -t "F* v$V" \
             "$TAG" ../artifacts/*
