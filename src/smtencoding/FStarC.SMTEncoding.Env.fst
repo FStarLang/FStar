@@ -63,19 +63,6 @@ let mk_term_projector_by_pos (lid:lident) (i:int) : ML term =
 let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 (* ------------------------------------ *)
 (* New name generation *)
-type varops_t = {
-    push: unit -> ML unit;
-    pop: unit -> ML unit;
-    snapshot: unit -> ML (int & unit);
-    rollback: option int -> ML unit;
-    new_var:ident -> int -> ML string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
-    new_fvar:lident -> ML string;
-    fresh:string -> string -> ML string;  (* module name -> prefix -> name *)
-    reset_fresh:unit -> ML unit;
-    next_id: unit -> ML int;
-    mk_unique:string -> ML string;
-    reset_scope: unit -> ML unit
-}
 let varops =
     let initial_ctr = 100 in
     let ctr = mk_ref initial_ctr in
@@ -123,17 +110,6 @@ let varops =
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
 (* free variables, depending on whether or not they are fully applied ...  *)
 (* ... are mapped either to SMT2 functions, or to nullary tokens *)
-type fvar_binding = {
-    fvar_lid:  lident;
-    univ_arity : int;
-    smt_arity: int;
-    smt_id:    string;
-    smt_token: option term;
-    smt_fuel_partial_app:option (term & term);
-    fvb_thunked: bool;
-    needs_fuel_and_universe_instantiations: option univ_names;
-}
-
 let list_of (i:int) (f:int -> ML 'a)
 : ML (list 'a)
 = let rec aux i out : ML _ =
@@ -205,21 +181,6 @@ let check_valid_fvb fvb =
 
 
 let binder_of_eithervar v = (v, None)
-
-type env_t = {
-    bvar_bindings: PSMap.t (PIMap.t (bv & term));
-    fvar_bindings: (PSMap.t fvar_binding & list fvar_binding);  //list of fvar bindings for the current module
-                                                                   //remember them so that we can store them in the checked file
-    depth:int; //length of local var/tvar bindings
-    tcenv:Env.env;
-    warn:bool;
-    nolabels:bool;
-    use_zfuel_name:bool;
-    encode_non_total_function_typ:bool;
-    current_module_name:string;
-    encoding_quantifier:bool;
-    global_cache:SMap.t (decls_elt & lident);  //cache for hashconsing, 2nd arg is the module name of the decl -- see Encode.fs where it is used and updated
-}
 
 let print_env (e:env_t) : ML string =
     let bvars = PSMap.fold e.bvar_bindings (fun _k pi acc ->

@@ -49,7 +49,6 @@ fn five_alt ()
 
 open Pulse.Lib.Reference
 open Pulse.Class.PtsTo
-module R = Pulse.Lib.Reference
 
 (* 
   Things to note:
@@ -114,7 +113,6 @@ fn test (r:ref int)
 }
 
 open Pulse.Lib.Array
-module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
 open Pulse.Lib.BoundedIntegers
 

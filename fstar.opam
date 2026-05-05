@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2026.04.17~dev"
+version: "2026.05.03~dev"
 maintainer: "guimartinez@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -13,7 +13,7 @@ depends: [
   "dune" {>= "3.8.0"}
   "memtrace" {>= "0.2.3"}
   "menhirLib"
-  "menhir" {build & >= "20230415"}
+  "menhir" {build & >= "20260112"}
   "mtime" {>= "2.1.0"}
   "pprint"
   "sedlex" {>= "3.5" }

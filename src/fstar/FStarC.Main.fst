@@ -23,6 +23,7 @@ open FStarC.Ident
 open FStarC.CheckedFiles
 open FStarC.Universal
 open FStarC.Util
+open FStarC.Syntax.Print
 
 open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
 

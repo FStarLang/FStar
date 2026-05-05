@@ -30,6 +30,7 @@ open FStarC.SMTEncoding.Util
 open FStarC.SMTEncoding.Env
 open FStarC.SMTEncoding.EncodeTerm
 open FStarC.Class.Show
+open FStarC.Syntax.Print {}
 
 module BU     = FStarC.Util
 module Const  = FStarC.Parser.Const

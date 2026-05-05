@@ -4,10 +4,8 @@ open FStar.All
 open FStar.IO
 
 module U8   = FStar.UInt8
-module U16  = FStar.UInt16
 module U32  = FStar.UInt32
 module U64  = FStar.UInt64
-module I8   = FStar.Int8
 module I32  = FStar.Int32
 
 let check s (b:bool) : ML unit =

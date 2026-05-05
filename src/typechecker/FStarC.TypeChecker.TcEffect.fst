@@ -37,7 +37,6 @@ module TcUtil = FStarC.TypeChecker.Util
 module Gen = FStarC.TypeChecker.Generalize
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
-module BU = FStarC.Util
 open FStarC.Class.Show
 open FStarC.Class.Tagged
 

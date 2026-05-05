@@ -7,7 +7,6 @@
 module SimpleHeap
 
 module S = FStar.Set
-module F = FStar.FunctionalExtensionality
 
 (** The heap type *)
 val heap : Type u#1
