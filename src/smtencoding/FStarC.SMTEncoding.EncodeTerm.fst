@@ -1192,6 +1192,31 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
           when S.fv_eq_lid fv Const.rewrite_by_tactic_lid ->
           encode_term phi env
 
+        // TODO: Make sure they are fully applied
+        | Tm_fvar fv, _
+        | Tm_uinst ({n=Tm_fvar fv}, _), _
+          when S.fv_eq_lid fv Const.admit_lid || S.fv_eq_lid fv Const.magic_lid ->
+          (* Special handling for admit() and magic()
+             Instead of encoding them as constant functions, encode them as fresh functions
+             applied to the entire context. This prevents all calls to admit/magic from being
+             concluded to return the same value. *)
+          // let ctx_fvs = Env.bound_vars env.tcenv in
+          // let fv_terms = List.map (fun x -> lookup_term_var env x) ctx_fvs in
+          let all_bvar_bindings =
+            PSMap.fold env.bvar_bindings
+              (fun s imap acc -> PIMap.fold imap (fun _ (_, t) acc -> t::acc) acc)
+              []
+          in
+          let fv_terms = all_bvar_bindings in
+
+          (* Generate a fresh function symbol for this call to admit/magic *)
+          let fresh_fn_name = varops.fresh env.current_module_name
+            (if S.fv_eq_lid fv Const.admit_lid then "admit_fn" else "magic_fn") in
+          let arg_sorts = List.map (fun _ -> Term_sort) fv_terms in
+          let fresh_fn_decl = Term.DeclFun (fresh_fn_name, arg_sorts, Term_sort, None) in
+          let fresh_fn_app = mkApp (fresh_fn_name, fv_terms) in
+          fresh_fn_app, mk_decls_trivial [fresh_fn_decl]
+
         | _ ->
             let args, decls = encode_args args_e env in
 
