@@ -17,7 +17,6 @@
 module PulseTutorial.AtomicsAndInvariants
 #lang-pulse
 open Pulse.Lib.Pervasives
-module T = FStar.Tactics
 module U32 = FStar.UInt32
 
 //owns$

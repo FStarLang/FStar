@@ -28,7 +28,6 @@ module T = FStar.Tactics.V2
 module L = FStar.List.Tot.Base
 module R = FStar.Reflection.V2
 module RT = FStar.Reflection.Typing
-module RU = Pulse.RuntimeUtils
 
 let br_typing_vis (g:env) (_:universe) (_:typ) (_:term) (_:pattern) (_:st_term) (_:comp_st) : Type = unit
 

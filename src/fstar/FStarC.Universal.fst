@@ -29,6 +29,7 @@ open FStarC.Dependencies
 open FStarC.Extraction.ML.UEnv
 open FStarC.TypeChecker.Env
 open FStarC.Syntax.DsEnv
+open FStarC.Syntax.Print
 open FStarC.TypeChecker
 open FStarC.CheckedFiles
 

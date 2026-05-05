@@ -34,6 +34,7 @@ open FStarC.Class.Show
 open FStarC.Class.PP
 open FStarC.Class.Hashable
 open FStarC.RBSet
+open FStarC.Syntax.Print {} // instances
 
 module BU       = FStarC.Util
 module Env      = FStarC.TypeChecker.Env
