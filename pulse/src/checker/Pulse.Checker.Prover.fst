@@ -377,6 +377,13 @@ let pure_eq_unif (g: env) (p: term) skip_eq_uvar : Dv bool =
     )
   | None -> false
 
+// Restore a previously-captured error_range_bound around a thunk.
+let with_saved_bound (saved_bound: option Range.range) (f: unit -> T.Tac 'a)
+  : T.Tac 'a =
+  match saved_bound with
+  | Some r -> RU.with_error_bound r f
+  | None -> f ()
+
 // skip_eq_uvar to support (assert foo. with pure (foo == ....))
 let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slprop_view) :
     T.Tac (option (prover_result g ctxt [goal])) =
@@ -393,12 +400,7 @@ let prove_pure (g: env) (ctxt: list slprop_view) (skip_eq_uvar: bool) (goal: slp
       // Restore the error bound that was active when this pure goal was matched.
       // This closure is evaluated lazily (via cont_elab_thunk) after the
       // original with_error_bound scope has exited.
-      let pv =
-        let do_check () = check_prop_validity g'' p in
-        match saved_bound with
-        | Some r -> RU.with_error_bound r do_check
-        | None -> do_check ()
-      in
+      let pv = with_saved_bound saved_bound (fun () -> check_prop_validity g'' p) in
       cont_elab_refl g ctxt ([] @ ctxt),
       (fun frame ->
 
@@ -440,12 +442,9 @@ let prove_with_pure (g: env) (ctxt: list slprop_view) skip_eq_uvar (goal: slprop
 
 
         k_elab_equiv (elab_slprops (frame @ [Unknown v] @ [])) (elab_slprops (frame @ [goal]))
-          (let do_intro post t =
-            (match saved_bound with
-             | Some r -> RU.with_error_bound r (fun () -> intro_with_pure g'' (elab_slprops frame) p n v post t)
-             | None -> intro_with_pure g'' (elab_slprops frame) p n v post t)
-          in
-          do_intro))
+          (fun post t ->
+            with_saved_bound saved_bound
+              (fun () -> intro_with_pure g'' (elab_slprops frame) p n v post t)))
       <: T.Tac _ |)
   | _ -> None
 
@@ -936,6 +935,15 @@ let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
 
 let dup_lid = ["Pulse"; "Class"; "Duplicable"; "dup"]
 
+// Check that ctxt_t and goal are equivalent slprops, and (if dup) that the
+// dup token typechecks.
+let check_atom_equiv (g: env) (ctxt_t goal: T.term) (dup: bool) : T.Tac unit =
+  let _ = check_slprop_equiv_ext (RU.range_of_term goal) g ctxt_t goal in
+  if dup then
+    ignore (compute_term_type g
+      (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
+        [ctxt_t, R.Q_Explicit; unit_const, R.Q_Explicit]))
+
 let prove_atom_result (g: env)
     (ctxt: slprop_view { Atom? ctxt }) (rest_ctxt: list slprop_view)
     (#ctxt0: list slprop_view) // ctxt0 == ctxt ** rest_ctxt
@@ -943,17 +951,25 @@ let prove_atom_result (g: env)
     T.Tac (prover_result g ctxt0 [goal]) =
   let Atom _ dup _ _ = ctxt in
   let goal = elab_slprop goal in
-  // Run the equivalence check eagerly (not deferred in a continuation) so that
-  // errors are reported with the correct error_range_bound context.
-  // Previously this was deferred in the continuation closure, but that caused
-  // errors to be mislocalized when the closure ran after with_error_bound exited.
-  let _ = check_slprop_equiv_ext (RU.range_of_term goal) g (elab_slprop ctxt) goal in
-  (if dup then
-    ignore (compute_term_type g
-      (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
-        [elab_slprop ctxt, R.Q_Explicit; unit_const, R.Q_Explicit])));
-  (| g, (if dup then rest_ctxt@[ctxt] else rest_ctxt), [], [ctxt], fun g' ->
-    cont_elab_refl _ _ _, cont_elab_refl _ _ _ <: T.Tac _ |)
+  let ctxt_t = elab_slprop ctxt in
+  // When terms have no uvars we check eagerly for better error localization
+  // (the correct error_range_bound is still active). When uvars are present
+  // we must defer because later prover steps may instantiate them.
+  let can_check_eagerly =
+    RU.no_uvars_in_term (RU.deep_compress_safe ctxt_t) &&
+    RU.no_uvars_in_term (RU.deep_compress_safe goal)
+  in
+  let rest = if dup then rest_ctxt@[ctxt] else rest_ctxt in
+  if can_check_eagerly then (
+    check_atom_equiv g ctxt_t goal dup;
+    (| g, rest, [], [ctxt], fun g' ->
+      cont_elab_refl _ _ _, cont_elab_refl _ _ _ <: T.Tac _ |)
+  ) else (
+    let saved_bound = RU.get_error_bound () in
+    (| g, rest, [], [ctxt], fun g' ->
+      with_saved_bound saved_bound (fun () -> check_atom_equiv g ctxt_t goal dup);
+      cont_elab_refl _ _ _, cont_elab_refl _ _ _ <: T.Tac _ |)
+  )
 
 // this matches atoms when they're the only unifiable pair
 // necessary for various gather like functions where you don't specify all arguments
