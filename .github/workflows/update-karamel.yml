@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: true
+          token: ${{ secrets.DZOMO_GITHUB_TOKEN }}
 
       - name: Fast-forward karamel to upstream master
         id: update
@@ -50,7 +51,7 @@ jobs:
       - name: Close stale auto-update PRs
         if: steps.update.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
         run: |
           gh pr list --state open --json number,headRefName \
             -q '.[] | select(.headRefName | startswith("auto/update-karamel-")) | .number' \
@@ -62,7 +63,7 @@ jobs:
       - name: Create PR
         if: steps.update.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
           NEW_SHA: ${{ steps.update.outputs.new_sha }}
         run: |
           BRANCH="auto/update-karamel-$NEW_SHA"
