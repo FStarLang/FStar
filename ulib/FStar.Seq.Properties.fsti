@@ -760,3 +760,10 @@ val map_seq_index (#a #b:Type) (f:a -> Tot b) (s:Seq.seq a) (i:nat{i < Seq.lengt
 val map_seq_append (#a #b:Type) (f:a -> Tot b) (s1 s2:Seq.seq a)
   : Lemma (ensures (map_seq f (Seq.append s1 s2) ==
                     Seq.append (map_seq f s1) (map_seq f s2)))
+
+val index_extensionality (#a: eqtype) (s1 s2: seq a) 
+: Lemma
+  (requires
+    (length s1 == length s2 /\
+    (forall (i: nat) . i < length s1 ==> index s1 i == index s2 i)))
+  (ensures (s1 == s2))
