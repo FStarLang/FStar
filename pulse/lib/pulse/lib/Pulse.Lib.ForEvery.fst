@@ -396,6 +396,23 @@ fn forevery_ext_2
 }
 
 ghost
+fn forevery_intro_pure (#a:Type0) (p: a -> prop)
+  requires
+    pure (forall x. p x)
+  ensures
+    forall+ x. pure (p x)
+{
+  forevery_intro_false (fun x -> pure (p x));
+  forevery_fill
+    #a
+    #(fun _ -> False)
+    (fun x -> pure (p x))
+    (fun _ -> True)
+    fn x {};
+  forevery_rw_type (x:a{False \/ True}) a (fun x -> pure (p x));
+}
+
+ghost
 fn forevery_map
   (#a:Type0)
   (p1 p2 : a -> slprop)
@@ -410,6 +427,23 @@ fn forevery_map
     fn pred add g { forevery_fill p2 add fn x { g x; f x } }
     fn pred x { f x; forevery_insert p2 x };
   forevery_refine_ext (fun _ -> True) p2;
+}
+
+ghost
+fn forevery_intro_pure_2 (#a:Type0) (#b:Type0) (p: a -> b -> prop)
+  requires
+    pure (forall x y. p x y)
+  ensures
+    forall+ (x:a) (y:b). pure (p x y)
+{
+  forevery_intro_false (fun (x:a) -> forall+ (y:b). pure (p x y));
+  forevery_fill
+    #a
+    #(fun _ -> False)
+    (fun x -> forall+ (y:b). pure (p x y))
+    (fun _ -> True)
+    fn x { forevery_intro_pure #b (fun y -> p x y) };
+  forevery_rw_type (x:a{False \/ True}) a (fun x -> forall+ (y:b). pure (p x y));
 }
 
 ghost
@@ -2467,14 +2501,29 @@ fn forevery_zip3_2
   ensures
     forall+ (x:a) (y:b). p1 x y ** p2 x y ** p3 x y
 {
-  forevery_zip_2 p1 p2;
-  forevery_zip_2 (fun x y -> p1 x y ** p2 x y) p3;
-  (* Have: forall+ x y. (p1 ** p2) ** p3 *)
-  (* Want: forall+ x y. p1 ** (p2 ** p3) *)
-  forevery_map_2 #a #b
-    (fun (x:a) (y:b) -> (p1 x y ** p2 x y) ** p3 x y)
-    (fun (x:a) (y:b) -> p1 x y ** p2 x y ** p3 x y)
-    fn x y { () };
+  forevery_zip_2 p2 p3;
+  forevery_zip_2 p1 (fun x y -> p2 x y ** p3 x y);
+}
+
+(* 4-way zip for 2-argument predicates *)
+ghost
+fn forevery_zip4_2
+  (#a #b : Type0)
+  (p1 p2 p3 p4 : a -> b -> slprop)
+  requires
+    forall+ (x:a) (y:b). p1 x y
+  requires
+    forall+ (x:a) (y:b). p2 x y
+  requires
+    forall+ (x:a) (y:b). p3 x y
+  requires
+    forall+ (x:a) (y:b). p4 x y
+  ensures
+    forall+ (x:a) (y:b). p1 x y ** p2 x y ** p3 x y ** p4 x y
+{
+  forevery_zip_2 p3 p4;
+  forevery_zip_2 p2 (fun x y -> p3 x y ** p4 x y);
+  forevery_zip_2 p1 (fun x y -> p2 x y ** p3 x y ** p4 x y);
 }
 
 ghost
