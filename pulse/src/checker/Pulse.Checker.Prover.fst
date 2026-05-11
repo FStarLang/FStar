@@ -1091,7 +1091,7 @@ let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
           let typing = core_check_term g t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
 
-
+          check_slprop_equiv_ext (RU.range_of_term pre) g (elab_slprop ctxt) pre;
 
           assume (elab_slprop ctxt == pre);
           let k_t = cont_elab_with_bind_nondep_unit c t' in
@@ -1133,9 +1133,7 @@ let try_apply_eager_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: sl
           let typing = core_check_term g'' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
 
-
-
-
+          check_slprop_equiv_ext (RU.range_of_term (elab_slprop goal)) g post' (elab_slprop goal);
 
           let k_typing = cont_elab_with_bind_nondep_unit c t' in
           cont_elab_refl g ctxt ([] @ ctxt),
@@ -1238,9 +1236,7 @@ let try_apply_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_v
           let typing = core_check_term g' t T.E_Ghost ty in
           let t' = wtag (Some STT_Ghost) (Tm_ST { t; args=[] }) in
 
-
-
-
+          check_slprop_equiv_ext (RU.range_of_term (elab_slprop goal)) g (elab_slprop post''_i) (elab_slprop goal);
 
           let k_typing = cont_elab_with_bind_nondep_unit c t' in
           let k_typing = cont_elab_frame k_typing ctxt' in
