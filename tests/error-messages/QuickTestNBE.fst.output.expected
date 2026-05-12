@@ -1,7 +1,17 @@
 * Info at QuickTestNBE.fst(131,2-134,34):
   - Expected failure:
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (va_s0 : QuickTestNBE.vale_state)
+  - VC =
+      forall (ok: Prims.bool) (p: (_: Prims.unit -> Prims.GTot Prims.prop)).
+        (forall (u193: Prims.unit). {:pattern Prims.guard_free (p u193)} p ()) ==>
+        FStar.Range.labeled (FStar.Sealed.seal QuickTestNBE(1,2-3,4))
+          ""
+          (QuickTestNBE.f 4 - QuickTestNBE.f 4 == 0 /\ QuickTestNBE.f 4 == 0 /\
+            (forall (pure_result: Prims.unit).
+                (forall (i: Prims.int). {:pattern QuickTestNBE.f i}
+                    QuickTestNBE.f i > 0) ==>
+                p pure_result))
   - Also see: QuickTestNBE(1,2-3,4)
   - Other related locations: QuickTestNBE.fst(116,16-116,18)
 

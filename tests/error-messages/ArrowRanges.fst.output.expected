@@ -2,8 +2,9 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (a : Type0)
+  - VC = Prims.hasEq (_: a -> Prims.bool)
   - See also Prims.fst(90,23-90,30)
 
 * Info at ArrowRanges.fst(10,29-10,38):

@@ -16,39 +16,47 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      forall (b:
+        (n: FStar.Ghost.erased Prims.nat -> FStar.Ghost.erased Prims.nat)).
+        (fun n -> n) == b ==> Prims.l_False
   - See also Prims.fst(642,18-642,24)
 
 * Info at Coercions.fst(74,49-74,57):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : FStar.Ghost.erased Prims.int)
+  - VC = forall (any_result: Prims.int). x == any_result ==> x >= 0
   - See also Prims.fst(642,18-642,24)
 
 * Info at Coercions.fst(76,55-76,56):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
   - See also Prims.fst(642,18-642,24)
 
 * Info at Coercions.fst(78,50-78,51):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : FStar.Ghost.erased Prims.int)
+  - VC = forall (any_result: Prims.int). x == any_result ==> x >= 0
   - See also Prims.fst(642,18-642,24)
 
 * Info at Coercions.fst(80,51-80,52):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
   - See also Prims.fst(642,18-642,24)
 

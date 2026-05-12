@@ -2,7 +2,8 @@
   - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (xs : Prims.list Prims.int)
+  - VC = ~(Nil? xs) ==> Prims.l_False
   - Also see: MatchBasic.fst(134,8-134,10)
 

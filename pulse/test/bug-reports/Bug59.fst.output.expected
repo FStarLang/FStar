@@ -1,8 +1,8 @@
 * Info at Bug59.fst(12,11-12,24):
   - Expected failure:
-  - Ill-typed term: pure (x == y)
-  - Expected a term of type slprop
+  - Ill-typed term
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (a : Type0) (b : Type0) (x : a) (y : b)
+  - VC = b == a
 

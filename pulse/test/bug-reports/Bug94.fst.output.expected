@@ -1,10 +1,10 @@
 * Info at Bug94.fst(9,16-9,18):
   - Expected failure:
-  - Ill-typed term: - 1
-  - Expected a term of type nat
+  - Ill-typed term
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___0 : Prims.unit)
+  - VC = Prims.l_False
   - Also see: Prims.fst(642,18-642,24)
 
 * Info at Bug94.fst(16,16-16,17):
@@ -13,8 +13,15 @@
 
 * Info at Bug94.fst(30,18-30,27):
   - Expected failure:
-  - Ill-typed term: hundred 0
+  - Ill-typed term
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (uu___0 : Prims.unit)
+      (hundred
+        :
+        b: FStar.Ghost.erased Prims.int {b <> 0}
+          -> Prims.GTot (FStar.Ghost.erased Prims.int))
+      (__ : Prims.squash (hundred == Bug94.divide 100)) (__ : Prims.unit)
+  - VC = Prims.l_False
 

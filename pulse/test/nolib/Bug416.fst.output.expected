@@ -1,9 +1,9 @@
 * Info at Bug416.fst(14,19-14,22):
   - Expected failure:
-  - Ill-typed term: foo 2
-  - Expected a term of type slprop
+  - Ill-typed term
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___0 : Prims.squash (Bug416.ref 1)) (__ : Prims.unit)
+  - VC = Bug416.ref 2
   - See also Bug416.fst(8,23-8,28)
 

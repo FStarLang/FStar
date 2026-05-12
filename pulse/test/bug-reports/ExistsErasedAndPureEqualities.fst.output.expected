@@ -13,7 +13,6 @@
 
 * Info at ExistsErasedAndPureEqualities.fst(66,32-68,5):
   - Expected failure:
-  - Ill-typed term: pure (v == (*?u105*)_)
-  - Expected a term of type slprop
+  - Ill-typed term
   - Cannot check relation with uvars.
 

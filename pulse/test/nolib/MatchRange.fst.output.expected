@@ -2,15 +2,22 @@
   - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (x : Prims.list Prims.int) (__ : Prims.unit) (__ : Prims.unit)
+      (__ : Prims.unit) (__ : Prims.unit) (_letpattern : Prims.list Prims.int)
+      (__ : Prims.squash (_letpattern == x))
+  - VC = ~(Cons? _letpattern) ==> Prims.l_False
   - Also see: MatchRange.fst(13,6-13,12)
 
 * Info at MatchRange.fst(28,2-32,3):
   - Expected failure:
   - Could not verify that this match is exhaustive.
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (x : Prims.list Prims.int) (__ : Prims.unit) (__ : Prims.unit)
+      (__ : Prims.unit) (__ : Prims.unit)
+  - VC = ~(Cons? x) ==> Prims.l_False
   - Also see: MatchRange.fst(28,8-28,9)
 

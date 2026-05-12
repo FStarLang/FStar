@@ -1,6 +1,9 @@
 * Info at Unit2.fst(37,21-38,60):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Type) (uu___ : _)
+  - VC =
+      (a: Type0 -> x: Prims.nat -> Unit2.vector a x) ==
+      (b: Type0 -> y: Unit2.zat -> Unit2.vector b y)
 

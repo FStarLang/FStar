@@ -13,6 +13,6 @@
 
 * Info at Bug.DesugaringError.fst(36,4-36,8):
   - Expected failure:
-  - Ill-typed term: f true
+  - Ill-typed term
   - Expected expression of type Prims.nat got expression true of type Prims.bool
 
