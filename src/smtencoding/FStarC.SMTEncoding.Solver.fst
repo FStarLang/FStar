@@ -417,6 +417,16 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : ML (l
             in
             base @ recovery_failed_msg
         in
+        let open FStarC.Errors.Msg in
+        let open FStarC.Class.PP in
+        let vc_detail = [
+          prefix 2 1 (text "Env =")
+            (all_binders settings.query_env.tcenv |> Pprint.flow_map (break_ 1) fun (b:Syntax.binder) ->
+              group <| parens <| nest 2 <|
+                pp b.binder_bv.ppname ^/^ colon ^/^ pp b.binder_bv.sort);
+          prefix 2 1 (text "VC =") (pp settings.query_term);
+        ] in
+        let smt_error = smt_error @ vc_detail in
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
           // FStarC.Errors.log_issue settings.query_range (FStarC.Errors.Warning_SMTErrorReason, smt_error);
