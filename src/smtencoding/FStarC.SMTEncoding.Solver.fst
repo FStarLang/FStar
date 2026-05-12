@@ -411,7 +411,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : ML (l
               ];
             let base =
               match incomplete_count, canceled_count, unknown_count with
-              | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query. Use --query_stats for more details."]
+              | _, 0, 0 when incomplete_count > 0 -> [text "The SMT solver could not prove the query."]
               | 0, _, 0 when canceled_count > 0   -> [text "The SMT query timed out, you might want to increase the rlimit"]
               | _, _, _                           -> [text "Try with --query_stats to get more details"]
             in
