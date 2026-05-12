@@ -509,9 +509,13 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
 
     | Sequence { s1={s=LetBinding lb; range=s1range}; s2 } ->
       begin match lb.pat.pat with
-      | A.PatVar _
-      | A.PatWild _ ->
-        (* simple bind *)
+      | A.PatVar (_, _, attrs)
+      | A.PatWild (_, attrs) ->
+        (* A simple bind. But error out if the user wrote binder
+        attributes, since these are ignored. *)
+        if Cons? attrs then
+          fail "Binder attributes are not allowed." (pos (List.hd attrs))
+        else return ();!
         desugar_bind env lb s2 s.range
       | _ ->
         (* a single-branch pattern match *)
