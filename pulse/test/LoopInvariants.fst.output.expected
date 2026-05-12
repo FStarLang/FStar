@@ -4,8 +4,13 @@
   - Pulse.Lib.Reference.pts_to s 3
   - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (r : Pulse.Lib.Reference.ref Prims.int)
+      (s : Pulse.Lib.Reference.ref Prims.int) (meas : Prims.unit)
+      (__ : Prims.squash (meas == ())) (__ : Prims.squash (true == true))
+      (__ : Prims.unit)
+  - VC = Pulse.Lib.Reference.pts_to s 3 == Pulse.Lib.Reference.pts_to s 2
   - See also LoopInvariants.fst(65,4-65,10)
 
 * Info at LoopInvariants.fst(76,4-76,8):
@@ -14,7 +19,12 @@
   - Pulse.Lib.Reference.pts_to s 3
   - Pulse.Lib.Reference.pts_to s 2
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (r : Pulse.Lib.Reference.ref Prims.int)
+      (s : Pulse.Lib.Reference.ref Prims.int) (meas : Prims.unit)
+      (__ : Prims.squash (meas == ())) (__ : Prims.squash (true == true))
+      (__ : Prims.unit)
+  - VC = Pulse.Lib.Reference.pts_to s 3 == Pulse.Lib.Reference.pts_to s 2
   - See also LoopInvariants.fst(76,4-76,10)
 

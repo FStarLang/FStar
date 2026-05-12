@@ -7,8 +7,17 @@
   - Expected failure:
   - Could not prove equality between computed type int and expected type nat
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (x : Prims.nat) (y : Prims.nat) (ctr : Pulse.Lib.Reference.ref Prims.int)
+      (acc : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
+      (___8 : FStar.Ghost.erased Prims.unit)
+      (__c89 : FStar.Ghost.erased (FStar.Ghost.erased Prims.int))
+      (__a910 : FStar.Ghost.erased (FStar.Ghost.erased Prims.int))
+      (__ : Prims.squash (__c89 <= x /\ __a910 == __c89 * y))
+      (__ : Prims.squash (___8 == ()))
+      (__ : Prims.squash (false == (__c89 < x)))
+  - VC = forall (i: Prims.int). Prims.l_True == (i >= 0 == true)
   - Also see: Prims.fst(165,27-165,38)
   - See also Bug267.fst(58,4-58,8)
 

@@ -1,22 +1,51 @@
 * Info at Test.Recursion.fst(84,2-84,20):
   - Expected failure:
-  - Ill-typed term: test_ghost_loop ()
-  - Expected a term of type
-      ghost fn
-        requires emp
-        ensures emp
+  - Ill-typed term
   - Could not prove termination
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (x : Prims.unit)
+      (test_ghost_loop
+        :
+
+            x':
+              Prims.unit
+                { FStar.Range.labeled FStar.Range.range_0
+                    "Could not prove termination"
+                    (() << ()) }
+          -> ghost fn
+               requires Pulse.Lib.Core.emp
+               ensures Pulse.Lib.Core.emp)
+  - VC =
+      FStar.Range.labeled FStar.Range.range_0
+        "Could not prove termination"
+        (() << ())
 
 * Info at Test.Recursion.fst(127,4-127,22):
   - Expected failure:
-  - Ill-typed term: test5' (z - 1) (y - 1)
-  - Expected a term of type
-      ghost fn
-        requires emp
-        ensures emp
+  - Ill-typed term
   - Could not prove termination
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (z : Prims.int) (y : Prims.nat)
+      (test5'
+        :
+
+            z': Prims.int ->
+            y':
+              Prims.nat
+                { FStar.Range.labeled FStar.Range.range_0
+                    "Could not prove termination"
+                    (z' << z) }
+          -> ghost fn
+               requires Pulse.Lib.Core.emp
+               ensures Pulse.Lib.Core.emp)
+      (_if_hyp
+        :
+        Prims.squash (Pulse.Lib.Core.rewrites_to_p (z <> 0 && y <> 0) true))
+  - VC =
+      y - 1 >= 0 /\
+      FStar.Range.labeled FStar.Range.range_0
+        "Could not prove termination"
+        (z - 1 << z)
 

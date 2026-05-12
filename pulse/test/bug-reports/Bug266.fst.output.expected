@@ -2,8 +2,9 @@
   - Expected failure:
   - Failed to prove pure property: l_False
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___0 : Prims.unit)
+  - VC = Prims.l_False
   - See also Bug266.fst(10,31-10,36)
 
 * Info at Bug266.fst(24,2-24,9):
