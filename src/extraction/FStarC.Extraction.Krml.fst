@@ -227,6 +227,7 @@ instance pretty_width = { pp = function
   | Float -> doc_of_string "Float"
   | Double -> doc_of_string "Double"
 }
+instance showable_width : showable width = showable_from_pretty
 
 let ctor (n: string) (args: list document) =
   nest 2 (group (parens (flow (break_ 1) (doc_of_string n :: args))))
@@ -250,8 +251,9 @@ let rec typ_to_doc (t:typ) : ML document =
   | TTuple ts -> ctor "TTuple" [pp_list' typ_to_doc ts]
   | TConstBuf t -> ctor "TConstBuf" [typ_to_doc t]
   | TArray (t, c) -> ctor "TArray" [typ_to_doc t; parens (separate comma [pp (fst c); doc_of_string (snd c)])]
-  
+
 instance pretty_typ = { pp = typ_to_doc }
+instance showable_typ : showable typ = showable_from_pretty
 
 instance pretty_string = { pp = (fun s -> dquotes (doc_of_string s)) }
 
@@ -286,12 +288,14 @@ instance pretty_binder = { pp = fun b ->
     fld "meta" (pp b.meta);
   ]
 }
+instance showable_binder : showable binder = showable_from_pretty
 
 instance pretty_lifetime : pretty lifetime = { pp = function
   | Eternal -> doc_of_string "Eternal"
   | Stack -> doc_of_string "Stack"
   | ManuallyManaged -> doc_of_string "ManuallyManaged"
 }
+instance showable_lifetime : showable lifetime = showable_from_pretty
 
 instance pretty_op = { pp = function
   | Add -> doc_of_string "Add"
@@ -320,12 +324,14 @@ instance pretty_op = { pp = function
   | Xor -> doc_of_string "Xor"
   | Not -> doc_of_string "Not"
 }
+instance showable_op : showable op = showable_from_pretty
 
 instance pretty_cc = { pp = function
   | StdCall -> doc_of_string "StdCall"
   | CDecl -> doc_of_string "CDecl"
   | FastCall -> doc_of_string "FastCall"
 }
+instance showable_cc : showable cc = showable_from_pretty
 
 let rec pattern_to_doc (p:pattern) : ML document =
   match p with
@@ -338,6 +344,7 @@ let rec pattern_to_doc (p:pattern) : ML document =
   | PConstant c -> ctor "PConstant" [pp c]
 
 instance pretty_pattern = { pp = pattern_to_doc }
+instance showable_pattern : showable pattern = showable_from_pretty
 
 let rec decl_to_doc (d:decl) : ML document =
   match d with
@@ -397,13 +404,18 @@ and expr_to_doc (e:expr) : ML document =
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   | ESizeof t -> ctor "ESizeof" [pp t]
   | EGFor (i, c, s, b) -> ctor "EGFor" [expr_to_doc i; expr_to_doc c; expr_to_doc s; expr_to_doc b]
-  
+
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
   parens (pp p ^^ comma ^/^ expr_to_doc e)
 
+instance pretty_expr : pretty expr = { pp = expr_to_doc; }
 instance pretty_decl : pretty decl = { pp = decl_to_doc; }
+instance pretty_branch : pretty branch = { pp = pp_branch; }
+
+instance showable_expr : showable expr = showable_from_pretty
 instance showable_decl : showable decl = showable_from_pretty
+instance showable_branch : showable branch = showable_from_pretty
 
 (* This is a Kuiper modification to interpret F*'s SizeT as UInt32.
 It should eventually be removed. *)
