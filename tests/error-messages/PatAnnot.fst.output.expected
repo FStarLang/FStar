@@ -2,44 +2,59 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC =
+      forall (b: Prims.unit) (b: Prims.unit).
+        PatAnnot.f () == (b, b) ==> Prims.l_False
   - See also PatAnnot.fst(25,19-25,24)
 
 * Info at PatAnnot.fst(28,0-30,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC =
+      forall (b: Prims.unit & Prims.unit).
+        PatAnnot.f () == b ==>
+        (forall (b: Prims.unit) (b: Prims.unit). b == (b, b) ==> Prims.l_False)
   - Also see: Prims.fst(427,77-427,89)
 
 * Info at PatAnnot.fst(33,0-35,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC =
+      forall (b: Prims.list Prims.int & Prims.list Prims.int).
+        FStar.List.Tot.Base.splitAt 0 [1; 2; 3] == b ==>
+        (forall (b: Prims.list Prims.int) (b: Prims.list Prims.int).
+            b == (b, b) ==> Prims.l_False)
   - Also see: Prims.fst(427,77-427,89)
 
 * Info at PatAnnot.fst(39,10-39,12):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash Prims.l_False got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Prims.l_False
   - See also PatAnnot.fst(40,26-40,31)
 
 * Info at PatAnnot.fst(46,10-46,11):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (i : Prims.int)
+  - VC = i >= 0
   - See also Prims.fst(642,18-642,24)
 
 * Info at PatAnnot.fst(55,36-55,39):
   - Expected failure:
   - Type annotation on parameter incompatible with the expected type
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = forall (_: Prims.int). _ >= 0
   - See also Prims.fst(642,18-642,24)
 

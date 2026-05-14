@@ -2,42 +2,51 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Prims.l_False
   - See also Prims.fst(642,18-642,24)
 
 * Info at NegativeTests.Neg.fst(24,8-24,10):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Prims.l_False
   - See also Prims.fst(642,18-642,24)
 
 * Info at NegativeTests.Neg.fst(27,30-27,35):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC = Prims.l_False
 
 * Info at NegativeTests.Neg.fst(30,28-31,15):
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Type) (l : Prims.list _)
+  - VC = ~(Cons? l) ==> Prims.l_False
 
 * Info at NegativeTests.Neg.fst(38,32-38,42):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x > 0
   - See also NegativeTests.Neg.fst(33,44-33,57)
 
 * Info at NegativeTests.Neg.fst(42,33-42,34):
   - Expected failure:
   - Could not prove post-condition
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC =
+      forall (p: Prims.pure_post Prims.int).
+        (forall (pure_result: Prims.int). pure_result > 0 ==> p pure_result) ==>
+        (forall (return_val: Prims.int). return_val == x ==> p return_val)
   - See also NegativeTests.Neg.fst(40,83-40,88)
 
 * Info at NegativeTests.Neg.fst(46,30-46,31):
@@ -45,8 +54,9 @@
   - Subtyping check failed
   - Expected type _: FStar.Pervasives.Native.option 'a {Some? _}
     got type FStar.Pervasives.Native.option 'a
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = ('a : Type) (x : FStar.Pervasives.Native.option 'a)
+  - VC = Some? x
   - See also FStar.Pervasives.Native.fst(33,4-33,8)
 
 * Info at NegativeTests.Neg.fst(50,45-50,47):
@@ -54,16 +64,20 @@
   - Subtyping check failed
   - Expected type _: FStar.Pervasives.result Prims.int {V? _}
     got type FStar.Pervasives.result Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC =
+      forall (ri: FStar.Pervasives.result Prims.int).
+        (* - Could not prove post-condition *) V? ri
   - See also FStar.Pervasives.fsti(374,4-374,5)
 
 * Info at NegativeTests.Neg.fst(55,25-55,26):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = forall (x: Prims.int). (* - Could not prove post-condition *) x >= 0
   - See also Prims.fst(642,18-642,24)
 
 * Info at NegativeTests.Neg.fst(59,26-59,34):

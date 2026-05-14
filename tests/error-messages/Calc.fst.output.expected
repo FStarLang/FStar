@@ -1,82 +1,285 @@
 * Info at Calc.fst(11,2-11,13):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          (forall (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              forall (_: Prims.unit).
+                (* - Could not prove post-condition *)
+                Calc.eta Prims.op_GreaterThanOrEqual 10 9) /\
+          (forall (any_result:
+              (_: Prims.unit
+                  -> Prims.squash (FStar.Calc.calc_pack [
+                            Calc.eta Prims.op_GreaterThanOrEqual
+                          ]
+                          10
+                          9)))
+              (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              Calc.eta Prims.op_LessThanOrEqual 9 11)) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [
+                        Calc.eta Prims.op_LessThanOrEqual;
+                        Calc.eta Prims.op_GreaterThanOrEqual
+                      ]
+                      10
+                      11))).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.int) (y: Prims.int).
+                (exists (w: Prims.int).
+                    (exists (w: Prims.int).
+                        x == w /\ Calc.eta Prims.op_GreaterThanOrEqual w w) /\
+                    Calc.eta Prims.op_LessThanOrEqual w y) ==>
+                Calc.eta Prims.op_GreaterThanOrEqual x y))
   - See also FStar.Calc.fsti(43,50-43,55)
 
 * Info at Calc.fst(21,2-27,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+        "Could not prove that this calc-chain is compatible"
+        (forall (x: Prims.int) (y: Prims.int).
+            (exists (w: Prims.int).
+                (exists (w: Prims.int). x == w /\ w >= w) /\ w <= y) ==>
+            x >= y)
   - See also Calc.fst(21,7-21,11)
 
 * Info at Calc.fst(32,2-34,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+        "Could not prove that this calc-chain is compatible"
+        (forall (x: Prims.int) (y: Prims.int). x == y ==> x < y)
   - See also Calc.fst(32,7-32,10)
 
 * Info at Calc.fst(39,2-43,3):
   - Expected failure:
   - Could not prove that this calc-chain is compatible
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC =
+      forall (p: Prims.pure_post Prims.unit).
+        (forall (pure_result: Prims.unit). p pure_result) ==>
+        FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          "Could not prove that this calc-chain is compatible"
+          (forall (x: Prims.int) (y: Prims.int).
+              (exists (w: Prims.int). x == w /\ w == y) ==> x > y)
   - See also Calc.fst(39,7-39,10)
 
 * Info at Calc.fst(50,6-50,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (1 == 2) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              forall (_: Prims.unit).
+                (* - Could not prove post-condition *) Prims.l_False) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [
+                        (fun x7 y8 -> x7 == y8 <: Prims.prop);
+                        (fun x5 y6 -> x5 == y6 <: Prims.prop);
+                        fun x3 y4 -> x3 == y4 <: Prims.prop
+                      ]
+                      1
+                      4))).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.int) (y: Prims.int).
+                (exists (w: Prims.int).
+                    (exists (w: Prims.int).
+                        (exists (w: Prims.int). x == w /\ w == w) /\ w == w) /\
+                    w == y) ==>
+                x == y))
   - See also Calc.fst(50,3-50,5)
 
 * Info at Calc.fst(64,6-64,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (2 == 3) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.unit).
+              (* - Could not prove post-condition *) Prims.l_False) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [
+                        (fun x7 y8 -> x7 == y8 <: Prims.prop);
+                        (fun x5 y6 -> x5 == y6 <: Prims.prop);
+                        fun x3 y4 -> x3 == y4 <: Prims.prop
+                      ]
+                      1
+                      4))).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.int) (y: Prims.int).
+                (exists (w: Prims.int).
+                    (exists (w: Prims.int).
+                        (exists (w: Prims.int). x == w /\ w == w) /\ w == w) /\
+                    w == y) ==>
+                x == y))
   - See also Calc.fst(64,3-64,5)
 
 * Info at Calc.fst(78,6-78,8):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash (3 == 4) got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          forall (_: Prims.unit).
+            (* - Could not prove post-condition *) Prims.l_False) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [
+                        (fun x7 y8 -> x7 == y8 <: Prims.prop);
+                        (fun x5 y6 -> x5 == y6 <: Prims.prop);
+                        fun x3 y4 -> x3 == y4 <: Prims.prop
+                      ]
+                      1
+                      4))).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.int) (y: Prims.int).
+                (exists (w: Prims.int).
+                    (exists (w: Prims.int).
+                        (exists (w: Prims.int). x == w /\ w == w) /\ w == w) /\
+                    w == y) ==>
+                x == y))
   - See also Calc.fst(78,3-78,5)
 
 * Info at Calc.fst(92,42-92,44):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.squash Calc.p).
+              (* - Could not prove post-condition *) Calc.q) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [Prims.l_imp] Calc.p Calc.q)
+          )).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.prop) (y: Prims.prop).
+                (exists (w: Prims.prop). x == w /\ (w ==> y)) ==> x ==> y))
   - See also Calc.fst(90,20-90,21)
 
 * Info at Calc.fst(99,10-99,12):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.squash q got type Prims.unit
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      (forall (_: Prims.unit).
+          (* - Could not prove post-condition *)
+          forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.squash Calc.p).
+              (* - Could not prove post-condition *) Calc.q) /\
+      (forall (any_result:
+          (_: Prims.unit
+              -> Prims.squash (FStar.Calc.calc_pack [
+                        fun x3 y4 -> x3 ==> y4 <: Prims.prop
+                      ]
+                      Calc.p
+                      Calc.q))).
+          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            "Could not prove that this calc-chain is compatible"
+            (forall (x: Prims.prop) (y: Prims.prop).
+                (exists (w: Prims.prop). x == w /\ (w ==> y)) ==> x ==> y))
   - See also Calc.fst(100,4-100,5)
 
 * Info at Calc.fst(113,17-113,25):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC =
+      forall (p: Prims.pure_post Prims.unit).
+        (forall (pure_result: Prims.unit). p pure_result) ==>
+        (forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              forall (_: Prims.unit).
+                (* - Could not prove post-condition *) Prims.l_False) /\
+        (forall (any_result:
+            (_: Prims.unit
+                -> Prims.squash (FStar.Calc.calc_pack [
+                          (fun x y -> x == y);
+                          fun x y -> x == y
+                        ]
+                        x
+                        x))).
+            FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+              "Could not prove that this calc-chain is compatible"
+              (forall (x: Prims.int) (y: Prims.int).
+                  (exists (w: Prims.int).
+                      (exists (w: Prims.int). x == w /\ w == w) /\ w == y) ==>
+                  x == y))
   - See also Calc.fst(104,12-104,17)
 
 * Info at Calc.fst(120,9-120,17):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC =
+      forall (p: Prims.pure_post Prims.unit).
+        (forall (pure_result: Prims.unit). p pure_result) ==>
+        (forall (_: Prims.unit).
+            (* - Could not prove post-condition *)
+            forall (_: Prims.unit).
+              (* - Could not prove post-condition *)
+              forall (_: Prims.unit).
+                (* - Could not prove post-condition *) Prims.l_False) /\
+        (forall (any_result:
+            (_: Prims.unit
+                -> Prims.squash (FStar.Calc.calc_pack [
+                          (fun x6 y7 -> x6 == y7 <: Prims.prop);
+                          fun x4 y5 -> x4 == y5 <: Prims.prop
+                        ]
+                        x
+                        x))).
+            FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+              "Could not prove that this calc-chain is compatible"
+              (forall (x: Prims.int) (y: Prims.int).
+                  (exists (w: Prims.int).
+                      (exists (w: Prims.int). x == w /\ w == w) /\ w == y) ==>
+                  x == y))
   - See also Calc.fst(104,12-104,17)
 

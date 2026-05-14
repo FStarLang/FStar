@@ -2,15 +2,19 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type b: Prims.bool{bad_p b} got type Prims.bool
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = NegativeTests.ShortCircuiting.bad_p true
   - See also NegativeTests.ShortCircuiting.fst(19,31-19,38)
 
 * Info at NegativeTests.ShortCircuiting.fst(25,11-25,36):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (u : Prims.unit)
+  - VC =
+      forall (p: Prims.pure_post Prims.unit) (any_result: Prims.unit).
+        p any_result
   - See also Prims.fst(419,90-419,102)
 
 * Warning 240 at NegativeTests.ShortCircuiting.fst(23,4-23,6):

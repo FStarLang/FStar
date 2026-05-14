@@ -177,19 +177,27 @@ let ill_typed_term (t:term) (expected_typ got_typ : option term)
        (ensures fun _ -> True)
 =
   let open Pulse.PP in
-  match expected_typ, got_typ with
-  | None, None -> [
-    prefix 2 1 (text "Ill-typed term:") (pp t)
-  ]
-  | Some ty, None -> [
-    prefix 2 1 (text "Ill-typed term:") (pp t);
-    prefix 2 1 (text "Expected a term of type") (pp ty);
-  ]
-  | Some ty, Some ty' -> [
-    prefix 2 1 (text "Expected term of type") (pp ty) ^/^
-    prefix 2 1 (text "got term") (pp t) ^/^
-    prefix 2 1 (text "of type") (pp ty')
-  ]
+  // We used to print the term and the expected type as part of the error
+  // message, but this is often misleading and unhelpful:
+  // - It implies that the top-level term is at fault,
+  //   but the error might be in a subterm
+  // - It implies that the term has the wrong type,
+  //   but the error might just be a failing precondition.
+  [text "Ill-typed term"]
+
+  // match expected_typ, got_typ with
+  // | None, None -> [
+    // prefix 2 1 (text "Ill-typed term:") (pp t)
+  // ]
+  // | Some ty, None -> [
+  //   prefix 2 1 (text "Ill-typed term:") (pp t);
+  //   prefix 2 1 (text "Expected a term of type") (pp ty);
+  // ]
+  // | Some ty, Some ty' -> [
+  //   prefix 2 1 (text "Expected term of type") (pp ty) ^/^
+  //   prefix 2 1 (text "got term") (pp t) ^/^
+  //   prefix 2 1 (text "of type") (pp ty')
+  // ]
 
 let instantiate_term_implicits
   (g:env) (t0:term) (expected:option typ) (inst_extra:bool)

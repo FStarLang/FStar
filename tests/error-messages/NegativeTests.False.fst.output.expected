@@ -1,8 +1,9 @@
 * Info at NegativeTests.False.fst(23,13-23,33):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC = forall (p: Prims.pure_post Prims.bool). Prims.l_False
   - See also Prims.fst(427,77-427,89)
 
 * Info at NegativeTests.False.fst(30,42-30,66):

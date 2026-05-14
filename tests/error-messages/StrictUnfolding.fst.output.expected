@@ -1,7 +1,41 @@
 * Info at StrictUnfolding.fst(50,2-50,8):
   - Expected failure:
   - Could not prove goal #1
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (sw : FStar.Integers.signed_width)
+  - VC =
+      forall (x:
+        ((match sw with
+            | FStar.Integers.Unsigned FStar.Integers.W8 -> FStar.UInt8.t
+            | FStar.Integers.Unsigned FStar.Integers.W16 -> FStar.UInt16.t
+            | FStar.Integers.Unsigned FStar.Integers.W32 -> FStar.UInt32.t
+            | FStar.Integers.Unsigned FStar.Integers.W64 -> FStar.UInt64.t
+            | FStar.Integers.Unsigned FStar.Integers.W128 -> FStar.UInt128.t
+            | FStar.Integers.Signed FStar.Integers.Winfinite -> Prims.int
+            | FStar.Integers.Signed FStar.Integers.W8 -> FStar.Int8.t
+            | FStar.Integers.Signed FStar.Integers.W16 -> FStar.Int16.t
+            | FStar.Integers.Signed FStar.Integers.W32 -> FStar.Int32.t
+            | FStar.Integers.Signed FStar.Integers.W64 -> FStar.Int64.t
+            | FStar.Integers.Signed FStar.Integers.W128 -> FStar.Int128.t)
+          <:
+          Type0))
+        (y:
+        ((match sw with
+            | FStar.Integers.Unsigned FStar.Integers.W8 -> FStar.UInt8.t
+            | FStar.Integers.Unsigned FStar.Integers.W16 -> FStar.UInt16.t
+            | FStar.Integers.Unsigned FStar.Integers.W32 -> FStar.UInt32.t
+            | FStar.Integers.Unsigned FStar.Integers.W64 -> FStar.UInt64.t
+            | FStar.Integers.Unsigned FStar.Integers.W128 -> FStar.UInt128.t
+            | FStar.Integers.Signed FStar.Integers.Winfinite -> Prims.int
+            | FStar.Integers.Signed FStar.Integers.W8 -> FStar.Int8.t
+            | FStar.Integers.Signed FStar.Integers.W16 -> FStar.Int16.t
+            | FStar.Integers.Signed FStar.Integers.W32 -> FStar.Int32.t
+            | FStar.Integers.Signed FStar.Integers.W64 -> FStar.Int64.t
+            | FStar.Integers.Signed FStar.Integers.W128 -> FStar.Int128.t)
+          <:
+          Type0)).
+        FStar.Integers.within_bounds' sw
+          (FStar.Integers.v x + FStar.Integers.v y) ==>
+        FStar.Integers.v (x + y) == FStar.Integers.v x + FStar.Integers.v y
   - See also StrictUnfolding.fst(50,48-50,72)
 

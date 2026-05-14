@@ -877,12 +877,23 @@ let rec ty_strictly_positive_in_type (env:env)
           and that it is strictly positive in the return type");
        let sbs, c = U.arrow_formals_comp in_type in
        let return_type = FStarC.Syntax.Util.comp_result c in
+       let effect_args = U.comp_effect_args c in
        let ty_lid_not_to_left_of_arrow =
             L.for_all 
                (fun ({binder_bv=b}) -> mutuals_unused_in_type mutuals b.sort)
                sbs
        in
-       if ty_lid_not_to_left_of_arrow
+       (* We should also consider the effect arguments for positivity. See
+       https://github.com/FStarLang/FStar/issues/4252. We simply forbid the
+       effect args from mentioning the type. We do not track positivity
+       of effect definitions or mark arguments as positive. If this becomes
+       a limitation, we should revisit. *)
+       let mutuals_unused_in_effect_args =
+            L.for_all
+               (fun (a, _) -> mutuals_unused_in_type mutuals a)
+               effect_args
+       in
+       if ty_lid_not_to_left_of_arrow && mutuals_unused_in_effect_args
        then (
          (* and is strictly positive also in the return type  *)
          ty_strictly_positive_in_type 

@@ -1,21 +1,24 @@
 * Info at Asserts.fst(6,2-6,8):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int) (y : Prims.int)
+  - VC = forall (b: Prims.int). y + 1 == b ==> b == y
   - See also Asserts.fst(6,9-6,17)
 
 * Info at Asserts.fst(11,2-11,8):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int) (y : Prims.int)
+  - VC = forall (b: Prims.int). y + 1 == b ==> b == y
   - See also Asserts.fst(11,9-11,17)
 
 * Info at Asserts.fst(16,2-16,8):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int) (y : Prims.int)
+  - VC = Prims.l_False
   - See also Asserts.fst(16,9-16,14)
 

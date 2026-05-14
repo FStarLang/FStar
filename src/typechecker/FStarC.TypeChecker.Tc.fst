@@ -1238,13 +1238,16 @@ let tc_more_partial_modul env modul decls =
 
 let finish_partial_modul should_pop (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : ML (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
+  if Debug.low () then
+    Format.print3 "Finishing %s %s -- loading_from_cache=%s\n"
+      (if m.is_interface then "interface" else "module")
+      (show m.name)
+      (show loading_from_cache);
   let env = Env.finish_module en m in
 
   if not loading_from_cache then (
     let missing = missing_definition_list env in
-    // Filter to only report missing definitions belonging to THIS module
     let mname_ids = ids_of_lid m.name in
-    let missing = List.filter (fun l -> ns_of_lid l = mname_ids) missing in
     if Cons? missing then
       log_issue env Errors.Error_AdmitWithoutDefinition [
           Pprint.prefix 2 1 (text <| Format.fmt1 "Missing definitions in module %s:" (string_of_lid m.name))
