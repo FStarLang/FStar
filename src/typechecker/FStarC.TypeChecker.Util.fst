@@ -3597,9 +3597,8 @@ let try_lookup_record_type env (typename:lident)
          | Some ({sigel=Sig_datacon {t; num_ty_params=nparms}}) ->
            let formals, c = U.arrow_formals t in
            if nparms < List.length formals
-           then let _, fields = List.splitAt nparms formals in //remove params
-                let fields = List.filter (fun b -> match b.binder_qual with | Some (Implicit _) -> false | _ -> true) fields in //remove implicits
-                let fields = List.map (fun b -> b.binder_bv.ppname, b.binder_bv.sort) fields in
+           then let _, fields = List.splitAt nparms formals in // Remove params. Whatever remains are fields.
+                let fields = List.map (fun b -> b.binder_bv.ppname, S.is_bqual_implicit_or_meta b.binder_qual, b.binder_bv.sort) fields in
                 let is_rec = Env.is_record env typename in
                 let r : DsEnv.record_or_dc =
                   {
@@ -3684,7 +3683,7 @@ let find_record_or_dc_from_head_fv env (head_fv:option fv) (uc:unresolved_constr
     let constructor =
         let qual =
           if rdc.is_record
-            then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map fst)))
+            then (Some (Record_ctor(rdc.typename, rdc.fields |> List.map (fun (i, _, _) -> i))))
           else None
         in
         S.lid_as_fv constrname qual
@@ -3714,9 +3713,10 @@ let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident
   The field assignments of a record constructor can be given out of
   order.
 
-  Given that we've committed to `rdc` as the record constructor, if
-  the user's field assignments are `fas`, then we order the alphas
-  by the order in which they appear in `rdc`.
+  Given that we've committed to `rdc` as the record constructor, if the user's
+  field assignments are `fas`, then we order the alphas by the order in which
+  they appear in `rdc`. This is the list we return, augmented with a boolean to
+  indicate whether the field was implicit or not.
 
   If a particular field cannot be found, then we call not_found, which
   an provide a default.
@@ -3724,18 +3724,21 @@ let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident
   We raise errors if fields are not found and no default exists, or if
   redundant fields are present.
 *)
-let make_record_fields_in_order env uc topt
+let make_record_fields_in_order
+       (env : Env.env)
+       (uc : unresolved_constructor)
+       (topt : option (either typ typ))
        (rdc : DsEnv.record_or_dc)
        (fas : list (lident & 'a))
-       (not_found:ident -> ML (option 'a))
+       (not_found : (ident -> is_imp:bool -> ML (option 'a)))
        (rng : Range.t)
-  : ML (list 'a)
+  : ML (list ('a & bool))
   = let debug () =
       let print_rdc (rdc:DsEnv.record_or_dc) =
         Format.fmt3 "{typename=%s; constrname=%s; fields=[%s]}"
           (string_of_lid rdc.typename)
           (string_of_id rdc.constrname)
-          (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
+          (List.map (fun (i, _, _) -> string_of_id i) rdc.fields |> String.concat "; ")
       in
       let print_topt topt =
         Format.fmt2 "topt=%s; rdc=%s" (show topt) (print_rdc rdc)
@@ -3749,7 +3752,7 @@ let make_record_fields_in_order env uc topt
     in
     let rest, as_rev, missing =
       List.fold_left
-        (fun (fields, as_rev, missing) (field_name, _) ->
+        (fun (fields, as_rev, missing) (field_name, is_imp, _) ->
            let matching, rest =
              List.partition
                (fun (fn, _) -> field_name_matches fn rdc field_name)
@@ -3757,15 +3760,15 @@ let make_record_fields_in_order env uc topt
            in
            match matching with
            | [(_, a)] ->
-             rest, a::as_rev, missing
+             rest, (a, is_imp) ::as_rev, missing
 
            | [] -> (
-             match not_found field_name with
+             match not_found field_name is_imp with
              | None ->
 //               debug();
-              rest, as_rev, field_name :: missing
+               rest, as_rev, field_name :: missing
              | Some a ->
-               rest, a::as_rev, missing
+               rest, (a, is_imp) ::as_rev, missing
              )
 
            | x1::x2::_ ->
@@ -3795,6 +3798,7 @@ let make_record_fields_in_order env uc topt
         ]
 
       | [], _ ->
+        // debug ();
         raise_error rng Errors.Fatal_MissingFieldInRecord [
             prefix 2 1 (text <| Format.fmt1 "Missing fields for record type '%s':" (show rdc.typename))
                 (pp_missing ())
