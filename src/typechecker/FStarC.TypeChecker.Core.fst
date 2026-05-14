@@ -1316,15 +1316,20 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
              then prove `v.v1 == u.v1` *)
           let compare_head_and_args () =
             handle_with
-              (check_relation g EQUALITY head0 head1 ;!
-               check_relation_args g EQUALITY args0 args1)
+              //cf. Issue 4239
+              //We first try to prove `f a == f b` structurally with no SMT guard
+              //this handles cases where `a == b`
+              //If that fails, then we unfold and try again
+              (no_guard
+                (check_relation g EQUALITY head0 head1 ;!
+                 check_relation_args g EQUALITY args0 args1))
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
           in
           if guard_ok &&
-            (rel=EQUALITY) && 
+            (rel=EQUALITY) &&
             (equatable g t0 || equatable g t1)
           then (
-            handle_with 
+            handle_with
               (no_guard (compare_head_and_args ()))
               (fun _ -> emit_guard t0 t1)
           )
