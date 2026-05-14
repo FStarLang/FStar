@@ -1,10 +1,14 @@
-* Info at IfBranchMismatch.fst(14,4-14,8):
+* Info at IfBranchMismatch.fst(11,2-14,8):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to r 2
   - Pulse.Lib.Reference.pts_to r 1
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also IfBranchMismatch.fst(14,4-14,10)
+  - The SMT solver could not prove the query.
+  - Env =
+      (r : Pulse.Lib.Reference.ref Prims.int) (b : Prims.bool)
+      (_if_hyp : Prims.squash (Pulse.Lib.Core.rewrites_to_p b false))
+      (_if_br : Prims.unit)
+  - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
+  - See also IfBranchMismatch.fst(11,2-14,10)
 

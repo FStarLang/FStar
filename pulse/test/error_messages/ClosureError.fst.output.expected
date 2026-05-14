@@ -4,7 +4,15 @@
   - Pulse.Lib.Reference.pts_to r 0
   - Pulse.Lib.Reference.pts_to r 1
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (r : Pulse.Lib.Reference.ref Prims.int)
+      (helper
+        :
+        _: Prims.unit
+          -> fn
+               requires Pulse.Class.PtsTo.pts_to r 1
+               ensures Pulse.Class.PtsTo.pts_to r 1)
+  - VC = Pulse.Lib.Reference.pts_to r 0 == Pulse.Lib.Reference.pts_to r 1
   - See also ClosureError.fst(17,2-18,4)
 

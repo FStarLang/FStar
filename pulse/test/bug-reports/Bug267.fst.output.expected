@@ -21,7 +21,7 @@
   - Also see: Prims.fst(165,27-165,38)
   - See also Bug267.fst(58,4-58,8)
 
-* Info at Bug267.fst(62,53-63,17):
+* Info at Bug267.fst(63,2-63,17):
   - Expected failure:
   - Tactic failed
   - Cannot prove:

@@ -2,6 +2,7 @@
   - Expected failure:
   - Failed to prove pure property: 5 > 10
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (r : Pulse.Lib.Reference.ref Prims.int)
+  - VC = Prims.l_False
 

@@ -4,6 +4,10 @@
   - Pulse.Lib.Reference.pts_to r2 2
   - Pulse.Lib.Reference.pts_to r2 1
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (r1 : Pulse.Lib.Reference.ref Prims.int)
+      (r2 : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
+      (__ : Prims.unit)
+  - VC = Pulse.Lib.Reference.pts_to r2 2 == Pulse.Lib.Reference.pts_to r2 1
 
