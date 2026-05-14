@@ -935,6 +935,15 @@ let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
 
 let dup_lid = ["Pulse"; "Class"; "Duplicable"; "dup"]
 
+// Check that ctxt_t and goal are equivalent slprops, and (if dup) that the
+// dup token typechecks.
+let check_atom_equiv (g: env) (ctxt_t goal: T.term) (dup: bool) : T.Tac unit =
+  let _ = check_slprop_equiv_ext (RU.range_of_term goal) g ctxt_t goal in
+  if dup then
+    ignore (compute_term_type g
+      (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv dup_lid)))
+        [ctxt_t, R.Q_Explicit; unit_const, R.Q_Explicit]))
+
 let prove_atom_result (g: env)
     (ctxt: slprop_view { Atom? ctxt }) (rest_ctxt: list slprop_view)
     (#ctxt0: list slprop_view) // ctxt0 == ctxt ** rest_ctxt
