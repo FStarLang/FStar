@@ -484,13 +484,16 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
           (group <| separate_map (comma ^^ break_ 1) pp tlist)
       ]
 
-let check_smt_pat env t bs c : ML unit =
-    if U.is_smt_lemma t //check patterns cover the bound vars
-    then match c.n with
-        | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            check_pat_fvs t.pos env pats bs;
-            check_no_smt_theory_symbols env pats
-        | _ -> failwith "Impossible: check_smt_pat: not Comp"
+let check_smt_pat env t : ML unit =
+    // Check patterns cover the bound vars
+    if U.is_smt_lemma t then
+      let bs, c = U.arrow_formals_comp t in
+      match c.n with
+      | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
+          check_pat_fvs t.pos env pats bs;
+          check_no_smt_theory_symbols env pats
+      | _ ->
+        failwith "Impossible: check_smt_pat: not Comp"
 
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
@@ -1860,7 +1863,7 @@ and tc_value env (e:term) : ML (term
     let e = {U.arrow bs c with pos=top.pos} in
     (* checks the SMT pattern associated with this function is properly defined with regard to context *)
     if not env.phase1 then
-      check_smt_pat env e bs c;
+      check_smt_pat env e;
     (* taking the maximum of the universes of the computation and of all binders *)
     let u = S.U_max (uc::us) in
     (* create a universe of level u *)
