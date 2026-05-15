@@ -117,3 +117,29 @@ let di_bad : dep_imp = { v = 0; }
 let mi_ooo : multi_imp = { vb = "hello"; va = 42; }
 let _ = assert (mi_ooo.a == int)
 let _ = assert (mi_ooo.b == string)
+
+(* With a parameter and implicit field. The constructor
+has two implicits, the typechecker should consider that
+and elaborate xx to something like `Mkfoo #_ #1 (+)`. *)
+noeq
+type with_param (t : Type) = {
+  #x : t;
+  add : t -> t -> t;
+}
+
+let test_param : with_param int =
+  { x = 1; add = (+); }
+
+(* With a parameter and implicit field. The constructor
+has two implicits, the typechecker should consider that
+and elaborate xx to something like `Mkfoo #_ #int (+)`. *)
+noeq
+type with_param' (t' : Type) = {
+  #t : (t : Type{t == t'});
+  add : t -> t -> t;
+}
+
+let test_param' : with_param' int =
+  { add = (+); }
+let test_param'' : with_param' int =
+  { t = int; add = (+); }

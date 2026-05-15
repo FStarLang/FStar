@@ -1214,7 +1214,10 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
             | None -> None)
           top.pos
     in
-    let term = S.mk_Tm_app constructor (List.map (fun (a, is_imp) -> a, as_aqual_implicit is_imp) args) top.pos in
+    (* First, apply the constructor to as many wildcards as it has parameters. Otherwise,
+       if its first field is implicit, we would construct a bad application. *)
+    let term = S.mk_Tm_app constructor (List.map (fun _ -> S.iarg S.tun) rdc.parms) top.pos in
+    let term = S.mk_Tm_app term (List.map (fun (a, is_imp) -> a, as_aqual_implicit is_imp) args) top.pos in
     tc_term env term
 
   | Tm_app {hd={n=Tm_fvar {fv_name=field_name; fv_qual=Some (Unresolved_projector candidate)}};

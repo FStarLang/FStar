@@ -3597,14 +3597,14 @@ let try_lookup_record_type env (typename:lident)
          | Some ({sigel=Sig_datacon {t; num_ty_params=nparms}}) ->
            let formals, c = U.arrow_formals t in
            if nparms < List.length formals
-           then let _, fields = List.splitAt nparms formals in // Remove params. Whatever remains are fields.
+           then let parms, fields = List.splitAt nparms formals in // Remove params. Whatever remains are fields.
                 let fields = List.map (fun b -> b.binder_bv.ppname, S.is_bqual_implicit_or_meta b.binder_qual, b.binder_bv.sort) fields in
                 let is_rec = Env.is_record env typename in
                 let r : DsEnv.record_or_dc =
                   {
                     typename = typename;
                     constrname = Ident.ident_of_lid dc;
-                    parms = [];
+                    parms;
                     fields = fields;
                     is_private = false;
                     is_record = is_rec
