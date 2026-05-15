@@ -1315,15 +1315,49 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
              first by trying to unify `v` and `u` and if it fails
              then prove `v.v1 == u.v1` *)
           let compare_head_and_args () =
+            let structural () =
+              check_relation g EQUALITY head0 head1 ;!
+              check_relation_args g EQUALITY args0 args1
+            in
             handle_with
               //cf. Issue 4239
-              //We first try to prove `f a == f b` structurally with no SMT guard
-              //this handles cases where `a == b`
-              //If that fails, then we unfold and try again
-              (no_guard
-                (check_relation g EQUALITY head0 head1 ;!
-                 check_relation_args g EQUALITY args0 args1))
-              (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+              //First try structural comparison without SMT guards.
+              //This handles cases where args are definitionally equal.
+              (no_guard (structural ()))
+              (fun _ ->
+                //If structural fails, try unfolding the type abbreviation.
+                if! unfolding_ok then (
+                  match maybe_unfold_side Both t0 t1 with
+                  | None ->
+                    //Can't unfold: fall back to structural with guards
+                    structural ()
+                  | Some (t0', t1') ->
+                    //Check if unfolding exposes a refinement type.
+                    //If so, the refinement comparison produces properly
+                    //weakened guards (e.g., natlt i <: natlt n gives
+                    //forall x. x < i ==> x < n, not i == n).
+                    let t0' = beta_iota_reduce t0' in
+                    let t1' = beta_iota_reduce t1' in
+                    match (Subst.compress t0').n, (Subst.compress t1').n with
+                    | Tm_refine _, _ | _, Tm_refine _ ->
+                      check_relation g rel t0' t1'
+                    | _ ->
+                      //Not a refinement: try three fallbacks in order.
+                      //1. Unfolded without guards (handles structurally equal
+                      //   after unfolding).
+                      //2. Structural with guards (handles equatable args like
+                      //   variables, producing simple arg-level guards for
+                      //   e.g. slprop type abbreviations).
+                      //3. Unfolded with guards (handles non-equatable args
+                      //   like constants, where unfolding may expose equatable
+                      //   functions like op_Equality).
+                      handle_with
+                        (no_guard (check_relation g rel t0' t1'))
+                        (fun _ ->
+                          handle_with
+                            (structural ())
+                            (fun _ -> check_relation g rel t0' t1'))
+                ) else structural ())
           in
           if guard_ok &&
             (rel=EQUALITY) &&

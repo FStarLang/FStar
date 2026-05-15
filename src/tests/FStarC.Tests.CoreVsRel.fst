@@ -715,6 +715,117 @@ let run_all () : ML bool =
       "let cvr_concrete_ok (x: cvr_natlt 5) : cvr_natlt 10 = x";
 
     (* ----------------------------------------------------------
+       Group 15: Non-refinement type abbreviation applications
+       These test the structural fallback (step 3 of compare_head_and_args):
+       type abbreviations that expand to non-refinement types
+       (e.g., function types, pairs) should succeed with arg-level
+       guards when unfolding fails or produces complex terms.
+       ---------------------------------------------------------- *)
+
+    let _ = Pars.pars_and_tc_fragment
+      "let cvr_nonref_arr (n:int) (m:int) : Type = (x:int{x > n}) -> (y:int{y > m})\n\
+       let cvr_nonref_wrap (n:int) : Type = (x:int{x > n}) -> int"
+    in
+
+    let cvr_nonref_arr_head = tc "cvr_nonref_arr" in
+    let cvr_nonref_wrap_head = tc "cvr_nonref_wrap" in
+
+    (* Helper: create environment with a:int, b:int *)
+    let env_with_ab_ints () : ML (Env.env & bv & bv) =
+      let env = tcenv () in
+      let int_t = tc "int" in
+      let a_bv = S.gen_bv "a" None int_t in
+      let env = Env.push_bv env a_bv in
+      let b_bv = S.gen_bv "b" None int_t in
+      let env = Env.push_bv env b_bv in
+      (env, a_bv, b_bv)
+    in
+
+    (* Test 1500: cvr_nonref_arr 1 2 =?= cvr_nonref_arr 1 2 — identical *)
+    let _ =
+      compare_equality 1500 (tc "cvr_nonref_arr 1 2") (tc "cvr_nonref_arr 1 2") BothTrivial
+    in
+
+    (* Test 1501: with a:int, b:int in env:
+       cvr_nonref_arr a b <: cvr_nonref_arr b a — swapped args.
+       Not a refinement type (it's an arrow), so structural fallback should
+       produce arg-level guards rather than failing. *)
+    let _ =
+      let env, a_bv, b_bv = env_with_ab_ints () in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_nonref_arr_head [(a_name, None); (b_name, None)] FStarC.Range.dummyRange in
+      let t1 = S.mk_Tm_app cvr_nonref_arr_head [(b_name, None); (a_name, None)] FStarC.Range.dummyRange in
+      compare_subtyping_env 1501 env t0 t1 BothGuarded
+    in
+
+    (* Test 1502: with a:int, b:int in env:
+       cvr_nonref_arr a b <: cvr_nonref_arr a b — reflexive, should be trivial *)
+    let _ =
+      let env, a_bv, b_bv = env_with_ab_ints () in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_nonref_arr_head [(a_name, None); (b_name, None)] FStarC.Range.dummyRange in
+      compare_subtyping_env 1502 env t0 t0 BothTrivial
+    in
+
+    (* Test 1503: with a:int in env:
+       cvr_nonref_wrap a =?= cvr_nonref_wrap a — reflexive *)
+    let _ =
+      let env, a_bv, _b_bv = env_with_ab_ints () in
+      let a_name = S.bv_to_name a_bv in
+      let t0 = S.mk_Tm_app cvr_nonref_wrap_head [(a_name, None)] FStarC.Range.dummyRange in
+      compare_equality_env 1503 env t0 t0 BothTrivial
+    in
+
+    (* Test 1504: with a:int, b:int in env:
+       cvr_nonref_wrap a =?= cvr_nonref_wrap b — different args
+       Should produce arg-level guard a == b via structural fallback. *)
+    let _ =
+      let env, a_bv, b_bv = env_with_ab_ints () in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_nonref_wrap_head [(a_name, None)] FStarC.Range.dummyRange in
+      let t1 = S.mk_Tm_app cvr_nonref_wrap_head [(b_name, None)] FStarC.Range.dummyRange in
+      compare_equality_env 1504 env t0 t1 RelFailCoreSucceed
+    in
+
+    (* ----------------------------------------------------------
+       Group 16: Non-refinement type abbreviation with constant args
+       These test the third fallback in compare_head_and_args:
+       when args are non-equatable constants (like 2, 3), structural
+       comparison can't produce guards. The unfolded comparison with
+       guards handles this by exposing equatable functions (like
+       op_Equality) in the unfolded form.
+       ---------------------------------------------------------- *)
+
+    let _ = Pars.pars_and_tc_fragment
+      "let cvr_const_app (m:nat) (n:nat) : Type = b:bool{ b == (m = n) }"
+    in
+
+    (* Test 1600: cvr_const_app 2 2 =?= cvr_const_app 2 2 — identical *)
+    let _ =
+      compare_equality 1600 (tc "cvr_const_app 2 2") (tc "cvr_const_app 2 2") BothTrivial
+    in
+
+    (* Test 1601: cvr_const_app 2 2 <: cvr_const_app 2 3 — different constant args.
+       This is the Bug4256 pattern: args are constants (non-equatable),
+       so the unfolded-with-guards fallback is needed. *)
+    let _ =
+      compare_subtyping 1601 (tc "cvr_const_app 2 2") (tc "cvr_const_app 2 3") BothGuarded
+    in
+
+    (* Test 1602: cvr_const_app 2 3 =?= cvr_const_app 2 3 — identical *)
+    let _ =
+      compare_equality 1602 (tc "cvr_const_app 2 3") (tc "cvr_const_app 2 3") BothTrivial
+    in
+
+    (* Test 1603: full checker integration — coercion between
+       non-refinement type abbrevs with constant args should work *)
+    tc_fragment_ok 1603
+      "let cvr_const_ok (x: cvr_const_app 2 2) : cvr_const_app 2 2 = x";
+
+    (* ----------------------------------------------------------
        Summary
        ---------------------------------------------------------- *)
 
