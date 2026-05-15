@@ -583,7 +583,7 @@ let is_valid_namespace deps ns =
   let res = Some? (SMap.try_find deps.valid_namespaces (String.lowercase (Ident.string_of_lid ns))) in
   if not res
   then Format.print2 "Could not resolve namespace %s\n valid namespaces are %s\n"
-      (show ns) (show <| SMap.keys deps.valid_namespaces);
+      (show ns) (show <| List.sortWith String.compare (SMap.keys deps.valid_namespaces));
   res
 
 let interface_of deps key = 
