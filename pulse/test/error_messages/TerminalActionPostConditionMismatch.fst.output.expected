@@ -1,4 +1,4 @@
-* Info at IfBranchMismatch.fst(14,4-14,8):
+* Info at TerminalActionPostConditionMismatch.fst(12,2-12,6):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to r 2
@@ -6,13 +6,12 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env =
-      (r : Pulse.Lib.Reference.ref Prims.int) (b : Prims.bool)
-      (_if_hyp : Prims.squash (Pulse.Lib.Core.rewrites_to_p b false))
-      (_if_br : Prims.unit)
+      (r : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
+      (__ : Prims.unit)
   - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
-  - See also IfBranchMismatch.fst(14,4-14,10)
+  - See also TerminalActionPostConditionMismatch.fst(12,2-12,8)
 
-* Info at IfBranchMismatch.fst(30,4-30,6):
+* Info at TerminalActionPostConditionMismatch.fst(23,2-23,4):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to r 2
@@ -20,8 +19,7 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env =
-      (r : Pulse.Lib.Reference.ref Prims.int) (b : Prims.bool)
-      (_if_hyp : Prims.squash (Pulse.Lib.Core.rewrites_to_p b false))
+      (r : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
       (__ : Prims.unit)
   - VC = Pulse.Lib.Reference.pts_to r 2 == Pulse.Lib.Reference.pts_to r 1
 
