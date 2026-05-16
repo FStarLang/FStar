@@ -63,7 +63,8 @@ val sklem0 (#a:Type) (#p : a -> prop) ($v : squash (exists (x:a). p x)) (phi:pro
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi)
 
-val lemma_from_squash : #a:Type -> #b:(a -> prop) -> (x:a -> squash (b x)) -> x:a -> Lemma (b x)
+val lemma_from_squash (#a:Type) (#pre #post : a -> prop) :
+  (x:a{pre x} -> squash (post x)) -> x:a -> Lemma (requires pre x) (ensures post x)
 
 val lem1_fa #a #pre #post
   ($lem : (x:a -> Lemma (requires pre x) (ensures post x))) :
