@@ -32,7 +32,7 @@ type record_or_dc = {
   typename: lident; (* the namespace part applies to the constructor and fields as well *)
   constrname: ident;
   parms: binders;
-  fields: list (ident & typ);
+  fields: list (ident & bool & typ); (* bool: is it implicit or meta? *)
   is_private: bool;
   is_record:bool
 }
