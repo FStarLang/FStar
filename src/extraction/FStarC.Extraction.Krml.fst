@@ -45,8 +45,9 @@ module FC = FStarC.Const
 - v29: added a SizeT and PtrdiffT width to machine integers
 - v30: Added EBufDiff
 - v31: Added a `meta` field to binders. Currently only relevant to propagate `CInline`.
+- v32: Introduce ESizeof
 *)
-let current_version: version = 31
+let current_version: version = 32
 
 (* COPY-PASTED ****************************************************************)
 
@@ -140,6 +141,7 @@ and expr =
   | EAddrOf of expr
   | EBufNull of typ
   | EBufDiff of expr & expr
+  | ESizeof of typ
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
