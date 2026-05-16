@@ -4402,9 +4402,23 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
 
       | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ tag_of t1 ^ " vs " ^ tag_of t2)) orig
 
+(* Ignore SMTPat annotations here, they are irrelevant and only a hint
+generating patterns when they appear in a top-level type annotation. *)
+let no_lemma_pats (c : comp) : ML comp =
+  let nil = S.tdataconstr PC.nil_lid in
+  match c.n with
+  | Comp ct when U.is_lemma_comp c ->
+    let args =
+      match ct.effect_args with
+      | pre::post::_::rest -> pre::post::(nil, None)::rest
+      | _ -> ct.effect_args
+    in
+    { c with n = Comp ({ct with effect_args = args}) }
+  | _ -> c
+
 let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
-    let c1 = problem.lhs in
-    let c2 = problem.rhs in
+    let c1 = problem.lhs |> no_lemma_pats in
+    let c2 = problem.rhs |> no_lemma_pats in
     let orig = CProb problem in
     let env = p_env wl orig in
     let sub_prob : worklist -> term -> rel -> term -> string -> ML (prob & worklist) =
