@@ -385,6 +385,7 @@ and expr_to_doc (e:expr) : ML document =
   | EAddrOf x -> ctor "EAddrOf" [expr_to_doc x]
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
+  | ESizeof t -> ctor "ESizeof" [pp t]
   
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
