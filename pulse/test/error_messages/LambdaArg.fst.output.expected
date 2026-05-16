@@ -1,0 +1,9 @@
+* Info at LambdaArg.fst(18,2-18,11):
+  - Expected failure:
+  - Ill-typed term
+  - Expected a function.
+  - Got an expression of type:
+      fn
+        requires Pulse.Lib.Core.emp
+        ensures Pulse.Lib.Core.emp
+

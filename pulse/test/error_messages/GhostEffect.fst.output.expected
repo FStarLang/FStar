@@ -1,0 +1,7 @@
+* Info at GhostEffect.fst(21,10-21,18):
+  - Expected failure:
+  - Tactic failed
+  - Expected a term with a non-informative (e.g., erased) type.
+  - Got: int
+  - See also GhostEffect.fst(20,1-22,3)
+

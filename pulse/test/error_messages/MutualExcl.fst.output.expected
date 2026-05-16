@@ -1,0 +1,6 @@
+* Info at MutualExcl.fst(11,2-11,4):
+  - Expected failure:
+  - Tactic failed
+  - Leftover resources: Pulse.Lib.Reference.pts_to r 0
+  - Did you forget to free these resources?
+

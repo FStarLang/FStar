@@ -1,0 +1,17 @@
+* Info at WhileInvPreservation.fst(15,4-15,8):
+  - Expected failure:
+  - Could not prove equality of:
+  - Pulse.Lib.Reference.pts_to i 2
+  - Pulse.Lib.Reference.pts_to i 0
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env =
+      (uu___0 : Prims.unit) (i : Pulse.Lib.Reference.ref Prims.int)
+      (meas : Prims.unit) (__ : Prims.squash (true /\ true))
+      (__ : Prims.squash (meas == ())) (__ : Prims.squash (true == true))
+      (__anf0 : Prims.int)
+      (__ : Prims.squash (Pulse.Lib.Core.rewrites_to_p __anf0 0))
+      (__ : Prims.unit)
+  - VC = Pulse.Lib.Reference.pts_to i 2 == Pulse.Lib.Reference.pts_to i 0
+  - See also WhileInvPreservation.fst(15,4-15,13)
+

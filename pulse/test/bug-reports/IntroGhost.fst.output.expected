@@ -6,7 +6,7 @@
   - In the context:
       my_inv _b5 r
 
-* Info at IntroGhost.fst(84,46-87,24):
+* Info at IntroGhost.fst(87,2-87,24):
   - Expected failure:
   - Tactic failed
   - Cannot prove:

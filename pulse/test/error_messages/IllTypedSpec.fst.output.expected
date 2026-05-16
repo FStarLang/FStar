@@ -1,0 +1,7 @@
+* Info at IllTypedSpec.fst(8,11-8,12):
+  - Expected failure:
+  - Ill-typed term
+  - Expected expression of type Pulse.Lib.Core.slprop
+    got expression x
+    of type Prims.int
+

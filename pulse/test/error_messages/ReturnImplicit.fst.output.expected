@@ -1,0 +1,9 @@
+* Info at ReturnImplicit.fst(12,2-12,4):
+  - Expected failure:
+  - Ill-typed term
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env = (uu___0 : Prims.unit)
+  - VC = Prims.l_False
+  - Also see: Prims.fst(642,18-642,24)
+

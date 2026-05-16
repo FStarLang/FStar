@@ -23,6 +23,7 @@ type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_error_bound (r:Range.range) (f:unit -> T.Tac 'a) : T.Tac 'a
+val get_error_bound (_:unit) : T.Tac (option Range.range)
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string
 val debug_at_level_no_module (s:string) : bool
