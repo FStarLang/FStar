@@ -193,9 +193,28 @@ val try_lookup_record_type : env -> lident -> ML (option DsEnv.record_or_dc)
 val head_fv_of_typ (_:env) (t:typ) : ML (option fv)
 val find_record_or_dc_from_head_fv : env -> option fv -> unresolved_constructor -> Range.t -> ML (DsEnv.record_or_dc & lident & fv)
 val field_name_matches : lident -> DsEnv.record_or_dc -> ident -> ML bool
-val make_record_fields_in_order : env -> unresolved_constructor -> option (either typ typ) ->
-                                DsEnv.record_or_dc ->
-                                list (lident & 'a) ->
-                                not_found:(ident -> ML (option 'a)) ->
-                                Range.t ->
-                                ML (list 'a)
+
+(*
+  The field assignments of a record constructor can be given out of
+  order.
+
+  Given that we've committed to `rdc` as the record constructor, if the user's
+  field assignments are `fas`, then we order the alphas by the order in which
+  they appear in `rdc`. This is the list we return, augmented with a boolean to
+  indicate whether the field was implicit or not.
+
+  If a particular field cannot be found, then we call not_found, which
+  an provide a default.
+
+  We raise errors if fields are not found and no default exists, or if
+  redundant fields are present.
+*)
+val make_record_fields_in_order
+       (env : Env.env)
+       (uc : unresolved_constructor)
+       (topt : option (either typ typ))
+       (rdc : DsEnv.record_or_dc)
+       (fas : list (lident & 'a))
+       (not_found : (ident -> is_imp:bool -> ML (option 'a)))
+       (rng : Range.t)
+  : ML (list ('a & bool))

@@ -484,13 +484,16 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
           (group <| separate_map (comma ^^ break_ 1) pp tlist)
       ]
 
-let check_smt_pat env t bs c : ML unit =
-    if U.is_smt_lemma t //check patterns cover the bound vars
-    then match c.n with
-        | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
-            check_pat_fvs t.pos env pats bs;
-            check_no_smt_theory_symbols env pats
-        | _ -> failwith "Impossible: check_smt_pat: not Comp"
+let check_smt_pat env t : ML unit =
+    // Check patterns cover the bound vars
+    if U.is_smt_lemma t then
+      let bs, c = U.arrow_formals_comp t in
+      match c.n with
+      | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
+          check_pat_fvs t.pos env pats bs;
+          check_no_smt_theory_symbols env pats
+      | _ ->
+        failwith "Impossible: check_smt_pat: not Comp"
 
 (************************************************************************************************************)
 (* Building the environment for the body of a let rec;                                                      *)
@@ -1184,7 +1187,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let rdc : DsEnv.record_or_dc = rdc in //for type-based disambiguation of rdc projectors below
     let open FStarC.Pprint in
     (if Some? (Env.expected_typ env) && not rdc.is_record then
-      let rdc_field_names = List.map (fun (i, _) -> Ident.string_of_id i) rdc.fields in
+      let rdc_field_names = List.map (fun (i, _, _) -> Ident.string_of_id i) rdc.fields in
       let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
       match bad_field with
       | Some f ->
@@ -1201,18 +1204,23 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         let candidate = S.fvar (Ident.set_lid_range projname x.pos) qual in
         S.mk_Tm_app candidate [(x, None)] x.pos
     in
-    let fields =
+    let args =
         TcUtil.make_record_fields_in_order env uc topt
           rdc
           uc_fields
-          (fun field_name ->
+          (fun field_name is_imp ->
             match base_term with
             | Some x -> Some (mk_field_projector field_name x)
-            | _ -> None)
+            | None when is_imp ->
+              (* We're missing an implicit field, use a wildcard. *)
+              Some S.tun
+            | None -> None)
           top.pos
     in
-    let args = List.map (fun x -> x, None) fields in
-    let term = S.mk_Tm_app constructor args top.pos in
+    (* First, apply the constructor to as many wildcards as it has parameters. Otherwise,
+       if its first field is implicit, we would construct a bad application. *)
+    let term = S.mk_Tm_app constructor (List.map (fun _ -> S.iarg S.tun) rdc.parms) top.pos in
+    let term = S.mk_Tm_app term (List.map (fun (a, is_imp) -> a, as_aqual_implicit is_imp) args) top.pos in
     tc_term env term
 
   | Tm_app {hd={n=Tm_fvar {fv_name=field_name; fv_qual=Some (Unresolved_projector candidate)}};
@@ -1251,12 +1259,12 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       | Some rdc ->
         let i =
           List.tryFind
-            (fun (i, _) -> TcUtil.field_name_matches field_name rdc i)
+            (fun (i, _, _) -> TcUtil.field_name_matches field_name rdc i)
             rdc.fields
         in
         match i with
         | None -> proceed_with candidate
-        | Some (i, _) ->
+        | Some (i, _, _) ->
           let constrname = FStarC.Ident.lid_of_ids (Ident.ns_of_lid rdc.typename @ [rdc.constrname]) in
           let projname = mk_field_projector_name_from_ident constrname i in
           let qual = if rdc.is_record then Some (Record_projector (constrname, i)) else None in
@@ -1855,7 +1863,7 @@ and tc_value env (e:term) : ML (term
     let e = {U.arrow bs c with pos=top.pos} in
     (* checks the SMT pattern associated with this function is properly defined with regard to context *)
     if not env.phase1 then
-      check_smt_pat env e bs c;
+      check_smt_pat env e;
     (* taking the maximum of the universes of the computation and of all binders *)
     let u = S.U_max (uc::us) in
     (* create a universe of level u *)
@@ -3335,7 +3343,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
           let f_sub_pats = List.zip uc.uc_fields sub_pats in
           let open FStarC.Pprint in
           if not rdc.is_record then begin
-            let rdc_field_names = List.map (fun (i, _) -> Ident.string_of_id i) rdc.fields in
+            let rdc_field_names = List.map (fun (i, _, _) -> Ident.string_of_id i) rdc.fields in
             let bad_field = List.tryFind (fun i -> not (List.existsb (fun f -> f = Ident.string_of_id (Ident.ident_of_lid i)) rdc_field_names)) uc.uc_fields in
             match bad_field with
             | Some f ->
@@ -3348,11 +3356,13 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
           end;
           let sub_pats =
             TcUtil.make_record_fields_in_order env uc (Some (Inl t)) rdc f_sub_pats
-              (fun _ ->
+              (fun _ is_imp ->
                 let x = S.new_bv None S.tun in
                 Some (S.withinfo (Pat_var x) p.p, false))
               p.p
           in
+          let sub_pats = List.map (fun ((p, _), b) -> p, b) sub_pats in
+          (* ^ Respect the implicitness of the fields. *)
           let p = { p with v=Pat_cons(constructor_fv, us_opt, sub_pats) } in
           let p = PatternUtils.elaborate_pat env p in
           check_nested_pattern env p t
