@@ -62,6 +62,7 @@ let main () : ML unit =
           Pars.parse_incremental_decls_use_lang ();
           Norm.run_all ();
           if Unif.run_all () then () else exit 1;
+          if CoreVsRel.run_all () then () else exit 1;
           Data.run_all ();
 
           FStarC.Errors.report_all () |> ignore;
