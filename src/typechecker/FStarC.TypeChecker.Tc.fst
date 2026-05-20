@@ -1108,6 +1108,8 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
+    if Options.Ext.enabled "freshen" then
+      env.solver.refresh (Some env.proof_ns);
 
     let ses', ses_elaborated, env =
             Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration ‘%s’"
