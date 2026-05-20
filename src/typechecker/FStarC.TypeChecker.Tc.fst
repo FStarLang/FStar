@@ -1344,6 +1344,8 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
+    if Options.Ext.enabled "freshen" then
+      env.solver.refresh (Some env.proof_ns);
 
     (* Tick off the entries of the interface's to-do list that this declaration
        discharges. Copied interface sigelts and the declarations being
