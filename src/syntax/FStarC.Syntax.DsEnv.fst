@@ -360,7 +360,7 @@ let find_in_record ns id record (cont: record_or_dc -> ML (cont_t 'a)) : ML (con
  if lid_equals typename' record.typename
  then
       let fname = lid_of_ids (ns_of_lid record.typename @ [id]) in
-      let find = BU.find_map record.fields (fun (f, _) ->
+      let find = BU.find_map record.fields (fun (f, _, _) ->
         if string_of_id id = string_of_id f
         then Some record
         else None)
@@ -373,7 +373,7 @@ let find_in_record ns id record (cont: record_or_dc -> ML (cont_t 'a)) : ML (con
 
 let find_in_record_many ids record (cont: record_or_dc -> ML (cont_t 'a)) : ML (cont_t 'a) =
   let found = BU.multiset_equiv
-      (fun (fn,_) id -> string_of_id id = string_of_id fn)
+      (fun (fn, _, _) id -> string_of_id id = string_of_id fn)
       record.fields ids
   in
   if found
@@ -1005,16 +1005,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) : sigelt -> ML unit
                 (* Ignore parameters, we don't create projectors for them *)
                 let _params, formals = BU.first_N n all_formals in
                 let is_rec = is_record typename_quals in
-                let formals' = formals |> List.collect (fun f ->
-                        if S.is_null_bv f.binder_bv
-                        || (is_rec && S.is_bqual_implicit f.binder_qual)
-                        then []
-                        else [f] )
-                in
-                let fields' = formals' |> List.map (fun f -> (f.binder_bv.ppname, f.binder_bv.sort))
-                in
-                let fields = fields'
-                in
+                let fields = formals |> List.map (fun f -> (f.binder_bv.ppname, S.is_bqual_implicit_or_meta f.binder_qual, f.binder_bv.sort)) in
                 let record = {typename=typename;
                               constrname=ident_of_lid constrname;
                               parms=parms;
@@ -1027,7 +1018,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) : sigelt -> ML unit
                 let () = new_globs := Record_or_dc record :: !new_globs in
                 (* the field names are added into the set of exported fields for "include" *)
                 let () =
-                  let add_field (id, _) =
+                  let add_field (id, _, _) =
                     let modul = string_of_lid (lid_of_ids (ns_of_lid constrname)) in
                     match get_exported_id_set e modul with
                     | Some my_ex ->
@@ -1042,7 +1033,7 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) : sigelt -> ML unit
                       ()
                     | None -> () (* current module was not prepared? should not happen *)
                   in
-                  List.iter add_field fields'
+                  List.iter add_field fields
                 in
                 insert_record_cache record
             | _ -> ()
@@ -1378,7 +1369,7 @@ let elab_restriction (f: env -> lident -> restriction -> ML env) env ns restrict
             |> List.filter (fun (x, _) -> name_exists x))
       // If `id` is a record, we include its fields
       @ ( match try_lookup_record_type env lid with
-        | Some {constrname; fields} -> List.map (fun (id, _) -> (id, None)) fields
+        | Some {constrname; fields} -> List.map (fun (id, _, _) -> (id, None)) fields
         | None -> [])
       end |> List.map (fun (id, renamed) -> (with_id_range id, Option.map with_renamed_range renamed))
     ) l |> List.flatten |> List.append l in

@@ -1,0 +1,7 @@
+* Info at BindTypeMismatch.fst(19,17-19,26):
+  - Expected failure:
+  - Tactic failed
+  - Type mismatch (NB: this is a syntactic check)
+  - Expected: bool
+  - Got: int
+

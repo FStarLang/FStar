@@ -22,6 +22,9 @@ let rec with_context (c:context) (f: unit -> 'a utac) : 'a utac =
 let with_error_bound (r:FStarC_Range.range) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     FStarC_Errors.with_error_bound r (fun _ -> f () ps)
+let get_error_bound () : FStarC_Range.range option utac =
+  fun _ps ->
+    FStarC_Effect.op_Bang FStarC_Errors.error_range_bound
 let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
     let open FStarC_Options_Ext in

@@ -578,13 +578,25 @@ let mk_class (nm:string) : Tac decls =
             mk_arr (ps@(b1::bs')) cod
       in
       let def =
-        let bs, body = collect_abs proj_lb.lb_def in
-        let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
-        match bs with
-        | [] -> fail "mk_class: impossible, no binders"
-        | b1::bs' ->
+        if false then
+          let bs, body = collect_abs proj_lb.lb_def in
+          let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+          match bs with
+          | [] -> fail "mk_class: impossible, no binders"
+          | b1::bs' ->
+              let b1 = binder_set_meta b1 tcr in
+              mk_abs (ps@(b1::bs')) body
+        else
+          let bs, _cod = collect_arr_bs proj_lb.lb_typ in
+          let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
+          match bs with
+          | [] -> fail "mk_class: impossible, no binders"
+          | b1::bs' ->
             let b1 = binder_set_meta b1 tcr in
-            mk_abs (ps@(b1::bs')) body
+            mk_abs (ps@[b1]) <|
+              mk_app (Tv_FVar proj_lb.lb_fv)
+                (L.map (fun p -> (binder_to_term p, Q_Implicit)) ps
+                @ [binder_to_term b1, Q_Explicit])
       in
       debug' (fun () -> "def = " ^ term_to_string def);
       debug' (fun () -> "ty  = " ^ term_to_string ty);
@@ -597,7 +609,7 @@ let mk_class (nm:string) : Tac decls =
       let se = pack_sigelt (Sg_Let {isrec=false; lbs=[lb]}) in
       let se = set_sigelt_quals to_propagate se in
       let se = set_sigelt_attrs ((`tcmethod) :: proj_attrs @ b.attrs) se in
-      //debug' (fun () -> "trying to return : " ^ term_to_string (quote se));
+      // debug' (fun () -> "trying to return : " ^ term_to_string (quote se));
       se
     )
 #pop-options

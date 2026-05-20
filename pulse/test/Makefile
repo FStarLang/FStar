@@ -1,4 +1,5 @@
 SUBDIRS += bug-reports
+SUBDIRS += error_messages
 SUBDIRS += nolib
 SUBDIRS += pool
 

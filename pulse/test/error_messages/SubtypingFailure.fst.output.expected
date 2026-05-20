@@ -1,0 +1,9 @@
+* Info at SubtypingFailure.fst(18,2-18,10):
+  - Expected failure:
+  - Ill-typed term
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
+  - Also see: Prims.fst(642,18-642,24)
+

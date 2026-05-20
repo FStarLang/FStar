@@ -1339,9 +1339,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       let mk_pattern p = mk_pattern p r.range in
       let elab =
         let pat =
-          (* All of the fields are explicit arguments of the constructor, hence the None below *)
           mk_pattern (PatApp (mk_pattern (PatName constrname),
-                              List.map (fun (field, _) -> mk_pattern (PatVar (field, None, []))) record.fields))
+                              List.map (fun (field, is_imp, _) -> mk_pattern (PatVar (field, (if is_imp then Some Implicit else None), []))) record.fields))
         in
         let branch = (pat, None, e) in
         let r = mk_term (Ascribed (r, rty, None, false)) r.range Expr in

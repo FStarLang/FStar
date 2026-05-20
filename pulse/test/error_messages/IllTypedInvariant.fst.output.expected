@@ -1,0 +1,8 @@
+* Info at IllTypedInvariant.fst(13,43-13,44):
+  - Expected failure:
+  - Failed to prove pure property: true /\ true /\ false
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env = (uu___0 : Prims.unit) (i : Pulse.Lib.Reference.ref Prims.int)
+  - VC = Prims.l_False
+

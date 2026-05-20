@@ -1,0 +1,8 @@
+* Info at FailAssertion.fst(11,2-11,16):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      x > 0
+  - In the context:
+
+
