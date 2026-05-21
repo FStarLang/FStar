@@ -74,10 +74,10 @@ let run_rel_subtyping (env:Env.env) (t0 t1:typ)
       let g = Rel.simplify_guard env g in
       Some g.guard_f
 
-(* Run Rel's try_teq (no SMT), return guard_formula *)
+(* Run Rel's try_teq (with SMT guards enabled), return guard_formula *)
 let run_rel_equality (env:Env.env) (t0 t1:typ)
   : ML (option guard_formula)
-  = match Rel.try_teq false env t0 t1 with
+  = match Rel.try_teq true env t0 t1 with
     | None -> None
     | Some g ->
       let g = Rel.simplify_guard env g in
@@ -370,12 +370,11 @@ let run_all () : ML bool =
        ---------------------------------------------------------- *)
 
     (* Test 600: cvr_natlt 5 =?= cvr_natlt 10
-       Core can produce a guard (forall i. i < 5 == i < 10);
-       Rel's try_teq with smt_ok=false can't solve this, so it fails.
-       This is an expected divergence: equality of distinct type
-       abbreviation applications is harder for Rel without SMT. *)
+       Both produce guards:
+       - Core: forall i. i < 5 == i < 10
+       - Rel: defers equality to SMT *)
     let _ =
-      compare_equality 600 (tc "cvr_natlt 5") (tc "cvr_natlt 10") RelFailCoreSucceed
+      compare_equality 600 (tc "cvr_natlt 5") (tc "cvr_natlt 10") BothGuarded
     in
 
     (* Test 601: cvr_natlt 5 =?= i:nat{ i < 5 } — unfolding should yield equality *)
@@ -457,8 +456,8 @@ let run_all () : ML bool =
       let i_name = S.bv_to_name i_bv in
       let t0 = S.mk_Tm_app cvr_natlt_head [(i_name, None)] FStarC.Range.dummyRange in
       let t1 = S.mk_Tm_app cvr_natlt_head [(n_name, None)] FStarC.Range.dummyRange in
-      (* Core produces guard i == n; Rel fails without SMT *)
-      compare_equality_env 704 env t0 t1 RelFailCoreSucceed
+      (* Both produce guards: Core emits i == n; Rel defers to SMT *)
+      compare_equality_env 704 env t0 t1 BothGuarded
     in
 
     (* Test 705: with n:nat, i:nat in env:
@@ -472,14 +471,14 @@ let run_all () : ML bool =
 
     (* Test 706: with n:nat, i:nat in env:
        cvr_ty0 i =?= cvr_ty0 n (equality with variables)
-       Same bug pattern as 704 but with different abbreviation. *)
+       Same pattern as 704: both produce guards. *)
     let _ =
       let env, n_bv, i_bv = env_with_n_i () in
       let n_name = S.bv_to_name n_bv in
       let i_name = S.bv_to_name i_bv in
       let t0 = S.mk_Tm_app cvr_ty0_head [(i_name, None)] FStarC.Range.dummyRange in
       let t1 = S.mk_Tm_app cvr_ty0_head [(n_name, None)] FStarC.Range.dummyRange in
-      compare_equality_env 706 env t0 t1 RelFailCoreSucceed
+      compare_equality_env 706 env t0 t1 BothGuarded
     in
 
     (* ----------------------------------------------------------
@@ -664,16 +663,15 @@ let run_all () : ML bool =
     in
 
     (* Test 1301: (nat -> bool) =?= (int -> bool) — different domains
-       Rel can't prove arrow equality without SMT.
-       Core produces a guard (which is also buggy — equates refinement
-       formulas via injectivity: l_True == (i >= 0 == true)). *)
+       Both produce guards: Core equates refinement formulas;
+       Rel defers domain equality to SMT. *)
     let _ =
-      compare_equality 1301 (tc "nat -> bool") (tc "int -> bool") RelFailCoreSucceed
+      compare_equality 1301 (tc "nat -> bool") (tc "int -> bool") BothGuarded
     in
 
     (* Test 1302: with n:nat, i:nat in env:
        (cvr_natlt n -> bool) =?= (cvr_natlt i -> bool) (arrow equality with var args)
-       Core will produce equational guard; Rel fails without SMT. *)
+       Both produce guards: Core emits equational guard; Rel defers to SMT. *)
     let _ =
       let env, n_bv, i_bv = env_with_n_i () in
       let n_name = S.bv_to_name n_bv in
@@ -685,7 +683,7 @@ let run_all () : ML bool =
       let b1 = S.mk_binder (S.gen_bv "_" None dom1) in
       let t0 = U.arrow [b0] (S.mk_Total bool_t) in
       let t1 = U.arrow [b1] (S.mk_Total bool_t) in
-      compare_equality_env 1302 env t0 t1 RelFailCoreSucceed
+      compare_equality_env 1302 env t0 t1 BothGuarded
     in
 
     (* ----------------------------------------------------------
@@ -787,7 +785,7 @@ let run_all () : ML bool =
       let b_name = S.bv_to_name b_bv in
       let t0 = S.mk_Tm_app cvr_nonref_wrap_head [(a_name, None)] FStarC.Range.dummyRange in
       let t1 = S.mk_Tm_app cvr_nonref_wrap_head [(b_name, None)] FStarC.Range.dummyRange in
-      compare_equality_env 1504 env t0 t1 RelFailCoreSucceed
+      compare_equality_env 1504 env t0 t1 BothGuarded
     in
 
     (* ----------------------------------------------------------
@@ -879,15 +877,14 @@ let run_all () : ML bool =
 
     (* Test 1701: cvr_ha_like c a =?= cvr_ha_like c b — EQUALITY, different 2nd arg.
        This is THE ha_val_core pattern:
-       - Core: structural fallback (step 2) produces guard (a == b).
+       - Core: structural fallback (step 2) produces simple guard (a == b).
          Path: compare_head_and_args → no_guard(structural) fails →
          unfold → non-refinement → 3-way: no_guard(unfolded) fails →
          structural() succeeds with guard a == b.
-       - Rel: try_teq without SMT cannot prove equality of
-         the abbreviation applications → fails.
-       This is exactly why step 2 exists: without it, only step 3
-       (unfolded with guards) would be tried, producing complex
-       formula-level guards from the arrow/refinement body. *)
+       - Rel: unfolds, compares arrows, defers domain equality to SMT,
+         producing complex formula-level guards.
+       Both succeed with guards, but Core's is simpler and more
+       SMT-friendly — this is why step 2 exists. *)
     let _ =
       let env, c_bv, a_bv, b_bv = env_with_cab_ints () in
       let c_name = S.bv_to_name c_bv in
@@ -895,19 +892,19 @@ let run_all () : ML bool =
       let b_name = S.bv_to_name b_bv in
       let t0 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (a_name, None)] FStarC.Range.dummyRange in
       let t1 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (b_name, None)] FStarC.Range.dummyRange in
-      compare_equality_env 1701 env t0 t1 RelFailCoreSucceed
+      compare_equality_env 1701 env t0 t1 BothGuarded
     in
 
     (* Test 1702: cvr_ha_like a b =?= cvr_ha_like b a — EQUALITY, both args swapped.
        Core: structural (step 2) produces guard (a == b /\ b == a).
-       Rel: fails. *)
+       Rel: defers equality to SMT. *)
     let _ =
       let env, _c_bv, a_bv, b_bv = env_with_cab_ints () in
       let a_name = S.bv_to_name a_bv in
       let b_name = S.bv_to_name b_bv in
       let t0 = S.mk_Tm_app cvr_ha_like_head [(a_name, None); (b_name, None)] FStarC.Range.dummyRange in
       let t1 = S.mk_Tm_app cvr_ha_like_head [(b_name, None); (a_name, None)] FStarC.Range.dummyRange in
-      compare_equality_env 1702 env t0 t1 RelFailCoreSucceed
+      compare_equality_env 1702 env t0 t1 BothGuarded
     in
 
     (* Test 1703: cvr_ha_like c a <: cvr_ha_like c b — SUBTYPING variant.
