@@ -1030,6 +1030,12 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
   else
     Right
 
+let is_marked_injective env t =
+  match (U.un_uinst t).n with
+  | Tm_fvar fv ->
+    Env.fv_has_attr env fv PC.unifier_hint_injective_lid
+  | _ -> false
+
 instance showable_rel : showable relation = {
     show = fun rel ->
       match rel with
@@ -1314,11 +1320,11 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
              This is designed to be able to prove things like `v.v1 == u.v1`
              first by trying to unify `v` and `u` and if it fails
              then prove `v.v1 == u.v1` *)
+          let structural () =
+            check_relation g EQUALITY head0 head1 ;!
+            check_relation_args g EQUALITY args0 args1
+          in
           let compare_head_and_args () =
-            let structural () =
-              check_relation g EQUALITY head0 head1 ;!
-              check_relation_args g EQUALITY args0 args1
-            in
             handle_with
               //cf. Issue 4239
               //First try structural comparison without SMT guards.
@@ -1364,7 +1370,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                             (fun _ -> check_relation g rel t0' t1'))
                 ) else structural ())
           in
-          if guard_ok &&
+          if is_marked_injective g.tcenv head0
+          then structural () 
+          else if guard_ok &&
             (rel=EQUALITY) &&
             (equatable g t0 || equatable g t1)
           then (
