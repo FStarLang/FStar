@@ -30,7 +30,7 @@ let assert_0_eq_1 () = assert (0=1) //should fail
 let hd_int_inexhaustive l = match l with
   | hd::_ -> hd //should fail
 
-val test_label: x:int -> Pure int (requires (b2t (x > 0))) (ensures (fun y -> y > 0))
+val test_label: x:int -> Pure int (requires (x > 0)) (ensures (fun y -> y > 0))
 let test_label x = x
 
 val test_precondition_label: x:int -> Tot int
@@ -47,7 +47,7 @@ let bad_projector x = Some?.v x (* should fail *)
 
 assume type t_pred : (result int -> Type) -> Type
 [@@(expect_failure [19])]
-assume val test: t_pred (fun ri -> b2t (V?.v ri = 0))//should fail: not (V? ri)
+assume val test: t_pred (fun ri -> V?.v ri = 0)//should fail: not (V? ri)
 
 assume val f1: (x:int -> Tot unit) -> Tot unit
 assume val g1: nat -> Tot unit

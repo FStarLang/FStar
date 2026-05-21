@@ -30,7 +30,7 @@ type renaming (s:sub) = (forall x. EVar? (s x))
 
 val is_renaming : s:sub -> GTot nat
 let is_renaming s =
-  if (t2b (renaming s)) then 0 else 1
+  if (renaming s) then 0 else 1
 
 val is_evar : exp -> Tot nat
 let is_evar e = if (EVar? e) then 0 else 1
