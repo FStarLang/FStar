@@ -26,6 +26,7 @@ module T = FStar.Tactics.V2
 let forall_f (#a:Type u#a) (p:a->slprop) (#[T.exact (`emp)] v:slprop) =
   x:a -> stt_ghost unit emp_inames v (fun _ -> p x)
 
+[@@ unifier_hint_injective]
 val ( forall* )
     (#a:Type u#a)
     (p:a -> slprop)

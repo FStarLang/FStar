@@ -1364,10 +1364,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                       //   functions like op_Equality).
                       handle_with
                         (no_guard (check_relation g rel t0' t1'))
-                        (fun _ ->
-                          handle_with
-                            (structural ())
-                            (fun _ -> check_relation g rel t0' t1'))
+                        (fun _ -> check_relation g rel t0' t1')
                 ) else structural ())
           in
           if is_marked_injective g.tcenv head0
