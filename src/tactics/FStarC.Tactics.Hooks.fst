@@ -541,7 +541,7 @@ let rec traverse_for_spinoff
 
           | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                  // ==> is specialized to U_zero
-            let x = S.new_bv None p in
+            let x = S.new_bv None (U.mk_squash p) in
             let r1 = traverse (flip pol)  e                p in
             let r2 = traverse       pol  (Env.push_bv e x) q in
             comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
