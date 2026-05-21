@@ -935,8 +935,6 @@ let e_vconfig =
                    S.as_arg (embed vcfg.smtencoding_elim_box                      rng None norm);
                    S.as_arg (embed vcfg.smtencoding_nl_arith_repr                 rng None norm);
                    S.as_arg (embed vcfg.smtencoding_l_arith_repr                  rng None norm);
-                   S.as_arg (embed vcfg.smtencoding_valid_intro                   rng None norm);
-                   S.as_arg (embed vcfg.smtencoding_valid_elim                    rng None norm);
                    S.as_arg (embed vcfg.tcnorm                                    rng None norm);
                    S.as_arg (embed vcfg.no_plugins                                rng None norm);
                    S.as_arg (embed vcfg.no_tactics                                rng None norm);
@@ -971,8 +969,6 @@ let e_vconfig =
             (smtencoding_elim_box, _);
             (smtencoding_nl_arith_repr, _);
             (smtencoding_l_arith_repr, _);
-            (smtencoding_valid_intro, _);
-            (smtencoding_valid_elim, _);
             (tcnorm, _);
             (no_plugins, _);
             (no_tactics, _);
@@ -1000,8 +996,6 @@ let e_vconfig =
                   Option.bind (try_unembed smtencoding_elim_box norm) (fun smtencoding_elim_box ->
                   Option.bind (try_unembed smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
                   Option.bind (try_unembed smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
-                  Option.bind (try_unembed smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
-                  Option.bind (try_unembed smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
                   Option.bind (try_unembed tcnorm norm) (fun tcnorm ->
                   Option.bind (try_unembed no_plugins norm) (fun no_plugins ->
                   Option.bind (try_unembed no_tactics norm) (fun no_tactics ->
@@ -1029,8 +1023,6 @@ let e_vconfig =
                     smtencoding_elim_box = smtencoding_elim_box;
                     smtencoding_nl_arith_repr = smtencoding_nl_arith_repr;
                     smtencoding_l_arith_repr = smtencoding_l_arith_repr;
-                    smtencoding_valid_intro = smtencoding_valid_intro;
-                    smtencoding_valid_elim = smtencoding_valid_elim;
                     tcnorm = tcnorm;
                     no_plugins = no_plugins;
                     no_tactics = no_tactics;
@@ -1043,7 +1035,7 @@ let e_vconfig =
                     z3version = z3version;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  })))))))))))))))))))))))))))))
+                  })))))))))))))))))))))))))))
         | _ ->
           None
     in

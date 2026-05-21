@@ -362,7 +362,7 @@ let star_elim (p1 p2: slprop) (w: premem { star p1 p2 w }) :
   star__elim p1 p2 w
 
 #restart-solver
-#push-options "--split_queries always"
+#push-options "--split_queries always --z3rlimit 20"
 irreducible
 let star_elim' (p1 p2: slprop) (w: mem { star p1 p2 w }) :
     GTot (w':(mem & mem) { disjoint_mem w'._1 w'._2 /\ w == join_premem w'._1 w'._2 /\ p1 w'._1 /\ p2 w'._2 }) =

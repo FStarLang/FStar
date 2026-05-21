@@ -27,10 +27,8 @@ let _ = assert_norm (True \/ True)
 (* let l1 a = assert_norm (a ==> squash a) *)
 
 (* This needs the validity axioms to succeed *)
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 val l2 : (a : prop) -> Lemma (a ==> a)
 let l2 a = assert_norm (a ==> a)
-#pop-options
 
 
 // Why does the third one need SMT and not the second? Investigate

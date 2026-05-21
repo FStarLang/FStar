@@ -1090,21 +1090,6 @@ and mkPrelude z3options : ML string =
                                               (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
-   let valid_intro =
-     "(assert (forall ((e Term) (t Term))\n\
-                      (! (implies (HasType e t)\n\
-                                  (Valid t))\n\
-                       :pattern ((HasType e t)\n\
-                                 (Valid t))\n\
-                       :qid __prelude_valid_intro)))\n"
-   in
-   let valid_elim =
-     "(assert (forall ((t Term))\n\
-                      (! (implies (Valid t)\n\
-                                  (exists ((e Term)) (HasType e t)))\n\
-                       :pattern ((Valid t))\n\
-                       :qid __prelude_valid_elim)))\n"
-   in
    let tm_type_typing =
      "(assert (forall ((u Universe) (t Term))\n\
                 (! (iff (HasType (Tm_type u) t)\n\
@@ -1114,12 +1099,6 @@ and mkPrelude z3options : ML string =
    ^ bcons
    ^ precedes_partial_app
    ^ lex_ordering
-   ^ (if FStarC.Options.smtencoding_valid_intro()
-      then valid_intro
-      else "")
-   ^ (if FStarC.Options.smtencoding_valid_elim()
-      then valid_elim
-      else "")
    ^ tm_type_typing
 
 let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
