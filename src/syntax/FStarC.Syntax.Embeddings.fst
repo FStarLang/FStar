@@ -935,8 +935,6 @@ let e_vconfig =
                    S.as_arg (embed vcfg.smtencoding_elim_box                      rng None norm);
                    S.as_arg (embed vcfg.smtencoding_nl_arith_repr                 rng None norm);
                    S.as_arg (embed vcfg.smtencoding_l_arith_repr                  rng None norm);
-                   S.as_arg (embed vcfg.smtencoding_valid_intro                   rng None norm);
-                   S.as_arg (embed vcfg.smtencoding_valid_elim                    rng None norm);
                    S.as_arg (embed vcfg.tcnorm                                    rng None norm);
                    S.as_arg (embed vcfg.no_plugins                                rng None norm);
                    S.as_arg (embed vcfg.no_tactics                                rng None norm);
@@ -971,8 +969,6 @@ let e_vconfig =
             (smtencoding_elim_box, _);
             (smtencoding_nl_arith_repr, _);
             (smtencoding_l_arith_repr, _);
-            (smtencoding_valid_intro, _);
-            (smtencoding_valid_elim, _);
             (tcnorm, _);
             (no_plugins, _);
             (no_tactics, _);
@@ -986,34 +982,33 @@ let e_vconfig =
             (trivial_pre_for_unannotated_effectful_fns, _);
             (reuse_hint_for, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
-                  Option.bind (try_unembed initial_fuel norm) (fun initial_fuel ->
-                  Option.bind (try_unembed max_fuel norm) (fun max_fuel ->
-                  Option.bind (try_unembed initial_ifuel norm) (fun initial_ifuel ->
-                  Option.bind (try_unembed max_ifuel norm) (fun max_ifuel ->
-                  Option.bind (try_unembed detail_errors norm) (fun detail_errors ->
-                  Option.bind (try_unembed detail_hint_replay norm) (fun detail_hint_replay ->
-                  Option.bind (try_unembed no_smt norm) (fun no_smt ->
-                  Option.bind (try_unembed quake_lo norm) (fun quake_lo ->
-                  Option.bind (try_unembed quake_hi norm) (fun quake_hi ->
-                  Option.bind (try_unembed quake_keep norm) (fun quake_keep ->
-                  Option.bind (try_unembed retry norm) (fun retry ->
-                  Option.bind (try_unembed smtencoding_elim_box norm) (fun smtencoding_elim_box ->
-                  Option.bind (try_unembed smtencoding_nl_arith_repr norm) (fun smtencoding_nl_arith_repr ->
-                  Option.bind (try_unembed smtencoding_l_arith_repr norm) (fun smtencoding_l_arith_repr ->
-                  Option.bind (try_unembed smtencoding_valid_intro norm) (fun smtencoding_valid_intro ->
-                  Option.bind (try_unembed smtencoding_valid_elim norm) (fun smtencoding_valid_elim ->
-                  Option.bind (try_unembed tcnorm norm) (fun tcnorm ->
-                  Option.bind (try_unembed no_plugins norm) (fun no_plugins ->
-                  Option.bind (try_unembed no_tactics norm) (fun no_tactics ->
-                  Option.bind (try_unembed z3cliopt norm) (fun z3cliopt ->
-                  Option.bind (try_unembed z3smtopt norm) (fun z3smtopt ->
-                  Option.bind (try_unembed z3refresh norm) (fun z3refresh ->
-                  Option.bind (try_unembed z3rlimit norm) (fun z3rlimit ->
-                  Option.bind (try_unembed z3rlimit_factor norm) (fun z3rlimit_factor ->
-                  Option.bind (try_unembed z3seed norm) (fun z3seed ->
-                  Option.bind (try_unembed z3version norm) (fun z3version ->
-                  Option.bind (try_unembed trivial_pre_for_unannotated_effectful_fns norm) (fun trivial_pre_for_unannotated_effectful_fns ->
-                  Option.bind (try_unembed reuse_hint_for norm) (fun reuse_hint_for ->
+                  let open FStarC.Class.Monad in
+                  let! initial_fuel = try_unembed initial_fuel norm in
+                  let! max_fuel = try_unembed max_fuel norm in
+                  let! initial_ifuel = try_unembed initial_ifuel norm in
+                  let! max_ifuel = try_unembed max_ifuel norm in
+                  let! detail_errors = try_unembed detail_errors norm in
+                  let! detail_hint_replay = try_unembed detail_hint_replay norm in
+                  let! no_smt = try_unembed no_smt norm in
+                  let! quake_lo = try_unembed quake_lo norm in
+                  let! quake_hi = try_unembed quake_hi norm in
+                  let! quake_keep = try_unembed quake_keep norm in
+                  let! retry = try_unembed retry norm in
+                  let! smtencoding_elim_box = try_unembed smtencoding_elim_box norm in
+                  let! smtencoding_nl_arith_repr = try_unembed smtencoding_nl_arith_repr norm in
+                  let! smtencoding_l_arith_repr = try_unembed smtencoding_l_arith_repr norm in
+                  let! tcnorm = try_unembed tcnorm norm in
+                  let! no_plugins = try_unembed no_plugins norm in
+                  let! no_tactics = try_unembed no_tactics norm in
+                  let! z3cliopt = try_unembed z3cliopt norm in
+                  let! z3smtopt = try_unembed z3smtopt norm in
+                  let! z3refresh = try_unembed z3refresh norm in
+                  let! z3rlimit = try_unembed z3rlimit norm in
+                  let! z3rlimit_factor = try_unembed z3rlimit_factor norm in
+                  let! z3seed = try_unembed z3seed norm in
+                  let! z3version = try_unembed z3version norm in
+                  let! trivial_pre_for_unannotated_effectful_fns = try_unembed trivial_pre_for_unannotated_effectful_fns norm in
+                  let! reuse_hint_for = try_unembed reuse_hint_for norm in
                   Some ({
                     initial_fuel = initial_fuel;
                     max_fuel = max_fuel;
@@ -1029,8 +1024,6 @@ let e_vconfig =
                     smtencoding_elim_box = smtencoding_elim_box;
                     smtencoding_nl_arith_repr = smtencoding_nl_arith_repr;
                     smtencoding_l_arith_repr = smtencoding_l_arith_repr;
-                    smtencoding_valid_intro = smtencoding_valid_intro;
-                    smtencoding_valid_elim = smtencoding_valid_elim;
                     tcnorm = tcnorm;
                     no_plugins = no_plugins;
                     no_tactics = no_tactics;
@@ -1043,7 +1036,7 @@ let e_vconfig =
                     z3version = z3version;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  })))))))))))))))))))))))))))))
+                  })
         | _ ->
           None
     in

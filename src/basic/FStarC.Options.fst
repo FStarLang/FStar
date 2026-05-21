@@ -294,8 +294,6 @@ let defaults = [
   ("smtencoding.elim_box"                      , Bool false);
   ("smtencoding.l_arith_repr"                  , String "boxwrap");
   ("smtencoding.nl_arith_repr"                 , String "boxwrap");
-  ("smtencoding.valid_elim"                    , Bool false);
-  ("smtencoding.valid_intro"                   , Bool true);
   ("smt"                                       , Unset);
   ("split_queries"                             , String "on_failure");
   ("stats"                                     , Bool false);
@@ -436,8 +434,6 @@ let set_verification_options o =
     "smtencoding.elim_box";
     "smtencoding.nl_arith_repr";
     "smtencoding.l_arith_repr";
-    "smtencoding.valid_intro";
-    "smtencoding.valid_elim";
     "tcnorm";
     "no_plugins";
     "no_tactics";
@@ -551,8 +547,6 @@ let get_smt                     ()      = lookup_opt "smt"                      
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
 let get_smtencoding_nl_arith_repr ()    = lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr()      = lookup_opt "smtencoding.l_arith_repr" as_string
-let get_smtencoding_valid_intro ()      = lookup_opt "smtencoding.valid_intro"  as_bool
-let get_smtencoding_valid_elim  ()      = lookup_opt "smtencoding.valid_elim"   as_bool
 let get_split_queries           ()      = lookup_opt "split_queries"            as_string
 let get_stats                   ()      = lookup_opt "stats"                    as_bool
 let get_tactic_raw_binders      ()      = lookup_opt "tactic_raw_binders"       as_bool
@@ -1395,16 +1389,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     text "(default 'boxwrap')");
 
   ( noshort,
-    "smtencoding.valid_intro",
-    BoolStr,
-    text "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof");
-
-  ( noshort,
-    "smtencoding.valid_elim",
-    BoolStr,
-    text "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness");
-
-  ( noshort,
     "split_queries",
     EnumStr ["no"; "on_failure"; "always"],
     text "Split SMT verification conditions into several separate queries, one per goal. \
@@ -1795,8 +1779,6 @@ let settable = function
     | "smtencoding.elim_box"
     | "smtencoding.l_arith_repr"
     | "smtencoding.nl_arith_repr"
-    | "smtencoding.valid_intro"
-    | "smtencoding.valid_elim"
     | "split_queries"
     | "stats"
     | "tactic_raw_binders"
@@ -2189,8 +2171,6 @@ let smtencoding_nl_arith_wrapped () = get_smtencoding_nl_arith_repr () = "wrappe
 let smtencoding_nl_arith_default () = get_smtencoding_nl_arith_repr () = "boxwrap"
 let smtencoding_l_arith_native   () = get_smtencoding_l_arith_repr () = "native"
 let smtencoding_l_arith_default  () = get_smtencoding_l_arith_repr () = "boxwrap"
-let smtencoding_valid_intro      () = get_smtencoding_valid_intro     ()
-let smtencoding_valid_elim       () = get_smtencoding_valid_elim      ()
 
 let parse_split_queries (s:string) : option split_queries_t =
   match s with
@@ -2505,8 +2485,6 @@ let get_vconfig () =
     smtencoding_elim_box                      = get_smtencoding_elim_box ();
     smtencoding_nl_arith_repr                 = get_smtencoding_nl_arith_repr ();
     smtencoding_l_arith_repr                  = get_smtencoding_l_arith_repr ();
-    smtencoding_valid_intro                   = get_smtencoding_valid_intro ();
-    smtencoding_valid_elim                    = get_smtencoding_valid_elim ();
     tcnorm                                    = get_tcnorm ();
     no_plugins                                = get_no_plugins ();
     no_tactics                                = get_no_tactics ();
@@ -2543,8 +2521,6 @@ let set_vconfig (vcfg:vconfig) : ML unit =
   set_option "smtencoding.elim_box"                      (Bool vcfg.smtencoding_elim_box);
   set_option "smtencoding.nl_arith_repr"                 (String vcfg.smtencoding_nl_arith_repr);
   set_option "smtencoding.l_arith_repr"                  (String vcfg.smtencoding_l_arith_repr);
-  set_option "smtencoding.valid_intro"                   (Bool vcfg.smtencoding_valid_intro);
-  set_option "smtencoding.valid_elim"                    (Bool vcfg.smtencoding_valid_elim);
   set_option "tcnorm"                                    (Bool vcfg.tcnorm);
   set_option "no_plugins"                                (Bool vcfg.no_plugins);
   set_option "no_tactics"                                (Bool vcfg.no_tactics);

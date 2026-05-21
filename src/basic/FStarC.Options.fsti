@@ -368,10 +368,6 @@ val smtencoding_l_arith_native  : unit    -> ML bool
 
 val smtencoding_l_arith_default : unit    -> ML bool
 
-val smtencoding_valid_intro     : unit    -> ML bool
-
-val smtencoding_valid_elim      : unit    -> ML bool
-
 val split_queries               : unit    -> ML split_queries_t
 
 val stats                       : unit    -> ML bool

@@ -32,9 +32,7 @@ let rewrite_with_tactic _ p = p
 
 let synth_by_tactic #_ _ = admit ()
 
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let assert_by_tactic _ _ = ()
-#pop-options
 
 let by_tactic_seman _ _ = ()
 

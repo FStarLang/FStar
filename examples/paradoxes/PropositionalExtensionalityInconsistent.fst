@@ -36,13 +36,11 @@ let propExt_Type_inconsistent ()
 let sub_singleton = a:prop{forall (x y:squash a). x == y}
 let propExt_sub_singleton = forall (p1 p2:sub_singleton). (p1 <==> p2) <==> p1==p2
 
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 [@@(expect_failure [19])]
 let propExt_sub_singleton_inconsistent()
   : Lemma (requires propExt_sub_singleton)
           (ensures False)
   = ()
-#pop-options
 
 
 (* predicate extensionality over prop predicates *)

@@ -1341,8 +1341,6 @@ type solver_cfg = {
   cliopt           : list string;
   smtopt           : list string;
   facts            : list (list string & bool);
-  valid_intro      : bool;
-  valid_elim       : bool;
   z3version        : string;
   context_pruning  : bool;
   record_hints     : bool;
@@ -1355,8 +1353,6 @@ let get_cfg env : ML solver_cfg =
     ; cliopt           = Options.z3_cliopt ()
     ; smtopt           = Options.z3_smtopt ()
     ; facts            = env.proof_ns
-    ; valid_intro      = Options.smtencoding_valid_intro ()
-    ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
     ; context_pruning  = Options.Ext.enabled "context_pruning"
     ; record_hints     = Options.record_hints ()
