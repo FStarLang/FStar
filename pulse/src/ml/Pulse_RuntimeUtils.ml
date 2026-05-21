@@ -224,6 +224,25 @@ let teq_nosmt (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
 let teq_nosmt_phase1 (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
   teq_nosmt {g with phase1=true; admit=true } ty1 ty2
 
+let check_equiv_head_injective (g:TcEnv.env) (ty1:S.term) (ty2:S.term) =
+  let issues, res = FStarC_Errors.catch_errors (fun _ ->
+    let g = TcEnv.set_range g ty1.pos in
+    FStarC_TypeChecker_Core.check_term_equality_head_injective g ty1 ty2) in
+  match res with
+  | Some (FStar_Pervasives.Inl None) -> true
+  | Some (FStar_Pervasives.Inl (Some (guard_f, commit))) ->
+    let guard_t = FStarC_TypeChecker_Env.guard_of_guard_formula
+                    (FStarC_TypeChecker_Common.NonTrivial guard_f) in
+    let discharged =
+      FStarC_Errors.catch_errors (fun _ ->
+        FStarC_TypeChecker_Rel.discharge_guard g guard_t) in
+    (match discharged with
+     | ([], Some _) ->
+       commit ();
+       true
+     | _ -> false)
+  | _ -> false
+
 let whnf_lax (g:TcEnv.env) (t:S.term) : S.term = 
   FStarC_TypeChecker_Normalize.unfold_whnf' [TcEnv.Unascribe] g t
 

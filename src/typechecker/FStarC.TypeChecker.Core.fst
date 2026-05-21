@@ -2383,3 +2383,22 @@ let check_term_subtyping guard_ok unfolding_ok g t0 t1
     match check_relation g (SUBTYPING None) t0 t1 ctx initial_cache with
     | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
     | Error err -> Inr err
+
+let check_term_equality_head_injective g t0 t1
+  = let head0, args0 = U.leftmost_head_and_args t0 in
+    let head1, args1 = U.leftmost_head_and_args t1 in
+    let heads_match =
+      match (U.un_uinst head0).n, (U.un_uinst head1).n with
+      | Tm_fvar fv0, Tm_fvar fv1 -> fv_eq fv0 fv1
+      | Tm_name x0, Tm_name x1 -> bv_eq x0 x1
+      | _ -> equal_term head0 head1
+    in
+    if not heads_match
+    then Inr ({ no_guard = false; unfolding_ok = true; error_context = [("HeadInjective", None)] },
+              Errors.mkmsg "Head mismatch in check_term_equality_head_injective")
+    else
+      let g = initial_env g in
+      let ctx = { unfolding_ok = true; no_guard = false; error_context = [("HeadInjective", None)] } in
+      match check_relation_args g EQUALITY args0 args1 ctx initial_cache with
+      | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
+      | Error err -> Inr err

@@ -733,27 +733,24 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
 = 
   let p = RU.deep_compress_safe p in
   let q = RU.deep_compress_safe q in
-  // For slprop comparisons, avoid implicit unfolding of type abbreviations.
-  // The Pulse prover has already matched atoms via MKeys at the right
-  // abstraction level; unfolding would produce complex connective-level
-  // guards instead of simple arg-level guards.
-  // Fall back to full check_equiv_now (with unfolding) if the no-unfold
-  // check fails.
-  let res, issues =
-    let r, _ = Pulse.Typing.Util.check_equiv_now_nounfold (elab_env g) p q in
-    match r with
-    | Some _ -> (r, [])
-    | None -> Pulse.Typing.Util.check_equiv_now (elab_env g) p q
-  in
-  match res with
-  | None -> 
-    fail_doc_with_subissues g (Some r) issues [
-      text "Could not prove equality of:";
-      pp p;
-      pp q;
-    ]
-  | Some token ->
-    ()
+  // For slprop comparisons, first try head-injective equality:
+  // treat the head symbol as injective and check argument-level equality
+  // with unfolding and guards allowed. This avoids unfolding slprop
+  // connectives while still allowing args to be simplified.
+  // Fall back to full check_equiv_now (with unfolding) if that fails.
+  if RU.check_equiv_head_injective (elab_env g) p q
+  then ()
+  else
+    let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
+    match res with
+    | None -> 
+      fail_doc_with_subissues g (Some r) issues [
+        text "Could not prove equality of:";
+        pp p;
+        pp q;
+      ]
+    | Some token ->
+      ()
 
 let on_name = R.inspect_fv (R.pack_fv <| Pulse.Reflection.Util.mk_pulse_lib_core_lid "on")
 let on_head_id : head_id = FVarHead on_name

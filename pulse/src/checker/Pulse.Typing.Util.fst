@@ -32,13 +32,6 @@ let check_equiv_now_nosmt tcenv t0 t1 =
 let check_equiv_now_nosmt_unfold tcenv t0 t1 =
   T.t_check_equiv false true tcenv t0 t1
 
-(* Allows SMT guards but disables unfolding.
-   Structural comparison produces simple arg-level guards
-   without looking through type abbreviations. *)
-let check_equiv_now_nounfold tcenv t0 t1 =
-  T.with_policy ForceSMT (fun () ->
-    T.t_check_equiv true false tcenv t0 t1)
-
 let universe_of_now g e =
   T.with_policy ForceSMT (fun () ->
     T.universe_of g e)

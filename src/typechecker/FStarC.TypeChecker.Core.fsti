@@ -90,3 +90,11 @@ val check_term_equality (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:t
 
 val check_term_subtyping (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
   : ML (either (option guard_and_tok_t) error)
+
+(* Check equality of two terms assuming their head symbol is injective.
+   Decomposes both terms into head+args, verifies heads match, then checks
+   argument-wise equality with guards and unfolding allowed.
+   Used by the Pulse prover for slprop equivalence where the head symbol
+   (e.g., a vprop connective) should not be unfolded. *)
+val check_term_equality_head_injective (g:Env.env) (t0 t1:typ)
+  : ML (either (option guard_and_tok_t) error)
