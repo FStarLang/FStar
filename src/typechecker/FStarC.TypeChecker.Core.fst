@@ -1330,7 +1330,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                   match maybe_unfold_side Both t0 t1 with
                   | None ->
                     //Can't unfold: fall back to structural with guards
-                    structural ()
+                    if! guard_not_allowed 
+                    then err "structural check fails, guards not allowed, and cannot unfold further"
+                    else structural ()
                   | Some (t0', t1') ->
                     //Check if unfolding exposes a refinement type.
                     //If so, the refinement comparison produces properly
@@ -1342,6 +1344,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                     | Tm_refine _, _ | _, Tm_refine _ ->
                       check_relation g rel t0' t1'
                     | _ ->
+                      if! guard_not_allowed then
+                        check_relation g rel t0' t1'
+                      else
                       //Not a refinement: try three fallbacks in order.
                       //1. Unfolded without guards (handles structurally equal
                       //   after unfolding).
