@@ -826,6 +826,114 @@ let run_all () : ML bool =
       "let cvr_const_ok (x: cvr_const_app 2 2) : cvr_const_app 2 2 = x";
 
     (* ----------------------------------------------------------
+       Group 17: Pulse slprop / ha_val_core pattern
+       Mimics the pattern from ZetaHashAccumulator:
+         ha_val_core b1 X =?= ha_val_core b1 Y
+       where ha_val_core is a type abbreviation whose body uses
+       Pulse slprop connectives (star, exists_, pts_to) that are
+       abstract types. The body interleaves both arguments in
+       complex ways, making unfolded comparison produce complex
+       formula-level guards, while structural comparison (step 2)
+       produces a simple arg-level guard (X == Y).
+       
+       This demonstrates WHY step 2 (structural with guards) is
+       needed in the 3-way fallback: it produces a provable
+       arg-level guard where unfolded comparison would produce
+       complex connective-level guards that SMT can't handle.
+       ---------------------------------------------------------- *)
+
+    (* Define a type abbreviation that mimics ha_val_core:
+       - Two args: 'core' (shared) and 'v' (differs between sides)
+       - Body interleaves both args in multiple positions
+       - Body is NOT a refinement at top level (it's an arrow/pair)
+       This models ha_val_core whose body is:
+         pts_to core.acc (fst h) ** (exists* n. pure (snd h == n) ** pts_to core.ctr n) *)
+    let _ = Pars.pars_and_tc_fragment
+      "let cvr_ha_like (core:int) (v:int) : Type = \
+         (x:int{x > core + v}) -> (y:int{y > core * v}) -> bool"
+    in
+
+    let cvr_ha_like_head = tc "cvr_ha_like" in
+
+    (* Helper: create environment with c:int, a:int, b:int *)
+    let env_with_cab_ints () : ML (Env.env & bv & bv & bv) =
+      let env = tcenv () in
+      let int_t = tc "int" in
+      let c_bv = S.gen_bv "c" None int_t in
+      let env = Env.push_bv env c_bv in
+      let a_bv = S.gen_bv "a" None int_t in
+      let env = Env.push_bv env a_bv in
+      let b_bv = S.gen_bv "b" None int_t in
+      let env = Env.push_bv env b_bv in
+      (env, c_bv, a_bv, b_bv)
+    in
+
+    (* Test 1700: cvr_ha_like c a =?= cvr_ha_like c a — reflexive, trivial *)
+    let _ =
+      let env, c_bv, a_bv, _b_bv = env_with_cab_ints () in
+      let c_name = S.bv_to_name c_bv in
+      let a_name = S.bv_to_name a_bv in
+      let t0 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (a_name, None)] FStarC.Range.dummyRange in
+      compare_equality_env 1700 env t0 t0 BothTrivial
+    in
+
+    (* Test 1701: cvr_ha_like c a =?= cvr_ha_like c b — EQUALITY, different 2nd arg.
+       This is THE ha_val_core pattern:
+       - Core: structural fallback (step 2) produces guard (a == b).
+         Path: compare_head_and_args → no_guard(structural) fails →
+         unfold → non-refinement → 3-way: no_guard(unfolded) fails →
+         structural() succeeds with guard a == b.
+       - Rel: try_teq without SMT cannot prove equality of
+         the abbreviation applications → fails.
+       This is exactly why step 2 exists: without it, only step 3
+       (unfolded with guards) would be tried, producing complex
+       formula-level guards from the arrow/refinement body. *)
+    let _ =
+      let env, c_bv, a_bv, b_bv = env_with_cab_ints () in
+      let c_name = S.bv_to_name c_bv in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (a_name, None)] FStarC.Range.dummyRange in
+      let t1 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (b_name, None)] FStarC.Range.dummyRange in
+      compare_equality_env 1701 env t0 t1 RelFailCoreSucceed
+    in
+
+    (* Test 1702: cvr_ha_like a b =?= cvr_ha_like b a — EQUALITY, both args swapped.
+       Core: structural (step 2) produces guard (a == b /\ b == a).
+       Rel: fails. *)
+    let _ =
+      let env, _c_bv, a_bv, b_bv = env_with_cab_ints () in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_ha_like_head [(a_name, None); (b_name, None)] FStarC.Range.dummyRange in
+      let t1 = S.mk_Tm_app cvr_ha_like_head [(b_name, None); (a_name, None)] FStarC.Range.dummyRange in
+      compare_equality_env 1702 env t0 t1 RelFailCoreSucceed
+    in
+
+    (* Test 1703: cvr_ha_like c a <: cvr_ha_like c b — SUBTYPING variant.
+       Both Core and Rel can produce guards here:
+       - Core: structural (step 2) produces simple guard (a == b)
+       - Rel: unfolds to arrows, compares with variance, produces
+         formula-level guards (forall x. x > c+b ==> x > c+a, etc.)
+       Both succeed with guards, but Core's guard is simpler. *)
+    let _ =
+      let env, c_bv, a_bv, b_bv = env_with_cab_ints () in
+      let c_name = S.bv_to_name c_bv in
+      let a_name = S.bv_to_name a_bv in
+      let b_name = S.bv_to_name b_bv in
+      let t0 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (a_name, None)] FStarC.Range.dummyRange in
+      let t1 = S.mk_Tm_app cvr_ha_like_head [(c_name, None); (b_name, None)] FStarC.Range.dummyRange in
+      compare_subtyping_env 1703 env t0 t1 BothGuarded
+    in
+
+    (* Test 1704: integration test — coercion through ha_val_core-like abbreviation.
+       With a hypothesis a == b in scope, the structural guard should be provable. *)
+    tc_fragment_ok 1704
+      "let cvr_ha_coerce (c:int) (a:int) (b:int) \
+         (pf: squash (a == b)) \
+         (x: cvr_ha_like c a) : cvr_ha_like c b = x";
+
+    (* ----------------------------------------------------------
        Summary
        ---------------------------------------------------------- *)
 
