@@ -733,7 +733,18 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
 = 
   let p = RU.deep_compress_safe p in
   let q = RU.deep_compress_safe q in
-  let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
+  // For slprop comparisons, avoid implicit unfolding of type abbreviations.
+  // The Pulse prover has already matched atoms via MKeys at the right
+  // abstraction level; unfolding would produce complex connective-level
+  // guards instead of simple arg-level guards.
+  // Fall back to full check_equiv_now (with unfolding) if the no-unfold
+  // check fails.
+  let res, issues =
+    let r, _ = Pulse.Typing.Util.check_equiv_now_nounfold (elab_env g) p q in
+    match r with
+    | Some _ -> (r, [])
+    | None -> Pulse.Typing.Util.check_equiv_now (elab_env g) p q
+  in
   match res with
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
