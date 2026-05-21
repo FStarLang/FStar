@@ -79,12 +79,12 @@ let ones (n:pos) : Tot (int_t n) = -1
 (* Increment and decrement *)
 let incr (#n:pos) (a:int_t n)
     : Pure (int_t n)
-      (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
+      (requires (a < max_int n)) (ensures (fun _ -> True))
   = a + 1
 
 let decr (#n:pos) (a:int_t n)
     : Pure (int_t n)
-      (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
+      (requires (a > min_int n)) (ensures (fun _ -> True))
   = a - 1
 
 let incr_mod (#n:pos) (a:int_t n) : Tot (int_t n) =
