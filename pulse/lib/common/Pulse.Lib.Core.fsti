@@ -67,7 +67,7 @@ val allow_ambiguous : unit
 (***** begin slprop_equiv *****)
 
 (* A full slprop. In universe 4 (currently!) *)
-[@@erasable]
+[@@erasable; unifier_hint_injective_type]
 val slprop : Type u#4
 
 val timeless (p: slprop) : prop
@@ -84,6 +84,7 @@ val timeless_pure  (p:prop)
 : Lemma (timeless (pure p))
         [SMTPat (timeless (pure p))]
 
+[@@unifier_hint_not_injective]
 val ( ** ) (p q:slprop) : slprop
 
 val timeless_star (p q : slprop)
@@ -92,6 +93,7 @@ val timeless_star (p q : slprop)
     (ensures timeless (p ** q))
     [SMTPat (timeless (p ** q))]
 
+[@@unifier_hint_not_injective]
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
 val timeless_exists (#a:Type u#a) (p: a -> slprop)
@@ -459,6 +461,7 @@ val loc_get () : stt_ghost loc_id emp_inames emp (fun l -> loc l)
 val loc_dup l : stt_ghost unit emp_inames (loc l) (fun _ -> loc l ** loc l)
 val loc_gather l #l' : stt_ghost unit emp_inames (loc l ** loc l') (fun _ -> loc l ** pure (l == l'))
 
+[@@unifier_hint_not_injective]
 val on (l:loc_id) ([@@@mkey] p:slprop) : slprop
 val on_intro #l p : stt_ghost unit emp_inames (loc l ** p) (fun _ -> loc l ** on l p)
 val on_elim #l p : stt_ghost unit emp_inames (loc l ** on l p) (fun _ -> loc l ** p)

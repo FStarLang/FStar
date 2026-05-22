@@ -3659,7 +3659,22 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
               let treat_as_injective =
                 match (U.un_uinst head1).n with
                 | Tm_fvar fv ->
-                  Env.fv_has_attr env fv PC.unifier_hint_injective_lid
+                  if Env.fv_has_attr env fv PC.unifier_hint_injective_lid then true
+                  else if Env.fv_has_attr env fv PC.unifier_hint_not_injective_lid then false
+                  else (
+                    match Env.delta_depth_of_fv env fv with
+                    | S.Delta_equational_at_level _ -> false
+                    | _ ->
+                      (match Env.try_lookup_lid env fv.fv_name with
+                       | Some ((_, typ), _) ->
+                         let _, ret_typ = U.arrow_formals typ in
+                         let ret_head, _ = U.head_and_args ret_typ in
+                         (match (U.un_uinst ret_head).n with
+                          | Tm_fvar ret_fv ->
+                            Env.fv_has_attr env ret_fv PC.unifier_hint_injective_type_lid
+                          | _ -> false)
+                       | _ -> false)
+                  )
                 | _ -> false
               in
               let is_reveal = U.is_fvar PC.reveal head1 || U.is_fvar PC.reveal head2 in

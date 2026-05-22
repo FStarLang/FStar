@@ -1033,7 +1033,28 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
 let is_marked_injective env t =
   match (U.un_uinst t).n with
   | Tm_fvar fv ->
-    Env.fv_has_attr env fv PC.unifier_hint_injective_lid
+    // Explicit injective attribute always wins
+    if Env.fv_has_attr env fv PC.unifier_hint_injective_lid then true
+    // Explicit opt-out always wins
+    else if Env.fv_has_attr env fv PC.unifier_hint_not_injective_lid then false
+    // Check if the function is Delta_equational (match/if-based)
+    // Such functions should NOT be treated as injective since equality
+    // may hold by case analysis, not by argument equality.
+    else (
+      match Env.delta_depth_of_fv env fv with
+      | S.Delta_equational_at_level _ -> false
+      | _ ->
+        // Check if return type has injective_type attribute
+        (match Env.try_lookup_lid env fv.fv_name with
+         | Some ((_, typ), _) ->
+           let _, ret_typ = U.arrow_formals typ in
+           let ret_head, _ = U.head_and_args ret_typ in
+           (match (U.un_uinst ret_head).n with
+            | Tm_fvar ret_fv ->
+              Env.fv_has_attr env ret_fv PC.unifier_hint_injective_type_lid
+            | _ -> false)
+         | _ -> false)
+    )
   | _ -> false
 
 instance showable_rel : showable relation = {
@@ -1368,7 +1389,41 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                 ) else structural ())
           in
           if is_marked_injective g.tcenv head0
-          then structural () 
+          then (
+            // For injective heads: first try structural without guard.
+            // If that fails and guards are allowed, compare each arg:
+            //  1. Try no_guard first (handles definitionally equal args)
+            //  2. For lambda args: use full check_relation (opens lambdas,
+            //     allows unfolding inside the body, produces ∀-quantified guards)
+            //  3. For non-lambda args: emit_guard on original arg pair (avoids
+            //     deeply unfolding into forms SMT can't handle)
+            handle_with
+              (no_guard (structural ()))
+              (fun _ ->
+                if not guard_ok
+                then err "injective head: structural check fails and guards not allowed"
+                else (
+                  check_relation g EQUALITY head0 head1 ;!
+                  if List.length args0 = List.length args1
+                  then iter2 args0 args1
+                    (fun (a0, q0) (a1, q1) _ ->
+                      check_aqual q0 q1;!
+                      handle_with
+                        (no_guard (check_relation g EQUALITY a0 a1))
+                        (fun _ ->
+                          // For lambda args, use full check_relation which opens
+                          // the lambda and allows unfolding inside the body.
+                          // For non-lambda args, emit guard on original forms.
+                          match (Subst.compress a0).n, (Subst.compress a1).n with
+                          | Tm_abs _, Tm_abs _ ->
+                            check_relation g EQUALITY a0 a1
+                          | _ ->
+                            emit_guard a0 a1))
+                    ()
+                  else fail_str "Unequal number of arguments"
+                )
+              )
+          )
           else if guard_ok &&
             (rel=EQUALITY) &&
             (equatable g t0 || equatable g t1)
@@ -2396,6 +2451,32 @@ let check_term_equality_head_injective g t0 t1
     else
       let g = initial_env g in
       let ctx = { unfolding_ok = true; no_guard = false; error_context = [("HeadInjective", None)] } in
-      match check_relation_args g EQUALITY args0 args1 ctx initial_cache with
+      // For each arg pair: try no_guard comparison, then for lambda args
+      // then emit guard on original arg pair
+      let emit_guard_for_arg a0 a1 : ML (result unit) =
+        let! _, t_typ = with_context "checking lhs while emitting guard" None (fun _ -> do_check g a0) in
+        let! u = universe_of_well_typed_term g t_typ in
+        guard g (U.mk_eq2 u t_typ a0 a1)
+      in
+      let check_args_with_per_arg_guards () =
+        if List.length args0 = List.length args1
+        then iter2 args0 args1
+          (fun (a0, q0) (a1, q1) _ ->
+            check_aqual q0 q1;!
+            handle_with
+              (no_guard (check_relation g EQUALITY a0 a1))
+              (fun _ ->
+                // For lambda args, use full check_relation which opens
+                // the lambda and allows unfolding inside the body.
+                // For non-lambda args, emit guard on original forms.
+                match (Subst.compress a0).n, (Subst.compress a1).n with
+                | Tm_abs _, Tm_abs _ ->
+                  check_relation g EQUALITY a0 a1
+                | _ ->
+                  emit_guard_for_arg a0 a1))
+          ()
+        else fail_str "Unequal number of arguments"
+      in
+      match check_args_with_per_arg_guards () ctx initial_cache with
       | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
       | Error err -> Inr err
