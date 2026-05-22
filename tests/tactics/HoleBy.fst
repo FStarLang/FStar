@@ -26,7 +26,7 @@ let _ = assert (x == 1)
 let _ : int = _ by (exact (`1); fail "")
 
 [@@(expect_failure [228])]
-let lem1 x = () <: squash (x + 1 == 1 + x)
+let lem1 x = () <: (x + 1 == 1 + x)
                 by fail ""
 
 val lem2 : (x:int) -> (y:int) -> Lemma (x + y == y + x)

@@ -106,7 +106,7 @@ let f (x : option int) : int
   | Some n -> n
   | None   -> 0
 
-let _ : squash (f (mk_option_int ()) == 5)
+let _ : (f (mk_option_int ()) == 5)
   = _ by (
       norm [delta_only [`%mk_option_int]];
       norm [delta_only [`%f]; iota; zeta];

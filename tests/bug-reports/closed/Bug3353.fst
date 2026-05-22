@@ -27,5 +27,5 @@ let test () =
   assert(pre v1)
 
 assume val p : prop
-let test2 (x : squash (p /\ True)) : squash p = ()
+let test2 (x : (p /\ True)) : p = ()
 #pop-options
