@@ -556,7 +556,7 @@ and faithful_lemma_pattern (p1 p2 : pattern) : Lemma (requires faithful_pattern 
   | Pat_Cons head1 univs1 subpats1, Pat_Cons head2 univs2 subpats2 ->
     (***)faithful_Pat_Cons p1 head1 univs1 subpats1;
     (***)faithful_Pat_Cons p2 head2 univs2 subpats2;
-    let aux : squash (defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) univs1 univs2)) =
+    let aux : defined (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) univs1 univs2) =
       match univs1, univs2 with
       | Some us1, Some us2 ->
         univ_faithful_lemma_list p1 p2 us1 us2

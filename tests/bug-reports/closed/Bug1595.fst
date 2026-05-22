@@ -9,7 +9,7 @@ noeq
 type calc_proof #t : list (relation t) -> t -> t -> Type =
   | CalcRefl : #x:t -> calc_proof [] x x
   | CalcStep : rs:(list (relation t)) -> #p:(relation t) ->
-               #x:t -> #y:t -> #z:t -> calc_proof rs x y -> squash (p y z) -> calc_proof (p::rs) x z
+               #x:t -> #y:t -> #z:t -> calc_proof rs x y -> (p y z) -> calc_proof (p::rs) x z
 
 let init (#t:Type) (x:t) : calc_proof [] x x = CalcRefl
 
@@ -17,7 +17,7 @@ let step (#t:Type) (#rs : list (relation t)) (#x #y : t)
          (p : relation t)                 (* Preorder for this step *)
          (z : t)                          (* Next expression *)
          (pf : unit -> calc_proof rs x y) (* Rest of the proof *)
-         (j : unit -> squash (p y z))     (* Justification, thunked to avoid confusion such as #1397 *)
+         (j : unit -> (p y z))     (* Justification, thunked to avoid confusion such as #1397 *)
          : Tot (calc_proof (p::rs) x z)
          (* Need to annotate #p seemingly due to #1486 *)
          = CalcStep rs #p (pf ()) (j ())

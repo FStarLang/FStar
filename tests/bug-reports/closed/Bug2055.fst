@@ -26,7 +26,7 @@ let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
 
 sub_effect PURE ~> ND = lift_pure_nd
 
-let rec blah () : ND (squash False) () = blah ()
+let rec blah () : ND (False) () = blah ()
 
 [@@expect_failure [34]]  //Computed effect is Div, annotated effect is Tot
-let blah2 () : Tot (squash False) = reify (blah ())
+let blah2 () : Tot (False) = reify (blah ())

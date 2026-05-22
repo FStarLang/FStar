@@ -109,7 +109,7 @@ type eqtype_u = a:Type{hasEq a}
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: eqtype_u) (pre: prop) (post: (squash pre -> prop)) (pats: list pattern) =
+effect Lemma (a: eqtype_u) (pre: prop) (post: (pre -> prop)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
 (** IN the default mode of operation, all proofs in a verification
@@ -144,7 +144,7 @@ let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
 val ambient (#a: Type) (x: a) : prop
 
 (** cf. [ambient], above *)
-val intro_ambient (#a: Type) (x: a) : Tot (squash (ambient x))
+val intro_ambient (#a: Type) (x: a) : Tot (ambient x)
 
 open FStar.NormSteps
 
@@ -642,7 +642,7 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
     to [b]. In most cases, F* will silently coerce from [a] to [b]
     along a provable equality (as in the body of this
     function). Occasionally, you may need to apply this explicitly *)
-let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+let coerce_eq (#a:Type) (#b:Type) (_:a == b) (x:a) : b = x
 
 (** This attribute decorates a let binding, e.g.,
 

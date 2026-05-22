@@ -21,7 +21,7 @@ assume val phi : prop
 assume val psi : prop
 assume val xi : prop
 
-assume val p : squash xi
+assume val p : xi
 
 let l1 (x : bool) (y : int) (z : unit) =
     assert (phi ==> (psi ==> xi))

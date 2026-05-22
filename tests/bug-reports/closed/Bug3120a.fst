@@ -60,7 +60,7 @@ let rec m_bind #a #b #ac #ad (#bc : a -> _) (#bd : a -> _) (u : m #ac #ad a) (f 
   | Ret x -> m_lift (f x)
   | Req c k -> Req (BL c) (fun z -> m_bind (k ()) f)
 
-let m_req (p : prop) : m #req_code #(req_decode p) (squash p) =
+let m_req (p : prop) : m #req_code #(req_decode p) (p) =
   Req Triv (fun h -> Ret h)
 
 (** Specification monad **)
@@ -100,7 +100,7 @@ let _w_bind #a #b (w : wp a) (wf : a -> wp b) : wp b =
 let w_bind #a #b (w : wp a) (wf : a -> wp b) : wp b =
   _w_bind w wf
 
-let w_req (p : prop) : wp (squash p) =
+let w_req (p : prop) : wp (p) =
   fun post hist -> p /\ post [] ()
 
 (** Effect observation **)
@@ -130,7 +130,7 @@ let d_bind #ac #ad #a #bc (#bd : a -> _) #b #w (#wf : a -> wp b)
   assume (theta (m_bind u f) `wle` w_bind w wf) ;
   m_bind u f
 
-let d_req (p : prop) : dm (squash p) (w_req p) =
+let d_req (p : prop) : dm (p) (w_req p) =
   m_req p
 
 let d_subcomp #ac #ad #a #w1 #w2 (u : dm #ac #ad a w1) :

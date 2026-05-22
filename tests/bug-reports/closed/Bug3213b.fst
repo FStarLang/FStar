@@ -11,7 +11,7 @@ let also_bad ()
 let also_bad_assumed ()
   : Lemma (forall (f : (nat -> Type0)). (forall (x : nat). f x) ==> (fun (_:nat) -> True) == f) = admit()
   
-let eq_fun (f1 f2 : 'a -> 'b) (x : 'a) (_ : squash (f1 == f2)) : Lemma (f1 x == f2 x) = ()
+let eq_fun (f1 f2 : 'a -> 'b) (x : 'a) (_ : (f1 == f2)) : Lemma (f1 x == f2 x) = ()
   
 [@@expect_failure [19]]
 let bad2 () =

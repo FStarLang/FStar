@@ -22,7 +22,7 @@ assume val q : prop
 assume val x : p
 
 assume val lem1 : p -> Lemma q
-assume val lem2 : p -> squash q
+assume val lem2 : p -> q
 
 let _ = assert q
             by (apply_lemma (`lem1);

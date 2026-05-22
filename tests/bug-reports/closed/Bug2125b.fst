@@ -22,7 +22,7 @@ val interp (#a : Type) : list a -> w a
 let interp #a (l:list a) = fun p -> forall x. memP x l ==> p x
 
 let dm (a : Type) (wp : w a) : Type =
-  ( pre:prop & (squash pre -> c:(list a){wp `w_ord` interp c}) )
+  ( pre:prop & (pre -> c:(list a){wp `w_ord` interp c}) )
 
 let irepr (a : Type) (wp: w a) =
   dm a wp

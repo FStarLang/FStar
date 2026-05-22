@@ -42,8 +42,8 @@ let mk_bijection
   (#a #b : _)
   (right : a -> b)
   (left  : b -> a)
-  (right_left : (x:b -> squash (right (left x) == x)))
-  (left_right : (x:a -> squash (left (right x) == x)))
+  (right_left : (x:b -> right (left x) == x))
+  (left_right : (x:a -> left (right x) == x))
   : (a =~ b) =
   Mkbijection right left left_right right_left
 
@@ -190,8 +190,8 @@ noeq type cbij (a b: Type) = {
 let mk_cbij
   (#a #b : _)
   (right : a -> b) (left : b -> a)
-  (right_left : (x:b -> squash (right (left x) == x)))
-  (left_right : (x:a -> squash (left (right x) == x)))
+  (right_left : (x:b -> right (left x) == x))
+  (left_right : (x:a -> left (right x) == x))
   : cbij a b =
 {
   bij = {

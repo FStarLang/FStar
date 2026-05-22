@@ -70,11 +70,11 @@ let bytes_pre_is_compatible (#bytes:Type0) {|bytes_like bytes|} (pre:bytes -> pr
 
 let bytes_pre_is_compatible_intro
   (#bytes:Type0) {|bytes_like bytes|} (pre:bytes -> prop)
-  (empty_proof:squash(pre empty))
+  (empty_proof: (pre empty))
   (concat_proof:(b1:bytes{pre b1} -> b2:bytes{pre b2} -> Lemma (pre (concat b1 b2))))
   (split_proof:(b:bytes{pre b} -> i:nat{Some? (split #bytes b i)} -> Lemma (pre (fst (Some?.v (split b i))) /\ pre (snd (Some?.v (split b i))))))
   (from_nat_proof:(sz:nat -> n:nat_lbytes sz -> Lemma (pre (from_nat sz n))))
-  : squash (bytes_pre_is_compatible pre)
+  : (bytes_pre_is_compatible pre)
   =
   FStar.Classical.forall_intro_2 concat_proof;
   FStar.Classical.forall_intro_2 split_proof;
