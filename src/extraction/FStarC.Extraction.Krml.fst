@@ -1361,9 +1361,16 @@ let translate_let' env flavor lb: ML (option decl) =
         | MLE_Fun (bs, _) -> List.map (fun {mlbinder_name} -> mlbinder_name) bs
         | _ -> []
       in
-      if Nil? tvars then
-        Some (DExternal (translate_cc meta, translate_flags meta, name, translate_type env t0, arg_names))
-      else begin
+      if Nil? tvars then (
+        let t = translate_type env t0 in
+        let rec n_bs (t : typ) : nat =
+          match t with
+          | TArrow (_, cod) -> 1 + n_bs cod
+          | _ -> 0
+        in
+        let arg_names, _ = List.splitAt (n_bs t) arg_names in
+        Some (DExternal (translate_cc meta, translate_flags meta, name, t, arg_names))
+      ) else begin
         if not (Options.silent ()) then
           Format.print1_warning "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n" (Syntax.string_of_mlpath name);
         None
