@@ -15,10 +15,10 @@ let test_elim_exists_1 p (x z:nat)
     with _.
        trans x y z
 
-let test_elim_exists_2 p x z
-                       (_:squash (exists y. p x y /\ p y z))
-                       (trans : (#x:_ -> #y:_ -> #z:_ -> squash (p x y /\ p y z) -> squash (p x z)))
-  : squash (p x z)
+let test_elim_exists_2 (p:nat -> nat -> prop) x z
+                       (_:(exists y. p x y /\ p y z))
+                       (trans : (#x:_ -> #y:_ -> #z:_ -> (p x y /\ p y z) -> (p x z)))
+  : (p x z)
   = eliminate exists (y:nat).
          p x y /\ p y z
     returns p x z
@@ -44,8 +44,8 @@ let test_elim_exists_3 p
        trans x y0 z
     )
 
-let test_elim_forall_1 p (_:squash (forall x y. p x y))
-  : squash (p 0 1)
+let test_elim_forall_1 (p:nat -> nat -> prop) (_:(forall x y. p x y))
+  : (p 0 1)
   = eliminate forall x y. p x y
     with 0 1
 
@@ -56,8 +56,8 @@ let test_elim_forall_2 (p: nat -> nat -> prop)
   = eliminate forall x y. p x y
     with 0 1
 
-let test_elim_implies_1 p q (_:squash (p ==> q)) (x:squash p)
- : Tot (squash q)
+let test_elim_implies_1 (p q:prop) (_:(p ==> q)) (x:p)
+ : Tot q
   = eliminate p ==> q
     with x
 
@@ -67,8 +67,8 @@ let test_elim_implies_2 p q (f: unit -> Lemma p)
   = eliminate p ==> q
     with f()
 
-let test_elim_or_1 p q r (_:squash (p \/ q))  (f: squash p -> squash r) (g:squash q -> squash r)
-  : squash r
+let test_elim_or_1 (p q r:prop) (_:(p \/ q))  (f: p -> r) (g:q -> r)
+  : r
   = eliminate p \/ q
     returns r
     with pf_p. f pf_p
@@ -84,13 +84,13 @@ let test_elim_or_2 p q r
     with _p. f ()
     and  _q. g ()
 
-let test_elim_and_1 p q r (_:squash (p /\ q))  (f: squash p -> squash q -> squash r)
-  : squash r
+let test_elim_and_1 (p q r:prop) (_:(p /\ q))  (f: p -> q -> r)
+  : r
   = eliminate p /\ q
     returns r
     with pf_p pf_q. f pf_p pf_q
 
-let test_elim_and_2 p q r (f: squash p -> squash q -> Lemma r)
+let test_elim_and_2 (p q r:prop) (f: p -> q -> Lemma r)
   : Lemma
     (requires p /\ q)
     (ensures r)
@@ -100,8 +100,8 @@ let test_elim_and_2 p q r (f: squash p -> squash q -> Lemma r)
 
 ////////////////////////////////////////////////////////////////////////////////
 let test_forall_intro_1 #a #b #c (p: a -> b -> c -> prop)
-                      (f:(x:a -> y:b -> z:c -> squash (p x y z)))
-  : squash (forall x y z. p x y z)
+                      (f:(x:a -> y:b -> z:c -> (p x y z)))
+  : (forall x y z. p x y z)
   = introduce forall x y z. p x y z
     with f x y z
 
@@ -113,8 +113,8 @@ let test_forall_intro_2 #a #b #c (p: a -> b -> c -> prop)
         with f x y z
 
 let test_exists_intro_1 #a #b #c (p: a -> b -> c -> prop) va vb vc
-                        (f:squash (p va vb vc))
-  : squash (exists x y z. p x y z)
+                        (f:(p va vb vc))
+  : (exists x y z. p x y z)
   = introduce exists x y z. p x y z
     with va vb vc
     and f
@@ -126,8 +126,8 @@ let test_exists_intro_2 #a #b #c (p: a -> b -> c -> prop) va vb vc
     with va vb vc
     and f()
 
-let test_implies_intro_1 p q (f: squash p -> squash q)
-  : squash (p ==> q)
+let test_implies_intro_1 (p q:prop) (f: p -> q)
+  : (p ==> q)
   = introduce p ==> q
     with x. f x
 
@@ -136,28 +136,28 @@ let test_implies_intro_2 p q (f: unit -> Lemma (requires p) (ensures q))
   = introduce p ==> q
     with _. f ()
 
-let test_or_intro_left_1 p q (f: squash p)
-  : squash (p \/ q)
+let test_or_intro_left_1 (p q:prop) (f: p)
+  : (p \/ q)
   = introduce p \/ q
     with Left f
 
-let test_or_intro_left_2 p q (f: unit -> Lemma p)
-  : squash (p \/ q)
+let test_or_intro_left_2 (p q:prop) (f: unit -> Lemma p)
+  : (p \/ q)
   = introduce p \/ q
     with Left (f())
 
-let test_or_intro_right_1 p q (f: squash q)
-  : squash (p \/ q)
+let test_or_intro_right_1 (p q:prop) (f: q)
+  : (p \/ q)
   = introduce p \/ q
     with Right f
 
-let test_or_intro_right_2 p q (f: unit -> Lemma q)
-  : squash (p \/ q)
+let test_or_intro_right_2 (p q:prop) (f: unit -> Lemma q)
+  : (p \/ q)
   = introduce p \/ q
     with Right (f())
 
-let test_and_intro_1 p q (f:squash p) (g:squash q)
-  : squash (p /\ q)
+let test_and_intro_1 (p q:prop) (f:p) (g:q)
+  : (p /\ q)
   = introduce p /\ q
     with f
     and g
@@ -180,8 +180,8 @@ let test_excluded_middle p r
     with _. f ()
     and  _. g ()
 
-let test_forall_implies a (p:a -> prop) (q:a -> prop) (f: (x:a -> squash (p x) -> squash (q x)))
-  : squash (forall x. p x ==> q x)
+let test_forall_implies a (p:a -> prop) (q:a -> prop) (f: (x:a -> (p x) -> (q x)))
+  : (forall x. p x ==> q x)
   = introduce forall x. p x ==> q x
     with introduce _ ==> _
          with px. (
@@ -252,13 +252,13 @@ let test_bias_or_alt (f: nat -> nat { forall x. f x = x + 1 })
 // Some more tests, checking that admits don't discard the continuation
 ////////////////////////////////////////////////////////////////////////////////
 
-let admit_implies_elim p q (_:squash (p ==> q))
+let admit_implies_elim (p q:prop) (_:(p ==> q))
   = eliminate p ==> q
     with admit();
     assert q
 
 [@@expect_failure [19]]
-let admit_implies_elim_fail p q r (_:squash (p ==> q))
+let admit_implies_elim_fail (p q r:prop) (_:(p ==> q))
   = eliminate p ==> q
     with admit();
     assert r

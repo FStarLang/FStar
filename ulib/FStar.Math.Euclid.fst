@@ -138,7 +138,7 @@ let is_gcd_for_euclid a b q d =
   is_gcd_plus b (a - q * b) q d
 
 let lemma_div_mod' (u : int) (v : nonzero)
-  : squash (u - (u / v) * v = u % v)
+  : (u - (u / v) * v = u % v)
   = lemma_div_mod u v
 
 val egcd (a b u1 u2 u3 v1 v2 v3:int) : Pure (int & int & int)
