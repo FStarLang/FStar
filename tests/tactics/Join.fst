@@ -19,7 +19,7 @@ open FStar.Tactics.V2
 
 (* Basic test *)
 assume val p : int -> prop
-let test (x:int) (_:squash (p x)) = assert (p x /\ p x) by (
+let test (x:int) (_: (p x)) = assert (p x /\ p x) by (
   split ();
   join()
   )
@@ -31,7 +31,7 @@ let hard = pow2 20 == 1048576
 
 assume val phi : prop
 assume val psi : prop
-assume val lem : squash hard -> Lemma phi
+assume val lem : hard -> Lemma phi
 
 (* Making sure it can be proven *)
 let _ = assert hard

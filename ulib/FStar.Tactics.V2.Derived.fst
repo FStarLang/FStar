@@ -696,7 +696,7 @@ let __grewrite_derived (t1 t2 : term) : Tac unit =
     )
 
 private
-let __un_sq_eq (#a:Type) (x y : a) (_ : squash (x == y)) : Lemma (x == y) = ()
+let __un_sq_eq (#a:Type) (x y : a) (_ : x == y) : Lemma (x == y) = ()
 
 (** A wrapper to [grewrite] which takes a binder of an equality type *)
 let grewrite_eq (b:binding) : Tac unit =
@@ -916,7 +916,7 @@ let string_to_term_with_lb
 
 private
 val lem_trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->
-                    squash (x == y) -> squash (y == z) -> Lemma (x == z)
+                    (x == y) -> (y == z) -> Lemma (x == z)
 private
 let lem_trans #a #x #z #y e1 e2 = ()
 

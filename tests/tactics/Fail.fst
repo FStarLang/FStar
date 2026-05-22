@@ -23,10 +23,10 @@ assume val p : prop
 assume val q : prop
 assume val r : prop
 
-assume val f : squash p -> squash r
-assume val g : squash q -> squash r
+assume val f : p -> r
+assume val g : q -> r
 
-assume val vq : squash q
+assume val vq : q
 
 let tau () : Tac unit =
     let _ = trytac #unit (fun () -> apply (quote f); fail "oops wrong way") in

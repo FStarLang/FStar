@@ -43,7 +43,7 @@ let rec sorted_pred_sorted_lemma #a f s =
 let intro_sorted_pred (#a:eqtype) (f:tot_ord a) (s:seq a)
   ($g:(i:nat{i < length s} -> j:nat{j < length s} -> Lemma (requires (i <= j)) (ensures (f (index s i) (index s j)))))
   : Lemma (sorted_pred #a f s)
-= let aux (i j : (k:nat{k < length s})) (p:squash (i <= j)) : GTot (squash (f (index s i) (index s j))) =
+= let aux (i j : (k:nat{k < length s})) (p:i <= j) : GTot (f (index s i) (index s j)) =
     g i j in
   FStar.Classical.forall_intro_2 (fun (i j:(k:nat{k < length s})) ->
     (FStar.Classical.arrow_to_impl (aux i j)) <: Lemma (i <= j ==> f (index s i) (index s j)))

@@ -1,14 +1,14 @@
 module Parentheses
 
-let forall_intro #t (#p: t->prop) (h: (x:t -> squash (p x))) : squash (forall x. p x) =
+let forall_intro #t (#p: t->prop) (h: (x:t -> (p x))) : (forall x. p x) =
   Classical.Sugar.forall_intro _ _ h
 
 let trailing_fun_does_not_require_parens :
-    squash (forall (x: nat) (y: nat). x + y >= 0) =
+    (forall (x: nat) (y: nat). x + y >= 0) =
   forall_intro fun x -> forall_intro fun y -> ()
 
 let trailing_fun_swallows_seqs :
-    squash (forall (x: nat) (y: nat). x + y >= 0) =
+    (forall (x: nat) (y: nat). x + y >= 0) =
   forall_intro fun x -> forall_intro fun y -> (); ()
 
 let assert_does_not_require_parens : unit =

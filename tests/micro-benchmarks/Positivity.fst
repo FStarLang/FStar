@@ -118,14 +118,14 @@ type t_t20 (f:Type0 -> Type0) =
 #pop-options
 
 
-let f_false : Type0 -> Type0 = fun a -> (a -> squash False)
+let f_false : Type0 -> Type0 = fun a -> (a -> False)
 let g : f_false (t_t20 f_false) =
    fun x ->
      match x with
      | C201 h -> h x
 
 // Thunk to avoid polluting the SMT context for the rest of the file with False
-let r1 (_:unit) : squash False = g (C201 g)
+let r1 (_:unit) : False = g (C201 g)
 
 
 (*

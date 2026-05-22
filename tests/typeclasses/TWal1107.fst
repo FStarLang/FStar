@@ -18,14 +18,14 @@ type test_sum (bytes:Type0) {|bytes_like bytes|} =
   | Ctor_1: unit -> test_sum bytes
   | Ctor_2: unit -> test_sum bytes
 
-val arrow_to_forall: #a:Type -> p:(a -> prop) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
+val arrow_to_forall: #a:Type -> p:(a -> prop) -> (forall (x:a). p x) -> (x:a -> (p x))
 let arrow_to_forall #a p _ x =
   ()
 
 assume val foo:
   bytes:Type0 -> {|bytes_like bytes|} ->
   f:(dtuple2 toto tata -> test_sum bytes) -> g:(test_sum bytes -> dtuple2 toto tata) ->
-  (x:dtuple2 toto tata -> squash (g (f x) == x)) ->
+  (x:dtuple2 toto tata -> (g (f x) == x)) ->
   unit
 open FStar.Tactics.V2
 

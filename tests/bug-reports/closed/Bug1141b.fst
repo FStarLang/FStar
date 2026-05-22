@@ -32,6 +32,6 @@ let self #a (v : np a) : a =
 let loop #a (f : a -> a) : a =
     self (Mk (fun x -> f (self x)))
 
-val falso : squash False
+val falso : False
 let falso = loop (fun x -> x)
 *)

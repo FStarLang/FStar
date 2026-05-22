@@ -55,26 +55,26 @@ val forall_elim
        (#a:Type)
        (#p:a -> prop)
        (v:a)
-       (f:squash (forall (x:a). p x))
-  : Tot (squash (p v))
+       (f:(forall (x:a). p x))
+  : Tot (p v)
 
 (** Eliminate an existential quantifier into a proof of a goal [q] *)
 val exists_elim
      (#t:Type)
      (#p:t -> prop)
      (#q:prop)
-     (s_ex_p: squash (exists (x:t). p x))
-     (f: (x:t -> squash (p x) -> Tot (squash q)))
-  : Tot (squash q)
+     (s_ex_p: (exists (x:t). p x))
+     (f: (x:t -> p x -> Tot q))
+  : Tot q
 
 (** Eliminate an implication, by providing a proof of the hypothesis
     Note, the proof is thunked *)
 let implies_elim
         (p:prop)
         (q:prop)
-        (_:squash (p ==> q))
-        (f:unit -> Tot (squash p))
-  : squash q
+        (_:(p ==> q))
+        (f:unit -> Tot p)
+  : q
   = f()
 
 (** Eliminate a disjunction
@@ -83,47 +83,47 @@ let implies_elim
 *)
 val or_elim
         (p:prop)
-        (q:squash (~p) -> prop)
+        (q:(~p) -> prop)
         (r:prop)
-        (p_or:squash (p \/ q()))
-        (left:squash p -> Tot (squash r))
-        (right:squash (~p) -> squash (q()) -> Tot (squash r))
-  : Tot (squash r)
+        (p_or:(p \/ q()))
+        (left:p -> Tot r)
+        (right:(~p) -> q() -> Tot r)
+  : Tot r
 
 (** Eliminate a conjunction
     - The type of q can depend on p
 *)
 val and_elim
         (p:prop)
-        (q:squash p -> prop)
+        (q:p -> prop)
         (r:prop)
-        (_:squash (p /\ q()))
-        (f:squash p -> squash (q()) -> Tot (squash r))
-  : Tot (squash r)
+        (_:(p /\ q()))
+        (f:p -> q() -> Tot r)
+  : Tot r
 
 (** Introduce a universal quantifier *)
 val forall_intro
       (a:Type)
       (p:a -> prop)
-      (f: (x:a -> Tot (squash (p x))))
-  : Tot (squash (forall x. p x))
+      (f: (x:a -> Tot (p x)))
+  : Tot (forall x. p x)
 
 (** Introduce an existential quantifier *)
 val exists_intro
         (a:Type)
         (p:a -> prop)
         (v:a)
-        (x: unit -> Tot (squash (p v)))
-  : Tot (squash (exists x. p x))
+        (x: unit -> Tot (p v))
+  : Tot (exists x. p x)
 
 (** Introduce an implication
     - The type of q can depend on p
   *)
 val implies_intro
         (p:prop)
-        (q:squash p -> prop)
-        (f:(squash p -> Tot (squash (q()))))
-  : Tot (squash (p ==> q()))
+        (q:p -> prop)
+        (f:(p -> Tot (q())))
+  : Tot (p ==> q())
 
 (** Introduce an disjunction on the left
     - The type of q can depend on ~p
@@ -131,9 +131,9 @@ val implies_intro
   *)
 val or_intro_left
         (p:prop)
-        (q:squash (~p) -> prop)
-        (f:unit -> Tot (squash p))
-  : Tot (squash (p \/ q()))
+        (q:(~p) -> prop)
+        (f:unit -> Tot p)
+  : Tot (p \/ q())
 
 (** Introduce an disjunction on the right
     - The type of q can depend on ~p
@@ -141,9 +141,9 @@ val or_intro_left
   *)
 val or_intro_right
         (p:prop)
-        (q:squash (~p) -> prop)
-        (f:squash (~p) -> Tot (squash (q())))
-  : Tot (squash (p \/ q()))
+        (q:(~p) -> prop)
+        (f:(~p) -> Tot (q()))
+  : Tot (p \/ q())
 
 (** Introduce a conjunction
     - The type of q can depend on p
@@ -151,7 +151,7 @@ val or_intro_right
   *)
 val and_intro
         (p:prop)
-        (q:squash p -> prop)
-        (left:unit -> Tot (squash p))
-        (right:squash p -> Tot (squash (q())))
-  : Tot (squash (p /\ q()))
+        (q:p -> prop)
+        (left:unit -> Tot p)
+        (right:p -> Tot (q()))
+  : Tot (p /\ q())

@@ -6,8 +6,8 @@ open FStar.Tactics.MkProjectors
 unfold
 let maybe_ghost (b:bool) (post : unit -> prop) =
   if b
-  then unit -> squash (post ())
-  else unit -> squash (post ())
+  then unit -> (post ())
+  else unit -> (post ())
 
 [@@no_auto_projectors_decls]
 noeq

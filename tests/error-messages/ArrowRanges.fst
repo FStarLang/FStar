@@ -7,5 +7,5 @@ type ppof (a:Type) : eqtype = a -> bool
 type ppof (a:Type) : Type = {
   tot_p : a -> a -> Tot bool;
   gho_p : a -> a -> Type;
-  ok : x:a -> y:a -> squash (gho_p x y ==> tot_p x y);
+  ok : x:a -> y:a -> (gho_p x y ==> tot_p x y);
 }

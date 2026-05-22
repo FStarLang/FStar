@@ -78,8 +78,8 @@ let rec flatten_correct (#a:Type) (m:monoid a) (e:exp a) :
                   flatten_correct m e1; flatten_correct m e2
 
 let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
-    (_ : squash (mldenote m (flatten e1) == mldenote m (flatten e2)))
-    : squash (mdenote m e1 == mdenote m e2) =
+    (_ : (mldenote m (flatten e1) == mldenote m (flatten e2)))
+    : (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
 // This expects that mult, unit, and me have already been normalized

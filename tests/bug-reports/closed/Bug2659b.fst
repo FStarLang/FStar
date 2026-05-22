@@ -95,9 +95,9 @@ let lift_e0_e1
 sub_effect E0 ~> E1 = lift_e0_e1
 
 
-assume val return_False (_:unit) : E0 (squash False) BT IT
+assume val return_False (_:unit) : E0 (False) BT IT
 
-let make_BF (f : squash False) : unit -> E0 unit BF (false_elim ()) = false_elim ()
+let make_BF (f : False) : unit -> E0 unit BF (false_elim ()) = false_elim ()
 
 //
 // Here we compute:

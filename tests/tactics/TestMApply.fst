@@ -19,12 +19,12 @@ open FStar.Tactics.V2
 
 assume val p : prop
 assume val q : prop
-assume val x : squash p
+assume val x : p
 
 assume val lem     : unit -> Lemma (requires p) (ensures q)
 assume val lem_imp : unit -> Lemma (p ==> q)
-assume val f_sq    : squash p -> squash q
-assume val f_unsq  : squash p -> q
+assume val f_sq    : p -> q
+assume val f_unsq  : p -> q
 
 let _ =
     assert q by (mapply (quote lem_imp);

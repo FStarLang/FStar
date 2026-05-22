@@ -19,7 +19,7 @@ open FStar.Tactics.V2
 
 #set-options "--admit_smt_queries true"
 
-let unsquash (#a:prop) : a -> squash a =
+let unsquash (#a:prop) : a -> a =
   fun _ -> ()
 
 let broken (a: prop) =

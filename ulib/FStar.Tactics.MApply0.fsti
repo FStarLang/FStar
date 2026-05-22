@@ -5,13 +5,13 @@ open FStar.Tactics.Effect
 
 (* Used by mapply, must be exposed, but not to be used directly *)
 private val push1 : (#p:prop) -> (#q:prop) ->
-                        squash (p ==> q) ->
-                        squash p ->
-                        squash q
+                        (p ==> q) ->
+                        p ->
+                        q
 private val push1' : (#p:prop) -> (#q:prop) ->
-                         squash (p ==> q) ->
-                         squash p ->
-                         squash q
+                         (p ==> q) ->
+                         p ->
+                         q
 
 (* `m` is for `magic` *)
 [@@plugin]

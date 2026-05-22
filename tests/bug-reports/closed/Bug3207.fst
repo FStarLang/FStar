@@ -179,7 +179,7 @@ and sub_elam (#r:bool) (s:sub r)
     with not_r. 
       eliminate exists y. ~ (EVar? (s y))
       returns (exists x. ~ (EVar? (f x)))
-      with (not_evar_sy:squash (~(EVar? (s y)))). 
+      with (not_evar_sy: (~(EVar? (s y)))). 
         introduce exists x. ~(EVar? (f x))
         with (y + 1)
         and ()
@@ -211,16 +211,16 @@ type step : exp -> exp -> Type =
             #e1':exp ->
             $hst:step e1 e1' ->
                  step (EApp e1 e2) (EApp e1' e2)
-  | SApp2 :   e1:exp ->
+  | SApp2 : e1:exp ->
              #e2:exp ->
             #e2':exp ->
             $hst:step e2 e2' ->
                  step (EApp e1 e2) (EApp e1 e2')
-  | SSucc :    e:exp ->
+  | SSucc : e:exp ->
              #e':exp ->
             $hst:step e e' ->
                  step (ESucc e) (ESucc e')     
-  | SNRecV :  #e1:exp ->
+  | SNRecV : #e1:exp ->
              #e1':exp ->
                e2:exp ->
                e3:exp ->
@@ -229,44 +229,44 @@ type step : exp -> exp -> Type =
   | SNRec0 : e2:exp ->
              e3:exp ->
                  step (ENRec EZero e2 e3) e2
-  | SNRecIter :  v:exp ->
+  | SNRecIter : v:exp ->
                 e2:exp ->
                 e3:exp ->
                 step (ENRec (ESucc v) e2 e3) (ENRec v (EApp e3 e2) e3)
-  | SInl  :    e:exp ->
+  | SInl  : e:exp ->
              #e':exp ->
             $hst:step e e' ->
                  step (EInl e) (EInl e')
-  | SInr  :    e:exp ->
+  | SInr  : e:exp ->
              #e':exp ->
             $hst:step e e' ->
                  step (EInr e) (EInr e')
-  | SCase :  #e1:exp ->
+  | SCase : #e1:exp ->
             #e1':exp ->
               e2:exp ->
               e3:exp ->
             $hst:step e1 e1' ->
                  step (ECase e1 e2 e3) (ECase e1' e2 e3)
-  | SCaseInl :  v:exp ->
+  | SCaseInl : v:exp ->
                e2:exp ->
                e3:exp ->
                  step (ECase (EInl v) e2 e3) (EApp e2 v)
-  | SCaseInr :  v:exp ->
+  | SCaseInr : v:exp ->
                e2:exp ->
                e3:exp ->
                  step (ECase (EInr v) e2 e3) (EApp e3 v)
-  | SFst0 :    #e:exp ->
+  | SFst0 : #e:exp ->
               #e':exp ->
              $hst:step e e' ->
                  step (EFst e) (EFst e')
-  | SFst :  e1:exp ->
+  | SFst : e1:exp ->
             e2:exp ->
                step (EFst (EPair e1 e2)) e1
-  | SSnd0 :    #e:exp ->
+  | SSnd0 : #e:exp ->
               #e':exp ->
              $hst:step e e' ->
                  step (ESnd e) (ESnd e')
-  | SSnd :  e1:exp ->
+  | SSnd : e1:exp ->
             e2:exp ->
                step (ESnd (EPair e1 e2)) e2
   | SPair1  : #e1:exp ->
@@ -274,7 +274,7 @@ type step : exp -> exp -> Type =
              $hst:step e1 e1' ->
                e2:exp ->
                  step (EPair e1 e2) (EPair e1' e2)
-  | SPair2  :  e1:exp ->
+  | SPair2  : e1:exp ->
               #e2:exp ->
              #e2':exp ->
              $hst:step e2 e2' ->
@@ -582,8 +582,8 @@ let behT (| ew, htw |) = sem (TyApp htw TyUnit)
 
 type rel = 
   #ty:typ -> 
-  elab_typ ty ->             (** F* value **)
-  #e:exp ->                  (** STLC value **)
+  elab_typ ty -> (** F* value **)
+  #e:exp -> (** STLC value **)
   typing empty e ty -> 
   prop
 

@@ -19,7 +19,7 @@ open FStar.Tactics.V2
 
 type t : eqtype = | V of nat | W
 
-let _ : (n: nat) -> squash (not (V n = W)) = _ by (
+let _ : (n: nat) -> (not (V n = W)) = _ by (
   let open FStar.Tactics in
   let n = intro () in
   norm [delta; iota; zeta; primops];

@@ -11,7 +11,7 @@ let test1 (x:int) =
       by (let _ = pose_lemma (`lem2 (`@x) 2) in
           ())
 
-let test2 (x:int) (h : squash (x < 0)) =
+let test2 (x:int) (h : (x < 0)) =
   assert (pred x 2)
       by (let _ = pose_lemma (`lem1 (`@x) 2) in
           exact (quote h);

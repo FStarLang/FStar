@@ -39,6 +39,6 @@ module FStar.FiniteSet.Ambient
 
 open FStar.FiniteSet.Base
 
-let all_finite_set_facts_ambient : (squash all_finite_set_facts) =
+let all_finite_set_facts_ambient : all_finite_set_facts =
   all_finite_set_facts_lemma ()
 

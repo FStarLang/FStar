@@ -22,8 +22,8 @@ let forall_elim
        (#a:Type)
        (#p:a -> prop)
        (v:a)
-       (f:squash (forall (x:a). p x))
-  : Tot (squash (p v))
+       (f:(forall (x:a). p x))
+  : Tot (p v)
   = ()
 
 let exists_elim #t #p #q s_ex_p f =
@@ -33,40 +33,40 @@ let or_elim_simple
         (p:prop)
         (q:prop)
         (r:prop)
-        (x:squash (p \/ q))
-        (f:squash p -> Tot (squash r))
-        (g:squash q -> Tot (squash r))
-  : Tot (squash r)
+        (x:(p \/ q))
+        (f:p -> Tot r)
+        (g:q -> Tot r)
+  : Tot r
   = Classical.or_elim #p #q #(fun _ -> r) (fun _ -> f ()) (fun _ -> g ())
 
 let or_elim
         (p:prop)
-        (q:squash (~p) -> prop)
+        (q:(~p) -> prop)
         (r:prop)
-        (p_or:squash (p \/ q()))
-        (left:squash p -> Tot (squash r))
-        (right:squash (~p) -> squash (q()) -> Tot (squash r))
-  : Tot (squash r)
+        (p_or:(p \/ q()))
+        (left:p -> Tot r)
+        (right:(~p) -> q() -> Tot r)
+  : Tot r
   = or_elim_simple p (~p) r ()
-            (fun (s:squash p) -> left s)
-            (fun (np:squash (~p)) ->
+            (fun (s:p) -> left s)
+            (fun (np:(~p)) ->
               or_elim_simple p (q ()) r p_or
-                (fun (pf_p:squash p) -> left pf_p)
-                (fun (pf_q:squash (q())) -> right np pf_q))
+                (fun (pf_p:p) -> left pf_p)
+                (fun (pf_q:q()) -> right np pf_q))
 
 let and_elim (p:prop)
-             (q:squash p -> prop)
+             (q:p -> prop)
              (r:prop)
-             (x:squash (p /\ q()))
-             (f:squash p -> squash (q()) -> Tot (squash r))
-  : Tot (squash r)
+             (x:(p /\ q()))
+             (f:p -> q() -> Tot r)
+  : Tot r
   = f () ()
 
 let forall_intro
       (a:Type)
       (p:a -> prop)
-      (f: (x:a -> Tot (squash (p x))))
-  : Tot (squash (forall x. p x))
+      (f: (x:a -> Tot (p x)))
+  : Tot (forall x. p x)
   = let f (x: a) : Lemma (p x) = f x in
   Classical.forall_intro #a #p f
 
@@ -74,38 +74,38 @@ let exists_intro_simple
         (a:Type)
         (p:a -> prop)
         (v:a)
-        (f: squash (p v))
-  : Tot (squash (exists x. p x))
+        (f:p v)
+  : Tot (exists x. p x)
   = ()
 
 let exists_intro
         (a:Type)
         (p:a -> prop)
         (v:a)
-        (f: unit -> Tot (squash (p v)))
-  : Tot (squash (exists x. p x))
+        (f: unit -> Tot (p v))
+  : Tot (exists x. p x)
   = exists_intro_simple a p v (f())
 
 
 let implies_intro
         (p:prop)
-        (q:squash p -> prop)
-        (f:(squash p -> Tot (squash (q()))))
-  : Tot (squash (p ==> q()))
+        (q:p -> prop)
+        (f:(p -> Tot (q())))
+  : Tot (p ==> q())
   = Classical.impl_intro_gen #p #q fun _ -> f ()
 
 let or_intro_left
         (p:prop)
-        (q:squash (~p) -> prop)
-        (f:unit -> Tot (squash p))
-  : Tot (squash (p \/ q()))
+        (q:(~p) -> prop)
+        (f:unit -> Tot p)
+  : Tot (p \/ q())
   = f()
 
 let or_intro_right
         (p:prop)
-        (q:squash (~p) -> prop)
-        (f:squash (~p) -> Tot (squash (q())))
-  : Tot (squash (p \/ q()))
+        (q:(~p) -> prop)
+        (f:(~p) -> Tot (q()))
+  : Tot (p \/ q())
   = or_elim_simple p (~p)
                   (p \/ q())
                   ()
@@ -114,8 +114,8 @@ let or_intro_right
 
 let and_intro
         (p:prop)
-        (q:squash p -> prop)
-        (f:unit -> Tot (squash p))
-        (g:squash p -> Tot (squash (q())))
-  : Tot (squash (p /\ q()))
+        (q:p -> prop)
+        (f:unit -> Tot p)
+        (g:p -> Tot (q()))
+  : Tot (p /\ q())
   = let _ = f() in g()

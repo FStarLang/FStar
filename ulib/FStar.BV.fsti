@@ -112,7 +112,7 @@ val int2bv_logand:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvand #n (int2bv #n x) (int2bv #n y) == z)
+    (bvand #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (logand #n x y) == z)
 
 (** Bitwise exclusive or *)
@@ -123,7 +123,7 @@ val int2bv_logxor:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvxor #n (int2bv #n x) (int2bv #n y) == z)
+    (bvxor #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (logxor #n x y) == z)
 
 (** Bitwise disjunction *)
@@ -134,13 +134,13 @@ val int2bv_logor:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvor #n (int2bv #n x) (int2bv #n y) == z)
+    (bvor #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (logor #n x y) == z)
 
 (** Bitwise negation *)
 val bvnot (#n: pos) (a: bv_t n) : Tot (bv_t n)
 
-val int2bv_lognot: #n: pos -> #x: uint_t n -> #z: bv_t n -> squash (bvnot #n (int2bv #n x) == z)
+val int2bv_lognot: #n: pos -> #x: uint_t n -> #z: bv_t n -> (bvnot #n (int2bv #n x) == z)
   -> Lemma (int2bv #n (lognot #n x) == z)
 
 (** Bitwise shift left: shift by bit-vector.
@@ -159,7 +159,7 @@ val int2bv_shl':
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvshl' #n (int2bv #n x) (int2bv #n y) == z)
+    (bvshl' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (shift_left #n x y) == z)
 
 val int2bv_shl:
@@ -167,7 +167,7 @@ val int2bv_shl:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvshl #n (int2bv #n x) y == z)
+    (bvshl #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_left #n x y) == z)
 
 (** Bitwise shift right: shift by bit-vector.
@@ -187,7 +187,7 @@ val int2bv_shr':
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvshr' #n (int2bv #n x) (int2bv #n y) == z)
+    (bvshr' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (shift_right #n x y) == z)
 
 val int2bv_shr:
@@ -195,7 +195,7 @@ val int2bv_shr:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvshr #n (int2bv #n x) y == z)
+    (bvshr #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_right #n x y) == z)
 
 (**** Rotate operations *)
@@ -211,7 +211,7 @@ val int2bv_rol':
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvrol' #n (int2bv #n x) (int2bv #n y) == z)
+    (bvrol' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (rotate_left #n x y) == z)
 
 val int2bv_rol:
@@ -219,7 +219,7 @@ val int2bv_rol:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvrol #n (int2bv #n x) y == z)
+    (bvrol #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (rotate_left #n x y) == z)
 
 (** Bitwise rotate right: rotate by bit-vector. *)
@@ -233,7 +233,7 @@ val int2bv_ror':
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvror' #n (int2bv #n x) (int2bv #n y) == z)
+    (bvror' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (rotate_right #n x y) == z)
 
 val int2bv_ror:
@@ -241,7 +241,7 @@ val int2bv_ror:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvror #n (int2bv #n x) y == z)
+    (bvror #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (rotate_right #n x y) == z)
 
 (**** Arithmetic operations *)
@@ -265,7 +265,7 @@ val int2bv_add:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvadd #n (int2bv #n x) (int2bv #n y) == z)
+    (bvadd #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (add_mod #n x y) == z)
 
 (** Subtraction *)
@@ -276,7 +276,7 @@ val int2bv_sub:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvsub #n (int2bv #n x) (int2bv #n y) == z)
+    (bvsub #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (sub_mod #n x y) == z)
 
 (** Division *)
@@ -287,7 +287,7 @@ val int2bv_div:
     #x: uint_t n ->
     #y: uint_t n {y <> 0} ->
     #z: bv_t n ->
-    squash (bvdiv #n (int2bv #n x) y == z)
+    (bvdiv #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (udiv #n x y) == z)
 
 
@@ -302,7 +302,7 @@ val bvdiv_unsafe_sound :
     #n: pos ->
     #a : bv_t n ->
     #b : bv_t n ->
-    squash (bv2int b <> 0)
+    (bv2int b <> 0)
   -> Lemma (bvdiv_unsafe #n a b = bvdiv a (bv2int b))
 
 
@@ -314,7 +314,7 @@ val int2bv_mod:
     #x: uint_t n ->
     #y: uint_t n {y <> 0} ->
     #z: bv_t n ->
-    squash (bvmod #n (int2bv #n x) y == z)
+    (bvmod #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mod #n x y) == z)
 
 (** 'bvmod_unsafe' is an uninterpreted function on 'bv_t n',
@@ -328,7 +328,7 @@ val bvmod_unsafe_sound :
     #n: pos ->
     #a : bv_t n ->
     #b : bv_t n ->
-    squash (bv2int b <> 0)
+    (bv2int b <> 0)
   -> Lemma (bvmod_unsafe #n a b = bvmod a (bv2int b))
 
 (** Multiplication modulo*)
@@ -339,7 +339,7 @@ val int2bv_mul:
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvmul #n (int2bv #n x) y == z)
+    (bvmul #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
 
 (** Bit-vector multiplication *)
@@ -350,6 +350,6 @@ val int2bv_mul':
     #x: uint_t n ->
     #y: uint_t n ->
     #z: bv_t n ->
-    squash (bvmul' #n (int2bv #n x) (int2bv #n y) == z)
+    (bvmul' #n (int2bv #n x) (int2bv #n y) == z)
   -> Lemma (int2bv #n (mul_mod #n x y) == z)
 

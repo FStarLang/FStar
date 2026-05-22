@@ -23,7 +23,7 @@ assume val phi : prop
 assume val psi : prop
 assume val xi : prop
 
-assume val p : squash xi
+assume val p : xi
 
 let dump s =
     (* dump s; *)

@@ -187,7 +187,7 @@ private let append_sums_lengths_lemma () : Lemma (append_sums_lengths_fact u#a) 
     FLT.append_length s0 s1
   )
 
-private let index_into_singleton_lemma (_: squash (singleton_length_one_fact u#a)) : Lemma (index_into_singleton_fact u#a ()) =
+private let index_into_singleton_lemma (_: singleton_length_one_fact u#a) : Lemma (index_into_singleton_fact u#a ()) =
   ()
 
 private let rec index_after_append_helper (ty: Type) (s0: list ty) (s1: list ty) (n: nat)
@@ -197,7 +197,7 @@ private let rec index_after_append_helper (ty: Type) (s0: list ty) (s1: list ty)
   | [] -> ()
   | hd :: tl -> if n = 0 then () else index_after_append_helper ty tl s1 (n - 1)
 
-private let index_after_append_lemma (_: squash (append_sums_lengths_fact u#a)) : Lemma (index_after_append_fact u#a ()) =
+private let index_after_append_lemma (_: append_sums_lengths_fact u#a) : Lemma (index_after_append_fact u#a ()) =
   introduce
     forall (ty: Type u#a) (s0: seq ty) (s1: seq ty) (n: nat{n < length (append s0 s1)}).
         (n < length s0 ==> index (append s0 s1) n == index s0 n)
