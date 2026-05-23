@@ -77,7 +77,6 @@ val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.te
 val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool
 val teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
 val teq_nosmt_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
-val check_equiv_head_injective (g:env) (ty1 ty2:T.term) : Dv bool
 val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 val beta_lax (g:env) (t:T.term) : T.term

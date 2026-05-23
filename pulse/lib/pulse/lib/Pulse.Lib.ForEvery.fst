@@ -111,7 +111,6 @@ let rec timeless_forevery_aux (#a: Type u#a) (p: a -> timeless_slprop) (s: shape
     timeless_exists' (fun y -> p y ** pure (mask y) ** forevery_aux p s (fun x -> mask x /\ x =!= y))
       (fun y -> timeless_forevery_aux p s (fun x -> mask x /\ x =!= y))
 
-[@@unifier_hint_injective]
 let (forall+) #a (p: a -> slprop) : slprop =
   exists* (s: shape). forevery_aux (fun x -> p x) s (fun x -> True)
 
