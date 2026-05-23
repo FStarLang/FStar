@@ -36,8 +36,6 @@ type vconfig = {
   smtencoding_elim_box                      : bool;
   smtencoding_nl_arith_repr                 : string;
   smtencoding_l_arith_repr                  : string;
-  smtencoding_valid_intro                   : bool;
-  smtencoding_valid_elim                    : bool;
   tcnorm                                    : bool;
   no_plugins                                : bool;
   no_tactics                                : bool;

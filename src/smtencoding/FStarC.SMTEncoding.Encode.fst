@@ -467,217 +467,222 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
          let d = Term.DeclFun(vname, univ_sorts @ arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
          let dd = Term.DeclFun(vtok, univ_sorts, Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd] |> mk_decls_trivial, env
-    else if prims.is lid
-         then let _ = if Cons? us then failwith "Impossible: unexpected universe-polymorphic primitive function" in
-              let vname = varops.new_fvar lid in
-              let tok, arity, definition = prims.mk lid vname in
-              let env = push_free_var env lid arity 0 vname (Some tok) in
-              definition |> mk_decls_trivial, env
-         else let encode_non_total_function_typ = nsstr lid <> "Prims" in
-              let formals, (pre_opt, res_t) =
-                let args, comp = curried_arrow_formals_comp t_norm in
-                let tcenv_comp = Env.push_binders env.tcenv args in
-                let comp =
-                  if is_smt_reifiable_comp env.tcenv comp
-                  then S.mk_Total (reify_comp ({tcenv_comp with admit=true}) comp U_unknown)
-                  else comp
-                in
-                if encode_non_total_function_typ
-                then args, TypeChecker.Util.pure_or_ghost_pre_and_post tcenv_comp comp
-                else args, (None, U.comp_result comp)
-              in
-              let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) =
-                quals |> List.collect
-                (function
-                  | Discriminator d ->
-                    let _, xxv = BU.prefix vars in
-                    let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
-                    [Util.mkAssume(mkForall (S.range_of_fv fv)
-                                            ([[vapp]],
-                                             univ_fvs@vars,
-                                             mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
-                                   Some "Discriminator equation",
-                                   "disc_equation_"^escape (string_of_lid d))]
+    else let encode_non_total_function_typ = nsstr lid <> "Prims" in
+         let formals, (pre_opt, res_t) =
+           let args, comp = curried_arrow_formals_comp t_norm in
+           let tcenv_comp = Env.push_binders env.tcenv args in
+           let comp =
+             if is_smt_reifiable_comp env.tcenv comp
+             then S.mk_Total (reify_comp ({tcenv_comp with admit=true}) comp U_unknown)
+             else comp
+           in
+           if encode_non_total_function_typ
+           then args, TypeChecker.Util.pure_or_ghost_pre_and_post tcenv_comp comp
+           else args, (None, U.comp_result comp)
+         in
+         let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) =
+           quals |> List.collect
+           (function
+             | Discriminator d ->
+               let _, xxv = BU.prefix vars in
+               let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
+               [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                       ([[vapp]],
+                                        univ_fvs@vars,
+                                        mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
+                              Some "Discriminator equation",
+                              "disc_equation_"^escape (string_of_lid d))]
 
-                  | Projector(d, f) ->
-                    let _, xxv = BU.prefix vars in
-                    let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
-                    let f = {ppname=f; index=0; sort=tun} in
-                    let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
-                    let prim_app = mkApp(tp_name, [xx]) in
-                    [Util.mkAssume(mkForall (S.range_of_fv fv)
-                                            ([[vapp]], univ_fvs@vars, mkEq(vapp, prim_app)),
-                                   Some "Projector equation",
-                                   "proj_equation_"^tp_name)]
-                  | _ -> [])
-              in
-              let vars, guards, env', decls1, _ = encode_binders None formals env in
-              let guards =
-                // Special typing rule for /\ and ==> where we assume validity of the lhs for typing the rhs
-                if lid_equals lid Const.and_lid || lid_equals lid Const.imp_lid then
-                  let [x; y] = vars in
-                  let prop_ty = lookup_free_var env Const.prop_lid in
-                  [
-                    mk_HasType (mkFreeV x) prop_ty;
-                    mkImp(
-                      mkApp("Valid", [mkFreeV x]),
-                      mk_HasType (mkFreeV y) prop_ty)
-                  ]
-                else
-                  guards
-              in
-              let guard, decls1 = match pre_opt with
-                | None -> mk_and_l guards, decls1
-                | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
-              let dummy_var = mk_fv ("@dummy", dummy_sort) in
-              let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
-              let should_thunk () =
-                //See note [Thunking Nullary Constants] in FStarC.SMTEncoding.Term.fs
-                let is_type t =
-                    match (SS.compress t).n with
-                    | Tm_type _ -> true
-                    | _ -> false
-                in
-                let is_squash t =
-                    let head, _ = U.head_and_args t in
-                    match (U.un_uinst head).n with
-                    | Tm_fvar fv ->
-                      Syntax.fv_eq_lid fv FStarC.Parser.Const.squash_lid
+             | Projector(d, f) ->
+               let _, xxv = BU.prefix vars in
+               let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
+               let f = {ppname=f; index=0; sort=tun} in
+               let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
+               let prim_app = mkApp(tp_name, [xx]) in
+               [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                       ([[vapp]], univ_fvs@vars, mkEq(vapp, prim_app)),
+                              Some "Projector equation",
+                              "proj_equation_"^tp_name)]
+             | _ -> [])
+         in
+         let vars, guards, env', decls1, _ = encode_binders None formals env in
+         let guards =
+           // Special typing rule for /\ and ==> where we assume validity of the lhs for typing the rhs
+           if lid_equals lid Const.and_lid || lid_equals lid Const.imp_lid then
+             let [x; y] = vars in
+             let prop_ty = lookup_free_var env Const.prop_lid in
+             [
+               mk_HasType (mkFreeV x) prop_ty;
+               mkImp(
+                 mkApp("Valid", [mkFreeV x]),
+                 mk_HasType (mkFreeV y) prop_ty)
+             ]
+           else
+             guards
+         in
+         let guard, decls1 = match pre_opt with
+           | None -> mk_and_l guards, decls1
+           | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
+         let dummy_var = mk_fv ("@dummy", dummy_sort) in
+         let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
+         let should_thunk () =
+           //See note [Thunking Nullary Constants] in FStarC.SMTEncoding.Term.fs
+           let is_type t =
+               match (SS.compress t).n with
+               | Tm_type _ -> true
+               | _ -> false
+           in
+           let is_squash t =
+               let head, _ = U.head_and_args t in
+               match (U.un_uinst head).n with
+               | Tm_fvar fv ->
+                 Syntax.fv_eq_lid fv FStarC.Parser.Const.squash_lid
 
-                    | Tm_refine {b={sort={n=Tm_fvar fv}}} ->
-                      Syntax.fv_eq_lid fv FStarC.Parser.Const.unit_lid
+               | Tm_refine {b={sort={n=Tm_fvar fv}}} ->
+                 Syntax.fv_eq_lid fv FStarC.Parser.Const.unit_lid
 
-                    | _ -> false
-                in
-                // Thunk if ...
-                nsstr lid <> "Prims"  //not in prims
-                && Nil? us //has no universe binders
-                && not (quals |> List.contains Logic) //not logic qualified terms
-                && not (is_squash t_norm) //not ambient squashed properties
-                && not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
-              in
-              let thunked, vars =
-                 match vars with
-                 | [] when should_thunk () ->
-                   true, [dummy_var]
-                 | _ -> false, vars
-              in
-              let arity = List.length formals in
-              let univ_arity = List.length univs in
-              let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity univ_arity thunked in
-              let get_vtok () = Option.must vtok_opt in
-              let vtok_tm =
-                    match formals with
-                    | [] when thunked ->  //univ_vars must be []
-                      mkApp(vname, [dummy_tm])
-                    | [] when not thunked ->
-                      mkApp(vname, univs)
-                    | _ ->
-                      mkApp(get_vtok(), univs) //not thunked
-              in
-              let vtok_app = mk_Apply vtok_tm vars in
-              let vapp = mkApp(vname, univs @ List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
-              let decls2, env =
-                let vname_decl = Term.DeclFun(vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, None) in
-                let tok_typing, decls2 =
-                    let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
-                    if not(head_normal env tt)
-                    then encode_term_pred None tt env vtok_tm
-                    else encode_term_pred None t_norm env vtok_tm
-                in
-                //close over the universe variables, if any
-                let tok_typing = close_universes (S.range_of_fv fv) univ_fvs vtok_tm tok_typing in
-                //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
-                let tok_decl, env =
-                    match vars with
-                    | [] ->
-                      let tok_typing =
-                        Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
-                      in
-                      decls2@([tok_typing] |> mk_decls_trivial),
-                      push_free_var env lid arity univ_arity vname (Some <| mkApp(vname, []))
+               | _ -> false
+           in
+           // Thunk if ...
+           nsstr lid <> "Prims"  //not in prims
+           && Nil? us //has no universe binders
+           && not (quals |> List.contains Logic) //not logic qualified terms
+           && not (is_squash t_norm) //not ambient squashed properties
+           && not (is_type t_norm) //not : Type terms, since ambient typing hypotheses for these are cheap
+         in
+         let thunked, vars =
+            match vars with
+            | [] when should_thunk () ->
+              true, [dummy_var]
+            | _ -> false, vars
+         in
+         let arity = List.length formals in
+         let univ_arity = List.length univs in
+         let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity univ_arity thunked in
+         let get_vtok () = Option.must vtok_opt in
+         let vtok_tm =
+               match formals with
+               | [] when thunked ->  //univ_vars must be []
+                 mkApp(vname, [dummy_tm])
+               | [] when not thunked ->
+                 mkApp(vname, univs)
+               | _ ->
+                 mkApp(get_vtok(), univs) //not thunked
+         in
+         let vtok_app = mk_Apply vtok_tm vars in
+         let vapp = mkApp(vname, univs @ List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
+         let decls2, env =
+           let vname_decl = Term.DeclFun(vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, None) in
+           let tok_typing, decls2 =
+               let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
+               if not(head_normal env tt)
+               then encode_term_pred None tt env vtok_tm
+               else encode_term_pred None t_norm env vtok_tm
+           in
+           //close over the universe variables, if any
+           let tok_typing = close_universes (S.range_of_fv fv) univ_fvs vtok_tm tok_typing in
+           //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
+           let tok_decl, env =
+               match vars with
+               | [] ->
+                 let tok_typing =
+                   Util.mkAssume(tok_typing, Some "function token typing", ("function_token_typing_"^vname))
+                 in
+                 decls2@([tok_typing] |> mk_decls_trivial),
+                 push_free_var env lid arity univ_arity vname (Some <| mkApp(vname, []))
 
-                    | _ when thunked ->
-                      decls2, env
+               | _ when thunked ->
+                 decls2, env
 
-                    | _ ->
-                     (* Generate a token and a function symbol;
-                        equate the two, and use the function symbol for full applications *)
-                      let vtok = get_vtok() in
-                      let vtok_decl = Term.DeclFun(vtok, univ_sorts, Term_sort, None) in
-                      let name_tok_corr_formula pat =
-                          match univ_fvs with
-                          | [] ->
-                            mkForall (S.range_of_fv fv)
-                                     ([[pat]], vars, mkEq(vtok_app, vapp))
-                                     //use the patterns provided by the caller
-                          | _ ->
-                            let inner_quant =
-                              mkForall (S.range_of_fv fv)
-                                       ([[vtok_app];[vapp]], vars, mkEq(vtok_app, vapp))
-                                       //patterns for rewriting in both directions
-                                       //since it is nested within a quantifier guarded by
-                                       //a universe-application of the token
-                            in
-                            mkForall (S.range_of_fv fv) ([[vtok_tm]], univ_fvs, inner_quant)
-                      in
-                      //See issue #613 for the choice of patterns here
-                      let name_tok_corr =
-                          //this allows rewriting (ApplyTT tok ... x1..xn) to f x1...xn
-                          Util.mkAssume(name_tok_corr_formula vtok_app,
-                                        Some "Name-token correspondence",
-                                        ("token_correspondence_"^vname)) in
-                      let tok_typing =
-                        let guarded_tok_typing =
-                          match univ_fvs with
-                          | _::_ ->
-                            //This assumption is already protected by a universe quantifier;
-                            //No need to guard it further
-                            tok_typing
-                          | _ ->
-                            let ff = mk_fv ("ty", Term_sort) in
-                            let f = mkFreeV ff in
-                            let vtok_app_r = mk_Apply f [mk_fv (vtok, Term_sort)] in
-                        //guard the token typing assumption with a Apply(f, tok), where f is typically __uu__PartialApp
-                        //Additionally, the body of the term becomes
-                        //                NoHoist f (and (HasType tok ...)
-                        //                               (forall (x1..xn).{:pattern (f x1..xn)} f x1..xn=ApplyTT (ApplyTT tok x1) ... xn
-                        //which provides a typing hypothesis for the token
-                        //and a rule to rewrite f x1..xn to ApplyTT tok ... x1..xn
-                        //The NoHoist prevents the Z3 simplifier from hoisting the (HasType tok ...) part out
-                        //Since the top-levels of modules are full of function typed terms
-                        //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
-                        //regardless of whether or not the function is used ... leading to bloat
-                        //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
-                            mkForall (S.range_of_fv fv)
-                                     ([[vtok_app_r]],
-                                      [ff],
-                                      mkAnd(Term.mk_NoHoist f tok_typing,
-                                            name_tok_corr_formula vapp))
-                        in
-                        Util.mkAssume(guarded_tok_typing, Some "function token typing", ("function_token_typing_"^vname))
-                      in
-                      decls2@([vtok_decl;name_tok_corr;tok_typing] |> mk_decls_trivial),
-                      env
-                in
-                ([vname_decl] |> mk_decls_trivial)@tok_decl, env
-              in
-              let encoded_res_t, ty_pred, decls3 =
-                   let res_t = SS.compress res_t in
-                   let encoded_res_t, decls = encode_term res_t env' in
-                   encoded_res_t, mk_HasType vapp encoded_res_t, decls in //occurs positively, so add fuel
-              let typingAx = Util.mkAssume(mkForall (S.range_of_fv fv)
-                                            ([[vapp]], univ_fvs@vars, mkImp(guard, ty_pred)),
-                                            Some "free var typing",
-                                            ("typing_"^vname)) in
-              let freshness =
-                if quals |> List.contains New
-                then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
-                      pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
-                else [] in
-              let g = decls1@decls2@decls3@(freshness@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars
-                                            |> mk_decls_trivial) in
-              g, env
+               | _ ->
+                (* Generate a token and a function symbol;
+                   equate the two, and use the function symbol for full applications *)
+                 let vtok = get_vtok() in
+                 let vtok_decl = Term.DeclFun(vtok, univ_sorts, Term_sort, None) in
+                 let name_tok_corr_formula pat =
+                     match univ_fvs with
+                     | [] ->
+                       mkForall (S.range_of_fv fv)
+                                ([[pat]], vars, mkEq(vtok_app, vapp))
+                                //use the patterns provided by the caller
+                     | _ ->
+                       let inner_quant =
+                         mkForall (S.range_of_fv fv)
+                                  ([[vtok_app];[vapp]], vars, mkEq(vtok_app, vapp))
+                                  //patterns for rewriting in both directions
+                                  //since it is nested within a quantifier guarded by
+                                  //a universe-application of the token
+                       in
+                       mkForall (S.range_of_fv fv) ([[vtok_tm]], univ_fvs, inner_quant)
+                 in
+                 //See issue #613 for the choice of patterns here
+                 let name_tok_corr =
+                     //this allows rewriting (ApplyTT tok ... x1..xn) to f x1...xn
+                     Util.mkAssume(name_tok_corr_formula vtok_app,
+                                   Some "Name-token correspondence",
+                                   ("token_correspondence_"^vname)) in
+                 let tok_typing =
+                   let guarded_tok_typing =
+                     match univ_fvs with
+                     | _::_ ->
+                       //This assumption is already protected by a universe quantifier;
+                       //No need to guard it further
+                       tok_typing
+                     | _ ->
+                       let ff = mk_fv ("ty", Term_sort) in
+                       let f = mkFreeV ff in
+                       let vtok_app_r = mk_Apply f [mk_fv (vtok, Term_sort)] in
+                   //guard the token typing assumption with a Apply(f, tok), where f is typically __uu__PartialApp
+                   //Additionally, the body of the term becomes
+                   //                NoHoist f (and (HasType tok ...)
+                   //                               (forall (x1..xn).{:pattern (f x1..xn)} f x1..xn=ApplyTT (ApplyTT tok x1) ... xn
+                   //which provides a typing hypothesis for the token
+                   //and a rule to rewrite f x1..xn to ApplyTT tok ... x1..xn
+                   //The NoHoist prevents the Z3 simplifier from hoisting the (HasType tok ...) part out
+                   //Since the top-levels of modules are full of function typed terms
+                   //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
+                   //regardless of whether or not the function is used ... leading to bloat
+                   //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
+                       mkForall (S.range_of_fv fv)
+                                ([[vtok_app_r]],
+                                 [ff],
+                                 mkAnd(Term.mk_NoHoist f tok_typing,
+                                       name_tok_corr_formula vapp))
+                   in
+                   Util.mkAssume(guarded_tok_typing, Some "function token typing", ("function_token_typing_"^vname))
+                 in
+                 decls2@([vtok_decl;name_tok_corr;tok_typing] |> mk_decls_trivial),
+                 env
+           in
+           ([vname_decl] |> mk_decls_trivial)@tok_decl, env
+         in
+         let encoded_res_t, ty_pred, decls3 =
+              let res_t = SS.compress res_t in
+              let encoded_res_t, decls = encode_term res_t env' in
+              encoded_res_t, mk_HasType vapp encoded_res_t, decls in //occurs positively, so add fuel
+         let typingAx = Util.mkAssume(mkForall (S.range_of_fv fv)
+                                       ([[vapp]], univ_fvs@vars, mkImp(guard, ty_pred)),
+                                       Some "free var typing",
+                                       ("typing_"^vname)) in
+         let freshness =
+           if quals |> List.contains New
+           then [Term.fresh_constructor (S.range_of_fv fv) (vname, univ_sorts @ (vars |> List.map fv_sort), Term_sort, varops.next_id());
+                 pretype_axiom false (S.range_of_fv fv) env vapp (univ_fvs@vars)]
+           else [] in
+
+         (* If this is a primitive symbol, add an axiom for its interpretation. *)
+         let prim_defn : list decl =
+           if prims.is fv.fv_name
+           then (
+             let _tok, _arity, definition = prims.mk fv.fv_name vname in
+             definition
+           )
+           else []
+         in
+
+         let g = decls1@decls2@decls3@(freshness@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars @ prim_defn
+                                       |> mk_decls_trivial) in
+         g, env
 
 
 let declare_top_level_let env x us t t_norm : ML (fvar_binding & decls_t & env_t) =

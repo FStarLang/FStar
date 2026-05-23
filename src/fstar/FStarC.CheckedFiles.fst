@@ -35,7 +35,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with Prims.fst
  *)
-let cache_version_number = 76
+let cache_version_number = 78
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)

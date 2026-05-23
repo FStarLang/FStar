@@ -224,7 +224,7 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
 
         | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
-               let x = S.new_bv None p in
+               let x = S.new_bv None (U.mk_squash p) in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
@@ -236,8 +236,8 @@ let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t
         (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
-               let xp = S.new_bv None p in
-               let xq = S.new_bv None q in
+               let xp = S.new_bv None (U.mk_squash p) in
+               let xq = S.new_bv None (U.mk_squash q) in
                let r1 = traverse f Both (Env.push_bv e xq) p in
                let r2 = traverse f Both (Env.push_bv e xp) q in
                // Should be flipping the tres, I think
@@ -541,7 +541,7 @@ let rec traverse_for_spinoff
 
           | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                  // ==> is specialized to U_zero
-            let x = S.new_bv None p in
+            let x = S.new_bv None (U.mk_squash p) in
             let r1 = traverse (flip pol)  e                p in
             let r2 = traverse       pol  (Env.push_bv e x) q in
             comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
