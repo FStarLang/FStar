@@ -3,20 +3,20 @@
   - Current context:
       foo x
   - In typing environment:
-      y#292 : int
-      x#290 : int
+      y#294 : int
+      x#292 : int
 
-      goto _return#345 requires foo x
+      goto _return#347 requires foo x
 
 * Info at AdmitDoesNotSimpl.fst(20,2-20,9):
   - Admitting continuation.
   - Current context:
       foo x
   - In typing environment:
-      y#292 : int
-      x#290 : int
+      y#294 : int
+      x#292 : int
 
-      goto _return#345 requires foo x
+      goto _return#347 requires foo x
 
 * Info at AdmitDoesNotSimpl.fst(27,2-27,9):
   - Admitting continuation.

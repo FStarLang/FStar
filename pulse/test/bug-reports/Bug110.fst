@@ -3,7 +3,7 @@ module Bug110
 #lang-pulse
 open Pulse
 
-[@@no_mkeys] assume val foo : int -> slprop
+[@@no_mkeys; unifier_hint_not_injective] assume val foo : int -> slprop
 
 (* OK *)
 fn test1 (i j : int)

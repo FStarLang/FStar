@@ -1413,7 +1413,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                         (fun _ ->
                           // For lambda args, use full check_relation which opens
                           // the lambda and allows unfolding inside the body.
-                          // For non-lambda args, emit guard on original forms.
+                          // For non-lambda args, emit per-arg guard.
                           match (Subst.compress a0).n, (Subst.compress a1).n with
                           | Tm_abs _, Tm_abs _ ->
                             check_relation g EQUALITY a0 a1
