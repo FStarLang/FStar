@@ -15,7 +15,7 @@ module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
 
-let should_unfold cfg should_reify fv qninfo : ML should_unfold_res =
+let should_unfold (allow_strict : bool) cfg should_reify fv qninfo : ML should_unfold_res =
     let attrs =
       match Env.attrs_of_qninfo qninfo with
       | None -> []
@@ -65,6 +65,13 @@ let should_unfold cfg should_reify fv qninfo : ML should_unfold_res =
                                                (show fv)
                                                (show b));
         if b then reif else no
+
+    // If this definition is marked strict_on_arguments, we will not
+    // unfold standalone occurrences of it, only applications that
+    // pass the strictness check. Unless allow_strict is on.
+    | _ when not allow_strict && Some? (Env.fv_has_strict_args cfg.tcenv fv) ->
+        log_unfolding cfg (fun () -> Format.print_string " >> Not unfolding strict_on_arguments definition\n");
+        no
 
     // If it is handled primitively, then don't unfold
     | _ when Some? (find_prim_step cfg fv) ->

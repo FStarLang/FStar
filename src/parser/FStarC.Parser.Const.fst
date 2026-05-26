@@ -331,6 +331,7 @@ let steps_unfoldnamespace = mk_norm_step_lid "delta_namespace"
 let steps_unascribe       = mk_norm_step_lid "unascribe"
 let steps_nbe             = mk_norm_step_lid "nbe"
 let steps_unmeta          = mk_norm_step_lid "unmeta"
+let steps_reduce_projections = mk_norm_step_lid "reduce_projections"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"

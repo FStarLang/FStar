@@ -83,6 +83,72 @@ let cases f d = function
   | Some x -> f x
   | None -> d
 
+(* For strict_on_arguments *)
+let head_of_term_is_evaluated env (t : term) : ML bool =
+  let h, _ = U.head_and_args_full t in
+  let h = h |> unlazy |> unmeta |> un_uinst in
+  match (SS.compress h).n with
+  | Tm_constant _ -> true
+  | Tm_fvar fv -> Env.is_datacon env fv.fv_name
+  (* TODO: consider machine integer literals evaluated? *)
+  | _ -> false
+
+let guard (b : bool) : option unit =
+  if b
+  then Some ()
+  else None
+
+(* Is this a saturated and valid strict_on_arguments application? If so, return the deconstructed
+app + qninfo. *)
+let check_strict_app (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bool =
+  let open FStarC.Class.Monad in
+  let (h, u, a) = hua in
+  match Env.fv_has_strict_args cfg.tcenv h with
+  | None -> false
+  | Some strict_indices ->
+    log cfg (fun () -> Format.print3 "Checking strict application for %s, head=%s, strict_indices=%s\n"
+                                  (show hua) (show h) (show strict_indices));
+    let len_a = List.length a in
+    let all_ok = strict_indices |> List.for_all (fun i ->
+                  if i >= len_a then false else head_of_term_is_evaluated cfg.tcenv (fst (List.nth a i))) in
+    all_ok
+
+(* If it is a projector, consider it strict if it's applied to a constructor on
+   its first explicit argument. *)
+let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bool =
+  let open FStarC.Class.Monad in
+  let (h, u, a) = hua in
+  if not (Env.is_projector cfg.tcenv h.fv_name) then
+    false
+  else
+    (* Check that
+      1) Last argument is explicit
+      2) Last argument is evaluated (head is a constrctor)
+      3) All previous args are implicit.
+      In one pass. *)
+    let rec check (args : S.args) : ML bool =
+      match args with
+      | [] -> false
+      | [last, last_q] -> None? last_q && head_of_term_is_evaluated cfg.tcenv last
+      | a::args' -> Some? (snd a) && check args'
+    in
+    check a
+
+(* Check for strict applications (both strict_on_arguments and projectors, when
+the flag for reducing projections is set). The boolean is whether we
+should "force" then unfolding regardless of what delta says. We set it to true
+for projectors. *)
+let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
+  let open FStarC.Class.Monad in
+  if check_strict_app cfg hua then (
+    log cfg (fun () -> Format.print1 "Strict application detected for %s\n" (show hua));
+    Some false
+  ) else if cfg.steps.reduce_projections && cfg.steps.iota && check_strict_projector cfg hua then (
+    log cfg (fun () -> Format.print1 "Strict projector detected for %s\n" (show hua));
+    Some true
+  ) else
+    None
+
 (* We memoize the normal form of variables in the environment, in
  * order to implement call-by-need and avoid an exponential explosion,
  * but we take care to only reuse memoized values when the cfg has not
@@ -154,7 +220,7 @@ let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : ML unit =
 
 let closure_to_string = function
     | Clos (env, t, _, _) -> Format.fmt2 "(env=%s elts; %s)" (List.length env |> show) (show t)
-    | Univ _ -> "Univ"
+    | Univ u -> "Univ " ^ show u
     | Dummy -> "dummy"
 
 instance showable_closure : showable closure = {
@@ -166,7 +232,7 @@ instance showable_stack_elt : showable stack_elt = {
           | Arg (c, _, _) -> Format.fmt1 "Arg %s" (show c)
           | MemoLazy _ -> "MemoLazy"
           | Abs (_, bs, _, _, _) -> Format.fmt1 "Abs %s" (show <| List.length bs)
-          | UnivArgs _ -> "UnivArgs"
+          | UnivArgs us -> "UnivArgs " ^ show us
           | Match   _ -> "Match"
           | App (_, t,_,_) -> Format.fmt1 "App %s" (show t)
           | CBVApp (_, t,_,_) -> Format.fmt1 "CBVApp %s" (show t)
@@ -224,17 +290,25 @@ let norm_universe cfg (env:env) u : ML universe =
         match u with
           | U_bvar x ->
             begin
-                try match (List.nth env x)._2 with
-                      | Univ u ->
-                           if !dbg_univ_norm then
-                               Format.print1 "Univ (in norm_universe): %s\n" (show u)
-                           else ();  aux u
-                      | Dummy -> [u]
-                      | _ -> failwith (Format.fmt1 "Impossible: universe variable u@%s bound to a term"
-                                                   (show x))
-                with _ -> if cfg.steps.allow_unbound_universes
-                          then [U_unknown]
-                          else failwith ("Universe variable not found: u@" ^ show x)
+              let vo =
+                try Some ((List.nth env x)._2)
+                with _ -> None
+              in
+              match vo with
+              | Some (Univ u) ->
+                if !dbg_univ_norm then
+                    Format.print1 "Univ (in norm_universe): %s\n" (show u);
+                aux u
+              | Some Dummy ->
+                [u]
+              | Some _ ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith (Format.fmt1 "Impossible: universe variable u@%s bound to a term" (show x))
+              | None ->
+                if cfg.steps.allow_unbound_universes
+                then [U_unknown]
+                else failwith ("Universe variable not found: u@" ^ show x)
             end
           | U_unif _ when cfg.steps.default_univs_to_zero ->
             [U_zero]
@@ -562,9 +636,10 @@ let rec maybe_weakly_reduced tm :  ML bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
-let decide_unfolding cfg stack fv qninfo (* : option (option cfg * stack) *) =
+val decide_unfolding : cfg -> stack -> fv -> qninfo -> ML (option (option cfg & stack))
+let decide_unfolding cfg stack fv qninfo =
     let res =
-        should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
+        should_unfold false cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
     match res with
     | Should_unfold_no ->
@@ -1025,76 +1100,34 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             end
 
           | Tm_app {hd=head; args} ->
-            let strict_args =
-              match (head |> U.unascribe |> U.un_uinst).n with
-              | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
-              | _ -> None
+            let stack =
+              List.fold_right
+                (fun (a, aq) stack ->
+                  let a =
+                    if ((Cfg.cfg_env cfg).erase_erasable_args ||
+                        cfg.steps.for_extraction ||
+                        cfg.debug.erase_erasable_args) //just for experimentation
+                    && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
+                    then U.exp_unit
+                    else a
+                  in
+                  // !! Optimization: if the argument we are pushing is an obvious
+                  // value/closed term, then drop the environment. This can save
+                  // a ton of memory, particularly when running tactics in tight loop.
+                  let env =
+                    match (Subst.compress a).n with
+                    | Tm_name _
+                    | Tm_constant _
+                    | Tm_lazy _
+                    | Tm_fvar _ -> empty_env
+                    | _ -> env
+                  in
+                  Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
+                args
+                stack
             in
-            begin
-            match strict_args with
-            | None ->
-              let stack =
-                List.fold_right
-                  (fun (a, aq) stack ->
-                    let a =
-                      if ((Cfg.cfg_env cfg).erase_erasable_args ||
-                          cfg.steps.for_extraction ||
-                          cfg.debug.erase_erasable_args) //just for experimentation
-                      && U.aqual_is_erasable aq //If we're extracting, then erase erasable arguments eagerly
-                      then U.exp_unit
-                      else a
-                    in
-                    // !! Optimization: if the argument we are pushing is an obvious
-                    // value/closed term, then drop the environment. This can save
-                    // a ton of memory, particularly when running tactics in tight loop.
-                    let env =
-                      match (Subst.compress a).n with
-                      | Tm_name _
-                      | Tm_constant _
-                      | Tm_lazy _
-                      | Tm_fvar _ -> empty_env
-                      | _ -> env
-                    in
-                    Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
-                  args
-                  stack
-              in
-              log cfg  (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
-              norm cfg env stack head
-
-            | Some strict_args ->
-              // Format.print2 "%s has strict args %s\n" (show head) (show strict_args);
-              let norm_args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
-              let norm_args_len = List.length norm_args in
-              if strict_args
-                |> List.for_all (fun i ->
-                  if i >= norm_args_len then false
-                  else
-                    let arg_i, _ = List.nth norm_args i in
-                    let head, _ = arg_i |> U.unmeta_safe |> U.head_and_args in
-                    match (un_uinst head).n with
-                    | Tm_constant _ -> true
-                    | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
-                    | _ -> false)
-              then //all strict args have constant head symbols
-                   let stack =
-                     stack |>
-                     List.fold_right (fun (a, aq) stack ->
-                       Arg (Clos(env, a, mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
-                     norm_args
-                   in
-                   log cfg  (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
-                   norm cfg env stack head
-              else let head = closure_as_term cfg env head in
-                   let term = S.mk_Tm_app head norm_args t.pos in
-                   // let _ =
-                   //   Format.print3 "Rebuilding %s as %s\n%s\n"
-                   //     (show t)
-                   //     (show term)
-                   //     (BU.stack_dump())
-                   // in
-                   rebuild cfg env stack term
-            end
+            log cfg (fun () -> Format.print1 "\tPushed %s arguments\n" (show <| List.length args));
+            norm cfg env stack head
 
           | Tm_refine {b=x}
               when cfg.steps.for_extraction
@@ -2221,10 +2254,47 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
   if f_opt |> Some? && (match stack with | Arg _::_ -> true | _ -> false)  //AR: it is crucial to check that (on_domain a #b) is actually applied, else it would be unsound to reduce it to f
   then f_opt |> Option.must |> norm cfg env stack
   else
-      let t, renorm = maybe_simplify cfg env stack t in
-      if renorm
-      then norm cfg env stack t
-      else do_rebuild cfg env stack t
+    let t, renorm = maybe_simplify cfg env stack t in
+    if renorm
+    then norm cfg env stack t
+    else
+      (* Check for strict applications. *)
+      match U.hua t with
+      | None -> do_rebuild cfg env stack t
+      | Some hua ->
+        match check_strict cfg hua with
+        | Some force -> (
+          let h, u, a = hua in
+          log cfg (fun () -> Format.print1 "Strict application detected, trying to unfold the head: %s\n" (show t));
+          let fv = S.lid_of_fv h in
+          (* First check if the head actually has a visible definition. *)
+          let qninfo = Env.lookup_qname cfg.tcenv fv in
+          let defn = Env.lookup_definition_qninfo cfg.delta_level h.fv_name qninfo in
+          if None? defn then
+            (* No definition, just continue *)
+            do_rebuild cfg env stack t
+          else
+            (* Here, go through should_unfold to see if we *should* unfold this definition,
+              unless check_strict returned force=true (e.g. due to ReduceProjections) *)
+            (* strict_on_arguments makes recursive definition unfold even without zeta *)
+            let cfg_zeta = { cfg with steps = { cfg.steps with zeta = true } } in
+            if force || Should_unfold_yes? (should_unfold true cfg_zeta (fun _ -> false) h qninfo) then
+              (* Just call do_unfold_fv, which keeps normalizing as needed.
+              We do need a proper stack, though. *)
+              let stack = List.fold_right (fun (arg : S.arg) acc ->
+                let memo = fresh_memo () in
+                Arg (Clos(env, fst arg, memo, false), snd arg, pos (fst arg))::acc)
+                a stack
+              in
+              let stack = if Cons? u then UnivArgs(u, t.pos)::stack else stack in
+              let t0 = S.fv_to_tm h in
+              log cfg (fun () -> Format.print2 "Continuing with t=%s, stack=%s\n" (show t0) (show stack));
+              do_unfold_fv cfg stack t0 qninfo h
+            else
+              do_rebuild cfg env stack t
+      )
+      | None ->
+        do_rebuild cfg env stack t
 
 and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
       match stack with

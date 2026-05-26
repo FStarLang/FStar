@@ -740,6 +740,7 @@ let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 }
     timeless_interp b w;
     h (age_to_ w 0)
 
+#push-options "--z3rlimit 20"
 let equiv_timeless (a b: slprop) :
     Lemma (requires timeless a /\ timeless b)
       (ensures timeless (equiv a b) /\ equiv a b == pure (a == b)) =
@@ -754,6 +755,7 @@ let equiv_timeless (a b: slprop) :
     introduce equiv a b w ==> a == b with _.
       timeless_ext a b fun w' ->
         eq_at_elim 1 a b w'
+#pop-options
 
 let equiv_star_congr (p q r: slprop) =
   let aux (q r: slprop) (n: nat { eq_at n q r }) (w: premem) =

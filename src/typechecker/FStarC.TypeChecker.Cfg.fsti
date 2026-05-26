@@ -70,6 +70,7 @@ type fsteps = {
      unrefine:bool;
      default_univs_to_zero:bool; (* Default unresolved universe levels to zero *)
      tactics : bool;
+     reduce_projections : bool;
 }
 
 instance val deq_fsteps : deq fsteps

@@ -161,3 +161,5 @@ val unmeta : norm_step
 
    *)
 val unascribe : norm_step
+
+val reduce_projections : norm_step

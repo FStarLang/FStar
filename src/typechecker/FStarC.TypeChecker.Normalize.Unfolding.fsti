@@ -13,8 +13,10 @@ type should_unfold_res =
     | Should_unfold_fully
     | Should_unfold_reify
 
-val should_unfold : cfg
-                 -> should_reify:(cfg -> ML bool)
-                 -> fv
-                 -> Env.qninfo
-                 -> ML should_unfold_res
+val should_unfold
+  (allow_strict:bool)
+  (c:cfg)
+  (should_reify : cfg -> ML bool)
+  (fv:fv)
+  (qninfo:Env.qninfo)
+  : ML should_unfold_res

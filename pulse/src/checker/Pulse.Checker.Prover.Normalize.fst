@@ -44,6 +44,8 @@ let __normalize_slprop
   let steps = steps @ [delta_qualifier ["unfold"]] in
   (* Unfold recursive definitions too, but only the ones that match the filters above. *)
   let steps = steps @ [zeta] in
+  (* Reduce applied projections like {x=1; ..}.x *)
+  let steps = steps @ [reduce_projections] in
 
   let v' = PCP.norm_well_typed_term (elab_env g) steps v in
   let v' = Pulse.Simplify.simplify v' in (* NOTE: the simplify stage is unverified *)
