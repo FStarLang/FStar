@@ -1105,6 +1105,7 @@ let lookup_projector env lid i : ML _ =
 
 let is_projector env (l:lident) : ML (bool) =
     match lookup_qname env l with
+        | Some (Inr ({ sigel = Sig_let _; sigquals=quals }, _), _)
         | Some (Inr ({ sigel = Sig_declare_typ _; sigquals=quals }, _), _) ->
           BU.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
