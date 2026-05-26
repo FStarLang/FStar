@@ -84,7 +84,8 @@ let rec eq_step s1 s2 : ML bool =
   | Unrefine, Unrefine
   | NormDebug, NormDebug
   | DefaultUnivsToZero, DefaultUnivsToZero
-  | Tactics, Tactics -> true
+  | Tactics, Tactics
+  | ReduceProjections, ReduceProjections -> true
   | _ -> false
 
 instance deq_step : deq step = {
@@ -128,6 +129,7 @@ let rec step_to_string (s:step) : ML string =
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
   | Tactics -> "Tactics"
+  | ReduceProjections -> "ReduceProjections"
   | _ -> failwith "fixme: step_to_string incomplete"
 
 instance showable_step : showable step = {

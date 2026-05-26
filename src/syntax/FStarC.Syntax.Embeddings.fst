@@ -792,6 +792,7 @@ let steps_UnfoldNamespace = tconst PC.steps_unfoldnamespace
 let steps_Unascribe     = tconst PC.steps_unascribe
 let steps_NBE           = tconst PC.steps_nbe
 let steps_Unmeta        = tconst PC.steps_unmeta
+let steps_ReduceProjections = tconst PC.steps_reduce_projections
 
 let e_norm_step : embedding NormSteps.norm_step =
   let open FStarC.NormSteps in
@@ -852,6 +853,8 @@ let e_norm_step : embedding NormSteps.norm_step =
                     S.mk_Tm_app steps_UnfoldNamespace [S.as_arg (embed l rng None norm)]
                                 rng
 
+                | ReduceProjections ->
+                    steps_ReduceProjections
 
                 )
     in
@@ -908,6 +911,8 @@ let e_norm_step : embedding NormSteps.norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldnamespace ->
                     Option.bind (try_unembed l norm) (fun ss ->
                     Some <| UnfoldNamespace ss)
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_reduce_projections ->
+                    Some ReduceProjections
                 | _ -> None)
     in
     mk_emb_full

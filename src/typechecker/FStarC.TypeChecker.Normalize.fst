@@ -84,14 +84,70 @@ let cases f d = function
   | None -> d
 
 (* For strict_on_arguments *)
-let head_of_term_is_evaluated (t : term) : ML bool =
+let head_of_term_is_evaluated env (t : term) : ML bool =
   let h, _ = U.head_and_args_full t in
   let h = h |> unlazy |> unmeta |> un_uinst in
   match (SS.compress h).n with
   | Tm_constant _ -> true
-  | Tm_fvar fv -> Env.is_datacon cfg.tcenv fv.fv_name
+  | Tm_fvar fv -> Env.is_datacon env fv.fv_name
   (* TODO: consider machine integer literals evaluated? *)
   | _ -> false
+
+let guard (b : bool) : option unit =
+  if b
+  then Some ()
+  else None
+
+(* Is this a saturated and valid strict_on_arguments application? If so, return the deconstructed
+app + qninfo. *)
+let check_strict_app (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bool =
+  let open FStarC.Class.Monad in
+  let (h, u, a) = hua in
+  match Env.fv_has_strict_args cfg.tcenv h with
+  | None -> false
+  | Some strict_indices ->
+    log cfg (fun () -> Format.print3 "Checking strict application for %s, head=%s, strict_indices=%s\n"
+                                  (show hua) (show h) (show strict_indices));
+    let len_a = List.length a in
+    let all_ok = strict_indices |> List.for_all (fun i ->
+                  if i >= len_a then false else head_of_term_is_evaluated cfg.tcenv (fst (List.nth a i))) in
+    all_ok
+
+(* If it is a projector, consider it strict if it's applied to a constructor on
+   its first explicit argument. *)
+let check_strict_projector (cfg : Cfg.cfg) (hua : fv & universes & args) : ML bool =
+  let open FStarC.Class.Monad in
+  let (h, u, a) = hua in
+  if not (Env.is_projector cfg.tcenv h.fv_name) then
+    false
+  else
+    (* Check that
+      1) Last argument is explicit
+      2) Last argument is evaluated (head is a constrctor)
+      3) All previous args are implicit.
+      In one pass. *)
+    let rec check (args : S.args) : ML bool =
+      match args with
+      | [] -> false
+      | [last, last_q] -> None? last_q && head_of_term_is_evaluated cfg.tcenv last
+      | a::args' -> Some? (snd a) && check args'
+    in
+    check a
+
+(* Check for strict applications (both strict_on_arguments and projectors, when
+the flag for reducing projections is set). The boolean is whether we
+should "force" then unfolding regardless of what delta says. We set it to true
+for projectors. *)
+let check_strict (cfg : Cfg.cfg) (hua : fv & universes & args) : ML (option bool) =
+  let open FStarC.Class.Monad in
+  if check_strict_app cfg hua then (
+    log cfg (fun () -> Format.print1 "Strict application detected for %s\n" (show hua));
+    Some false
+  ) else if cfg.steps.reduce_projections && cfg.steps.iota && check_strict_projector cfg hua then (
+    log cfg (fun () -> Format.print1 "Strict projector detected for %s\n" (show hua));
+    Some true
+  ) else
+    None
 
 (* We memoize the normal form of variables in the environment, in
  * order to implement call-by-need and avoid an exponential explosion,
@@ -2202,51 +2258,40 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
     if renorm
     then norm cfg env stack t
     else
-      (* Is this a saturated and valid strict_on_args application? If so,
-      try to unfold the head and keep normalizing. *)
-      let check_strict (t : term) : ML (option (fv & list universe & args & qninfo)) =
-        let open FStarC.Class.Monad in
-        let! (h, u, a) = U.hua t in
-        let! strict_indices = Env.fv_has_strict_args cfg.tcenv h in
-        log cfg (fun () -> Format.print3 "Checking strict application for %s, head=%s, strict_indices=%s\n"
-                                      (show t) (show h) (show strict_indices));
-        (* If there is no definition available for h at our delta level,
-           then just say no. We would go into an infinite loop otherwise. *)
-           // FIXME: this sucks, we're repeating a lot of the logic of do_unfold_fv
-        let qninfo = Env.lookup_qname cfg.tcenv (S.lid_of_fv h) in
-        let defn = Env.lookup_definition_qninfo cfg.delta_level h.fv_name qninfo in
-        match defn with
-        | None -> None
-        | Some _ ->
-        let len_a = List.length a in
-        let all_ok = strict_indices |> List.for_all (fun i ->
-                       if i >= len_a then false else head_of_term_is_evaluated (fst (List.nth a i))) in
-        if all_ok then
-          Some (h, u, a, qninfo)
-        else
-          None
-      in
-      match check_strict t with
-      | Some (h, u, a, qninfo) -> (
-        log cfg (fun () -> Format.print1 "Strict application detected, trying to unfold the head: %s\n" (show t));
-        let fv = S.lid_of_fv h in
-        let t0 = S.fvar fv None in // fake, but ok
-        (* strict_on_arguments makes recursive definitionis unfold even without zeta *)
-        let cfg_zeta = { cfg with steps = { cfg.steps with zeta = true } } in
-        match should_unfold true cfg_zeta (fun _ -> false) h qninfo with
-        | Should_unfold_yes ->
-          (* Just call do_unfold_fv, which keeps normalizing as needed.
-          We do need a proper stack, though. *)
-          let stack = List.fold_right (fun (arg : S.arg) acc ->
-            let memo = fresh_memo () in
-            Arg (Clos(env, fst arg, memo, false), snd arg, pos (fst arg))::acc)
-            a stack
-          in
-          let stack = if Cons? u then UnivArgs(u, t.pos)::stack else stack in
-          log cfg (fun () -> Format.print2 "Continuing with t=%s, stack=%s\n" (show t0) (show stack));
-          do_unfold_fv cfg stack t0 qninfo h
-        | _ ->
-          do_rebuild cfg env stack t
+      (* Check for strict applications. *)
+      match U.hua t with
+      | None -> do_rebuild cfg env stack t
+      | Some hua ->
+        match check_strict cfg hua with
+        | Some force -> (
+          let h, u, a = hua in
+          log cfg (fun () -> Format.print1 "Strict application detected, trying to unfold the head: %s\n" (show t));
+          let fv = S.lid_of_fv h in
+          (* First check if the head actually has a visible definition. *)
+          let qninfo = Env.lookup_qname cfg.tcenv fv in
+          let defn = Env.lookup_definition_qninfo cfg.delta_level h.fv_name qninfo in
+          if None? defn then
+            (* No definition, just continue *)
+            do_rebuild cfg env stack t
+          else
+            (* Here, go through should_unfold to see if we *should* unfold this definition,
+              unless check_strict returned force=true (e.g. due to ReduceProjections) *)
+            (* strict_on_arguments makes recursive definition unfold even without zeta *)
+            let cfg_zeta = { cfg with steps = { cfg.steps with zeta = true } } in
+            if force || Should_unfold_yes? (should_unfold true cfg_zeta (fun _ -> false) h qninfo) then
+              (* Just call do_unfold_fv, which keeps normalizing as needed.
+              We do need a proper stack, though. *)
+              let stack = List.fold_right (fun (arg : S.arg) acc ->
+                let memo = fresh_memo () in
+                Arg (Clos(env, fst arg, memo, false), snd arg, pos (fst arg))::acc)
+                a stack
+              in
+              let stack = if Cons? u then UnivArgs(u, t.pos)::stack else stack in
+              let t0 = S.fv_to_tm h in
+              log cfg (fun () -> Format.print2 "Continuing with t=%s, stack=%s\n" (show t0) (show stack));
+              do_unfold_fv cfg stack t0 qninfo h
+            else
+              do_rebuild cfg env stack t
       )
       | None ->
         do_rebuild cfg env stack t
