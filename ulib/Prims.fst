@@ -687,7 +687,3 @@ val string_of_bool: bool -> Tot string
 (** A primitive printer for [int] *)
 assume
 val string_of_int: int -> Tot string
-
-(** Incrementing this forces all .checked files to be invalidated *)
-irreducible
-let __cache_version_number__ = 78
