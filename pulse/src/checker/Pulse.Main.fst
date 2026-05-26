@@ -46,7 +46,7 @@ let rec elab_slprop_defn (g: env) (binders: list (option qualifier & binder & bv
       sort = b_ty;
       qual = elab_qual quals;
       ppname = b.binder_ppname.name;
-      attrs = [];
+      attrs = b.binder_attrs;
     }) (close_term body bv.bv_index))
 
 let check_slprop_defn
