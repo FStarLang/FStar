@@ -93,7 +93,6 @@ val timeless_star (p q : slprop)
     (ensures timeless (p ** q))
     [SMTPat (timeless (p ** q))]
 
-[@@unifier_hint_not_injective]
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
 val timeless_exists (#a:Type u#a) (p: a -> slprop)
