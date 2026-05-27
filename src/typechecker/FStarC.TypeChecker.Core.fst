@@ -1334,105 +1334,81 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         if not (head_matches && List.length args0 = List.length args1)
         then maybe_unfold_and_retry t0 t1
         else (
-          (* If we're proving equality, SMT queries are ok, and either head
-             is equatable:
-              - first try proving equality structurally, without a guard.
-              - if that fails, then emit an SMT query
-             This is designed to be able to prove things like `v.v1 == u.v1`
-             first by trying to unify `v` and `u` and if it fails
-             then prove `v.v1 == u.v1` *)
           let structural () =
             check_relation g EQUALITY head0 head1 ;!
             check_relation_args g EQUALITY args0 args1
           in
-          let compare_head_and_args () =
-            handle_with
-              //cf. Issue 4239
-              //First try structural comparison without SMT guards.
-              //This handles cases where args are definitionally equal.
-              (no_guard (structural ()))
-              (fun _ ->
-                //If structural fails, try unfolding the type abbreviation.
-                if! unfolding_ok then (
-                  match maybe_unfold_side Both t0 t1 with
-                  | None ->
-                    //Can't unfold: fall back to structural with guards
-                    if! guard_not_allowed 
-                    then err "structural check fails, guards not allowed, and cannot unfold further"
-                    else structural ()
-                  | Some (t0', t1') ->
-                    //Check if unfolding exposes a refinement type.
-                    //If so, the refinement comparison produces properly
-                    //weakened guards (e.g., natlt i <: natlt n gives
-                    //forall x. x < i ==> x < n, not i == n).
-                    let t0' = beta_iota_reduce t0' in
-                    let t1' = beta_iota_reduce t1' in
-                    match (Subst.compress t0').n, (Subst.compress t1').n with
-                    | Tm_refine _, _ | _, Tm_refine _ ->
-                      check_relation g rel t0' t1'
+          //For injective heads: compare each arg independently.
+          //  1. Try no_guard first (handles definitionally equal args)
+          //  2. For lambda args: use full check_relation (opens lambdas,
+          //     allows unfolding inside the body, produces ∀-quantified guards)
+          //  3. For non-lambda args: emit_guard on original arg pair
+          let injective_args () =
+            check_relation g EQUALITY head0 head1 ;!
+            if List.length args0 = List.length args1
+            then iter2 args0 args1
+              (fun (a0, q0) (a1, q1) _ ->
+                check_aqual q0 q1;!
+                handle_with
+                  (no_guard (check_relation g EQUALITY a0 a1))
+                  (fun _ ->
+                    match (Subst.compress a0).n, (Subst.compress a1).n with
+                    | Tm_abs _, Tm_abs _ ->
+                      check_relation g EQUALITY a0 a1
                     | _ ->
-                      if! guard_not_allowed then
-                        check_relation g rel t0' t1'
-                      else
-                      //Not a refinement: try three fallbacks in order.
-                      //1. Unfolded without guards (handles structurally equal
-                      //   after unfolding).
-                      //2. Structural with guards (handles equatable args like
-                      //   variables, producing simple arg-level guards for
-                      //   e.g. slprop type abbreviations).
-                      //3. Unfolded with guards (handles non-equatable args
-                      //   like constants, where unfolding may expose equatable
-                      //   functions like op_Equality).
-                      handle_with
-                        (no_guard (check_relation g rel t0' t1'))
-                        (fun _ -> check_relation g rel t0' t1')
-                ) else structural ())
+                      emit_guard a0 a1))
+              ()
+            else fail_str "Unequal number of arguments"
           in
-          if is_marked_injective g.tcenv head0
-          then (
-            // For injective heads: first try structural without guard.
-            // If that fails and guards are allowed, compare each arg:
-            //  1. Try no_guard first (handles definitionally equal args)
-            //  2. For lambda args: use full check_relation (opens lambdas,
-            //     allows unfolding inside the body, produces ∀-quantified guards)
-            //  3. For non-lambda args: emit_guard on original arg pair (avoids
-            //     deeply unfolding into forms SMT can't handle)
-            handle_with
-              (no_guard (structural ()))
-              (fun _ ->
+          //For non-injective heads: try unfolding both sides and recurse.
+          //If unfolding exposes a refinement, the refinement comparison
+          //produces properly weakened guards (e.g., natlt i <: natlt n gives
+          //forall x. x < i ==> x < n, not i == n).
+          //If unfolding fails or is not allowed, fall back to structural.
+          let unfold_both_and_retry () =
+            if! unfolding_ok then (
+              match maybe_unfold_side Both t0 t1 with
+              | None ->
+                //Can't unfold: fall back to structural with guards
+                if! guard_not_allowed 
+                then err "structural check fails, guards not allowed, and cannot unfold further"
+                else structural ()
+              | Some (t0', t1') ->
+                let t0' = beta_iota_reduce t0' in
+                let t1' = beta_iota_reduce t1' in
+                check_relation g rel t0' t1'
+            ) else (
+              //Unfolding not allowed: fall back to structural with guards
+              if! guard_not_allowed
+              then err "structural check fails, guards not allowed, and unfolding not allowed"
+              else structural ()
+            )
+          in
+          //Main logic:
+          //1. Always try no_guard(structural) first.
+          //2. If that fails:
+          //   - injective head: per-arg comparison
+          //   - non-injective head: unfold_both_and_retry
+          //3. If unfold_both_and_retry fails and equatable: emit_guard
+          handle_with
+            (no_guard (structural ()))
+            (fun _ ->
+              if is_marked_injective g.tcenv head0
+              then (
                 if not guard_ok
                 then err "injective head: structural check fails and guards not allowed"
-                else (
-                  check_relation g EQUALITY head0 head1 ;!
-                  if List.length args0 = List.length args1
-                  then iter2 args0 args1
-                    (fun (a0, q0) (a1, q1) _ ->
-                      check_aqual q0 q1;!
-                      handle_with
-                        (no_guard (check_relation g EQUALITY a0 a1))
-                        (fun _ ->
-                          // For lambda args, use full check_relation which opens
-                          // the lambda and allows unfolding inside the body.
-                          // For non-lambda args, emit per-arg guard.
-                          match (Subst.compress a0).n, (Subst.compress a1).n with
-                          | Tm_abs _, Tm_abs _ ->
-                            check_relation g EQUALITY a0 a1
-                          | _ ->
-                            emit_guard a0 a1))
-                    ()
-                  else fail_str "Unequal number of arguments"
-                )
+                else injective_args ()
               )
-          )
-          else if guard_ok &&
-            (rel=EQUALITY) &&
-            (equatable g t0 || equatable g t1)
-          then (
-            handle_with
-              (no_guard (compare_head_and_args ()))
-              (fun _ -> emit_guard t0 t1)
-          )
-          else compare_head_and_args ()
+              else if guard_ok &&
+                (rel=EQUALITY) &&
+                (equatable g t0 || equatable g t1)
+              then (
+                handle_with
+                  (no_guard (unfold_both_and_retry ()))
+                  (fun _ -> emit_guard t0 t1)
+              )
+              else unfold_both_and_retry ()
+            )
         )
 
       | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
