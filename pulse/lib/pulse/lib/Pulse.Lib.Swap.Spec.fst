@@ -671,6 +671,9 @@ let array_swap_inner_invariant
         Seq.index s idx == Seq.index s0 (if i' < i || (i' = i && j' < j) then jump (n) (l) idx else idx)
   )
 
+#restart-solver
+#push-options "--z3rlimit 10"
+
 let array_swap_inner_invariant_end
   (#t: Type)
   (n: nat)
@@ -692,6 +695,8 @@ let array_swap_inner_invariant_end
   ))
 //  [SMTPat (array_swap_inner_invariant s0 n l bz s i j idx)]
 = ()
+
+#pop-options
 
 module SZ = FStar.SizeT
 
