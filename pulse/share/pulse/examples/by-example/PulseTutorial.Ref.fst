@@ -217,7 +217,7 @@ ensures
 fn max_perm u#a (#a: Type u#a) (r:ref a) #p anything
 requires pts_to r #p 'v
 requires pure (~ (p <=. 1.0R))
-returns _:squash False
+returns _:(False)
 ensures anything
 {
     pts_to_perm_bound r;

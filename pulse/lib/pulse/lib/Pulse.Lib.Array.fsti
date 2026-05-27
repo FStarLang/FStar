@@ -48,7 +48,7 @@ fn memcpy_l
         (#src0 #dst0:Ghost.erased (Seq.seq t))
   requires pts_to src #p src0 **
            pts_to dst dst0
-  returns  squash (Seq.length src0 == length src /\ Seq.length dst0 == length dst)
+  returns  (Seq.length src0 == length src /\ Seq.length dst0 == length dst)
   ensures  pts_to src #p src0 **
            pts_to dst (Seq.append (Seq.slice src0 0 (SZ.v l))
                                    (Seq.slice dst0 (SZ.v l) (length dst)))

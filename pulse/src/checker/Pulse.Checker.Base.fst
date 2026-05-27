@@ -280,7 +280,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     continuation_elaborator_with_bind' ctxt c1 e1 x
 
 
-let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+let coerce_eq (#a #b:Type) (x:a) (_:(a == b)) : y:b{y == x} = x
 
 let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
   (e1:st_term)

@@ -130,7 +130,7 @@ fn gather u#a
     (v1:a)
   requires pts_to r v0
   requires pts_to r v1
-  returns  squash (composable pcm v0 v1)
+  returns  (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
 {
   with inst0. assert C.ghost_pcm_pts_to r (U.raise_val #a #inst0 v0);

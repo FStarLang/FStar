@@ -52,7 +52,7 @@ ghost
 fn intro_with_pure
   (p : prop)
   (v : squash p -> slprop)
-  (_ : squash p)
+  (_ : p)
   requires v ()
   ensures  with_pure p v
 {
@@ -66,7 +66,7 @@ ghost
 fn squash_single_coerce
   (p : prop)
   (v : squash p -> slprop)
-  (s : squash p)
+  (s : p)
   requires v s
   ensures pure p
   ensures v ()
@@ -82,7 +82,7 @@ fn elim_with_pure
   (p : prop)
   (v : squash p -> slprop)
   requires with_pure p v
-  returns  s : squash p
+  returns  s : p
   ensures  v ()
 {
   unfold (with_pure p v);

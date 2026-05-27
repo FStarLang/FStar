@@ -448,7 +448,7 @@ fn read_node
   (#t : erased (T.tree a){T.Node? t})
   requires is_tree tree t
   (* ^ Some? p should be trivial, but just kick the ball to the caller *)
-  returns  res : tree_t a & a & tree_t a & squash (Some? tree)
+  returns  res : tree_t a & a & tree_t a & (Some? tree)
     (* ^ squash to help with spec well-formedness *)
   ensures (
     let (l, x, r, _) = res in

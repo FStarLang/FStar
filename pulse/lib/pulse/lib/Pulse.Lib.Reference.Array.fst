@@ -43,7 +43,7 @@ ghost
 fn return_to_array u#a (#a: Type u#a) (r: ref a) #p (#v: Seq.seq a)
   requires to_array_ghost r |-> Frac p v
   requires pure (length (to_array_ghost r) == 1)
-  returns _: squash (Seq.length v == 1)
+  returns _: (Seq.length v == 1)
   ensures r |-> Frac p (Seq.index v 0)
 {
   pts_to_len (to_array_ghost r);

@@ -86,7 +86,7 @@ val seq_list_match_cons_elim
   (c: Seq.seq t)
   (v: list t' { Cons? v \/ Seq.length c > 0 })
   (item_match: (t -> (v': t' { v' << v }) -> slprop))
-: stt_ghost (squash (Cons? v /\ Seq.length c > 0))
+: stt_ghost ((Cons? v /\ Seq.length c > 0))
     emp_inames
     (seq_list_match c v item_match)
     (fun _ -> item_match (Seq.head c) (List.Tot.hd v) **
@@ -212,7 +212,7 @@ val seq_seq_match_singleton_elim
   (i: nat)
   (x1: t1)
   (x2: t2)
-: stt_ghost (squash (i < Seq.length s1 /\ i < Seq.length s2)) emp_inames
+: stt_ghost ((i < Seq.length s1 /\ i < Seq.length s2)) emp_inames
     (seq_seq_match p s1 s2 i (i + 1))
     (fun _ -> p (Seq.index s1 i) (Seq.index s2 i))
 
@@ -253,7 +253,7 @@ ghost fn seq_seq_match_dequeue_left
   (j: nat)
 requires
    (seq_seq_match p s1 s2 i j ** pure (i < j))
-  returns _: squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)
+  returns _: (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)
 ensures
    seq_seq_match p s1 s2 (i + 1) j ** p (Seq.index s1 i) (Seq.index s2 i)
 
@@ -266,7 +266,7 @@ ghost fn seq_seq_match_dequeue_right
   (j: nat)
 requires
     (seq_seq_match p s1 s2 i j ** pure (i < j))
-  returns _: (squash (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2))
+  returns _: (i < j /\ j <= Seq.length s1 /\ j <= Seq.length s2)
 ensures
     (seq_seq_match p s1 s2 i (j - 1) ** p (Seq.index s1 (j - 1)) (Seq.index s2 (j - 1)))
 
@@ -413,7 +413,7 @@ val seq_list_match_index
   (s1: Seq.seq t1)
   (s2: list t2)
   (i: nat)
-: stt_ghost (squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1))
+: stt_ghost ((i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1))
     emp_inames
     (seq_list_match s1 s2 p ** pure (
       (i < Seq.length s1 \/ i < List.Tot.length s2)
@@ -569,7 +569,7 @@ val seq_seq_match_upd
   })
   (x1: t1)
   (x2: t2)
-: stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2))
+: stt_ghost ((j < Seq.length s1 /\ j < Seq.length s2))
     emp_inames
     (seq_seq_match p s1 s2 i k ** p x1 x2)
     (fun _ -> 
@@ -589,7 +589,7 @@ val seq_seq_match_item_match_option_upd_none
   })
   (x1: t1)
   (x2: t2)
-: stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2))
+: stt_ghost ((j < Seq.length s1 /\ j < Seq.length s2))
     emp_inames
     (seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2)
     (fun _ -> 
@@ -606,7 +606,7 @@ val seq_seq_match_item_match_option_index
     i <= j /\ j < k /\
     (j < Seq.length s2 ==> Some? (Seq.index s2 j))
   })
-: stt_ghost (squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j)))
+: stt_ghost ((j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j)))
     emp_inames
     (seq_seq_match (item_match_option p) s1 s2 i k)
     (fun _ -> 
@@ -629,7 +629,7 @@ fn seq_seq_match_item_match_option_upd_some
   (x2: t2)
   requires
     seq_seq_match (item_match_option p) s1 s2 i k ** p x1 x2
-  returns res: squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
+  returns res: (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j))
   ensures
     seq_seq_match (item_match_option p) (Seq.upd s1 j x1) (Seq.upd s2 j (Some x2)) i k **
     p (Seq.index s1 j) (Some?.v (Seq.index s2 j))

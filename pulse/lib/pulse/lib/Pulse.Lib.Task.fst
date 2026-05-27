@@ -727,7 +727,7 @@ let rec all_tasks_done (ts : list task_t) =
     all_tasks_done ts'
 
 noextract
-let slprop_equiv_refl (v1 v2 : slprop) (_ : squash (v1 == v2)) 
+let slprop_equiv_refl (v1 v2 : slprop) (_ : (v1 == v2))
   : slprop_equiv v1 v2 = slprop_equiv_refl v1
 
 let helper_tac () : Tac unit =

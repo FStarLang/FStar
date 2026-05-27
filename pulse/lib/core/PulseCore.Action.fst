@@ -382,7 +382,7 @@ let dup_inv (i:iref) (p:slprop) =
   lift_pre_act0_act fun #ictx -> ITA.dup_inv ictx i p
 let new_invariant p = lift_pre_act0_act fun #ictx -> ITA.new_invariant ictx p
 let exists_equiv (#a:_) (#p:a -> slprop)
-  : squash (op_exists_Star p == (exists* x. p x))
+  : (op_exists_Star p == (exists* x. p x))
   = let pf = I.slprop_equiv_exists p (fun x -> p x) () in
     I.slprop_equiv_elim (op_exists_Star p) (exists* x. p x)
  
@@ -435,7 +435,7 @@ let pts_to_not_null #a #p r v =
   ITA.lift_mem_action (Mem.pts_to_not_null_action #a #p r v)
 
 let lift_eqs ()
-: squash (
+: (
   Sep.lift Mem.emp == emp /\
   (forall p. Sep.lift (Mem.pure p) == pure p) /\
   (forall p q. Sep.lift (Mem.star p q) == star (Sep.lift p) (Sep.lift q)))
@@ -501,7 +501,7 @@ let gather
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1))
+: act ((composable pcm v0 v1))
       Ghost
       emp_inames
       (pts_to r v0 `star` pts_to r v1)
@@ -533,7 +533,7 @@ let intro_pure (p:prop) (pf:squash p)
 = lift_pre_act0_act fun #ictx -> ITA.intro_pure #ictx p pf
 
 let elim_pure (p:prop)
-: act (squash p) Ghost emp_inames (pure p) (fun _ -> emp)
+: act (p) Ghost emp_inames (pure p) (fun _ -> emp)
 = lift_pre_act0_act fun #ictx -> ITA.elim_pure #ictx p
 
 ///////////////////////////////////////////////////////////////////

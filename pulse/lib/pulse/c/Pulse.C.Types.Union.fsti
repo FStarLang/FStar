@@ -297,7 +297,7 @@ val has_union_field_inj
   (#t2: Type0)
   (#td2: typedef t2)
   (r2: ref td2)
-: stt_ghost (squash (t1 == t2 /\ td1 == td2))
+: stt_ghost ((t1 == t2 /\ td1 == td2))
     emp_inames
     (has_union_field r field r1 ** has_union_field r field r2)
     (fun _ -> has_union_field r field r1 ** has_union_field r field r2 ** ref_equiv r1 (coerce_eq () r2))
@@ -343,7 +343,7 @@ val ghost_union_field_focus
   (#t': Type0)
   (#td': typedef t')
   (r': ref td')
-: stt_ghost (squash (
+: stt_ghost ((
       t' == fields.fd_type field /\
       td' == fields.fd_typedef field
   ))
@@ -393,8 +393,8 @@ let union_field1
   (r: ref (union0 tn n fields))
   (field: field_t fields {union_get_case v == Some field})
   (td': typedef t')
-  (sq_t': squash (t' ==  fields.fd_type field))
-  (sq_td': squash (td' == fields.fd_typedef field))
+  (sq_t': (t' ==  fields.fd_type field))
+  (sq_td': (td' == fields.fd_typedef field))
 : stt (ref td')
     (pts_to r v)
     (fun r' -> has_union_field r field r' ** pts_to r' (union_get_field v field))
@@ -411,8 +411,8 @@ let union_field
   (field: field_t fields {union_get_case v == Some field})
   (#t': Type0)
   (#td': typedef t')
-  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
-  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  (# [ norm_fields () ] sq_t': (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': (td' == fields.fd_typedef field))
   ()
 : stt (ref td')
     (pts_to r v)
@@ -505,8 +505,8 @@ let union_switch_field1
   (r: ref (union0 tn n fields))
   (field: field_t fields)
   (td': typedef t')
-  (sq_t': squash (t' ==  fields.fd_type field))
-  (sq_td': squash (td' == fields.fd_typedef field))
+  (sq_t': (t' ==  fields.fd_type field))
+  (sq_td': (td' == fields.fd_typedef field))
 : stt (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v ** pure (
       full (union0 tn n fields) v
@@ -525,8 +525,8 @@ let union_switch_field
   (field: field_t fields)
   (#t': Type0)
   (#td': typedef t')
-  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
-  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  (# [ norm_fields () ] sq_t': (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': (td' == fields.fd_typedef field))
   ()
 : stt (ref td') // need to write the pcm carrier value, so this cannot be Ghost or Atomic
     (pts_to r v ** pure (

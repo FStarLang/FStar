@@ -263,7 +263,7 @@ ghost
 fn forevery_refine_ext'
   (#a: Type0)
   (#f g: a->prop)
-  (#_ : squash (forall x. f x <==> g x))
+  (#_ : (forall x. f x <==> g x))
   (p: (x:a{f x} -> slprop))
   requires
     forall+ (x:a {f x}). p x
@@ -1353,7 +1353,7 @@ fn forevery_emp_elim
   drop_ (forall+ (_: a). emp)
 }
 
-let singleton_lemma (#a:Type) {| d : enumerable a |} (_:squash (cardinal a #d == 1))
+let singleton_lemma (#a:Type) {| d : enumerable a |} (_:(cardinal a #d == 1))
 : Lemma (forall (y:a). of_nat 0 == y)
 = introduce forall (y:a). of_nat 0 == y
   with assert (d.bij.right y == 0)

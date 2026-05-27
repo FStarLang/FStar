@@ -111,7 +111,7 @@ fn gather_ (r:gref)
   (v0 v1:pcm_t)
   requires GR.pts_to r v0 **
            GR.pts_to r v1
-  returns _:squash (PCM.composable pcm v0 v1)
+  returns _:(PCM.composable pcm v0 v1)
   ensures GR.pts_to r (PCM.op pcm v0 v1)
 {
   GR.gather r v0 v1;
@@ -266,7 +266,7 @@ fn frame_session_perm_at_sid
   (r:gref)
   (pht0 pht1:pht_t)
   (i j:nat)
-  (_:squash (session_table_eq_on_range pht0 pht1 i j))
+  (_:(session_table_eq_on_range pht0 pht1 i j))
   (sid:(sid:nat { i <= sid /\ sid < j }))
   requires session_perm r pht0 sid
   ensures session_perm r pht1 sid
@@ -734,7 +734,7 @@ fn init_l0_ctxt
   (#engine_repr:erased engine_record_repr)
   (#s:erased (Seq.seq U8.t))
   (#uds_bytes:erased (Seq.seq U8.t))
-  (_:squash (cdi_functional_correctness s uds_bytes engine_repr /\
+  (_:(cdi_functional_correctness s uds_bytes engine_repr /\
              l0_is_authentic engine_repr))
   requires pts_to cdi s
   returns ctxt:l0_context_t
@@ -775,7 +775,7 @@ fn init_l1_ctxt
   (repr:erased l0_record_repr_t)
   (#deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
    #deviceIDCSR_repr #aliasKeyCRT_repr:erased (Seq.seq U8.t))
-  (_:squash (l0_post
+  (_:(l0_post
      cdi
      repr.fwid
      deviceID_label_len
@@ -920,7 +920,7 @@ fn derive_child_from_context
     (record:record_t)
     (#record_repr: erased repr_t)
     (#context_repr:erased (context_repr_t))
-    (_:squash (valid_context_and_record_for_derive_child context_repr record_repr))
+    (_:(valid_context_and_record_for_derive_child context_repr record_repr))
 
   requires
     context_perm context context_repr **

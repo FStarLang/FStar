@@ -135,7 +135,7 @@ ghost
 fn forevery_refine_ext'
   (#a: Type0)
   (#f g: a->prop)
-  (#_ : squash (forall x. f x <==> g x))
+  (#_ : (forall x. f x <==> g x))
   (p: (x:a{f x} -> slprop))
   requires
     forall+ (x:a {f x}). p x

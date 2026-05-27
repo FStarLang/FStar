@@ -45,7 +45,7 @@ let op_Star_Star = op_Star_Star
 let timeless_star p q = Sep.timeless_star p q
 let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)
-  (_:squash (forall x. p x == q x))
+  (_:(forall x. p x == q x))
   : Lemma (op_exists_Star p == op_exists_Star q)
   = introduce forall x. slprop_equiv (p x) (q x)
     with (
@@ -72,7 +72,7 @@ let intro_slprop_post_equiv
 
 let elim_slprop_post_equiv (#t:Type u#a)
                           (p q: t -> slprop) 
-                          (pf:squash (slprop_post_equiv p q))
+                          (pf:(slprop_post_equiv p q))
                           (x:t) 
 : slprop_equiv (p x) (q x)
 = eliminate forall x. slprop_equiv (p x) (q x) with x
@@ -81,14 +81,14 @@ let slprop_equiv_refl (v0:slprop)
   : slprop_equiv v0 v0
   = slprop_equiv_refl v0
 
-let slprop_equiv_sym (v0 v1:slprop) (p:squash (slprop_equiv v0 v1))
+let slprop_equiv_sym (v0 v1:slprop) (p:(slprop_equiv v0 v1))
   : slprop_equiv v1 v0
   = slprop_equiv_elim v0 v1; p
 
 let slprop_equiv_trans
       (v0 v1 v2:slprop)
-      (p:squash (slprop_equiv v0 v1))
-      (q:squash (slprop_equiv v1 v2))
+      (p:(slprop_equiv v0 v1))
+      (q:(slprop_equiv v1 v2))
   : slprop_equiv v0 v2
   = slprop_equiv_elim v0 v1;
     slprop_equiv_elim v1 v2;
@@ -107,13 +107,13 @@ let slprop_equiv_assoc (p1 p2 p3:slprop)
   = slprop_equiv_assoc p1 p2 p3
 
 let slprop_equiv_exists (#a:Type) (p q : a -> slprop)
-  (_ : squash (forall x. slprop_equiv (p x) (q x)))
+  (_ : (forall x. slprop_equiv (p x) (q x)))
   : slprop_equiv (op_exists_Star p) (op_exists_Star q)
   = slprop_equiv_exists p q ()
 
 let slprop_equiv_cong (p1 p2 p3 p4:slprop)
-                     (f: squash (slprop_equiv p1 p3))
-                     (g: squash (slprop_equiv p2 p4))
+                     (f: (slprop_equiv p1 p3))
+                     (g: (slprop_equiv p2 p4))
   : slprop_equiv (p1 ** p2) (p3 ** p4)
   = slprop_equiv_elim p1 p3;
     slprop_equiv_elim p2 p4;
@@ -173,7 +173,7 @@ let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
 let sub_invs_ghost = A.sub_invs_stt_ghost
 
-let rewrite_eq p q (pf:squash (p == q))
+let rewrite_eq p q (pf:(p == q))
   : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
@@ -274,7 +274,7 @@ let fork_core pre #l f =
   let l' = l in // TODO
   PulseCore.Action.fork l l' (f l')
 
-let rewrite p q (pf:squash (slprop_equiv p q))
+let rewrite p q (pf:(slprop_equiv p q))
   : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q

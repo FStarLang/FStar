@@ -332,7 +332,7 @@ let affine_hprop_intro
      : Lemma (heap_prop_is_affine p)
   =
   let aux (h0 h1: heap u#a) : Lemma (p h0 /\ disjoint h0 h1 ==> p (join h0 h1)) =
-    let aux (_ : squash (p h0 /\ disjoint h0 h1)) : Lemma (disjoint h0 h1 /\ p (join h0 h1)) =
+    let aux (_ : (p h0 /\ disjoint h0 h1)) : Lemma (disjoint h0 h1 /\ p (join h0 h1)) =
       lemma h0 h1
     in
     Classical.impl_intro aux

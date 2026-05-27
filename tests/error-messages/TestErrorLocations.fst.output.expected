@@ -105,7 +105,7 @@
           (n: Prims.nat)
           (pf_zero: Prims.squash (n = 0)).
           (* - Could not prove post-condition *) n = 0)
-  - See also FStar.Classical.Sugar.fsti(66,21-66,40)
+  - See also FStar.Classical.Sugar.fsti(66,14-66,33)
 
 * Info at TestErrorLocations.fst(96,28-96,33):
   - Expected failure:
@@ -141,7 +141,7 @@
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop)
   - VC = p \/ q
-  - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+  - See also FStar.Classical.Sugar.fsti(88,14-88,24)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
   - TestErrorLocations.test7 is declared but no definition was found

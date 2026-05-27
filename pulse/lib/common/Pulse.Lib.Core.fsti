@@ -76,7 +76,7 @@ let timeless_slprop = v:slprop { timeless v }
 
 val emp : slprop
 
-val timeless_emp : squash (timeless emp)
+val timeless_emp : (timeless emp)
 
 val pure (p:prop) : slprop
 
@@ -101,7 +101,7 @@ val timeless_exists (#a:Type u#a) (p: a -> slprop)
     [SMTPat (timeless (op_exists_Star p))]
 
 val slprop_equiv (p q:slprop) : prop
-val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
+val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : (p == q)
 val slprop_post_equiv (#t:Type u#a) (p q: t -> slprop) : prop
 
 val intro_slprop_post_equiv
@@ -133,7 +133,7 @@ val slprop_equiv_assoc (p1 p2 p3:slprop)
   : slprop_equiv ((p1 ** p2) ** p3) (p1 ** (p2 ** p3))
 
 val slprop_equiv_exists (#a:Type) (p q : a -> slprop)
-  (_ : squash (forall x. slprop_equiv (p x) (q x)))
+  (_ : (forall x. slprop_equiv (p x) (q x)))
   : slprop_equiv (op_exists_Star p) (op_exists_Star q)
 
 val slprop_equiv_cong (p1 p2 p3 p4:slprop)
@@ -362,7 +362,7 @@ val sub_invs_atomic
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_atomic a #obs opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
 
 val lift_atomic
@@ -446,7 +446,7 @@ val sub_invs_ghost
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_ghost a opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : (inames_subset opens1 opens2))
 : stt_ghost a opens2 pre post
 
 ////////////////////////////////////////////////////////////////////
@@ -469,9 +469,9 @@ val timeless_on (l:loc_id) (p : slprop)
     (ensures timeless (on l p))
     [SMTPat (timeless (on l p))]
 
-val on_star_eq l a b : squash (on l (a ** b) == on l a ** on l b)
-val on_on_eq l1 l2 a : squash (on l1 (on l2 a) == on l2 a)
-val on_loc_eq l1 l2 : squash (on l1 (loc l2) == pure (l1 == l2))
+val on_star_eq l a b : (on l (a ** b) == on l a ** on l b)
+val on_on_eq l1 l2 a : (on l1 (on l2 a) == on l2 a)
+val on_loc_eq l1 l2 : (on l1 (loc l2) == pure (l1 == l2))
 
 inline_for_extraction
 [@@deprecated "impersonate_core is unsound; only use for model implementations";
@@ -502,7 +502,7 @@ val ghost_impersonate_core
 
 val later_credit (amt: nat) : slprop
 
-val on_later_credit_eq l n : squash (on l (later_credit n) == later_credit n)
+val on_later_credit_eq l n : (on l (later_credit n) == later_credit n)
 
 val timeless_later_credit (amt: nat)
 : Lemma (timeless (later_credit amt))
@@ -524,11 +524,11 @@ val later_elim (p: slprop) : stt_ghost unit emp_inames (later p ** later_credit 
 
 val later_elim_timeless (p: slprop { timeless p }) : stt_ghost unit emp_inames (later p) (fun _ -> p)
 
-val later_star p q : squash (later (p ** q) == later p ** later q)
+val later_star p q : (later (p ** q) == later p ** later q)
 val later_exists (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (later (exists* x. f x)) (fun _ -> exists* x. later (f x))
 val exists_later (#t: Type) (f:t->slprop) : stt_ghost unit emp_inames (exists* x. later (f x)) (fun _ -> later (exists* x. f x))
 
-val on_later_eq l p : squash (on l (later p) == later (on l p))
+val on_later_eq l p : (on l (later p) == later (on l p))
 
 //////////////////////////////////////////////////////////////////////////
 // Equivalence
@@ -537,7 +537,7 @@ val on_later_eq l p : squash (on l (later p) == later (on l p))
 (* Two slprops are equal when approximated to the current heap level. *)
 val equiv (a b: slprop) : slprop
 
-val on_equiv_eq l a b : squash (on l (equiv a b) == equiv a b)
+val on_equiv_eq l a b : (on l (equiv a b) == equiv a b)
 
 val equiv_dup a b : stt_ghost unit emp_inames (equiv a b) fun _ -> equiv a b ** equiv a b
 val equiv_refl a : stt_ghost unit emp_inames emp fun _ -> equiv a a
@@ -548,9 +548,9 @@ val equiv_elim a b : stt_ghost unit emp_inames (a ** equiv a b) fun _ -> b
 
 val equiv_elim_timeless (a:slprop { timeless a }) (b: slprop { timeless b }) : stt_ghost unit emp_inames (equiv a b) fun _ -> pure (eq2 #slprop a b)
 
-val equiv_star_congr (p q r: slprop) : squash (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
+val equiv_star_congr (p q r: slprop) : (equiv q r == (equiv q r ** equiv (p ** q) (p ** r)))
 
-val later_equiv (p q: slprop) : squash (later (equiv p q) == equiv (later p) (later q))
+val later_equiv (p q: slprop) : (later (equiv p q) == equiv (later p) (later q))
 
 //////////////////////////////////////////////////////////////////////////
 // Higher-order ghost state: references that can store predicates
@@ -563,7 +563,7 @@ val null_slprop_ref : slprop_ref
 
 val slprop_ref_pts_to ([@@@mkey]x: slprop_ref) (y: slprop) : slprop
 
-val on_slprop_ref_pts_to_eq l x y : squash (on l (slprop_ref_pts_to x y) == slprop_ref_pts_to x y)
+val on_slprop_ref_pts_to_eq l x y : (on l (slprop_ref_pts_to x y) == slprop_ref_pts_to x y)
 
 val slprop_ref_alloc (y: slprop)
 : stt_ghost slprop_ref emp_inames emp fun x -> slprop_ref_pts_to x y
@@ -620,7 +620,7 @@ let slprop_equiv_fold (head_sym:string) (_:unit) : T.Tac unit =
     T.mapply (`slprop_equiv_refl);
     T.mapply (`slprop_equiv_refl)
     
-let slprop_equiv_ext' (p1 p2:slprop) (_: squash (p1 == p2))
+let slprop_equiv_ext' (p1 p2:slprop) (_: (p1 == p2))
   : slprop_equiv p1 p2 = slprop_equiv_refl p1
 
 let match_rewrite_tac (_:unit) : T.Tac unit =
@@ -647,12 +647,12 @@ val rewrite_by (p:slprop) (q:slprop)
 : stt_ghost unit emp_inames p (fun _ -> q)
 
 val elim_pure_explicit (p:prop)
-: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+: stt_ghost (p) emp_inames (pure p) (fun _ -> emp)
 
 val elim_pure () (#p:prop)
-: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+: stt_ghost (p) emp_inames (pure p) (fun _ -> emp)
 
-val intro_pure (p:prop) (_:squash p)
+val intro_pure (p:prop) (_:p)
 : stt_ghost unit emp_inames emp (fun _ -> pure p)
 
 val elim_exists (#a:Type) (p:a -> slprop)
@@ -681,7 +681,7 @@ val drop_ (p:slprop)
 
 let is_unreachable = pure False
 
-val unreachable (_:squash False)
+val unreachable (_:False)
 : stt_ghost unit emp_inames emp (fun _ -> is_unreachable)
 
 // Finally, a big escape hatch for introducing architecture/backend-specific

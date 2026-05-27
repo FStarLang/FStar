@@ -542,7 +542,7 @@ let same_base_null #t x y = ()
 ghost fn gsub_intro u#a (#t: Type u#a) (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq (option t)) { i <= j /\ j <= Seq.length v })
   requires pts_to_mask arr #f v mask
   requires pure (forall (k: nat). mask k /\ k < Seq.length v ==> i <= k /\ k < j)
-  returns _: squash (length arr == Seq.length v)
+  returns _: (length arr == Seq.length v)
   ensures pts_to_mask (gsub arr i j) #f (Seq.slice v i j) (fun k -> mask (k + i))
 {
   pts_to_mask_props arr;
@@ -555,7 +555,7 @@ ghost fn gsub_intro u#a (#t: Type u#a) (arr: array t) #f #mask (i j: nat) (#v: e
 ghost fn gsub_elim u#a (#t: Type u#a) (arr: array t) #f (#mask: nat->prop) (i j: nat)
     (#v: erased (Seq.seq (option t)) { i <= j /\ j <= length arr })
   requires pts_to_mask (gsub arr i j) #f v mask
-  returns _: squash (j - i == Seq.length v)
+  returns _: (j - i == Seq.length v)
   ensures exists* (v': Seq.seq (option t)).
     pts_to_mask arr #f v' (fun k -> i <= k /\ k < j /\ mask (k - i)) **
     pure (Seq.length v' == length arr /\ (forall (k:nat). k < j - i ==> Seq.index v k == Seq.index v' (k + i)))

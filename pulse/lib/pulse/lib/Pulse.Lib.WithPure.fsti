@@ -34,7 +34,7 @@ ghost
 fn intro_with_pure
   (p : prop)
   (v : squash p -> slprop)
-  (_ : squash p)
+  (_ : p)
   requires v ()
   ensures  with_pure p v
 
@@ -43,5 +43,5 @@ fn elim_with_pure
   (p : prop)
   (v : squash p -> slprop)
   requires with_pure p v
-  returns  _ : squash p
+  returns  _ : p
   ensures  v ()

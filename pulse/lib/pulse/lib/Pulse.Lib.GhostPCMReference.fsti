@@ -125,7 +125,7 @@ fn gather u#a
     (v1:a)
   requires pts_to r v0
   requires pts_to r v1
-  returns  squash (composable pcm v0 v1)
+  returns  (composable pcm v0 v1)
   ensures  pts_to r (op pcm v0 v1)
 
 ghost fn pts_to_not_null u#a (#a:Type u#a)

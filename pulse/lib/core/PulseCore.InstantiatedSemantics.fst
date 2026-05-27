@@ -22,7 +22,7 @@ module F = FStar.FunctionalExtensionality
 open PulseCore.IndirectionTheorySep
 
 let laws ()
-: squash (
+: (
     Sem.associative star /\
     Sem.commutative star /\
     Sem.is_unit emp star
@@ -60,7 +60,7 @@ let inv i p = inv i p
 
 let slprop_equiv p q = p == q
 
-let return_slprop_equiv (p q:slprop) (_:squash (p == q))
+let return_slprop_equiv (p q:slprop) (_:(p == q))
 : slprop_equiv p q
 = ()
 
@@ -74,7 +74,7 @@ let slprop_equiv_assoc p1 p2 p3 = ()
 let slprop_equiv_exists 
     (#a:Type)
     (p q: a -> slprop)
-    (_:squash (forall x. slprop_equiv (p x) (q x)))
+    (_:(forall x. slprop_equiv (p x) (q x)))
 = assert (F.feq p q);
   assert (F.feq (F.on_dom a p) (F.on_dom a q));
   Sep.exists_ext p q;
@@ -113,8 +113,8 @@ let conv (#a:Type u#a)
          (pre2:slprop)
          (post1:a -> slprop)
          (post2:a -> slprop)
-         (pf1:squash (slprop_equiv pre1 pre2))
-         (pf2:squash (slprop_post_equiv post1 post2))
+         (pf1:(slprop_equiv pre1 pre2))
+         (pf2:(slprop_post_equiv post1 post2))
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 = slprop_equiv_elim pre1 pre2;
   introduce forall (x:a). post1 x == post2 x
@@ -127,8 +127,8 @@ let sub (#a:Type u#a)
         (pre2:slprop)
         (#post1:a -> slprop)
         (post2:a -> slprop)
-        (pf1:squash (slprop_equiv pre1 pre2))
-        (pf2:squash (slprop_post_equiv post1 post2))
+        (pf1:(slprop_equiv pre1 pre2))
+        (pf2:(slprop_post_equiv post1 post2))
         (e:stt a pre1 post1)
 : stt a pre2 post2
 = coerce_eq (conv pre1 pre2 post1 post2 pf1 pf2) e

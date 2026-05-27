@@ -28,7 +28,7 @@ open Pulse.Checker.Pure
 module L = FStar.List.Tot
 
 
-let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b {y == x} = x
+let coerce_eq (#a #b:Type) (x:a) (_:(a == b)) : y:b {y == x} = x
 
 let rec no_repeats (l:list var) : prop =
   match l with

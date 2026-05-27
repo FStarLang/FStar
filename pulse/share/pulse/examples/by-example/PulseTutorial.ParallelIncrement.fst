@@ -519,7 +519,7 @@ fn gather (r:GPR.gref pcm) (#n1 #n2:int) (#v1 #v2:int)
   requires GPR.pts_to r (half n1, None) **
            GPR.pts_to r (None, half n2) **
            GPR.pts_to r (half v1, half v2)
-  returns _:squash (v1 == n1 /\ v2 == n2)
+  returns _:(v1 == n1 /\ v2 == n2)
   ensures GPR.pts_to r (full n1, full n2)
 
 {
