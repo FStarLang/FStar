@@ -403,7 +403,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                        Some "with_type primitive axiom",
                        "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
    in
-   let mk_has_eq_refine : env -> string -> term -> list decl = fun env has_eq _has_eq_tt ->
+   let mk_has_eq_refine : env -> string -> term -> ML (list decl) = fun env has_eq _has_eq_tt ->
       (* (assert (forall ((u Universe) (base Term) (refine (=> Term Bool)))
                          (! (iff (Prims.hasEq u base) (Prims.hasEq u (Tm_refine base refine))))
                             :pattern ((Prims.hasEq u (Tm_refine base refine)))
@@ -422,7 +422,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                        Some "has_eq_refine axiom",
                        "has_eq_refine")]
    in
-   let mk_forall_interp  : env -> string -> term -> list decl  = fun env forall_lid _ ->
+   let mk_forall_interp  : env -> string -> term -> ML (list decl) = fun env forall_lid _ ->
     let uu = mk_fv ("u", univ_sort) in
     let u = mkFreeV uu in
     let tt = mk_fv ("t", Term_sort) in
@@ -444,7 +444,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                       Some "l_forall_interp",
                       "l_forall_interp")]
    in
-   let mk_exists_interp  : env -> string -> term -> list decl  = fun env exists_lid _ ->
+   let mk_exists_interp  : env -> string -> term -> ML (list decl) = fun env exists_lid _ ->
     let uu = mk_fv ("u", univ_sort) in
     let u = mkFreeV uu in
     let tt = mk_fv ("t", Term_sort) in
@@ -480,12 +480,14 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                  (Const.imp_lid,    mk_imp_interp);
                  (Const.iff_lid,    mk_iff_interp);
                  (Const.not_lid,    mk_not_interp);
-                 (Const.forall_lid, mk_forall_interp);
-                 (Const.exists_lid, mk_exists_interp);
                  (Const.range_lid,  mk_range_interp);
                  (Const.inversion_lid,mk_inversion_axiom);
-                 (Const.haseq_lid, mk_has_eq_refine)
-                ] in
+                ] @ (
+                  if Options.Ext.enabled "higher_order_smt"
+                  then [(Const.forall_lid, mk_forall_interp);
+                        (Const.exists_lid, mk_exists_interp);
+                        (Const.haseq_lid, mk_has_eq_refine)]
+                  else []) in
     (fun (env:env) (t:lident) (s:string) (tt:term) ->
         match Option.find (fun (l, _) -> lid_equals l t) prims with
             | None -> []

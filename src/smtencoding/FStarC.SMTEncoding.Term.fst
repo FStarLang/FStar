@@ -514,7 +514,7 @@ let check_pattern_ok (t:term) : option term =
     aux t
 
 //debug output
-let rec print_smt_term (t:term) : MLstring =
+let rec print_smt_term (t:term) : ML string =
   match t.tm with
   | Integer n               -> Format.fmt1 "(Integer %s)" n
   | String s                -> Format.fmt1 "(String %s)" s
@@ -1066,8 +1066,11 @@ and mkPrelude z3options : ML string =
                 (declare-fun _rdiv (Real Real) Real)\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n\
                 (assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n\
-                (define-fun Unreachable () Bool false)\n\
-                (declare-fun Tm_refinement (Term (=> Term Bool)) Term)\n\
+                (define-fun Unreachable () Bool false)\n"
+
+  in
+  let higher_order = 
+               "(declare-fun Tm_refinement (Term (=> Term Bool)) Term)\n\
                 (assert (forall ((x Term) (base Term) (f (=> Term Bool)))
                   (! (iff (and (HasType x base) (select f x))
                           (HasType x (Tm_refinement base f)))
@@ -1152,6 +1155,7 @@ and mkPrelude z3options : ML string =
                         (= t (Tm_type (U_succ u))))\n\
                    :pattern ((HasType (Tm_type u) t)))))\n"   in
    basic
+   ^ (if Options.Ext.enabled "higher_order_smt" then higher_order else "")
    ^ bcons
    ^ precedes_partial_app
    ^ lex_ordering
