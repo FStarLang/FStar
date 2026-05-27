@@ -26,4 +26,4 @@ val def_check_scoped :
   {| hasNames thing_t |} ->
   {| pretty thing_t |} ->
   range -> string ->
-  env_t -> thing_t -> unit
+  env_t -> thing_t -> ML unit

@@ -90,7 +90,6 @@ let test_elim_exists () : unit
   returns True
   with pf_zero . assert(n = 0)
 
-open FStar.Mul
 
 [@@expect_failure [19]]
 let test_elim_forall () : unit

@@ -14,27 +14,26 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Free
-
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
-
-val names            : term -> FlatSet.t bv
-val names_comp       : comp -> FlatSet.t bv
-val names_of_binders : binders -> FlatSet.t bv
-
-val fvars            : term -> RBSet.t Ident.lident
-
-val uvars            : term -> FlatSet.t ctx_uvar
-val uvars_uncached   : term -> FlatSet.t ctx_uvar
-val uvars_full       : term -> FlatSet.t ctx_uvar
-
-val univs            : term -> FlatSet.t universe_uvar
-
-val univnames        : term -> FlatSet.t univ_name
-val univnames_comp   : comp -> FlatSet.t univ_name
 
 (* Bad place for these instances. But they cannot be instance
 Syntax.Syntax since they reference the UF graph. *)
 instance val ord_ctx_uvar  : Class.Ord.ord ctx_uvar
 instance val ord_univ_uvar : Class.Ord.ord universe_uvar
+
+val names            : term -> ML (FlatSet.t bv)
+val names_comp       : comp -> ML (FlatSet.t bv)
+val names_of_binders : binders -> ML (FlatSet.t bv)
+
+val fvars            : term -> ML (RBSet.t Ident.lident)
+
+val uvars            : term -> ML (FlatSet.t ctx_uvar)
+val uvars_uncached   : term -> ML (FlatSet.t ctx_uvar)
+val uvars_full       : term -> ML (FlatSet.t ctx_uvar)
+
+val univs            : term -> ML (FlatSet.t universe_uvar)
+
+val univnames        : term -> ML (FlatSet.t univ_name)
+val univnames_comp   : comp -> ML (FlatSet.t univ_name)

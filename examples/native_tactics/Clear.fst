@@ -17,9 +17,9 @@ module Clear
 
 open FStar.Tactics.V2
 
-assume val phi : Type
-assume val psi : Type
-assume val xi : Type u#0
+assume val phi : prop
+assume val psi : prop
+assume val xi : prop
 
 assume val p : squash xi
 

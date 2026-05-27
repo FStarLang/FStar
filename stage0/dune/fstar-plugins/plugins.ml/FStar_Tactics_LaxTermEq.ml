@@ -357,17 +357,14 @@ and pat_arg_eq :
           (Obj.magic
              (FStar_Tactics_Effect.tac_bind (Obj.magic (pat_eq p1 p2))
                 (fun uu___2 uu___3 -> Prims.op_Negation uu___2)))
-          (fun uu___2 ->
-             if uu___2
-             then fun uu___3 -> false
-             else FStar_Tactics_Effect.lift_div_tac (fun uu___4 -> b1 = b2))
+          (fun uu___2 uu___3 -> if uu___2 then false else b1 = b2)
 let lax_term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) :
   (Prims.bool, unit) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = term_eq t1 t2 ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.of_int (3))
+    "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -383,7 +380,7 @@ let lax_univ_eq (u1 : FStarC_Reflection_Types.universe)
   (Prims.bool, unit) FStar_Tactics_Effect.tac_repr= univ_eq u1 u2
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.of_int (3))
+    "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->

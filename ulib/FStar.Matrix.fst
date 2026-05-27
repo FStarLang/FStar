@@ -32,7 +32,6 @@ module SB = FStar.Seq.Base
 module SProp = FStar.Seq.Properties
 
 open FStar.IntegerIntervals   
-open FStar.Mul
 open FStar.Seq.Equiv
 
 (* 

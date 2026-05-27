@@ -63,8 +63,7 @@ let mk_pos (l : Prims.int) (c : Prims.int) : pos=
   { line = (max Prims.int_zero l); col = (max Prims.int_zero c) }
 let mk_rng (file_name1 : Prims.string) (start_pos : pos) (end_pos : pos) :
   rng=
-  let uu___ = FStarC_Filepath.basename file_name1 in
-  { file_name = uu___; start_pos; end_pos }
+  { file_name = (FStarC_Filepath.basename file_name1); start_pos; end_pos }
 let mk_range (f : Prims.string) (b : pos) (e : pos) : range=
   let r = mk_rng f b e in range_of_rng r r
 let json_of_pos (r : pos) : FStarC_Json.json=
@@ -72,22 +71,10 @@ let json_of_pos (r : pos) : FStarC_Json.json=
     [("line", (FStarC_Json.JsonInt (r.line)));
     ("col", (FStarC_Json.JsonInt (r.col)))]
 let json_of_rng (r : rng) : FStarC_Json.json=
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 = json_of_pos r.start_pos in ("start_pos", uu___3) in
-      let uu___3 =
-        let uu___4 =
-          let uu___5 = json_of_pos r.end_pos in ("end_pos", uu___5) in
-        [uu___4] in
-      uu___2 :: uu___3 in
-    ("file_name", (FStarC_Json.JsonStr (r.file_name))) :: uu___1 in
-  FStarC_Json.JsonAssoc uu___
+  FStarC_Json.JsonAssoc
+    [("file_name", (FStarC_Json.JsonStr (r.file_name)));
+    ("start_pos", (json_of_pos r.start_pos));
+    ("end_pos", (json_of_pos r.end_pos))]
 let json_of_range (r : range) : FStarC_Json.json=
-  let uu___ =
-    let uu___1 = let uu___2 = json_of_rng r.def_range in ("def", uu___2) in
-    let uu___2 =
-      let uu___3 = let uu___4 = json_of_rng r.use_range in ("use", uu___4) in
-      [uu___3] in
-    uu___1 :: uu___2 in
-  FStarC_Json.JsonAssoc uu___
+  FStarC_Json.JsonAssoc
+    [("def", (json_of_rng r.def_range)); ("use", (json_of_rng r.use_range))]

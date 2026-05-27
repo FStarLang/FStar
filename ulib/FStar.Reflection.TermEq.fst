@@ -17,23 +17,23 @@ In fact many auxiliary lemmas should be removed as they should become
 obvious. Lines marked with *** should not be needed.
 *)
 
-let rec memP_allP #a #b (top:b) (pred : (x:a{x << top}) -> Type) (x : a) (l : list a{l << top})
+let rec memP_allP #a #b (top:b) (pred : (x:a{x << top}) -> prop) (x : a) (l : list a{l << top})
   : Lemma (requires allP top pred l /\ L.memP x l)
           (ensures x << top /\ pred x)
           [SMTPat (allP top pred l); SMTPat (L.memP x l)]
   = match l with
     | [] -> ()
     | y::ys ->
-      if StrongExcludedMiddle.strong_excluded_middle (x == y) then () else memP_allP top pred x ys
+      if x == y then () else memP_allP top pred x ys
 
-let rec memP_allP0 #a (pred : a -> Type) (x : a) (l : list a)
+let rec memP_allP0 #a (pred : a -> prop) (x : a) (l : list a)
   : Lemma (requires allP0 pred l /\ L.memP x l)
           (ensures pred x)
           [SMTPat (allP0 pred l); SMTPat (L.memP x l)]
   = match l with
     | [] -> ()
     | y::ys ->
-      if StrongExcludedMiddle.strong_excluded_middle (x == y) then () else memP_allP0 pred x ys
+      if x == y then () else memP_allP0 pred x ys
 
 let rec memP_dec #a (x : a) (l : list a)
   : Lemma (requires L.memP x l)
@@ -42,7 +42,7 @@ let rec memP_dec #a (x : a) (l : list a)
   = match l with
     | [] -> ()
     | y::ys ->
-      if StrongExcludedMiddle.strong_excluded_middle (x == y) then () else memP_dec x ys
+      if x == y then () else memP_dec x ys
 
 (* FIXME: the only reason these are not exposed is to not contaminate
 the namespace for most users, especially as `Eq` is already used in

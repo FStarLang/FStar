@@ -705,18 +705,21 @@ let pop_unit (ts : mltyscheme) : (e_tag * mltyscheme)=
        | MLTY_Fun (l, eff, t) ->
            if l = ml_unit_ty
            then (eff, (vs, t))
-           else failwith "unexpected: pop_unit: domain was not unit"
-       | uu___1 -> failwith "unexpected: pop_unit: not a function type")
+           else
+             FStarC_Effect.failwith
+               "unexpected: pop_unit: domain was not unit"
+       | uu___1 ->
+           FStarC_Effect.failwith "unexpected: pop_unit: not a function type")
 let ctor' (n : Prims.string) (args : FStar_Pprint.document Prims.list) :
   FStar_Pprint.document=
-  FStar_Pprint.nest (Prims.of_int (2))
+  FStar_Pprint.nest (Prims.of_int 2)
     (FStar_Pprint.group
        (FStar_Pprint.parens
           (FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
              ((FStar_Pprint.doc_of_string n) :: args))))
 let ctor (n : Prims.string) (arg : FStar_Pprint.document) :
   FStar_Pprint.document=
-  FStar_Pprint.nest (Prims.of_int (2))
+  FStar_Pprint.nest (Prims.of_int 2)
     (FStar_Pprint.group
        (FStar_Pprint.parens
           (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string n) arg)))
@@ -734,12 +737,8 @@ let rec mlty_to_doc (t : mlty) : FStar_Pprint.document=
   | MLTY_Named (ts, p) ->
       let uu___ =
         let uu___1 = FStarC_List.map mlty_to_doc ts in
-        let uu___2 =
-          let uu___3 =
-            let uu___4 = string_of_mlpath p in
-            FStar_Pprint.doc_of_string uu___4 in
-          [uu___3] in
-        FStarC_List.op_At uu___1 uu___2 in
+        FStarC_List.op_At uu___1
+          [FStar_Pprint.doc_of_string (string_of_mlpath p)] in
       ctor' "<MLTY_Named>" uu___
   | MLTY_Tuple ts ->
       let uu___ =
@@ -768,6 +767,56 @@ let mltyscheme_to_doc (tsc : mltyscheme) : FStar_Pprint.document=
   ctor "<MLTY_Scheme>" uu___
 let mltyscheme_to_string (tsc : mltyscheme) : Prims.string=
   let uu___ = mltyscheme_to_doc tsc in FStar_Pprint.render uu___
+let meta_to_doc (m : meta) : FStar_Pprint.document=
+  match m with
+  | Mutable -> FStar_Pprint.doc_of_string "Mutable"
+  | Assumed -> FStar_Pprint.doc_of_string "Assumed"
+  | Private -> FStar_Pprint.doc_of_string "Private"
+  | NoExtract -> FStar_Pprint.doc_of_string "NoExtract"
+  | CInline -> FStar_Pprint.doc_of_string "CInline"
+  | Substitute -> FStar_Pprint.doc_of_string "Substitute"
+  | GCType -> FStar_Pprint.doc_of_string "GCType"
+  | PpxDerivingShow -> FStar_Pprint.doc_of_string "PpxDerivingShow"
+  | PpxDerivingShowConstant s ->
+      ctor' "PpxDerivingShowConstant"
+        [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | PpxDerivingYoJson -> FStar_Pprint.doc_of_string "PpxDerivingYoJson"
+  | Comment s ->
+      ctor' "Comment" [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | StackInline -> FStar_Pprint.doc_of_string "StackInline"
+  | CPrologue s ->
+      ctor' "CPrologue" [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | CEpilogue s ->
+      ctor' "CEpilogue" [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | CConst s ->
+      ctor' "CConst" [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | CCConv s ->
+      ctor' "CCConv" [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | Erased -> FStar_Pprint.doc_of_string "Erased"
+  | CAbstract -> FStar_Pprint.doc_of_string "CAbstract"
+  | CIfDef -> FStar_Pprint.doc_of_string "CIfDef"
+  | CMacro -> FStar_Pprint.doc_of_string "CMacro"
+  | Deprecated s ->
+      ctor' "Deprecated"
+        [FStar_Pprint.dquotes (FStar_Pprint.doc_of_string s)]
+  | RemoveUnusedTypeParameters (is, r) ->
+      let uu___ =
+        let uu___1 =
+          FStarC_Class_PP.pp (FStarC_Class_PP.pp_list FStarC_Class_PP.pp_int)
+            is in
+        let uu___2 =
+          let uu___3 = FStarC_Class_PP.pp FStarC_Range_Ops.pretty_range r in
+          [uu___3] in
+        uu___1 :: uu___2 in
+      ctor' "RemoveUnusedTypeParameters" uu___
+  | HasValDecl r ->
+      let uu___ =
+        let uu___1 = FStarC_Class_PP.pp FStarC_Range_Ops.pretty_range r in
+        [uu___1] in
+      ctor' "HasValDecl" uu___
+  | CNoInline -> FStar_Pprint.doc_of_string "CNoInline"
+let meta_to_string (m : meta) : Prims.string=
+  let uu___ = meta_to_doc m in FStar_Pprint.render uu___
 let pair (a : FStar_Pprint.document) (b : FStar_Pprint.document) :
   FStar_Pprint.document=
   FStar_Pprint.group
@@ -794,7 +843,7 @@ let list_to_doc (xs : 't Prims.list) (f : 't -> FStar_Pprint.document) :
              (FStar_Pprint.break_ Prims.int_one)) f xs in
       FStar_Pprint.brackets uu___2 in
     FStar_Pprint.group uu___1 in
-  FStar_Pprint.nest (Prims.of_int (2)) uu___
+  FStar_Pprint.nest (Prims.of_int 2) uu___
 let option_to_doc (x : 't FStar_Pervasives_Native.option)
   (f : 't -> FStar_Pprint.document) : FStar_Pprint.document=
   match x with
@@ -810,7 +859,7 @@ let spaced (a : FStar_Pprint.document) : FStar_Pprint.document=
     (FStar_Pprint.op_Hat_Hat a (FStar_Pprint.break_ Prims.int_one))
 let record (fs : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
   FStar_Pprint.group
-    (FStar_Pprint.nest (Prims.of_int (2))
+    (FStar_Pprint.nest (Prims.of_int 2)
        (FStar_Pprint.braces
           (spaced
              (FStar_Pprint.separate
@@ -819,7 +868,7 @@ let record (fs : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
 let fld (n : Prims.string) (v : FStar_Pprint.document) :
   FStar_Pprint.document=
   FStar_Pprint.group
-    (FStar_Pprint.nest (Prims.of_int (2))
+    (FStar_Pprint.nest (Prims.of_int 2)
        (FStar_Pprint.op_Hat_Slash_Hat
           (FStar_Pprint.doc_of_string (Prims.strcat n " =")) v))
 let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
@@ -859,10 +908,9 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
         let uu___3 = mlty_to_doc t2 in triple uu___1 uu___2 uu___3 in
       ctor "MLE_Coerce" uu___
   | MLE_CTor (p, es) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc es mlexpr_to_doc in
-      ctor2 "MLE_CTor" uu___ uu___1
+      let uu___ = list_to_doc es mlexpr_to_doc in
+      ctor2 "MLE_CTor" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLE_Seq es ->
       let uu___ = list_to_doc es mlexpr_to_doc in ctor "MLE_Seq" uu___
   | MLE_Tuple es ->
@@ -880,9 +928,8 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
       ctor2 "MLE_Record" uu___ uu___1
   | MLE_Proj (e1, p) ->
       let uu___ = mlexpr_to_doc e1 in
-      let uu___1 =
-        let uu___2 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___2 in
-      ctor2 "MLE_Proj" uu___ uu___1
+      ctor2 "MLE_Proj" uu___
+        (FStar_Pprint.doc_of_string (string_of_mlpath p))
   | MLE_If (e1, e2, e3) ->
       let uu___ =
         let uu___1 = mlexpr_to_doc e1 in
@@ -891,17 +938,15 @@ let rec mlexpr_to_doc (e : mlexpr) : FStar_Pprint.document=
         triple uu___1 uu___2 uu___3 in
       ctor "MLE_If" uu___
   | MLE_Raise (p, es) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc es mlexpr_to_doc in
-      ctor2 "MLE_Raise" uu___ uu___1
+      let uu___ = list_to_doc es mlexpr_to_doc in
+      ctor2 "MLE_Raise" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLE_Try (e1, bs) ->
       let uu___ = mlexpr_to_doc e1 in
       let uu___1 = list_to_doc bs mlbranch_to_doc in
       ctor2 "MLE_Try" uu___ uu___1
-and mlbranch_to_doc
-  (uu___ : (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr)) :
-  FStar_Pprint.document=
+and mlbranch_to_doc (b : mlbranch) : FStar_Pprint.document=
+  let uu___ = b in
   match uu___ with
   | (p, e1, e2) ->
       let uu___1 = mlpattern_to_doc p in
@@ -941,7 +986,15 @@ and mllb_to_doc (lb : mllb) : FStar_Pprint.document=
           let uu___7 =
             let uu___8 =
               let uu___9 = mlexpr_to_doc lb.mllb_def in fld "mllb_def" uu___9 in
-            [uu___8] in
+            let uu___9 =
+              let uu___10 =
+                let uu___11 =
+                  (FStarC_Class_PP.pp_list
+                     { FStarC_Class_PP.pp = meta_to_doc }).FStarC_Class_PP.pp
+                    lb.mllb_meta in
+                fld "mllb_meta" uu___11 in
+              [uu___10] in
+            uu___8 :: uu___9 in
           uu___6 :: uu___7 in
         uu___4 :: uu___5 in
       uu___2 :: uu___3 in
@@ -968,10 +1021,9 @@ and mlpattern_to_doc (mlp : mlpattern) : FStar_Pprint.document=
   | MLP_Const c -> let uu___ = mlconstant_to_doc c in ctor "MLP_Const" uu___
   | MLP_Var x -> ctor "MLP_Var" (FStar_Pprint.doc_of_string x)
   | MLP_CTor (p, ps) ->
-      let uu___ =
-        let uu___1 = string_of_mlpath p in FStar_Pprint.doc_of_string uu___1 in
-      let uu___1 = list_to_doc ps mlpattern_to_doc in
-      ctor2 "MLP_CTor" uu___ uu___1
+      let uu___ = list_to_doc ps mlpattern_to_doc in
+      ctor2 "MLP_CTor" (FStar_Pprint.doc_of_string (string_of_mlpath p))
+        uu___
   | MLP_Branch ps ->
       let uu___ = list_to_doc ps mlpattern_to_doc in ctor "MLP_Branch" uu___
   | MLP_Record (path, fields) ->
@@ -1018,7 +1070,7 @@ let mltybody_to_doc (d : mltybody) : FStar_Pprint.document=
                          pair (FStar_Pprint.doc_of_string x) uu___6) l in
               spaced uu___4 in
             FStar_Pprint.braces uu___3 in
-          FStar_Pprint.nest (Prims.of_int (2)) uu___2 in
+          FStar_Pprint.nest (Prims.of_int 2) uu___2 in
         FStar_Pprint.group uu___1 in
       ctor "MLTD_Record" uu___
   | MLTD_DType l ->
@@ -1044,7 +1096,7 @@ let mltybody_to_doc (d : mltybody) : FStar_Pprint.document=
                          pair (FStar_Pprint.doc_of_string x) uu___6) l in
               spaced uu___4 in
             FStar_Pprint.brackets uu___3 in
-          FStar_Pprint.nest (Prims.of_int (2)) uu___2 in
+          FStar_Pprint.nest (Prims.of_int 2) uu___2 in
         FStar_Pprint.group uu___1 in
       ctor "MLTD_DType" uu___
 let mltybody_to_string (d : mltybody) : Prims.string=
@@ -1121,6 +1173,10 @@ let showable_mlmodule1 : mlmodule1 FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = mlmodule1_to_string }
 let showable_mlmodulebody : mlmodulebody FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = mlmodulebody_to_string }
+let showable_mllb : mllb FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = mllb_to_string }
+let showable_meta : meta FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = meta_to_string }
 let pp_mlty : mlty FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = mlty_to_doc }
 let pp_mlconstant : mlconstant FStarC_Class_PP.pretty=
@@ -1131,3 +1187,7 @@ let pp_mlmodule1 : mlmodule1 FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = mlmodule1_to_doc }
 let pp_mlmodulebody : mlmodulebody FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = mlmodulebody_to_doc }
+let pp_mllb : mllb FStarC_Class_PP.pretty=
+  { FStarC_Class_PP.pp = mllb_to_doc }
+let pp_meta : meta FStarC_Class_PP.pretty=
+  { FStarC_Class_PP.pp = meta_to_doc }

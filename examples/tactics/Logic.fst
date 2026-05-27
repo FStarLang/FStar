@@ -21,7 +21,6 @@ let tau () : Tac unit =
     let h = implies_intro () in
     right ();
     let (h1, _) = destruct_and (binding_to_term h) in
-    apply (`FStar.Squash.return_squash);
     exact (binding_to_term h1);
     qed ()
 

@@ -3,15 +3,15 @@ module ID5
 open FStar.Ghost
 
 // The base type of WPs
-val wp0 (a : Type u#a) : Type u#(max 1 a)
-let wp0 a = (a -> Type0) -> Type0
+val wp0 (a : Type u#a) : Type u#a
+let wp0 a = (a -> prop) -> prop
 
-val wp (a : Type u#a) : Type u#(max 1 a)
+val wp (a : Type u#a) : Type u#a
 let wp a = pure_wp a
 
-let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
+let repr (a : Type u#aa) (w : wp a) : Type u#aa =
   // Hmmm, the explicit post bumps the universe level
-  p:erased (a -> Type0) -> squash (w p) -> v:a{reveal p v}
+  p:erased (a -> prop) -> squash (w p) -> v:a{reveal p v}
 
 open FStar.Monotonic.Pure
 
@@ -54,14 +54,14 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 //let subcomp (a b:Type u#uu) (w1:wp a) (w2: wp b)
 //    (f : repr a w1)
 //: Pure (repr b w2)
-//       (requires a `subtype_of` b /\ (forall (p:b->Type0). w2 p ==> w1 (fun x -> p x)))
+//       (requires a `subtype_of` b /\ (forall (p:b->prop). w2 p ==> w1 (fun x -> p x)))
 //       (ensures fun _ -> True)
 //= fun p pf -> f (hide (fun x -> reveal p x)) ()
 
 unfold
 let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
   elim_pure_wp_monotonicity_forall u#a ();
-  (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
+  (as_pure_wp (fun (p:a -> prop) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
@@ -71,29 +71,29 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 = repr a  wp
 
 unfold
-let strengthen_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
+let strengthen_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
   elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun post -> p /\ w post)
 
-let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
+let strengthen #a #w (p:prop) (f : squash p -> repr a w) : repr a (strengthen_wp w p) =
   fun post _ -> f () post ()
 
 unfold
-let weaken_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
+let weaken_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
   elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun post -> p ==> w post)
 
-let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (weaken_wp w p))
+let weaken #a #w (p:prop) (f : repr a w) : Pure (repr a (weaken_wp w p))
                                                  (requires p)
                                                  (ensures (fun _ -> True))
   = fun post _ -> f post ()
 
 unfold
-let cut_wp (#a:Type u#a) (w:wp a) (p:Type0) : wp a =
+let cut_wp (#a:Type u#a) (w:wp a) (p:prop) : wp a =
   elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun post -> p /\ (p ==> w post))
 
-let cut #a #w (p:Type0) (f : repr a w) : repr a (cut_wp w p) =
+let cut #a #w (p:prop) (f : repr a w) : repr a (cut_wp w p) =
   strengthen p (fun _ -> weaken p f)
   
 
@@ -110,7 +110,7 @@ effect {
   with {repr; return; bind; subcomp; if_then_else}
 }
 
-effect Id (a:Type) (pre:Type0) (post:a->Type0) =
+effect Id (a:Type) (pre:prop) (post:a->prop) =
         ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
@@ -133,10 +133,10 @@ let incorrect_apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun 
 [@@expect_failure]
 let another_one (n:int) (f:(x:int -> Id int (x > 0) (fun _ -> True))) : Id int True (fun _ -> True) = f n
 
-let iassert (q:Type0) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
+let iassert (q:prop) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
 
 assume
-val iassume (q:Type0) : ID unit (as_pure_wp (fun p -> q ==> p ()))
+val iassume (q:prop) : ID unit (as_pure_wp (fun p -> q ==> p ()))
 
 (* Checking that it's kind of usable *)
 
@@ -208,11 +208,13 @@ let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
   then 0
   else 1 + idiv (a-b) b
 
+#push-options "--admit_smt_queries true"
 let rec ack (m n : nat) : I nat =
   match m, n with
   | 0, n -> n+1
   | m, 0 -> ack (m-1) 1
   | m, n -> ack (m-1) (ack m (n-1))
+#pop-options
 
 let add1 (x:int) : Id int (requires (x > 0)) (ensures (fun r -> r == x+1)) = x + 1
 

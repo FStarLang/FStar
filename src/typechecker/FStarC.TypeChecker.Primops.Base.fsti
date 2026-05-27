@@ -10,17 +10,17 @@ module NBE = FStarC.TypeChecker.NBETerm
 
 type psc = {
      psc_range : FStarC.Range.t;
-     psc_subst : unit -> subst_t // potentially expensive, so thunked
+     psc_subst : unit -> ML subst_t // potentially expensive, so thunked
 }
 
 val null_psc : psc
 val psc_range : psc -> FStarC.Range.t
-val psc_subst : psc -> subst_t
+val psc_subst : psc -> ML subst_t
 
 type interp_t =
-    psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> option term
+    psc -> FStarC.Syntax.Embeddings.norm_cb -> universes -> args -> ML (option term)
 type nbe_interp_t =
-    NBE.nbe_cbs -> universes -> NBE.args -> option NBE.t
+    NBE.nbe_cbs -> universes -> NBE.args -> ML (option NBE.t)
 
 type primitive_step = {
     name:FStarC.Ident.lid;
@@ -40,8 +40,8 @@ val as_primitive_step_nbecbs
      : (Ident.lident & int & int & interp_t & nbe_interp_t) -> primitive_step
 
 (* Some helpers for the NBE. Does not really belong in this module. *)
-val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> term
-val try_unembed_simple: {| EMB.embedding 'a |} -> term -> option 'a
+val embed_simple: {| EMB.embedding 'a |} -> Range.t -> 'a -> ML term
+val try_unembed_simple: {| EMB.embedding 'a |} -> term -> ML (option 'a)
 
 val mk_interp1 #a #r
   {| EMB.embedding a |}
@@ -161,8 +161,8 @@ val mk1' #a #r #na #nr
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> option r)
-  (f : na -> option nr)
+  (f : a -> ML (option r))
+  (f : na -> ML (option nr))
   : primitive_step
 
 val mk1_psc' #a #r #na #nr
@@ -170,8 +170,8 @@ val mk1_psc' #a #r #na #nr
   (name : Ident.lid)
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : psc -> a -> option r)
-  (f : psc -> na -> option nr)
+  (f : psc -> a -> ML (option r))
+  (f : psc -> na -> ML (option nr))
   : primitive_step
 
 val mk2' #a #b #r #na #nb #nr
@@ -180,8 +180,8 @@ val mk2' #a #b #r #na #nb #nr
   {| EMB.embedding a |} {| NBE.embedding na |}
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> option r)
-  (f : na -> nb -> option nr)
+  (f : a -> b -> ML (option r))
+  (f : na -> nb -> ML (option nr))
   : primitive_step
 
 val mk3' #a #b #c #r #na #nb #nc #nr
@@ -191,8 +191,8 @@ val mk3' #a #b #c #r #na #nb #nc #nr
   {| EMB.embedding b |} {| NBE.embedding nb |}
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> option r)
-  (f : na -> nb -> nc -> option nr)
+  (f : a -> b -> c -> ML (option r))
+  (f : na -> nb -> nc -> ML (option nr))
   : primitive_step
 
 val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
@@ -203,8 +203,8 @@ val mk4' #a #b #c #d #r #na #nb #nc #nd #nr
   {| EMB.embedding c |} {| NBE.embedding nc |}
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> d -> option r)
-  (f : na -> nb -> nc -> nd -> option nr)
+  (f : a -> b -> c -> d -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ML (option nr))
   : primitive_step
 
 
@@ -217,8 +217,8 @@ val mk5' #a #b #c #d #e #r #na #nb #nc #nd #ne #nr
   {| EMB.embedding d |} {| NBE.embedding nd |}
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> d -> e -> option r)
-  (f : na -> nb -> nc -> nd -> ne -> option nr)
+  (f : a -> b -> c -> d -> e -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ne -> ML (option nr))
   : primitive_step
 
 val mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
@@ -231,6 +231,6 @@ val mk6' #a #b #c #d #e #f #r #na #nb #nc #nd #ne #nf #nr
   {| EMB.embedding e |} {| NBE.embedding ne |}
   {| EMB.embedding f |} {| NBE.embedding nf |}
   {| EMB.embedding r |} {| NBE.embedding nr |}
-  (f : a -> b -> c -> d -> e -> f -> option r)
-  (f : na -> nb -> nc -> nd -> ne -> nf -> option nr)
+  (f : a -> b -> c -> d -> e -> f -> ML (option r))
+  (f : na -> nb -> nc -> nd -> ne -> nf -> ML (option nr))
   : primitive_step

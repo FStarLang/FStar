@@ -18,7 +18,6 @@ module FStar.Int32
 (**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.Int
-open FStar.Mul
 
 #set-options "--fuel 0 --ifuel 0"
 
@@ -69,6 +68,10 @@ let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 let shift_arithmetic_right a s = Mk (shift_arithmetic_right (v a) (UInt32.v s))
+
+let rotate_right a s = Mk (rotate_right (v a) (UInt32.v s))
+
+let rotate_left a s = Mk (rotate_left (v a) (UInt32.v s))
 
 let to_string _ = admit ()
 

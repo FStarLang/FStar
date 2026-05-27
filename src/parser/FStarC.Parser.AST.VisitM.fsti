@@ -1,5 +1,4 @@
 module FStarC.Parser.AST.VisitM
-
 open FStarC
 open FStarC.Effect
 open FStarC.Parser.AST
@@ -15,7 +14,7 @@ The one non-uniformity is the `with_binder` field that allows users to write
 scoping-aware visitors. Not sure how this could be determined in a general way
 if this visitor was derived. *)
 
-type endo (m : Type -> Type) a = a -> m a
+type endo (m : Type -> Type) a = a -> ML (m a)
 
 (* I'm writing this in a very uniform style. Every type in the
 recursive group gets a configurable visitor function. *)
@@ -39,10 +38,10 @@ type dict (m : Type -> Type) = {
 
 val nops #m {| monad m |} : dict m
 
-val tie #m {| monad m |} (pre post : dict m) : dict m
+val tie #m {| monad m |} (pre post : dict m) : ML (dict m)
 
 (* bottom up *)
-val tie_bu #m {| monad m |} (d : dict m) : dict m
+val tie_bu #m {| monad m |} (d : dict m) : ML (dict m)
 
 (* top down *)
-val tie_td #m {| monad m |} (d : dict m) : dict m
+val tie_td #m {| monad m |} (d : dict m) : ML (dict m)

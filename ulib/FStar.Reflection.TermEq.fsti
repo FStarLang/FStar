@@ -5,28 +5,28 @@ open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
 
 (* Auxiliary... would be good to move. *)
-let rec allP0 #a (pred : a -> Type0) (l : list a) : Type0 =
+let rec allP0 #a (pred : a -> prop) (l : list a) : prop =
   match l with
   | [] -> True
   | x::xs -> pred x /\ allP0 pred xs
 
-let rec allP #a #b (top:b) (pred : (x:a{x << top}) -> Type0) (l : list a{l << top \/ l === top}) : Type0 =
+let rec allP #a #b (top:b) (pred : (x:a{x << top}) -> prop) (l : list a{l << top \/ l === top}) : prop =
   match l with
   | [] -> True
   | x::xs -> pred x /\ allP top pred xs
 
-let optP0 #a (pred : a -> Type0) (o : option a) : Type0 =
+let optP0 #a (pred : a -> prop) (o : option a) : prop =
   match o with
   | None -> True
   | Some x -> pred x
 
-let optP #a #b (top:b) (pred : (x:a{x << top}) -> Type0) (o : option a{o << top}) : Type0 =
+let optP #a #b (top:b) (pred : (x:a{x << top}) -> prop) (o : option a{o << top}) : prop =
   match o with
   | None -> True
   | Some x -> pred x
 (* /Aux *)
 
-let rec faithful_univ (u : universe) : Type0 =
+let rec faithful_univ (u : universe) : prop =
   match inspect_universe u with
   | Uv_Unif _ -> False (* We just forbid this *)
 
@@ -39,9 +39,9 @@ let rec faithful_univ (u : universe) : Type0 =
   | Uv_Max us -> allP u faithful_univ us
 
 (* Just a placeholder for now *)
-let faithful_const (c:vconst) : Type0 = True
+let faithful_const (c:vconst) : prop = True
 
-let rec faithful (t:term) : Type0 =
+let rec faithful (t:term) : prop =
   match inspect_ln t with
   | Tv_Var _
   | Tv_BVar _
@@ -90,26 +90,26 @@ let rec faithful (t:term) : Type0 =
      /\ faithful_comp c
      /\ optP t faithful tacopt
 
-and faithful_arg (a : argv) : Type0 =
+and faithful_arg (a : argv) : prop =
   faithful (fst a) /\ faithful_qual (snd a)
 
-and faithful_qual (q:aqualv) : Type0 =
+and faithful_qual (q:aqualv) : prop =
   match q with
   | Q_Implicit -> True
   | Q_Explicit -> True
   | Q_Equality -> True
   | Q_Meta m -> faithful m
 
-and faithful_binder (b:binder) : Type0 =
+and faithful_binder (b:binder) : prop =
   match inspect_binder b with
   | {sort=sort; qual=q; attrs=attrs} ->
     faithful sort /\ faithful_qual q /\ faithful_attrs attrs
 
-and faithful_branch (b : branch) : Type0 =
+and faithful_branch (b : branch) : prop =
   let (p, t) = b in
   faithful_pattern p /\ faithful t
 
-and faithful_pattern (p : pattern) : Type0 =
+and faithful_pattern (p : pattern) : prop =
   match p with
   | Pat_Constant c -> faithful_const c
   | Pat_Cons head univs subpats ->
@@ -121,10 +121,10 @@ and faithful_pattern (p : pattern) : Type0 =
   | Pat_Dot_Term None -> True
   | Pat_Dot_Term (Some t) -> faithful t
 
-and faithful_pattern_arg (pb : pattern & bool) : Type0 =
+and faithful_pattern_arg (pb : pattern & bool) : prop =
   faithful_pattern (fst pb)
 
-and faithful_attrs ats : Type0 =
+and faithful_attrs ats : prop =
   allP ats faithful ats
 
 and faithful_comp c =

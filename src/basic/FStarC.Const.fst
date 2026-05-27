@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@ module FStarC.Const
 open FStarC.Effect
 
 open FStar.Char
-open FStar.Mul
 
 let eq_const c1 c2 =
     match c1, c2 with

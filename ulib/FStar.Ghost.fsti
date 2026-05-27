@@ -108,7 +108,7 @@ let elift3
   return (f a b c)
 
 (** Pushing a refinement type under the [erased] constructor *)
-let push_refinement #a (#p: (a -> Type0)) (r: erased a {p (reveal r)})
+let push_refinement #a (#p: (a -> prop)) (r: erased a {p (reveal r)})
     : erased (x: a{p x /\ x == reveal r}) =
   let x:(x: a{p x}) = reveal r in
   return x
@@ -117,7 +117,7 @@ let push_refinement #a (#p: (a -> Type0)) (r: erased a {p (reveal r)})
 irreducible
 let elift1_p
       (#a #b: Type)
-      (#p: (a -> Type))
+      (#p: (a -> prop))
       ($f: (x: a{p x} -> GTot b))
       (r: erased a {p (reveal r)})
     : Tot (z: erased b {reveal z == f (reveal r)}) =
@@ -129,7 +129,7 @@ let elift1_p
 irreducible
 let elift2_p
       (#a #b #c: Type)
-      (#p: (a -> b -> Type))
+      (#p: (a -> b -> prop))
       ($f: (xa: a -> xb: b{p xa xb} -> GTot c))
       (ra: erased a)
       (rb: erased b {p (reveal ra) (reveal rb)})
@@ -143,8 +143,8 @@ let elift2_p
 irreducible
 let elift1_pq
       (#a #b: Type)
-      (#p: (a -> Type))
-      (#q: (x: a{p x} -> b -> Type))
+      (#p: (a -> prop))
+      (#q: (x: a{p x} -> b -> prop))
       ($f: (x: a{p x} -> GTot (y: b{q x y})))
       (r: erased a {p (reveal r)})
     : Tot (z: erased b {reveal z == f (reveal r)}) =
@@ -157,8 +157,8 @@ let elift1_pq
 irreducible
 let elift2_pq
       (#a #b #c: Type)
-      (#p: (a -> b -> Type))
-      (#q: (x: a -> y: b{p x y} -> c -> Type))
+      (#p: (a -> b -> prop))
+      (#q: (x: a -> y: b{p x y} -> c -> prop))
       ($f: (x: a -> y: b{p x y} -> GTot (z: c{q x y z})))
       (ra: erased a)
       (rb: erased b {p (reveal ra) (reveal rb)})

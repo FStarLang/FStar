@@ -1569,7 +1569,7 @@ let steps =
     zeta;
     delta_attr [`%canon_attr];
     delta_only [
-      `%FStar.Mul.op_Star;                        // For integer ring
+      `%Prims.op_Star;                            // For integer ring
       `%FStar.Algebra.CommMonoid.int_plus_cm;     // For integer ring
       `%FStar.Algebra.CommMonoid.int_multiply_cm; // For integer ring
       `%FStar.Algebra.CommMonoid.CM?.mult;
@@ -1688,7 +1688,7 @@ let canon_semiring_aux
       trefl ()
     | _ -> fail "Unexpected"
     end
-  | _ -> fail "Goal should be an equality")
+  | _ -> fail ("Goal should be an equality: " ^ term_to_string g))
 
 let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
   canon_semiring_aux a

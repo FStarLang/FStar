@@ -16,35 +16,18 @@
 module EExists
 
 open FStar.Tactics.V2
-open FStar.Classical
-open FStar.Squash
+open FStar.Reflection.Const
 
 let pack_fv' (n:name) : Tac term = pack (Tv_FVar (pack_fv n))
 
-let eexists (a:Type) (t:unit -> Tac a) : Tac a =
-  apply_lemma (`exists_intro); later(); norm[];
-  fst (divide (ngoals()-1) t dismiss)
-
+// Test existential introduction using `witness` tactic
 let f1 =
   assert (exists x. x == 42 ==> x + 1 == 43)
-      by (eexists unit (fun _ ->
+      by (witness (`42);
           let b = implies_intro() in
-          let _ = tcut (mk_e_app (pack_fv' squash_qn) [b.sort]) in
-          flip();
-          trefl();
-          norm [primops]; trefl()))
+          norm [primops]; trefl())
 
-// inlining this tactic below causes the end of the world
-let foo () : Tac unit =
-            eexists unit (fun _ ->
-            let b = implies_intro() in
-            (match term_as_formula' b.sort with
-            | Comp (Eq (Some t)) x y ->
-              (match inspect x, inspect y with
-              | Tv_Uvar _ _, _ | _, Tv_Uvar _ _ ->
-                if unify x y then (norm [primops]; trefl())
-                             else fail "unexpected1"
-              | _, _ -> fail "unexpected2")
-            | _ -> fail "unexpected3"))
-
-let f2 = assert (exists x. x == 42 ==> x + 1 == 43) by foo ()
+let f2 = assert (exists x. x == 42 ==> x + 1 == 43)
+      by (witness (`42);
+          let b = implies_intro() in
+          norm [primops]; trefl())

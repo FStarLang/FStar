@@ -26,7 +26,7 @@ let ( &= ) (#a:Type) (x:a) (y:a) :
   = fun () -> y
 
 (** Combinator used to discharge equalities with SMT/lemmas*)
-let ( &| ) #a #req (#ens : (_:a{req}) -> GTot Type0) ($f:(unit -> Pure a req ens))
+let ( &| ) #a #req (#ens : (_:a{req}) -> GTot prop) ($f:(unit -> Pure a req ens))
             (proof:unit -> Lemma req)
     : Tot (x:a{req /\ ens x})
   = proof (); f ()
@@ -38,8 +38,8 @@ private let rw_and_try (proof : unit -> Tac unit) () : Tac unit =
 
 #reset-options "--no_tactics"
 (** Combinator used to discharge equalities with tactics*)
-let ( &|| ) #a (#req : Type0) (#ens : (_:a{req}) -> GTot Type0) ($f:(unit -> Pure a req ens))
-      (proof: (unit -> Tac unit){with_tactic (rw_and_try proof) (squash req)})
+let ( &|| ) #a (#req : prop) (#ens : (_:a{req}) -> GTot prop) ($f:(unit -> Pure a req ens))
+      (proof: (unit -> Tac unit){with_tactic (rw_and_try proof) req})
         : Tot (x:a{req /\ ens x}) =
             f ()
         //this is weird, but the sequencing "encourages" the

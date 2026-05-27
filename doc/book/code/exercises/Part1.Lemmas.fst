@@ -1,5 +1,4 @@
 module Part1.Lemmas
-open FStar.Mul
 
 let rec factorial (n:nat)
   : nat

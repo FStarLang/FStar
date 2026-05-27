@@ -6,9 +6,9 @@ let rec mk_nary_function (dom codom: Type) (n: nat) : Type =
 
 let test0 : mk_nary_function int int 1 = fun (x: int) -> x
 
-let test1 : normalize (mk_nary_function int int 1) = fun (x: int) -> x
+let test1 : normalize_term (mk_nary_function int int 1) = fun (x: int) -> x
 
 let t n = if n = 0 then int -> int else string -> string
 let test2 : t 0 = fun (x: int) -> x
 
-let test3 : normalize (t 0) = fun (x: int) -> x
+let test3 : normalize_term (t 0) = fun (x: int) -> x

@@ -1,0 +1,3 @@
+module InterleaveDupException
+
+exception MyExn

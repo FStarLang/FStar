@@ -19,21 +19,17 @@ open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Math.Lemmas
 open FStar.Math.Lib
-open FStar.Mul
 open Calc
 open X64.Vale.State_i   // needed for mem
 open X64.Poly1305.Bitvectors_i
 
 (*
-open FStar.Mul
 open FStar.UInt
 open Semantics
 lemma_BitwiseAdd64()
 lemma_BitwiseMul64()
 *)
 
-
-// private unfold let op_Star = op_Multiply
 
 // GM 2024-07-17: this file is rather particular with options. It had
 // #reset-options pragmas everywher, but no real explanations. I've changed

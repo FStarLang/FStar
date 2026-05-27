@@ -1,0 +1,6 @@
+open Prims
+let test (x : Prims.bool) : Prims.int=
+  match x with
+  | true when false -> Prims.of_int 10
+  | uu___ -> Prims.of_int 20
+let x : Prims.int= test true

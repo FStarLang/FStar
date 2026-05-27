@@ -1,13 +1,12 @@
 open Prims
 let shellescape (s : Prims.string) : Prims.string=
-  let uu___ =
-    let uu___1 = FStarC_String.list_of_string s in
-    FStarC_List.map
-      (fun uu___2 ->
-         match uu___2 with
-         | 39 -> "'\"'\"'"
-         | c -> FStarC_String.make Prims.int_one c) uu___1 in
-  FStarC_String.concat "" uu___
+  FStarC_String.concat ""
+    (FStar_List_Tot_Base.map
+       (fun uu___ ->
+          match uu___ with
+          | 39 -> "'\"'\"'"
+          | c -> FStar_String.make Prims.int_one c)
+       (FStarC_String.list_of_string s))
 let new_ocamlpath (uu___ : unit) : Prims.string=
   let ocamldir = FStarC_Find.locate_ocaml () in
   let old_ocamlpath =

@@ -22,4 +22,4 @@ open FStarC.Syntax.Syntax
 
 val extract_as_lid : lid
 
-val is_extract_as_attr (attr: attribute) : option term
+val is_extract_as_attr (attr: attribute) : ML (option term)

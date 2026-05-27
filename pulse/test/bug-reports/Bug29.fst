@@ -1,0 +1,76 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Bug29
+#lang-pulse
+open Pulse.Lib.Pervasives
+module R = Pulse.Lib.Reference
+
+
+fn test_assert (x y: R.ref int) (#v:erased int)
+requires 
+    R.pts_to x v **
+    R.pts_to y v
+ensures
+    R.pts_to x v **
+    R.pts_to y v 
+{
+  assert_ (R.pts_to x v);
+  ()
+}
+
+
+
+
+fn test_assert2 (x y: R.ref int) (#v:erased int)
+requires 
+    R.pts_to x v **
+    R.pts_to y v
+ensures
+    R.pts_to x v **
+    R.pts_to y v 
+{
+  assert_ (R.pts_to x v ** R.pts_to y v);
+  ()
+}
+
+
+[@@expect_failure]
+
+fn test_assert_with_duplicates(r: ref nat)
+    preserves exists* v. pts_to r v
+{
+    with v. assert (pts_to r v ** pts_to r v);
+    ()
+}
+
+
+
+
+fn test_with_assert_pure(r: R.ref nat)
+    preserves R.pts_to r 5
+{
+    with v. assert (R.pts_to r v ** pure (v = 5));
+    ()
+}
+
+
+
+fn trivial (x:unit)
+{
+  assert (pure (5 == 5));
+  ()
+}

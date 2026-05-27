@@ -1,5 +1,4 @@
 module Bug2069
-module WF = FStar.WellFounded
 
 
 let id (a : Type u#aa) (x:a) : a = x

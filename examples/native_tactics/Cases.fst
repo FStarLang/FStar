@@ -18,11 +18,10 @@ module Cases
 (* *)
 
 open FStar.Tactics.V2
-open FStar.Mul
 
-assume val p : Type0
-assume val q : Type0
-assume val r : Type0
+assume val p : prop
+assume val q : prop
+assume val r : prop
 
 assume val f : unit -> Lemma (p ==> r)
 assume val g : unit -> Lemma (q ==> r)

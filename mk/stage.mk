@@ -28,9 +28,6 @@ else
 DUNE=dune
 endif
 
-fstarc-bare: _force
-	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) fstarc-bare
-
 tests: _force
 	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) tests
 

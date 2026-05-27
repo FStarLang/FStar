@@ -1,7 +1,21 @@
 * Info at QuickTest.fst(131,2-134,34):
   - Expected failure:
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (va_s0 : QuickTest.vale_state)
+  - VC =
+      forall (ok: Prims.bool).
+        (forall (p: (_: Prims.unit -> Prims.GTot Prims.prop)).
+            (forall (u179: Prims.unit). {:pattern Prims.guard_free (p u179)}
+                p ()) ==>
+            FStar.Range.labeled (FStar.Sealed.seal QuickTest(1,2-3,4))
+              ""
+              (QuickTest.f 4 - QuickTest.f 4 == 0 /\ QuickTest.f 4 == 0 /\
+                (forall (pure_result: Prims.unit).
+                    (forall (i: Prims.int). {:pattern QuickTest.f i}
+                        QuickTest.f i > 0) ==>
+                    p pure_result)))
+        <:
+        Prims.prop
   - Also see: QuickTest(1,2-3,4)
   - Other related locations: QuickTest.fst(116,12-116,20)
 

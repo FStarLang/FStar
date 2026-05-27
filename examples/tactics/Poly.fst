@@ -16,7 +16,6 @@
 module Poly
 
 open FStar.Tactics.CanonCommSemiring
-open FStar.Mul
 
 #set-options "--no_smt --tactics_info"
 

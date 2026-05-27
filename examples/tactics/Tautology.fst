@@ -26,18 +26,21 @@ let rec tauto (): Tac unit =
     P.gpm (fun (g: P.pm_goal (squash True)) ->
       trivial ()
     );
-    P.gpm (fun (a b: Type0) (g: P.pm_goal (squash (a /\ b))) ->
+    P.gpm (fun (a b: prop) (g: P.pm_goal (squash (a /\ b))) ->
       split ()
     );
-    P.gpm (fun (a b: Type0) (g: P.pm_goal (squash (a \/ b))) ->
+    P.gpm (fun (a b: prop) (g: P.pm_goal (squash (a \/ b))) ->
       (fun () -> left (); tauto ()) `or_else`
       (fun () -> right (); tauto ())
     );
-    P.gpm (fun (a b: Type0) (g: P.pm_goal (squash (a ==> b))) ->
+    P.gpm (fun (a b: prop) (g: P.pm_goal (squash (a ==> b))) ->
       P.implies_intro' ()
     );
-    P.gpm (fun (a: Type0) (h: P.hyp a) (g: P.pm_goal (squash a)) ->
+    P.gpm (fun (a: prop) (h: P.hyp a) (g: P.pm_goal (squash a)) ->
       P.exact_hyp a (binding_to_namedv h)
+    );
+    P.gpm (fun (a: prop) (h: P.hyp (squash a)) (g: P.pm_goal (squash a)) ->
+      P.exact_hyp' (binding_to_namedv h)
     );
     P.gpm (fun (a: Type0) (h: P.hyp a) (g: P.pm_goal a) ->
       P.exact_hyp' (binding_to_namedv h)
@@ -48,8 +51,7 @@ let rec tauto (): Tac unit =
 assume val p: prop
 
 // This one exercises matching on squash p
-let _ =
-  assume p;
+let ex1 (h: squash p) =
   assert p by tauto ()
 
 // This one exercises matching on p (without the squash)

@@ -441,7 +441,7 @@ val lemma_list_seq_bij: #a:Type -> l:list a -> Lemma
   (requires (True))
   (ensures  (seq_to_list (seq_of_list l) == l))
 
-unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot Type0 =
+unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : prop =
   normalize (L.length l = length s) /\ seq_to_list s == l /\ seq_of_list l == s
 
 let createL (#a:Type0) (l:list a)
@@ -462,7 +462,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
 [@@ remove_unused_type_parameters [0; 1; 2]]
-val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
+val contains (#a:Type) (s:seq a) (x:a) : Tot prop
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
@@ -659,7 +659,7 @@ let rec explode_and (#a: Type)
   (i: nat)
   (s: seq a { i <= length s })
   (l: list a { List.Tot.length l + i = length s }):
-  Tot Type
+  Tot prop
   (decreases (List.Tot.length l))
 = match l with
   | [] -> True

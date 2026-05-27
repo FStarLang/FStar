@@ -16,7 +16,7 @@
 module Bug363
 
 assume new type tt
-assume new type good : nat -> Type
+assume new type good : nat -> prop
 type tpar (ps:nat) = m:tt{good ps}
 
 val pstep: ps':nat -> pi:(tpar ps' & unit) -> Tot (tpar ps')

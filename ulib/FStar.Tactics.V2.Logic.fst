@@ -76,12 +76,8 @@ let l_intro () = forall_intro `or_else` implies_intro
 (** Repeated [l]. *)
 let l_intros () = repeat l_intro
 
-let squash_intro () : Tac unit =
-    apply (`FStar.Squash.return_squash)
-
 let l_exact (t:term) =
-    try exact t with
-    | _ -> (squash_intro (); exact t)
+    exact t
 
 // FIXME: should this take a binding? It's less general...
 // but usually what we want. Coercions could help.
@@ -165,24 +161,6 @@ let rec unfold_definition_and_simplify_eq (tm:term) : Tac unit =
             clear_top ();
             visit (fun () -> unfold_definition_and_simplify_eq tm)
         end
-
-(** A tactic to unsquash a hypothesis. Perhaps you are looking
-for [unsquash_term].
-
-Pre:
-  goal =
-    G |- e : squash s
-    t : squash r
-
-Post:
-    G, x:r |- e : squash s
-    `x` is returned as a term
-*)
-let unsquash (t : term) : Tac term =
-    let v = `vbind in
-    apply_lemma (mk_e_app v [t]);
-    let b = intro () in
-    pack (Tv_Var b)
 
 let cases_or (o:term) : Tac unit =
     apply_lemma (mk_e_app (`or_ind) [o])

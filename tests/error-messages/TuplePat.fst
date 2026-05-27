@@ -1,6 +1,5 @@
 module TuplePat
 
-open FStar.Mul
 
 let mult x y =
   match x, y with

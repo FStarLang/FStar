@@ -17,6 +17,23 @@
         "type": "indirect"
       }
     },
+    "karamel-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1774904518,
+        "narHash": "sha256-bwooU4bmESYnUA+O43r0yJsIHWFSz5AGEbz/7F5h/+A=",
+        "owner": "FStarLang",
+        "repo": "karamel",
+        "rev": "7bdb6cb2fd7661f4a0dade9ccae810451cb51746",
+        "type": "github"
+      },
+      "original": {
+        "owner": "FStarLang",
+        "ref": "fstar2",
+        "repo": "karamel",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1759381078,
@@ -35,6 +52,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "karamel-src": "karamel-src",
         "nixpkgs": "nixpkgs"
       }
     },

@@ -15,7 +15,7 @@ let namedv_to_string (x : FStarC_Reflection_Types.namedv) :
     namedv_view_to_string x1 ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.namedv_to_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.namedv_to_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -76,7 +76,7 @@ let rec universe_to_ast_string (u : FStar_Tactics_NamedView.universe) :
     | FStar_Tactics_NamedView.Uv_Unk -> "Uv_Unk"
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.universe_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.universe_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -93,7 +93,7 @@ let universes_to_ast_string (us : FStarC_Reflection_V2_Data.universes) :
   print_list universe_to_ast_string us
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.universes_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.universes_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -343,7 +343,7 @@ and const_to_ast_string (uu___ : FStarC_Reflection_V2_Data.vconst) :
     uu___
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.term_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.term_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -357,7 +357,7 @@ let _ =
                args)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.match_returns_to_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.match_returns_to_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -380,7 +380,7 @@ let _ =
                args)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.branches_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.branches_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -397,7 +397,7 @@ let _ =
                args)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.branch_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.branch_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -413,7 +413,7 @@ let _ =
                args)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.comp_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.comp_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -427,7 +427,7 @@ let _ =
                args)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Print.const_to_ast_string" (Prims.of_int (2))
+    "FStar.Tactics.Print.const_to_ast_string" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

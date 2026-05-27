@@ -15,7 +15,7 @@
 *)
 module Bug543
 
-type range = r:(int * int) { fst r <= snd r }
+type range = r:(int & int) { fst r <= snd r }
 type wider (r1:range) (r2:range) = fst r1 <= fst r2 /\ snd r2 <= snd r1
 type within (n:int) (r:range) = fst r <= n /\ n <= snd r
 type rint (r:range) = n:int {fst r <= n /\ n <= snd r}

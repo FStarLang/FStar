@@ -16,7 +16,6 @@ let fstar_ns_lid : FStarC_Ident.lident= p2l ["FStar"]
 let bool_lid : FStarC_Ident.lident= pconst "bool"
 let unit_lid : FStarC_Ident.lident= pconst "unit"
 let squash_lid : FStarC_Ident.lident= pconst "squash"
-let auto_squash_lid : FStarC_Ident.lident= pconst "auto_squash"
 let string_lid : FStarC_Ident.lident= pconst "string"
 let bytes_lid : FStarC_Ident.lident= pconst "bytes"
 let int_lid : FStarC_Ident.lident= pconst "int"
@@ -61,7 +60,6 @@ let real_lid : FStarC_Ident.lident= p2l ["FStar"; "Real"; "real"]
 let float_lid : FStarC_Ident.lident= p2l ["FStar"; "Float"; "float"]
 let char_lid : FStarC_Ident.lident= p2l ["FStar"; "Char"; "char"]
 let heap_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "heap"]
-let logical_lid : FStarC_Ident.lident= pconst "logical"
 let prop_lid : FStarC_Ident.lident= pconst "prop"
 let smt_theory_symbol_attr_lid : FStarC_Ident.lident=
   pconst "smt_theory_symbol"
@@ -77,6 +75,7 @@ let exists_lid : FStarC_Ident.lident= pconst "l_Exists"
 let forall_lid : FStarC_Ident.lident= pconst "l_Forall"
 let haseq_lid : FStarC_Ident.lident= pconst "hasEq"
 let b2t_lid : FStarC_Ident.lident= pconst "b2t"
+let t2b_lid : FStarC_Ident.lident= pconst "t2b"
 let admit_lid : FStarC_Ident.lident= pconst "admit"
 let magic_lid : FStarC_Ident.lident= pconst "magic"
 let has_type_lid : FStarC_Ident.lident= pconst "has_type"
@@ -146,13 +145,12 @@ let op_GTE : FStarC_Ident.lident= pconst "op_GreaterThanOrEqual"
 let op_Subtraction : FStarC_Ident.lident= pconst "op_Subtraction"
 let op_Minus : FStarC_Ident.lident= pconst "op_Minus"
 let op_Addition : FStarC_Ident.lident= pconst "op_Addition"
-let op_Multiply : FStarC_Ident.lident= pconst "op_Multiply"
+let op_Star : FStarC_Ident.lident= pconst "op_Star"
 let op_Division : FStarC_Ident.lident= pconst "op_Division"
 let op_Modulus : FStarC_Ident.lident= pconst "op_Modulus"
 let op_And : FStarC_Ident.lident= pconst "op_AmpAmp"
 let op_Or : FStarC_Ident.lident= pconst "op_BarBar"
 let op_Negation : FStarC_Ident.lident= pconst "op_Negation"
-let subtype_of_lid : FStarC_Ident.lident= pconst "subtype_of"
 let real_const (s : Prims.string) : FStarC_Ident.lident=
   p2l ["FStar"; "Real"; s]
 let real_op_LT : FStarC_Ident.lident= real_const "op_Less_Dot"
@@ -184,18 +182,21 @@ let bv_shift_right'_lid : FStarC_Ident.lident= bvconst "bvshr'"
 let bv_udiv_unsafe_lid : FStarC_Ident.lident= bvconst "bvdiv_unsafe"
 let bv_mod_unsafe_lid : FStarC_Ident.lident= bvconst "bvmod_unsafe"
 let bv_mul'_lid : FStarC_Ident.lident= bvconst "bvmul'"
+let bv_rotate_left_lid : FStarC_Ident.lident= bvconst "bvrol"
+let bv_rotate_right_lid : FStarC_Ident.lident= bvconst "bvror"
+let bv_rotate_left'_lid : FStarC_Ident.lident= bvconst "bvrol'"
+let bv_rotate_right'_lid : FStarC_Ident.lident= bvconst "bvror'"
 let bv_ult_lid : FStarC_Ident.lident= bvconst "bvult"
 let bv_uext_lid : FStarC_Ident.lident= bvconst "bv_uext"
 let bv_not_lid : FStarC_Ident.lident= bvconst "bvnot"
 let array_lid : FStarC_Ident.lident= p2l ["FStar"; "Array"; "array"]
 let array_of_list_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Array"; "of_list"]
-let st_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"]
-let write_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "write"]
-let read_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "read"]
-let alloc_lid : FStarC_Ident.lident= p2l ["FStar"; "ST"; "alloc"]
-let op_ColonEq : FStarC_Ident.lident= p2l ["FStar"; "ST"; "op_Colon_Equals"]
-let ref_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "ref"]
+let write_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Colon_Equals"]
+let read_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Bang"]
+let alloc_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "alloc"]
+let op_ColonEq : FStarC_Ident.lident= p2l ["FStar"; "All"; "op_Colon_Equals"]
+let ref_lid : FStarC_Ident.lident= p2l ["FStar"; "All"; "ref"]
 let heap_addr_of_lid : FStarC_Ident.lident= p2l ["FStar"; "Heap"; "addr_of"]
 let set_empty : FStarC_Ident.lident= p2l ["FStar"; "Set"; "empty"]
 let set_singleton : FStarC_Ident.lident= p2l ["FStar"; "Set"; "singleton"]
@@ -213,27 +214,15 @@ let effect_Ghost_lid : FStarC_Ident.lident= pconst "Ghost"
 let effect_DIV_lid : FStarC_Ident.lident= psconst "DIV"
 let effect_Div_lid : FStarC_Ident.lident= psconst "Div"
 let effect_Dv_lid : FStarC_Ident.lident= psconst "Dv"
-let ef_base (uu___ : unit) : Prims.string Prims.list=
-  let uu___1 = FStarC_Options.ml_ish () in
-  if uu___1
-  then
-    let uu___2 = FStarC_Options.ml_ish_effect () in
-    FStarC_String.split [46] uu___2
-  else ["FStar"; "All"]
+let ef_base (uu___ : unit) : Prims.string Prims.list= ["FStar"; "All"]
 let effect_ALL_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 = let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["ALL"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["ALL"])
 let effect_ML_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 = let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["ML"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["ML"])
 let failwith_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 =
-    let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["failwith"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["failwith"])
 let try_with_lid (uu___ : unit) : FStarC_Ident.lident=
-  let uu___1 =
-    let uu___2 = ef_base () in FStarC_List.op_At uu___2 ["try_with"] in
-  p2l uu___1
+  p2l (FStarC_List.op_At (ef_base ()) ["try_with"])
 let as_requires : FStarC_Ident.lident= pconst "as_requires"
 let as_ensures : FStarC_Ident.lident= pconst "as_ensures"
 let decreases_lid : FStarC_Ident.lident= pconst "decreases"
@@ -288,7 +277,6 @@ let no_inline_let_attr : FStarC_Ident.lident= attr "no_inline_let"
 let rename_let_attr : FStarC_Ident.lident= attr "rename_let"
 let plugin_attr : FStarC_Ident.lident= attr "plugin"
 let tcnorm_attr : FStarC_Ident.lident= attr "tcnorm"
-let dm4f_bind_range_attr : FStarC_Ident.lident= attr "dm4f_bind_range"
 let must_erase_for_extraction_attr : FStarC_Ident.lident=
   attr "must_erase_for_extraction"
 let strict_on_arguments_attr : FStarC_Ident.lident=
@@ -324,7 +312,7 @@ let bind_has_range_args_attr : FStarC_Ident.lident=
 let primitive_extraction_attr : FStarC_Ident.lident=
   attr "primitive_extraction"
 let binder_strictly_positive_attr : FStarC_Ident.lident=
-  attr "strictly_positive"
+  pconst "strictly_positive"
 let binder_unused_attr : FStarC_Ident.lident= attr "unused"
 let no_auto_projectors_decls_attr : FStarC_Ident.lident=
   attr "no_auto_projectors_decls"
@@ -352,9 +340,7 @@ let sli (l : FStarC_Ident.lident) : Prims.string=
   let uu___ = FStarC_Options.print_real_names () in
   if uu___
   then FStarC_Ident.string_of_lid l
-  else
-    (let uu___2 = FStarC_Ident.ident_of_lid l in
-     FStarC_Ident.string_of_id uu___2)
+  else FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)
 let const_to_string (x : FStarC_Const.sconst) : Prims.string=
   match x with
   | FStarC_Const.Const_effect -> "Effect"
@@ -369,21 +355,18 @@ let const_to_string (x : FStarC_Const.sconst) : Prims.string=
   | FStarC_Const.Const_range_of -> "range_of"
   | FStarC_Const.Const_set_range_of -> "set_range_of"
   | FStarC_Const.Const_reify lopt ->
-      let uu___ =
-        match lopt with
-        | FStar_Pervasives_Native.None -> ""
-        | FStar_Pervasives_Native.Some l ->
-            let uu___1 = FStarC_Ident.string_of_lid l in
-            FStarC_Format.fmt1 "<%s>" uu___1 in
-      FStarC_Format.fmt1 "reify%s" uu___
+      FStarC_Format.fmt1 "reify%s"
+        (match lopt with
+         | FStar_Pervasives_Native.None -> ""
+         | FStar_Pervasives_Native.Some l ->
+             FStarC_Format.fmt1 "<%s>" (FStarC_Ident.string_of_lid l))
   | FStarC_Const.Const_reflect l ->
       let uu___ = sli l in FStarC_Format.fmt1 "[[%s.reflect]]" uu___
 let is_name (lid : FStarC_Ident.lident) : Prims.bool=
   let c =
-    let uu___ =
-      let uu___1 = FStarC_Ident.ident_of_lid lid in
-      FStarC_Ident.string_of_id uu___1 in
-    FStarC_Util.char_at uu___ Prims.int_zero in
+    FStarC_Util.char_at
+      (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid))
+      Prims.int_zero in
   FStarC_Util.is_upper c
 let term_view_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Reflection"; "V1"; "Data"; "term_view"]

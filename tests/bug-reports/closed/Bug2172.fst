@@ -9,3 +9,5 @@ let p2 = exists (x: int)         (y: int). 0 == x + y
 let test0 (witness:nat) = assert p1
 let test1 (x:int) = assert (0 == x + (-x)); assert p2
 let _ = assert (p1 <==> p2)
+
+#pop-options

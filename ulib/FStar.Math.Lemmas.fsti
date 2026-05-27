@@ -15,7 +15,6 @@
 *)
 module FStar.Math.Lemmas
 
-open FStar.Mul
 
 (* Lemma: definition of Euclidean division *)
 val euclidean_div_axiom: a:int -> b:pos -> Lemma

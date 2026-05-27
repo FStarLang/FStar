@@ -16,5 +16,6 @@
 module FStarC.Extraction.ML.PrintFS
 
 open FStarC.Extraction.ML.Syntax
+open FStarC.Effect
 
-val print_fs (modul : mlmodule) : string
+val print_fs (modul : mlmodule) : ML string

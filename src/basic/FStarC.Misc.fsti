@@ -6,5 +6,5 @@ open FStarC.Effect
 NOTE: the versions cannot contain any alphabetic character, only numbers
 are allowed for now. *)
 
-val version_gt : string -> string -> bool
-val version_ge : string -> string -> bool
+val version_gt : string -> string -> ML bool
+val version_ge : string -> string -> ML bool

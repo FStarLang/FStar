@@ -102,14 +102,14 @@ val equal_elim (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value)
 (**** Restricting the domain of a map *)
 
 (** Restricts the domain of the map to those keys satisfying [p] *)
-val restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> Tot Type0)) (m: t key value)
+val restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> prop)) (m: t key value)
     : Tot (t (k: key{p k}) value)
 
 (** The action of [sel] on [restrict] : the contents of the map isn't changed *)
 val sel_restrict
       (#key: eqtype)
       (#value: (key -> Tot Type))
-      (p: (key -> Tot Type0))
+      (p: (key -> prop))
       (m: t key value)
       (k: key{p k})
     : Lemma (ensures (sel (restrict p m) k == sel m k))

@@ -161,19 +161,19 @@ unfold let va_get_whileCond (c:va_code{While? c}) : ocmp = While?.whileCond c
 unfold let va_get_whileBody (c:va_code{While? c}) : va_code = While?.whileBody c
 
 
-val eval_code : c:va_code -> s0:va_state -> s1:va_state -> Type0
-val eval_while : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> s1:va_state -> Type0
+val eval_code : c:va_code -> s0:va_state -> s1:va_state -> prop
+val eval_while : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> s1:va_state -> prop
 
 (* ok for now but no need to actually expose the definition.
    instead expose lemmas about it *)
-let va_state_eq (s0:va_state) (s1:va_state) : Type0 = state_eq s0 s1
+let va_state_eq (s0:va_state) (s1:va_state) : prop = state_eq s0 s1
 
-let va_require (block:va_codes) (c:va_code) (s0:va_state) (s1:va_state) : Type0 =
+let va_require (block:va_codes) (c:va_code) (s0:va_state) (s1:va_state) : prop =
   Cons? block /\
   Cons?.hd block == c /\
   eval_code (va_Block block) s0 s1
 
-let va_ensure (b0:va_codes) (b1:va_codes) (s0:va_state) (s1:va_state) (sN:va_state) : Type0 =
+let va_ensure (b0:va_codes) (b1:va_codes) (s0:va_state) (s1:va_state) (sN:va_state) : prop =
   Cons? b0 /\
   Cons?.tl b0 == b1 /\
   eval_code (Cons?.hd b0) s0 s1 /\
@@ -416,8 +416,8 @@ val va_lemma_Mul64Wrap : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> s
   (requires ((va_require va_b0 (va_code_Mul64Wrap src) va_s0 va_sN) /\ (va_is_src_operand_uint64
     src va_s0) /\ (va_get_ok va_s0)))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state)) -> ((va_ensure va_b0 va_bM va_s0 va_sM va_sN)
-    /\ (va_get_ok va_sM) /\ nat64_max `op_Multiply` (va_get_reg Rdx va_sM) + (va_get_reg Rax va_sM)
-    == (va_get_reg Rax va_s0) `op_Multiply` (va_eval_operand_uint64 va_s0 src) /\ (va_state_eq
+    /\ (va_get_ok va_sM) /\ nat64_max * (va_get_reg Rdx va_sM) + (va_get_reg Rax va_sM)
+    == (va_get_reg Rax va_s0) * (va_eval_operand_uint64 va_s0 src) /\ (va_state_eq
     va_sM (va_update_reg Rdx va_sM (va_update_reg Rax va_sM (va_update_flags va_sM (va_update_ok
     va_sM va_s0))))))))
 
@@ -428,11 +428,11 @@ val va_lemma_IMul64 : va_b0:va_codes -> va_s0:va_state -> va_sN:va_state -> dst:
   -> Ghost (va_codes & va_state)
   (requires ((va_require va_b0 (va_code_IMul64 dst src) va_s0 va_sN) /\
     (va_is_dst_dst_operand_uint64 dst va_s0) /\ (va_is_src_operand_uint64 src va_s0) /\ (va_get_ok
-    va_s0) /\ (va_eval_dst_operand_uint64 va_s0 dst) `op_Multiply` (va_eval_operand_uint64 va_s0
+    va_s0) /\ (va_eval_dst_operand_uint64 va_s0 dst) * (va_eval_operand_uint64 va_s0
     src) < nat64_max))
   (ensures (fun ((va_bM:va_codes), (va_sM:va_state)) -> ((va_ensure va_b0 va_bM va_s0 va_sM va_sN)
     /\ (va_get_ok va_sM) /\ (eq_int (va_eval_dst_operand_uint64 va_sM dst)
-    ((va_eval_dst_operand_uint64 va_s0 dst) `op_Multiply` (va_eval_operand_uint64 va_s0 src))) /\
+    ((va_eval_dst_operand_uint64 va_s0 dst) * (va_eval_operand_uint64 va_s0 src))) /\
     (va_state_eq va_sM (va_update_flags va_sM (va_update_ok va_sM (va_update_dst_operand dst va_sM
     va_s0)))))))
 

@@ -1,4 +1,5 @@
 module DependentBoolRefinement
+open FStar.Nonempty
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 open FStar.List.Tot
@@ -853,14 +854,12 @@ let soundness_lemma (f:fstar_top_env)
                     (se:src_exp)
                     (st:src_ty)
   : Lemma
-    (requires src_typing f sg se st)
-    (ensures  RT.tot_typing (extend_env_l f sg)
+    (requires nonempty (src_typing f sg se st))
+    (ensures  nonempty (RT.tot_typing (extend_env_l f sg)
                             (elab_exp se)
-                            (elab_ty st))
-  = FStar.Squash.bind_squash 
-      #(src_typing f sg se st)
-      ()
-      (fun dd -> FStar.Squash.return_squash (soundness dd))
+                            (elab_ty st)))
+  = let dd = nonempty_elim (src_typing f sg se st) in
+    nonempty_intro (soundness dd)
 
 let rec closed (s:src_exp) 
   : b:bool { b <==> (freevars s `Set.equal` Set.empty) }
@@ -884,8 +883,8 @@ let main (nm:string) (src:src_exp)
   = fun (f, expected_t) -> 
       if closed src
       then if None? expected_t
-           then let (| src_ty, _ |) = check f [] src in
-                soundness_lemma f [] src src_ty;
+           then let (| src_ty, d |) = check f [] src in
+                let _ : nonempty (RT.tot_typing (extend_env_l f []) (elab_exp src) (elab_ty src_ty)) = nonempty_intro (soundness d) in
                 [],
                 RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
                 []

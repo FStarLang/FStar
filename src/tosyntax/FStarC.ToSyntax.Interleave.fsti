@@ -15,7 +15,6 @@
 *)
 module FStarC.ToSyntax.Interleave
 open FStarC.Effect
-open FStarC.Effect
 open FStarC.Ident
 open FStarC.Parser.AST
 module DsEnv = FStarC.Syntax.DsEnv

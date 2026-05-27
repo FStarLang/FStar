@@ -17,17 +17,18 @@
 module FStarC.Tactics.Hooks
 
 open FStarC
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range
 
 module O   = FStarC.Options
 module Env = FStarC.TypeChecker.Env
 
-val preprocess      : Env.env -> term -> bool & list (Env.env & term & O.optionstate)
-val spinoff_strictly_positive_goals      : Env.env -> term -> list (Env.env & term)
-val handle_smt_goal : Env.env -> Env.goal -> list (Env.env & term)
-val synthesize      : Env.env -> typ -> term -> range -> term
-val solve_implicits : Env.env -> term -> Env.implicits -> unit
+val preprocess      : Env.env -> term -> ML (bool & list (Env.env & term & O.optionstate))
+val spinoff_strictly_positive_goals      : Env.env -> term -> ML (list (Env.env & term))
+val synthesize      : Env.env -> typ -> term -> range -> ML term
+val solve_implicits : Env.env -> term -> Env.implicits -> ML unit
+val handle_smt_goal : Env.env -> Env.goal -> ML (list (Env.env & term))
 val splice          : Env.splice_t
-val mpreprocess     : Env.env -> term -> term -> term
-val postprocess     : Env.env -> term -> typ -> term -> term
+val mpreprocess     : Env.env -> term -> term -> ML term
+val postprocess     : Env.env -> term -> typ -> term -> ML term

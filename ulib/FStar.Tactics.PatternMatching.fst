@@ -144,10 +144,9 @@ let and_elim' (h: binding) : Tac unit =
   and_elim (pack (Tv_Var h));
   clear h
 
-(** Use a hypothesis at type a to satisfy a goal at type squash a *)
+(** Use a hypothesis at type squash a to satisfy a goal at type squash a *)
 let exact_hyp (a: Type0) (h: namedv) : Tac unit =
-  let hd = quote (FStar.Squash.return_squash #a) in
-  exact (mk_app hd [((pack (Tv_Var h)), Q_Explicit)])
+  exact (pack (Tv_Var h))
 
 (** Use a hypothesis h (of type a) to satisfy a goal at type a *)
 let exact_hyp' (h: namedv): Tac unit =

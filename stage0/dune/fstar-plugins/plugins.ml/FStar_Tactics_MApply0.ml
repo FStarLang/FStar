@@ -147,10 +147,10 @@ let rec apply_squash_or_lem (d : Prims.nat)
                           uu___4))))
 let mapply0 (t : FStar_Tactics_NamedView.term) :
   (unit, unit) FStar_Tactics_Effect.tac_repr=
-  apply_squash_or_lem (Prims.of_int (10)) t
+  apply_squash_or_lem (Prims.of_int 10) t
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.MApply0.mapply0" (Prims.of_int (2))
+    "FStar.Tactics.MApply0.mapply0" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

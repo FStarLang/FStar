@@ -16,7 +16,7 @@
 module Bug1346
 open FStar.Tactics.V2
 
-assume val p1 (x:int) : Type0
+assume val p1 (x:int) : prop
 
 private val __cut : (a:Type) -> (b:Type) -> (a -> b) -> a -> b
 private let __cut a b f x = f x
@@ -26,8 +26,8 @@ let my_cut (t:term) : Tac unit =
     let tt = pack (Tv_App qq (t, Q_Explicit)) in
     apply tt
 
-assume val aug : (unit -> Type0) -> Type0
-let test (p:(unit -> Type0)) (q:(unit -> Type0))
+assume val aug : (unit -> prop) -> prop
+let test (p:(unit -> prop)) (q:(unit -> prop))
    = assert (p == q ==>
              aug p ==>
              aug q)
@@ -40,7 +40,6 @@ let test (p:(unit -> Type0)) (q:(unit -> Type0))
              norm [] ;
              dump "C" ;
              let hh = intro () in
-             apply (`FStar.Squash.return_squash) ;
              dump "D" ;
              exact (pack (Tv_Var (binding_to_namedv hh))) ; //USED TO FAIL
              exact (pack (Tv_Var (binding_to_namedv h))))
@@ -53,7 +52,6 @@ let t1 () : Tac unit =
   dump "Before";
   rewrite eq_yx;
   dump "***************After rewrite";
-  squash_intro ();
   dump "***************After squash" ;
   exact (pack (Tv_Var (binding_to_namedv px)));
   dump "End"

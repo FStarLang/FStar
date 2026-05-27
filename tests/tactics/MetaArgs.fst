@@ -27,7 +27,7 @@ let _ = assert (test1 == 42)
 let same_as (i:int) = exact (quote i)
 
 (* By default, a diagonal function, but allows to be overriden *)
-let diag (x:int) (#[same_as x] y:int) : int * int = (x, y)
+let diag (x:int) (#[same_as x] y:int) : int & int = (x, y)
 
 let _ = assert (diag 42 #43 == (42, 43))
 let _ = assert (diag 42     == (42, 42))

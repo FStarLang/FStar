@@ -8,21 +8,15 @@ let mono_lem () : Lemma (pure_wp_monotonic unit break_wp') =
     l_to_r [`spinoff_eq]
   end
 
-let squash_p_impl_p (p:pure_post unit) : squash (squash (p ()) ==> p ()) = ()
-
 #push-options "--no_tactics" // don't process `with_tactic` markers
-
-let (==>>) = (==>) // Working around #3173 and #3175
 
 let aux2 (p:pure_post unit)
 : Lemma (break_wp p ==> pure_return unit () p)
-= calc (==>>) {
+= calc (==>) {
     break_wp p;
     == {}
-    spinoff (squash (p ()));
-    ==> { spinoff_equiv (squash (p ())) }
-    squash (p ());
-    ==>> { squash_p_impl_p p }
+    spinoff (p ());
+    ==> { spinoff_equiv (p ()) }
     p ();
     ==> { () }
     pure_return unit () p;

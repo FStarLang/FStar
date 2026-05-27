@@ -6,10 +6,10 @@ open FStar.Monotonic.Pure
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
-  st -> (a & st -> Type0) -> Type0
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
+  st -> (a & st -> prop) -> prop
 
-let st_monotonic #st #a (w : wp0 st a) : Type0 =
+let st_monotonic #st #a (w : wp0 st a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
@@ -56,7 +56,7 @@ unfold
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp

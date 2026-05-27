@@ -1,6 +1,5 @@
 module Long
 
-open FStar.Mul
 open FStar.Calc
 
 let calc25 (a : int) : Lemma (a == a) =

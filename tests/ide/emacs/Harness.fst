@@ -1,5 +1,4 @@
 module Harness
-open FStar.Mul
 open FStar.Classical
 
 // Something that Z3 can't prove on its own

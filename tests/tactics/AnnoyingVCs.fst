@@ -16,7 +16,7 @@
 module AnnoyingVCs
 open FStar.Tactics.V2
 
-assume val p : nat -> Type
+assume val p : nat -> prop
 
 let dump s =
     (* dump s; *)

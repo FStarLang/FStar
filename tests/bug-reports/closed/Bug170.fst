@@ -17,7 +17,7 @@ module Bug170
 
 type t =
   | A
-assume type sorted: t -> Type
+assume type sorted: t -> prop
 assume val split: unit -> Dv t
 assume val merge: l1:t -> Dv (r:t{sorted l1})
 assume val foo : t -> Dv t

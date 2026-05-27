@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ open FStarC.Class.Show
 
 open FStarC.Hooks (* KEEP: we need this module for its top-level effect. *)
 
-let handle_error e =
+let handle_error e : ML unit =
     if FStarC.Errors.handleable e then
       FStarC.Errors.err_exn e
     else begin
@@ -39,7 +39,7 @@ let handle_error e =
     FStarC.Errors.report_all () |> ignore;
     ()
 
-let main () =
+let main () : ML unit =
     Format.print_string "Initializing tests...\n";
     try
         let res, fs = O.parse_cmd_line () in

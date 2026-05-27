@@ -39,13 +39,13 @@ type tc_result = {
   extraction_time:int
 }
 
-val load_tc_result (checked_fn:string) : option (list (string & string) & tc_result)
+val load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result))
 
 val load_checked_file_with_tc_result
   (deps:Dep.deps)
   (fn:string)
   (checked_fn:string)
-  : either string tc_result
+  : ML (either string tc_result)
 
 (*
  * Read parsing data from the checked file
@@ -54,7 +54,7 @@ val load_checked_file_with_tc_result
  * Input is the file name, not the cache file name
  * The function computes the cache file name itself
  *)
-val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_data
+val load_parsing_data_from_cache: file_name:string -> ML (option Parser.Dep.parsing_data)
 
 (***********************************************************************)
 (* Loading and storing cache files                                     *)
@@ -62,16 +62,16 @@ val load_parsing_data_from_cache: file_name:string -> option Parser.Dep.parsing_
 
 //checks if the cache files exists and all their dependences are valid
 //returning the names of all the dependences if so
-val scan_deps_and_check_cache_validity (file:string) : option (list string & Dep.deps)
+val scan_deps_and_check_cache_validity (file:string) : ML (option (list string & Dep.deps))
 
-val load_module_from_cache: TcEnv.env -> string -> option tc_result
+val load_module_from_cache: TcEnv.env -> string -> ML (option tc_result)
 
 val store_module_to_cache:
     TcEnv.env ->
     file_name: string ->
     parsing_data_and_direct_deps: (Dep.parsing_data & list string) ->
     tc_result ->
-    unit
+    ML unit
 
 val unsafe_raw_load_checked_file (checked_file_name:string)
-  : option (FStarC.Parser.Dep.parsing_data & list string & tc_result)
+  : ML (option (FStarC.Parser.Dep.parsing_data & list string & tc_result))

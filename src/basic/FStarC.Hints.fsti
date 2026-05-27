@@ -26,5 +26,5 @@ type hints_read_result =
   | MalformedJson
   | UnableToOpen
 
-val write_hints: string -> hints_db -> unit
-val read_hints: string -> hints_read_result
+val write_hints: string -> hints_db -> ML unit
+val read_hints: string -> ML hints_read_result

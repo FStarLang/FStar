@@ -1,6 +1,5 @@
 module StringMatching
 open FStar.Seq
-open FStar.Mul
 #set-options " --ext context_pruning_no_ambients"
 (* Some basic notions *)
 
@@ -124,8 +123,34 @@ let lemma_mod_add_3 (a b c:int) (p:pos)
 = lemma_mod_add_distr_l (a + b) c p;
   lemma_mod_add_distr_l (a + c) b p
 
-#push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2 --split_queries no"
+#push-options "--z3rlimit_factor 10 --ifuel 0 --fuel 2 --split_queries always"
 #restart-solver
+let aux (x: str nat) (base: nat) (prime:nat { prime > 0 }) (i: nat) (j: nat { i+1 < j /\ j <= Seq.length x })
+  (h_lsd: nat { h_lsd == base * hash x base prime (i+1) (j-1) })
+  (msd: nat { msd == pow base (j - i - 1) * Seq.index x i })
+  (h : nat { h == (hash x base prime (i+1) (j-1) + pow base (j-i-2) * Seq.index x i) % prime })
+: Lemma (base * h % prime == (h_lsd + msd) % prime)
+= calc(==) {
+      base * h % prime;
+    (==) { () }
+      (base * ((hash x base prime (i + 1) (j - 1) + 
+                pow base (j - i - 2) * Seq.index x i)%prime)) % prime;
+    (==) { FStar.Math.Lemmas.lemma_mod_mul_distr_r 
+              base 
+              (hash x base prime (i + 1) (j - 1) + 
+                pow base (j - i - 2) * Seq.index x i)
+              prime }
+    (base * (hash x base prime (i + 1) (j - 1) + 
+              pow base (j - i - 2) * Seq.index x i)) % prime;
+    (==) { 
+      FStar.Math.Lemmas.distributivity_add_right
+                base
+                (hash x base prime (i + 1) (j - 1))
+                (pow base (j - i - 2) * Seq.index x i);
+            pow_lemma base (j - i - 2) }
+      (h_lsd + msd) % prime;            
+  }
+
 // This is the main utility lemma on the hash function
 // It allows inverting the hash to inspect the most significant digit
 let rec hash_inversion
@@ -143,30 +168,6 @@ let rec hash_inversion
     hash_inversion x base prime i (j - 1);
     let h_lsd = base * hash x base prime (i + 1) (j - 1) in
     let msd = pow base (j - i - 1) * Seq.index x i in
-    FStar.Pure.BreakVC.break_vc();
-    let aux () 
-    : Lemma (base * h % prime == (h_lsd + msd) % prime)
-    = calc(==) {
-          base * h % prime;
-        (==) { hash_inversion x base prime i (j - 1) }
-          (base * ((hash x base prime (i + 1) (j - 1) + 
-                    pow base (j - i - 2) * Seq.index x i)%prime)) % prime;
-        (==) { FStar.Math.Lemmas.lemma_mod_mul_distr_r 
-                  base 
-                  (hash x base prime (i + 1) (j - 1) + 
-                    pow base (j - i - 2) * Seq.index x i)
-                  prime }
-        (base * (hash x base prime (i + 1) (j - 1) + 
-                  pow base (j - i - 2) * Seq.index x i)) % prime;
-        (==) { 
-          FStar.Math.Lemmas.distributivity_add_right
-                   base
-                   (hash x base prime (i + 1) (j - 1))
-                   (pow base (j - i - 2) * Seq.index x i);
-                pow_lemma base (j - i - 2) }
-          (h_lsd + msd) % prime;            
-      }
-    in
     calc (==) {
       hash x base prime i j;
     (==) {}
@@ -174,7 +175,7 @@ let rec hash_inversion
     (==) { FStar.Math.Lemmas.lemma_mod_plus_distr_l
               (base * h) lsd prime }
       (base * h % prime + lsd) % prime;
-    (==) { aux () }
+    (==) { aux x base prime i j h_lsd msd h }
     ((h_lsd + msd) % prime + lsd) % prime;
     (==) { lemma_mod_add_3 h_lsd msd lsd prime }
     ((h_lsd + lsd)%prime + msd)%prime;

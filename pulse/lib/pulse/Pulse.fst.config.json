@@ -1,0 +1,18 @@
+{
+	"fstar_exe": "../../../stage3/dune/_build/default/fstarc-full/fstarc3_full.exe",
+	"options": [
+		"--query_cache",
+		"--ext", "optimize_let_vc",
+		"--ext", "fly_deps"
+	],
+	"include_dirs": [
+		"../../../ulib",
+		"../../../stage3/ulib.checked",
+		"../../build/lib.common.checked",
+		"../../build/lib.pulse.checked",
+		"../common",
+		"../core",
+		"c",
+		"lib"
+	]
+}

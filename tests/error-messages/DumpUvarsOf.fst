@@ -2,8 +2,8 @@ module DumpUvarsOf
 
 open FStar.Tactics.V2
 
-assume val p : bool -> int -> Type
-assume val q : Type
+assume val p : bool -> int -> prop
+assume val q : prop
 assume val lem : b:bool -> i:int -> squash (p b i) -> Lemma q
 assume val p5 : unit -> Lemma (p false 5)
 

@@ -16,7 +16,6 @@
 module Canon
 
 open FStar.Tactics.V2
-open FStar.Mul
 open FStar.Tactics.Canon
 
 [@@plugin]

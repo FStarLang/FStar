@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fstar-mcp": {
+      "type": "http",
+      "url": "http://localhost:3001/"
+    }
+  }
+}

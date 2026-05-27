@@ -16,7 +16,7 @@
 module Split
 open FStar.Tactics.V2
 
-private val split_lem : (#a:Type) -> (#b:Type) ->
+private val split_lem : (#a:prop) -> (#b:prop) ->
                         squash a -> squash b -> Lemma (a /\ b)
 let split_lem #a #b sa sb = ()
 

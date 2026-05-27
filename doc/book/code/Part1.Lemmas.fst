@@ -1,5 +1,4 @@
 module Part1.Lemmas
-open FStar.Mul
 open Part1.Inductives
 
 let rec factorial (x:nat)

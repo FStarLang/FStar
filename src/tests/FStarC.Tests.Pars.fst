@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +88,7 @@ let do_init () =
   let env = {env with dsenv=dsenv} in
   let _prims_mod, env = Tc.check_module env prims_mod false in
   // needed to run tests with chars
-  // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Mul.fst"; "FStar.Squash.fsti";
+  // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Squash.fsti";
   //                            "FStar.Classical.fst"; "FStarC.List.Tot.Base.fst"; "FStarC.List.Tot.Properties.fst"; "FStarC.List.Tot.fst";
   //                            "FStar.StrongExcludedMiddle.fst"; "FStar.Seq.Base.fst"; "FStar.Seq.Properties.fst"; "FStar.Seq.fst";
   //                            "FStar.BitVector.fst"; "FStar.Math.Lib.fst"; "FStar.Math.Lemmas.fst"; "FStar.UInt.fst"; "FStar.UInt32.fst";
@@ -184,7 +184,7 @@ let test_hashes () =
               (show n)
               (FStarC.Hash.string_of_hash_code hc)
   in
-  let rec aux (n:int) =
+  let rec aux (n:int) : ML unit =
     if n = 0 then ()
     else (test_one_hash n; aux (n - 1))
   in
@@ -280,8 +280,6 @@ let parse_incremental_decls () =
   | _ ->
       failwith "Incremental parsing failed: Unexpected output"
 
-
-open FStarC.Class.Show
 
 let parse_incremental_decls_use_lang () =
   let source0 =

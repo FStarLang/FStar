@@ -16,7 +16,6 @@
 module FStar.UInt128
 
 open FStar.UInt
-open FStar.Mul
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64

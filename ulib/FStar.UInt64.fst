@@ -18,7 +18,6 @@ module FStar.UInt64
 (**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.UInt
-open FStar.Mul
 
 #set-options "--fuel 0 --ifuel 0"
 
@@ -75,6 +74,10 @@ let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 #push-options "--z3rlimit 80 --fuel 1"  //AR: working around the interleaving semantics of pragmas
 
 let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
+
+let rotate_right a s = Mk (rotate_right (v a) (UInt32.v s))
+
+let rotate_left a s = Mk (rotate_left (v a) (UInt32.v s))
 
 let lemma_sub_msbs a b
     = from_vec_propriety (to_vec (v a)) 1;

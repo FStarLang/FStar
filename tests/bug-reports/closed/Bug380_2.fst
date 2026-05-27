@@ -20,7 +20,7 @@ let single_inhabitant t =
 let single_inhabitant_and p q
     : Lemma (single_inhabitant (p /\ q)) = ()
 
-[@@expect_failure [19]]
+[@@expect_failure [189]]
 let single_inhabitant_bool ()
     : Lemma (single_inhabitant bool) =
   let should_fail = assert (bool == (True /\ bool)) in // Woops.  The normalizer used to simplifies `True /\ bool` into bool instead of `squash bool`

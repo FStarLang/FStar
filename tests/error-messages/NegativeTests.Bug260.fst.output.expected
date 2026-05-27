@@ -2,8 +2,9 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type validity (S (S t)) got type validity (S t)
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (t : NegativeTests.Bug260.pnat)
+  - VC = t == NegativeTests.Bug260.S t
   - See also NegativeTests.Bug260.fst(23,37-26,9)
 
 * Warning 240 at NegativeTests.Bug260.fst(23,4-23,7):

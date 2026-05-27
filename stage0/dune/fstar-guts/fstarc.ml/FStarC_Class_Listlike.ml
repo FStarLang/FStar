@@ -32,18 +32,18 @@ let view (s : unit) (projectee : ('e, Obj.t) listlike) :
   match projectee with
   | { empty = empty1; cons = cons1; view = view1;_} -> view1
 let is_empty (uu___ : ('e, 's) listlike) (l : 's) : Prims.bool=
-  let uu___1 = Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) in
-  match uu___1 with | VNil -> true | VCons (uu___2, uu___3) -> false
+  match Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) with
+  | VNil -> true
+  | VCons (uu___1, uu___2) -> false
 let singleton (uu___1 : ('e, 's) listlike) (uu___ : 'e) : 's=
   (fun uu___ x ->
      Obj.magic (cons () (Obj.magic uu___) x (empty () (Obj.magic uu___))))
     uu___1 uu___
 let rec to_list : 'e 's . ('e, 's) listlike -> 's -> 'e Prims.list =
   fun uu___ l ->
-    let uu___1 = Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) in
-    match uu___1 with
+    match Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) with
     | VNil -> []
-    | VCons (x, xs) -> let uu___2 = to_list uu___ xs in x :: uu___2
+    | VCons (x, xs) -> let uu___1 = to_list uu___ xs in x :: uu___1
 let rec from_list : 'e 's . ('e, 's) listlike -> 'e Prims.list -> 's =
   fun uu___1 uu___ ->
     (fun uu___ l ->

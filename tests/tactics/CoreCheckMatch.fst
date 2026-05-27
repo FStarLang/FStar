@@ -17,7 +17,7 @@ let g (x:(f1:int & int)): simple_record =
   let (|gf1, gf2|) = x in
   {f1=gf1; f2=gf2}
 
-val dtuple2_ind: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> Type0) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
+val dtuple2_ind: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> prop) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
 let dtuple2_ind #a #b p _ = ()
   
 let _: squash (forall (x:(f1:int & int)). f (g x) == x) =
@@ -27,7 +27,7 @@ let _: squash (forall (x:(f1:int & int)). f (g x) == x) =
     let _ = forall_intro () in
     trefl())
 
-let option_ind (#a:Type) (p:option a -> Type) (_:squash (p None)) (_: squash (forall x. p (Some x))) : Lemma (forall (x:option a). p x) = ()
+let option_ind (#a:Type) (p:option a -> prop) (_:squash (p None)) (_: squash (forall x. p (Some x))) : Lemma (forall (x:option a). p x) = ()
 
 let _ =
   assert (forall (x:option bool). match x with | None -> True | Some x -> True)
@@ -161,20 +161,20 @@ let _: squash (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
 
 type refined (a:Type) (pred:a -> bool) = x:a{pred x}
 
-val dtuple2_ind_ss: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> Type0) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
+val dtuple2_ind_ss: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> prop) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
 let dtuple2_ind_ss #a #b p _ = ()
 
-val refined_ind: a:Type -> pred:(a -> bool) -> p:(refined a pred -> Type0) -> squash (forall (x:a). pred x ==> p x) -> squash (forall (x:refined a pred). p x)
+val refined_ind: a:Type -> pred:(a -> bool) -> p:(refined a pred -> prop) -> squash (forall (x:a). pred x ==> p x) -> squash (forall (x:refined a pred). p x)
 let refined_ind a pred p _ = ()
 
-val eq_to_eq: a:eqtype -> x:a -> y:a -> p:Type0 -> squash (x == y ==> p) -> squash (x = y ==> p)
+val eq_to_eq: a:eqtype -> x:a -> y:a -> p:prop -> squash (x == y ==> p) -> squash (x = y ==> p)
 let eq_to_eq a x y p _ = ()
 
-val add_squash: p:Type0 -> q:Type0 -> squash (squash p ==> q) -> squash (p ==> q)
+val add_squash: p:prop -> q:prop -> squash (p ==> q) -> squash (p ==> q)
 let add_squash p q _ =
   introduce p ==> q with _. ()
 
-val or_split: b1:bool -> b2:bool -> p:Type0 -> squash (b1 ==> p) -> squash (b2 ==> p) -> squash (b1 || b2 ==> p)
+val or_split: b1:bool -> b2:bool -> p:prop -> squash (b1 ==> p) -> squash (b2 ==> p) -> squash (b1 || b2 ==> p)
 let or_split b1 b2 p _ _ = ()
 
 unfold
@@ -202,11 +202,11 @@ let g_ss (x:test_sum): dtuple2 toto tata =
   | Ctor_1 _0 -> (|0, _0|)
   | Ctor_2 _0 -> (|1, _0|)
 
-val arrow_to_forall: #a:Type -> p:(a -> Type0) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
+val arrow_to_forall: #a:Type -> p:(a -> prop) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
 let arrow_to_forall #a p _ x =
   ()
 
-val remove_refine: a:Type0 -> p:(a -> Type0) -> q:(a -> Type0) -> squash (forall (x:a). q x) -> squash (forall (x:a{p x}). q x)
+val remove_refine: a:Type0 -> p:(a -> prop) -> q:(a -> prop) -> squash (forall (x:a). q x) -> squash (forall (x:a{p x}). q x)
 let remove_refine a p q _ = ()
 
 //

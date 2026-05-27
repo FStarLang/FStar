@@ -74,7 +74,7 @@ type proofstate = {
     splice_attrs : list attribute;
 
     depth        : int;          //depth for tracing and debugging
-    __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
+    __dump       : proofstate -> string -> ML unit; // callback to dump_proofstate, to avoid an annoying circularity
     psc          : PO.psc;       //primitive step context where we started execution
     entry_range  : Range.t;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
@@ -94,17 +94,17 @@ type ref_proofstate = ref proofstate
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
-val tracepoint_with_psc : PO.psc -> proofstate -> bool
-val tracepoint : proofstate -> bool
+val set_ps_psc : PO.psc -> proofstate -> proofstate
+val tracepoint_with_psc : PO.psc -> proofstate -> ML bool
+val tracepoint : proofstate -> ML bool
 val set_proofstate_range : proofstate -> Range.t -> proofstate
 
-val set_ps_psc : PO.psc -> proofstate -> proofstate
 val goal_env: goal -> env
 val goal_range: goal -> Range.t
-val goal_witness: goal -> term
-val goal_type: goal -> term
+val goal_witness: goal -> ML term
+val goal_type: goal -> ML term
 val goal_opts: goal -> Options.optionstate
-val goal_with_env: goal -> env -> goal
+val goal_with_env: goal -> env -> ML goal
 val is_guard : goal -> bool
 
 val get_label : goal -> string
@@ -115,8 +115,8 @@ val smt_goals_of : proofstate -> list goal
 
 val mk_goal: env -> ctx_uvar -> FStarC.Options.optionstate -> bool -> string -> goal
 
-val goal_of_goal_ty : env -> typ -> goal & guard_t
-val goal_of_implicit : env -> implicit -> goal
+val goal_of_goal_ty : env -> typ -> ML (goal & guard_t)
+val goal_of_implicit : env -> implicit -> ML goal
 val goal_of_ctx_uvar: goal -> ctx_uvar -> goal
 
 type ctrl_flag =
@@ -128,7 +128,7 @@ type direction =
     | TopDown
     | BottomUp
 
-val check_goal_solved' : goal -> option term
-val check_goal_solved  : goal -> bool
+val check_goal_solved' : goal -> ML (option term)
+val check_goal_solved  : goal -> ML bool
 
 type tref (a:Type) = ref a

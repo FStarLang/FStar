@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,9 +33,11 @@ module Range = FStarC.Range
 
 open FStarC.Class.Show
 
-let codegen_fsharp () = Options.codegen () = Some Options.FSharp
+let codegen_fsharp () : ML bool =
+  let c = Options.codegen () in
+  c = Some Options.FSharp
 
-let pruneNones (l : list (option 'a)) : list 'a =
+let pruneNones (l : list (option 'a)) : ML (list 'a) =
     List.fold_right (fun  x ll -> match x with
                           | Some xs -> xs::ll
                           | None -> ll) l []
@@ -45,7 +47,7 @@ let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
 
 (* private *)
-let mlconst_of_const' (sctt : sconst) =
+let mlconst_of_const' (sctt : sconst) : ML mlconstant =
   match sctt with
   | Const_effect       -> failwith "Unsupported constant"
 
@@ -65,12 +67,12 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_reflect _ ->
     failwith "Unhandled constant: real/reify/reflect"
 
-let mlconst_of_const (p:Range.t) (c:sconst) =
+let mlconst_of_const (p:Range.t) (c:sconst) : ML mlconstant =
     try mlconst_of_const' c
     with _ -> failwith (Format.fmt2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
 
-let mlexpr_of_range (r:Range.t) : mlexpr' =
-    let cint (i : int) : mlexpr =
+let mlexpr_of_range (r:Range.t) : ML mlexpr' =
+    let cint (i : int) : ML mlexpr =
         MLC_Int (show i, None) |> MLE_Const |> with_ty ml_int_ty
     in
     let cstr (s : string) : mlexpr =
@@ -93,7 +95,7 @@ let mlexpr_of_range (r:Range.t) : mlexpr' =
                             Range.end_of_range r   |> Range.col_of_pos  |> cint;
                             ])
 
-let mlexpr_of_const (p:Range.t) (c:sconst) : mlexpr' =
+let mlexpr_of_const (p:Range.t) (c:sconst) : ML mlexpr' =
     (* Special case ranges, which can be extracted but not as constants.
      * Maybe a sign that there shouldn't really be a Const_range *)
     match c with
@@ -103,7 +105,7 @@ let mlexpr_of_const (p:Range.t) (c:sconst) : mlexpr' =
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
-let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
+let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : ML mlty =
     match t with
     | MLTY_Var  x -> (match Option.find (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
@@ -114,19 +116,20 @@ let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     | MLTY_Top
     | MLTY_Erased -> t
 
-let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
+let try_subst (ts:mltyscheme) (args:list mlty) : ML (option mlty) =
+    let formals, t = ts in
     if List.length formals <> List.length args
     then None
     else Some (subst_aux (List.zip (ty_param_names formals) args) t)
 
-let subst ts args =
+let subst ts args : ML mlty =
     match try_subst ts args with
     | None ->
       failwith "Substitution must be fully applied (see GitHub issue #490)"
     | Some t ->
       t
 
-let udelta_unfold (g:UEnv.uenv) = function
+let udelta_unfold (g:UEnv.uenv) (t:mlty) : ML (option mlty) = match t with
     | MLTY_Named(args, n) ->
       begin match UEnv.lookup_tydef g n with
         | Some ts ->
@@ -154,7 +157,7 @@ let eff_to_string = function
     | E_ERASABLE -> "Erasable"
     | E_IMPURE -> "Impure"
 
-let join r f f' = match f, f' with
+let join r f f' : ML e_tag = match f, f' with
     | E_IMPURE, E_PURE
     | E_PURE  , E_IMPURE
     | E_IMPURE, E_IMPURE -> E_IMPURE
@@ -166,9 +169,9 @@ let join r f f' = match f, f' with
                             (Range.string_of_range r)
                             (eff_to_string f) (eff_to_string f'))
 
-let join_l r fs = List.fold_left (join r) E_PURE fs
+let join_l r fs : ML e_tag = List.fold_left (join r) E_PURE fs
 
-let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_PURE, t))
+let mk_ty_fun (bs:Prims.list mlbinder) (t:mlty) : ML mlty = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_PURE, t)) bs t
 
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
@@ -176,7 +179,7 @@ let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply
    erase e to unit right away.
 *)
-let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool & option mlexpr) =
+let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : ML (bool & option mlexpr) =
     match t, t' with
     | MLTY_Var x, MLTY_Var y ->
         if x = y
@@ -199,7 +202,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (
             then if f=E_PURE
                 && f'=E_ERASABLE
                 then if type_leq unfold_ty t2 t2'
-                    then let body = if type_leq unfold_ty t2 ml_unit_ty
+                     then let body = if type_leq unfold_ty t2 ml_unit_ty
                                     then ml_unit
                                     else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
                             true, Some (with_ty (mk_ty_fun [x] body.mlty) <| MLE_Fun([x], body))
@@ -255,7 +258,7 @@ let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (
 
     | _ -> false, None
 
-and type_leq g t1 t2 : bool = type_leq_c g None t1 t2 |> fst
+and type_leq g t1 t2 : ML bool = type_leq_c g None t1 t2 |> fst
 
 let rec erase_effect_annotations (t:mlty) =
     match t with
@@ -279,13 +282,13 @@ let resugar_exp e = match e.expr with
         | _ -> e)
     | _ -> e
 
-let record_field_path = function
+let record_field_path (fs: list lident) : ML (list string) = match fs with
     | f::_ ->
         let ns, _ = BU.prefix (ns_of_lid f) in
-        ns |> List.map (fun id -> (string_of_id id))
+        List.map (fun id -> (string_of_id id)) ns
     | _ -> failwith "impos"
 
-let record_fields fs vs = List.map2 (fun (f:lident) e -> (string_of_id (ident_of_lid f)), e) fs vs
+let record_fields fs vs : ML _ = List.map2 (fun (f:lident) e -> (string_of_id (ident_of_lid f)), e) fs vs
 //
 //let resugar_pat q p = match p with
 //    | MLP_CTor(d, pats) ->
@@ -311,18 +314,19 @@ let resugar_mlty t = match t with
     
 let flatten_ns ns = String.concat "_" ns
 let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
-let ml_module_name_of_lid (l:lident) =
-  let mlp = l |> ns_of_lid |> List.map string_of_id,  string_of_id (ident_of_lid l) in
+let ml_module_name_of_lid (l:lident) : ML string =
+  let ns_strs = List.map string_of_id (ns_of_lid l) in
+  let mlp = (ns_strs, string_of_id (ident_of_lid l)) in
   flatten_mlpath mlp
 
 
-let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
-   let erasableTypeNoDelta (t:mlty) =
+let rec erasableType (unfold_ty:unfold_t) (t:mlty) : ML bool =
+   let erasableTypeNoDelta (t:mlty) : ML bool =
      if t = ml_unit_ty then true
      else match t with
           | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
           (* erase tactic terms, unless extracting for tactic compilation *)
-          | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> Options.codegen () <> Some Options.Plugin
+          | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> let c = Options.codegen () in c <> Some Options.Plugin
           | _ -> false // this function is used by another function which does delta unfolding
    in
    if erasableTypeNoDelta t
@@ -331,7 +335,7 @@ let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
      | Some t -> erasableType unfold_ty t
      | None  -> false
 
-let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
+let rec eraseTypeDeep unfold_ty (t:mlty) : ML mlty =
     match t with
     | MLTY_Fun (tyd, etag, tycd) ->
       if etag=E_PURE

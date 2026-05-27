@@ -1,20 +1,27 @@
-{ stdenv, lib, fetchzip, autoPatchelfHook, fixDarwinDylibNames }:
+{
+  autoPatchelfHook,
+  fetchzip,
+  fixDarwinDylibNames,
+  lib,
+  stdenv,
+}:
 
 let
   platform = if stdenv.isDarwin then "osx-10.14.2" else "ubuntu-16.04";
-  hash = if stdenv.isDarwin then
-    "sha256-Bz5Bsg+0Bsshne/VN0dGeesOibI6yUfh3s+wiDNhwHM="
-  else
-    "sha256-dgG4L77Y3+g10tO2pygmJ+XeGOhJrzuDxIzuZyJvMf0=";
+  hash =
+    if stdenv.isDarwin then
+      "sha256-Bz5Bsg+0Bsshne/VN0dGeesOibI6yUfh3s+wiDNhwHM="
+    else
+      "sha256-dgG4L77Y3+g10tO2pygmJ+XeGOhJrzuDxIzuZyJvMf0=";
 
-in stdenv.mkDerivation rec {
+in
+stdenv.mkDerivation rec {
   pname = "z3";
   version = "4.8.5";
 
   src = fetchzip {
     inherit hash;
-    url =
-      "https://github.com/Z3Prover/z3/releases/download/Z3-${version}/z3-${version}-x64-${platform}.zip";
+    url = "https://github.com/Z3Prover/z3/releases/download/Z3-${version}/z3-${version}-x64-${platform}.zip";
   };
 
   nativeBuildInputs =

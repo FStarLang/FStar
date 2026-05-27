@@ -39,8 +39,18 @@ let inverse_of_inj #a #b f def =
   (* extend the inverse to the full domain b *)
   let g : b -> GTot a =
     fun (y:b) ->
-      if FStar.StrongExcludedMiddle.strong_excluded_middle (in_image f y)
+      if in_image f y
       then g_partial y
       else def
   in
   g
+
+let pigeon (n1:nat) (n2:nat{n2 < n1}) (f : fin n1 -> GTot (fin n2))
+: Lemma (~ (is_inj f))
+= if n2 = 0
+  then let _ = f 0 in ()
+  else (
+    let holes = Seq.init_ghost #(Fin.under n2) n1 f in
+    let i, j = Fin.pigeonhole holes in
+    ()
+  )

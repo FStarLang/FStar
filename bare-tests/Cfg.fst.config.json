@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "../stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe",
+  "fstar_exe": "../stage1/dune/_build/default/fstarc-full/fstarc1_full.exe",
   "options": [
     "--no_prelude"
   ],

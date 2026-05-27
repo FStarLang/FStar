@@ -55,8 +55,7 @@ let and_elim' (h: binder) : Tac unit =
   clear h
 
 let exact_hyp (a: Type0) (h: binder) : Tac unit =
-  let hd = quote (FStar.Squash.return_squash #a) in
-  exact (mk_app hd [((pack (Tv_Var h)), Q_Explicit)])
+  exact (pack (Tv_Var h))
 
 type varname = string
 

@@ -1,0 +1,31 @@
+* Info at Bug274.fst(30,4-30,9):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove any of:
+      trade (*?u98*)_ (*?u99*)_
+      trade (*?u99*)_ (*?u100*)_
+  - In the context:
+      trade p q
+      trade q r
+
+* Info at Bug274.fst(43,4-43,9):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove any of:
+      trade (*?u98*)_ (*?u99*)_
+      trade (*?u99*)_ (*?u100*)_
+  - In the context:
+      trade p q
+      trade q r
+
+* Info at Bug274.fst(79,4-79,8):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove any of:
+      trade (*?u118*)_ (*?u119*)_
+      (*?u118*)_
+  - In the context:
+      p
+      trade p q
+      trade r r
+

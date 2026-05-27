@@ -45,8 +45,8 @@ open FStar.Monotonic.Pure
 
 /// type of pre and postconditions, parameteric in the state type
 
-type mpre (st:Type) = st -> Type0
-type mpost (st:Type) (a:Type) = st -> a -> st -> Type0
+type mpre (st:Type) = st -> prop
+type mpost (st:Type) (a:Type) = st -> a -> st -> prop
 
 /// The free monad would contain an Act node,
 ///   that has an atomic action, followed by a continuation k
@@ -68,7 +68,7 @@ let act_q (#st:Type) (#a:Type) (#b:Type) (a_q:mpost st a) (k_q:a -> mpost st b) 
 ///   {p0} c {q0} to {p1} c {q1}
 
 unfold
-let weaken_ok (#st:Type) (#a:Type) (p0:mpre st) (q0:mpost st a) (p1:mpre st) (q1:mpost st a) : Type0 =
+let weaken_ok (#st:Type) (#a:Type) (p0:mpre st) (q0:mpost st a) (p1:mpre st) (q1:mpost st a) : prop =
   (forall (s:st). p1 s ==> p0 s) /\
   (forall (s0:st) (x:a) (s1:st). p1 s0 ==> q0 s0 x s1 ==> q1 s0 x s1)
 
@@ -120,8 +120,8 @@ type m (st:Type u#s) : a:Type u#a -> p:mpre st -> q:mpost st a -> Type =
 assume val st : Type u#1
 
 
-type pre = st -> Type0
-type post (a:Type) = st -> a -> st -> Type0
+type pre = st -> prop
+type post (a:Type) = st -> a -> st -> prop
 
 type repr (a:Type) (p:pre) (q:post a) = unit -> Dv (m st a p q)
 
@@ -212,9 +212,9 @@ assume val st_q : st -> prop
 
 assume ST_axiom: forall s. st_p s ==> st_q s
 
-assume val f : squash p -> M unit (fun _ -> True) (fun _ _ s1 -> squash q /\ st_p s1)
-assume val g : unit -> Pure unit True (fun _ -> squash p)
-assume val h : unit -> M unit (fun s0 -> squash q /\ st_q s0) (fun _ _ s1 -> st_p s1)
+assume val f : squash p -> M unit (fun _ -> True) (fun _ _ s1 -> q /\ st_p s1)
+assume val g : unit -> Pure unit True (fun _ -> p)
+assume val h : unit -> M unit (fun s0 -> q /\ st_q s0) (fun _ _ s1 -> st_p s1)
 
 let test () : M unit (fun _ -> True) (fun _ _ s1 -> st_q s1) =
   g ();

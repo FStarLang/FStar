@@ -77,7 +77,7 @@ let rec step_exp h e = match e with
     | (VInt i1, VInt i2) -> (match op with
       | Plus -> Some (Val (VInt (i1 + i2)))
       | Minus -> Some (Val (VInt (i1 - i2)))
-      | Times -> Some (Val (VInt (op_Multiply i1 i2)))
+      | Times -> Some (Val (VInt (i1 * i2)))
       | Gt -> Some (Val (if (i1 > i2) then VBool true else VBool false))
       | Lt -> Some (Val (if (i1 < i2) then VBool true else VBool false))
       | Eq -> Some (Val (if (i1 = i2) then VBool true else VBool false))

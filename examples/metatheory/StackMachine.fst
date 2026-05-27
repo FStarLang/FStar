@@ -28,7 +28,7 @@ type exp : Type0 =
 | Binop : binop -> exp -> exp -> exp
 
 let add_nat (n1:nat) (n2:nat) : Tot nat = n1 + n2
-let mul_nat (n1:nat) (n2:nat) : Tot nat = n1 `op_Multiply` n2
+let mul_nat (n1:nat) (n2:nat) : Tot nat = n1 * n2
 let eq_nat (n1:nat) (n2:nat) : Tot bool = n1 = n2
 let eq_bool (b1:bool) (b2:bool) : Tot bool = b1 = b2
 let lt_nat (n1:nat) (n2:nat) : Tot bool = n1 < n2
@@ -148,7 +148,7 @@ let rec vstack (ts : tstack) : Type0 =
     | [] -> unit
     | t :: ts' -> typeDenote t & vstack ts'
 
-let rec tinstrDenote (#ts:tstack) (#ts':tstack)
+let tinstrDenote (#ts:tstack) (#ts':tstack)
                      (i : tinstr ts ts') (s:vstack ts) : Tot (vstack ts') =
   match i with
     | TiNConst _ n -> (n, s)

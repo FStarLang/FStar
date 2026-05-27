@@ -3,6 +3,7 @@ module UseRBSet
 open FStar.RBSet
 open FStar.Class.Printable
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let _ =
   let s = empty () in
   let s = add 5 s in
@@ -16,3 +17,4 @@ let _ =
   IO.print_string (to_string (mem 4 s) ^ "\n");
   IO.print_string (to_string (mem 5 s) ^ "\n");
   ()
+#pop-options

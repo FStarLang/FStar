@@ -21,4 +21,4 @@ open FStarC.Syntax.Syntax
 open FStarC.Ident
 
 val disentangle_abbrevs_from_bundle: list sigelt -> list qualifier -> list lident ->
-                                     FStarC.Range.Type.range -> sigelt & list sigelt
+                                     FStarC.Range.Type.range -> ML (sigelt & list sigelt)

@@ -13,6 +13,7 @@ EXTRACT += --extract -FStar.Ghost
 EXTRACT += --extract -FStar.Heap
 EXTRACT += --extract -FStar.Bytes
 EXTRACT += --extract -FStar.Char
+EXTRACT += --extract -FStar.Dyn
 EXTRACT += --extract -FStar.Exn
 EXTRACT += --extract -FStar.Float
 EXTRACT += --extract -FStar.Int16
@@ -68,11 +69,10 @@ ROOTS += ../ulib/FStar.Tactics.Print.fsti
 ROOTS += ../ulib/FStar.Tactics.SMT.fsti
 ROOTS += ../ulib/FStar.Tactics.Typeclasses.fsti
 ROOTS += ../ulib/FStar.Tactics.TypeRepr.fsti
-ROOTS += ../ulib/FStar.Tactics.V1.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.Logic.fsti
 ROOTS += ../ulib/FStar.Tactics.V2.SyntaxHelpers.fst
 ROOTS += ../ulib/FStar.Tactics.Visit.fst
 ROOTS += ../ulib/FStar.Tactics.PrettifyType.fst
 ROOTS += ../ulib/FStar.Tactics.LaxTermEq.fst
 
-include mk/generic-1.mk
+include $(GENERIC_MK)

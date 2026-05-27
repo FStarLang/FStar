@@ -20,40 +20,29 @@ module FStar.Classical.Sugar
 
 let forall_elim
        (#a:Type)
-       (#p:a -> Type)
+       (#p:a -> prop)
        (v:a)
        (f:squash (forall (x:a). p x))
   : Tot (squash (p v))
   = ()
 
-let exists_elim #t #p #q s_ex_p f
-  = let open FStar.Squash in
-    bind_squash s_ex_p (fun ex_p ->
-    bind_squash ex_p (fun (sig_p: (x:t & p x)) ->
-    let (| x, px |) = sig_p in
-    f x (return_squash px)))
+let exists_elim #t #p #q s_ex_p f =
+  Classical.exists_elim q s_ex_p fun x -> f x ()
 
 let or_elim_simple
-        (p:Type)
-        (q:Type)
-        (r:Type)
+        (p:prop)
+        (q:prop)
+        (r:prop)
         (x:squash (p \/ q))
         (f:squash p -> Tot (squash r))
         (g:squash q -> Tot (squash r))
   : Tot (squash r)
-  = let open FStar.Squash in
-    bind_squash x (fun p_or_q ->
-    bind_squash p_or_q (fun p_cor_q ->
-    match p_cor_q with
-    | Prims.Left p ->
-      f (return_squash p)
-    | Prims.Right q ->
-      g (return_squash q)))
+  = Classical.or_elim #p #q #(fun _ -> r) (fun _ -> f ()) (fun _ -> g ())
 
 let or_elim
-        (p:Type)
-        (q:squash (~p) -> Type)
-        (r:Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
+        (r:prop)
         (p_or:squash (p \/ q()))
         (left:squash p -> Tot (squash r))
         (right:squash (~p) -> squash (q()) -> Tot (squash r))
@@ -65,42 +54,33 @@ let or_elim
                 (fun (pf_p:squash p) -> left pf_p)
                 (fun (pf_q:squash (q())) -> right np pf_q))
 
-let and_elim (p:Type)
-             (q:squash p -> Type)
-             (r:Type)
+let and_elim (p:prop)
+             (q:squash p -> prop)
+             (r:prop)
              (x:squash (p /\ q()))
              (f:squash p -> squash (q()) -> Tot (squash r))
   : Tot (squash r)
-  = let open FStar.Squash in
-    bind_squash x (fun p_and_q ->
-    bind_squash p_and_q (fun (Prims.Pair p q) ->
-    f (return_squash p) (return_squash q)))
+  = f () ()
 
 let forall_intro
       (a:Type)
-      (p:a -> Type)
+      (p:a -> prop)
       (f: (x:a -> Tot (squash (p x))))
   : Tot (squash (forall x. p x))
-  = let open FStar.Squash in
-    let f' (x:a)
-      : GTot (squash (p x))
-      = f x
-    in
-    return_squash (squash_double_arrow (return_squash f'))
+  = let f (x: a) : Lemma (p x) = f x in
+  Classical.forall_intro #a #p f
 
 let exists_intro_simple
         (a:Type)
-        (p:a -> Type)
+        (p:a -> prop)
         (v:a)
         (f: squash (p v))
   : Tot (squash (exists x. p x))
-  = let open FStar.Squash in
-    let p = (| v, f |) in
-    squash_double_sum (return_squash p)
+  = ()
 
 let exists_intro
         (a:Type)
-        (p:a -> Type)
+        (p:a -> prop)
         (v:a)
         (f: unit -> Tot (squash (p v)))
   : Tot (squash (exists x. p x))
@@ -108,27 +88,22 @@ let exists_intro
 
 
 let implies_intro
-        (p:Type)
-        (q:squash p -> Type)
+        (p:prop)
+        (q:squash p -> prop)
         (f:(squash p -> Tot (squash (q()))))
   : Tot (squash (p ==> q()))
-  = let open FStar.Squash in
-    let f' (x:p)
-      : GTot (squash (q ()))
-      = f (return_squash x)
-    in
-    return_squash (squash_double_arrow (return_squash f'))
+  = Classical.impl_intro_gen #p #q fun _ -> f ()
 
 let or_intro_left
-        (p:Type)
-        (q:squash (~p) -> Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
         (f:unit -> Tot (squash p))
   : Tot (squash (p \/ q()))
   = f()
 
 let or_intro_right
-        (p:Type)
-        (q:squash (~p) -> Type)
+        (p:prop)
+        (q:squash (~p) -> prop)
         (f:squash (~p) -> Tot (squash (q())))
   : Tot (squash (p \/ q()))
   = or_elim_simple p (~p)
@@ -138,8 +113,8 @@ let or_intro_right
                   (fun s_np -> f s_np)
 
 let and_intro
-        (p:Type)
-        (q:squash p -> Type)
+        (p:prop)
+        (q:squash p -> prop)
         (f:unit -> Tot (squash p))
         (g:squash p -> Tot (squash (q())))
   : Tot (squash (p /\ q()))

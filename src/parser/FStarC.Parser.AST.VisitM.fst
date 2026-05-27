@@ -1,5 +1,4 @@
 module FStarC.Parser.AST.VisitM
-
 open FStarC
 open FStarC.Effect
 open FStarC.Parser.AST
@@ -26,7 +25,7 @@ let nops #m {| monad m |} : dict m = {
 (* Apply a monadic function on every (immediate) subcomponent. *)
 let on_sub_term'
   #m {| monad m |} (d : dict m)
-  (t : term') : m term'
+  (t : term') : ML (m term')
 =
   match t with
   (* No subterms *)
@@ -258,20 +257,20 @@ let on_sub_term'
     let! ts = mapM d.f_term ts in
     return <| SeqLiteral ts
 
-let on_sub_term #m {| monad m |} (d : dict m) (t : term) : m term =
+let on_sub_term #m {| monad m |} (d : dict m) (t : term) : ML (m term) =
   let {tm; range; level} = t in
   let! tm = d.f_term' tm in
   return {tm; range; level}
 
 let on_sub_match_returns_annotation
-  #m {| monad m |} (d : dict m) (x : match_returns_annotation) : m match_returns_annotation =
+  #m {| monad m |} (d : dict m) (x : match_returns_annotation) : ML (m match_returns_annotation) =
   let (iopt, t, b) = x in
   let! t = d.f_term t in
   return (iopt, t, b)
 
 let on_sub_patterns
   #m {| monad m |} (d : dict m)
-  (x : patterns) : m patterns
+  (x : patterns) : ML (m patterns)
 =
   let (ids, tss) = x in
   let! tss = mapM (mapM d.f_term) tss in
@@ -279,7 +278,7 @@ let on_sub_patterns
 
 let on_sub_calc_step
   #m {| monad m |} (d : dict m)
-  (x : calc_step) : m calc_step
+  (x : calc_step) : ML (m calc_step)
 =
   match x with
   | CalcStep (rel, pf, e') ->
@@ -290,7 +289,7 @@ let on_sub_calc_step
 
 let on_sub_attributes_
   #m {| monad m |} (d : dict m)
-  (x : attributes_) : m attributes_
+  (x : attributes_) : ML (m attributes_)
 =
   let ts = x in
   let! ts = mapM d.f_term ts in
@@ -298,7 +297,7 @@ let on_sub_attributes_
 
 let on_sub_binder'
   #m {| monad m |} (d : dict m)
-  (x : binder') : m binder'
+  (x : binder') : ML (m binder')
 =
   match x with
   | Variable i ->
@@ -312,7 +311,7 @@ let on_sub_binder'
 
 let on_sub_binder
   #m {| monad m |} (d : dict m)
-  (x : binder) : m binder
+  (x : binder) : ML (m binder)
 =
   let {b; brange; blevel; aqual; battributes} = x in
   let! b = d.f_binder' b in
@@ -322,7 +321,7 @@ let on_sub_binder
 
 let on_sub_pattern'
   #m {| monad m |} (d : dict m)
-  (x : pattern') : m pattern'
+  (x : pattern') : ML (m pattern')
 =
   match x with
   | PatWild (aq, attrs) ->
@@ -368,7 +367,7 @@ let on_sub_pattern'
 
 let on_sub_pattern
   #m {| monad m |} (d : dict m)
-  (x : pattern) : m pattern
+  (x : pattern) : ML (m pattern)
 =
   let {pat; prange} = x in
   let! pat = d.f_pattern' pat in
@@ -376,7 +375,7 @@ let on_sub_pattern
 
 let on_sub_branch
   #m {| monad m |} (d : dict m)
-  (x : branch) : m branch
+  (x : branch) : ML (m branch)
 =
   let (pat, wopt, t) = x in
   let! pat = on_sub_pattern d pat in
@@ -386,7 +385,7 @@ let on_sub_branch
 
 let on_sub_arg_qualifier
   #m {| monad m |} (d : dict m)
-  (x : arg_qualifier) : m arg_qualifier
+  (x : arg_qualifier) : ML (m arg_qualifier)
 =
   match x with
   | Implicit
@@ -398,13 +397,13 @@ let on_sub_arg_qualifier
 
 let on_sub_aqual
   #m {| monad m |} (d : dict m)
-  (x : aqual) : m aqual
+  (x : aqual) : ML (m aqual)
 =
   map_optM d.f_arg_qualifier x
 
 let on_sub_imp
   #m {| monad m |} (d : dict m)
-  (x : imp) : m imp
+  (x : imp) : ML (m imp)
 =
   match x with
   | Hash
@@ -417,9 +416,9 @@ let on_sub_imp
     return <| HashBrace t
 
 
-let tie #m {| monad m |} (pre post : dict m) : dict m =
+let tie #m {| monad m |} (pre post : dict m) : ML (dict m) =
   let r : ref (dict m) = mk_ref (nops #m #_) in
-  let th #m (f : dict m -> 'a -> 'b) (r : ref (dict m)) : 'a -> 'b =
+  let th (f : dict m -> 'a -> ML 'b) (r : ref (dict m)) : 'a -> ML 'b =
     fun x -> f (!r) x
   in
    (* Note: we need to thunk the access to r. *)
@@ -441,5 +440,5 @@ let tie #m {| monad m |} (pre post : dict m) : dict m =
   };
   !r
 
-let tie_bu #m {| monad m |} (d : dict m) : dict m = tie d (nops #_ #_)
-let tie_td #m {| monad m |} (d : dict m) : dict m = tie (nops #_ #_) d
+let tie_bu #m {| monad m |} (d : dict m) : ML (dict m) = tie d (nops #_ #_)
+let tie_td #m {| monad m |} (d : dict m) : ML (dict m) = tie (nops #_ #_) d

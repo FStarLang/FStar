@@ -24,13 +24,13 @@ type cmp (a:Type) = f:(a -> a -> Tot bool){asym a f}
 val p_cmp: #k:Type -> #v:Type -> cmp k -> Tot unit
 let p_cmp (#k:Type) (#v:Type) (f:cmp k) =
   let g
-    = fun (p1:k*v) (p2:k*v) -> f (fst p1) (fst p2) in
+    = fun (p1:k&v) (p2:k&v) -> f (fst p1) (fst p2) in
   ()
 
 (* -- this variant fails as it should: failed to prove a pre-condition *)
 val p_cmp': #k:Type -> #v:Type -> cmp k -> Tot unit
 [@@expect_failure [19]]
 let p_cmp' (#k:Type) (#v:Type) (f:cmp k) =
-  let g:(cmp (k * v))
-    = fun (p1:k*v) (p2:k*v) -> f (fst p1) (fst p2) in
+  let g:(cmp (k & v))
+    = fun (p1:k&v) (p2:k&v) -> f (fst p1) (fst p2) in
   ()

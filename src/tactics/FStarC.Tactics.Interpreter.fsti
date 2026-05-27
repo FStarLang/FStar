@@ -14,12 +14,29 @@
    limitations under the License.
 *)
 module FStarC.Tactics.Interpreter
-
 open FStarC.Effect
 open FStarC.Range
 open FStarC.Syntax.Syntax
 open FStarC.Syntax.Embeddings
 open FStarC.Tactics.Types
+
+(* Only plugins *)
+val native_tactics_steps : unit -> ML (list FStarC.TypeChecker.Primops.primitive_step)
+
+(* Plugins + primitives. *)
+val primitive_steps : unit -> ML (list FStarC.TypeChecker.Primops.primitive_step)
+
+(* Called by Main *)
+val register_tactic_primitive_step : FStarC.TypeChecker.Primops.primitive_step -> ML unit
+
+open FStarC.Tactics.Monad
+module NBET = FStarC.TypeChecker.NBETerm
+val e_tactic_thunk (er : embedding 'r) : ML (embedding (tac 'r))
+val e_tactic_nbe_thunk (er : NBET.embedding 'r) : ML (NBET.embedding (tac 'r))
+val e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : ML (embedding ('a -> tac 'r))
+val e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : ML (NBET.embedding ('a -> tac 'r))
+
+val report_implicits : range -> FStarC.TypeChecker.Rel.tagged_implicits -> ML unit
 
 (* Run a `tac` *)
 val run_unembedded_tactic_on_ps :
@@ -27,9 +44,9 @@ val run_unembedded_tactic_on_ps :
     range -> (* position for the goal *)
     bool ->  (* whether this call is in the "background", like resolve_implicits *)
     'a ->
-    ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
+    ('a -> ML (Monad.tac 'b)) -> (* a term representing an `'a -> tac 'b` *)
     proofstate ->  (* proofstate *)
-    list goal & 'b (* goals and return value *)
+    ML (list goal & 'b) (* goals and return value *)
 
 (* Run a term of type `a -> Tac b` *)
 val run_tactic_on_ps :
@@ -42,22 +59,4 @@ val run_tactic_on_ps :
     term ->        (* a term representing an `'a -> tac 'b` *)
     bool ->        (* true if the tactic term is already typechecked *)
     proofstate ->  (* proofstate *)
-    list goal & 'b (* goals and return value *)
-
-(* Only plugins *)
-val native_tactics_steps : unit -> list FStarC.TypeChecker.Primops.primitive_step
-
-(* Plugins + primitives. *)
-val primitive_steps : unit -> list FStarC.TypeChecker.Primops.primitive_step
-
-val report_implicits : range -> FStarC.TypeChecker.Rel.tagged_implicits -> unit
-
-(* Called by Main *)
-val register_tactic_primitive_step : FStarC.TypeChecker.Primops.primitive_step -> unit
-
-open FStarC.Tactics.Monad
-module NBET = FStarC.TypeChecker.NBETerm
-val e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
-val e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
-val e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
-val e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)
+    ML (list goal & 'b) (* goals and return value *)

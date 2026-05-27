@@ -26,17 +26,13 @@ let rec nat2unary (n: nat) : unary_nat =
   if n = 0 then U0  else US (nat2unary (n - 1))
 
 open FStar.Tactics.V2
+open FStar.Nonempty
 
-let even0 () : Lemma (even U0) = ()
+let even0 () : Lemma (nonempty (even U0)) = nonempty_intro Even0
 let evenSSn (n: unary_nat) : 
-  Lemma (requires even n)
-        (ensures even (US (US n))) =
- // What's the proper way to do this?
- assert (even n ==> even (US (US n)))
-     by (ignore (implies_intro ());
-         squash_intro ();
-         apply (`Even_SSn);
-         assumption ())
+  Lemma (requires nonempty (even n))
+        (ensures nonempty (even (US (US n)))) =
+ nonempty_intro (Even_SSn n (nonempty_elim (even n)))
 
 [@@plugin]
 let prove_even () : Tac unit =

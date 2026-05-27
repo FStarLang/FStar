@@ -44,7 +44,7 @@ let _ = assert_norm (f1 C1 == 3)
 (* Arguments in ctors *)
 type t2 =
  | A2 of int
- | B2 of bool * int
+ | B2 of bool & int
  | C2 : nat -> int -> string -> t2
 
 let fst (a,b) = a
@@ -67,7 +67,7 @@ let _ = assert_norm (f2 (C2 8 (-1) "hi") == 3)
 (* Params *)
 type t3 (i:int) =
  | A3 : t3 i
- | B3 : int * string -> t3 i
+ | B3 : int & string -> t3 i
  | C3 : bool -> nat -> t3 i
 
 let f3 (x:t3 8) : int =
@@ -83,7 +83,7 @@ let _ = assert_norm (f3 (C3 false 25) == 3)
 (* Type param, which means universe polymorphism *)
 type t4 a =
  | A4 of a
- | B4 of a * int
+ | B4 of a & int
  | C4 : nat -> a -> string -> t4 a
 
 let f4 (#a:Type) (x:t4 a) : int =

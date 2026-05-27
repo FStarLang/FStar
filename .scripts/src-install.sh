@@ -35,6 +35,7 @@ rsync -r --copy-links                   \
   --filter="- **/*.*depend*"            \
   --filter="- /out"                     \
   --filter="- /.gitignore"              \
+  --filter="- /.fstarlock"              \
   "${BROOT}/" "${PREFIX}/"
 
 cp LICENSE* "${PREFIX}"
@@ -56,6 +57,10 @@ cp .scripts/mk-package.sh   "${PREFIX}/.scripts"
 cp .scripts/get_fstar_z3.sh "${PREFIX}/.scripts"
 cp .scripts/package_z3.sh   "${PREFIX}/.scripts"
 
+# Copy a clean checkout of karamel
+mkdir "${PREFIX}/karamel"
+git -C karamel archive HEAD | tar -C "${PREFIX}/karamel" -x
+
 cp mk/src_package_mk.mk "${PREFIX}/Makefile"
 
 # Make sure the source package has a proper version.
@@ -72,5 +77,5 @@ fi
 # Remove extra ML files, rsync has resolved the links
 # into the corresponding files already, and these would be
 # duplicates.
-rm -r "$PREFIX"/*.ml
-rm -r "$PREFIX"/*.pluginml
+rm -rf "$PREFIX"/*.ml
+rm -rf "$PREFIX"/*.pluginml

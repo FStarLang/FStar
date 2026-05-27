@@ -10,7 +10,7 @@ val f: (int & int) -> (int & int)
 let f (a, b) = (b, a)
 
 // Theorem to work with `apply_lemma` to split a forall on a pair
-val tuple2_ind: #a:Type0 -> #b:Type0 -> p:((a & b) -> Type0) -> squash (forall (x:a) (y:b). p (x, y)) -> Lemma (forall xy. p xy)
+val tuple2_ind: #a:Type0 -> #b:Type0 -> p:((a & b) -> prop) -> squash (forall (x:a) (y:b). p (x, y)) -> Lemma (forall xy. p xy)
 let tuple2_ind #a #b p _ = ()
 
 // First test, get a goal using `assert` (things work fine)

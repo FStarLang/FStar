@@ -19,16 +19,16 @@ open FStar.Tactics.V2
 
 #set-options "--admit_smt_queries true"
 
-let unsquash #a : a -> squash a =
+let unsquash (#a:prop) : a -> squash a =
   fun _ -> ()
 
-let broken (a: Type0) =
+let broken (a: prop) =
   assert a
       by (apply (quote (unsquash #a));
           let xx : a = admit () in
           exact (quote xx))
 
-let yy : (Type0 -> unit) =
+let yy : (prop -> unit) =
   synth_by_tactic (fun () -> exact (norm_term [] (quote broken)))
 
 let _ =

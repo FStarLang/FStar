@@ -31,7 +31,7 @@ type pos = {
 }
 let max i j = if i < j then j else i
 
-let compare_pos (p1 p2 : pos) : order =
+let compare_pos (p1 p2 : pos) : ML order =
   lex (cmp p1.line p2.line) (fun _ -> cmp p1.col p2.col)
 
 instance deq_pos : deq pos = { (=?) = (=); }

@@ -2,7 +2,15 @@
   - Expected failure:
   - Subtyping check failed
   - Expected type wP a got type wP b
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC =
+      forall (a: Type)
+        (b: Type)
+        (wp1: Bug446.wP a)
+        (wp2: Bug446.wP b)
+        (f: Bug446.m a wp1).
+        (* - Subtyping check failed\n  - Expected type wP a got type wP b *)
+        forall (_: b). Prims.has_type _ a
   - See also Bug446.fst(33,55-33,58)
 

@@ -39,7 +39,6 @@ let sep_logic
 // so working around it for now
 (x y z1 z2 z3 : int) =
   let unfold m = int_multiply_cm in
-  let unfold op_Star = op_Multiply in
   let unfold h0 = z1 * CM?.unit m * (x * z2 * y * CM?.unit m) * z3 in
   let unfold h1 = x * y in
   assert_by_tactic (exists h1'. h1 * h1' == h0)

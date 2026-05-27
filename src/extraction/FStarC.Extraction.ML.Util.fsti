@@ -15,40 +15,40 @@
 *)
 module FStarC.Extraction.ML.Util
 open FStarC
-open FStarC
+open FStarC.Effect
 open FStarC.Ident
 open FStarC.Extraction.ML.Syntax
 
-val codegen_fsharp : unit -> bool
-val pruneNones : list (option 'a) -> list 'a
+val codegen_fsharp : unit -> ML bool
+val pruneNones : list (option 'a) -> ML (list 'a)
 val mk_range_mle : mlexpr
-val mlconst_of_const : p:Range.t -> c:Const.sconst -> mlconstant
-val mlexpr_of_const : p:Range.t -> c:Const.sconst -> mlexpr'
-val mlexpr_of_range : r:Range.t -> mlexpr'
-val subst : list ty_param & mlty -> args:list mlty -> mlty
-val udelta_unfold : g:UEnv.uenv -> _arg1:mlty -> option mlty
+val mlconst_of_const : p:Range.t -> c:Const.sconst -> ML mlconstant
+val mlexpr_of_range : r:Range.t -> ML mlexpr'
+val mlexpr_of_const : p:Range.t -> c:Const.sconst -> ML mlexpr'
+val subst : list ty_param & mlty -> args:list mlty -> ML mlty
+val udelta_unfold : g:UEnv.uenv -> _arg1:mlty -> ML (option mlty)
 val eff_leq : f:e_tag -> f':e_tag -> bool
 val eff_to_string : _arg1:e_tag -> string
-val join : r:Range.t -> f:e_tag -> f':e_tag -> e_tag
-val join_l : r:Range.t -> fs:Prims.list e_tag -> e_tag
-val mk_ty_fun : (Prims.list mlbinder -> mlty -> mlty)
-type unfold_t = mlty -> option mlty
-val type_leq_c : unfold_ty:unfold_t -> e:option mlexpr -> t:mlty -> t':mlty -> bool & option mlexpr
-val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> bool
+val join : r:Range.t -> f:e_tag -> f':e_tag -> ML e_tag
+val join_l : r:Range.t -> fs:Prims.list e_tag -> ML e_tag
+val mk_ty_fun : Prims.list mlbinder -> mlty -> ML mlty
+type unfold_t = mlty -> ML (option mlty)
+val type_leq_c : unfold_ty:unfold_t -> e:option mlexpr -> t:mlty -> t':mlty -> ML (bool & option mlexpr)
+val type_leq : g:unfold_t -> t1:mlty -> t2:mlty -> ML bool
 val erase_effect_annotations: mlty -> mlty
 val is_type_abstraction : list (either 'a 'b & 'c) -> bool
 val is_xtuple : list string & string -> option int
 val is_xtuple_ty : list string & string -> option int
 val resugar_exp : e:mlexpr -> mlexpr
+val record_field_path : list lident -> ML (list string)
+val record_fields : fs:list lident -> vs:list 'a -> ML (list (string & 'a))
 val resugar_mlty : t:mlty -> mlty
-val record_field_path : list lident -> list string
-val record_fields : fs:list lident -> vs:list 'a -> list (string & 'a)
 
 val flatten_ns : ns:list string -> string
 val flatten_mlpath : list string & string -> string
-val ml_module_name_of_lid: lident -> string
-val erasableType : unfold_ty:unfold_t -> t:mlty -> bool
-val eraseTypeDeep : unfold_ty:unfold_t -> t:mlty -> mlty
+val ml_module_name_of_lid: lident -> ML string
+val erasableType : unfold_ty:unfold_t -> t:mlty -> ML bool
+val eraseTypeDeep : unfold_ty:unfold_t -> t:mlty -> ML mlty
 val prims_op_equality : mlexpr
 val prims_op_amp_amp : mlexpr
 val conjoin : e1:mlexpr -> e2:mlexpr -> mlexpr

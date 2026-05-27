@@ -16,7 +16,7 @@ OTHERFLAGS += --warn_error -241
 # warnings about missing checked files since it will mess up the output.
 
 FSTAR_ROOT ?= ..
-FSTAR_EXE ?= $(abspath $(FSTAR_ROOT)/stage1/dune/_build/default/fstarc-bare/fstarc1_bare.exe)
+FSTAR_EXE ?= $(abspath $(FSTAR_ROOT)/stage1/dune/_build/default/fstarc-full/fstarc1_full.exe)
 export FSTAR_LIB ?= $(abspath $(FSTAR_ROOT)/ulib)
 include $(FSTAR_ROOT)/mk/test.mk
 

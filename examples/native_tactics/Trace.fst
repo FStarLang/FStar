@@ -21,7 +21,7 @@ open FStar.List.Tot
 (* Do not warn about recursive functions not used in their bodies:
 since we metaprogram them, the desugaring phase wrongly concludes
 they do not have to be recursive, but they do. *)
-#push-options "--warn_error -328"
+#push-options "--warn_error -328" //Warning_UnusedLetRec
 
 (* We take a function such as
  *
@@ -174,7 +174,7 @@ let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 let rec fact_aux (n acc : nat) : Tot nat =
     if n = 0
     then acc
-    else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
+    else let acc' = acc * n in fact_aux (n - 1) acc'
 
 let fact (n : nat) : Tot nat = fact_aux n 1
 
@@ -194,3 +194,5 @@ let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
 #pop-options
 
 let _ = assert (fact' 5 [] == ([5], 120))
+
+#pop-options

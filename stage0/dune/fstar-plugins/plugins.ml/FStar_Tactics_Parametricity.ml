@@ -230,10 +230,10 @@ let rec param' (s : param_state) (t : FStar_Tactics_NamedView.term) :
                                              (FStar_Tactics_NamedView.Tv_Arrow
                                                 (x5,
                                                   (FStarC_Reflection_V2_Data.C_Total
-                                                     (FStar_Tactics_NamedView.pack
-                                                        (FStar_Tactics_NamedView.Tv_Type
-                                                           (FStar_Tactics_NamedView.pack_universe
-                                                              FStar_Tactics_NamedView.Uv_Unk))))))))))))))))))
+                                                     (FStarC_Reflection_V2_Builtins.pack_ln
+                                                        (FStarC_Reflection_V2_Data.Tv_Type
+                                                           (FStarC_Reflection_V2_Builtins.pack_universe
+                                                              FStarC_Reflection_V2_Data.Uv_Unk))))))))))))))))))
       | FStar_Tactics_NamedView.Tv_Var bv ->
           Obj.magic
             (Obj.repr
@@ -634,7 +634,7 @@ let param (t : FStar_Tactics_NamedView.term) :
   fun ps -> let x = param' init_param_state t ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.param" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.param" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -830,7 +830,7 @@ let paramd (nm : Prims.string) :
         x4
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.paramd" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.paramd" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -849,7 +849,7 @@ let paramds (nms : Prims.string Prims.list) :
     FStar_List_Tot_Base.flatten x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.Parametricity.paramds" (Prims.of_int (2))
+    "FStar.Tactics.Parametricity.paramds" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

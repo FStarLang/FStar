@@ -1,13 +1,14 @@
 module OpenOperators
 
-open FStar.Mul { ( * ) }
 
+open Prims { ( * ) }
+ 
 let _ = assert (2 * 3 == 6)
 
-open FStar.Mul { ( * ) as ( ++ ) }
+open Prims { ( * ) as ( ++ ) }
 
 let _ = assert (2 ++ 3 == 6)
 
-open FStar.Mul { ( * ) as (-) }
+open Prims { ( * ) as (-) }
 
 let _ = assert (2 - 3 == 6)

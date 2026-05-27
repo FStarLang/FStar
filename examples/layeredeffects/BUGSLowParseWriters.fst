@@ -44,13 +44,13 @@ type result (a: Type u#x) : Type u#x =
 let pure_post_err
   (pre: pure_pre)
 : Tot Type
-= unit (* squash pre *) -> GTot Type0
+= unit (* squash pre *) -> GTot prop
 
 let pure_post'
   (a: Type)
   (pre: pure_pre)
 : Tot Type
-= (x: a) -> GTot Type0 // (requires pre) (ensures (fun _ -> True))
+= (x: a) -> GTot prop // (requires pre) (ensures (fun _ -> True))
 
 
 let read_repr_spec (a:Type u#x) (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)  : Tot (Type u#x) =
@@ -125,7 +125,7 @@ let read_subcomp_spec_cond
   (a:Type)
   (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
   (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
-: GTot Type0
+: GTot prop
 = (pre' ==> pre) /\
   (forall x . (pre' /\ post x) ==> post' x) /\
   ((pre' /\ post_err ()) ==> post_err' ())
@@ -137,7 +137,7 @@ let read_subcomp_cond
   (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l: memory_invariant)
   (l' : memory_invariant)
-: GTot Type0
+: GTot prop
 = read_subcomp_spec_cond a pre post post_err pre' post' post_err'
 
 let read_subcomp_spec (a:Type)

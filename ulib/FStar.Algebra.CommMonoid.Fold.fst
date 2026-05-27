@@ -32,7 +32,6 @@ open FStar.IntegerIntervals
  
 (* We refine multiplication a bit to make proofs smoothier *)
 
-open FStar.Mul  
 
 let rec fold #c #eq 
              (cm: CE.cm c eq) 

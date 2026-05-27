@@ -29,7 +29,7 @@ type eff_label =
   | WR
   | EXN
 
-type annot = eff_label -> Type0
+type annot = eff_label -> prop
 
 noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
@@ -167,7 +167,7 @@ let subcomp (a:Type)
          (ensures (fun _ -> True))
   = f
 
-let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
+let ite (p q r : prop) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
   (a : Type)

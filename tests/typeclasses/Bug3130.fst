@@ -18,7 +18,7 @@ assume val truc:
   #bytes:Type0 -> {|typeclass1 bytes|} ->
   #a:Type -> {|typeclass2 bytes a|} ->
   t bytes -> a ->
-  Type0
+  prop
 
 open FStar.Tactics.Typeclasses
 

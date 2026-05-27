@@ -17,7 +17,9 @@ module Evens.Test
 open Evens
 open FStar.Tactics.V2
 
+open FStar.Nonempty
+
 let even_test () =
- assert (even (nat2unary 1024))
+ assert (nonempty (even (nat2unary 1024)))
      by (norm [nbe; delta_only [`%nat2unary]; zeta; iota; primops];
          prove_even ())

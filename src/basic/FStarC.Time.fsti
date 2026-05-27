@@ -23,17 +23,15 @@ open FStarC.Class.Show
 
 type time_of_day
 
-val get_time_of_day ()
-  : time_of_day
+val get_time_of_day : unit -> ML time_of_day
 
-val get_time_of_day_ms ()
-  : int
+val get_time_of_day_ms : unit -> ML int
 
 val is_before (t1 t2 : time_of_day)
   : bool
 
 val get_file_last_modification_time (fn : string)
-  : time_of_day
+  : ML time_of_day
 
 val string_of_time_of_day (t : time_of_day)
   : string

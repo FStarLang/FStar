@@ -408,7 +408,35 @@ let replace_chars (s:string) c (by:string) =
   BatString.replace_chars (fun x -> if x = Char.chr c then by else BatString.of_char x) s
 let hashcode s = Z.of_int (BatHashtbl.hash s)
 let compare s1 s2 = Z.of_int (BatString.compare s1 s2)
-let split s sep = BatString.split_on_string sep s
+let split s sep =
+  (* Stack-safe replacement for BatString.split_on_string.
+     BatString.find_from is not tail-recursive and overflows on long strings. *)
+  if sep = "" then invalid_arg "String.split: empty separator"
+  else
+    let slen = String.length s in
+    let seplen = String.length sep in
+    if slen = 0 then [""]
+    else
+      let find_sep start =
+        let result = ref (-1) in
+        let i = ref start in
+        while !i + seplen <= slen && !result = -1 do
+          if String.sub s !i seplen = sep then result := !i
+          else i := !i + 1
+        done;
+        !result
+      in
+      let rec collect acc start =
+        if start > slen then List.rev acc
+        else if start = slen then List.rev ("" :: acc)
+        else
+          let p = find_sep start in
+          if p = -1 then List.rev (String.sub s start (slen - start) :: acc)
+          else
+            let tok = String.sub s start (p - start) in
+            collect (tok :: acc) (p + seplen)
+      in
+      collect [] 0
 let splitlines s = split s "\n"
 
 let iof = int_of_float

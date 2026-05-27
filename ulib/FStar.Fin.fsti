@@ -90,9 +90,9 @@ type binary_relation (a: Type) = a -> a -> bool
     Use reveal_opaque when you really need it. Or use refl/trans/symm lemmas
     below to keep the context clean. *)
 
-val is_reflexive (#a:Type) (r: binary_relation a) : Type0
-val is_symmetric (#a:Type) (r: binary_relation a) : Type0
-val is_transitive (#a:Type) (r: binary_relation a) : Type0
+val is_reflexive (#a:Type) (r: binary_relation a) : prop
+val is_symmetric (#a:Type) (r: binary_relation a) : prop
+val is_transitive (#a:Type) (r: binary_relation a) : prop
 
 val is_reflexive_intro (#a:Type) (r: binary_relation a)
   : Lemma (requires forall (x:a). r x x) (ensures is_reflexive r)

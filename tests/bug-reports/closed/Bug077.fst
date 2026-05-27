@@ -16,7 +16,7 @@
 module Bug077
 
 assume type a
-assume type p : a -> Type u#0
+assume type p : a -> prop
 
 val ok : x:a{p x} -> r:a{p r}
 let ok x = x
@@ -27,7 +27,7 @@ let ok3 x = Some x
 
 
 assume type b
-assume type q : a -> b -> Type u#0
+assume type q : a -> b -> prop
 
 val ok4 : x:a -> y:b{q x y} -> r:(a & b){q (fst r) (snd r)}
 let ok4 x y = (x, y)

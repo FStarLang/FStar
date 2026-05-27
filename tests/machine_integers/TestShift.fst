@@ -11,6 +11,8 @@ module I32  = FStar.Int32
 module U8   = FStar.UInt8
 module U32  = FStar.UInt32
 
+#set-options "--z3rlimit 40"
+
 let check s (b:bool) : ML unit =
     if not b then failwith s
 
@@ -27,7 +29,6 @@ let test_u32 () : ML unit =
         (U32.to_string (U32.uint_to_t (pow2 32 - 1) `U32.shift_right` 24ul) = "255");
     check "u32r31"
         (U32.to_string (U32.uint_to_t (pow2 32 - 1) `U32.shift_right` 31ul) = "1");
-
     check "u32l0"
         (U32.to_string (U32.uint_to_t 1 `U32.shift_left` 0ul)  = "1");
     check "u32l1"

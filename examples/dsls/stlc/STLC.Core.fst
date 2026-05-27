@@ -15,6 +15,7 @@
 *)
 
 module STLC.Core
+open FStar.Nonempty
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -543,21 +544,19 @@ let soundness_lemma (sg:stlc_env)
                     (st:stlc_ty)
                     (g:RT.fstar_top_env)
   : Lemma
-    (requires stlc_typing sg se st)
-    (ensures  RT.tot_typing (extend_env_l g sg)
+    (requires nonempty (stlc_typing sg se st))
+    (ensures  nonempty (RT.tot_typing (extend_env_l g sg)
                             (elab_exp se)
-                            (elab_ty st))
-  = FStar.Squash.bind_squash 
-      #(stlc_typing sg se st)
-      ()
-      (fun dd -> FStar.Squash.return_squash (soundness dd g))
+                            (elab_ty st)))
+  = let dd = nonempty_elim (stlc_typing sg se st) in
+    nonempty_intro (soundness dd g)
 
 let main (nm:string) (src:stlc_exp) : RT.dsl_tac_t =
   fun (g, expected_t) ->
   if ln src && closed src
   then if None? expected_t
        then let (| src_ty, d |) = check g [] src in
-            soundness_lemma [] src src_ty g;
+            let _ : nonempty (RT.tot_typing (extend_env_l g []) (elab_exp src) (elab_ty src_ty)) = nonempty_intro (soundness d g) in
             [],
             RT.mk_checked_let g (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
             []

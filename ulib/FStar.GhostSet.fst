@@ -29,7 +29,7 @@ let mem #a x s = s x
 
 (* constructors *)
 let empty #a           = F.on_dom_g a (fun x -> false)
-let singleton #a f x   = F.on_dom_g a #(fun _ -> bool) (fun y -> f x y)
+let singleton #a x     = F.on_dom_g a #(fun _ -> bool) (fun y -> x == y)
 let union #a s1 s2     = F.on_dom_g a (fun x -> s1 x || s2 x)
 let intersect #a s1 s2 = F.on_dom_g a (fun x -> s1 x && s2 x)
 let complement #a s    = F.on_dom_g a ( fun x -> not (s x))

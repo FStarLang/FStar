@@ -27,15 +27,11 @@ open FStar.Preorder
 ///
 /// See examples/calc for some examples
 
-/// The main type for the calc proof chain
-
-val calc_chain (#a:Type u#a) (rs:list (relation a)) (x y:a) : Type u#(max 1 a)
-
 /// Definition of when a calc chain is sound
 
 [@@"opaque_to_smt"]
 let rec calc_chain_related (#a:Type) (rs:list (relation a)) (x y:a)
-  : Tot Type0
+  : prop
   = match rs with
     | [] -> x == y
       (* GM: The `:t` annotation below matters a lot for compactness of the formula! *)
@@ -43,13 +39,11 @@ let rec calc_chain_related (#a:Type) (rs:list (relation a)) (x y:a)
 
 [@@"opaque_to_smt"]
 let calc_chain_compatible (#t:Type) (rs:list (relation t)) (p:relation t)
-  : Tot Type0
+  : prop
   = forall (x y:t). calc_chain_related rs x y ==> p x y
 
 /// A proof irrelevant type for the calc chains
-
-type calc_pack (#a:Type) (rs:list (relation a)) (x y:a) =
-  squash (calc_chain rs x y)
+val calc_pack (#a:Type) (rs:list (relation a)) (x y:a) : prop
 
 /// Initializing a calc chain
 
@@ -88,5 +82,5 @@ val calc_finish
                          (calc_chain_compatible rs p))))
       (ensures (p x y))
 
-val calc_push_impl (#p #q:Type) (f:squash p -> GTot (squash q))
+val calc_push_impl (#p #q:prop) (f:squash p -> GTot (squash q))
   : Tot (squash (p ==> q))

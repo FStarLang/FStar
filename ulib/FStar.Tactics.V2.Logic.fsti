@@ -76,9 +76,6 @@ val l_intro () : Tac binding
 val l_intros () : Tac (list binding)
 
 [@@plugin]
-val squash_intro () : Tac unit
-
-[@@plugin]
 val l_exact (t:term) : Tac unit
 
 // FIXME: should this take a binding? It's less general...
@@ -100,21 +97,6 @@ val rewrite_all_equalities () : Tac unit
 
 [@@plugin]
 val unfold_definition_and_simplify_eq (tm:term) : Tac unit
-
-(** A tactic to unsquash a hypothesis. Perhaps you are looking
-for [unsquash_term].
-
-Pre:
-  goal =
-    G |- e : squash s
-    t : squash r
-
-Post:
-    G, x:r |- e : squash s
-    `x` is returned as a term
-*)
-[@@plugin]
-val unsquash (t : term) : Tac term
 
 [@@plugin]
 val cases_or (o:term) : Tac unit

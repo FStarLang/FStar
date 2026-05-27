@@ -49,12 +49,17 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
           let uu___9 =
             let uu___10 =
               let uu___11 = mk_lid "render_issue" in
-              FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero uu___11
+              FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero uu___11
                 FStarC_Syntax_Embeddings.e_issue
                 FStarC_TypeChecker_NBETerm.e_issue
                 FStarC_Syntax_Embeddings.e_string
                 FStarC_TypeChecker_NBETerm.e_string
-                FStarC_Errors.format_issue in
+                (fun i ->
+                   let uu___12 = FStarC_Errors.format_issue i in
+                   FStar_Pervasives_Native.Some uu___12)
+                (fun i ->
+                   let uu___12 = FStarC_Errors.format_issue i in
+                   FStar_Pervasives_Native.Some uu___12) in
             let uu___11 =
               let uu___12 =
                 let uu___13 = mk_lid "mk_issue_doc" in
@@ -78,10 +83,10 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                   FStarC_Syntax_Embeddings.e_issue
                   FStarC_TypeChecker_NBETerm.e_issue
                   (fun level msg range number context ->
-                     let uu___14 = FStarC_Errors.issue_level_of_string level in
                      {
                        FStarC_Errors.issue_msg = msg;
-                       FStarC_Errors.issue_level = uu___14;
+                       FStarC_Errors.issue_level =
+                         (FStarC_Errors.issue_level_of_string level);
                        FStarC_Errors.issue_range = range;
                        FStarC_Errors.issue_number = number;
                        FStarC_Errors.issue_ctx = context

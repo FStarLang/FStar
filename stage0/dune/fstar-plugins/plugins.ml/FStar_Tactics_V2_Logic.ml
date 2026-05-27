@@ -33,7 +33,7 @@ let l_revert (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
                ["FStar"; "Tactics"; "Logic"; "Lemmas"; "revert_squash"]))) ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.l_revert" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.l_revert" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -57,7 +57,7 @@ let rec l_revert_all (uu___ : FStar_Tactics_NamedView.binding Prims.list) :
     uu___
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.l_revert_all" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.l_revert_all" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -80,7 +80,7 @@ let forall_intro (uu___ : unit) :
     FStarC_Tactics_V2_Builtins.intro () ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.forall_intro" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.forall_intro" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -102,7 +102,7 @@ let forall_intro_as (s : Prims.string) :
     FStar_Tactics_V2_Derived.intro_as s ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.forall_intro_as" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.forall_intro_as" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -120,7 +120,7 @@ let forall_intros (uu___ : unit) :
   FStar_Tactics_V2_Derived.repeat1 forall_intro
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.forall_intros" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.forall_intros" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -146,7 +146,7 @@ let split (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
     (fun uu___1 -> FStar_Tactics_V2_Derived.fail "Could not split goal")
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.split" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.split" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -167,7 +167,7 @@ let implies_intro (uu___ : unit) :
     FStarC_Tactics_V2_Builtins.intro () ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intro" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.implies_intro" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -190,7 +190,7 @@ let implies_intro_as (s : Prims.string) :
     FStar_Tactics_V2_Derived.intro_as s ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intro_as" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.implies_intro_as" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -208,7 +208,7 @@ let implies_intros (uu___ : unit) :
   FStar_Tactics_V2_Derived.repeat1 implies_intro
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.implies_intros" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.implies_intros" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -226,7 +226,7 @@ let l_intro (uu___ : unit) :
   FStar_Tactics_V2_Derived.or_else forall_intro implies_intro
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.l_intro" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.l_intro" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -243,7 +243,7 @@ let l_intros (uu___ : unit) :
   FStar_Tactics_V2_Derived.repeat l_intro
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.l_intros" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.l_intros" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -263,7 +263,7 @@ let squash_intro (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
              ["FStar"; "Squash"; "return_squash"])))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.squash_intro" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.squash_intro" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -280,7 +280,7 @@ let l_exact (t : FStar_Tactics_NamedView.term) :
     (fun uu___ ps -> squash_intro () ps; FStar_Tactics_V2_Derived.exact t ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.l_exact" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.l_exact" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -295,7 +295,7 @@ let hyp (x : FStar_Tactics_NamedView.namedv) :
   l_exact (FStar_Tactics_V2_SyntaxCoercions.namedv_to_term x)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.hyp" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.hyp" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -429,7 +429,7 @@ let pose_lemma (t : FStar_Tactics_NamedView.term) :
               x6))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.pose_lemma" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.pose_lemma" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -449,7 +449,7 @@ let explode (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
            (fun uu___2 ps1 -> split () ps1)]) ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.explode" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.explode" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -496,7 +496,7 @@ let rec simplify_eq_implication (uu___ : unit) :
          visit simplify_eq_implication ps)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.simplify_eq_implication" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.simplify_eq_implication" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -511,7 +511,7 @@ let rewrite_all_equalities (uu___ : unit) :
   (unit, unit) FStar_Tactics_Effect.tac_repr= visit simplify_eq_implication
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.rewrite_all_equalities" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.rewrite_all_equalities" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -543,7 +543,7 @@ let rec unfold_definition_and_simplify_eq (tm : FStar_Tactics_NamedView.term)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq"
-    (Prims.of_int (2))
+    (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -570,7 +570,7 @@ let unsquash (t : FStar_Tactics_NamedView.term) :
           (FStar_Tactics_V2_SyntaxCoercions.binding_to_namedv x2)))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.unsquash" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.unsquash" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -592,7 +592,7 @@ let cases_or (o : FStar_Tactics_NamedView.term) :
        [o])
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.cases_or" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.cases_or" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -624,7 +624,7 @@ let cases_bool (b : FStar_Tactics_NamedView.term) :
          ()) ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.cases_bool" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.cases_bool" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -642,7 +642,7 @@ let left (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
              ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_1"])))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.left" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.left" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -660,7 +660,7 @@ let right (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
              ["FStar"; "Tactics"; "Logic"; "Lemmas"; "or_intro_2"])))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.right" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.right" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -703,7 +703,7 @@ let and_elim (t : FStar_Tactics_NamedView.term) :
                  (t, FStarC_Reflection_V2_Data.Q_Explicit)))))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.and_elim" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.and_elim" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -721,7 +721,7 @@ let destruct_and (t : FStar_Tactics_NamedView.term) :
     (let x1 = implies_intro () ps in let x2 = implies_intro () ps in (x1, x2))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.destruct_and" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.destruct_and" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -746,7 +746,7 @@ let witness (t : FStar_Tactics_NamedView.term) :
     FStar_Tactics_V2_Derived.exact t ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.witness" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.witness" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -776,7 +776,7 @@ let elim_exists (t : FStar_Tactics_NamedView.term) :
      let x2 = FStarC_Tactics_V2_Builtins.intro () ps in (x1, x2))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.elim_exists" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.elim_exists" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -834,7 +834,7 @@ let instantiate (fa : FStar_Tactics_NamedView.term)
          (fun uu___1 -> FStar_Tactics_V2_Derived.fail "could not instantiate"))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.instantiate" (Prims.of_int (3))
+    "FStar.Tactics.V2.Logic.instantiate" (Prims.of_int 3)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -854,7 +854,7 @@ let instantiate_as (fa : FStar_Tactics_NamedView.term)
     FStarC_Tactics_V2_Builtins.rename_to x1 s ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.instantiate_as" (Prims.of_int (4))
+    "FStar.Tactics.V2.Logic.instantiate_as" (Prims.of_int 4)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -920,7 +920,7 @@ let skolem (uu___ : unit) :
     FStar_Tactics_Util.map sk_binder x ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.skolem" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.skolem" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->
@@ -992,7 +992,7 @@ let using_lemma (t : FStar_Tactics_NamedView.term) :
                    "using_lemma: failed to instantiate")))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.using_lemma" (Prims.of_int (2))
+    "FStar.Tactics.V2.Logic.using_lemma" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

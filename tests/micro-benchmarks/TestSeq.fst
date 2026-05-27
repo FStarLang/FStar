@@ -26,7 +26,9 @@ let rec print_seq s i =
         print_string "\n";
         print_seq s (i + 1))
 
+#push-options "--warn_error -272" //Warning_TopLevelEffect
 let main =
   let id i = i in
   let s = Seq.init 10 id in
   print_seq s 0
+#pop-options

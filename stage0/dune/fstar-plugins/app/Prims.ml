@@ -118,7 +118,7 @@ let ( mod )   = Z.erem
 let ( ~- )    = Z.neg
 let abs       = Z.abs
 
-let op_Multiply x y = x * y
+let op_Star x y = x * y
 let op_Subtraction x y = x - y
 let op_Addition x y = x + y
 let op_Minus x = -x

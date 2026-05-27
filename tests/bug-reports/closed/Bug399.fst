@@ -15,7 +15,7 @@
 *)
 module Bug399
 
-open FStar.ST
+open FStar.All
 
 type foo = unit -> St unit
 

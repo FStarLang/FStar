@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Part3.DataTypesALaCarte
-open FStar.Mul
 open FStar.Tactics.Typeclasses
 #set-options "--z3rlimit_factor 4 --z3cliopt 'smt.qi.eager_threshold=100' --fuel 2 --ifuel 2"
 (**

@@ -16,7 +16,7 @@ let test0 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 t2))
     let e2 = t2 in
     check_subtyping g t1 e2
 
-[@@expect_failure [54]]
+[@@expect_failure [66]]
 let test1 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 _)) =
   fun (g:env) (t1 t2:term) ->
     let e2 = t2 in

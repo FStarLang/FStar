@@ -3,7 +3,7 @@ let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs=
   {
     FStarC_TypeChecker_NBETerm.iapp = (fun h _args -> h);
     FStarC_TypeChecker_NBETerm.translate =
-      (fun uu___ -> failwith "bogus_cbs translate")
+      (fun uu___ -> FStarC_Effect.failwith "bogus_cbs translate")
   }
 let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
   FStarC_List.map
@@ -29,8 +29,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
          FStarC_TypeChecker_Primops_Base.interpretation_nbe =
            (uu___.FStarC_TypeChecker_Primops_Base.interpretation_nbe)
        })
-    [(FStarC_Parser_Const.map_seal_lid, (Prims.of_int (4)),
-       (Prims.of_int (2)),
+    [(FStarC_Parser_Const.map_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
        ((fun psc univs cbs args ->
            match args with
            | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
@@ -52,12 +51,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                    FStar_Pervasives_Native.Some s1,
                    FStar_Pervasives_Native.Some f1) ->
                     let r =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_Syntax_Syntax.as_arg
-                            (FStarC_Sealed.unseal s1) in
-                        [uu___6] in
-                      FStarC_Syntax_Util.mk_app f1 uu___5 in
+                      FStarC_Syntax_Util.mk_app f1
+                        [FStarC_Syntax_Syntax.as_arg
+                           (FStarC_Sealed.unseal s1)] in
                     let emb =
                       FStarC_Syntax_Embeddings_Base.set_type ta1
                         FStarC_Syntax_Embeddings.e_any in
@@ -89,12 +85,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                    FStar_Pervasives_Native.Some s1,
                    FStar_Pervasives_Native.Some f1) ->
                     let r =
-                      let uu___5 =
-                        let uu___6 =
-                          FStarC_TypeChecker_NBETerm.as_arg
-                            (FStarC_Sealed.unseal s1) in
-                        [uu___6] in
-                      cb.FStarC_TypeChecker_NBETerm.iapp f1 uu___5 in
+                      cb.FStarC_TypeChecker_NBETerm.iapp f1
+                        [FStarC_TypeChecker_NBETerm.as_arg
+                           (FStarC_Sealed.unseal s1)] in
                     let emb =
                       FStarC_TypeChecker_NBETerm.set_type ta1
                         FStarC_TypeChecker_NBETerm.e_any in
@@ -105,8 +98,7 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                     FStar_Pervasives_Native.Some uu___5
                 | uu___5 -> FStar_Pervasives_Native.None)
            | uu___ -> FStar_Pervasives_Native.None)));
-    (FStarC_Parser_Const.bind_seal_lid, (Prims.of_int (4)),
-      (Prims.of_int (2)),
+    (FStarC_Parser_Const.bind_seal_lid, (Prims.of_int 4), (Prims.of_int 2),
       ((fun psc univs cbs args ->
           match args with
           | (ta, uu___)::(tb, uu___1)::(s, uu___2)::(f, uu___3)::[] ->
@@ -128,12 +120,8 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                   FStar_Pervasives_Native.Some s1,
                   FStar_Pervasives_Native.Some f1) ->
                    let r =
-                     let uu___5 =
-                       let uu___6 =
-                         FStarC_Syntax_Syntax.as_arg
-                           (FStarC_Sealed.unseal s1) in
-                       [uu___6] in
-                     FStarC_Syntax_Util.mk_app f1 uu___5 in
+                     FStarC_Syntax_Util.mk_app f1
+                       [FStarC_Syntax_Syntax.as_arg (FStarC_Sealed.unseal s1)] in
                    let uu___5 =
                      FStarC_TypeChecker_Primops_Base.embed_simple
                        FStarC_Syntax_Embeddings.e_any
@@ -161,12 +149,9 @@ let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
                   FStar_Pervasives_Native.Some s1,
                   FStar_Pervasives_Native.Some f1) ->
                    let r =
-                     let uu___5 =
-                       let uu___6 =
-                         FStarC_TypeChecker_NBETerm.as_arg
-                           (FStarC_Sealed.unseal s1) in
-                       [uu___6] in
-                     cb.FStarC_TypeChecker_NBETerm.iapp f1 uu___5 in
+                     cb.FStarC_TypeChecker_NBETerm.iapp f1
+                       [FStarC_TypeChecker_NBETerm.as_arg
+                          (FStarC_Sealed.unseal s1)] in
                    let emb =
                      FStarC_TypeChecker_NBETerm.set_type ta1
                        FStarC_TypeChecker_NBETerm.e_any in

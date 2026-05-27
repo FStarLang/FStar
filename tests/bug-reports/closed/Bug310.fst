@@ -2,7 +2,7 @@ module Bug310
 
 (* a is rewritten to 'a
   'a is rewritten to 'a1 *)
-type capture (a:Type) 'a = 'a * a
+type capture (a:Type) 'a = 'a & a
 
 ////////////////////////////////////////////////////////////////////////////////
 

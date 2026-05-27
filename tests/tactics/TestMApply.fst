@@ -17,8 +17,8 @@ module TestMApply
 
 open FStar.Tactics.V2
 
-assume val p : Type0
-assume val q : Type0
+assume val p : prop
+assume val q : prop
 assume val x : squash p
 
 assume val lem     : unit -> Lemma (requires p) (ensures q)
@@ -50,20 +50,20 @@ let _ =
           mapply h)
 
 let _ =
-  assert (squash (p ==> q) ==> p ==> q)
+  assert ((p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
           mapply i;
           mapply h)
 
 let _ =
-  assert (squash (p ==> q) ==> squash p ==> q)
+  assert ((p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
           mapply i;
           mapply h)
 let _ =
-  assert ((p ==> q) ==> squash p ==> q)
+  assert ((p ==> q) ==> p ==> q)
       by (let i = implies_intro () in
           let h = implies_intro () in
           mapply i;

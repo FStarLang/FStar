@@ -10,15 +10,17 @@
 * Info at Bug3980.fst(23,8-23,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Bug3980.a == Bug3980.c
   - See also Bug3980.fst(23,15-23,23)
 
 * Info at Bug3980.fst(25,8-25,14):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Bug3980.b == Bug3980.c
   - See also Bug3980.fst(25,15-25,23)
 
 * Info at Bug3980.fst(33,0-33,29):

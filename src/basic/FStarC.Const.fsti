@@ -57,4 +57,4 @@ val eq_const (c1 c2 : sconst) : bool
 
 val bounds : signedness -> width -> int & int
 
-val within_bounds : string -> signedness -> width -> bool
+val within_bounds : string -> signedness -> width -> ML bool

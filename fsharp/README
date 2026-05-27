@@ -1,7 +1,10 @@
 This directory contains all that's needed to build an F# version of the
-F* application library (alib) in order to build F# applications. This is
-currently not tested by anything in this repository.
+F* application library (alib) in order to build F# applications.
 
-The output of this build goes into the bin/ and nuget/ subdirectories.
-Run `make lib-fsharp` from the top level to extract the library and
-build it (this is implied by `make all`).
+Run `make fsharp-lib` from the top level to extract the library,
+build it, and run the F# tests.
+
+The `tests/` subdirectory contains small F* programs that are extracted
+to F#, compiled, and run.
+
+The output of the library build goes into the bin/ and obj/ subdirectories.

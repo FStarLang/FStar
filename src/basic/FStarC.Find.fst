@@ -22,7 +22,7 @@ module BU = FStarC.Util
 
 open FStarC.Class.Show
 
-let cached_fun #a (cache : SMap.t a) (f : string -> a) : string -> a =
+let cached_fun #a (cache : SMap.t a) (f : string -> ML a) : string -> ML a =
   fun s ->
     match SMap.try_find cache s with
     | Some v -> v
@@ -35,7 +35,7 @@ let cached_fun #a (cache : SMap.t a) (f : string -> a) : string -> a =
 let _full_include : ref (option (list string)) = mk_ref None
 let find_file_cache : SMap.t (option string) = SMap.create 100
 
-let clear () =
+let clear () : ML unit =
   SMap.clear find_file_cache;
   _full_include := None;
   ()
@@ -47,35 +47,47 @@ let _odir : ref (option string) = mk_ref None
 let _no_default_includes : ref bool = mk_ref false
 let _with_fstarc : ref bool = mk_ref false
 
-let get_include_path () : list string = !_include
-let set_include_path (path : list string) : unit =
+let get_include_path () : ML (list string) = !_include
+let set_include_path (path : list string) : ML unit =
   clear ();
   _include := path
 
-let get_cache_dir () : option string = !_cache_dir
-let set_cache_dir (path : string) : unit =
+let get_cache_dir () : ML (option string) = !_cache_dir
+let set_cache_dir (path : string) : ML unit =
   clear ();
   _cache_dir := Some path
 
-let get_odir () : option string = !_odir
-let set_odir (path : string) : unit =
+let get_odir () : ML (option string) = !_odir
+let set_odir (path : string) : ML unit =
   clear ();
   _odir := Some path
 
-let get_no_default_includes () : bool = !_no_default_includes
-let set_no_default_includes (b : bool) : unit =
+let get_no_default_includes () : ML bool = !_no_default_includes
+let set_no_default_includes (b : bool) : ML unit =
   clear ();
   _no_default_includes := b
 
-let get_with_fstarc () : bool = !_with_fstarc
-let set_with_fstarc (b : bool) : unit =
+let get_with_fstarc () : ML bool = !_with_fstarc
+let set_with_fstarc (b : bool) : ML unit =
   clear ();
   _with_fstarc := b
 
 let fstar_bin_directory : string =
   BU.get_exec_dir ()
 
-let read_fstar_include (fn : string) : option (list string) =
+let lib_root () : ML (option string) =
+  (* No default includes means we don't try to find a library on our own. *)
+  if !_no_default_includes then
+    None
+  else
+    (* FSTAR_LIB can be set in the environment to override the library *)
+    match Util.expand_environment_variable "FSTAR_LIB" with
+    | Some s -> Some s
+    | None ->
+      (* Otherwise, just at the default location *)
+      Some (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar")
+
+let read_fstar_include (fn : string) : ML (option (list string)) =
   try
     let s = BU.file_get_contents fn in
     let subdirs =
@@ -95,7 +107,7 @@ let read_fstar_include (fn : string) : option (list string) =
     failwith ("Could not read " ^ fn);
     None
 
-let rec expand_include_d (dirname : string) : list string =
+let rec expand_include_d (dirname : string) : ML (list string) =
   let dot_inc_path = dirname ^ "/fstar.include" in
   if Filepath.file_exists dot_inc_path then (
     let subdirs = Some?.v <| read_fstar_include dot_inc_path in
@@ -103,31 +115,19 @@ let rec expand_include_d (dirname : string) : list string =
   ) else
     [dirname]
 
-let expand_include_ds (dirnames : list string) : list string =
+let expand_include_ds (dirnames : list string) : ML (list string) =
   List.collect expand_include_d dirnames
 
-let lib_root () : option string =
-  (* No default includes means we don't try to find a library on our own. *)
-  if !_no_default_includes then
-    None
-  else
-    (* FSTAR_LIB can be set in the environment to override the library *)
-    match Util.expand_environment_variable "FSTAR_LIB" with
-    | Some s -> Some s
-    | None ->
-      (* Otherwise, just at the default location *)
-      Some (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar")
-
-let fstarc_paths () =
+let fstarc_paths () : ML _ =
   if !_with_fstarc
   then expand_include_d (Filepath.canonicalize <| fstar_bin_directory ^ "/../lib/fstar/fstarc")
   else []
 
-let lib_paths () =
+let lib_paths () : ML _ =
   (Common.option_to_list (lib_root ()) |> expand_include_ds)
   @ fstarc_paths ()
 
-let full_include_path () =
+let full_include_path () : ML _ =
   // Stats.record "Find.full_include_path" fun () ->
   match !_full_include with
   | Some paths -> paths
@@ -144,7 +144,7 @@ let full_include_path () =
     _full_include := Some res;
     res
 
-let do_find (paths : list string) (filename : string) : option string =
+let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
   if Filepath.is_path_absolute filename then
     if Filepath.file_exists filename then
@@ -182,23 +182,23 @@ let find_file_odir =
     let odir = match !_odir with Some d -> [d] | None -> [] in
     do_find (full_include_path () @ odir) s
 
-let prepend_output_dir fname =
-  match !_odir with
-  | None -> fname
-  | Some x -> Filepath.join_paths x fname
-
-let prepend_cache_dir fpath =
+let prepend_cache_dir fpath : ML _ =
   match !_cache_dir with
   | None -> fpath
   | Some x -> Filepath.join_paths x (Filepath.basename fpath)
 
-let locate () =
+let prepend_output_dir fname : ML _ =
+  match !_odir with
+  | None -> fname
+  | Some x -> Filepath.join_paths x fname
+
+let locate () : ML _ =
   Util.get_exec_dir () |> Filepath.normalize_file_path
 
-let locate_lib () =
+let locate_lib () : ML _ =
   Option.map Filepath.normalize_file_path (lib_root ())
 
-let locate_ocaml () =
+let locate_ocaml () : ML _ =
   // This is correct right now, but probably should change.
   Util.get_exec_dir () ^ "/../lib" |> Filepath.normalize_file_path
 
@@ -212,7 +212,7 @@ a valid path. To palliate this, we
   2) try to find this file in our include path.
 
 This function is called by error reporting (both batch and IDE). *)
-let refind_file (f:string) : string =
+let refind_file (f:string) : ML string =
   try
     match find_file (Filepath.basename f) with
     | None -> f // Couldn't find file; just return the original path

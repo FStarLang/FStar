@@ -34,7 +34,7 @@ type binders = list binder
 type ppname_t = sealed string
 val as_ppname (s:string) : Tot ppname_t
 
-let binder_is_simple (b:Stubs.Reflection.Types.binder) : Tot Type0 = True
+let binder_is_simple (b:Stubs.Reflection.Types.binder) : prop = True
 
 type simple_binder = binder
 

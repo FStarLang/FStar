@@ -33,13 +33,14 @@ let sub_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
 let sub_mod (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
   Obj.t uint_t= (mod) (a - b) (Prims.pow2 n)
 let mul (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Obj.t uint_t=
-  a * b
+  Prims.op_Star a b
 let mul_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= if fits (a * b) n then a * b else Prims.int_zero
+  Obj.t uint_t=
+  if fits (Prims.op_Star a b) n then Prims.op_Star a b else Prims.int_zero
 let mul_mod (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= (mod) (a * b) (Prims.pow2 n)
+  Obj.t uint_t= (mod) (Prims.op_Star a b) (Prims.pow2 n)
 let mul_div (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= (a * b) / (Prims.pow2 n)
+  Obj.t uint_t= (Prims.op_Star a b) / (Prims.pow2 n)
 let div (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Obj.t uint_t=
   a / b
 let div_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
@@ -47,7 +48,7 @@ let div_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
 let udiv (n : Prims.pos) (a : Obj.t uint_t) (b : Obj.t uint_t) :
   Obj.t uint_t= a / b
 let mod1 (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= a - ((a / b) * b)
+  Obj.t uint_t= a - (Prims.op_Star (a / b) b)
 let eq (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Prims.bool=
   a = b
 let ne (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Prims.bool=
@@ -68,15 +69,15 @@ let rec to_vec (n : Prims.nat) (num : Obj.t uint_t) :
   then FStar_Seq_Base.empty ()
   else
     FStar_Seq_Base.append
-      (to_vec (n - Prims.int_one) (num / (Prims.of_int (2))))
+      (to_vec (n - Prims.int_one) (num / (Prims.of_int 2)))
       (FStar_Seq_Base.create Prims.int_one
-         (((mod) num (Prims.of_int (2))) = Prims.int_one))
+         (((mod) num (Prims.of_int 2)) = Prims.int_one))
 let rec from_vec (n : Prims.nat) (vec : Obj.t FStar_BitVector.bv_t) :
   Obj.t uint_t=
   if n = Prims.int_zero
   then Prims.int_zero
   else
-    ((Prims.of_int (2)) *
+    (Prims.op_Star (Prims.of_int 2)
        (from_vec (n - Prims.int_one)
           (FStar_Seq_Base.slice vec Prims.int_zero (n - Prims.int_one))))
       +
@@ -103,6 +104,11 @@ let shift_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_left_vec n (to_vec n a) s)
 let shift_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
   Obj.t uint_t= from_vec n (FStar_BitVector.shift_right_vec n (to_vec n a) s)
+let rotate_left (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t= from_vec n (FStar_BitVector.rotate_left_vec n (to_vec n a) s)
+let rotate_right (n : Prims.pos) (a : Obj.t uint_t) (s : Prims.nat) :
+  Obj.t uint_t=
+  from_vec n (FStar_BitVector.rotate_right_vec n (to_vec n a) s)
 let msb (n : Prims.pos) (a : Obj.t uint_t) : Prims.bool=
   nth n a Prims.int_zero
 let zero_extend_vec (n : Prims.pos) (a : Obj.t FStar_BitVector.bv_t) :

@@ -32,4 +32,4 @@ type connective =
 
 instance val showable_connective : showable connective
 
-val destruct_typ_as_formula (f:term) : option connective
+val destruct_typ_as_formula (f:term) : ML (option connective)

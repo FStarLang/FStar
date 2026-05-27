@@ -26,5 +26,5 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 
-val should_defer_uvar_to_user_tac : env -> ctx_uvar -> bool
-val solve_deferred_to_tactic_goals: env -> guard_t -> guard_t
+val should_defer_uvar_to_user_tac : env -> ctx_uvar -> ML bool
+val solve_deferred_to_tactic_goals: env -> guard_t -> ML guard_t

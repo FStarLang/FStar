@@ -28,13 +28,13 @@ open FStarC.Const
 open FStarC.TypeChecker.Rel
 open FStarC.TypeChecker.Common
 
-val check_inductive_well_typedness: env_t -> list sigelt -> list qualifier -> list lident -> (sigelt & list sigelt & list sigelt)
+val is_haseq_lid: lid -> ML bool
+val get_haseq_axiom_lid: lid -> ML lid
+val optimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> ML (list sigelt)
+val unoptimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> ML (list sigelt)
+
+val check_inductive_well_typedness: env_t -> list sigelt -> list qualifier -> list lident -> ML (sigelt & list sigelt & list sigelt)
 
 val early_prims_inductives :list string
 
-val is_haseq_lid: lid -> bool  //see if the given lid is that of an haseq axiom
-val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get the haseq axiom lid
-val optimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> list sigelt
-val unoptimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> list sigelt
-
-val mk_data_operations: list qualifier -> list attribute -> env -> list sigelt -> sigelt -> list sigelt  //elaborate discriminator and projectors
+val mk_data_operations: list qualifier -> list attribute -> env -> list sigelt -> sigelt -> ML (list sigelt)  //elaborate discriminator and projectors

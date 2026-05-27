@@ -1,21 +1,18 @@
 %{
 (*
- Menhir reports the following warnings:
+ This parser should be conflict-free (0 shift/reduce, 0 reduce/reduce).
 
-   Warning: 5 states have shift/reduce conflicts.
-   Warning: 6 shift/reduce conflicts were arbitrarily resolved.
-   Warning: 221 end-of-stream conflicts were arbitrarily resolved.
+ Shift/reduce conflicts that naturally arise in an ML-style language
+ (dangling BAR in match/function/try, FUN body extent, etc.) are
+ resolved via precedence declarations: chain rules are annotated with
+ %prec below_op so that binary operators and delimiters always shift
+ into the body of the enclosing construct.
 
- If you're editing this file, be sure to not increase the warnings,
- except if you have a really good reason.
-
- The shift-reduce conflicts are natural in an ML-style language. E.g.,
- there are S-R conflicts with dangling elses, with a non-delimited match where
- the BAR is dangling etc.
+ If you're editing this file, be sure to not introduce new conflicts.
 
  Note: Some symbols are marked public, so that we can reuse this parser from
  the parser for the Pulse DSL in FStarLang/steel.
- 
+
 *)
 (* (c) Microsoft Corporation. All rights reserved *)
 open Prims
@@ -67,6 +64,65 @@ type tc_constraint = {
   r: FStarC_Range.t;
 }
 
+let pattern_must_be_binder (p : pattern) : binder =
+  match p.pat with
+  | PatConst Const_unit ->
+    (* A unit pattern: `()`. Unsure if this is the right place to look
+    for it. *)
+    let x = gen p.prange in
+    let u =
+      unit_type p.prange
+      (* mk_term (Const Const_unit) p.prange Expr *)
+    in
+    mk_binder (Annotated (x, u)) p.prange Expr None
+
+  | PatAscribed ({ pat = PatVar (x, aq, attrs)}, (t, _tac_opt)) ->
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatVar (x, aq, attrs) ->
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | PatAscribed ({ pat = PatWild (aq, attrs)}, (t, _tac_opt)) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Annotated (x, t)) p.prange Expr aq attrs
+
+  | PatWild (aq, attrs) ->
+    let x = gen p.prange in
+    mk_binder_with_attrs (Variable x) p.prange Expr aq attrs
+
+  | _ ->
+    raise_error_text p.prange Fatal_SyntaxError
+      ("Must be a simple binder: " ^ pat_to_string p)
+
+(* For a multibinder like `(a b c : Type | eq, ord)`, this generates
+   binders
+     {| _ : eq a |} {| _ : ord a |}
+     {| _ : eq b |} {| _ : ord b |}
+     {| _ : eq c |} {| _ : ord c |}
+  in that order.
+*)
+let expand_inline_constraints (cts : term list) (xs : ident list) : pattern list =
+  List.concat_map (fun x ->
+    List.concat_map (fun ct ->
+      let r = ct.range in
+      let x_t = mk_term (Var (lid_of_ids [x])) r Expr in
+      let ct = mk_term (App (ct, x_t, Nothing)) r Expr in
+      let id = gen r in
+      [ mk_pattern (PatAscribed(mk_pattern (PatVar (id, Some TypeClassArg, [])) r, (ct, None))) r ]
+    ) cts
+  ) xs
+
+let rec pat_names (bs : pattern list) : ident list =
+  match bs with
+  | [] -> []
+  | b::bs' ->
+    match b.pat with
+    | PatAscribed ({pat = PatVar (x, _, _)}, _)
+    | PatVar (x, _, _) -> x :: pat_names bs'
+    | _ ->
+      raise_error_text b.prange Fatal_SyntaxError
+        ("Inline constraints require simple variable binders, got: " ^ pat_to_string b)
+
 %}
 
 %token <string> STRING
@@ -112,7 +168,7 @@ type tc_constraint = {
 %token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY
-%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK
+%token PRAGMA_SHOW_OPTIONS PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER PRAGMA_PRINT_EFFECTS_GRAPH PRAGMA_CHECK PRAGMA_EVAL
 %token SUBTYPE EQUALTYPE SUBKIND BY
 %token AND ASSERT SYNTH BEGIN ELSE END
 %token EXCEPTION FALSE FUN FUNCTION IF IN MODULE
@@ -146,13 +202,31 @@ type tc_constraint = {
 /* These are artificial */
 %token EOF
 
+(* Lowest precedence — used for chain rules that should always
+   lose to any operator/delimiter, so that the body of FUN,
+   quantifiers, match, function, and try extends as far right
+   as possible (standard "maximal munch" for ML-like languages). *)
+%nonassoc below_op
+
 %nonassoc THEN
 %nonassoc ELSE
+
+%nonassoc SEMICOLON SEMICOLON_OP
 
 %nonassoc ASSERT
 %nonassoc EQUALTYPE
 %nonassoc SUBTYPE
 %nonassoc BY
+
+%nonassoc LBRACK
+%nonassoc BAR
+
+%nonassoc IFF
+%nonassoc IMPLIES
+%nonassoc RARROW
+%nonassoc DISJUNCTION
+%nonassoc CONJUNCTION
+%nonassoc COMMA
 
 %right COLON_COLON
 %right AMP
@@ -232,6 +306,7 @@ pragmaStartToken:
  | PRAGMA_RESTART_SOLVER
  | PRAGMA_PRINT_EFFECTS_GRAPH
  | PRAGMA_CHECK
+ | PRAGMA_EVAL
      { () }
 
 /******************************************************************************/
@@ -255,6 +330,8 @@ pragma:
       { PrintEffectsGraph }
   | PRAGMA_CHECK t=term
       { Check t }
+  | PRAGMA_EVAL t=term
+      { Eval t }
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
@@ -457,6 +534,7 @@ typars:
   | LBRACE record_field_decls=right_flexible_nonempty_list(SEMICOLON, recordFieldDecl) RBRACE
     { record_field_decls }
 
+
 typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
   | EQUALS t=typ
@@ -508,7 +586,7 @@ letoperatorbinding:
     }
 
 letbinding:
-  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
+  | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(genBinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
         let pat = mk_pattern (PatVar(lid, None, [])) (rr $loc(lid)) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rr2 $loc(focus_opt) $loc(lbp)) in
@@ -659,7 +737,7 @@ letqualifier:
  *)
 aqual:
   | HASH LBRACK t=thunk(term) RBRACK { mk_meta_tac t }
-  | HASH      { Implicit }
+  | HASH      %prec below_op { Implicit }
   | DOLLAR    { Equality }
 
 binderAttributes:
@@ -690,15 +768,16 @@ constructorPattern:
       { pat }
 
 atomicPattern:
-  | DOT_DOT
-      {
-        mk_pattern PatRest (rr $loc)
-      }
   | LPAREN pat=tuplePattern COLON t=simpleArrow phi_opt=refineOpt RPAREN
       {
         let pos_t = rr2 $loc(pat) $loc(t) in
         let pos = rr $loc in
         mkRefinedPattern pat t true phi_opt pos_t pos
+      }
+  | LPAREN pat=tuplePattern RPAREN   { pat }
+  | DOT_DOT
+      {
+        mk_pattern PatRest (rr $loc)
       }
   | LBRACK pats=right_flexible_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
@@ -706,13 +785,8 @@ atomicPattern:
       { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
-  | LPAREN pat=tuplePattern RPAREN   { pat }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rr $loc) }
-  | UNDERSCORE
-      { mk_pattern (PatWild (None, [])) (rr $loc) }
-  | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit, [])) (rr $loc) }
   | c=constant
       { mk_pattern (PatConst c) (rr $loc(c)) }
   | tok=MINUS c=constant
@@ -733,6 +807,10 @@ atomicPattern:
     {
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rr $loc(qual_id)) }
+  | qual_id=aqualifiedWithAttrs(UNDERSCORE)
+    {
+      let (aqual, attrs), _ = qual_id in
+      mk_pattern (PatWild (aqual, attrs)) (rr $loc(qual_id)) }
   | uid=quident
       { mk_pattern (PatName uid) (rr $loc(uid)) }
 
@@ -749,51 +827,21 @@ tc_constraint:
       {id; t; r}
     }
 
+(* Typeclass constraints: what appears inside a {| ... |}. They can
+be named or anonymous *)
 tc_constraints:
   | constraints=right_flexible_nonempty_list(COMMA, tc_constraint) { constraints }
 
-  (* (x : t) is already covered by atomicPattern *)
-  (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
-  (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
-patternOrMultibinder:
-  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
-      {
-        let constraint_as_pat (c:tc_constraint) =
-          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
-          let asc = (c.t, None) in
-          mk_pattern (PatAscribed(w, asc)) c.r
-        in
-        List.map constraint_as_pat constraints
-      }
+(* Constraints on binders: like (#a : Type | deq) *)
+type_tc_constraints:
+  | BAR constraints=right_flexible_nonempty_list(COMMA, tmEqNoRefinement) { constraints }
+  | { [] }
 
-  | pat=atomicPattern { [pat] }
-  | LPAREN
-      qual_id0=aqualifiedWithAttrs(lident)
-      qual_ids=nonempty_list(aqualifiedWithAttrs(lident))
-      COLON
-      t=simpleArrow r=refineOpt
-    RPAREN
-      {
-        let pos = rr $loc in
-        let t_pos = rr $loc(t) in
-        let qual_ids = qual_id0 :: qual_ids in
-        let n = List.length qual_ids in
-        List.mapi (fun idx ((aq, attrs), x) ->
-          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
-          (* Only the last binder carries the refinement, if any. *)
-          let refine_opt = if idx = Int.sub n 1 then r else None in
-          (*                    ^ The - symbol resolves to F* addition. *)
-          mkRefinedPattern pat t true refine_opt t_pos pos
-        ) qual_ids
-      }
-
-binder:
-  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
-     {
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs
-     }
-
+(* NOTE: multiBinder and genBinder have parallel structure for {| ... |}
+   and multi-identifier (x y : t | constraints) cases, but produce different
+   types (binder list vs pattern list). Keep them in sync when modifying
+   constraint handling. Both use expand_inline_constraints for the shared
+   logic. *)
 %public
 multiBinder:
   | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
@@ -804,27 +852,37 @@ multiBinder:
         List.map constraint_as_binder constraints
       }
 
-  | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore))
+      COLON t=simpleArrow r=refineOpt cts=type_tc_constraints
+    RPAREN
      {
-       let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
        let n = List.length qual_ids in
-       List.mapi (fun idx ((q, attrs), x) ->
+       let bs = List.mapi (fun idx ((q, attrs), x) ->
          let refine_opt = if idx = Int.sub n 1 then r else None in
          mkRefinedBinder x t true refine_opt (rr $loc) q attrs
-       ) qual_ids
+       ) qual_ids in
+       let names = List.map (fun ((_, _), x) -> x) qual_ids in
+       let cts_binders = List.map pattern_must_be_binder
+                           (expand_inline_constraints cts names) in
+       bs @ cts_binders
      }
 
   | LPAREN_RPAREN
     {
       let r = rr $loc in
-      let unit_t = mk_term (Var (lid_of_ids [(mk_ident("unit", r))])) r Un in
-      [mk_binder (Annotated (gen r, unit_t)) r Un None]
+      let unit_t = unit_type r in
+      [mk_binder (Annotated (gen r, unit_t)) r Type_level None]
     }
 
-  | b=binder { [b] }
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
+     {
+       let (q, attrs), lid = aqualifiedWithAttrs_lid in
+       [mk_binder_with_attrs (Variable lid) (rr $loc(aqualifiedWithAttrs_lid)) Type_level q attrs]
+     }
 
 %public
-binders: bss=list(bs=multiBinder {bs}) { flatten bss }
+binders: bss=list(multiBinder) { flatten bss }
 
 aqualifiedWithAttrs(X):
   | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
@@ -848,6 +906,7 @@ path(Id):
   | id=Id { [id] }
   | uid=uident DOT p=path(Id) { uid::p }
 
+%public
 ident:
   | x=lident { x }
   | x=uident  { x }
@@ -915,6 +974,7 @@ kind:
 
 term:
   | e=noSeqTerm
+      %prec below_op
       { e }
   | e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Seq(e1, e2)) (rr2 $loc(e1) $loc(e2)) Expr }
@@ -946,7 +1006,7 @@ localletqualifier:
 
 %public
 noSeqTerm:
-  | t=typ  { t }
+  | t=typ  %prec below_op { t }
   | e=tmIff SUBTYPE t=tmIff
       { mk_term (Ascribed(e,{t with level=Expr},None,false)) (rr $loc(e)) Expr }
   | e=tmIff SUBTYPE t=tmIff BY tactic=thunk(typ)
@@ -1001,11 +1061,13 @@ noSeqTerm:
         mk_term (If(e1, op, ret_opt, e2, e3)) (rr2 $loc(op) $loc(e2)) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
+      %prec below_op
       {
          let branches = focusBranches (pbs) (rr2 $loc($1) $loc(pbs)) in
          mk_term (TryWith(e1, branches)) (rr2 $loc($1) $loc(pbs)) Expr
       }
   | op=matchMaybeOp e=term ret_opt=option(match_returning) WITH pbs=left_flexible_list(BAR, pb=patternBranch {pb})
+      %prec below_op
       {
         let branches = focusBranches pbs (rr2 $loc(op) $loc(pbs)) in
         mk_term (Match(e, op, ret_opt, branches)) (rr2 $loc(op) $loc(pbs)) Expr
@@ -1039,6 +1101,7 @@ noSeqTerm:
 			   , e)) (rr2 $loc(op) $loc(e)) Expr
     }
   | FUNCTION pbs=left_flexible_nonempty_list(BAR, patternBranch)
+      %prec below_op
       {
         let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
         mk_function branches (rr $loc) (rr2 $loc($1) $loc(pbs))
@@ -1089,7 +1152,7 @@ noSeqTerm:
         else mk_term (IntroExists(bs, p, vs, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
-   | INTRO p=tmFormula IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
+   | INTRO p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH y=singleBinder DOT e=noSeqTerm
      {
         mk_term (IntroImplies(p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
@@ -1119,7 +1182,7 @@ noSeqTerm:
         mk_term (ElimExists(bs, p, q, y, e)) (rr2 $loc($1) $loc(e)) Expr
      }
 
-   | ELIM p=tmFormula IMPLIES q=tmFormula WITH e=noSeqTerm
+   | ELIM p=tmArrow(tmFormula) IMPLIES q=tmFormula WITH e=noSeqTerm
      {
         mk_term (ElimImplies(p, q, e)) (rr2 $loc($1) $loc(e)) Expr
      }
@@ -1159,7 +1222,7 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-%inline
+%public
 typ:
   | t=simpleTerm { t }
 
@@ -1179,8 +1242,9 @@ typ:
     }
 
 %public
+%inline
 trigger:
-  |   { [] }
+  | { [] }
   | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
 
 disjunctivePats:
@@ -1215,12 +1279,13 @@ patternBranch:
 tmIff:
   | e1=tmImplies tok=IFF e2=tmIff
       { mk_term (Op(mk_ident("<==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
-  | e=tmImplies { e }
+  | e=tmImplies %prec below_op { e }
 
 tmImplies:
   | e1=tmArrow(tmFormula) tok=IMPLIES e2=tmImplies
       { mk_term (Op(mk_ident("==>", rr $loc(tok)), [e1; e2])) (rr2 $loc(e1) $loc(e2)) Formula }
   | e=tmArrow(tmFormula)
+      %prec below_op
       { e }
 
 
@@ -1235,8 +1300,9 @@ tmArrow(Tm):
        in
        mk_term (Product([b], tgt)) (rr2 $loc(dom) $loc(tgt))  Un
      }
-  | e=Tm { e }
+  | e=Tm %prec below_op { e }
 
+%public
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
@@ -1263,7 +1329,7 @@ simpleArrowDomain:
 tmFormula:
   | e1=tmFormula tok=DISJUNCTION e2=tmConjunction
       { mk_term (Op(mk_ident("\\/", rr $loc(tok)), [e1;e2])) (rr2 $loc(e1) $loc(e2)) Formula }
-  | e=tmConjunction { e }
+  | e=tmConjunction %prec below_op { e }
 
 tmConjunction:
   | e1=tmConjunction tok=CONJUNCTION e2=tmTuple
@@ -1271,13 +1337,16 @@ tmConjunction:
   | e=tmTuple { e }
 
 tmTuple:
-  | el=separated_nonempty_list(COMMA, tmEq)
-      {
-        match el with
-          | [x] -> x
-          | components -> mkTuple components (rr2 $loc(el) $loc(el))
-      }
+  | e=tmEq %prec below_op
+      { e }
+  | e=tmEq COMMA rest=commaTmEqList
+      { mkTuple (e :: rest) (rr $loc(e)) }
 
+commaTmEqList:
+  | e=tmEq %prec below_op
+      { [e] }
+  | e=tmEq COMMA rest=commaTmEqList
+      { e :: rest }
 
 
 %public
@@ -1312,6 +1381,7 @@ tmEqWith(X):
   | BACKTICK_HASH e=atomicTerm
       { mk_term (Antiquote e) (rr $loc) Un }
   | e=tmNoEqWith(X)
+      %prec below_op
       { e }
 
 %inline recordTerm:
@@ -1353,6 +1423,7 @@ tmNoEqNoRecordWith(X):
       { mk_term (Op(mk_ident (op, rr $loc(op)), [e])) (rr $loc) Formula }
   | e=X { e }
 
+%public
 tmNoEqWith(X):
   | e=tmNoEqNoRecordWith(X) { e }
   | e=recordTerm { e }
@@ -1380,8 +1451,9 @@ binop_name:
 tmEqNoRefinement:
   | e=tmEqWith(appTermNoRecordExp) { e }
 
+%public
 tmEq:
-  | e=tmEqWith(tmRefinement)  { e }
+  | e=tmEqWith(tmRefinement) %prec below_op { e }
 
 tmNoEq:
   | e=tmNoEqWith(tmRefinement) { e }
@@ -1469,7 +1541,7 @@ trailingTerm:
     { x }
 
 onlyTrailingTerm:
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
+  | FUN pats=nonempty_list(genBinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
   | q=quantifier bs=binders DOT trigger=trigger e=term
       {
@@ -1494,7 +1566,7 @@ atomicTermQUident:
     }
 
 atomicTermNotQUident:
-  | UNDERSCORE { mk_term Wild (rr $loc) Un }
+  | UNDERSCORE %prec below_op { mk_term Wild (rr $loc) Un }
   | c=constant { mk_term (Const c) (rr $loc) Expr }
   | x=opPrefixTerm(atomicTermNotQUident)
     { x }
@@ -1669,6 +1741,7 @@ right_flexible_nonempty_list(SEP, X):
 
 reverse_left_flexible_list(delim, X):
 | (* nothing *)
+   %prec below_op
    { [] }
 | x = X
    { [x] }
@@ -1688,3 +1761,50 @@ reverse_left_flexible_nonempty_list(delim, X):
 %inline left_flexible_nonempty_list(delim, X):
  xs = reverse_left_flexible_nonempty_list(delim, X)
    { List.rev xs }
+
+(* See note on multiBinder about keeping these in sync. *)
+genBinder:
+  (* Typeclass constraints {| ... |} *)
+  | LBRACE_BAR constraints=tc_constraints BAR_RBRACE
+      {
+        let constraint_as_pat (c:tc_constraint) =
+          let w = mk_pattern (PatVar (c.id, Some TypeClassArg, [])) c.r in
+          let asc = (c.t, None) in
+          mk_pattern (PatAscribed(w, asc)) c.r
+        in
+        List.map constraint_as_pat constraints
+      }
+
+  | pat=atomicPattern { [pat] }
+
+  (* Multi-binder: (x y : t | constraints) — 2+ identifiers with annotation *)
+  | LPAREN
+      qual_id0=aqualifiedWithAttrs(lidentOrUnderscore)
+      qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore))
+      COLON t=simpleArrow r=refineOpt cts=type_tc_constraints
+    RPAREN
+      {
+        let qual_ids = qual_id0 :: qual_ids in
+        let pos = rr $loc in
+        let n = List.length qual_ids in
+        let pats = List.mapi (fun idx ((aq, attrs), x) ->
+          let pat = mk_pattern (PatVar (x, aq, attrs)) pos in
+          let refine_opt = if idx = Int.sub n 1 then r else None in
+          mkRefinedPattern pat t true refine_opt (rr $loc(t)) pos
+        ) qual_ids in
+        let names = List.map (fun ((_, _), x) -> x) qual_ids in
+        pats @ expand_inline_constraints cts names
+      }
+
+  (* Single pattern with inline constraints: (x : t | constraints) *)
+  | LPAREN
+      pat=tuplePattern
+      COLON t=simpleArrow r=refineOpt
+      BAR cts=right_flexible_nonempty_list(COMMA, tmEqNoRefinement)
+    RPAREN
+      {
+        let pos_t = rr2 $loc(pat) $loc(t) in
+        let p = mkRefinedPattern pat t true r pos_t (rr $loc) in
+        let names = pat_names [p] in
+        [p] @ expand_inline_constraints cts names
+      }

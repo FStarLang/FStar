@@ -20,7 +20,7 @@ let f0 (b:bool) (n:nat) : Tot nat =
   let b, n = b, n in
   let zz = hoo n in
   let k0, k1 =
-    let rec g (m:nat) : Tot (nat * nat) =
+    let rec g (m:nat) : Tot (nat & nat) =
        if b then m, m
        else (admit(); g (m - 1))
     in

@@ -741,7 +741,7 @@ let term_as_formula' (t : FStar_Tactics_NamedView.term) :
                      FStar_Pervasives_Native.None)) ps))
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))
+    "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int 2)
     (fun psc ->
        fun ncb ->
          fun us ->

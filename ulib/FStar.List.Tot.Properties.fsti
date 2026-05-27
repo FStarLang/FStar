@@ -322,15 +322,13 @@ val lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 (** Definition and properties about [split_using] *)
 
 (** [split_using] splits a list at the first instance of finding an
-    element in it.
-
-    NOTE: Uses [strong_excluded_middle] axiom. *)
+    element in it.  *)
 let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (list t & list t) =
   match l with
   | [_] -> [], l
   | a :: rest ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
+    if a == x then (
       [], l
     ) else (
       let l1', l2' = split_using rest x in
@@ -348,15 +346,13 @@ val lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
 
 (** Definition of [index_of] *)
 
-(** [index_of l x] gives the index of the leftmost [x] in [l].
-
-    NOTE: Uses [strong_excluded_middle] axiom. *)
+(** [index_of l x] gives the index of the leftmost [x] in [l]. *)
 let rec index_of (#t:Type) (l:list t) (x:t{x `memP` l}) :
   GTot (i:nat{i < length l /\ index l i == x}) =
   match l with
   | [_] -> 0
   | a :: rest ->
-    if FStar.StrongExcludedMiddle.strong_excluded_middle (a == x) then (
+    if a == x then (
       0
     ) else (
       1 + index_of rest x
@@ -621,7 +617,7 @@ val fold_left_invar
   (#a #b: Type)
   (f: (a -> b -> Tot a))
   (l: list b)
-  (p: (a -> Tot Type0))
+  (p: (a -> prop))
   : Lemma
   (requires forall (x: a) (y: b) . p x ==> memP y l ==> p (f x y) )
   (ensures forall (x: a) . p x ==> p (fold_left f x l))

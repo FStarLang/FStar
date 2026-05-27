@@ -42,12 +42,12 @@ open FStar.Monotonic.Pure
 ///
 /// But, permuting its arguments here, makes some things a bit
 /// smoother
-let wp0 (st:Type0) (a:Type) = st -> (a & st -> Type) -> Type
+let wp0 (st:Type0) (a:Type) = st -> (a & st -> prop) -> prop
 
 /// Monotonicity of wp's
 let st_monotonic #st #a (w : wp0 st a) : prop =
   forall (s0:st)
-    (p1 p2: (a & st -> Type)).
+    (p1 p2: (a & st -> prop)).
     //If p1 is stronger than p2
     (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==>
     //Then wp s0 p1 is stronger then wp s0 p2
@@ -126,7 +126,7 @@ let bind (a:Type) (b:Type) (st:Type0)
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp

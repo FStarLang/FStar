@@ -1,6 +1,5 @@
 module Lib.Exponentiation.Definition
 
-open FStar.Mul
 
 
 #set-options "--z3rlimit 50 --fuel 0 --ifuel 0"

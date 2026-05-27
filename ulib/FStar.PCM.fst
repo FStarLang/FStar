@@ -115,7 +115,7 @@ let compatible_trans
 *)
 let compatible_elim
   (#a: Type u#a) (pcm:pcm a) (x y:a)
-  (goal: Type)
+  (goal: prop)
   (lemma: (frame: a{composable pcm x frame /\ op pcm frame x == y}) ->
     Lemma (goal)
   )

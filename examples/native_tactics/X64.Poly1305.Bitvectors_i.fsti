@@ -16,7 +16,6 @@
 module X64.Poly1305.Bitvectors_i
 
 open FStar.BV
-open FStar.Mul
 open FStar.UInt
 
 val lemma_shr2: (x:uint_t 64) -> Lemma

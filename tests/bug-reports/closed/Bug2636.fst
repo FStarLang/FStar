@@ -2,24 +2,26 @@ module Bug2636
 open FStar.Tactics.V2
 
 
-type prop_with_pre (p : Type0) (pf : squash p) : Type0
+open FStar.Nonempty
+
+type prop_with_pre (p : prop) (pf : squash p) : Type0
   = | PropWithPre
 
-let lazy_and : Type0
-  = False /\ prop_with_pre False ()
+let lazy_and : prop
+  = False /\ nonempty (prop_with_pre False ())
 
 
 type this_type (t : Type) = | ThisType
 
-let and_right (p0 p1 : Type0) (_ : this_type (p0 /\ p1)) : Type0
+let and_right (p0 p1 : prop) (_ : this_type (p0 /\ p1)) : prop
   = p1
 
 //let  pwp_False  : Type0 = Bug2636.and_right Prims.l_False (Bug2636.prop_with_pre Prims.l_False ()) (Bug2636.ThisType)
 
 // This fails to check now, in the application of exact,
 // since the core typechecker returns a guard equal to False.
-[@@expect_failure [19]]
-let pwp_False : Type0
+[@@expect_failure [189]]
+let pwp_False : prop
   = _ by (apply (`and_right);
           dump "A";
           // [this_type (?p0 /\ ?p1)]

@@ -226,17 +226,14 @@ let rec find_idx :
                              (Obj.repr
                                 (FStar_Tactics_Effect.tac_bind
                                    (Obj.magic (find_idx f xs))
-                                   (fun uu___2 ->
+                                   (fun uu___2 uu___3 ->
                                       match uu___2 with
                                       | FStar_Pervasives_Native.None ->
-                                          (fun uu___3 ->
-                                             FStar_Pervasives_Native.None)
+                                          FStar_Pervasives_Native.None
                                       | FStar_Pervasives_Native.Some 
                                           (i, x1) ->
-                                          FStar_Tactics_Effect.lift_div_tac
-                                            (fun uu___3 ->
-                                               FStar_Pervasives_Native.Some
-                                                 ((i + Prims.int_one), x1))))))
+                                          FStar_Pervasives_Native.Some
+                                            ((i + Prims.int_one), x1)))))
                         uu___)))) uu___1 uu___
 let atom (t : FStarC_Reflection_Types.term) : expr tm=
   fun uu___ ->
@@ -251,17 +248,14 @@ let atom (t : FStarC_Reflection_Types.term) : expr tm=
                         (fun uu___1 ->
                            FStar_Reflection_TermEq_Simple.term_eq t a))
                      uu___1) atoms))
-          (fun uu___1 ->
+          (fun uu___1 uu___2 ->
              match uu___1 with
              | FStar_Pervasives_Native.None ->
-                 (fun uu___2 ->
-                    Fstarcompiler.FStar_Pervasives.Inr
-                      ((Atom (n, t)), ((n + Prims.int_one), (t :: atoms))))
+                 Fstarcompiler.FStar_Pervasives.Inr
+                   ((Atom (n, t)), ((n + Prims.int_one), (t :: atoms)))
              | FStar_Pervasives_Native.Some (i, t1) ->
-                 FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___2 ->
-                      Fstarcompiler.FStar_Pervasives.Inr
-                        ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms))))
+                 Fstarcompiler.FStar_Pervasives.Inr
+                   ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms)))
 let fail (uu___ : Prims.string) : 'a tm=
   (fun s i -> Obj.magic (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inl s))
     uu___
@@ -339,11 +333,7 @@ let rec as_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
              else
                if qn = FStar_Reflection_Const.mult_qn
                then liftM2 (fun uu___3 uu___4 -> Mult (uu___3, uu___4)) ll rr
-               else
-                 if qn = FStar_Reflection_Const.mult'_qn
-                 then
-                   liftM2 (fun uu___4 uu___5 -> Mult (uu___4, uu___5)) ll rr
-                 else atom t
+               else atom t
        | (FStarC_Reflection_V2_Data.Tv_FVar fv,
           (l, FStarC_Reflection_V2_Data.Q_Implicit)::(r,
                                                       FStarC_Reflection_V2_Data.Q_Explicit)::[])

@@ -2,7 +2,7 @@ module ElimExists
 
 open FStar.Tactics.V2
 
-assume val pred : nat -> Type0
+assume val pred : nat -> prop
 
 let lem (h : (exists x. x > 0 /\ pred x)) : Lemma (exists x. pred x /\ x > 0) =
   assert (exists x. pred x /\ x > 0)

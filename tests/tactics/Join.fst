@@ -29,8 +29,8 @@ let p16 _ = assert_norm (pow2 16 == 65536)
 
 let hard = pow2 20 == 1048576
 
-assume val phi : Type
-assume val psi : Type
+assume val phi : prop
+assume val psi : prop
 assume val lem : squash hard -> Lemma phi
 
 (* Making sure it can be proven *)

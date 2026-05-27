@@ -30,7 +30,8 @@ open FStarC.Class.Show
  *   getting deps from the checked files
  *)
 let find_deps_if_needed files
-  (get_parsing_data_from_cache:string -> option Parser.Dep.parsing_data)
+  (get_parsing_data_from_cache:string -> ML (option Parser.Dep.parsing_data))
+  : ML _
   = let all_files, deps = Parser.Dep.collect files get_parsing_data_from_cache in
     match all_files with
     | [] ->

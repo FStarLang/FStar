@@ -68,7 +68,6 @@ val div (a:t{v a >= 0}) (b:t{v b > 0}) : Pure t
 (** Modulo specification, similar to FStar.Int.mod *)
 
 let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
-  let open FStar.Mul in
   let res = a - ((a/b) * b) in
   fits_lt res b;
   res

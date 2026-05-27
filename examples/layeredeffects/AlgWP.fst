@@ -28,7 +28,7 @@ let rec sublist_at_const (l1 l2 l3 : ops)
     | h::t -> sublist_at_const t l2 l3
     
 let (@@) : rwops -> rwops -> rwops = fun l1 l2 -> l1@l2
-let subops : rwops -> rwops -> Type0 = sublist
+let subops : rwops -> rwops -> prop = sublist
 
 let sublist_at (l1 l2 : ops)
   : Lemma (sublist l1 (l1@l2) /\ sublist l2 (l1@l2))
@@ -45,9 +45,9 @@ let tbind : #a:_ -> #b:_ ->
             rwtree a labs1 -> 
             (a -> rwtree b labs2) -> rwtree b (labs1@@labs2) = fun c f -> Alg.bind _ _ c f
 
-let st_wp0 (a:Type) : Type = state -> (a & state -> Type0) -> Type0
+let st_wp0 (a:Type) : Type = state -> (a & state -> prop) -> prop
 
-let st_monotonic #a (w : st_wp0 a) : Type0 =
+let st_monotonic #a (w : st_wp0 a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
@@ -89,7 +89,7 @@ let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)
 unfold
-val stronger : (#a:Type) -> st_wp a -> st_wp a -> Type0
+val stronger : (#a:Type) -> st_wp a -> st_wp a -> prop
 let stronger w1 w2 = forall p s. w1 p s ==> w2 p s
 
 let equiv #a (w1 w2 : st_wp a) = w1 `stronger` w2 /\ w2 `stronger` w1
@@ -102,7 +102,7 @@ let interp_ret x = ()
 val interp_ret' (#a:Type) (x:a) : Lemma (return_wp x == interp_as_wp (Return x))
 let interp_ret' x = assert_norm (return_wp x == interp_as_wp (Return x))
 
-let wp_is_monotonic #a (wp : st_wp a) : Type0 =
+let wp_is_monotonic #a (wp : st_wp a) : prop =
   forall p1 p2 s0. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> wp s0 p1 ==> wp s0 p2
 
 let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
@@ -126,7 +126,7 @@ let rec interp_monotonic #a #l (c:rwtree a l) : Lemma (wp_is_monotonic (interp_a
     Classical.forall_intro aux;
     bind_preserves_mon (write_wp s) (fun x -> interp_as_wp (k x))
 
-let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> Type0)) (s0:state)
+let elim_str #a (w1 w2 : st_wp a) (p : (a & state -> prop)) (s0:state)
   : Lemma (requires (w1 <<= w2))
           (ensures w1 s0 p ==> w2 s0 p)
   = ()
@@ -164,7 +164,7 @@ val interp_bind (#a #b:Type) (#l1 #l2 : rwops)
   : Lemma (requires w1 <<= interp_as_wp c /\ (forall x. w2 x <<= interp_as_wp (f x)))
           (ensures bind_wp w1 w2 `stronger` interp_as_wp (tbind c f))
 let interp_bind #a #b c f w1 w2 =
-  let aux (p: (b & state -> Type0)) (s0:state) : Lemma (bind_wp w1 w2 s0 p ==> interp_as_wp (tbind c f) s0 p) =
+  let aux (p: (b & state -> prop)) (s0:state) : Lemma (bind_wp w1 w2 s0 p ==> interp_as_wp (tbind c f) s0 p) =
     calc (==>) {
       bind_wp w1 w2 s0 p;
       ==> {}
@@ -270,9 +270,9 @@ let rec interp_sem #a (t : rwtree a [Read; Write]) (s0:state)
 let quotient_ro #a (w : st_wp a) : st_wp a =
   fun s0 p -> w s0 (fun (y, s1) -> s0 == s1 ==> p (y, s1))
 
-let is_mono #a (w : st_wp a) : Type0 = forall s0 p1 p2. (forall x. p1 x ==> p2 x) ==> w s0 p1 ==> w s0 p2
+let is_mono #a (w : st_wp a) : prop = forall s0 p1 p2. (forall x. p1 x ==> p2 x) ==> w s0 p1 ==> w s0 p2
 
-let is_ro #a (w : st_wp a) : Type0 =
+let is_ro #a (w : st_wp a) : prop =
   quotient_ro w `stronger` w
 
 let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
@@ -346,7 +346,7 @@ let quot #a #wp (f : unit -> AlgWP a [Read] wp)
   : AlgWP a [Read] (quotient_ro wp)
   = AlgWP?.reflect (quot_tree (reify (f ())))
 
-effect AlgPP (a:Type) (ll:rwops) (pre : state -> Type0) (post : state -> a -> state -> Type0) =
+effect AlgPP (a:Type) (ll:rwops) (pre : state -> prop) (post : state -> a -> state -> prop) =
   AlgWP a ll (fun h0 p -> pre h0 /\ (forall y h1. post h0 y h1 ==> p (y, h1)))
   
 let quotPP #a #pre #post (f : unit -> AlgPP a [Read] pre post)

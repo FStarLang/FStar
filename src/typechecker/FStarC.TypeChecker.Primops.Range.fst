@@ -50,5 +50,7 @@ let ops = [
   mk5 0 PC.__mk_range_lid __mk_range;
   mk5 0 PC.mk_range_lid   mk_range;
   mk1 0 PC.__explode_range_lid explode;
-  mk2 0 PC.join_range_lid FStarC.Range.union_ranges;
+  mk2' 0 PC.join_range_lid
+    (fun r1 r2 -> Some (FStarC.Range.union_ranges r1 r2))
+    (fun r1 r2 -> Some (FStarC.Range.union_ranges r1 r2));
 ]

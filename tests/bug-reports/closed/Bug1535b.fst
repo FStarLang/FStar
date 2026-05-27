@@ -25,7 +25,7 @@ exception E2 of (exn -> exn)
 exception E3 of ((exn -> int) -> int)
 
 [@@(expect_failure [3])]
-exception E4 of exn * (exn -> int)
+exception E4 of exn & (exn -> int)
 
 [@@(expect_failure [3])]
 exception E5 of exn & (exn -> exn)

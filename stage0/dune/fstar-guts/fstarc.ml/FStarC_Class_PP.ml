@@ -7,10 +7,10 @@ let pp (projectee : 'a pretty) : 'a -> FStar_Pprint.document=
   match projectee with | { pp = pp1;_} -> pp1
 let gparens (a : FStar_Pprint.document) : FStar_Pprint.document=
   FStar_Pprint.group
-    (FStar_Pprint.nest (Prims.of_int (2)) (FStar_Pprint.parens a))
+    (FStar_Pprint.nest (Prims.of_int 2) (FStar_Pprint.parens a))
 let gbrackets (a : FStar_Pprint.document) : FStar_Pprint.document=
   FStar_Pprint.group
-    (FStar_Pprint.nest (Prims.of_int (2)) (FStar_Pprint.brackets a))
+    (FStar_Pprint.nest (Prims.of_int 2) (FStar_Pprint.brackets a))
 let pp_unit : unit pretty=
   { pp = (fun uu___ -> FStar_Pprint.doc_of_string "()") }
 let pp_int : Prims.int pretty=
@@ -42,7 +42,7 @@ let pp_option (uu___ : 'a pretty) : 'a FStar_Pervasives_Native.option pretty=
                  let uu___3 = pp uu___ v in
                  FStar_Pprint.op_Hat_Slash_Hat
                    (FStar_Pprint.doc_of_string "Some") uu___3 in
-               FStar_Pprint.nest (Prims.of_int (2)) uu___2 in
+               FStar_Pprint.nest (Prims.of_int 2) uu___2 in
              FStar_Pprint.group uu___1
          | FStar_Pervasives_Native.None -> FStar_Pprint.doc_of_string "None")
   }
@@ -62,7 +62,7 @@ let pp_either (uu___ : 'a pretty) (uu___1 : 'b pretty) :
                  let uu___4 = pp uu___1 x in
                  FStar_Pprint.op_Hat_Slash_Hat
                    (FStar_Pprint.doc_of_string "Inr") uu___4 in
-           FStar_Pprint.nest (Prims.of_int (2)) uu___3 in
+           FStar_Pprint.nest (Prims.of_int 2) uu___3 in
          FStar_Pprint.group uu___2)
   }
 let comma_space : FStar_Pprint.document=

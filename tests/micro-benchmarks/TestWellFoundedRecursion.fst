@@ -167,7 +167,7 @@ type higher_nat : Type u#1 =
   | HS : higher_nat -> higher_nat
 
 let higher_nat_lt
-  : binrel u#1 u#0 higher_nat
+  : binrel u#1 higher_nat
   = fun x y -> x << y //sub-term ordering on higher nats
 
 let rec higher_nat_lt_well_founded (n:higher_nat)
@@ -204,9 +204,9 @@ let rec rel_poly (a:Type) (r:well_founded_relation a) (x:a)
   = 0
 
 
-let rec rel_poly (a:Type) (r:binrel a) (wf_r:well_founded (WFU.squash_binrel r)) (x:a)
-  : Tot nat (decreases {:well-founded WFU.lift_binrel_squashed_as_well_founded_relation wf_r (| a, x |)})
-  = match get_previous (WFU.lift_binrel_squashed_as_well_founded_relation wf_r) (| a, x |) with
+let rec rel_poly (a:Type) (r:binrel a) (wf_r:well_founded r) (x:a)
+  : Tot nat (decreases {:well-founded WFU.lift_binrel_as_well_founded_relation wf_r (| a, x |)})
+  = match get_previous (WFU.lift_binrel_as_well_founded_relation wf_r) (| a, x |) with
     | None -> 0
     | Some z -> 
       1 + rel_poly a r wf_r (dsnd z)

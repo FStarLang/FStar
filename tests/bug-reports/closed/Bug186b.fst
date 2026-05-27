@@ -32,7 +32,7 @@ opaque type renaming (s:sub) = (forall (x:var). EVar? (s x))
 
 val is_renaming : s:sub -> GTot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
-let is_renaming s = (if StrongExcludedMiddle.strong_excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if t2b (renaming s) then 0 else 1)
 
 val sub_inc_above : nat -> var -> Tot exp
 let sub_inc_above n y = if y<n then EVar y else EVar (y+1)

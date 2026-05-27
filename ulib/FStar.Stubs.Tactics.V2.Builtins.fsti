@@ -25,7 +25,6 @@ open FStar.Reflection.Const
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
-open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
 include FStar.Stubs.Tactics.Unseal
@@ -563,7 +562,7 @@ val check_prop_validity (g:env) (t:term { typing_token g t (E_Total, (`prop)) })
 
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
 val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
-  : Type0
+  : prop
 
 // Returns elaborated patterns, the bindings for each one, and a token. Possibly some issues
 // too. The bindings are open.

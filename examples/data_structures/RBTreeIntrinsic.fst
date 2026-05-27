@@ -32,7 +32,7 @@
 module RBTreeIntrinsic
 
 /// Much of the file verifies with fuel=0, max_ifuel=1
-#set-options "--max_fuel 2 --max_ifuel 2 --z3rlimit 80"
+#set-options "--max_fuel 2 --max_ifuel 2 --z3rlimit 80 --z3refresh --split_queries always"
 
 type color =
 | Red
@@ -389,7 +389,9 @@ val balanceRB_preserves_sort : #h:nat -> #c:color -> a:rbnode h c -> x:int -> b:
   Lemma 
   (requires sorted a /\ almostNode_sorted b /\ chain (max a) x (almostNode_min b))
   (ensures  hiddenTree_sorted (balanceRB a x b))
+#push-options "--retry 3"
 let balanceRB_preserves_sort #h #c a x right = ()
+#pop-options
 
 val balanceLR_preserves_sort : #h:nat -> #c:color -> a:hiddenTree h -> x:int -> b:rbnode h c ->
   Lemma 

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <OtherFlags>--mlcompatibility --langversion:5.0</OtherFlags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="_output/Hello.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../ulibfs.fsproj" />
+  </ItemGroup>
+</Project>

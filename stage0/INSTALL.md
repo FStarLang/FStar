@@ -14,10 +14,6 @@
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
     * [Building F* and the libraries](#building-f-and-its-libraries)
-  * [Bootstrapping F* in OCaml](#bootstrapping-f-in-ocaml)
-    * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
-    * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
-    * [Repeat Step 1](#repeat-step-1)
   * [Runtime dependency: Particular version of Z3](#runtime-dependency-particular-version-of-z3)
 
 ## Online editor ##
@@ -306,17 +302,11 @@ your machine):
 
     $ make -j N
 
-This does two things:
+This builds the F\* compiler (with Pulse support baked in), verifies
+the standard library and the Pulse library, and installs the result
+into `out/`. You can then add `out/bin` to your `PATH`.
 
-1. As explained in more detail [below](#bootstrapping-f-in-ocaml), a snapshot of
-   the F\* sources extracted to OCaml is checked in the F\* repo and regularly
-   updated, and the command above will simply build an F\* binary out of that snapshot.
-
-   That snapshot also contains the extracted OCaml code of the various
-   OCaml libraries needed for building OCaml code extracted from F\*,
-   native tactics, etc., so this step also compiles them.
-
-   This step can be isolatedly run with `make dune-fstar`
+Run `make help` for a list of all available targets.
 
    **Note:** On Windows this generates a *native* F\* binary, that is,
    a binary that does *not* depend on `cygwin1.dll`, since [the installer above](#instructions-for-windows)
@@ -328,55 +318,5 @@ This does two things:
    special `flexlink` technology for this. See `examples/crypto` and
    `contrib/CoreCrypto/ml` for examples.
 
-2. The command above verifies the F\* standard library, producing
-   `.checked` files that cache definitions to speed up subsequent
-   usage.
-
-   This step can be isolatedly run with `make verify-ulib`
-
-## Bootstrapping F\* in OCaml
-
-F\* is written in a subset of F\* itself and can generate OCaml code from its own sources.
-Therefore, the standard bootstrap build process of F\* involves the following three steps:
-
-  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml snapshot.
-
-  **Step 2.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
-
-  **Repeat step 1**: Rebuild F\* from the newly generated OCaml code in the previous step.
-
-A convenience Makefile target is available to run all three steps:
-
-    $ make boot -j6
-
-If you already compiled F\*, you can do Step 2 then Step 1, by
-skipping the first Step 1 (but not its repeat after Step 2) and using
-your existing F\* to perform Step 2. To do so, just run `make
-dune-bootstrap` instead of `make boot`.
-
-Those rules support parallelism and incrementality (by virtue of the
-snapshot being compiled with dune). However, in some cases, it is
-necessary to regenerate the whole snapshot by fully erasing it before
-extracting it again. This may be needed for instance if some modules
-in the F\* sources or in the standard library are renamed or
-deleted. To this end, you can use `make dune-full-bootstrap` instead
-of `make boot`. This command does `make clean-full-dune-snapshot` to
-erase the extracted snapshot.
-
-### Step 1. Build an F\* binary from OCaml snapshot ###
-
-[Get an F\* binary using the OCaml build process](#building-f-and-its-libraries):
-
-    $ make -j6
-
-### Step 2. Extract the sources of F\* itself to OCaml ###
-
-1. Make sure you follow the instructions above to get a
-   [working OCaml setup](#prerequisites-working-ocaml-setup).
-
-2. Once you satisfy the prerequisites for your platform,
-   translate the F\* sources to OCaml using F\* by running:
-
-        $ make dune-extract-all -j6
-
-### Repeat [Step 1](#step-1-build-an-f-binary-from-ocaml-snapshot)
+The build is a multi-stage bootstrapping process (stage0 → stage1 →
+stage2 → stage3). For details see [doc/ref/bootstrapping](doc/ref/bootstrapping).

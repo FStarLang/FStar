@@ -1,28 +1,17 @@
-include ../Makefile.include
+# This Makefile exists only to set FSTAR_EXE for dune, so it uses our
+# locally-built F* binary instead of whatever is in the environment.
+# Dune's env-vars mechanism does not support variable expansion, so we
+# must set FSTAR_EXE externally.
 
-include $(FSTAR_ULIB)/ml/Makefile.include
+FSTAR_ROOT ?= ../..
+FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
+FSTAR_EXE := $(abspath $(FSTAR_EXE))
+export FSTAR_EXE
 
-all: hello testseq multi strings
+.PHONY: all clean
 
-hello: out Hello/Hello.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'Hello' Hello/Hello.fst
-	$(OCAMLOPT) out/Hello.ml -o hello.exe
-	./hello.exe
-
-testseq: out TestSeq/TestSeq.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'TestSeq' TestSeq/TestSeq.fst
-	$(OCAMLOPT) out/TestSeq.ml -o testseq.exe
-	./testseq.exe
-
-strings: out strings/TestStrings.fst
-	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract 'TestStrings' strings/TestStrings.fst
-	$(OCAMLOPT) out/TestStrings.ml -o teststrings.exe
-
-multi:
-	$(MAKE) -C multifile
-
-out:
-	mkdir -p out
+all:
+	FSTAR_EXE=$(FSTAR_EXE) $(FSTAR_EXE) --ocamlenv dune build
 
 clean:
-	rm -rf out *~ *.exe
+	dune clean

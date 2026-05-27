@@ -78,7 +78,6 @@ unfold let eval_mem (ptr:int) (s:state) : uint64 = s.mem.[ptr]
 
 let eval_maddr (m:maddr) (s:state) : int =
   let open FStar.UInt64 in
-  let open FStar.Mul in
     match m with
     | MConst n -> n
     | MReg reg offset -> v (eval_reg reg s) + offset
@@ -132,7 +131,7 @@ let update_cf (flags:uint64) (new_cf:bool) : (new_flags:uint64{cf new_flags == n
 
 
 
-let st (a:Type) = state -> a * state
+let st (a:Type) = state -> a & state
 
 unfold
 let return (#a:Type) (x:a) :st a =
@@ -291,17 +290,16 @@ let sub_mod64 a b = a -%^ b
 
 val mul_mod64: a:uint64 -> b:uint64 -> Pure uint64
   (requires True)
-  (ensures (fun c -> (v a `op_Multiply` v b) % nat64_max = v c))
+  (ensures (fun c -> (v a * v b) % nat64_max = v c))
 let mul_mod64 a b = a *%^ b
 
 val mul_div64: a:uint64 -> b:uint64 -> Pure uint64
   (requires True)
-  (ensures (fun c -> v a `op_Multiply` v b >= 0 /\ (v a `op_Multiply` v b) / nat64_max = v c))
+  (ensures (fun c -> v a * v b >= 0 /\ (v a * v b) / nat64_max = v c))
 // This used to be implemented as a */^ b, using the mul_div operator, but that was removed
 let mul_div64 a b = admit()
 
 let eval_ins (ins:ins) : st unit =
-  let open FStar.Mul in
   s <-- get;
   match ins with
   | Mov64 dst src ->

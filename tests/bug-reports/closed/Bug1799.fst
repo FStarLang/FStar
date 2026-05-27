@@ -16,7 +16,7 @@ let _ = f (\/)
 let _ = f (<==>)
 let _ = f (~)
 
-let test (p q r : Type0) =
+let test (p q r : prop) =
     calc (==>) {
       p /\ (q \/ r);
       <==> { (* distr *) }
@@ -27,7 +27,7 @@ let test (p q r : Type0) =
 
 let (<==) p q = q ==> p
 
-let test' (p q r : Type0) =
+let test' (p q r : prop) =
     calc (<==) {
       q \/ p;
       <== { (* monotonicity of \/ *) }

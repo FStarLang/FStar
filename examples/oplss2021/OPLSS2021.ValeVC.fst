@@ -18,7 +18,6 @@
 module OPLSS2021.ValeVC
 open OPLSS2021.Vale
 open FStar.FunctionalExtensionality
-open FStar.Mul
 
 /////////////////////////////////////////////////////////////////
 // Now, we're going to define a verification-condition generator
@@ -202,7 +201,7 @@ let normal_steps : list string =
   ]
 
 unfold
-let normal (x:Type0) : Type0 =
+let normal (x:prop) : prop =
   norm [nbe;
         iota;
         zeta;
@@ -249,7 +248,7 @@ procedure Triple()
 *)
 
 [@@qattr]
-let state_eq (s0 s1:state) : Pure Type0
+let state_eq (s0 s1:state) : Pure prop
   (requires True)
   (ensures fun b -> b ==> s0 `feq` s1)
   =

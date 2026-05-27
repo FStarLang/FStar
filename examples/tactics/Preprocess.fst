@@ -38,7 +38,6 @@ let inst_fv_with (fv:string) (def:term) (t:term) : Tac term =
 
 let add_imp #x y = x + y
 
-open FStar.Mul
 
 [@@(preprocess_with (visit_tm (inst_fv_with (`%add_imp) (`42))))]
 let test3 x y z =

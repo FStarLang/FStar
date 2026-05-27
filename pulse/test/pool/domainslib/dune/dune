@@ -1,0 +1,10 @@
+(include_subdirs unqualified)
+(executable
+ (name driver)
+ (public_name qsort.exe)
+ (libraries domainslib)
+ (modes native byte)
+)
+(env
+  (_
+    (flags (:standard -w -A))))

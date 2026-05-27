@@ -1,0 +1,7 @@
+* Info at AtomicMismatch.fst(12,2-12,8):
+  - Expected failure:
+  - Tactic failed
+  - Cannot compose computations in this atomic block:
+  - This computation has effect: stt
+  - The continuation has effect: stt_atomic emp_inames
+

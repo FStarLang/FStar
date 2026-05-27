@@ -16,16 +16,17 @@
 
 module FStarC.TypeChecker.Generalize
 
+open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
+
+val generalize_universes:
+  env ->
+  term ->
+  ML tscheme
 
 val generalize:
   env ->
   bool -> (* is_rec *)
   list (lbname & term & comp) ->
-  list (lbname & univ_names & term & comp & list binder)
-
-val generalize_universes:
-  env ->
-  term ->
-  tscheme
+  ML (list (lbname & univ_names & term & comp & list binder))

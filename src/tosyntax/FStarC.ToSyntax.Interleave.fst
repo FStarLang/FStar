@@ -1,4 +1,4 @@
-﻿(*
+(*
   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +34,7 @@ let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
 let is_val x d = match d.d with
     | Val(y, _) -> (string_of_id x) = (string_of_id y)
+    | DeclToBeDesugared { idents=[y] } -> (string_of_id x) = (string_of_id y)
     | _ -> false
 
 let is_type x d = match d.d with
@@ -149,8 +150,8 @@ let is_definition_of x d =
 let rec prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
-   : list decl  //remaining iface decls
-   & list decl =  //d prefixed with relevant bits from iface
+   : ML (list decl  //remaining iface decls
+    & list decl) =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
        let karamel_private =
            FStarC.Parser.AST.mk_term
@@ -192,7 +193,8 @@ let rec prefix_with_iface_decls
          iface, [qualify_karamel_private impl]
        ) else (
          let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
-         let rec aux mutuals iface =
+         let rec aux mutuals iface
+            : ML (list decl & list decl) =
            match mutuals, iface with
            | [], _ -> [], iface
            | _::_, [] -> [], []
@@ -213,6 +215,24 @@ let rec prefix_with_iface_decls
          rest_iface, iface_hd::take_iface@[impl]
        )
 
+     //Extension declarations (e.g., Pulse fn) in the interface:
+     //When the implementation defines the same name, consume the interface decl.
+     //Always prefix the interface decl so it produces a val declaration,
+     //which the implementation can then be checked against.
+     //This also prevents the implementation from getting KrmlPrivate.
+     | DeclToBeDesugared { idents=[x] } ->
+       let def_ids = definition_lids impl in
+       let defines_x = Util.for_some (id_eq_lid x) def_ids in
+       if defines_x then (
+         iface_tl, [iface_hd; impl]
+       ) else (
+         //implementation doesn't define x; skip past this iface entry
+         //and try to find a match further in the interface.
+         //Keep iface_hd in the remaining interface for later matching.
+         let iface, ds = prefix_with_iface_decls iface_tl impl in
+         iface_hd::iface, ds
+       )
+
      | Pragma _ ->
         (* Don't interleave pragmas on interface into implementation *)
         prefix_with_iface_decls iface_tl impl
@@ -223,7 +243,8 @@ let rec prefix_with_iface_decls
     end
 
 let check_initial_interface (iface:list decl) =
-    let rec aux iface =
+    let rec aux iface
+        : ML unit =
         match iface with
         | [] -> ()
         | hd::tl -> begin
@@ -247,81 +268,11 @@ let check_initial_interface (iface:list decl) =
     aux iface;
     iface |> List.filter (fun d -> match d.d with TopLevelModule _ -> false | _ -> true)
 
-//////////////////////////////////////////////////////////////////////
-//A weaker variant, for use only in --MLish mode
-//////////////////////////////////////////////////////////////////////
-//in --MLish mode: the interleaving rules are WAY more lax
-//      this is basically only in support of bootstrapping the compiler
-//      Here, if you have a `let x = e` in the implementation
-//      Then prefix it with `val x : t`, if any in the interface
-//      Don't enforce any ordering constraints
-let ml_mode_prefix_with_iface_decls
-        (iface:list decl)
-        (impl:decl)
-   : list decl    //remaining iface decls
-   & list decl =  //impl prefixed with relevant bits from iface
-
-
-   match impl.d with
-   | TopLevelModule _
-   | Open _
-   | Friend _
-   | Include _
-   | ModuleAbbrev _ ->
-     let iface_prefix_opens, iface =
-       List.span (fun d -> match d.d with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
-     in
-     let iface =
-       List.filter 
-         (fun d ->
-           match d.d with
-           | Val _
-           | Tycon _ -> true //only retain the vals in --MLish mode
-           | _ -> false)
-         iface
-     in
-     iface, [impl]@iface_prefix_opens
-     
-   | _ ->
-
-     let iface_prefix_tycons, iface =
-       List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
-     in
-
-     let maybe_get_iface_vals lids iface =
-       List.partition
-         (fun d -> lids |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
-         iface in
-
-     match impl.d with
-     | TopLevelLet _
-     | Tycon _ ->
-       let xs = definition_lids impl in
-       let val_xs, rest_iface = maybe_get_iface_vals xs iface in
-       rest_iface, iface_prefix_tycons@val_xs@[impl]
-     | _ ->
-       iface, iface_prefix_tycons@[impl]
-
-let ml_mode_check_initial_interface mname (iface:list decl) =
-  iface |> List.filter (fun d ->
-    match d.d with
-    | Tycon(_, _, tys)
-      when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-      raise_error d Errors.Fatal_AbstractTypeDeclarationInInterface
-        "Interface contains an abstract 'type' declaration; use 'val' instead"
-    | Tycon _
-    | Val _
-    | Open _
-    | ModuleAbbrev _ -> true
-    | _ -> false)
-
-let prefix_one_decl iface impl =
+let prefix_one_decl (iface:list decl) impl : ML (list decl & list decl) =
     match impl.d with
     | TopLevelModule _ -> iface, [impl]
     | _ ->
-      if Options.ml_ish ()
-      then ml_mode_prefix_with_iface_decls iface impl
-      else prefix_with_iface_decls iface impl
+      prefix_with_iface_decls iface impl
 
 //////////////////////////////////////////////////////////////////////////
 //Top-level interface
@@ -329,10 +280,7 @@ let prefix_one_decl iface impl =
 module E = FStarC.Syntax.DsEnv
 let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
   fun (env:E.env) ->
-    let decls =
-        if Options.ml_ish ()
-        then ml_mode_check_initial_interface mname l
-        else check_initial_interface l in
+    let decls = check_initial_interface l in
     match E.iface_decls env mname with
     | Some _ ->
       raise_error mname Errors.Fatal_InterfaceAlreadyProcessed
@@ -340,7 +288,7 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
     | None ->
       (), E.set_iface_decls env mname decls
 
-let fixup_interleaved_decls (iface : list decl) : list decl =
+let fixup_interleaved_decls (iface : list decl) : ML (list decl) =
   let fix1 (d : decl) : decl =
     let d = { d with interleaved = true } in
     d

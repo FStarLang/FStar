@@ -1,70 +1,179 @@
 * Info at NegativeTests.Termination.fst(21,28-21,29):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (m : Prims.int) (l : Prims.int)
+  - VC = forall (p: Prims.pure_post Prims.unit). m << m \/ l << l
   - See also NegativeTests.Termination.fst(18,12-21,29)
 
 * Info at NegativeTests.Termination.fst(28,26-28,35):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (n : Prims.int) (count : Prims.int)
+  - VC =
+      forall (k: Prims.pure_post Prims.int).
+        (forall (x: Prims.int). {:pattern Prims.guard_free (k x)} k x) ==>
+        ~(count = 0) ==>
+        (forall (b: Prims.int). count == b ==> n << n \/ count - 1 << count)
   - See also NegativeTests.Termination.fst(25,23-28,35)
 
 * Info at NegativeTests.Termination.fst(35,43-35,44):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (m : Prims.int) (n : Prims.int)
+  - VC =
+      forall (k: Prims.pure_post Prims.int).
+        (forall (x: Prims.int). {:pattern Prims.guard_free (k x)} k x) ==>
+        ~(m = 0 = true) ==>
+        (forall (b: Prims.bool).
+            m = 0 == b ==>
+            (forall (k: Prims.pure_post Prims.int).
+                (forall (x: Prims.int). {:pattern Prims.guard_free (k x)} k x) ==>
+                (n = 0 == true ==> m - 1 << m \/ m - 1 === m /\ 1 << n) /\
+                (~(n = 0 = true) ==>
+                  (forall (b: Prims.bool).
+                      n = 0 == b ==>
+                      (m << m \/ n - 1 << n) /\
+                      (forall (return_val: n: Prims.int{m << m \/ n << n}).
+                          return_val == n - 1 ==>
+                          (forall (any_result: Prims.int).
+                              NegativeTests.Termination.ackermann_bad m (n - 1) ==
+                              any_result ==>
+                              m - 1 << m \/
+                              m - 1 === m /\
+                              NegativeTests.Termination.ackermann_bad m (n - 1) <<
+                              n))))))
   - See also NegativeTests.Termination.fst(31,19-36,54)
 
 * Info at NegativeTests.Termination.fst(42,28-42,29):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = ('a : Type) (l : Prims.list 'a)
+  - VC =
+      forall (k: Prims.pure_post Prims.nat).
+        (forall (x: Prims.nat). {:pattern Prims.guard_free (k x)} k x) ==>
+        (~(Nil? l) /\ ~(Cons? l) ==> Prims.l_False) /\
+        (~(Nil? l) ==>
+          (forall (b: 'a) (b: Prims.list 'a).
+              l == b :: b ==>
+              l << l /\
+              (forall (any_result: Prims.list 'a).
+                  l == any_result ==>
+                  (forall (any_result: Prims.nat).
+                      NegativeTests.Termination.length_bad l == any_result ==>
+                      (forall (return_val: Prims.nat).
+                          return_val == NegativeTests.Termination.length_bad l ==>
+                          NegativeTests.Termination.length_bad l == return_val ==>
+                          (forall (any_result: Prims.int).
+                              1 + NegativeTests.Termination.length_bad l ==
+                              any_result ==>
+                              1 + NegativeTests.Termination.length_bad l >= 0)))
+              )))
   - See also NegativeTests.Termination.fst(40,23-42,29)
 
 * Info at NegativeTests.Termination.fst(55,15-55,29):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (v : Prims.nat)
+  - VC =
+      forall (k: Prims.pure_post Prims.nat).
+        (forall (x: Prims.nat). {:pattern Prims.guard_free (k x)} k x) ==>
+        ~(v = 0 = true) ==>
+        (forall (b: Prims.bool).
+            v = 0 == b ==> (forall (x: Prims.nat). x <= v ==> x << v))
   - See also NegativeTests.Termination.fst(53,2-55,29)
 
 * Info at NegativeTests.Termination.fst(67,19-67,29):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (n : NegativeTests.Termination.snat)
+  - VC =
+      forall (k: Prims.pure_post Prims.bool).
+        (forall (x: Prims.bool). {:pattern Prims.guard_free (k x)} k x) ==>
+        (~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False) /\
+        (~(O? n) ==>
+          ~(S? n && O? n._0) ==>
+          (forall (b: NegativeTests.Termination.snat).
+              n == NegativeTests.Termination.S (NegativeTests.Termination.S b) ==>
+              NegativeTests.Termination.S (NegativeTests.Termination.S b) << n))
   - See also NegativeTests.Termination.fst(64,2-67,29)
 
 * Info at NegativeTests.Termination.fst(75,34-75,35):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
+  - VC =
+      forall (k: Prims.pure_post NegativeTests.Termination.snat).
+        (forall (x: NegativeTests.Termination.snat).
+            {:pattern Prims.guard_free (k x)}
+            k x) ==>
+        (~(O? n) /\ ~(S? n && O? n._0) /\ ~(S? n && S? n._0) ==> Prims.l_False) /\
+        (~(O? n) ==>
+          ~(S? n && O? n._0) ==>
+          (forall (b: NegativeTests.Termination.snat).
+              n == NegativeTests.Termination.S (NegativeTests.Termination.S b) ==>
+              NegativeTests.Termination.S (NegativeTests.Termination.S b) << n \/
+              NegativeTests.Termination.S (NegativeTests.Termination.S b) === n /\
+              m << m))
   - See also NegativeTests.Termination.fst(71,13-75,35)
 
 * Info at NegativeTests.Termination.fst(80,2-82,14):
   - Expected failure:
   - Patterns are incomplete
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
+  - VC =
+      forall (k: Prims.pure_post NegativeTests.Termination.snat).
+        (forall (x: NegativeTests.Termination.snat).
+            {:pattern Prims.guard_free (k x)}
+            k x) ==>
+        ~(O? n) /\ ~(S? n && O? n._0) ==> Prims.l_False
 
 * Info at NegativeTests.Termination.fst(89,29-89,31):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (n : NegativeTests.Termination.snat) (m : NegativeTests.Termination.snat)
+  - VC =
+      forall (k: Prims.pure_post NegativeTests.Termination.snat).
+        (forall (x: NegativeTests.Termination.snat).
+            {:pattern Prims.guard_free (k x)}
+            k x) ==>
+        (~(O? (n, m)._1) /\ ~(S? (n, m)._1) ==> Prims.l_False) /\
+        (~(O? (n, m)._1) ==>
+          (forall (b: NegativeTests.Termination.snat)
+              (b: NegativeTests.Termination.snat).
+              (n, m) == (NegativeTests.Termination.S b, b) ==>
+              NegativeTests.Termination.S b << n \/
+              NegativeTests.Termination.S b === n /\ b << m))
   - See also NegativeTests.Termination.fst(86,15-89,31)
 
 * Info at NegativeTests.Termination.fst(96,20-96,26):
   - Expected failure:
   - Could not prove termination of this recursive call
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (n : NegativeTests.Termination.snat)
+  - VC =
+      forall (k: Prims.pure_post NegativeTests.Termination.snat).
+        (forall (x: NegativeTests.Termination.snat).
+            {:pattern Prims.guard_free (k x)}
+            k x) ==>
+        (~(O? (n, 42)._1 && (n, 42)._2 = 42) /\
+          ~(S? (n, 42)._1 && (n, 42)._2 = 42) ==>
+          Prims.l_False) /\
+        (~(O? (n, 42)._1 && (n, 42)._2 = 42) ==>
+          (forall (b: NegativeTests.Termination.snat).
+              (n, 42) == (NegativeTests.Termination.S b, 42) ==>
+              NegativeTests.Termination.S b << n))
   - See also NegativeTests.Termination.fst(94,2-96,26)
 
 * Warning 240 at NegativeTests.Termination.fst(91,4-91,7):

@@ -16,6 +16,7 @@
 
 module FStarC.Tactics.Hooks
 
+
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -54,9 +55,7 @@ let dbg_SpinoffAll = Debug.get_toggle "SpinoffAll"
 let run_tactic_on_typ
         (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (typ:term)
-                    : list goal // remaining goals
-                    & term // witness
-                    =
+                    : ML (list goal & term) =
     let rng = range_of_rng (use_range rng_tac) (use_range rng_goal) in
     let ps, w = FStarC.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
     let tactic_already_typed = false in
@@ -66,7 +65,7 @@ let run_tactic_on_typ
 let run_tactic_on_all_implicits
         (rng_tac : Range.t) (rng_goal : Range.t)
         (tactic:term) (env:Env.env) (imps:Env.implicits)
-    : list goal // remaining goals
+    : ML (list goal) // remaining goals
     =
     let ps, _ = FStarC.Tactics.V2.Basic.proofstate_of_all_implicits rng_goal env imps in
     let tactic_already_typed = false in
@@ -107,11 +106,11 @@ let flip p = match p with
     | Neg -> Pos
     | Both -> Both
 
-let getprop (e:Env.env) (t:term) : option term =
+let getprop (e:Env.env) (t:term) : ML (option term) =
     let tn = N.normalize [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant] e t in
     U.un_squash tn
 
-let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
+let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
     let hd, args = U.head_and_args t in
     match (U.un_uinst hd).n, args with
 
@@ -121,11 +120,11 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         begin match pol with
         | StrictlyPositive
         | Pos ->
-            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e (U.mk_squash assertion) in
             Simplified (FStarC.Syntax.Util.t_true, gs)
 
         | Both ->
-            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e assertion in
+            let gs, _ = run_tactic_on_typ tactic.pos assertion.pos tactic e (U.mk_squash assertion) in
             Dual (assertion, FStarC.Syntax.Util.t_true, gs)
 
         | Neg ->
@@ -140,12 +139,12 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         begin  match pol with
         | StrictlyPositive
         | Pos ->
-          let g = fst <| goal_of_goal_ty e assertion in
+          let g = fst <| goal_of_goal_ty e (U.mk_squash assertion) in
           let g = set_label "spun-off assertion" g in
           Simplified (FStarC.Syntax.Util.t_true, [g])
 
         | Both ->
-          let g = fst <| goal_of_goal_ty e assertion in
+          let g = fst <| goal_of_goal_ty e (U.mk_squash assertion) in
           let g = set_label "spun-off assertion" g in
           Dual (assertion, FStarC.Syntax.Util.t_true, [g])
 
@@ -161,8 +160,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         let uvtm, _, g_imp = Env.new_implicit_var_aux "rewrite_with_tactic RHS" tm.pos e typ Strict None false in
 
         let u = e.universe_of e typ in
-        // eq2 is squashed already, so it's in Type0
-        let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+        let goal = U.mk_squash (U.mk_eq2 u typ tm uvtm) in
         let gs, _ = run_tactic_on_typ tactic.pos tm.pos tactic e goal in
 
         // abort if the uvar was not solved
@@ -182,12 +180,12 @@ let explode (t : tres_m 'a) : 'a & 'a & list goal =
     | Simplified (t, gs) -> (t, t, gs)
     | Dual (tn, tp, gs) -> (tn, tp, gs)
 
-let comb1 (f : 'a -> 'b) : tres_m 'a -> tres_m 'b = function
+let comb1 (f : 'a -> ML 'b) : tres_m 'a -> ML (tres_m 'b) = function
     | Unchanged t -> Unchanged (f t)
     | Simplified (t, gs) -> Simplified (f t, gs)
     | Dual (tn, tp, gs) -> Dual (f tn, f tp, gs)
 
-let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m 'a) (y : tres_m 'b) : tres_m 'c =
+let comb2 (f : 'a -> 'b -> ML 'c) (x : tres_m 'a) (y : tres_m 'b) : ML (tres_m 'c) =
     match x, y with
     | Unchanged t1, Unchanged t2 ->
         Unchanged (f t1 t2)
@@ -204,18 +202,18 @@ let comb2 (f : 'a -> 'b -> 'c ) (x : tres_m 'a) (y : tres_m 'b) : tres_m 'c =
         let (n2, p2, gs2) = explode y in
         Dual (f n1 n2, f p1 p2, gs1@gs2)
 
-let comb_list (rs : list (tres_m 'a)) : tres_m (list 'a) =
-    let rec aux rs acc =
+let comb_list (rs : list (tres_m 'a)) : ML (tres_m (list 'a)) =
+    let rec aux rs acc : ML _ =
         match rs with
         | [] -> acc
         | hd::tl -> aux tl (comb2 (fun l r -> l::r) hd acc)
     in
     aux (List.rev rs) (tpure [])
 
-let emit (gs : list goal) (m : tres_m 'a) : tres_m 'a =
+let emit (gs : list goal) (m : tres_m 'a) : ML (tres_m 'a) =
     comb2 (fun () x -> x) (Simplified ((), gs)) m
 
-let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:term) : tres =
+let rec traverse (f: pol -> Env.env -> term -> ML tres) (pol:pol) (e:Env.env) (t:term) : ML tres =
     let r =
         match (SS.compress t).n with
         | Tm_uinst (t,us) -> let tr = traverse f pol e t in
@@ -226,7 +224,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
 
         | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                // ==> is specialized to U_zero
-               let x = S.new_bv None p in
+               let x = S.new_bv None (U.mk_squash p) in
                let r1 = traverse f (flip pol)  e                p in
                let r2 = traverse f       pol  (Env.push_bv e x) q in
                comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
@@ -238,8 +236,8 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         (* But if neither side ran tactics, we just keep p <==> q *)
         | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.iff_lid ->
                // <==> is specialized to U_zero
-               let xp = S.new_bv None p in
-               let xq = S.new_bv None q in
+               let xp = S.new_bv None (U.mk_squash p) in
+               let xq = S.new_bv None (U.mk_squash q) in
                let r1 = traverse f Both (Env.push_bv e xq) p in
                let r2 = traverse f Both (Env.push_bv e xp) q in
                // Should be flipping the tres, I think
@@ -302,7 +300,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let preprocess (env:Env.env) (goal:term)
-  : bool & list (Env.env & term & O.optionstate)
+  : ML (bool & list (Env.env & term & O.optionstate))
     (* bool=true iff any tactic actually ran *)
 =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
@@ -352,10 +350,10 @@ let rec traverse_for_spinoff
                  (pol:pol)
                  (label_ctx:option (list Pprint.document & Range.t))
                  (e:Env.env)
-                 (t:term) : tres =
+                 (t:term) : ML tres =
     let debug_any = Debug.any () in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let traverse_ctx pol (ctx : list Pprint.document & Range.t) (e:Env.env) (t:term) : tres =
+    let traverse_ctx pol (ctx : list Pprint.document & Range.t) (e:Env.env) (t:term) : ML tres =
       let print_lc (msg, rng) =
         Format.fmt3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
@@ -379,7 +377,6 @@ let rec traverse_for_spinoff
             S.fv_eq_lid fv PC.and_lid ||
             S.fv_eq_lid fv PC.imp_lid ||
             S.fv_eq_lid fv PC.forall_lid ||
-            S.fv_eq_lid fv PC.auto_squash_lid ||
             S.fv_eq_lid fv PC.squash_lid
 
           | Tm_meta _
@@ -396,18 +393,13 @@ let rec traverse_for_spinoff
                       (label_ctx:option (list Pprint.document & Range.t))
                       (e:Env.env)
                       (t:term)
-      : tres =
+      : ML tres =
         let label_goal (env, t) =
             let t =
               match (SS.compress t).n, label_ctx with
               | Tm_meta {meta=Meta_labeled _}, _ -> t
               | _, Some (msg, r) -> TcUtil.label msg r t
               | _ -> t
-            in
-            let t =
-              if U.is_sub_singleton t
-              then t
-              else U.mk_auto_squash U_zero t
             in
             fst (goal_of_goal_ty env t)
         in
@@ -425,7 +417,7 @@ let rec traverse_for_spinoff
         then spinoff t
         else Unchanged t
     in
-    let rewrite_boolean_conjunction t =
+    let rewrite_boolean_conjunction t : ML _ =
         let hd, args = U.head_and_args t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
@@ -441,8 +433,8 @@ let rec traverse_for_spinoff
             )
         | _ -> None
     in
-    let try_rewrite_match env t =
-        let rec pat_as_exp env p =
+    let try_rewrite_match env t : ML _ =
+        let rec pat_as_exp env p : ML _ =
           match FStarC.TypeChecker.PatternUtils.raw_pat_as_exp env p with
           | None -> None
           | Some (e, _) ->
@@ -453,16 +445,16 @@ let rec traverse_for_spinoff
               FStarC.TypeChecker.TcTerm.universe_of env lc.res_typ in
             Some (e, lc.res_typ, u)
         in
-        let bv_universes env bvs =
+        let bv_universes env bvs : ML _ =
           List.map (fun x -> x, FStarC.TypeChecker.TcTerm.universe_of env x.sort) bvs
         in
-        let mk_forall_l bv_univs term = 
+        let mk_forall_l bv_univs term : ML _ = 
           List.fold_right
             (fun (x,u) out -> U.mk_forall u x out)
             bv_univs
             term
         in
-        let mk_exists_l bv_univs term = 
+        let mk_exists_l bv_univs term : ML _ = 
           List.fold_right
             (fun (x,u) out -> U.mk_exists u x out)
             bv_univs
@@ -472,7 +464,7 @@ let rec traverse_for_spinoff
         else (
           match (SS.compress t).n with
           | Tm_match {scrutinee=sc; ret_opt=asc_opt; brs; rc_opt=lopt} ->  //AR: not traversing the return annotation
-            let rec rewrite_branches path_condition branches =
+            let rec rewrite_branches path_condition branches : ML _ =
               match branches with
               | [] -> Inr (U.mk_imp path_condition U.t_false)
               | br::branches ->
@@ -549,7 +541,7 @@ let rec traverse_for_spinoff
 
           | Tm_app {hd={ n = Tm_fvar fv }; args=[(p,_); (q,_)]} when S.fv_eq_lid fv PC.imp_lid ->
                  // ==> is specialized to U_zero
-            let x = S.new_bv None p in
+            let x = S.new_bv None (U.mk_squash p) in
             let r1 = traverse (flip pol)  e                p in
             let r2 = traverse       pol  (Env.push_bv e x) q in
             comb2 (fun l r -> (U.mk_imp l r).n) r1 r2
@@ -632,7 +624,7 @@ let pol_to_string = function
   | Both -> "Both"
 
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
-  : list (Env.env & term)
+  : ML (list (Env.env & term))
   = if !dbg_SpinoffAll then Format.print1 "spinoff_all called with %s\n" (show goal);
     Errors.with_ctx "While spinning off all goals" (fun () ->
       let initial = (1, []) in
@@ -698,7 +690,7 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
   )
 
 
-let synthesize (env:Env.env) (typ:typ) (tau:term) rng : term =
+let synthesize (env:Env.env) (typ:typ) (tau:term) rng : ML term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
     if env.flychecking
@@ -724,7 +716,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) rng : term =
     end
   )
 
-let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : ML unit =
   Errors.with_ctx "While solving implicits with a tactic" (fun () ->
     if env.flychecking then () else
     begin
@@ -761,7 +753,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
   )
 
 (* Retrieves a tactic associated to a given attribute, if any *)
-let find_user_tac_for_attr env (a:term) : option sigelt =
+let find_user_tac_for_attr env (a:term) : ML (option sigelt) =
   let hooks = Env.lookup_attr env (Ident.string_of_lid PC.handle_smt_goals_attr) in
   hooks |> BU.try_find (fun _ -> true)
 
@@ -770,7 +762,7 @@ let find_user_tac_for_attr env (a:term) : option sigelt =
    If such a tactic exists, all the unresolved goals must be propositions,
    that will be directly encoded to SMT inside Rel.discharge_guard.
    If such a tactic does not exist, this function is a no-op. *)
-let handle_smt_goal env goal =
+let handle_smt_goal env goal : ML _ =
   match check_trivial goal with
   (* No need to pass the term to the tactic if trivial *)
   | Trivial -> [env, goal]
@@ -792,7 +784,7 @@ let handle_smt_goal env goal =
      let gs = Errors.with_ctx "While handling an SMT goal with a tactic" (fun () ->
 
         (* Executing the tactic on the goal. *)
-        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash U_zero goal) in
+        let gs, _ = run_tactic_on_typ tau.pos (Env.get_range env) tau env (U.mk_squash goal) in
         // Check that all goals left are irrelevant and provable
         gs |> List.map (fun g ->
             match getprop (goal_env g) (goal_type g) with
@@ -835,7 +827,7 @@ let splice
   (is_typed:bool)
   (lids:list Ident.lident)
   (tau:term)
-  (rng:Range.t) : list sigelt =
+  (rng:Range.t) : ML (list sigelt) =
   
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.flychecking then [] else begin
@@ -869,7 +861,7 @@ let splice
             // For spliced vals, their lids is set to []
             //   (see ToSyntax.fst:desugar_decl, splice case)
             //
-            if List.length lids = 0
+            if Nil? lids
             then None, None
             else
               match Env.try_lookup_val_decl env (List.hd lids) with
@@ -1013,7 +1005,7 @@ let splice
     end
   )
 
-let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+let mpreprocess (env:Env.env) (tau:term) (tm:term) : ML term =
   Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.flychecking then tm else begin
     let ps = FStarC.Tactics.V2.Basic.proofstate_of_goals tm.pos env [] [] in
@@ -1023,7 +1015,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
     end
   )
 
-let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : ML term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.flychecking then tm else begin
     //we know that tm:typ
@@ -1033,7 +1025,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
 
     let u = env.universe_of env typ in
     // eq2 is squashed already, so it's in Type0
-    let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
+    let goal = U.mk_squash (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
     // see comment in `synthesize`
     List.iter (fun g ->

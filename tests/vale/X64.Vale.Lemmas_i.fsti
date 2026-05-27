@@ -25,11 +25,11 @@ unfold let codes = S.codes
 
 let cf (flags:int) : bool = S.cf (S.u (int_to_nat64 flags))
 
-let eval_code (c:code) (s0:state) (s1:state) : Type0 =
+let eval_code (c:code) (s0:state) (s1:state) : prop =
   exists (fuel:nat).{:pattern (S.eval_code c fuel (state_to_S s0))}
     Some (state_to_S s1) == S.eval_code c fuel (state_to_S s0)
 
-val eval_while : b:S.ocmp -> c:code -> n:nat -> s0:state -> s1:state -> Type0
+val eval_while : b:S.ocmp -> c:code -> n:nat -> s0:state -> s1:state -> prop
 
 let eval_ocmp (s:state) (c:S.ocmp) : bool = S.eval_ocmp (state_to_S s) c
 

@@ -7,7 +7,7 @@ open FStar.Tactics.V2
 // category can be used as right associative binary operators.
 
 let ( ∈ ) = List.Tot.memP
-let ( ⊆ ) (l1 l2: list 'a): Type0 = forall x. x ∈ l1 ==> x ∈ l2
+let ( ⊆ ) (l1 l2: list 'a): prop = forall x. x ∈ l1 ==> x ∈ l2
 
 let _ = assert_norm (3 ∈ [1;2;3;4])
 let _ = assert_norm ([2;4] ⊆ [1;2;3;4])

@@ -20,19 +20,13 @@ module FStar.IndefiniteDescription
 /// for existentially quantified predicate. See the interface for more
 /// context.
 
-(** A proof for squash p can be eliminated to get p in the Ghost effect *)
-irreducible let elim_squash (#p:Type u#a) (s:squash p) : GTot p = admit ()
-
 (** Given a classical proof of [exists x. p x], we can exhibit an erased
     (computationally irrelevant) a witness [x:erased a] validating
     [p x].  *)
 irreducible
 let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
   : GTot (x: a { p x })
-  = let h : squash (exists x. p x) = () in
-    let h : (exists x. p x) = elim_squash h in
-    let (| x, h |) : x:a & p x = elim_squash h in
-    x
+  = indefinite_description p
 
 (** A version in ghost is easily derivable *)
 let indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
@@ -42,13 +36,8 @@ let indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
 (** Indefinite description entails the a strong form of the excluded
     middle, i.e., one can case-analyze the truth of a proposition
     (only in [Ghost]) *)
-let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
-  let h : squash (p \/ ~p) = () in
-  let h : (p \/ ~p) = elim_squash h in
-  let h : sum p (~p) = elim_squash h in
-  match h with
-  | Left h -> true
-  | Right h -> false
+let strong_excluded_middle (p: prop) : GTot (b: bool{b = true <==> p}) =
+  p
 
 (** We also can combine this with a the classical tautology converting
     with a [forall] and an [exists] to extract a witness of validity of [p] from

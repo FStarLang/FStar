@@ -17,15 +17,15 @@ module Cut
 
 open FStar.Tactics.V2
 
-assume val phi : Type
-assume val psi : Type
+assume val phi : prop
+assume val psi : prop
 
 assume val p1 : psi
 assume val p2 : psi -> squash phi
 
 let _ =
     assert phi
-        by (let psi' = quote psi in
+        by (let psi' = quote (squash psi) in
             let _ = tcut psi' in
             flip ();
             exact (`p1); // TODO: kinda pointless example

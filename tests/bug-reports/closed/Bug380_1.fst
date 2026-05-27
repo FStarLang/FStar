@@ -15,5 +15,5 @@
 *)
 module Bug380_1
 
-[@@expect_failure [19]]
+[@@expect_failure [189]]
 let should_fail = assert (forall (x:Type0). (x /\ True) == x)

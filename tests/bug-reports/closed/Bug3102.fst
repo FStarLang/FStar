@@ -16,12 +16,7 @@ let test0 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 t2))
     let e2 = t2 in
     check_subtyping g t1 e2
 
-[@@expect_failure [54]]
-// * Error 54 at Bug3102.fst(28,4-28,27):
-//   - (*?u23*) _ g t1 t2 is not equal to the expected type e2
-// Not great... but it does make sense as we wrote an _ that can only
-// mention g t1 and t2, and the escapes check does not trigger in the same way
-// as above
+[@@expect_failure [66]]
 let test1 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 _)) =
   fun (g:env) (t1 t2:term) ->
     let e2 = t2 in

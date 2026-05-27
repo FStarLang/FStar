@@ -3,7 +3,6 @@ module Test.CanonCommMonoidSimple.Equiv
 open FStar.Algebra.CommMonoid.Equiv
 open FStar.Tactics.V2
 open FStar.Tactics.CanonCommMonoidSimple.Equiv
-open FStar.Mul
 
 (***** Example *)
 

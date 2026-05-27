@@ -2,9 +2,9 @@ module Bug2066
 
 type unit : Type = unit
 
-type pre_t = Type0
+type pre_t = prop
 
-type post_t (a:Type) = a -> Type0
+type post_t (a:Type) = a -> prop
 
 type repr (a:Type) (pre:pre_t) (post:post_t a) =
   unit -> Pure a pre post

@@ -17,7 +17,6 @@
 *)
 module OPLSS2021.Vale
 open FStar.FunctionalExtensionality
-open FStar.Mul
 //suppress a benign warning in this program
 #set-options "--warn_error -290"
 

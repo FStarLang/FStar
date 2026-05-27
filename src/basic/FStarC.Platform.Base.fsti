@@ -10,4 +10,4 @@ type sys =
 val system : sys
 
 (* Tries to read the output of the `uname` command. *)
-val kernel () : string
+val kernel : unit -> ML string

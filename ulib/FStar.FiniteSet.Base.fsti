@@ -116,21 +116,21 @@ val difference (#a: eqtype) (s1: set a) (s2: set a)
 /// function Set#Subset<T>(Set T, Set T): bool;
 
 val subset (#a: eqtype) (s1: set a) (s2: set a)
-  : Type0
+  : prop
 
 /// We represent the Dafny function `Set#Equal` with `equal`:
 ///
 /// function Set#Equal<T>(Set T, Set T): bool;
 
 val equal (#a: eqtype) (s1: set a) (s2: set a)
-  : Type0
+  : prop
 
 /// We represent the Dafny function `Set#Disjoint` with `disjoint`:
 ///
 /// function Set#Disjoint<T>(Set T, Set T): bool;
 
 val disjoint (#a: eqtype) (s1: set a) (s2: set a)
-  : Type0
+  : prop
 
 /// We represent the Dafny choice operator by `choose`:
 ///

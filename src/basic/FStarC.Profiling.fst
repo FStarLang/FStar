@@ -67,7 +67,7 @@ let create_or_lookup_counter cid =
     c
 
 (* Time an operation, if the the profiler is enabled *)
-let profile  (f: unit -> 'a) (module_name:option string) (cid:string) : 'a =
+let profile  (f: unit -> ML 'a) (module_name:option string) (cid:string) : ML 'a =
   // Stats.record cid fun () ->
   if Options.profile_enabled module_name cid
   then let c = create_or_lookup_counter cid in
@@ -116,7 +116,7 @@ let report tag c =
   | Json -> report_json tag c
 
 (* Report all profiles and clear all counters *)
-let report_and_clear tag =
+let report_and_clear tag : ML _ =
     let ctrs = //all the counters as a list
       SMap.fold all_counters (fun _ v l -> v :: l) []
     in

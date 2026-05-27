@@ -1,5 +1,4 @@
 module ProvableEquality
-open FStar.Mul
 
 //SNIPPET_START: vec$
 type vec (a:Type) : nat -> Type =

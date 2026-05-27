@@ -15,7 +15,6 @@
 *)
 module X64.Poly1305.Spec_s
 
-open FStar.Mul
 open FStar.UInt
 open FStar.Map
 

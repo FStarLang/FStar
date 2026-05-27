@@ -19,16 +19,14 @@ OUT_DIR   = out
 CACHE_DIR = cache
 ROOTS     = Test.fst
 
-FSTAR_FLAGS = $(OTHERFLAGS) --cmi --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
-  --cache_checked_modules --already_cached 'Prims FStar' \
-  --ext optimize_let_vc --ext fly_deps
+FSTAR_FLAGS = $(OTHERFLAGS) --odir $(OUT_DIR) --cache_dir $(CACHE_DIR) \
+  --cache_checked_modules --already_cached 'Prims FStar'
 
 FSTAR = $(FSTAR_EXE) $(FSTAR_FLAGS)
 
 .PHONY: all test clean run
 
 all:
-	rm -f .depend && $(MAKE) .depend # Always re-generate dependencies
 	+$(MAKE) test
 
 # 1. Extract .ml files

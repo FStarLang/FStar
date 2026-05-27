@@ -63,14 +63,14 @@ let destruct_sq_base_table = [
   (3, [(PC.c_eq2_lid, PC.eq2_lid)]);
 ]
 
-let rec unmeta_monadic f =
+let rec unmeta_monadic f : ML term =
   let f = Subst.compress f in
   match f.n with
   | Tm_meta {tm=t; meta=Meta_monadic _}
   | Tm_meta {tm=t; meta=Meta_monadic_lift _} -> unmeta_monadic t
   | _ -> f
 
-let lookup_arity_lid table target_lid args =
+let lookup_arity_lid table target_lid args : ML (option connective) =
     let arg_len : int = List.length args in
     let aux (arity, lids) =
         if arg_len = arity
@@ -83,13 +83,13 @@ let lookup_arity_lid table target_lid args =
     in
     BU.find_map table aux
 
-let destruct_base_conn t =
+let destruct_base_conn t : ML (option connective) =
     let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n with
     | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name args
     | _ -> None
 
-let destruct_sq_base_conn t =
+let destruct_sq_base_conn t : ML (option connective) =
     let! t = U.un_squash t in
     let t = U.unmeta t in
     let hd, args = U.head_and_args_full t in
@@ -97,14 +97,14 @@ let destruct_sq_base_conn t =
     | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name args
     | _ -> None
 
-let patterns t =
+let patterns t : ML (list (list arg) & term) =
     let t = SS.compress t in
     match t.n with
         | Tm_meta {tm=t; meta=Meta_pattern (_, pats)} -> pats, SS.compress t
         | _ -> [], t
 
-let destruct_q_conn t =
-    let is_q (fa:bool) (fv:fv) : bool =
+let destruct_q_conn t : ML (option connective) =
+    let is_q (fa:bool) (fv:fv) : ML bool =
         if fa
         then U.is_forall fv.fv_name
         else U.is_exists fv.fv_name
@@ -113,7 +113,7 @@ let destruct_q_conn t =
         let t, args = U.head_and_args_full t in
         U.un_uinst t, args |> List.map (fun (t, imp) -> U.unascribe t, imp)
     in
-    let rec aux qopt out t = match qopt, flat t with
+    let rec aux qopt out t : ML (option connective) = match qopt, flat t with
         | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
         | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
             when (is_q fa tc) ->
@@ -135,7 +135,7 @@ let destruct_q_conn t =
         | _ -> None in
     aux None [] t
 
-let rec destruct_sq_forall t =
+let rec destruct_sq_forall t : ML (option connective) =
     let! t = U.un_squash t in
     let t = U.unmeta t in
     match U.arrow_one t with
@@ -153,7 +153,7 @@ let rec destruct_sq_forall t =
                 Some (BaseConn (PC.imp_lid, [as_arg b.binder_bv.sort; as_arg q]))
             )
     | _ -> None
-and destruct_sq_exists t =
+and destruct_sq_exists t : ML (option connective) =
     let! t = U.un_squash t in
     let t = U.unmeta t in
     let hd, args = U.head_and_args_full t in
@@ -172,7 +172,7 @@ and destruct_sq_exists t =
             | _ -> None
             end
     | _ -> None
-and maybe_collect f =
+and maybe_collect f : ML (option connective) =
     match f with
     | Some (QAll (bs, pats, phi)) ->
         begin match destruct_sq_forall phi with
@@ -186,7 +186,7 @@ and maybe_collect f =
         end
     | _ -> f
 
-let destruct_typ_as_formula f : option connective =
+let destruct_typ_as_formula f : ML (option connective) =
   let phi = unmeta_monadic f in
   let r = 
     // Try all possibilities, stopping at the first

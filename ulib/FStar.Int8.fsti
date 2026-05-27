@@ -20,7 +20,6 @@ module FStar.Int8
 unfold let n = 8
 
 open FStar.Int
-open FStar.Mul
 
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
@@ -65,16 +64,16 @@ val mul (a:t) (b:t) : Pure t
   (requires (size (v a * v b) n))
   (ensures (fun c -> v a * v b = v c))
 
-(* Division primitives *)
+(* Division primitives. Note division truncates towards zero (/-). *)
 val div (a:t) (b:t{v b <> 0}) : Pure t
   // division overflows on INT_MIN / -1
-  (requires (size (v a / v b) n))
-  (ensures (fun c -> v a / v b = v c))
+  (requires (size (v a /- v b) n))
+  (ensures (fun c -> v a /- v b = v c))
 
 (* Modulo primitives *)
 (* If a/b is not representable the result of a%b is undefind *)
 val rem (a:t) (b:t{v b <> 0}) : Pure t
-  (requires (size (v a / v b) n))
+  (requires (size (v a /- v b) n))
   (ensures (fun c -> FStar.Int.mod (v a) (v b) = v c))
 
 (* Bitwise operators *)
@@ -109,6 +108,22 @@ val shift_left (a:t) (s:UInt32.t) : Pure t
 val shift_arithmetic_right (a:t) (s:UInt32.t) : Pure t
   (requires (UInt32.v s < n))
   (ensures (fun c -> FStar.Int.shift_arithmetic_right (v a) (UInt32.v s) = v c))
+
+(* Rotate operators *)
+
+(** Rotate right.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
+val rotate_right (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> FStar.Int.rotate_right (v a) (UInt32.v s) = v c))
+
+(** Rotate left.
+    Note: Rotation is performed at the bit level and is essentially unsigned.
+    The sign bit is rotated just like any other bit. *)
+val rotate_left (a:t) (s:UInt32.t) : Pure t
+  (requires (UInt32.v s < n))
+  (ensures (fun c -> FStar.Int.rotate_left (v a) (UInt32.v s) = v c))
 
 (* Comparison operators *)
 let eq  (a:t) (b:t) : Tot bool = eq  #n (v a) (v b)

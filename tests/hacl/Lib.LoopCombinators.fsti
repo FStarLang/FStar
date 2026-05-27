@@ -230,14 +230,14 @@ val repeat_range_all_ml:
   -> FStar.All.ML a
 
 unfold
-type repeatable (#a:Type) (#n:nat) (pred:(i:nat{i <= n} -> a -> Tot Type)) =
+type repeatable (#a:Type) (#n:nat) (pred:(i:nat{i <= n} -> a -> Tot prop)) =
   i:nat{i < n} -> x:a{pred i x} -> y:a{pred (i+1) y}
 
 val repeat_range_inductive:
     #a:Type
   -> min:nat
   -> max:nat{min <= max}
-  -> pred:(i:nat{i <= max} -> a -> Type)
+  -> pred:(i:nat{i <= max} -> a -> prop)
   -> f:repeatable #a #max pred
   -> x0:a{pred min x0}
   -> Tot (res:a{pred max res}) (decreases (max - min))
@@ -245,7 +245,7 @@ val repeat_range_inductive:
 val repeati_inductive:
    #a:Type
  -> n:nat
- -> pred:(i:nat{i <= n} -> a -> Type)
+ -> pred:(i:nat{i <= n} -> a -> prop)
  -> f:repeatable #a #n pred
  -> x0:a{pred 0 x0}
  -> res:a{pred n res}
@@ -253,7 +253,7 @@ val repeati_inductive:
 val repeati_inductive_repeat_gen:
    #a:Type
  -> n:nat
- -> pred:(i:nat{i <= n} -> a -> Type)
+ -> pred:(i:nat{i <= n} -> a -> prop)
  -> f:repeatable #a #n pred
  -> x0:a{pred 0 x0}
  -> Lemma (repeati_inductive n pred f x0 == repeat_gen n (fun i -> x:a{pred i x}) f x0)
@@ -261,13 +261,13 @@ val repeati_inductive_repeat_gen:
 type preserves_predicate (n:nat)
      (a:(i:nat{i <= n} -> Type))
      (f:(i:nat{i < n} -> a i -> a (i + 1)))
-     (pred:(i:nat{i <= n} -> a i -> Tot Type))=
+     (pred:(i:nat{i <= n} -> a i -> Tot prop))=
   forall (i:nat{i < n}) (x:a i). pred i x ==> pred (i + 1) (f i x)
 
 val repeat_gen_inductive:
    n:nat
  -> a:(i:nat{i <= n} -> Type)
- -> pred:(i:nat{i <= n} -> a i -> Type0)
+ -> pred:(i:nat{i <= n} -> a i -> prop)
  -> f:(i:nat{i < n} -> a i -> a (i + 1))
  -> x0:a 0
  -> Pure (a n)
@@ -277,13 +277,13 @@ val repeat_gen_inductive:
 type preserves (#a:Type)
   (#n:nat)
   (f:(i:nat{i < n} -> a -> a))
-  (pred:(i:nat{i <= n} -> a -> Tot Type)) =
+  (pred:(i:nat{i <= n} -> a -> Tot prop)) =
   forall (i:nat{i < n}) (x:a). pred i x ==> pred (i + 1) (f i x)
 
 val repeati_inductive':
   #a:Type
   -> n:nat
-  -> pred:(i:nat{i <= n} -> a -> Type0)
+  -> pred:(i:nat{i <= n} -> a -> prop)
   -> f:(i:nat{i < n} -> a -> a)
   -> x0:a
   -> Pure a

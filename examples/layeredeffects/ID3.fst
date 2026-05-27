@@ -1,14 +1,14 @@
 module ID3
 
 // The base type of WPs
-val w0 (a : Type u#a) : Type u#(max 1 a)
-let w0 a = (a -> Type0) -> Type0
+val w0 (a : Type u#a) : Type u#a
+let w0 a = (a -> prop) -> prop
 
 // We require monotonicity of them
 let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
-val w (a : Type u#a) : Type u#(max 1 a)
+val w (a : Type u#a) : Type u#a
 let w a = pure_wp a
 
 let repr (a : Type) (wp : w a) : Type =

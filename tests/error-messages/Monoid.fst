@@ -49,7 +49,7 @@ let int_plus_monoid : monoid int =
   intro_monoid int 0 (+)
 
 (* let int_mul_monoid : monoid int = *)
-(*   intro_monoid int 1 op_Multiply *)
+(*   intro_monoid int 1 op_Star *)
 
 let conjunction_monoid : monoid prop =
   let u : prop = singleton True in

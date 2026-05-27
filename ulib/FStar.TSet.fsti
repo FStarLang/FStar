@@ -17,11 +17,10 @@
 (** Propositional sets (on any types): membership is a predicate *)
 module FStar.TSet
 
-(*
- * AR: mark it must_erase_for_extraction temporarily until CMI comes in
- *)
-[@@must_erase_for_extraction; erasable]
-val set (a:Type u#a) : Type u#(max 1 a)
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
+[@@erasable]
+val set (a:Type u#a) : Type u#a
 
 val equal (#a:Type) (s1:set a) (s2:set a) : prop
 
@@ -38,7 +37,7 @@ val complement : #a:Type -> x:set a -> Tot (set a)
 val intension  : #a:Type -> (a -> prop) -> Tot (set a)
 
 (* ops *)
-let subset (#a:Type) (s1:set a) (s2:set a) : Type0 = forall x. mem x s1 ==> mem x s2
+let subset (#a:Type) (s1:set a) (s2:set a) : prop = forall x. mem x s1 ==> mem x s2
 
 (* Properties *)
 val mem_empty: #a:Type -> x:a -> Lemma
@@ -105,9 +104,9 @@ val lemma_mem_tset_of_set (#a:eqtype) (s:Set.set a) (x:a)
          (ensures  (Set.mem x s <==> mem x (tset_of_set s)))
          [SMTPat (mem x (tset_of_set s))]
 
-val filter (#a:Type) (f:a -> Type0) (s:set a) : Tot (set a)
+val filter (#a:Type) (f:a -> prop) (s:set a) : Tot (set a)
 
-val lemma_mem_filter (#a:Type) (f:(a -> Type0)) (s:set a) (x:a)
+val lemma_mem_filter (#a:Type) (f:(a -> prop)) (s:set a) (x:a)
   :Lemma (requires True)
          (ensures  (mem x (filter f s) <==> mem x s /\ f x))
          [SMTPat (mem x (filter f s))]
@@ -118,7 +117,7 @@ val lemma_mem_map (#a:Type) (#b:Type) (f:(a -> Tot b)) (s:set a) (x:b)
   :Lemma ((exists (y:a). {:pattern (mem y s)} mem y s /\ x == f y) <==> mem x (map f s))
          [SMTPat (mem x (map f s))]
 
-// #reset-options
+#reset-options
 let rec as_set' (#a:Type) (l:list a) : Tot (set a) =
   match l with
   | [] -> empty

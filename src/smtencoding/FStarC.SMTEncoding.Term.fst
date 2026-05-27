@@ -40,7 +40,7 @@ let mk_named (id: string) : document =
 let mk_pattern (pat: document) : document =
   nest 1 (group (doc_of_string ":pattern" ^/^ pat))
 
-let rec strSort x = match x with
+let rec strSort x : ML string = match x with
   | Bool_sort  -> "Bool"
   | Int_sort  -> "Int"
   | Term_sort -> "Term"
@@ -51,7 +51,7 @@ let rec strSort x = match x with
   | Arrow(s1, s2) -> Format.fmt2 "(=> %s %s)" (strSort s1) (strSort s2)
   | Sort s -> s
 
-let rec docSort x = match x with
+let rec docSort x : ML document = match x with
   | Bool_sort  -> doc_of_string "Bool"
   | Int_sort  -> doc_of_string "Int"
   | Term_sort -> doc_of_string "Term"
@@ -128,7 +128,7 @@ The bool in the fv is used in termToSmt to force the thunk before
 printing.
  **)
 
-let mk_decls name key decls aux_decls = [{
+let mk_decls name key decls aux_decls : ML decls_t = [{
   sym_name    = Some name;
   key         = Some key;
   decls       = decls;
@@ -143,7 +143,7 @@ let mk_decls name key decls aux_decls = [{
     SMap.keys sm
 }]
 
-let mk_decls_trivial decls = [{
+let mk_decls_trivial decls : ML decls_t = [{
   sym_name = None;
   key = None;
   decls = decls;
@@ -152,7 +152,7 @@ let mk_decls_trivial decls = [{
               | _ -> []) decls;
 }]
 
-let decls_list_of l = l |> List.collect (fun elt -> elt.decls)
+let decls_list_of l : ML (list decl) = l |> List.collect (fun elt -> elt.decls)
 
 let mk_fv (x, y) : fv = FV (x, y, false)
 
@@ -169,7 +169,7 @@ instance ord_fv : ord fv = {
 let fv_sort (x:fv) = let FV (_, sort, _) = x in sort
 let fv_force (x:fv) = let FV (_, _, force) = x in force
 let fv_eq (x:fv) (y:fv) = fv_name x = fv_name y
-let fvs_subset_of (x:fvs) (y:fvs) =
+let fvs_subset_of (x:fvs) (y:fvs) : ML bool =
   let open FStarC.Class.Setlike in
   subset (from_list x <: RBSet.t fv) (from_list y)
 
@@ -179,10 +179,10 @@ let freevar_eq x y = match x.tm, y.tm with
 let freevar_sort  = function
     | {tm=FreeV x} -> fv_sort x
     | _ -> failwith "impossible"
-let fv_of_term = function
+let fv_of_term : term -> ML fv = function
     | {tm=FreeV fv} -> fv
     | _ -> failwith "impossible"
-let rec freevars t = match t.tm with
+let rec freevars t : ML (list fv) = match t.tm with
   | Integer _
   | String _
   | Real _
@@ -196,7 +196,7 @@ let rec freevars t = match t.tm with
   | Lambda (_sort, body) -> freevars body
 
 //memo-ized
-let free_variables t = match !t.freevars with
+let free_variables t : ML fvs = match !t.freevars with
   | Some b -> b
   | None ->
     let fvs = BU.remove_dups fv_eq (freevars t) in
@@ -205,8 +205,8 @@ let free_variables t = match !t.freevars with
 
 open FStarC.Class.Setlike
 let free_top_level_names (t:term)
-: RBSet.t string
-= let rec free_top_level_names acc t =
+: ML (RBSet.t string)
+= let rec free_top_level_names acc t : ML _ =
     match t.tm with
     | FreeV (FV (nm, _, _)) -> add nm acc
     | App (Var s, args) -> 
@@ -232,7 +232,7 @@ let qop_to_string = function
   | Forall -> "forall"
   | Exists -> "exists"
 
-let op_to_string = function
+let op_to_string : op -> ML string = function
   | TrueOp -> "true"
   | FalseOp -> "false"
   | Not -> "not"
@@ -264,17 +264,21 @@ let op_to_string = function
   | BvMod -> "bvurem"
   | BvMul -> "bvmul"
   | BvUlt -> "bvult"
+  | BvExtRol -> "ext_rotate_left"
+  | BvExtRor -> "ext_rotate_right"
+  | BvRol n -> Format.fmt1 "(_ rotate_left %s)" (show n)
+  | BvRor n -> Format.fmt1 "(_ rotate_right %s)" (show n)
   | BvToNat -> "bv2int"
   | BvUext n -> Format.fmt1 "(_ zero_extend %s)" (show n)
   | BvNot -> "bvnot"
   | NatToBv n -> Format.fmt1 "(_ int2bv %s)" (show n)
   | Var s -> s
 
-let weightToSmtStr : option int -> string = function
+let weightToSmtStr : option int -> ML string = function
   | None -> ""
   | Some i -> Format.fmt1 ":weight %s\n" (show i)
 
-let weightToSmt : option int -> list document = function
+let weightToSmt : option int -> ML (list document) = function
   | None -> []
   | Some i -> [nest 1 (group (doc_of_string ":weight" ^/^ doc_of_string (show i)))]
 
@@ -283,7 +287,7 @@ These names can affect the behavior of Z3 and make the difference between a succ
 a failure, especially on flaky queries. So this function SHOULD NOT depend on any
 external factors, like filepaths, timestamps, etc. There used to be a string_of_range
 call here for the Labeled case, which caused flakiness across machines. *)
-let rec hash_of_term' t =
+let rec hash_of_term' t : ML string =
   match t with
   | Integer i ->  i
   | String s -> s
@@ -309,7 +313,7 @@ let rec hash_of_term' t =
     "(let (" ^ (List.map hash_of_term es |> String.concat " ") ^ ") " ^ hash_of_term body ^ ")"
   | Lambda (sort, body) ->
     "(lambda (" ^ (strSort sort) ^") " ^hash_of_term body^")"
-and hash_of_term tm = hash_of_term' tm.tm
+and hash_of_term tm : ML string = hash_of_term' tm.tm
 
 let mkBoxFunctions s = (s, s ^ "_proj_0")
 let boxIntFun        = mkBoxFunctions "BoxInt"
@@ -325,7 +329,7 @@ let isInjective s =
         not (List.existsML (fun c -> c = '.') (FStar.String.list_of_string s))
     else false
 
-let mk t r = {tm=t; freevars=mk_ref None; rng=r}
+let mk t r : ML term = {tm=t; freevars=mk_ref None; rng=r}
 let mkTrue  r       = mk (App(TrueOp, [])) r
 let mkFalse r       = mk (App(FalseOp, [])) r
 let mkUnreachable   = mk (App(Var "Unreachable", [])) Range.dummyRange
@@ -378,11 +382,29 @@ let mkBvAdd = mk_bin_op BvAdd
 let mkBvSub = mk_bin_op BvSub
 let mkBvShl sz (t1, t2) r = mkApp'(BvShl, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShr sz (t1, t2) r = mkApp'(BvShr, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvRol sz (t1, t2) r =
+  match t2.tm with
+  | Integer n ->
+    mkApp'(BvRol (FStarC.Util.int_of_string n), [t1]) r
+  | App(Var proj, [{tm=App(Var box, [{tm=Integer n}])}])
+    when proj = "BoxInt_proj_0" && box = "BoxInt" ->
+    mkApp'(BvRol (FStarC.Util.int_of_string n), [t1]) r
+  | _ -> mkApp'(BvExtRol, [t1;(mkNatToBv sz t2 r)]) r
+let mkBvRor sz (t1, t2) r =
+  match t2.tm with
+  | Integer n ->
+    mkApp'(BvRor (FStarC.Util.int_of_string n), [t1]) r
+  | App(Var proj, [{tm=App(Var box, [{tm=Integer n}])}])
+    when proj = "BoxInt_proj_0" && box = "BoxInt" ->
+    mkApp'(BvRor (FStarC.Util.int_of_string n), [t1]) r
+  | _ -> mkApp'(BvExtRor, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvUdiv sz (t1, t2) r = mkApp'(BvUdiv, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMod sz (t1, t2) r = mkApp'(BvMod, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvMul sz (t1, t2) r = mkApp' (BvMul, [t1;(mkNatToBv sz t2 r)]) r
 let mkBvShl' sz (t1, t2) r = mkApp'(BvShl, [t1;t2]) r
 let mkBvShr' sz (t1, t2) r = mkApp'(BvShr, [t1;t2]) r
+let mkBvRol' sz (t1, t2) r = mkApp'(BvExtRol, [t1;t2]) r
+let mkBvRor' sz (t1, t2) r = mkApp'(BvExtRor, [t1;t2]) r
 let mkBvMul' sz (t1, t2) r = mkApp' (BvMul, [t1;t2]) r
 let mkBvUdivUnsafe sz (t1, t2) r = mkApp'(BvUdiv, [t1;t2]) r
 let mkBvModUnsafe sz (t1, t2) r = mkApp'(BvMod, [t1;t2]) r
@@ -459,6 +481,10 @@ let check_pattern_ok (t:term) : option term =
                 | BvSub
                 | BvShl
                 | BvShr
+                | BvRol _
+                | BvRor _
+                | BvExtRol
+                | BvExtRor
                 | BvUdiv
                 | BvMod
                 | BvMul
@@ -488,7 +514,7 @@ let check_pattern_ok (t:term) : option term =
     aux t
 
 //debug output
-let rec print_smt_term (t:term) :string =
+let rec print_smt_term (t:term) : MLstring =
   match t.tm with
   | Integer n               -> Format.fmt1 "(Integer %s)" n
   | String s                -> Format.fmt1 "(String %s)" s
@@ -500,9 +526,9 @@ let rec print_smt_term (t:term) :string =
   | Quant (qop, l, _, _, t) -> Format.fmt3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
   | Let (es, body) -> Format.fmt2 "(let %s %s)" (print_smt_term_list es) (print_smt_term body)
   | Lambda (sort, body) -> Format.fmt2 "(lambda (_ %s) %s)" (strSort sort) (print_smt_term body)
-and print_smt_term_list (l:list term) :string = List.map print_smt_term l |> String.concat " "
+and print_smt_term_list (l:list term) : ML string = List.map print_smt_term l |> String.concat " "
 
-and print_smt_term_list_list (l:list (list term)) :string =
+and print_smt_term_list_list (l:list (list term)) : ML string =
     List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l
 
 let mkQuant r check_pats (qop, pats, wopt, vars, body) =
@@ -517,13 +543,13 @@ let mkQuant r check_pats (qop, pats, wopt, vars, body) =
             []
            end
     in
-    if List.length vars = 0 then body
+    if Nil? vars then body
     else match body.tm with
          | App(TrueOp, _) -> body
          | _ -> mk (Quant(qop, all_pats_ok pats, wopt, vars, body)) r
 
 let mkLet (es, body) r =
-  if List.length es = 0 then body
+  if Nil? es then body
   else mk (Let (es,body)) r
 
 (*****************************************************)
@@ -535,7 +561,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
     | None -> None
     | Some i -> Some (nvars - (i + 1))
   in
-  let rec aux ix t =
+  let rec aux ix t : ML term =
     match !t.freevars with
     | Some [] -> t
     | _ ->
@@ -567,7 +593,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
 let inst tms t =
   let tms = List.rev tms in //forall x y . t   ... y is an index 0 in t
   let n = List.length tms in //instantiate the first n BoundV's with tms, in order
-  let rec aux shift t = match t.tm with
+  let rec aux shift t : ML term = match t.tm with
     | Integer _
     | String _
     | Real _
@@ -668,7 +694,8 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
 
 let injective_constructor
   (rng:Range.t)
-  ((name, fields, sort):(string & list constructor_field & sort)) :list decl =
+  (x:(string & list constructor_field & sort)) : ML (list decl) =
+    let (name, fields, sort) = x in
     let n_bvars = List.length fields in
     let bvar_name i = "x_" ^ show i in
     let bvar_index i = n_bvars - (i + 1) in
@@ -792,7 +819,7 @@ let name_macro_binders sorts =
 let mk_tag f attrs = form_core ((doc_of_string "! " ^^ f) :: attrs)
 
 let termToSmt
-  : print_ranges:bool -> enclosing_name:string -> t:term -> document
+  : print_ranges:bool -> enclosing_name:string -> t:term -> ML document
   =
   //a counter and a hash table for string constants to integer ids mapping
   let string_id_counter = mk_ref 0 in
@@ -815,7 +842,7 @@ let termToSmt
             | App(Var "Prims.guard_free", [p]) -> p
             | _ -> tm))
       in
-      let rec aux' depth n (names:list fv) t : document =
+      let rec aux' depth n (names:list fv) t : ML document =
         let aux = aux (depth + 1) in
         match t.tm with
         | Integer i -> doc_of_string i
@@ -867,7 +894,7 @@ let termToSmt
           let names, binders, n = name_binders_inner None names n [sort] in
           binder "lambda" (form_core binders) [aux n names body]
 
-      and aux depth n names t : document =
+      and aux depth n names t : ML document =
         let s = aux' depth n names t in
         if print_ranges && t.rng <> norng
         then
@@ -878,7 +905,7 @@ let termToSmt
       in
       aux 0 0 [] t
 
-let rec declToSmt' print_captions z3options decl : document =
+let rec declToSmt' (print_captions:bool) (z3options:string) (decl:decl) : ML document =
   let with_caption c body =
     match c with
     | Some c when print_captions ->
@@ -958,30 +985,30 @@ let rec declToSmt' print_captions z3options decl : document =
   | GetStatistics -> doc_of_string "(echo \"<statistics>\") (get-info :all-statistics) (echo \"</statistics>\")"
   | GetReasonUnknown-> doc_of_string "(echo \"<reason-unknown>\") (get-info :reason-unknown) (echo \"</reason-unknown>\")"
 
-and declToSmt z3options decl =
+and declToSmt z3options decl : ML string =
   render <| declToSmt' (Options.keep_query_captions())  z3options decl
 
-and mkPrelude z3options =
+and mkPrelude z3options : ML string =
   let basic = z3options ^
                 "(declare-sort FString)\n\
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
-                (declare-datatypes () ((Universe \n\
-                                        (Univ (ulevel Int)))))\n\
-                (define-fun imax ((i Int) (j Int)) Int \n\
-                  (ite (<= i 0) j \n\
-                    (ite (<= j 0) i \n\
-                      (ite (<= i j) j i)))) \n\
-                (define-fun U_zero () Universe (Univ 0))\n\
-                (define-fun U_succ ((u Universe)) Universe\n\
-                  (Univ (+ (ulevel u) 1)))\n\
-                (declare-fun U_max (Universe Universe) Universe) \n\
-                (assert (forall ((u1 Universe) (u2 Universe)) \n\
-                                (! (= (U_max u1 u2)\n\
-                                      (Univ (imax (ulevel u1) (ulevel u2))))\n\
-                                 :pattern ((U_max u1 u2)))))\n\
-                (assert (forall ((u Universe)) (>= (ulevel u) 0)))\n\
+                (declare-sort Universe)\n\
+                (declare-fun U_zero () Universe)\n\
+                (declare-fun U_succ (Universe) Universe)\n\
+                (declare-fun ulevel ((Universe)) Int)\n\
+                (declare-fun Univ (Int) Universe)\n\
+                (assert (= (ulevel U_zero) 0))\n\
+                (assert (forall ((u Universe)) (! (= (ulevel (U_succ u)) (+ 1 (ulevel u))) :pattern ((ulevel (U_succ u))))))\n\
+                (assert (forall ((u Universe)) (! (>= (ulevel u) 0) :pattern ((ulevel u)))))\n\
+                (assert (forall ((u Universe)) (! (= (Univ (ulevel u)) u) :pattern ((ulevel u)))))\n\
+                (assert (forall ((i Int)) (! (implies (>= i 0) (= (ulevel (Univ i)) i)) :pattern ((Univ i)))))\n\
+                (declare-fun U_max (Universe Universe) Universe)\n\
+                (assert (forall ((u1 Universe) (u2 Universe))\n\
+                  (! (= (U_max u1 u2)\n\
+                        (ite (<= (ulevel u1) (ulevel u2)) u2 u1))\n\
+                    :pattern ((U_max u1 u2)))))\n\
                 (declare-fun U_unif (Int) Universe)\n\
                 (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
@@ -1069,9 +1096,10 @@ and mkPrelude z3options =
                                 (= (WithInterp t interp) t))
                           :pattern ((WithInterp t interp)))))\n"
    in
-   let as_constr (name, fields, sort, id, _injective)
-     : constructor_t
-     = { constr_name=name;
+   let as_constr x
+     : ML constructor_t
+     = let (name, fields, sort, id, _injective) = x in
+       { constr_name=name;
          constr_fields=List.map (fun (field_name, field_sort, field_projectible) -> {field_name; field_sort; field_projectible}) fields;
          constr_sort=sort;
          constr_id=Some id;
@@ -1118,21 +1146,6 @@ and mkPrelude z3options =
                                               (Prec t1 t2))\n\
                                       :pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
 
-   let valid_intro =
-     "(assert (forall ((e Term) (t Term))\n\
-                      (! (implies (HasType e t)\n\
-                                  (Valid t))\n\
-                       :pattern ((HasType e t)\n\
-                                 (Valid t))\n\
-                       :qid __prelude_valid_intro)))\n"
-   in
-   let valid_elim =
-     "(assert (forall ((t Term))\n\
-                      (! (implies (Valid t)\n\
-                                  (exists ((e Term)) (HasType e t)))\n\
-                       :pattern ((Valid t))\n\
-                       :qid __prelude_valid_elim)))\n"
-   in
    let tm_type_typing =
      "(assert (forall ((u Universe) (t Term))\n\
                 (! (iff (HasType (Tm_type u) t)\n\
@@ -1142,12 +1155,6 @@ and mkPrelude z3options =
    ^ bcons
    ^ precedes_partial_app
    ^ lex_ordering
-   ^ (if FStarC.Options.smtencoding_valid_intro()
-      then valid_intro
-      else "")
-   ^ (if FStarC.Options.smtencoding_valid_elim()
-      then valid_elim
-      else "")
    ^ tm_type_typing
 
 let declsToSmt        z3options decls = List.map (declToSmt z3options) decls |> String.concat "\n"
@@ -1250,7 +1257,6 @@ let mk_Valid t        = match t.tm with
     | _ ->
         mkApp("Valid",  [t]) t.rng
 let mk_unit_type = mkApp("Prims.unit", []) norng
-let mk_subtype_of_unit v = mkApp("Prims.subtype_of", [mk_U_zero;mk_U_zero;v;mk_unit_type]) v.rng
 let mk_HasType v t    = mkApp("HasType", [v;t]) t.rng
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t]) t.rng
 let mk_IsTotFun t     = mkApp("IsTotFun", [t]) t.rng

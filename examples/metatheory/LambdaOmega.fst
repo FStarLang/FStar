@@ -25,7 +25,6 @@ module LambdaOmega
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality
-open FStar.StrongExcludedMiddle
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism
@@ -56,7 +55,7 @@ type erenaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
                                          (~(erenaming s) ==> n=1)})
-let is_erenaming s = (if strong_excluded_middle (erenaming s) then 0 else 1)
+let is_erenaming s = (if t2b (erenaming s) then 0 else 1)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -125,7 +124,7 @@ type trenaming (s:tsub) = (forall (x:var). TVar? (s x))
 
 val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
                                          (~(trenaming s) ==> n=1)})
-let is_trenaming s = (if strong_excluded_middle (trenaming s) then 0 else 1)
+let is_trenaming s = (if t2b (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
 let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
@@ -558,7 +557,7 @@ let kinding_strengthening_ebnd g x t_x #t #k h = kinding_extensional h g
 irreducible val kinding_inversion_arrow: #g:env -> #t1:typ -> #t2:typ ->
                              h:(kinding g (TArr t1 t2) KTyp) ->
                              Tot (cand (kinding g t1 KTyp) (kinding g t2 KTyp))
-let rec kinding_inversion_arrow #g #t1 #t2 h = match h with
+let kinding_inversion_arrow #g #t1 #t2 h = match h with
   | KiArr h1 h2 -> Conj h1 h2
 
 irreducible val typing_to_kinding : #g:env -> #e:exp -> #t:typ ->
@@ -583,7 +582,7 @@ val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
     (ensures (tshift_up_above x (tsubst_beta t2 t1) =
               tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
     (decreases t1)
-let rec tshift_up_above_tsubst_beta x t1 t2 =
+let tshift_up_above_tsubst_beta x t1 t2 =
 
   assert(tshift_up_above x (tsubst_beta t2 t1) =
          tsubst (tsub_inc_above x) (tsubst_beta t2 t1));
@@ -635,7 +634,7 @@ type renaming (s:esub) = (forall (x:var). EVar? (s x))
 
 val is_renaming : s:esub -> GTot (n:int{  (renaming s  ==> n=0) /\
                                         (~(renaming s) ==> n=1)})
-let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if t2b (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =
   f:(x:var{Some? (lookup_evar g1 x)} ->
@@ -683,7 +682,7 @@ irreducible val typing_substitution: #e:exp -> #v:exp -> #t_x:typ ->
       h1:(typing g v t_x) ->
       h2:(typing (extend_evar g 0 t_x) e t) ->
       Tot (typing g (esubst_beta v e) t) (decreases %[e;h2])
-let rec typing_substitution #e #v #t_x #t #g h1 h2 =
+let typing_substitution #e #v #t_x #t #g h1 h2 =
   let hs : subst_typing (esub_beta v) (extend_evar g 0 t_x) g =
     fun y hkind -> if y = 0 then h1
                    else TyVar (y-1) (kinding_extensional hkind g) in
@@ -796,7 +795,7 @@ let tsh = tshift_up_above
 (* shift above and substitute is an identity *)
 val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
-let rec shift_above_and_subst s y t =
+let shift_above_and_subst s y t =
   tsubst_comp (tsub_beta_gen y t) (tsub_inc_above y) s;
   tsubst_extensional (tsub_comp (tsub_beta_gen y t) (tsub_inc_above y)) tsub_id s;
   tsubst_id s
@@ -813,7 +812,7 @@ val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
                     (ensures (ts x s (ts y t2 t1) =
                               ts y (ts x s t2) (ts (x + 1) (tsh y s) t1)))
-let rec tsubst_commute t1 y t2 x s =
+let tsubst_commute t1 y t2 x s =
   tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
   forall_intro (tsubst_commute_aux y x s t2);
   tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2))

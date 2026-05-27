@@ -16,7 +16,7 @@
 module Bug460
 
 open FStar.IO
-open FStar.ST
+open FStar.All
 
 // let x = alloc 0
 

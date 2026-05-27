@@ -20,20 +20,11 @@ open FStarC
 open FStarC.Syntax
 open FStarC.Syntax.Syntax
 
-val shift_subst:        int -> subst_t -> subst_t
-val subst:              list subst_elt -> term -> term
-val subst':             subst_ts -> term -> term
-val subst_comp:         list subst_elt -> comp -> comp
-val subst_bqual:        list subst_elt -> bqual -> bqual
-val subst_aqual:        list subst_elt -> aqual -> aqual
-val subst_ascription:   list subst_elt -> ascription -> ascription
-val subst_decreasing_order:
-                        list subst_elt -> decreases_order -> decreases_order
-val subst_binder:       list subst_elt -> binder -> binder
-val subst_binders:      list subst_elt -> binders -> binders
-val subst_residual_comp:list subst_elt -> residual_comp -> residual_comp
-val compress:           term -> term
-val compress_univ:      universe -> universe
+val compress_univ:      universe -> ML universe
+val subst':             subst_ts -> term -> ML term
+val shift_subst:        int -> subst_t -> ML subst_t
+val subst_binder:       list subst_elt -> binder -> ML binder
+val subst_binders:      list subst_elt -> binders -> ML binders
 
 //
 // It pushes delayed substitutions down,
@@ -41,41 +32,46 @@ val compress_univ:      universe -> universe
 //
 // Whereas compress does both
 //
-val compress_subst: term -> term
+val compress_subst: term -> ML term
 
-val close:                binders -> term -> term
-val close_comp:           binders -> comp -> comp
-val close_binders:        binders -> binders
-val close_ascription:     binders -> ascription -> ascription
-val close_branch:         branch -> branch
-val close_univ_vars:      univ_names -> term -> term
-val close_univ_vars_comp: univ_names -> comp -> comp
-val close_let_rec:        list letbinding -> term -> list letbinding & term
-val closing_of_binders:   binders -> subst_t
-
-val open_binders':      binders -> binders & subst_t
-val open_binders:       binders -> binders
-val open_term:          binders -> term -> binders & term
-val open_term':         binders -> term -> binders & term & subst_t
-val open_comp:          binders -> comp -> binders & comp
-val open_ascription:    binders -> ascription -> binders & ascription
-val open_branch:        branch -> branch
-val open_branch':       branch -> branch & subst_t
-val open_let_rec:       list letbinding -> term -> list letbinding & term
-val open_univ_vars:     univ_names -> term -> univ_names & term
-val open_univ_vars_comp:univ_names -> comp -> univ_names & comp
-val opening_of_binders: binders -> subst_t
-
-val subst_tscheme: list subst_elt -> tscheme -> tscheme
-val close_tscheme: binders -> tscheme -> tscheme
-val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
-
-val univ_var_opening: univ_names -> list subst_elt & list univ_name
-val univ_var_closing: univ_names -> list subst_elt
-
-val set_use_range: Range.Type.range -> term -> term
+val compress:           term -> ML term
+val subst:              list subst_elt -> term -> ML term
+val set_use_range: Range.Type.range -> term -> ML term
+val subst_comp:         list subst_elt -> comp -> ML comp
+val subst_bqual:        list subst_elt -> bqual -> ML bqual
+val subst_aqual:        list subst_elt -> aqual -> ML aqual
+val subst_ascription:   list subst_elt -> ascription -> ML ascription
+val subst_decreasing_order:
+                        list subst_elt -> decreases_order -> ML decreases_order
+val subst_residual_comp:list subst_elt -> residual_comp -> ML residual_comp
+val open_binders':      binders -> ML (binders & subst_t)
+val open_binders:       binders -> ML binders
+val open_term':         binders -> term -> ML (binders & term & subst_t)
+val open_term:          binders -> term -> ML (binders & term)
+val open_comp:          binders -> comp -> ML (binders & comp)
+val open_ascription:    binders -> ascription -> ML (binders & ascription)
+val open_branch':       branch -> ML (branch & subst_t)
+val open_branch:        branch -> ML branch
+val close:                binders -> term -> ML term
+val close_comp:           binders -> comp -> ML comp
+val close_binders:        binders -> ML binders
+val close_ascription:     binders -> ascription -> ML ascription
+val close_branch:         branch -> ML branch
+val univ_var_opening: univ_names -> ML (list subst_elt & list univ_name)
+val univ_var_closing: univ_names -> ML (list subst_elt)
+val open_univ_vars:     univ_names -> term -> ML (univ_names & term)
+val open_univ_vars_comp:univ_names -> comp -> ML (univ_names & comp)
+val close_univ_vars:      univ_names -> term -> ML term
+val close_univ_vars_comp: univ_names -> comp -> ML comp
+val open_let_rec:       list letbinding -> term -> ML (list letbinding & term)
+val close_let_rec:        list letbinding -> term -> ML (list letbinding & term)
+val close_tscheme: binders -> tscheme -> ML tscheme
+val close_univ_vars_tscheme: univ_names -> tscheme -> ML tscheme
+val subst_tscheme: list subst_elt -> tscheme -> ML tscheme
+val opening_of_binders: binders -> ML subst_t
+val closing_of_binders:   binders -> ML subst_t
 
 (* Helpers *)
-val open_term_1   : binder   -> term -> binder & term
-val open_term_bvs : list bv -> term -> list bv & term
-val open_term_bv  : bv       -> term -> bv & term
+val open_term_1   : binder   -> term -> ML (binder & term)
+val open_term_bvs : list bv -> term -> ML (list bv & term)
+val open_term_bv  : bv       -> term -> ML (bv & term)

@@ -15,19 +15,19 @@
 *)
 module FStar.Tactics.Logic.Lemmas
 
-let fa_intro_lem (#a:Type) (#p:a -> Type) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
-  FStar.Classical.lemma_forall_intro_gtot
-    ((fun x -> FStar.IndefiniteDescription.elim_squash (f x)) <: (x:a -> GTot (p x)))
+let fa_intro_lem (#a:Type) (#p:a -> prop) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
+  let f (x: a) : Lemma (p x) = f x in
+  Classical.forall_intro #a #p fun x -> f x
 
 let split_lem #a #b sa sb = ()
 
 let imp_intro_lem #a #b f =
-  FStar.Classical.give_witness (FStar.Classical.arrow_to_impl (fun (x:squash a) -> FStar.Squash.bind_squash x f))
+  Classical.arrow_to_impl #a #b f
 
 let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
   h ()
 
-let vbind #p #q sq f = FStar.Classical.give_witness_from_squash (FStar.Squash.bind_squash sq f)
+let vbind #p #q sq f = f sq
 
 let or_ind #p #q #phi o l r = ()
 
@@ -43,17 +43,17 @@ let __and_elim' #p #q #phi p_and_q f = ()
 
 let __witness #a x #p _ = ()
 
-let __elim_exists' #t (#pred : t -> Type0) #goal (h : (exists x. pred x))
-                          (k : (x:t -> pred x -> squash goal)) : squash goal =
-  FStar.Squash.bind_squash #(x:t & pred x) h (fun (|x, pf|) -> k x pf)
+let __elim_exists' #t (#pred : t -> prop) #goal (h : squash (exists x. pred x))
+                          (k : (x:t -> squash (pred x) -> squash goal)) : squash goal =
+  Classical.exists_elim goal h fun x -> k x ()
 
-let __forall_inst #t (#pred : t -> Type0) (h : (forall x. pred x)) (x : t) : squash (pred x) =
+let __forall_inst #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
     ()
 
-let __forall_inst_sq #t (#pred : t -> Type0) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
+let __forall_inst_sq #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
     ()
 
-let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
+let sklem0 (#a:Type) (#p : a -> prop) ($v : squash (exists (x:a). p x)) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
 

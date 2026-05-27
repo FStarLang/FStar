@@ -1,6 +1,6 @@
 module Parentheses
 
-let forall_intro #t (#p: t->Type0) (h: (x:t -> squash (p x))) : squash (forall x. p x) =
+let forall_intro #t (#p: t->prop) (h: (x:t -> squash (p x))) : squash (forall x. p x) =
   Classical.Sugar.forall_intro _ _ h
 
 let trailing_fun_does_not_require_parens :

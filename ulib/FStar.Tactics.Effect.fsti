@@ -24,11 +24,11 @@ open FStar.Stubs.Tactics.Types
  * will break. (`synth_by_tactic` is fine) *)
 
 type tac_wp_t0 (a:Type) =
-  (a -> Type0) -> Type0
+  (a -> prop) -> prop
 
 unfold
 let tac_wp_monotonic (#a:Type) (wp:tac_wp_t0 a) =
-  forall (p q:a -> Type0).
+  forall (p q:a -> prop).
     (forall x. p x ==> q x) ==> (wp p ==> wp q)
 
 type tac_wp_t (a:Type) = wp:tac_wp_t0 a{tac_wp_monotonic wp}
@@ -53,7 +53,7 @@ let tac_bind_wp (#a #b:Type) (wp_f:tac_wp_t a) (wp_g:a -> tac_wp_t b) : tac_wp_t
 unfold
 let tac_wp_compact (a:Type) (wp:tac_wp_t a) : tac_wp_t a =
   fun post ->
-  forall (k:a -> Type0). (forall (r:a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp k
+  forall (k:a -> prop). (forall (r:a).{:pattern (guard_free (k r))} post r ==> k r) ==> wp k
 
 
 (* monadic bind *)
@@ -113,7 +113,7 @@ effect {
 }
 
 (* Hoare variant *)
-effect TacH (a:Type) (pre : Type0) (post : a -> Tot Type0) =
+effect TacH (a:Type) (pre : prop) (post : a -> prop) =
     TAC a (fun post' -> pre /\ (forall r. post r ==> post' r))
 
 (* "Total" variant *)
@@ -145,7 +145,7 @@ sub_effect DIV ~> TAC = lift_div_tac
 
 /// assert p by t
 
-val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
+val with_tactic (t : unit -> Tac unit) (p:prop) : prop
 
 (* This syntactic marker will generate a goal of the shape x == ?u for
  * a new unification variable ?u, and run tactic [t] to solve this goal.
@@ -162,12 +162,12 @@ val rewrite_with_tactic (t:unit -> Tac unit) (#a:Type) (x:a) : a
  * can be thought as a language construct, and not a real function. *)
 val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
-val assert_by_tactic (p:Type) (t:unit -> Tac unit)
+val assert_by_tactic (p:prop) (t:unit -> Tac unit)
   : Pure unit
-         (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
+         (requires (set_range_of (with_tactic t p) (range_of t)))
          (ensures (fun _ -> p))
 
-val by_tactic_seman (tau:unit -> Tac unit) (phi:Type)
+val by_tactic_seman (tau:unit -> Tac unit) (phi:prop)
   : Lemma (with_tactic tau phi ==> phi)
 
 (* One can always bypass the well-formedness of metaprograms. It does
@@ -207,7 +207,7 @@ val postprocess_type : unit
 
 #set-options "--no_tactics"
 
-val unfold_with_tactic (t:unit -> Tac unit) (p:Type)
+val unfold_with_tactic (t:unit -> Tac unit) (p:prop)
   : Lemma (requires p)
           (ensures (with_tactic t p))
 

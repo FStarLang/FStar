@@ -23,7 +23,6 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-open FStar.Mul
 
 /// Definition of little and big-endianness
 /// ---------------------------------------

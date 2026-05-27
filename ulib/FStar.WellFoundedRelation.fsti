@@ -96,12 +96,12 @@
 
 module FStar.WellFoundedRelation
 
-noeq type acc_classical (#a: Type u#a) (r: a -> a -> Type0) (x: a) : Type u#a =
+noeq type acc_classical (#a: Type u#a) (r: a -> a -> prop) (x: a) : Type u#a =
   | AccClassicalIntro : access_smaller:(y: a{r y x} -> acc_classical r y) -> acc_classical r x
 
 noeq type wfr_t (a: Type u#a) : Type u#(a + 1) =
   {
-    relation: a -> a -> Type0;
+    relation: a -> a -> prop;
     decreaser: (x: a -> acc_classical relation x);
     proof: (x1: a) -> (x2: a) -> 
            Lemma (requires relation x1 x2) (ensures decreaser x1 << decreaser x2);
@@ -119,7 +119,7 @@ let ambient_wfr_lemma (#a: Type u#a) (wfr: wfr_t a) (x1: a) (x2: a)
 ///
 /// `(default_wfr a).relation` is `default_relation` as defined below.
 
-let default_relation (#a: Type u#a) (x1: a) (x2: a) : Type0 = x1 << x2
+let default_relation (#a: Type u#a) (x1: a) (x2: a) : prop = x1 << x2
 
 val default_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == default_relation})
 
@@ -128,7 +128,7 @@ val default_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == default_relation})
 ///
 /// `(empty_wfr a).relation` is `empty_relation` as defined below.
 
-let empty_relation (#a: Type u#a) (x1: a) (x2: a) : Type0 = False
+let empty_relation (#a: Type u#a) (x1: a) (x2: a) : prop = False
 
 val empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation})
 
@@ -139,9 +139,9 @@ val empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation})
 ///
 /// `(acc_to_wfr r f).relation` is `acc_relation r` as defined below.
 
-let acc_relation (#a: Type u#a) (r: a -> a -> Type0) (x1: a) (x2: a) : Type0 = exists (p: r x1 x2). True
+let acc_relation (#a: Type u#a) (r: a -> a -> prop) = r
 
-val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: FStar.WellFounded.well_founded r)
+val acc_to_wfr (#a: Type u#a) (r: a -> a -> prop) (f: FStar.WellFounded.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r})
 
 /// `subrelation_to_wfr r wfr` is a `wfr_t` built from a relation `r`
@@ -151,7 +151,7 @@ val acc_to_wfr (#a: Type u#a) (r: a -> a -> Type0) (f: FStar.WellFounded.well_fo
 ///
 /// `(subrelation_to_wfr r wfr).relation` is the parameter `r`.
 
-val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
+val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> prop)
                        (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2})
   : (wfr': wfr_t a{wfr'.relation == r})
 
@@ -166,7 +166,7 @@ val subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
 val inverse_image_to_wfr
   (#a: Type u#a)
   (#b: Type u#b)
-  (r: a -> a -> Type0)
+  (r: a -> a -> prop)
   (f: a -> b)
   (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
   : (wfr': wfr_t a{wfr'.relation == r})
@@ -181,7 +181,7 @@ val inverse_image_to_wfr
 
 let lex_nondep_relation (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
                         (xy1: a & b) (xy2: a & b)
-  : Type0 =
+  : prop =
   let (x1, y1), (x2, y2) = xy1, xy2 in
   wfr_a.relation x1 x2 \/ (x1 == x2 /\ wfr_b.relation y1 y2)
 
@@ -199,7 +199,7 @@ val lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t 
 
 let lex_dep_relation (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
                      (a_to_wfr_b: (x: a -> wfr_t (b x))) (xy1: (x: a & b x)) (xy2: (x: a & b x))
-  : Type0 =
+  : prop =
   let (| x1, y1 |), (| x2, y2 |) = xy1, xy2 in
   wfr_a.relation x1 x2 \/ (x1 == x2 /\ (a_to_wfr_b x1).relation y1 y2)
 
@@ -212,7 +212,7 @@ val lex_dep_wfr (#a: Type u#a) (#b: a -> Type u#b) (wfr_a: wfr_t a)
 ///
 /// `bool_wfr.relation` is `bool_relation`, as defined below.
 
-let bool_relation (x1: bool) (x2: bool) : Type0 = x1 == false /\ x2 == true
+let bool_relation (x1: bool) (x2: bool) : prop = x1 == false /\ x2 == true
 
 val bool_wfr: (wfr: wfr_t bool{wfr.relation == bool_relation})
 
@@ -223,7 +223,7 @@ val bool_wfr: (wfr: wfr_t bool{wfr.relation == bool_relation})
 ///
 /// `(option_wfr wfr).relation` is `option_relation wfr` as defined below.
 
-let option_relation (#a: Type u#a) (wfr: wfr_t a) (opt1: option a) (opt2: option a) : Type0 =
+let option_relation (#a: Type u#a) (wfr: wfr_t a) (opt1: option a) (opt2: option a) : prop =
   Some? opt2 /\ (None? opt1 \/ wfr.relation (Some?.v opt1) (Some?.v opt2))
 
 val option_wfr (#a: Type u#a) (wfr: wfr_t a)

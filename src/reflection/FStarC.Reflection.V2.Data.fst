@@ -28,13 +28,8 @@ open FStarC.Ident
 (* These two functions are in ulib/FStarC.Reflection.V2.Data.fsti
    But, they are not extracted from there.
 
-   Instead, these functions are extraction from this file. It is
-   not sufficient to place these functions in the interface
-   src/reflection/FStarC.Reflection.V2.Data.fsti since this module, like the
-   rest of the compiler, is extracted in MLish mode. Which means that
-   functions in the interface are not supported for extraction. So,
-   we include them in this module implementation file to force them
-   to be extracted *)
+   Instead, these functions are extracted from this file. We include them
+   in this module implementation file to force them to be extracted. *)
 let as_ppname (x:string) : Tot ppname_t = FStarC.Sealed.seal x
 
 let notAscription (tv:term_view) : Tot bool =

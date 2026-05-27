@@ -225,7 +225,7 @@ equality. *)
 
 (** [memP x l] holds if, and only if, [x] appears as an
 element of [l]. Similar to: List.In in Coq. *)
-let rec memP (#a: Type) (x: a) (l: list a) : Tot Type0 =
+let rec memP (#a: Type) (x: a) (l: list a) : prop =
   match l with
   | [] -> False
   | y :: q -> x == y \/ memP x q
@@ -550,7 +550,7 @@ let rec sortWith f = function
 
 (** A l1 is a strict suffix of l2. *)
 let rec strict_suffix_of (#a: Type) (l1 l2: list a)
-: Pure Type0
+: Pure prop
   (requires True)
   (ensures (fun _ -> True))
   (decreases l2)
@@ -561,7 +561,7 @@ let rec strict_suffix_of (#a: Type) (l1 l2: list a)
 [@@deprecated "This function was misnamed: Please use 'strict_suffix_of'"]
 let strict_prefix_of = strict_suffix_of
 
-val list_unref : #a:Type -> #p:(a -> Type0) -> list (x:a{p x}) -> Tot (list a)
+val list_unref : #a:Type -> #p:(a -> prop) -> list (x:a{p x}) -> Tot (list a)
 let rec list_unref #a #p l =
     match l with
     | [] -> []

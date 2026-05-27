@@ -1,12 +1,22 @@
 * Info at Bug3757.fst(8,4-8,13):
   - Expected failure:
   - Expected a pattern of type Prims.int & Prims.int
-  - Type FStar.Pervasives.Native.tuple2 is not a record type.
+  - Type
+    FStar.Pervasives.Native.tuple2
+    is not declared as a record type;
+    field
+    x
+    is not valid for this type.
 
 * Info at Bug3757.fst(12,28-12,31):
   - Expected failure:
   - Expected an expression of type Prims.int & Prims.bool
-  - Type FStar.Pervasives.Native.tuple2 is not a record type.
+  - Type
+    FStar.Pervasives.Native.tuple2
+    is not declared as a record type;
+    field
+    x
+    is not valid for this type.
 
 * Info at Bug3757.fst(15,15-15,17):
   - Expected failure:

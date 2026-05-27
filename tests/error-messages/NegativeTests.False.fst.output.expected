@@ -1,21 +1,22 @@
 * Info at NegativeTests.False.fst(23,13-23,33):
   - Expected failure:
   - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
-  - See also Prims.fst(467,77-467,89)
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC = forall (p: Prims.pure_post Prims.bool). Prims.l_False
+  - See also Prims.fst(427,77-427,89)
 
 * Info at NegativeTests.False.fst(30,42-30,66):
   - Expected failure:
-  - Expected type Prims.l_True \/ Prims.l_True
+  - Expected type Prims.squash (Prims.l_True \/ Prims.l_True)
     but Prims.Right Prims.T
-    has type Prims.sum Prims.l_True (*?u6*)_
+    has type Prims.sum (Prims.squash Prims.l_True) (*?u8*)_
 
 * Info at NegativeTests.False.fst(30,18-30,41):
   - Expected failure:
-  - Expected type Prims.l_True \/ Prims.l_True
+  - Expected type Prims.squash (Prims.l_True \/ Prims.l_True)
     but Prims.Left Prims.T
-    has type Prims.sum (*?u1*)_ Prims.l_True
+    has type Prims.sum (*?u3*)_ (Prims.squash Prims.l_True)
 
 * Warning 240 at NegativeTests.False.fst(28,4-28,10):
   - NegativeTests.False.absurd is declared but no definition was found

@@ -24,10 +24,10 @@ open FStar.Reflection.Const
  * No calling `norm [simpl]`, that's cheating!
  *)
 
-val lem_iff_refl : #a:Type -> Lemma (a <==> a)
+val lem_iff_refl : #a:prop -> Lemma (a <==> a)
 let lem_iff_refl #a = ()
 
-val lem_iff_trans : #a:Type -> #b:Type -> #c:Type -> squash (a <==> b) -> squash (b <==> c)
+val lem_iff_trans : #a:prop -> #b:prop -> #c:prop -> squash (a <==> b) -> squash (b <==> c)
                                                             -> Lemma (a <==> c)
 let lem_iff_trans #a #b #c _ _ = ()
 
@@ -37,37 +37,37 @@ let tiff () : Tac unit =
 let step () : Tac unit =
     apply_lemma (`lem_iff_trans)
 
-val lem_true_and_p : #p:Type -> Lemma ((True /\ p) <==> p)
+val lem_true_and_p : #p:prop -> Lemma ((True /\ p) <==> p)
 let lem_true_and_p #p = ()
 
-val lem_p_and_true : #p:Type -> Lemma ((p /\ True) <==> p)
+val lem_p_and_true : #p:prop -> Lemma ((p /\ True) <==> p)
 let lem_p_and_true #p = ()
 
-val lem_false_and_p : #p:Type -> Lemma ((False /\ p) <==> False)
+val lem_false_and_p : #p:prop -> Lemma ((False /\ p) <==> False)
 let lem_false_and_p #p = ()
 
-val lem_p_and_false : #p:Type -> Lemma ((p /\ False) <==> False)
+val lem_p_and_false : #p:prop -> Lemma ((p /\ False) <==> False)
 let lem_p_and_false #p = ()
 
-val lem_true_or_p : #p:Type -> Lemma ((True \/ p) <==> True)
+val lem_true_or_p : #p:prop -> Lemma ((True \/ p) <==> True)
 let lem_true_or_p #p = ()
 
-val lem_p_or_true : #p:Type -> Lemma ((p \/ True) <==> True)
+val lem_p_or_true : #p:prop -> Lemma ((p \/ True) <==> True)
 let lem_p_or_true #p = ()
 
-val lem_false_or_p : #p:Type -> Lemma ((False \/ p) <==> p)
+val lem_false_or_p : #p:prop -> Lemma ((False \/ p) <==> p)
 let lem_false_or_p #p = ()
 
-val lem_p_or_false : #p:Type -> Lemma ((p \/ False) <==> p)
+val lem_p_or_false : #p:prop -> Lemma ((p \/ False) <==> p)
 let lem_p_or_false #p = ()
 
-val lem_true_imp_p : #p:Type -> Lemma ((True ==> p) <==> p)
+val lem_true_imp_p : #p:prop -> Lemma ((True ==> p) <==> p)
 let lem_true_imp_p #p = ()
 
-val lem_p_imp_true : #p:Type -> Lemma ((p ==> True) <==> True)
+val lem_p_imp_true : #p:prop -> Lemma ((p ==> True) <==> True)
 let lem_p_imp_true #p = ()
 
-val lem_false_imp_p : #p:Type -> Lemma ((False ==> p) <==> True)
+val lem_false_imp_p : #p:prop -> Lemma ((False ==> p) <==> True)
 let lem_false_imp_p #p = ()
 
 val lem_fa_true : #a:Type -> Lemma ((forall (x:a). True) <==> True)
@@ -88,69 +88,49 @@ let lem_neg_false () = ()
 val lem_neg_true : unit -> Lemma (~True <==> False)
 let lem_neg_true () = ()
 
-val lem_true_iff_p : #p:Type -> Lemma ((True <==> p) <==> p)
+val lem_true_iff_p : #p:prop -> Lemma ((True <==> p) <==> p)
 let lem_true_iff_p #p = ()
 
-val lem_false_iff_p : #p:Type -> Lemma ((False <==> p) <==> ~p)
+val lem_false_iff_p : #p:prop -> Lemma ((False <==> p) <==> ~p)
 let lem_false_iff_p #p = ()
 
-val lem_p_iff_true : #p:Type -> Lemma ((p <==> True) <==> p)
+val lem_p_iff_true : #p:prop -> Lemma ((p <==> True) <==> p)
 let lem_p_iff_true #p = ()
 
-val lem_p_iff_false : #p:Type -> Lemma ((p <==> False) <==> ~p)
+val lem_p_iff_false : #p:prop -> Lemma ((p <==> False) <==> ~p)
 let lem_p_iff_false #p = ()
 
-val and_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
+val and_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
                                       squash (q <==> q') ->
                                       Lemma ((p /\ q) <==> (p' /\ q'))
 let and_cong #p #q #p' #q' _ _ = ()
 
-val or_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
+val or_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
                                      squash (q <==> q') ->
                                      Lemma ((p \/ q) <==> (p' \/ q'))
 let or_cong #p #q #p' #q' _ _ = ()
 
-val imp_cong (#p #q #p' #q' : Type) : squash (p <==> p') ->
+val imp_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
                                       squash (q <==> q') ->
                                       Lemma ((p ==> q) <==> (p' ==> q'))
 let imp_cong #p #q #p' #q' _ _ = ()
 
-val fa_cong (#a : Type) (#p #q : a -> Type) :
+val fa_cong (#a : Type) (#p #q : a -> prop) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
 let fa_cong #a #p #q f =
-  assert ((forall (x:a). p x) <==> (forall (x:a). q x)) by (
-    split();
-    let do1 () : Tac unit =
-      let _ = l_intros () in
-      let t = quote f in
-      let x = nth_var (-1) in
-      let bb = pose (mk_e_app t [binding_to_term x]) in
-      ()
-    in
-    iseq [do1; do1]
-  )
+    introduce forall x. p x <==> q x with f x
 
-val ex_cong (#a : Type) (#p #q : a -> Type) :
+val ex_cong (#a : Type) (#p #q : a -> prop) :
     (x:a -> squash (p x <==> q x)) ->
     Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
 let ex_cong #a #p #q f =
-  assert ((exists (x:a). p x) <==> (exists (x:a). q x)) by (assume_safe (fun () ->
-    split();
-    let do1 () : Tac unit =
-      let [ex] = l_intros () in
-      let (b, pf) = elim_exists (binding_to_term ex) in
-      let t = quote f in
-      let bb = pose (mk_e_app t [binding_to_term b]) in
-      ()
-    in
-    iseq [do1; do1]
-  ))
+    introduce forall x. p x <==> q x with f x
 
-val neg_cong (#p #q:Type) : squash (p <==> q) -> Lemma (~p <==> ~q)
+val neg_cong (#p #q:prop) : squash (p <==> q) -> Lemma (~p <==> ~q)
 let neg_cong #p #q _ = ()
 
-val iff_cong (#p #p' #q #q' : Type) : squash (p <==> p') -> squash (q <==> q') -> Lemma ((p <==> q) <==> (p' <==> q'))
+val iff_cong (#p #p' #q #q' : prop) : squash (p <==> p') -> squash (q <==> q') -> Lemma ((p <==> q) <==> (p' <==> q'))
 let iff_cong #p #p' #q #q' _ _ = ()
 
 // Absolutely hideous, do something about normalization
@@ -301,7 +281,7 @@ and recurse () : Tac unit =
         end
     | _ -> fail "recurse: failed precondition: goal should be `g <==> ?u`"
 
-val equiv : #p:Type -> #q:Type -> squash (p <==> q) -> squash q -> Lemma p
+val equiv : #p:prop -> #q:prop -> squash (p <==> q) -> squash q -> Lemma p
 let equiv #p #q _ _ = ()
 
 let simplify () : Tac unit =

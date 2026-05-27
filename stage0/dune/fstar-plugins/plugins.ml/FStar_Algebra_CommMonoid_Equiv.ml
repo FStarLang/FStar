@@ -21,4 +21,4 @@ let __proj__CM__item__mult (eq : 'a equiv) (projectee : ('a, Obj.t) cm) :
 let int_plus_cm : (Prims.int, Obj.t) cm=
   CM (Prims.int_zero, (+), (), (), (), ())
 let int_multiply_cm : (Prims.int, Obj.t) cm=
-  CM (Prims.int_one, ( * ), (), (), (), ())
+  CM (Prims.int_one, Prims.op_Star, (), (), (), ())

@@ -1,6 +1,6 @@
 open Prims
 let rfrac : FStarC_BaseTypes.float= FStarC_Util.float_of_string "1.0"
-let width : Prims.int= (Prims.of_int (100))
+let width : Prims.int= Prims.of_int 100
 let pp (d : FStar_Pprint.document) : Prims.string=
   FStarC_Pprint.pretty_string rfrac width d
 let term_to_doc' (env : FStarC_Syntax_DsEnv.env)

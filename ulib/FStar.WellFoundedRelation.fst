@@ -55,16 +55,12 @@ let empty_wfr (a: Type u#a) : (wfr: wfr_t a{wfr.relation == empty_relation}) =
 
 let rec acc_decreaser
   (#a: Type u#a)
-  (r: a -> a -> Type0)
-  (f: WF.well_founded r{forall x1 x2 (p: r x1 x2). (f x2).access_smaller x1 p == f x1})
+  (r: a -> a -> prop)
+  (f: WF.well_founded r{forall x1 x2. r x1 x2 ==> (f x2).access_smaller x1 () == f x1})
   (x: a)
   : Tot (acc_classical (acc_relation r) x) (decreases (f x)) =
-  let smaller (y: a{(acc_relation r) y x}) : (acc_classical (acc_relation r) y) = (
-    eliminate exists (p: r y x). True
-    returns   f y << f x
-    with _.   assert ((f x).access_smaller y p == f y);
-    acc_decreaser r f y
-  ) in
+  let smaller (y: a{(acc_relation r) y x}) : (acc_classical (acc_relation r) y) = 
+    acc_decreaser r f y in
   AccClassicalIntro smaller
 
 let rec eta_expand_well_founded (#a: Type) (r: WF.binrel a) (wf_r: WF.well_founded r) (x: a)
@@ -75,7 +71,7 @@ let rec eta_expand_well_founded (#a: Type) (r: WF.binrel a) (wf_r: WF.well_found
                      eta_expand_well_founded r wf_r y
                  in g_smaller)
 
-let acc_to_wfr (#a: Type u#a) (r: WF.binrel u#a u#0 a) (f: WF.well_founded r)
+let acc_to_wfr (#a: Type u#a) (r: WF.binrel u#a a) (f: WF.well_founded r)
   : (wfr: wfr_t a{wfr.relation == acc_relation r}) =
   let f = eta_expand_well_founded r f in
   let proof (x1: a) (x2: a)
@@ -85,7 +81,7 @@ let acc_to_wfr (#a: Type u#a) (r: WF.binrel u#a u#0 a) (f: WF.well_founded r)
   in
   { relation = acc_relation r; decreaser = acc_decreaser r f; proof = proof; }
 
-let rec subrelation_decreaser (#a: Type u#a) (r: a -> a -> Type0)
+let rec subrelation_decreaser (#a: Type u#a) (r: a -> a -> prop)
                               (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2}) (x: a)
   : Tot (acc_classical r x) (decreases wfr.decreaser x) =
   let smaller (y: a{r y x}) : (acc_classical r y) =
@@ -93,7 +89,7 @@ let rec subrelation_decreaser (#a: Type u#a) (r: a -> a -> Type0)
   in
   AccClassicalIntro smaller
 
-let subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
+let subrelation_to_wfr (#a: Type u#a) (r: a -> a -> prop)
                        (wfr: wfr_t a{forall x1 x2. r x1 x2 ==> wfr.relation x1 x2})
   : (wfr': wfr_t a{wfr'.relation == r}) =
   let proof (x1: a) (x2: a)
@@ -103,7 +99,7 @@ let subrelation_to_wfr (#a: Type u#a) (r: a -> a -> Type0)
   in
   { relation = r; decreaser = subrelation_decreaser r wfr; proof = proof; }
 
-let rec inverse_image_decreaser (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: a -> b)
+let rec inverse_image_decreaser (#a: Type u#a) (#b: Type u#b) (r: a -> a -> prop) (f: a -> b)
                                 (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
                                 (x: a)
   : Tot (acc_classical r x) (decreases wfr.decreaser (f x)) =
@@ -112,7 +108,7 @@ let rec inverse_image_decreaser (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type
   in
   AccClassicalIntro smaller
 
-let inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> Type0) (f: a -> b)
+let inverse_image_to_wfr (#a: Type u#a) (#b: Type u#b) (r: a -> a -> prop) (f: a -> b)
                          (wfr: wfr_t b{forall x1 x2. r x1 x2 ==> wfr.relation (f x1) (f x2)})
   : (wfr': wfr_t a{wfr'.relation == r}) =
   let proof (x1: a) (x2: a)

@@ -12,7 +12,8 @@ let rec inst
   let t1 = FStarC_Syntax_Subst.compress t in
   let mk1 = mk t1 in
   match t1.FStarC_Syntax_Syntax.n with
-  | FStarC_Syntax_Syntax.Tm_delayed uu___ -> failwith "Impossible"
+  | FStarC_Syntax_Syntax.Tm_delayed uu___ ->
+      FStarC_Effect.failwith "Impossible"
   | FStarC_Syntax_Syntax.Tm_name uu___ -> t1
   | FStarC_Syntax_Syntax.Tm_uvar uu___ -> t1
   | FStarC_Syntax_Syntax.Tm_uvar uu___ -> t1
@@ -234,24 +235,21 @@ and inst_args
   (s :
     FStarC_Syntax_Syntax.term ->
       FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.term)
-  (args :
+  (args0 :
     (FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax *
       FStarC_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
       Prims.list)
-  :
-  (FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax *
-    FStarC_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
-    Prims.list=
+  : (FStarC_Syntax_Syntax.term * FStarC_Syntax_Syntax.aqual) Prims.list=
   FStarC_List.map
     (fun uu___ ->
        match uu___ with | (a, imp) -> let uu___1 = inst s a in (uu___1, imp))
-    args
+    args0
 and inst_comp
   (s :
     FStarC_Syntax_Syntax.term ->
       FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.term)
   (c : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) :
-  FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax=
+  FStarC_Syntax_Syntax.comp=
   match c.FStarC_Syntax_Syntax.n with
   | FStarC_Syntax_Syntax.Total t ->
       let uu___ = inst s t in FStarC_Syntax_Syntax.mk_Total uu___
@@ -317,11 +315,7 @@ and inst_ascription
   (s :
     FStarC_Syntax_Syntax.term ->
       FStarC_Syntax_Syntax.fv -> FStarC_Syntax_Syntax.term)
-  (asc : FStarC_Syntax_Syntax.ascription) :
-  ((FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax,
-    FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
-    FStar_Pervasives.either * FStarC_Syntax_Syntax.term'
-    FStarC_Syntax_Syntax.syntax FStar_Pervasives_Native.option * Prims.bool)=
+  (asc : FStarC_Syntax_Syntax.ascription) : FStarC_Syntax_Syntax.ascription=
   let uu___ = asc in
   match uu___ with
   | (annot, topt, use_eq) ->

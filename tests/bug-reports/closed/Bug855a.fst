@@ -1,6 +1,6 @@
 module Bug855a
 
-open FStar.Ref
+open FStar.All
 
 val bar: unit -> St (unit -> St nat)
 let bar () =

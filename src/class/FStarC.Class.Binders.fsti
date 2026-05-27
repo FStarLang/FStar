@@ -1,15 +1,16 @@
 module FStarC.Class.Binders
 
+open FStarC.Effect
 open FStarC.FlatSet
 open FStarC.Syntax.Syntax
 
 (* TODO: should be for any setlike *)
 class hasNames (a:Type) = {
-  freeNames : a -> flat_set bv;
+  freeNames : a -> ML (flat_set bv);
 }
 
 class hasBinders (a:Type) = {
-  boundNames : a -> flat_set bv;
+  boundNames : a -> ML (flat_set bv);
 }
 
 instance val hasNames_term : hasNames term

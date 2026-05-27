@@ -38,16 +38,16 @@ let absurd : squash False
 
 // Revised version, not depending on False by Aseem
 assume
-val p : Type0
+val p : prop
 
 assume
-val q (x:pos) : Type0
+val q (x:pos) : prop
 
 //the primitive is perhaps more useful in a context like this
 assume
 val expect_pos (_: squash (exists (x:pos). q x)) : squash p
 
-let intro_exists (#a:Type)  (#p:a -> Type) (x:a) (_:squash (p x)) : squash (exists (x:a). p x) = ()
+let intro_exists (#a:Type)  (#p:a -> prop) (x:a) (_:squash (p x)) : squash (exists (x:a). p x) = ()
 
 let use_pos (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
   assert p by (

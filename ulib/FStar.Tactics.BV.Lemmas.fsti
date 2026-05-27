@@ -71,7 +71,7 @@ val eq_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
               squash (int2bv #n x == int2bv #n y) -> Lemma (x == y)
 
 val lt_to_bv: #n:pos -> (#x:uint_t n) -> (#y:uint_t n) ->
-              (b2t (bvult #n (int2bv #n x) (int2bv #n y))) -> Lemma (x < y)
+              bvult #n (int2bv #n x) (int2bv #n y) -> Lemma (x < y)
 
 (* Creates two fresh variables and two equations of the form int2bv
    x = z /\ int2bv y = w. The above lemmas transform these two

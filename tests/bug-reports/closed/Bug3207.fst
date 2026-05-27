@@ -585,9 +585,9 @@ type rel =
   elab_typ ty ->             (** F* value **)
   #e:exp ->                  (** STLC value **)
   typing empty e ty -> 
-  Type0
+  prop
 
-let rel_whole (r:rel) (ws:wholeS) (wt:wholeT) : Type0 =
+let rel_whole (r:rel) (ws:wholeS) (wt:wholeT) : prop =
   ws `r` (dsnd wt) ==> behS ws == behT wt
 
 val naive_rel : rel

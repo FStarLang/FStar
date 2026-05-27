@@ -1,10 +1,9 @@
 module Calc
 
-open FStar.Mul
 open FStar.Calc
 open FStar.Tactics.V2
 
-let eta (f:'a->'b->bool) x y : Type0 = f x y
+let eta (f:'a->'b->bool) x y : prop = f x y
 
 (* bad chain *)
 [@@(expect_failure [19])]

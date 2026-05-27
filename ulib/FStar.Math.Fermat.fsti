@@ -1,6 +1,5 @@
 module FStar.Math.Fermat
 
-open FStar.Mul
 open FStar.Math.Euclid
 
 /// Fermat's Little Theorem (and Binomial Theorem)

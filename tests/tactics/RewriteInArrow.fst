@@ -9,5 +9,5 @@ let lemma_revert_ok (x: nat) (some_evidence: squash (x == 1)): unit =
 
 (* This case of dependent binders was causing issues in ctrl_rewrite *)
 let dependent_binders =
-  assert (let id = fun (a: Type) (x: a) -> x in id Type0 True)
+  assert (let id = fun (a: Type) (x: a) -> x in id prop True)
     by (Tac.pointwise (fun () -> Tac.trefl ()))

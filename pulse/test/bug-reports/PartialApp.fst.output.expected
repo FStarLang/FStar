@@ -1,0 +1,16 @@
+* Info at PartialApp.fst(24,2-24,3):
+  - Expected failure:
+  - Tactic failed
+  - This statement returns a value of type: int
+  - Did you forget to assign it or ignore it?
+
+* Info at PartialApp.fst(50,2-50,9):
+  - Expected failure:
+  - Tactic failed
+  - This function is partially applied. Remaining type:
+      y: t
+        -> fn
+             requires emp
+             ensures emp
+  - Did you forget to apply some arguments?
+

@@ -126,7 +126,6 @@ or write complex tactics.
 
 For instance, consider the following fragment:
 *)
-open FStar.Mul
 
 // computes 1 + 2 + .. + n
 let rec triang (n : nat) : Tot nat =

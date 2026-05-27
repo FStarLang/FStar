@@ -134,21 +134,21 @@ let difference (#a: eqtype) (s1: set a) (s2: set a) : set a =
 ///
 /// function Set#Subset<T>(Set T, Set T): bool;
 
-let subset (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
+let subset (#a: eqtype) (s1: set a) (s2: set a) : prop =
   forall x. (s1 x = true) ==> (s2 x = true)
 
 /// We represent the Dafny function `Set#Equal` with `equal`:
 ///
 /// function Set#Equal<T>(Set T, Set T): bool;
 
-let equal (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
+let equal (#a: eqtype) (s1: set a) (s2: set a) : prop =
   feq s1 s2
 
 /// We represent the Dafny function `Set#Disjoint` with `disjoint`:
 ///
 /// function Set#Disjoint<T>(Set T, Set T): bool;
 
-let disjoint (#a: eqtype) (s1: set a) (s2: set a) : Type0 =
+let disjoint (#a: eqtype) (s1: set a) (s2: set a) : prop =
   forall x. not (s1 x && s2 x)
 
 /// We represent the Dafny choice operator by `choose`:

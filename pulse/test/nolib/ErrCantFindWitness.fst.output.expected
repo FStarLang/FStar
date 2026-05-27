@@ -1,0 +1,6 @@
+* Info at ErrCantFindWitness.fst(8,1-8,1):
+  - Expected failure:
+  - Cannot find witness for (exists* (x:nat). emp)
+  - Ill-typed term
+  - Cannot check relation with uvars.
+

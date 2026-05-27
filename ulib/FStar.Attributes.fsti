@@ -115,23 +115,7 @@ val plugin (x: int) : Tot unit
     elaborate and typecheck, but unfold before verification. *)
 val tcnorm : unit
 
-(** This attribute is used with the Dijkstra Monads for Free
-    construction to track position information in generated VCs *)
-val dm4f_bind_range : unit
-
-(** We erase all ghost functions and unit-returning pure functions to
-    [()] at extraction. This creates a small issue with abstract
-    types. Consider a module that defines an abstract type [t] whose
-    (internal) definition is [unit] and also defines [f: int -> t]. [f]
-    would be erased to be just [()] inside the module, while the
-    client calls to [f] would not, since [t] is abstract. To get
-    around this, when extracting interfaces, if we encounter an
-    abstract type, we tag it with this attribute, so that
-    extraction can treat it specially.
-
-    Note, since the use of cross-module inlining (the [--cmi] option),
-    this attribute is no longer necessary. We retain it for legacy,
-    but will remove it in the future. *)
+[@@deprecated "use [@@erasable] instead"]
 val must_erase_for_extraction : unit
 
 (** When attached a top-level definition, the typechecker will succeed
@@ -364,17 +348,6 @@ val primitive_extraction : unit
     similarly to `a -> Dv b`.
  *)
 val extract_as_impure_effect : unit
-
-
-(** A binder in a definition/declaration may optionally be annotated as strictly_positive
-    When the let definition is used in a data constructor type in an inductive
-    definition, this annotation is used to check the positivity of the inductive
-
-    Further F* checks that the binder is actually positive in the let definition
-
-    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
-  *)
-val strictly_positive : unit
 
 (** A binder in a definition/declaration may optionally be annotated as unused.
     This is used in the strict positivity checker. E.g., a type such as the one

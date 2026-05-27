@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 *)
 
 module FStarC.Tactics.Interpreter
-
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
 
@@ -60,10 +59,10 @@ let dbg_Tac = Debug.get_toggle "Tac"
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 
 let embed {|embedding 'a|} r (x:'a) norm_cb = embed x r None norm_cb
-let unembed {|embedding 'a|} a norm_cb : option 'a = unembed a norm_cb
+let unembed {|embedding 'a|} a norm_cb : ML (option 'a) = unembed a norm_cb
 
-let native_tactics_steps () =
-  let step_from_native_step (s: native_primitive_step) : PO.primitive_step =
+let native_tactics_steps () : ML (list PO.primitive_step) =
+  let step_from_native_step (s: native_primitive_step) : ML PO.primitive_step =
     { name                         = s.name
     ; arity                        = s.arity
     ; univ_arity                   = 0 // Zoe : We might need to change that
@@ -81,24 +80,26 @@ let native_tactics_steps () =
 let __primitive_steps_ref : ref (list PO.primitive_step) =
   mk_ref []
 
-let primitive_steps () : list PO.primitive_step =
+let primitive_steps () : ML (list PO.primitive_step) =
     (native_tactics_steps ())
     @ (!__primitive_steps_ref)
 
-let register_tactic_primitive_step (s : PO.primitive_step) : unit =
+let register_tactic_primitive_step (s : PO.primitive_step) : ML unit =
   __primitive_steps_ref := s :: !__primitive_steps_ref
 
 (* This function attempts to reconstruct the reduction head of a
 stuck tactic term, to provide a better error message for the user. *)
-let rec t_head_of (t : term) : term =
-    match (SS.compress t).n with
+let rec t_head_of (t : term) : ML term =
+    let t0 = SS.compress t in
+    match t0.n with
     | Tm_app _ ->
       (* If the head is a ctor, or an uninterpreted fv, do not shrink
          further. Otherwise we will get failures saying that 'Success'
          or 'dump' got stuck, which is not helpful. *)
       let h, args = U.head_and_args_full t in
       let h = U.unmeta h in
-      begin match (SS.compress h).n with
+      let h0 = SS.compress h in
+      begin match h0.n with
       | Tm_uinst _
       | Tm_fvar _
       | Tm_bvar _ // should not occur
@@ -134,13 +135,13 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
                  Env.Tactics] in
 
     // Maybe use NBE if the user asked for it
-    let norm_f = if Options.tactics_nbe ()
-                 then NBE.normalize
-                 else N.normalize_with_primitive_steps
+    let use_nbe = Options.tactics_nbe () in
+    let psteps = primitive_steps () in
+    let result =
+      if use_nbe
+      then NBE.normalize psteps steps ps0.main_context tm
+      else N.normalize_with_primitive_steps psteps steps ps0.main_context tm
     in
-    (* if proof_state.tac_verb_dbg then *)
-    (*     Format.print1 "Starting normalizer with %s\n" (show tm); *)
-    let result = norm_f (primitive_steps ()) steps ps0.main_context tm in
     (* if proof_state.tac_verb_dbg then *)
     (*     Format.print1 "Reduced tactic: got %s\n" (show result); *)
 
@@ -159,7 +160,8 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           contains an admit, which is a common error *)
           let r : option term =
             Syntax.VisitM.visitM_term false (fun t ->
-              match t.n with
+              let tn = t.n in
+              match tn with
               | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> None
               | _ -> Some t) h_result
           in
@@ -193,25 +195,25 @@ let unembed_tactic_nbe_0 (eb:NBET.embedding 'b) (cb:NBET.nbe_cbs) (embedded_tac_
         ]
 
 let unembed_tactic_1 (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : 'a -> tac 'r =
-    fun x ->
+    fun x -> fun ps ->
       let rng = FStarC.Range.dummyRange  in
       let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
-      unembed_tactic_0 er app ncb
+      (unembed_tactic_0 er app ncb) ps
 
 let unembed_tactic_nbe_1 (ea:NBET.embedding 'a) (er:NBET.embedding 'r) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac 'r =
-    fun x ->
+    fun x -> fun ps ->
       let x_tm = NBET.embed ea cb x in
       let app = NBET.iapp_cb cb f [NBET.as_arg x_tm] in
-      unembed_tactic_nbe_0 er cb app
+      (unembed_tactic_nbe_0 er cb app) ps
 
-let e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)
+let e_tactic_thunk (er : embedding 'r) : ML (embedding (tac 'r))
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (thunk)?")
            (fun t cb -> Some (unembed_tactic_1 e_unit er t cb ()))
            (FStarC.Syntax.Embeddings.term_as_fv S.t_unit)
 
-let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
+let e_tactic_nbe_thunk (er : NBET.embedding 'r) : ML (NBET.embedding (tac 'r))
     =
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
@@ -219,13 +221,13 @@ let e_tactic_nbe_thunk (er : NBET.embedding 'r) : NBET.embedding (tac 'r)
            (fun () -> NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of unit)
 
-let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : embedding ('a -> tac 'r)
+let e_tactic_1 (ea : embedding 'a) (er : embedding 'r) : ML (embedding ('a -> tac 'r))
     =
     mk_emb (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?")
            (fun t cb -> Some (unembed_tactic_1 ea er t cb))
            (FStarC.Syntax.Embeddings.term_as_fv S.t_unit)
 
-let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embedding ('a -> tac 'r)
+let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : ML (NBET.embedding ('a -> tac 'r))
     =
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
@@ -234,13 +236,13 @@ let e_tactic_nbe_1 (ea : NBET.embedding 'a) (er : NBET.embedding 'r) : NBET.embe
            (emb_typ_of unit)
 
 let unembed_tactic_1_alt (ea:embedding 'a) (er:embedding 'r) (f:term) (ncb:norm_cb) : option ('a -> tac 'r) =
-    Some (fun x ->
+    Some (fun x -> fun ps ->
       let rng = FStarC.Range.dummyRange  in
       let x_tm = embed rng x ncb in
       let app = S.mk_Tm_app f [as_arg x_tm] rng in
-      unembed_tactic_0 er app ncb)
+      (unembed_tactic_0 er app ncb) ps)
 
-let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> tac 'r) =
+let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): ML (embedding ('a -> tac 'r)) =
     let em = (fun _ _ _ _ -> failwith "Impossible: embedding tactic (1)?") in
     let un (t0: term) (n: norm_cb): option ('a -> tac 'r) =
         match unembed_tactic_1_alt ea er t0 n with
@@ -249,7 +251,7 @@ let e_tactic_1_alt (ea: embedding 'a) (er:embedding 'r): embedding ('a -> tac 'r
     in
     mk_emb em un (FStarC.Syntax.Embeddings.term_as_fv t_unit)
 
-let report_implicits rng (is : TcRel.tagged_implicits) : unit =
+let report_implicits rng (is : TcRel.tagged_implicits) : ML unit =
   let open FStarC.Pprint in
   let open FStarC.Errors.Msg in
   let open FStarC.Class.PP in
@@ -278,10 +280,10 @@ let run_unembedded_tactic_on_ps
   (rng_goal : Range.t)
   (background : bool)
   (arg : 'a)
-  (tau: 'a -> tac 'b)
+  (tau: 'a -> ML (tac 'b))
   (ps:proofstate)
-  : list goal // remaining goals
-  & 'b // return value
+  : ML (list goal // remaining goals
+  & 'b) // return value
   =
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
@@ -371,7 +373,8 @@ let run_unembedded_tactic_on_ps
                 [doc_of_string <| "Uncaught exception: " ^ (show t)],
                 None
             | e ->
-              match FStarC.Errors.issue_of_exn e with
+              let issue = FStarC.Errors.issue_of_exn e in
+              match issue with
               | Some { issue_range; issue_msg } ->
                 issue_msg, issue_range
               | None ->
@@ -401,8 +404,8 @@ let run_tactic_on_ps'
   (tactic:term)
   (tactic_already_typed:bool)
   (ps:proofstate)
-  : list goal // remaining goals
-  & 'b // return value
+  : ML (list goal // remaining goals
+  & 'b) // return value
   =
     let env = ps.main_context in
     if !dbg_Tac then

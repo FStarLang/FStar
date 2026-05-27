@@ -4,16 +4,41 @@
     'TestHasEq.t3'
     supports decidable equality because of this argument.
   - Add either the 'noeq' or 'unopteq' qualifier
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env = (a : Type0)
+  - VC =
+      forall (x: a).
+        (* - Failed to prove that the type\n    'TestHasEq.t3'\n    supports decidable equality because of this argument.\n  - Add either the 'noeq' or 'unopteq' qualifier *)
+        Prims.hasEq a
   - See also TestHasEq.fst(57,0-58,19)
 
 * Info at TestHasEq.fst(84,10-84,70):
   - Expected failure:
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
-  - The SMT solver could not prove the query. Use --query_stats for more
-    details.
+  - The SMT solver could not prove the query.
+  - Env =
+      (x : x: TestHasEq.erasable_t{C_erasable_t? x})
+      (y : y: TestHasEq.erasable_t{D_erasable_t? y})
+  - VC =
+      Prims.hasEq TestHasEq.erasable_t /\
+      (forall (any_result: Type0).
+          x:
+          TestHasEq.erasable_t{C_erasable_t? x \/ D_erasable_t? x} ==
+          any_result ==>
+          (C_erasable_t? x ==> C_erasable_t? x \/ D_erasable_t? x) /\
+          (forall (any_result: x: TestHasEq.erasable_t{C_erasable_t? x}).
+              x == any_result ==>
+              (D_erasable_t? y ==> C_erasable_t? y \/ D_erasable_t? y) /\
+              (forall (any_result: y: TestHasEq.erasable_t{D_erasable_t? y}).
+                  y == any_result ==>
+                  (forall (any_result: Prims.bool).
+                      x = y == any_result ==>
+                      (forall (k: Prims.pure_post (n: Prims.int{n == 1})).
+                          (forall (x: n: Prims.int{n == 1}).
+                              {:pattern Prims.guard_free (k x)}
+                              k x) ==>
+                          x = y == true ==> Prims.l_False)))))
   - See also TestHasEq.fst(84,12-84,22)
 
 * Info at TestHasEq.fst(88,8-89,30):

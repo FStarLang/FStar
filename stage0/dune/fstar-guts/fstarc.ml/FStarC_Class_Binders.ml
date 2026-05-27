@@ -45,22 +45,22 @@ let hasNames_comp : FStarC_Syntax_Syntax.comp hasNames=
                uu___2 :: uu___3 in
              FStarC_List.fold_left
                (fun uu___3 uu___2 ->
-                  (Obj.magic
-                     (FStarC_Class_Setlike.union ()
-                        (Obj.magic
-                           (FStarC_FlatSet.setlike_flat_set
-                              FStarC_Syntax_Syntax.ord_bv)))) uu___3 uu___2)
+                  Obj.magic
+                    (FStarC_Class_Setlike.union ()
+                       (Obj.magic
+                          (FStarC_FlatSet.setlike_flat_set
+                             FStarC_Syntax_Syntax.ord_bv))) uu___3 uu___2)
                uu___ uu___1)
   }
 let hasBinders_list_bv : FStarC_Syntax_Syntax.bv Prims.list hasBinders=
   {
     boundNames =
       (fun uu___ ->
-         (Obj.magic
-            (FStarC_Class_Setlike.from_list ()
-               (Obj.magic
-                  (FStarC_FlatSet.setlike_flat_set
-                     FStarC_Syntax_Syntax.ord_bv)))) uu___)
+         Obj.magic
+           (FStarC_Class_Setlike.from_list ()
+              (Obj.magic
+                 (FStarC_FlatSet.setlike_flat_set FStarC_Syntax_Syntax.ord_bv)))
+           uu___)
   }
 let hasBinders_set_bv :
   FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set hasBinders=

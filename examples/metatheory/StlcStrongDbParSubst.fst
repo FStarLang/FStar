@@ -22,7 +22,6 @@ module StlcStrongDbParSubst
 open FStar.Constructive
 open FStar.Classical
 open FStar.FunctionalExtensionality
-open FStar.StrongExcludedMiddle
 
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
@@ -56,7 +55,7 @@ type renaming (s:sub) = (forall (x:var). EVar? (s x))
 
 val is_renaming : s:sub -> GTot (n:int{  (renaming s  ==> n=0) /\
                                        (~(renaming s) ==> n=1)})
-let is_renaming s = (if strong_excluded_middle (renaming s) then 0 else 1)
+let is_renaming s = (if t2b (renaming s) then 0 else 1)
 
 
 val sub_inc : var -> Tot exp
@@ -207,7 +206,7 @@ val substitution_beta :
       h1:typing g v t_x ->
       h2:typing (extend t_x g) e t ->
       Tot (typing g (subst (sub_beta v) e) t) (decreases e)
-let rec substitution_beta #e #v #t_x #t #g h1 h2 =
+let substitution_beta #e #v #t_x #t #g h1 h2 =
   let hs : subst_typing (sub_beta v) (extend t_x g) g =
     fun y -> if y = 0 then h1 else TyVar (y-1) in
   substitution (sub_beta v) h2 hs

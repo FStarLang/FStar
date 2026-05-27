@@ -1,0 +1,12 @@
+/inst
+/*.ml/**
+/*.fs/**
+/*.pluginml/**
+.*_depend
+.depend
+*.install
+.fstarlock
+
+# Symlink, must persist
+!/ulib.checked
+!/fstarc.checked

@@ -2,8 +2,8 @@ module TestST
 
 let state_t = int
 
-let post a = a -> state_t -> Type0
-let pre = state_t -> Type0
+let post a = a -> state_t -> prop
+let pre = state_t -> prop
 
 (* The spec monad *)
 let spec (a:Type) = post a -> pre

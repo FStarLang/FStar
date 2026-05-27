@@ -57,7 +57,7 @@ val bv_t (n: nat) : eqtype
 
 (** Extending a bit vector of length [n] to a larger vector of size
     [m+n], filling the extra bits with 0 *)
-val bv_uext (#n #m: pos) (a: bv_t n) : Tot (normalize (bv_t (m + n)))
+val bv_uext (#n #m: pos) (a: bv_t n) : Tot (bv_t (m + n))
 
 (**** Relating unsigned integers to bitvectors *)
 
@@ -197,6 +197,52 @@ val int2bv_shr:
     #z: bv_t n ->
     squash (bvshr #n (int2bv #n x) y == z)
   -> Lemma (int2bv #n (shift_right #n x y) == z)
+
+(**** Rotate operations *)
+
+(** Bitwise rotate left: rotate by bit-vector. *)
+val bvrol' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise rotate left: rotate by integer. *)
+val bvrol  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_rol':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvrol' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (rotate_left #n x y) == z)
+
+val int2bv_rol:
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvrol #n (int2bv #n x) y == z)
+  -> Lemma (int2bv #n (rotate_left #n x y) == z)
+
+(** Bitwise rotate right: rotate by bit-vector. *)
+val bvror' (#n: pos) (a: bv_t n) (s: bv_t n) : Tot (bv_t n)
+
+(** Bitwise rotate right: rotate by integer. *)
+val bvror  (#n: pos) (a: bv_t n) (s: nat)    : Tot (bv_t n)
+
+val int2bv_ror':
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvror' #n (int2bv #n x) (int2bv #n y) == z)
+  -> Lemma (int2bv #n (rotate_right #n x y) == z)
+
+val int2bv_ror:
+    #n: pos ->
+    #x: uint_t n ->
+    #y: uint_t n ->
+    #z: bv_t n ->
+    squash (bvror #n (int2bv #n x) y == z)
+  -> Lemma (int2bv #n (rotate_right #n x y) == z)
 
 (**** Arithmetic operations *)
 unfold

@@ -694,7 +694,7 @@ let rec fold_left_invar
   (#a #b: Type)
   (f: (a -> b -> Tot a))
   (l: list b)
-  (p: (a -> Tot Type0))
+  (p: (a -> Tot prop))
   : Lemma
   (requires forall (x: a) (y: b) . p x ==> memP y l ==> p (f x y) )
   (ensures forall (x: a) . p x ==> p (fold_left f x l))

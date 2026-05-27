@@ -37,14 +37,9 @@ type option (a: Type) =
 /// Aside from special support in extraction, the tuple types have
 /// special syntax in F*.
 ///
-/// For instance, rather than [tupleN a1 ... aN],
-/// we usually write [a1 & ... & aN] or [a1 * ... * aN].
-///
-/// The latter notation is more common for those coming to F* from
-/// OCaml or F#. However, the [*] also clashes with the multiplication
-/// operator on integers define in FStar.Mul. For this reason, we now
-/// prefer to use the [&] notation, though there are still many uses
-/// of [*] remaining.
+/// Rather than [tupleN a1 ... aN], we usually write [a1 & ... & aN].
+/// We do not use [a1 * ... * aN] as in other ML-like languages
+/// to avoid clashing with the multiplication operator.
 ///
 /// Tuple values are introduced using as [a1, ..., an], rather than
 /// [MktupleN a1 ... aN].

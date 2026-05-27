@@ -25,15 +25,13 @@ let e_erased (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
             FStar_Pervasives_Native.None in
         let ty = FStarC_Syntax_Embeddings_Base.type_of d in
         let uu___ =
-          let uu___1 = FStarC_Syntax_Syntax.iarg ty in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStarC_Syntax_Embeddings_Base.embed d x1 in
-                uu___5 rng shadow cbs in
-              FStarC_Syntax_Syntax.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStarC_Syntax_Embeddings_Base.embed d x1 rng shadow cbs in
+              FStarC_Syntax_Syntax.as_arg uu___3 in
+            [uu___2] in
+          (FStarC_Syntax_Syntax.iarg ty) :: uu___1 in
         FStarC_Syntax_Util.mk_app h uu___
     | Reveal (_ty, x1) ->
         let r =
@@ -41,15 +39,13 @@ let e_erased (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
             FStar_Pervasives_Native.None in
         let ty = FStarC_Syntax_Embeddings_Base.type_of d in
         let uu___ =
-          let uu___1 = FStarC_Syntax_Syntax.iarg ty in
-          let uu___2 =
-            let uu___3 =
-              let uu___4 =
-                let uu___5 = FStarC_Syntax_Embeddings_Base.embed d x1 in
-                uu___5 rng shadow cbs in
-              FStarC_Syntax_Syntax.as_arg uu___4 in
-            [uu___3] in
-          uu___1 :: uu___2 in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                FStarC_Syntax_Embeddings_Base.embed d x1 rng shadow cbs in
+              FStarC_Syntax_Syntax.as_arg uu___3 in
+            [uu___2] in
+          (FStarC_Syntax_Syntax.iarg ty) :: uu___1 in
         FStarC_Syntax_Util.mk_app r uu___ in
   let un uu___1 uu___ =
     (fun t cbs ->
@@ -110,14 +106,10 @@ let e_erased (d : 'a FStarC_Syntax_Embeddings_Base.embedding) :
     (fun uu___ ->
        match uu___ with
        | Hide (_ty, x) ->
-           let uu___1 =
-             let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of d in
-             uu___2 x in
+           let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of d x in
            Prims.strcat "Hide " uu___1
        | Reveal (_ty, x) ->
-           let uu___1 =
-             let uu___2 = FStarC_Syntax_Embeddings_Base.printer_of d in
-             uu___2 x in
+           let uu___1 = FStarC_Syntax_Embeddings_Base.printer_of d x in
            Prims.strcat "Reveal " uu___1)
     (fun uu___ -> FStarC_Syntax_Syntax.ET_abstract)
 let nbe_e_erased (d : 'a FStarC_TypeChecker_NBETerm.embedding) :
@@ -157,39 +149,38 @@ let nbe_e_erased (d : 'a FStarC_TypeChecker_NBETerm.embedding) :
         FStarC_TypeChecker_NBETerm.mkFV fv [] uu___ in
   let un uu___1 uu___ =
     (fun cbs t ->
-       let uu___ = FStarC_TypeChecker_NBETerm.nbe_t_of_t t in
-       match uu___ with
+       match FStarC_TypeChecker_NBETerm.nbe_t_of_t t with
        | FStarC_TypeChecker_NBETerm.FV
-           (fv, uu___1, (body, uu___2)::(ty, uu___3)::[]) when
+           (fv, uu___, (body, uu___1)::(ty, uu___2)::[]) when
            FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide ->
            Obj.magic
              (Obj.repr
-                (let uu___4 = FStarC_TypeChecker_NBETerm.unembed d cbs body in
+                (let uu___3 = FStarC_TypeChecker_NBETerm.unembed d cbs body in
                  FStarC_Class_Monad.op_let_Bang
-                   FStarC_Class_Monad.monad_option () () (Obj.magic uu___4)
-                   (fun uu___5 ->
+                   FStarC_Class_Monad.monad_option () () (Obj.magic uu___3)
+                   (fun uu___4 ->
                       (fun v ->
                          let v = Obj.magic v in
                          Obj.magic
                            (FStarC_Class_Monad.return
                               FStarC_Class_Monad.monad_option ()
-                              (Obj.magic (Hide (ty, v))))) uu___5)))
+                              (Obj.magic (Hide (ty, v))))) uu___4)))
        | FStarC_TypeChecker_NBETerm.FV
-           (fv, uu___1, (body, uu___2)::(ty, uu___3)::[]) when
+           (fv, uu___, (body, uu___1)::(ty, uu___2)::[]) when
            FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.reveal ->
            Obj.magic
              (Obj.repr
-                (let uu___4 = FStarC_TypeChecker_NBETerm.unembed d cbs body in
+                (let uu___3 = FStarC_TypeChecker_NBETerm.unembed d cbs body in
                  FStarC_Class_Monad.op_let_Bang
-                   FStarC_Class_Monad.monad_option () () (Obj.magic uu___4)
-                   (fun uu___5 ->
+                   FStarC_Class_Monad.monad_option () () (Obj.magic uu___3)
+                   (fun uu___4 ->
                       (fun v ->
                          let v = Obj.magic v in
                          Obj.magic
                            (FStarC_Class_Monad.return
                               FStarC_Class_Monad.monad_option ()
-                              (Obj.magic (Reveal (ty, v))))) uu___5)))
-       | uu___1 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___1
+                              (Obj.magic (Reveal (ty, v))))) uu___4)))
+       | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)) uu___1
       uu___ in
   FStarC_TypeChecker_NBETerm.mk_emb em un (fun uu___ -> Prims.magic ())
     (fun uu___ -> FStarC_Syntax_Syntax.ET_abstract)
@@ -211,15 +202,13 @@ let nbe_reveal (a : FStarC_TypeChecker_NBETerm.abstract_nbe_term)
   | Hide (uu___, x) -> FStar_Pervasives_Native.Some x
   | uu___ -> FStar_Pervasives_Native.None
 let ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  let uu___ =
-    FStarC_TypeChecker_Primops_Base.mk2' Prims.int_one
-      FStarC_Parser_Const.reveal FStarC_Syntax_Embeddings.e_abstract_term
-      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
-      (e_erased FStarC_Syntax_Embeddings.e_abstract_term)
-      (nbe_e_erased FStarC_TypeChecker_NBETerm.e_abstract_nbe_term)
-      FStarC_Syntax_Embeddings.e_abstract_term
-      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term s_reveal nbe_reveal in
-  [uu___]
+  [FStarC_TypeChecker_Primops_Base.mk2' Prims.int_one
+     FStarC_Parser_Const.reveal FStarC_Syntax_Embeddings.e_abstract_term
+     FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
+     (e_erased FStarC_Syntax_Embeddings.e_abstract_term)
+     (nbe_e_erased FStarC_TypeChecker_NBETerm.e_abstract_nbe_term)
+     FStarC_Syntax_Embeddings.e_abstract_term
+     FStarC_TypeChecker_NBETerm.e_abstract_nbe_term s_reveal nbe_reveal]
 let s_hide (a : FStarC_Syntax_Embeddings.abstract_term)
   (e :
     (FStarC_Syntax_Syntax.term, FStarC_Syntax_Embeddings.abstract_term)
@@ -244,12 +233,10 @@ let nbe_hide (a : FStarC_TypeChecker_NBETerm.abstract_nbe_term)
       -> FStar_Pervasives_Native.Some x
   | uu___ -> FStar_Pervasives_Native.None
 let simplify_ops : FStarC_TypeChecker_Primops_Base.primitive_step Prims.list=
-  let uu___ =
-    FStarC_TypeChecker_Primops_Base.mk2' Prims.int_one
-      FStarC_Parser_Const.hide FStarC_Syntax_Embeddings.e_abstract_term
-      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
-      (e_erased FStarC_Syntax_Embeddings.e_abstract_term)
-      (nbe_e_erased FStarC_TypeChecker_NBETerm.e_abstract_nbe_term)
-      FStarC_Syntax_Embeddings.e_abstract_term
-      FStarC_TypeChecker_NBETerm.e_abstract_nbe_term s_hide nbe_hide in
-  [uu___]
+  [FStarC_TypeChecker_Primops_Base.mk2' Prims.int_one
+     FStarC_Parser_Const.hide FStarC_Syntax_Embeddings.e_abstract_term
+     FStarC_TypeChecker_NBETerm.e_abstract_nbe_term
+     (e_erased FStarC_Syntax_Embeddings.e_abstract_term)
+     (nbe_e_erased FStarC_TypeChecker_NBETerm.e_abstract_nbe_term)
+     FStarC_Syntax_Embeddings.e_abstract_term
+     FStarC_TypeChecker_NBETerm.e_abstract_nbe_term s_hide nbe_hide]

@@ -18,7 +18,6 @@ module FStar.UInt
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
  * a copy-paste of this module. *)
 
-open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
@@ -362,6 +361,20 @@ let shift_left_logor_lemma #n a b s = nth_lemma (shift_left #n (logor #n a b) s)
 
 let shift_right_logor_lemma #n a b s = nth_lemma (shift_right #n (logor #n a b) s) (logor #n (shift_right #n a s) (shift_right #n b s))
 
+(* Rotate operators lemmas *)
+
+let rotate_left_lemma #n a s i = ()
+
+let rotate_right_lemma #n a s i = ()
+
+let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
+
+let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
+
+let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
+
+let rotate_right_left_inverse #n a s = nth_lemma (rotate_left #n (rotate_right #n a s) s) a
+
 
 let shift_left_value_aux_1 #n a s = pow2_multiplication_modulo_lemma_1 a n s
 
@@ -501,8 +514,8 @@ let lemma_lognot_zero_ext #n a =
   let eav = Seq.append hd0 av in
 
   append_lemma #1 #n hd0 av;
-  assert (from_vec #(n+1) eav = op_Multiply (from_vec #1 hd0) (pow2 n) + from_vec av);
-  assert (op_Multiply (from_vec #1 hd0) (pow2 n) = 0);
+  assert (from_vec #(n+1) eav = from_vec #1 hd0 * pow2 n + from_vec av);
+  assert (from_vec #1 hd0 * pow2 n = 0);
   assert (from_vec #(n+1) eav = from_vec #n av);
   assert (from_vec #(n+1) eav < pow2 n);
 
@@ -510,8 +523,8 @@ let lemma_lognot_zero_ext #n a =
   let neav_r = BitVector.lognot_vec #(n+1) eav in
   let neav_l = Seq.append hd1 nav in
   append_lemma #1 #n hd1 nav;
-  assert (from_vec #(n+1) neav_l = (op_Multiply (from_vec #1 hd1) (pow2 n)) + (from_vec #n nav));
-  assert (op_Multiply (from_vec #1 hd1) (pow2 n) = pow2 n);
+  assert (from_vec #(n+1) neav_l = (from_vec #1 hd1 * pow2 n) + (from_vec #n nav));
+  assert (from_vec #1 hd1 * pow2 n = pow2 n);
   assert (from_vec #(n+1) neav_l = pow2 n + from_vec #n nav);
   assert (pow2 n + from_vec #n nav = rhs);
 
@@ -547,12 +560,11 @@ let rec lemma_lognot_value_mod #n a =
       let tl = from_vec #(n-1) (Seq.slice (to_vec a) 1 n) in
 
       assert (hd = 0 || hd = 1);
-      let hdpow = op_Multiply hd (pow2 (n-1)) in
+      let hdpow = hd * pow2 (n-1) in
 
       from_vec_propriety (to_vec a) 1;
-      assert (from_vec av = (op_Multiply
-                              (from_vec #1     (Seq.slice av 0 1)) (pow2 (n-1))) +
-                              (from_vec #(n-1) (Seq.slice av 1 n)));
+      assert (from_vec av = (from_vec #1     (Seq.slice av 0 1) * pow2 (n-1)) +
+                             from_vec #(n-1) (Seq.slice av 1 n));
 
       let ntl = lognot tl in
       lemma_lognot_value_mod #(n-1) tl;

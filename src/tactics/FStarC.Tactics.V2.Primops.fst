@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2016 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@ module FStarC.Tactics.V2.Primops
 (* Most of the tactic running logic is here. V1.Interpreter calls
 into this module for all of that. *)
 
-open FStarC
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -52,7 +51,7 @@ let solve (#a:Type) {| ev : a |} : Tot a = ev
 instance _ = RE.e_term (* REMOVE ME *)
 
 (* Takes a `sealed a`, but that's just a userspace abstraction. *)
-let unseal (_typ:_) (x:Sealed.sealed 'a) : tac 'a = return (Sealed.unseal x)
+let unseal (_typ:_) (x:Sealed.sealed 'a) : ML (tac 'a) = return (Sealed.unseal x)
 let unseal_step =
   (* Unseal is not in builtins. *)
   let s =

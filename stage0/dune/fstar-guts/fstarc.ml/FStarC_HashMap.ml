@@ -47,7 +47,7 @@ let fold (uu___ : 'k FStarC_Class_Deq.deq)
 let cached_fun (uu___ : 'a FStarC_Class_Hashable.hashable)
   (uu___1 : 'a FStarC_Class_Deq.deq) (f : 'a -> 'b) :
   (('a -> 'b) * (unit -> unit))=
-  let cache = let uu___2 = empty () in FStarC_Effect.mk_ref uu___2 in
+  let cache = FStarC_Effect.mk_ref (empty ()) in
   let f_cached x =
     let uu___2 =
       let uu___3 = FStarC_Effect.op_Bang cache in
@@ -61,6 +61,4 @@ let cached_fun (uu___ : 'a FStarC_Class_Hashable.hashable)
             add uu___1 uu___ x y uu___5 in
           FStarC_Effect.op_Colon_Equals cache uu___4);
          y) in
-  (f_cached,
-    (fun uu___2 ->
-       let uu___3 = empty () in FStarC_Effect.op_Colon_Equals cache uu___3))
+  (f_cached, (fun uu___2 -> FStarC_Effect.op_Colon_Equals cache (empty ())))

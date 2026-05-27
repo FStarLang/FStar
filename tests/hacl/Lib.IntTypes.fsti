@@ -1,6 +1,5 @@
 module Lib.IntTypes
 
-open FStar.Mul
 
 #set-options "--fuel 0 --max_ifuel 1 --z3rlimit 20"
 
@@ -84,7 +83,7 @@ unfold
 let minint (t:inttype) =
   if unsigned t then 0 else -(pow2 (bits t - 1))
 
-let range (n:int) (t:inttype) : Type0 =
+let range (n:int) (t:inttype) : prop =
   minint t <= n /\ n <= maxint t
 
 unfold

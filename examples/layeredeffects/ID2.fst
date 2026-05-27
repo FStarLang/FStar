@@ -1,7 +1,7 @@
 module ID2
 
 unfold
-let sat (w : pure_wp 'a) : Type0 = w (fun _ -> True)
+let sat (w : pure_wp 'a) : prop = w (fun _ -> True)
 
 open FStar.Monotonic.Pure
 

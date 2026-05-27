@@ -3,8 +3,6 @@
 
   "fstar_exe": "../stage2/dune/_build/default/fstarc-full/fstarc2_full.exe",
   "options": [
-    "--ext", "optimize_let_vc",
-    "--ext", "fly_deps"
   ],
   "include_dirs": [
       "../stage2/ulib.checked"

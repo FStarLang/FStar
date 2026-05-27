@@ -15,8 +15,8 @@
 *)
 module Subtyping
 
-assume val p : int -> Type0
-assume val q : int -> Type0
+assume val p : int -> prop
+assume val q : int -> prop
 assume val n : n:int{q n}
 
 let f : int -> b:int{q b} = fun (_:int) -> n

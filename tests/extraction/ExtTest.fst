@@ -247,7 +247,7 @@ match a with
 | S a' -> add b (mult2 a' b)
 
 
-type capture (a:Type) 'a = 'a*a
+type capture (a:Type) 'a = 'a&a
 
 (*
 type bTree (t:Type)=

@@ -1,6 +1,6 @@
 module Bug1595
 
-let relation (a:Type) = a -> a -> Type0
+let relation (a:Type) = a -> a -> prop
 
 (* let preorder (a:Type) = relation a *)
 let preorder (a:Type) = rel:relation a{True}
@@ -22,8 +22,8 @@ let step (#t:Type) (#rs : list (relation t)) (#x #y : t)
          (* Need to annotate #p seemingly due to #1486 *)
          = CalcStep rs #p (pf ()) (j ())
 
-let r1 : preorder int = fun x y -> (>=) x y <: Type
-let r2 : preorder int = fun x y -> (<=) x y <: Type
+let r1 : preorder int = fun x y -> (>=) x y <: prop
+let r2 : preorder int = fun x y -> (<=) x y <: prop
 
 [@@(expect_failure [19])]
 let test_gt_lt_desugared () : Lemma False =

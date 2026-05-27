@@ -4,10 +4,10 @@ open FStar.Preorder
 open FStar.Calc
 
 (* Ouch, (>=) doesn't typecheck as a preorder *)
-let (<=) : relation int = (fun x y -> x <= y <: Type)
-let (>=) : relation int = (fun x y -> x >= y <: Type)
-let (>) : relation int = (fun x y -> x > y <: Type)
-let (<) : relation int = (fun x y -> x < y <: Type)
+let (<=) : relation int = (fun x y -> x <= y <: prop)
+let (>=) : relation int = (fun x y -> x >= y <: prop)
+let (>) : relation int = (fun x y -> x > y <: prop)
+let (<) : relation int = (fun x y -> x < y <: prop)
 
 let test1 () = assert_norm (calc_chain_compatible [(<); (<=)] (<))
 let test2 () = assert_norm (calc_chain_compatible [(<=); (<)] (<))

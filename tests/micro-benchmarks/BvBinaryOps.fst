@@ -54,3 +54,45 @@ let lemma_bvnot_test (bv: BV.bv_t 64) : unit =
   let not2 = BV.bvnot #64 (BV.bvnot #64 bv) in
   assert (not2 == bv);
   assert (not1 <> bv)
+
+(** Tests for bvrol / bvror *)
+
+// rotate left by 0 is identity
+let lemma_test_bvrol_zero (bv: BV.bv_t 8) : unit =
+  assert (BV.bvrol #8 bv 0 == bv)
+
+// rotate right by 0 is identity
+let lemma_test_bvror_zero (bv: BV.bv_t 8) : unit =
+  assert (BV.bvror #8 bv 0 == bv)
+
+// rotate left then right by same amount is identity
+let lemma_test_bvrol_bvror_inverse_8 (bv: BV.bv_t 8) (i: UInt.uint_t 3) : unit =
+  assert (BV.bvror #8 (BV.bvrol #8 bv i) i == bv)
+
+// rotate right then left by same amount is identity
+let lemma_test_bvror_bvrol_inverse_8 (bv: BV.bv_t 8) (i: UInt.uint_t 3) : unit =
+  assert (BV.bvrol #8 (BV.bvror #8 bv i) i == bv)
+
+// rotating by full width is identity
+let lemma_test_bvrol_full_8 (bv: BV.bv_t 8) : unit =
+  assert (BV.bvrol #8 bv 8 == bv)
+
+let lemma_test_bvror_full_8 (bv: BV.bv_t 8) : unit =
+  assert (BV.bvror #8 bv 8 == bv)
+
+// rotating a known constant: 0x0F rotated left by 4 = 0xF0
+let lemma_test_bvrol_constant () : unit =
+  assert (BV.bvrol #8 (BV.int2bv #8 0x0F) 4 == BV.int2bv #8 0xF0)
+
+// rotating a known constant back: 0xF0 rotated right by 4 = 0x0F
+let lemma_test_bvror_constant () : unit =
+  assert (BV.bvror #8 (BV.int2bv #8 0xF0) 4 == BV.int2bv #8 0x0F)
+
+// primed variants (bv_t arg for rotation amount)
+let lemma_test_bvrol'_8 (bv: BV.bv_t 8) (i: UInt.uint_t 3) : unit =
+  let unfold i' = BV.bv_uext #3 #5 (BV.int2bv #3 i) in
+  assert (BV.bvror' #8 (BV.bvrol' #8 bv i') i' == bv)
+
+let lemma_test_bvror'_8 (bv: BV.bv_t 8) (i: UInt.uint_t 3) : unit =
+  let unfold i' = BV.bv_uext #3 #5 (BV.int2bv #3 i) in
+  assert (BV.bvrol' #8 (BV.bvror' #8 bv i') i' == bv)

@@ -16,7 +16,7 @@
 module Bug516b
 
 open Bug516
-open FStar.ST
+open FStar.All
 
 type tt = ref bar
 type tt' = ref bar'
