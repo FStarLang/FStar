@@ -84,7 +84,8 @@ let rec eq_step s1 s2 : ML bool =
   | Unrefine, Unrefine
   | NormDebug, NormDebug
   | DefaultUnivsToZero, DefaultUnivsToZero
-  | Tactics, Tactics -> true
+  | Tactics, Tactics
+  | ReduceProjections, ReduceProjections -> true
   | _ -> false
 
 instance deq_step : deq step = {
@@ -128,6 +129,7 @@ let rec step_to_string (s:step) : ML string =
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
   | Tactics -> "Tactics"
+  | ReduceProjections -> "ReduceProjections"
   | _ -> failwith "fixme: step_to_string incomplete"
 
 instance showable_step : showable step = {
@@ -1105,6 +1107,7 @@ let lookup_projector env lid i : ML _ =
 
 let is_projector env (l:lident) : ML (bool) =
     match lookup_qname env l with
+        | Some (Inr ({ sigel = Sig_let _; sigquals=quals }, _), _)
         | Some (Inr ({ sigel = Sig_declare_typ _; sigquals=quals }, _), _) ->
           BU.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false

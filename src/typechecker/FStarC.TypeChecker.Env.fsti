@@ -63,6 +63,7 @@ type step =
   | NormDebug       //force debugging
   | DefaultUnivsToZero // default al unresolved universe uvars to zero
   | Tactics
+  | ReduceProjections
 and steps = list step
 
 instance val deq_step : deq step

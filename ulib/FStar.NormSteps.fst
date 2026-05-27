@@ -26,6 +26,7 @@ type norm_step =
   | UnfoldNamespace : list string -> norm_step
   | Unmeta : norm_step
   | Unascribe // Remove type ascriptions [t <: ty ~> t]
+  | ReduceProjections
 
 irreducible
 let simplify = Simpl
@@ -83,3 +84,6 @@ let unmeta = Unmeta
 
 irreducible
 let unascribe = Unascribe
+
+irreducible
+let reduce_projections = ReduceProjections

@@ -59,6 +59,7 @@ let steps_to_string f : ML string =
     unrefine = %s;\n\
     default_univs_to_zero = %s;\n\
     tactics = %s;\n\
+    reduce_projections = %s;\n\
   }"
   [ f.beta |> show;
     f.iota |> show;
@@ -92,6 +93,7 @@ let steps_to_string f : ML string =
     f.unrefine |> show;
     f.default_univs_to_zero |> show;
     f.tactics |> show;
+    f.reduce_projections |> show;
    ]
 
 instance deq_fsteps : deq fsteps = {
@@ -127,7 +129,8 @@ instance deq_fsteps : deq fsteps = {
             f1.for_extraction =? f2.for_extraction &&
             f1.unrefine =? f2.unrefine &&
             f1.default_univs_to_zero =? f2.default_univs_to_zero &&
-            f1.tactics =? f2.tactics
+            f1.tactics =? f2.tactics &&
+            f1.reduce_projections =? f2.reduce_projections
             );
 }
 
@@ -165,6 +168,7 @@ let default_steps : fsteps = {
     unrefine = false;
     default_univs_to_zero = false;
     tactics = false;
+    reduce_projections = false;
 }
 
 let fstep_add_one s fs : ML fsteps =
@@ -214,6 +218,7 @@ let fstep_add_one s fs : ML fsteps =
     | NormDebug -> fs // handled above, affects only dbg flags
     | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
     | Tactics -> { fs with tactics = true }
+    | ReduceProjections -> {fs with reduce_projections = true}
 
 let to_fsteps (s : list step) : ML fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -470,6 +475,7 @@ let translate_norm_step s : ML (list Env.step) = match s with
     | NormSteps.Unascribe -> [Unascribe]
     | NormSteps.NBE -> [NBE]
     | NormSteps.Unmeta -> [Unmeta]
+    | NormSteps.ReduceProjections -> [ReduceProjections]
 
 let translate_norm_steps s : ML (list Env.step) =
     let s = List.concatMap translate_norm_step s in
