@@ -131,6 +131,25 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       )
       | _ -> None
     in
+    let eq_subst_elt (e1:subst_elt) (e2:subst_elt) : ML bool =
+      match e1, e2 with
+      | DB (i1, x1), DB (i2, x2) -> i1 = i2 && bv_eq x1 x2
+      | DT (i1, t1), DT (i2, t2) -> i1 = i2 && eq_tm env t1 t2 = Equal
+      | NM (x1, i1), NM (x2, i2) -> bv_eq x1 x2 && i1 = i2
+      | NT (x1, t1), NT (x2, t2) -> bv_eq x1 x2 && eq_tm env t1 t2 = Equal
+      | UN (i1, u1), UN (i2, u2) -> i1 = i2 && eq_univs u1 u2
+      | UD (u1, i1), UD (u2, i2) -> ident_equals u1 u2 && i1 = i2
+      | _ -> false
+    in
+    let eq_subst_ts (_env:env_t) (s1:subst_ts) (s2:subst_ts) : ML bool =
+      let s1l, _r1 = s1 in
+      let s2l, _r2 = s2 in
+      List.length s1l = List.length s2l &&
+      List.forall2 (fun l1 l2 ->
+        List.length l1 = List.length l2 &&
+        List.forall2 eq_subst_elt l1 l2
+      ) s1l s2l
+    in
     let t1 = unmeta t1 in
     let t2 = unmeta t2 in
     match t1.n, t2.n with
@@ -185,8 +204,10 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       // updates should be done with care.
       equal_iff (eq_const c d)
 
-    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
-      equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
+    | Tm_uvar (u1, s1), Tm_uvar (u2, s2) ->
+      if Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head
+      then equal_if (eq_subst_ts env s1 s2)
+      else Unknown
 
     | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
