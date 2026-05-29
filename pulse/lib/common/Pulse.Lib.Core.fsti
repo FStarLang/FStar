@@ -84,7 +84,6 @@ val timeless_pure  (p:prop)
 : Lemma (timeless (pure p))
         [SMTPat (timeless (pure p))]
 
-[@@unifier_hint_not_injective]
 val ( ** ) (p q:slprop) : slprop
 
 val timeless_star (p q : slprop)
@@ -460,7 +459,6 @@ val loc_get () : stt_ghost loc_id emp_inames emp (fun l -> loc l)
 val loc_dup l : stt_ghost unit emp_inames (loc l) (fun _ -> loc l ** loc l)
 val loc_gather l #l' : stt_ghost unit emp_inames (loc l ** loc l') (fun _ -> loc l ** pure (l == l'))
 
-[@@unifier_hint_not_injective]
 val on (l:loc_id) ([@@@mkey] p:slprop) : slprop
 val on_intro #l p : stt_ghost unit emp_inames (loc l ** p) (fun _ -> loc l ** on l p)
 val on_elim #l p : stt_ghost unit emp_inames (loc l ** on l p) (fun _ -> loc l ** p)

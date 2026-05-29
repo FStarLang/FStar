@@ -1033,28 +1033,29 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
 let is_marked_injective env t =
   match (U.un_uinst t).n with
   | Tm_fvar fv ->
-    // Explicit injective attribute always wins
-    if Env.fv_has_attr env fv PC.unifier_hint_injective_lid then true
-    // Explicit opt-out always wins
-    else if Env.fv_has_attr env fv PC.unifier_hint_not_injective_lid then false
-    // Check if the function is Delta_equational (match/if-based)
-    // Such functions should NOT be treated as injective since equality
-    // may hold by case analysis, not by argument equality.
-    else (
-      match Env.delta_depth_of_fv env fv with
-      | S.Delta_equational_at_level _ -> false
-      | _ ->
-        // Check if return type has injective_type attribute
-        (match Env.try_lookup_lid env fv.fv_name with
-         | Some ((_, typ), _) ->
-           let _, ret_typ = U.arrow_formals typ in
-           let ret_head, _ = U.head_and_args ret_typ in
-           (match (U.un_uinst ret_head).n with
-            | Tm_fvar ret_fv ->
-              Env.fv_has_attr env ret_fv PC.unifier_hint_injective_type_lid
-            | _ -> false)
-         | _ -> false)
-    )
+    // Only explicit [@@unifier_hint_injective] counts
+    Env.fv_has_attr env fv PC.unifier_hint_injective_lid
+  | _ -> false
+
+// Check if a function head returns a type marked with [@@unifier_hint_injective_type].
+// Such functions get equatable treatment: if structural comparison fails,
+// we emit a full application guard (or open lambdas if only lambda args differ).
+// Excludes Delta_equational heads (match/if-based) since those should be unfolded.
+let returns_equatable_type env t =
+  match (U.un_uinst t).n with
+  | Tm_fvar fv ->
+    (match Env.delta_depth_of_fv env fv with
+     | S.Delta_equational_at_level _ -> false
+     | _ ->
+       (match Env.try_lookup_lid env fv.fv_name with
+        | Some ((_, typ), _) ->
+          let _, ret_typ = U.arrow_formals typ in
+          let ret_head, _ = U.head_and_args ret_typ in
+          (match (U.un_uinst ret_head).n with
+           | Tm_fvar ret_fv ->
+             Env.fv_has_attr env ret_fv PC.unifier_hint_injective_type_lid
+           | _ -> false)
+        | _ -> false))
   | _ -> false
 
 instance showable_rel : showable relation = {
@@ -1387,9 +1388,11 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           //Main logic:
           //1. Always try no_guard(structural) first.
           //2. If that fails:
-          //   - injective head: per-arg comparison
-          //   - non-injective head: unfold_both_and_retry
-          //3. If unfold_both_and_retry fails and equatable: emit_guard
+          //   - explicitly injective head: per-arg comparison
+          //   - returns equatable type: if only lambda args differ, open them;
+          //     otherwise emit full application guard
+          //   - equatable head (Delta_abstract etc.): same as equatable type
+          //   - otherwise: unfold_both_and_retry
           handle_with
             (no_guard (structural ()))
             (fun _ ->
@@ -1401,11 +1404,35 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               )
               else if guard_ok &&
                 (rel=EQUALITY) &&
-                (equatable g t0 || equatable g t1)
+                (equatable g t0 || equatable g t1 ||
+                 returns_equatable_type g.tcenv head0)
               then (
                 handle_with
                   (no_guard (unfold_both_and_retry ()))
-                  (fun _ -> emit_guard t0 t1)
+                  (fun _ ->
+                    //Per-arg comparison with full application guard fallback:
+                    //For each arg pair:
+                    //  - if no_guard(check_relation) succeeds, the arg is equal
+                    //  - if both are lambdas, use check_relation (may emit guard)
+                    //  - otherwise, bail to full application emit_guard
+                    if List.length args0 <> List.length args1
+                    then emit_guard t0 t1
+                    else
+                      handle_with
+                        (check_relation g EQUALITY head0 head1 ;!
+                         iter2 args0 args1
+                           (fun (a0, q0) (a1, q1) _ ->
+                             check_aqual q0 q1;!
+                             handle_with
+                               (no_guard (check_relation g EQUALITY a0 a1))
+                               (fun _ ->
+                                 match (Subst.compress a0).n, (Subst.compress a1).n with
+                                 | Tm_abs _, Tm_abs _ ->
+                                   check_relation g EQUALITY a0 a1
+                                 | _ ->
+                                   err "equatable: non-lambda arg differs"))
+                           ())
+                        (fun _ -> emit_guard t0 t1))
               )
               else unfold_both_and_retry ()
             )
