@@ -31,23 +31,27 @@ module FStar.Fin
 module L = FStar.List.Tot
 module S = FStar.Seq 
 
-(** The type of natural numbers bounded by [n] *)
+(** The type of natural numbers bounded by [n].
+
+Note, n can be negative, in which case this is just an empty type (as it is for
+0). Using int instead of nat means we don't have to prove [n >= 0] just to show
+that the type is well-defined. *)
 inline_for_extraction
-let fin (n: nat) = k: int {0 <= k /\ k < n} 
+let fin (n: int) = k: int {0 <= k /\ k < n}
 
 (** Newer synonym. We perhaps should choose one over another globally.
     [under] is also defined in IntegerIntervals.fst, along with other 
     often used finite intervals. *)
 inline_for_extraction
-let under (p:nat) = x:nat {x<p}
+let under (p:int) = x:nat {x<p}
 
 (** Length-indexed list *)
 inline_for_extraction
-let vect (n: nat) (a: Type) = l: list a {L.length l = n}
+let vect (n: int) (a: Type) = l: list a {L.length l = n}
 
 (** Length-indexed sequence *)
 inline_for_extraction
-let seqn (n: nat) (a: Type) = s: S.seq a {S.length s = n}
+let seqn (n: int) (a: Type) = s: S.seq a {S.length s = n}
 
 (** [in_ s] is the type of a valid index into the sequence [s] *)
 inline_for_extraction
@@ -65,7 +69,7 @@ val find (#a: Type) (s: S.seq a) (p: (a -> bool)) (i: under (S.length s))
 (** Given a sequence [s] all of whose elements are at most [n], if the
     length of [s] is greater than [n], then there are two distinct
     indexes in [s] that contain the same element *)
-val pigeonhole (#n: pos) (s: S.seq (under n))
+val pigeonhole (#n: nat) (s: S.seq (under n))
     : Pure (in_ s & in_ s)
       (requires S.length s > n)
       (ensures (fun (i1, i2) -> i1 < i2 /\ S.index s i1 = S.index s i2))
