@@ -65,7 +65,7 @@ val find (#a: Type) (s: S.seq a) (p: (a -> bool)) (i: under (S.length s))
 (** Given a sequence [s] all of whose elements are at most [n], if the
     length of [s] is greater than [n], then there are two distinct
     indexes in [s] that contain the same element *)
-val pigeonhole (#n: pos) (s: S.seq (under n))
+val pigeonhole (#n: nat) (s: S.seq (under n))
     : Pure (in_ s & in_ s)
       (requires S.length s > n)
       (ensures (fun (i1, i2) -> i1 < i2 /\ S.index s i1 = S.index s i2))
