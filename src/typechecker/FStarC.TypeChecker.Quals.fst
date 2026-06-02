@@ -256,10 +256,10 @@ let check_erasable env quals (r:Range.t) se =
           let Some ((us, t), _) = val_decl in
         if non_info_norm_weak env body then
           log_issue lbname Error_MustEraseMissing [
-            text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
+            text (Format.fmt1 "Values of type ‘%s’ will be erased during extraction, \
                   but its interface hides this fact." (show lbname));
-            text (Format.fmt1 "Add the `erasable` \
-                  attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
+            text (Format.fmt1 "Add the ‘erasable’ \
+                  attribute to the ‘val %s’ declaration for this symbol in the interface" (show lbname));
           ]
     | _ -> ()
   end;
@@ -270,7 +270,7 @@ let check_erasable env quals (r:Range.t) se =
       if not (quals |> BU.for_some (function Noeq -> true | _ -> false))
       then raise_error r Errors.Fatal_QualifierListNotPermitted [
               text "Incompatible attributes and qualifiers: \
-               erasable types do not support decidable equality and must be marked `noeq`."
+               erasable types do not support decidable equality and must be marked ‘noeq’."
              ]
     | Sig_declare_typ _ ->
       ()
@@ -282,7 +282,7 @@ let check_erasable env quals (r:Range.t) se =
       if not (N.non_info_norm env body)
       then raise_error body Errors.Fatal_QualifierListNotPermitted [
                   text "Illegal attribute: \
-                   the `erasable` attribute is only permitted on inductive type definitions \
+                   the ‘erasable’ attribute is only permitted on inductive type definitions \
                    and abbreviations for non-informative types.";
                   text "The term" ^/^ pp body ^/^ text "is considered informative.";
              ]
@@ -296,7 +296,7 @@ let check_erasable env quals (r:Range.t) se =
     | _ ->
       raise_error r Errors.Fatal_QualifierListNotPermitted [
           text "Illegal attribute: \
-          the `erasable` attribute is only permitted on inductive type definitions \
+          the ‘erasable’ attribute is only permitted on inductive type definitions \
           and abbreviations for non-informative types.";
         ]
   end
@@ -327,15 +327,15 @@ let check_must_erase_attribute env se =
                let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
                if must_erase && not has_attr
                then log_issue lbname Error_MustEraseMissing [
-                        text (Format.fmt1 "Values of type `%s` will be erased during extraction, \
+                        text (Format.fmt1 "Values of type ‘%s’ will be erased during extraction, \
                                but its interface hides this fact." (show lbname));
-                        text (Format.fmt1 "Add the `must_erase_for_extraction` \
-                               attribute to the `val %s` declaration for this symbol in the interface" (show lbname));
+                        text (Format.fmt1 "Add the ‘must_erase_for_extraction’ \
+                               attribute to the ‘val %s’ declaration for this symbol in the interface" (show lbname));
                       ]
                else if has_attr && not must_erase
                then log_issue lbname Error_MustEraseMissing [
-                        text (Format.fmt1 "Values of type `%s` cannot be erased during extraction, \
-                               but the `must_erase_for_extraction` attribute claims that it can."
+                        text (Format.fmt1 "Values of type ‘%s’ cannot be erased during extraction, \
+                               but the ‘must_erase_for_extraction’ attribute claims that it can."
                                (show lbname));
                         text "Please remove the attribute.";
                       ])
@@ -388,8 +388,8 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
 
     | _ ->
       FStarC.Errors.log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
-          text "The `instance` attribute is only allowed on `let` and `val` declarations.";	
-          text "It is not allowed for" ^/^ squotes (arbitrary_string <| Print.sigelt_to_string_short se);
+          text "The ‘instance’ attribute is only allowed on ‘let’ and ‘val’ declarations.";	
+          text "It is not allowed for" ^/^ fquotes (arbitrary_string <| Print.sigelt_to_string_short se);
         ]
 
 let check_sigelt_quals_post env se : ML unit =

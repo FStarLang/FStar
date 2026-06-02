@@ -89,7 +89,7 @@ let take_lang_extension file =
 
 let check_extension fn =
   if (not (has_extension fn (fst_extensions ()))) then
-    let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
+    let message = FStarC_Format.fmt1 "Unrecognized extension ‘%s’" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =

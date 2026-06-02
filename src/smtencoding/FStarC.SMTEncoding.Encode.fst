@@ -1653,7 +1653,7 @@ let encode_datacon (env:env_t) (se:sigelt)
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
     let nm = Print.sigelt_to_string_short se in
-    let g, env = Errors.with_ctx (Format.fmt1 "While encoding top-level declaration `%s`"
+    let g, env = Errors.with_ctx (Format.fmt1 "While encoding top-level declaration ‘%s’"
                                              (Print.sigelt_to_string_short se))
                    (fun () -> encode_sigelt' env se)
     in

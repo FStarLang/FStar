@@ -84,9 +84,6 @@ let is_erasable (p:st_term) : T.Tac bool =
   | Some STT_Ghost -> true
   | _ -> false
     
-let head_and_args (t:term)
-  : option (R.term & list R.argv) = Some (R.collect_app_ln t)
-
 let term_eq_string (s:string) (t:R.term) : bool =
   match R.inspect_ln t with
   | R.Tv_Const (R.C_String s') -> s=s'

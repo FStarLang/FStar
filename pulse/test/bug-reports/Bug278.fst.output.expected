@@ -1,5 +1,6 @@
-* Info at Bug278.fst(29,5-31,5):
+* Info at Bug278.fst(30,11-30,56):
   - Expected failure:
   - Tactic failed
-  - Internal error: unexpected unresolved (universe) uvar in deep_compress: 315
+  - Unexpected unresolved uvars in the term:
+  - spawn (pth n)
 

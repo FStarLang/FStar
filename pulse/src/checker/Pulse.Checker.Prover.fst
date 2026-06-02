@@ -1069,7 +1069,7 @@ let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) =
   let pg = if pg.penv_plems_enabled then { pg with penv_plems = build_plems pg } else pg in
   pg
 
-let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
+let rec apply_with_uvars_aux (g:env) (t:typ) (v:term) (acc:list term) : T.Tac (typ & term & list term) =
   match R.inspect_ln_unascribe t with
   | R.Tv_Arrow b c -> (
     match R.inspect_comp c with
@@ -1079,9 +1079,14 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
         (T.range_of_term v) (elab_env g) sort false in
       let v = R.pack_ln <| R.Tv_App v (u, qual) in
       let res = open_term' res u 0 in
-      apply_with_uvars g res v
-    | _ -> t, v)
-  | _ -> t, v
+      apply_with_uvars_aux g res v (u :: acc)
+    | _ -> t, v, acc)
+  | _ -> t, v, acc
+
+let apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
+  let ty, tm, uvars = apply_with_uvars_aux g t v [] in
+  RU.try_solve_single_valued_implicits (elab_env g) uvars;
+  ty, tm
 
 #push-options "--split_queries always --z3rlimit 10"
 let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :

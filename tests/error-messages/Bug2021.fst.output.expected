@@ -20,20 +20,20 @@
   - Expected failure:
   - Failed to resolve implicit argument ?9
     of type Prims.int
-    introduced for Instantiating implicit argument 'x'
+    introduced for Instantiating implicit argument ‘x’
   - See also Bug2021.fst(23,11-23,12)
 
 * Info at Bug2021.fst(30,13-30,17):
   - Expected failure:
   - Failed to resolve implicit argument ?10
     of type Prims.int
-    introduced for Instantiating implicit argument 'x'
+    introduced for Instantiating implicit argument ‘x’
   - See also Bug2021.fst(29,11-30,17)
 
 * Info at Bug2021.fst(36,13-36,17):
   - Expected failure:
   - Failed to resolve implicit argument ?13
     of type Prims.int
-    introduced for Instantiating implicit argument 'x'
+    introduced for Instantiating implicit argument ‘x’
   - See also Bug2021.fst(35,11-36,17)
 

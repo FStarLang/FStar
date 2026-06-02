@@ -695,6 +695,7 @@ let array_swap_inner_invariant_end
   ))
 //  [SMTPat (array_swap_inner_invariant s0 n l bz s i j idx)]
 = ()
+#pop-options
 
 #pop-options
 
