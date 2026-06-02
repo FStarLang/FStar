@@ -18,7 +18,7 @@ open FStar.Tactics.V2
 
 (* Tests for the grewrite function *)
 
-let test_grewrite (a b c : int) (l : squash (b == c)) =
+let test_grewrite (a b c : int) (l : (b == c)) =
     assert (a + b == a + c)
         by (grewrite (quote b) (quote c);
             trivial ();
@@ -42,7 +42,7 @@ let test_grewrite4 (f : int -> int -> int) (w : int) =
             seq (fun () -> grewrite (quote (f w w)) (quote w))
                 l_revert)
 
-let test_grewrite5 (n m : int) (p1 : squash (n == m))
+let test_grewrite5 (n m : int) (p1 : (n == m))
                                (p2 : (fun x -> x + n) == (fun x -> m + x)) =
     assert ((fun x -> x + n) == (fun x -> m + x))
         by (grewrite (quote n) (quote m);

@@ -6,7 +6,7 @@ type ind : Type u#1 = | A
 
 assume val p : prop
 
-assume val ep : squash p
+assume val ep : p
 
 let test0 (x:ind) =
     assert (match x with | A -> p)

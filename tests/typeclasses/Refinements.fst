@@ -26,7 +26,7 @@ let _ : dummy 1 (natlt 1) = foo
 let _ : dummy 1 (natlt 0) = foo
 
 (* a separate squash on z *)
-instance inst_2_1 (z : int) (_ : squash (z > 0)) : cc (dummy 2 (natlt z)) = { foo = C; meta = 42; }
+instance inst_2_1 (z : int) (_ : (z > 0)) : cc (dummy 2 (natlt z)) = { foo = C; meta = 42; }
 
 (* fine *)
 let _ : dummy 2 (natlt 1) = foo
@@ -74,9 +74,9 @@ class dummy2 = {
 
 assume val p : prop
 
-instance blah (_ : squash p) : dummy2 = { x = (); }
+instance blah (_ : p) : dummy2 = { x = (); }
 
-let test (_ : squash p) : dummy2 = solve
+let test (_ : p) : dummy2 = solve
 
 [@@expect_failure [19]]
 let test_fail () : dummy2 = solve

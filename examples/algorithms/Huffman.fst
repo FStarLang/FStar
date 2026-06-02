@@ -57,7 +57,7 @@ let rec sorted_smaller x y l = match l with
     | z::zs -> if z=y then () else sorted_smaller x y zs
 
 let rec insert_in_sorted (x:trie) (xs:list trie) : Pure (list trie)
-    (requires (b2t (sorted xs)))
+    (requires (sorted xs))
     (ensures (fun ys -> sorted ys /\ permutation (x::xs) ys)) =
   match xs with
   | [] -> [x]
@@ -97,7 +97,7 @@ let rec huffman_trie (ts:list trie) : Pure trie
   | [t1] -> t1 (* this uses `existsb Node? [t] ==> Node? t` fact *)
 
 let huffman (sws:list (symbol&pos)) : Pure trie
-    (requires (b2t (List.Tot.length sws > 0)))
+    (requires (List.Tot.length sws > 0))
     (ensures (fun t -> List.Tot.length sws > 1 ==> Node? t)) =
   huffman_trie (insertion_sort (List.Tot.map (fun (s,w) -> Leaf w s) sws))
 
@@ -165,11 +165,11 @@ let rec decode_aux (t':trie{Node? t'}) (t:trie) (bs:list bool) :
   | Node _ _ _, [] -> None
 
 let decode (t:trie) (bs:list bool) : Pure (option (list symbol))
-    (requires (b2t (Node? t))) (ensures (fun _ -> True)) =
+    (requires (Node? t)) (ensures (fun _ -> True)) =
   decode_aux t t bs
 
 let rec cancelation_one (t':trie) (t:trie) (s:symbol) : Lemma
-  (requires (b2t (Node? t')))
+  (requires (Node? t'))
   (ensures (Node? t' ==>
             (match encode_one t s with
             | Some e -> (match decode_aux t' t e with
@@ -223,7 +223,7 @@ let rec cancelation_aux (t:trie{Node? t}) (ss:list symbol) : Lemma
     | _, _ -> ())
 
 let cancelation (sws:list (symbol&pos)) (ss:list symbol) : Lemma
-  (requires (b2t (List.Tot.length sws > 1)))
+  (requires (List.Tot.length sws > 1))
   (ensures (List.Tot.length sws > 1 ==>
             (let t = huffman sws in
             (match encode t ss with

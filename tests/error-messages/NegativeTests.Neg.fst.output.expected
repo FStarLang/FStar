@@ -36,7 +36,7 @@
   - The SMT solver could not prove the query.
   - Env = (x : Prims.int)
   - VC = x > 0
-  - See also NegativeTests.Neg.fst(33,44-33,57)
+  - See also NegativeTests.Neg.fst(33,44-33,51)
 
 * Info at NegativeTests.Neg.fst(42,33-42,34):
   - Expected failure:
@@ -59,7 +59,7 @@
   - VC = Some? x
   - See also FStar.Pervasives.Native.fst(33,4-33,8)
 
-* Info at NegativeTests.Neg.fst(50,45-50,47):
+* Info at NegativeTests.Neg.fst(50,40-50,42):
   - Expected failure:
   - Subtyping check failed
   - Expected type _: FStar.Pervasives.result Prims.int {V? _}

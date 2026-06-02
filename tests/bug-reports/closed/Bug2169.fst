@@ -66,7 +66,7 @@ let rec concatmaplemma #a #b l f x =
     concatmaplemma t f x
 
 let dm (a : Type) (wp : w a) : Type =
-  p:(a -> prop) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
+  p:(a -> prop) -> (wp p) -> l:(m a){forall x. memP x l ==> p x}
 
 let irepr (a : Type) (wp: w a) = dm a wp
 
@@ -95,7 +95,7 @@ let mem_memP
         [SMTPat (memP x l); SMTPat (mem x l)]
 = FStar.List.Tot.Properties.mem_memP x l
 
-val append_memP: #t:Type ->  l1:list t
+val append_memP: #t:Type -> l1:list t
               -> l2:list t
               -> a:t
               -> Lemma (requires True)
@@ -156,6 +156,6 @@ let wrap (f:int -> ND unit (as_pure_wp (fun p -> True))) (x':int) : ND unit (as_
 
 assume val f : int -> ND unit (as_pure_wp (fun p -> forall x. p x))
 
-let rewrite_inside_reify (x y:int) (_:squash (x == y)) =
+let rewrite_inside_reify (x y:int) (_: (x == y)) =
   assert (reify (f x) (fun _ -> True) == reify (f y) (fun _ -> True))
     by (rewrite_eqs_from_context ())

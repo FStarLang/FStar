@@ -74,9 +74,9 @@ let f8 (k:nat) (x:f6 k) = if k > 0 then f7 x else ()
 assume val f9 : int -> prop
 let f10 = x:int{f9 x}
 
-assume val f11 : x:f10 -> squash (f9 x)
+assume val f11 : x:f10 -> (f9 x)
 
-let f12 () : squash (f9 5) =
+let f12 () : (f9 5) =
     assume (f9 5);
     f11 _
 
@@ -93,7 +93,7 @@ assume val f16 (x:int{f15}) :Tot unit
 let f17 (x:int) :Lemma (requires True) (ensures f15) [SMTPat (f16 x)] = admit ()
 
 (* We were dropping the comp from the ascription in the second phase, this testcase tests the fix *)
-let f18 (p:int -> prop) (f:(x:int -> squash (p x))) :Lemma (forall (x:int). p x)
+let f18 (p:int -> prop) (f:(x:int -> (p x))) :Lemma (forall (x:int). p x)
   = FStar.Classical.forall_intro #int #p (fun (x:int) -> (f x <: Lemma (p x)))
 
 (*

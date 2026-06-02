@@ -76,9 +76,9 @@ let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
 
 let introduce_is_permutation (#a:Type) (s0:seq a) (s1:seq a)
                              (f:index_fun s0)
-                             (_:squash (Seq.length s0 == Seq.length s1))
-                             (_:squash (forall x y. x <> y ==> f x <> f y))
-                             (_:squash (forall (i:nat{i < Seq.length s0}). Seq.index s0 i == Seq.index s1 (f i)))
+                             (_:(Seq.length s0 == Seq.length s1))
+                             (_:(forall x y. x <> y ==> f x <> f y))
+                             (_:(forall (i:nat{i < Seq.length s0}). Seq.index s0 i == Seq.index s1 (f i)))
    : Lemma
      (ensures
        is_permutation s0 s1 f)
@@ -193,7 +193,7 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
       let n = Seq.length pfx in
       let f : index_fun s0 = adapt_index_fun s0 f' n in
       assert (Seq.length s0 == Seq.length s1);
-      let len_eq : squash (Seq.length s0 == Seq.length s1) = () in
+      let len_eq : (Seq.length s0 == Seq.length s1) = () in
       assert (forall x y. x <> y ==> f' x <> f' y);
       let neq =
       introduce forall x y. x <> y ==> f x <> f y
@@ -385,7 +385,7 @@ let remove_i #a (s:seq a) (i:nat{i < Seq.length s})
 #push-options "--using_facts_from '* -FStar.Seq.Properties.slice_slice'"
 let shift_perm' #a
                (s0 s1:seq a)
-               (_:squash (Seq.length s0 == Seq.length s1 /\ Seq.length s0 > 0))
+               (_:(Seq.length s0 == Seq.length s1 /\ Seq.length s0 > 0))
                (p:seqperm s0 s1)
   : Tot (seqperm (fst (Seq.un_snoc s0))
                  (snd (remove_i s1 (p (Seq.length s0 - 1)))))
@@ -403,7 +403,7 @@ let shift_perm' #a
 
 let shift_perm #a
                (s0 s1:seq a)
-               (_:squash (Seq.length s0 == Seq.length s1 /\ Seq.length s0 > 0))
+               (_:(Seq.length s0 == Seq.length s1 /\ Seq.length s0 > 0))
                (p:seqperm s0 s1)
   : Pure (seqperm (fst (Seq.un_snoc s0))
                   (snd (remove_i s1 (p (Seq.length s0 - 1)))))
@@ -568,7 +568,7 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
                            (n0: int)
                            (nk: not_less_than n0)
                            (expr1 expr2: (ifrom_ito n0 nk) -> c)
-  : Tot (squash (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
+  : Tot ((foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr (func_sum cm expr1 expr2) n0 nk)) `eq.eq`
                  cm.mult (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr1 n0 nk)))
                          (foldm_snoc cm (init (closed_interval_size n0 nk) (init_func_from_expr expr2 n0 nk)))))
         (decreases nk-n0)
@@ -611,7 +611,7 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
       let nk' = nk - 1 in
       (* here's the nasty bit with where we have to massage the proof from the induction hypothesis *)
       let ih
-        : squash ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(ifrom_ito n0 nk') cm expr1 expr2) n0 nk')) `eq.eq`
+        : ((foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' (func_sum #(ifrom_ito n0 nk') cm expr1 expr2) n0 nk')) `eq.eq`
               cm.mult (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')))
                       (foldm_snoc cm (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')))))
         = foldm_snoc_split' cm n0 nk' expr1 expr2
@@ -630,7 +630,7 @@ let rec foldm_snoc_split' #c #eq (cm: CE.cm c eq)
       };
       assert (Seq.equal subseq_r1 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr1 n0 nk')));
       assert (Seq.equal subseq_r2 (init (range_count n0 nk') (init_func_from_expr #_ #n0 #nk' expr2 n0 nk')));
-      let _ : squash (subfold `eq.eq` (subfold_r1 `cm.mult` subfold_r2)) = ih in
+      let _ : subfold `eq.eq` (subfold_r1 `cm.mult` subfold_r2) = ih in
       cm.congruence subfold last (subfold_r1 `cm.mult` subfold_r2) last;
       aux_shuffle_lemma cm subfold_r1 subfold_r2 (rfunc_1_up_to nk sub_count) (rfunc_2_up_to nk sub_count);
       cm.congruence (subfold_r1 `cm.mult` (rfunc_1_up_to nk sub_count)) (subfold_r2 `cm.mult` (rfunc_2_up_to nk sub_count))

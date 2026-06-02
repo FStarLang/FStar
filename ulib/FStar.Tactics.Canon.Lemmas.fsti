@@ -33,14 +33,14 @@ val sw_mult : (#x : int) -> (#y : int) -> (#z : int) -> Lemma ((x * y) * z == (x
 val comm_mult : (#x : int) -> (#y : int) -> Lemma (x * y == y * x)
 
 val trans : (#a:Type) -> (#x:a) -> (#z:a) -> (#y:a) ->
-                    squash (x == y) -> squash (y == z) -> Lemma (x == z)
+                    (x == y) -> (y == z) -> Lemma (x == z)
 
 val cong_plus : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
-                squash (w == y) -> squash (x == z) ->
+                (w == y) -> (x == z) ->
                 Lemma (w + x == y + z)
 
 val cong_mult : (#w:int) -> (#x:int) -> (#y:int) -> (#z:int) ->
-                squash (w == y) -> squash (x == z) ->
+                (w == y) -> (x == z) ->
                 Lemma (w * x == y * z)
 
 val neg_minus_one : (#x:int) -> Lemma (-x == (-1) * x)

@@ -823,7 +823,7 @@ let pm #b #a (abspat: a) : Tac b =
 /// Here's the example from the intro, which we can now run!
 
 let fetch_eq_side' #a : Tac (term & term) =
-  gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
+  gpm (fun (left right: a) (g: pm_goal (left == right)) ->
          (quote left, quote right)) ()
 
 (* let _ = *)

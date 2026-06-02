@@ -27,7 +27,7 @@ let idempotence_on_domain #a #b f
   = assert_norm (on_domain a f == (on_domain a (on_domain a f)))
 
 let quantifier_as_lemma (#a:Type) (#b: a -> prop)
-                        (f:squash (forall (x:a). b x))
+                        (f:(forall (x:a). b x))
                         (x:a)
     : Lemma (b x)
     = ()
@@ -55,7 +55,7 @@ let l_to_r (t:term) : Tac unit =
 let extensionality_1 (a:Type)
                      (b: a -> Type)
                      (f g: arrow a b)
-                     (sq_feq : squash (feq f g))
+                     (sq_feq : (feq f g))
   : Lemma (ensures on_domain a f == on_domain a g)
   = assert (on_domain a f == on_domain a g)
        by  (norm [delta_only [`%on_domain]];
@@ -86,7 +86,7 @@ let idempotence_on_domain_g #a #b f
 let extensionality_1_g (a:Type)
                        (b: a -> Type)
                        (f g: arrow_g a b)
-                       (sq_feq : squash (feq_g f g))
+                       (sq_feq : (feq_g f g))
   : Lemma (ensures on_domain_g a f == on_domain_g a g)
   = assert (on_domain_g a f == on_domain_g a g)
        by  (norm [delta_only [`%on_domain_g]];

@@ -13,7 +13,7 @@ let foo (b:bool) : Tac (term -> Tac unit) =
   then and_elim
   else fail "no"
 
-let test (x : squash (p /\ q)) =
+let test (x : (p /\ q)) =
   assert True by (
     let f = foo true in
     f (quote x);

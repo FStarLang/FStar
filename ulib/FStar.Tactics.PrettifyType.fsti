@@ -18,7 +18,7 @@ let fakeunit = `unit
 
 unfold
 let f_inverses #a #b (f : b -> a) (g : a -> b) (x:a) =
-  squash (f (g x) == x)
+  (f (g x) == x)
 
 type atom = term
 

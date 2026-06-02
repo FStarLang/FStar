@@ -20,7 +20,7 @@ let g (x:(f1:int & int)): simple_record =
 val dtuple2_ind: #a:Type -> #b:(a -> Type) -> p:((x:a & b x) -> prop) -> squash (forall (x:a) (y:b x). p (|x, y|)) -> Lemma (forall xy. p xy)
 let dtuple2_ind #a #b p _ = ()
   
-let _: squash (forall (x:(f1:int & int)). f (g x) == x) =
+let _: (forall (x:(f1:int & int)). f (g x) == x) =
   _ by (
     apply_lemma (`dtuple2_ind);
     let _ = forall_intro () in
@@ -55,7 +55,7 @@ let g_nd (x:nested_pair): simple_record_nd =
   let (|f1, f2|) = x in
   {f1; f2}
 
-let _: squash (forall (x:nested_pair). f_nd (g_nd x) == x) =
+let _: (forall (x:nested_pair). f_nd (g_nd x) == x) =
   synth_by_tactic(fun () -> (
     apply_lemma (`dtuple2_ind);
     let _ = forall_intro () in
@@ -89,7 +89,7 @@ let g_dp (x:nested_pair_dp): simple_record_dp =
   let (|f1, (|f2, f3|)|) = x in
   {f1; f2; f3}
 
-let _: squash (forall (x:nested_pair_dp). f_dp (g_dp x) == x) =
+let _: (forall (x:nested_pair_dp). f_dp (g_dp x) == x) =
   synth_by_tactic(fun () -> (
     apply_lemma (`dtuple2_ind);
     let _ = forall_intro () in
@@ -135,7 +135,7 @@ let g_tsc_ref (x:nested_pair_tsc_ref): simple_record_tsc_ref =
   {f1; f2; f3; f4}
 
 #push-options "--no_smt"
-let _: squash (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
+let _: (forall (x:nested_pair_tsc_ref). f_tsc_ref (g_tsc_ref x) == x) =
   synth_by_tactic(fun () -> (
     apply_lemma (`dtuple2_ind);
     let _ = forall_intro () in
@@ -214,7 +214,7 @@ let remove_refine a p q _ = ()
 //
 
 #push-options "--admit_smt_queries true"
-let _: x:dtuple2 toto tata -> squash (g_ss (f_ss x) == x) =
+let _: x:dtuple2 toto tata -> (g_ss (f_ss x) == x) =
   synth_by_tactic (fun () ->
     apply (`arrow_to_forall);
     apply_lemma (`dtuple2_ind);

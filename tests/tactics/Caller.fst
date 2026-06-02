@@ -25,6 +25,6 @@ assume val ax : tau:(unit -> Tac unit) ->
 
 (* No tactic should run before this line *)
 
-(* Will call tau to discharge the `b2t (3 > 0)` goal. *)
+(* Will call tau to discharge the `3 > 0` goal. *)
 let f () : int =
     ax (fun () -> debug "Hello!"; trivial ()) 3

@@ -19,8 +19,8 @@ let t9 = pure True
 let t10 = pure False
 // squash a is Type0, not prop (squash : prop -> Type0)
 let t11 (a:prop) = pure a
-let t12 (b:bool) = pure (b2t b)  // bool is not prop, use b2t
-let t12_1 (b:bool) = pure (b2t b)
+let t12 (b:bool) = pure b  // bool now coerces to prop automatically
+let t12_1 (b:bool) = pure b
 let t13 (a:Type) = pure (hasEq a)
 let t14 (a:Type) (x y:a) = pure (x << y)
 

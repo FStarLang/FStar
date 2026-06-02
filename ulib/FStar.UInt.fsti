@@ -65,19 +65,19 @@ let ones (n:nat) : Tot (uint_t n) = max_int n
 
 (* Increment and decrement *)
 let incr (#n:nat) (a:uint_t n) : Pure (uint_t n)
-  (requires (b2t (a < max_int n))) (ensures (fun _ -> True))
+  (requires (a < max_int n)) (ensures (fun _ -> True))
   = a + 1
 
 let decr (#n:nat) (a:uint_t n) : Pure (uint_t n)
-  (requires (b2t (a > min_int n))) (ensures (fun _ -> True))
+  (requires (a > min_int n)) (ensures (fun _ -> True))
   = a - 1
 
 val incr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a < max_int n)))
+  (requires (a < max_int n))
   (ensures (fun b -> a + 1 = b))
 
 val decr_underspec: #n:nat -> a:uint_t n -> Pure (uint_t n)
-  (requires (b2t (a > min_int n)))
+  (requires (a > min_int n))
   (ensures (fun b -> a - 1 = b))
 
 let incr_mod (#n:nat) (a:uint_t n) : Tot (uint_t n) = (a + 1) % (pow2 n)

@@ -5,7 +5,7 @@ noeq
 type injection (a b : Type) = {
   f : a -> GTot b;
 
-  is_inj : x:_ -> y:_ -> squash (f x == f y ==> x == y);
+  is_inj : x:_ -> y:_ -> (f x == f y ==> x == y);
 }
 
 // Terrible symbol, but F* is limited in operator support.

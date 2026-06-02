@@ -20,7 +20,7 @@ let test (r_env goal : _) : Tac unit =
     my_erased (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0)))
     = magic()
   in
-  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
+  let goal_typing_tok : (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
     match goal_typing with E x -> ()
   in
   ()
@@ -31,7 +31,7 @@ let test2 (r_env goal u0 : _) : Tac unit =
     my_erased (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0)))
     = magic()
   in
-  let goal_typing_tok : squash (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
+  let goal_typing_tok : (typing_token r_env goal (E_Total, pack_ln (R.Tv_Type u0))) =
     match goal_typing with E x -> ()
   in
   ()
