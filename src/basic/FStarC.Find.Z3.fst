@@ -33,7 +33,7 @@ let z3_install_suggestion (v : string) : list Pprint.document =
   [
     prefix 4 1 (text <| Format.fmt1 "Please download version %s of Z3 from" v)
               (url z3url) ^/^
-      group (text "and install it into your $PATH as" ^/^ squotes
+      group (text "and install it into your $PATH as" ^/^ fquotes
         (doc_of_string (Platform.exe ("z3-" ^ v))) ^^ dot);
     if List.mem v packaged_z3_versions then
       text <| Format.fmt1 "Version %s of Z3 should be included in binary packages \

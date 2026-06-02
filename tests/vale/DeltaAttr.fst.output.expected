@@ -1,7 +1,7 @@
 * Warning 274:
-  - Implicitly opening namespace 'fstar.' shadows module 'calc' in file
-    "Calc.fst".
-  - Rename "Calc.fst" to avoid conflicts.
+  - Implicitly opening namespace ‘fstar.’ shadows module ‘calc’ in file
+    ‘Calc.fst’.
+  - Rename ‘Calc.fst’ to avoid conflicts.
 
 Module after desugaring:
 module DeltaAttr

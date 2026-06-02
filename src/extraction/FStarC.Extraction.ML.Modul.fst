@@ -1012,7 +1012,7 @@ let lb_is_tactic (g:env_t) (lb:letbinding) : ML bool =
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
-  Errors.with_ctx (Format.fmt1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
+  Errors.with_ctx (Format.fmt1 "While extracting top-level definition ‘%s’" (Print.sigelt_to_string_short se)) (fun () ->
     debug g (fun u -> Format.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
 
   if sigelt_has_noextract se then
@@ -1186,7 +1186,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
           | _ -> 
             Errors.log_issue se Errors.Warning_UnrecognizedAttribute
               (Format.fmt1
-                "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                "Ill-formed application of ‘normalize_for_extraction’: normalization steps ‘%s’ could not be interpreted"
                 (show steps));
             None
           end

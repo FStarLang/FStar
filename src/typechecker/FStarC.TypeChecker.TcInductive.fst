@@ -511,8 +511,8 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       let open FStarC.Class.PP in
       let haseq_b = TcUtil.label
                     [
-                      text "Failed to prove that the type" ^/^ squotes (pp ty_lid) ^/^ text "supports decidable equality because of this argument.";
-                      text "Add either the 'noeq' or 'unopteq' qualifier";
+                      text "Failed to prove that the type" ^/^ fquotes (pp ty_lid) ^/^ text "supports decidable equality because of this argument.";
+                      text "Add either the ‘noeq’ or ‘unopteq’ qualifier";
                     ]
                     sort_range
                     haseq_b

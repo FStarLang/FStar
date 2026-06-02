@@ -939,7 +939,7 @@ let check_id id : ML unit =
     let first_char = String.substring (string_of_id id) 0 1 in
     if not (String.lowercase first_char = first_char) then
       raise_error id Fatal_InvalidIdentifier
-        (Format.fmt1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (show id))
+        (Format.fmt1 "Invalid identifer ‘%s’; expected a symbol that begins with a lower-case character" (show id))
 
 let ident_of_binder r b : ML ident =
   match b.b with

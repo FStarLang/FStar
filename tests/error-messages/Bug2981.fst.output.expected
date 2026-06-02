@@ -1,8 +1,8 @@
 * Info at Bug2981.fst(10,10-10,27):
   - Expected failure:
   - Bound variable
-    'g'
+    ‘g’
     escapes because of impure applications in the type of
-    'check'
+    ‘check’
   - Add explicit let-bindings to avoid this
 

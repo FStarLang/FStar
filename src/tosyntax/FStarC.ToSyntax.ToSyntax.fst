@@ -547,7 +547,7 @@ let check_linear_pattern_variables pats (r:Range.t) : ML _ =
           else
             let duplicate_bv = List.hd (elems intersection) in
             raise_error duplicate_bv Errors.Fatal_NonLinearPatternNotPermitted
-              (Format.fmt1 "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
+              (Format.fmt1 "Non-linear patterns are not permitted: ‘%s’ appears more than once in this pattern."
                 (show duplicate_bv.ppname))
       in
       List.fold_left aux (empty ()) pats
@@ -1191,7 +1191,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
           let open FStarC.Class.PP in
           raise_error id Errors.Fatal_NonLinearPatternNotPermitted [
             text "Non-linear patterns are not permitted.";
-            text "The variable " ^/^ squotes (pp id) ^/^ text " appears more than once in this function definition."
+            text "The variable " ^/^ fquotes (pp id) ^/^ text " appears more than once in this function definition."
           ]
       end;
 
@@ -1333,7 +1333,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         | Some r -> r
         | None ->
           raise_error rty Errors.Error_BadLetOpenRecord
-            (Format.fmt1 "Not a record type: `%s`" (term_to_string rty))
+            (Format.fmt1 "Not a record type: ‘%s’" (term_to_string rty))
       in
       let constrname = lid_of_ns_and_id (ns_of_lid record.typename) record.constrname in
       let mk_pattern p = mk_pattern p r.range in
@@ -1499,7 +1499,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
               let open FStarC.Pprint in
               Errors.log_issue rng Errors.Warning_UnusedLetRec [
                 surround 4 1 (text gl)
-                             (squotes (doc_of_string nm))
+                             (fquotes (doc_of_string nm))
                              (text "is recursive but not used in its body")
               ]
             ) funs used_markers
@@ -2924,7 +2924,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : ML (option (list int &
   let warn () =
     if warn then
       Errors.log_issue at Errors.Warning_UnappliedFail
-        (Format.fmt1 "Found ill-applied '%s', argument should be a non-empty list of integer literals" (string_of_lid head))
+        (Format.fmt1 "Found ill-applied ‘%s’, argument should be a non-empty list of integer literals" (string_of_lid head))
   in
   let hd, args = U.head_and_args at in
    match (SS.compress hd).n with

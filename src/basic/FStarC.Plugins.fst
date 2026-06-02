@@ -106,7 +106,7 @@ let compile_modules dir ms : ML _ =
      if rc <> 0
      then E.raise_error0 E.Fatal_FailToCompileNativeTactic [
             E.text "Failed to compile native tactic.";
-            E.text (Format.fmt2 "Command\n`%s`\nreturned with exit code %s"
+            E.text (Format.fmt2 "Command\n‘%s’\nreturned with exit code %s"
                                   cmd (show rc))
           ]
      else ()
