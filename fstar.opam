@@ -11,6 +11,7 @@ depends: [
   "stdint"
   "yojson"
   "dune" {>= "3.8.0"}
+  "ocamlfind"
   "memtrace" {>= "0.2.3"}
   "menhirLib"
   "menhir" {build & >= "20260112"}

@@ -275,6 +275,17 @@ let run_process (id: string) (prog: string) (args: string list) (stdin: string o
 
 let system_run (cmd:string) : Z.t = Z.of_int (Sys.command cmd)
 
+(* True iff findlib can resolve the package [pkg] in the current (ambient)
+   OCaml environment, using the findlib library directly rather than spawning
+   `ocamlfind` (which would require a shell and is unavailable on native
+   Windows). [Findlib.init] reads OCAMLPATH/OCAMLFIND_CONF at call time, so
+   this reflects the user's current opam switch as long as it is called before
+   any OCAMLPATH is overridden. *)
+let findlib_package_exists (pkg:string) : bool =
+  Findlib.init ();
+  try ignore (Findlib.package_directory pkg); true
+  with Fl_package_base.No_such_package _ -> false
+
 type read_result = EOF | SIGINT
 
 let handle_stderr (p:proc) (h : string -> unit) =

@@ -68,11 +68,13 @@ let exec_ocamlopt_plugin args =
     ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: args)
 
 (* True iff findlib can resolve [pkg] in the current (ambient) OCaml
-   environment, i.e. `ocamlfind query <pkg>` succeeds. We deliberately do
-   NOT set OCAMLPATH here, so the query reflects the user's current opam
-   switch rather than the library bundled with this fstar.exe. *)
+   environment. We use the findlib library (via Util.findlib_package_exists)
+   rather than spawning `ocamlfind`, so this works on native Windows (no shell
+   required). We deliberately query the ambient environment, NOT fstar.exe's
+   bundled OCAMLPATH, so the result reflects the user's current opam switch
+   rather than the library shipped with this fstar.exe. *)
 let ocamlfind_query (pkg:string) : ML bool =
-  Util.system_run (Format.fmt1 "ocamlfind query %s >/dev/null 2>&1" pkg) = 0
+  Util.findlib_package_exists pkg
 
 let install_lib () : ML int =
   if ocamlfind_query app_lib then begin

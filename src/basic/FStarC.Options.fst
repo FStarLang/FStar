@@ -1690,11 +1690,11 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Build and install the F* application library (fstar.lib) into the \
           current OCaml/opam environment, then exit. Does nothing if fstar.lib \
-          is already installed (i.e. 'ocamlfind query fstar.lib' succeeds); \
+          is already installed (i.e. findlib can resolve the fstar.lib package); \
           errors out if an 'fstar' findlib package is already present, to avoid \
           overwriting its META and dropping other sub-packages. Requires the \
-          fstar.lib sources shipped in binary packages, plus dune, ocamlfind \
-          and opam on the PATH.");
+          fstar.lib sources shipped in binary packages, plus dune and opam on \
+          the PATH.");
   ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
