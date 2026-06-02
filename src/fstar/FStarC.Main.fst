@@ -339,7 +339,7 @@ let go_normal () : ML unit =
       | None ->
         // Use an actual error to reuse the pretty printing.
         Errors.log_issue0 Errors.Error_Z3InvocationError ([
-          Errors.Msg.text <| Format.fmt1 "Z3 version '%s' was not found." v;
+          Errors.Msg.text <| Format.fmt1 "Z3 version ‘%s’ was not found." v;
           ] @ Find.Z3.z3_install_suggestion v);
         report_errors []; // but make sure to report.
         exit 1

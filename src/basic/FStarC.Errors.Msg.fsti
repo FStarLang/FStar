@@ -37,6 +37,12 @@ anything else) all its formatting will be lost. You should instead use
 last resort use doc_of_string. *)
 val text : string -> document
 
+(* Wrap a document in fancy quotes (‘...’). Use this instead of squotes/dquotes/
+bquotes when quoting a term or identifier in a message: a plain ' or " or ` can
+be mistaken for an apostrophe/tick or backtick that is part of the quoted term
+(F* identifiers can contain primes, and F* uses backticks for quotations). *)
+val fquotes : document -> document
+
 (* Makes an indented sublist using bullet as a header for each list element. *)
 val sublist : bullet:document -> elems:list document -> ML document
 

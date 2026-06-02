@@ -1,7 +1,7 @@
 * Info at Erasable.fst(6,0-8,17):
   - Expected failure:
   - Incompatible attributes and qualifiers: erasable types do not support
-    decidable equality and must be marked `noeq`.
+    decidable equality and must be marked ‘noeq’.
 
 * Info at Erasable.fst(18,2-20,15):
   - Expected failure:
@@ -19,8 +19,8 @@
 
 * Info at Erasable.fst(41,12-41,15):
   - Expected failure:
-  - Illegal attribute: the `erasable` attribute is only permitted on inductive
-    type definitions and abbreviations for non-informative types.
+  - Illegal attribute: the ‘erasable’ attribute is only permitted on
+    inductive type definitions and abbreviations for non-informative types.
   - The term Prims.nat is considered informative.
 
 * Info at Erasable.fst(52,0-52,17):

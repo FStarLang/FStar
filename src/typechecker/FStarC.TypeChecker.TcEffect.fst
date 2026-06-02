@@ -1199,7 +1199,7 @@ let validate_indexed_effect_lift_shape (env:env)
  * If the effect is reifiable, returns reify__M sigelt also
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) : ML _ =
-Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
+Errors.with_ctx (Format.fmt1 "While checking layered effect definition ‘%s’" (string_of_lid ed.mname)) (fun () ->
   if !dbg_LayeredEffectsTc then
     Format.print1 "Typechecking layered effect: \n\t%s\n" (show ed);
 
@@ -1955,7 +1955,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition `%s`" (st
   )
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : ML S.eff_decl =
-Errors.with_ctx (Format.fmt1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
+Errors.with_ctx (Format.fmt1 "While checking effect definition ‘%s’" (string_of_lid ed.mname)) (fun () ->
   if !dbg then
     Format.print1 "Typechecking eff_decl: \n\t%s\n" (show ed);
 
@@ -2587,8 +2587,8 @@ let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r
     let def_result_typ = FStarC.Syntax.Util.comp_result c in
     if not (Rel.teq_nosmt_force env expected_result_typ def_result_typ)
     then raise_error r Errors.Fatal_EffectAbbreviationResultTypeMismatch
-                      (Format.fmt2 "Result type of effect abbreviation `%s` \
-                                  does not match the result type of its definition `%s`"
+                      (Format.fmt2 "Result type of effect abbreviation ‘%s’ \
+                                  does not match the result type of its definition ‘%s’"
                                   (show expected_result_typ)
                                   (show def_result_typ))
   in

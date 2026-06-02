@@ -2905,7 +2905,7 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) : ML _ =
  *)
 let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : ML (term & typ & aqual & guard_t) =
   if Debug.high () then
-    Format.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
+    Format.print1 "instantiate_one_binder: Instantiating implicit binder ‘%s’\n" (show b);
   let (++) = Env.conj_guard in
   let { binder_bv=x } = b in
   let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in (* meta/attrs computed here *)
@@ -2917,7 +2917,7 @@ let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : ML (term & typ &
         | Some (Ctx_uvar_meta_tac tau) -> U.is_fvar C.tcresolve_lid tau
         | _ -> false
       in
-      let name = "'" ^ show x ^ "'" in
+      let name = "‘" ^ show x ^ "’" in
       if is_typeclass then "Typeclass constraint argument"
       else if Some? ctx_uvar_meta then "Instantiating meta argument " ^ name
       else "Instantiating implicit argument " ^ name
@@ -3774,14 +3774,14 @@ let make_record_fields_in_order
            | x1::x2::_ ->
 //             debug();
              raise_error (fst x1) Errors.Fatal_MissingFieldInRecord
-                (Format.fmt2 "Field '%s' of record type '%s' is given multiple assignments."
+                (Format.fmt2 "Field ‘%s’ of record type ‘%s’ is given multiple assignments."
                   (string_of_id field_name)
                   (string_of_lid rdc.typename)))
         (fas, [], [])
         rdc.fields
     in
     let pp_missing () =
-      separate_map (comma ^^ break_ 1) (fun f -> squotes (doc_of_string (show f))) missing
+      separate_map (comma ^^ break_ 1) (fun f -> fquotes (doc_of_string (show f))) missing
     in
     let _ =
       match rest, missing with
@@ -3789,7 +3789,7 @@ let make_record_fields_in_order
       | (f, _)::_, _ ->
 //        debug();
         raise_error f Errors.Fatal_MissingFieldInRecord [
-            Errors.Msg.text <| Format.fmt2 "No field '%s' in record type '%s'." (show f) (show rdc.typename);
+            Errors.Msg.text <| Format.fmt2 "No field ‘%s’ in record type ‘%s’." (show f) (show rdc.typename);
             if Cons? missing then
               prefix 2 1 (text "Missing fields:")
                 (pp_missing ())
@@ -3800,7 +3800,7 @@ let make_record_fields_in_order
       | [], _ ->
         // debug ();
         raise_error rng Errors.Fatal_MissingFieldInRecord [
-            prefix 2 1 (text <| Format.fmt1 "Missing fields for record type '%s':" (show rdc.typename))
+            prefix 2 1 (text <| Format.fmt1 "Missing fields for record type ‘%s’:" (show rdc.typename))
                 (pp_missing ())
         ]
     in

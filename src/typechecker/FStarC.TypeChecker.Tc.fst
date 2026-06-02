@@ -277,7 +277,7 @@ let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list a
       ats, Some tau
     | Some (ats, args) ->
       Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
-        text <| Format.fmt1 "Ill-formed application of `%s`" (show lid);
+        text <| Format.fmt1 "Ill-formed application of ‘%s’" (show lid);
       ];
       ats, None
   in
@@ -347,14 +347,14 @@ let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list 
       let open FStarC.Pprint in
       raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
           text "Inconsistent qualifier annotations on" ^/^ pp l;
-          prefix 4 1 (text "Expected") (squotes (pp val_q)) ^/^
-          prefix 4 1 (text "got") (squotes (pp q'));
+          prefix 4 1 (text "Expected") (fquotes (pp val_q)) ^/^
+          prefix 4 1 (text "got") (fquotes (pp q'));
 
           if Cons? d1 then
-            prefix 2 1 (text "Only in declaration: ") (squotes (pp d1))
+            prefix 2 1 (text "Only in declaration: ") (fquotes (pp d1))
           else empty;
           if Cons? d2 then
-            prefix 2 1 (text "Only in definition: ") (squotes (pp d2))
+            prefix 2 1 (text "Only in definition: ") (fquotes (pp d2))
           else empty;
         ]
 
@@ -1110,7 +1110,7 @@ let tc_decls env ses : ML (list sigelt & Env.env) =
     if !dbg_IdInfoOn then Env.toggle_id_info env true;
 
     let ses', ses_elaborated, env =
-            Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration `%s`"
+            Errors.with_ctx (Format.fmt2 "While typechecking the %stop-level declaration ‘%s’"
                                   (if se.sigmeta.sigmeta_spliced then "(spliced) " else "")
                                   (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
