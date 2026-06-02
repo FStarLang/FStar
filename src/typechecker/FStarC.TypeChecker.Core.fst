@@ -1033,7 +1033,6 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
 let is_marked_injective env t =
   match (U.un_uinst t).n with
   | Tm_fvar fv ->
-    // Only explicit [@@unifier_hint_injective] counts
     Env.fv_has_attr env fv PC.unifier_hint_injective_lid
   | _ -> false
 
@@ -1518,6 +1517,28 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         handle_with
           (check_relation g EQUALITY e0 e1 ;!
            iter2 brs0 brs1 relate_branch ())
+          (fun _ -> fallback t0 t1)
+
+      | Tm_match _, _
+      | _, Tm_match _ ->
+        //One side is a match and the other is not (both-match handled above).
+        //Try to reduce the match away by normalizing with delta + iota + primops.
+        //If the match reduces (e.g., scrutinee unfolds to a constructor), recurse.
+        //Otherwise, fall back.
+        let reduce_match t =
+          N.normalize [Env.Weak; Env.HNF; Env.Beta; Env.Iota; Env.Primops;
+                       Env.UnfoldUntil delta_constant] g.tcenv t
+        in
+        let try_reduce () =
+          let t0' = reduce_match t0 in
+          let t1' = reduce_match t1 in
+          //Check that at least one side actually changed (made progress)
+          if equal_term t0 t0' && equal_term t1 t1'
+          then fallback t0 t1
+          else check_relation g rel t0' t1'
+        in
+        handle_with
+          (try_reduce ())
           (fun _ -> fallback t0 t1)
 
       | _ -> fallback t0 t1
