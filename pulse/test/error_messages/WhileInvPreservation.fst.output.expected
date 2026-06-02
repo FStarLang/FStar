@@ -1,4 +1,4 @@
-* Info at WhileInvPreservation.fst(15,6-15,8):
+* Info at WhileInvPreservation.fst(15,4-15,8):
   - Expected failure:
   - Could not prove equality of:
   - Pulse.Lib.Reference.pts_to i 2
@@ -12,6 +12,6 @@
       (__anf0 : Prims.int)
       (__ : Prims.squash (Pulse.Lib.Core.rewrites_to_p __anf0 0))
       (__ : Prims.unit)
-  - VC = Prims.l_False
-  - See also WhileInvPreservation.fst(15,12-15,13)
+  - VC = Pulse.Lib.Reference.pts_to i 2 == Pulse.Lib.Reference.pts_to i 0
+  - See also WhileInvPreservation.fst(15,4-15,13)
 

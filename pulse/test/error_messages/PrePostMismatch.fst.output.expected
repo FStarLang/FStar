@@ -6,5 +6,5 @@
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (r : Pulse.Lib.Reference.ref Prims.int) (__ : Prims.unit)
-  - VC = Prims.l_False
+  - VC = Pulse.Lib.Reference.pts_to r 1 == Pulse.Lib.Reference.pts_to r 42
 
