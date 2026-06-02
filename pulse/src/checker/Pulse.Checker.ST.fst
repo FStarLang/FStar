@@ -69,6 +69,17 @@ let check
     let allow_ambiguous = should_allow_ambiguous e in
     let (| g', ctxt', k |) = prove (RU.range_of_term e) g ctxt (comp_pre c0) allow_ambiguous in
 
+    if not (RU.no_uvars_in_term e) then
+      fail_doc g (Some range) [
+        text "Unexpected unresolved uvars in the term:";
+        pp e
+      ];
+    if not (RU.no_uvars_in_term ty) then
+      fail_doc g (Some range) [
+        text "Unexpected unresolved uvars in the type:";
+        pp ty
+      ];
+
     // remove spurious beta-redexes
     let e = e |> RU.beta_lax (elab_env g) |> RU.deep_compress in
     let ty = ty |> RU.beta_lax (elab_env g) |> RU.deep_compress in
