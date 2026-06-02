@@ -44,3 +44,12 @@ val exec_ocamlopt #a (args : list string) : ML a
 using fstar.pluginlib. Expects the source file and further options as
 arguments. *)
 val exec_ocamlopt_plugin #a (args : list string) : ML a
+
+(* Build and install the F* application library (fstar.lib) into the
+current OCaml/opam environment, returning the exit code to use:
+  - 0 if fstar.lib is already installed (nothing to do), or after a
+    successful install;
+  - non-zero if an 'fstar' findlib package is already present (refusing
+    to clobber it), if the fstar.lib sources are not shipped with this
+    build, or if the underlying build/install fails. *)
+val install_lib (_:unit) : ML int

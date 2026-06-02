@@ -230,6 +230,7 @@ let defaults = [
   ("include"                                   , List []);
   ("initial_fuel"                              , Int 2);
   ("initial_ifuel"                             , Int 1);
+  ("install_lib"                               , Bool false);
   ("keep_query_captions"                       , Bool true);
   ("krmloutput"                                , Unset);
   ("lang_extensions"                           , List []);
@@ -491,6 +492,7 @@ let get_print                   ()      = lookup_opt "print"                    
 let get_print_in_place          ()      = lookup_opt "print_in_place"           as_bool
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
+let get_install_lib             ()      = lookup_opt "install_lib"              as_bool
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lang_extensions         ()      = lookup_opt "lang_extensions"                     (as_list as_string)
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
@@ -1684,6 +1686,16 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
           Note: this is the Z3 executable that F* will attempt to call for the given version, \
           but the version check is not performed at this point.");
   ( noshort,
+    "install_lib",
+    Const (Bool true),
+    text "Build and install the F* application library (fstar.lib) into the \
+          current OCaml/opam environment, then exit. Does nothing if fstar.lib \
+          is already installed (i.e. 'ocamlfind query fstar.lib' succeeds); \
+          errors out if an 'fstar' findlib package is already present, to avoid \
+          overwriting its META and dropping other sub-packages. Requires the \
+          fstar.lib sources shipped in binary packages, plus dune, ocamlfind \
+          and opam on the PATH.");
+  ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
@@ -2157,6 +2169,7 @@ let locate_lib                   () = get_locate_lib                  ()
 let locate_ocaml                 () = get_locate_ocaml                ()
 let locate_file                  () = get_locate_file                 ()
 let locate_z3                    () = get_locate_z3                   ()
+let install_lib                  () = get_install_lib                 ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
