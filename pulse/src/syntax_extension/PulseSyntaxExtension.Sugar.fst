@@ -135,7 +135,7 @@ type stmt' =
       qualifier: option mut_or_ref;
       pat:A.pattern;
       typ:option A.term;
-      init:option let_init
+      init:let_init;
     }
       
   | Block { 
@@ -484,7 +484,7 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
     eq_opt eq_mut_or_ref q1 q2 &&
     AD.eq_pattern pat1 pat2 &&
     eq_opt AD.eq_term t1 t2 &&
-    eq_opt eq_let_init init1 init2
+    eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
   | If { head=h1; join_slprop=j1; then_=t1; else_opt=e1 }, If { head=h2; join_slprop=j2; then_=t2; else_opt=e2 } ->
     eq_stmt h1 h2 &&
@@ -629,7 +629,7 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
   | Expr e -> cbs.scan_term e.e; iter (scan_lambda cbs) e.args
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
   | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
-    iopt (scan_let_init cbs) init;
+    scan_let_init cbs init;
     cbs.scan_pattern p;
     iopt cbs.scan_term t
   | Block { stmt=s } -> scan_stmt cbs s
