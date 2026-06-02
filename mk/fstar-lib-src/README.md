@@ -22,27 +22,33 @@ via opam): `batteries`, `zarith`, `stdint`, `pprint`, `ppx_deriving`,
 
 ## Build and install
 
-From this directory:
+The simplest way is to let `fstar.exe` do it for you (it runs exactly the steps
+below and refuses if it would overwrite an existing `fstar` findlib package):
 
 ```
-./install.sh
+fstar.exe --install_lib
 ```
 
-(Optionally pass an install prefix and libdir: `./install.sh <prefix> <libdir>`;
-they default to `opam var prefix` and `opam var lib`.)
+Alternatively, from this directory:
 
-This installs `fstar.lib` as a findlib package into your current opam switch, so
+```
+dune build
+dune install
+```
+
+`dune install` (with no `--prefix`) installs into your current opam switch, so
 that `ocamlfind query fstar.lib` resolves and OCaml code extracted by F\* can be
 compiled against it.
 
-### Why not a bare `dune install`?
+### Caveat: an existing `fstar` findlib package
 
-`fstar.lib` is the `lib` sub-package of the findlib package `fstar`, which also
-provides `fstar.compiler` and `fstar.pluginlib` (the latter is used by
+`fstar.lib` is the `lib` sub-package of the findlib package `fstar`, which may
+also provide `fstar.compiler` and `fstar.pluginlib` (the latter is used by
 `fstar.exe --ocamlopt_plugin`). dune writes the package metadata at
 `<libdir>/fstar/META` and offers no option to merge or skip it, so a bare
-`dune install` of this project would **overwrite** that file with a META that
-mentions only `lib`, silently dropping the `compiler`/`pluginlib` stanzas and
-breaking plugin compilation. `install.sh` performs the `dune install` and then
-merges the freshly generated `lib` stanza back into the pre-existing META,
-preserving every other sub-package.
+`dune install` of this project into a switch that *already* has the `fstar`
+package would **overwrite** that file with a META mentioning only `lib`,
+silently dropping the `compiler`/`pluginlib` stanzas.
+
+To avoid this, install `fstar.lib` into a switch that does not already provide
+the `fstar` package — which is exactly what `fstar.exe --install_lib` enforces.

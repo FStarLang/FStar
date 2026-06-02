@@ -38,9 +38,5 @@ find "$DEST" -name '.depend' -delete 2>/dev/null || true
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/dune"         "$DEST/dune"
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/dune-project" "$DEST/dune-project"
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/README.md"    "$DEST/README.md"
-# Mediated installer: builds fstar.lib and installs it without clobbering the
-# rest of the F* findlib metadata (compiler/pluginlib). See README.md.
-cp -p "$FSTAR_ROOT/mk/fstar-lib-src/install.sh"   "$DEST/install.sh"
-chmod +x "$DEST/install.sh"
 
 echo "Installed fstar.lib sources + dune project into $DEST"
