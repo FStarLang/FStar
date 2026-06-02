@@ -76,6 +76,15 @@ let exec_ocamlopt_plugin args =
 let ocamlfind_query (pkg:string) : ML bool =
   Util.findlib_package_exists pkg
 
+(* Spawn [prog] with [args] (no shell), inheriting our stdio, and return its
+   exit code (or 1 if it was killed by a signal). Unlike a shell invocation,
+   this works on native Windows. *)
+let run_prog (prog:string) (args:list string) : ML int =
+  let pid = Util.create_process prog (prog :: args) in
+  match Util.waitpid pid with
+  | Inl rc -> rc
+  | Inr _ -> 1
+
 let install_lib () : ML int =
   if ocamlfind_query app_lib then begin
     Format.print1_error "%s is already installed; nothing to do.\n" app_lib;
@@ -97,13 +106,21 @@ separate switch, or (re)install F* via opam.\n";
         "Could not locate the F* library (is --no_default_includes set?).\n";
       1
     | Some root ->
+      (* Binary/source packages ship the fstar.lib OCaml sources together with a
+         dune project under <lib_root>/lib. We build and install them by driving
+         dune directly (no shell), so this works on native Windows too. We do not
+         pass --prefix, so dune installs into the current opam switch; and we do
+         not need to merge META, since we already refused above if an 'fstar'
+         findlib package was present (so dune writes a fresh fstar/META here). *)
       let dir = root ^ "/lib" in
-      let installer = dir ^ "/install.sh" in
-      if not (Filepath.file_exists installer) then begin
+      let dune_project = dir ^ "/dune-project" in
+      if not (Filepath.file_exists dune_project) then begin
         Format.print1_error
-          "This F* installation does not ship the fstar.lib sources (expected an \
-installer at %s). Only binary or source packages carry them.\n" installer;
+          "This F* installation does not ship the fstar.lib sources (expected a \
+dune project at %s). Only binary or source packages carry them.\n" dune_project;
         1
       end
       else
-        Util.system_run (Format.fmt1 "bash '%s'" (shellescape installer))
+        let rc = run_prog "dune" ["build"; "--root"; dir] in
+        if rc <> 0 then rc
+        else run_prog "dune" ["install"; "--root"; dir]
