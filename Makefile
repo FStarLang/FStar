@@ -474,7 +474,7 @@ __do-archive: .force
 	$(MAKE) $(INSTALL_RULE) PREFIX="$(abspath $(PKGTMP)/fstar)"
 	$(MAKE) -C karamel install PREFIX="$(abspath $(PKGTMP)/fstar)" LOWSTAR=false
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
-	.scripts/bin-install.sh "$(PKGTMP)/fstar"
+	.scripts/bin-install.sh "$(PKGTMP)/fstar" "$(abspath $(BROOT))/ulib.ml"
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
 	rm -rf $(PKGTMP)
 
