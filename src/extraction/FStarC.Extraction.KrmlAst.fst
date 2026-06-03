@@ -162,6 +162,7 @@ and width =
   | CInt
   | SizeT | PtrdiffT
   | Float32 | Float64 | Float16
+  | BFloat16
 
 and constant = width & string
 
@@ -211,6 +212,7 @@ instance pretty_width = { pp = function
   | Float32 -> doc_of_string "Float32"
   | Float64 -> doc_of_string "Float64"
   | Float16 -> doc_of_string "Float16"
+  | BFloat16 -> doc_of_string "BFloat16"
 }
 instance showable_width : showable width = showable_from_pretty
 
