@@ -612,7 +612,7 @@ accept_pulse: accept_pulse_test accept_pulse_examples
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test: _unit-tests _examples _doc
+_test: _unit-tests _examples _doc _test_install_lib
 
 need_fstar_exe:
 	if [ -z "$(FSTAR_EXE)" ]; then \
@@ -630,6 +630,27 @@ _unit-tests: need_fstar_exe .force
 
 _examples: need_fstar_exe .force
 	+$(MAKE) -C examples all FSTAR_EXE=$(FSTAR_EXE)
+
+# A source-built (or `make install`ed) F* ships a compiled fstar.lib next to
+# fstar.exe, so `--install_lib_with_deps` must detect it and be a no-op (it
+# must NOT try to rebuild fstar.lib or invoke opam). This guards against
+# regressions in that detection. We assert a 0 exit code and the "already
+# installed" message. (For a binary package, where fstar.lib is shipped as
+# sources, the command instead builds+installs it; that path is exercised
+# separately, not here.)
+.PHONY: _test_install_lib
+_test_install_lib: need_fstar_exe .force
+	$(call msg, "TEST", "install_lib no-op")
+	@out=$$($(FSTAR_EXE) --install_lib_with_deps 2>&1); rc=$$?; \
+	  printf '%s\n' "$$out"; \
+	  if [ $$rc -ne 0 ]; then \
+	    echo "ERROR: --install_lib_with_deps returned $$rc, expected a no-op"; \
+	    false; \
+	  fi; \
+	  printf '%s\n' "$$out" | grep -q 'already installed' || { \
+	    echo "ERROR: --install_lib_with_deps was not a no-op (expected 'already installed')"; \
+	    false; \
+	  }
 
 ci: .force
 	+$(MAKE) 2
