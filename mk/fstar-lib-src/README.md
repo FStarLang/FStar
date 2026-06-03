@@ -69,3 +69,9 @@ silently dropping the `compiler`/`pluginlib` stanzas.
 
 To avoid this, install `fstar.lib` into a switch that does not already provide
 the `fstar` package — which is exactly what `fstar.exe --install_lib` enforces.
+
+Note that an F\* *binary package* deliberately ships **no** precompiled OCaml
+packages at all (no `compiler`/`pluginlib`/`lib`, hence no `META`): those depend
+on the exact OCaml toolchain that built the package and are useless to a binary
+recipient. So when you install `fstar.lib` from a binary package there is no
+bundled `META` to overwrite.

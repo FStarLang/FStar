@@ -64,23 +64,29 @@ fi
 $STRIP "$strip_prefix"/bin/* || true
 $STRIP "$strip_prefix"/lib/fstar/z3-*/bin/* || true
 
-# fstar.lib: in a binary package we do NOT ship the precompiled library
-# that `dune install` produced under lib/fstar/lib. Instead we replace it
-# with its OCaml *sources* + a dune project, so the user builds fstar.lib
-# against their own OCaml toolchain (avoiding ABI mismatches). A regular
-# `make install` / `opam install fstar.opam` keeps the compiled fstar.lib.
+# A binary package must NOT ship any precompiled OCaml/findlib packages.
+# `dune install` produced, under lib/fstar/, the compiled findlib packages
+# fstar.compiler (compiler/), fstar.pluginlib (pluginlib/) and fstar.lib
+# (lib/), advertised by META (and dune-package). These only work if the
+# recipient uses the *exact same* OCaml compiler and dependency package
+# versions that built this package's fstar.exe -- impossible for someone who
+# received fstar.exe as a binary -- so we remove them all. fstar.lib is then
+# re-shipped as OCaml *sources* + a dune project, so the user builds it
+# against their own OCaml toolchain via `fstar.exe --install_lib`.
+#
+# A regular `make install` / `opam install fstar.opam` does NOT run this
+# script (it goes through mk/stage.mk's install rule), so it keeps shipping
+# the compiled OCaml packages. Only this binary-package path strips them.
+#
+# Removing META also fixes findlib resolution of the user-built fstar.lib:
+# fstar.exe's --ocamlopt/--ocamlenv prepend <exec>/../lib to OCAMLPATH; with
+# no META there, ocamlfind falls through to the user's switch where
+# --install_lib installed fstar.lib (with a proper META), instead of being
+# shadowed by the package's own META.
 if [ -n "$ULIB_ML" ]; then
-  # Drop the precompiled fstar.lib advertised in META (the "lib" sub-package),
-  # since the binary package ships sources only. The user's later
-  # `dune install` of the shipped dune project re-adds it.
-  META="$PREFIX/lib/fstar/META"
-  if [ -f "$META" ]; then
-    awk '
-      /^package "lib" \(/ { skip=1 }
-      skip { if ($0 ~ /^\)/) skip=0; next }
-      { print }
-    ' "$META" > "$META.tmp" && mv "$META.tmp" "$META"
-  fi
-  # Replace the compiled library directory with sources + dune project.
+  LIBDIR="$PREFIX/lib/fstar"
+  rm -rf "$LIBDIR/compiler" "$LIBDIR/pluginlib"
+  rm -f  "$LIBDIR/META" "$LIBDIR/dune-package"
+  # Replace the compiled fstar.lib with sources + a dune project.
   "$FSTAR_ROOT/.scripts/install-fstar-lib-src.sh" "$PREFIX" "$FSTAR_ROOT" "$ULIB_ML"
 fi
