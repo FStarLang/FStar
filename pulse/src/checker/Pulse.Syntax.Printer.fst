@@ -72,62 +72,7 @@ let rec collect_binders (until: term_view -> bool) (t:term) : list binder & term
     | _ -> [], t
   )
 
-let rec binder_to_string_paren (b:binder)
-  : T.Tac string
-  = sprintf "(%s%s:%s)"
-            (match b.binder_attrs with
-             | [] -> ""
-             | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
-            (T.unseal b.binder_ppname.name)
-            (term_to_string' "" b.binder_ty)
-
-and term_to_string' (level:string) (t:term) : T.Tac string
-  = match inspect_term t with
-    | Tm_Emp -> "emp"
-
-    | Tm_IsUnreachable -> "is_unreachable"
-
-    | Tm_Pure p ->
-      sprintf "pure (%s)" 
-        (term_to_string' (indent level) p)
-      
-    | Tm_Star p1 p2 ->
-      sprintf "%s ** \n%s%s" 
-        (term_to_string' level p1)
-        level
-        (term_to_string' level p2)
-
-    | Tm_WithPure p n v ->
-      sprintf "(with_pure %s fun _ ->\n%s%s)"
-              (term_to_string' (indent level) p)
-              level
-              (term_to_string' (indent level) v)
-                      
-    | Tm_ExistsSL _ _ _ ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
-      sprintf "(exists* %s.\n%s%s)"
-              (T.map binder_to_string_paren bs |> String.concat " ")
-              level
-              (term_to_string' (indent level) body)
-
-    | Tm_ForallSL u b body ->
-      let bs, body = collect_binders Tm_ForallSL? t in
-      sprintf "(forall* %s.\n%s%s)"
-              (T.map binder_to_string_paren bs |> String.concat " ")
-              level
-              (term_to_string' (indent level) body)
-                          
-    | Tm_SLProp -> "slprop"
-    | Tm_Inames -> "inames"
-    | Tm_EmpInames -> "emp_inames"
-    | Tm_Unknown -> "_"
-    | Tm_Inv i p ->
-      sprintf "inv %s %s"
-        (term_to_string' level i)
-        (term_to_string' level p)
-    | Tm_FStar t -> T.term_to_string t
-
-let term_to_string t = term_to_string' "" t
+let term_to_string t = T.term_to_string t
 
 let star_doc = doc_of_string "**"
 
@@ -142,81 +87,19 @@ let should_paren_term (t:term) : T.Tac bool =
   | T.Tv_Match _ _ _ -> true
   | _ -> false
 
-let rec binder_to_doc b : T.Tac document =
+let binder_to_doc b : T.Tac document =
   parens (doc_of_string (T.unseal b.binder_ppname.name)
           ^^ doc_of_string ":"
-          ^^ term_to_doc b.binder_ty)
+          ^^ T.term_to_doc b.binder_ty)
 
-and term_to_doc t : T.Tac document
-  = match inspect_term t with
-    | Tm_Emp -> doc_of_string "emp"
-    | Tm_IsUnreachable -> doc_of_string "is_unreachable"
-
-    | Tm_Pure p -> doc_of_string "pure " ^^ parens (term_to_doc p)
-    | Tm_Star _ _ ->
-      (* We gather all the components of the star so we can
-         print in fully-flat or fully-unflattened style (otherwise
-          we could get most of the slprops in different lines, except for
-          one or two lines which have >1, which is misleading). See #96.
-          Some callers to this module also canonicalize the expression
-          to put the slprops in order, but we MUST NOT do that here,
-          since we are recursively called on arguments,
-          and we must not confound pledge p (q ** r) with pledge p (r ** q),
-          etc. *)
-      let components = slprop_as_list t in
-      let term_to_doc_paren (t:term) : T.Tac document =
-        if should_paren_term t
-        then parens (term_to_doc t)
-        else term_to_doc t
-      in
-      let docs = T.map term_to_doc_paren components in
-      (* This makes sure to either print everything on a single line
-      or break after every **. The doc_of_string is a non-breakable space,
-      the one introduced by ^/^ is breakable. *)
-      group <|
-        fold_right1 (fun p q -> (p ^^ doc_of_string " " ^^ star_doc) ^/^ q) docs
-    
-    | Tm_WithPure p n v ->
-      parens <|
-        prefix 2 1 (prefix 2 1 (doc_of_string "with_pure") (parens (term_to_doc p)
-            ^/^ doc_of_string "fun _ ->"))
-          (term_to_doc v)
-
-    | Tm_ExistsSL _ _ _ ->
-      let bs, body = collect_binders Tm_ExistsSL? t in
-      let bs_doc = align (group (separate (doc_of_string " ") (T.map binder_to_doc bs))) in
-      parens <|
-        prefix 2 1 (prefix 2 1 (doc_of_string "exists*") bs_doc ^^ dot)
-                   (term_to_doc body)
-      // parens (doc_of_string "exists*" ^/^ (separate (doc_of_string " ") (T.map binder_to_doc bs))
-      //         ^^ doc_of_string "."
-      //         ^/^ term_to_doc body)
-
-    | Tm_ForallSL _ _ _ ->
-      let bs, body = collect_binders Tm_ForallSL? t in
-      let bs_doc = align (group (separate (doc_of_string " ") (T.map binder_to_doc bs))) in
-      parens <|
-        prefix 2 1 (prefix 2 1 (doc_of_string "forall*") bs_doc ^^ dot)
-                   (term_to_doc body)
-
-    | Tm_SLProp -> doc_of_string "slprop"
-    | Tm_Inames -> doc_of_string "inames"
-    | Tm_EmpInames -> doc_of_string "emp_inames"
-    | Tm_Inv i p ->
-      doc_of_string "inv " ^^
-        term_to_doc i ^^
-        doc_of_string " " ^^
-        parens (term_to_doc p)
-
-    | Tm_Unknown -> doc_of_string "_"
-    | Tm_FStar t -> T.term_to_doc t
+let term_to_doc t : T.Tac document = T.term_to_doc t
 
 let binder_to_string (b:binder)
   : T.Tac string
   = sprintf "%s%s:%s"
             (match b.binder_attrs with
              | [] -> ""
-             | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map (term_to_string' "") l)))
+             | l -> sprintf "[@@@ %s] " (String.concat ";" (T.map term_to_string l)))
             (T.unseal b.binder_ppname.name)
             (term_to_string b.binder_ty)
 
@@ -338,7 +221,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
     | Tm_IntroPure { p } ->
       sprintf "introduce pure (\n%s%s)"
         (indent level)
-        (term_to_string' (indent level) p)
+        (term_to_string p)
 
     | Tm_ElimExists { p } ->
       sprintf "elim_exists %s"
@@ -347,7 +230,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
     | Tm_IntroExists { p; witnesses } ->
       sprintf "introduce\n%s%s\n%swith %s"
         (indent level)
-        (term_to_string' (indent level) p)
+        (term_to_string p)
         level
         (term_list_to_string " " witnesses)
 
@@ -527,8 +410,15 @@ let tag_of_comp (c:comp) : T.Tac string =
     Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
   | C_STGhost _ _ ->
     "Ghost" 
-    
-let rec print_st_head (t:st_term)
+
+let print_head (t:term) =
+  match t with
+  // | Tm_FVar fv
+  // | Tm_UInst fv _ -> String.concat "." fv.fv_name
+  // | Tm_PureApp head _ _ -> print_head head
+  | _ -> "<pure term>"
+
+let print_st_head (t:st_term)
   : Tot string (decreases t) =
   match t.term with
   | Tm_Abs _  -> "Abs"
@@ -552,14 +442,6 @@ let rec print_st_head (t:st_term)
   | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
   | Tm_Goto _ -> "Goto"
   | Tm_Defer _ -> "Defer"
-
-and print_head (t:term) =
-  match t with
-  // | Tm_FVar fv
-  // | Tm_UInst fv _ -> String.concat "." fv.fv_name
-  // | Tm_PureApp head _ _ -> print_head head
-  | _ -> "<pure term>"
-
 
 let rec print_skel (t:st_term) = 
   match t.term with
