@@ -67,12 +67,14 @@ let exec_ocamlopt_plugin args =
   exec_in_ocamlenv "ocamlfind"
     ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: args)
 
-(* True iff findlib can resolve [pkg] in the current (ambient) OCaml
-   environment. We use the findlib library (via Util.findlib_package_exists)
-   rather than spawning `ocamlfind`, so this works on native Windows (no shell
-   required). We deliberately query the ambient environment, NOT fstar.exe's
-   bundled OCAMLPATH, so the result reflects the user's current opam switch
-   rather than the library shipped with this fstar.exe. *)
+(* True iff findlib can resolve [pkg] in the OCaml environment currently in
+   effect (i.e. the current OCAMLPATH/OCAMLFIND_CONF). We use the findlib
+   library (via Util.findlib_package_exists) rather than spawning `ocamlfind`,
+   so this works on native Windows (no shell required). [Findlib.init] re-reads
+   OCAMLPATH on each call, so the result follows any OCAMLPATH we set before
+   calling: install_lib_aux extends OCAMLPATH with fstar.exe's bundled library
+   dir (as --ocamlenv does) so this query sees both the user's opam switch and
+   a compiled fstar.lib shipped alongside this fstar.exe. *)
 let ocamlfind_query (pkg:string) : ML bool =
   Util.findlib_package_exists pkg
 
@@ -106,6 +108,17 @@ the dependencies are already installed.\n" opam_file;
     run_prog "opam" ["install"; "--deps-only"; "-y"; opam_file]
 
 let install_lib_aux (with_deps:bool) : ML int =
+  (* Extend OCAMLPATH with fstar.exe's bundled library dir (<exec>/../lib),
+     exactly as --ocamlenv does, before the detection below. This way the
+     "is fstar.lib already available?" check also sees a compiled fstar.lib
+     shipped alongside this fstar.exe -- as in a source build, `make install`
+     or `opam install` -- and reports it as already installed (a no-op),
+     making `--install_lib[_with_deps]` behave uniformly across all install
+     methods. For a binary package the bundled dir ships no findlib metadata,
+     so this is a no-op extension and we proceed to build+install fstar.lib
+     into the current opam switch as before. (This command then exits, so
+     mutating the process environment here is harmless.) *)
+  Util.putenv "OCAMLPATH" (new_ocamlpath ());
   if ocamlfind_query app_lib then begin
     Format.print1_error "%s is already installed; nothing to do.\n" app_lib;
     0
