@@ -1520,7 +1520,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           (fun _ -> fallback t0 t1)
 
       | Tm_match _, _
-      | _, Tm_match _ ->
+      | _, Tm_match _ when guard_not_ok ->
         //One side is a match and the other is not (both-match handled above).
         //Try to reduce the match away by normalizing with delta + iota + primops.
         //If the match reduces (e.g., scrutinee unfolds to a constructor), recurse.
@@ -1529,9 +1529,14 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           N.normalize [Env.Weak; Env.HNF; Env.Beta; Env.Iota; Env.Primops;
                        Env.UnfoldUntil delta_constant] g.tcenv t
         in
+        let maybe_reduce t =
+          match t.n with
+          | Tm_match _ -> reduce_match t
+          | _ -> t
+        in
         let try_reduce () =
-          let t0' = reduce_match t0 in
-          let t1' = reduce_match t1 in
+          let t0' = maybe_reduce t0 in
+          let t1' = maybe_reduce t1 in
           //Check that at least one side actually changed (made progress)
           if equal_term t0 t0' && equal_term t1 t1'
           then fallback t0 t1
