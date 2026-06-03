@@ -48,7 +48,7 @@ let check
   if Cons? args then
     fail_doc g (Some t.range) [
       text "Internal error: trailing combinator arguments not lifted in Tm_ST";
-      pp t
+      fquotes (pp t)
     ];
   let e, ty, eff = tc_term_phase1 g e in
   match Pulse.Readback.readback_comp ty with
@@ -61,7 +61,7 @@ let check
       (Some range)
       [text "Expected an application of a function returning a computation type { stt, stt_ghost, stt_atomic }";
        text "But the application:";
-       pp e;
+       fquotes (pp e);
        text "is a total term";
        text "Maybe it is not fully applied?"]
 
@@ -72,12 +72,12 @@ let check
     if not (RU.no_uvars_in_term e) then
       fail_doc g (Some range) [
         text "Unexpected unresolved uvars in the term:";
-        pp e
+        fquotes (pp e)
       ];
     if not (RU.no_uvars_in_term ty) then
       fail_doc g (Some range) [
         text "Unexpected unresolved uvars in the type:";
-        pp ty
+        fquotes (pp ty)
       ];
 
     // remove spurious beta-redexes
@@ -94,9 +94,9 @@ let check
         let open Pulse.PP in
         fail_doc g (Some range)
           [text "Application of a stateful or atomic computation cannot have a ghost effect";
-          pp t;
+          fquotes (pp t);
           text "has computation type";
-          pp c]
+          fquotes (pp c)]
       | C_STGhost .. ->
         let token = is_non_informative g' c in
         (match token with

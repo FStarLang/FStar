@@ -456,7 +456,7 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
  // implied by t2_typing
  // implied by t2_typing
   let _ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
-    [text "Cannot find witness for" ^/^ pp (tm_exists_sl u b body)]) in
+    [text "Cannot find witness for" ^/^ fquotes (pp (tm_exists_sl u b body))]) in
 
 
 
@@ -738,8 +738,8 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
       text "Could not prove equality of:";
-      pp p;
-      pp q;
+      fquotes (pp p);
+      fquotes (pp q);
     ]
   | Some token ->
     ()
@@ -1525,8 +1525,8 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           k_elab_trans k (k_elab_trans k3 k_unreach) |)
       ) else
         fail_doc g (Some rng) [
-          text "The return type" ^^ indent (pp ty) ^/^
-          text "does not match the expected" ^^ indent (pp post_hint.ret_ty)
+          text "The return type" ^^ indent (fquotes (pp ty)) ^/^
+          text "does not match the expected" ^^ indent (fquotes (pp post_hint.ret_ty))
         ]
     ) else
       let ppname = mk_ppname_no_range "_posth" in
