@@ -16,9 +16,15 @@ compiler/findlib setup.
 
 ## Prerequisites
 
-An OCaml toolchain with `dune` and the following findlib packages (all available
-via opam): `batteries`, `zarith`, `stdint`, `pprint`, `ppx_deriving`,
-`ppx_deriving_yojson`.
+An OCaml toolchain with `ocamlfind` (findlib), `dune`, and the following findlib
+packages (all available via opam): `batteries`, `zarith`, `stdint`, `pprint`,
+`ppx_deriving`, `ppx_deriving_yojson`.
+
+`ocamlfind`/findlib in particular must be installed in the active opam switch:
+`fstar.exe --install_lib[_with_deps]` uses findlib to detect whether `fstar.lib`
+is already present, `dune install` records the `fstar/META` that `ocamlfind query
+fstar.lib` later resolves, and OCaml code extracted by F\* is compiled by invoking
+`ocamlfind`.
 
 These dependencies are also recorded in `fstar-lib.opam` (shipped alongside this
 directory, in the parent of the dune project). That file is **not** a buildable

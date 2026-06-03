@@ -1695,17 +1695,18 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
           is already installed (i.e. findlib can resolve the fstar.lib package); \
           errors out if an 'fstar' findlib package is already present, to avoid \
           overwriting its META and dropping other sub-packages. Requires the \
-          fstar.lib sources shipped in binary packages and dune on the PATH; \
-          fstar.lib is installed into the active opam switch.");
+          fstar.lib sources shipped in binary packages, and both ocamlfind \
+          (findlib) and dune on the PATH; fstar.lib is installed into the active \
+          opam switch.");
   ( noshort,
     "install_lib_with_deps",
     Const (Bool true),
     text "Like --install_lib, but first install fstar.lib's OCaml dependencies \
           into the current opam switch (via `opam install --deps-only` on the \
           fstar-lib.opam file shipped in binary packages) before building. \
-          Requires opam and an active switch with network access for any \
-          missing dependencies. Errors out if the opam dependency file is not \
-          shipped with this build.");
+          Requires opam, ocamlfind (findlib) and dune, and an active switch with \
+          network access for any missing dependencies. Errors out if the opam \
+          dependency file is not shipped with this build.");
   ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
