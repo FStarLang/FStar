@@ -174,6 +174,7 @@ and width =
   (* MUST BE IN SAME ORDER AS KARAMEL! *)
   | Float | Double
   | Half
+  | BFloat16
 
 and constant = width & string
 
@@ -224,6 +225,7 @@ instance pretty_width = { pp = function
   | SizeT -> doc_of_string "SizeT"
   | PtrdiffT -> doc_of_string "PtrdiffT"
   | Half  -> doc_of_string "Half"
+  | BFloat16 -> doc_of_string "BFloat16"
   | Float -> doc_of_string "Float"
   | Double -> doc_of_string "Double"
 }
