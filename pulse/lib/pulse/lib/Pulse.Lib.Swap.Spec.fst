@@ -697,8 +697,6 @@ let array_swap_inner_invariant_end
 = ()
 #pop-options
 
-#pop-options
-
 module SZ = FStar.SizeT
 
 let sz_rem_spec
