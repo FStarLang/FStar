@@ -231,6 +231,7 @@ let defaults = [
   ("initial_fuel"                              , Int 2);
   ("initial_ifuel"                             , Int 1);
   ("install_lib"                               , Bool false);
+  ("install_lib_with_deps"                     , Bool false);
   ("keep_query_captions"                       , Bool true);
   ("krmloutput"                                , Unset);
   ("lang_extensions"                           , List []);
@@ -493,6 +494,7 @@ let get_print_in_place          ()      = lookup_opt "print_in_place"           
 let get_initial_fuel            ()      = lookup_opt "initial_fuel"             as_int
 let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            as_int
 let get_install_lib             ()      = lookup_opt "install_lib"              as_bool
+let get_install_lib_with_deps   ()      = lookup_opt "install_lib_with_deps"    as_bool
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lang_extensions         ()      = lookup_opt "lang_extensions"                     (as_list as_string)
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
@@ -1696,6 +1698,15 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
           fstar.lib sources shipped in binary packages and dune on the PATH; \
           fstar.lib is installed into the active opam switch.");
   ( noshort,
+    "install_lib_with_deps",
+    Const (Bool true),
+    text "Like --install_lib, but first install fstar.lib's OCaml dependencies \
+          into the current opam switch (via `opam install --deps-only` on the \
+          fstar-lib.opam file shipped in binary packages) before building. \
+          Requires opam and an active switch with network access for any \
+          missing dependencies. Errors out if the opam dependency file is not \
+          shipped with this build.");
+  ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),
                      (Const (Bool true))),
@@ -2170,6 +2181,7 @@ let locate_ocaml                 () = get_locate_ocaml                ()
 let locate_file                  () = get_locate_file                 ()
 let locate_z3                    () = get_locate_z3                   ()
 let install_lib                  () = get_install_lib                 ()
+let install_lib_with_deps        () = get_install_lib_with_deps       ()
 let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()

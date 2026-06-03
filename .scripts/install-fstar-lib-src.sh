@@ -38,5 +38,10 @@ find "$DEST" -name '.depend' -delete 2>/dev/null || true
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/dune"         "$DEST/dune"
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/dune-project" "$DEST/dune-project"
 cp -p "$FSTAR_ROOT/mk/fstar-lib-src/README.md"    "$DEST/README.md"
+# opam file carrying fstar.lib's dependencies, used by
+# `fstar.exe --install_lib_with_deps` (via `opam install --deps-only`).
+# It is placed in the parent of the dune project dir ($DEST) so that `dune
+# build` (run with --root $DEST) does not treat it as a project package.
+cp -p "$FSTAR_ROOT/mk/fstar-lib-src/fstar-lib.opam" "$(dirname "$DEST")/fstar-lib.opam"
 
 echo "Installed fstar.lib sources + dune project into $DEST"

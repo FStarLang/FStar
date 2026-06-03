@@ -85,7 +85,27 @@ let run_prog (prog:string) (args:list string) : ML int =
   | Inl rc -> rc
   | Inr _ -> 1
 
-let install_lib () : ML int =
+(* Install fstar.lib's OCaml dependencies into the current opam switch, using
+   the fstar-lib.opam file shipped at [root] (= <lib_root>, the parent of the
+   dune project directory; we keep it out of the dune project dir so that
+   `dune build` does not pick it up as a package). We drive opam directly
+   (no shell) via `opam install --deps-only -y <file>`. The opam file is
+   intentionally not buildable (build: false), so `--deps-only` installs only
+   its dependencies and never tries to build a package. Errors out if the opam
+   file is missing. *)
+let install_lib_deps (root:string) : ML int =
+  let opam_file = root ^ "/fstar-lib.opam" in
+  if not (Filepath.file_exists opam_file) then begin
+    Format.print1_error
+      "This F* installation does not ship fstar.lib's opam dependency file \
+(expected %s). Only binary or source packages carry it; use --install_lib if \
+the dependencies are already installed.\n" opam_file;
+    1
+  end
+  else
+    run_prog "opam" ["install"; "--deps-only"; "-y"; opam_file]
+
+let install_lib_aux (with_deps:bool) : ML int =
   if ocamlfind_query app_lib then begin
     Format.print1_error "%s is already installed; nothing to do.\n" app_lib;
     0
@@ -121,6 +141,16 @@ dune project at %s). Only binary or source packages carry them.\n" dune_project;
         1
       end
       else
-        let rc = run_prog "dune" ["build"; "--root"; dir] in
-        if rc <> 0 then rc
-        else run_prog "dune" ["install"; "--root"; dir]
+        (* When requested, first install fstar.lib's dependencies via opam, so
+           that the subsequent dune build can succeed. The opam file lives at
+           [root] (parent of the dune project dir). *)
+        let deps_rc = if with_deps then install_lib_deps root else 0 in
+        if deps_rc <> 0 then deps_rc
+        else
+          let rc = run_prog "dune" ["build"; "--root"; dir] in
+          if rc <> 0 then rc
+          else run_prog "dune" ["install"; "--root"; dir]
+
+let install_lib () : ML int = install_lib_aux false
+
+let install_lib_with_deps () : ML int = install_lib_aux true

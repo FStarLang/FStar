@@ -353,6 +353,11 @@ let go_normal () : ML unit =
       check_no_filenames "--install_lib";
       exit (OCaml.install_lib ())
 
+    (* --install_lib_with_deps *)
+    | Success when Options.install_lib_with_deps () ->
+      check_no_filenames "--install_lib_with_deps";
+      exit (OCaml.install_lib_with_deps ())
+
     (* --dump_ast *)
     | Success when Options.dump_ast () -> (
       filenames |> List.iter (fun fn ->

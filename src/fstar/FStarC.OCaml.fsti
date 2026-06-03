@@ -53,3 +53,9 @@ current OCaml/opam environment, returning the exit code to use:
     to clobber it), if the fstar.lib sources are not shipped with this
     build, or if the underlying build/install fails. *)
 val install_lib (_:unit) : ML int
+
+(* Like [install_lib], but first installs fstar.lib's OCaml dependencies into
+   the current opam switch (via `opam install --deps-only` on the shipped
+   fstar-lib.opam) before building. Returns the same kind of exit code; also
+   non-zero if the opam dependency file is missing or `opam` fails. *)
+val install_lib_with_deps (_:unit) : ML int

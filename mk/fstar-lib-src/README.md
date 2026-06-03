@@ -20,6 +20,11 @@ An OCaml toolchain with `dune` and the following findlib packages (all available
 via opam): `batteries`, `zarith`, `stdint`, `pprint`, `ppx_deriving`,
 `ppx_deriving_yojson`.
 
+These dependencies are also recorded in `fstar-lib.opam` (shipped alongside this
+directory, in the parent of the dune project). That file is **not** a buildable
+package — it exists only so that its dependencies can be installed with
+`opam install --deps-only`; installing it directly fails on purpose.
+
 ## Build and install
 
 The simplest way is to let `fstar.exe` do it for you (it runs exactly the steps
@@ -29,7 +34,19 @@ below and refuses if it would overwrite an existing `fstar` findlib package):
 fstar.exe --install_lib
 ```
 
-Alternatively, from this directory:
+If the prerequisites above are not yet installed in your current opam switch, use
+instead:
+
+```
+fstar.exe --install_lib_with_deps
+```
+
+which first runs `opam install --deps-only` on `fstar-lib.opam` (installing the
+dependencies into the active switch) and then performs the same build/install as
+`--install_lib`.
+
+Alternatively, from this directory (after installing the prerequisites
+yourself):
 
 ```
 dune build

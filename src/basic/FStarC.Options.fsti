@@ -340,6 +340,7 @@ val locate_file                 : unit    -> ML (option string)
 
 val locate_z3                   : unit    -> ML (option string)
 val install_lib                 : unit    -> ML bool
+val install_lib_with_deps       : unit    -> ML bool
 
 val read_krml_file              : unit    -> ML (option string)
 

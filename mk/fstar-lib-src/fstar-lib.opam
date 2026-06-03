@@ -1,0 +1,32 @@
+opam-version: "2.0"
+maintainer: "The F* team"
+authors: "The F* team"
+homepage: "https://www.fstar-lang.org"
+bug-reports: "https://github.com/FStarLang/FStar/issues"
+license: "Apache-2.0"
+synopsis: "Dependencies of the F* application library (fstar.lib)"
+description: """
+This package exists solely to install, into the current opam switch, the
+OCaml dependencies required to build the F* application library (fstar.lib).
+
+Do NOT install this package directly: it is intentionally not buildable. To
+build and install fstar.lib itself, run `fstar.exe --install_lib_with_deps`
+(which uses this file via `opam install --deps-only`), or, if the
+dependencies are already present, `fstar.exe --install_lib`.
+"""
+# Make a direct `opam install ./fstar-lib.opam` fail, so that users do not try
+# to install this pseudo-package: it only carries fstar.lib's dependencies.
+# `opam install --deps-only ./fstar-lib.opam` does not run this build step, so
+# it still installs the dependencies as intended.
+build: [ "false" ]
+depends: [
+  "ocaml" {>= "4.14.0"}
+  "batteries"
+  "zarith" {>= "1.14"}
+  "stdint"
+  "pprint"
+  "yojson"
+  "dune" {>= "3.8.0"}
+  "ppx_deriving" {build}
+  "ppx_deriving_yojson" {build}
+]
