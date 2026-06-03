@@ -468,13 +468,21 @@ __do-install-stage3:
 	$(call bold_msg, "INSTALL", "STAGE 3")
 	$(MAKE) -C stage3 install FSTAR_DUNE_RELEASE=1
 
+# Directory of F*-extracted ulib OCaml sources to re-ship as fstar.lib
+# sources in the binary package (see .scripts/bin-install.sh). By default
+# it is the packaged stage's own ulib.ml, but stage3 never re-extracts ulib
+# to OCaml -- it reuses stage2's extraction (cf. the stage3/dune/libapp
+# symlink into ../../../stage2/ulib.ml) -- so package-3 overrides this to
+# point at stage2/ulib.ml.
+ULIB_ML ?= $(abspath $(BROOT))/ulib.ml
+
 __do-archive: .force
 	rm -rf $(PKGTMP)
 	# add an 'fstar' top-level directory to the archive
 	$(MAKE) $(INSTALL_RULE) PREFIX="$(abspath $(PKGTMP)/fstar)"
 	$(MAKE) -C karamel install PREFIX="$(abspath $(PKGTMP)/fstar)" LOWSTAR=false
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
-	.scripts/bin-install.sh "$(PKGTMP)/fstar" "$(abspath $(BROOT))/ulib.ml"
+	.scripts/bin-install.sh "$(PKGTMP)/fstar" "$(ULIB_ML)"
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
 	rm -rf $(PKGTMP)
 
@@ -515,6 +523,7 @@ package-3: .stage3.src.touch .force
 	env \
 	  PKGTMP=_pak3 \
 	  BROOT=stage3/ \
+	  ULIB_ML=$(abspath stage2/ulib.ml) \
 	  ARCHIVE=fstar$(FSTAR_TAG) \
 	  INSTALL_RULE=__do-install-stage3 \
 	  $(MAKE) __do-archive
