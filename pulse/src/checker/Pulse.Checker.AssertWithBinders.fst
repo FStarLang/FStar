@@ -270,8 +270,7 @@ let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:ter
   match Pulse.Typing.Util.universe_of_now g_env ty with
   | None, issues ->
     fail_doc_with_subissues g (Some rng) issues [
-      text "rewrite: could not determine the universe of";
-      pp ty;
+      text "rewrite: could not determine the universe of" ^/^ fquotes (pp ty);
     ]
   | Some u, _ ->
     let goal = mk_squash (RT.eq2 u ty lhs rhs) in
@@ -303,8 +302,8 @@ let check_pair (g:env) rng (lhs rhs:term) (tac_opt:option term) : T.Tac unit =
   | Some issues -> 
     fail_doc_with_subissues g (Some rng) issues [
       text "rename: could not prove equality of";
-      pp lhs;
-      pp rhs;
+      fquotes (pp lhs);
+      fquotes (pp rhs);
     ]
   | _ ->
     ()

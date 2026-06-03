@@ -110,7 +110,7 @@ let lift_ghost_atomic (g:env) (e:st_term) (c:comp_st { C_STGhost? c })
     fail_doc g (Some (RU.range_of_term t)) [
         text "Expected a term with a non-informative (e.g., erased) type.";
         prefix 2 1 (text "Got:")
-          (pp t);
+          (fquotes (pp t));
     ]
   | Some d ->
     d
@@ -210,8 +210,8 @@ let rec mk_bind (g:env)
   = let open Pulse.PP in
     fail_doc g (Some e1.range)
       [text "Cannot compose computations in this " ^/^ text tag ^/^ text " block:";
-       prefix 4 1 (text "This computation has effect: ") (pp (effect_annot_of_comp c1));
-       prefix 4 1 (text "The continuation has effect: ") (pp (effect_annot_of_comp c2))]
+       prefix 4 1 (text "This computation has effect: ") (fquotes (pp (effect_annot_of_comp c1)));
+       prefix 4 1 (text "The continuation has effect: ") (fquotes (pp (effect_annot_of_comp c2)))]
   in
   match c1, c2 with
   | C_ST _, C_ST _ ->

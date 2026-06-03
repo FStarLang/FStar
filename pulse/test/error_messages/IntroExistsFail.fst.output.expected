@@ -1,6 +1,6 @@
 * Info at IntroExistsFail.fst(11,2-11,4):
   - Expected failure:
-  - Failed to prove pure property: 0 > 0
+  - Failed to prove pure property: ‘0 > 0’
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env = (r : Pulse.Lib.Reference.ref Prims.int)

@@ -2,5 +2,5 @@
   - Expected failure:
   - Tactic failed
   - Unexpected unresolved uvars in the term:
-  - spawn (pth n)
+  - ‘spawn (pth n)’
 

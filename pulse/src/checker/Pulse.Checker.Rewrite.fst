@@ -34,8 +34,8 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
       text "rewrite: could not prove equality of";
-      pp p;
-      pp q;
+      fquotes (pp p);
+      fquotes (pp q);
     ]
   | Some token ->
     ()
@@ -66,9 +66,9 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
       text "rewrite: could not prove equality of";
-      pp p;
-      pp q;
-      text "Using tactic:" ^/^ pp tac_tm
+      fquotes (pp p);
+      fquotes (pp q);
+      text "Using tactic:" ^/^ fquotes (pp tac_tm)
     ]
   | Some token ->
     ()

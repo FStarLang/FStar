@@ -68,13 +68,13 @@ let check_if_seq_lhs
     let open Pulse.PP in
     if T.Tv_Arrow? ty then
       fail_doc g (Some e1.range) [
-        prefix 2 1 (text "This function is partially applied. Remaining type:") (pp ty);
+        prefix 2 1 (text "This function is partially applied. Remaining type:") (fquotes (pp ty));
         text "Did you forget to apply some arguments?";
       ]
     else if None? (fst <| T.is_non_informative (elab_env g) ty) then (
       if None? (Pulse.Checker.Pure.try_get_non_informative_witness g u ty) then
         fail_doc g (Some e1.range) [
-          prefix 2 1 (text "This statement returns a value of type:") (pp ty);
+          prefix 2 1 (text "This statement returns a value of type:") (fquotes (pp ty));
           text "Did you forget to assign it or ignore it?";
         ]
     ) else
@@ -108,8 +108,8 @@ let check_binder_typ
       let open Pulse.PP in
       fail_doc g (Some e1.range) [
         text "Type mismatch (NB: this is a syntactic check)";
-        prefix 2 1 (text "Expected:") (pp ty);
-        prefix 2 1 (text "Got:") (pp t);
+        prefix 2 1 (text "Expected:") (fquotes (pp ty));
+        prefix 2 1 (text "Got:") (fquotes (pp t));
       ]
   end
 

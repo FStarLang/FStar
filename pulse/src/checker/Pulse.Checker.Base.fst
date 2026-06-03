@@ -372,8 +372,8 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
          | None, issues ->
            let open Pulse.PP in
            fail_doc_with_subissues g (Some t.range) issues [
-            prefix 2 1 (text "Could not prove equality between computed type") (pp cres) ^/^
-            prefix 2 1 (text "and expected type") (pp ret_ty);
+            prefix 2 1 (text "Could not prove equality between computed type") (fquotes (pp cres)) ^/^
+            prefix 2 1 (text "and expected type") (fquotes (pp ret_ty));
            ]
          | Some tok, _ ->
            let d_equiv
@@ -823,7 +823,7 @@ let hoist_st_lambda
       fail_doc g (Some (RU.range_of_term e)) [
         text "Expected function";
         text "Actual type:" ^^ hardline ^^
-          pp e_ty
+          fquotes (pp e_ty)
       ]
     )
   | _ -> None

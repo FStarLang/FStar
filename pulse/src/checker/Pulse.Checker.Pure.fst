@@ -57,8 +57,8 @@ let check_ln (g:env) (label:string) (t:R.term) : Tac unit =
   if not (CheckLN.check_ln t) then
     fail_doc g (Some (RU.range_of_term t)) [
       text "Failure: not locally nameless!";
-      text "Aborting before calling" ^/^ pp label;
-      text "term" ^/^ equals ^/^ pp t;
+      text "Aborting before calling" ^/^ fquotes (pp label);
+      text "term" ^/^ equals ^/^ fquotes (pp t);
       text (RU.stack_dump ())
     ]
 
@@ -213,9 +213,9 @@ let instantiate_term_implicits
     match namedvs with
     | (v, vty) :: _ ->
       fail_doc g (Some rng) [
-        prefix 2 1 (doc_of_string "Could not resolve implicit") (pp v) ^/^
-        prefix 2 1 (doc_of_string "of type") (pp vty) ^/^
-        prefix 2 1 (doc_of_string "in term") (pp t0);
+        prefix 2 1 (doc_of_string "Could not resolve implicit") (fquotes (pp v)) ^/^
+        prefix 2 1 (doc_of_string "of type") (fquotes (pp vty)) ^/^
+        prefix 2 1 (doc_of_string "in term") (fquotes (pp t0));
       ]
     | [] ->
       t, ty
@@ -446,9 +446,9 @@ let tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe) =
       let open Pulse.PP in
       T.fail_doc_at [
         text "Expected Type, got:";
-        pp sort;
+        fquotes (pp sort);
         text "This is the type of:";
-        pp t;
+        fquotes (pp t);
       ] (Some (RU.range_of_term t)) in
   t, u
 
@@ -607,7 +607,7 @@ let get_non_informative_witness g u t
       fail_doc g (Some (RU.range_of_term t)) [
         text "Expected a term with a non-informative (e.g., erased) type.";
         prefix 2 1 (text "Got:")
-          (pp t);
+          (fquotes (pp t));
       ]
     | Some e, issues ->
       e
@@ -628,14 +628,14 @@ let check_prop_validity (g:env) (p:term)
     | None -> 
       let open Pulse.PP in
       fail_doc_with_subissues g (Some <| RU.range_of_term p) issues [
-        prefix 2 1 (text "Failed to prove pure property:") (pp p);
+        prefix 2 1 (text "Failed to prove pure property:") (fquotes (pp p));
       ]
     | Some tok -> tok
 
 let fail_expected_tot_found_ghost (g:env) (t:term) =
   fail_doc g (Some (RU.range_of_term t)) [
     prefix 2 1 (text "Expected a total term, got found ghost term:")
-      (pp t);
+      (fquotes (pp t));
   ]
 
 let compute_tot_term_type g t =
@@ -674,7 +674,7 @@ let check_subtyping g t1 t2 =
   | None ->
     let open Pulse.PP in
     fail_doc_with_subissues g (Some (RU.range_of_term t1)) issues [
-      text "Could not prove subtyping of" ^/^ pp t1 ^/^ text "and" ^/^ pp t2
+      text "Could not prove subtyping of" ^/^ fquotes (pp t1) ^/^ text "and" ^/^ fquotes (pp t2)
     ]
   )
 

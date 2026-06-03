@@ -110,7 +110,7 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
       (R.pack_ln (R.Tv_Var (R.pack_namedv { uniq = qbv.bv_index; sort = T.seal b.binder_ty; ppname = b.binder_ppname.name }))) 0) r in
     qb::bs, c
   | qb::qbs, _ ->
-    fail_doc g (Some r) [text "main: FnDefn: expected inferred type to be an arrow"; pp ty]
+    fail_doc g (Some r) [text "main: FnDefn: expected inferred type to be an arrow"; fquotes (pp ty)]
   | [], _ ->
     [], ty
 
@@ -210,7 +210,7 @@ let add_knot (g : env) (rng : R.range)
     | Some (C_ST _) ->
       r_bs
     | _ ->
-      fail_doc g (Some d.range) [text "main: FnDefn has unexpected type"; pp comp]
+      fail_doc g (Some d.range) [text "main: FnDefn has unexpected type"; fquotes (pp comp)]
   in
   let r_res = R.subst_term prime_subst comp in
   let r_ty = FStar.Tactics.V2.SyntaxHelpers.mk_tot_arr r_bs r_res in
