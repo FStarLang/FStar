@@ -22,6 +22,9 @@ let vconcat (ds:list document) : ML document =
 let text (s:string) : document =
   flow (break_ 1) (words s)
 
+let fquotes (d:document) : document =
+  enclose (utf8string "‘") (utf8string "’") d
+
 let sublist (h:document) (ds:list document) : ML document =
   nest 2 (hardline ^^ align (ds |> List.map (fun d -> h ^^ d) |> vconcat))
 

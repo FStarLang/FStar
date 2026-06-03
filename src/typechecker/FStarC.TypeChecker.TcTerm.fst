@@ -87,14 +87,14 @@ let check_no_escape (head_opt : option term)
       let msg =
         match head_opt with
         | None -> [
-           text "Bound variable" ^/^ squotes (pp x)
+           text "Bound variable" ^/^ fquotes (pp x)
              ^/^ text "would escape in the type of this letbinding";
            text "Add a type annotation that does not mention it";
         ]
         | Some head -> [
-            text "Bound variable" ^/^ squotes (pp x)
+            text "Bound variable" ^/^ fquotes (pp x)
               ^/^ text "escapes because of impure applications in the type of"
-              ^/^ squotes (N.term_to_doc env head);
+              ^/^ fquotes (N.term_to_doc env head);
             text "Add explicit let-bindings to avoid this";
           ]
       in
@@ -2230,8 +2230,8 @@ and tc_abs_check_binders env bs bs_expected use_eq
           let open FStarC.Class.PP in
           raise_error hd Errors.Fatal_InconsistentImplicitArgumentAnnotation [
               text <| Format.fmt1 "Inconsistent implicit argument annotation on argument %s" (show hd);
-              prefix 2 1 (text "Got:") (squotes <| doc_of_string <| Print.bqual_to_string imp);
-              prefix 2 1 (text "Expected:") (squotes <| doc_of_string <| Print.bqual_to_string imp');
+              prefix 2 1 (text "Got:") (fquotes <| doc_of_string <| Print.bqual_to_string imp);
+              prefix 2 1 (text "Expected:") (fquotes <| doc_of_string <| Print.bqual_to_string imp');
             ]
         end;
 

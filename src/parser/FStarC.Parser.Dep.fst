@@ -196,7 +196,7 @@ let module_name_of_file f =
       longname
     | None ->
       raise_error0 Errors.Fatal_NotValidFStarFile (
-        [ text <| Format.fmt1 "Not a valid FStar file: '%s'" f; ] @
+        [ text <| Format.fmt1 "Not a valid FStar file: ‘%s’" f; ] @
         (if Platform.windows && f = ".." then [
           text <| "Note: In Windows-compiled versions of F*, a literal
           asterisk as argument will be expanded to a list of files,
@@ -661,13 +661,13 @@ let enter_namespace
              log_issue0 Errors.Warning_UnexpectedFile [
                 flow (break_ 1) [
                   text "Implicitly opening namespace";
-                  squotes (doc_of_string sprefix);
+                  fquotes (doc_of_string sprefix);
                   text "shadows module";
-                  squotes (doc_of_string suffix);
+                  fquotes (doc_of_string suffix);
                   text "in file";
-                  dquotes (doc_of_string str) ^^ dot;
+                  fquotes (doc_of_string str) ^^ dot;
                 ];
-                text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
+                text "Rename" ^/^ fquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
              ]
       end;
 

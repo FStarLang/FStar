@@ -3898,25 +3898,29 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                   ~> t1        =?= hide t2
                   ~> reveal t1 =?= t2
                 *)
+                | Some (Reveal (u, ty, lhs)), Some (Hide _)
                 | Some (Reveal (u, ty, lhs)), None when is_flex lhs ->
                   // reveal (?u _) / _
                   //add hide to rhs and simplify lhs
                   let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Reveal (u, ty, rhs)) when is_flex rhs ->
+                | Some (Hide _), Some (Reveal (u, ty, rhs))
+                | None,          Some (Reveal (u, ty, rhs)) when is_flex rhs ->
                   // _ / reveal (?u _)
                   //add hide to lhs and simplify rhs
                   let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
+                | Some (Hide (u, ty, lhs)), Some (Reveal _)
                 | Some (Hide (u, ty, lhs)), None ->
                   // hide _ / _
                   //add reveal to rhs and simplify lhs
                   let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Hide (u, ty, rhs)) ->
+                | Some (Reveal _), Some (Hide (u, ty, rhs))
+                | None,            Some (Hide (u, ty, rhs)) ->
                   // _ / hide _
                   //add reveal to lhs and simplify rhs
                   let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in

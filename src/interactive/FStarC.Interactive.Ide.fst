@@ -276,7 +276,7 @@ let unpack_interactive_query st json =
            | "format" -> Format (arg "code" |> js_str)
            | "restart-solver" -> RestartSolver
            | "cancel" -> Cancel (Some(st.repl_fname, arg "cancel-line" |> js_int, arg "cancel-column" |> js_int))
-           | _ -> ProtocolViolation (Format.fmt1 "Unknown query '%s'" query) }
+           | _ -> ProtocolViolation (Format.fmt1 "Unknown query ‘%s’" query) }
   with
   | InvalidQuery msg -> { qid = qid; qq = ProtocolViolation msg }
   | UnexpectedJsonType (expected, got) -> wrap_js_failure qid expected got

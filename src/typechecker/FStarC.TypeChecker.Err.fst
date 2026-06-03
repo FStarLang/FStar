@@ -321,7 +321,7 @@ let __expected_eff_expression #a (effname:string) (rng:Range.t) (e:term) (c:comp
      | None -> empty
      | Some msg -> flow (break_ 1) (doc_of_string "Because:" :: words (msg ^ ".")));
     prefix 2 1 (text "Got an expression") (pp e) ^/^
-    prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
+    prefix 2 1 (text "with effect") (fquotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
   ]
 
 let expected_pure_expression #a (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a =

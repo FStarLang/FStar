@@ -206,7 +206,7 @@ let try_lookup_fv (r:Range.t) (g:uenv) (fv:fv) : ML (option exp_binding) =
     (* Log an error/warning and return None *)
     let open FStarC.Errors.Msg in
     Errors.log_issue r Errors.Error_CallToErased [
-       text <| Format.fmt1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (string_of_lid fv.fv_name);
+       text <| Format.fmt1 "Will not extract reference to variable ‘%s’ since it has the ‘noextract’ qualifier." (string_of_lid fv.fv_name);
        text <| Format.fmt2 "Either remove the noextract qualifier from %s (defined in %s) or add it to this definition."
                  (string_of_lid fv.fv_name) (show pos);
        text <| Format.fmt1 "This error can be ignored with `--warn_error -%s`." (show Errors.call_to_erased_errno)];
