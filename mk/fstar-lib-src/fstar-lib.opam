@@ -21,6 +21,7 @@ dependencies are already present, `fstar.exe --install_lib`.
 build: [ "false" ]
 depends: [
   "ocaml" {>= "4.14.0"}
+  "ocamlfind"
   "batteries"
   "zarith" {>= "1.14"}
   "stdint"

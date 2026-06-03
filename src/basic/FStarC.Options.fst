@@ -1703,10 +1703,12 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
     Const (Bool true),
     text "Like --install_lib, but first install fstar.lib's OCaml dependencies \
           into the current opam switch (via `opam install --deps-only` on the \
-          fstar-lib.opam file shipped in binary packages) before building. \
-          Requires opam, ocamlfind (findlib) and dune, and an active switch with \
-          network access for any missing dependencies. Errors out if the opam \
-          dependency file is not shipped with this build.");
+          fstar-lib.opam file shipped in binary packages) before building. Those \
+          dependencies include ocamlfind (findlib) and dune themselves, so unlike \
+          --install_lib this does not require them to be preinstalled. Requires \
+          opam and an active switch with network access for any missing \
+          dependencies. Errors out if the opam dependency file is not shipped \
+          with this build.");
   ( noshort,
     "ocamlenv",
     WithSideEffect ((fun _ -> Format.print_error "--ocamlenv must be the first argument, see fstar.exe --help for details\n"; exit 1),

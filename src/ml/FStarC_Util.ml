@@ -280,11 +280,22 @@ let system_run (cmd:string) : Z.t = Z.of_int (Sys.command cmd)
    `ocamlfind` (which would require a shell and is unavailable on native
    Windows). [Findlib.init] reads OCAMLPATH/OCAMLFIND_CONF at call time, so
    this reflects the user's current opam switch as long as it is called before
-   any OCAMLPATH is overridden. *)
+   any OCAMLPATH is overridden.
+
+   [Findlib.init] itself can fail (e.g. raise [Failure] if no findlib
+   configuration can be located, as in a switch where findlib is not
+   installed/configured). We treat any such failure -- as well as
+   [No_such_package] from the lookup -- as "package not resolvable", returning
+   [false] rather than crashing. This is what lets callers such as
+   --install_lib_with_deps proceed to install ocamlfind/findlib via opam. *)
 let findlib_package_exists (pkg:string) : bool =
-  Findlib.init ();
-  try ignore (Findlib.package_directory pkg); true
-  with Fl_package_base.No_such_package _ -> false
+  try
+    Findlib.init ();
+    ignore (Findlib.package_directory pkg);
+    true
+  with
+  | Fl_package_base.No_such_package _ -> false
+  | Failure _ -> false
 
 type read_result = EOF | SIGINT
 
