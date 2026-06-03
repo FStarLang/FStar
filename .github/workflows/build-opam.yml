@@ -44,3 +44,16 @@ jobs:
           fstar.exe B.fst
           # Check that karamel is there
           krml -version
+
+      - name: Test sample F* applications
+        # opam install . has already installed fstar.lib into the switch,
+        # so building OCaml applications against it should just work.
+        # tests/extraction includes mk/test.mk, which makes FSTAR_EXE
+        # absolute, so we must pass the resolved path rather than relying
+        # on it finding fstar.exe on the PATH.
+        run: |
+          eval $(opam env)
+          FSTAR_EXE="$(command -v fstar.exe)"
+          make -C tests/simple_hello FSTAR_EXE="$FSTAR_EXE"
+          make -C tests/dune_hello FSTAR_EXE="$FSTAR_EXE"
+          make -C tests/extraction FSTAR_EXE="$FSTAR_EXE"
