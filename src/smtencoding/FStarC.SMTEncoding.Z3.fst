@@ -187,7 +187,7 @@ let check_z3version (p:proc) : ML unit =
     let open FStarC.Pprint in
     let open FStarC.Errors.Msg in
     Errors.log_issue0 Errors.Warning_SolverMismatch ([
-      text (Format.fmt3 "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+      text (Format.fmt3 "Unexpected Z3 version for ‘%s’: expected ‘%s’, got ‘%s’."
                   (proc_prog p) ver_conf ver_found);
       ] @ Find.Z3.z3_install_suggestion ver_conf
     );
@@ -207,7 +207,7 @@ let new_z3proc (id:string) (cmd_and_args : string & list string) : ML BU.proc =
         Errors.raise_error0 Errors.Error_Z3InvocationError [
           text "Could not start SMT solver process.";
           prefix 2 1 (text "Command:" )
-            (fst cmd_and_args |> arbitrary_string |> squotes);
+            (fst cmd_and_args |> arbitrary_string |> fquotes);
           prefix 2 1 (text "Exception:")
             (Util.print_exn e |> arbitrary_string);
         ]
@@ -713,7 +713,7 @@ let ask_text
     be sent to the solver. *)
     let theory = 
       match core with
-      | None -> with_solver_state SolverState.flush
+      | None -> reading_solver_state SolverState.all_decls
       | Some core -> reading_solver_state (SolverState.filter_with_unsat_core queryid core)
     in
     let query_tail = Push 0 :: qry@[Pop 0] in

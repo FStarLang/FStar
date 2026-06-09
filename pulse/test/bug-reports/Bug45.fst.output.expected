@@ -1,5 +1,6 @@
-* Info at Bug45.fst(57,10-62,5):
+* Info at Bug45.fst(60,13-60,58):
   - Expected failure:
   - Tactic failed
-  - Internal error: unexpected unresolved (universe) uvar in deep_compress: 535
+  - Unexpected unresolved uvars in the term:
+  - ‘spawn (pth n)’
 

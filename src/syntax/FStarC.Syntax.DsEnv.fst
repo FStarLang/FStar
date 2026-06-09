@@ -1415,7 +1415,7 @@ let push_namespace' env ns restriction : ML _ =
         let open FStarC.Pprint in
         let open FStarC.Class.PP in
         raise_error ns Errors.Fatal_NameSpaceNotFound [
-          text <| Format.fmt1 "Namespace '%s' cannot be found." (Ident.string_of_lid ns);
+          text <| Format.fmt1 "Namespace ‘%s’ cannot be found." (Ident.string_of_lid ns);
           typo_msg (Ident.string_of_lid ns) (List.map Ident.string_of_lid module_names);
         ]
       in

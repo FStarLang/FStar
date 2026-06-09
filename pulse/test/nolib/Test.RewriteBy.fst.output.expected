@@ -1,12 +1,12 @@
 * Info at Test.RewriteBy.fst(32,2-37,8):
   - Expected failure:
   - rewrite: could not prove equality of
-  - p
-  - q
+  - ‘p’
+  - ‘q’
   - Using tactic:
-    fun _ ->
+    ‘fun _ ->
       dump "a";
-      tac ()
+      tac ()’
   - Tactic failed
   - Tactic got stuck!
   - Reduction stopped at:

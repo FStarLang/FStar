@@ -1692,7 +1692,7 @@ let set_options (s : string) : ML (tac unit) = wrap_err "set_options" <| (
         let g' = { g with opts = opts' } in
         replace_cur g'
     | FStarC.Getopt.Error (err, _) ->
-        fail2 "Setting options `%s` failed: %s" s err
+        fail2 "Setting options ‘%s’ failed: %s" s err
     )
 
 let top_env     () : ML (tac env) = let! ps = get in return <| ps.main_context

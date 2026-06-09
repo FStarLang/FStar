@@ -153,6 +153,21 @@ let new_implicit_var (reason: string) (r:FStarC_Range.range) (g:TcEnv.env) (e:S.
   let uvar, _, _ = FStarC_TypeChecker_Util.new_implicit_var reason r g e unrefine in
   uvar
 
+let try_solve_single_valued_implicits (g:TcEnv.env) (ts: S.term list) : unit =
+  let g = {g with phase1=true; admit=true} in
+  let imps = List.filter_map (fun t ->
+    let t = FStarC_Syntax_Subst.compress t in
+    match t.FStarC_Syntax_Syntax.n with
+    | FStarC_Syntax_Syntax.Tm_uvar (ctx_u, _) ->
+      Some { FStarC_TypeChecker_Common.imp_reason = "single-valued implicit";
+             FStarC_TypeChecker_Common.imp_uvar = ctx_u;
+             FStarC_TypeChecker_Common.imp_tm = t;
+             FStarC_TypeChecker_Common.imp_range = t.FStarC_Syntax_Syntax.pos }
+    | _ -> None
+  ) ts in
+  let _ = FStarC_TypeChecker_Rel.try_solve_single_valued_implicits g false imps in
+  ()
+
 let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
   : S.term option
   = let open FStarC_Tactics_V2_Basic in

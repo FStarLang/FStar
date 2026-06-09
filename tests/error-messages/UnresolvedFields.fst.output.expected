@@ -4,9 +4,9 @@
 
 * Info at UnresolvedFields.fst(17,4-17,5):
   - Expected failure:
-  - No field 'c' in record type 'UnresolvedFields.t'.
+  - No field ‘c’ in record type ‘UnresolvedFields.t’.
 
 * Info at UnresolvedFields.fst(26,4-26,5):
   - Expected failure:
-  - No field 'c' in record type 'UnresolvedFields.t'.
+  - No field ‘c’ in record type ‘UnresolvedFields.t’.
 

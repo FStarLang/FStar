@@ -3898,25 +3898,29 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                   ~> t1        =?= hide t2
                   ~> reveal t1 =?= t2
                 *)
+                | Some (Reveal (u, ty, lhs)), Some (Hide _)
                 | Some (Reveal (u, ty, lhs)), None when is_flex lhs ->
                   // reveal (?u _) / _
                   //add hide to rhs and simplify lhs
                   let rhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Reveal (u, ty, rhs)) when is_flex rhs ->
+                | Some (Hide _), Some (Reveal (u, ty, rhs))
+                | None,          Some (Reveal (u, ty, rhs)) when is_flex rhs ->
                   // _ / reveal (?u _)
                   //add hide to lhs and simplify rhs
                   let lhs = mk_fv_app PC.hide u [(ty, S.as_aqual_implicit true); (t1, None)] t1.pos in
                   Some (lhs, rhs)
 
+                | Some (Hide (u, ty, lhs)), Some (Reveal _)
                 | Some (Hide (u, ty, lhs)), None ->
                   // hide _ / _
                   //add reveal to rhs and simplify lhs
                   let rhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t2, None)] t2.pos in
                   Some (lhs, rhs)
 
-                | None, Some (Hide (u, ty, rhs)) ->
+                | Some (Reveal _), Some (Hide (u, ty, rhs))
+                | None,            Some (Hide (u, ty, rhs)) ->
                   // _ / hide _
                   //add reveal to lhs and simplify rhs
                   let lhs = mk_fv_app PC.reveal u [(ty,S.as_aqual_implicit true); (t1, None)] t1.pos in
@@ -4402,9 +4406,23 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
 
       | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ tag_of t1 ^ " vs " ^ tag_of t2)) orig
 
+(* Ignore SMTPat annotations here, they are irrelevant and only a hint
+generating patterns when they appear in a top-level type annotation. *)
+let no_lemma_pats (c : comp) : ML comp =
+  let nil = S.tdataconstr PC.nil_lid in
+  match c.n with
+  | Comp ct when U.is_lemma_comp c ->
+    let args =
+      match ct.effect_args with
+      | pre::post::_::rest -> pre::post::(nil, None)::rest
+      | _ -> ct.effect_args
+    in
+    { c with n = Comp ({ct with effect_args = args}) }
+  | _ -> c
+
 let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
-    let c1 = problem.lhs in
-    let c2 = problem.rhs in
+    let c1 = problem.lhs |> no_lemma_pats in
+    let c2 = problem.rhs |> no_lemma_pats in
     let orig = CProb problem in
     let env = p_env wl orig in
     let sub_prob : worklist -> term -> rel -> term -> string -> ML (prob & worklist) =

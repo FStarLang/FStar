@@ -527,9 +527,8 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         else return ();!
         let! init_expr =
           match lb.init with
-          | None -> fail "Pattern bindings must have an initializer" lb.pat.prange
-          | Some (Default_initializer (Some e, [])) -> return e
-          | Some _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
+          | Default_initializer (Some e, []) -> return e
+          | _ -> fail "Pattern bindings cannot have complext initializers" lb.pat.prange
         in
         let lb' =
           { norw = lb.norw;
@@ -809,101 +808,95 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
       let! s2 = desugar_stmt env s2 in
       return (PSN.close_st_term s2 bv.index)
     in
-    match lb.init with
-    | None ->
-      fail "Uninitialized variables are not yet handled" r
-
-    | Some e1 -> (
-      match lb.qualifier with
-      | None -> ( //just a regular bind
-        match e1 with
-        | Sugar.Array_initializer _ ->
-          fail "immutable local arrays are not yet supported" r
-        | Sugar.Lambda_initializer {
-            id; is_rec=false;
-            binders;
-            ascription=Inl c;
-            measure=None;
-            body=Inl stmt;
+    match lb.qualifier with
+    | None -> ( //just a regular bind
+      match lb.init with
+      | Sugar.Array_initializer _ ->
+        fail "immutable local arrays are not yet supported" r
+      | Sugar.Lambda_initializer {
+          id; is_rec=false;
+          binders;
+          ascription=Inl c;
+          measure=None;
+          body=Inl stmt;
+          range
+        } ->
+        let lam : lambda = {
+            binders = binders;
+            ascription = Some c;
+            body = stmt;
             range
-          } ->
-          let lam : lambda = {
-              binders = binders;
-              ascription = Some c;
-              body = stmt;
-              range
-            }
-          in
-          let! lam = desugar_lambda env lam in
-          return <| PSBuild.with_range (PSBuild.tm_bind b lam s2) r
+          }
+        in
+        let! lam = desugar_lambda env lam in
+        return <| PSBuild.with_range (PSBuild.tm_bind b lam s2) r
 
-        | Sugar.Lambda_initializer {
-            id; is_rec=false;
-            binders;
-            ascription=Inr ascription;
-            measure=None;
-            body=Inr body;
-            range
-          } ->
-          let! env, bs, bvs = desugar_binders env binders in
-          let! comp =
-            match ascription with
-            | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown range))
-            | Some t -> let! t = desugar_term env t in return (C_Tot t)
-          in
-          let! body = desugar_lambda env body in
-          let! qbs = map2 faux bs bvs in
-          let abs = mk_abs_with_comp qbs (Some comp) body range in
-          return <| PSBuild.with_range (PSBuild.tm_bind b abs s2) r
+      | Sugar.Lambda_initializer {
+          id; is_rec=false;
+          binders;
+          ascription=Inr ascription;
+          measure=None;
+          body=Inr body;
+          range
+        } ->
+        let! env, bs, bvs = desugar_binders env binders in
+        let! comp =
+          match ascription with
+          | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown range))
+          | Some t -> let! t = desugar_term env t in return (C_Tot t)
+        in
+        let! body = desugar_lambda env body in
+        let! qbs = map2 faux bs bvs in
+        let abs = mk_abs_with_comp qbs (Some comp) body range in
+        return <| PSBuild.with_range (PSBuild.tm_bind b abs s2) r
 
-        | Sugar.Lambda_initializer _ ->
-          fail "Nested functions are not yet fully supported" r
+      | Sugar.Lambda_initializer _ ->
+        fail "Nested functions are not yet fully supported" r
 
-        | Default_initializer (Some e1, []) ->
-          let! s1 : S.term = tosyntax env e1 in
-          let t =
-            match admit_or_return env s1 with
-            | AdmitOrReturn_STTerm s1 ->
-              PSBuild.with_range (PSBuild.tm_bind b s1 s2) r
-            | AdmitOrReturn_Return s1 ->
-              PSBuild.with_range (PSBuild.tm_totbind b (as_term s1) s2) r
-          in
-          return t
+      | Default_initializer (Some e1, []) ->
+        let! s1 : S.term = tosyntax env e1 in
+        let t =
+          match admit_or_return env s1 with
+          | AdmitOrReturn_STTerm s1 ->
+            PSBuild.with_range (PSBuild.tm_bind b s1 s2) r
+          | AdmitOrReturn_Return s1 ->
+            PSBuild.with_range (PSBuild.tm_totbind b (as_term s1) s2) r
+        in
+        return t
 
-        | Default_initializer (Some e1, args) ->
-          let! s1 : S.term = tosyntax env e1 in
-          let! args = desugar_st_args env args in
-          let t = PSBuild.with_range (PSBuild.tm_bind b (PSBuild.with_range (PSBuild.tm_st s1 args) r) s2) r in
-          return t
+      | Default_initializer (Some e1, args) ->
+        let! s1 : S.term = tosyntax env e1 in
+        let! args = desugar_st_args env args in
+        let t = PSBuild.with_range (PSBuild.tm_bind b (PSBuild.with_range (PSBuild.tm_st s1 args) r) s2) r in
+        return t
 
-        | Stmt_initializer e ->
-          let! s = desugar_stmt env e in
-          return (PSBuild.with_range (PSBuild.tm_bind b s s2) r)
-      )
-      | Some MUT //these are handled the same for now
-      | Some REF ->
-        let b = sw_mk_binder id annot in
-        match e1 with
-        | Sugar.Array_initializer {init; len} ->
-          let! init =
-            match init with
-            | Some init ->
-              let! init = desugar_term env init in
-              return (Some init)
-            | None -> return None in
-          let! len = desugar_term env len in
-          return (PSBuild.with_range (PSBuild.tm_with_local_array b init len s2) r)
-        | Sugar.Default_initializer (init, []) ->
-          let! init =
-            match init with
-            | Some init ->
-              let! init = desugar_term env init in
-              return (Some init)
-            | None -> return None in
-          return (PSBuild.with_range (PSBuild.tm_with_local b init s2) r)
-        | Sugar.Default_initializer (e1, args) ->
-          fail "Lambda arguments not yet supported in let mut" r
+      | Stmt_initializer e ->
+        let! s = desugar_stmt env e in
+        return (PSBuild.with_range (PSBuild.tm_bind b s s2) r)
     )
+    | Some MUT //these are handled the same for now
+    | Some REF ->
+      let b = sw_mk_binder id annot in
+      match lb.init with
+      | Sugar.Array_initializer {init; len} ->
+        let! init =
+          match init with
+          | Some init ->
+            let! init = desugar_term env init in
+            return (Some init)
+          | None -> return None in
+        let! len = desugar_term env len in
+        return (PSBuild.with_range (PSBuild.tm_with_local_array b init len s2) r)
+      | Sugar.Default_initializer (init, []) ->
+        let! init =
+          match init with
+          | Some init ->
+            let! init = desugar_term env init in
+            return (Some init)
+          | None -> return None in
+        return (PSBuild.with_range (PSBuild.tm_with_local b init s2) r)
+      | Sugar.Default_initializer (e1, args) ->
+        fail "Lambda arguments not yet supported in let mut" r
 
 and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
   : ML (err st_term)

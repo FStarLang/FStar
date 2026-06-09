@@ -456,7 +456,7 @@ let intro_exists (g: env) (frame: slprop) (u: universe) (b: binder) (body: slpro
  // implied by t2_typing
  // implied by t2_typing
   let _ = core_check_term' g e T.E_Ghost b.binder_ty (fun _ -> let open Pulse.PP in
-    [text "Cannot find witness for" ^/^ pp (tm_exists_sl u b body)]) in
+    [text "Cannot find witness for" ^/^ fquotes (pp (tm_exists_sl u b body))]) in
 
 
 
@@ -738,8 +738,8 @@ let check_slprop_equiv_ext r (g:env) (p q:slprop)
   | None -> 
     fail_doc_with_subissues g (Some r) issues [
       text "Could not prove equality of:";
-      pp p;
-      pp q;
+      fquotes (pp p);
+      fquotes (pp q);
     ]
   | Some token ->
     ()
@@ -1069,7 +1069,7 @@ let mk_penv (g: env) (allow_amb: bool) : T.Tac (pg:penv { pg.penv_env == g }) =
   let pg = if pg.penv_plems_enabled then { pg with penv_plems = build_plems pg } else pg in
   pg
 
-let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
+let rec apply_with_uvars_aux (g:env) (t:typ) (v:term) (acc:list term) : T.Tac (typ & term & list term) =
   match R.inspect_ln_unascribe t with
   | R.Tv_Arrow b c -> (
     match R.inspect_comp c with
@@ -1079,9 +1079,14 @@ let rec apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
         (T.range_of_term v) (elab_env g) sort false in
       let v = R.pack_ln <| R.Tv_App v (u, qual) in
       let res = open_term' res u 0 in
-      apply_with_uvars g res v
-    | _ -> t, v)
-  | _ -> t, v
+      apply_with_uvars_aux g res v (u :: acc)
+    | _ -> t, v, acc)
+  | _ -> t, v, acc
+
+let apply_with_uvars (g:env) (t:typ) (v:term) : T.Tac (typ & term) =
+  let ty, tm, uvars = apply_with_uvars_aux g t v [] in
+  RU.try_solve_single_valued_implicits (elab_env g) uvars;
+  ty, tm
 
 #push-options "--split_queries always --z3rlimit 10"
 let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
@@ -1520,8 +1525,8 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           k_elab_trans k (k_elab_trans k3 k_unreach) |)
       ) else
         fail_doc g (Some rng) [
-          text "The return type" ^^ indent (pp ty) ^/^
-          text "does not match the expected" ^^ indent (pp post_hint.ret_ty)
+          text "The return type" ^^ indent (fquotes (pp ty)) ^/^
+          text "does not match the expected" ^^ indent (fquotes (pp post_hint.ret_ty))
         ]
     ) else
       let ppname = mk_ppname_no_range "_posth" in

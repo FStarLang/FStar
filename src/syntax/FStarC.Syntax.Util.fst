@@ -1532,7 +1532,7 @@ let process_pragma p r =
       with
       | Options.NotSettable x ->
         Errors.raise_error r Errors.Fatal_FailToProcessPragma [
-          Errors.Msg.text <| Format.fmt1 "Option '%s' is not settable via a pragma." x;
+          Errors.Msg.text <| Format.fmt1 "Option ‘%s’ is not settable via a pragma." x;
         ]
     in
     match p with

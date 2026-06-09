@@ -217,12 +217,6 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   in
   begin
     match a.assumption_term.tm with
-    // - The top-level assumption `function_token_typing_Prims.__cache_version_number__`
-    //   is always included in the pruned set, since it provides an inhabitation proof
-    //   for int which some proofs rely on
-    | _ when a.assumption_name = "function_token_typing_Prims.__cache_version_number__" ->
-      { p with ambients = a.assumption_name::p.ambients }
-
     // - l_quant_interp assumptions give interpretations to deeply embedded quantifiers
     //   and have a specific shape of an Iff, where the LHS has a pattern, if the
     //   user annotated one.

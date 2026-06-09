@@ -364,8 +364,8 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       if None? tok then (
         let open Pulse.PP in
         fail_doc g (Some (RU.range_of_term i)) [
-          prefix 4 1 (text "Annotated effect expects only invariants in") (pp i) ^/^
-          prefix 4 1 (text "to be opened; but computed effect claims that invariants") (pp j) ^/^
+          prefix 4 1 (text "Annotated effect expects only invariants in") (fquotes (pp i)) ^/^
+          prefix 4 1 (text "to be opened; but computed effect claims that invariants") (fquotes (pp j)) ^/^
           text "are opened"
         ]
       );
@@ -378,9 +378,9 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       let open Pulse.PP in
       fail_doc g (Some r) [
         prefix 4 1 (text "Expected effect")
-                      (arbitrary_string (P.tag_of_comp c)) ^/^
+                      (fquotes (arbitrary_string (P.tag_of_comp c))) ^/^
         prefix 4 1 (text "but this function body has effect")
-                      (arbitrary_string (P.tag_of_comp c_computed))
+                      (fquotes (arbitrary_string (P.tag_of_comp c_computed)))
       ]
 
 
@@ -401,8 +401,8 @@ let maybe_rewrite_body_typing
         | None, _ ->
           Env.fail_doc g (Some e.range) [
             text "Inferred type is incompatible with annotation.";
-            text "Inferred:" ^/^ pp t';
-            text "Annotated:" ^/^ pp t;
+            text "Inferred:" ^/^ fquotes (pp t');
+            text "Annotated:" ^/^ fquotes (pp t);
           ]
         | Some tok, _ ->
           debug_abs g

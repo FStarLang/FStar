@@ -2313,7 +2313,7 @@ let extract_settings
       let result, set = !memo in
       let fail msg =
            display_usage();
-           failwith (Format.fmt1 "Could not parse '%s' passed to the --extract option" msg)
+           failwith (Format.fmt1 "Could not parse ‘%s’ passed to the --extract option" msg)
       in
       if set then result
       else match get_extract () with
@@ -2342,7 +2342,7 @@ let extract_settings
                    display_usage();
                    failwith
                      (Format.fmt2
-                       "Could not parse '%s'; multiple setting for %s target"
+                       "Could not parse ‘%s’; multiple setting for %s target"
                        msg tgt)
                in
                let pes =

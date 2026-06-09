@@ -101,3 +101,7 @@ val would_have_pruned (s:solver_state) : ML (option (list string))
 // Get all declarations to be given to the solver since the last flush
 // and update the solver state.
 val flush (s:solver_state) : ML (list decl & solver_state)
+
+// Returns all declarations currently visible in the solver state, i.e. the full
+// theory that would be sent to a fresh Z3 process. Does not change the solver state.
+val all_decls (s:solver_state) : ML (list decl)

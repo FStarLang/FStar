@@ -43,7 +43,7 @@ let rec find (#a: Type) (s: S.seq a) (p: (a -> bool)) (i: under (S.length s)) =
 (** Given a sequence [s] all of whose elements are at most [n], if the
     length of [s] is greater than [n], then there are two distinct
     indexes in [s] that contain the same element *)
-let rec pigeonhole (#n: pos) (s: S.seq (under n)) = 
+let rec pigeonhole (#n: nat) (s: S.seq (under n)) =
    if n = 1 then (0, 1)
    else let k0 = S.index s 0 in
      match find s (fun k -> k = k0) 1 with

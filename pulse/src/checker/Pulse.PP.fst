@@ -32,6 +32,10 @@ open Pulse.Show
 let text (s:string) : FStar.Pprint.document =
   flow (break_ 1) (words s)
 
+(* Wrap in "fancy" quotes *)
+let fquotes (d : document) : document =
+  enclose (utf8string "‘") (utf8string "’") d
+
 (* Nests a document 2 levels deep, as a block. It inserts a hardline
 before the doc, so if you want to format something as
 

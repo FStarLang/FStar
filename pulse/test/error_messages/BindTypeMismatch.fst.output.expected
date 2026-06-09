@@ -2,6 +2,6 @@
   - Expected failure:
   - Tactic failed
   - Type mismatch (NB: this is a syntactic check)
-  - Expected: bool
-  - Got: int
+  - Expected: ‘bool’
+  - Got: ‘int’
 

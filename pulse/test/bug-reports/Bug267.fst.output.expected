@@ -5,7 +5,7 @@
 
 * Info at Bug267.fst(58,5-58,8):
   - Expected failure:
-  - Could not prove equality between computed type int and expected type nat
+  - Could not prove equality between computed type ‘int’ and expected type ‘nat’
   - Assertion failed
   - The SMT solver could not prove the query.
   - Env =

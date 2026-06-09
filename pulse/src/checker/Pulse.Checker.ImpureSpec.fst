@@ -73,7 +73,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   debug g (fun _ -> [ text "impure spec inferred type"; pp t; pp ty ]);
   match readback_comp ty with
   | None | Some (C_Tot ..) ->
-    T.fail_doc_at [text "Impossible: not a stateful application type"; pp ty] (Some (RU.range_of_term t))
+    T.fail_doc_at [text "Impossible: not a stateful application type"; fquotes (pp ty)] (Some (RU.range_of_term t))
   | Some c -> match c with
   | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } ->
     let x = fresh g in
@@ -85,8 +85,8 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
     | None ->
       let head, _ = T.collect_app_ln t in
       T.fail_doc_at [
-        text "Cannot use" ^/^ pp head ^/^ text "in impure spec, cannot find rewrites_to in post:";
-        pp post;
+        text "Cannot use" ^/^ fquotes (pp head) ^/^ text "in impure spec, cannot find rewrites_to in post:";
+        fquotes (pp post);
       ] (Some (RU.range_of_term t))
     | Some rwr ->
       let allow_amb = true in

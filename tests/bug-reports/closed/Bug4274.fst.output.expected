@@ -9,5 +9,5 @@
       x#278 : foo
 
       goto _return#345 requires
-        (exists* (vx:foo_spec). foo_pred x vx ** pure (vx.x' == 10))
+        exists* (vx: foo_spec). foo_pred x vx ** pure (vx.x' == 10)
 

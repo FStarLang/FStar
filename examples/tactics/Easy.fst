@@ -22,3 +22,6 @@ let plus_assoc = easy
 
 val plus_comm : x:int -> y:int -> Lemma (x + y == y + x)
 let plus_comm = easy
+
+val plus_pos : x:int -> y:int -> Lemma (requires x > 0 /\ y > 0) (ensures x + y > 0)
+let plus_pos = easy
