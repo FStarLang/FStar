@@ -712,7 +712,7 @@ let ask_text
     be sent to the solver. *)
     let theory = 
       match core with
-      | None -> with_solver_state SolverState.flush
+      | None -> reading_solver_state SolverState.all_decls
       | Some core -> reading_solver_state (SolverState.filter_with_unsat_core queryid core)
     in
     let query_tail = Push 0 :: qry@[Pop 0] in

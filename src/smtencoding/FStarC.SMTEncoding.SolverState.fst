@@ -538,3 +538,12 @@ let flush (s:solver_state)
   let flushed = List.rev s.pending_flushes_rev @ to_flush in
   flushed,
   s1
+
+(* all_decls: Return the full theory that would be sent to a fresh Z3 process,
+   i.e. all declarations visible in the current solver state, with the same
+   filtering that flushing to a fresh solver would apply. Does not change s. *)
+let all_decls (s:solver_state)
+: ML (list decl)
+= let s = reset s.using_facts_from s in
+  let flushed, _ = flush s in
+  flushed
