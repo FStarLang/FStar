@@ -43,7 +43,7 @@
 
 * Info at TestHasEq.fst(88,8-89,30):
   - Expected failure:
-  - Invalid qualifiers for declaration `type TestHasEq.erasable_t2`
+  - Invalid qualifiers for declaration ‘type TestHasEq.erasable_t2’
   - The `unopteq` qualifier is not allowed on erasable inductives since they
     don't have decidable equality.
 
