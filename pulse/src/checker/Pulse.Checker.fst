@@ -46,6 +46,7 @@ module ForwardJumpLabel = Pulse.Checker.ForwardJumpLabel
 module Defer = Pulse.Checker.Defer
 module Goto = Pulse.Checker.Goto
 module PCP = Pulse.Checker.Pure
+module ImpureSpec = Pulse.Checker.ImpureSpec
 
 let terms_to_string (t:list term)
   : T.Tac string 
@@ -372,6 +373,7 @@ let rec check
           | Some p, TypeHint _ ->
             //We set the computation type to be STT in this case
             //We might allow the post_if annotation to also set the effect tag
+            let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
             PostHint <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
           | Some p, PostHint q ->
             Pulse.Typing.Env.fail g (Some t.range) 
@@ -423,6 +425,7 @@ let rec check
           | Some p, NoHint
           | Some p, TypeHint _ ->
             //See same remark in the If case
+            let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
             Checker.Base.intro_post_hint g EffectAnnotSTT None p
           | Some p, PostHint q ->
             Pulse.Typing.Env.fail g (Some t.range)

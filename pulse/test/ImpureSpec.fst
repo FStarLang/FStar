@@ -128,3 +128,56 @@ fn test14 ()
   assert live x ** pure (!x == 42);
   rewrite each !x as 42;
 }
+
+let max_spec (x y: int) = if x < y then y else x
+
+// A non-tail `if` annotated with a postcondition that uses impure spec
+// syntax (the `!result` selector). The annotation must be purified before
+// being used as the post hint.
+fn test15_if #p #q (x y: ref int)
+  preserves pts_to x #p 'vx
+  requires pts_to y #q 'vy
+  returns n: int
+  ensures pts_to y #q 'vy ** pure (n == max_spec 'vx 'vy)
+{
+  let mut result = 0;
+  let vx = !x;
+  let vy = !y;
+  if (vx > vy)
+  ensures
+    pts_to x #p 'vx **
+    pts_to y #q 'vy **
+    (exists* r. pts_to result r) **
+    pure (!result == max_spec 'vx 'vy)
+  {
+    result := vx;
+  }
+  else
+  {
+    result := vy;
+  };
+  !result;
+}
+
+// Same as test15_if, but for a non-tail `match`.
+fn test16_match #p #q (x y: ref int)
+  preserves pts_to x #p 'vx
+  requires pts_to y #q 'vy
+  returns n: int
+  ensures pts_to y #q 'vy ** pure (n == max_spec 'vx 'vy)
+{
+  let mut result = 0;
+  let vx = !x;
+  let vy = !y;
+  match (vx > vy)
+  ensures
+    pts_to x #p 'vx **
+    pts_to y #q 'vy **
+    (exists* r. pts_to result r) **
+    pure (!result == max_spec 'vx 'vy)
+  {
+    true -> { result := vx; }
+    false -> { result := vy; }
+  };
+  !result;
+}
