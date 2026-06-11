@@ -38,7 +38,7 @@ let with_printed_effect_args #a (k : unit -> ML a) : ML a =
     (fun () -> Options.set_option "print_effect_args" (Options.Bool true); k ())
 
 let term_to_string tcenv t =
-  with_printed_effect_args (fun () -> FStarC.TypeChecker.Normalize.term_to_string tcenv t)
+  with_printed_effect_args (fun () -> Syntax.Print.term_to_string' (DsEnv.set_current_module tcenv.dsenv tcenv.curmodule) t)
 
 let sigelt_to_string tcenv se =
   with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string' (DsEnv.set_current_module tcenv.dsenv tcenv.curmodule) se)
