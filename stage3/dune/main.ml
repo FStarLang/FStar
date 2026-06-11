@@ -32,7 +32,9 @@ let x =
 
       (* Only on stage3: we've baked Pulse into the compiler, which
          brings in the plugin library. Make sure F* knows this so it
-         will not try to load it again. *)
+         will not try to load it again. Also mark Pulse as loaded plugin,
+         so #lang-pulse will not attempt to load it again. *)
       Fstarcompiler.FStarC_Plugins.loaded_plugin_lib := true;
+      Fstarcompiler.FStarC_Plugins.loaded := "pulse" :: !Fstarcompiler.FStarC_Plugins.loaded;
 
       Fstarcompiler.FStarC_Main.main ()

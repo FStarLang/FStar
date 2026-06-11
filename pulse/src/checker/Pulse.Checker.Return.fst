@@ -178,10 +178,10 @@ let check
         match ctag_of_effect_annot p.effect_annot with
         | Some c -> c
         | None -> STT_Atomic in
-      // If we are returning an applications, introduce an intermediate binding
-      // for it. This makes sure whatever logical payload the call provides
-      // (as a postcondition) is available to prove the postcondition of
-      // the current function (the caller). See #4314.
+      // If we are returning an application, introduce an intermediate binding
+      // for it. This makes sure whatever logical payload the call provides (as
+      // a postcondition) is available to prove the postcondition of the current
+      // function (the caller). See #4314.
       let _, args = T.collect_app_ln f.term in
       if Cons? args then (
         let x = fresh g in
@@ -192,7 +192,7 @@ let check
           | NoHint -> f.expected_type // This seems always = to tm_unknown, oh well
         in
         Pulse.Checker.Util.debug g "pulse.return" (fun _ ->
-          Printf.sprintf "About to let-bind return, expected type = %s"
+          Printf.sprintf "About to let-bind return, expected type = %s" 
             (Pulse.Show.show expected_type));
         let b = mk_binder_ppname expected_type res_ppname in
         let body =

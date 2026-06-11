@@ -6,6 +6,10 @@ open Pulse
 assume val q : prop
 
 assume val lem () : Lemma (ensures q)
+fn test0 ()
+  ensures pure q
+  { let x : unit = lem (); () }
+
 fn test ()
   ensures pure q
   { lem (); }
