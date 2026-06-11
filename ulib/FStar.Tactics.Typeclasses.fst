@@ -26,6 +26,11 @@ open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView
 
+(* Wrap in "fancy" quotes *)
+let fquotes (d : Pprint.document) : Pprint.document =
+  let open FStar.Pprint in
+  enclose (utf8string "‘") (utf8string "’") d
+
 module L = FStar.List.Tot.Base
 let (@) = L.op_At
 
@@ -456,7 +461,7 @@ let __tcresolve (dbg : bool) : Tac unit =
       let open FStar.Pprint in
       fail_doc [
         prefix 2 1 (text "Could not solve typeclass constraint")
-          (bquotes (term_to_doc (cur_goal ())));
+          (fquotes (term_to_doc (cur_goal ())));
       ]
     | TacticFailure (msg,r) ->
       fail_doc_at ([text "Typeclass resolution failed."] @ msg) r
