@@ -81,13 +81,15 @@ let mk_slprop_eq (e0 e1:term) : term =
 
 let rewrites_to_p_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "rewrites_to_p"
 
-let mk_sq_rewrites_to_p u t x y =
+let mk_rewrites_to_p u t x y =
   let open R in
   let hd = pack_fv rewrites_to_p_lid in
   let hd = pack_ln (Tv_UInst hd [u]) in
   let args = [(t, Q_Implicit); (x, Q_Explicit); (y, Q_Explicit)] in
-  mk_squash (R.mk_app hd args)
+  R.mk_app hd args
 
+let mk_sq_rewrites_to_p u t x y =
+  mk_squash (mk_rewrites_to_p u t x y)
 
 let mk_ref (t:term) : term = tm_pureapp (tm_uinst (as_fv ref_lid) [u0]) None t
 

@@ -185,13 +185,32 @@ let check
       let _, args = T.collect_app_ln f.term in
       if Cons? args then (
         let x = fresh g in
-        let b = mk_binder_ppname tm_unknown res_ppname in
+        let expected_type =
+          match post_hint with
+          | PostHint t -> t.ret_ty
+          | TypeHint t -> t
+          | NoHint -> f.expected_type // This seems always = to tm_unknown, oh well
+        in
+        Pulse.Checker.Util.debug g "pulse.return" (fun _ ->
+          Printf.sprintf "About to let-bind return, expected type = %s"
+            (Pulse.Show.show expected_type));
+        let b = mk_binder_ppname expected_type res_ppname in
         let body =
-          mk_term (Tm_Return { expected_type = tm_unknown
+          mk_term (Tm_Return { expected_type
                              ; insert_eq = false
                              ; term = term_of_no_name_var x }) st.range in
-        let body = close_st_term body x in
-        let tt = { st with term = Tm_TotBind { binder = b; head = f.term; body } } in
+        (* Add a rewrites_to, so the extra alias does not prevent slprop proving. *)
+        let assertion =
+          ASSERT { elaborated=true;
+                   p = tm_pure (mk_rewrites_to_p u_unknown expected_type (term_of_no_name_var x) f.term)
+                   }
+        in
+        let tt = { st with term = Tm_ProofHintWithBinders {
+                                    hint_type = assertion;
+                                    binders = [];
+                                    t = body; } } in
+        let tt = close_st_term tt x in
+        let tt = { st with term = Tm_TotBind { binder = b; head = f.term; body=tt } } in
         Pulse.Checker.Util.debug g "pulse.return" (fun _ ->
           Printf.sprintf "Sequencing tail return (#4314): %s"
             (Pulse.Syntax.Printer.st_term_to_string tt));
