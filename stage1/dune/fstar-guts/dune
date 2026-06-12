@@ -4,6 +4,7 @@
  (public_name fstar.compiler)
  (libraries
     batteries
+    findlib
     zarith
     stdint
     yojson

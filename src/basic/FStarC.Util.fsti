@@ -91,6 +91,11 @@ val kill_all: unit -> ML unit
 val proc_prog : proc -> string
 val system_run : string -> ML int (* a less refined launching, implemented by Sys.command *)
 
+(* True iff findlib can resolve the package [pkg] in the current (ambient)
+   OCaml environment. Uses the findlib library directly (no subprocess), so it
+   works on native Windows where no shell is available. *)
+val findlib_package_exists : string -> ML bool
+
 val getcwd: unit -> ML string
 
 val int_of_string: string -> ML int
