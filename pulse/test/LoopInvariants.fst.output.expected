@@ -1,4 +1,4 @@
-* Info at LoopInvariants.fst(65,4-65,8):
+* Info at LoopInvariants.fst(65,6-65,8):
   - Expected failure:
   - Could not prove equality of:
   - ‘Pulse.Lib.Reference.pts_to s 3’
@@ -10,10 +10,10 @@
       (s : Pulse.Lib.Reference.ref Prims.int) (meas : Prims.unit)
       (__ : Prims.squash (meas == ())) (__ : Prims.squash (true == true))
       (__ : Prims.unit)
-  - VC = Pulse.Lib.Reference.pts_to s 3 == Pulse.Lib.Reference.pts_to s 2
-  - See also LoopInvariants.fst(65,4-65,10)
+  - VC = Prims.l_False
+  - See also LoopInvariants.fst(65,9-65,10)
 
-* Info at LoopInvariants.fst(76,4-76,8):
+* Info at LoopInvariants.fst(76,6-76,8):
   - Expected failure:
   - Could not prove equality of:
   - ‘Pulse.Lib.Reference.pts_to s 3’
@@ -25,6 +25,6 @@
       (s : Pulse.Lib.Reference.ref Prims.int) (meas : Prims.unit)
       (__ : Prims.squash (meas == ())) (__ : Prims.squash (true == true))
       (__ : Prims.unit)
-  - VC = Pulse.Lib.Reference.pts_to s 3 == Pulse.Lib.Reference.pts_to s 2
-  - See also LoopInvariants.fst(76,4-76,10)
+  - VC = Prims.l_False
+  - See also LoopInvariants.fst(76,9-76,10)
 

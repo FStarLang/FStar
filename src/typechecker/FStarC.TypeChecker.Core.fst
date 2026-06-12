@@ -1031,6 +1031,33 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
   else
     Right
 
+let is_marked_injective env t =
+  match (U.un_uinst t).n with
+  | Tm_fvar fv ->
+    Env.fv_has_attr env fv PC.unifier_hint_injective_lid
+  | _ -> false
+
+// Check if a function head returns a type marked with [@@unifier_hint_injective_type].
+// Such functions get equatable treatment: if structural comparison fails,
+// we emit a full application guard (or open lambdas if only lambda args differ).
+// Excludes Delta_equational heads (match/if-based) since those should be unfolded.
+let returns_equatable_type env t =
+  match (U.un_uinst t).n with
+  | Tm_fvar fv ->
+    (match Env.delta_depth_of_fv env fv with
+     | S.Delta_equational_at_level _ -> false
+     | _ ->
+       (match Env.try_lookup_lid env fv.fv_name with
+        | Some ((_, typ), _) ->
+          let _, ret_typ = U.arrow_formals typ in
+          let ret_head, _ = U.head_and_args ret_typ in
+          (match (U.un_uinst ret_head).n with
+           | Tm_fvar ret_fv ->
+             Env.fv_has_attr env ret_fv PC.unifier_hint_injective_type_lid
+           | _ -> false)
+        | _ -> false))
+  | _ -> false
+
 instance showable_rel : showable relation = {
     show = fun rel ->
       match rel with
@@ -1308,28 +1335,107 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         if not (head_matches && List.length args0 = List.length args1)
         then maybe_unfold_and_retry t0 t1
         else (
-          (* If we're proving equality, SMT queries are ok, and either head
-             is equatable:
-              - first try proving equality structurally, without a guard.
-              - if that fails, then emit an SMT query
-             This is designed to be able to prove things like `v.v1 == u.v1`
-             first by trying to unify `v` and `u` and if it fails
-             then prove `v.v1 == u.v1` *)
-          let compare_head_and_args () =
-            handle_with
-              (check_relation g EQUALITY head0 head1 ;!
-               check_relation_args g EQUALITY args0 args1)
-              (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
+          let structural () =
+            check_relation g EQUALITY head0 head1 ;!
+            check_relation_args g EQUALITY args0 args1
           in
-          if guard_ok &&
-            (rel=EQUALITY) && 
-            (equatable g t0 || equatable g t1)
-          then (
-            handle_with 
-              (no_guard (compare_head_and_args ()))
-              (fun _ -> emit_guard t0 t1)
-          )
-          else compare_head_and_args ()
+          //For injective heads: compare each arg independently.
+          //  1. Try no_guard first (handles definitionally equal args)
+          //  2. For lambda args: use full check_relation (opens lambdas,
+          //     allows unfolding inside the body, produces ∀-quantified guards)
+          //  3. For non-lambda args: emit_guard on original arg pair
+          let injective_args () =
+            check_relation g EQUALITY head0 head1 ;!
+            if List.length args0 = List.length args1
+            then iter2 args0 args1
+              (fun (a0, q0) (a1, q1) _ ->
+                check_aqual q0 q1;!
+                handle_with
+                  (no_guard (check_relation g EQUALITY a0 a1))
+                  (fun _ ->
+                    match (Subst.compress a0).n, (Subst.compress a1).n with
+                    | Tm_abs _, Tm_abs _ ->
+                      check_relation g EQUALITY a0 a1
+                    | _ ->
+                      emit_guard a0 a1))
+              ()
+            else fail_str "Unequal number of arguments"
+          in
+          //For non-injective heads: try unfolding both sides and recurse.
+          //If unfolding exposes a refinement, the refinement comparison
+          //produces properly weakened guards (e.g., natlt i <: natlt n gives
+          //forall x. x < i ==> x < n, not i == n).
+          //If unfolding fails or is not allowed, fall back to structural.
+          let unfold_both_and_retry () =
+            if! unfolding_ok then (
+              match maybe_unfold_side Both t0 t1 with
+              | None ->
+                //Can't unfold: fall back to structural with guards
+                if! guard_not_allowed 
+                then err "structural check fails, guards not allowed, and cannot unfold further"
+                else structural ()
+              | Some (t0', t1') ->
+                let t0' = beta_iota_reduce t0' in
+                let t1' = beta_iota_reduce t1' in
+                check_relation g rel t0' t1'
+            ) else (
+              //Unfolding not allowed: fall back to structural with guards
+              if! guard_not_allowed
+              then err "structural check fails, guards not allowed, and unfolding not allowed"
+              else structural ()
+            )
+          in
+          //Main logic:
+          //1. Always try no_guard(structural) first.
+          //2. If that fails:
+          //   - explicitly injective head: per-arg comparison
+          //   - returns equatable type: if only lambda args differ, open them;
+          //     otherwise emit full application guard
+          //   - equatable head (Delta_abstract etc.): same as equatable type
+          //   - otherwise: unfold_both_and_retry
+          handle_with
+            (no_guard (structural ()))
+            (fun _ ->
+              if is_marked_injective g.tcenv head0
+              then (
+                if not guard_ok
+                then err "injective head: structural check fails and guards not allowed"
+                else injective_args ()
+              )
+              else if guard_ok &&
+                (rel=EQUALITY) &&
+                (equatable g t0 || equatable g t1 ||
+                 returns_equatable_type g.tcenv head0)
+              then (
+                handle_with
+                  (no_guard (unfold_both_and_retry ()))
+                  (fun _ ->
+                    //Per-arg comparison with full application guard fallback:
+                    //For each arg pair:
+                    //  - if no_guard(check_relation) succeeds, the arg is equal
+                    //  - if both are lambdas, use check_relation (may emit guard)
+                    //  - otherwise, bail to full application emit_guard
+                    if List.length args0 <> List.length args1
+                    then emit_guard t0 t1
+                    else
+                      handle_with
+                        (check_relation g EQUALITY head0 head1 ;!
+                         iter2 args0 args1
+                           (fun (a0, q0) (a1, q1) _ ->
+                             check_aqual q0 q1;!
+                             handle_with
+                               (no_guard (check_relation g EQUALITY a0 a1))
+                               (fun _ ->
+                                 match (Subst.compress a0).n, (Subst.compress a1).n with
+                                 | Tm_abs _, Tm_abs _ ->
+                                   check_relation g EQUALITY a0 a1
+                                 | _ ->
+                                   err "equatable: non-lambda arg differs"))
+                           ())
+                        (fun _ -> emit_guard t0 t1))
+              )
+              else unfold_both_and_retry ()
+            )
         )
 
       | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
@@ -1412,6 +1518,33 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         handle_with
           (check_relation g EQUALITY e0 e1 ;!
            iter2 brs0 brs1 relate_branch ())
+          (fun _ -> fallback t0 t1)
+
+      | Tm_match _, _
+      | _, Tm_match _ when guard_not_ok ->
+        //One side is a match and the other is not (both-match handled above).
+        //Try to reduce the match away by normalizing with delta + iota + primops.
+        //If the match reduces (e.g., scrutinee unfolds to a constructor), recurse.
+        //Otherwise, fall back.
+        let reduce_match t =
+          N.normalize [Env.Weak; Env.HNF; Env.Beta; Env.Iota; Env.Primops;
+                       Env.UnfoldUntil delta_constant] g.tcenv t
+        in
+        let maybe_reduce t =
+          match t.n with
+          | Tm_match _ -> reduce_match t
+          | _ -> t
+        in
+        let try_reduce () =
+          let t0' = maybe_reduce t0 in
+          let t1' = maybe_reduce t1 in
+          //Check that at least one side actually changed (made progress)
+          if equal_term t0 t0' && equal_term t1 t1'
+          then fallback t0 t1
+          else check_relation g rel t0' t1'
+        in
+        handle_with
+          (try_reduce ())
           (fun _ -> fallback t0 t1)
 
       | _ -> fallback t0 t1

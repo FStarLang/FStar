@@ -143,6 +143,18 @@ val tcdecltime : unit
     definition of `t`. *)
 val unifier_hint_injective : unit
 
+(** This attribute opts a function out of injective treatment by
+    the unifier, even if it would otherwise be treated as injective
+    (e.g., due to its return type being marked with
+    unifier_hint_injective_type). *)
+val unifier_hint_not_injective : unit
+
+(** This attribute on a type definition causes all functions returning
+    that type to be treated as injective by the unifier, unless they
+    are Delta_equational (i.e., defined by match/if) or explicitly
+    opted out via unifier_hint_not_injective. *)
+val unifier_hint_injective_type : unit
+
 (**
  This attribute is used to control the evaluation order
  and unfolding strategy for certain definitions.
