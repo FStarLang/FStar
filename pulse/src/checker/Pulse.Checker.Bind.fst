@@ -200,6 +200,26 @@ let check_tot_bind
 = let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
+  // When binding an application at an annotated type, first bind it at its
+  // inferred type, then coerce to the annotation:
+  //   let x : t = e   ~>   let x0 = e in let x : t = x0
+  // This way any logical content of e's inferred type (e.g. a Lemma's
+  // postcondition, which shows up as a refinement) is brought into scope
+  // before we force x to have type t. Otherwise `let x : unit = lem ()` would
+  // check `lem ()` at the bare type `unit` and drop the postcondition.
+  // Mirrors the returned-application handling for #4314. See Bug4314.
+  let _, args = T.collect_app_ln e1 in
+  if (not (Tm_Unknown? (inspect_term b.binder_ty))) && Cons? args
+  then (
+    let x0 = fresh g in
+    let b0 = mk_binder_ppname tm_unknown b.binder_ppname in
+    let inner = { t with term = Tm_TotBind { binder=b; head=term_of_no_name_var x0; body=e2 } } in
+    let inner = close_st_term inner x0 in
+    let tt = { t with term = Tm_TotBind { binder=b0; head=e1; body=inner } } in
+    Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
+      Printf.sprintf "check_tot_bind: sequencing annotated application binding (Bug4314):\n%s\n" (show tt));
+    check g pre post_hint res_ppname tt
+  ) else (
   let rebuild (head:either term st_term) : T.Tac (t:st_term { Tm_Bind? t.term }) =
     match head with
     | Inl e1' ->
@@ -221,4 +241,5 @@ let check_tot_bind
       (show t)
       (show t'));
     check g pre post_hint res_ppname t'
+  )
 #pop-options

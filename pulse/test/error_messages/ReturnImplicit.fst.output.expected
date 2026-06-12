@@ -3,7 +3,9 @@
   - Ill-typed term
   - Assertion failed
   - The SMT solver could not prove the query.
-  - Env = (uu___0 : Prims.unit)
-  - VC = Prims.l_False
+  - Env =
+      (uu___0 : Prims.unit) (_fret : Prims.int)
+      (__ : Prims.squash (_fret == -1))
+  - VC = _fret >= 0
   - Also see: Prims.fst(642,18-642,24)
 
