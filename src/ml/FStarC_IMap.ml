@@ -1,6 +1,7 @@
 module ZHashtbl = BatHashtbl.Make(Z)
 
-type 'value imap = 'value ZHashtbl.t
+type 'value t = 'value ZHashtbl.t
+type 'value imap = 'value t
 let create (i:Z.t) : 'value imap = ZHashtbl.create (Z.to_int i)
 let clear (s:('value imap)) = ZHashtbl.clear s
 let add (m:'value imap) k (v:'value) = ZHashtbl.replace m k v

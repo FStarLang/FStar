@@ -42,6 +42,7 @@ module U  = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TcComm = FStarC.TypeChecker.Common
+module IMap = FStarC.IMap
 
 open FStarC.Defensive
 
@@ -1297,7 +1298,37 @@ let bound_vars_of_bindings bs =
         | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-let all_binders env = binders_of_bindings env.gamma
+
+(* [all_binders] is a pure function of [env.gamma], but its result is
+   stored verbatim in every context uvar created in that environment (see
+   [new_uvar]'s [ctx_uvar_binders]). Many uvars share a [gamma], so without
+   caching each gets its own copy of an identical, often large, binder list.
+   Cache so uvars sharing a context share one list.
+
+   The cache is keyed on the top binder's [index] (a fresh global id, since
+   names are freshened), with hits confirmed by physical equality on [gamma].
+   It is deliberately small and dropped wholesale once full: the win is
+   sharing among the few contexts live during a constraint-solving burst; a
+   larger cache would instead retain dead contexts' binder lists. [gamma] is
+   immutable, so this memo needs no invalidation. *)
+let all_binders_cache_size = 64
+let all_binders_cache : IMap.t (list binding & binders) =
+  IMap.create all_binders_cache_size
+let all_binders_cache_count : ref int = mk_ref 0
+let all_binders env =
+  let g = env.gamma in
+  let key = match g with | Binding_var x :: _ -> x.index | _ -> 0 in
+  let recompute () : ML binders =
+    let bs = binders_of_bindings g in
+    if !all_binders_cache_count >= all_binders_cache_size
+    then (IMap.clear all_binders_cache; all_binders_cache_count := 0);
+    IMap.add all_binders_cache key (g, bs);
+    all_binders_cache_count := !all_binders_cache_count + 1;
+    bs
+  in
+  match IMap.try_find all_binders_cache key with
+  | Some (g', bs) -> if BU.physical_equality g g' then bs else recompute ()
+  | None -> recompute ()
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
