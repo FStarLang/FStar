@@ -85,6 +85,7 @@ open FStar.List.Tot
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.TypeChecker
+open FStarC.Errors.Msg { fquotes }
 module Env = FStarC.TypeChecker.Env
 module S = FStarC.Syntax.Syntax
 module R = FStarC.Range
@@ -501,7 +502,7 @@ let is_type (g:env) (t:term)
 
         | _ ->
           fail [
-            text "Expected a type, got" ^/^ pp t
+            text "Expected a type, got" ^/^ fquotes (pp t)
           ]
     in
     with_context "is_type" (Some (CtxTerm t)) (fun _ ->
@@ -544,7 +545,7 @@ let rec is_arrow (g:env) (t:term)
             match e_tag with
             | None ->
               fail [
-                text "Expected total or gtot arrow, got" ^/^ pp (U.comp_effect_name c);
+                text "Expected total or gtot arrow, got" ^/^ fquotes (pp (U.comp_effect_name c));
               ]
             | Some e_tag ->
               let g, [x], c = arrow_formals_comp g t in
@@ -580,7 +581,7 @@ let rec is_arrow (g:env) (t:term)
 
         | _ ->
           fail [
-            text "Expected an arrow, got a" ^/^ doc_of_string (tag_of t) ^^ colon ^/^ pp t;
+            text "Expected an arrow, got a" ^/^ doc_of_string (tag_of t) ^^ colon ^/^ fquotes (pp t);
           ]
     in
     with_context "is_arrow" None (fun _ ->
@@ -645,8 +646,8 @@ let check_aqual (a0 a1:aqual)
       return ()
     | _ ->
       fail [
-        text "Unequal arg qualifiers: lhs" ^/^ pp a0
-        ^^ text "and rhs" ^/^ pp a1
+        text "Unequal arg qualifiers: lhs" ^/^ fquotes (pp a0)
+        ^^ text "and rhs" ^/^ fquotes (pp a1)
       ]
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
@@ -1050,16 +1051,16 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         | EQUALITY ->
           fail [
             parens (text lbl) ^/^ text "not equal terms:"
-            ^/^ pp t0
+            ^/^ fquotes (pp t0)
             ^/^ text "<>"
-            ^/^ pp t1
+            ^/^ fquotes (pp t1)
           ]
         | _ ->
           fail [
             parens (text lbl)
-            ^/^ pp t0
+            ^/^ fquotes (pp t0)
             ^/^ text "is not a subtype of"
-            ^/^ pp t1
+            ^/^ fquotes (pp t1)
           ]
     in
 
@@ -1480,7 +1481,7 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
           else
             fail [
               text "Subcomp failed: Unequal computation types"
-               ^/^ pp ct0.effect_name ^/^ doc_of_string "and" ^/^ pp ct1.effect_name
+               ^/^ fquotes (pp ct0.effect_name) ^/^ doc_of_string "and" ^/^ fquotes (pp ct1.effect_name)
             ]
         )
       )
@@ -1927,9 +1928,9 @@ and check_comp (g:env) (c:comp)
                  fail [
                   flow (break_ 1) [
                     text "Total effect";
-                    pp (U.comp_effect_name c);
+                    fquotes (pp (U.comp_effect_name c));
                     text "(normalized to";
-                    pp c_lid ^^ doc_of_string ")";
+                    fquotes (pp c_lid) ^^ doc_of_string ")";
                     text "does not have a representation.";
                   ]
                  ]
@@ -2025,9 +2026,9 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
       fail [
         flow (break_ 1) [
           text "Scrutinee type";
-          pp t_sc;
+          fquotes (pp t_sc);
           text "and pattern type";
-          pp t_pat;
+          fquotes (pp t_pat);
           text "are not compatible because";
           text s;
         ]
