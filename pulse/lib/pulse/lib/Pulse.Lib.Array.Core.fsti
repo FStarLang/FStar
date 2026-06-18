@@ -216,6 +216,10 @@ val length_gsub #t arr i j : Lemma (length (gsub #t arr i j) == j - i) [SMTPat (
 val offset_of_gsub #t arr i j : Lemma (offset_of (gsub #t arr i j) == offset_of arr + i) [SMTPat (offset_of (gsub arr i j))]
 val base_of_gsub #t arr i j : Lemma (base_of (gsub #t arr i j) == base_of arr) [SMTPat (base_of (gsub arr i j))]
 
+val same_base_null (#t: Type u#a) (x y: array t)
+  : Lemma (requires base_of x == base_of y)
+          (ensures (is_null x <==> is_null y))
+
 ghost fn gsub_intro u#a (#t: Type u#a) (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq (option t)) { i <= j /\ j <= Seq.length v })
   requires pts_to_mask arr #f v mask
   requires pure (forall (k: nat). mask k /\ k < Seq.length v ==> i <= k /\ k < j)
