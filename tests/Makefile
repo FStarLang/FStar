@@ -5,6 +5,7 @@ SUBDIRS += error-messages
 SUBDIRS += tactics
 SUBDIRS += ide
 SUBDIRS += machine_integers
+SUBDIRS += floats
 SUBDIRS += micro-benchmarks
 SUBDIRS += prettyprinting
 SUBDIRS += projectors
