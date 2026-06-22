@@ -1,4 +1,4 @@
-all: test-missing test-missing-nocache
+all: test-missing.touch test-missing-nocache.touch
 
 # So test.mk does not do anything by default
 NOVERIFY=1
@@ -11,8 +11,10 @@ define MUSTFAIL
 	@echo "Command '$1' failed as expected"
 endef
 
-test-missing: $(CACHE_DIR)/Missing.fsti.checked
+test-missing.touch: $(CACHE_DIR)/Missing.fsti.checked
 	$(call MUSTFAIL,$(FSTAR_EXE) Missing.fst)
+	touch $@
 
-test-missing-nocache:
+test-missing-nocache.touch:
 	$(call MUSTFAIL,$(FSTAR_EXE) --cache_off Missing.fst)
+	touch $@
