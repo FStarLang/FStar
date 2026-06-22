@@ -22,7 +22,8 @@ open Pulse.Lib.Fixpoints
 open Pulse.Lib.Task
 open FStar.Real
 open Pulse.Lib.Pledge
-open Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 
 module P = Pulse.Lib.Pledge
 module R = Pulse.Lib.Reference
@@ -130,19 +131,22 @@ fn rec simple_for
    (n : nat)
    (f : simple_for_f pre post r)
    preserves r
-   requires on_range pre 0 n
-   ensures on_range post 0 n
+   requires (forall+ (k:nat{0 <= k /\ k < n}). pre k)
+   ensures (forall+ (k:nat{0 <= k /\ k < n}). post k)
 {
   (* Couldn't use a while loop here, weird errors, try again. *)
   if (n = 0) {
-    on_range_empty_elim pre 0;
-    on_range_empty post 0;
+    range_rebound pre 0 n 0 0;
+    range_empty_elim pre 0;
+    range_empty_intro post 0;
+    range_rebound post 0 0 0 n;
   } else {
     // rewrite (on_range pre 0 n) as (on_range pre (reveal (hide 0)) (reveal (hide n)));
-    on_range_unsnoc ();
+    range_unsnoc pre 0 n;
     f (n-1);
     simple_for pre post r (n-1) f;
-    on_range_snoc ();
+    range_snoc post 0 (n-1);
+    range_rebound post 0 ((n-1)+1) 0 n;
     ()
   }
 }
@@ -155,20 +159,20 @@ fn for_loop
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (lo hi : nat)
    preserves r
-   requires on_range pre lo hi
-   ensures on_range post lo hi
+   requires pure (lo <= hi)
+   requires (forall+ (k:nat{lo <= k /\ k < hi}). pre k)
+   ensures (forall+ (k:nat{lo <= k /\ k < hi}). post k)
 {
-  on_range_le pre;
   let pre'  : (nat -> slprop) = (fun (i:nat) -> pre  (i + lo));
   let post' : (nat -> slprop) = (fun (i:nat) -> post (i + lo));
-  assert (on_range pre lo hi);
-  on_range_weaken_and_shift
+  assert (forall+ (k:nat{lo <= k /\ k < hi}). pre k);
+  range_weaken_and_shift_down
     pre pre'
-    (-lo)
+    lo
     lo hi
-    fn k { rewrite pre k as pre' (k + (-lo)); };
-  rewrite (on_range pre' (lo+(-lo)) (hi+(-lo))) as (on_range pre' 0 (hi-lo));
-  assert (on_range pre' 0 (hi-lo));
+    fn k { rewrite pre k as pre' (k - lo); };
+  range_rebound pre' (lo - lo) (hi - lo) 0 (hi - lo);
+  assert (forall+ (k:nat{0 <= k /\ k < hi - lo}). pre' k);
 
   simple_for pre' post' r (hi-lo) fn i
   {
@@ -177,26 +181,23 @@ fn for_loop
     rewrite post (i+lo) as post' i;
   };
 
-  assert (on_range post' 0 (hi-lo));
+  assert (forall+ (k:nat{0 <= k /\ k < hi - lo}). post' k);
 
-  on_range_weaken_and_shift
+  range_weaken_and_shift
     post' post
     lo
     0 (hi-lo)
-    fn k { rewrite post' k as post (k + lo) };
-  rewrite
-    on_range post (0+lo) ((hi-lo)+lo)
-  as
-    on_range post lo hi;
+    fn k { rewrite post' k as post (k + lo); };
+  range_rebound post (0 + lo) ((hi-lo) + lo) lo hi;
 }
 
 
 assume val frac_n (n:pos) (p:pool) (e:perm)
   : stt unit (pool_alive #e p)
-             (fun () -> on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
+             (fun () -> (forall+ (k:nat{0 <= k /\ k < n}). (fun i -> pool_alive #(div_perm e n) p) k))
 
 assume val unfrac_n (n:pos) (p:pool) (e:perm)
-  : stt unit (on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
+  : stt unit (forall+ (k:nat{0 <= k /\ k < n}). (fun i -> pool_alive #(div_perm e n) p) k)
              (fun () -> pool_alive #e p)
 
 
@@ -207,22 +208,24 @@ fn rec redeem_range
   (f : slprop)
   (n : nat)
   preserves f
-  requires on_range (fun i -> pledge emp_inames f (p i)) 0 n
-  ensures on_range p 0 n
+  requires (forall+ (k:nat{0 <= k /\ k < n}). (fun i -> pledge emp_inames f (p i)) k)
+  ensures (forall+ (k:nat{0 <= k /\ k < n}). p k)
 {
   if (n = 0) {
     rewrite each n as 0;
-    on_range_empty_elim (fun i -> pledge emp_inames f (p i)) 0;
-    on_range_empty p 0;
+    range_empty_elim (fun i -> pledge emp_inames f (p i)) 0;
+    range_empty_intro p 0;
+    range_rebound p 0 0 0 n;
   } else {
-    on_range_unsnoc (); // (fun i -> pledge emp_inames f (p i)) n ();
+    range_unsnoc (fun i -> pledge emp_inames f (p i)) 0 n;
     rewrite // ????
       (fun i -> pledge emp_inames f (p i)) (n-1)
     as
       pledge emp_inames f (p (n-1));
     redeem_pledge _ f (p (n-1));
     redeem_range p f (n-1);
-    on_range_snoc ();
+    range_snoc p 0 (n-1);
+    range_rebound p 0 ((n-1)+1) 0 n;
     // p_join_last p n ()
   }
 }
@@ -235,8 +238,8 @@ parallel_for
   (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires on_range pre 0 n
-  ensures on_range post 0 n
+  requires (forall+ (k:nat{0 <= k /\ k < n}). pre k)
+  ensures (forall+ (k:nat{0 <= k /\ k < n}). post k)
 {
   let p = setup_pool 42;
   (* Use a normal for loop to *spawn* each task *)
@@ -245,7 +248,7 @@ parallel_for
   assert (pool_alive #1.0R p);
   frac_n n p 1.0R;
 
-  on_range_zip
+  range_zip
     pre
     (fun i -> pool_alive #(div_perm 1.0R n) p)
     0 n;
@@ -262,7 +265,7 @@ parallel_for
     ()
   };
 
-  on_range_unzip
+  range_unzip
     (fun i -> pledge emp_inames (pool_done p) (post i))
     (fun i -> pool_alive #(div_perm 1.0R n) p)
     0 n;
@@ -288,8 +291,8 @@ parallel_for_alt
   (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires on_range pre 0 n
-  ensures on_range post 0 n
+  requires (forall+ (k:nat{0 <= k /\ k < n}). pre k)
+  ensures (forall+ (k:nat{0 <= k /\ k < n}). post k)
 {
   let p = setup_pool 42;
 
@@ -317,7 +320,7 @@ let wsr_loop_inv_f
   exists* (ii:nat).
        R.pts_to i ii
     ** full_post ii
-    ** on_range post ii n
+    ** (forall+ (k:nat{ii <= k /\ k < n}). post k)
     ** pure (b == (Prims.op_LessThan ii n))
 
 let wsr_loop_inv_tf
@@ -339,16 +342,17 @@ fn rec ffold
   (i : nat)
   requires pure (i <= n)
   requires fp i
-  requires on_range p i n
+  requires (forall+ (k:nat{i <= k /\ k < n}). p k)
   ensures fp n
 {
    if (i = n) {
-     on_range_empty_elim p n;
+     range_rebound p i n n n;
+     range_empty_elim p n;
      rewrite fp i as fp n;
      ()
    } else {
-     assert (fp i ** on_range p i n);
-     on_range_uncons ();
+     assert (fp i ** (forall+ (k:nat{i <= k /\ k < n}). p k));
+     range_uncons p i n;
      ss i;
      ffold p fp ss n (i+1);
      ()
@@ -365,11 +369,12 @@ fn rec funfold
   (n : nat)
   requires fp n
   ensures fp 0
-  ensures on_range p 0 n
+  ensures (forall+ (k:nat{0 <= k /\ k < n}). p k)
 {
    if (n = 0) {
      rewrite fp n as fp 0;
-     on_range_empty p 0;
+     range_empty_intro p 0;
+     range_rebound p 0 0 0 n;
      ()
    } else {
      assert (fp n);
@@ -377,7 +382,8 @@ fn rec funfold
      ss (n-1);
      assert (p (n-1) ** fp (n-1));
      funfold p fp ss (n-1);
-     on_range_snoc ();
+     range_snoc p 0 (n-1);
+     range_rebound p 0 ((n-1)+1) 0 n;
    }
 }
 
@@ -419,11 +425,11 @@ fn rec h_for_task
   (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
   (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (lo hi : nat)
+  (lo : nat) (hi : nat { lo <= hi })
   (_:unit)
   requires pool_alive #e p
-  requires on_range pre lo hi
-  ensures pledge emp_inames (pool_done p) (on_range post lo hi)
+  requires (forall+ (k:nat{lo <= k /\ k < hi}). pre k)
+  ensures pledge emp_inames (pool_done p) (forall+ (k:nat{lo <= k /\ k < hi}). post k)
 {
   if (hi - lo < 100) {
     (* Too small, just run sequentially *)
@@ -431,46 +437,47 @@ fn rec h_for_task
     for_loop pre post emp
              (fun i -> frame_stt_left emp (f i)) lo hi;
 
-    return_pledge (pool_done p) (on_range post lo hi) #_
+    return_pledge (pool_done p) (forall+ (k:nat{lo <= k /\ k < hi}). post k) #_
   } else {
-    let mid = (hi+lo)/2;
+    let mid : (m:nat{lo <= m /\ m <= hi}) = (hi+lo)/2;
     assert (pure (lo <= mid /\ mid <= hi));
 
     share_alive p e;
     share_alive p (e /. 2.0R);
 
-    on_range_split mid;
+    range_split pre lo mid hi;
 
     spawn_ p
             #(e /. 2.0R)
-            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre lo mid)
-            #(pledge emp_inames (pool_done p) (on_range post lo mid))
+            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** (forall+ (k:nat{lo <= k /\ k < mid}). pre k))
+            #(pledge emp_inames (pool_done p) (forall+ (k:nat{lo <= k /\ k < mid}). post k))
             (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f lo mid);
 
     spawn_ p
             #(e /. 2.0R)
-            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre mid hi)
-            #(pledge emp_inames (pool_done p) (on_range post mid hi))
+            #(pool_alive #((e /. 2.0R) /. 2.0R) p ** (forall+ (k:nat{mid <= k /\ k < hi}). pre k))
+            #(pledge emp_inames (pool_done p) (forall+ (k:nat{mid <= k /\ k < hi}). post k))
             (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
 
     (* We get this complicated pledge emp_inames from the spawns above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post lo mid)));
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post mid hi)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (forall+ (k:nat{lo <= k /\ k < mid}). post k)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (forall+ (k:nat{mid <= k /\ k < hi}). post k)));
 
-    squash_pledge (pool_done p) (on_range post lo mid);
-    squash_pledge (pool_done p) (on_range post mid hi);
+    squash_pledge (pool_done p) (forall+ (k:nat{lo <= k /\ k < mid}). post k);
+    squash_pledge (pool_done p) (forall+ (k:nat{mid <= k /\ k < hi}). post k);
 
-    join_pledge #emp_inames #(pool_done p) (on_range post lo mid) (on_range post mid hi);
+    join_pledge #emp_inames #(pool_done p) (forall+ (k:nat{lo <= k /\ k < mid}). post k) (forall+ (k:nat{mid <= k /\ k < hi}). post k);
     rewrite_pledge
       #emp_inames
       #(pool_done p)
-      (on_range post lo mid ** on_range post mid hi)
-      (on_range post lo hi)
-      (fun () -> on_range_join lo mid hi);
+      ((forall+ (k:nat{lo <= k /\ k < mid}). post k) ** (forall+ (k:nat{mid <= k /\ k < hi}). post k))
+      (forall+ (k:nat{lo <= k /\ k < hi}). post k)
+      #emp_inames
+      fn _ { range_join post lo mid hi };
 
     (* Better *)
-    assert (pledge emp_inames (pool_done p) (on_range post lo hi));
+    assert (pledge emp_inames (pool_done p) (forall+ (k:nat{lo <= k /\ k < hi}). post k));
 
     drop_ (pool_alive #(e /. 2.0R) p);
 
@@ -496,8 +503,8 @@ parallel_for_hier
   (post : (nat -> slprop)) {| (x:nat -> is_send (post x)) |}
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires on_range pre 0 n
-  ensures on_range post 0 n
+  requires (forall+ (k:nat{0 <= k /\ k < n}). pre k)
+  ensures (forall+ (k:nat{0 <= k /\ k < n}). post k)
 {
   let p = setup_pool 42;
 
@@ -513,21 +520,21 @@ parallel_for_hier
 
     spawn_ p
             #0.5R
-            #(pool_alive #0.5R p ** on_range pre 0 n)
-            #(pledge emp_inames (pool_done p) (on_range post 0 n))
+            #(pool_alive #0.5R p ** (forall+ (k:nat{0 <= k /\ k < n}). pre k))
+            #(pledge emp_inames (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k))
             (h_for_task p 0.5R pre post f 0 n);
 
     (* We get this complicated pledge emp_inames from the spawn above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post 0 n)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k)));
 
-    squash_pledge (pool_done p) (on_range post 0 n);
+    squash_pledge (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k);
 
-    assert (pledge emp_inames (pool_done p) (on_range post 0 n));
+    assert (pledge emp_inames (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k));
 
     wait_pool p 0.5R;
 
-    redeem_pledge emp_inames (pool_done p) (on_range post 0 n);
+    redeem_pledge emp_inames (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k);
 
     drop_ (pool_done p)
   } else {
@@ -539,7 +546,7 @@ parallel_for_hier
 
     assert (pool_done p);
 
-    redeem_pledge emp_inames (pool_done p) (on_range post 0 n);
+    redeem_pledge emp_inames (pool_done p) (forall+ (k:nat{0 <= k /\ k < n}). post k);
 
     drop_ (pool_done p)
   }

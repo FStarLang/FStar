@@ -36,7 +36,8 @@ module A = Pulse.Lib.Array
 module PHT = Pulse.Lib.HashTable.Spec
 
 open PulseCore.Preorder
-open Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 
@@ -339,7 +340,7 @@ let dpe_inv ([@@@mkey] r:gref) (s:option st) : slprop =
     // For sids below counter, we have the session state perm
     //
     (exists* pht. models s.st_tbl pht **
-                  on_range (session_perm r pht) 0 (U16.v s.st_ctr))
+                  (forall+ (k:nat{0 <= k /\ k < U16.v s.st_ctr}). session_perm r pht k))
 
 val trace_ref : gref
 

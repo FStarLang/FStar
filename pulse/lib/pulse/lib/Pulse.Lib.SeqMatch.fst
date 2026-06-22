@@ -16,7 +16,8 @@
 
 module Pulse.Lib.SeqMatch
 #lang-pulse
-open Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 open Pulse.Lib.Trade.Util
 
 module Seq = FStar.Seq
@@ -184,19 +185,6 @@ values. Contrary to `seq_list_match`, `seq_seq_match` is not meant to be usable 
 (mutually) recursive definitions of matching functions on the type of
 high-level values, because no lemma ensures that `Seq.index s i << s`  *)
 
-let seq_seq_match_item
-  (#t1 #t2: Type)
-  (p: t1 -> t2 -> slprop)
-  (c: Seq.seq t1)
-  (l: Seq.seq t2)
-  (i: nat)
-: Tot slprop
-= if i < Seq.length c && i < Seq.length l
-  then
-    p (Seq.index c i) (Seq.index l i)
-  else
-    pure False
-
 let seq_seq_match_item_tail
   (#t1 #t2: Type)
   (p: t1 -> t2 -> slprop)
@@ -215,15 +203,6 @@ let seq_seq_match_item_tail
   ))
 = ()
 
-let seq_seq_match
-  (#t1 #t2: Type)
-  (p: t1 -> t2 -> slprop)
-  (c: Seq.seq t1)
-  (l: Seq.seq t2)
-  (i j: nat)
-: Tot slprop
-= on_range (seq_seq_match_item p c l) i j
-
 ghost
 fn seq_seq_match_length
   (#t1 #t2: Type0)
@@ -237,7 +216,6 @@ ensures
     (seq_seq_match p s1 s2 i j ** pure (i <= j /\ (i == j \/ (j <= Seq.length s1 /\ j <= Seq.length s2))))
 {
   unfold (seq_seq_match p s1 s2 i j);
-  on_range_le (seq_seq_match_item p s1 s2) #i #j;
   if (i = j) {
     fold (seq_seq_match p s1 s2 i j)
   } else {
@@ -245,10 +223,7 @@ ensures
     if (j' < Seq.length s1 && j' < Seq.length s2) {
       fold (seq_seq_match p s1 s2 i j);
     } else {
-      on_range_unsnoc
-        ()
-        #(seq_seq_match_item p s1 s2)
-        #i #j;
+      range_unsnoc (seq_seq_match_item p s1 s2) i j;
       rewrite
         (seq_seq_match_item p s1 s2 (j - 1))
         as
@@ -269,7 +244,7 @@ requires
 ensures
     (seq_seq_match p s1 s2 i i)
 {
-  on_range_empty (seq_seq_match_item p s1 s2) i;
+  range_empty_intro (seq_seq_match_item p s1 s2) i;
   fold (seq_seq_match p s1 s2 i i)
 }
 
@@ -285,7 +260,7 @@ ensures
     (emp)
 {
   unfold (seq_seq_match p s1 s2 i i);
-  on_range_empty_elim (seq_seq_match_item p s1 s2) i;
+  range_empty_elim (seq_seq_match_item p s1 s2) i;
 }
 
 ghost fn seq_seq_match_join
@@ -301,7 +276,7 @@ ensures
 {
   unfold (seq_seq_match p s1 s2 i j);
   unfold (seq_seq_match p s1 s2 j k);
-  on_range_join i j k;
+  range_join (seq_seq_match_item p s1 s2) i j k;
   fold (seq_seq_match p s1 s2 i k)
 }
 
@@ -317,7 +292,7 @@ ensures
     (seq_seq_match p s1 s2 i j ** seq_seq_match p s1 s2 j k)
 {
   unfold (seq_seq_match p s1 s2 i k);
-  on_range_split j;
+  range_split (seq_seq_match_item p s1 s2) i j k;
   fold (seq_seq_match p s1 s2 i j);
   fold (seq_seq_match p s1 s2 j k)
 }
@@ -336,7 +311,7 @@ ensures
     (seq_seq_match p s1 s2 i (i + 1))
 {
   rewrite p x1 x2 as seq_seq_match_item p s1 s2 i;
-  on_range_singleton_intro (seq_seq_match_item p s1 s2) i;
+  range_singleton_intro (seq_seq_match_item p s1 s2) i;
   fold (seq_seq_match p s1 s2 i (i + 1))
 }
 
@@ -358,7 +333,7 @@ ensures
 {
   seq_seq_match_length p s1 s2 i (i + 1);
   unfold (seq_seq_match p s1 s2 i (i + 1));
-  on_range_singleton_elim ();
+  range_singleton_elim (seq_seq_match_item p s1 s2) i;
   // unfold (seq_seq_match_item p s1 s2 i);
   if (i < Seq.length s1 && i < Seq.length s2) {
     assert (pure (i < Seq.length s1 && i < Seq.length s2));
@@ -385,7 +360,7 @@ ensures
 {
   unfold (seq_seq_match p s1 s2 i j);
   rewrite p x1 x2 as seq_seq_match_item p s1 s2 (i - 1);
-  on_range_cons (i - 1);
+  range_cons_down (seq_seq_match_item p s1 s2) i j;
   fold (seq_seq_match p s1 s2 (i - 1) j)
 }
 
@@ -405,7 +380,7 @@ ensures
 {
   unfold (seq_seq_match p s1 s2 i j);
   rewrite p x1 x2 as seq_seq_match_item p s1 s2 j;
-  on_range_snoc ();
+  range_snoc (seq_seq_match_item p s1 s2) i j;
   fold (seq_seq_match p s1 s2 i (j + 1))
 }
 
@@ -424,7 +399,7 @@ ensures
 {
   seq_seq_match_length p s1 s2 i j;
   unfold (seq_seq_match p s1 s2 i j);
-  on_range_uncons ();
+  range_uncons (seq_seq_match_item p s1 s2) i j;
   fold (seq_seq_match p s1 s2 (i + 1) j);
   rewrite (seq_seq_match_item p s1 s2 i) as (p (Seq.index s1 i) (Seq.index s2 i));
 }
@@ -444,7 +419,7 @@ ensures
 {
   seq_seq_match_length p s1 s2 i j;
   unfold (seq_seq_match p s1 s2 i j);
-  on_range_unsnoc ();
+  range_unsnoc (seq_seq_match_item p s1 s2) i j;
   fold (seq_seq_match p s1 s2 i (j - 1));
   rewrite (seq_seq_match_item p s1 s2 (j-1)) as (p (Seq.index s1 (j - 1)) (Seq.index s2 (j - 1)))
 }
@@ -472,7 +447,7 @@ ensures
     (seq_seq_match p' c1' c2' i j)
 {
   unfold (seq_seq_match p c1 c2 i j);
-  on_range_weaken
+  range_weaken
     (seq_seq_match_item p c1 c2)
     (seq_seq_match_item p' c1' c2')
     i j
@@ -562,8 +537,7 @@ ensures
     (seq_seq_match p c l (i + delta) (j + delta))
 {
   unfold (seq_seq_match p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) i j);
-  on_range_le (seq_seq_match_item p _ _);
-  on_range_weaken_and_shift
+  range_weaken_and_shift
     (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
     (seq_seq_match_item p c l)
     delta
@@ -606,11 +580,10 @@ ensures
     (seq_seq_match p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (i - delta) (j - delta))
 {
   unfold (seq_seq_match p c l i j);
-  on_range_le (seq_seq_match_item p _ _);
-  on_range_weaken_and_shift
+  range_weaken_and_shift_down
     (seq_seq_match_item p c l)
     (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)))
-    (0 - delta)
+    delta
     i j
   fn k {
       if (k < Seq.length c && k < Seq.length l) {
@@ -618,7 +591,7 @@ ensures
         rewrite
           (seq_seq_match_item p c l k)
           as
-          (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (k + (0 - delta)))
+          (seq_seq_match_item p (Seq.slice c delta (Seq.length c)) (Seq.slice l delta (Seq.length l)) (k - delta))
       } else {
         rewrite
           (seq_seq_match_item p c l k)
@@ -680,15 +653,15 @@ ensures
 {
   match l {
     [] -> {
-      on_range_eq_emp (seq_seq_match_item p c (Seq.seq_of_list l)) 0 (List.Tot.length l);
       rewrite (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
-        as emp;
+        as (seq_seq_match p c (Seq.seq_of_list l) 0 0);
+      seq_seq_match_empty_elim p c (Seq.seq_of_list l) 0;
       seq_list_match_nil_intro c l p
     }
     a :: q -> {
       unfold (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l));
       Seq.lemma_seq_of_list_induction (a :: q);
-      on_range_uncons ();
+      range_uncons (seq_seq_match_item p c (Seq.seq_of_list l)) 0 (List.Tot.length l);
       rewrite
         (seq_seq_match_item p c (Seq.seq_of_list l) 0)
         as
@@ -724,10 +697,9 @@ ensures
   match l {
     [] -> {
       seq_list_match_nil_elim c l p;
-    on_range_empty
-      (seq_seq_match_item p c (Seq.seq_of_list l))
-      0;
-    fold (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
+    seq_seq_match_empty_intro p c (Seq.seq_of_list l) 0;
+    rewrite (seq_seq_match p c (Seq.seq_of_list l) 0 0)
+      as (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
     }
     a :: q -> {
       Seq.lemma_seq_of_list_induction (a :: q);
@@ -746,7 +718,7 @@ ensures
         (p (Seq.head c) (List.Tot.hd l))
         as
         (seq_seq_match_item p c (Seq.seq_of_list l) 0);
-      on_range_cons 0;
+      range_cons (seq_seq_match_item p c (Seq.seq_of_list l)) 0 (List.Tot.length l);
       fold (seq_seq_match p c (Seq.seq_of_list l) 0 (List.Tot.length l))
     }
   }
@@ -829,14 +801,19 @@ ensures
 {
   seq_list_match_seq_seq_match_with_implies p s1 s2;
   let res : squash (i < Seq.length s1 /\ List.Tot.length s2 == Seq.length s1) = ();
-  rewrite_with_trade
-    (seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2))
-    (on_range (seq_seq_match_item p s1 (Seq.seq_of_list s2)) 0 (List.Tot.length s2));
+  unfold (seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2));
+  range_focus (seq_seq_match_item p s1 (Seq.seq_of_list s2)) 0 i (List.Tot.length s2);
+  intro
+    ((forall+ (kk:nat{0 <= kk /\ kk < List.Tot.length s2}). seq_seq_match_item p s1 (Seq.seq_of_list s2) kk)
+      @==> seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2))
+    fn _
+  {
+    fold (seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2))
+  };
+  trans _ _ (seq_seq_match p s1 (Seq.seq_of_list s2) 0 (List.Tot.length s2));
   trans _ _ (seq_list_match s1 s2 p);
-  on_range_focus i;
-  trans _ _ (seq_list_match s1 s2 p);
   rewrite_with_trade
-    (seq_seq_match_item p _ _ _)
+    (seq_seq_match_item p s1 (Seq.seq_of_list s2) i)
     (p (Seq.index s1 i) (List.Tot.index s2 i));
   trans _ _ (seq_list_match s1 s2 p);
   res
@@ -864,7 +841,7 @@ ensures
     (seq_seq_match p s1 s2 i j)
 {
   unfold (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j);
-  on_range_weaken
+  range_weaken
     (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2))
     (seq_seq_match_item p s1 s2)
     i j
@@ -889,7 +866,7 @@ ensures
     (seq_seq_match (item_match_option p) s1 (seq_map Some s2) i j)
 {
   unfold (seq_seq_match p s1 s2 i j);
-  on_range_weaken
+  range_weaken
     (seq_seq_match_item p s1 s2)
     (seq_seq_match_item (item_match_option p) s1 (seq_map Some s2))
     i j
@@ -913,12 +890,13 @@ ensures
   decreases (Seq.length s)
 {
   if (Seq.length s = 0) {
-    on_range_empty (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None)) 0;
-    fold (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
+    seq_seq_match_empty_intro (item_match_option p) s (Seq.create (Seq.length s) None) 0;
+    rewrite (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 0)
+      as (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
   } else {
     seq_seq_match_item_match_option_init p (Seq.tail s);
     unfold (seq_seq_match (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None) 0 (Seq.length (Seq.tail s)));
-    on_range_weaken_and_shift
+    range_weaken_and_shift
       (seq_seq_match_item (item_match_option p) (Seq.tail s) (Seq.create (Seq.length (Seq.tail s)) None))
       (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None))
       1
@@ -934,8 +912,10 @@ ensures
       emp
       as
       (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None) 0);
-    on_range_cons 0;
-    fold (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
+    range_cons (seq_seq_match_item (item_match_option p) s (Seq.create (Seq.length s) None)) 0 (Seq.length (Seq.tail s) + 1);
+    fold (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length (Seq.tail s) + 1));
+    rewrite (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length (Seq.tail s) + 1))
+      as (seq_seq_match (item_match_option p) s (Seq.create (Seq.length s) None) 0 (Seq.length s))
   }
 }
 
@@ -961,7 +941,7 @@ ensures
 {
   seq_seq_match_length p s1 s2 i k;
   unfold (seq_seq_match p s1 s2 i k);
-  on_range_get j;
+  range_get (seq_seq_match_item p s1 s2) i j k;
   let res : squash (j < Seq.length s1 /\ j < Seq.length s2) = ();
   rewrite (seq_seq_match_item p s1 s2 j) as (p (Seq.index s1 j) (Seq.index s2 j));
   rewrite
@@ -984,7 +964,8 @@ ensures
     fn _ _{};
   unfold (seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i j);
   unfold (seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) (j + 1) k);
-  on_range_put
+  range_put
+    (seq_seq_match_item p (Seq.upd s1 j x1) (Seq.upd s2 j x2))
     i j k;
   fold (seq_seq_match p (Seq.upd s1 j x1) (Seq.upd s2 j x2) i k);
   res
@@ -1039,7 +1020,7 @@ ensures
 {
   seq_seq_match_length (item_match_option p) s1 s2 i k;
   unfold (seq_seq_match (item_match_option p) s1 s2 i k);
-  on_range_get j;
+  range_get (seq_seq_match_item (item_match_option p) s1 s2) i j k;
   let res : squash (j < Seq.length s1 /\ j < Seq.length s2 /\ Some? (Seq.index s2 j)) = ();
   rewrite
     (seq_seq_match_item (item_match_option p) s1 s2 j)
@@ -1065,7 +1046,8 @@ ensures
     fn _ _{};
   unfold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i j);
   unfold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) (j + 1) k);
-  on_range_put
+  range_put
+    (seq_seq_match_item (item_match_option p) s1 (Seq.upd s2 j None))
     i j k;
   fold (seq_seq_match (item_match_option p) s1 (Seq.upd s2 j None) i k);
   res

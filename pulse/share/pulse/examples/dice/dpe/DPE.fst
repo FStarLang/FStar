@@ -38,7 +38,8 @@ module PHT = Pulse.Lib.HashTable.Spec
 module Global = Pulse.Lib.GlobalVar
 
 open PulseCore.Preorder
-open Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
@@ -293,11 +294,11 @@ fn frame_session_perm_on_range
   (r:gref)
   (pht0 pht1:pht_t)
   (i j:nat)
-  requires on_range (session_perm r pht0) i j **
+  requires (forall+ (k:nat{i <= k /\ k < j}). session_perm r pht0 k) **
            pure (session_table_eq_on_range pht0 pht1 i j)
-  ensures on_range (session_perm r pht1) i j
+  ensures (forall+ (k:nat{i <= k /\ k < j}). session_perm r pht1 k)
 {
-  Pulse.Lib.OnRange.on_range_weaken
+  range_weaken
     (session_perm r pht0)
     (session_perm r pht1)
     i j
@@ -325,7 +326,7 @@ fn __open_session (s:st)
     s.st_tbl as tbl;
 
   with pht. assert (models tbl pht);
-  assert (on_range (session_perm trace_ref pht) 0 (U16.v ctr));
+  assert (forall+ (k:nat{0 <= k /\ k < U16.v ctr}). session_perm trace_ref pht k);
   assert (GR.pts_to trace_ref (sids_above_unused ctr));
 
   let copt = safe_incr ctr;
@@ -365,7 +366,8 @@ fn __open_session (s:st)
         rewrite (session_state_perm trace_ref pht1 ctr) as
                 (session_perm trace_ref pht1 (U16.v ctr));
         frame_session_perm_on_range trace_ref pht pht1 0 (U16.v ctr);
-        on_range_snoc () #(session_perm trace_ref pht1) #0 #(U16.v ctr);
+        range_snoc (session_perm trace_ref pht1) 0 (U16.v ctr);
+        range_rebound (session_perm trace_ref pht1) 0 (U16.v ctr + 1) 0 (U16.v ctr1);
         let s = { st_ctr = ctr1; st_tbl = tbl1 };
         let ret = s, Some ctr;
         rewrite each
@@ -414,9 +416,8 @@ fn maybe_mk_session_tbl (sopt:option st)
               (GR.pts_to trace_ref (sids_above_unused s.st_ctr));
 
       with pht. assert (models s.st_tbl pht);
-      on_range_empty (session_perm trace_ref pht) 0;
-      rewrite (on_range (session_perm trace_ref pht) 0 0) as
-              (on_range (session_perm trace_ref pht) 0 (U16.v s.st_ctr));
+      range_empty_intro (session_perm trace_ref pht) 0;
+      range_rebound (session_perm trace_ref pht) 0 0 0 (U16.v s.st_ctr);
   
       fold (dpe_inv trace_ref (Some s));
       s
@@ -554,9 +555,9 @@ fn replace_session
         s.st_ctr as ctr,
         s.st_tbl as tbl;
       with pht0. assert (models tbl pht0);
-      assert (on_range (session_perm trace_ref pht0) 0 (U16.v ctr));
+      assert (forall+ (k:nat{0 <= k /\ k < U16.v ctr}). session_perm trace_ref pht0 k);
       if U16.lt sid ctr {
-        on_range_get (U16.v sid) #(session_perm trace_ref pht0) #0 #(U16.v ctr);
+        range_get (session_perm trace_ref pht0) 0 (U16.v sid) (U16.v ctr);
         rewrite (session_perm trace_ref pht0 (U16.v sid)) as
                 (session_state_perm trace_ref pht0 sid);
         unfold session_state_perm trace_ref pht0 sid;
@@ -581,7 +582,7 @@ fn replace_session
                     (session_perm trace_ref pht (U16.v sid));
             frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
             frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
-            on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
+            range_put (session_perm trace_ref pht) 0 (U16.v sid) (U16.v ctr);
             let s = { st_ctr = ctr; st_tbl = tbl };
             rewrite each
               ctr as s.st_ctr,
