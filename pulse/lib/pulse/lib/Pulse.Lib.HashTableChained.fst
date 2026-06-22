@@ -1302,7 +1302,7 @@ fn rec search_bucket_rec
 preserves LL.is_list b entries
 returns result:option v
 ensures pure (result == find_in_bucket entries key)
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
@@ -1341,7 +1341,7 @@ fn rec free_bucket
   (b:bucket k v)
   (#entries:erased (list (entry k v)))
 requires LL.is_list b entries
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
@@ -1369,7 +1369,7 @@ requires LL.is_list b entries
 returns result:(bucket k v & bool)
 ensures LL.is_list (fst result) (fst (remove_from_bucket entries key)) ** 
         pure (snd result == snd (remove_from_bucket entries key))
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
