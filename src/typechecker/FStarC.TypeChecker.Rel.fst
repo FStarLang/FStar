@@ -2492,7 +2492,7 @@ let solve_rigid_flex_or_flex_rigid_subtyping
       : ML (term & list prob & worklist)
       = let eq_prob t1 t2 wl =
             let p, wl =
-            new_problem wl (p_env wl (TProb tp)) t1 EQ t2 None t1.pos
+            new_problem wl (p_env wl (TProb tp)) t1 EQ t2 None tp.loc
                         "join/meet refinements"
             in
             def_check_prob "meet_or_join" (TProb p);
