@@ -38,8 +38,8 @@ ensures
     let mut i0 : SZ.t = 0sz;
     let mut i1 : SZ.t = j;
     while (
-      (!i0 <> len0 &&
-       !i1 <> len1)
+      let v1 = !i1;
+      (!i0 <> len0 && v1 <> len1)
     )
     invariant
       exists* v0 v1.
