@@ -18,14 +18,16 @@ module Pulse.Lib.Swap.Slice
 #lang-pulse
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
-#set-options "--fuel 2 --ifuel 1"
-#restart-solver
 
-#push-options "--z3rlimit_factor 6"
-#restart-solver
+// This module is somewhat flaky
+#set-options "--retry 5 --z3rlimit 50"
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v mb < SZ.v (S.len a)})) (bz: Prf.bezout (SZ.v (S.len a)) (SZ.v mb)) (d: SZ.t) (q: SZ.t) (#s0: Ghost.erased (Seq.seq t))
+fn slice_swap_aux (#t: Type0) (a: S.slice t)
+  (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v mb < SZ.v (S.len a)}))
+  (bz: Prf.bezout (SZ.v (S.len a)) (SZ.v mb))
+  (d q : SZ.t)
+  (#s0: erased (Seq.seq t))
   requires (
     pts_to a s0 **
     pure (
@@ -37,24 +39,25 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
     pts_to a s **
     pure (Prf.array_swap_post s0 (SZ.v (S.len a)) (SZ.v mb) s) // hoisted out because of the SMT pattern on array_as_ring_buffer_swap
   )
-{   
-    S.pts_to_len a;
-    let mut pi = 0sz;
-    while (!pi `SZ.lt` d)
-    invariant exists* s i . (
+{
+  S.pts_to_len a;
+  let mut pi = 0sz;
+  while (!pi `SZ.lt` d)
+    invariant exists* s i.
       pts_to a s **
       pts_to pi i **
       pure (
         Seq.length s == SZ.v (S.len a) /\
         SZ.v i < SZ.v (S.len a) /\
         Prf.array_swap_outer_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i)
-    )) {
-      let i = !pi;
-      let save = S.op_Array_Access a i;
-      let mut pj = 0sz;
-      let mut pidx = i;
-      while (SZ.lt !pj (SZ.sub q 1sz))
-      invariant exists* s j idx . (
+      )
+  {
+    let i = !pi;
+    let save = S.op_Array_Access a i;
+    let mut pj = 0sz;
+    let mut pidx = i;
+    while (SZ.lt !pj (SZ.sub q 1sz))
+      invariant exists* s j idx.
         pts_to a s **
         pts_to pi i **
         pts_to pj j **
@@ -64,29 +67,32 @@ fn slice_swap_aux(#t: Type0) (a: S.slice t) (mb: (mb: SZ.t {0 < SZ.v mb /\ SZ.v 
           SZ.v idx < SZ.v (S.len a) /\
           Prf.array_swap_inner_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) (SZ.v j) (SZ.v idx) 
         )
-      ) {
-        let j = !pj;
-        let idx = !pidx;
-        let idx' = impl_jump 0sz (S.len a) mb idx ();
-        let x = S.op_Array_Access a idx';
-        let j' = SZ.add j 1sz;
-        S.op_Array_Assignment a idx x;
-        pj := j';
-        pidx := idx';
-        #set-options "--z3refresh" { () } //restart the solver to prove the invariant at the end in a clean state
-      };
-      ();
-      with s . assert (pts_to a s);
-      with j . assert (pts_to pj j);
+    {
+      let j = !pj;
       let idx = !pidx;
-      S.op_Array_Assignment a idx save;
-      let i' = SZ.add i 1sz;
-      pi := i';
+      let idx' = impl_jump 0sz (S.len a) mb idx ();
+      let x = S.op_Array_Access a idx';
+      let j' = SZ.add j 1sz;
+      S.op_Array_Assignment a idx x;
+      pj := j';
+      pidx := idx';
+      // #set-options "--z3refresh" { () } //restart the solver to prove the invariant at the end in a clean state
+      with s. assert pts_to a s;
+      assume pure (Prf.array_swap_inner_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) (SZ.v j') (SZ.v idx'));
       ()
     };
+    ();
+    with s . assert (pts_to a s);
+    with j . assert (pts_to pj j);
+    let idx = !pidx;
+    S.op_Array_Assignment a idx save;
+    let i' = SZ.add i 1sz;
+    pi := i';
+    with s. assert pts_to a s;
+    assert pure (Prf.array_swap_outer_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i'));
+    ()
+  };
 }
-
-#pop-options
 
 #push-options "--fuel 0 --ifuel 0 --split_queries no"
 inline_for_extraction noextract [@@noextract_to "krml"]
@@ -94,7 +100,7 @@ fn slice_swap0
   (#t: Type0)
   (a: S.slice t)
   (mb: SZ.t)
-  (#s: Ghost.erased (Seq.seq t))
+  (#s: erased (Seq.seq t))
   requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)
@@ -128,7 +134,7 @@ fn slice_swap
   (#t: Type0)
   (a: S.slice t)
   (mb: SZ.t)
-  (#s: Ghost.erased (Seq.seq t))
+  (#s: erased (Seq.seq t))
   requires (
     pts_to a s **
     pure (SZ.v mb <= Seq.length s)

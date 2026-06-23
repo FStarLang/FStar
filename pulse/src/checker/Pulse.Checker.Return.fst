@@ -23,7 +23,9 @@ open Pulse.Checker.Base
 open Pulse.Checker.Prover
 
 module T = FStar.Tactics.V2
+module TU = FStar.Tactics.Util
 module RU = Pulse.RuntimeUtils
+module R = FStar.Reflection.V2
 
 let check_effect
     (g:env) (e:term) (eff:T.tot_or_ghost)
@@ -74,6 +76,68 @@ let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
   let (| c, e |) = check_effect g t eff c in
   R c e u ty () ()
 
+// Free (named) variables of a term in de Bruijn form: binder-bound variables
+// appear as `Tv_BVar` and so are excluded automatically; only `Tv_Var` (named)
+// occurrences are collected.
+let rec free_named_vars (t:term) : T.Tac (list var) =
+  let (++) (a b: list var) : list var = List.Tot.append a b in
+  match R.inspect_ln t with
+  | R.Tv_Var nv -> [(R.inspect_namedv nv).uniq]
+  | R.Tv_App hd (a, _) -> free_named_vars hd ++ free_named_vars a
+  | R.Tv_Abs _ body -> free_named_vars body
+  | R.Tv_Refine b ref -> free_named_vars (R.inspect_binder b).sort ++ free_named_vars ref
+  | R.Tv_Arrow b c ->
+    free_named_vars (R.inspect_binder b).sort ++
+    (match R.inspect_comp c with
+     | R.C_Total ret | R.C_GTotal ret -> free_named_vars ret
+     | R.C_Lemma pre post pats -> free_named_vars pre ++ free_named_vars post ++ free_named_vars pats
+     | R.C_Eff _ _ ret _ _ -> free_named_vars ret)
+  | R.Tv_Let _ _ _ def body -> free_named_vars def ++ free_named_vars body
+  | R.Tv_Match sc _ brs ->
+    TU.fold_left (fun (acc:list var) (br:R.branch) -> List.Tot.append acc (free_named_vars (snd br)))
+                 (free_named_vars sc) brs
+  | R.Tv_AscribedT e ty _ _ -> free_named_vars e ++ free_named_vars ty
+  | R.Tv_AscribedC e _ _ _ -> free_named_vars e
+  | _ -> []
+
+// Does the refinement formula `ref` constrain the refinement binder `bx`, i.e.
+// does the result value itself appear in the formula? (`ref` is the opened body
+// of a `Tv_Refine`, so `bx` occurs as a named variable iff the formula mentions
+// the result.)
+let refinement_constrains_result (bx:var) (ref:term) : T.Tac bool =
+  List.Tot.mem bx (free_named_vars ref)
+
+// When inferring a return type (no post-condition hint), the Core typechecker
+// turns a `Pure`-effect `ensures` into a refinement on the returned value's
+// type, e.g. `SZ.lt : Pure bool (ensures z == (v x < v y))` gives a return type
+// `z:bool{z == (SZ.v x < SZ.v y)}`. When the operand is a branch-local hoisted
+// ANF temporary `__anf0` (introduced by hoisting a stateful read such as `!j`),
+// that temporary leaks into the refinement, e.g. `z:bool{z == (SZ.v __anf0 < ...)}`.
+// Closing the branch closes the *term* over `__anf0` but not the *type*, so when
+// the type is later used in the outer scope where `__anf0` no longer exists it
+// fails with Error 76 ("universe_of failed ... Variable not found"); the refined
+// result type also blocks joining two `if`/`match` branches whose boolean results
+// are refined differently.
+//
+// We weaken the inferred type by dropping refinements that constrain the result
+// value itself, i.e. whose formula mentions the refinement binder -- of *any*
+// shape (`z == e`, `z > 0`, ...), not just equalities. Such refinements are
+// redundant: in the inference path `comp_return` re-establishes the value via the
+// equality `result == term` (`use_eq` below, which holds for any non-`unit`
+// result), and any `Pure` postcondition of the operand is in scope at its call.
+// Refinements that do *not* mention the result are payload facts with no other
+// carrier -- e.g. a lemma application's conclusion (`some_lemma x : Lemma (p x)`
+// flows through this same path as `_:unit{ p x }`) -- and are kept.
+let rec unrefine_result (t:term) : T.Tac term =
+  match T.inspect t with
+  | T.Tv_Refine b ref ->
+    if refinement_constrains_result b.uniq ref
+    then unrefine_result b.sort
+    else t
+  | T.Tv_AscribedT e _ _ _ -> unrefine_result e
+  | T.Tv_AscribedC e _ _ _ -> unrefine_result e
+  | _ -> t
+
 #push-options "--z3rlimit_factor 16 --fuel 0 --ifuel 1 --split_queries no"
 #restart-solver
 let check_core
@@ -112,7 +176,8 @@ let check_core
   let R c t u ty uty d : result_of_typing g =
     match return_type with
     | None ->
-      compute_tot_or_ghost_term_type_and_u g t ctag_ctxt
+      let R rc rt ru rty ruty rd = compute_tot_or_ghost_term_type_and_u g t ctag_ctxt in
+      R rc rt ru (unrefine_result rty) ruty rd
     | Some (| ret_ty, u |) ->
       let (| c, t |) = check_tot_or_ghost_term g t ret_ty ctag_ctxt in
       R c t u ret_ty () ()
