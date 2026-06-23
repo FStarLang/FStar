@@ -138,13 +138,16 @@ let add_knot (g : env) (rng : R.range)
               (f : (x1':t1) -> ... -> (xn':tn) -> stt a pre post)
               : stt a pre post
 
-    without any sort of termination check. Now, for
+    without any sort of termination check by default. If the
+    definition has a decreases clause, or for effects that require
+    one, we check recursive calls by adding a measure refinement to
+    the knot. For
 
        ghost fn rec f (x1:t1) ... (xn:tn) :
          requires pre
          returns x:a
          ensures post
-         measure meas
+         decreases meas
 
     we must elab into
 
@@ -154,7 +157,7 @@ let add_knot (g : env) (rng : R.range)
 
     so we need to add the measure refinement. Since `meas` is an
     open term (wrt x1...xn), we must substitute it to create meas',
-    subtituting x1' for x1, ..., xn' for xn
+    substituting x1' for x1, ..., xn' for xn
 
   *)
   (* Desugaring added a recursive knot argument at the end *)
@@ -176,19 +179,11 @@ let add_knot (g : env) (rng : R.range)
                       R.NT (binder_to_r_namedv b1)
                             (binder_to_term b2)) r_bs0 r_bs in
   let r_bs =
-    (* If ghost/atomic, we need to add a decreases refinement on the last arg *)
-    match readback_comp comp with
-    | Some (C_STAtomic ..) | Some (C_STGhost ..) ->
-      if None? meas then (
-        let open FStar.Pprint in
-        let open Pulse.PP in
-        fail_doc g (Some d.range) [
-          text "'ghost' and 'atomic' recursive functions require a 'decreases' clause"]
-      );
+    let add_decreases_refinement meas =
+      (* Add a decreases refinement on the last argument. *)
       let init, last = splitlast r_bs in
       let last : FStar.Tactics.NamedView.binder = last in
       let last =
-        (* add a refinement to last *)
         let b' : simple_binder = {
           uniq = last.uniq;
           ppname = last.ppname;
@@ -197,7 +192,6 @@ let add_knot (g : env) (rng : R.range)
           attrs = [];
         }
         in
-        let meas = Some?.v meas in
         let meas' = R.subst_term prime_subst meas in
         let ref = `(`#meas' << `#meas) in
         (* TODO: this is not always printed *)
@@ -207,8 +201,21 @@ let add_knot (g : env) (rng : R.range)
         }
       in
       init @ [last]
+    in
+    match readback_comp comp with
+    | Some (C_STAtomic ..) | Some (C_STGhost ..) ->
+      (match meas with
+      | None ->
+        let open FStar.Pprint in
+        let open Pulse.PP in
+        fail_doc g (Some d.range) [
+          text "'ghost' and 'atomic' recursive functions require a 'decreases' clause"]
+      | Some meas ->
+        add_decreases_refinement meas)
     | Some (C_ST _) ->
-      r_bs
+      (match meas with
+      | Some meas -> add_decreases_refinement meas
+      | None -> r_bs)
     | _ ->
       fail_doc g (Some d.range) [text "main: FnDefn has unexpected type"; fquotes (pp comp)]
   in
