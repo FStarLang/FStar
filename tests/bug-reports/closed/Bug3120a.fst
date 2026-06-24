@@ -41,7 +41,7 @@ let req_decode (pre : prop) : decode_pre req_code =
 noeq
 type m (#code : Type u#a) (#dc : decode_pre code) (a : Type u#a) : Type u#a =
 | Ret : a -> m #code #dc a
-| Req : c:code -> (squash (dc c) -> m #code #dc a) -> m #code #dc a
+| Req : c:code -> (dc c -> m #code #dc a) -> m #code #dc a
 (* | Read : (int -> m #code #dc a) -> m #code #dc a
 | Write : int -> m #code #dc a -> m #code #dc a *)
 

@@ -34,7 +34,7 @@ assume val proven : prop -> slprop
 
 [@@pulse_intro]
 ghost
-fn prove (#p:prop) (_ : squash p)
+fn prove (#p:prop) (_ : p)
   ensures proven p
 {
   admit()

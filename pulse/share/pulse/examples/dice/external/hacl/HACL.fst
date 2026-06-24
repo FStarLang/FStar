@@ -155,7 +155,7 @@ let dice_hash_alg0 _ = dice_hash_alg1 ()
 inline_for_extraction noextract [@@noextract_to "krml"]
 let dice_digest_len0 = 32sz // this is taken from previously handwritten hacl.rs
 
-let dice_digest_len_spec : squash (
+let dice_digest_len_spec : (
   is_hashable_len (digest_len dice_hash_alg) /\
   dice_digest_len0 == digest_len dice_hash_alg
 ) = ()

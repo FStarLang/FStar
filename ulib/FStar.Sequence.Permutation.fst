@@ -299,7 +299,7 @@ let remove_i #a (s:seq a) (i:nat{i < S.length s})
 
 let shift_perm' #a
                (s0 s1:seq a)
-               (_:squash (S.length s0 == S.length s1 /\ S.length s0 > 0))
+               (_:(S.length s0 == S.length s1 /\ S.length s0 > 0))
                (p:seqperm s0 s1)
   : Tot (seqperm (fst (un_build s0))
                  (snd (remove_i s1 (p (S.length s0 - 1)))))
@@ -316,7 +316,7 @@ let shift_perm' #a
 
 let shift_perm #a
                (s0 s1:seq a)
-               (_:squash (S.length s0 == S.length s1 /\ S.length s0 > 0))
+               (_:(S.length s0 == S.length s1 /\ S.length s0 > 0))
                (p:seqperm s0 s1)
   : Pure (seqperm (fst (un_build s0))
                   (snd (remove_i s1 (p (S.length s0 - 1)))))

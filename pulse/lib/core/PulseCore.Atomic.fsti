@@ -111,7 +111,7 @@ val sub_invs_stt_atomic
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_atomic a #obs opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : inames_subset opens1 opens2)
 : stt_atomic a #obs opens2 pre post
 
 let as_ghost_post #t (post: t->slprop) : erased t -> slprop =
@@ -209,17 +209,17 @@ val sub_invs_stt_ghost
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_ghost a opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : (inames_subset opens1 opens2))
 : stt_ghost a opens2 pre post
 
 val noop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 
-val intro_pure (p:prop) (pf:squash p)
+val intro_pure (p:prop) (pf:p)
 : stt_ghost unit emp_inames emp (fun _ -> pure p)
 
 val elim_pure (p:prop)
-: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+: stt_ghost p emp_inames (pure p) (fun _ -> emp)
 
 val intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
 : stt_ghost unit emp_inames (p x) (fun _ -> exists* x. p x)
@@ -278,9 +278,9 @@ val with_invariant_g
 // val distinct_invariants_have_distinct_names
 //     (#p #q:slprop)
 //     (i j:iref)
-//     (_:squash (p =!= q))
+//     (_:(p =!= q))
 // : stt_ghost
-//     (squash (i =!= j))
+//     (i =!= j)
 //     emp_inames
 //     ((inv i p) ** (inv j q))
 //     (fun _ -> (inv i p) ** (inv j q))
@@ -320,7 +320,7 @@ val pts_to_not_null
     (#p:FStar.PCM.pcm a)
     (r:ref a p)
     (v:a)
-: stt_ghost (squash (not (is_ref_null r)))
+: stt_ghost (not (is_ref_null r))
     emp_inames
     (pts_to r v)
     (fun _ -> pts_to r v)
@@ -378,7 +378,7 @@ val gather
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
+: stt_ghost (composable pcm v0 v1)
     emp_inames
     (pts_to r v0 ** pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
@@ -391,7 +391,7 @@ val ghost_pts_to_not_null
     (#p:FStar.PCM.pcm a)
     (r:ghost_ref p)
     (v:a)
-: stt_ghost (squash (r =!= core_ghost_ref_null))
+: stt_ghost (r =!= core_ghost_ref_null)
     emp_inames
     (ghost_pts_to r v)
     (fun _ -> ghost_pts_to r v)
@@ -446,7 +446,7 @@ val ghost_gather
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
+: stt_ghost (composable pcm v0 v1)
     emp_inames
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))

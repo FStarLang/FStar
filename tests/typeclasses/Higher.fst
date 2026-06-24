@@ -14,7 +14,7 @@ let rec interp (c : code) : prop =
 
 class codeable (p : prop) = {
   code_of : code;
-  pf : squash (interp code_of <==> p);
+  pf : interp code_of <==> p;
 }
 
 instance codeable_eq (x y : int) : codeable (x == y) = {

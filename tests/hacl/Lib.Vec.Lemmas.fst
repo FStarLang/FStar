@@ -167,7 +167,7 @@ val repeat_gen_blocks_multi_vec_step:
   -> f:(i:nat{i < hi_f} -> lseq inp_t blocksize -> a i -> a (i + 1))
   -> f_v:(i:nat{i < n} -> lseq inp_t (w * blocksize) -> a_vec i -> a_vec (i + 1))
   -> normalize_v:(i:nat{i <= n} -> a_vec i -> a (w * i))
-  -> pre:squash(forall (i:nat{i < n}) (b_v:lseq inp_t (w * blocksize)) (acc_v:a_vec i).
+  -> pre:(forall (i:nat{i < n}) (b_v:lseq inp_t (w * blocksize)) (acc_v:a_vec i).
       repeat_gen_blocks_multi_vec_equiv_pre w blocksize n hi_f a a_vec f f_v normalize_v i b_v acc_v)
   -> i:nat{i < n}
   -> acc_v:a_vec i ->
@@ -276,7 +276,7 @@ val lemma_repeat_blocks_multi_vec_equiv_pre:
   -> f:(lseq a blocksize -> b -> b)
   -> f_v:(lseq a (w * blocksize) -> b_vec -> b_vec)
   -> normalize_v:(b_vec -> b)
-  -> pre:squash (forall (b_v:lseq a (w * blocksize)) (acc_v:b_vec).
+  -> pre:(forall (b_v:lseq a (w * blocksize)) (acc_v:b_vec).
          repeat_blocks_multi_vec_equiv_pre w blocksize f f_v normalize_v b_v acc_v)
   -> i:nat{i < n}
   -> b_v:lseq a (w * blocksize)
@@ -338,7 +338,7 @@ val lemma_repeat_blocks_vec_equiv_pre:
   -> l:(len:nat{len < blocksize} -> lseq a len -> b -> c)
   -> l_v:(len:nat{len < w * blocksize} -> lseq a len -> b_vec -> c)
   -> normalize_v:(b_vec -> b)
-  -> pre:squash (forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (acc_v:b_vec).
+  -> pre:(forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (acc_v:b_vec).
       repeat_blocks_vec_equiv_pre w blocksize f l l_v normalize_v rem b_v acc_v)
   -> rem:nat{rem < w * blocksize}
   -> b_v:lseq a rem
@@ -455,7 +455,7 @@ val lemma_map_blocks_multi_vec_equiv_pre_k:
   -> f_v:(i:nat{i < n} -> lseq a (w * blocksize) -> lseq a (w * blocksize))
   -> i:nat{i < n}
   -> b_v:lseq a (w * blocksize)
-  -> pre:squash (forall (k:nat{k < w * blocksize}). map_blocks_multi_vec_equiv_pre_k w blocksize n (w * n) f f_v i b_v k)
+  -> pre:(forall (k:nat{k < w * blocksize}). map_blocks_multi_vec_equiv_pre_k w blocksize n (w * n) f f_v i b_v k)
   -> acc_v:map_blocks_a a (w * blocksize) n i ->
   Lemma (map_blocks_multi_vec_equiv_pre #a w blocksize n hi_f f f_v i b_v acc_v)
 
@@ -500,7 +500,7 @@ val lemma_map_blocks_multi_vec_equiv_pre:
   -> hi_f:nat{w * n <= hi_f}
   -> f:(i:nat{i < hi_f} -> lseq a blocksize -> lseq a blocksize)
   -> f_v:(i:nat{i < n} -> lseq a (w * blocksize) -> lseq a (w * blocksize))
-  -> pre:squash (forall (i:nat{i < n}) (b_v:lseq a (w * blocksize)) (k:nat{k < w * blocksize}).
+  -> pre:(forall (i:nat{i < n}) (b_v:lseq a (w * blocksize)) (k:nat{k < w * blocksize}).
       map_blocks_multi_vec_equiv_pre_k w blocksize n (w * n) f f_v i b_v k)
   -> i:nat{i < n}
   -> b_v:lseq a (w * blocksize)
@@ -585,7 +585,7 @@ val lemma_map_blocks_vec_equiv_pre_k_aux:
   -> l_v:(i:nat{i <= n} -> rem:nat{rem < w * blocksize} -> lseq a rem -> lseq a rem)
   -> rem:nat{rem < w * blocksize}
   -> b_v:lseq a rem
-  -> pre:squash (forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
+  -> pre:(forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
       map_blocks_vec_equiv_pre_k w blocksize n f l l_v rem b_v k)
   -> k:nat{k < rem} ->
   Lemma
@@ -636,7 +636,7 @@ val lemma_map_blocks_vec_equiv_pre_k:
   -> l_v:(i:nat{i <= n} -> rem:nat{rem < w * blocksize} -> lseq a rem -> lseq a rem)
   -> rem:nat{rem < w * blocksize}
   -> b_v:lseq a rem
-  -> pre:squash (forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
+  -> pre:(forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
       map_blocks_vec_equiv_pre_k w blocksize n f l l_v rem b_v k)
   -> acc_v:map_blocks_a a (w * blocksize) n n ->
   Lemma (map_blocks_vec_equiv_pre w blocksize n f l l_v rem b_v acc_v)
@@ -679,7 +679,7 @@ val lemma_map_blocks_vec_equiv_pre:
   -> f:(i:nat{i < w * n + w} -> lseq a blocksize -> lseq a blocksize)
   -> l:(i:nat{i <= w * n + w} -> rem:nat{rem < blocksize} -> lseq a rem -> lseq a rem)
   -> l_v:(i:nat{i <= n} -> rem:nat{rem < w * blocksize} -> lseq a rem -> lseq a rem)
-  -> pre:squash (forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
+  -> pre:(forall (rem:nat{rem < w * blocksize}) (b_v:lseq a rem) (k:nat{k < rem}).
       map_blocks_vec_equiv_pre_k w blocksize n f l l_v rem b_v k)
   -> rem:nat{rem < w * blocksize}
   -> b_v:lseq a rem

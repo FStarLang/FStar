@@ -906,8 +906,8 @@ fn impl_matches_map_group_no_restricted
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
     (ig: (impl_matches_map_entry_zero_or_more (g)))
-    (h_ig: squash (
-        (Nil? g.one /\ Nil? g.zero_or_one)
+    (h_ig: (
+        Nil? g.one /\ Nil? g.zero_or_one
     ))
 : impl_matches_map_group #b g
 =

@@ -75,7 +75,7 @@ copy_array
 fn
 merge_impl
   (a : array int) (lo mid hi : SZ.t)
-  (_:squash (SZ.v lo <= SZ.v mid /\ SZ.v mid <= SZ.v hi))
+  (_:(SZ.v lo <= SZ.v mid /\ SZ.v mid <= SZ.v hi))
   (s1 : erased (S.seq int))
   (s2 : erased (S.seq int))
   requires pts_to_range a (SZ.v lo) (SZ.v mid) s1

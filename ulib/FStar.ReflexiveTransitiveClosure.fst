@@ -22,7 +22,7 @@ open FStar.Nonempty
 noeq
 type _closure (#a:Type u#a) (r:binrel u#a a) : a -> a -> Type u#a =
 | Refl: x:a -> _closure r x x
-| Step: x:a -> y:a -> squash (r x y) ->_closure r x y
+| Step: x:a -> y:a -> (r x y) ->_closure r x y
 | Closure: x:a -> y:a -> z:a -> _closure r x y -> _closure r y z -> _closure r x z
 
 let _closure0 (#a:Type) (r:binrel a) (x y: a) : prop =
@@ -42,7 +42,7 @@ let rec induct_ (#a:Type) (r:binrel a) (p: a -> a -> prop)
     let p2 = induct_ r p f_refl f_step f_closure y z yz in
     f_closure x y z
 
-let get_squash (#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
+let get_(#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
   : GTot (_closure r x y)
   = nonempty_elim (_closure r x y)
 
@@ -67,8 +67,8 @@ let closure_step #a r x y =
 
 val closure_one_aux: #a:Type u#a -> r:binrel u#a a -> x:a -> y:a
   -> xy:_closure r x y
-  -> Tot (either (squash (x == y))
-                (z:a & squash (r x z) & _closure r z y))
+  -> Tot (either (x == y)
+                (z:a & r x z & _closure r z y))
     (decreases xy)
 let rec closure_one_aux #a r x y xy =
   match xy with

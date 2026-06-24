@@ -148,7 +148,7 @@ let check_fndefn
 
   let mk_main_decl
     (refl_t:typ)
-    (_:squash (Nonempty.nonempty (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t))) =
+    (_:Nonempty.nonempty (RT.tot_typing (elab_env g) (RU.magic #R.term ()) refl_t)) =
     let nm = fst (inspect_ident id) in
     Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm us (RU.magic #R.term ()) refl_t
   in

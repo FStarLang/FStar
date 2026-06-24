@@ -15,7 +15,7 @@
 *)
 module FStar.Tactics.Logic.Lemmas
 
-let fa_intro_lem (#a:Type) (#p:a -> prop) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x) =
+let fa_intro_lem (#a:Type) (#p:a -> prop) (f:(x:a -> (p x))) : Lemma (forall (x:a). p x) =
   let f (x: a) : Lemma (p x) = f x in
   Classical.forall_intro #a #p fun x -> f x
 
@@ -24,7 +24,7 @@ let split_lem #a #b sa sb = ()
 let imp_intro_lem #a #b f =
   Classical.arrow_to_impl #a #b f
 
-let __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens =
+let __lemma_to_squash #req #ens (_ : req) (h : (unit -> Lemma (requires req) (ensures ens))) : ens =
   h ()
 
 let vbind #p #q sq f = f sq
@@ -43,17 +43,17 @@ let __and_elim' #p #q #phi p_and_q f = ()
 
 let __witness #a x #p _ = ()
 
-let __elim_exists' #t (#pred : t -> prop) #goal (h : squash (exists x. pred x))
-                          (k : (x:t -> squash (pred x) -> squash goal)) : squash goal =
+let __elim_exists' #t (#pred : t -> prop) (#goal: prop) (h : (exists x. pred x))
+                          (k : (x:t -> (pred x) -> goal)) : goal =
   Classical.exists_elim goal h fun x -> k x ()
 
-let __forall_inst #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
+let __forall_inst #t (#pred : t -> prop) (h : (forall x. pred x)) (x : t) : (pred x) =
     ()
 
-let __forall_inst_sq #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x) =
+let __forall_inst_sq #t (#pred : t -> prop) (h : (forall x. pred x)) (x : t) : (pred x) =
     ()
 
-let sklem0 (#a:Type) (#p : a -> prop) ($v : squash (exists (x:a). p x)) (phi:prop) :
+let sklem0 (#a:Type) (#p : a -> prop) ($v : (exists (x:a). p x)) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi) = ()
 

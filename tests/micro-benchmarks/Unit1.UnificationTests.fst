@@ -61,7 +61,7 @@ let test_760 a = admit #(buf_760 a) ()
 (***** tests for unit valued implicits *****)
 
 assume val some_predicate : prop
-assume val some_f (#_:squash some_predicate) (#_:unit) (_:unit) : unit
+assume val some_f (#_:some_predicate) (#_:unit) (_:unit) : unit
 
 open FStar.Monotonic.Pure
 

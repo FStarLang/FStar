@@ -5,7 +5,7 @@ open Pulse
 
 [@@expect_failure]
 ghost
-fn foo (x:squash False)
+fn foo (x:False)
   ensures pure False
 {
   ();

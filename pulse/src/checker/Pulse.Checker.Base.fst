@@ -434,7 +434,7 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
           (| ee, cc |)
         )
   in
-  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt') =
+  let _ : checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt' =
     match post_hint with
     | PostHint post_hint -> ()
     | _ -> () in

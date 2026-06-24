@@ -195,9 +195,9 @@ val later_credit_add m n : (later_credit (m + n) == later_credit m `star` later_
 
 val implies (p q: slprop) : prop
 val elim_implies p q (m: mem { level m > 0 }) :
-  squash (implies p q /\ interp p m ==> interp q m)
+  (implies p q /\ interp p m ==> interp q m)
 let elim_implies' #p #q (h: (implies p q)) (m: mem { level m > 0 }) :
-    squash (interp p m ==> interp q m) =
+    (interp p m ==> interp q m) =
   elim_implies p q m
 
 let timeless (p: slprop) : prop = later p `implies` p
@@ -208,7 +208,7 @@ val timeless_later_credit n : (timeless (later_credit n))
 val later_star p q : (later (star p q) == star (later p) (later q))
 val timeless_star p q : Lemma (requires timeless p /\ timeless q) (ensures timeless (star p q))
 val later_exists #t (f:t->slprop) :
-  squash (later (exists* x. f x) `implies` (exists* x. later (f x))
+  (later (exists* x. f x) `implies` (exists* x. later (f x))
       /\ (exists* x. later (f x)) `implies` later (exists* x. f x))
 val timeless_exists (#t: Type) (f: t->slprop) : Lemma (requires forall x. timeless (f x)) (ensures timeless (exists* x. f x))
 
@@ -480,7 +480,7 @@ val dup_inv_equiv :
     Lemma (inv i p == (inv i p `star` inv i p))
 
 val invariant_name_identifies_invariant (i: iref) (p q: slprop) :
-  squash (star (inv i p) (inv i q) `implies` later (equiv p q))
+  star (inv i p) (inv i q) `implies` later (equiv p q)
 
 val on_inv_eq l i p : (on l (inv i p) == inv i p)
 

@@ -22,8 +22,8 @@ type bijection (a b : Type) = {
   (* Proofs that the functions are inverses of each other. As
   usual the name here is a tough choice. We call the first one
   "right_left" because it says something about "right (left x)". *)
-  left_right : x:a -> squash (left (right x) == x);
-  right_left : y:b -> squash (right (left y) == y);
+  left_right : x:a -> left (right x) == x;
+  right_left : y:b -> right (left y) == y;
 }
 
 (* A symbol *)

@@ -41,7 +41,7 @@ let map_hogs_val #x #y (f: x->y) (v: hogs_val_ x) : hogs_val_ y =
   | Pred p -> Pred (f p)
   | Inv p -> Inv (f p)
 
-let f_ext #t #s (f g: t ^-> s) (h: (x:t -> squash (f x == g x))) : (f == g) =
+let f_ext #t #s (f g: t ^-> s) (h: (x:t -> (f x == g x))) : (f == g) =
   introduce forall x. f x == g x with h x;
   F.extensionality _ _ f g
 
@@ -87,9 +87,9 @@ val level_pack n x :
       [SMTPat (level_ (pack n x))]
 
 val mem_ext (w1: premem) (w2: premem { level_ w1 == level_ w2 /\ credits_ w1 == credits_ w2 /\ current_loc_ w1 == current_loc_ w2 /\ timeless_heap_of w1 == timeless_heap_of w2 })
-    (h: (a: address -> squash (read w1 a == read w2 a))) : (w1 == w2)
+    (h: (a: address -> (read w1 a == read w2 a))) : (w1 == w2)
 
-val mem_pred_ext (f g: mem_pred) (h: (w:premem -> squash (f w <==> g w))) : (f == g)
+val mem_pred_ext (f g: mem_pred) (h: (w:premem -> (f w <==> g w))) : (f == g)
 
 val approx_read (m: premem) a :
     Lemma (map_hogs_val (approx (level_ m)) (read m a) == read m a)

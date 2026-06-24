@@ -8,7 +8,7 @@ let flip_order (o:order) : order =
 
 class total_order (a:Type) = {
   compare: a -> a -> order;
-  properties : squash (
+  properties : (
     (forall (x y:a). {:pattern compare x y} eq (compare x y) <==> x == y) /\
     (forall (x y z:a). {:pattern compare x y; compare y z} lt (compare x y) /\ lt (compare y z) ==> lt (compare x z)) /\
     (forall (x y:a). {:pattern compare x y} compare x y == flip_order (compare y x))

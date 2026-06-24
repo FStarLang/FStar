@@ -558,7 +558,7 @@ let aux_shuffle_lemma #c #eq (cm: CE.cm c eq)
        proof fails, often mysteriously.
 
      - To have something more robust, I rewrote this function to
-       return a squash proof, and then to coerce this proof to the
+       return a proof, and then to coerce this proof to the
        type needed, where the F* unififer/normalization machinery can
        help, rather than leaving it purely to SMT, which is what
        happens when the property is states as a postcondition of a

@@ -262,8 +262,8 @@ let monoid_reflect_orig (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:ex
                       (mdenote eq m am e2)
 
 let monoid_reflect (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:exp)
-    (_ : squash (xsdenote eq m am (canon e1) `EQ?.eq eq` xsdenote eq m am (canon e2)))
-       : squash (mdenote eq m am e1 `EQ?.eq eq` mdenote eq m am e2) =
+    (_ : xsdenote eq m am (canon e1) `EQ?.eq eq` xsdenote eq m am (canon e2))
+       : mdenote eq m am e1 `EQ?.eq eq` mdenote eq m am e2 =
   monoid_reflect_orig #a eq m am e1 e2
 
 (* Finds the position of first occurrence of x in xs.
@@ -373,7 +373,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 let canon_monoid (eq: term) (m: term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
-  // removing top-level squash application
+  // removing top-level application
   let sq, rel_xy = collect_app t in
   // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
   (match rel_xy with
@@ -389,4 +389,4 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
          fail "Goal should have been an application of a binary relation to n implicit and 2 explicit arguments"
        )
      )
-   | _ -> fail "Goal should be squash applied to a binary relation")
+   | _ -> fail "Goal should be applied to a binary relation")

@@ -60,7 +60,7 @@ val dep : #a:Type -> (#l : list a) -> unit -> int
 let dep () = 1
 
 val app_pure : #a:Type -> #req:_ -> #ens:_
-               -> (unit -> Pure a req ens) -> squash req -> Tot a
+               -> (unit -> Pure a req ens) -> req -> Tot a
 let app_pure f _ = f ()
 
 val app_pure2 : #a:Type -> #req:_ -> #ens:_

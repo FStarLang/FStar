@@ -106,11 +106,11 @@ let rec elab_slprops (ps: list slprop_view) : slprop =
 let slprop_eqv (p q: slprop) : prop =
   True
 
-let slprop_eqv_intro #p #q (h: (g:env -> unit)) : squash (slprop_eqv p q) = ()
-let slprop_eqv_refl (p: slprop) : squash (slprop_eqv p p) = slprop_eqv_intro fun g -> ()
+let slprop_eqv_intro #p #q (h: (g:env -> unit)) : slprop_eqv p q = ()
+let slprop_eqv_refl (p: slprop) : slprop_eqv p p = slprop_eqv_intro fun g -> ()
 let slprop_eqv_trans (p q r: slprop) : Lemma (requires slprop_eqv p q /\ slprop_eqv q r) (ensures slprop_eqv p r) = admit ()
 let slprop_eqv_star p1 q1 p2 q2 : Lemma (requires slprop_eqv p1 p2 /\ slprop_eqv q1 q2) (ensures slprop_eqv (tm_star p1 q1) (tm_star p2 q2)) = admit ()
-let elab_slprops_append ps qs : squash (elab_slprops (ps@qs) `slprop_eqv` (elab_slprops ps `tm_star` elab_slprops qs)) = admit ()
+let elab_slprops_append ps qs : (elab_slprops (ps@qs) `slprop_eqv` (elab_slprops ps `tm_star` elab_slprops qs)) = admit ()
 
 #push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 #restart-solver

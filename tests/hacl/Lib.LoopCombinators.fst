@@ -94,9 +94,9 @@ let unfold_repeat_right_once
 
 module T = FStar.Tactics
 
-let refine_eq (a:Type) (p q:a -> prop) (x:squash (forall (i:a). p i <==> q i))
+let refine_eq (a:Type) (p q:a -> prop) (x:(forall (i:a). p i <==> q i))
   : Lemma ((i:a{p i} == i:a{q i}))
-  = let pext (a:Type) (p q: a -> prop) (_:squash (forall (x:a). p x <==> q x)) (x:a) : Lemma (p x == q x) 
+  = let pext (a:Type) (p q: a -> prop) (_:(forall (x:a). p x <==> q x)) (x:a) : Lemma (p x == q x) 
         = FStar.PropositionalExtensionality.apply (p x) (q x)
     in
     assert (i:a{p i} == i:a{q i})

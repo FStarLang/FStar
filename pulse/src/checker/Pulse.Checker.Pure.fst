@@ -96,7 +96,7 @@ let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
   | u -> u, []
   
 
-let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (squash (subtyping_token g t1 t2))) =
+let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
   debug g (fun _ ->
     Printf.sprintf "(%s, %s) Calling check_subtyping on %s <: %s"
         (show (RU.range_of_term t1))
@@ -137,7 +137,7 @@ let rtb_core_check_term_at_type g f e t =
   res
 
 let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) =
-  let _ : squash (typing_token f p (E_Total, (`prop))) = magic () in
+  let _ : (typing_token f p (E_Total, (`prop))) = magic () in
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (show (RU.range_of_term p))
@@ -308,7 +308,7 @@ let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
       | Some ru ->
-        let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) = () in
+        let proof : (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) = () in
         let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
         ru
     in
@@ -517,7 +517,7 @@ let check_slprop_with_core (g:env)
 
 let non_informative_class_typing
   (g:env) (u:universe) (ty:typ)
-  : my_erased (squash (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u))))
+  : my_erased (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u)))
   = E (magic())
 
 let non_info_tac_tm : term =
@@ -549,7 +549,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
   = let goal = non_informative_class u ty in
     let r_env = elab_env g in
     let constraint_typing = non_informative_class_typing g u ty in
-    let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
+    let goal_typing_tok : (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
       match constraint_typing with | E tok -> ()
     in
     let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) =
@@ -588,7 +588,7 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
       assert (typing_token r_env r_dict (E_Total, goal));
       assume (~(Tv_Unknown? (inspect_ln r_dict)));
       let dict = wr r_dict (RU.range_of_term ty) in
-      let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, goal)) = () in
+      let r_dict_typing_token : (typing_token r_env r_dict (E_Total, goal)) = () in
       let r_dict_typing : RT.typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
 
       Some dict, issues

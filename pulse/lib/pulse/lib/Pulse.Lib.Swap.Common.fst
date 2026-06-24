@@ -44,7 +44,7 @@ inline_for_extraction
 let impl_jump
   (lb rb mb: SZ.t)
   (idx: SZ.t)
-  (_: squash (
+  (_: (
       SZ.v lb < SZ.v mb /\
       SZ.v mb < SZ.v rb /\
       SZ.v lb <= SZ.v idx /\

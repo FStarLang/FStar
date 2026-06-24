@@ -42,7 +42,7 @@ let map_hogvs_id (a:Type) (x:hogvs a) : (map_hogvs (id #a) == id #(hogvs a)) =
     f_ext (map_hogvs (id #a) x) (id x) fun _ -> ()
 
 let map_hogvs_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
-: (squash (compose (map_hogvs b2c) (map_hogvs a2b) ==
+: ((compose (map_hogvs b2c) (map_hogvs a2b) ==
             map_hogvs (compose b2c a2b)))
 = let lhs = compose (map_hogvs b2c) (map_hogvs a2b) in
   let rhs = map_hogvs (compose b2c a2b) in
@@ -52,7 +52,7 @@ let map_premem_id (a:Type) (x:premem_ a) : (map_premem (id #a) == id #(premem_ a
   f_ext (map_premem (id #a)) (id #(premem_ a)) fun x -> map_hogvs_id a x.hogs
 
 let map_premem_comp (a:Type) (b:Type) (c:Type) (b2c:b -> c) (a2b:a -> b)
-: (squash (compose (map_premem b2c) (map_premem a2b) ==
+: ((compose (map_premem b2c) (map_premem a2b) ==
             map_premem (compose b2c a2b)))
 = let lhs = compose (map_premem b2c) (map_premem a2b) in
   let rhs = map_premem (compose b2c a2b) in
@@ -108,12 +108,12 @@ let level_pack n x =
   unpack_pack n (premem_of2 x)
 
 let mem_ext (w1: premem) w2
-    (h: (a: address -> squash (read w1 a == read w2 a))) : (w1 == w2) =
+    (h: (a: address -> read w1 a == read w2 a)) : (w1 == w2) =
   pack_unpack w1;
   pack_unpack w2;
   f_ext (IT.unpack w1).hogs (IT.unpack w2).hogs fun a -> h a
 
-let mem_pred_ext (f g: mem_pred) (h: (w:premem -> squash (f w <==> g w))) : (f == g) =
+let mem_pred_ext (f g: mem_pred) (h: (w:premem -> (f w <==> g w))) : (f == g) =
   f_ext f g fun w ->
     h w;
     PropositionalExtensionality.apply (f w) (g w)

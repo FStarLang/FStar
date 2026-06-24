@@ -161,7 +161,7 @@ let lift_star (l:tag) (p q:H.slprop)
   );
   slprop_extensionality (llift l (p `H.star` q)) (llift l p `star` llift l q)
 #pop-options
-let lift_emp : squash (lift H.emp == emp u#a) = 
+let lift_emp : (lift H.emp == emp u#a) = 
   FStar.Classical.forall_intro (H.intro_emp u#a);
   slprop_extensionality (lift u#a H.emp) (emp u#a)
 
@@ -409,7 +409,7 @@ let elim_pure (p:prop)
     in
     refined_pre_action_as_action f
 
-let intro_pure (p:prop) (_:squash p)
+let intro_pure (p:prop) (_:p)
 : action emp unit (fun _ -> pure p)
 = let f
     : refined_pre_action emp unit (fun _ -> pure p)
@@ -568,7 +568,7 @@ let lift_action_ghost
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
 
-let lift_ghost_emp : squash (llift GHOST H.emp == emp u#a) = 
+let lift_ghost_emp : (llift GHOST H.emp == emp u#a) = 
   FStar.Classical.forall_intro (H.intro_emp u#a);
   slprop_extensionality (llift GHOST H.emp) (emp u#a)
 
@@ -644,7 +644,7 @@ let ghost_gather
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
-    (squash (composable pcm v0 v1))
+    (composable pcm v0 v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 = lift_erased #_ #(ni_squash )
     (Ghost.hide <|

@@ -55,8 +55,8 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
 let timeless_exists #a p =
   exists_extensional p (fun x -> p x) ();
   Sep.timeless_exists p;
-  let unfold h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
-  let unfold h: squash (Sep.timeless (exists* x. p x)) = h in
+  let unfold h: Sep.timeless Sep.(exists* x. p x) = () in
+  let unfold h: Sep.timeless (exists* x. p x) = h in
   ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
@@ -229,12 +229,12 @@ let later_elim_timeless p = A.implies_elim (later p) p
 
 let later_star = Sep.later_star
 let later_exists #t f =
-  let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
-  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  let h: Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
+  let h: (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
   A.implies_elim _ _
 let exists_later #t f =
-  let h: squash Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
-  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
+  let h: Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
+  let h: ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
   A.implies_elim _ _
 
 let on_later_eq = Sep.on_later_eq
@@ -284,7 +284,7 @@ let rewrite_by (p:slprop) (q:slprop)
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (slprop_equiv p q) })
   : stt_ghost unit emp_inames p (fun _ -> q)
-  = let pf : squash (slprop_equiv p q) = T.by_tactic_seman t (slprop_equiv p q) in
+  = let pf : (slprop_equiv p q) = T.by_tactic_seman t (slprop_equiv p q) in
     rewrite p q (coerce_eq () pf)
 #pop-options
 
@@ -305,7 +305,7 @@ let assert_ (p:slprop) = A.noop p
 let assume_ (p:slprop) = admit() //intentional
 let drop_ (p:slprop) = A.drop p
 
-let unreachable (_:squash False)
+let unreachable (_:False)
   = FStar.Pervasives.false_elim ()
 
 let as_atomic #a pre post e = admit () // intentional since it is an assumption

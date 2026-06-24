@@ -528,7 +528,7 @@ let pure_true ()
  };
  coerce_eq () <| slprop_equiv_refl (pure True)
 
-let intro_pure (p:prop) (pf:squash p)
+let intro_pure (p:prop) (pf:p)
 : act unit Ghost emp_inames emp (fun _ -> pure p)
 = lift_pre_act0_act fun #ictx -> ITA.intro_pure #ictx p pf
 

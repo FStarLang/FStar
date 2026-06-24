@@ -8,7 +8,7 @@ module U32 = FStar.UInt32
 concrete as a U32. *)
 class concrete (x:nat) = {
   c  : U32.t;
-  pf : squash (eq2 #int (U32.v c) x);
+  pf : eq2 #int (U32.v c) x;
 }
 
 (* We can define instances for some constants... but not all *)

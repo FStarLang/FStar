@@ -35,7 +35,7 @@ class bounded_int (t:eqtype) = {
     ( % ) : (x:t -> y:t -> Pure t (requires v y `Prims.(op_GreaterThan)` 0 /\ fits (v x % v y)) (ensures fun z -> v z == v x % v y));
     ( / ) : (x:t -> y:t -> Pure t (requires v y <> 0 /\ fits (v x / v y)) (ensures fun z -> v z == v x / v y));
     [@@@TC.no_method]
-    properties: squash (
+    properties: (
       (forall (x:t). {:pattern v x} fits (v x)) 
     )
     (* ...todo, add other ops **)
@@ -67,7 +67,7 @@ class bounded_unsigned (t:eqtype) = {
   [@@@TC.no_method]  
   static_max_bound: bool;
   [@@@TC.no_method]
-  properties: squash (
+  properties: (
     (forall (x:t). v x >= 0 /\ (static_max_bound ==> v x <= v max_bound)) /\
     (forall (x:nat). x <= v max_bound ==> fits #t x)
   )

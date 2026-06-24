@@ -61,7 +61,7 @@ val calc_step
   (z:a)                                      (* Next expression *)
   (#rs:list (relation a))
   (pf:unit -> Tot (calc_pack rs x y))         (* Rest of the proof *)
-  (j:unit -> Tot (squash (p y z)))            (* Justification *)
+  (j:unit -> Tot (p y z))            (* Justification *)
   : Tot (calc_pack (p::rs) x z)
 
 /// Finishing a calc proof,
@@ -82,5 +82,5 @@ val calc_finish
                          (calc_chain_compatible rs p))))
       (ensures (p x y))
 
-val calc_push_impl (#p #q:prop) (f:squash p -> GTot (squash q))
-  : Tot (squash (p ==> q))
+val calc_push_impl (#p #q:prop) (f:p -> GTot q)
+  : Tot (p ==> q)

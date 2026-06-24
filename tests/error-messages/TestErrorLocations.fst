@@ -103,7 +103,7 @@ let test_elim_and (p q:prop) : unit
   with pp qq. qq
 
 [@@expect_failure [19]]
-let test_elim_and (p q:prop) (_:squash p) : unit
+let test_elim_and (p q:prop) (_:p) : unit
 = eliminate p /\ q
   returns q
   with pp qq. qq

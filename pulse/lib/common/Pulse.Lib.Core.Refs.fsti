@@ -55,7 +55,7 @@ val timeless_pcm_pts_to
 : Lemma (timeless (pcm_pts_to r v))
         [SMTPat (timeless (pcm_pts_to r v))]
 
-val on_pcm_pts_to_eq l #a #p r v : squash (on l (pcm_pts_to #a #p r v) == pcm_pts_to r v)
+val on_pcm_pts_to_eq l #a #p r v : (on l (pcm_pts_to #a #p r v) == pcm_pts_to r v)
 
 let pcm_ref_null
     (#a:Type)
@@ -75,7 +75,7 @@ val pts_to_not_null
     (#p:FStar.PCM.pcm a)
     (r:pcm_ref p)
     (v:a)
-: stt_ghost (squash (not (is_pcm_ref_null r)))
+: stt_ghost (not (is_pcm_ref_null r))
             emp_inames
             (pcm_pts_to r v)
             (fun _ -> pcm_pts_to r v)
@@ -128,7 +128,7 @@ val gather
     (r:pcm_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
+: stt_ghost (composable pcm v0 v1)
     emp_inames
     (pcm_pts_to r v0 ** pcm_pts_to r v1)
     (fun _ -> pcm_pts_to r (op pcm v0 v1))
@@ -160,14 +160,14 @@ val timeless_ghost_pcm_pts_to
 : Lemma (timeless (ghost_pcm_pts_to r v))
         [SMTPat (timeless (ghost_pcm_pts_to r v))]
 
-val on_ghost_pcm_pts_to_eq l #a #p r v : squash (on l (ghost_pcm_pts_to #a #p r v) == ghost_pcm_pts_to r v)
+val on_ghost_pcm_pts_to_eq l #a #p r v : (on l (ghost_pcm_pts_to #a #p r v) == ghost_pcm_pts_to r v)
 
 val ghost_pts_to_not_null
     (#a:Type)
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: stt_ghost (squash (r =!= null_core_ghost_pcm_ref))
+: stt_ghost (r =!= null_core_ghost_pcm_ref)
             emp_inames
             (ghost_pcm_pts_to r v)
             (fun _ -> ghost_pcm_pts_to r v)
@@ -223,7 +223,7 @@ val ghost_gather
     (r:ghost_pcm_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: stt_ghost (squash (composable pcm v0 v1))
+: stt_ghost (composable pcm v0 v1)
     emp_inames
     (ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
     (fun _ -> ghost_pcm_pts_to r (op pcm v0 v1))

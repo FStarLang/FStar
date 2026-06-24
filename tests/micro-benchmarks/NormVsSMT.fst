@@ -22,10 +22,6 @@ let _ = assert_norm (True \/ True)
 (* let _ = assert (pair True True) *)
 (* let _ = assert (pair trivial trivial) *)
 
-(* This fails after removing t_valid, c.f. 5ac0bd96d *)
-(* val l1 : (a : Type) -> Lemma (a ==> squash a) *)
-(* let l1 a = assert_norm (a ==> squash a) *)
-
 (* This needs the validity axioms to succeed *)
 val l2 : (a : prop) -> Lemma (a ==> a)
 let l2 a = assert_norm (a ==> a)

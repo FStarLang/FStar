@@ -40,7 +40,7 @@ let star_commutative (p q: slprop u#a) : Lemma (star p q == star q p) =
   slprop_extensionality (star p q) (star q p)
 
 let star_associative' (p q r: slprop) (m: mem { interp (star p (star q r)) m }) :
-    squash (interp (star (star p q) r) m) =
+    interp (star (star p q) r) m =
   star_equiv p (star q r) m;
   let m1 = IndefiniteDescription.indefinite_description_ghost _ fun m1 -> exists m23.
     disjoint_mem m1 m23 /\ m == join_mem m1 m23 /\ interp p m1 /\ interp (star q r) m23 in

@@ -35,7 +35,7 @@ let binrel (a:Type) = a -> a -> prop
 [@@ erasable]
 noeq
 type acc (#a:Type u#a) (r:binrel u#a a) (x:a) : Type u#a =
-  | AccIntro : access_smaller:(y:a -> squash (r y x) -> acc r y) -> acc r x
+  | AccIntro : access_smaller:(y:a -> r y x -> acc r y) -> acc r x
 
 (*
  * A binrel r is well-founded if every element is accessible

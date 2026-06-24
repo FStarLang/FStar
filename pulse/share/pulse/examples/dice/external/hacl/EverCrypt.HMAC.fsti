@@ -55,7 +55,7 @@ let compute_st (a: H.hash_alg) =
   p_data: perm ->
   v_data: Ghost.erased (Seq.seq U8.t) ->
   datalen: U32.t{ U32.v datalen = A.length data } ->
-  stt (squash (Seq.length v_key == A.length key /\ Seq.length v_data == A.length data))
+  stt (Seq.length v_key == A.length key /\ Seq.length v_data == A.length data)
   (requires
     (exists* v_tag . pts_to tag v_tag) **
     pts_to key #p_key v_key **

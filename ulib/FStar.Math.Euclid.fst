@@ -62,12 +62,12 @@ let divides_1 a = ()
 
 let divides_minus a b =
   Classical.exists_elim (a `divides` (-b))
-    (() <: squash (a `divides` b))
+    (() <: (a `divides` b))
     (fun q -> Classical.exists_intro (fun q' -> -b = q' * a) (-q))
 
 let divides_opp a b =
   Classical.exists_elim ((-a) `divides` b)
-    (() <: squash (a `divides` b))
+    (() <: (a `divides` b))
     (fun q -> Classical.exists_intro (fun q' -> b = q' * (-a)) (-q))
 
 let divides_plus a b d =
@@ -84,7 +84,7 @@ let divides_sub a b d =
   divides_plus a (-b) d
 
 let divides_mult_right a b d =
-  Classical.exists_elim (d `divides` (a * b)) (() <: squash (d `divides` b))
+  Classical.exists_elim (d `divides` (a * b)) (() <: (d `divides` b))
     (fun q ->
       paren_mul_right a q d;
       Classical.exists_intro (fun r -> a * b = r * d) (a * q))
@@ -97,7 +97,7 @@ let mod_divides a b =
   Classical.exists_intro (fun q -> a = q * b) (a / b)
 
 let divides_mod a b =
-  Classical.exists_elim (a % b = 0) (() <: squash (b `divides` a))
+  Classical.exists_elim (a % b = 0) (() <: (b `divides` a))
     (fun q -> cancel_mul_div q b)
 
 let is_gcd_unique a b c d =

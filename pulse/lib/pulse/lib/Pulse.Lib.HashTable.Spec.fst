@@ -156,7 +156,7 @@ type pht_t (kt:eqtype) (vt:Type) = {
   // somehow? Does it also get erased? (I think so, but double check)
   spec : Ghost.erased (spec_t kt vt);
   repr : repr_t kt vt;
-  inv : squash (pht_models spec repr /\ US.fits repr.sz);
+  inv : pht_models spec repr /\ US.fits repr.sz;
 }
 
 let upd_ #kt #vt (repr : repr_t kt vt) idx k v : repr_t kt vt =

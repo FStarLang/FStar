@@ -31,7 +31,7 @@ val sign:
   -> p_msg: perm
   -> v_msg: Ghost.erased (Seq.seq U8.t)
   -> msg:A.larray U8.t (U32.v msg_len) ->
-  stt (squash (Seq.length v_private_key == 32 /\ Seq.length v_msg == U32.v msg_len))
+  stt (Seq.length v_private_key == 32 /\ Seq.length v_msg == U32.v msg_len)
     (requires
       (exists* v_signature . pts_to signature v_signature) **
       pts_to private_key #p_private_key v_private_key **

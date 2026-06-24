@@ -58,7 +58,7 @@ let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
   let goal = Pulse.Reflection.Util.stt_slprop_equiv p q in
   let goal = mk_squash goal in
   let r_env = elab_env g in
-  let goal_typing_tok : squash (T.typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u0))) =
+  let goal_typing_tok : T.typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u0)) =
     RU.magic ()
   in
   let res, issues = T.call_subtac_tm r_env tac_tm u0 goal in

@@ -15,56 +15,56 @@
 *)
 module FStar.Tactics.Logic.Lemmas
 
-val fa_intro_lem (#a:Type) (#p:a -> prop) (f:(x:a -> squash (p x))) : Lemma (forall (x:a). p x)
+val fa_intro_lem (#a:Type) (#p:a -> prop) (f:(x:a -> (p x))) : Lemma (forall (x:a). p x)
 
 val split_lem : (#a:prop) -> (#b:prop) ->
-                        squash a -> squash b -> Lemma (a /\ b)
+                        a -> b -> Lemma (a /\ b)
 val imp_intro_lem : (#a:prop) -> (#b : prop) ->
-                            (squash a -> squash b) ->
+                            (a -> b) ->
                             Lemma (a ==> b)
-val __lemma_to_squash #req #ens (_ : squash req) (h : (unit -> Lemma (requires req) (ensures ens))) : squash ens
+val __lemma_to_squash (#req #ens:prop) (_ : req) (h : (unit -> Lemma (requires req) (ensures ens))) : ens
 
-val vbind : (#p:prop) -> (#q:prop) -> squash p -> (squash p -> squash q) -> Lemma q
+val vbind : (#p:prop) -> (#q:prop) -> p -> (p -> q) -> Lemma q
 
 val or_ind : (#p:prop) -> (#q:prop) -> (#phi:prop) ->
-                     squash (p \/ q) ->
-                     (squash (p ==> phi)) ->
-                     (squash (q ==> phi)) ->
+                     (p \/ q) ->
+                     (p ==> phi) ->
+                     (q ==> phi) ->
                      Lemma phi
 
-val bool_ind : (b:bool) -> (phi:prop) -> (squash (b == true  ==> phi)) ->
-                                                 (squash (b == false ==> phi)) ->
+val bool_ind : (b:bool) -> (phi:prop) -> (b == true  ==> phi) ->
+                                                 (b == false ==> phi) ->
                                                  Lemma phi
 
-val or_intro_1 : (#p:prop) -> (#q:prop) -> squash p -> Lemma (p \/ q)
+val or_intro_1 : (#p:prop) -> (#q:prop) -> p -> Lemma (p \/ q)
 
-val or_intro_2 : (#p:prop) -> (#q:prop) -> squash q -> Lemma (p \/ q)
+val or_intro_2 : (#p:prop) -> (#q:prop) -> q -> Lemma (p \/ q)
 
 val __and_elim : (#p:prop) -> (#q:prop) -> (#phi:prop) ->
-                              squash (p /\ q) ->
-                              squash (p ==> q ==> phi) ->
+                              (p /\ q) ->
+                              (p ==> q ==> phi) ->
                               Lemma phi
 
 val __and_elim' : (#p:prop) -> (#q:prop) -> (#phi:prop) ->
-                              squash (p /\ q) ->
-                              squash (p ==> q ==> phi) ->
+                              (p /\ q) ->
+                              (p ==> q ==> phi) ->
                               Lemma phi
 
-val __witness : (#a:Type) -> (x:a) -> (#p:(a -> prop)) -> squash (p x) -> squash (exists (x:a). p x)
+val __witness : (#a:Type) -> (x:a) -> (#p:(a -> prop)) -> p x -> (exists (x:a). p x)
 
-val __elim_exists' #t (#pred : t -> prop) #goal (h : squash (exists x. pred x))
-                          (k : (x:t -> squash (pred x) -> squash goal)) : squash goal
+val __elim_exists' #t (#pred : t -> prop) (#goal: prop) (h : (exists x. pred x))
+                          (k : (x:t -> (pred x) -> goal)) : goal
 
-val __forall_inst #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x)
+val __forall_inst #t (#pred : t -> prop) (h : (forall x. pred x)) (x : t) : (pred x)
 
-val __forall_inst_sq #t (#pred : t -> prop) (h : squash (forall x. pred x)) (x : t) : squash (pred x)
+val __forall_inst_sq #t (#pred : t -> prop) (h : (forall x. pred x)) (x : t) : (pred x)
 
-val sklem0 (#a:Type) (#p : a -> prop) ($v : squash (exists (x:a). p x)) (phi:prop) :
+val sklem0 (#a:Type) (#p : a -> prop) ($v : (exists (x:a). p x)) (phi:prop) :
   Lemma (requires (forall x. p x ==> phi))
         (ensures phi)
 
 val lemma_from_squash (#a:Type) (#pre #post : a -> prop) :
-  (x:a{pre x} -> squash (post x)) -> x:a -> Lemma (requires pre x) (ensures post x)
+  (x:a{pre x} -> (post x)) -> x:a -> Lemma (requires pre x) (ensures post x)
 
 val lem1_fa #a #pre #post
   ($lem : (x:a -> Lemma (requires pre x) (ensures post x))) :
@@ -79,5 +79,5 @@ val lem3_fa #a #b #c #pre #post
   Lemma (forall (x:a) (y:b) (z:c). pre x y z ==> post x y z)
 
 val revert_squash : (#a:Type) -> (#b : (a -> prop)) ->
-                            (squash (forall (x:a). b x)) ->
-                            x:a -> squash (b x)
+                            (forall (x:a). b x) ->
+                            x:a -> b x

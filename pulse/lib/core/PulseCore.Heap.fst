@@ -1135,7 +1135,7 @@ let gather_action #a #pcm r v0 v1
 ////////////////////////////////////////////////////////////////////////////////
 let pts_to_not_null_action #a #pcm r v
   = let g : refined_pre_action (pts_to r v)
-                               (squash (not (is_null r)))
+                               (not (is_null r))
                                (fun _ -> pts_to r v)
       = fun m ->
           pts_to_not_null r v m;

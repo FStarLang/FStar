@@ -548,14 +548,14 @@ open FStar.Tactics // needed again because we overrode return and bind
 let example #a #b #c: unit =
   assert (a /\ b ==> c == b ==> c)
     by (repeat'
-       (fun () -> gpm #unit (fun (a: Type) (h: hyp (squash a)) ->
+       (fun () -> gpm #unit (fun (a: Type) (h: hyp a) ->
                     clear h <: Tac unit) `or_else`
-       (fun () -> gpm #unit (fun (a b: Type0) (g: goal (squash (a ==> b))) ->
+       (fun () -> gpm #unit (fun (a b: Type0) (g: goal ((a ==> b))) ->
                     implies_intro' () <: Tac unit) `or_else`
        (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a /\ b)) ->
                     and_elim' h <: Tac unit) `or_else`
-       (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal (squash a)) ->
+       (fun () -> gpm #unit (fun (a b: Type0) (h: hyp (a == b)) (g: goal a) ->
                     rewrite h <: Tac unit) `or_else`
-       gpm #unit (fun (a: Type0) (h: hyp a) (g: goal (squash a)) ->
+       gpm #unit (fun (a: Type0) (h: hyp a) (g: goal a) ->
                     exact_hyp a h <: Tac unit)))));
       qed ())

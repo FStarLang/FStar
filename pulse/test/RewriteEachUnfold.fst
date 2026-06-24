@@ -7,7 +7,7 @@ assume val foo : slprop
 assume val baz : slprop
 unfold let bar = foo
 
-fn test (_ : squash (foo == baz))
+fn test (_ : (foo == baz))
   requires bar
   ensures  baz
 {

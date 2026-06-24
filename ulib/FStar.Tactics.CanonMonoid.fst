@@ -113,7 +113,7 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
       (* First, make sure we have an equality at type ta, since otherwise
       we will fail to apply the reflection Lemma. We can just cut by the equality
       we want, since they should be equiprovable (though not equal). *)
-      let b = tcut (`(squash (eq2 #(`#(quote a)) (`#me1) (`#me2)))) in
+      let b = tcut (`((eq2 #(`#(quote a)) (`#me1) (`#me2)))) in
       smt (); // let the SMT prove it, it should really be trivial
 
       let r1 = reification m me1 in

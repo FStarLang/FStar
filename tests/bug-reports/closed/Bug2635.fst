@@ -4,31 +4,31 @@ open FStar.Tactics.V2
 //Original report by Benjamin Bonneau
 let prove_False
       (pf : False)
-      (_  : (pf0 : False) -> (eq2 #(squash False) pf ()))
+      (_  : (pf0 : False) -> (eq2 #(False) pf ()))
   : False
   = pf
 
 //
 // This solves the uvar for the pf binder in prove_false to ()
-// But that solution is well-typed only under the squash False hypothesis
+// But that solution is well-typed only under the False hypothesis
 // So we typecheck the solution again in environment for the pf uvar,
 //   which is empty, and that produces an SMT failure
 //
 [@@expect_failure [19]]
 let absurd : False
-  = _ by (// |- ?pf : squash l_False
+  = _ by (// |- ?pf : l_False
           apply (`prove_False);
           let pf0 = intro () in
-          // (pf0 : squash l_False) |- _ : ?pf == ()
+          // (pf0 : l_False) |- _ : ?pf == ()
           trefl ())
 
 //Using the  gather_explicit_guards_for_resolved_goals primitive
 //you can now see that goal explicitly and work on solving from your tactic
-// let admit_absurd (_:unit) : squash False
-//   = _ by (// |- ?pf : squash l_False
+// let admit_absurd (_:unit) : False
+//   = _ by (// |- ?pf : l_False
 //           apply (`prove_False);
 //           let pf0 = intro () in
-//           // (pf0 : squash l_False) |- _ : ?pf == ()
+//           // (pf0 : l_False) |- _ : ?pf == ()
 //           trefl ();
 //           gather_or_solve_explicit_guards_for_resolved_goals();
 //           dump "After";
@@ -55,7 +55,7 @@ let use_pos (x:nat) (xpos: (x > 0)) (hyp: (q x)) =
     apply (`intro_exists);
     apply (quote hyp)) //the implicit `pos` of intro_exists is solved by unification here to x:nat
 
-// let use_pos2 (x:nat) (xpos:squash (x > 0)) (hyp:squash (q x)) =
+// let use_pos2 (x:nat) (xpos:(x > 0)) (hyp:(q x)) =
 //   assert p by (
 //     apply (`expect_pos);
 //     apply (`intro_exists);
@@ -153,7 +153,7 @@ let prove_False0
 //   arguments of prove_False0
 //
 // One for the binder e, let's call it ?u_e
-// And second for the binder with squash type, let's call it ?u_sq
+// And second for the binder with type, let's call it ?u_sq
 //
 // (Tactic engine does an optimization where since ?u_e appears in the type
 //   of other uvars (?u_sq here), it is not shown as a goal to the user
@@ -222,7 +222,7 @@ let omega2 : bool
 
 let prove_False_lemma
       (pf : False)
-      (_  : (pf0 : False) -> (eq2 #(squash False) pf ()))
+      (_  : (pf0 : False) -> (eq2 #(False) pf ()))
   : Lemma False
   = pf
 

@@ -31,7 +31,7 @@ ensures pure (y==z)
 }
 
 
-let assume_squash (p:prop) : squash p = assume p
+let assume_squash (p:prop) : p = assume p
 
 
 fn sample (x:R.ref int)

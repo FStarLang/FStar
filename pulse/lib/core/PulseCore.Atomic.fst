@@ -38,7 +38,7 @@ let equiv (#p #q:slprop) (pf:slprop_equiv p q)
 : (p == q)
 = I.slprop_equiv_elim p q
 
-let pure_trivial (p:prop) (_:squash p)
+let pure_trivial (p:prop) (_:p)
   : (pure p == emp)
   = calc (==) {
       pure p;
@@ -230,7 +230,7 @@ let noop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 = lift_neutral_ghost (A.return ())
 
-let intro_pure (p:prop) (pf:squash p)
+let intro_pure (p:prop) (pf:p)
 : stt_ghost unit emp_inames emp (fun _ -> pure p)
 = lift_neutral_ghost (A.intro_pure p pf)
 
@@ -276,7 +276,7 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   let f: act (erased a) Ghost f_opens (somewhere (later p) ** fp) (fun x -> somewhere (later p) ** fp' x) = f () in
   A.with_invariant #(erased a) #Ghost #fp #(as_ghost_post fp') #f_opens #p i (fun _ -> f)
 
-let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> squash (p x == q x))) : slprop_post_equiv p q =
+let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> p x == q x)) : slprop_post_equiv p q =
   introduce forall x. slprop_equiv (p x) (q x) with
     (h x; slprop_equiv_refl (p x))
 

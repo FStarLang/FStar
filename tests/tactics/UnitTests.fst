@@ -67,7 +67,7 @@ let _ = assert (D?.x (D 5) == 5) by trivial ()
 
 assume val p1 : prop
 assume val p2 : prop
-assume val proof_1 : squash p1
+assume val proof_1 : p1
 assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
 let _ =
@@ -83,7 +83,7 @@ let _ =
 
 assume val pp1 : prop
 
-val l2 : x:(squash pp1) -> Lemma pp1
+val l2 : x:(pp1) -> Lemma pp1
 let l2 x =
     assert pp1 by assumption ()
 
@@ -93,7 +93,7 @@ let xx : r = {x = 4}
 let _ = assert (xx.x = 4) by trivial ()
 let _ = assert (xx.x == 4) by trivial ()
 
-assume val dlem : squash True -> squash True -> squash True
+assume val dlem : True -> True -> True
 
 let _ = assert True
             by (apply (quote dlem);
