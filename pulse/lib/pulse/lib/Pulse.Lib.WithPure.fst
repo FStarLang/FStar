@@ -6,7 +6,7 @@ open Pulse.Main
 
 let with_pure
   (p : prop)
-  (v : squash p -> slprop)
+  (v : p -> slprop)
 : slprop
 = exists* h. v h
 // Alternative definition:
@@ -15,13 +15,13 @@ let with_pure
 
 let with_pure_timeless
   (p : prop)
-  (v : squash p -> slprop)
+  (v : p -> slprop)
 : Lemma (requires forall s. timeless (v s))
         (ensures  timeless (with_pure p v))
         [SMTPat (timeless (with_pure p v))]
 = assert_norm (with_pure p v == (exists* h. v h))
 
-ghost fn on_with_pure_elim l (p: prop) (v: squash p -> slprop)
+ghost fn on_with_pure_elim l (p: prop) (v: p -> slprop)
   requires on l (with_pure p v)
   ensures with_pure p (fun _ -> on l (v ()))
 {
@@ -35,7 +35,7 @@ ghost fn on_with_pure_elim l (p: prop) (v: squash p -> slprop)
   }
 }
 
-ghost fn on_with_pure_intro l (p: prop) (v: squash p -> slprop)
+ghost fn on_with_pure_intro l (p: prop) (v: p -> slprop)
   requires with_pure p (fun _ -> on l (v ()))
   ensures on l (with_pure p v)
 {
@@ -51,8 +51,8 @@ let is_send_across_with_pure p v #_ = Tactics.Typeclasses.solve
 ghost
 fn intro_with_pure
   (p : prop)
-  (v : squash p -> slprop)
-  (_ : squash p)
+  (v : p -> slprop)
+  (_ : p)
   requires v ()
   ensures  with_pure p v
 {
@@ -65,8 +65,8 @@ fn intro_with_pure
 ghost
 fn squash_single_coerce
   (p : prop)
-  (v : squash p -> slprop)
-  (s : squash p)
+  (v : p -> slprop)
+  (s : p)
   requires v s
   ensures pure p
   ensures v ()
@@ -80,9 +80,9 @@ fn squash_single_coerce
 ghost
 fn elim_with_pure
   (p : prop)
-  (v : squash p -> slprop)
+  (v : p -> slprop)
   requires with_pure p v
-  returns  s : squash p
+  returns  s : p
   ensures  v ()
 {
   unfold (with_pure p v);

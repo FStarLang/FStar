@@ -62,7 +62,7 @@ let div_perm (p:perm) (n:pos) : perm =
 
 // 
 // ghost
-// fn p_join (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+// fn p_join (p : (nat->slprop)) (i j k : nat) (_ : (i <= j /\ j <= k))
 //   requires on_range p i j ** on_range p j k
 //   ensures  on_range p i k
 // {
@@ -71,7 +71,7 @@ let div_perm (p:perm) (n:pos) : perm =
 // 
 
 // 
-// fn p_split (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+// fn p_split (p : (nat->slprop)) (i j k : nat) (_ : (i <= j /\ j <= k))
 //   requires on_range p i k
 //   ensures on_range p i j ** on_range p j k
 // {
@@ -81,7 +81,7 @@ let div_perm (p:perm) (n:pos) : perm =
 
 // 
 // ghost
-// fn p_join_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
+// fn p_join_last (p : (nat->slprop)) (n : nat) (_ : (n > 0))
 //   requires on_range p 0 (n-1) ** p (n-1)
 //   ensures on_range p 0 n
 // {
@@ -91,7 +91,7 @@ let div_perm (p:perm) (n:pos) : perm =
 
 // 
 // ghost
-// fn p_split_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
+// fn p_split_last (p : (nat->slprop)) (n : nat) (_ : (n > 0))
 //   requires on_range p 0 n
 //   ensures on_range p 0 (n-1) ** p (n-1)
 // {

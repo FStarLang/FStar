@@ -57,7 +57,7 @@ let forall_intro_squash_gtot_join #a #p f =
   forall_intro_gtot #a #p f
 
 let forall_intro #a #p f =
-  let f (x: a) : squash (p x) = f x in
+  let f (x: a) : p x = f x in
   forall_intro_gtot #a #p f
 
 let forall_intro_with_pat #a #c #p pat f = forall_intro #a #p f

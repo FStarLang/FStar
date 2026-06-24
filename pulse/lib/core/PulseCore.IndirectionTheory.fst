@@ -19,7 +19,7 @@ module PulseCore.IndirectionTheory
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   restricted_t (m:nat {m<n}) fun m -> knot_t m ^-> prop
 
-let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> squash (f x == g x))) : squash (f == g) =
+let f_ext #t #s (f g: restricted_t t s) (h: (x:t -> f x == g x)) : (f == g) =
   introduce forall x. f x == g x with h x; extensionality _ _ f g
 
 irreducible let irred_true : b:bool{b} = true // gadget to control unfolding
@@ -27,7 +27,7 @@ irreducible let irred_true : b:bool{b} = true // gadget to control unfolding
 let rec k' #f (ff: functor u#a f) : nat -> Type u#(a+1) =
   fun n -> if irred_true then f (pred' ff n (k' ff)) else (assert False; Type u#a)
 
-let k'_eq #f (ff: functor u#a f) (n: nat) : squash (k' ff n == f (pred' ff n (k' ff))) = ()
+let k'_eq #f (ff: functor u#a f) (n: nat) : (k' ff n == f (pred' ff n (k' ff))) = ()
 
 let k'_unfold #f (#ff: functor u#a f) (#n: Ghost.erased nat) (x: k' ff n) : f (pred' ff n (k' ff)) =
   k'_eq ff n; x

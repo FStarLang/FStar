@@ -55,7 +55,7 @@ ghost fn fold_pts_to_range u#a (#a: Type u#a) (x: array a)
 
 ghost fn unfold_pts_to_range u#a (#a: Type u#a) (x: array a) (i j: nat) #p s
   requires pts_to_range x i j #p s
-  returns _: squash (i <= j /\ j <= length x)
+  returns _: (i <= j /\ j <= length x)
   ensures exists* (s' : Seq.seq (option a)).
     pts_to_mask (gsub x i j) #p s' (fun _ -> True) **
     pure (Seq.length s' == Seq.length s /\

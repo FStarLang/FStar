@@ -78,8 +78,8 @@ let rec flatten_correct (#a:Type) (m:monoid a) (e:exp a) :
                   flatten_correct m e1; flatten_correct m e2
 
 let monoid_reflect (#a:Type) (m:monoid a) (e1 e2:exp a)
-    (_ : squash (mldenote m (flatten e1) == mldenote m (flatten e2)))
-    : squash (mdenote m e1 == mdenote m e2) =
+    (_ : (mldenote m (flatten e1) == mldenote m (flatten e2)))
+    : (mdenote m e1 == mdenote m e2) =
   flatten_correct m e1; flatten_correct m e2
 
 // This expects that mult, unit, and me have already been normalized
@@ -113,7 +113,7 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
       (* First, make sure we have an equality at type ta, since otherwise
       we will fail to apply the reflection Lemma. We can just cut by the equality
       we want, since they should be equiprovable (though not equal). *)
-      let b = tcut (`(squash (eq2 #(`#(quote a)) (`#me1) (`#me2)))) in
+      let b = tcut (`((eq2 #(`#(quote a)) (`#me1) (`#me2)))) in
       smt (); // let the SMT prove it, it should really be trivial
 
       let r1 = reification m me1 in

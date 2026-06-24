@@ -362,8 +362,8 @@ let rec lemma_split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
     FStar.Classical.or_elim
       #_ #_
       #(fun () -> goal)
-      (fun (_:squash (a == x)) -> ())
-      (fun (_:squash (x `memP` rest)) -> lemma_split_using rest x)
+      (fun (_:(a == x)) -> ())
+      (fun (_:(x `memP` rest)) -> lemma_split_using rest x)
 
 (** Properties about partition **)
 

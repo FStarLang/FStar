@@ -94,9 +94,9 @@ let unfold_repeat_right_once
 
 module T = FStar.Tactics
 
-let refine_eq (a:Type) (p q:a -> prop) (x:squash (forall (i:a). p i <==> q i))
+let refine_eq (a:Type) (p q:a -> prop) (x:(forall (i:a). p i <==> q i))
   : Lemma ((i:a{p i} == i:a{q i}))
-  = let pext (a:Type) (p q: a -> prop) (_:squash (forall (x:a). p x <==> q x)) (x:a) : Lemma (p x == q x) 
+  = let pext (a:Type) (p q: a -> prop) (_:(forall (x:a). p x <==> q x)) (x:a) : Lemma (p x == q x) 
         = FStar.PropositionalExtensionality.apply (p x) (q x)
     in
     assert (i:a{p i} == i:a{q i})
@@ -104,11 +104,11 @@ let refine_eq (a:Type) (p q:a -> prop) (x:squash (forall (i:a). p i <==> q i))
 
 let nat_refine_equiv (n:nat)
   : Lemma ((i:nat{i <= n}) == (i:nat{0<=i /\ i<=n})) 
-  = let b2t_prop (b:bool) 
-      : Lemma ((b2t b) `subtype_of` unit) 
+  = let bool_prop (b:bool) 
+      : Lemma (b `subtype_of` unit) 
       = ()
     in
-    refine_eq nat (fun (i:nat) -> b2t_prop (i <= n); b2t (i <= n)) (fun (i:nat) -> 0 <= i /\ i <= n) ()
+    refine_eq nat (fun (i:nat) -> bool_prop (i <= n); i <= n) (fun (i:nat) -> 0 <= i /\ i <= n) ()
 
 let a' (#a:Type) (n:nat) (pred:(i:nat{i <= n} -> a -> prop)) = fun (i:nat{i<=n}) -> x:a{pred i x}
 

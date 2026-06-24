@@ -491,7 +491,7 @@ let rec find_l_none_no_index' (#a:Type) (s:Seq.seq a) (f:(a -> Tot bool)) :
 let find_l_none_no_index = find_l_none_no_index'
 
 let cons_head_tail #_ s =
-  let _ : squash (slice s 0 1 == create 1 (index s 0)) =
+  let _ : (slice s 0 1 == create 1 (index s 0)) =
       lemma_index_slice s 0 1 0;
       lemma_index_create 1 (index s 0) 0;
       lemma_eq_elim (slice s 0 1) (create 1 (index s 0))
@@ -535,9 +535,9 @@ let rec mem_seq_of_list #_ x l
   match l with
   | [] -> ()
   | y :: q ->
-    let _ : squash (head (seq_of_list l) == y) = () in
-    let _ : squash (tail (seq_of_list l) == seq_of_list q) = seq_of_list_tl l in
-    let _ : squash (mem x (seq_of_list l) == (x = y || mem x (seq_of_list q))) =
+    let _ : (head (seq_of_list l) == y) = () in
+    let _ : (tail (seq_of_list l) == seq_of_list q) = seq_of_list_tl l in
+    let _ : (mem x (seq_of_list l) == (x = y || mem x (seq_of_list q))) =
      lemma_mem_inversion (seq_of_list l)
     in
     mem_seq_of_list x q

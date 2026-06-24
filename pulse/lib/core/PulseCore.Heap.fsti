@@ -232,11 +232,11 @@ val affine_star (p q:slprop) (h:heap)
 
 (** Equivalence of separation logic propositions is symmetric *)
 val equiv_symmetric (p1 p2:slprop)
-  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+  : (p1 `equiv` p2 ==> p2 `equiv` p1)
 
 (** If [p1 ~ p2] then [p1 * p3 ~ p2 * p3] *)
 val equiv_extensional_on_star (p1 p2 p3:slprop)
-  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+  : (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 (** [p ~~ p * emp] *)
 val emp_unit (p:slprop)
@@ -605,7 +605,7 @@ val pts_to_not_null_action
   (v:Ghost.erased a)
 : action #immut_heap
     (pts_to r v)
-    (squash (not (is_null r)))
+    (not (is_null r))
     (fun _ -> pts_to r v)
 
 (** Allocating is a pseudo action here, the context needs to provide a fresh address *)

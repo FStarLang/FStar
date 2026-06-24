@@ -60,7 +60,7 @@ type state : Type u#(s + 1)= {
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
   invariant: s -> pred;
-  laws: squash (associative star /\ commutative star /\ is_unit emp star);
+  laws: (associative star /\ commutative star /\ is_unit emp star);
 }
 
 (** [post a c] is a postcondition on [a]-typed result *)
@@ -347,7 +347,7 @@ let act_as_m2
 noeq
 type liftable : Type u#(1 + (max a b)) = {
   downgrade_val : (t:Type u#a -> U.raise_t u#a u#(max a b) t -> t);
-  laws : squash (forall (t:Type u#a) (x:t). downgrade_val t (U.raise_val x) == x)
+  laws : (forall (t:Type u#a) (x:t). downgrade_val t (U.raise_val x) == x)
 }
 
 let act_as_m_poly

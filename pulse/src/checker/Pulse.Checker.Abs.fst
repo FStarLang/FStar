@@ -409,7 +409,7 @@ let maybe_rewrite_body_typing
             (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n"
               (show c)
               (show (C_Tot t)));
-          let sq : squash (RT.equiv_token (elab_env g) t t') = () in
+          let sq : RT.equiv_token (elab_env g) t t' = () in
           C_Tot t
     )
 

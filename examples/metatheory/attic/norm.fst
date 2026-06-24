@@ -260,7 +260,7 @@ val step_preserves_halting : e:exp -> e':exp -> Lemma
   (requires (step e = Some e'))
   (ensures (halts e <==> halts e'))
 let step_preserves_halting e e' =
-  iff_intro #(b2t (step e = Some e')) #(halts e) #(halts e')
+  iff_intro #(step e = Some e') #(halts e) #(halts e')
     (fun () -> step_preserves_halting_ltr e e')
     (fun () -> step_preserves_halting_rtl e e')
 

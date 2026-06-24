@@ -31,7 +31,7 @@ fn merge_aux_consume_1
   (c2: Seq.seq tl)
   (v2: list th)
   (x1: tl)
-  (sq: squash (
+  (sq: (
     Cons? v1 /\
     Seq.length c1 > 0 /\
     x1 == Seq.index c1 0
@@ -88,7 +88,7 @@ fn merge_aux_consume_2
   (c2: Seq.seq tl)
   (v2: list th)
   (x2: tl)
-  (sq: squash (
+  (sq: (
     Cons? v2 /\
     Seq.length c2 > 0 /\
     x2 == Seq.index c2 0

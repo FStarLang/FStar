@@ -486,7 +486,7 @@ fn weaken_single_entry
     (perm_table: GFT.table frac)
     (spec1 spec2: table_spec)
     (i j: nat)
-    (pf: squash (forall (k:nat). i <= k /\ k < j ==> spec1 k == spec2 k))
+    (pf: (forall (k:nat). i <= k /\ k < j ==> spec1 k == spec2 k))
     (k: nat{i <= k /\ k < j})
   requires owns_half_table_entry perm_table spec1 k
   ensures owns_half_table_entry perm_table spec2 k

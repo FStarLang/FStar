@@ -171,7 +171,7 @@ fn return_to_array_mask u#a (#a: Type u#a) (r: ref a) #p #v #m
   requires pts_to_mask (to_array_ghost r) #p v m
   requires pure (m 0)
   requires pure (Seq.length v == 1 /\ Some? (Seq.index v 0))
-  returns _: squash (Seq.length v == 1)
+  returns _: (Seq.length v == 1)
   ensures exists* (v0:a). r |-> Frac p v0 ** pure (Seq.index v 0 == Some v0)
 
 val array_at_ghost (#a: Type u#a) (arr: array a) (i: nat { i < length arr }) : GTot (r:ref a { to_array_ghost r == gsub arr i (i+1) })

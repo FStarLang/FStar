@@ -20,9 +20,9 @@ open FStar.Tactics.V2
 
 type bound = option nat
 
-let bounded_by (b:bound) n =
+let bounded_by (b:bound) n : prop =
   match b with
-  | Some b -> b2t (n <= b)
+  | Some b -> n <= b
   | None -> True
 
 let succ : bound -> bound = function | None -> None | Some b -> Some (b+1)

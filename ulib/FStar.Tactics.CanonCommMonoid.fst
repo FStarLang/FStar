@@ -225,9 +225,9 @@ let canon_correct (#a #b:Type) (p:permute b) (pc:permute_correct p)
 
 let monoid_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
                    (m:cm a) (vm:vmap a b) (e1 e2:exp)
-    (_ : squash (xsdenote m vm (canon vm p e1) ==
-                 xsdenote m vm (canon vm p e2)))
-    : squash (mdenote m vm e1 == mdenote m vm e2) =
+    (_ : xsdenote m vm (canon vm p e1) ==
+                 xsdenote m vm (canon vm p e2))
+    : (mdenote m vm e1 == mdenote m vm e2) =
   canon_correct p pc m vm e1; canon_correct p pc m vm e2
 
 (* Finds the position of first occurrence of x in xs.

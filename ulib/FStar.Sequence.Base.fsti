@@ -187,7 +187,7 @@ private let build_increments_length_fact =
 ///   (i == Seq#Length(s) ==> Seq#Index(Seq#Build(s,v), i) == v) &&
 ///   (i != Seq#Length(s) ==> Seq#Index(Seq#Build(s,v), i) == Seq#Index(s, i)));
 
-private let index_into_build_fact (_: squash (build_increments_length_fact u#a)) =
+private let index_into_build_fact (_: build_increments_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (v: ty) (i: nat{i < length (build s v)})
     .{:pattern index (build s v) i}
       (i = length s ==> index (build s v) i == v)
@@ -206,7 +206,7 @@ private let append_sums_lengths_fact =
 ///
 /// axiom (forall<T> t: T :: { Seq#Index(Seq#Singleton(t), 0) } Seq#Index(Seq#Singleton(t), 0) == t);
 
-private let index_into_singleton_fact (_: squash (singleton_length_one_fact u#a)) =
+private let index_into_singleton_fact (_: singleton_length_one_fact u#a) =
   forall (ty: Type u#a) (v: ty).{:pattern index (singleton v) 0}
      index (singleton v) 0 == v
 
@@ -216,7 +216,7 @@ private let index_into_singleton_fact (_: squash (singleton_length_one_fact u#a)
 ///   (n < Seq#Length(s0) ==> Seq#Index(Seq#Append(s0,s1), n) == Seq#Index(s0, n)) &&
 ///   (Seq#Length(s0) <= n ==> Seq#Index(Seq#Append(s0,s1), n) == Seq#Index(s1, n - Seq#Length(s0))));
 
-private let index_after_append_fact (_: squash (append_sums_lengths_fact u#a)) =
+private let index_after_append_fact (_: append_sums_lengths_fact u#a) =
   forall (ty: Type u#a) (s0: seq ty) (s1: seq ty) (n: nat{n < length (append s0 s1)})
     .{:pattern index (append s0 s1) n}
       (n < length s0 ==> index (append s0 s1) n == index s0 n)
@@ -358,7 +358,7 @@ private let take_length_fact =
 ///   0 <= j && j < n && j < Seq#Length(s) ==>
 ///     Seq#Index(Seq#Take(s,n), j) == Seq#Index(s, j));
 
-private let index_into_take_fact (_ : squash (take_length_fact u#a)) =
+private let index_into_take_fact (_ : take_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (n: nat) (j: nat).
     {:pattern index (take s n) j \/ index s j ; take s n}
     j < n && n <= length s ==> index (take s n) j == index s j
@@ -381,7 +381,7 @@ private let drop_length_fact =
 ///   0 <= n && 0 <= j && j < Seq#Length(s)-n ==>
 ///     Seq#Index(Seq#Drop(s,n), j) == Seq#Index(s, j+n));
 
-private let index_into_drop_fact (_ : squash (drop_length_fact u#a)) =
+private let index_into_drop_fact (_ : drop_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (n: nat) (j: nat).
     {:pattern index (drop s n) j}
     j < length s - n ==> index (drop s n) j == index s (j + n)
@@ -394,7 +394,7 @@ private let index_into_drop_fact (_ : squash (drop_length_fact u#a)) =
 ///   0 <= n && n <= k && k < Seq#Length(s) ==>
 ///     Seq#Index(Seq#Drop(s,n), k-n) == Seq#Index(s, k));
 
-private let drop_index_offset_fact (_ : squash (drop_length_fact u#a)) =
+private let drop_index_offset_fact (_ : drop_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (n: nat) (k: nat).
     {:pattern index s k; drop s n}
     n <= k && k < length s ==> index (drop s n) (k - n) == index s k
@@ -409,7 +409,7 @@ private let drop_index_offset_fact (_ : squash (drop_length_fact u#a)) =
 ///   Seq#Take(Seq#Append(s, t), n) == s &&
 ///   Seq#Drop(Seq#Append(s, t), n) == t);
 
-private let append_then_take_or_drop_fact (_ : squash (append_sums_lengths_fact u#a)) =
+private let append_then_take_or_drop_fact (_ : append_sums_lengths_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (t: seq ty) (n: nat).
     {:pattern take (append s t) n \/ drop (append s t) n}
     n = length s ==> take (append s t) n == s /\ drop (append s t) n == t
@@ -422,7 +422,7 @@ private let append_then_take_or_drop_fact (_ : squash (append_sums_lengths_fact 
 ///         Seq#Take(Seq#Update(s, i, v), n) == Seq#Update(Seq#Take(s, n), i, v) );
 
 private let take_commutes_with_in_range_update_fact
-  (_ : squash (update_maintains_length_fact u#a /\ take_length_fact u#a)) =
+  (_ : (update_maintains_length_fact u#a /\ take_length_fact u#a)) =
   forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
     i < n && n <= length s ==>
     take (update s i v) n == update (take s n) i v
@@ -433,7 +433,7 @@ private let take_commutes_with_in_range_update_fact
 ///         { Seq#Take(Seq#Update(s, i, v), n) }
 ///         n <= i && i < Seq#Length(s) ==> Seq#Take(Seq#Update(s, i, v), n) == Seq#Take(s, n));
 
-private let take_ignores_out_of_range_update_fact (_ : squash (update_maintains_length_fact u#a)) =
+private let take_ignores_out_of_range_update_fact (_ : update_maintains_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern take (update s i v) n}
     n <= i && i < length s ==>
     take (update s i v) n == take s n
@@ -446,7 +446,7 @@ private let take_ignores_out_of_range_update_fact (_ : squash (update_maintains_
 ///         Seq#Drop(Seq#Update(s, i, v), n) == Seq#Update(Seq#Drop(s, n), i-n, v) );
 
 private let drop_commutes_with_in_range_update_fact
-  (_ : squash (update_maintains_length_fact u#a /\ drop_length_fact u#a)) =
+  (_ : (update_maintains_length_fact u#a /\ drop_length_fact u#a)) =
   forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
     n <= i && i < length s ==>
     drop (update s i v) n == update (drop s n) (i - n) v
@@ -459,7 +459,7 @@ private let drop_commutes_with_in_range_update_fact
 ///         { Seq#Drop(Seq#Update(s, i, v), n) }
 ///         0 <= i && i < n && n < Seq#Length(s) ==> Seq#Drop(Seq#Update(s, i, v), n) == Seq#Drop(s, n));
 
-private let drop_ignores_out_of_range_update_fact (_ : squash (update_maintains_length_fact u#a)) =
+private let drop_ignores_out_of_range_update_fact (_ : update_maintains_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (i: nat) (v: ty) (n: nat).{:pattern drop (update s i v) n}
     i < n && n <= length s ==>
     drop (update s i v) n == drop s n
@@ -471,7 +471,7 @@ private let drop_ignores_out_of_range_update_fact (_ : squash (update_maintains_
 ///         0 <= n && n <= Seq#Length(s) ==>
 ///         Seq#Drop(Seq#Build(s, v), n) == Seq#Build(Seq#Drop(s, n), v) );
 
-private let drop_commutes_with_build_fact (_ : squash (build_increments_length_fact u#a)) =
+private let drop_commutes_with_build_fact (_ : build_increments_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (v: ty) (n: nat).{:pattern drop (build s v) n}
     n <= length s ==> drop (build s v) n == build (drop s n) v
 
@@ -552,7 +552,7 @@ private let take_zero_fact =
 ///         0 <= m && 0 <= n && m+n <= Seq#Length(s) ==>
 ///         Seq#Drop(Seq#Drop(s, m), n) == Seq#Drop(s, m+n));
 
-private let drop_then_drop_fact (_: squash (drop_length_fact u#a)) =
+private let drop_then_drop_fact (_: drop_length_fact u#a) =
   forall (ty: Type u#a) (s: seq ty) (m: nat) (n: nat).{:pattern drop (drop s m) n}
     m + n <= length s ==> drop (drop s m) n == drop s (m + n)
 

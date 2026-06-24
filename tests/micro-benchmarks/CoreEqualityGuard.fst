@@ -12,7 +12,7 @@ let dsnd #a (#b: a -> Type) (x: dtuple2 a b) : b (dfst x) = dsnd x
 
 // #push-options "--debug SMTQuery,Rel"
 // let test (t1 t2 : dtuple2 a b)
-//          (p: squash (dfst t1 == dfst t2))
+//          (p: (dfst t1 == dfst t2))
 //   : b (dfst t1)
 //   = dsnd t2
   
@@ -22,7 +22,7 @@ let dsnd #a (#b: a -> Type) (x: dtuple2 a b) : b (dfst x) = dsnd x
 let test (t1 t2 : dtuple2 a b)
          (p: (dfst t1 == dfst t2 /\
              r_b (dfst t1) (dsnd t1) (dsnd t2)))
-    : squash True
+    : True
     = ()
 
 #pop-options

@@ -49,7 +49,7 @@
         x <> 0 /\
         (forall (pure_result: Prims.int). pure_result >= 0 ==> p pure_result) ==>
         (forall (return_val: Prims.int). return_val == x + 1 ==> p return_val)
-  - See also TestErrorLocations.fst(46,84-46,90)
+  - See also TestErrorLocations.fst(46,78-46,84)
 
 * Info at TestErrorLocations.fst(58,15-58,17):
   - Expected failure:
@@ -90,7 +90,7 @@
   - The SMT solver could not prove the query.
   - Env =
   - VC = forall (x: Prims.int). x >= 0
-  - See also TestErrorLocations.fst(68,52-68,66)
+  - See also TestErrorLocations.fst(68,52-68,60)
 
 * Info at TestErrorLocations.fst(89,20-89,36):
   - Expected failure:
@@ -105,7 +105,7 @@
           (n: Prims.nat)
           (pf_zero: Prims.squash (n = 0)).
           (* - Could not prove post-condition *) n = 0)
-  - See also FStar.Classical.Sugar.fsti(66,21-66,40)
+  - See also FStar.Classical.Sugar.fsti(66,14-66,33)
 
 * Info at TestErrorLocations.fst(96,28-96,33):
   - Expected failure:
@@ -141,7 +141,7 @@
   - The SMT solver could not prove the query.
   - Env = (p : Prims.prop) (q : Prims.prop)
   - VC = p \/ q
-  - See also FStar.Classical.Sugar.fsti(88,21-88,31)
+  - See also FStar.Classical.Sugar.fsti(88,14-88,24)
 
 * Warning 240 at TestErrorLocations.fst(60,4-60,9):
   - TestErrorLocations.test7 is declared but no definition was found

@@ -21,7 +21,7 @@ assume val phi : prop
 assume val psi : prop
 
 assume val p1 : psi
-assume val p2 : psi -> squash phi
+assume val p2 : psi -> phi
 
 let _ =
     assert phi

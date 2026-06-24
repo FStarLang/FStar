@@ -37,7 +37,7 @@ let t23 x y = sum2 x y
 open FStar.List.Tot
 open FStar.Ghost
 inline_for_extraction noextract
-let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+let coerce_eq (#a:Type) (#b:Type) (_:a == b) (x:a) : b = x
 
 inline_for_extraction noextract
 let tupdesc = erased (list Type0)

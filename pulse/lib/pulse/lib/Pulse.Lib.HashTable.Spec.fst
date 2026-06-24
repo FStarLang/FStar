@@ -156,7 +156,7 @@ type pht_t (kt:eqtype) (vt:Type) = {
   // somehow? Does it also get erased? (I think so, but double check)
   spec : Ghost.erased (spec_t kt vt);
   repr : repr_t kt vt;
-  inv : squash (pht_models spec repr /\ US.fits repr.sz);
+  inv : pht_models spec repr /\ US.fits repr.sz;
 }
 
 let upd_ #kt #vt (repr : repr_t kt vt) idx k v : repr_t kt vt =
@@ -356,7 +356,7 @@ let lemma_walk_from_canonical_all_used #kt #kv (repr : repr_t kt kv) (off : nat{
           (ensures lookup_repr repr k == Some v)
 = let sz = repr.sz in
   let cidx = canonical_index k repr in
-  let rec aux (off':nat{off' <= off}) (_ : squash (all_used_not_by repr ((cidx+off')%sz) (off-off') k))
+  let rec aux (off':nat{off' <= off}) (_ : (all_used_not_by repr ((cidx+off')%sz) (off-off') k))
     : Lemma (ensures walk repr cidx k off' == Some v)
             (decreases off - off')
     = if off' = off then () else begin
@@ -550,8 +550,8 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
   (repr : repr_t_sz kt vt sz{pht_models spec repr /\ not_full repr}) (k : kt) (v : vt) 
   (off:nat{off <= sz})
   (cidx:nat{cidx = canonical_index k repr})
-  (_ : squash (strong_all_used_not_by repr cidx off k))
-  (_ : squash (walk repr cidx k off == lookup_repr repr k))
+  (_ : (strong_all_used_not_by repr cidx off k))
+  (_ : (walk repr cidx k off == lookup_repr repr k))
   : Tot (repr':repr_t_sz kt vt sz{
           pht_models (spec ++ (k,v)) repr' /\
           repr_related repr repr'
@@ -634,8 +634,8 @@ let insert_repr #kt #vt #sz
 let rec delete_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt)) 
   (repr : repr_t_sz kt vt sz{pht_models spec repr}) (k : kt)
   (off:nat{off <= sz}) (cidx:nat{cidx = canonical_index k repr})
-  (_ : squash (all_used_not_by repr cidx off k))
-  (_ : squash (walk repr cidx k off == lookup_repr repr k))
+  (_ : (all_used_not_by repr cidx off k))
+  (_ : (walk repr cidx k off == lookup_repr repr k))
   : Tot (repr':repr_t_sz kt vt sz{
           pht_models (spec -- k) repr' /\
           repr_related repr repr'
@@ -716,7 +716,7 @@ let lookup_index_us #kt #vt (ht : pht_t kt vt) (k : kt)
   | None -> None
 
 let upd_pht (#kt:eqtype) (#vt:Type) (pht:pht_t kt vt) idx (k:kt) (v:vt)
-  (_:squash (lookup_index_us pht k == Some idx)) : pht_t kt vt =
+  (_:(lookup_index_us pht k == Some idx)) : pht_t kt vt =
   let spec' = Ghost.hide (pht.spec ++ (k, v)) in
   let repr' = upd_ pht.repr (US.v idx) k v in
 

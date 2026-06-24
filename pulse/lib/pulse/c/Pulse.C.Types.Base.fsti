@@ -164,7 +164,7 @@ requires
     (pts_to_or_null p v ** pure (
       ~ (p == null _)
     ))
-returns _:(squash (~ (p == null _)))
+returns _:(~ (p == null _))
 ensures
     (pts_to p v)
 {

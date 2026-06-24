@@ -18,13 +18,12 @@ module PM = PulseCore.MemoryAlt
 module B = PulseCore.BaseHeapSig
 open FStar.Ghost
 
-let pm_sep_laws () : squash (
+let pm_sep_laws () :
   PulseCore.Semantics.(
     associative (PM.star u#a) /\
     commutative (PM.star u#a) /\
     is_unit PM.emp (PM.star u#a)
   )
-) 
 = introduce forall p q. PM.equiv u#a p q ==> p == q
   with introduce _ ==> _
   with _ . (
@@ -559,7 +558,7 @@ let elim_pure (#opened_invariants:_) (p:prop)
     is_ghost_action_refl s0;
     (), s0
 
-let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
+let intro_pure (#opened_invariants:_) (p:prop) (_:p)
 : ghost_act unit opened_invariants emp (fun _ -> pure p)
 = fun frame s0 -> 
     sep_laws();

@@ -93,7 +93,7 @@ let coerce_action_back
     (#post':a -> slprop u#a)
     (pre:B.slprop)
     (post:a -> GTot (B.slprop))
-    (_:squash (pre == reveal pre' /\ (forall x. post x == reveal (post' x))))
+    (_:(pre == reveal pre' /\ (forall x. post x == reveal (post' x))))
     ($act:_pst_action_except a mg pre' post')
 : B._action_except a mg pre post
 = fun frame m0 -> act frame m0 

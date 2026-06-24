@@ -57,11 +57,11 @@ let lemma_sorted_append
 let lemma_sorted_append_squash
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
-    (_ : squash (sorted s1 /\ between_bounds s1 l1 r1 /\
+    (_ : (sorted s1 /\ between_bounds s1 l1 r1 /\
               sorted s2 /\ between_bounds s2 l2 r2 /\
               r1 >= l1 /\ r2 >= l2 /\ // silly, but needed since the seqs may be empty
               r1 <= l2))
-    : squash (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
+    : (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
   = ()
 #pop-options
 
@@ -94,8 +94,8 @@ let append_permutations_3 (s1 s2 s3 s1' s3': Seq.seq int):
 
 (* workaround for #151 *)
 let append_permutations_3_squash (s1 s2 s3 s1' s3': Seq.seq int)
-  (_ : squash (permutation s1 s1' /\ permutation s3 s3'))
-  : squash (permutation (Seq.append s1 (Seq.append s2 s3)) (Seq.append s1' (Seq.append s2 s3')))
+  (_ : (permutation s1 s1' /\ permutation s3 s3'))
+  : (permutation (Seq.append s1 (Seq.append s2 s3)) (Seq.append s1' (Seq.append s2 s3')))
 = append_permutations_3 s1 s2 s3 s1' s3'
 
 let seq_swap_commute (s: Seq.seq int) (i j: nat_smaller (Seq.length s)):

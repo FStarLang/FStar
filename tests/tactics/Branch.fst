@@ -8,9 +8,9 @@ assume val p : prop
 assume val q : prop
 assume val r : prop
 
-assume val ep : squash p
-assume val eq : squash q
-assume val er : squash r
+assume val ep : p
+assume val eq : q
+assume val er : r
 
 let test0 (x:abc) =
     assert (match x with | A x -> q | _ -> r)

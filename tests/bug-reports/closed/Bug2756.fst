@@ -2,7 +2,7 @@ module Bug2756
 
 open FStar.Tactics.V2
 
-val arrow_to_forall: #a:Type -> p:(a -> prop) -> squash (forall (x:a). p x) -> (x:a -> squash (p x))
+val arrow_to_forall: #a:Type -> p:(a -> prop) -> (forall (x:a). p x) -> (x:a -> (p x))
 let arrow_to_forall #a p _ x = ()
 
 val last: #a:Type0 -> list a -> Tac a
@@ -31,7 +31,7 @@ let encoded_type = dtuple2 (refined (nat_dep 1) pre) encoded_snd
 
 assume val bar:
   f:(encoded_type -> test_dependent_sum) -> g:(test_dependent_sum -> encoded_type) ->
-  (x:test_dependent_sum -> squash (f (g x) == x)) ->
+  (x:test_dependent_sum -> (f (g x) == x)) ->
   unit
 
 let the_proof (): Tac unit =

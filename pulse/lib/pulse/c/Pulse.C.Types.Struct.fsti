@@ -184,7 +184,7 @@ val has_struct_field_inj
   (#t2: Type0)
   (#td2: typedef t2)
   (r2: ref td2)
-: stt_ghost (squash (t1 == t2 /\ td1 == td2))
+: stt_ghost ((t1 == t2 /\ td1 == td2))
     emp_inames
     (has_struct_field r field r1 ** has_struct_field r field r2)
     (fun _ -> has_struct_field r field r1 ** has_struct_field r field r2 ** ref_equiv r1 (coerce_eq () r2))
@@ -231,7 +231,7 @@ val ghost_struct_field_focus
   (#t': Type0)
   (#td': typedef t')
   (r': ref td')
-: stt_ghost (squash (
+: stt_ghost ((
       t' == fields.fd_type field /\
       td' == fields.fd_typedef field
   ))
@@ -282,8 +282,8 @@ let struct_field1
   (r: ref (struct0 tn n fields))
   (field: field_t fields)
   (td': typedef t')
-  (sq_t': squash (t' ==  fields.fd_type field))
-  (sq_td': squash (td' == fields.fd_typedef field))
+  (sq_t': (t' ==  fields.fd_type field))
+  (sq_td': (td' == fields.fd_typedef field))
 : stt (ref td')
     (pts_to r v)
     (fun r' -> pts_to r (struct_set_field field (unknown (fields.fd_typedef field)) v) ** pts_to r' (struct_get_field v field) ** has_struct_field r field r')
@@ -300,8 +300,8 @@ let struct_field
   (field: field_t fields)
   (#t': Type0)
   (#td': typedef t')
-  (# [ norm_fields () ] sq_t': squash (t' ==  fields.fd_type field))
-  (# [ norm_fields () ] sq_td': squash (td' == fields.fd_typedef field))
+  (# [ norm_fields () ] sq_t': (t' ==  fields.fd_type field))
+  (# [ norm_fields () ] sq_td': (td' == fields.fd_typedef field))
   ()
 : stt (ref td')
     (pts_to r v)

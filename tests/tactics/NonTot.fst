@@ -17,7 +17,7 @@ module NonTot
 
 open FStar.Tactics.V2
 
-val h : unit -> Pure (squash False) (requires False) (ensures (fun _ -> True))
+val h : unit -> Pure (False) (requires False) (ensures (fun _ -> True))
 let h x = ()
 
 [@@(expect_failure [228])]

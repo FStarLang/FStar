@@ -69,7 +69,7 @@ instance introducable_forall (a: Type u#a) (t: a -> Type u#b) is extra concl {| 
 let slprop_equiv_forall
     (#a:Type)
     (p q: a -> slprop)
-    (_:squash (forall x. p x == q x))
+    (_:(forall x. p x == q x))
 : slprop_equiv (op_forall_Star p) (op_forall_Star q)
 = FStar.FunctionalExtensionality.extensionality _ _ p q;
   slprop_equiv_refl (op_forall_Star p)

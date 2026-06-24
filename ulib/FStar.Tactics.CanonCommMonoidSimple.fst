@@ -204,8 +204,8 @@ let monoid_reflect_orig (#a:Type) (m:cm a) (am:amap a) (e1 e2:exp) :
   canon_correct m am e1; canon_correct m am e2
 
 let monoid_reflect (#a:Type) (m:cm a) (am:amap a) (e1 e2:exp)
-    (_ : squash (xsdenote m am (canon e1) == xsdenote m am (canon e2)))
-       : squash (mdenote m am e1 == mdenote m am e2) =
+    (_ : xsdenote m am (canon e1) == xsdenote m am (canon e2))
+       : (mdenote m am e1 == mdenote m am e2) =
   canon_correct m am e1; canon_correct m am e2
 
 (* Finds the position of first occurrence of x in xs.

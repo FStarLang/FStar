@@ -89,13 +89,13 @@ let rec forevery_aux (#a: Type u#a) (p: a -> slprop) (s: shape) (mask: a -> prop
     forallm pred (fun x -> p x) ** forevery_aux p s (fun x -> mask x /\ ~(pred x))
   | Insert s -> exists* y. p y ** pure (mask y) ** forevery_aux p s (fun x -> mask x /\ x =!= y)
 
-let timeless_exists' (#a:Type u#a) (p: a -> slprop) (h: (x:a -> squash (timeless (p x)))) :
-    squash (timeless (exists* x. p x)) =
+let timeless_exists' (#a:Type u#a) (p: a -> slprop) (h: (x:a -> timeless (p x))) :
+    timeless (exists* x. p x) =
   introduce forall x. timeless (p x) with h x;
   timeless_exists p
 
 let rec timeless_forevery_aux (#a: Type u#a) (p: a -> timeless_slprop) (s: shape) (mask: a -> prop) :
-    squash (timeless (forevery_aux p s mask)) =
+    timeless (forevery_aux p s mask) =
   match s with
   | Empty -> ()
   | Fill s ->
@@ -263,7 +263,7 @@ ghost
 fn forevery_refine_ext'
   (#a: Type0)
   (#f g: a->prop)
-  (#_ : squash (forall x. f x <==> g x))
+  (#_ : (forall x. f x <==> g x))
   (p: (x:a{f x} -> slprop))
   requires
     forall+ (x:a {f x}). p x
@@ -717,7 +717,7 @@ ghost
 fn forevery_unrefine_pred'
   (#a:Type0)
   (f: a -> prop)
-  (p: (x:a -> squash (f x) -> slprop))
+  (p: (x:a -> f x -> slprop))
   requires
     forall+ (x:a { f x }). p x ()
   ensures
@@ -1353,7 +1353,7 @@ fn forevery_emp_elim
   drop_ (forall+ (_: a). emp)
 }
 
-let singleton_lemma (#a:Type) {| d : enumerable a |} (_:squash (cardinal a #d == 1))
+let singleton_lemma (#a:Type) {| d : enumerable a |} (_:(cardinal a #d == 1))
 : Lemma (forall (y:a). of_nat 0 == y)
 = introduce forall (y:a). of_nat 0 == y
   with assert (d.bij.right y == 0)

@@ -275,10 +275,10 @@ let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:ter
   | Some u, _ ->
     let goal = mk_squash (RT.eq2 u ty lhs rhs) in
     let goal_typing 
-      : my_erased (squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))))
+      : my_erased (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0)))
       = magic()
     in
-    let goal_typing_tok : squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))) =
+    let goal_typing_tok : T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0)) =
       match goal_typing with | E x -> ()
     in
     let res, issues = T.call_subtac_tm g_env tac_tm u0 goal in

@@ -532,7 +532,7 @@ let jump_iter_elim
 let jump_if
   (n: pos)
   (l: nat)
-  (sq: squash (l < n))
+  (sq: (l < n))
   (idx: nat_up_to n)
 : Lemma
   (jump n l idx == (if idx + l >= n then idx - (n - l) else idx + l))

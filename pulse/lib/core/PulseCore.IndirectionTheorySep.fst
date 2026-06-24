@@ -38,7 +38,7 @@ let mem_le' (a b: premem) : prop =
   credits_ a <= credits_ b
 
 [@@"opaque_to_smt"] let mem_le = mem_le'
-let reveal_mem_le () : squash (mem_le == mem_le') = reveal_opaque (`%mem_le) mem_le
+let reveal_mem_le () : (mem_le == mem_le') = reveal_opaque (`%mem_le) mem_le
 
 let mem_pred_affine (p: premem -> prop) : prop =
   forall a b. mem_le a b /\ p a ==> p b
@@ -59,7 +59,7 @@ let hereditary (p: premem -> prop) : prop =
 
 let slprop_ok' (p: premem -> prop) : prop = hereditary p /\ mem_pred_affine p
 [@@"opaque_to_smt"] let slprop_ok : mem_pred -> prop = slprop_ok'
-let reveal_slprop_ok () : squash (forall (p: mem_pred).  slprop_ok p == slprop_ok' p) =
+let reveal_slprop_ok () : (forall (p: mem_pred).  slprop_ok p == slprop_ok' p) =
   reveal_opaque (`%slprop_ok) slprop_ok
 
 let fresh_addr (m: premem) (a: address) =
@@ -385,21 +385,21 @@ let star_assoc (x y z:slprop)
 : Lemma (star x (star y z) == star (star x y) z)
 = star__assoc x y z
 
-let disjoint_empty w : squash (disjoint_mem w (empty_for w) /\ disjoint_mem (empty_for w) w) =
+let disjoint_empty w : (disjoint_mem w (empty_for w) /\ disjoint_mem (empty_for w) w) =
   H2.join_empty (timeless_heap_of w);
   join_premem_commutative w (empty_for w)
 
-let join_empty w : squash (disjoint_mem (empty_for w) w /\ join_premem (empty_for w) w == w) =
+let join_empty w : (disjoint_mem (empty_for w) w /\ join_premem (empty_for w) w == w) =
   disjoint_empty w;
   H2.join_empty (timeless_heap_of w);
   H2.join_commutative (timeless_heap_of w) B.empty_mem;
   mem_ext (join_premem (empty_for w) w) w fun a -> ()
 
-let empty_join w : squash (disjoint_mem w (empty_for w) /\ join_premem w (empty_for w) == w) =
+let empty_join w : (disjoint_mem w (empty_for w) /\ join_premem w (empty_for w) == w) =
   join_empty w;
   join_premem_commutative w (empty_for w)
 
-let star_emp (x: slprop) : squash (star x emp == x) =
+let star_emp (x: slprop) : (star x emp == x) =
   mem_pred_ext (star x emp) x fun w ->
     introduce x w ==> star x emp w with _. (
       let w2 = empty_for w in
@@ -420,7 +420,7 @@ let (exists*) #a f =
 let exists_ext p q =
   mem_pred_ext (op_exists_Star p) (op_exists_Star q) fun _ -> ()
 
-let sep_laws (_:unit) : squash (
+let sep_laws (_:unit) : (
   PulseCore.Semantics.(
     associative star /\
     commutative star /\
@@ -569,10 +569,10 @@ let later_credit (n: nat) : slprop =
   reveal_mem_le ();
   mk_slprop fun w -> credits_ w >= n
 
-let later_credit_zero () : squash (later_credit 0 == emp) =
+let later_credit_zero () : (later_credit 0 == emp) =
   mem_pred_ext (later_credit 0) emp fun _ -> ()
 
-let later_credit_add (m n: nat) : squash (later_credit (m + n) == later_credit m `star` later_credit n) =
+let later_credit_add (m n: nat) : (later_credit (m + n) == later_credit m `star` later_credit n) =
   mem_pred_ext (later_credit (m+n)) (later_credit m `star` later_credit n) fun w ->
     introduce later_credit (m+n) w ==> (later_credit m `star` later_credit n) w with _. (
       let w1 = pack (level_ w) { unpack w with saved_credits = credits_ w - n } in
@@ -589,17 +589,17 @@ let implies (p q: slprop) : prop =
 
 let elim_implies p q m = ()
 
-let timeless_intro (p: slprop) (h: (m:premem { level_ m > 0 /\ later p m } -> squash (p m))) : squash (timeless p) =
+let timeless_intro (p: slprop) (h: (m:premem { level_ m > 0 /\ later p m } -> (p m))) : (timeless p) =
   introduce forall (m: premem). level_ m > 0 /\ later p m ==> p m with
   introduce level_ m > 0 /\ later p m ==> p m with _. h m
 
-let timeless_intro' (#p: slprop { forall (m:premem). level_ m > 0 ==> (later p m ==> p m) }) : squash (timeless p) =
+let timeless_intro' (#p: slprop { forall (m:premem). level_ m > 0 ==> (later p m ==> p m) }) : (timeless p) =
   timeless_intro p fun m -> ()
 
-let timeless_lift (p: PM.slprop) : squash (timeless (lift p)) = timeless_intro'
-let timeless_pure (p: prop) : squash (timeless (pure p)) = timeless_intro'
-let timeless_emp () : squash (timeless emp) = timeless_intro'
-let timeless_later_credit n : squash (timeless (later_credit n)) = timeless_intro'
+let timeless_lift (p: PM.slprop) : (timeless (lift p)) = timeless_intro'
+let timeless_pure (p: prop) : (timeless (pure p)) = timeless_intro'
+let timeless_emp () : (timeless emp) = timeless_intro'
+let timeless_later_credit n : (timeless (later_credit n)) = timeless_intro'
 
 irreducible
 let rejuvenate1 (m: premem) (m': premem { mem_le m' (age1_ m) }) :
@@ -629,7 +629,7 @@ let rejuvenate1_sep (m m1': premem) (m2': premem { disjoint_mem m1' m2' /\ age1_
   (m1'', m2'')
 #pop-options
 
-let later_star (p q: slprop) : squash (later (star p q) == star (later p) (later q)) =
+let later_star (p q: slprop) : (later (star p q) == star (later p) (later q)) =
   mem_pred_ext (later (star p q)) (star (later p) (later q)) fun w ->
     if level_ w > 0 then (
       introduce star p q (age1_ w) ==> star (later p) (later q) w with _. (
@@ -655,7 +655,7 @@ let timeless_star p q =
       star__intro p q m m1 m2
     )
 
-let later_exists #t (f:t->slprop) : squash (later (exists* x. f x) `implies` exists* x. later (f x)) =
+let later_exists #t (f:t->slprop) : (later (exists* x. f x) `implies` exists* x. later (f x)) =
   introduce forall (m: premem). level_ m > 0 /\ later (exists* x. f x) m ==> exists x. later (f x) m with ()
 
 let timeless_exists (#t: Type) (f: t->slprop) :
@@ -672,14 +672,14 @@ let eq_at_elim n (p q: mem_pred) (w: premem) :
   assert approx n p w == approx n q w
 
 let eq_at_intro (n: nat) (p q: mem_pred)
-    (h: (m: premem { level_ m < n } -> squash (p m <==> q m))) :
+    (h: (m: premem { level_ m < n } -> (p m <==> q m))) :
     Lemma (eq_at n p q) =
   mem_pred_ext (approx n p) (approx n q) fun m ->
     if level_ m < n then h m else ()
 
 let intro_equiv p m = ()
 
-let equiv_comm (p q: slprop) : squash (equiv p q == equiv q p) =
+let equiv_comm (p q: slprop) : (equiv p q == equiv q p) =
   mem_pred_ext (equiv p q) (equiv q p) fun _ -> ()
 
 let interp_equiv_star (p q r: slprop) m :
@@ -696,12 +696,12 @@ let interp_equiv_star (p q r: slprop) m :
     star_intro (equiv p q) r m (empty_for m) m
   )
 
-let equiv_elim (p q: slprop) : squash (equiv p q `star` p == equiv p q `star` q) =
+let equiv_elim (p q: slprop) : (equiv p q `star` p == equiv p q `star` q) =
   mem_pred_ext (equiv p q `star` p) (equiv p q `star` q) fun m ->
     introduce equiv p q m ==> (p m <==> q m) with _.
       eq_at_elim (level_ m + 1) p q m
 
-let equiv_trans (p q r: slprop) : squash (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
+let equiv_trans (p q r: slprop) : (equiv p q `star` equiv q r == equiv p q `star` equiv p r) =
   mem_pred_ext (equiv p q `star` equiv q r) (equiv p q `star` equiv p r) fun w -> ()
 
 let later_equiv (p q: slprop) =
@@ -733,8 +733,8 @@ let rec timeless_interp (a: slprop { timeless a }) (w: premem) :
     reveal_slprop_ok ()
   )
 
-let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 } -> squash (a w <==> b w))) :
-    squash (a == b) =
+let timeless_ext (a b: (p:slprop {timeless p})) (h: (w: premem { level_ w == 0 } -> (a w <==> b w))) :
+    (a == b) =
   mem_pred_ext a b fun w ->
     timeless_interp a w;
     timeless_interp b w;
@@ -851,7 +851,7 @@ let loc_gather_eq l1 l2 =
 let on_ (l: loc_id) (p: slprop) : mem_pred =
   F.on_dom premem fun m -> p (set_loc_ m l)
 
-let on_affine l (p: slprop) : squash (mem_pred_affine (on_ l p)) =
+let on_affine l (p: slprop) : (mem_pred_affine (on_ l p)) =
   reveal_slprop_ok ();
   introduce forall a b. mem_le a b /\ on_ l p a ==> on_ l p b with
   introduce _ ==> _ with _. (
@@ -882,7 +882,7 @@ let loc_on_eq l p =
       star_intro (loc l) p m m1 m2
     )
 
-let timeless_on l (p: slprop { timeless p }) : squash (timeless (on l p)) =
+let timeless_on l (p: slprop { timeless p }) : (timeless (on l p)) =
   ()
 
 let on_emp l = mem_pred_ext (on l emp) emp fun _ -> ()
@@ -1203,7 +1203,7 @@ let hogs_invariant_disjoint (e1 e2:inames) (m1 m2:mem) :
 let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
     (m: mem { forall i. GS.mem i (hogs_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
     (f: address) (w: premem) :
-    squash (hogs_invariant_ ex1 m f w ==> hogs_invariant_ ex2 m f w) =
+    (hogs_invariant_ ex1 m f w ==> hogs_invariant_ ex2 m f w) =
   introduce _ ==> _ with _.
   if reveal f = 0 then
     ()
@@ -1227,7 +1227,7 @@ let rec hogs_invariant__mono (ex1: inames) (ex2: inames)
 let hogs_invariant_mono (ex1: inames) (ex2: inames)
     (m: mem { forall i. GS.mem i (hogs_dom m) /\ GS.mem i ex1 ==> GS.mem i ex2 })
     (w: premem) :
-    squash (hogs_invariant ex1 m w ==> hogs_invariant ex2 m w) =
+    (hogs_invariant ex1 m w ==> hogs_invariant ex2 m w) =
   hogs_invariant__mono ex1 ex2 m (some_fresh_addr m) w
 
 let gs_diff #t (a b: GS.set t) : GS.set t =
@@ -1245,12 +1245,12 @@ let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
       mem_ok m /\
       (p0 `star` p1 `star` hogs_invariant (GS.union e f) m) m)) =
   let e' = gs_diff e (hogs_dom m1) in
-  let _ : squash ((p0 `star` hogs_invariant e' m0) m0) =
+  let _ : ((p0 `star` hogs_invariant e' m0) m0) =
     let (w1, w2) = star_elim p0 (hogs_invariant e m0) m0 in
     hogs_invariant_mono e e' m0 w2;
     star_intro p0 (hogs_invariant e' m0) m0 w1 w2 in
   let f' = gs_diff f (hogs_dom m0) in
-  let _ : squash ((p1 `star` hogs_invariant f' m1) m1) =
+  let _ : ((p1 `star` hogs_invariant f' m1) m1) =
     let (w1, w2) = star_elim p1 (hogs_invariant f m1) m1 in
     hogs_invariant_mono f f' m1 w2;
     star_intro p1 (hogs_invariant f' m1) m1 w1 w2 in
@@ -1260,7 +1260,7 @@ let hogs_invariant_disjoint' (e f:inames) (p0 p1:slprop) (m0 m1:mem) :
   star_intro
     (p0 `star` hogs_invariant e' m0) (p1 `star` hogs_invariant f' m1)
     m m0 m1;
-  let _ : squash (
+  let _ : (
     (p0 `star` hogs_invariant e' m0) `star` (p1 `star` hogs_invariant f' m1) ==
     (p0 `star` p1) `star` (hogs_invariant (GS.union e' f') m)
   ) = sep_laws () in
@@ -1294,7 +1294,7 @@ let hogs_single n l (a: iref) (p: slprop) : mem =
   reveal_mem_le (); reveal_slprop_ok ();
   m
 
-let rec hogs_single_invariant_ n l a p f : squash (hogs_invariant_ (single a) (hogs_single n l a p) f == emp) =
+let rec hogs_single_invariant_ n l a p f : (hogs_invariant_ (single a) (hogs_single n l a p) f == emp) =
   if reveal f = 0 then
     ()
   else
@@ -1330,7 +1330,7 @@ let inames_live (e:inames) : slprop =
   mk_slprop fun m ->
     hogs_inames_ok_internal e m
 
-let inames_live_empty () : squash (inames_live GS.empty == emp) =
+let inames_live_empty () : (inames_live GS.empty == emp) =
   mem_pred_ext (inames_live GS.empty) emp fun w -> ()
 
 let inames_live_union (e1 e2:inames) 
@@ -1362,7 +1362,7 @@ let fresh_inv_name (m:mem) (ctx:inames { GS.is_finite ctx }) : i:iref { None? (r
 let fresh_inv p m ctx =
   let i = fresh_inv_name m ctx in
   let m': mem = hogs_fresh_inv p m i in
-  let _: squash (inv i p `star` mem_invariant (single i) m' == inv i p) =
+  let _: (inv i p `star` mem_invariant (single i) m' == inv i p) =
     hogs_single_invariant (level m) (current_loc m) i p;
     sep_laws () in
   Classical.forall_intro (H2.join_empty u#3);
@@ -1376,7 +1376,7 @@ let dup_inv_equiv i p =
     introduce star (inv i p) (inv i p) w ==> inv i p w with _.
       let (w1, w2) = star_elim (inv i p) (inv i p) w in ()
 
-let implies_intro (p q: slprop) (h: (m:premem { level_ m > 0 /\ p m } -> squash (q m))) : squash (implies p q) =
+let implies_intro (p q: slprop) (h: (m:premem { level_ m > 0 /\ p m } -> (q m))) : (implies p q) =
   introduce forall m. level_ m > 0 /\ p m ==> q m with introduce _ ==> _ with _. h m
 
 let invariant_name_identifies_invariant i p q =
@@ -1409,7 +1409,7 @@ let single_slprop_pts_to n l (i: slprop_ref) (p: slprop) : mem =
   m
 
 let rec hogs_invariant__single_slprop_pts_to ex (n: nat) l i p f :
-    squash (hogs_invariant_ ex (single_slprop_pts_to n l i p) f == emp) =
+    (hogs_invariant_ ex (single_slprop_pts_to n l i p) f == emp) =
   if reveal f = 0 then
     ()
   else
@@ -1417,14 +1417,14 @@ let rec hogs_invariant__single_slprop_pts_to ex (n: nat) l i p f :
     sep_laws ();
     hogs_invariant__single_slprop_pts_to ex n l i p f'
 let hogs_invariant_single_slprop_pts_to ex (n: nat) l i p :
-    squash (hogs_invariant ex (single_slprop_pts_to n l i p) == emp) =
+    (hogs_invariant ex (single_slprop_pts_to n l i p) == emp) =
   hogs_invariant__single_slprop_pts_to ex n l i p (some_fresh_addr (single_slprop_pts_to n l i p))
 
 let fresh_slprop_ref p m =
   let i = indefinite_description fun i -> fresh_addr m i in
   let m' = single_slprop_pts_to (level_ m) (current_loc_ m) i p in
   assert slprop_ref_pts_to i p m';
-  let _: squash (slprop_ref_pts_to i p `star` mem_invariant GS.empty m' == slprop_ref_pts_to i p) =
+  let _: (slprop_ref_pts_to i p `star` mem_invariant GS.empty m' == slprop_ref_pts_to i p) =
     hogs_invariant_single_slprop_pts_to GS.empty (level_ m) (current_loc_ m) i p;
     star_emp emp;
     star_emp (slprop_ref_pts_to i p) in
@@ -1452,7 +1452,7 @@ let on_slprop_ref_pts_to_eq l x y = mem_pred_ext (on l (slprop_ref_pts_to x y)) 
 let implies' (p q: slprop) : prop =
   forall (m: premem). p m ==> q m
 
-let loeb (p: slprop { implies' (later p) p }) : squash (implies' emp p) =
+let loeb (p: slprop { implies' (later p) p }) : (implies' emp p) =
   let rec aux (m: premem) : Lemma (ensures p m) (decreases level_ m) =
     if level_ m > 0 then aux (age1_ m) else () in
   introduce forall m. p m with aux m

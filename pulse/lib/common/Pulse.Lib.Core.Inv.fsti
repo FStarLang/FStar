@@ -24,7 +24,7 @@ open FStar.ExtractAs
 
 val inv (i:iname) (p:slprop) : slprop
 
-val on_inv_eq l i p : squash (on l (inv i p) == inv i p)
+val on_inv_eq l i p : (on l (inv i p) == inv i p)
 
 val dup_inv (i:iname) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)

@@ -67,7 +67,7 @@ val closure_inversion: #a:Type u#a -> r:binrel u#a a -> x:a -> y:a
 * the monotonicity relation is the closure of a step relation.
 *)
 val stable_on_closure: #a:Type u#a -> r:binrel u#a a -> p:(a -> prop)
-  -> p_stable_on_r: (squash (forall x y.{:pattern (p y); (r x y)} p x /\ (r x y) ==> p y))
+  -> p_stable_on_r: (forall x y.{:pattern (p y); (r x y)} p x /\ (r x y) ==> p y)
   -> Lemma (forall x y.{:pattern (closure r x y)} p x /\ (closure r x y) ==> p y)
 
 (**
@@ -75,9 +75,9 @@ val stable_on_closure: #a:Type u#a -> r:binrel u#a a -> p:(a -> prop)
 *)
 val induct
       (#a:Type) (r:binrel a) (p: a -> a -> prop)
-      (f_refl: (x:a -> squash (p x x)))
-      (f_step: (x:a -> y:a { r x y } -> squash (p x y)))
-      (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> squash (p x z)))
-      (x:a) (y:a) (xy:squash (closure r x y))
-: squash (p x y)
+      (f_refl: (x:a -> p x x))
+      (f_step: (x:a -> y:a { r x y } -> p x y))
+      (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> p x z))
+      (x:a) (y:a) (xy:closure r x y)
+: p x y
 

@@ -115,7 +115,7 @@ val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
 val elim_pure (#opened_invariants:_) (p:prop)
 : ghost_act (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
 
-val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
+val intro_pure (#opened_invariants:_) (p:prop) (_:p)
 : ghost_act unit opened_invariants emp (fun _ -> pure p)
 
 val drop (#opened_invariants:_) (p:slprop)

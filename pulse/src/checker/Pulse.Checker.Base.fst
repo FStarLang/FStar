@@ -280,7 +280,7 @@ let continuation_elaborator_with_bind (#g:env) (ctxt:term)
     continuation_elaborator_with_bind' ctxt c1 e1 x
 
 
-let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+let coerce_eq (#a #b:Type) (x:a) (_:(a == b)) : y:b{y == x} = x
 
 let continuation_elaborator_with_bind_fn (#g:env) (ctxt:term)
   (e1:st_term)
@@ -434,7 +434,7 @@ let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_o
           (| ee, cc |)
         )
   in
-  let _ : squash (checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt') =
+  let _ : checker_res_matches_post_hint g post_hint x (comp_res c1) ctxt' =
     match post_hint with
     | PostHint post_hint -> ()
     | _ -> () in

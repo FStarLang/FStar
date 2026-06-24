@@ -18,7 +18,7 @@ let fakeunit = `unit
 
 unfold
 let f_inverses #a #b (f : b -> a) (g : a -> b) (x:a) =
-  squash (f (g x) == x)
+  (f (g x) == x)
 
 type atom = term
 
@@ -59,9 +59,9 @@ val prove_right_left () : Tac unit
     - nm_pretty_right: the right map of the bijection (old -> pretty)
     - nm_pretty_left: the left map of the bijection (pretty -> old)
     - nm_pretty_left_right: proof that left inverses right
-                       (i.e. x:old -> squash (left (right x) == x))
+                       (i.e. x:old -> (left (right x) == x))
     - nm_pretty_right_left: proof that right inverses left
-                       (i.e. x:pretty -> squash (right (left x) == x))
+                       (i.e. x:pretty -> (right (left x) == x))
 
     *)
 [@@plugin]

@@ -193,7 +193,7 @@ fn replace
   (idx:SZ.t)
   (k:kt)
   (v:vt)
-  (_:squash (SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
+  (_:(SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
 
   requires models ht pht
   returns p:(ht_t kt vt & vt)

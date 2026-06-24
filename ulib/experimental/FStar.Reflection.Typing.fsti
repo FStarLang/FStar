@@ -1117,7 +1117,7 @@ type non_informative : env -> term -> Type0 =
   | Non_informative_token:
     g:env ->
     t:typ ->
-    squash (non_informative_token g t) ->
+    non_informative_token g t ->
     non_informative g t
 
 val bindings_ok_for_pat : env -> list R.binding -> pattern -> prop
@@ -1174,7 +1174,7 @@ type typing : env -> term -> comp_typ -> Type0 =
     g:env ->
     e:term ->
     c:comp_typ ->
-    squash (typing_token g e c) ->
+    typing_token g e c ->
     typing g e c
 
   | T_Var : 
@@ -1368,14 +1368,14 @@ and related : env -> term -> relation -> term -> Type0 =
     g:env ->
     t0:term ->
     t1:term ->
-    squash (equiv_token g t0 t1) ->
+    equiv_token g t0 t1 ->
     related g t0 R_Eq t1 
 
   | Rel_subtyping_token:
     g:env ->
     t0:term ->
     t1:term ->
-    squash (subtyping_token g t0 t1) ->
+    subtyping_token g t0 t1 ->
     related g t0 R_Sub t1
 
   | Rel_equiv:
@@ -1482,7 +1482,7 @@ and branch_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
 
     body:term ->
 
-    _ : squash (Some? (elaborate_pat pat bnds)) ->
+    _ : (Some? (elaborate_pat pat bnds)) ->
 
     typing (extend_env
             (extend_env_l g (refl_bindings_to_bindings bnds))
@@ -1501,7 +1501,7 @@ and match_is_complete : env -> term -> typ -> list pattern -> list (list R.bindi
     ty:_ ->
     pats:_ ->
     bnds:_ ->
-    squash (match_complete_token env sc ty pats bnds) -> match_is_complete env sc ty pats bnds
+    match_complete_token env sc ty pats bnds -> match_is_complete env sc ty pats bnds
 
 and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
@@ -1795,7 +1795,7 @@ type sigelt_typing : env -> sigelt -> Type0 =
     us: list R.univ_name ->
     ty : R.typ ->
     (* no tm: only a proof of existence *)
-    squash (exists (tm:R.term). nonempty (typing g tm (E_Total, ty))) ->
+    (exists (tm:R.term). nonempty (typing g tm (E_Total, ty))) ->
     sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) })]))
 
 (**

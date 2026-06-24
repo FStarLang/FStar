@@ -158,10 +158,10 @@ val dice_digest_len : (dice_digest_len: hashable_len {
 })
 
 
-val dice_digest_len_is_hkdf_ikm : squash (valid_hkdf_ikm_len dice_digest_len)
+val dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
 
-val is_hashable_len_32 : squash (is_hashable_len v32us)
+val is_hashable_len_32 : is_hashable_len v32us
 
 val reveal_dice_digest_len () : Lemma (dice_digest_len == 32sz)
 
-val dice_digest_len_is_hashable : squash (is_hashable_len dice_digest_len)
+val dice_digest_len_is_hashable : is_hashable_len dice_digest_len

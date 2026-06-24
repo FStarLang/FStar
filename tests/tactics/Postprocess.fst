@@ -71,8 +71,8 @@ let lemB x : Lemma (lift (B1 x) == (B2 x)) = ()
 let lemC ($f: int -> t1) : Lemma (lift (C1 f) == C2 (fun x -> lift (f x))) by (compute ()) = ()
 
 (* These could really be polymorphic *)
-let congB #i #j (_ : squash (i == j)) : Lemma (B2 i == B2 j) = ()
-let congC #f #g (_ : squash (f == g)) : Lemma (C2 f == C2 g) = ()
+let congB #i #j (_ : (i == j)) : Lemma (B2 i == B2 j) = ()
+let congC #f #g (_ : (f == g)) : Lemma (C2 f == C2 g) = ()
 
 let xx = C1 (function
              | 0 -> A1
@@ -81,11 +81,11 @@ let xx = C1 (function
 
 open FStar.FunctionalExtensionality
 
-let q_as_lem (#a:Type) (#b:a -> prop) (p:squash (forall x. b x)) (x:a)
+let q_as_lem (#a:Type) (#b:a -> prop) (p: (forall x. b x)) (x:a)
   : Lemma (b x)
   = ()
 
-let congruence_fun #a (#b:a -> Type) (f g:(x:a -> b x)) (x:squash (forall x. f x == g x)) :
+let congruence_fun #a (#b:a -> Type) (f g:(x:a -> b x)) (x: (forall x. f x == g x)) :
   Lemma (ensures (fun (x:a) -> f x) == (fun (x:a) -> g x)) =
   assert ((fun (x:a) -> f x) == (fun (x:a) -> g x))
       by (l_to_r [quote (q_as_lem x)];
@@ -96,7 +96,7 @@ let apply_feq_lem #a #b ($f $g : a -> b) : Lemma (requires (forall x. f x == g x
 
 let fext () = apply_lemma (`apply_feq_lem); dismiss (); ignore (forall_intros ())
 
-let _onL a b c (_ : squash (a == b)) (_ : squash (b == c)) : Lemma (a == c) = ()
+let _onL a b c (_ : (a == b)) (_ : (b == c)) : Lemma (a == c) = ()
 let onL () = apply_lemma (`_onL)
 
 // invariant: takes goals of shape squash (E == ?u) and solves them

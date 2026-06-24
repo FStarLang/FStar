@@ -56,7 +56,7 @@ fn memcpy_l (#t:Type0) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
   requires pts_to src #p src0 **
            pts_to dst dst0
-  returns _:squash (Seq.length src0 == A.length src /\ Seq.length dst0 == A.length dst)
+  returns _:(Seq.length src0 == A.length src /\ Seq.length dst0 == A.length dst)
   ensures pts_to src #p src0 **
           pts_to dst (Seq.append (Seq.slice src0 0 (US.v l))
                                    (Seq.slice dst0 (US.v l) (A.length dst)))

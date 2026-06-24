@@ -22,7 +22,7 @@ let refext (t:Type) (r1 : t -> prop) (r2 : t -> prop) :
   ()
 
 (* Small test. Use names to avoid hash-consing mismatches. *)
-let ref1 (x:int) : prop = b2t (x >= 0)
+let ref1 (x:int) : prop = x >= 0
 let ref2 (x:int) : prop = x >= 0 \/ x >= 1
 
 let ty1 = x:int{ref1 x}

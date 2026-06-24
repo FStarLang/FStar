@@ -218,7 +218,7 @@ requires
   SLT.pts_to t i #0.5R p **
   stored_predicates t n 0.5R preds **
   pure (Seq.length preds == n)
-  returns _:squash (i < Seq.length preds)
+  returns _:(i < Seq.length preds)
 ensures
   SLT.is_table t n **
   SLT.pts_to t i #1.0R (Seq.index preds i) **

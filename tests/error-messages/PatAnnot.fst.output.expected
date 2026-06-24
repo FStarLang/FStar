@@ -7,7 +7,7 @@
   - VC =
       forall (b: Prims.unit) (b: Prims.unit).
         PatAnnot.f () == (b, b) ==> Prims.l_False
-  - See also PatAnnot.fst(25,19-25,24)
+  - See also PatAnnot.fst(25,12-25,17)
 
 * Info at PatAnnot.fst(28,0-30,14):
   - Expected failure:
@@ -39,7 +39,7 @@
   - The SMT solver could not prove the query.
   - Env =
   - VC = Prims.l_False
-  - See also PatAnnot.fst(40,26-40,31)
+  - See also PatAnnot.fst(40,19-40,24)
 
 * Info at PatAnnot.fst(46,10-46,11):
   - Expected failure:

@@ -14,7 +14,7 @@ let inj_my_t (#a:Type u#1) (x:my_t a)
 = ()
 
 [@@expect_failure [19]]
-let my_t_injective : squash (is_inj my_t) = 
+let my_t_injective : (is_inj my_t) = 
   introduce forall f0 f1.
       my_t f0 == my_t f1 ==> f0 == f1
   with introduce _ ==> _
@@ -32,7 +32,7 @@ let inj_t (#a:Type u#1) (x:t a)
 = ()
 
 [@@expect_failure [19]]
-let t_injective : squash (is_inj t) = 
+let t_injective : (is_inj t) = 
   introduce forall f0 f1.
       t f0 == t f1 ==> f0 == f1
   with introduce _ ==> _
@@ -55,14 +55,14 @@ let test2_injective (f0 f1:Type u#2)
 = let x : test2 f0 = test2_inhabited f0 in
   let Mk2 #_ = x in
   ()
-let itest2_injective' : squash (is_inj test2) = 
+let itest2_injective' : (is_inj test2) = 
   introduce forall f0 f1.
       test2 f0 == test2 f1 ==> f0 == f1
   with introduce _ ==> _
   with _ . (
     test2_injective f0 f1
   )
-let fals () : squash False =
+let fals () : False =
   CC.no_inj_universes_suc test2
 
 

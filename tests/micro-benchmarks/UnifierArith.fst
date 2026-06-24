@@ -6,7 +6,7 @@ val n :int
 assume
 val m :int
 assume
-val nnn : squash (n <= m /\ n <> 0)
+val nnn : (n <= m /\ n <> 0)
 assume
 val v:vec (m - n)
 

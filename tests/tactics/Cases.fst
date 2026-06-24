@@ -45,7 +45,7 @@ let test_cases_unsquash (h : (p \/ q)) : Lemma r =
 
 (* assume val pp : Type0 *)
 (* assume val qq : Type0 *)
-(* assume val ff :  pp -> Lemma qq *)
+(* assume val ff : pp -> Lemma qq *)
 (* assume val gg : ~pp -> Lemma qq *)
 
 (* let ll () : Lemma (pp \/ ~pp) = () *)
@@ -62,8 +62,8 @@ let test_cases_unsquash (h : (p \/ q)) : Lemma r =
 (*             qed ()) *)
 
 assume val pred : bool -> prop
-assume val pred_true  : squash (pred true)
-assume val pred_false : squash (pred false)
+assume val pred_true  : (pred true)
+assume val pred_false : (pred false)
 
 let test_cases_bool (b:bool) : Lemma (pred b) =
     assert (pred b)

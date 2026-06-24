@@ -22,18 +22,18 @@ open FStar.Nonempty
 noeq
 type _closure (#a:Type u#a) (r:binrel u#a a) : a -> a -> Type u#a =
 | Refl: x:a -> _closure r x x
-| Step: x:a -> y:a -> squash (r x y) ->_closure r x y
+| Step: x:a -> y:a -> (r x y) ->_closure r x y
 | Closure: x:a -> y:a -> z:a -> _closure r x y -> _closure r y z -> _closure r x z
 
 let _closure0 (#a:Type) (r:binrel a) (x y: a) : prop =
   nonempty (_closure r x y)
 
 let rec induct_ (#a:Type) (r:binrel a) (p: a -> a -> prop)
-               (f_refl: (x:a -> squash (p x x)))
-               (f_step: (x:a -> y:a { r x y } -> squash (p x y)))
-               (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> squash (p x z)))
+               (f_refl: (x:a -> p x x))
+               (f_step: (x:a -> y:a { r x y } -> p x y))
+               (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> p x z))
                (x:a) (y:a) (xy:_closure r x y)
-: Tot (squash (p x y)) (decreases xy)
+: Tot (p x y) (decreases xy)
 = match xy with
   | Refl x -> f_refl x
   | Step x y _ -> f_step x y
@@ -42,7 +42,7 @@ let rec induct_ (#a:Type) (r:binrel a) (p: a -> a -> prop)
     let p2 = induct_ r p f_refl f_step f_closure y z yz in
     f_closure x y z
 
-let get_squash (#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
+let get_(#a:Type) (r:binrel a) (x:a) (y:a{_closure0 r x y})
   : GTot (_closure r x y)
   = nonempty_elim (_closure r x y)
 
@@ -67,8 +67,8 @@ let closure_step #a r x y =
 
 val closure_one_aux: #a:Type u#a -> r:binrel u#a a -> x:a -> y:a
   -> xy:_closure r x y
-  -> Tot (either (squash (x == y))
-                (z:a & squash (r x z) & _closure r z y))
+  -> Tot (either (x == y)
+                (z:a & r x z & _closure r z y))
     (decreases xy)
 let rec closure_one_aux #a r x y xy =
   match xy with
@@ -89,7 +89,7 @@ let rec closure_one_aux #a r x y xy =
 
 let closure_one_aux' (#a:Type u#a) (r:binrel u#a a) (x y:a)
                      (xy:_closure r x y)
-  : GTot (squash (x == y \/ (exists z. r x z /\ closure r z y)))
+  : GTot (x == y \/ (exists z. r x z /\ closure r z y))
   = let p = closure_one_aux r x y xy in
     match p with
     | Inl _ -> ()
@@ -100,20 +100,20 @@ let closure_one_aux' (#a:Type u#a) (r:binrel u#a a) (x y:a)
       ()
 
 val closure_one: #a:Type u#a -> r:binrel u#a a -> x:a -> y:a
-  -> xy:squash (closure r x y)
-  -> GTot (squash (x == y \/ (exists z. r x z /\ closure r z y)))
+  -> xy:closure r x y
+  -> GTot (x == y \/ (exists z. r x z /\ closure r z y))
 let closure_one #a r x y xy =
   closure_one_aux' r x y (nonempty_elim _)
 
 let closure_inversion #a r x y = closure_one r x y ()
 
 val _stable_on_closure: #a:Type u#a -> r:binrel u#a a -> p:(a -> prop)
-  -> p_stable_on_r: squash (forall x y. p x /\ r x y ==> p y)
+  -> p_stable_on_r: (forall x y. p x /\ r x y ==> p y)
   -> x: a
   -> y: a
   -> xy: _closure r x y
-  -> px: squash (p x)
-  -> GTot (squash (p y)) (decreases xy)
+  -> px: p x
+  -> GTot (p y) (decreases xy)
 let rec _stable_on_closure #a r p p_stable_on_r x y xy px =
   match xy with
   | Refl _ -> ()
@@ -130,9 +130,9 @@ let stable_on_closure #a r p hr =
 
 let induct
       (#a:Type) (r:binrel a) (p: a -> a -> prop)
-      (f_refl: (x:a -> squash (p x x)))
-      (f_step: (x:a -> y:a { r x y } -> squash (p x y)))
-      (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> squash (p x z)))
-      (x:a) (y:a) (xy:squash (closure r x y))
-: squash (p x y) =
+      (f_refl: (x:a -> p x x))
+      (f_step: (x:a -> y:a { r x y } -> p x y))
+      (f_closure: (x:a -> y:a -> z:a { p x y /\ p y z } -> p x z))
+      (x:a) (y:a) (xy:closure r x y)
+: p x y =
   induct_ r p f_refl f_step f_closure x y (nonempty_elim _)

@@ -49,7 +49,7 @@ val interp (#a : Type) : m a -> w a
 let interp #a (l:a) = as_pure_wp (fun p -> p l)
 
 let dm (a : Type) (wp : w a) : Type =
-  p:(a -> prop) -> squash (wp p) -> l:(m a){p l}
+  p:(a -> prop) -> (wp p) -> l:(m a){p l}
 
 let irepr (a : Type) (wp: w a) = dm a wp
 

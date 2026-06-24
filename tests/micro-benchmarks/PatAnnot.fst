@@ -20,24 +20,24 @@ let id x = x
 let f () = (), ()
 
 [@@expect_failure]
-let whoops : squash False =
+let whoops : False =
   match f () with
-  | _, (x : squash False) -> x
+  | _, (x : False) -> x
 
 [@@expect_failure]
-let whoops2 : squash False =
+let whoops2 : False =
   let _, (x:unit{False}) = f () in
   assert False
 
 [@@expect_failure]
-let sub_bv : squash False =
+let sub_bv : False =
   let _, (l:list int{False}) = splitAt 0 [1;2;3] in
   assert False
 
 [@@expect_failure]
-let s : squash False =
+let s : False =
     match () with
-    | x -> let x : squash False = x in x
+    | x -> let x : False = x in x
 
 (* Should fail, we're annotating `x` as a nat which, even if not really
  * taken into account by the typechecker, is wrong. *)
@@ -46,7 +46,7 @@ let test1 (i:int) : int =
     match i with
     | (x : nat) -> 1 + x
 
-let test2 (i:int) (_ : squash (i >= 0)) : nat =
+let test2 (i:int) (_ : (i >= 0)) : nat =
     match i with
     | (x : nat) -> x
 

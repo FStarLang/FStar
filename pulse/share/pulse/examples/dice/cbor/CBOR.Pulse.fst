@@ -666,7 +666,7 @@ let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
         pure (cbor_map_sort_merge_invariant_prop lo hi l1_0 l2_0 i1 i2 res accu l1 l2)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let size_add (x1 x2: SZ.t) (sq: squash (SZ.fits (SZ.v x1 + SZ.v x2))) : Tot SZ.t = x1 `SZ.add` x2
+let size_add (x1 x2: SZ.t) (sq: (SZ.fits (SZ.v x1 + SZ.v x2))) : Tot SZ.t = x1 `SZ.add` x2
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let size_eq (x1 x2: SZ.t) : Tot bool = x1 = x2

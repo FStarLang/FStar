@@ -58,7 +58,7 @@ let carry_bv (a b: uint_t 64) =
           63
 
 let carry_uint64_ok (a b:uint_t 64)
-  : squash (int2bv (carry_uint64 a b) == carry_bv a b)
+  : (int2bv (carry_uint64 a b) == carry_bv a b)
   = _ by (T.norm [delta_only [`%carry_uint64]; unascribe];
           let open FStar.Tactics.BV in
           TM.mapply (`FStar.Tactics.BV.Lemmas.trans);
@@ -71,14 +71,14 @@ let fact1 (a b: uint_t 64) = carry_bv a b == int2bv 1
 let fact0 (a b: uint_t 64) = carry_bv a b == int2bv 0
 
 let lem_ult_1 (a b: uint_t 64)
-  : squash (bvult (int2bv a) (int2bv b) ==> fact1 a b)
+  : (bvult (int2bv a) (int2bv b) ==> fact1 a b)
   = assert (bvult (int2bv a) (int2bv b) ==> fact1 a b)
        by (T.norm [delta_only [`%fact1;`%carry_bv]];
            T.set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'";
            TD.smt())
 
 let lem_ult_2 (a b:uint_t 64)
-  : squash (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
+  : (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
   = assert (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
        by (T.norm [delta_only [`%fact0;`%carry_bv]];
            T.set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'")

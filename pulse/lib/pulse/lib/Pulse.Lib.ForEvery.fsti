@@ -135,7 +135,7 @@ ghost
 fn forevery_refine_ext'
   (#a: Type0)
   (#f g: a->prop)
-  (#_ : squash (forall x. f x <==> g x))
+  (#_ : (forall x. f x <==> g x))
   (p: (x:a{f x} -> slprop))
   requires
     forall+ (x:a {f x}). p x
@@ -216,7 +216,7 @@ let when_ (p: prop) (q: slprop) : slprop =
   if t2b p then q else emp
 
 (* Needed for when the rhs is partially defined *)
-let when__ (p: prop) (q: squash p -> slprop) : slprop =
+let when__ (p: prop) (q: p -> slprop) : slprop =
   if t2b p then q () else emp
 
 ghost
@@ -233,7 +233,7 @@ ghost
 fn forevery_unrefine_pred'
   (#a:Type0)
   (f: a -> prop)
-  (p: (x:a -> squash (f x) -> slprop))
+  (p: (x:a -> f x -> slprop))
   requires
     forall+ (x:a { f x }). p x ()
   ensures

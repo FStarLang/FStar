@@ -146,7 +146,7 @@ let read_prf
   Classical.forall_intro_2 prf'
 
  // FIXME: FStar.IndefiniteDescription.indefinite_description_tot cannot be called directly from Pulse because of refinements on lambdas!
-let indefinite_description_tot0 (a:Type) (p:(a -> prop)) (q: squash (exists x. p x))
+let indefinite_description_tot0 (a:Type) (p:(a -> prop)) (q: (exists x. p x))
 : Tot (w:Ghost.erased a{ p w })
 = FStar.IndefiniteDescription.indefinite_description_tot a p
 

@@ -673,7 +673,7 @@ let matrix_mul_is_associative #c #eq #m #n #p #q (add: CE.cm c eq)
   let (+) = add.mult in
   let ( * ) = mul.mult in
   let (=) = eq.eq in
-  let aux i l : squash (ijth lhs i l = ijth rhs i l) =
+  let aux i l : (ijth lhs i l = ijth rhs i l) =
     let unfold sum_j (f: under n -> c) = SP.foldm_snoc add (SB.init n f) in
     let unfold sum_k (f: under p -> c) = SP.foldm_snoc add (SB.init p f) in 
     let xy_products_init k j = ijth mx i j * ijth my j k in
@@ -1045,7 +1045,7 @@ let matrix_mul_left_identity #c #eq #m (add: CE.cm c eq)
   let mxu = matrix_mul add mul unit mx in
   let unfold ( * ) = mul.mult in
   let ( $=$ ) = eq.eq in
-  let aux (i j: under m) : squash (ijth mxu i j $=$ ijth mx i j) = 
+  let aux (i j: under m) : (ijth mxu i j $=$ ijth mx i j) = 
     let gen (k: under m) = ijth unit i k * ijth mx k j in
     matrix_mul_ijth_eq_sum_of_seq_for_init add mul unit mx i j gen;
     let seq = SB.init m gen in       

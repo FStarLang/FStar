@@ -25,7 +25,7 @@ inline_for_extraction
 let size_add
   (a: SZ.t)
   (b: SZ.t)
-  (_: squash (SZ.fits (SZ.v a + SZ.v b)))
+  (_: (SZ.fits (SZ.v a + SZ.v b)))
 : Tot (c: SZ.t {
     SZ.v c == SZ.v a + SZ.v b
   })
@@ -42,7 +42,7 @@ inline_for_extraction
 let size_sub
   (a: SZ.t)
   (b: SZ.t)
-  (_: squash (SZ.v a >= SZ.v b))
+  (_: (SZ.v a >= SZ.v b))
 : Tot (c: SZ.t { SZ.v c == (SZ.v a - SZ.v b) })
 = a `SZ.sub` b
 

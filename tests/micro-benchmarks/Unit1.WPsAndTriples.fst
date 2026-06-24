@@ -30,7 +30,7 @@ let f x = assert (x > 0); x + 1
 val h : #req:(int -> prop) -> #ens:(int -> int -> prop) -> $f:(x:int -> Pure int (req x) (ens x)) -> y:int -> Pure int (req y) (ens y)
 let h #req #ens f x = f x
 
-val g : x:int -> Pure int (b2t (x > 0)) (fun y -> y == x + 1)
+val g : x:int -> Pure int (x > 0) (fun y -> y == x + 1)
 let g = h (as_Pure f)
 
 
@@ -51,7 +51,7 @@ val good_hoare : unit -> Pure int True (fun r -> r == 3)
 (*
  * An example from Dominique Unruh
  *)
-let mono (a:Type u#a) (wp:pure_wp a) (p q:pure_post a) (_:squash(forall (x:a). p x ==> q x)) : 
+let mono (a:Type u#a) (wp:pure_wp a) (p q:pure_post a) (_:(forall (x:a). p x ==> q x)) : 
     Lemma (wp p ==> wp q) = 
 	FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ()
 
@@ -60,6 +60,6 @@ let contradiction () : Lemma(False) =
     let a = unit in
     let wp : pure_wp a = as_pure_wp (fun p -> ~ (p ())) in
     let p x = False in let q x = True in
-    let u : squash(forall x. p x ==> q x) = () in
+    let u :(forall x. p x ==> q x) = () in
     mono a wp p q u;
     assert (wp p ==> wp q)

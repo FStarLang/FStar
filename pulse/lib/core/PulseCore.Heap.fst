@@ -332,7 +332,7 @@ let affine_hprop_intro
      : Lemma (heap_prop_is_affine p)
   =
   let aux (h0 h1: heap u#a) : Lemma (p h0 /\ disjoint h0 h1 ==> p (join h0 h1)) =
-    let aux (_ : squash (p h0 /\ disjoint h0 h1)) : Lemma (disjoint h0 h1 /\ p (join h0 h1)) =
+    let aux (_ : (p h0 /\ disjoint h0 h1)) : Lemma (disjoint h0 h1 /\ p (join h0 h1)) =
       lemma h0 h1
     in
     Classical.impl_intro aux
@@ -1135,7 +1135,7 @@ let gather_action #a #pcm r v0 v1
 ////////////////////////////////////////////////////////////////////////////////
 let pts_to_not_null_action #a #pcm r v
   = let g : refined_pre_action (pts_to r v)
-                               (squash (not (is_null r)))
+                               (not (is_null r))
                                (fun _ -> pts_to r v)
       = fun m ->
           pts_to_not_null r v m;

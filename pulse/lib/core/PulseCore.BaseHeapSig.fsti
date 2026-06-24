@@ -178,7 +178,7 @@ val ghost_gather
     (r:ghost_ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: ghost_action_except (squash (composable pcm v0 v1))
+: ghost_action_except (composable pcm v0 v1)
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
@@ -187,7 +187,7 @@ val ghost_pts_to_not_null_action
       (#pcm:pcm a)
       (r:ghost_ref a pcm)
       (v:Ghost.erased a)
-: ghost_action_except (squash (r =!= core_ghost_ref_null))
+: ghost_action_except ((r =!= core_ghost_ref_null))
     (ghost_pts_to r v)
     (fun _ -> ghost_pts_to r v)
 
@@ -235,7 +235,7 @@ val gather
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: ghost_action_except (squash (composable pcm v0 v1))
+: ghost_action_except (composable pcm v0 v1)
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
@@ -244,7 +244,7 @@ val pts_to_not_null_action
       (#pcm:pcm a)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
-: ghost_action_except (squash (not (is_null r)))
+: ghost_action_except (not (is_null r))
     (pts_to r v)
     (fun _ -> pts_to r v)
 

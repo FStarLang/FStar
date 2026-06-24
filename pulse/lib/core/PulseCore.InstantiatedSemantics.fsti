@@ -36,7 +36,7 @@ val later_credit_zero () : Lemma (later_credit 0 == emp)
 
 // val timeless (p:slprop) : prop
 // val timeless_slprops ()
-// : squash (
+// : (
 //     (timeless emp) /\
 //     (forall p. timeless p) /\
 //     (forall p q. timeless p /\ timeless q ==> timeless (p ** q)) /\
@@ -68,7 +68,7 @@ val slprop_equiv_assoc (p1 p2 p3:slprop)
 val slprop_equiv_exists 
     (#a:Type)
     (p q: a -> slprop)
-    (_:squash (forall x. slprop_equiv (p x) (q x)))
+    (_:(forall x. slprop_equiv (p x) (q x)))
 : slprop_equiv (op_exists_Star p) (op_exists_Star q)
 
 val stt (a:Type u#a) 

@@ -204,11 +204,11 @@ val affine_star (p q:slprop) (h:heap)
 
 (** Equivalence of separation logic propositions is symmetric *)
 val equiv_symmetric (p1 p2:slprop)
-  : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
+  : (p1 `equiv` p2 ==> p2 `equiv` p1)
 
 (** If [p1 ~ p2] then [p1 * p3 ~ p2 * p3] *)
 val equiv_extensional_on_star (p1 p2 p3:slprop)
-  : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
+  : (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
 (** [p ~~ p * emp] *)
 val emp_unit (p:slprop)
@@ -567,7 +567,7 @@ val pts_to_not_null_action
       (v:Ghost.erased a)
 : action #IMMUTABLE
     (pts_to r v)
-    (squash (not (is_null r)))
+    ((not (is_null r)))
     (fun _ -> pts_to r v)
 
 (** Allocating is a pseudo action here, the context needs to provide a fresh address *)
@@ -606,7 +606,7 @@ val change_slprop (p q:slprop)
 val elim_pure (p:prop)
   : action #IMMUTABLE (pure p) (u:unit{p}) (fun _ -> emp)
 
-val intro_pure (p:prop) (_:squash p)
+val intro_pure (p:prop) (_:p)
   : action #IMMUTABLE emp unit (fun _ -> pure p)
 
 val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
@@ -727,7 +727,7 @@ val ghost_gather
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
-    (squash (composable pcm v0 v1))
+    (composable pcm v0 v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 val ghost_pts_to_not_null_action 
@@ -737,5 +737,5 @@ val ghost_pts_to_not_null_action
       (v:Ghost.erased a)
 : action #IMMUTABLE
     (ghost_pts_to r v)
-    (squash (r =!= core_ghost_ref_null))
+    (r =!= core_ghost_ref_null)
     (fun _ -> ghost_pts_to r v)

@@ -1604,12 +1604,12 @@ let rec quote_polynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:polynomia
 
 (* Constructs the 3 main goals of the tactic *)
 let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:polynomial a) (a1 a2:a)
-    (_ : squash (
+    (_ : (
       interp_cs r vm (polynomial_simplify r e1) ==
       interp_cs r vm (polynomial_simplify r e2)))
-    (_ : squash (a1 == interp_p r vm e1))
-    (_ : squash (a2 == interp_p r vm e2)) :
-    squash (a1 == a2)
+    (_ : (a1 == interp_p r vm e1))
+    (_ : (a2 == interp_p r vm e2)) :
+    (a1 == a2)
   =
   polynomial_simplify_ok r vm e1;
   polynomial_simplify_ok r vm e2
@@ -1630,7 +1630,7 @@ let canon_semiring_aux
     (* First, make sure we have an equality at type ta, since otherwise
     we will fail to apply the reflection Lemma. We can just cut by the equality
     we want, since they should be equiprovable (though not equal). *)
-    let b = tcut (`(squash (eq2 #(`#ta) (`#t1) (`#t2)))) in
+    let b = tcut (`((eq2 #(`#ta) (`#t1) (`#t2)))) in
     (* Try solving it trivially if type was exactly the same, or give to smt.
     It should really be trivial. *)
     begin

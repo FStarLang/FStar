@@ -22,7 +22,7 @@ let keysized (a:H.hash_alg) (l:nat) =
   l `H.less_than_max_input_length` a &&
   l + block_length a < pow2 32
 
-val sha2_256_is_keysized : squash (keysized Spec.Hash.Definitions.sha2_256 32)
+val sha2_256_is_keysized : (keysized Spec.Hash.Definitions.sha2_256 32)
 
 /// From Spec.Agile.HMAC
 noextract [@@noextract_to "krml"]
@@ -35,7 +35,7 @@ val spec_hmac:
       (Seq.length data + block_length a) `H.less_than_max_input_length` a)
     (ensures fun _ -> True)
 
-let compute_st_spec_hmac_intro : squash (pow2 32 < pow2 61) = // needed by compute_st
+let compute_st_spec_hmac_intro : (pow2 32 < pow2 61) = // needed by compute_st
   assert_norm (pow2 32 < pow2 61)
 
 /// From EverCrypt.HMAC.compute_st
@@ -55,7 +55,7 @@ let compute_st (a: H.hash_alg) =
   p_data: perm ->
   v_data: Ghost.erased (Seq.seq U8.t) ->
   datalen: U32.t{ U32.v datalen = A.length data } ->
-  stt (squash (Seq.length v_key == A.length key /\ Seq.length v_data == A.length data))
+  stt (Seq.length v_key == A.length key /\ Seq.length v_data == A.length data)
   (requires
     (exists* v_tag . pts_to tag v_tag) **
     pts_to key #p_key v_key **

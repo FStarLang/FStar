@@ -23,7 +23,7 @@ let decides_eq (#a:Type) (f : a -> a -> bool) : prop =
 
 class deq a = {
   raw : Raw.deq a;
-  eq_dec : squash (decides_eq raw.eq);
+  eq_dec : decides_eq raw.eq;
 }
 
 (* Superclass *)

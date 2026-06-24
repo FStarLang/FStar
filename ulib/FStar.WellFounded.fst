@@ -35,7 +35,7 @@ let binrel (a:Type) = a -> a -> prop
 [@@ erasable]
 noeq
 type acc (#a:Type u#a) (r:binrel u#a a) (x:a) : Type u#a =
-  | AccIntro : access_smaller:(y:a -> squash (r y x) -> acc r y) -> acc r x
+  | AccIntro : access_smaller:(y:a -> r y x -> acc r y) -> acc r x
 
 (*
  * A binrel r is well-founded if every element is accessible
@@ -115,7 +115,7 @@ let is_well_founded_of_well_founded #a (#r: binrel u#a a) (r_wf: well_founded r)
 
 unfold
 let subrelation_as_wf (#a:Type u#a) (#r #sub_r:binrel u#a a)
-  (sub_w:(x:a -> y:a -> sub_r x y -> squash (r x y)))
+  (sub_w:(x:a -> y:a -> sub_r x y -> r x y))
   (r_wf:well_founded r)
   : well_founded_relation a
   = subrelation_squash_wf sub_w r_wf;

@@ -431,7 +431,7 @@ All of the following are available in Pulse.Lib.Core:
 
    val timeless (p: slprop) : prop
    let timeless_slprop = v:slprop { timeless v }
-   val timeless_emp : squash (timeless emp)
+   val timeless_emp : timeless emp
    val timeless_pure  (p:prop) : Lemma (timeless (pure p))
    val timeless_star (p q : slprop) : Lemma
       (requires timeless p /\ timeless q)

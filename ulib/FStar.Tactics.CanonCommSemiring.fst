@@ -1621,12 +1621,11 @@ let rec quote_polynomial (#a:Type) (ta:term) (quotea:a -> Tac term) (e:polynomia
 
 (* Constructs the 3 main goals of the tactic *)
 let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:polynomial a) (a1 a2:a)
-    (_ : squash (
-      interp_cs r vm (polynomial_simplify r e1) ==
-      interp_cs r vm (polynomial_simplify r e2)))
-    (_ : squash (a1 == interp_p r vm e1))
-    (_ : squash (a2 == interp_p r vm e2)) :
-    squash (a1 == a2)
+    (_ : interp_cs r vm (polynomial_simplify r e1) ==
+      interp_cs r vm (polynomial_simplify r e2))
+    (_ : a1 == interp_p r vm e1)
+    (_ : a2 == interp_p r vm e2) :
+    (a1 == a2)
   =
   polynomial_simplify_ok r vm e1;
   polynomial_simplify_ok r vm e2

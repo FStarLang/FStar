@@ -8,7 +8,7 @@ assume val t: Type0
 class toto = {
   f: t -> t -> t;
   g: t -> t -> t;
-  f_lemma: x:t -> y:t -> squash (f x y == g y x);
+  f_lemma: x:t -> y:t -> (f x y == g y x);
 }
 
 // Lemma that can be proven using f_lemma twice

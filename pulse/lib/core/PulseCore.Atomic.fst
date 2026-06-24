@@ -29,17 +29,17 @@ let r_of_obs = function
 let stt_atomic a #obs opens pre post =
   A.act a (r_of_obs obs) opens pre post
 
-let pure_equiv (p q:prop) (_:squash (p <==> q))
+let pure_equiv (p q:prop) (_:(p <==> q))
   : slprop_equiv (pure p) (pure q)
   = FStar.PropositionalExtensionality.apply p q;
     slprop_equiv_refl (pure p)
 
 let equiv (#p #q:slprop) (pf:slprop_equiv p q)
-: squash (p == q)
+: (p == q)
 = I.slprop_equiv_elim p q
 
-let pure_trivial (p:prop) (_:squash p)
-  : squash (pure p == emp)
+let pure_trivial (p:prop) (_:p)
+  : (pure p == emp)
   = calc (==) {
       pure p;
     (==) { equiv (pure_equiv p True ()) }
@@ -49,7 +49,7 @@ let pure_trivial (p:prop) (_:squash p)
   }
 
 let emp_unit_r (p:slprop)
-: squash (p ** emp == p)
+: (p ** emp == p)
 = calc (==) {
     (p ** emp);
    (==) { equiv (slprop_equiv_comm p emp) }
@@ -138,8 +138,8 @@ let sub_atomic
     (pre2:slprop)
     (#post1:a -> slprop)
     (post2:a -> slprop)
-    (pf1 : squash (slprop_equiv pre1 pre2))
-    (pf2 : squash (slprop_post_equiv post1 post2))
+    (pf1 : (slprop_equiv pre1 pre2))
+    (pf2 : (slprop_post_equiv post1 post2))
     (e:stt_atomic a #obs opens pre1 post1)
 : stt_atomic a #obs opens pre2 post2
 = A.sub pre2 post2 e
@@ -151,7 +151,7 @@ let sub_invs_stt_atomic
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_atomic a #obs opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
 = assert (Set.equal (Set.union opens1 opens2) opens2);
   A.weaken #_ #_ #_ #_ #(r_of_obs obs) opens2 e
@@ -221,7 +221,7 @@ let sub_invs_stt_ghost
     (#pre:slprop)
     (#post:a -> slprop)
     (e:stt_ghost a opens1 pre post)
-    (_ : squash (inames_subset opens1 opens2))
+    (_ : (inames_subset opens1 opens2))
 : stt_ghost a opens2 pre post
 = assert (Set.equal (Set.union opens1 opens2) opens2);
   Ghost.hide (A.weaken #_ #_ #_ #_ #Ghost opens2 e)
@@ -230,12 +230,12 @@ let noop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 = lift_neutral_ghost (A.return ())
 
-let intro_pure (p:prop) (pf:squash p)
+let intro_pure (p:prop) (pf:p)
 : stt_ghost unit emp_inames emp (fun _ -> pure p)
 = lift_neutral_ghost (A.intro_pure p pf)
 
 let elim_pure (p:prop)
-: stt_ghost (squash p) emp_inames (pure p) (fun _ -> emp)
+: stt_ghost (p) emp_inames (pure p) (fun _ -> emp)
 = lift_neutral_ghost (A.elim_pure p)
 
 let intro_exists (#a:Type u#a) (p:a -> slprop) (x:erased a)
@@ -276,7 +276,7 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   let f: act (erased a) Ghost f_opens (somewhere (later p) ** fp) (fun x -> somewhere (later p) ** fp' x) = f () in
   A.with_invariant #(erased a) #Ghost #fp #(as_ghost_post fp') #f_opens #p i (fun _ -> f)
 
-let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> squash (p x == q x))) : slprop_post_equiv p q =
+let slprop_post_equiv_intro #t (#p #q: t->slprop) (h: (x:t -> p x == q x)) : slprop_post_equiv p q =
   introduce forall x. slprop_equiv (p x) (q x) with
     (h x; slprop_equiv_refl (p x))
 

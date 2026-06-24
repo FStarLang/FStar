@@ -27,7 +27,7 @@ open FStar.Reflection.Const
 val lem_iff_refl : #a:prop -> Lemma (a <==> a)
 let lem_iff_refl #a = ()
 
-val lem_iff_trans : #a:prop -> #b:prop -> #c:prop -> squash (a <==> b) -> squash (b <==> c)
+val lem_iff_trans : #a:prop -> #b:prop -> #c:prop -> (a <==> b) -> (b <==> c)
                                                             -> Lemma (a <==> c)
 let lem_iff_trans #a #b #c _ _ = ()
 
@@ -100,37 +100,37 @@ let lem_p_iff_true #p = ()
 val lem_p_iff_false : #p:prop -> Lemma ((p <==> False) <==> ~p)
 let lem_p_iff_false #p = ()
 
-val and_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
-                                      squash (q <==> q') ->
+val and_cong (#p #q #p' #q' : prop) : (p <==> p') ->
+                                      (q <==> q') ->
                                       Lemma ((p /\ q) <==> (p' /\ q'))
 let and_cong #p #q #p' #q' _ _ = ()
 
-val or_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
-                                     squash (q <==> q') ->
+val or_cong (#p #q #p' #q' : prop) : (p <==> p') ->
+                                     (q <==> q') ->
                                      Lemma ((p \/ q) <==> (p' \/ q'))
 let or_cong #p #q #p' #q' _ _ = ()
 
-val imp_cong (#p #q #p' #q' : prop) : squash (p <==> p') ->
-                                      squash (q <==> q') ->
+val imp_cong (#p #q #p' #q' : prop) : (p <==> p') ->
+                                      (q <==> q') ->
                                       Lemma ((p ==> q) <==> (p' ==> q'))
 let imp_cong #p #q #p' #q' _ _ = ()
 
 val fa_cong (#a : Type) (#p #q : a -> prop) :
-    (x:a -> squash (p x <==> q x)) ->
+    (x:a -> (p x <==> q x)) ->
     Lemma ((forall (x:a). p x) <==> (forall (x:a). q x))
 let fa_cong #a #p #q f =
     introduce forall x. p x <==> q x with f x
 
 val ex_cong (#a : Type) (#p #q : a -> prop) :
-    (x:a -> squash (p x <==> q x)) ->
+    (x:a -> (p x <==> q x)) ->
     Lemma ((exists (x:a). p x) <==> (exists (x:a). q x))
 let ex_cong #a #p #q f =
     introduce forall x. p x <==> q x with f x
 
-val neg_cong (#p #q:prop) : squash (p <==> q) -> Lemma (~p <==> ~q)
+val neg_cong (#p #q:prop) : (p <==> q) -> Lemma (~p <==> ~q)
 let neg_cong #p #q _ = ()
 
-val iff_cong (#p #p' #q #q' : prop) : squash (p <==> p') -> squash (q <==> q') -> Lemma ((p <==> q) <==> (p' <==> q'))
+val iff_cong (#p #p' #q #q' : prop) : (p <==> p') -> (q <==> q') -> Lemma ((p <==> q) <==> (p' <==> q'))
 let iff_cong #p #p' #q #q' _ _ = ()
 
 // Absolutely hideous, do something about normalization
@@ -281,7 +281,7 @@ and recurse () : Tac unit =
         end
     | _ -> fail "recurse: failed precondition: goal should be `g <==> ?u`"
 
-val equiv : #p:prop -> #q:prop -> squash (p <==> q) -> squash q -> Lemma p
+val equiv : #p:prop -> #q:prop -> (p <==> q) -> q -> Lemma p
 let equiv #p #q _ _ = ()
 
 let simplify () : Tac unit =

@@ -18,7 +18,7 @@ module PatternMatch.IFuel
 assume val n : int
 
 type proof (m:int) =
-  | Proof    : squash (m == n) -> proof m
+  | Proof    : m == n -> proof m
 
 type m_and_proof =
   | C : m:int -> p:proof m -> m_and_proof

@@ -27,7 +27,7 @@ type calc_chain #a : list (relation a) -> a -> a -> Type =
   | CalcRefl : #x:a -> calc_chain [] x x
   | CalcStep :
     rs:(list (relation a)) -> #p:(relation a) ->
-    #x:a -> #y:a -> #z:a -> calc_chain rs x y -> squash (p y z) -> calc_chain (p::rs) x z
+    #x:a -> #y:a -> #z:a -> calc_chain rs x y -> p y z -> calc_chain (p::rs) x z
 
 let rec elim_calc_chain #a (rs:list (relation a)) (#x #y:a) (pf:calc_chain rs x y)
   : Lemma (ensures (calc_chain_related rs x y))
@@ -48,7 +48,7 @@ let _calc_step (#t:Type) (#rs:list (relation t)) (#x #y:t)
   (p:relation t)
   (z:t)
   (pf:calc_chain rs x y)
-  (j:squash (p y z))
+  (j:p y z)
   : GTot (calc_chain (p::rs) x z)
   = CalcStep rs pf j
 

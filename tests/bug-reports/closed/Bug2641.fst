@@ -10,7 +10,7 @@ open FStar.Tactics.Typeclasses
 noeq
 type free (a:Type u#a) : Type u#(max a 1) =
 | Return : a -> free a
-| PartialCall : (pre:pure_pre) -> cont:((squash pre) -> free u#a a) -> free a
+| PartialCall : (pre:pure_pre) -> cont:((pre) -> free u#a a) -> free a
 
 let rec free_bind (#a:Type u#a) (#b:Type u#b) (l:free a) (k: a -> free b) : free b =
   match l with
@@ -35,8 +35,8 @@ let wp_lift_pure_hist (#a:Type u#a) (w : pure_wp a) : hist a =
   FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall u#a ();
   w
 
-let partial_call_wp (pre:pure_pre) : hist (squash pre) = 
-  let wp' : pure_wp' (squash pre) = fun p -> pre /\ p () in
+let partial_call_wp (pre:pure_pre) : hist (pre) = 
+  let wp' : pure_wp' (pre) = fun p -> pre /\ p () in
   wp'
 
 
@@ -71,9 +71,9 @@ let rec lemma_monad_morphism a b v f =
       == { _ by (FStar.Tactics.compute ()) }
       hist_bind (partial_call_wp pre) (fun r -> hist_bind (theta (k r)) (fun x -> theta (f x)));
       `hist_ord` {         
-        let rhs1 : squash pre -> hist b = fun r -> hist_bind (theta (k r)) (fun x -> theta (f x)) in
-        let rhs2 : squash pre -> hist b = fun r -> theta (free_bind (k r) f) in
-        introduce forall (r:squash pre). (rhs1 r) `hist_ord` (rhs2 r) with begin
+        let rhs1 : pre -> hist b = fun r -> hist_bind (theta (k r)) (fun x -> theta (f x)) in
+        let rhs2 : pre -> hist b = fun r -> theta (free_bind (k r) f) in
+        introduce forall (r:pre). (rhs1 r) `hist_ord` (rhs2 r) with begin
           lemma_monad_morphism _ _ (k r) f
         end
       }

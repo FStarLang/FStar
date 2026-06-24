@@ -205,10 +205,10 @@ val timeless_pts_to
     (v:a)
 : Lemma (timeless (pts_to r v))
 
-val on_pcm_pts_to_eq l #a #p r v : squash (Sep.on l (pts_to #a #p r v) == pts_to r v)
+val on_pcm_pts_to_eq l #a #p r v : (Sep.on l (pts_to #a #p r v) == pts_to r v)
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
-: act (squash (not (is_ref_null r)))
+: act (not (is_ref_null r))
     Ghost
     emp_inames 
     (pts_to r v)
@@ -268,7 +268,7 @@ val gather
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1))
+: act (composable pcm v0 v1)
     Ghost
     emp_inames
     (pts_to r v0 ** pts_to r v1)
@@ -280,11 +280,11 @@ val gather
 val pure_true ()
 : slprop_equiv (pure True) emp
 
-val intro_pure (p:prop) (pf:squash p)
+val intro_pure (p:prop) (pf:p)
 : act unit Ghost emp_inames emp (fun _ -> pure p)
 
 val elim_pure (p:prop)
-: act (squash p) Ghost emp_inames (pure p) (fun _ -> emp)
+: act (p) Ghost emp_inames (pure p) (fun _ -> emp)
 
 ///////////////////////////////////////////////////////////////////
 // exists*
@@ -320,10 +320,10 @@ val timeless_ghost_pts_to
     (v:a)
 : Lemma (timeless (ghost_pts_to r v))
 
-val on_ghost_pcm_pts_to_eq l #a #p r v : squash (Sep.on l (ghost_pts_to #a #p r v) == ghost_pts_to r v)
+val on_ghost_pcm_pts_to_eq l #a #p r v : (Sep.on l (ghost_pts_to #a #p r v) == ghost_pts_to r v)
 
 val ghost_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ghost_ref p) (v:a)
-: act (squash (r =!= core_ghost_ref_null))
+: act (r =!= core_ghost_ref_null)
     Ghost
     emp_inames 
     (ghost_pts_to r v)
@@ -375,7 +375,7 @@ val ghost_gather
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: act (squash (composable pcm v0 v1)) Ghost emp_inames
+: act (composable pcm v0 v1) Ghost emp_inames
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 

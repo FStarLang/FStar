@@ -656,7 +656,7 @@ val unarray_of_ref
   (#s: Ghost.erased (Seq.seq t))
   (r: ref td)
   (a: array td)
-: stt_ghost (squash (Seq.length s == 1)) opened
+: stt_ghost ((Seq.length s == 1)) opened
     (array_pts_to a s ** has_array_of_ref r a)
     (fun _ -> pts_to r (Seq.index s 0) ** has_array_of_ref r a)
 *)
@@ -756,7 +756,7 @@ val ghost_array_cell_focus
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: stt_ghost (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
+: stt_ghost ((SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
     emp_inames
     (array_pts_to a s ** has_array_cell a i r)
     (fun _ -> array_pts_to a (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell a i r)
@@ -822,7 +822,7 @@ val unarray_cell
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: stt_ghost (squash (SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
+: stt_ghost ((SZ.v i < Seq.length s /\ Seq.length s == SZ.v (dsnd a)))
     emp_inames
     (array_pts_to a s ** pts_to r v ** has_array_cell a i r ** pure (
       SZ.v i < Seq.length s ==> Seq.index s (SZ.v i) == unknown td
@@ -891,7 +891,7 @@ val ghost_array_split
   (#s: Ghost.erased (Seq.seq t))
   (a: array td)
   (i: SZ.t)
-: stt_ghost (squash (SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)))
+: stt_ghost ((SZ.v i <= SZ.v (dsnd a) /\ Seq.length s == SZ.v (dsnd a)))
     emp_inames
     (array_pts_to a s ** pure (
       SZ.v i <= SZ.v (dsnd a) \/ SZ.v i <= Seq.length s

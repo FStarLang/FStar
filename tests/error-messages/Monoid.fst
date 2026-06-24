@@ -25,9 +25,9 @@ type monoid (m:Type) =
   | Monoid :
     unit:m ->
     mult:(m -> m -> m) ->
-    right_unitality:squash (right_unitality_lemma m unit mult) ->
-    left_unitality:squash (left_unitality_lemma m unit mult) ->
-    associativity:squash (associativity_lemma m mult) ->
+    right_unitality: (right_unitality_lemma m unit mult) ->
+    left_unitality: (left_unitality_lemma m unit mult) ->
+    associativity: (associativity_lemma m mult) ->
     monoid m
 
 
@@ -136,8 +136,8 @@ let monoid_morphism_mult_lemma (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid 
 
 type monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b) =
   | MonoidMorphism :
-    unit:squash (monoid_morphism_unit_lemma f ma mb) ->
-    mult:squash (monoid_morphism_mult_lemma f ma mb) ->
+    unit: (monoid_morphism_unit_lemma f ma mb) ->
+    mult: (monoid_morphism_mult_lemma f ma mb) ->
     monoid_morphism f ma mb
 
 let intro_monoid_morphism (#a #b:Type) (f:a -> b) (ma:monoid a) (mb:monoid b)
@@ -183,8 +183,8 @@ unopteq
 type left_action (#m:Type) (mm:monoid m) (a:Type) =
   | LAct :
     act:(m -> a -> a) ->
-    mult_lemma: squash (mult_act_lemma m a (Monoid?.mult mm) act) ->
-    unit_lemma: squash (unit_act_lemma m a (Monoid?.unit mm) act) ->
+    mult_lemma: (mult_act_lemma m a (Monoid?.mult mm) act) ->
+    unit_lemma: (unit_act_lemma m a (Monoid?.unit mm) act) ->
     left_action mm a
 
 let left_action_morphism

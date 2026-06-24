@@ -29,7 +29,7 @@ let id x = x
 (* A more elaborate test *)
 
 val exists_weaken: #a:Type -> p:(a -> prop) -> q:(a -> prop) -> h:(forall (x:a{p x}). q x) -> x:a{p x}
-  -> GTot (squash (exists x. q x))
+  -> GTot ((exists x. q x))
 let exists_weaken #a p q h x = exists_intro q x
 
 val a : Type0
@@ -42,7 +42,7 @@ val q : a -> prop
 let q x = False
 
 [@@(expect_failure [19])]
-let fact (h:squash (exists x. p x)) : Lemma (exists x. q x) =
+let fact (h: (exists x. p x)) : Lemma (exists x. q x) =
    assert (exists x. q x)
        by (apply_lemma (`exists_elim);
            exact (quote h);

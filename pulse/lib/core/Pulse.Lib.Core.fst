@@ -45,7 +45,7 @@ let op_Star_Star = op_Star_Star
 let timeless_star p q = Sep.timeless_star p q
 let op_exists_Star = op_exists_Star
 let exists_extensional (#a:Type u#a) (p q: a -> slprop)
-  (_:squash (forall x. p x == q x))
+  (_:(forall x. p x == q x))
   : Lemma (op_exists_Star p == op_exists_Star q)
   = introduce forall x. slprop_equiv (p x) (q x)
     with (
@@ -55,8 +55,8 @@ let exists_extensional (#a:Type u#a) (p q: a -> slprop)
 let timeless_exists #a p =
   exists_extensional p (fun x -> p x) ();
   Sep.timeless_exists p;
-  let unfold h: squash (Sep.timeless Sep.(exists* x. p x)) = () in
-  let unfold h: squash (Sep.timeless (exists* x. p x)) = h in
+  let unfold h: Sep.timeless Sep.(exists* x. p x) = () in
+  let unfold h: Sep.timeless (exists* x. p x) = h in
   ()
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
@@ -72,7 +72,7 @@ let intro_slprop_post_equiv
 
 let elim_slprop_post_equiv (#t:Type u#a)
                           (p q: t -> slprop) 
-                          (pf:squash (slprop_post_equiv p q))
+                          (pf:(slprop_post_equiv p q))
                           (x:t) 
 : slprop_equiv (p x) (q x)
 = eliminate forall x. slprop_equiv (p x) (q x) with x
@@ -81,14 +81,14 @@ let slprop_equiv_refl (v0:slprop)
   : slprop_equiv v0 v0
   = slprop_equiv_refl v0
 
-let slprop_equiv_sym (v0 v1:slprop) (p:squash (slprop_equiv v0 v1))
+let slprop_equiv_sym (v0 v1:slprop) (p:(slprop_equiv v0 v1))
   : slprop_equiv v1 v0
   = slprop_equiv_elim v0 v1; p
 
 let slprop_equiv_trans
       (v0 v1 v2:slprop)
-      (p:squash (slprop_equiv v0 v1))
-      (q:squash (slprop_equiv v1 v2))
+      (p:(slprop_equiv v0 v1))
+      (q:(slprop_equiv v1 v2))
   : slprop_equiv v0 v2
   = slprop_equiv_elim v0 v1;
     slprop_equiv_elim v1 v2;
@@ -107,13 +107,13 @@ let slprop_equiv_assoc (p1 p2 p3:slprop)
   = slprop_equiv_assoc p1 p2 p3
 
 let slprop_equiv_exists (#a:Type) (p q : a -> slprop)
-  (_ : squash (forall x. slprop_equiv (p x) (q x)))
+  (_ : (forall x. slprop_equiv (p x) (q x)))
   : slprop_equiv (op_exists_Star p) (op_exists_Star q)
   = slprop_equiv_exists p q ()
 
 let slprop_equiv_cong (p1 p2 p3 p4:slprop)
-                     (f: squash (slprop_equiv p1 p3))
-                     (g: squash (slprop_equiv p2 p4))
+                     (f: (slprop_equiv p1 p3))
+                     (g: (slprop_equiv p2 p4))
   : slprop_equiv (p1 ** p2) (p3 ** p4)
   = slprop_equiv_elim p1 p3;
     slprop_equiv_elim p2 p4;
@@ -173,7 +173,7 @@ let frame_ghost = A.frame_ghost
 let sub_ghost = A.sub_ghost
 let sub_invs_ghost = A.sub_invs_stt_ghost
 
-let rewrite_eq p q (pf:squash (p == q))
+let rewrite_eq p q (pf:(p == q))
   : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
@@ -229,12 +229,12 @@ let later_elim_timeless p = A.implies_elim (later p) p
 
 let later_star = Sep.later_star
 let later_exists #t f =
-  let h: squash Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
-  let h: squash (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
+  let h: Sep.(later (exists* x. f x) `implies` exists* x. later (f x)) = Sep.later_exists #t f in
+  let h: (later (exists* x. f x) `implies` exists* x. later (f x)) = h in
   A.implies_elim _ _
 let exists_later #t f =
-  let h: squash Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
-  let h: squash ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
+  let h: Sep.((exists* x. later (f x)) `implies` later (exists* x. f x)) = Sep.later_exists #t f in
+  let h: ((exists* x. later (f x)) `implies` later (exists* x. f x)) = h in
   A.implies_elim _ _
 
 let on_later_eq = Sep.on_later_eq
@@ -274,7 +274,7 @@ let fork_core pre #l f =
   let l' = l in // TODO
   PulseCore.Action.fork l l' (f l')
 
-let rewrite p q (pf:squash (slprop_equiv p q))
+let rewrite p q (pf:(slprop_equiv p q))
   : stt_ghost unit emp_inames p (fun _ -> q)
   = slprop_equiv_elim p q;
     A.noop q
@@ -284,7 +284,7 @@ let rewrite_by (p:slprop) (q:slprop)
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (slprop_equiv p q) })
   : stt_ghost unit emp_inames p (fun _ -> q)
-  = let pf : squash (slprop_equiv p q) = T.by_tactic_seman t (slprop_equiv p q) in
+  = let pf : (slprop_equiv p q) = T.by_tactic_seman t (slprop_equiv p q) in
     rewrite p q (coerce_eq () pf)
 #pop-options
 
@@ -305,7 +305,7 @@ let assert_ (p:slprop) = A.noop p
 let assume_ (p:slprop) = admit() //intentional
 let drop_ (p:slprop) = A.drop p
 
-let unreachable (_:squash False)
+let unreachable (_:False)
   = FStar.Pervasives.false_elim ()
 
 let as_atomic #a pre post e = admit () // intentional since it is an assumption
