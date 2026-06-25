@@ -654,63 +654,9 @@ let convert_fstar_match (g:env) (t:term)
     ) else None
   | _ -> None
 
-(* Short-circuiting boolean operators.
-
-   F* desugars `e1 && e2` to the binary application `Prims.op_AmpAmp e1 e2`
-   and `e1 || e2` to `Prims.op_BarBar e1 e2`. Left to the normal hoisting
-   machinery, *both* operands would be eagerly evaluated, breaking
-   short-circuiting whenever an operand is stateful. We rewrite these
-   applications into the equivalent short-circuiting conditional and route
-   them through `convert_fstar_match`, which only produces a `Tm_If` when a
-   branch is actually stateful; for pure operands it returns None and the
-   original term is left untouched. *)
-let op_amp_amp_qn : list string = ["Prims"; "op_AmpAmp"]
-let op_bar_bar_qn : list string = ["Prims"; "op_BarBar"]
-
-let tm_bool_const (b:bool) : term =
-  R.pack_ln (R.Tv_Const (if b then R.C_True else R.C_False))
-
-(* Build the F*-level term `if scrutinee then then_ else else_`. *)
-let mk_bool_if (scrutinee then_ else_ : term) : term =
-  R.pack_ln (R.Tv_Match scrutinee None [
-    (R.Pat_Constant R.C_True, then_);
-    (R.Pat_Constant R.C_False, else_)
-  ])
-
-(* If `t` is `e1 && e2` or `e1 || e2`, rewrite it to the short-circuiting
-   conditional so the second operand is only evaluated when needed:
-     e1 && e2  ~>  if e1 then e2 else false
-     e1 || e2  ~>  if e1 then true else e2
-   Returns None for any other term. *)
-let short_circuit_op_match (t:term) : option term =
-  let head, args = R.collect_app_ln t in
-  let fv_opt =
-    match R.inspect_ln head with
-    | R.Tv_FVar fv -> Some fv
-    | R.Tv_UInst fv _ -> Some fv
-    | _ -> None
-  in
-  match fv_opt, args with
-  | Some fv, [(e1, R.Q_Explicit); (e2, R.Q_Explicit)] ->
-    let n = R.inspect_fv fv in
-    if n = op_amp_amp_qn then Some (mk_bool_if e1 e2 (tm_bool_const false))
-    else if n = op_bar_bar_qn then Some (mk_bool_if e1 (tm_bool_const true) e2)
-    else None
-  | _ -> None
-
 let rec maybe_hoist (g:env) (arg:T.argv)
 : T.Tac (env & list (binder & var & st_term) & T.argv)
 = let t, q = arg in
-  let sc =
-    match short_circuit_op_match t with
-    | Some m -> convert_fstar_match g m maybe_hoist
-    | None -> None
-  in
-  match sc with
-  | Some st_cond ->
-    let g, b, x, var_t = bind_st_term g st_cond in
-    g, [b, x, st_cond], (var_t, q)
-  | None ->
   let head, args = T.collect_app_ln t in
   match args with
   | [] ->
@@ -780,26 +726,7 @@ let hoist_stateful_apps
       (hoist_top_level /\ Inl? tt ==> Inl? x)
     } -> T.Tac st_term))
 : T.Tac (option st_term)
-= let sc =
-    match tt with
-    | Inl t -> (
-      match short_circuit_op_match t with
-      | Some m -> (
-        match convert_fstar_match g m maybe_hoist with
-        | Some st_cond ->
-          let rng = RU.range_of_term t in
-          let _, b, v, var_t = bind_st_term g st_cond in
-          let bind_term = context (Inl var_t) in
-          let body = Pulse.Syntax.Naming.close_st_term bind_term v in
-          Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
-        | None -> None)
-      | None -> None)
-    | _ -> None
-  in
-  match sc with
-  | Some res -> Some res
-  | None ->
-  match decompose_app g tt with
+= match decompose_app g tt with
   | None -> None
   | Some (head, args, rebuild) ->
     let _, binders, args = maybe_hoist_args g args in
