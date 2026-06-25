@@ -170,6 +170,7 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
+  | Float32 | Float64
 
 and constant = width & string
 
@@ -216,6 +217,8 @@ instance pretty_width = { pp = function
   | CInt -> doc_of_string "CInt"
   | SizeT -> doc_of_string "SizeT"
   | PtrdiffT -> doc_of_string "PtrdiffT"
+  | Float32 -> doc_of_string "Float32"
+  | Float64 -> doc_of_string "Float64"
 }
 instance showable_width : showable width = showable_from_pretty
 
@@ -423,7 +426,16 @@ let mk_width = function
   | "Int64" -> Some Int64
   | "SizeT" -> Some SizeT
   | "PtrdiffT" -> Some PtrdiffT
+  | "Float32" -> Some Float32
+  | "Float64" -> Some Float64
   | _ -> None
+
+(* Floating-point modules (FStar.Float32, FStar.Float64). They reuse the
+   machine-integer machinery for their type and arithmetic operators, but
+   have a few extra constructors (of_int, of_literal) handled specially. *)
+let is_float_width = function
+  | Some Float32 | Some Float64 -> true
+  | _ -> false
 
 let mk_bool_op = function
   | "op_Negation" ->
@@ -459,6 +471,7 @@ let mk_op = function
   | "shift_right"            -> Some BShiftR
   | "shift_left"             -> Some BShiftL
   | "eq"                     -> Some Eq
+  | "ieee_eq"                -> Some Eq
   |  "gt"                    -> Some Gt
   |  "gte"                   -> Some Gte
   | "lt"                     -> Some Lt
@@ -1064,6 +1077,14 @@ and translate_expr' env e: ML expr =
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)
+
+  // Float modules: of_int n is an integer-to-float cast.
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "of_int") }, [ e ]) when is_float_width (mk_width m) ->
+      ECast (translate_expr env e, TInt (Option.must (mk_width m)))
+
+  // Float modules: of_literal "3.14" is a floating-point constant.
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "of_literal") }, [ { expr = MLE_Const (MLC_String s) } ]) when is_float_width (mk_width m) ->
+      EConstant (Option.must (mk_width m), s)
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->

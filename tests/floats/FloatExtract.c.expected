@@ -1,0 +1,100 @@
+/* krml header omitted for test repeatability */
+
+
+#include "FloatExtract.h"
+
+double FloatExtract_f64_add(double x, double y)
+{
+  return x + y;
+}
+
+double FloatExtract_f64_sub(double x, double y)
+{
+  return x - y;
+}
+
+double FloatExtract_f64_mul(double x, double y)
+{
+  return x * y;
+}
+
+double FloatExtract_f64_div(double x, double y)
+{
+  return x / y;
+}
+
+bool FloatExtract_f64_lt(double x, double y)
+{
+  return x < y;
+}
+
+bool FloatExtract_f64_lte(double x, double y)
+{
+  return x <= y;
+}
+
+bool FloatExtract_f64_eq(double x, double y)
+{
+  return x == y;
+}
+
+double FloatExtract_f64_of_int(int64_t n)
+{
+  return (double)n;
+}
+
+double FloatExtract_f64_pi(void)
+{
+  return (double)3.141592653589793;
+}
+
+double FloatExtract_f64_poly(double x, double y)
+{
+  return (x + y) * (double)2.0;
+}
+
+float FloatExtract_f32_add(float x, float y)
+{
+  return x + y;
+}
+
+float FloatExtract_f32_sub(float x, float y)
+{
+  return x - y;
+}
+
+float FloatExtract_f32_mul(float x, float y)
+{
+  return x * y;
+}
+
+float FloatExtract_f32_div(float x, float y)
+{
+  return x / y;
+}
+
+bool FloatExtract_f32_lt(float x, float y)
+{
+  return x < y;
+}
+
+bool FloatExtract_f32_lte(float x, float y)
+{
+  return x <= y;
+}
+
+bool FloatExtract_f32_eq(float x, float y)
+{
+  return x == y;
+}
+
+float FloatExtract_f32_of_int(int64_t n)
+{
+  return (float)n;
+}
+
+float FloatExtract_f32_pi(void)
+{
+  return (float)3.141592653589793;
+}
+
