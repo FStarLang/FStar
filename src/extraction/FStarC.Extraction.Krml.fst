@@ -437,6 +437,43 @@ let is_float_width = function
   | Some Float32 | Some Float64 -> true
   | _ -> false
 
+(* Float literals are emitted by KaRaMeL as raw C tokens. Accept only a
+   conservative decimal grammar here instead of forwarding arbitrary strings
+   into generated C. *)
+let valid_float_literal (s:string) : bool =
+  let is_digit (c:FStar.Char.char) =
+    let i = BU.int_of_char c in
+    i >= 48 && i <= 57 in
+  let rec consume_digits cs =
+    match cs with
+    | c :: cs' when is_digit c -> consume_digits cs'
+    | _ -> cs in
+  let has_digits cs = consume_digits cs <> cs in
+  let cs =
+    match FStar.String.list_of_string s with
+    | '+' :: cs | '-' :: cs -> cs
+    | cs -> cs in
+  let before_dot = consume_digits cs in
+  let after_mantissa, has_mantissa_digit =
+    match before_dot with
+    | '.' :: cs' ->
+        let after_dot = consume_digits cs' in
+        after_dot, before_dot <> cs || after_dot <> cs'
+    | _ ->
+        before_dot, before_dot <> cs in
+  if not has_mantissa_digit
+  then false
+  else
+    match after_mantissa with
+    | [] -> true
+    | 'e' :: exp | 'E' :: exp ->
+        let exp =
+          match exp with
+          | '+' :: exp | '-' :: exp -> exp
+          | exp -> exp in
+        has_digits exp && consume_digits exp = []
+    | _ -> false
+
 let mk_bool_op = function
   | "op_Negation" ->
       Some Not
@@ -1084,6 +1121,12 @@ and translate_expr' env e: ML expr =
 
   // Float modules: of_literal "3.14" is a floating-point constant.
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "of_literal") }, [ { expr = MLE_Const (MLC_String s) } ]) when is_float_width (mk_width m) ->
+      if not (valid_float_literal s)
+      then
+        failwith
+          (Format.fmt2
+             "Refusing to extract invalid %s.of_literal argument as a C floating-point constant: %s"
+             m s);
       EConstant (Option.must (mk_width m), s)
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
