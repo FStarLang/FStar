@@ -654,9 +654,41 @@ let convert_fstar_match (g:env) (t:term)
     ) else None
   | _ -> None
 
+let short_circuit_op_match (t:term) : option term =
+  let head, args = T.collect_app_ln t in
+  let fv =
+    match R.inspect_ln head with
+    | R.Tv_FVar fv
+    | R.Tv_UInst fv _ -> Some fv
+    | _ -> None
+  in
+  match fv, args with
+  | Some fv, [(e1, T.Q_Explicit); (e2, T.Q_Explicit)] ->
+    let n = R.inspect_fv fv in
+    if n = ["Prims"; "op_AmpAmp"] then
+      Some (R.pack_ln (R.Tv_Match e1 None [
+        (R.Pat_Constant R.C_True, e2);
+        (R.Pat_Constant R.C_False, Pulse.Reflection.Util.false_tm)
+      ]))
+    else if n = ["Prims"; "op_BarBar"] then
+      Some (R.pack_ln (R.Tv_Match e1 None [
+        (R.Pat_Constant R.C_True, Pulse.Reflection.Util.true_tm);
+        (R.Pat_Constant R.C_False, e2)
+      ]))
+    else None
+  | _ -> None
+
 let rec maybe_hoist (g:env) (arg:T.argv)
 : T.Tac (env & list (binder & var & st_term) & T.argv)
 = let t, q = arg in
+  match short_circuit_op_match t with
+  | Some m -> (
+    match convert_fstar_match g m maybe_hoist with
+    | Some st_cond ->
+      let g, b, x, var_t = bind_st_term g st_cond in
+      g, [b, x, st_cond], (var_t, q)
+    | None -> g, [], arg)
+  | None ->
   let head, args = T.collect_app_ln t in
   match args with
   | [] ->
@@ -726,7 +758,26 @@ let hoist_stateful_apps
       (hoist_top_level /\ Inl? tt ==> Inl? x)
     } -> T.Tac st_term))
 : T.Tac (option st_term)
-= match decompose_app g tt with
+= let sc =
+    match tt with
+    | Inl t -> (
+      match short_circuit_op_match t with
+      | Some m -> (
+        match convert_fstar_match g m maybe_hoist with
+        | Some st_cond ->
+          let rng = RU.range_of_term t in
+          let _, b, v, var_t = bind_st_term g st_cond in
+          let bind_term = context (Inl var_t) in
+          let body = Pulse.Syntax.Naming.close_st_term bind_term v in
+          Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
+        | None -> None)
+      | None -> None)
+    | _ -> None
+  in
+  match sc with
+  | Some res -> Some res
+  | None ->
+  match decompose_app g tt with
   | None -> None
   | Some (head, args, rebuild) ->
     let _, binders, args = maybe_hoist_args g args in
