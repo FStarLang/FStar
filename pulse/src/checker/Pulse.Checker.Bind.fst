@@ -26,6 +26,7 @@ open Pulse.Show
 open Pulse.Checker.Util
 
 module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 module P = Pulse.Syntax.Printer
 module Abs = Pulse.Checker.Abs
 
@@ -200,6 +201,14 @@ let check_tot_bind
 = let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   let Tm_TotBind { binder=b; head=e1; body=e2 } = t.term in
+  let body_returns_bound_var (body:st_term) : bool =
+    match body.term with
+    | Tm_Return { term } ->
+      (match R.inspect_ln term with
+       | R.Tv_BVar bv -> (R.inspect_bv bv).index = 0
+       | _ -> false)
+    | _ -> false
+  in
   let rebuild (head:either term st_term) : T.Tac (t:st_term { Tm_Bind? t.term }) =
     match head with
     | Inl e1' ->
@@ -209,6 +218,16 @@ let check_tot_bind
     | Inr e1' ->
       { t with term = Tm_Bind { binder=b; head=e1'; body=e2 } }
   in
+  match if body_returns_bound_var e2
+        then Pulse.Checker.Base.hoist_control_flow_return g e1
+        else None with
+  | Some t' ->
+    Pulse.Checker.Util.debug g "pulse.hoist" (fun _ ->
+      Printf.sprintf "Eta-reduced and elaborated control-flow let\n%s\nto\n%s\n"
+      (show t)
+      (show t'));
+    check g pre post_hint res_ppname t'
+  | None ->
   match Pulse.Checker.Base.hoist g (Inl e1) false rebuild with
   | None -> //no stateful apps; just return the head and check it
     let t = rebuild (Inl e1) in

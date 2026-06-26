@@ -33,7 +33,7 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 
-let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
+let close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
 : T.Tac slprop
 = let maybe_close (n, y,ty) (post:slprop) = 
     if not (y `Set.mem` freevars post) then post
@@ -43,51 +43,111 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       tm_exists_sl u b (close_term post y)
     )
   in
-  let maybe_elim_rewrites_to pr (post:term) : T.Tac term =
+  let subst_term_with (t:term) (substs:list RT.subst_elt) : T.Tac term =
+    match substs with
+    | [] -> t
+    | _ -> Pulse.Syntax.Naming.subst_term t substs
+  in
+  let pure_fact_subst (lhs rhs:term) (allow_symmetric:bool)
+    : T.Tac (option RT.subst_elt)
+  =
+    let open R in
+    let subst_var_if_not_return (x:term) (replacement:term) : T.Tac (option RT.subst_elt) =
+      match T.inspect_ln x with
+      | Tv_Var n1 ->
+        let n1 = inspect_namedv n1 in
+        if n1.uniq = x_ret then None
+        else Some (RT.NT n1.uniq replacement)
+      | _ -> None
+    in
+    match subst_var_if_not_return lhs rhs with
+    | Some s -> Some s
+    | None ->
+      if allow_symmetric
+      then subst_var_if_not_return rhs lhs
+      else None
+  in
+  let keep_pure_eq n (u:universe) (typ lhs rhs:term) (post:term) : T.Tac term =
+    tm_with_pure (RT.eq2 u typ lhs rhs) n post
+  in
+  let apply_pure_fact pr (substs:list RT.subst_elt) (post:term)
+    : T.Tac (list RT.subst_elt & term)
+  =
     let n, property = pr in
     let open R in
-    let hd, args = T.collect_app_ln property in
-    match T.inspect_ln hd, args with
+    let property = subst_term_with property substs in
+    let hd_tm, args = T.collect_app_ln property in
+    match T.inspect_ln hd_tm, args with
     | Tv_UInst hd [u], [(typ, Q_Implicit); (lhs, Q_Explicit); (rhs, Q_Explicit)] ->
       if T.inspect_fv hd = rewrites_to_p_lid
       then (
-        match T.inspect_ln lhs with
-        | Tv_Var n1 ->
-          let n1 = inspect_namedv n1 in
-          if n1.uniq = x_ret then
-            tm_with_pure (RT.eq2 u typ lhs rhs) n post
-          else
-            Pulse.Syntax.Naming.subst_term post [RT.NT n1.uniq rhs]
-        | _ -> 
-          let eq = RT.eq2 u typ lhs rhs in
-          tm_with_pure eq n post
+        match pure_fact_subst lhs rhs false with
+        | Some s ->
+          s :: substs, Pulse.Syntax.Naming.subst_term post [s]
+        | None ->
+          substs, keep_pure_eq n u typ lhs rhs post
       )
-      else tm_with_pure property n post
-    | _ -> tm_with_pure property n post
+      else if FStar.Reflection.TermEq.term_eq hd_tm (`(Prims.eq2 u#0))
+      then (
+        match pure_fact_subst lhs rhs true with
+        | Some s ->
+          s :: substs, Pulse.Syntax.Naming.subst_term post [s]
+        | None ->
+          substs, keep_pure_eq n u typ lhs rhs post
+      )
+      else substs, tm_with_pure property n post
+    | _ -> substs, tm_with_pure property n post
   in
-  let close_post = close_post x_ret dom_g g1 in
-  match bs1 with
-  | [] -> post
-  | BindingVar {n;x=y;ty}::tl -> (
-    if y = x_ret
-    then close_post tl post
-    else if y `Set.mem` dom_g
-    then close_term post x_ret
-    else (
-      let open R in
-      match T.inspect_ln ty with
-      | Tv_App hd (p, Q_Explicit) -> (
-        match T.inspect_ln hd with
-        | Tv_FVar fv ->
-          if inspect_fv fv = R.squash_qn
-          then close_post tl (maybe_elim_rewrites_to (n, p) post)
-          else close_post tl (maybe_close (n,y,ty) post)
-        | _ -> close_post tl (maybe_close (n,y,ty) post)
+  let rec apply_pure_facts bs1 (substs:list RT.subst_elt) (post:term)
+    : T.Tac term
+  =
+    match bs1 with
+    | [] -> post
+    | BindingVar {n;x=y;ty}::tl -> (
+      if y = x_ret || y `Set.mem` dom_g
+      then apply_pure_facts tl substs post
+      else (
+        match T.inspect_ln ty with
+        | R.Tv_App hd (p, R.Q_Explicit) -> (
+          match T.inspect_ln hd with
+          | R.Tv_FVar fv ->
+            if R.inspect_fv fv = R.squash_qn
+            then
+              let substs, post = apply_pure_fact (n, p) substs post in
+              apply_pure_facts tl substs post
+            else apply_pure_facts tl substs post
+          | _ -> apply_pure_facts tl substs post
+        )
+        | _ -> apply_pure_facts tl substs post
       )
-      | _ -> close_post tl (maybe_close (n,y,ty) post)
     )
-  )
-  | _::tl -> close_post tl post
+    | _::tl -> apply_pure_facts tl substs post
+  in
+  let rec close_vars bs1 (post:term) : T.Tac term =
+    match bs1 with
+    | [] -> post
+    | BindingVar {n;x=y;ty}::tl -> (
+      if y = x_ret
+      then close_vars tl post
+      else if y `Set.mem` dom_g
+      then close_term post x_ret
+      else (
+        match T.inspect_ln ty with
+        | R.Tv_App hd (p, R.Q_Explicit) -> (
+          match T.inspect_ln hd with
+          | R.Tv_FVar fv ->
+            if R.inspect_fv fv = R.squash_qn
+            then close_vars tl post
+            else close_vars tl (maybe_close (n,y,ty) post)
+          | _ -> close_vars tl (maybe_close (n,y,ty) post)
+        )
+        | _ -> close_vars tl (maybe_close (n,y,ty) post)
+      )
+    )
+    | _::tl -> close_vars tl post
+  in
+  let post = apply_pure_facts bs1 [] post in
+  close_vars bs1 post
 
 let rec bindings_var_dom : env_bindings -> Set.set var = function
   | [] -> Set.empty

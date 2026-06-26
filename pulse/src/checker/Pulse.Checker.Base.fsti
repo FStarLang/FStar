@@ -199,6 +199,12 @@ val checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
 val is_stateful_application (g:env) (e:term) 
 : T.Tac (option st_term)
 
+val hoist_short_circuit_return (g:env) (t:term)
+: T.Tac (option st_term)
+
+val hoist_control_flow_return (g:env) (t:term)
+: T.Tac (option st_term)
+
 val hoist
   (g:env)
   (tt:either term st_term)
