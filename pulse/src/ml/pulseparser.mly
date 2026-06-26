@@ -352,6 +352,11 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
   | SHOW_PROOF_STATE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (SHOW_PROOF_STATE (rr $loc)) [] }
+  | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
+    {
+      let tm = mk_term (CalcProof (rel, init, steps)) (rr $loc) Expr in
+      PulseSyntaxExtension_Sugar.mk_expr tm []
+    }
   | f=localFnDefn
     {
       let id, fndefn = f in
