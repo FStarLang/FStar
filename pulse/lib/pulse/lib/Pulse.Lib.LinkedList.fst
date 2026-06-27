@@ -112,7 +112,6 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
             with w tail. _;
             let v = Some?.v x;
             rewrite each w as v;
-            rewrite each tail as (({ head; tail }).tail) in (is_list tail tl);
             fold (is_list_cases (Some v) l);
             rewrite (is_list_cases (Some v) l) as
                     (is_list_cases x l)
@@ -271,7 +270,6 @@ fn cons (#t:Type) (v:t) (x:llist t)
     ensures is_list y (v::'l)
 {
     let y = Box.alloc { head=v; tail=x };
-    rewrite each x as ({head=v; tail=x}).tail in (is_list x 'l);
     fold (is_list (Some y) (v::'l));
     Some y
 }
@@ -296,7 +294,6 @@ fn rec append (#t:Type0) (x y:llist t)
       is_list_cases_none None;
       unfold (is_list #t None []);
       np := { node with tail = y };
-      rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some p -> {
@@ -442,7 +439,6 @@ ensures
       is_list_cases_none None;
       unfold (is_list #t None []);
       np := { node with tail = y };
-      rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
     }
     Some vtl -> {
@@ -461,7 +457,6 @@ fn non_empty_list (#t:Type0) (x:llist t)
     unfold (is_list x (Cons?.hd 'l :: Cons?.tl 'l));
     with v tail. _;
     with n tl. assert (pts_to v n ** is_list tail tl);
-    rewrite each tail as n.tail;
     intro_is_list_cons x v #n #tl;
 }
 
