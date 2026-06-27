@@ -827,7 +827,9 @@ let hoist_stateful_apps
         let body = Pulse.Syntax.Naming.close_st_term bind_term v in
         Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
       in
-      match convert_short_circuit_app g head args (RU.range_of_term t) maybe_hoist with
+      match if hoist_top_level
+            then convert_short_circuit_app g head args (RU.range_of_term t) maybe_hoist
+            else None with
       | Some st_sc -> bind_context_to_st (RU.range_of_term t) st_sc
       | None ->
         let _, binders, args = maybe_hoist_args g args in

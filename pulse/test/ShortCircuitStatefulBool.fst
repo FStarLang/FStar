@@ -18,7 +18,8 @@ fn stateful_and_skips_rhs (flag: ref bool) (n: ref int)
   returns b: bool
   ensures flag |-> false ** n |-> 0 ** pure (b == false)
 {
-  (!flag) && tick_true n
+  let b = (!flag) && tick_true n;
+  b
 }
 
 fn stateful_and_runs_rhs (flag: ref bool) (n: ref int)
@@ -26,7 +27,8 @@ fn stateful_and_runs_rhs (flag: ref bool) (n: ref int)
   returns b: bool
   ensures flag |-> true ** n |-> 1 ** pure (b)
 {
-  (!flag) && tick_true n
+  let b = (!flag) && tick_true n;
+  b
 }
 
 fn stateful_or_skips_rhs (flag: ref bool) (n: ref int)
@@ -34,7 +36,8 @@ fn stateful_or_skips_rhs (flag: ref bool) (n: ref int)
   returns b: bool
   ensures flag |-> true ** n |-> 0 ** pure (b)
 {
-  (!flag) || tick_true n
+  let b = (!flag) || tick_true n;
+  b
 }
 
 fn stateful_or_runs_rhs (flag: ref bool) (n: ref int)
@@ -42,7 +45,8 @@ fn stateful_or_runs_rhs (flag: ref bool) (n: ref int)
   returns b: bool
   ensures flag |-> false ** n |-> 1 ** pure (b)
 {
-  (!flag) || tick_true n
+  let b = (!flag) || tick_true n;
+  b
 }
 
 fn nested_stateful_and_or (a: ref bool) (b: ref bool) (n: ref int)
@@ -50,7 +54,8 @@ fn nested_stateful_and_or (a: ref bool) (b: ref bool) (n: ref int)
   returns r: bool
   ensures a |-> false ** b |-> false ** n |-> 0 ** pure (r == false)
 {
-  (!a) && ((!b) || tick_true n)
+  let r = (!a) && ((!b) || tick_true n);
+  r
 }
 
 fn nested_stateful_or_and (a: ref bool) (b: ref bool) (n: ref int)
@@ -58,7 +63,8 @@ fn nested_stateful_or_and (a: ref bool) (b: ref bool) (n: ref int)
   returns r: bool
   ensures a |-> true ** b |-> true ** n |-> 0 ** pure (r)
 {
-  (!a) || ((!b) && tick_true n)
+  let r = (!a) || ((!b) && tick_true n);
+  r
 }
 
 (* Equivalent expression-position conditionals.  The condition is not a bare

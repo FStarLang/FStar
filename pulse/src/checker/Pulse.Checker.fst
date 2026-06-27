@@ -196,9 +196,7 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
          let b' = { b with term = Tm_Return { expected_type; insert_eq; term = bt' } } in
          {t with term=Tm_If { b=b'; then_=e1; else_=e2; post }}
        in
-       (match Pulse.Checker.Base.hoist g (Inl bt) true rebuild with
-        | Some t -> Some t
-        | None -> None)
+       Pulse.Checker.Base.hoist g (Inl bt) true rebuild
      | _ ->
        // Stateful condition: transform into let _cond = b; if (return _cond) { e1 } else { e2 }
        let binder = mk_binder_ppname Pulse.Typing.tm_bool (mk_ppname_no_range "_if_cond") in
@@ -264,8 +262,6 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
       {t with term=Tm_Goto { lbl; arg }}
     in
     Pulse.Checker.Base.hoist g (Inl arg) true rebuild  
-  | Tm_Return { term = bt } ->
-    Pulse.Checker.Base.hoist_control_flow_return g bt
 
   | _ -> None
 #pop-options
