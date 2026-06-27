@@ -83,7 +83,7 @@ let close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       then (
         match pure_fact_subst lhs rhs false with
         | Some s ->
-          s :: substs, Pulse.Syntax.Naming.subst_term post [s]
+          s :: substs, keep_pure_eq n u typ lhs rhs (Pulse.Syntax.Naming.subst_term post [s])
         | None ->
           substs, keep_pure_eq n u typ lhs rhs post
       )
@@ -91,7 +91,7 @@ let close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       then (
         match pure_fact_subst lhs rhs true with
         | Some s ->
-          s :: substs, Pulse.Syntax.Naming.subst_term post [s]
+          s :: substs, keep_pure_eq n u typ lhs rhs (Pulse.Syntax.Naming.subst_term post [s])
         | None ->
           substs, keep_pure_eq n u typ lhs rhs post
       )
