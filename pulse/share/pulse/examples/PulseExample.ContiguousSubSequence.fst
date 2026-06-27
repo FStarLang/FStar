@@ -54,9 +54,7 @@ ensures
           starts_with_at (SZ.v j) (take s0 (SZ.v v0)) s1
         )
     ensures
-      (let v1 = !i1 in
-       let v0 = !i0 in
-       v1 < len1 /\ v0 < len0 /\ Seq.index s1 (SZ.v v1) =!= Seq.index s0 (SZ.v v0))
+      (!i1 < len1 /\ !i0 < len0 /\ Seq.index s1 (SZ.v !i1) =!= Seq.index s0 (SZ.v !i0))
     {
       let v0 = !i0;
       let v1 = !i1;
