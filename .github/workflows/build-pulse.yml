@@ -33,7 +33,6 @@ jobs:
         with:
           path: pulse/
           repository: FStarLang/pulse
-          ref: fstar1
 
       - name: Build plugin
         run: make -C pulse -skj$(nproc) ADMIT=1 plugin
