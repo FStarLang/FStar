@@ -132,7 +132,6 @@ ensures is_list_cases x l
       with w tail. _;
       let v = Some?.v x;
       rewrite each w as v;
-      rewrite each tail as (({ head; tail }).tail) in (is_list tail tl);
       fold (is_list_cases (Some v) l);
       rewrite each (Some #(ref (node t)) v) as x;
     }
@@ -377,7 +376,6 @@ ensures
   elim_is_list_nil _node.tail;
   let node = !np;
   np := { node with tail = y };
-  rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
   intro_is_list_cons x np; 
 }
 //end append_at_last_cell$
@@ -392,7 +390,6 @@ ensures pure (Some? x)
     elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
     with v tail. _;
     with n tl. assert (pts_to v n ** is_list tail tl);
-    rewrite each tail as n.tail;
     intro_is_list_cons x v #n #tl;
 }
 //end non_empty_list$
