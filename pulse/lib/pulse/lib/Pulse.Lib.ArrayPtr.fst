@@ -55,6 +55,22 @@ ensures
   fold (pts_to s #p v);
 }
 
+ghost fn pts_to_len
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+requires
+  (pts_to s #p v)
+ensures
+  (pts_to s #p v ** pure (SZ.fits (Seq.length v)))
+{
+  unfold (pts_to s #p v);
+  A.pts_to_range_prop s.base;
+  SZ.fits_lte (Seq.length v) (A.length s.base);
+  fold (pts_to s #p v);
+}
+
 fn is_null
   (#t:Type)
   (s:ptr t)
