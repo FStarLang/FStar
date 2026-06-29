@@ -516,7 +516,21 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         if Cons? attrs then
           fail "Binder attributes are not allowed." (pos (List.hd attrs))
         else return ();!
-        desugar_bind env lb s2 s.range
+        if lb.rw
+        then (
+          (* 'let rewrite x = e' desugars to 'let x = e; assert rewrites_to x e' *)
+          match lb.pat.pat, lb.qualifier, lb.init with
+          | A.PatVar (id, _, _), None, Default_initializer (Some e, []) ->
+            let xtm = A.mk_term (A.Var (Ident.id_as_lid id)) lb.pat.prange A.Expr in
+            let rwt = A.mk_term (A.Var (Ident.lid_of_str "Pulse.Lib.Core.rewrites_to")) lb.pat.prange A.Expr in
+            let prop = A.mk_term (A.App (A.mk_term (A.App (rwt, xtm, A.Nothing)) lb.pat.prange A.Expr, e, A.Nothing)) lb.pat.prange A.Expr in
+            let assert_stmt = { mk_stmt (ProofHintWithBinders { hint_type = ASSERT prop; binders = [] }) s1range with source = false } in
+            let s2' = { mk_stmt (Sequence { s1 = assert_stmt; s2 }) s.range with source = false } in
+            desugar_bind env { lb with rw = false } s2' s.range
+          | _ ->
+            fail "'let rewrite' requires a simple variable binding with a pure initializer" lb.pat.prange
+        )
+        else desugar_bind env lb s2 s.range
       | _ ->
         (* a single-branch pattern match *)
         let id = Ident.id_of_text "_letpattern" in
@@ -532,6 +546,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         in
         let lb' =
           { norw = lb.norw;
+            rw = false;
             qualifier = lb.qualifier;
             pat = A.mk_pattern (A.PatVar (id, None, [])) lb.pat.prange;
             typ = lb.typ;
