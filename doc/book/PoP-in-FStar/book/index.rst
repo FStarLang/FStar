@@ -55,4 +55,5 @@ hope this book will soon include chapters authored by others.
    part4/part4
    part5/part5
    pulse/pulse
+   agentic/agentic
    under_the_hood/under_the_hood

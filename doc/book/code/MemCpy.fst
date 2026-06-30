@@ -14,43 +14,47 @@
    limitations under the License.
 *)
 module MemCpy
-open FStar.HyperStack.ST
-open LowStar.Buffer
-open MemCpy.Deps
+open Pulse
+#lang-pulse
+open Pulse.Lib.Array
+module V = Pulse.Lib.Vec
+module U8 = FStar.UInt8
+module SZ = FStar.SizeT
 
-/// Attempt: Prove the copy correct
-///     -- Needs a loop invariant
-let rec memcpy
-        (len:uint32)
-        (cur:uint32{cur <= len})
-        (src dest:lbuffer len uint8)
-  : ST unit 
-       (requires fun h ->
-         live h src  /\
-         live h dest /\
-         disjoint src dest /\
-         prefix_equal h src dest cur)
-       (ensures fun h0 _ h1 ->
-         modifies dest h0 h1 /\
-         prefix_equal h1 src dest len)
-  = if cur < len
-    then begin
-      dest.(cur) <- src.(cur);
-      memcpy len (cur + 1ul) src dest
-    end
+fn memcpy_vec
+    (len:SZ.t)
+    (src dest:V.vec U8.t)
+    (#f:perm)
+preserves
+  src |-> Frac f 's
+requires 
+  pure (
+    V.length src == SZ.v len /\
+    V.length src == V.length dest
+  )
+requires
+  exists* s. dest |-> s
+ensures
+  dest |-> 's
+{ 
+  V.to_array_pts_to dest;
+  V.to_array_pts_to src ;
+  Pulse.Lib.Array.memcpy len (V.vec_to_array src) (V.vec_to_array dest);
+  V.to_vec_pts_to dest;
+  V.to_vec_pts_to src;
+}
 
 //SNIPPET_START: malloc_copy_free
-let malloc_copy_free (len:uint32 { 0ul < len })
-                     (src:lbuffer len uint8)
-  : ST (lbuffer len uint8)
-       (requires fun h -> 
-         live h src /\
-         freeable src)
-       (ensures fun h0 dest h1 -> 
-         live h1 dest /\
-         (forall (j:uint32). j < len ==> get h0 src j == get h1 dest j))
-  = let dest = malloc 0uy len in
-    memcpy len 0ul src dest;
-    free src;
-    dest
+fn malloc_copy_free (v:V.vec U8.t) (len:SZ.t)
+requires v |-> 's
+requires pure (V.length v == SZ.v len /\ V.is_full_vec v)
+returns u:V.vec U8.t
+ensures u |-> 's
+
+{
+  let u = V.alloc 0uy len;
+  memcpy_vec len v u;
+  V.free v;
+  u
+}
 //SNIPPET_END: malloc_copy_free
