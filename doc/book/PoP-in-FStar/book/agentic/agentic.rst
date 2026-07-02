@@ -59,4 +59,3 @@ importanly, that humans are able to understand the results.
    agentic_rubrics_as_templates
    agentic_state_machines
    agentic_tls
-   agentic_skills
