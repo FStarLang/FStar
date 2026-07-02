@@ -229,7 +229,8 @@ service itself.
 
 A state machine is described by the following class, which is parametric in the
 type of the state, the wire messages, the local events, and the local outputs.
-It class defines the initial state and the transition relation ``step`, which
+
+The class defines the initial state and the transition relation ``step``, which
 given a current state and an event relates it to a new state and a step output.
 
 .. code-block:: pulse

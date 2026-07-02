@@ -1,4 +1,4 @@
-.. _PartPulse:
+.. _PartAgentic:
 
 ##################################
 Agentic Proof-Oriented Programming

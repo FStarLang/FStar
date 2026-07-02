@@ -227,6 +227,21 @@ ensures pure (n == k + List.Tot.length 'l)
 module I = Pulse.Lib.Trade.Util
 open I
 
+//tail_for_cons$
+ghost
+fn tail_for_cons (#t:Type) (v:node_ptr t) (#n:node t) (tl:erased (list t))
+requires 
+  pts_to v n
+ensures 
+  (is_list n.tail tl @==> is_list (Some v) (n.head::tl))
+{
+  intro (is_list n.tail tl @==> is_list (Some v) (n.head::tl)) #(pts_to v n) fn _
+  {
+    intro_is_list_cons (Some v) v
+  };
+}
+//end tail_for_cons$
+
 //tail$
 fn tail (#t:Type) (x:llist t)
 requires is_list x 'l
