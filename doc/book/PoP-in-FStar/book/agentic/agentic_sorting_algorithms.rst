@@ -40,7 +40,19 @@ Each of the four algorithms is implemented in imperative Pulse code with a
 specification showing functional correctness. Here below is the specification of
 ``insertion_sort`` and ``heapsort`` (slightly simplified):
 
-Insertion sort:
+Insertion sort, which says in its preconditions
+
+* The array ``a`` points to a sequence of integers ``s0``; and,
+
+* The length of the array is ``len``, and ``len`` is less than or equal to the
+  length of the sequence ``s0``
+
+Then, the postcondition ensures
+
+* The array ``a`` points to a sequence of integers ``s``; and,
+
+* The sequence ``s`` is sorted, and is a permutation of the original sequence
+  ``s0``, and has the same length as ``s0``.
 
 .. code-block:: pulse
 
@@ -60,7 +72,12 @@ Insertion sort:
             sorted s /\
             permutation s0 s)
 
-Heapsort:
+Now, if we look at the specification of heapsort, it says much the same thing,
+but with some small differences. For some reason, ``heapsort`` has an additional
+precondition on the length, the provided length ``n`` is a lower bound on the
+length of the array, and the postcondition is more complicated too, proving only
+that the sub-array up to ``n`` is sorted, and that the rest of the array is
+unchanged.
 
 .. code-block:: pulse
 
@@ -83,15 +100,10 @@ Heapsort:
             (forall (k:nat). SZ.v n <= k /\ k < Seq.length s ==> Seq.index s k == Seq.index s0 k)
         )
 
-These are the specification of two sorting algorithms, but there are many small
-differences between them: for some reason, ``heapsort`` has an additional
-precondition on the length, the provided length ``n`` is a lower bound on the
-length of the array, and the postcondition is more complicated too, proving only
-that the sub-array up to ``n`` is sorted, and that the rest of the array is
-unchanged. Although the agents at least used some common definitions of
-sortedness and permutation, these differences in the top-level specifications
-double the reviewing work---in fact, all four algorithms have subtly different
-specifications.
+Although the agents at least used some common definitions of sortedness and
+permutation, these differences in the top-level specifications double the
+reviewing work---in fact, all four algorithms have subtly different
+specifications. 
 
 Of course, one shouldn't tolerate this. A more uniform specification is easier
 to vet and review, and it is also easier to reuse in other proofs. Let's write
@@ -132,9 +144,9 @@ A few things to note about this specification:
 
 Writing this specification once and having the agents prove that all the sorting
 algorithms satisfy this specification makes for a much better rubric. It's also
-just good software engineering practice (it's better for common abstractions to
-be factored and reused) and it remains good practice for agentic proof
-engineering.
+just good software engineering practice (better, as usual, for common
+abstractions to be factored and reused) and it remains good practice for agentic
+proof engineering.
 
 But, let's keep going, we can do more with polymorphic specifications.
 
@@ -194,25 +206,25 @@ This type is very similar to the previous type of ``insertion_sort``. The new el
    :ref:`this section <Pulse_Ghost>`. The ghost reference is used to count the
    number of operations we are interested in for the complexity analysis.
 
-2. The precondition includes an ownership of the ghost reference, ``GR.pts_to
-   ctr c0``, where ``c0`` is the initial value of the counter.
+2. The precondition includes ownership of the ghost reference, ``ctr |-> c0``,
+   where ``c0`` is the initial value of the counter.
 
-3. The postcondition includes the functional correctness properties, i.e., that
-   the output is a sorted precondition of the input.
+3. The postcondition includes the usual functional correctness properties, i.e.,
+   that the output is a sorted precondition of the input.
 
 4. And, importantly, the last clause states that the counter has been "ticked"
    ``(cf - c0)`` at most ``n * (n - 1) / 2`` times.
 
 Now, with type shown as the rubric, let's look at what one would have to review
-to judge that this was a proper worst-case complexity proof:
+to judge that this is a proper worst-case complexity proof:
 
 * Inspect the implementation of ``insertion_sort`` to check that every
   comparison is accounted for with an increment of the ghost counter.
 
 * The ghost counter is never decremented.
 
-This is sub-optimal since it now one must, as part of the review, read the code
-in detail, figure out it is instrumented correctly. The promise of
+This is sub-optimal since now one must, as part of the review, read the code in
+detail, figure out if it is instrumented correctly. The promise of
 proof-oriented programming is that one should be able to check the correctness
 of a program by reading the specification alone, but in this case, one also has
 to read the implementation.
@@ -225,8 +237,8 @@ Better Rubrics with Abstraction
 -------------------------------
 
 Consider the following typeclass as a rubric for complexity-aware sorting
-algorithms:
-
+algorithms---it's a lot to swallow in one go, so we'll describe it slowly piece
+by piece.
 
 .. code-block:: pulse
 
@@ -261,8 +273,6 @@ algorithms:
                 pure (sorted #_ #ord s' /\ permutation s s' /\ ticks <= i + f (Seq.length s)))
     }
 
-There are a few pieces to consider.
-
 Monotonic Ghost State
 .....................
 
@@ -273,7 +283,7 @@ one needs to carefully read the implementation to ensure that the counter is
 only ever incremented. 
 
 Pulse offers more sophisticated forms of ghost state, including something called
-monotonic ghost state. Given a reflexive, transitive relation ``rel: preorder
+*monotonic*  ghost state. Given a reflexive, transitive relation ``rel: preorder
 a``, one can build a monotonic ghost reference
 (``Pulse.Lib.MonotonicGhostRef.mref rel``) which is a reference to a mutable
 cell of type ``a`` which can only be updated in a way that respects the relation
@@ -294,7 +304,8 @@ instrumented with a tick of the counter. To do this, we define the type of an
 instrumented total order, a Pulse function that takes two elements of type ``a``
 and returns an ``order`` (i.e., a comparison result) with a postcondition
 proving that its result is equal to the result given by a *pure* total order
-``ord``, but also stating that tick counter has been incremented.
+``ord``, but also stating that tick counter has been incremented. (The ``#1.0R``
+is to state that we have full permission to the counter and can increment it.)
 
 .. code-block:: pulse
 
@@ -356,8 +367,8 @@ The ``sort`` function is
   - The postcondition states that the output is a sorted permutation of the
     input, as usual for functional correctness,
     
-   - And, finally, that the final value of the counter ``ticks`` is advanced by
-     at most a ``bound`` computed from the length of the input.
+  - And, importantly, that the final value of the counter ``ticks`` is advanced
+    by at most a ``bound`` computed from the length of the input.
 
 
 Using the Rubric
@@ -410,10 +421,9 @@ Auditing Implementations: What is an Algorithm?
 
 Simply knowing that say, ``insertion_sort_array_sort`` has the type of a
 correct, quadratic-time sorting algorithm doesn't tell us that what is
-implemented is actually an insertion sort. Notice even that
-``quicksort_array_sort`` has the same type, so the rubric alone does not have
-the power to distinguish the two. For this, we need to audit the implementation
-itself.
+implemented is actually an insertion sort. Notice that ``quicksort_array_sort``
+has exactly the same type, so the rubric alone does not have the power to
+distinguish the two. For this, we need to audit the implementation itself.
 
 Auditing a piece of code for fidelity to a particular algorithm is a thorny
 problem. In fact, even the notion of an algorithm itself is a deep conceptual

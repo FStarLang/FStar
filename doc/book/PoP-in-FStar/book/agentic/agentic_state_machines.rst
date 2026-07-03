@@ -18,8 +18,8 @@ each other over a network.
 How is one to build such services in a proof-oriented way, and how can agents
 help? In the next few chapters, we explore one way to do this, using state
 transition systems as an abstract, mathemtical model for such services and to
-use a technique called state-machine refinement to build a verified
-implementation of such services.
+use a technique called state-machine refinement to build verified
+implementations of such services.
 
 To get agents to do this, we will develop several rubrics, templates, and
 audits, eventually showing how to apply our methodology to a verified,
@@ -67,8 +67,8 @@ and produces responses of the form:
 
 where ``Ok`` indicates that the request was processed successfully; ``Result n``
 is the response to a ``Peek`` request, and ``Error`` indicates that the request
-could not be processed successfully (e.g., a ``Div`` request when the stack is
-empty, or when the stack exceeds a certain size).
+could not be processed successfully (e.g., an ``Add`` request when the stack is
+empty, a division by zero, or when the stack exceeds a certain size).
 
 A pure specification of the behavior of this service is given by the following
 transition relation:
@@ -161,15 +161,16 @@ OCaml, reading bytes of the network, parsing it, transitioning the state, and
 serializing the response, and looping. 
 
 While this would work for a simple calculator service, for more complex
-services, this is not always what one wants. For example, often, one would
-prefer to have a more efficient implementation in a low-level language like C,
-without needing to use a garbage collector. Or it might be that the state
-transition is not actually executable and made be specified a relation, rather
+protocols, this is not always what one wants. For example, often, one would
+prefer to have a more efficient implementation in a low-level language like C or
+Rust, without needing to use a garbage collector. Or it might be that the state
+transition is not actually executable and may be specified a relation, rather
 than a function, leaving some freedom in how the transition is implemented.
 
 What we'd like instead is to implement the service in a proof-oriented language
-with low-level control over memory and other resources, and to prove that a Pulse
-implementation of our service *refines* the purely functional specification.
+like Pulse, with low-level control over memory and other resources, and to prove
+that a Pulse implementation of our service *refines* the abstract state machine
+specification.
 
 State Machine Refinement
 -------------------------
@@ -200,8 +201,8 @@ system for correctness properties can be done at the level of the abstract state
 machine, ignoring the efficient low-level implementation.
 
 Note, this process of arriving at the state machine refinement class was itself
-done using a collaborative process between an agent and a human---we describe
-the process at the end of this chapter.
+done using a collaborative process between an agent and a human, emphasized our
+focus on structured interaction between humans and agents.
 
 State Machine Class
 ...................
@@ -422,14 +423,14 @@ And returns a result of type ``process_result``, satisfying a postconditions:
         requires pi_invariant i received sent st
         requires pi_network_frame_pre frame input input_len out out_len input_contents old_out
         requires input |-> input_contents
-        requires out |-> old_out
+        requires out |-> out0
         requires buffers_wf input_contents input_len old_out out_len
         returns result:process_result
         ensures exists* received1 sent1 st1 out1 consumed wire_outputs local_outputs
             pi_invariant i received1 sent1 st1 **
-            pi_network_frame_post frame results input_contents input_len out out1 st0 st1 consumed wire_outputs local_outputs **
+            pi_network_frame_post frame results input_contents input_len out0 out1 st0 st1 consumed wire_outputs local_outputs **
             input |-> input_contents **
-            out |-> out_contents **
+            out |-> out1 **
             pure (network_process_correct i .. local_outputs)
 
 Here is the main correctness property, ``network_process_correct``, which ties
@@ -527,16 +528,16 @@ state that corresponds to running the state machine from the initial state on
 the bytes received so far. But, nothing tells us that the implementation could
 not also suddenly rewrite history and claim that it had received some different
 bytes and produced some different outputs. We need a way to ensure that once the
-implementation as process some inputs, it commits to the history of the inputs
-and outputs so far, and cannot change it.
+implementation has processed some inputs, it commits to the history of the
+inputs and outputs so far, and cannot change it.
 
 Enforcing this sort of property is easily done in Pulse and other modern
-separation logic in a variety of ways. We saw an easy instance of monotoncity in
-the previous chapter where we used a monotonic ghost reference to ensure that a
-counter could only increase. But, in this case, we want a more abstract view of
-monotonicity, allowing an implementation to internalize the history of inputs
-and outputs in any way it wants, so long as it maintains the invariant that the
-history of inputs and outputs is monotonic.
+separation logics in a variety of ways. We saw an simple instance of
+monotonicity in the previous chapter where we used a monotonic ghost reference
+to ensure that a counter could only increase. But, in this case, we want a more
+abstract view of monotonicity, allowing an implementation to internalize the
+history of inputs and outputs in any way it wants, so long as it maintains the
+invariant that the history of inputs and outputs is monotonic.
 
 For this, we add three more fields to our typeclass:
 
@@ -601,7 +602,7 @@ the implementation is a refinement of the following state machine.
     match ev with
     | SM.WireEvent msg ->
         let req = calc_frame_request msg in
-        let (next_stack, resp) = step log0.current_state req in
+        let (next_stack, resp) = step log0.current_state req in (* This is the pure state machine step *)
         let resp_msg = calc_response_frame resp in
         log1.current_state == next_stack /\
         log1.requests == log0.requests @ [req] /\
@@ -625,10 +626,10 @@ the implementation is a refinement of the following state machine.
 Auditing the Calculator Service
 -------------------------------
 
-Of course, even knowning that it refines the pure state machine, one should also
+Of course, even knowing that it refines the pure state machine, one should also
 apply other auditing steps to the calculator service, including basic testing.
 
-We don't show it here, but we also define classes to turn an protocol event
+We don't show it here, but we also define verified code to turn a protocol event
 handler in a full implementation, tied to a TCP channel, and with a top-level
 event handling loop that repeatedly calls the event handler and sends the
 results back to the client. 

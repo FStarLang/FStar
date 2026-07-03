@@ -27,9 +27,9 @@ A typical way to verify a data structure in separation logic is to prove that
 the in-memory representation of the data strcture is a refinement of some purely
 functional model.
 
-We saw this in :ref:`that chapter on linked lists <Pulse_linked_list>` where an
-in-memory linked data structure is related to purely functional lists. Let's
-recall that here briefly.
+We saw this in a previous :ref:`chapter on linked lists <Pulse_linked_list>`
+where an in-memory linked data structure is related to a purely functional list.
+Let's recall that here briefly.
 
 Here is an in-memory, pointer-based representation of a linked list in Pulse.
 
@@ -45,15 +45,15 @@ Here is an in-memory, pointer-based representation of a linked list in Pulse.
     and llist (t:Type0) = option (node_ptr t)
 
 And here is a separation logic predicate relating an ``x:llist t`` to a purely
-functional list of``t:list t``:
+functional list ``l:list t``:
 
 .. code-block:: pulse
 
     let rec is_list #t (x:llist t) (l:list t)
     : Tot slprop (decreases l)
     = match l with
-    | [] -> pure (x == None)
-    | head::tl -> 
+      | [] -> pure (x == None)
+      | head::tl -> 
         exists* (p:node_ptr t) (tail:llist t).
         pure (x == Some p) **
         pts_to p { head; tail } **
@@ -71,9 +71,9 @@ Complexity Aware Search Structures
 ----------------------------------
 
 Providing with our sorting rubric, and existing verified implementations of
-binary trees and red-black trees as templates, we ask an agent to develop a
+binary trees and red-black trees as templates, we asked an agent to develop a
 typeclass as a rubric for search data structures. Here's what it produced; we'll
-presented it piece by piece.
+present it piece by piece.
 
 * First, we have a typeclass ``search_structure`` indexed by representation type
   ``repr`` and ``model`` (both parameterized by the element type ``a``).
@@ -203,6 +203,12 @@ insert and delete bounds, respectively.
             ticks <= i + delete_bound (height a m) (size a m)));
 
 
+Of course, this rubric only counts the comparison operations for complexity, not
+every read, write, or allocation. For that we'll need a more powerful form of
+abstraction, that we'll leave for later. But, using rubrics as templates
+demonstrates how agents can generalize from patterns in existing code to produce
+new specifications for other settings.
+
 Constraining the Model
 ----------------------
 
@@ -275,50 +281,35 @@ on the inserted key etc.
 Auditing the Rubric with Small Proof-Oriented Tests
 ----------------------------------------------------
 
+Whereas in the previous chapter, we wrote a rubric for sorting ourselves, here
+we had agents author a rubric for search structures. It would be prudent to
+check that the agent-authored specification is reasonable.
+
 In this `blog post <https://risemsr.github.io/blog/2026-04-16-spotting-specs/>`_
 we wrote about the idea of "Small Proof-Oriented Tests" (SPOTs) to audit
-agent-generated specifications. Whereas in the previous chapter, we wrote a
-rubric for sorting ourselves, here had agents to author a rubric for search
-structures. It would be prudent to check that the agent-authored specification 
-is reasonable.
-
-One way to do that is to write a few small tests against this rubric. For
-example, could one prove that creating a search structure and inserting and
+agent-generated specifications, a technique where one writes a few small tests
+against a specification to check that the specification is usable and precise.
+For example, could one prove that creating a search structure and inserting and
 deleting a few keys, and then searching for a key returns the expected result?
 Such tests shake out bugs in specifications by checking that they are precise
 enough to prove expected properties on small inputs.
 
-
 A Rubric-compliant Binary Search Tree
 -------------------------------------
 
-Reviewing a 1000 line implementation of a binary search tree for rubric
-compliance amounts to checking these instances only:
+Now, with our audited rubric in place, reviewing a 1000 line implementation of a
+binary search tree for rubric compliance amounts to checking these lines only:
 
 .. code-block:: fstar
 
     instance bst_search_structure_instance : SC.search_structure
         bst_ptr bst owns valid empty_model find_model insert_model delete_model
         height size bst_search_bound bst_insert_bound bst_delete_bound
-    = {
-        create = create;
-        dispose = dispose;
-        search = search;
-        insert = insert;
-        delete = delete;
-    }
-
+    
     instance bst_search_model_laws_instance :
-    SC.search_model_laws bst valid empty_model find_model insert_model  delete_model
-    = {
-        find_empty = find_empty;
-        find_insert_hit = find_insert_hit;
-        find_insert_other = find_insert_other;
-        find_delete_hit = find_delete_hit;
-        find_delete_other = find_delete_other;
-    }
-
-where the complexity bounds are linear in the height of the tree.
+        SC.search_model_laws bst valid empty_model find_model insert_model  delete_model
+    
+where the complexity bounds are linear in the height of the tree. 
 
 .. code-block:: fstar
 
@@ -326,12 +317,15 @@ where the complexity bounds are linear in the height of the tree.
     let bst_insert_bound (h:nat) (_n:nat) : nat = h
     let bst_delete_bound (h:nat) (_n:nat) : nat = 4 * h + 1
 
+One should also review the definition of ``height`` to check that it is indeed
+the height of the tree, and not some other measure.
+
 A Rubric-compliant Red-Black Tree
 ---------------------------------
 
 The solution for a red-black tree is about 2000 lines of Pulse code, but its
-typeclass instantiation is also just a dozen lines of F*. The only thing to
-audit for rubric compliance is the complexity bound.
+typeclass instantiation is also just a few lines of F*. The only thing to audit
+for rubric compliance is the complexity bound.
 
 For red-black trees, these are as follows. Since a red-black tree is balanced,
 the complexity bounds are logarithmic in the size of the tree.
@@ -347,14 +341,17 @@ the complexity bounds are logarithmic in the size of the tree.
     let rb_delete_bound (_h:nat) (n:nat) : nat =
         if n = 0 then 2 else 4 * log2_floor (n + 1) + 2
 
+One should also review the definition of ``size`` to check that it is indeed the
+size of the tree, and not some other measure.
 
 Auditing Red-Black Trees
 ------------------------
 
-However, on closer inspection, we found that the agent's first solution to this
-rubric implemented a version of red-black trees based on Chris Okasaki's purely
-functional red-black trees. One can see this by inspecting the type of the model
-and the representation:
+As before, rubric compliance is a big step towards checking a result, but it is
+not the full story. For instance, on closer inspection, we found that the
+agent's first solution to this rubric implemented a version of red-black trees
+based on Chris Okasaki's purely functional red-black trees. One can see this by
+inspecting the type of the model and the representation:
 
 .. code-block:: fstar
     

@@ -43,10 +43,11 @@ to carefully check  that what is proven matches what is intended.
 
 In this part of the book, we offer a few principles and techniques for agentic
 proof-oriented programming. Thankfully, a lot of what we've come to know as good
-proof-engineering practice still applies. Our main message is that humans need
-to think carefully about the right abstractions for designing a system so that
-agents are effective at producing proof-oriented software, and, perhaps more
-importanly, that humans are able to understand the results.
+proof-engineering practice is still very much relevant in this new setting. Our
+main message is that humans need to think carefully about the right abstractions
+for designing a system so that agents are effective at producing proof-oriented
+software, and, perhaps more importanly, that humans are able to understand the
+results.
 
 
 .. toctree::

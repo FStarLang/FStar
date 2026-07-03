@@ -41,7 +41,9 @@ At this point, you should be able to launch copilot and in chat session say some
         Write it in RevSample.fst and use fstar.exe to check that it verifies correctly.
 
 A run that I did cost around $0.33 with Claude Sonnet 4.6, producing a 43 line
-file with an implementation of ``rev`` and its proof.
+file with an implementation of ``rev`` and its proof, shown below. For a first
+try, a default GitHub profile should suffice, but for anything more serious, you
+will probably need a paid plan (more on that below).
 
 .. code-block:: fstar
 
@@ -50,19 +52,19 @@ file with an implementation of ``rev`` and its proof.
     open FStar.List.Tot
 
     let rec rev_aux (#a: Type) (acc: list a) (l: list a) : Tot (list a) (decreases l) =
-    match l with
-    | [] -> acc
-    | hd :: tl -> rev_aux (hd :: acc) tl
+      match l with
+      | [] -> acc
+      | hd :: tl -> rev_aux (hd :: acc) tl
 
     let rev (#a: Type) (l: list a) : list a =
-    rev_aux [] l
+      rev_aux [] l
 
     (* Lemma: rev_aux acc l == (rev_aux [] l) @ acc *)
     let rec rev_aux_append (#a: Type) (acc: list a) (l: list a)
     : Lemma (ensures rev_aux acc l == rev_aux [] l @ acc) (decreases l)
     = match l with
-    | [] -> ()
-    | hd :: tl ->
+      | [] -> ()
+      | hd :: tl ->
         rev_aux_append (hd :: acc) tl;
         rev_aux_append [hd] tl;
         append_assoc (rev_aux [] tl) [hd] acc
@@ -71,8 +73,8 @@ file with an implementation of ``rev`` and its proof.
     let rec rev_append (#a: Type) (l1 l2: list a)
     : Lemma (ensures rev (l1 @ l2) == rev l2 @ rev l1) (decreases l1)
     = match l1 with
-    | [] -> ()
-    | hd :: tl ->
+      | [] -> ()
+      | hd :: tl ->
         rev_append tl l2;
         rev_aux_append [hd] (tl @ l2);
         rev_aux_append [hd] tl;
@@ -82,8 +84,8 @@ file with an implementation of ``rev`` and its proof.
     let rec rev_involutive (#a: Type) (l: list a)
     : Lemma (ensures rev (rev l) == l) (decreases l)
     = match l with
-    | [] -> ()
-    | hd :: tl ->
+      | [] -> ()
+      | hd :: tl ->
         rev_involutive tl;
         rev_aux_append [hd] tl;
         rev_append (rev tl) [hd];
@@ -97,32 +99,32 @@ file with an implementation of ``rev`` and its proof.
 
 This example is very simple---a version of it even appears in `a previous
 chapter <_Part1_intrinsic_extrinsic>`_ of this book. But, even on this example
-you can see how things work. 
+you can start to see how things work. 
 
 * Agents start with a few steps of "thinking"---natural language output that
   describes the approach to solving the problem
 
-* Various tool calls, to read files, write files, call fstar.exe etc. (which
-  need to be authorized)
+* Then, they emit various tool calls, to read files, write files, call fstar.exe
+  etc. (which need to be authorized)
 
-* Feedback from the tool calls (e.g., error messages from failed verification
-  runs), followed by attempts to fix it.
+* They read feedback from the tool calls (e.g., error messages from failed
+  verification runs), followed by attempts to fix it.
 
-* And, eventually, after several rounds, a solution that is declared complete.
+* And, eventually, after several rounds, a solution is declared complete.
 
 Despite being very simple, this example already raises several interesting
 questions. On the one hand, that agents can automate so much is incredibly
-exciting, and we have many questions around the scale of program proofs one
-might attempt today with agentic automation. But, there are also some
-significant challenges to address, some technical, some societal---we outline
-just a few of them below.
+exciting, and raised many questions around the scale of program proofs one might
+attempt today with agentic automation. But, there are also some significant
+challenges to address, some technical, some societal---we outline just a few of
+them below.
 
 **Intent Confirmation**: How is one to judge whether or not the task is actually
 completed? In this case, we have a function called ``rev`` and a lemma
 ``rev_involutive`` proving that ``rev (rev l) == l``. Does this ``rev`` function
-really reverse a list? And is ``rev (rev l) == l`` the involution that we had in
-mind? Answering such questions effectively is perhaps the central question in
-agentic programming.
+really reverse a list? What if the agent produce ``let rev l = l`` instead? And
+is ``rev (rev l) == l`` the involution that we had in mind? Answering such
+questions effectively is perhaps the central question in agentic programming.
 
 **Agent Direction**: For this simple problem, we didn't need to say much. The
 background knowledge of the agents was sufficient to solve the problem (likely a
@@ -147,12 +149,13 @@ cooling technologies are developed.
 
 **Pedagogical Issues**: With many programming and proving tasks now
 substantially automatable, how will we teach the next generation these skills?
-Will these skills even be necessary in the future? 
+Will these skills even be necessary in the future? And how should we teach
+agentic programming itself---is there any method to it?
 
 Of course, there are many more questions, spanning areas from labor issues to
 cognition and psychology. We will not attempt to address most of these issues,
 and instead focus primarily on the questions of *intent confirmation* and *agent
-direction*, while providing the beginnings of a *pedagogy* of agentic
+direction*, while providing some steps towards a *pedagogy* of agentic
 programming. These are the beginnings of a what we believe is a new paradigm in
-which agents and proof-oriented architects work closely together to build
-verified systems.
+which agents and human proof-oriented system architects work closely together to
+build verified software systems at scale.

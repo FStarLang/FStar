@@ -6,10 +6,10 @@ A Verified TLS-1.3 Client and Server
 
 We went to some trouble in the last chapter to create a rubric for state
 machines and their implementation refinements. In this chapter, we'll put that
-rubric to work by using to to structure a verified implementation of the TLS-1.3
+rubric to work by using it to structure a verified implementation of the TLS-1.3
 protocol.
 
-Some background on TLS: Tranport Layer Security (TLS) is a widely used
+Some background on TLS: Transport Layer Security (TLS) is a widely used
 cryptographic protocol for secure communication over the Internet. It is used to
 secure web traffic (e.g., for HTTPS) and is also used in many other applications
 that require secure communication. TLS provides confidentiality, integrity, and
@@ -29,29 +29,38 @@ handshake protocol was not completed.
 TLS supports many modes and optimizations. What we'll focus on here is verifying
 a single, commonly used profile of the protocol, reusing some verified
 components from Project Everest notably for the cryptographic primitives, and
-focusing instead on the main handshake protocol in the following mode:
+focusing on the main handshake protocol in the following mode:
 
 * 1-RTT (one round trip time) handshake, with no 0-RTT (zero round trip time) support.
-* No session resumption, i.e., each handshake is a full handshake.
+* No session resumption, i.e., each handshake is a full handshake, or key update.
 * X25519 key exchange
 * Chacha20-Poly1305 as the symmetric cipher, with SHA-256 as the hash function.
+
+This is a limited profile for TLS, but a common one and widely supported.
 
 A Roadmap for an Agentic Implementation of TLS-1.3
 --------------------------------------------------
 
+An agentic implementation of TLS-1.3 took about 2 weeks of agentic programming
+to get a first verified version, costing around $3000 in tokens using GPT-5.5
+with GitHub Copilot CLI. Getting there took some planning and structure, with
+templates, rubrics, and audits playing a central role. We outline a roadmap for
+our process before getting into it in detail.
+
+
 **Templates** Using the implementation of the Calculator Server as a template
-for a agent, instructing it to first implement a TLS-1.3 client, and then using
+for an agent, instructing it to first implement a TLS-1.3 client, and then using
 the client as a template for the server. A lesson from this is to start small,
 and build up to more complex systems, using the simpler systems as templates for
 the more complex ones. 
 
 **Rubrics** To ensure that the implementation follows a well-understood pattern
-and to keep things comprehensible for a human, we use the state machine rubric
-to ensure that the relationship between the Calculator Server and the TLS
-implementations are not just loosely related, but that they are both, formally,
-instances of the same rubric. Understanding the rubric alone, and convincing
-oneself that it enforces a state machine refinement, is enough to understand
-that a TLS implementation refines a state machine specification.
+and to keep things comprehensible for a human, we use the state machine
+typeclass to ensure that the relationship between the Calculator Server and the
+TLS implementations are not just loosely related, but that they are both,
+formally, instances of the same rubric. Understanding the rubric alone, and
+convincing oneself that it enforces a state machine refinement, is enough to
+understand that a TLS implementation refines a state machine specification.
 
 **Audits** The state machine specification for the Caclulator Server is just a
 few dozen lines of code and is easy to understand and review. In contrast, a
@@ -183,7 +192,7 @@ the handshake state machine, etc.
 The handshake state machine is perhaps the most interesting part: we don't
 discuss it in detail, but it records various parts of the handshake, e.g., the
 messages sent and received so far, the state of the key schedule, the transcript
-of the handshake, etc. The point is mainly to see that this is detailed model 
+of the handshake, etc. The point is mainly to see that this is a detailed model 
 of the TLS handshake.
 
 .. code-block:: fstar
@@ -206,7 +215,7 @@ of the TLS handshake.
         hs_keys: key_schedule_state;
     }
 
-And the transition relation is given by ``client_step``: we'll see a small part
+The transition relation is given by ``client_step``: we'll see a small part
 of it below. A few things to point out:
 
     * Unlike for Calculator Server, the transition relation is not a simple
@@ -306,11 +315,7 @@ validation, and other local events.
 
 * Callbacks to other local events, e.g., selecting server parameters, callbacks
   to certificate validation, and delivering application data, are all local
-  events with their effects logged in the connection state. Note, however, that
-  the model does not specify, e.g., that the payload ``cv`` of
-  ``LocalVerifyCertificateSignature cv`` is indeed a valid signature, just that
-  a local event claiming the certificate validation result was fired, so there
-  is an element of underspecification here that one could tighten up.
+  events with their effects logged in the connection state.
 
 .. code-block:: fstar
 
@@ -368,17 +373,21 @@ specifying the behavior of a signature verification algorithm.
             | _, _, _ -> False)
         | ...
 
-State Machine Specification with Key Agreement Proofs
-------------------------------------------------------
+Auditing State Machine Specification with Key Agreement Proofs
+---------------------------------------------------------------
 
-Of course, this is a large state machine specification (and we have only shown
-above at a small part of it), and it is not obvious that it is correct. One way
-to judge whether or not this is good specification is to try to prove that it
-satisfies various useful properties.
+Of course, this is a large state machine specification (and we have only shown a
+small part of it), and it is not obvious that it is correct. One way to audit
+whether or not this is a good specification is to try to prove that it satisfies
+various useful properties.
 
 One property that one aims to ensure is that if the client and server might
 expect is that if the client and server agree on the messages exchanged, then
-they also agree on the session key that is derived by the handshake.
+they also agree on the session key that is derived by the handshake. It is worth
+pointing out that this is not a small proof-oriented test (SPOT): it is a
+universal property of the protocol specification, rather than a property a
+single small example. Though, both SPOTs and proofs of such universal properties
+share the idea of proving properties of the specification to judge its quality.
 
 The lemma shown below gives us confidence that the state machine specification
 is sufficiently precise to draw such meaningful conclusions.
@@ -526,12 +535,10 @@ Our implementation extracts to about 45,000 lines of C code (of which about
 serializers). We compile this to C, linking the HACL* libraries for
 cryptographic primities, and OpenSSL libraries for certificate validation.
 
-Together with a few hundred lines of C code to implement a top-level main
-function to launch a client or server, configure the network, and to perform
-some basic testing to negotiate a connection.
-
-The resulting test client and server interoperate with OpenSSL and with each
-other.
+Together with a few hundred lines of unverified C code to implement a top-level
+main function to launch a client or server, configure the network, and to
+perform some basic testing to negotiate a connection, the resulting test client
+and server interoperate with OpenSSL.
 
 Of course, one would want to audit this further for a number of other
 properties, e.g., for performance profiling, for side-channel resistance
