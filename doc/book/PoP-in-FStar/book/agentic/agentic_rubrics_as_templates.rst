@@ -294,6 +294,10 @@ deleting a few keys, and then searching for a key returns the expected result?
 Such tests shake out bugs in specifications by checking that they are precise
 enough to prove expected properties on small inputs.
 
+Here are some SPOTs for the search structure rubric:
+`CLRS.Common.SPOT.Search.fst
+<https://github.com/FStarLang/AlgoStar/blob/rubrics/autoclrs/common/CLRS.Common.SPOT.Search.fst>`_
+
 A Rubric-compliant Binary Search Tree
 -------------------------------------
 
@@ -319,6 +323,9 @@ where the complexity bounds are linear in the height of the tree.
 
 One should also review the definition of ``height`` to check that it is indeed
 the height of the tree, and not some other measure.
+
+Here is the full code for the binary search tree: 
+`CLRS.Ch12.BST.Rubric.fst <https://github.com/FStarLang/AlgoStar/blob/rubrics/autoclrs/ch12-bst/CLRS.Ch12.BST.Rubric.fst>`_
 
 A Rubric-compliant Red-Black Tree
 ---------------------------------
@@ -386,3 +393,8 @@ to the one shown above.
     and rb_node_ptr (a:Type) = box (rb_node a)
     and rb_ptr (a:Type) = option (rb_node_ptr a)
 
+* Here is the Okasaki-style tree: `CLRS.Ch12.BST.Rubric.fst
+  <https://github.com/FStarLang/AlgoStar/blob/rubrics/autoclrs/ch12-bst/CLRS.Ch12.BST.Rubric.fst>`_
+
+* And here is the CLRS-style tree: `CLRS.Ch13.RBTree.CLRSRubric.fst
+  <https://github.com/FStarLang/AlgoStar/blob/rubrics/autoclrs/ch13-rbtree/CLRS.Ch13.RBTree.CLRSRubric.fst>`_

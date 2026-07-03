@@ -172,6 +172,56 @@ like Pulse, with low-level control over memory and other resources, and to prove
 that a Pulse implementation of our service *refines* the abstract state machine
 specification.
 
+A Pulse Implementation of the Calculator Service
+------------------------------------------------
+
+You can ask an agent to implement the calculator service in Pulse, proving that
+it refines the abstract state machine specification, and it will produce a
+solution. Here is the signature of one solution it produced:
+
+.. code-block:: pulse
+
+    fn process_request
+        (srv: server_state)
+        (req_buf: Vec.vec U8.t)
+        (resp_buf: Vec.vec U8.t)
+        (#log0: erased calc_log)
+    requires
+        server_exactly srv log0 **
+        Vec.pts_to req_buf 'req_bytes **
+        Vec.pts_to resp_buf 'resp_bytes **
+        pure (
+            Seq.length 'req_bytes == 5 /\
+            Seq.length 'resp_bytes == 5 /\
+            parse_request 'req_bytes <> None
+        )
+    ensures exists* (resp_bytes1: bytes) (log1: calc_log).
+        server_exactly srv log1 **
+        Vec.pts_to req_buf 'req_bytes **
+        Vec.pts_to resp_buf resp_bytes1 **
+        pure (
+            Seq.length 'req_bytes == 5 /\
+            parse_request 'req_bytes <> None /\
+            log_single_step log0 log1 /\
+            log1.input_bytes `Seq.equal` Seq.append log0.input_bytes 'req_bytes /\
+            log1.output_bytes `Seq.equal` Seq.append log0.output_bytes resp_bytes1 /\
+            CalcP.calc_frame_network_step_ok log0 'req_bytes log1 resp_bytes1
+        )
+
+Now, is this is a correct implementation of the calculator service? It does
+compile to C and correctly runs a suite of network tests, but how can one be
+sure that it is correct? Well, one has to read the specificxtion carefully, and
+check that the preconditions and postconditions are what one expects, and that
+the implementation is correct with respect to the specification.
+
+For an arbitrary, agent-generated specification, this is a non-trivial task.
+Even for this calculator service, one has to read the preconditions and
+postconditions carefully, and check that they all make sense. Can we do better?
+Can we have a more structured way to ensure that the implementation is correct,
+without needing to read the entire specification and implementation? We can by
+setting a better, generic rubric.
+
+
 State Machine Refinement
 -------------------------
 
@@ -417,18 +467,16 @@ And returns a result of type ``process_result``, satisfying a postconditions:
 .. code-block:: pulse
 
     pi_process_network:
-        fn (i:impl) (frame:pi_network_frame)
+        fn (i:impl)
            (input:array U8.t) (input_len:SZ.t)
            (out:array U8.t) (out_len:SZ.t)
         requires pi_invariant i received sent st
-        requires pi_network_frame_pre frame input input_len out out_len input_contents old_out
         requires input |-> input_contents
         requires out |-> out0
         requires buffers_wf input_contents input_len old_out out_len
         returns result:process_result
         ensures exists* received1 sent1 st1 out1 consumed wire_outputs local_outputs
             pi_invariant i received1 sent1 st1 **
-            pi_network_frame_post frame results input_contents input_len out0 out1 st0 st1 consumed wire_outputs local_outputs **
             input |-> input_contents **
             out |-> out1 **
             pure (network_process_correct i .. local_outputs)
@@ -585,10 +633,26 @@ pattern.
 Providing this as a rubric to an agent for our calculator service works well.
 GPT-5.5 with Copilot CLI and FStarLang/proof-copilot produces an instances of
 the ``protocol_implementation`` class for our calculator service without any
-human intervention. The instantiation itself is not particularly interesting,
-though the code and proofs consume about 4,500 lines of F*  and Pulse. But, we
-do not need to inspect any of it, since the typeclass instance guarantees that
-the implementation is a refinement of the following state machine.
+human intervention. Here is the instantiation:
+
+.. code-block:: pulse
+
+    let calc_server_protocol_implementation
+    : CPI.protocol_implementation
+        canonical_server calc_log CalcP.calc_frame CalcP.calc_frame_local_event unit
+    =
+  {
+    CPI.pi_system = (fun _ -> CalcP.calc_frame_wire_format_state_machine); ... }
+
+The only thing we need to review is that the ``pi_system`` field is indeed the
+correct state machine for the calculator service. The rest of the class ensures
+there there is a Pulse implementation that refines it. Turns out that
+implementation and proof is about 4,500 lines of F* and Pulse code, but we do
+not need to inspect any of it. But, we do not need to inspect any of it, since
+the typeclass instance guarantees that the implementation is a refinement of the
+following state machine.
+
+We do need to inspect the state machine specification, though, and here it is:
 
 
 .. code-block:: fstar
@@ -636,3 +700,6 @@ results back to the client.
 
 The resulting verified code extracts to about 300 lines of C code and correctly
 runs a suite of network tests.
+
+* Here is the calculator service: `Calc.Server.CanonicalProtocol.fst
+  <https://github.com/project-everest/mitls-fstar/blob/agentic_classes/calc_sample/impl/Calc.Server.CanonicalProtocol.fst>`_

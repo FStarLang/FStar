@@ -94,7 +94,7 @@ will probably need a paid plan (more on that below).
 4. Optionally, one can install the `FStarLang/proof-copilot
    <https://github.com/FStarLang/proof-copilot#installation>`_ plugin. It
    contains various tips and tricks for agents to use F*, Pulse, KaRaMeL, Z3,
-   and related tools. We will cover 
+   and related tools.
 
 
 This example is very simple---a version of it even appears in `a previous
