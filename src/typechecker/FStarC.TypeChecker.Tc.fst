@@ -629,11 +629,14 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     let env' = push_context env "#eval" in
     let tx = UF.new_transaction () in
     BU.finally (fun () -> ignore (pop_context env' "#eval"); UF.rollback tx) (fun () ->
-      let t, lc, g = tc_term { env with instantiate_imp = false } t0 in
+      let t_elab, _, g1 = tc_term { env' with instantiate_imp = false; phase1 = true; admit=true } t0 in
+      Format.print1 "Guard = %s\n" (Rel.guard_to_string env' g1);
+      Rel.force_trivial_guard env' g1;
+      let t, lc, g = tc_term { env' with instantiate_imp = false } t_elab in
       let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
                             Env.UnfoldUntil S.delta_constant;
                             Env.Eager_unfolding; Env.Inlining;
-                            Env.Unmeta; Env.Unascribe] env t in
+                            Env.Unmeta; Env.Unascribe] env' t in
       let open FStarC.Pprint in
       Errors.info r [
         text "#eval" ^/^ pp t0 ^/^ text "==>" ^/^ pp t
