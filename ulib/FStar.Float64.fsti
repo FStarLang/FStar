@@ -3,11 +3,14 @@ module FStar.Float64
 new
 val t : Type0
 
+inline_for_extraction
 let float64 = t
 
 val of_int : Int64.t -> t
 
+inline_for_extraction
 let zero = of_int 0L
+inline_for_extraction
 let one  = of_int 1L
 
 val add : t -> t -> t

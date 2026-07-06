@@ -13,6 +13,8 @@ let f64_add (x y: F64.t) : F64.t = F64.add x y
 let f64_sub (x y: F64.t) : F64.t = F64.sub x y
 let f64_mul (x y: F64.t) : F64.t = F64.mul x y
 let f64_div (x y: F64.t) : F64.t = F64.div x y
+let f64_neg (x : F64.t) : F64.t = F64.zero `F64.sub` x
+let f64_rcp (x : F64.t) : F64.t = F64.one `F64.div` x
 
 let f64_lt  (x y: F64.t) : bool = F64.lt x y
 let f64_lte (x y: F64.t) : bool = F64.lte x y
@@ -30,6 +32,8 @@ let f32_add (x y: F32.t) : F32.t = F32.add x y
 let f32_sub (x y: F32.t) : F32.t = F32.sub x y
 let f32_mul (x y: F32.t) : F32.t = F32.mul x y
 let f32_div (x y: F32.t) : F32.t = F32.div x y
+let f32_neg (x : F32.t) : F32.t = F32.zero `F32.sub` x
+let f32_rcp (x : F32.t) : F32.t = F32.one `F32.div` x
 
 let f32_lt  (x y: F32.t) : bool = F32.lt x y
 let f32_lte (x y: F32.t) : bool = F32.lte x y
