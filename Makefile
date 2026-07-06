@@ -12,6 +12,28 @@ FSTAR_DEFAULT_GOAL ?= build
 all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
+# By default, F* builds Karamel from the karamel/ submodule and uses the
+# resulting krml executable to test Pulse extraction. Set FSTAR_USE_KRML_EXE=1
+# to instead use an existing Karamel executable given by the KRML_EXE
+# environment variable; in that case the karamel/ submodule is not compiled.
+# KRML_EXE is a plain (non-exported) variable: it is passed explicitly to the
+# Pulse test sub-makes so that it does not leak into the Karamel build itself.
+.PHONY: karamel
+ifeq ($(FSTAR_USE_KRML_EXE),1)
+
+ifeq ($(KRML_EXE),)
+$(error FSTAR_USE_KRML_EXE is set to 1 but KRML_EXE is not set. Please set KRML_EXE to the full path of your Karamel executable.)
+endif
+
+# Nothing to build: use the user-provided Karamel executable.
+karamel:
+	@true
+
+else
+
+# Use the krml executable built from the karamel/ submodule.
+KRML_EXE := $(abspath karamel)/out/bin/krml
+
 karamel/Makefile:
 	$(error Error: $@ not found. Run `git submodule init && git submodule update` if you haven't)
 
@@ -29,6 +51,8 @@ karamel/Makefile:
 	@touch .krml.touch
 
 karamel: .krml.touch
+
+endif
 
 ### STAGES
 
@@ -412,8 +436,8 @@ define install-stage
 	$(call bold_msg, "INSTALL", "STAGE $(1)")
 	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
-	@# Karamel install
-	$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false
+	@# Karamel install (skipped when using an external Karamel executable)
+	$(if $(filter 1,$(FSTAR_USE_KRML_EXE)),,$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false)
 	touch $@
 endef
 
@@ -570,42 +594,39 @@ test-2: stage2
 	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
 
 test-3: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
-test-3: override KRML_HOME := $(abspath karamel)
 test-3: stage3
 	# Only test-3 calls test_pulse. The other compilers do not
 	# support Pulse.
-	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 unit-tests: _unit-tests
 
 # Use directly only at your own risk.
 _test_pulse: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test_pulse: KRML_HOME ?= $(abspath karamel)
 _test_pulse: _test_pulse_test _test_pulse_examples
 
 _test_pulse_test: karamel
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 _test_pulse_examples: karamel
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 accept_pulse_test:
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 accept_pulse_examples:
 	env \
 	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 accept_pulse: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
-accept_pulse: override KRML_HOME := $(abspath karamel)
 accept_pulse: accept_pulse_test accept_pulse_examples
 
 .PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse

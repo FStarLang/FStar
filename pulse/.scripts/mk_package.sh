@@ -2,7 +2,7 @@
 
 # This scripts builds a "standalone" package with F* and Pulse. It
 # does not include karamel as there is no way to install it and use it
-# without setting a KRML_HOME, which I would like to avoid. This will be
+# without setting a KRML_EXE, which I would like to avoid. This will be
 # fixed soon.
 
 set -eux

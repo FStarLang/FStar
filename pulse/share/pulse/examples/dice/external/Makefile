@@ -12,7 +12,7 @@
 
 # include $(PULSE_HOME)/share/pulse/Makefile.include
 
-# KRML ?= $(KRML_HOME)/krml
+# KRML ?= $(KRML_EXE)
 
 # .PHONY: extract
 # extract: $(ALL_KRML_FILES)
