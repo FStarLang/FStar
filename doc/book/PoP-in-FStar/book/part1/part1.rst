@@ -51,4 +51,5 @@ functions and prove them correct.
    part1_lemmas
    part1_quicksort
    part1_execution   
+   part1_modules
    part1_wrap
