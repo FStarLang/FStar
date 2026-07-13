@@ -34,7 +34,8 @@ module List = FStar.List.Tot
 module V = Pulse.Lib.Vec
 module B = Pulse.Lib.Box
 module LL = Pulse.Lib.LinkedList
-module OR = Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 module T = Pulse.Lib.Trade.Util
 module FE = FStar.FunctionalExtensionality
 module FS = FStar.FiniteSet.Base
@@ -1202,7 +1203,7 @@ let is_ht (#k:eqtype) (#v:Type0) (h:ht k v) (m:pmap k v) (keys:FS.set k) : slpro
          (cnt:SZ.t).
     V.pts_to h.buckets bucket_ptrs **
     B.pts_to h.count cnt **
-    OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v h.capacity) **
+    (forall+ (ix:nat{0 <= ix /\ ix < SZ.v h.capacity}). bucket_at bucket_ptrs bucket_contents ix) **
     pure (
       Seq.length bucket_ptrs == SZ.v h.capacity /\
       Seq.length bucket_contents == SZ.v h.capacity /\
@@ -1227,14 +1228,14 @@ fn get_bucket_at (#k:eqtype) (#v:Type0)
   (lo hi:nat)
   (i:nat{lo <= i /\ i < hi})
 requires 
-  OR.on_range (bucket_at bucket_ptrs bucket_contents) lo hi **
+  (forall+ (ix:nat{lo <= ix /\ ix < hi}). bucket_at bucket_ptrs bucket_contents ix) **
   pure (hi <= Seq.length bucket_ptrs /\ hi <= Seq.length bucket_contents)
 ensures 
   bucket_at bucket_ptrs bucket_contents i **
   (bucket_at bucket_ptrs bucket_contents i @==> 
-   OR.on_range (bucket_at bucket_ptrs bucket_contents) lo hi)
+   (forall+ (ix:nat{lo <= ix /\ ix < hi}). bucket_at bucket_ptrs bucket_contents ix))
 {
-  OR.on_range_focus i
+  range_focus (bucket_at bucket_ptrs bucket_contents) lo i hi
 }
 
 (** Put back bucket_at into on_range using the trade *)
@@ -1247,13 +1248,13 @@ fn put_bucket_at (#k:eqtype) (#v:Type0)
 requires 
   bucket_at bucket_ptrs bucket_contents i **
   (bucket_at bucket_ptrs bucket_contents i @==> 
-   OR.on_range (bucket_at bucket_ptrs bucket_contents) lo hi)
+   (forall+ (ix:nat{lo <= ix /\ ix < hi}). bucket_at bucket_ptrs bucket_contents ix))
 ensures 
-  OR.on_range (bucket_at bucket_ptrs bucket_contents) lo hi
+  (forall+ (ix:nat{lo <= ix /\ ix < hi}). bucket_at bucket_ptrs bucket_contents ix)
 {
   T.elim 
     (bucket_at bucket_ptrs bucket_contents i)
-    (OR.on_range (bucket_at bucket_ptrs bucket_contents) lo hi)
+    (forall+ (ix:nat{lo <= ix /\ ix < hi}). bucket_at bucket_ptrs bucket_contents ix)
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1302,7 +1303,7 @@ fn rec search_bucket_rec
 preserves LL.is_list b entries
 returns result:option v
 ensures pure (result == find_in_bucket entries key)
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
@@ -1341,7 +1342,7 @@ fn rec free_bucket
   (b:bucket k v)
   (#entries:erased (list (entry k v)))
 requires LL.is_list b entries
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
@@ -1369,7 +1370,7 @@ requires LL.is_list b entries
 returns result:(bucket k v & bool)
 ensures LL.is_list (fst result) (fst (remove_from_bucket entries key)) ** 
         pure (snd result == snd (remove_from_bucket entries key))
-decreases entries
+decreases reveal entries
 {
   let is_emp = LL.is_empty b;
   if is_emp {
@@ -2182,7 +2183,7 @@ requires
   pure (Seq.length bucket_ptrs == SZ.v capacity /\ SZ.v i <= SZ.v capacity)
 ensures exists* (new_ptrs:Seq.seq (bucket k v)) (new_contents:Seq.seq (list (entry k v))).
   V.pts_to buckets new_ptrs **
-  OR.on_range (bucket_at new_ptrs new_contents) (SZ.v i) (SZ.v capacity) **
+  (forall+ (ix:nat{SZ.v i <= ix /\ ix < SZ.v capacity}). bucket_at new_ptrs new_contents ix) **
   pure (
     Seq.length new_ptrs == SZ.v capacity /\
     Seq.length new_contents == SZ.v capacity /\
@@ -2195,7 +2196,8 @@ decreases (SZ.v capacity - SZ.v i)
     // Base case: i = capacity, on_range from capacity to capacity is empty
     let new_contents : erased (Seq.seq (list (entry k v))) = Seq.create (SZ.v capacity) [];
     assert (pure (Seq.length new_contents == SZ.v capacity));
-    OR.on_range_empty (bucket_at bucket_ptrs new_contents) (SZ.v capacity);
+    range_empty_intro (bucket_at bucket_ptrs new_contents) (SZ.v capacity);
+    range_rebound (bucket_at bucket_ptrs new_contents) (SZ.v capacity) (SZ.v capacity) (SZ.v i) (SZ.v capacity);
     ()
   } else {
     // Recursive case: first initialize bucket i, then recurse on i+1
@@ -2248,14 +2250,16 @@ decreases (SZ.v capacity - SZ.v i)
            as (bucket_at new_ptrs final_contents k)
     };
     
-    OR.on_range_weaken 
+    range_weaken 
       (bucket_at new_ptrs new_contents)
       (bucket_at new_ptrs final_contents)
       (SZ.v i_plus_1) (SZ.v capacity)
       weaken_bucket;
     
     // Combine: bucket_at at i + on_range [i+1, cap) = on_range [i, cap)
-    OR.on_range_cons (SZ.v i);
+    range_rebound (bucket_at new_ptrs final_contents)
+      (SZ.v i_plus_1) (SZ.v capacity) (SZ.v i + 1) (SZ.v capacity);
+    range_cons (bucket_at new_ptrs final_contents) (SZ.v i) (SZ.v capacity);
     
     ()
   }
@@ -2310,6 +2314,7 @@ ensures is_ht h empty_pmap FS.emptyset
   rewrite (V.pts_to buckets final_ptrs) as (V.pts_to h.buckets final_ptrs);
   rewrite (B.pts_to count 0sz) as (B.pts_to h.count 0sz);
   
+  range_rebound (bucket_at final_ptrs final_contents) 0 (SZ.v initial_capacity) 0 (SZ.v h.capacity);
   fold (is_ht h empty_pmap FS.emptyset);
   h
 }
@@ -2397,7 +2402,7 @@ ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
   let b = V.op_Array_Access h.buckets idx;
   
   // Split on_range at idx using on_range_get
-  OR.on_range_get idx_nat;
+  range_get (bucket_at bucket_ptrs bucket_contents) 0 idx_nat (SZ.v h.capacity);
   
   // Now we have:
   //   on_range [0, idx) ** bucket_at idx ** on_range [idx+1, capacity)
@@ -2461,20 +2466,20 @@ ensures is_ht h (insert_pmap m key value) (FS.insert key keys)
          as (bucket_at new_bucket_ptrs new_bucket_contents j)
   };
   
-  OR.on_range_weaken
+  range_weaken
     (bucket_at bucket_ptrs bucket_contents)
     (bucket_at new_bucket_ptrs new_bucket_contents)
     0 idx_nat
     weaken_lo;
   
-  OR.on_range_weaken
+  range_weaken
     (bucket_at bucket_ptrs bucket_contents)
     (bucket_at new_bucket_ptrs new_bucket_contents)
     (idx_nat + 1) (SZ.v h.capacity)
     weaken_hi;
   
   // Now combine the three parts back into one on_range
-  OR.on_range_put 0 idx_nat (SZ.v h.capacity);
+  range_put (bucket_at new_bucket_ptrs new_bucket_contents) 0 idx_nat (SZ.v h.capacity);
   
   // Now we have on_range [0, capacity) with new_bucket_ptrs/new_bucket_contents
   
@@ -2563,7 +2568,7 @@ ensures pure (removed == Some? (reveal m key))
   let b = V.op_Array_Access h.buckets idx;
   
   // Split on_range at idx using on_range_get
-  OR.on_range_get idx_nat;
+  range_get (bucket_at bucket_ptrs bucket_contents) 0 idx_nat (SZ.v h.capacity);
   
   // bucket_at gives us is_list for this bucket
   unfold_bucket_at bucket_ptrs bucket_contents idx_nat;
@@ -2612,20 +2617,20 @@ ensures pure (removed == Some? (reveal m key))
          as (bucket_at new_bucket_ptrs new_bucket_contents j)
   };
   
-  OR.on_range_weaken
+  range_weaken
     (bucket_at bucket_ptrs bucket_contents)
     (bucket_at new_bucket_ptrs new_bucket_contents)
     0 idx_nat
     weaken_lo;
   
-  OR.on_range_weaken
+  range_weaken
     (bucket_at bucket_ptrs bucket_contents)
     (bucket_at new_bucket_ptrs new_bucket_contents)
     (idx_nat + 1) (SZ.v h.capacity)
     weaken_hi;
   
   // Combine back into one on_range
-  OR.on_range_put 0 idx_nat (SZ.v h.capacity);
+  range_put (bucket_at new_bucket_ptrs new_bucket_contents) 0 idx_nat (SZ.v h.capacity);
   
   // Prove the properties (independent of count)
   // Count: use total_count_remove lemma
@@ -2782,7 +2787,7 @@ fn rec free_all_buckets
   (#bucket_contents:erased (Seq.seq (list (entry k v))))
 requires 
   V.pts_to buckets bucket_ptrs **
-  OR.on_range (bucket_at bucket_ptrs bucket_contents) (SZ.v i) (SZ.v capacity) **
+  (forall+ (ix:nat{SZ.v i <= ix /\ ix < SZ.v capacity}). bucket_at bucket_ptrs bucket_contents ix) **
   pure (Seq.length bucket_ptrs == SZ.v capacity /\ 
         Seq.length bucket_contents == SZ.v capacity /\
         SZ.v i <= SZ.v capacity)
@@ -2792,10 +2797,11 @@ decreases (SZ.v capacity - SZ.v i)
 {
   if (i = capacity) {
     // No more buckets to free
-    OR.on_range_empty_elim (bucket_at bucket_ptrs bucket_contents) (SZ.v capacity)
+    range_rebound (bucket_at bucket_ptrs bucket_contents) (SZ.v i) (SZ.v capacity) (SZ.v capacity) (SZ.v capacity);
+    range_empty_elim (bucket_at bucket_ptrs bucket_contents) (SZ.v capacity)
   } else {
     // Get the bucket at index i
-    OR.on_range_uncons ();
+    range_uncons (bucket_at bucket_ptrs bucket_contents) (SZ.v i) (SZ.v capacity);
     
     // Read the bucket pointer
     let b = V.op_Array_Access buckets i;
@@ -2812,6 +2818,7 @@ decreases (SZ.v capacity - SZ.v i)
     
     // Recurse
     let i_plus_1 = SZ.add i 1sz;
+    range_rebound (bucket_at bucket_ptrs bucket_contents) (SZ.v i + 1) (SZ.v capacity) (SZ.v i_plus_1) (SZ.v capacity);
     free_all_buckets buckets capacity i_plus_1
   }
 }
@@ -2890,7 +2897,7 @@ let is_ht_iter (#k:eqtype) (#v:Type0) (it:ht_iter k v)
     B.pts_to it.it_bucket_idx bucket_idx **
     B.pts_to it.it_entry_idx entry_idx **
     B.pts_to it.it_remaining rem_cnt **
-    OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v it.it_ht.capacity) **
+    (forall+ (ix:nat{0 <= ix /\ ix < SZ.v it.it_ht.capacity}). bucket_at bucket_ptrs bucket_contents ix) **
     pure (
       Seq.length bucket_ptrs == SZ.v it.it_ht.capacity /\
       Seq.length bucket_contents == SZ.v it.it_ht.capacity /\
@@ -3412,8 +3419,6 @@ ensures pure (ht_of it == h)
   // Rewrite to use it.it_ht instead of h
   rewrite (V.pts_to h.buckets bucket_ptrs) as (V.pts_to it.it_ht.buckets bucket_ptrs);
   rewrite (B.pts_to h.count cnt_val) as (B.pts_to it.it_ht.count cnt_val);
-  rewrite (OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v h.capacity))
-       as (OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v it.it_ht.capacity));
   rewrite (B.pts_to bucket_idx_box 0sz) as (B.pts_to it.it_bucket_idx 0sz);
   rewrite (B.pts_to entry_idx_box 0sz) as (B.pts_to it.it_entry_idx 0sz);
   rewrite (B.pts_to remaining_box cnt_val) as (B.pts_to it.it_remaining cnt_val);
@@ -3421,6 +3426,8 @@ ensures pure (ht_of it == h)
   // Prove remaining_keys_from starts with all keys
   remaining_keys_from_start bucket_contents;
   
+  assert (pure (SZ.v h.capacity == SZ.v it.it_ht.capacity));
+  range_rebound (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v h.capacity) 0 (SZ.v it.it_ht.capacity);
   fold (is_ht_iter it m keys keys);
   it
 }
@@ -3488,7 +3495,7 @@ fn rec find_nonempty_bucket (#k:eqtype) (#v:Type0)
   (start_idx:SZ.t)
 requires 
   V.pts_to buckets bucket_ptrs **
-  OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v capacity) **
+  (forall+ (ix:nat{0 <= ix /\ ix < SZ.v capacity}). bucket_at bucket_ptrs bucket_contents ix) **
   pure (
     SZ.v start_idx <= SZ.v capacity /\
     Seq.length bucket_ptrs == SZ.v capacity /\
@@ -3498,7 +3505,7 @@ requires
 returns bi:SZ.t
 ensures 
   V.pts_to buckets bucket_ptrs **
-  OR.on_range (bucket_at bucket_ptrs bucket_contents) 0 (SZ.v capacity) **
+  (forall+ (ix:nat{0 <= ix /\ ix < SZ.v capacity}). bucket_at bucket_ptrs bucket_contents ix) **
   pure (
     SZ.v start_idx <= SZ.v bi /\
     SZ.v bi <= SZ.v capacity /\

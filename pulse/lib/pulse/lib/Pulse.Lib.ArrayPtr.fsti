@@ -60,6 +60,17 @@ val pts_to_not_null
   (pts_to s #p v)
   (fun _ -> pts_to s #p v ** pure (not (g_is_null s)))
 
+(* The contents of any [pts_to] are backed by an in-memory array, whose length
+   fits [size_t]; hence the length of the underlying sequence fits [size_t]. *)
+val pts_to_len
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+: stt_ghost unit emp_inames
+  (pts_to s #p v)
+  (fun _ -> pts_to s #p v ** pure (SZ.fits (Seq.length v)))
+
 let pts_to_or_null
   (#t: Type)
   ([@@@mkey]s:ptr t)

@@ -74,7 +74,7 @@ val fits_u64_implies_fits (x:int)
 /// cast, see `uint32_to_sizet` below
 noextract inline_for_extraction
 val of_u32 (x: U32.t) : Pure t
-  (requires fits_u32)
+  (requires fits_u32 \/ fits (U32.v x))
   (ensures (fun y -> v y == U32.v x))
 
 /// Creates a size_t when given a uint64 literal. Note, this will not
@@ -82,7 +82,7 @@ val of_u32 (x: U32.t) : Pure t
 /// cast, see `uint64_to_sizet` below
 noextract inline_for_extraction
 val of_u64 (x: U64.t) : Pure t
-  (requires fits_u64)
+  (requires fits_u64 \/ fits (U64.v x))
   (ensures (fun y -> v y == U64.v x))
 
 val uint16_to_sizet (x:U16.t) : Pure t
@@ -90,11 +90,11 @@ val uint16_to_sizet (x:U16.t) : Pure t
   (ensures fun y -> v y == U16.v x)
 
 val uint32_to_sizet (x:U32.t) : Pure t
-  (requires fits_u32)
+  (requires fits_u32 \/ fits (U32.v x))
   (ensures fun y -> v y == U32.v x)
 
 val uint64_to_sizet (x:U64.t) : Pure t
-  (requires fits_u64)
+  (requires fits_u64 \/ fits (U64.v x))
   (ensures fun y -> v y == U64.v x)
 
 val sizet_to_uint32 (x:t) : Pure U32.t

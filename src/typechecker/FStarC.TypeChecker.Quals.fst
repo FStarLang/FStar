@@ -146,7 +146,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       let err msg =
         raise_error r Errors.Fatal_QualifierListNotPermitted (
           [ prefix 2 1 (text "Invalid qualifiers for declaration")
-                       (bquotes <| doc_of_string (Print.sigelt_to_string_short se));
+                       (fquotes <| doc_of_string (Print.sigelt_to_string_short se));
           ] @ msg
         )
       in
@@ -157,7 +157,7 @@ let check_sigelt_quals_pre (env:FStarC.TypeChecker.Env.env) se : ML unit =
       begin match pairwise_compat qual_compat quals with
       | Some (q, q') ->
         err [
-          text "Qualifiers" ^/^ (bquotes <| pp q) ^/^ text "and" ^/^ (bquotes <| pp q') ^/^ text "are not compatible.";
+          text "Qualifiers" ^/^ (fquotes <| pp q) ^/^ text "and" ^/^ (fquotes <| pp q') ^/^ text "are not compatible.";
         ]
       | None -> ()
       end;

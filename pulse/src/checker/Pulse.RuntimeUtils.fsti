@@ -69,7 +69,7 @@ val no_uvars_in_term (t:T.term) : Dv bool
    nodes. If and when that is fixed, we should remove this function *)
 val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
-val float_one : FStar.Float.float
+val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 val try_solve_single_valued_implicits : env -> list term -> Dv unit

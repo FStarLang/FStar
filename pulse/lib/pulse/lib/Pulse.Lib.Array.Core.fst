@@ -537,6 +537,8 @@ let length_gsub #t arr i j = ()
 let offset_of_gsub #t arr i j = ()
 let base_of_gsub #t arr i j = ()
 
+let same_base_null #t x y = ()
+
 ghost fn gsub_intro u#a (#t: Type u#a) (arr: array t) #f #mask (i j: nat) (#v: erased (Seq.seq (option t)) { i <= j /\ j <= Seq.length v })
   requires pts_to_mask arr #f v mask
   requires pure (forall (k: nat). mask k /\ k < Seq.length v ==> i <= k /\ k < j)

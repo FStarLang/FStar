@@ -27,7 +27,8 @@ module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 module GFT = Pulse.Lib.GhostFractionalTable
-module OR = Pulse.Lib.OnRange
+open Pulse.Lib.ForEvery
+open Pulse.Lib.ForEvery.Range
 module Frac = Pulse.Lib.Fractional
 
 ///
@@ -356,7 +357,7 @@ let rwlock_inv_aux (pred : perm -> slprop)
     B.pts_to counter n ** //counter is the actual physical counter on which do atomic operations
     GR.pts_to ghost_counter #(ghost_counter_perm n) n ** //ghost witness of counter value, only half when writer locks
     GFT.is_table perm_table table_size ** //permission to the table itself, allcoated up to table_size
-    OR.on_range (owns_half_table_entry perm_table spec) 0 table_size ** //half permission to all the table entries up to table size
+    (forall+ (k:nat{0 <= k /\ k < table_size}). owns_half_table_entry perm_table spec k) ** //half permission to all the table entries up to table size
     (if n = writer_sentinel then emp else pred f) ** //available permission in the lock
     table_relation n table_size entries spec f ///pure relation tying it all together
 
@@ -435,7 +436,7 @@ fn create (#pred : perm -> slprop) {| d: fractional pred |} (_u : unit)
   let empty_entries : index_set = Set.emptyset;
   
   // Create the invariant
-  OR.on_range_empty (owns_half_table_entry perm_table empty_spec) 0;
+  range_empty_intro (owns_half_table_entry perm_table empty_spec) 0;
   
   // Show ghost_counter_perm 0ul = 1.0R
   assert (pure (ghost_counter_perm 0ul == 1.0R));
@@ -573,12 +574,12 @@ fn try_acquire_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
         
         // Extend on_range: for k < table_size, new_spec k = spec k
         // Use on_range_weaken with a rewrite at each position
-        OR.on_range_weaken
+        range_weaken
           (owns_half_table_entry l.perm_table spec)
           (owns_half_table_entry l.perm_table (fun i -> if i = table_size then half_f else spec i))
           0 table_size
           (weaken_single_entry l.perm_table spec (fun i -> if i = table_size then half_f else spec i) 0 table_size ());
-        OR.on_range_snoc ();
+        range_snoc (owns_half_table_entry l.perm_table (fun i -> if i = table_size then half_f else spec i)) 0 table_size;
         
         // GFT.is_table should already be at table_size + 1 after alloc
         // Fold table_relation for new state
@@ -690,7 +691,7 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
       // reader_pos < table_size
       
       // Get entry from on_range
-      OR.on_range_get reader_pos;
+      range_get (owns_half_table_entry l.perm_table spec) 0 reader_pos table_size;
       rewrite (owns_half_table_entry l.perm_table spec reader_pos)
            as (GFT.pts_to l.perm_table reader_pos #0.5R (spec reader_pos));
       
@@ -714,7 +715,7 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
       // Put entry back into on_range
       rewrite (GFT.pts_to l.perm_table reader_pos #0.5R (spec reader_pos))
            as (owns_half_table_entry l.perm_table spec reader_pos);
-      OR.on_range_put 0 reader_pos table_size;
+      range_put (owns_half_table_entry l.perm_table spec) 0 reader_pos table_size;
       
       // Refold invariant
       fold (table_relation n table_size entries spec avail);
@@ -831,7 +832,7 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
         assert (pure (reader_pos < table_size));
         
         // Get the invariant's half of the entry from on_range
-        OR.on_range_get reader_pos;
+        range_get (owns_half_table_entry l.perm_table spec) 0 reader_pos table_size;
         rewrite (owns_half_table_entry l.perm_table spec reader_pos)
              as (GFT.pts_to l.perm_table reader_pos #0.5R (spec reader_pos));
         
@@ -875,18 +876,18 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
         
         // Weaken the on_range parts from spec to new_spec
         // For indices != reader_pos, new_spec i = spec i
-        OR.on_range_weaken
+        range_weaken
           (owns_half_table_entry l.perm_table spec)
           (owns_half_table_entry l.perm_table (fun i -> if i = reader_pos then 0.0R else spec i))
           0 reader_pos
           (weaken_single_entry l.perm_table spec (fun i -> if i = reader_pos then 0.0R else spec i) 0 reader_pos ());
-        OR.on_range_weaken
+        range_weaken
           (owns_half_table_entry l.perm_table spec)
           (owns_half_table_entry l.perm_table (fun i -> if i = reader_pos then 0.0R else spec i))
           (reader_pos + 1) table_size
           (weaken_single_entry l.perm_table spec (fun i -> if i = reader_pos then 0.0R else spec i) (reader_pos + 1) table_size ());
         
-        OR.on_range_put 0 reader_pos table_size;
+        range_put (owns_half_table_entry l.perm_table (fun i -> if i = reader_pos then 0.0R else spec i)) 0 reader_pos table_size;
         
         // Fold table_relation for new state
         fold (table_relation new_count table_size (Set.remove reader_pos entries) 
@@ -1219,7 +1220,7 @@ fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
     GR.free l.ghost_counter #writer_sentinel;
     
     // Drop ghost table resources
-    drop_ (OR.on_range (owns_half_table_entry l.perm_table spec) 0 table_size);
+    drop_ (forall+ (k:nat{0 <= k /\ k < table_size}). owns_half_table_entry l.perm_table spec k);
     drop_ (GFT.is_table l.perm_table table_size);
     
     fold (cond true (pred 1.0R) (is_rwlock l #1.0R));

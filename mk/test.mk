@@ -27,6 +27,10 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_EXE
 
+KRML_EXE ?= $(FSTAR_ROOT)/out/bin/krml
+KRML_EXE := $(abspath $(KRML_EXE))
+export KRML_EXE
+
 FSTAR_ARGS += --odir $(OUTPUT_DIR)
 FSTAR_ARGS += --cache_dir $(CACHE_DIR)
 FSTAR_ARGS += --already_cached Prims,FStar
@@ -100,6 +104,15 @@ $(OUTPUT_DIR)/%.ml:
 $(OUTPUT_DIR)/%.fs:
 	$(call msg, "EXTRACT FS", $(basename $(notdir $@)))
 	$(FSTAR) --codegen FSharp $< -o $@
+
+$(OUTPUT_DIR)/$(subst .,_,%).krml:
+	$(call msg, "EXTRACT", $(basename $(notdir $@)))
+	$(FSTAR) $< --codegen krml --extract_module $(subst .fst.checked,,$(notdir $<))
+
+$(OUTPUT_DIR)/%.c: $(OUTPUT_DIR)/%.krml
+	$(call msg, "KRML", $(basename $(notdir $@)))
+	if ! which $(KRML_EXE); then echo "krml ($(KRML_EXE)) not found" >&2; false; fi
+	$(KRML_EXE) $(KRML_FLAGS) -skip-makefiles -header=$(FSTAR_ROOT)/mk/krmlheader -bundle $*=* -skip-linking $+ -tmpdir $(OUTPUT_DIR)
 
 $(OUTPUT_DIR)/%.exe: $(OUTPUT_DIR)/%.ml
 	$(call msg, "OCAMLOPT", $(basename $(notdir $<)))

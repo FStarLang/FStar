@@ -23,7 +23,6 @@ open FStar.Classical
 open FStar.Constructive
 open FStar.DependentMap
 open FStar.Fin
-open FStar.Float
 open FStar.FunctionalExtensionality
 open FStar.Ghost
 open FStar.IndefiniteDescription

@@ -18,6 +18,7 @@ module Pulse.Lib.SeqMatch
 #lang-pulse
 include Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
+open Pulse.Lib.ForEvery
 
 module Seq = FStar.Seq
 
@@ -114,13 +115,32 @@ values. Contrary to `seq_list_match`, `seq_seq_match` is not meant to be usable 
 (mutually) recursive definitions of matching functions on the type of
 high-level values, because no lemma ensures that `Seq.index s i << s`  *)
 
-val seq_seq_match
+(* `seq_seq_match_item p c l i` matches the `i`-th low-level value of `c`
+   with the `i`-th high-level value of `l`, or is `pure False` when `i` is
+   out of bounds. *)
+let seq_seq_match_item
+  (#t1 #t2: Type)
+  (p: t1 -> t2 -> slprop)
+  (c: Seq.seq t1)
+  (l: Seq.seq t2)
+  (i: nat)
+: Tot slprop
+= if i < Seq.length c && i < Seq.length l
+  then
+    p (Seq.index c i) (Seq.index l i)
+  else
+    pure False
+
+(* `seq_seq_match` is defined in terms of `forall+` over the range of
+   indices `[i, j)`, together with the `pure (i <= j)` invariant. *)
+let seq_seq_match
   (#t1 #t2: Type)
   (p: t1 -> t2 -> slprop)
   ([@@@mkey] c : Seq.seq t1)
   (l : Seq.seq t2)
   (i j: nat)
 : Tot slprop
+= pure (i <= j) ** (forall+ (k:nat{i <= k /\ k < j}). seq_seq_match_item p c l k)
 
 val seq_seq_match_length
   (#t1 #t2: Type0)
