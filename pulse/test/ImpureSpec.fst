@@ -181,3 +181,27 @@ fn test16_match #p #q (x y: ref int)
   };
   !result;
 }
+
+// Regression tests for issue #4347: spec purification must descend into the
+// direct slprop-typed arguments of combinators, so that stateful reads
+// (e.g. `!r`) inside a combinator argument can see sibling resources.
+// Predicate-abstraction (function-typed) arguments are intentionally not
+// descended into (see Pulse.Checker.ImpureSpec.purify_args).
+
+let id_wrap (p: slprop) : slprop = p
+let nonneg (v: int) : slprop = pure (v >= 0)
+
+// Direct slprop argument: `!r` is resolved using the `pts_to r` sibling that
+// lives inside the same combinator argument.
+fn test17_comb_direct ()
+  returns r : (ref int)
+  ensures exists* (v: int). id_wrap (pts_to r v ** nonneg (!r))
+{ admit () }
+
+// The existential introduced while purifying `live x` must stay *inside* the
+// combinator argument: `id_wrap (live x ** pure (!x >= 0))` purifies to
+// `id_wrap (exists* y. pts_to x y ** pure (y >= 0))`. With no outer resource
+// for `x`, the `!x` must be resolved by the `live x` inside the argument.
+fn test18_comb_exists_inside (x: ref int)
+  ensures id_wrap (live x ** pure (!x >= 0))
+{ admit () }

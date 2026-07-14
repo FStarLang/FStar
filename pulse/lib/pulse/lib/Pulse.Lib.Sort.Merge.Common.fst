@@ -58,12 +58,33 @@ ensures
   SM.seq_list_match_singleton_intro_trade x1 (List.Tot.hd v1) vmatch;
   Trade.trans_hyp_l _ (vmatch x1 (List.Tot.hd v1)) _ _;
   Trade.reg_l (SM.seq_list_match c accu vmatch) _ (SM.seq_list_match c1 v1 vmatch);
-  Trade.assoc_hyp_l _ _ _ (_ ** SM.seq_list_match c1 v1 vmatch);
+  slprop_equivs ();
+  rewrite (Trade.trade
+             (SM.seq_list_match c accu vmatch **
+               (SM.seq_list_match (Seq.cons x1 Seq.empty) [List.Tot.hd v1] vmatch **
+                 SM.seq_list_match (Seq.tail c1) (List.Tot.tl v1) vmatch))
+             (SM.seq_list_match c accu vmatch ** SM.seq_list_match c1 v1 vmatch))
+       as (Trade.trade
+             ((SM.seq_list_match c accu vmatch **
+                 SM.seq_list_match (Seq.cons x1 Seq.empty) [List.Tot.hd v1] vmatch) **
+               SM.seq_list_match (Seq.tail c1) (List.Tot.tl v1) vmatch)
+             (SM.seq_list_match c accu vmatch ** SM.seq_list_match c1 v1 vmatch));
   SM.seq_list_match_append_intro_trade vmatch c accu (Seq.cons x1 Seq.empty) [List.Tot.hd v1];
   Trade.trans_hyp_l _ _ _ (_ ** SM.seq_list_match c1 v1 vmatch);
   Trade.reg_r _ _ (SM.seq_list_match c2 v2 vmatch);
-  Trade.assoc_hyp_r _ _ _ _;
-  Trade.assoc_concl_l _ _ _ _;
+  slprop_equivs ();
+  rewrite (Trade.trade
+             ((SM.seq_list_match (Seq.append c (Seq.cons x1 Seq.empty)) (List.Tot.append accu [List.Tot.hd v1]) vmatch **
+                 SM.seq_list_match (Seq.tail c1) (List.Tot.tl v1) vmatch) **
+               SM.seq_list_match c2 v2 vmatch)
+             ((SM.seq_list_match c accu vmatch ** SM.seq_list_match c1 v1 vmatch) **
+               SM.seq_list_match c2 v2 vmatch))
+       as (Trade.trade
+             (SM.seq_list_match (Seq.append c (Seq.cons x1 Seq.empty)) (List.Tot.append accu [List.Tot.hd v1]) vmatch **
+               (SM.seq_list_match (Seq.tail c1) (List.Tot.tl v1) vmatch **
+                 SM.seq_list_match c2 v2 vmatch))
+             (SM.seq_list_match c accu vmatch **
+               (SM.seq_list_match c1 v1 vmatch ** SM.seq_list_match c2 v2 vmatch)));
 }
 
 ghost
