@@ -37,6 +37,7 @@ implemented by the F* compiler. It should be possible to implement IDE
 support similar to fstar-mode.el or fstar-vscode-assistant in your
 favorite plugin-capable editor.
 
+.. _Part1_basic_structure:
 
 Basic syntactic structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^

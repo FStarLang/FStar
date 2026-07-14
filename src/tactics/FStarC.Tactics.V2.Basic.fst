@@ -496,10 +496,29 @@ let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term)  : ML (tac bool) 
   let uvs1 = SF.uvars_uncached t1 in
   let! r = do_unify_aux must_tot Check_right_only env t1 t2 in
   if r then begin
-      let uvs2 = SF.uvars_uncached t1 in
-      if not (equal uvs1 uvs2)
-      then (UF.rollback tx; return false)
-      else return true
+      (* Check that none of the variables in uvs1 is now solved
+         to something that is not also a uvar (i.e. they could be
+         solved to a different uvar, that is unsolved, due to flex-flex problems).
+         We previously used to do another call of uvars_uncached and compare
+         the sets, but this is too brittle. *)
+      let check1 (v : ctx_uvar) : ML bool =
+        match Syntax.Unionfind.find v.ctx_uvar_head with
+        | None -> true
+        | Some t ->
+          match (SS.compress t).n with
+          | Tm_uvar _ -> true
+          | _ ->
+            // Format.print2 "failing, uvar %s is solved to %s\n" (show v) (show t);
+            false
+      in
+      if for_all check1 uvs1
+      then (
+        UF.commit tx;
+        return true
+      ) else (
+        UF.rollback tx;
+        return false
+      )
   end
   else return false
 
@@ -1043,7 +1062,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     if only_match && not (is_empty (Free.uvars_uncached typ)) then
-      fail "t_apply: only_match is on, but the type of the term to apply is not a uvar"
+      fail "t_apply: only_match is on, but the type of the term to apply contains uvars"
     else return ();!
     let! uvs = try_unify_by_application (Some should_check) only_match e typ (goal_type goal) (rangeof goal) in
     if_verbose
