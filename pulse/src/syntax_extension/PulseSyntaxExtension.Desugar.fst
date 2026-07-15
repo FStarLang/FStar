@@ -205,6 +205,10 @@ let comp_to_ast_term (c:Sugar.computation_type) : ML (err A.term) =
       let h = mk_term (Var stt_lid) r Expr in
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       h
+    | Sugar.STDiv ->
+      let h = mk_term (Var stt_div_lid) r Expr in
+      let h = mk_term (App (h, return_ty, Nothing)) r Expr in
+      h
     | Sugar.STAtomic ->
       (* hack for now *)
       let is = mk_term (Var (Ident.lid_of_str "Pulse.Lib.Core.emp_inames")) r Expr in
@@ -382,6 +386,12 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
              (Some?.v annots.Sugar.opens).range
       else return ();!
       return (C_ST (sw_mk_st_comp pre (sw_mk_binder annots.Sugar.return_name ret) post))
+    | Sugar.STDiv ->
+      if Some? annots.Sugar.opens then
+        fail "STT computations are not indexed by invariants. Either remove the `opens` or make this function ghost/atomic."
+             (Some?.v annots.Sugar.opens).range
+      else return ();!
+      return (C_STDiv (sw_mk_st_comp pre (sw_mk_binder annots.Sugar.return_name ret) post))
     | Sugar.STAtomic ->
       return (C_STAtomic opens Observable (sw_mk_st_comp pre (sw_mk_binder annots.Sugar.return_name ret) post))
     | Sugar.STUnobservable ->

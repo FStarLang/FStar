@@ -75,7 +75,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   | None | Some (C_Tot ..) ->
     T.fail_doc_at [text "Impossible: not a stateful application type"; fquotes (pp ty)] (Some (RU.range_of_term t))
   | Some c -> match c with
-  | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } ->
+  | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } | C_STDiv { pre; post } ->
     let x = fresh g in
     let x_ppn = mk_ppname_no_range "result" in
     let g' = push_binding g x (mk_ppname_no_range "result") ty in

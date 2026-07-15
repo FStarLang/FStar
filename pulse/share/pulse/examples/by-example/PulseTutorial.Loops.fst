@@ -27,6 +27,7 @@ ensures  R.pts_to x 0
     while (true)
         invariant live x
         ensures (!x == 0)
+        decreases (!x)
     {
         if (!x = 0) {
             break;
@@ -44,7 +45,9 @@ ensures  R.pts_to x 0
     let mut decr : nat = 1;
     while (true)
         invariant live x
+        invariant R.pts_to decr 1
         ensures (!x == 0)
+        decreases (!x)
     {
         if (!x = 0) {
             break;
@@ -73,13 +76,14 @@ ensures  R.pts_to x 0
     )
     invariant
       exists* (v:nat). pts_to x v
+    decreases (!x)
     { () }
 }
 //end count_down3$
 
 
 //count_down_loopy$
-fn count_down_loopy (x:ref nat)
+divergent fn count_down_loopy (x:ref nat)
 requires R.pts_to x 'v
 ensures  R.pts_to x 0
 {
@@ -115,6 +119,7 @@ fn multiply_by_repeated_addition (x y:nat)
         R.pts_to acc a **
         pure (c <= x /\
               a == (c * y))
+    decreases (x - !ctr)
     {
         let a = !acc;
         acc := a + y;
@@ -159,6 +164,7 @@ ensures pure ((n * (n + 1) / 2) == z)
         R.pts_to acc a **
         pure (c <= n /\
               a == sum c)
+    decreases (n - !ctr)
     {
         let a = !acc;
         let c = !ctr;
@@ -190,6 +196,7 @@ ensures
           fst v == fib (n - 1) /\
           snd v == fib n 
         )
+decreases n
 {
   if (n = 1)
   {
@@ -226,6 +233,7 @@ fn fib_loop (k:pos)
             vctr <= k /\
             vi == fib (vctr - 1) /\
             vj == fib vctr) 
+  decreases (k - !ctr)
   {
       let vi = !i;
       let vj = !j;
@@ -269,6 +277,7 @@ fn fibonacci32 (k:U32.t)
            vctr <= k /\
            fib (v (vctr - 1ul)) == v vi/\
            fib (v vctr) == v vj)
+  decreases (Prims.op_Subtraction (v k) (v (!ctr)))
   {
      let vi = !i;
      let vj = !j;

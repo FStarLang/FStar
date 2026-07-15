@@ -771,6 +771,7 @@ fn rec sift_up (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t)
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (right_idx (SZ.v idx)))))
   ensures exists* s'. is_rvec pq s' cap ** pure (Seq.length s' == Seq.length s /\ is_heap s' /\
                                               (forall (y:t). count y s' == count y s))
+  decreases (SZ.v idx)
 {
   if (idx = 0sz) {
     // At root, heap_up_at is trivially satisfied
@@ -1089,6 +1090,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
                                      Seq.index s (parent_idx (SZ.v idx)) <=? Seq.index s (right_idx (SZ.v idx)))))
   ensures exists* s'. is_rvec pq s' cap ** pure (Seq.length s' == Seq.length s /\ is_heap s' /\
                                               (forall (y:t). count y s' == count y s))
+  decreases (Prims.op_Subtraction (SZ.v len) (SZ.v idx))
 {
   // We know: fits(2*len + 2), so fits(2*idx + 1) since idx < len
   let left : SZ.t = SZ.add (SZ.mul 2sz idx) 1sz;
@@ -1187,7 +1189,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 #pop-options
 
 // After setting root to last element and popping, we get almost_heap_sift_down at 0
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1"
+#push-options "--z3rlimit 10 --fuel 1 --ifuel 1 --split_queries always"
 let extract_almost_heap #t {| total_order t |} (s:Seq.seq t) (v:t)
   : Lemma (requires is_heap s /\ Seq.length s > 1)
           (ensures almost_heap_sift_down (Seq.slice (Seq.upd s 0 v) 0 (Seq.length s - 1)) 0)

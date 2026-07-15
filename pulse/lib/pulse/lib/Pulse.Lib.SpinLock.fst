@@ -78,6 +78,7 @@ fn new_lock (v:slprop)
   l
 }
 
+divergent
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   preserves lock_alive l #p v
   ensures v

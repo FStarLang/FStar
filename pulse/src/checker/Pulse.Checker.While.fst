@@ -35,10 +35,10 @@ let inv_typing_weakening (g:env) (inv:slprop)
  = let x : (x:FStar.Ghost.erased var {fresh_wrt x g (freevars inv)}) = RU.magic () in
    x
 
-let inv_as_post_hint (g:env) (inv:slprop) 
-: T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == EffectAnnotSTT })
+let inv_as_post_hint (g:env) (inv:slprop) (div:bool)
+: T.Tac (ph:post_hint_for_env g { ph.post == inv /\ ph.ret_ty == tm_unit /\ ph.u == u0 /\ ph.effect_annot == (if div then EffectAnnotSTTDiv else EffectAnnotSTT) })
 = let x = inv_typing_weakening g inv in
-  { g; effect_annot=EffectAnnotSTT;
+  { g; effect_annot=(if div then EffectAnnotSTTDiv else EffectAnnotSTT);
     ret_ty=tm_unit; u=u0; post=inv }
 
 let tm_l_true : term = FStar.Reflection.V2.Formula.(formula_as_term True_)
@@ -196,6 +196,9 @@ let check_while
       u, ty, meas_val, true, mk_dec
   in
   let dec_formula = mk_dec (tm_bvar {bv_index=0;bv_ppname=fst x_meas}) (term_of_nvar x_meas) in
+  (* A while loop without a decreases measure is divergent; a measured loop
+     is checked as terminating. *)
+  let div = not is_tot in
   let inv_range = term_range inv in
   let g_meas = push_binding g (snd x_meas) (fst x_meas) ty_meas in
   let inv =
@@ -252,7 +255,12 @@ let check_while
       let t: term = tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond.post tm_false 0) (snd x_meas)) in
       t
   in
-  let break_lbl_c = C_ST {
+  let break_lbl_c = if div then C_STDiv {
+    u = u0;
+    res = tm_unit;
+    pre = break_pred;
+    post = tm_is_unreachable;
+  } else C_ST {
     u = u0;
     res = tm_unit;
     pre = break_pred;
@@ -274,7 +282,7 @@ let check_while
 
   let body_pre_open = post_cond.post in
 
-  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open)) in
+  let body_ph : post_hint_for_env g2 = inv_as_post_hint g2 (comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div)) div in
   assert body_ph.ret_ty == tm_unit;
   let x = fresh g2 in
 
@@ -286,27 +294,26 @@ let check_while
   let (| cond, comp_cond |) = r_cond in
   let (| body, comp_body |) = apply_checker_result_k r_body ppname_default in
   assert (comp_cond == (comp_while_cond inv body_pre_open));
-  assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_res comp_body == comp_res (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open));
-  assert (comp_body == comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open);
+  assert (comp_post comp_body == comp_post (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
+  assert (comp_pre comp_body == comp_pre (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
+  assert (comp_u comp_body == comp_u (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
+  assert (comp_res comp_body == comp_res (comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div));
+  assert (comp_body == comp_while_body u_meas ty_meas is_tot dec_formula x_meas inv body_pre_open div);
 
 
-  let while = wtag (Some STT) (Tm_While { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
+  let while = wtag (Some (if div then STT_Div else STT)) (Tm_While { invariant = inv; loop_requires = tm_unknown; meas = []; condition = cond; body }) in
 
   assume ~(snd x_meas `Set.mem` freevars_st cond);
   assume ~(snd x_meas `Set.mem` freevars_st body);
 
-  let C_ST cst = comp_while u_meas ty_meas x_meas inv body_pre_open in
   let loop_pre = tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x_meas)) in
-  assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open) == loop_pre;
-  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| while, comp_while u_meas ty_meas x_meas inv body_pre_open |) in
+  assert comp_pre (comp_while u_meas ty_meas x_meas inv body_pre_open div) == loop_pre;
+  let d_st : Pulse.Typing.Combinators.st_typing_in_ctxt g1' loop_pre NoHint = (| while, comp_while u_meas ty_meas x_meas inv body_pre_open div |) in
   let res = checker_result_for_st_typing d_st ppname_default in
   assume (fresh_wrt x g0 (freevars break_pred));
   let post_hint_for_while : post_hint_for_env g0 = {
       g=g0;
-      effect_annot=EffectAnnotSTT;
+      effect_annot=(if div then EffectAnnotSTTDiv else EffectAnnotSTT);
       ret_ty=RT.unit_ty;
       u=u_zero;
       post=break_pred

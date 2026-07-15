@@ -53,6 +53,7 @@ fn test6 () {
   let mut y = 20;
   while (!y > !x)
     invariant (live y) ** pure (!y >= !x /\ !y <= old (!y))
+    decreases (!y - !x)
     // elaborates to: exists* vy. (y |-> vy) ** pure (vy >= 10 /\ vy <= 20)
   {
     y := !y - 1;
@@ -60,7 +61,7 @@ fn test6 () {
   assert pure (10 <= !y /\ !y <= 20);
 }
 
-fn rec test7 (r: ref int)
+divergent fn rec test7 (r: ref int)
   preserves live r
   ensures pure (!r <= old !r)
 {

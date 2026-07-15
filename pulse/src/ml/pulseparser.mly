@@ -87,12 +87,12 @@ let build_fn_type_term (binders : FStarC_Parser_AST.binder list list) (comp : Pu
   let post_pat = mk_pattern (PatVar (ret_name, None, [])) r in
   let post_lam = mk_term (Abs ([post_pat], post)) r Un in
   let stt_name = match comp.tag with
-    | ST -> "stt" | STGhost -> "stt_ghost"
+    | ST -> "stt" | STDiv -> "stt_div" | STGhost -> "stt_ghost"
     | STAtomic -> "stt_atomic" | STUnobservable -> "stt_unobservable"
   in
   let stt_var = mk_term (Var (FStarC_Ident.lid_of_ids [FStarC_Ident.mk_ident(stt_name, r)])) r Un in
   let stt_app = match comp.tag with
-    | ST ->
+    | ST | STDiv ->
       mkApp stt_var [(ret_ty, Nothing); (pre, Nothing); (post_lam, Nothing)] r
     | STGhost | STAtomic | STUnobservable ->
       let inames = match opens with
@@ -107,7 +107,7 @@ let build_fn_type_term (binders : FStarC_Parser_AST.binder list list) (comp : Pu
 
 /* pulse specific tokens; rest are inherited from F* */
 %token MUT FN INVARIANT WHILE REF REWRITE FOLD EACH NOREWRITE PREDICATE
-%token GHOST ATOMIC UNOBSERVABLE
+%token GHOST ATOMIC UNOBSERVABLE DIVERGENT
 %token OPENS  SHOW_PROOF_STATE
 %token PRESERVES
 %token GOTO LABEL BREAK CONTINUE RETURN DEFER
@@ -141,6 +141,7 @@ qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
   | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
   | UNOBSERVABLE { PulseSyntaxExtension_Sugar.STUnobservable }
+  | DIVERGENT { PulseSyntaxExtension_Sugar.STDiv }
 
 startOfNextPulseDeclToken:
  | i=startOfNextDeclToken { i }

@@ -207,6 +207,7 @@ let rec max_obs
   | c'::rest -> 
     match c' with
     | C_ST _
+    | C_STDiv _
     | C_STGhost _ _ ->
       max_obs rest obs
     | C_STAtomic _ obs' _ ->
@@ -225,6 +226,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| br, c |) = checked_br in
     match c with
     | C_ST _ 
+    | C_STDiv _
     | C_STGhost _ _ ->
       let rest = 
         List.Tot.map 
@@ -250,6 +252,7 @@ let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| _, c |) = checked_br in
     match c with
     | C_ST _ -> STT
+    | C_STDiv _ -> STT_Div
     | C_STGhost _ _ -> least_tag rest
     | C_STAtomic i _ _ -> STT_Atomic
 
@@ -280,6 +283,9 @@ let weaken_branch_tag_to
       let c' = Pulse.Typing.Combinators.st_ghost_as_atomic c in
       (| pe, c' |)
     )
+
+    | _ ->
+      fail g (Some r) "Cannot lift this branch effect"
     
 
 

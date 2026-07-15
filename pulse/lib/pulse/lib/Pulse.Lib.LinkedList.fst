@@ -234,6 +234,7 @@ fn rec length (#t:Type0) (x:llist t)
     preserves is_list x l
     returns n:nat
     ensures pure (n == List.Tot.length l)
+    decreases (reveal l)
 {
    match x {
     None -> {
@@ -281,6 +282,7 @@ fn rec append (#t:Type0) (x y:llist t)
   requires is_list y 'l2
   requires pure (Cons? 'l1)
   ensures is_list x ('l1 @ 'l2)
+  decreases (reveal 'l1)
 {
   some_iff_cons x;
   let np = Some?.v x;

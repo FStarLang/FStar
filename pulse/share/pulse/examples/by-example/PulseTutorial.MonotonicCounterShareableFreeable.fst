@@ -121,6 +121,7 @@ ensures exists* j. c.inv p j
     assert pure (v1 < v2);
 }
 
+divergent
 fn test_counter ()
 {
     let c = new_counter ();

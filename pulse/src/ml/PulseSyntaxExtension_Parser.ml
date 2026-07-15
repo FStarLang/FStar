@@ -16,6 +16,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "predicate" -> PP.PREDICATE
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
+    | IDENT "divergent" -> PP.DIVERGENT
     | IDENT "each" -> PP.EACH
     | IDENT "rewrite" -> PP.REWRITE
     | IDENT "fold" -> PP.FOLD
@@ -212,7 +213,8 @@ let rewrite_token (tok:FP.token)
 
 let wrap_lexer lexbuf () =
   let tok = FStarC_Parser_LexFStar.token lexbuf in
-  rewrite_token tok, lexbuf.start_p, lexbuf.cur_p
+  let rt = rewrite_token tok in
+  rt, lexbuf.start_p, lexbuf.cur_p
 
 let lexbuf_and_lexer (s:string) (r:range) = 
   let lexbuf =

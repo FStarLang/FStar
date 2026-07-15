@@ -96,6 +96,7 @@ let merge_case_2_post
 = ()
 
 inline_for_extraction
+divergent
 fn merge
     (#tl #th: Type0)
     (vmatch: tl -> th -> slprop)
@@ -278,7 +279,7 @@ let sort_aux_t
     (a: S.slice tl) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-stt bool
+stt_div bool
   (
     pts_to a c **
     SM.seq_list_match c l vmatch
@@ -286,6 +287,7 @@ stt bool
   (fun res -> sort_aux_post vmatch compare a c l res)
 
 inline_for_extraction
+divergent
 fn sort_aux
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
@@ -364,7 +366,7 @@ let sort_t
     (a: S.slice tl) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-    stt bool
+    stt_div bool
     (pts_to a c **
       SM.seq_list_match c l vmatch
     )
@@ -380,6 +382,7 @@ let sort_t
     )
 
 inline_for_extraction
+divergent
 fn sort
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)

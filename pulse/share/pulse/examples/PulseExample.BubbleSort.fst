@@ -239,6 +239,7 @@ fn bubble_sort
       suffix_sorted s (SZ.v vi + 1) /\
       prefix_le_suffix s (SZ.v vi + 1)
     )
+  decreases (SZ.v (!i))
   {
     let vi = !i;
     
@@ -258,6 +259,7 @@ fn bubble_sort
         prefix_le_suffix (value_of a) (SZ.v vi + 1) /\
         (SZ.v !j > 0 ==> is_max_up_to (value_of a) (SZ.v !j))
       )
+    decreases (Prims.op_Subtraction (SZ.v vi) (SZ.v (!j)))
     {
       let vj = !j;
       

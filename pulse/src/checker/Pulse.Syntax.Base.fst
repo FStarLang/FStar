@@ -25,6 +25,7 @@ let range_of_comp (c:comp) =
   match c with
   | C_Tot t -> RU.range_of_term t
   | C_ST st -> range_of_st_comp st
+  | C_STDiv st -> range_of_st_comp st
   | C_STAtomic _ _ st -> range_of_st_comp st
   | C_STGhost _ st -> range_of_st_comp st
 
@@ -53,6 +54,8 @@ let eq_comp (c1 c2:comp)
     | C_Tot t1, C_Tot t2 ->
       eq_tm t1 t2
     | C_ST s1, C_ST s2 ->
+      eq_st_comp s1 s2
+    | C_STDiv s1, C_STDiv s2 ->
       eq_st_comp s1 s2
     | C_STAtomic i1 o1 s1, C_STAtomic i2 o2 s2 ->
       eq_tm i1 i2 &&

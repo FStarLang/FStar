@@ -23,7 +23,7 @@ open Pulse.Lib.Send
 module T = FStar.Tactics.V2
 
 inline_for_extraction
-let task_f pre post = stt unit pre (fun _ -> post)
+let task_f pre post = stt_div unit pre (fun _ -> post)
 
 val handle : Type0
 val pool : Type0
@@ -32,6 +32,7 @@ instance val is_send_pool_alive #f p : is_send (pool_alive #f p)
 
 val joinable (p: pool) (post: slprop) (h: handle) : slprop
 
+divergent
 fn spawn
   (p: pool)
   (#pf: perm)
@@ -55,6 +56,7 @@ fn disown
   ensures  pledge [] (pool_done p) post
 
 (* spawn + disown *)
+divergent
 fn spawn_
   (p: pool)
   (#pf : perm)
@@ -66,6 +68,7 @@ fn spawn_
   requires pre
   ensures pledge [] (pool_done p) post
 
+divergent
 fn await
   (#p: pool)
   (#post : slprop)
@@ -75,6 +78,7 @@ fn await
   requires joinable p post h
   ensures post
 
+divergent
 fn await_pool
   (p:pool)
   (#is:inames)
@@ -84,6 +88,7 @@ fn await_pool
   requires pledge is (pool_done p) q
   ensures q
 
+divergent
 fn teardown_pool
   (p:pool)
   requires pool_alive p

@@ -105,6 +105,7 @@ let binder_to_string (b:binder)
 
 let ctag_to_string = function
   | STT -> "ST"
+  | STT_Div -> "STDiv"
   | STT_Atomic -> "STAtomic"
   | STT_Ghost -> "STGhost"
 
@@ -115,6 +116,7 @@ let observability_to_string =
 
 let effect_annot_to_string = function
   | EffectAnnotSTT -> "stt"
+  | EffectAnnotSTTDiv -> "stt_div"
   | EffectAnnotGhost { opens } -> sprintf "stt_ghost %s" (term_to_string opens)
   | EffectAnnotAtomic { opens } -> sprintf "stt_atomic %s" (term_to_string opens)
   | EffectAnnotAtomicOrGhost { opens } -> sprintf "stt_atomic_or_ghost %s" (term_to_string opens)  
@@ -127,6 +129,12 @@ let comp_to_string (c:comp)
       
     | C_ST s ->
       sprintf "stt %s (requires\n%s) (ensures\n%s)"
+              (term_to_string s.res)
+              (term_to_string s.pre)
+              (term_to_string s.post)
+
+    | C_STDiv s ->
+      sprintf "stt_div %s (requires\n%s) (ensures\n%s)"
               (term_to_string s.res)
               (term_to_string s.pre)
               (term_to_string s.post)
@@ -270,6 +278,7 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "%s<%s> %s%s"
         (match ctag with
          | STT -> "stt_admit"
+         | STT_Div -> "stt_div_admit"
          | STT_Atomic -> "stt_atomic_admit"
          | STT_Ghost -> "stt_ghost_admit")
         (universe_to_string 0 u)
@@ -406,6 +415,7 @@ let tag_of_comp (c:comp) : T.Tac string =
   match c with
   | C_Tot _ -> "Total"
   | C_ST _ -> "ST"
+  | C_STDiv _ -> "STDiv"
   | C_STAtomic i obs _ ->
     Printf.sprintf "%s %s" (observability_to_string obs) (term_to_string i)
   | C_STGhost _ _ ->

@@ -114,6 +114,7 @@ fn lookup
       walk_get_idx pht.repr (SZ.v cidx) k (SZ.v !off)
         == lookup_repr_index pht.repr k
     )
+    decreases (SZ.v ht.sz - SZ.v !off)
     requires (!ret == None)
     ensures (!ret == PHT.lookup_index_us pht k)
   {
@@ -267,6 +268,7 @@ fn insert
         insert_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k v (SZ.v !off) (SZ.v cidx) () ()
           == insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v
     )
+    decreases (SZ.v ht.sz - SZ.v !off)
     ensures // insert succeeded
       (SZ.v !idx < Seq.length (value_of !contents) /\
         (insert_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k v).seq `Seq.equal`
@@ -406,6 +408,7 @@ fn not_full
       SZ.(!i <=^ ht.sz) /\
       (forall (j:nat). j < SZ.v !i ==> Used? (pht.repr @@ j))
     )
+    decreases (SZ.v ht.sz - SZ.v !i)
     ensures (SZ.(!i <^ ht.sz) /\ not (Used? (pht.repr @@ (SZ.v !i))))
   {
     let vi = !i;
@@ -499,6 +502,7 @@ fn delete
       delete_repr_walk #kt #vt #(pht_sz pht) #pht.spec pht.repr k (SZ.v !off) (SZ.v cidx) () ()
         == delete_repr #kt #vt #(pht_sz pht) #pht.spec pht.repr k
     )
+    decreases (SZ.v ht.sz - SZ.v !off)
     requires (value_of (!contents) == pht.repr.seq)
     ensures (not (!err) /\ value_of (!contents) == (PHT.delete pht k).repr.seq)
   {

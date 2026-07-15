@@ -158,6 +158,7 @@ ensures
                 else I16.v res
             )
         )
+    decreases (SZ.v sz - SZ.v (!pi))
     {
         let i = !pi;
         let x1 = a1.(i);
@@ -174,6 +175,7 @@ inline_for_extraction noextract [@@noextract_to "krml"]
 let i16_neq_0 (x: I16.t) : Tot bool = x <> 0s // FIXME: WHY WHY WHY?
 
 
+divergent
 fn rec cbor_compare
   (a1: cbor)
   (a2: cbor)
@@ -231,24 +233,28 @@ ensures
                 c
             } else {
                 let i10 = cbor_array_iterator_init a1;
+                with li0 . assert (cbor_array_iterator_match p1 i10 li0);
                 let i20 = cbor_array_iterator_init a2;
                 let done0 = cbor_array_iterator_is_done i10;
                 let mut pi1 = i10;
                 let mut pi2 = i20;
                 let mut pdone = done0;
                 let mut pres = 0s;
+                let mut pn : erased nat = hide (List.Tot.length li0);
                 while (
                     let done = !pdone;
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant exists* i1 i2 done res l1 l2 .
+                invariant exists* i1 i2 done res l1 l2 (nn:erased nat) .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
+                    pts_to pn nn **
                     cbor_array_iterator_match p1 i1 l1 **
                     cbor_array_iterator_match p2 i2 l2 **
                     (cbor_array_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
                     (cbor_array_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
+                        reveal nn == List.Tot.length l1 /\
                         List.Tot.length l1 == List.Tot.length l2 /\
                         Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_array l1 l2 else I16.v res) /\
                         (res == 0s ==> done == Nil? l1))
@@ -260,6 +266,7 @@ ensures
                     let res = cbor_compare x1 x2;
                     with gi1' l1' . assert (pts_to pi1 gi1' ** cbor_array_iterator_match p1 gi1' l1');
                     with gi2' l2' . assert (pts_to pi2 gi2' ** cbor_array_iterator_match p2 gi2' l2');
+                    pn := hide (List.Tot.length l1');
                     stick_consume_l ()
                         #(raw_data_item_match p1 x1 v1')
                         #(cbor_array_iterator_match p1 gi1' l1');
@@ -306,24 +313,28 @@ ensures
                 c
             } else {
                 let i10 = cbor_map_iterator_init a1;
+                with li0 . assert (cbor_map_iterator_match p1 i10 li0);
                 let i20 = cbor_map_iterator_init a2;
                 let done0 = cbor_map_iterator_is_done i10;
                 let mut pi1 = i10;
                 let mut pi2 = i20;
                 let mut pdone = done0;
                 let mut pres = 0s;
+                let mut pn : erased nat = hide (List.Tot.length li0);
                 while (
                     let done = !pdone;
                     let res = !pres;
                     (res = 0s && not done)
                 )
-                invariant  exists* i1 i2 done res l1 l2 .
+                invariant  exists* i1 i2 done res l1 l2 (nn:erased nat) .
                     pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pdone done ** pts_to pres res **
+                    pts_to pn nn **
                     cbor_map_iterator_match p1 i1 l1 **
                     cbor_map_iterator_match p2 i2 l2 **
                     (cbor_map_iterator_match p1 i1 l1 @==> raw_data_item_match p1 a1 v1) **
                     (cbor_map_iterator_match p2 i2 l2 @==> raw_data_item_match p2 a2 v2) **
                     pure (
+                        reveal nn == List.Tot.length l1 /\
                         List.Tot.length l1 == List.Tot.length l2 /\
                         (Cbor.cbor_compare v1 v2 == (if res = 0s then Cbor.cbor_compare_map l1 l2 else I16.v res)) /\
                         (res == 0s ==> done == Nil? l1))
@@ -331,6 +342,7 @@ ensures
                     let x1 = cbor_map_iterator_next pi1;
                     with v1' . assert (raw_data_item_map_entry_match p1 x1 v1');
                     with gi1' l1' . assert (pts_to pi1 gi1' ** cbor_map_iterator_match p1 gi1' l1');
+                    pn := hide (List.Tot.length l1');
                     stick_trans ()
                         #(raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1');
                     let x2 = cbor_map_iterator_next pi2;
@@ -341,8 +353,10 @@ ensures
                     unfold (raw_data_item_map_entry_match p1 x1 v1');
                     unfold (raw_data_item_map_entry_match p2 x2 v2');
                     let test = cbor_compare (cbor_map_entry_key x1) (cbor_map_entry_key x2);
-                    if (test = 0s) ensures exists* res done . // FIXME: HOW HOW HOW can I frame some things out?
+                    let testv = cbor_compare (cbor_map_entry_value x1) (cbor_map_entry_value x2);
+                    if (test = 0s) ensures exists* res done (nn:erased nat) . // FIXME: HOW HOW HOW can I frame some things out?
                         pts_to pi1 gi1' ** pts_to pi2 gi2' ** pts_to pdone done **
+                        pts_to pn nn **
                         raw_data_item_match p1 (cbor_map_entry_key x1) (fstp v1') **
                         raw_data_item_match p2 (cbor_map_entry_key x2) (fstp v2') **
                         raw_data_item_match p1 (cbor_map_entry_value x1) (sndp v1') **
@@ -351,10 +365,9 @@ ensures
                         cbor_map_iterator_match p2 gi2' l2' **
                         ((raw_data_item_map_entry_match p1 x1 v1' ** cbor_map_iterator_match p1 gi1' l1') @==> raw_data_item_match p1 a1 v1) **
                         ((raw_data_item_map_entry_match p2 x2 v2' ** cbor_map_iterator_match p2 gi2' l2') @==> raw_data_item_match p2 a2 v2) **
-                        pts_to pres res ** pure ((I16.v res <: int) == (if Cbor.cbor_compare (fstp v1') (fstp v2') <> 0 then Cbor.cbor_compare (fstp v1') (fstp v2') else Cbor.cbor_compare (sndp v1') (sndp v2')))
+                        pts_to pres res ** pure ((I16.v res <: int) == (if Cbor.cbor_compare (fstp v1') (fstp v2') <> 0 then Cbor.cbor_compare (fstp v1') (fstp v2') else Cbor.cbor_compare (sndp v1') (sndp v2')) /\ reveal nn == List.Tot.length l1')
                     {
-                        let test = cbor_compare (cbor_map_entry_value x1) (cbor_map_entry_value x2);
-                        pres := test;
+                        pres := testv;
                     } else {
                         pres := test;
                     };
@@ -388,6 +401,7 @@ ensures
 
 
 
+divergent
 fn cbor_is_equal
   (a1: cbor)
   (a2: cbor)
@@ -539,6 +553,7 @@ ensures
 
 
 
+divergent
 fn cbor_map_get
   (key: cbor)
   (map: cbor)
@@ -563,6 +578,7 @@ ensures
     let mut pi = i0;
     let mut pres = NotFound;
     let mut pdone = done0;
+    let mut pn : erased nat = hide (List.Tot.length l0);
     fold (cbor_map_get_invariant pmap vkey vmap map NotFound i0 l0);
     while (
         with gres i l . assert (pts_to pres gres ** pts_to pi i ** cbor_map_get_invariant pmap vkey vmap map gres i l);
@@ -571,13 +587,14 @@ ensures
         assert (pts_to pres gres ** cbor_map_get_invariant pmap vkey vmap map gres i l); // FIXME: WHY WHY WHY?
         not (done || Found? res)
     )
-    invariant exists* (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) .
+    invariant exists* (done: bool) (res: cbor_map_get_t) (i: cbor_map_iterator_t) (l: list (Cbor.raw_data_item & Cbor.raw_data_item)) (nn:erased nat) .
         raw_data_item_match pkey key vkey ** 
         pts_to pdone done **
         pts_to pi i **
         pts_to pres res **
+        pts_to pn nn **
         cbor_map_get_invariant pmap vkey vmap map res i l **
-        pure (done == Nil? l)
+        pure (done == Nil? l /\ reveal nn == List.Tot.length l)
     {
         with gres gi l . assert (pts_to pres gres ** cbor_map_get_invariant pmap vkey vmap map gres gi l);
         rewrite each gres as NotFound;
@@ -614,6 +631,7 @@ ensures
             let i' = !pi;
             let done = cbor_map_iterator_is_done i';
             pdone := done;
+            pn := hide (List.Tot.length l');
             fold (cbor_map_get_invariant pmap vkey vmap map NotFound i' l')
         }
     };
@@ -683,6 +701,7 @@ let seq_helper_2 (#a:Type) (s:Seq.seq a) (x:a)
           (ensures s `Seq.equal` Seq.cons x (Seq.tail s)) = ()
 
 
+divergent
 fn cbor_map_sort_merge
     (a: A.array cbor_map_entry)
     (lo: SZ.t)
@@ -716,6 +735,7 @@ ensures exists* c l .
     SM.seq_list_match_append_elim (raw_data_item_map_entry_match 1.0R) c1l [] c1r l1_0;
     let mut pi2 = mi;
     let mut pres = true;
+    let mut pn : erased nat = hide ((SZ.v hi - SZ.v lo) + (SZ.v hi - SZ.v mi) + 1);
     fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres
         lo mi true
         c1l c1r c2 [] l1_0 l2_0
@@ -728,8 +748,10 @@ ensures exists* c l .
         let cont = (res && not (i1 = i2 || i2 = hi));
         cont
     )
-    invariant  exists* i1 i2 res c c1 c2 accu l1 l2 .
-        cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1 c2 accu l1 l2
+    invariant  exists* i1 i2 res c c1 c2 accu l1 l2 (nn:erased nat) .
+        cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1 c2 accu l1 l2 **
+        pts_to pn nn **
+        pure (reveal nn == (if res then (SZ.v hi - SZ.v i1) + (SZ.v hi - SZ.v i2) + 1 else 0))
     {
         with gi1 gi2 gres c c1 c2 accu l1 l2 .
             fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1 c2 accu l1 l2);
@@ -766,6 +788,7 @@ ensures exists* c l .
             SM.seq_list_match_cons_intro x1 (List.Tot.hd l1) (Seq.tail c1) (List.Tot.tl l1) (raw_data_item_map_entry_match 1.0R);
             SM.seq_list_match_cons_intro x2 (List.Tot.hd l2) (Seq.tail c2) (List.Tot.tl l2) (raw_data_item_map_entry_match 1.0R);
             pres := false;
+            pn := hide (0 <: nat);
             rewrite (A.pts_to_range a (Ghost.reveal (SZ.v gi1)) (Ghost.reveal (SZ.v gi2)) c1)
                 as (A.pts_to_range a (SZ.v gi1) (SZ.v gi2) (Seq.cons x1 (Seq.tail c1)));
             rewrite (A.pts_to_range a (Ghost.reveal (SZ.v gi2)) (Ghost.reveal (SZ.v hi)) c2)
@@ -794,6 +817,7 @@ ensures exists* c l .
                 as (A.pts_to_range a (SZ.v gi2) (SZ.v hi) (Seq.cons x2 (Seq.tail c2)));
             rewrite (A.pts_to_range a (SZ.v i1') (Ghost.reveal (SZ.v gi2)) (Seq.tail c1))
                 as (A.pts_to_range a (SZ.v i1') (SZ.v gi2) (Seq.tail c1));
+            pn := hide ((SZ.v hi - SZ.v i1') + (SZ.v hi - SZ.v gi2) + 1);
             fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1' gi2 gres
                 (Seq.append c (Seq.cons x1 Seq.empty))
                 (Seq.tail c1)
@@ -821,6 +845,7 @@ ensures exists* c l .
             SM.seq_list_match_append_intro (raw_data_item_map_entry_match 1.0R) c accu (Seq.cons x2 Seq.empty) [List.Tot.hd l2];
             pi1 := i1';
             pi2 := i2';
+            pn := hide ((SZ.v hi - SZ.v i1') + (SZ.v hi - SZ.v i2') + 1);
             fold (cbor_map_sort_merge_invariant a lo hi l1_0 l2_0 pi1 pi2 pres i1' i2' gres
                 (Seq.append c (Seq.cons x2 Seq.empty))
                 (Seq.cons x1 (Seq.tail c1))
@@ -848,6 +873,7 @@ ensures exists* c l .
 
 
 
+divergent
 fn rec cbor_map_sort_aux
     (a: A.array cbor_map_entry)
     (lo hi: SZ.t)
@@ -906,6 +932,7 @@ ensures exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbo
 
 
 
+divergent
 fn cbor_map_sort
     (a: A.array cbor_map_entry)
     (len: SZ.t)

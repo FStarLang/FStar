@@ -341,6 +341,7 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
             pts_to i wi **
             V.pts_to b1 (xor_bytes_pfx s1 s2 (v wi)) **
             V.pts_to b2 s2
+    decreases (Prims.op_Subtraction 32 (v (!i)))
     {
       let x1 = b1.(!i);
       let x2 = b2.(!i);

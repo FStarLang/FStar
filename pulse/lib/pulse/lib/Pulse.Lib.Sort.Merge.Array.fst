@@ -61,6 +61,7 @@ let merge_invariant // FIXME: WHY WHY WHY?
         pure (merge_invariant_prop compare lo hi l1_0 l2_0 i1 i2 res accu l1 l2)
 
 inline_for_extraction
+divergent
 fn merge
     (#tl #th: Type0)
     (vmatch: tl -> th -> slprop)
@@ -258,7 +259,7 @@ let sort_aux_t
     (hi: SZ.t) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-stt bool
+stt_div bool
   (
     pts_to_range a (SZ.v lo) (SZ.v hi) c **
     SM.seq_list_match c l vmatch
@@ -266,6 +267,7 @@ stt bool
   (fun res -> sort_aux_post vmatch compare a lo hi c l res)
 
 inline_for_extraction
+divergent
 fn sort_aux
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
@@ -341,7 +343,7 @@ let sort_t
     (len: SZ.t) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-    stt bool
+    stt_div bool
     (pts_to a c **
       SM.seq_list_match c l vmatch **
       pure (SZ.v len == length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l)
@@ -358,6 +360,7 @@ let sort_t
     )
 
 inline_for_extraction
+divergent
 fn sort
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)

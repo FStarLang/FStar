@@ -78,6 +78,7 @@ let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
   pure (r == B.box_to_ref m.r /\ R.is_full_ref r) ** lock_acquired m.l
 
 
+divergent
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   preserves mutex_live m #p v
   returns r:mutex_guard a

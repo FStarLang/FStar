@@ -16,7 +16,7 @@ fn test1 (r: ref Int32.t)
   // x not in scope for cleanup
 }
 
-fn find_zero (a: array Int32.t) (sz: SizeT.t)
+divergent fn find_zero (a: array Int32.t) (sz: SizeT.t)
   preserves pts_to a #'r 'va
   requires with_pure (SizeT.v sz <= Seq.length 'va)
   returns i: SizeT.t

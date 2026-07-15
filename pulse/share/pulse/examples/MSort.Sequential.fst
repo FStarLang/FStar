@@ -14,6 +14,7 @@ fn rec msort
   (s : erased (S.seq int))
   requires pts_to_range a (SZ.v lo) (SZ.v hi) (reveal s)
   ensures  pts_to_range a (SZ.v lo) (SZ.v hi) (sort (reveal s))
+  decreases (Prims.op_Subtraction (SZ.v hi) (SZ.v lo))
 {
   pts_to_range_prop a;
   if ((hi `SZ.sub` lo) `SZ.lt` 2sz) {

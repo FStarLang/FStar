@@ -145,6 +145,13 @@ let bind_stt = I.bind
 let frame_stt = I.frame
 let sub_stt = I.sub
 let conv_stt pf1 pf2 = I.conv #_ _ _ _ _ pf1 pf2
+let stt_div = I.stt
+let return_stt_div_noeq = I.return
+let bind_stt_div = I.bind
+let frame_stt_div = I.frame
+let sub_stt_div = I.sub
+let conv_stt_div pf1 pf2 = I.conv #_ _ _ _ _ pf1 pf2
+let lift_stt_div e = e
 let hide_div = I.hide_div
 
 ////////////////////////////////////////////////////////////////////
@@ -159,6 +166,7 @@ let frame_atomic = A.frame_atomic
 let sub_atomic = A.sub_atomic
 let sub_invs_atomic = A.sub_invs_stt_atomic
 let lift_atomic = A.lift_atomic
+let lift_atomic_div e = lift_stt_div (A.lift_atomic e)
 
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
