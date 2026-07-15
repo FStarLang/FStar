@@ -3,9 +3,15 @@
  (name fstarc3_full)
  (public_name fstar.exe)
  (libraries
-    ; Can we just say we extend fstar_bare instead of _guts, and duplicating main?
     fstarcompiler
-    fstar_plugins
+    ; The in-tree plugins (plugins.ml) are now folded into the wrapped
+    ; fstarcompiler library, so there is no separate fstar_plugins library.
+    ; The Pulse plugin depends on fstar.compiler.plugins (the flat, wrapped=false
+    ; fstar_pluginlib library built from stage2/ulib.pluginml), which is a
+    ; superset of the in-tree plugins. wrapped (fstarcompiler) vs flat
+    ; (fstar_pluginlib) modules do NOT collide at link time, and any double
+    ; plugin registration is benign (name-keyed psmap, last-wins). Base modules
+    ; Pulse needs come from fstar_pluginlib; FStar_Pervasives from fstarcompiler.
     pulse_plugin
     memtrace
  )

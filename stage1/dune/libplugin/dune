@@ -1,12 +1,13 @@
 (include_subdirs unqualified)
 (library
   (name fstar_pluginlib)
-  (public_name fstar.pluginlib)
+  (public_name fstar.compiler.plugins)
   (libraries
    fstarcompiler
   )
   (modes native)
-  (wrapped true)
+  (wrapped false)
+  (flags (:standard -open Fstarcompiler))
   (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
 )
 

@@ -218,7 +218,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 	  OUTPUT_DIR=stage1/ulib.pluginml/ \
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT' \
+	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT,-FStar.Pervasives' \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
 	  # NOTE: not extracting SizeT/PtrDiff in stage 1 as that is currently broken but
@@ -313,7 +313,7 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE
 	  OUTPUT_DIR=stage2/ulib.pluginml/ \
 	  CODEGEN=PluginNoLib \
 	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed' \
+	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.Pervasives' \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/lib.mk ocaml
 

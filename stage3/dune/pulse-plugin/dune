@@ -3,7 +3,7 @@
  (name pulse_plugin)
  (libraries
    fstarcompiler
-   fstar.pluginlib
+   fstar.compiler.plugins
  )
  (modes native)
  (wrapped false)

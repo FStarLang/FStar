@@ -6,6 +6,7 @@
  )
  (modes native)
  (wrapped false)
+ (flags (:standard -open Fstarcompiler))
  (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
  ; ^ Needed for some of the base modules.
 )
