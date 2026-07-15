@@ -1,4 +1,3 @@
-open Fstarcompiler
 open FStarC_Syntax_Syntax
 module R = FStarC_Range
 

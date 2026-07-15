@@ -130,6 +130,10 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	$(MAKE) -C stage0 install_bin # build: only fstar.exe
 	$(MAKE) -C stage0 trim # We don't need OCaml build files.
 
+# Unified extraction pass: extracts BOTH the compiler (FStarC* +
+# FStar.Pervasives) AND the in-tree ulib plugins into stage1/fstarc.ml/.
+# Uses CODEGEN=PluginNoLib so plugin-registration code is emitted for the
+# [@@plugin] annotations in both the compiler and the plugin modules.
 .bare1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC")
 	env \
@@ -138,7 +142,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
-	  CODEGEN=OCaml \
+	  CODEGEN=PluginNoLib \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
@@ -171,20 +175,7 @@ $(TESTS1_EXE): .tests1.src.touch .src.ml.touch $(MAYBEFORCE)
 stage1-unit-tests: $(TESTS1_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS1_EXE)
 
-.full1.src.touch: $(FSTAR0_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGINS")
-	env \
-	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR0_EXE) \
-	  CACHE_DIR=stage1/plugins.checked/ \
-	  OUTPUT_DIR=stage1/plugins.ml/ \
-	  CODEGEN=PluginNoLib \
-	  TAG=plugins \
-	  TOUCH=$@ \
-	  GENERIC_MK=mk/generic-0.mk \
-	  $(MAKE) -f mk/plugins.mk ocaml
-
-$(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE)
+$(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 1 FSTARC")
 	$(MAKE) -C stage1 fstarc-full
 	touch -c $@
@@ -233,13 +224,14 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .full1.src.touch .src.ml.touch $(MAYBEFORCE
 .bare2.src.touch: $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
+	# Unified extraction pass: compiler + in-tree plugins into stage2/fstarc.ml/.
 	env \
 	  SRC=src/ \
 	  FSTAR_LIB=$(abspath ulib) \
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage2/fstarc.checked/ \
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
-	  CODEGEN=OCaml \
+	  CODEGEN=PluginNoLib \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
@@ -265,21 +257,7 @@ $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 stage2-unit-tests: $(TESTS2_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
-.full2.src.touch: $(FSTAR1_FULL_EXE) .force
-	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGINS")
-	env \
-	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  CACHE_DIR=stage2/plugins.checked/ \
-	  OUTPUT_DIR=stage2/plugins.ml/ \
-	  CODEGEN=PluginNoLib \
-	  TAG=plugins \
-	  TOUCH=$@ \
-	  GENERIC_MK=mk/generic-1.mk \
-	  $(MAKE) -f mk/plugins.mk ocaml
-
-$(FSTAR2_FULL_EXE): .bare2.src.touch .full2.src.touch .src.ml.touch $(MAYBEFORCE)
+$(FSTAR2_FULL_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
 	$(MAKE) -C stage2 fstarc-full
 	touch -c $@
@@ -359,13 +337,14 @@ fsharp-all: fsharp-lib
 boot-src-bare: $(FSTAR2_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2+1 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
+	# Uses the same unified pass/codegen as .bare2 so the diff matches.
 	env \
 	  SRC=src/ \
 	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=boot-diff/fstarc.checked/ \
 	  OUTPUT_DIR=boot-diff/fstarc.ml/ \
-	  CODEGEN=OCaml \
+	  CODEGEN=PluginNoLib \
 	  TAG=fstarc \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
@@ -380,16 +359,16 @@ else
 LINK_OK=0
 endif
 
-.stage1.src.touch: .bare1.src.touch .full1.src.touch .alib1.src.touch .plib1.src.touch .src.ml.touch
+.stage1.src.touch: .bare1.src.touch .alib1.src.touch .plib1.src.touch .src.ml.touch
 	touch $@
 
-.stage2.src.touch: .bare2.src.touch .full2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
+.stage2.src.touch: .bare2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
 	touch $@
 
-.stage1-for-bump.src.touch: .bare1.src.touch .full1.src.touch .src.ml.touch
+.stage1-for-bump.src.touch: .bare1.src.touch .src.ml.touch
 	touch $@
 
-.stage2-for-bump.src.touch: .bare2.src.touch .full2.src.touch .src.ml.touch
+.stage2-for-bump.src.touch: .bare2.src.touch .src.ml.touch
 	touch $@
 
 .pulse-plugin.src.touch: stage2
@@ -713,13 +692,10 @@ watch:
 
 clean-depend: .force
 	rm -f stage1/fstarc.checked/.*depend*
-	rm -f stage1/plugins.checked/.*depend*
 	rm -f stage1/ulib.checked/.*depend*
 	rm -f stage2/fstarc.checked/.*depend*
-	rm -f stage2/plugins.checked/.*depend*
 	rm -f stage2/ulib.checked/.*depend*
 	rm -f stage3/fstarc.checked/.*depend*
-	rm -f stage3/plugins.checked/.*depend*
 	rm -f stage3/ulib.checked/.*depend*
 
 clean-0: .force
@@ -732,8 +708,6 @@ define clean-stage
 	rm -f stage$(1)/.fstarlock
 	rm -rf stage$(1)/fstarc.checked
 	rm -rf stage$(1)/fstarc.ml
-	rm -rf stage$(1)/plugins.checked
-	rm -rf stage$(1)/plugins.ml
 	rm -rf stage$(1)/ulib.checked
 	rm -rf stage$(1)/ulib.ml
 	rm -rf stage$(1)/ulib.pluginml
@@ -750,8 +724,6 @@ clean-3: .force
 	$(MAKE) -C stage3 clean
 	rm -f stage3/.fstarlock
 	rm -rf stage3/fstarc.ml
-	rm -rf stage3/plugins.checked
-	rm -rf stage3/plugins.ml
 	rm -rf stage3/ulib.ml
 	rm -rf stage3/ulib.pluginml
 	rm -rf pulse/build/checker.checked pulse/build/checker.ml

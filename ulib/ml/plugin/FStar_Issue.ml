@@ -1,4 +1,3 @@
-open Fstarcompiler
 type issue_level = FStarC_Errors.issue_level
 type issue = FStarC_Errors.issue
 type issue_level_string = string
