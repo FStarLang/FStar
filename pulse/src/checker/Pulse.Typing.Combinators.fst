@@ -68,15 +68,28 @@ let mk_bind_st_st
       let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
       (| t, c |)
 #pop-options
+
+#push-options "--fuel 0 --ifuel 0"
+let mk_bind_div_div
+  : bind_t C_STDiv? C_STDiv?
+  = fun g pre e1 e2 c1 c2 px _ ->
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let c : comp_st = C_STDiv (st_comp_with_pre (st_comp_of_comp c2) pre) in
+      let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
+      (| t, c |)
+#pop-options
 let inames_of (c:comp_st) : term =
   match c with
   | C_ST _ -> tm_emp_inames
+  | C_STDiv _ -> tm_emp_inames
   | C_STGhost inames _
   | C_STAtomic inames _ _ -> inames
 
 let with_inames (c:comp_st) (i:term) =
   match c with
   | C_ST _ -> c
+  | C_STDiv _ -> c
   | C_STGhost _ sc -> C_STGhost i sc
   | C_STAtomic _ obs sc -> C_STAtomic i obs sc
 
@@ -85,6 +98,7 @@ let weaken_comp_inames (g:env) (e:st_term) (c:comp_st) (new_inames:term)
            unit)
   = match c with
     | C_ST _ -> (| c, () |)
+    | C_STDiv _ -> (| c, () |)
     | C_STGhost inames sc ->
       let _ = check_prop_validity g (tm_inames_subset inames new_inames) in
       (| with_inames c new_inames, () |)
@@ -216,6 +230,53 @@ let rec mk_bind (g:env)
   match c1, c2 with
   | C_ST _, C_ST _ ->
     mk_bind_st_st g pre e1 e2 c1 c2 px post_hint
+
+  | C_STDiv _, C_STDiv _ ->
+    mk_bind_div_div g pre e1 e2 c1 c2 px post_hint
+
+  | C_ST _, C_STDiv _ ->
+    mk_bind g pre e1 e2 (C_STDiv (st_comp_of_comp c1)) c2 px post_hint
+
+  | C_STDiv _, C_ST _ ->
+    if (PostHint? post_hint)
+    then fail_bias "divergent"
+    else (
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let c : comp_st = C_STDiv (st_comp_with_pre (st_comp_of_comp c2) pre) in
+      let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
+      (| t, c |)
+    )
+
+  | C_STAtomic _ _ _, C_STDiv _ ->
+    mk_bind g pre e1 e2 (C_ST (st_comp_of_comp c1)) c2 px post_hint
+
+  | C_STDiv _, C_STAtomic _ _ _ ->
+    if (PostHint? post_hint)
+    then fail_bias "atomic"
+    else (
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let c : comp_st = C_STDiv (st_comp_with_pre (st_comp_of_comp c2) pre) in
+      let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
+      (| t, c |)
+    )
+
+  | C_STGhost _ _, C_STDiv _ ->
+    let _ = lift_ghost_atomic g e1 c1 in
+    mk_bind g pre e1 e2 (st_ghost_as_atomic c1) c2 px post_hint
+
+  | C_STDiv _, C_STGhost _ _ ->
+    if (PostHint? post_hint)
+    then fail_bias "ghost"
+    else (
+      let _ = lift_ghost_atomic (push_binding g (snd px) (fst px) (comp_res c1)) (open_st_term_nv e2 px) c2 in
+      let _, x = px in
+      let b = nvar_as_binder px (comp_res c1) in
+      let c : comp_st = C_STDiv (st_comp_with_pre (st_comp_of_comp c2) pre) in
+      let t = wrst c (Tm_Bind {binder=b; head=e1; body=e2}) in
+      (| t, c |)
+    )
 
   | C_STGhost _ _, C_STGhost _ _ ->
     mk_bind_ghost_ghost g pre e1 e2 c1 c2 px post_hint
@@ -356,6 +417,7 @@ let comp_for_post_hint (g:env) (pre:slprop)
   let s : st_comp = {u=post.u;res=post.ret_ty;pre;post=post.post} in
   match post.effect_annot with
   | EffectAnnotSTT -> C_ST s
+  | EffectAnnotSTTDiv -> C_STDiv s
   | EffectAnnotGhost { opens } ->
     C_STGhost opens s
   | EffectAnnotAtomic { opens }

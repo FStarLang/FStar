@@ -55,6 +55,7 @@ ensures
         )
     ensures
       (!i1 < len1 /\ !i0 < len0 /\ Seq.index s1 (SZ.v !i1) =!= Seq.index s0 (SZ.v !i0))
+    decreases (Prims.op_Subtraction (SZ.v len0) (SZ.v (!i0)))
     {
       let v0 = !i0;
       let v1 = !i1;
@@ -100,6 +101,7 @@ ensures
       !j <= len1 /\
       (forall (k:nat). k < SZ.v (!j) ==> ~(starts_with_at k s0 s1))
     )
+    decreases (Prims.op_Subtraction (SZ.v len1) (SZ.v (!j)))
   {
     if (check_starts_with_at a0 a1 len0 len1 (!j)) {
       return true;

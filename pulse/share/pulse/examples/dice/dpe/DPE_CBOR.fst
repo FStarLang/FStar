@@ -83,6 +83,7 @@ assume Fits_u64 : SZ.fits_u64
 
 #push-options "--z3rlimit 20"
 
+divergent
 fn initialize_context (len:SZ.t)
                       (input:A.larray U8.t (SZ.v len))
                       (#s:erased (Seq.seq U8.t))

@@ -78,6 +78,7 @@ let check_effect_annot (g:env) (e:effect_annot)
   in
   match e with
   | EffectAnnotSTT -> e
+  | EffectAnnotSTTDiv -> e
   | EffectAnnotGhost { opens } ->
     let opens = check_opens opens in
     EffectAnnotGhost { opens }
@@ -154,12 +155,14 @@ let comp_st_with_post (c:comp_st) (post:term)
   : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
   match c with
   | C_ST st -> C_ST { st with post }
+  | C_STDiv st -> C_STDiv { st with post }
   | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
+  | C_STDiv st -> C_STDiv { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
@@ -333,6 +336,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | EffectAnnotGhost _ -> STT_Ghost
     | EffectAnnotAtomicOrGhost _ -> STT_Atomic
     | EffectAnnotSTT -> STT
+    | EffectAnnotSTTDiv -> STT_Div
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
@@ -361,13 +365,21 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
 
+  let maybe_lift_to_div (c:comp_st) : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
+    match post_hint with
+    | PostHint { effect_annot = EffectAnnotSTTDiv } ->
+      if C_ST? c
+      then C_STDiv (st_comp_of_comp c)
+      else c
+    | _ -> c
+  in
   match post_hint with
   | NoHint -> c
   | TypeHint ret_ty
   | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
-    then c
+    then maybe_lift_to_div c
     else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
          | None, issues ->
            let open Pulse.PP in
@@ -383,7 +395,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
 
 
-           c'
+           maybe_lift_to_div c'
 #pop-options
 #pop-options
 
@@ -460,6 +472,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     match c with
     | None -> None
     | Some (C_ST _)
+    | Some (C_STDiv _)
     | Some (C_STGhost _ _)
     | Some (C_STAtomic _ _ _) -> (
       match args, out with

@@ -231,5 +231,5 @@ instance val is_send_sendable p : is_send (sendable p)
 
 inline_for_extraction noextract fn fork'
   (pre:slprop) {| is_send pre |}
-  (f: (unit -> stt unit pre (fun _ -> emp)))
+  (f: (unit -> stt_div unit pre (fun _ -> emp)))
   requires pre

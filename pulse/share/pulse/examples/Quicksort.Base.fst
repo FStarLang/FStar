@@ -252,6 +252,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
         /\ permutation s0 s
         /\ between_bounds s lb rb
       ))
+  decreases (hi - 1 - !k)
   { 
     let vk = !k;
     let ak = a.(SZ.uint_to_t vk);

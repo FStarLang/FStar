@@ -44,7 +44,8 @@ let effect_annot_labels_match (a1 a2:effect_annot) =
   | EffectAnnotAtomic _, EffectAnnotAtomic _
   | EffectAnnotGhost _, EffectAnnotGhost _
   | EffectAnnotAtomicOrGhost _, EffectAnnotAtomicOrGhost _
-  | EffectAnnotSTT, EffectAnnotSTT -> True
+  | EffectAnnotSTT, EffectAnnotSTT
+  | EffectAnnotSTTDiv, EffectAnnotSTTDiv -> True
   | _ -> False
 
 val intro_post_hint

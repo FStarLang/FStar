@@ -733,6 +733,7 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
 
 /// Acquire reader: spin until successful
 /// Reads current counter and tries to increment (if not at max or writer-held)
+divergent
 fn rec acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
@@ -936,6 +937,7 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
 
 /// Release reader: spin until successful
 /// Reads current counter and tries to decrement
+divergent
 fn rec release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
   preserves is_rwlock l #perm_lock
   requires reader_parts l f
@@ -965,6 +967,7 @@ fn rec release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
 //
 
 /// Acquire writer: CAS from 0 to sentinel
+divergent
 fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   ensures writer_token l

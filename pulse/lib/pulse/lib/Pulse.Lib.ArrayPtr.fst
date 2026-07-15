@@ -382,6 +382,7 @@ fn memcpy
         Seq.length s1' == Seq.length s1 /\
         forall (j:nat). j < Seq.length s1' ==>
           Seq.index s1' j == (if j < SZ.v vi then Seq.index s0 j else Seq.index s1 j))
+  decreases (SZ.v len - SZ.v !i)
   {
     let vi = !i;
     let x = src.(vi);

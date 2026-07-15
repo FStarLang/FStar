@@ -1,4 +1,4 @@
-* Info at Test.Recursion.fst(84,2-84,20):
+* Info at Test.Recursion.fst(86,2-86,20):
   - Expected failure:
   - Ill-typed term
   - Could not prove termination
@@ -21,7 +21,7 @@
         "Could not prove termination"
         (() << ())
 
-* Info at Test.Recursion.fst(127,4-127,22):
+* Info at Test.Recursion.fst(130,4-130,22):
   - Expected failure:
   - Ill-typed term
   - Could not prove termination

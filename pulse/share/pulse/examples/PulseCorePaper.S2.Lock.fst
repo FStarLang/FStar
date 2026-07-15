@@ -71,6 +71,7 @@ requires p
 }
 
 
+divergent
 fn rec acquire #p (l:lock)
 preserves protects l p
 ensures p

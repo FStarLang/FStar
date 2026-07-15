@@ -11,6 +11,37 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Pulse
+
+  * Pulse now distinguishes terminating from possibly-divergent computations at
+    the type and surface-syntax level. The computation type `stt` is split into
+    `stt` (terminating, surface keyword `fn`) and `stt_div` (possibly divergent,
+    surface keyword `divergent fn`). A terminating `stt` computation lifts
+    silently into `stt_div` (via `Pulse.Lib.Core.lift_stt_div`), and divergence
+    is infectious: any computation that sequences a divergent step is itself
+    divergent.
+
+    Consequences for existing code:
+    - A `while` loop with no `decreases` measure is now a divergent computation.
+      To keep such a function terminating (a plain `fn`), add a `decreases`
+      clause to the loop, placed after the `invariant`/`ensures` clauses:
+      `while (...) invariant (...) decreases (<nat measure>) { ... }`.
+      Genuinely non-terminating loops (e.g. spin/CAS-retry loops) must instead
+      live in a function declared with `divergent fn`.
+    - A recursive `fn rec` must now prove termination with a `decreases` clause,
+      or be declared `divergent fn rec`. Concurrency primitives that block or
+      spin (e.g. `Pulse.Lib.SpinLock.acquire`, `Mutex.lock`, `Par.par`, the task
+      pool's `spawn`/`await`/`teardown_pool`) are now `divergent`, so any function
+      that uses them is divergent too.
+    - `Pulse.Lib.Par` gains `par_div`, a divergent-accepting sibling of `par`.
+    - `Pulse.Lib.Task`'s task thunks (`task_f`) are now possibly divergent
+      (`stt_div`), so `spawn`/`spawn_` can spawn divergent tasks (including
+      recursively-spawning ones). A terminating task must be lifted at the call
+      site, e.g. `spawn_ p (fun () -> lift_stt_div (f ()))`.
+
+    (The PulseCore model currently defines `stt_div = stt`; a foundational model
+    of divergence is future work.)
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection

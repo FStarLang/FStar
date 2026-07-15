@@ -143,6 +143,7 @@ fn gather #a #b (r:ref a b) (#x:a) (#y:b)
 
 
 
+divergent
 fn upd_par #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   requires pcm_pts_to r (XY x1 y1)
   ensures  pcm_pts_to r (XY x2 y2)

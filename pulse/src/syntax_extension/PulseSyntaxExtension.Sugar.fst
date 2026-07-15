@@ -34,6 +34,7 @@ type slprop = A.term
 
 type st_comp_tag = 
   | ST
+  | STDiv
   | STAtomic
   | STUnobservable
   | STGhost

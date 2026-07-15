@@ -79,6 +79,7 @@ fn create (#pred : perm -> slprop) {| fractional pred |}
 /// Acquire reader access
 /// Spins until a reader slot is available
 /// Receives: reader_parts token and pred f separately so caller can use the predicate
+divergent
 fn acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   returns f : perm
@@ -88,6 +89,7 @@ fn acquire_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
 /// Release reader access
 /// Returns the reader's fraction to the lock
 /// Requires both reader_parts and pred f
+divergent
 fn release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred) (#f:perm)
   preserves is_rwlock l #perm_lock
   requires reader_parts l f
@@ -96,6 +98,7 @@ fn release_reader (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
 /// Acquire writer access
 /// Spins until all readers have released and no other writer holds the lock
 /// Receives: full permission to the predicate (pred 1.0R)
+divergent
 fn acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm) (l : rwlock pred)
   preserves is_rwlock l #perm_lock
   ensures writer_token l

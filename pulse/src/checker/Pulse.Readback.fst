@@ -72,6 +72,30 @@ let try_readback_st_comp (t:R.term)
               Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
             | _ -> None)
          | _ -> None
+    else if fv_lid = stt_div_lid
+    then match args with
+         | [res; pre; post] ->
+          (match inspect_ln (fst post) with
+           | Tv_Abs b body ->
+             let { qual=aq; attrs=attrs; sort=sort } =
+                 inspect_binder b
+             in    
+             assume (fv == stt_div_fv);
+             assume (aq == Q_Explicit           /\
+                     attrs == []                /\
+                     sort == fst res /\
+                     snd res == Q_Explicit      /\
+                     snd pre == Q_Explicit      /\
+                     snd post == Q_Explicit);
+
+             assume (t == mk_stt_div_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+             let res' = fst res in
+             let pre' = fst pre in
+             let post' = body in
+             let c = C_STDiv {u; res=res'; pre=pre';post=post'} in
+             Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
+           | _ -> None)
+         | _ -> None
     else if fv_lid = stt_atomic_lid
     then match args with
          | [res; obs; opened; pre; post] ->

@@ -180,6 +180,7 @@ fn rec length (#t:Type0) (x:llist t)
 preserves is_list x 'l
 returns n:nat
 ensures pure (n == List.Tot.length 'l)
+decreases (reveal 'l)
 {
   match x {
     norewrite None -> {
@@ -204,6 +205,7 @@ fn rec length_tail (#t:Type0) (x:llist t) (k:nat)
 preserves is_list x 'l
 returns n:nat
 ensures pure (n == k + List.Tot.length 'l)
+decreases (reveal 'l)
 {
   match x {
     norewrite None -> {
@@ -267,6 +269,7 @@ ensures pure (n == List.Tot.length 'l)
     is_list ll suffix **
     pure (n == List.Tot.length 'l - List.Tot.length suffix) **
     (is_list ll suffix @==> is_list x 'l)
+  decreases (List.Tot.length 'l - !ctr)
   {
     let n = !ctr;
     let ll = !cur;
@@ -290,6 +293,7 @@ requires is_list x 'l1
 requires is_list y 'l2
 requires pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
+decreases (reveal 'l1)
 {
   let np = Some?.v x;
   is_list_case_some x np;
@@ -404,7 +408,7 @@ ensures pure (b == (List.Tot.length 'l <> 1))
 }
 
 //append_iter$
-fn append_iter (#t:Type) (x y:llist t)
+divergent fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1
 requires is_list y 'l2
 requires pure (Some? x)

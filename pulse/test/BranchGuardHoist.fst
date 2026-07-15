@@ -27,7 +27,7 @@ module SZ = FStar.SizeT
    mention the result (e.g. a lemma's `ensures p x`) are kept. *)
 
 (* Stateful read in the else branch (the minimal repro). *)
-fn while_szlt_else (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
+divergent fn while_szlt_else (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
   requires i |-> 'vi ** j |-> 'vj
   ensures  exists* vi vj. i |-> vi ** j |-> vj
 {
@@ -37,7 +37,7 @@ fn while_szlt_else (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
 }
 
 (* Stateful read in the then branch. *)
-fn while_szlt_then (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
+divergent fn while_szlt_then (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
   requires i |-> 'vi ** j |-> 'vj
   ensures  exists* vi vj. i |-> vi ** j |-> vj
 {
@@ -47,7 +47,7 @@ fn while_szlt_then (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
 }
 
 (* Both branches read state. *)
-fn while_szlt_both (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
+divergent fn while_szlt_both (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
   requires i |-> 'vi ** j |-> 'vj
   ensures  exists* vi vj. i |-> vi ** j |-> vj
 {
@@ -58,7 +58,7 @@ fn while_szlt_both (i:ref SZ.t) (j:ref SZ.t) (l1:SZ.t) (l2:SZ.t)
 
 (* No-regression guard: `=` returns plain `bool`, so no refinement leaks; this
    verified before the fix and must keep verifying. *)
-fn while_int_else (r:ref int) (s:ref int)
+divergent fn while_int_else (r:ref int) (s:ref int)
   requires r |-> 'vr ** s |-> 'vs
   ensures  exists* vr vs. r |-> vr ** s |-> vs
 {

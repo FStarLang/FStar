@@ -20,7 +20,7 @@ module Test.Recursion
 open Pulse.Lib.Pervasives
 
 
-fn rec test1
+divergent fn rec test1
   (x:unit)
   ensures pure False
 {
@@ -31,7 +31,7 @@ fn rec test1
 let _ = test1
 
 
-fn test_call_1
+divergent fn test_call_1
   (z:unit)
   ensures pure False
 {
@@ -42,6 +42,7 @@ fn test_call_1
 
 fn rec test2
   (y:nat)
+  decreases y
 {
   if (y > 0) {
     test2 (y-1)
@@ -54,6 +55,7 @@ fn rec test3
   (z:nat)
   (y:nat)
   returns _:int
+  decreases y
 {
   if (y > 0) {
     test3 (z+1) (y-1)
@@ -92,6 +94,7 @@ fn rec test4
   (y : nat)
   requires pts_to r v
   ensures pts_to r (v+y)
+  decreases y
 {
   if (y > 0) {
     let w = !r;
@@ -130,7 +133,7 @@ fn rec test5'
 
 
 
-fn rec test6
+divergent fn rec test6
   (x:unit) (y:int)
   ensures pure False
 {

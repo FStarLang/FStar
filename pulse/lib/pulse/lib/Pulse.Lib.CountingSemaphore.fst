@@ -329,6 +329,7 @@ fn try_acquire (#p: slprop) (#f: perm) (s: sem p)
 }
 
 (** Release loop - retry CAS until success *)
+divergent
 fn rec release_loop (#p: slprop) (#f: perm) (s: sem p)
   requires sem_alive s #f ** permit s 1 ** p
   ensures sem_alive s #f
@@ -402,6 +403,7 @@ fn rec release_loop (#p: slprop) (#f: perm) (s: sem p)
   }
 }
 
+divergent
 fn release (#p: slprop) (#f: perm) (s: sem p)
   preserves sem_alive s #f
   requires permit s 1 ** p

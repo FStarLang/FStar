@@ -90,7 +90,7 @@ let check
     let t = { t with term = Tm_ST { t=e; args=[] }; effect_tag = Some (ctag_of_comp_st c) } in
     if not (eff = T.E_Total) then (
       match c with
-      | C_ST _ | C_STAtomic .. ->
+      | C_ST _ | C_STDiv _ | C_STAtomic .. ->
         let open Pulse.PP in
         fail_doc g (Some range)
           [text "Application of a stateful or atomic computation cannot have a ghost effect";

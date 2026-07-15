@@ -3,7 +3,7 @@ open Pulse
 open Pulse.Lib.WithPure
 #lang-pulse
 
-fn simple_break ()
+divergent fn simple_break ()
 {
   let mut k = true;
   while (!k)
@@ -14,7 +14,7 @@ fn simple_break ()
   }
 }
 
-fn break_continue_and_return (which: UInt8.t)
+divergent fn break_continue_and_return (which: UInt8.t)
 {
   let mut i = 0ul;
   while (!i `UInt32.lt` 1000ul)
@@ -34,7 +34,7 @@ fn break_continue_and_return (which: UInt8.t)
   }
 }
 
-fn find_zero_with_break (a: array Int32.t) (sz: SizeT.t)
+divergent fn find_zero_with_break (a: array Int32.t) (sz: SizeT.t)
   preserves pts_to a #'r 'va
   requires with_pure (SizeT.v sz <= Seq.length 'va)
   returns i: SizeT.t

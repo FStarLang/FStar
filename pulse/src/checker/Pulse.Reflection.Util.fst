@@ -167,6 +167,14 @@ let mk_stt_admit (u:R.universe) (t pre post:R.term) : R.term =
   let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
   pack_ln (Tv_App t (post, Q_Explicit))
 
+let stt_div_admit_lid = mk_pulse_lib_core_lid "stt_div_admit"
+let mk_stt_div_admit (u:R.universe) (t pre post:R.term) : R.term =
+  let open R in
+  let t = pack_ln (Tv_UInst (pack_fv stt_div_admit_lid) [u]) in
+  let t = pack_ln (Tv_App t (t, Q_Explicit)) in
+  let t = pack_ln (Tv_App t (pre, Q_Explicit)) in
+  pack_ln (Tv_App t (post, Q_Explicit))
+
 let stt_atomic_admit_lid = mk_pulse_lib_core_lid "stt_atomic_admit"
 let mk_stt_atomic_admit (u:R.universe) (t pre post:R.term) : R.term =
   let open R in
@@ -191,6 +199,15 @@ let stt_fv = R.pack_fv stt_lid
 let stt_tm = R.pack_ln (R.Tv_FVar stt_fv)
 let mk_stt_comp (u:R.universe) (res pre post:R.term) : Tot R.term =
   let t = R.pack_ln (R.Tv_UInst stt_fv [u]) in
+  let t = R.pack_ln (R.Tv_App t (res, R.Q_Explicit)) in
+  let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
+  R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
+
+let stt_div_lid = mk_pulse_lib_core_lid "stt_div"
+let stt_div_fv = R.pack_fv stt_div_lid
+let stt_div_tm = R.pack_ln (R.Tv_FVar stt_div_fv)
+let mk_stt_div_comp (u:R.universe) (res pre post:R.term) : Tot R.term =
+  let t = R.pack_ln (R.Tv_UInst stt_div_fv [u]) in
   let t = R.pack_ln (R.Tv_App t (res, R.Q_Explicit)) in
   let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
@@ -644,6 +661,14 @@ let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:
   (post_eq:RT.equiv g post1 post2)
   : RT.equiv g (mk_stt_comp u res1 pre1 post1)
                (mk_stt_comp u res2 pre2 post2)
+  = admit ()
+
+let mk_stt_div_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:R.term)
+  (res_eq: RT.equiv g res1 res2)
+  (pre_eq:RT.equiv g pre1 pre2)
+  (post_eq:RT.equiv g post1 post2)
+  : RT.equiv g (mk_stt_div_comp u res1 pre1 post1)
+               (mk_stt_div_comp u res2 pre2 post2)
   = admit ()
 
 let mk_stt_atomic_comp_equiv (g:R.env) obs (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)

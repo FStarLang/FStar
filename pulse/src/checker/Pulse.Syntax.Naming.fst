@@ -60,6 +60,11 @@ let close_open_inverse_comp' (c:comp)
       close_open_inverse' s.pre x i;      
       close_open_inverse' s.post x (i + 1)
 
+    | C_STDiv s ->
+      close_open_inverse' s.res x i;
+      close_open_inverse' s.pre x i;      
+      close_open_inverse' s.post x (i + 1)
+
     | C_STGhost n s
     | C_STAtomic n _ s ->    
       close_open_inverse' n x i;    
@@ -270,6 +275,7 @@ let open_with_gt_ln_comp (c:comp) (i:int) (t:term) (j:nat)
   match c with
   | C_Tot t1 -> open_with_gt_ln t1 i t j
   | C_ST s -> open_with_gt_ln_st s i t j
+  | C_STDiv s -> open_with_gt_ln_st s i t j
   | C_STGhost inames s
   | C_STAtomic inames _ s ->
     open_with_gt_ln inames i t j;
@@ -297,6 +303,7 @@ let close_comp_with_non_free_var (c:comp) (x:var) (i:nat)
   match c with
   | C_Tot t1 -> close_with_non_freevar t1 x i
   | C_ST s -> close_with_non_freevar_st s x i
+  | C_STDiv s -> close_with_non_freevar_st s x i
   | C_STGhost inames s
   | C_STAtomic inames _ s ->
     close_with_non_freevar inames x i;
