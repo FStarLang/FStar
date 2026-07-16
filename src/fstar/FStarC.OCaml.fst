@@ -65,4 +65,4 @@ let exec_ocamlopt args =
 
 let exec_ocamlopt_plugin args =
   exec_in_ocamlenv "ocamlfind"
-    ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: "-open" :: "Fstarcompiler" :: args)
+    ("opt" :: common_args @ "-shared" :: "-package" :: plugin_lib :: args)

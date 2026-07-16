@@ -287,10 +287,10 @@ let is_fv_type g fv =
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : ML (list mlsymbol) =
   (* In plugin codegen, F* stub modules are remapped to their FStarC
-     counterparts. These names are always emitted *unqualified* (no
-     Fstarcompiler prefix): modules compiled into the wrapped fstarcompiler
-     library see them as siblings, and external consumers get them in scope via
-     -open Fstarcompiler. *)
+     counterparts. These names are emitted *unqualified* (no Fstarcompiler
+     prefix): the fstarcompiler library is unwrapped, so modules compiled
+     into it see them as siblings, and external consumers get them as
+     top-level modules of the fstar.compiler package. *)
   match ns with
   | "FStar"::"NormSteps"::rest when plug () ->
     "FStarC"::"NormSteps"::rest
@@ -465,8 +465,8 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : ML (mlpath & uenv) =
     match string_of_lid x with
     (* Map the tactic-primitive-interface name for exceptions to the compiler's
        FStarC.Errors.Stop, so we don't expose FStarC.Errors. Emitted unqualified;
-       resolved via sibling visibility (inside fstarcompiler) or -open
-       Fstarcompiler (external plugins). *)
+       resolved as a top-level module of the (unwrapped) fstarcompiler
+       library, both for sibling modules and for external plugins. *)
     | "FStar.Stubs.Tactics.Common.Stop" ->
       "FStarC"::"Errors"::[], "Stop"
 

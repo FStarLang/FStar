@@ -1,6 +1,5 @@
 %{
 (* (c) Microsoft Corporation. All rights reserved *)
-open Fstarcompiler
 open Prims
 open FStar_Pervasives
 open FStarC_Errors

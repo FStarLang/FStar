@@ -80,7 +80,6 @@ let compile_modules dir ms : ML _ =
                 @ ["-I"; dir]
                 @ ["-w"; "-8-11-20-21-26-28" ]
                 @ (List.map pkg packages)
-                @ ["-open"; "Fstarcompiler"]
                 @ ["-o"; m ^ ".cmxs"; m ^ ".ml"] in
      (* Note: not useful when in an OPAM setting *)
      let old_ocamlpath =

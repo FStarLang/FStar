@@ -5,7 +5,6 @@
    fstarcompiler
    memtrace
  )
- (flags (:standard -open Fstarcompiler))
  (link_flags "-linkall")
  (modes (native exe))
  (enabled_if (= %{env:BUILD_FSTAR_OCAML_TESTS=false} true))

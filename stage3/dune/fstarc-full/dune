@@ -4,14 +4,13 @@
  (public_name fstar.exe)
  (libraries
     fstarcompiler
-    ; The in-tree plugins (plugins.ml) are folded into the wrapped
-    ; fstarcompiler library, so there is no separate fstar_plugins library.
-    ; The Pulse plugin (pulse_plugin) links against the wrapped fstarcompiler
-    ; library directly (compiled with -open Fstarcompiler), so there is no
-    ; separate flat fstar_pluginlib library. Pulse's flat (wrapped=false)
-    ; modules do NOT collide with fstarcompiler's wrapped modules at link
-    ; time, and any double plugin registration is benign (name-keyed psmap,
-    ; last-wins).
+    ; The in-tree plugins (plugins.ml) are folded into the fstarcompiler
+    ; library, so there is no separate fstar_plugins library. The Pulse
+    ; plugin (pulse_plugin) links against the (unwrapped) fstarcompiler
+    ; library directly, so there is no separate flat fstar_pluginlib
+    ; library. Pulse's flat modules do NOT collide with fstarcompiler's
+    ; modules (disjoint names), and any double plugin registration is
+    ; benign (name-keyed psmap, last-wins).
     pulse_plugin
     memtrace
  )

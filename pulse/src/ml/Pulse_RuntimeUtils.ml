@@ -1,4 +1,3 @@
-open Fstarcompiler
 type context = ((string * FStarC_Range.range option) list) (* FStar_Sealed.sealed *)
 let extend_context (s:string) (r:FStarC_Range.range option) (c:context) = (s,r)::c
 
