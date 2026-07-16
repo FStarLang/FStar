@@ -19,7 +19,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Getopt
 open FStarC.BaseTypes
-open FStarC.VConfig
+open FStar.VConfig
 
 (* Set externally, checks if the directory exists and otherwise
 logs an issue. Cannot do it here due to circular deps. *)

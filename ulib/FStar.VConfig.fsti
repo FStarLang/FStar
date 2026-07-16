@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStarC.VConfig
+module FStar.VConfig
 
 (** This type represents the set of verification-relevant options used
     to check a particular definition. It can be read from tactics via
@@ -48,6 +48,6 @@ type vconfig = {
   reuse_hint_for                            : option string;
 }
 
-(** Marker to check a sigelt with a particular vconfig, not really used internally.. *)
+(** Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()

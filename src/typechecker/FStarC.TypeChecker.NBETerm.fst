@@ -30,7 +30,7 @@ module BU = FStarC.Util
 module SE = FStarC.Syntax.Embeddings
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStarC.Class.Show
 open FStarC.Syntax.Print {}

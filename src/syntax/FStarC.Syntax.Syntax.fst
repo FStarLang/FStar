@@ -24,7 +24,7 @@ open FStarC.Range
 open FStarC.Ident
 open FStarC.Const
 open FStar.Dyn
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStarC.Class.Ord
 open FStarC.Class.HasRange

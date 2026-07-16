@@ -30,7 +30,7 @@ open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 open FStarC.Tactics.Printing
 open FStarC.Syntax.Syntax
-open FStarC.VConfig
+open FStar.VConfig
 open FStarC.Errors.Msg
 module Listlike = FStarC.Class.Listlike
 

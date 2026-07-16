@@ -22,7 +22,7 @@ open FStarC.List
 open FStarC.String
 open FStarC.Util
 open FStarC.Getopt
-open FStarC.VConfig
+open FStar.VConfig
 open FStarC.Class.Show
 open FStarC.Class.Deq
 
