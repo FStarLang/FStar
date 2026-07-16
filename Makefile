@@ -369,9 +369,7 @@ endif
 	touch $@
 
 .pulse-plugin.src.touch: stage2
-	env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  $(MAKE) -C pulse plugin.src
+	$(MAKE) -C pulse plugin.src FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE))
 
 # F* executable with baked-in Pulse.
 .stage3.exe.touch: $(FSTAR3_FULL_EXE)
@@ -380,30 +378,21 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	$(MAKE) -C stage3 fstarc-full FSTAR_DUNE_RELEASE=1
 	touch $@
 
+# NB: We pass FSTAR_EXE explicitly since we must use the freshly-built,
+# but not-yet-installed, stage3 compiler. The other variables
+# (FSTAR_LIB, INCLUDE_PATHS, STAGE3) are set by the pulse makefiles
+# themselves, deriving them from the exported FSTAR_ROOT.
 .pulse-common.touch: $(FSTAR3_FULL_EXE)
 	$(call bold_msg, "CHECK", "PULSE CORE")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+	$(MAKE) -C pulse/ -f mk/lib-common.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .pulse-core.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  $(MAKE) -C pulse/ -f mk/lib-core.mk
+	$(MAKE) -C pulse/ -f mk/lib-core.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .pulse-lib.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE LIB")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/ -f mk/lib-pulse.mk
+	$(MAKE) -C pulse/ -f mk/lib-pulse.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .stage3.src.touch: .stage2.src.touch .pulse-plugin.src.touch .pulse-core.touch .pulse-lib.touch
 	touch $@
@@ -580,32 +569,23 @@ unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 unit-tests: _unit-tests
 
 # Use directly only at your own risk.
-_test_pulse: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test_pulse: KRML_HOME ?= $(abspath karamel)
+# NB: FSTAR_EXE, KRML_HOME and STAGE3 are set by the pulse test
+# makefiles themselves (via the exported FSTAR_ROOT), so we don't pass
+# them here.
 _test_pulse: _test_pulse_test _test_pulse_examples
 
 _test_pulse_test: karamel
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/test/
 
 _test_pulse_examples: karamel
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/share/pulse/examples/
 
 accept_pulse_test:
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/test/ accept
 
 accept_pulse_examples:
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/share/pulse/examples/ accept
 
-accept_pulse: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
-accept_pulse: override KRML_HOME := $(abspath karamel)
 accept_pulse: accept_pulse_test accept_pulse_examples
 
 .PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
@@ -622,14 +602,18 @@ need_fstar_exe:
 
 _doc: _doc_book_code
 
+# FSTAR_EXE is not passed here: tests/examples/doc self-configure via
+# mk/test.mk (FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe). A stage
+# override (e.g. test-1) still reaches these subdirs, since it is passed
+# as a command-line variable and thus propagated automatically.
 _doc_book_code: need_fstar_exe .force
-	+$(MAKE) -C doc/book/code FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C doc/book/code
 
 _unit-tests: need_fstar_exe .force
-	+$(MAKE) -C tests all FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C tests all
 
 _examples: need_fstar_exe .force
-	+$(MAKE) -C examples all FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C examples all
 
 ci: .force
 	+$(MAKE) 2

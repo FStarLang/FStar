@@ -20,6 +20,7 @@ ifeq ($(PULSE_ROOT),)
   $(error PULSE_ROOT is not set. Please set it to the root of your F* repository)
 endif
 include $(PULSE_ROOT)/mk/common.mk
+include $(PULSE_ROOT)/mk/fstar-tree.mk
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 

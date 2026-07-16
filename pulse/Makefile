@@ -1,4 +1,6 @@
 include mk/common.mk
+PULSE_ROOT ?= .
+include mk/fstar-tree.mk
 include mk/locate.mk
 
 # Pulse's `Makefile`s rely on recent GNU Make's "shortest stem" rule,
