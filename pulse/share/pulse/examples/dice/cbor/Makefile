@@ -22,7 +22,7 @@ include $(PULSE_ROOT)/mk/boot.mk
 
 .DEFAULT_GOAL := myall
 
-KRML=$(KRML_HOME)/krml $(KRML_OPTS)
+KRML=$(KRML_EXE) $(KRML_OPTS)
 myall: verify test
 
 .PHONY: extract_all

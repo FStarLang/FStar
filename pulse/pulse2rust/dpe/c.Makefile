@@ -24,9 +24,9 @@ include $(PULSE_ROOT)/mk/boot.mk
 .DEFAULT_GOAL := all
 
 
-$(call need_dir,KRML_HOME)
+$(call need,KRML_EXE)
 
-KRML ?= $(KRML_HOME)/krml
+KRML ?= $(KRML_EXE)
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)

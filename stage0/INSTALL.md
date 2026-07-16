@@ -129,7 +129,7 @@ commands. (Note: On Windows this requires Cygwin and `make`)
          are interested in compiling these examples.
 
    Note: Some of the examples currently require having [KaRaMeL](https://github.com/FStarLang/karamel)
-         installed and the `KRML_HOME` variable pointing to its location.
+         installed and the `KRML_EXE` variable pointing to its `krml` executable.
          If KaRaMeL is absent, then these examples will be skipped.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
