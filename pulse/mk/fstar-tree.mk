@@ -34,5 +34,9 @@ FSTAR2_EXE := $(abspath $(FSTAR2_EXE))
 FSTAR3_EXE ?= $(FSTAR_ROOT)/stage3/dune/_build/default/fstarc-full/fstarc3_full.exe
 FSTAR3_EXE := $(abspath $(FSTAR3_EXE))
 
-KRML_HOME ?= $(FSTAR_ROOT)/karamel
+# Master migrated Pulse from KRML_HOME to KRML_EXE (locate.mk no longer
+# derives one from the other), so point KRML_EXE directly at the krml
+# built from the karamel/ submodule. A KRML_EXE provided on the command
+# line or in the environment (e.g. with FSTAR_USE_KRML_EXE=1) still wins.
+KRML_EXE  ?= $(FSTAR_ROOT)/karamel/out/bin/krml
 STAGE3    ?= 1

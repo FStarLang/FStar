@@ -122,7 +122,8 @@ go into `test/`. All of `share/pulse` is distributed in the package.
 
 You can run `make -j test` to verify and test them. This rule will
 work whether you have Karamel or not. If you have Karamel with the
-`KRML_HOME` variable set, then this rule will also extract and compile
+`KRML_EXE` variable pointing to the `krml` executable, then this rule
+will also extract and compile
 (and sometimes run) C extraction examples. Alternatively, you can run
 `make -j test` from the Pulse root directory, which will build Pulse
 beforehand.
