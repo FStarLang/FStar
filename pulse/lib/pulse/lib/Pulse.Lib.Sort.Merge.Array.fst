@@ -42,13 +42,9 @@ let merge_invariant // FIXME: WHY WHY WHY?
     (hi: SZ.t)
     (l1_0: (list th))
     (l2_0: (list th))
-    (pi1: R.ref SZ.t)
-    (pi2: R.ref SZ.t)
-    (pres: R.ref bool)
     i1 i2 (res: bool) c c1 c2 accu l1 l2
 : Tot slprop
 =
-        R.pts_to pi1 i1 ** R.pts_to pi2 i2 ** R.pts_to pres res **
         pts_to_range a (SZ.v lo) (SZ.v i1) c **
         SM.seq_list_match c accu vmatch **
         pts_to_range a (SZ.v i1) (SZ.v i2) c1 **
@@ -61,7 +57,6 @@ let merge_invariant // FIXME: WHY WHY WHY?
         pure (merge_invariant_prop compare lo hi l1_0 l2_0 i1 i2 res accu l1 l2)
 
 inline_for_extraction
-divergent
 fn merge
     (#tl #th: Type0)
     (vmatch: tl -> th -> slprop)
@@ -104,23 +99,23 @@ requires
     SM.seq_list_match_nil_intro c1l [] vmatch;
     let mut pi2 = mi;
     let mut pres = true;
-    fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres
+    fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0
         lo mi true
         c1l c1 c2 [] l1_0 l2_0
     );
     while (
-        unfold merge_invariant;
         let i1 = !pi1;
         let i2 = !pi2;
         let res = !pres;
         (res && not (i1 = i2 || i2 = hi))
     )
     invariant exists* i1 i2 res c c1' c2' accu l1' l2'.
-        merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2'
+        R.pts_to pi1 i1 ** R.pts_to pi2 i2 ** R.pts_to pres res **
+        merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 i1 i2 res c c1' c2' accu l1' l2'
+    decreases (SZ.v hi - SZ.v !pi1 + (if !pres then 1 else 0))
     {
         with gi1 gi2 gres c c1' c2' accu l1 l2 .
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1' c2' accu l1 l2);
-        unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 gres c c1' c2' accu l1 l2);
+            unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 gi1 gi2 gres c c1' c2' accu l1 l2);
         let prf_res : squash (gres == true) = ();
         SM.seq_list_match_length vmatch c1' l1;
         SM.seq_list_match_length vmatch c2' l2;
@@ -151,7 +146,7 @@ requires
         Trade.elim (vmatch x2 (List.Tot.hd l2) ** _) _;
         if (comp = 0s) {
             pres := false;
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres gi1 gi2 false c
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 gi1 gi2 false c
                 c1'
                 c2'
                 accu
@@ -174,7 +169,7 @@ requires
                 as (pts_to_range a (SZ.v gi2) (SZ.v hi) c2');
             rewrite (pts_to_range a (SZ.v i1') (Ghost.reveal (SZ.v gi2)) (Seq.tail c1'))
                 as (pts_to_range a (SZ.v i1') (SZ.v gi2) (Seq.tail c1'));
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1' gi2 gres
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 i1' gi2 gres
                 (Seq.append c (Seq.cons x1 Seq.empty))
                 (Seq.tail c1')
                 c2'
@@ -200,7 +195,7 @@ requires
             pi2 := i2';
             merge_aux_consume_2 vmatch c accu c1' l1 c2' l2 x2 ();
             Trade.trans _ _ (SM.seq_list_match c1 l1_0 vmatch ** SM.seq_list_match c2 l2_0 vmatch);
-            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1' i2' gres
+            fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 i1' i2' gres
                 (Seq.append c (Seq.cons x2 Seq.empty))
                 c1'
                 (Seq.tail c2')
@@ -211,8 +206,7 @@ requires
         }
     };
     with i1 i2 res c c1' c2' accu l1' l2' .
-        fold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2');
-    unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 pi1 pi2 pres i1 i2 res c c1' c2' accu l1' l2');
+        unfold (merge_invariant vmatch compare a c1 c2 lo hi l1_0 l2_0 i1 i2 res c c1' c2' accu l1' l2');
     SM.seq_list_match_length vmatch c1' l1';
     SM.seq_list_match_length vmatch c2' l2';
     List.Tot.append_l_nil l1';
@@ -253,28 +247,30 @@ let sort_aux_t
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
   (compare: th -> th -> int)
+  (n: Ghost.erased nat)
 =
     (a: array tl) ->
     (lo: SZ.t) ->
     (hi: SZ.t) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-stt_div bool
+stt bool
   (
     pts_to_range a (SZ.v lo) (SZ.v hi) c **
-    SM.seq_list_match c l vmatch
+    SM.seq_list_match c l vmatch **
+    pure (SZ.v hi - SZ.v lo <= n)
   )
   (fun res -> sort_aux_post vmatch compare a lo hi c l res)
 
 inline_for_extraction
-divergent
 fn sort_aux
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
   (compare: Ghost.erased (th -> th -> int))
   (impl_compare: impl_compare_t #tl #th vmatch compare)
-  (sort_aux: sort_aux_t #tl #th vmatch compare)
-: sort_aux_t #tl #th vmatch compare
+  (n: Ghost.erased nat)
+  (sort_aux: (m: Ghost.erased nat { Ghost.reveal m << Ghost.reveal n } -> sort_aux_t #tl #th vmatch compare m))
+: sort_aux_t #tl #th vmatch compare n
 = 
     (a: array tl)
     (lo: SZ.t)
@@ -302,7 +298,7 @@ fn sort_aux
           (SM.seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) vmatch);
         SM.seq_list_match_append_elim_trade vmatch c1 l1 c2 l2;
         Trade.trans _ _ (SM.seq_list_match c l vmatch);
-        let res = sort_aux a lo mi;
+        let res = sort_aux (n - 1) a lo mi;
         unfold (sort_aux_post vmatch compare a lo mi c1 l1);
         with c1' l1' . assert (pts_to_range a (SZ.v lo) (SZ.v mi) c1' ** SM.seq_list_match c1' l1' vmatch);
         Trade.trans_hyp_l (SM.seq_list_match c1' l1' vmatch) (SM.seq_list_match c1 l1 vmatch) (SM.seq_list_match c2 l2 vmatch) (SM.seq_list_match c l vmatch);
@@ -313,7 +309,7 @@ fn sort_aux
             fold (sort_aux_post vmatch compare a lo hi c l false);
             false
         } else {
-            let res = sort_aux a mi hi;
+            let res = sort_aux (n - 1) a mi hi;
             unfold (sort_aux_post vmatch compare a mi hi c2 l2);
             with c2' l2' . assert (pts_to_range a (SZ.v mi) (SZ.v hi) c2' ** SM.seq_list_match c2' l2' vmatch);
             Trade.trans_hyp_r (SM.seq_list_match c1' l1' vmatch) (SM.seq_list_match c2' l2' vmatch) (SM.seq_list_match c2 l2 vmatch) (SM.seq_list_match c l vmatch);
@@ -338,15 +334,16 @@ let sort_t
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
   (compare: (th -> th -> int))
+  (n: Ghost.erased nat)
 =
     (a: array tl) ->
     (len: SZ.t) ->
     (#c: Ghost.erased (Seq.seq tl)) ->
     (#l: Ghost.erased (list th)) ->
-    stt_div bool
+    stt bool
     (pts_to a c **
       SM.seq_list_match c l vmatch **
-      pure (SZ.v len == length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l)
+      pure ((SZ.v len == length a \/ SZ.v len == Seq.length c \/ SZ.v len == List.Tot.length l) /\ length a <= n)
     )
     (fun res -> exists* c' l' .
       pts_to a c' **
@@ -360,13 +357,13 @@ let sort_t
     )
 
 inline_for_extraction
-divergent
 fn sort
   (#tl #th: Type0)
   (vmatch: tl -> th -> slprop)
   (compare: Ghost.erased (th -> th -> int))
-  (sort_aux: sort_aux_t #tl #th vmatch compare)
-: sort_t #_ #_ vmatch compare
+  (n: Ghost.erased nat)
+  (sort_aux: sort_aux_t #tl #th vmatch compare n)
+: sort_t #_ #_ vmatch compare n
 =
     (a: array tl)
     (len: SZ.t)
