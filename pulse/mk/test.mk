@@ -28,6 +28,12 @@ include $(PULSE_ROOT)/mk/fstar-tree.mk
 # top-level `test-3` target.
 FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
 FSTAR_EXE := $(abspath $(FSTAR_EXE))
+# Some test subdirectories (e.g. test/pool/*) use mk/boot.mk rather than
+# this makefile, and so do not derive these variables themselves. Export
+# them so the recursive `make -C <subdir>` invocations below inherit the
+# same compiler and stage selection.
+export FSTAR_EXE
+export STAGE3
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 
