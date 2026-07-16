@@ -30,9 +30,4 @@ let x =
       (* Set up peak heap memory reporting (for benchmarking). *)
       Fstarcompiler.FStarC_MemReport.setup ();
 
-      (* Only on stage3: we've baked Pulse into the compiler, which
-         brings in the plugin library. Make sure F* knows this so it
-         will not try to load it again. *)
-      Fstarcompiler.FStarC_Plugins.loaded_plugin_lib := true;
-
       Fstarcompiler.FStarC_Main.main ()

@@ -198,29 +198,6 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(MAKE) -C stage1/ libapp
 	touch $@
 
-.plib1.src.touch: $(FSTAR1_FULL_EXE) .alib1.src.touch .force
-	# NB: shares .depend and checked from alib1.src,
-	# hence the dependency, though it is not quite precise.
-	$(call bold_msg, "EXTRACT", "STAGE 1 PLUGLIB")
-	env \
-	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
-	  CACHE_DIR=stage1/ulib.checked/ \
-	  OUTPUT_DIR=stage1/ulib.pluginml/ \
-	  CODEGEN=PluginNoLib \
-	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.SizeT,-FStar.PtrDiffT,-FStar.Pervasives' \
-	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk ocaml
-	  # NOTE: not extracting SizeT/PtrDiff in stage 1 as that is currently broken but
-	  # to requiring some staging (it uses FStar.UInt64.ne, which is not there
-	  # in the parent compiler). Remove after bumping stage0.
-
-.plib1.touch: .plib1.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 1 PLUGLIB")
-	$(MAKE) -C stage1/ libplugin
-	touch $@
-
 .bare2.src.touch: $(FSTAR1_FULL_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 2 FSTARC")
 	# NOTE: see the explanation for FSTAR_LIB near top of file.
@@ -278,26 +255,6 @@ $(FSTAR2_FULL_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 .alib2.touch: .alib2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 LIB")
 	$(MAKE) -C stage2/ libapp FSTAR_DUNE_RELEASE=1
-	touch $@
-
-.plib2.src.touch: $(FSTAR2_FULL_EXE) .alib2.src.touch .force
-	# NB: shares .depend and checked from .alib2.src,
-	# hence the dependency, though it is not quite precise.
-	$(call bold_msg, "EXTRACT", "STAGE 2 PLUGLIB")
-	env \
-	  SRC=ulib/ \
-	  FSTAR_EXE=$(FSTAR2_FULL_EXE) \
-	  CACHE_DIR=stage2/ulib.checked/ \
-	  OUTPUT_DIR=stage2/ulib.pluginml/ \
-	  CODEGEN=PluginNoLib \
-	  TAG=pluginlib \
-	  DEPFLAGS='--extract +FStar.Tactics,+FStar.Reflection,+FStar.Sealed,-FStar.Pervasives' \
-	  TOUCH=$@ \
-	  $(MAKE) -f mk/lib.mk ocaml
-
-.plib2.touch: .plib2.src.touch .src.ml.touch $(MAYBEFORCE)
-	$(call bold_msg, "BUILD", "STAGE 2 PLUGLIB")
-	$(MAKE) -C stage2/ libplugin FSTAR_DUNE_RELEASE=1
 	touch $@
 
 # F# library
@@ -359,10 +316,10 @@ else
 LINK_OK=0
 endif
 
-.stage1.src.touch: .bare1.src.touch .alib1.src.touch .plib1.src.touch .src.ml.touch
+.stage1.src.touch: .bare1.src.touch .alib1.src.touch .src.ml.touch
 	touch $@
 
-.stage2.src.touch: .bare2.src.touch .alib2.src.touch .plib2.src.touch .src.ml.touch
+.stage2.src.touch: .bare2.src.touch .alib2.src.touch .src.ml.touch
 	touch $@
 
 .stage1-for-bump.src.touch: .bare1.src.touch .src.ml.touch
@@ -627,12 +584,11 @@ save: stage0_new
 define do-stage0-snapshot
 	$(call bold_msg, "SNAPSHOT", "$(TO)")
 	rm -rf "$(TO)"
-	mkdir -p "$(1)"/ulib.ml "$(1)"/ulib.pluginml  # rsync fails with dangling symlinks
+	mkdir -p "$(1)"/ulib.ml  # rsync fails with dangling symlinks
 	.scripts/src-install.sh "$(1)" "$(TO)"
 	# Trim it a bit...
 	rm -rf "$(TO)/src"            # no need for compiler F* sources
 	rm -rf "$(TO)/ulib"*          # stage0 does not need its own ulib copy
-	rm -rf "$(TO)/dune/libplugin" # idem
 	rm -rf "$(TO)/dune/libapp"    # we won't even build apps
 	rm -rf "$(TO)/dune/tests"     # we won't build tests
 	rm -rf "$(TO)/karamel"        # only needed in source packages

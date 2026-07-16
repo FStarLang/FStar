@@ -58,7 +58,8 @@ EXTRACT_NS += +FStar.List.Pure.Base
 EXTRACT_NS += +FStar.List.Tot.Properties
 EXTRACT_NS += +FStar.Int.Cast.Full
 
-# Note: the pluginlib rules will enable these.
+# Tactics/Reflection are not extracted into the app library (fstar.lib);
+# they are extracted into the compiler library via the unified fstarc pass.
 EXTRACT_NS += -FStar.Tactics
 EXTRACT_NS += -FStar.Reflection
 
