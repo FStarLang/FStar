@@ -4,10 +4,8 @@ OUTPUT_DIR := build/lib.pulse.ml/
 CODEGEN := NONE
 PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/fstar-tree.mk
-ifneq ($(FSTAR_ROOT),)
 export FSTAR_LIB ?= $(FSTAR_ROOT)/ulib
 INCLUDE_PATHS ?= $(FSTAR_ROOT)/stage2/ulib.checked
-endif
 # If being called by F* stage3, no need to include plugin
 ifeq ($(STAGE3),)
 FSTAR_OPTIONS += --include build/ocaml/installed/lib/pulse
