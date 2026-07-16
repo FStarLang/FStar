@@ -21,6 +21,13 @@ ifeq ($(PULSE_ROOT),)
 endif
 include $(PULSE_ROOT)/mk/common.mk
 include $(PULSE_ROOT)/mk/fstar-tree.mk
+# The tests run against the *installed* stage3 compiler: with STAGE3 set
+# (the default), the rules below add no --include for the Pulse library and
+# rely on it being in the compiler's default lib path, which only the
+# installed stage3 (stage3/out/lib/fstar/pulse) provides. This matches the
+# top-level `test-3` target.
+FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
+FSTAR_EXE := $(abspath $(FSTAR_EXE))
 include $(PULSE_ROOT)/mk/locate.mk
 .DEFAULT_GOAL := all
 

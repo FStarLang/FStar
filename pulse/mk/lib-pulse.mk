@@ -4,6 +4,8 @@ OUTPUT_DIR := build/lib.pulse.ml/
 CODEGEN := NONE
 PULSE_ROOT ?= .
 include $(PULSE_ROOT)/mk/fstar-tree.mk
+FSTAR_EXE ?= $(FSTAR3_EXE)
+FSTAR_EXE := $(abspath $(FSTAR_EXE))
 export FSTAR_LIB ?= $(FSTAR_ROOT)/ulib
 INCLUDE_PATHS ?= $(FSTAR_ROOT)/stage2/ulib.checked
 # If being called by F* stage3, no need to include plugin
