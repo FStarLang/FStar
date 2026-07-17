@@ -1,6 +1,21 @@
-module FStar.Stubs.Errors.Msg
+(*
+   Copyright 2008-2018 Microsoft Research
 
-(* Implemented in src/, allows constructing structured pretty-printed error messages. *)
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+module FStar.Errors.Msg
+
+(* Allows constructing structured pretty-printed error messages. *)
 
 open FStar.Pprint
 
@@ -28,27 +43,9 @@ anything else) all its formatting will be lost. You should instead use
 last resort use doc_of_string. *)
 val text : string -> document
 
-(* Makes an indented sublist using bullet as a header for each list element. *)
-val sublist : bullet:document -> elems:list document -> document
-
-(* == sublist (doc_of_string "- ") *)
-val bulleted : list document -> document
-
 (* Create a simple error message from a string. If the string is just
 text and can be long, please use [text] instead. On the other hand, if
 you need to respect indentation/spacing in the string, then use this
 one, but if that's the case it's probably better to build a doc instead
 of lifting from a string. NB: mkmsg s is equal to [doc_of_string s]. *)
 val mkmsg : string -> error_message
-
-(* A nested document that can be concatenated with another one *)
-val subdoc : document -> document
-
-(* Only to be used by FStar.Errors *)
-val renderdoc : document -> string
-
-(* Returns a document with the current stack trace *)
-val backtrace_doc : unit -> document
-
-(* Render an error message as a string. *)
-val rendermsg : error_message -> string

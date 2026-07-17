@@ -40,6 +40,7 @@ EXTRACT += --extract +FStar.Injection
 EXTRACT += --extract +FStar.Functions
 EXTRACT += --extract +FStar.NormSteps
 EXTRACT += --extract +FStar.VConfig
+EXTRACT += --extract +FStar.Errors.Msg
 EXTRACT += --extract +FStar.Algebra.CommMonoid.Equiv
 EXTRACT += --extract +FStar.Preorder
 EXTRACT += --extract +FStar.Monotonic.Pure

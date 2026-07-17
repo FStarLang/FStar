@@ -402,7 +402,7 @@ let rec tcresolve' (st:st_t) : Tac unit =
     if st.fuel <= 0 then (
       let r = st.warned_oof in
       if not (read r) then (
-        let open FStar.Stubs.Errors.Msg in
+        let open FStar.Errors.Msg in
         log_issues [FStar.Issue.mk_issue_doc "Warning" [
           text "Warning: fuel exhausted during typeclass resolution.";
           text "This usually indicates a loop in your instances.";
