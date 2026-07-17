@@ -608,26 +608,77 @@ let bind_st_term (g:env) (s:st_term)
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
   g, b, x, RT.var_as_term x
 
+type short_circuit_op =
+  | ShortCircuitAnd
+  | ShortCircuitOr
+
+let prims_op_ampamp_lid : R.name = ["Prims"; "op_AmpAmp"]
+let prims_op_barbar_lid : R.name = ["Prims"; "op_BarBar"]
+
+(* F* parses/desugars Pulse `&&` and `||` as ordinary Prims applications.
+   The generic hoister traverses all application arguments and would therefore
+   bind both boolean operands before the operator is checked.  Recognize these
+   two applications first and reify their control-flow shape in Pulse syntax, so
+   the right operand is hoisted only in the branch where the sequential boolean
+   semantics actually evaluates it. *)
+let as_short_circuit_op (head:term) : T.Tac (option short_circuit_op) =
+  match R.inspect_ln head with
+  | R.Tv_FVar fv
+  | R.Tv_UInst fv _ ->
+    let lid = R.inspect_fv fv in
+    if lid = prims_op_ampamp_lid then Some ShortCircuitAnd
+    else if lid = prims_op_barbar_lid then Some ShortCircuitOr
+    else None
+  | _ -> None
+
+let mk_bool_return_st (rng:Range.range) (v:term) : st_term =
+  mk_term (Tm_Return {expected_type=tm_bool; insert_eq=false; term=v}) rng
+
 (* Hoist a single F*-level Tv_Match branch body by delegating to maybe_hoist.
    Returns the body as an st_term and whether any hoisting was done. *)
-let hoist_branch_body (g:env) (body:term) (rng:Range.range)
+let rec hoist_branch_body (g:env) (body:term) (rng:Range.range)
   (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
 : T.Tac (st_term & bool)
 = let body_rng = RU.range_of_term body in
-  let (_g', binders, (body', _q)) = maybe_hoist_fn g (body, R.Q_Explicit) in
-  match binders with
-  | [] ->
-    (mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body}) body_rng, false)
-  | _ ->
-    let ret = mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body'}) body_rng in
-    let final_st = List.Tot.fold_right
-      (fun (b, v, arg) (acc:st_term) ->
-        let acc' = Pulse.Syntax.Naming.close_st_term acc v in
-        mk_term (Tm_Bind { binder = b; head = arg; body = acc' }) rng)
-      binders
-      ret
+  match hoist_whole_short_circuit_body g body rng maybe_hoist_fn with
+  | Some st -> (st, true)
+  | None ->
+    let (_g', binders, (body', _q)) = maybe_hoist_fn g (body, R.Q_Explicit) in
+    match binders with
+    | [] ->
+      (mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body}) body_rng, false)
+    | _ ->
+      let ret = mk_term (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=body'}) body_rng in
+      let final_st = List.Tot.fold_right
+        (fun (b, v, arg) (acc:st_term) ->
+          let acc' = Pulse.Syntax.Naming.close_st_term acc v in
+          mk_term (Tm_Bind { binder = b; head = arg; body = acc' }) rng)
+        binders
+        ret
+      in
+      (final_st, true)
+
+and hoist_whole_short_circuit_body
+  (g:env)
+  (body:term)
+  (rng:Range.range)
+  (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
+: T.Tac (option st_term)
+= let head, args = T.collect_app_ln body in
+  match as_short_circuit_op head, args with
+  | Some op, [(lhs, R.Q_Explicit); (rhs, R.Q_Explicit)] ->
+    let lhs_st, lhs_changed = hoist_branch_body g lhs rng maybe_hoist_fn in
+    let rhs_st, rhs_changed = hoist_branch_body g rhs rng maybe_hoist_fn in
+    if not (lhs_changed || rhs_changed) then None else
+    let true_st = mk_bool_return_st rng tm_true in
+    let false_st = mk_bool_return_st rng tm_false in
+    let then_, else_ =
+      match op with
+      | ShortCircuitAnd -> rhs_st, false_st
+      | ShortCircuitOr -> true_st, rhs_st
     in
-    (final_st, true)
+    Some (mk_term (Tm_If { b = lhs_st; then_; else_; post = None }) rng)
+  | _ -> None
 
 (* Process all branches of an F*-level Tv_Match, hoisting stateful apps
    in each branch body. Returns processed branches and whether any changed. *)
@@ -667,6 +718,28 @@ let convert_fstar_match (g:env) (t:term)
     ) else None
   | _ -> None
 
+let convert_short_circuit_app
+  (g:env)
+  (head:term)
+  (args:list T.argv)
+  (rng:Range.range)
+  (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
+: T.Tac (option st_term)
+= match as_short_circuit_op head, args with
+  | Some op, [(lhs, R.Q_Explicit); (rhs, R.Q_Explicit)] ->
+    let lhs_st, lhs_changed = hoist_branch_body g lhs rng maybe_hoist_fn in
+    let rhs_st, rhs_changed = hoist_branch_body g rhs rng maybe_hoist_fn in
+    if not (lhs_changed || rhs_changed) then None else
+    let true_st = mk_bool_return_st rng tm_true in
+    let false_st = mk_bool_return_st rng tm_false in
+    let then_, else_ =
+      match op with
+      | ShortCircuitAnd -> rhs_st, false_st
+      | ShortCircuitOr -> true_st, rhs_st
+    in
+    Some (mk_term (Tm_If { b = lhs_st; then_; else_; post = None }) rng)
+  | _ -> None
+
 let rec maybe_hoist (g:env) (arg:T.argv)
 : T.Tac (env & list (binder & var & st_term) & T.argv)
 = let t, q = arg in
@@ -680,26 +753,32 @@ let rec maybe_hoist (g:env) (arg:T.argv)
        let g, b, x, var_t = bind_st_term g st_cond in
        g, [b, x, st_cond], (var_t, q)
      | None -> g, [], arg)
-  | _ ->
-  match is_stateful_application g t with
-  | None -> (
-    let g, binders, args = maybe_hoist_args g args in
-    match binders with
-    | [] -> g, [], arg // no elab
-    | _ -> 
-      let t = RU.mk_app_flat head args (T.range_of_term t) in
-      g, binders, (t, q)
-  )
-  | Some _ -> (
-    let g, binders, args = maybe_hoist_args g args in
-    if Cons? args 
-    then (
-      let st_app = as_stateful_application t head args  in
-      let g, b, x, t = bind_st_term g st_app in
-      let arg = t, q in
-      g, binders@[b, x, st_app], arg
-    )
-    else T.fail "Impossible: is_stateful_application returned true but no args to hoist"
+  | _ -> (
+    match convert_short_circuit_app g head args (T.range_of_term t) maybe_hoist with
+    | Some st_sc ->
+      let g, b, x, t = bind_st_term g st_sc in
+      g, [b, x, st_sc], (t, q)
+    | None ->
+      match is_stateful_application g t with
+      | None -> (
+        let g, binders, args = maybe_hoist_args g args in
+        match binders with
+        | [] -> g, [], arg // no elab
+        | _ ->
+          let t = RU.mk_app_flat head args (T.range_of_term t) in
+          g, binders, (t, q)
+      )
+      | Some _ -> (
+        let g, binders, args = maybe_hoist_args g args in
+        if Cons? args
+        then (
+          let st_app = as_stateful_application t head args  in
+          let g, b, x, t = bind_st_term g st_app in
+          let arg = t, q in
+          g, binders@[b, x, st_app], arg
+        )
+        else T.fail "Impossible: is_stateful_application returned true but no args to hoist"
+      )
   )
 
 and maybe_hoist_args (g:env) (args:list T.argv)
@@ -711,6 +790,17 @@ and maybe_hoist_args (g:env) (args:list T.argv)
       g, binders, arg::args)
     args
     (g, [], [])
+
+let hoist_short_circuit_return (g:env) (t:term)
+: T.Tac (option st_term)
+= let head, args = T.collect_app_ln t in
+  convert_short_circuit_app g head args (T.range_of_term t) maybe_hoist
+
+let hoist_control_flow_return (g:env) (t:term)
+: T.Tac (option st_term)
+= match hoist_short_circuit_return g t with
+  | Some st -> Some st
+  | None -> convert_fstar_match g t maybe_hoist
 
 #push-options "--ifuel 1"
 let maybe_hoist_top 
@@ -742,44 +832,76 @@ let hoist_stateful_apps
 = match decompose_app g tt with
   | None -> None
   | Some (head, args, rebuild) ->
-    let _, binders, args = maybe_hoist_args g args in
-    match args with
-    | [] ->
-      // No args after decomposition. Check if the term is an F*-level
-      // Tv_Match with stateful branches (the "hard case" from #443).
-      (match tt with
-       | Inl t ->
-         (match convert_fstar_match g t maybe_hoist with
-          | Some st_cond ->
-            let rng = RU.range_of_term t in
-            let _, b, v, var_t = bind_st_term g st_cond in
-            let bind_term = context (Inl var_t) in
-            let body = Pulse.Syntax.Naming.close_st_term bind_term v in
-            Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
-          | None -> None)
-       | _ -> None)
-    | _ ->
-      let tt' = rebuild args in
-      let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in 
-      let binders = binders @ binders' in
-      match binders with
-      | [] -> (
-        match tt, tt' with
-        | Inl _, Inr _ -> (
-          Some (context tt') //we at least elaborated a pure term to an inpure term
-        )
-        | _ -> None //No elaboration
-      )
+    match tt with
+    | Inl t -> (
+      let bind_context_to_st (rng:Range.range) (st_cond:st_term) : T.Tac (option st_term) =
+        let _, b, v, var_t = bind_st_term g st_cond in
+        let bind_term = context (Inl var_t) in
+        let body = Pulse.Syntax.Naming.close_st_term bind_term v in
+        Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
+      in
+      match if hoist_top_level
+            then convert_short_circuit_app g head args (RU.range_of_term t) maybe_hoist
+            else None with
+      | Some st_sc -> bind_context_to_st (RU.range_of_term t) st_sc
+      | None ->
+        let _, binders, args = maybe_hoist_args g args in
+        match args with
+        | [] ->
+          // No args after decomposition. Check if the term is an F*-level
+          // Tv_Match with stateful branches (the "hard case" from #443).
+          (match convert_fstar_match g t maybe_hoist with
+           | Some st_cond -> bind_context_to_st (RU.range_of_term t) st_cond
+           | None -> None)
+        | _ ->
+          let tt' = rebuild args in
+          let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in
+          let binders = binders @ binders' in
+          match binders with
+          | [] -> (
+            match tt, tt' with
+            | Inl _, Inr _ -> (
+              Some (context tt') //we at least elaborated a pure term to an inpure term
+            )
+            | _ -> None //No elaboration
+          )
+          | _ ->
+            let bind_term = context tt' in
+            let res = List.Tot.fold_right
+              (fun (b, v, arg) body ->
+                let body = Pulse.Syntax.Naming.close_st_term body v in
+                mk_term (Tm_Bind { binder = b; head = arg; body = body }) bind_term.range)
+              binders
+              bind_term
+            in
+            Some res
+    )
+    | Inr _ ->
+      let _, binders, args = maybe_hoist_args g args in
+      match args with
+      | [] -> None
       | _ ->
-        let bind_term = context tt' in
-        let res = List.Tot.fold_right
-          (fun (b, v, arg) body -> 
-            let body = Pulse.Syntax.Naming.close_st_term body v in
-            mk_term (Tm_Bind { binder = b; head = arg; body = body }) bind_term.range)
-          binders
-          bind_term
-        in
-        Some res
+        let tt' = rebuild args in
+        let _, binders', tt' = maybe_hoist_top (hoist_top_level && Inl? tt) g tt' in
+        let binders = binders @ binders' in
+        match binders with
+        | [] -> (
+          match tt, tt' with
+          | Inl _, Inr _ -> (
+            Some (context tt') //we at least elaborated a pure term to an inpure term
+          )
+          | _ -> None //No elaboration
+        )
+        | _ ->
+          let bind_term = context tt' in
+          let res = List.Tot.fold_right
+            (fun (b, v, arg) body ->
+              let body = Pulse.Syntax.Naming.close_st_term body v in
+              mk_term (Tm_Bind { binder = b; head = arg; body = body }) bind_term.range)
+            binders
+            bind_term
+          in
+          Some res
 
 let hoist_st_lambda
   (g:env)
