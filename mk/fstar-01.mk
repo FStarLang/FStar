@@ -1,144 +1,64 @@
 FSTAR_OPTIONS += --lax
 FSTAR_OPTIONS += --warn_error -272 # top-level effects
 
+
 # This is a UNIFIED extraction pass: it extracts BOTH the compiler
-# (FStarC* + FStar.Pervasives) AND the in-tree ulib plugins (the
+# (FStarC.* + FStar.Pervasives) AND the in-tree ulib plugins (the
 # FStar.Tactics.*, FStar.Reflection.*, etc. modules that used to be
-# extracted separately by mk/plugins.mk) into a single OUTPUT_DIR.
+# extracted separately by mk/plugins.mk) AND the ulib plugin-base modules
+# that out-of-tree plugins (e.g. Pulse) need (formerly the fstar_pluginlib
+# library), all into a single OUTPUT_DIR.
 # It is meant to be run with CODEGEN=PluginNoLib so that the [@@plugin]
 # annotations in both the compiler and the plugin modules get their
 # registration code emitted.
+#
+# Rather than allow-listing every ulib namespace, we extract everything
+# under FStarC and FStar that is reachable from the ROOTS below, and then
+# exclude the handful of modules that must NOT be re-extracted because they
+# are realized by the hand-written OCaml support library (fstar.lib:
+# FStar.String, FStar.List, the machine integers, ...) or are compiler
+# builtins (FStar.Stubs.*). Reachability is bounded by the ROOTS, so only
+# modules those roots depend on are ever extracted.
 
 EXTRACT :=
 
-# --- Compiler ---
 EXTRACT += --extract 'FStarC'
+EXTRACT += --extract '+FStar'
 
-# We need to extract pervasives since extracted code
-# uses its own definitions of options, tuples, either, etc.
-EXTRACT += --extract +FStar.Pervasives
+# Modules realized in OCaml (fstar.lib) or provided as compiler builtins:
+# these must NOT be re-extracted.
+EXTRACT += --extract -FStar.All
+EXTRACT += --extract -FStar.Attributes
+EXTRACT += --extract -FStar.Char
+EXTRACT += --extract -FStar.Dyn
+EXTRACT += --extract -FStar.Exn
+EXTRACT += --extract -FStar.Float64
+EXTRACT += --extract -FStar.Ghost
+EXTRACT += --extract -FStar.IO
+EXTRACT += --extract -FStar.ImmutableArray.Base
+EXTRACT += --extract -FStar.Int8
+EXTRACT += --extract -FStar.Int16
+EXTRACT += --extract -FStar.Int32
+EXTRACT += --extract -FStar.Int64
+EXTRACT += --extract -FStar.Issue
+EXTRACT += --extract -FStar.List
 EXTRACT += --extract -FStar.Pervasives.Native
+EXTRACT += --extract -FStar.Pprint
+EXTRACT += --extract -FStar.Prelude
+EXTRACT += --extract -FStar.Range
+EXTRACT += --extract -FStar.Real
+EXTRACT += --extract -FStar.String
+EXTRACT += --extract -FStar.Stubs
+EXTRACT += --extract -FStar.UInt8
+EXTRACT += --extract -FStar.UInt16
+EXTRACT += --extract -FStar.UInt32
+EXTRACT += --extract -FStar.UInt64
 
-# --- In-tree plugins (folded in from the former mk/plugins.mk pass) ---
-# These namespaces, intersected with what is reachable from the plugin
-# ROOTS below, yield exactly the module set the plugins pass used to
-# produce. Modules not reachable from the roots are not extracted.
-EXTRACT += --extract +FStar.Tactics
-EXTRACT += --extract +FStar.Reflection
-EXTRACT += --extract +FStar.Sealed
-EXTRACT += --extract +FStar.Order
-EXTRACT += --extract +FStar.BitVector
-EXTRACT += --extract +FStar.Seq
-EXTRACT += --extract +FStar.Int
-EXTRACT += --extract +FStar.UInt
-EXTRACT += --extract +FStar.BV
-EXTRACT += --extract +FStar.Fin
-EXTRACT += --extract +FStar.Calc
-EXTRACT += --extract +FStar.Math
-EXTRACT += --extract +FStar.Bijection
-EXTRACT += --extract +FStar.Injection
-EXTRACT += --extract +FStar.Functions
-EXTRACT += --extract +FStar.NormSteps
-EXTRACT += --extract +FStar.VConfig
-EXTRACT += --extract +FStar.Errors.Msg
-EXTRACT += --extract +FStar.Algebra.CommMonoid.Equiv
-EXTRACT += --extract +FStar.Preorder
-EXTRACT += --extract +FStar.Monotonic.Pure
-EXTRACT += --extract +FStar.List.Tot.Properties
-EXTRACT += --extract +FStar.Classical
-EXTRACT += --extract +FStar.IndefiniteDescription
-EXTRACT += --extract +FStar.Nonempty
-EXTRACT += --extract +FStar.PropositionalExtensionality
-EXTRACT += --extract +FStar.SizeT
-
-# --- Out-of-tree plugin base modules (formerly the fstar_pluginlib /
-# fstar.compiler.plugins library, extracted from ulib.pluginml). These are
-# the ulib plugin-usable modules that out-of-tree plugins (e.g. Pulse) need
-# but the compiler does not itself reach. Folding them into fstarcompiler
-# eliminates the separate fstar_pluginlib library/namespace.
-EXTRACT += --extract +FStar.Algebra.CommMonoid
-EXTRACT += --extract +FStar.Algebra.CommMonoid.Fold
-EXTRACT += --extract +FStar.Algebra.CommMonoid.Fold.Nested
-EXTRACT += --extract +FStar.Algebra.Monoid
-EXTRACT += --extract +FStar.BigOps
-EXTRACT += --extract +FStar.Cardinality.Cantor
-EXTRACT += --extract +FStar.Cardinality.Universes
-EXTRACT += --extract +FStar.Class.Add
-EXTRACT += --extract +FStar.Class.Eq
-EXTRACT += --extract +FStar.Class.Eq.Raw
-EXTRACT += --extract +FStar.Class.Ord.Raw
-EXTRACT += --extract +FStar.Class.Printable
-EXTRACT += --extract +FStar.Class.TotalOrder.Raw
-EXTRACT += --extract +FStar.ConstantTime.Integers
-EXTRACT += --extract +FStar.DependentMap
-EXTRACT += --extract +FStar.Endianness
-EXTRACT += --extract +FStar.Enumerable
-EXTRACT += --extract +FStar.Error
-EXTRACT += --extract +FStar.ExtractAs
-EXTRACT += --extract +FStar.FiniteMap.Ambient
-EXTRACT += --extract +FStar.FiniteMap.Base
-EXTRACT += --extract +FStar.FiniteSet.Ambient
-EXTRACT += --extract +FStar.FiniteSet.Base
-EXTRACT += --extract +FStar.FunctionalExtensionality
-EXTRACT += --extract +FStar.FunctionalQueue
-EXTRACT += --extract +FStar.GSet
-EXTRACT += --extract +FStar.GhostSet
-EXTRACT += --extract +FStar.IFC
-EXTRACT += --extract +FStar.Int128
-EXTRACT += --extract +FStar.Int.Cast.Full
-EXTRACT += --extract +FStar.IntegerIntervals
-EXTRACT += --extract +FStar.Integers
-EXTRACT += --extract +FStar.LexicographicOrdering
+# ...but a couple of FStar.List.* modules under the excluded FStar.List
+# namespace ARE needed by the plugins (they are not realized in OCaml).
+# Re-include them; being later, these override the -FStar.List above.
 EXTRACT += --extract +FStar.List.Pure.Base
-EXTRACT += --extract +FStar.Map
-EXTRACT += --extract +FStar.MarkovsPrinciple
-EXTRACT += --extract +FStar.Math.Euclid
-EXTRACT += --extract +FStar.Math.Exp
-EXTRACT += --extract +FStar.Math.Fermat
-EXTRACT += --extract +FStar.Matrix
-EXTRACT += --extract +FStar.OrdMap
-EXTRACT += --extract +FStar.OrdMapProps
-EXTRACT += --extract +FStar.OrdSet
-EXTRACT += --extract +FStar.OrdSetProps
-EXTRACT += --extract +FStar.PCM
-EXTRACT += --extract +FStar.PartialMap
-EXTRACT += --extract +FStar.PredicateExtensionality
-EXTRACT += --extract +FStar.PtrdiffT
-EXTRACT += --extract +FStar.Pure.BreakVC
-EXTRACT += --extract +FStar.RBMap
-EXTRACT += --extract +FStar.RBSet
-EXTRACT += --extract +FStar.RefinementExtensionality
-EXTRACT += --extract +FStar.Reflection
-EXTRACT += --extract +FStar.Reflection.Formula
-EXTRACT += --extract +FStar.Reflection.Typing
-EXTRACT += --extract +FStar.ReflexiveTransitiveClosure
-EXTRACT += --extract +FStar.Seq.Equiv
-EXTRACT += --extract +FStar.Seq.Permutation
-EXTRACT += --extract +FStar.Seq.Sorted
-EXTRACT += --extract +FStar.Sequence
-EXTRACT += --extract +FStar.Sequence.Ambient
-EXTRACT += --extract +FStar.Sequence.Base
-EXTRACT += --extract +FStar.Sequence.Permutation
-EXTRACT += --extract +FStar.Sequence.Seq
-EXTRACT += --extract +FStar.Sequence.Util
-EXTRACT += --extract +FStar.Set
-EXTRACT += --extract +FStar.Tactics.Arith
-EXTRACT += --extract +FStar.Tactics.BreakVC
-EXTRACT += --extract +FStar.Tactics.CanonCommMonoid
-EXTRACT += --extract +FStar.Tactics.CanonCommMonoidSimple
-EXTRACT += --extract +FStar.Tactics.CanonCommSemiring
-EXTRACT += --extract +FStar.Tactics.CanonMonoid
-EXTRACT += --extract +FStar.Tactics.Derived
-EXTRACT += --extract +FStar.Tactics.Logic
-EXTRACT += --extract +FStar.Tactics.PatternMatching
-EXTRACT += --extract +FStar.Tactics.Simplifier
-EXTRACT += --extract +FStar.Tactics.SyntaxHelpers
-EXTRACT += --extract +FStar.UInt128
-EXTRACT += --extract +FStar.Universe
-EXTRACT += --extract +FStar.Universe.PCM
-EXTRACT += --extract +FStar.WellFounded
-EXTRACT += --extract +FStar.WellFoundedRelation
-EXTRACT += --extract +FStar.WellFounded.Util
+EXTRACT += --extract +FStar.List.Tot.Properties
 
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
