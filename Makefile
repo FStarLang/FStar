@@ -12,6 +12,28 @@ FSTAR_DEFAULT_GOAL ?= build
 all: stage1 stage2 stage3 1.tests 2.tests boot-src-bare
 all-packages: package-1 package-2 package-src-1 package-src-2
 
+# By default, F* builds Karamel from the karamel/ submodule and uses the
+# resulting krml executable to test Pulse extraction. Set FSTAR_USE_KRML_EXE=1
+# to instead use an existing Karamel executable given by the KRML_EXE
+# environment variable; in that case the karamel/ submodule is not compiled.
+# KRML_EXE is a plain (non-exported) variable: it is passed explicitly to the
+# Pulse test sub-makes so that it does not leak into the Karamel build itself.
+.PHONY: karamel
+ifeq ($(FSTAR_USE_KRML_EXE),1)
+
+ifeq ($(KRML_EXE),)
+$(error FSTAR_USE_KRML_EXE is set to 1 but KRML_EXE is not set. Please set KRML_EXE to the full path of your Karamel executable.)
+endif
+
+# Nothing to build: use the user-provided Karamel executable.
+karamel:
+	@true
+
+else
+
+# Use the krml executable built from the karamel/ submodule.
+KRML_EXE := $(abspath karamel)/out/bin/krml
+
 karamel/Makefile:
 	$(error Error: $@ not found. Run `git submodule init && git submodule update` if you haven't)
 
@@ -29,6 +51,8 @@ karamel/Makefile:
 	@touch .krml.touch
 
 karamel: .krml.touch
+
+endif
 
 ### STAGES
 
@@ -369,9 +393,7 @@ endif
 	touch $@
 
 .pulse-plugin.src.touch: stage2
-	env \
-	  FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE)) \
-	  $(MAKE) -C pulse plugin.src
+	$(MAKE) -C pulse plugin.src FSTAR_EXE=$(abspath $(INSTALLED_FSTAR2_FULL_EXE))
 
 # F* executable with baked-in Pulse.
 .stage3.exe.touch: $(FSTAR3_FULL_EXE)
@@ -380,30 +402,21 @@ $(FSTAR3_FULL_EXE): .pulse-plugin.src.touch
 	$(MAKE) -C stage3 fstarc-full FSTAR_DUNE_RELEASE=1
 	touch $@
 
+# NB: We pass FSTAR_EXE explicitly since we must use the freshly-built,
+# but not-yet-installed, stage3 compiler. The other variables
+# (FSTAR_LIB, INCLUDE_PATHS, STAGE3) are set by the pulse makefiles
+# themselves, deriving them from the exported FSTAR_ROOT.
 .pulse-common.touch: $(FSTAR3_FULL_EXE)
 	$(call bold_msg, "CHECK", "PULSE CORE")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  $(MAKE) -C pulse/ -f mk/lib-common.mk
+	$(MAKE) -C pulse/ -f mk/lib-common.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .pulse-core.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE CORE IMPL")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  $(MAKE) -C pulse/ -f mk/lib-core.mk
+	$(MAKE) -C pulse/ -f mk/lib-core.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .pulse-lib.touch: $(FSTAR3_FULL_EXE) .pulse-common.touch
 	$(call bold_msg, "CHECK", "PULSE LIB")
-	env \
-	  FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE)) \
-	  FSTAR_LIB=$(abspath ulib) \
-	  INCLUDE_PATHS=$(abspath stage2/ulib.checked) \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/ -f mk/lib-pulse.mk
+	$(MAKE) -C pulse/ -f mk/lib-pulse.mk FSTAR_EXE=$(abspath $(FSTAR3_FULL_EXE))
 
 .stage3.src.touch: .stage2.src.touch .pulse-plugin.src.touch .pulse-core.touch .pulse-lib.touch
 	touch $@
@@ -412,8 +425,8 @@ define install-stage
 	$(call bold_msg, "INSTALL", "STAGE $(1)")
 	$(MAKE) -C stage$(1) install PREFIX=$(CURDIR)/stage$(1)/out $(2)
 	@# ^ pass PREFIX to make sure we don't get it from env
-	@# Karamel install
-	$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false
+	@# Karamel install (skipped when using an external Karamel executable)
+	$(if $(filter 1,$(FSTAR_USE_KRML_EXE)),,$(MAKE) -C karamel install PREFIX=$(CURDIR)/stage$(1)/out LOWSTAR=false)
 	touch $@
 endef
 
@@ -570,42 +583,32 @@ test-2: stage2
 	$(MAKE) _test FSTAR_EXE=$(FSTAR_EXE)
 
 test-3: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
-test-3: override KRML_HOME := $(abspath karamel)
 test-3: stage3
 	# Only test-3 calls test_pulse. The other compilers do not
 	# support Pulse.
-	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) _test _test_pulse FSTAR_EXE=$(FSTAR_EXE) KRML_EXE=$(KRML_EXE)
 
 unit-tests: override FSTAR_EXE := $(abspath stage2/out/bin/fstar.exe)
 unit-tests: _unit-tests
 
 # Use directly only at your own risk.
-_test_pulse: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test_pulse: KRML_HOME ?= $(abspath karamel)
+# NB: FSTAR_EXE, KRML_EXE and STAGE3 are set by the pulse test
+# makefiles themselves (via the exported FSTAR_ROOT), so we don't pass
+# them here.
 _test_pulse: _test_pulse_test _test_pulse_examples
 
 _test_pulse_test: karamel
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/test/
 
 _test_pulse_examples: karamel
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/share/pulse/examples/
 
 accept_pulse_test:
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/test/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/test/ accept
 
 accept_pulse_examples:
-	env \
-	  STAGE3=1 \
-	  $(MAKE) -C pulse/share/pulse/examples/ accept FSTAR_EXE=$(FSTAR_EXE) KRML_HOME=$(KRML_HOME)
+	$(MAKE) -C pulse/share/pulse/examples/ accept
 
-accept_pulse: override FSTAR_EXE := $(abspath stage3/out/bin/fstar.exe)
-accept_pulse: override KRML_HOME := $(abspath karamel)
 accept_pulse: accept_pulse_test accept_pulse_examples
 
 .PHONY: _test_pulse_test _test_pulse_examples accept_pulse_test accept_pulse_examples accept_pulse
@@ -622,14 +625,18 @@ need_fstar_exe:
 
 _doc: _doc_book_code
 
+# FSTAR_EXE is not passed here: tests/examples/doc self-configure via
+# mk/test.mk (FSTAR_EXE ?= $(FSTAR_ROOT)/out/bin/fstar.exe). A stage
+# override (e.g. test-1) still reaches these subdirs, since it is passed
+# as a command-line variable and thus propagated automatically.
 _doc_book_code: need_fstar_exe .force
-	+$(MAKE) -C doc/book/code FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C doc/book/code
 
 _unit-tests: need_fstar_exe .force
-	+$(MAKE) -C tests all FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C tests all
 
 _examples: need_fstar_exe .force
-	+$(MAKE) -C examples all FSTAR_EXE=$(FSTAR_EXE)
+	+$(MAKE) -C examples all
 
 ci: .force
 	+$(MAKE) 2
