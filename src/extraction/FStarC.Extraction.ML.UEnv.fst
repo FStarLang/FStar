@@ -54,7 +54,6 @@ open FStarC.Class.Show
 let plug () =
   let c = Options.codegen () in
   c = Some Options.Plugin
-  || c = Some Options.PluginNoLib
 
 instance showable_mlbinding : showable mlbinding = {
   show = function 
@@ -346,8 +345,7 @@ let initial_mlident_map =
             (match Options.codegen() with
               | Some Options.FSharp -> fsharpkeywords
               | Some Options.OCaml
-              | Some Options.Plugin
-              | Some Options.PluginNoLib ->
+              | Some Options.Plugin ->
                 ocamlkeywords
               | Some Options.Krml -> krml_keywords
               | Some Options.Extension -> []  // TODO

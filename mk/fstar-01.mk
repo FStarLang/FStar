@@ -8,7 +8,7 @@ FSTAR_OPTIONS += --warn_error -272 # top-level effects
 # extracted separately by mk/plugins.mk) AND the ulib plugin-base modules
 # that out-of-tree plugins (e.g. Pulse) need (formerly the fstar_pluginlib
 # library), all into a single OUTPUT_DIR.
-# It is meant to be run with CODEGEN=PluginNoLib so that the [@@plugin]
+# It is meant to be run with CODEGEN=Plugin so that the [@@plugin]
 # annotations in both the compiler and the plugin modules get their
 # registration code emitted.
 #

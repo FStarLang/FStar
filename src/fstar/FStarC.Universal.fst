@@ -308,8 +308,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
     let ext = match opt with
       | Some Options.FSharp -> ".fs"
       | Some Options.OCaml
-      | Some Options.Plugin
-      | Some Options.PluginNoLib -> ".ml"
+      | Some Options.Plugin -> ".ml"
       | Some Options.Krml -> ".krml"
       | Some Options.Extension -> ".ast"
       | _ -> fail ()
@@ -325,7 +324,7 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
     in
 
     match opt with
-    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin | Some Options.PluginNoLib ->
+    | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
       let printer : MLSyntax.mlmodule -> ML string =
         if opt = Some Options.FSharp
         then FStarC.Extraction.ML.PrintFS.print_fs

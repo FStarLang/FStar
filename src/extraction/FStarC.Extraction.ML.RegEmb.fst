@@ -824,7 +824,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1) =
       | _ -> Some None
     )
   in
-  if not <| List.mem (Options.codegen()) [Some Options.Plugin; Some Options.PluginNoLib]
+  if not <| List.mem (Options.codegen()) [Some Options.Plugin]
   then
     []
   else

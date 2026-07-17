@@ -132,7 +132,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 
 # Unified extraction pass: extracts BOTH the compiler (FStarC* +
 # FStar.Pervasives) AND the in-tree ulib plugins into stage1/fstarc.ml/.
-# Uses CODEGEN=PluginNoLib so plugin-registration code is emitted for the
+# Uses CODEGEN=Plugin so plugin-registration code is emitted for the
 # [@@plugin] annotations in both the compiler and the plugin modules.
 .bare1.src.touch: $(FSTAR0_EXE) .force
 	$(call bold_msg, "EXTRACT", "STAGE 1 FSTARC")
@@ -142,7 +142,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/fstarc.checked/ \
 	  OUTPUT_DIR=stage1/fstarc.ml/ \
-	  CODEGEN=PluginNoLib \
+	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-01.mk ocaml
@@ -155,7 +155,7 @@ stage0/out/bin/fstar.exe: .stage0.touch
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage1/tests.checked/ \
 	  OUTPUT_DIR=stage1/tests.ml/ \
-	  CODEGEN=PluginNoLib \
+	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/tests-1.mk ocaml
@@ -208,7 +208,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	  FSTAR_EXE=$(FSTAR1_FULL_EXE) \
 	  CACHE_DIR=stage2/fstarc.checked/ \
 	  OUTPUT_DIR=stage2/fstarc.ml/ \
-	  CODEGEN=PluginNoLib \
+	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
@@ -221,7 +221,7 @@ $(FSTAR1_FULL_EXE): .bare1.src.touch .src.ml.touch $(MAYBEFORCE)
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=stage2/tests.checked/ \
 	  OUTPUT_DIR=stage2/tests.ml/ \
-	  CODEGEN=PluginNoLib \
+	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  TOUCH=$@ \
 	  $(MAKE) -f mk/tests-2.mk ocaml
@@ -301,7 +301,7 @@ boot-src-bare: $(FSTAR2_FULL_EXE) .force
 	  FSTAR_LIB=$(abspath ulib) \
 	  CACHE_DIR=boot-diff/fstarc.checked/ \
 	  OUTPUT_DIR=boot-diff/fstarc.ml/ \
-	  CODEGEN=PluginNoLib \
+	  CODEGEN=Plugin \
 	  TAG=fstarc \
 	  $(MAKE) -f mk/fstar-12.mk ocaml
 
