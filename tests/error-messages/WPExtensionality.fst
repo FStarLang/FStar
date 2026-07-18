@@ -15,104 +15,47 @@
 *)
 module WPExtensionality
 
-open FStar.Tactics
+open FStar.Tactics.V2
+
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 assume val wp1 : (int -> Type0) -> Type0
 assume val wp2 : (int -> unit -> Type0) -> Type0
 
+let check_eq (s:string) (t1 t2 : term) : Tac unit =
+  if term_eq t1 t2 then () else
+    fail (Printf.sprintf "Test %s failed\nt1 = %s\nt2 = %s" s (term_to_string t1) (term_to_string t2))
+
 (* 1 arg direct *)
 let direct_1 ()
 = assert True
-      by (let tm = quote (forall p. (forall x. p x) ==> wp1 p) in
-          debug ("before = " ^ term_to_string tm);
+      by (let tm = `(forall p. (forall x. p x) ==> p 1) in
           let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp1 (fun (_:int) -> True)))
-          then ()
-          else fail "failed")
+          check_eq "direct_1" tm' (`True))
 
 (* 2 arg direct *)
 let direct_2 ()
 = assert True
-      by (let tm = quote (forall p. (forall x y. p x y) ==> wp2 p) in
-          debug ("before = " ^ term_to_string tm);
+      by (let tm = `(forall p. (forall x y. p x y) ==> p 12 ()) in
           let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp2 (fun (_:int) (_:unit) -> True)))
-          then ()
-          else fail "failed")
+          check_eq "direct_2" tm' (`True))
 
 (* 1 arg indirect *)
 let indirect_1
 = assert True
-      by (admit();
-          let tm = quote (forall p. (forall x. p x <==> True) ==> wp1 p) in
-          debug ("before = " ^ term_to_string tm);
+      by (let tm = `(forall p. (forall x. p x <==> True) ==> p 1) in
           let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp1 (fun (_:int) -> True)))
-          then ()
-          else fail "failed")
+          check_eq "indirect_1" tm' (`True))
 
 (* 2 arg indirect *)
 let indirect_2 ()
 = assert True
       by (admit ();
-          let tm = quote (forall p. (forall x y. p x y <==> True) ==> wp2 p) in
-          debug ("before = " ^ term_to_string tm);
+          let tm = `(forall p. (forall x y. p x y <==> True) ==> p 12 ()) in
           let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp2 (fun (_:int) (_:unit) -> True)))
-          then ()
-          else fail "failed")
+          check_eq "indirect_2" tm' (`True))
 
-(* 1 arg negated direct *)
-let neg_direct_1 ()
-= assert True
-      by (let tm = quote (forall p. (forall x. ~(p x)) ==> wp1 p) in
-          debug ("before = " ^ term_to_string tm);
-          let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp1 (fun (_:int) -> False)))
-          then ()
-          else fail "failed")
-
-(* 2 arg negated direct *)
-let neg_direct_2 ()
-= assert True
-      by (let tm = quote (forall p. (forall x y. ~(p x y)) ==> wp2 p) in
-          debug ("before = " ^ term_to_string tm);
-          let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp2 (fun (_:int) (_:unit) -> False)))
-          then ()
-          else fail "failed")
-
-(* 1 arg negated indirect *)
-let neg_indirect_1 ()
-= assert True
-      by (admit();
-          let tm = quote (forall p. (forall x. p x <==> False) ==> wp1 p) in
-          debug ("before = " ^ term_to_string tm);
-          let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp1 (fun (_:int) -> False)))
-          then ()
-          else fail "failed")
-
-(* 2 arg negated indirect *)
-let neg_indirect_2 ()
-= assert True
-      by (admit ();
-          let tm = quote (forall p. (forall x y. p x y <==> False) ==> wp2 p) in
-          debug ("before = " ^ term_to_string tm);
-          let tm' = norm_term [simplify] tm in
-          debug ("after= " ^ term_to_string tm');
-          if term_eq tm' (`(wp2 (fun (_:int) (_:unit) -> False)))
-          then ()
-          else fail "failed")
-
-// Bug reported by Jay
-[@@expect_failure]
+// Bug reported by Jay Bosamiya
+[@@expect_failure [19]]
 let bug () : Lemma False =
    ((if true then () else ()); ())

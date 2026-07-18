@@ -1,15 +1,16 @@
-FSTAR_HOME=../..
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk
 
-FSTAR_FILES=$(wildcard *.fst)
+all: Hacl.Meta.Use.fst.test
 
-all: verify-all
+# The negative tests in this file may succeed with hints, force them off.
+$(CACHE_DIR)/Pruning.fst.checked: HINTS_ENABLED=
 
-include $(FSTAR_HOME)/examples/Makefile.common
+Hacl_Meta.ml: $(CACHE_DIR)/Hacl.Meta.fst.checked
+	$(FSTAR) Hacl.Meta.fst --codegen Plugin
 
-verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))
+Hacl.Meta.Use.fst.test: Hacl.Meta.Use.fst Hacl_Meta.ml
+	$(FSTAR) $< --load Hacl.Meta
+	touch $@
 
-clean:
-	@echo "[CLEAN]"
-	$(Q)rm -f .depend
-	$(Q)rm -rf _cache
-	$(Q)rm -rf _output
+$(OUTPUT_DIR)/Postprocess.fst.output: FSTAR_ARGS+=--dump_module Postprocess --ugly

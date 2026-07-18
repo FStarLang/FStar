@@ -1,0 +1,8 @@
+{
+  "fstar_exe": "fstar.exe",
+  "options": [
+    "--z3rlimit_factor", "2"
+  ],
+  "include_dirs": [
+  ]
+}

@@ -15,6 +15,7 @@
 *)
 module FStar.Order
 
+[@@plugin]
 type order = | Lt | Eq | Gt
 
 // Some derived checks

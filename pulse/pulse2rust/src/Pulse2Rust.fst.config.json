@@ -1,0 +1,14 @@
+{
+  "fstar_exe": "../../../stage2/out/bin/fstar.exe",
+  "options": [
+    "--query_cache",
+    "--lax",
+    "--with_fstarc",
+    "--ext",
+    "optimize_let_vc",
+    "--ext",
+    "fly_deps"
+  ],
+  "include_dirs": [
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "fstar_exe": "../../../stage3/dune/_build/install/default/bin/fstar.exe",
+  "options": [
+    "--query_cache",
+    "--ext", "optimize_let_vc",
+    "--ext", "fly_deps"
+  ],
+  "include_dirs": [
+    "../../../ulib",
+    "../../../stage2/out/lib/fstar/ulib.checked",
+    "../../lib/common",
+    "../../build/lib.common.checked"
+  ]
+}

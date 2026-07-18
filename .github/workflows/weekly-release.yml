@@ -1,0 +1,130 @@
+name: Weekly release
+
+# Automated weekly version bump and release.
+#
+# Creates a PR to bump version.txt and fstar.opam to the current date,
+# enables auto-merge, waits for CI to pass and the PR to merge, then
+# dispatches the release workflow on the exact merge commit.
+#
+# Requirements:
+#   - "Allow auto-merge" must be enabled in repo settings
+#   - Branch protection must not require PR reviews (or the bot must
+#     be able to satisfy them)
+
+on:
+  schedule:
+    - cron: '0 12 * * 0' # Every Sunday at noon UTC
+  workflow_dispatch:
+
+concurrency:
+  group: weekly-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  bump-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Compute new version
+        id: version
+        run: |
+          NEW_VERSION=$(date -u +%Y.%m.%d)
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+          git fetch --tags
+          if git tag -l "v$NEW_VERSION" | grep -q .; then
+            echo "::notice::Version v$NEW_VERSION already released, skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Close stale auto-bump PRs
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr list --state open --json number,headRefName \
+            -q '.[] | select(.headRefName | startswith("auto/bump-v")) | .number' \
+          | while read -r pr; do
+            echo "Closing stale auto-bump PR #$pr"
+            gh pr close "$pr" --comment "Superseded by weekly bump to v${{ steps.version.outputs.new_version }}."
+          done
+
+      - name: Bump version and create PR
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DZOMO_GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          BRANCH="auto/bump-v$NEW_VERSION"
+
+          git config user.name "Dzomo, the Everest Yak"
+          git config user.email "24394600+dzomo@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+          echo "$NEW_VERSION" > version.txt
+          sed -i 's/^version: ".*"/version: "'"$NEW_VERSION"'~dev"/' fstar.opam
+          git add version.txt fstar.opam
+          git commit -m "Bump version to $NEW_VERSION"
+
+          # Push with PAT so that CI triggers on the PR
+          git push "https://${{ secrets.DZOMO_GITHUB_TOKEN }}@github.com/${{ github.repository }}" "$BRANCH"
+
+          gh pr create \
+            --title "Bump version to $NEW_VERSION" \
+            --body "Automated weekly version bump for release v$NEW_VERSION." \
+            --base master \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash
+
+      - name: Wait for PR merge
+        if: steps.version.outputs.skip != 'true'
+        id: merged
+        timeout-minutes: 180
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="auto/bump-v${{ steps.version.outputs.new_version }}"
+          while true; do
+            PR_JSON=$(gh pr view "$BRANCH" --json state,mergeCommit)
+            STATE=$(echo "$PR_JSON" | jq -r '.state')
+            if [[ "$STATE" == "MERGED" ]]; then
+              MERGE_SHA=$(echo "$PR_JSON" | jq -r '.mergeCommit.oid')
+              echo "PR merged at $MERGE_SHA"
+              echo "merge_sha=$MERGE_SHA" >> "$GITHUB_OUTPUT"
+              break
+            elif [[ "$STATE" == "CLOSED" ]]; then
+              echo "::error::PR was closed without merging"
+              exit 1
+            fi
+            echo "PR state: $STATE, waiting..."
+            sleep 60
+          done
+
+      - name: Delete bump branch
+        if: steps.version.outputs.skip != 'true' && steps.merged.outputs.merge_sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="auto/bump-v${{ steps.version.outputs.new_version }}"
+          git push origin --delete "$BRANCH" || true
+
+      - name: Trigger release
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MERGE_SHA="${{ steps.merged.outputs.merge_sha }}"
+          echo "Dispatching release.yml for commit $MERGE_SHA"
+          gh workflow run release.yml -f target_sha="$MERGE_SHA"

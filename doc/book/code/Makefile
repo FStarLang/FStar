@@ -1,29 +1,19 @@
-include ../../Makefile.include
+FSTAR_ROOT ?= ../../..
+include $(FSTAR_ROOT)/mk/test.mk
 
-FSTAR_FILES := $(wildcard *fst *fsti)
-FSTAR_FLAGS +=--cache_checked_modules $(OTHERFLAGS)
+FSTAR_FILES := $(filter-out ContextPollution.fst MemCpy.Deps.fst MemCpy.fst,$(FSTAR_FILES))
 
-all: $(addsuffix .checked, $(FSTAR_FILES))
+exercises:
 	$(MAKE) -C exercises
 
-.depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --already_cached '+Prims +FStar +LowStar' > .depend
-
-depend: .depend
-
--include .depend
-
-%.checked:
-	$(FSTAR) $<
-	touch -c $@
+all: exercises
 
 wc:
-	wc -l prims.fst $(ALL)
-
+	# Prims.fst seems to be missing here?
+	wc -l Prims.fst $(ALL)
 
 extract:
 	krml -skip-compilation MemCpy.fst -tmpdir out
 
 clean:
-	rm -rf *.c *.h *~ *.checked *.checked.lax *.krml .depend
 	$(MAKE) -C exercises clean

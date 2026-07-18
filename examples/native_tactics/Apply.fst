@@ -15,8 +15,7 @@
 *)
 module Apply
 
-open FStar.Mul
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val x : int
 

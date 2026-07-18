@@ -1,6 +1,4 @@
-include ../Makefile.include
+SUBDIRS += 2015
 
-all: uall
-
-uall:
-	$(FSTAR) 2015/Problem01.fst
+FSTAR_ROOT ?= ../..
+include $(FSTAR_ROOT)/mk/test.mk

@@ -23,10 +23,10 @@ and pre_s : Type0 =
   | S    : nat -> pre_s
   | SofT : pre_t -> pre_s
 
-assume type witnessed_nat : nat -> Type0
+assume type witnessed_nat : nat -> prop
 //Next, we define a recursive type function to carve out a good subset of pre_t, pre_s
-val good_t : p:pre_t -> GTot Type0
-val good_s:  s:pre_s -> GTot Type0
+val good_t : p:pre_t -> GTot prop
+val good_s:  s:pre_s -> GTot prop
 let rec good_t p = match p with
   | T n    -> witnessed_nat n /\ n >= 17 //explicitly adding the witnessed_nat to force this to be a recursive function in Type, rather than bool
   | TofS s -> good_s s
@@ -51,7 +51,7 @@ and extract_nat_s x = match x with
 
 //Another example
 open FStar.List.Tot
-val pointwise_eq : #a:Type -> list a -> list a -> Type0
+val pointwise_eq : #a:Type -> list a -> list a -> prop
 let rec pointwise_eq #a l1 l2 = 
   match l1, l2 with 
   | [], [] -> True

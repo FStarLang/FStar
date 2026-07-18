@@ -47,7 +47,6 @@ let max2 (x:int) (y:int)
 //SNIPPET_END: max
 
 //SNIPPET_START: factorial
-open FStar.Mul
 let rec factorial (n:nat)
   : nat
   = if n = 0

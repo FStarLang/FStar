@@ -15,7 +15,7 @@
 *)
 module Get
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True by (let ps = get () in
                         print (string_of_int (ngoals ())))

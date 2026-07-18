@@ -1,0 +1,22 @@
+{
+  "name": "Pulse devcontainer (from cached base container)",
+  "image": "ghcr.io/fstarlang/pulse-base-devcontainer:latest",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "FStarLang.fstar-vscode-assistant"
+      ]
+    }
+  },
+  "remoteEnv": {
+  },
+  // Runs only once when container is prepared
+  "onCreateCommand": {
+  },
+  // Runs periodically and/or when content of repo changes
+  "updateContentCommand": {
+  },
+  // These run only when the container is assigned to a user
+  "postCreateCommand": {
+  }
+}

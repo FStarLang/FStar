@@ -15,7 +15,7 @@
 *)
 module Tutorial
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List
 
 (* TODO: explanations needs to be updated for direct-style *)

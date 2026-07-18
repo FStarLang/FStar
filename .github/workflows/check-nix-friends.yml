@@ -1,0 +1,56 @@
+name: Check F* friends (Nix)
+
+# This workflow should be called ONLY after a run of nix.yml so the F*
+# build for the current sha has is already present in the Nix cache.
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  comparse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: TWal/comparse
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check
+
+  dy-star:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: REPROSEC/dolev-yao-star-extrinsic
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check
+
+  mls-star:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - uses: actions/checkout@master
+        with:
+          repository: Inria-Prosecco/mls-star
+
+      - name: Update fstar flake and check
+        run: |
+          nix flake update --update-input fstar-flake --override-input fstar-flake "github:${{github.repository}}?rev=${{github.sha}}"
+          nix flake check

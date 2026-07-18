@@ -1,0 +1,376 @@
+name: Check F* friends
+
+# This workflow must be called ONLY after a run of build.yml
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: steel/
+          repository: FStarLang/steel
+
+      - name: Build
+        run: make -C steel -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: steel
+          hometag: STEEL
+
+  build-steel-proofs:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    needs:
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery --z3version 4.15.3" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      - name: Test
+        run: make -C steel -skj$(nproc) verify-proofs
+
+  test-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    needs:
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      - name: Test
+        run: make -C steel -skj$(nproc) test
+
+  build-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+      - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      # everparse expects more environment variables to opt out of
+      # in-tree dependencies
+      - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_KRML_EXE=1" >> $GITHUB_ENV
+
+      - name: Checkout everparse
+        uses: actions/checkout@master
+        with:
+          repository: project-everest/everparse
+          path: everparse/
+          ref: fstar2
+
+      - name: Build
+        run: make -C everparse -skj$(nproc) all
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+  test-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    needs:
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+      - run: opam install -y hex re ctypes sha sexplib
+      - run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake python3-venv
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+
+      # everparse expects more environment variables to opt out of
+      # in-tree dependencies
+      - run: echo "EVERPARSE_USE_OPAMROOT=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_FSTAR_EXE=1" >> $GITHUB_ENV
+      - run: echo "EVERPARSE_USE_KRML_EXE=1" >> $GITHUB_ENV
+
+      # Everparse test needs the DICE/DPE files from the F* repo.
+      # Clone the repo here and point Everparse to it.
+      - uses: actions/checkout@master
+        with:
+          path: /tmp/FStar
+          submodules: true
+      - run: echo "DICE_HOME=/tmp/FStar/pulse/share/pulse/examples/dice" >> $GITHUB_ENV
+
+      - name: Test
+        # NOTE: We do not check against the expected C/Rust
+        # outputs, they are too noisy (they have gensym'd names) and do
+        # not really indicate a failure.
+        run: make -C everparse -skj$(nproc) test EVERPARSE_NO_DIFF=1
+
+  starmalloc:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    needs:
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: starmalloc/
+          repository: Inria-Prosecco/starmalloc
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+
+      # AFAICT there are no starmalloc tests. Just `make all`
+      # to verify, extract, and build.
+      - name: Build
+        run: make -C starmalloc all -skj$(nproc)
+
+  secrefstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: repo/
+          repository: andricicezar/fstar-io
+
+      - name: Build
+        run: make -C repo/secrefstar -skj$(nproc)
+      - name: Build and run examples
+        run: make -C repo/secrefstar -skj$(nproc) build-all
+
+  sciostar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - uses: actions/checkout@master
+        with:
+          path: repo/
+          repository: andricicezar/fstar-io
+
+      - name: Build
+        run: make -C repo/sciostar -skj$(nproc) verify
+
+      - name: Verify and build case study
+        run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) build
+
+  c2pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      # Install rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Install clang/LLVM 20
+      - name: Install clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsb-release wget software-properties-common gnupg
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+          sudo apt-get install -y clang-20 libclang-cpp20-dev g++ clang-tools-20 libclang-20-dev clang-format-20
+          sudo ln -s /usr/bin/clang-format-20 /usr/local/bin/clang-format
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      # c2pulse's Makefile hardcodes FSTAR_EXE = fstar.exe, so we
+      # add fstar/bin to PATH instead of setting FSTAR_EXE.
+      - run: echo "$(pwd)/fstar/bin" >> $GITHUB_PATH
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout c2pulse
+        uses: actions/checkout@master
+        with:
+          path: c2pulse/
+          repository: FStarLang/c2pulse
+
+      - name: Build
+        run: make -C c2pulse -j$(nproc)
+
+      - name: Test
+        run: make -C c2pulse -j$(nproc) test
+
+  algostar:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_EXE=$(pwd)/fstar/bin/fstar.exe" >> $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/fstar/bin/krml" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      # AlgoStar uses $(PULSE_ROOT)/mk/test.mk for its build system.
+      # Checkout FStar source (sparse) to provide pulse/mk/.
+      - uses: actions/checkout@master
+        with:
+          path: fstar-src/
+          sparse-checkout: pulse/mk
+      - run: echo "PULSE_ROOT=$(pwd)/fstar-src/pulse" >> $GITHUB_ENV
+
+      - name: Checkout AlgoStar
+        uses: actions/checkout@master
+        with:
+          path: algostar/
+          repository: FStarLang/AlgoStar
+
+      - name: Build
+        run: make -C algostar -j$(nproc)
+
+  pulse-verified-gc:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar -xzf fstar.tar.gz
+      - run: echo "FSTAR_HOME=$(pwd)/fstar" >> $GITHUB_ENV
+      - run: echo "OTHERFLAGS=--proof_recovery" >> $GITHUB_ENV
+
+      - name: Checkout pulse-verified-gc
+        uses: actions/checkout@master
+        with:
+          path: pulse-verified-gc/
+          repository: FStarLang/pulse-verified-gc
+
+      - name: Build
+        run: make -C pulse-verified-gc -j$(nproc)

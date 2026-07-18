@@ -10,3 +10,5 @@ let main () =
     if (not (U8.(x =^ 0uy))) then failwith "oops!";
     print_string "correct\n";
     0
+
+let _ = main ()

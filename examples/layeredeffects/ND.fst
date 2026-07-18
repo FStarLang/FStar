@@ -2,14 +2,11 @@ module ND
 
 (* An effect for (demonic) nondeterminism via lists. *)
 
+open FStar.Tactics.V2
 open FStar.List.Tot
-open FStar.Tactics
 open FStar.Calc
 
 open FStar.FunctionalExtensionality
-module F = FStar.FunctionalExtensionality
-module W = FStar.WellFounded
-module T = FStar.Tactics
 
 // m is a monad. In this particular example, lists
 val m (a : Type u#a) : Type u#a
@@ -24,10 +21,10 @@ let m_bind l f = concatMap f l
 // w is an ordered (w_ord) monad with conjunction (w_conj) and actions from prop (w_act_prop)
 // In this example, good ol' continuations into prop
 
-val w (a : Type u#a) : Type u#(max 1 a)
+val w (a : Type u#a) : Type u#a
 let w a = pure_wp a
 
-val w_ord (#a : Type) : w a -> w a -> Type0
+val w_ord (#a : Type) : w a -> w a -> prop
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
 
 open FStar.Monotonic.Pure
@@ -38,10 +35,11 @@ unfold
 let w_return x = as_pure_wp (fun p -> p x)
 
 unfold
-val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
+val w_bind (#a:Type u#a) (#b : Type u#b) : w a -> (a -> w b) -> w b
 unfold
 let w_bind wp1 k =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity_forall u#a ();
+  elim_pure_wp_monotonicity_forall u#b ();
   as_pure_wp (fun p -> wp1 (fun x -> k x p))
 
 val interp (#a : Type) : m a -> w a
@@ -65,13 +63,13 @@ let rec concatmaplemma #a #b l f x =
     concatmaplemma t f x
 
 let dm (a : Type) (wp : w a) : Type = 
-  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
+  p:(a -> prop) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
   
 let irepr (a : Type) (wp: w a) = dm a wp
 
 let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ _ -> [x]
 
-let rec pmap #a #b #pre (#post:b->Type0)
+let rec pmap #a #b #pre (#post:b->prop)
   (f : (x:a -> Pure b (requires (pre x)) (ensures post)))
   (l : list a)
   : Pure (list (v:b{post v}))
@@ -119,8 +117,8 @@ let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v)
  
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord wp2 wp1) (ensures fun _ -> True) = f
 
-let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
-  elim_pure_wp_monotonicity_forall ();
+let wp_if_then_else (#a:Type u#a) (wp1 wp2:w a) (b:bool) : w a=
+  elim_pure_wp_monotonicity_forall u#a ();
   as_pure_wp (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
 let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (b : bool) : Type =
@@ -193,8 +191,6 @@ let rec pick_from #a (l : list a) : ND a (as_pure_wp (fun p -> forall x. memP x 
       if flip ()
       then x
       else pick_from xs
-
-let ( * ) = op_Multiply
 
 let pyths () : ND (int & int & int) (as_pure_wp (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z))) by (compute ()) =
   let l = [1;2;3;4;5;6;7;8;9;10] in

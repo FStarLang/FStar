@@ -15,7 +15,7 @@
 *)
 module Unfold
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let x = 2
 let y = x + x

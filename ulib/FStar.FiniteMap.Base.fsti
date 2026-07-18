@@ -37,10 +37,12 @@ finite maps as they're modeled in Dafny.
 module FStar.FiniteMap.Base
 
 open FStar.FunctionalExtensionality
-module FLT = FStar.List.Tot
 module FSet = FStar.FiniteSet.Base
 
-type setfun_t (a: eqtype) (b: Type u#b) (s: FSet.set a) = f: (a ^-> option b){forall (key: a). FSet.mem key s <==> Some? (f key)}
+type setfun_t (a: eqtype)
+              (b: Type u#b)
+              (s: FSet.set a) =
+   f: (a ^-> option b){forall (key: a). FSet.mem key s == Some? (f key)}
 
 val map (a: eqtype) ([@@@ strictly_positive] b: Type u#b)
   : Type u#b
@@ -71,18 +73,18 @@ let mem (#a: eqtype) (#b: Type u#b) (key: a) (m: map a b) =
 
 /// We can convert a map to a list of pairs with `map_as_list`:
 
-let rec key_in_item_list (#a: eqtype) (#b: Type u#b) (key: a) (items: list (a * b)) : bool =
+let rec key_in_item_list (#a: eqtype) (#b: Type u#b) (key: a) (items: list (a & b)) : bool =
   match items with
   | [] -> false
   | (k, v) :: tl -> key = k || key_in_item_list key tl
 
-let rec item_list_doesnt_repeat_keys (#a: eqtype) (#b: Type u#b) (items: list (a * b)) : bool =
+let rec item_list_doesnt_repeat_keys (#a: eqtype) (#b: Type u#b) (items: list (a & b)) : bool =
   match items with
   | [] -> true
   | (k, v) :: tl -> not (key_in_item_list k tl) && item_list_doesnt_repeat_keys tl
 
 val map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-  : GTot (items: list (a * b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)})
+  : GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)})
 
 /// We represent the Dafny operator [] on maps with `lookup`:
 
@@ -109,7 +111,7 @@ val values (#a: eqtype) (#b: Type u#b) (m: map a b)
 /// function Map#Items<U,V>(Map U V) : Set Box;
 
 val items (#a: eqtype) (#b: Type u#b) (m: map a b)
-  : GTot ((a * b) -> prop)
+  : GTot ((a & b) -> prop)
 
 /// We represent the Dafny function `Map#Empty` with `emptymap`:
 ///
@@ -269,7 +271,7 @@ let values_contains_fact =
 ///    Map#Elements(m)[_System.Tuple2._0($Unbox(item))] == _System.Tuple2._1($Unbox(item)));
 
 let items_contains_fact =
-  forall (a: eqtype) (b: Type u#b) (m: map a b) (item: a * b).{:pattern (items m) item}
+  forall (a: eqtype) (b: Type u#b) (m: map a b) (item: a & b).{:pattern (items m) item}
     (items m) item <==>
         FSet.mem (fst item) (domain m)
       /\ (elements m) (fst item) == Some (snd item)

@@ -15,7 +15,7 @@
 *)
 module Raise
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 exception Ex1
 exception Ex2

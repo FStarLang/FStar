@@ -1,6 +1,6 @@
 module ResolveImplicitsErrorPos
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tag : unit = ()
 
@@ -8,7 +8,7 @@ let tag : unit = ()
 let tau () : Tac unit =
   fail "oops"
 
-let f (#[@@@tag] x:int) : int = x
+let f (#[@@@defer_to tag] x:int) : int = x
 
 [@@expect_failure]
 let test () =

@@ -1,0 +1,14 @@
+[package]
+name = "dpestar"
+version = "0.1.0"
+edition = "2021"
+
+[lints.rust]
+unused = "allow"
+non_camel_case_types = "allow"
+non_snake_case = "allow"
+non_upper_case_globals = "allow"
+
+[dependencies]
+libloading = "0.6.6"
+once_cell = "1.19.0"

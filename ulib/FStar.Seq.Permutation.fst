@@ -122,7 +122,7 @@ let count_head (#a:eqtype) (x:seq a{ Seq.length x > 0 })
   = ()
 
 
-#push-options "--fuel 0 --quake 10/10"
+#push-options "--fuel 0"
 #restart-solver
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
@@ -290,7 +290,12 @@ let x_yz_to_y_xz #a #eq (m:CE.cm a eq) (x y z:a)
       y `m.mult` (x `m.mult` z);
     }
 
-#push-options "--fuel 1 --ifuel 0 --z3rlimit_factor 2"
+let lemma_un_snoc_append (#a:Type) (s1 : seq a) (s2 : seq a {Seq.length s2 <> 0})
+  : Lemma (fst (Seq.un_snoc (append s1 s2)) == append s1 (fst (Seq.un_snoc s2)))
+  = assert (Seq.equal (fst (Seq.un_snoc (append s1 s2)))
+                      (append s1 (fst (Seq.un_snoc s2))))
+
+#push-options "--fuel 1 --ifuel 0"
 let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
   : Lemma
     (ensures eq.eq (foldm_snoc m (append s1 s2))
@@ -308,7 +313,10 @@ let rec foldm_snoc_append #a #eq (m:CE.cm a eq) (s1 s2: seq a)
         (eq.eq) { assert (Seq.equal (append s1 s2)
                          (Seq.snoc (append s1 s2') last)) }
         foldm_snoc m (Seq.snoc (append s1 s2') last);
-        (eq.eq) { assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2')) }
+        (eq.eq) {
+          lemma_un_snoc_append s1 s2;
+          assert (Seq.equal (fst (Seq.un_snoc (append s1 s2))) (append s1 s2'))
+        }
 
         m.mult last (foldm_snoc m (append s1 s2'));
         (eq.eq) { foldm_snoc_append m s1 s2';
@@ -418,7 +426,7 @@ let eq2_eq #a (eq:CE.equiv a) (x y:a)
   = eq.reflexivity x
 
 (* The sequence indexing lemmas make this quite fiddly *)
-#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0"
+#push-options "--z3rlimit_factor 2 --fuel 1 --ifuel 0" 
 let rec foldm_snoc_perm #a #eq m s0 s1 p
   : Lemma
     (ensures eq.eq (foldm_snoc m s0) (foldm_snoc m s1))
@@ -433,8 +441,11 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
     else (
       let n0 = Seq.length s0 - 1 in
       let prefix, last = Seq.un_snoc s0 in
-      let prefix', suffix' = Seq.split s1 (p n0) in
-      let last', suffix' = Seq.head suffix', Seq.tail suffix' in
+      let prefix', suffix0 = Seq.split s1 (p n0) in
+      assert (Seq.equal s1 (Seq.append prefix' suffix0));
+      let last', suffix' = Seq.head suffix0, Seq.tail suffix0 in
+      assert (Seq.cons last' suffix' `Seq.equal` suffix0);
+      assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix'));
       let s1' = snd (remove_i s1 (p n0)) in
       let p' : seqperm prefix s1' = shift_perm s0 s1 () p in
       assert (last == last');
@@ -442,8 +453,7 @@ let rec foldm_snoc_perm #a #eq m s0 s1 p
       (eq.eq)
       {
         foldm_snoc m s1;
-        (eq.eq) { assert (s1 `Seq.equal` Seq.append prefix' (Seq.cons last' suffix'));
-                  eq2_eq eq (foldm_snoc m s1)
+        (eq.eq) { eq2_eq eq (foldm_snoc m s1)
                             (foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'))) }
         foldm_snoc m (Seq.append prefix' (Seq.cons last' suffix'));
         (eq.eq) { foldm_snoc3 m prefix' last' suffix' }

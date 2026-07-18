@@ -8,8 +8,8 @@ let sel (s:store) (l:loc) : int = Map.sel s l
 open FStar.Set
 
 (*** A basic Hoare state monad ***)
-let pre = store -> Type0
-let post a = store -> a -> store -> Type0
+let pre = store -> prop
+let post a = store -> a -> store -> prop
 let hst a (p:pre) (q:post a) = s0:store{p s0} -> r:(a & store){q s0 (fst r) (snd r)}
 
 let return_hst a (x:a) : hst a (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) = fun s -> x,s
@@ -128,7 +128,7 @@ let does_not_read_loc #a #p #q (f:hst a p q) (reads:label) (l:loc) (s0:store{p s
   forall v. does_not_read_loc_v f reads l s0 v
 
 let reads_ok_preserves_equal_locs #a #p #q (f:hst a p q) (rds:label) (s0:store{p s0}) (s0':store{p s0'})
-  : Lemma (requires agree_on rds s0 s0' /\ HIFC.reads f rds)
+  : Lemma (requires agree_on rds s0 s0' /\ reads f rds)
           (ensures (let x1, s1 = f s0 in
                     let x1', s1' = f s0' in
                     agree_on rds s1 s1'))
@@ -146,15 +146,15 @@ let weaken_reads_ok #a #p #q (f:hst a p q) (rds rds1:label)
     in
     ()
 
-let reads_ok_does_not_read_loc #a #p #q (f:hst a p q) (reads:label) (l:loc{~(Set.mem l reads)}) (s0:store{p s0})
+let reads_ok_does_not_read_loc #a #p #q (f:hst a p q) (rds:label) (l:loc{~(Set.mem l rds)}) (s0:store{p s0})
   : Lemma
-    (requires HIFC.reads f reads)
-    (ensures does_not_read_loc f reads l s0)
+    (requires reads f rds)
+    (ensures does_not_read_loc f rds l s0)
   = let aux (v:int)
       : Lemma (requires p (upd s0 l v))
-              (ensures does_not_read_loc_v f reads l s0 v)
+              (ensures does_not_read_loc_v f rds l s0 v)
               [SMTPat ((upd s0 l v))]
-      = assert (agree_on reads s0 (upd s0 l v));
+      = assert (agree_on rds s0 (upd s0 l v));
         ()
     in
     ()
@@ -205,7 +205,7 @@ let bind_ifc_reads_ok (#a #b:Type)
                       #p #q #r #s
                       (x:hifc a r0 w0 fs0 p q)
                       (y: (x:a -> hifc b r1 w1 fs1 (r x) (s x)))
-  : Lemma (HIFC.reads (bind_ifc' x y) (union r0 r1))
+  : Lemma (reads (bind_ifc' x y) (union r0 r1))
   = let f = bind_ifc' x y in
     let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
     let reads = union r0 r1 in
@@ -544,7 +544,7 @@ let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
       = ()
     in
     let g : hst a p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1) = fun s0 -> f s0 in
-    assert (HIFC.reads f r);
+    assert (reads f r);
     let read_ok_lem (l:loc) (s:store{p s})
       : Lemma (requires (~(Set.mem l r)))
               (ensures (does_not_read_loc g r l s))
@@ -552,7 +552,7 @@ let frame (a:Type) (r w:label) (fs:flows) #p #q (f:hifc a r w fs p q)
       = reads_ok_does_not_read_loc g r l s;
         assert (does_not_read_loc f r l s)
     in
-    assert (HIFC.reads g r);
+    assert (reads g r);
     assert (writes g w);
     let respects_flows_lemma (from to:_)
       : Lemma
@@ -612,11 +612,11 @@ let consequence (a:Type) (r0 w0:label) p q p' q' (fs0:flows) (f:hifc a r0 w0 fs0
     g
 
 (* A couple of utils *)
-let norm_spec (p:Type)
+let norm_spec (p:prop)
   : Lemma (requires (norm [delta;iota;zeta] p))
           (ensures p)
   = ()
-let norm_spec_inv (p:Type)
+let norm_spec_inv (p:prop)
   : Lemma (requires p)
           (ensures (norm [delta;iota;zeta] p))
   = ()
@@ -725,7 +725,7 @@ let lift_PURE_HIFC (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
   : Pure (hifc a bot bot [] (fun _ -> True) (fun s0 _ s1 -> s0 == s1))
       (requires wp (fun _ -> True))
       (ensures fun _ -> True)
-  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+  = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
     return a (f ())
 
 sub_effect PURE ~> HIFC = lift_PURE_HIFC

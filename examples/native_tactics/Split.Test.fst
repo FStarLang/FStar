@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Split.Test
-open FStar.Tactics
+open FStar.Tactics.V2
 open Split
 
 let test = 

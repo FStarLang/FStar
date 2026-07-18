@@ -15,10 +15,13 @@
 *)
 module Easy
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val plus_assoc : x:int -> y:int -> z:int -> Lemma ((x + y) + z == x + (y + z))
 let plus_assoc = easy
 
 val plus_comm : x:int -> y:int -> Lemma (x + y == y + x)
 let plus_comm = easy
+
+val plus_pos : x:int -> y:int -> Lemma (requires x > 0 /\ y > 0) (ensures x + y > 0)
+let plus_pos = easy

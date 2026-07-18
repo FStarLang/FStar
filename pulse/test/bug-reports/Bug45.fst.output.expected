@@ -1,0 +1,6 @@
+* Info at Bug45.fst(60,13-60,58):
+  - Expected failure:
+  - Tactic failed
+  - Unexpected unresolved uvars in the term:
+  - ‘spawn (pth n)’
+

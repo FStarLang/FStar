@@ -68,7 +68,6 @@ val div (a:t{v a >= 0}) (b:t{v b > 0}) : Pure t
 (** Modulo specification, similar to FStar.Int.mod *)
 
 let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:int{fits n}) =
-  let open FStar.Mul in
   let res = a - ((a/b) * b) in
   fits_lt res b;
   res
@@ -107,8 +106,8 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-unfold let op_Plus_Hat = add
-unfold let op_Greater_Hat = gt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Hat = lt
-unfold let op_Less_Equals_Hat = lte
+inline_for_extraction unfold let op_Plus_Hat = add
+inline_for_extraction unfold let op_Greater_Hat = gt
+inline_for_extraction unfold let op_Greater_Equals_Hat = gte
+inline_for_extraction unfold let op_Less_Hat = lt
+inline_for_extraction unfold let op_Less_Equals_Hat = lte

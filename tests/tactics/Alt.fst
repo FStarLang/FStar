@@ -15,7 +15,7 @@
 *)
 module Alt
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tfail s () = fail s
 

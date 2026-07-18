@@ -18,7 +18,6 @@ module DM4F_layered5
 
 (* Same as DM4F, but layered over a layered PURE without monotonicity *)
 open ID5
-open FStar.Tactics
 open DM4F_Utils
 
 unfold
@@ -27,12 +26,12 @@ let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b 
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
-type post_t st a = a -> st -> Type0
+type post_t st a = a -> st -> prop
 
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
-  st -> post_t st a -> Type0
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
+  st -> post_t st a -> prop
 
-let st_monotonic #st #a (w : wp0 st a) : Type0 =
+let st_monotonic #st #a (w : wp0 st a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
@@ -41,7 +40,7 @@ type wp st a = w:(wp0 st a){st_monotonic w}
 
 open FStar.Monotonic.Pure
 
-type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
+type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
   s0:st -> ID (a & st) (as_pure_wp (fun p -> wp s0 (curry p)))
 
 unfold
@@ -56,12 +55,6 @@ let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
   fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
 
-[@@ resolve_implicits; refine]
-let resolve_tac () : Tac unit =
-  compute ();
-  explode ();
-  ()
-  
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
   (wp_f : a -> wp st b)
@@ -92,7 +85,7 @@ let if_then_else
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp
@@ -113,7 +106,7 @@ effect {
 }
 
 let lift_id_st_wp #a #st (w : ID5.wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall ();
+  elim_pure_wp_monotonicity w;
   fun s0 p -> w (fun x -> p x s0)
 
 let lift_id_st a wp st (f : ID5.repr a wp)
@@ -148,3 +141,9 @@ let add_via_state (x y : int) : ST int int (fun s0 p -> p (x+y) s0) =
   let r = get () in
   put o;
   r
+
+#push-options "--warn_error -272" //Warning_TopLevelEffect
+let main =
+  let r, n = reify (reify (add_via_state 1 2) 3) (Ghost.hide (fun _ -> True)) () in
+  FStar.IO.print_string (FStar.Printf.sprintf "%d:%d\n" r n)
+#pop-options

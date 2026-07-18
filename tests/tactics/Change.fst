@@ -15,7 +15,7 @@
 *)
 module Change
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let id #a (x:a) : a = x
 

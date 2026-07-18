@@ -1,0 +1,3 @@
+open Prims
+let id (x : 'uuuuu) : 'uuuuu= x
+type pack = (unit, Obj.t) Prims.dtuple2

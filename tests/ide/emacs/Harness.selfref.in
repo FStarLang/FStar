@@ -1,0 +1,3 @@
+{"query-id":"1","query":"push-partial-checked-file","args":{"until-lid":"Harness.always_foo"}, "comment": "this test checks that we cannot prove always_foo using itself"}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"let always_foo x : Lemma (foo x) = ()","line":1,"column":0}, "comment": "should fail because the SMT pattern for always_foo should not be loaded"}
+{"query-id":"3","query":"push","args":{"kind":"full","code":"let always_foo x : Lemma (foo x) = Harness.always_foo x","line":1,"column":0}, "comment": "should fail because Harness.always_foo is not defined yet"}

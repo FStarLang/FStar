@@ -14,9 +14,8 @@
    limitations under the License.
 *)
 module Canon.Test
-module XX = FStar.Tactics.Canon // load it, to get the symbols for the lemmas
-open FStar.Tactics
-open FStar.Mul
+open FStar.Tactics.Canon {} // load it to get the symbols for the lemmas
+open FStar.Tactics.V2
 open Canon
 
 assume val x : int

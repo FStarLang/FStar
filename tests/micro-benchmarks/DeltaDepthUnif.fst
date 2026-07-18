@@ -1,0 +1,25 @@
+module DeltaDepthUnif
+
+(* Misc tests about unification, unfolding, etc *)
+
+open FStar.Reflection.V2
+open FStar.Reflection.Typing
+
+assume val tyc : term -> Type0
+
+let test (x : tyc bool_ty)
+ : tyc (binder_sort (mk_binder (Sealed.seal "x") bool_ty Q_Explicit))
+ = x
+
+assume val p : prop
+
+val test1 : (~p)
+let test1 = magic ()
+
+assume val f : p -> False
+val test2 : (~p)
+let test2 = ()
+
+assume
+val ty : int -> Type
+let test3 (#n:nat) (x : ty 0) : ty (0 * n) = x

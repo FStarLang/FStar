@@ -3,7 +3,7 @@
 *.fst linguist-documentation=false
 *.fsti linguist-language=FStar
 *.fsti linguist-documentation=false
-/src/ocaml-output/FStar_*.ml linguist-vendored
+/ocaml/*/generated/*.ml linguist-vendored
 
 # Line endings
 *.fs* eol=lf
@@ -22,8 +22,8 @@ karamel_ref eol=lf
 # Do not shows diff nor try to merge for the OCaml snapshot and hint
 # files. This just takes the latest one when there's a conflict, and
 # does not show diffs in the CLI nor GitHub.
-/src/ocaml-output/FStar_*.ml -diff -merge
-/src/ocaml-output/FStar_*.ml linguist-generated=true
+/ocaml/*/generated/*.ml -diff -merge
+/ocaml/*/generated/*.ml linguist-generated=true
 *.hints -diff -merge
 *.hints linguist-generated=true
 

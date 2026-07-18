@@ -1,0 +1,18 @@
+* Info at ExistsErasedAndPureEqualities.fst(57,4-57,11):
+  - Admitting continuation.
+  - Current context:
+      some_pred x v
+  - In typing environment:
+      __#494 : squash (_v_5 == v)
+      _v_5#493 : erased int
+      __#372 : squash (v == v)
+      v#248 : erased int
+      x#242 : R.ref int
+
+      goto _return#292 requires emp
+
+* Info at ExistsErasedAndPureEqualities.fst(66,32-68,5):
+  - Expected failure:
+  - Ill-typed term
+  - Cannot check relation with uvars.
+

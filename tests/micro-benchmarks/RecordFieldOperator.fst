@@ -25,7 +25,7 @@ instance intHasPlus: hasPlus int
   = { (+) = Prims.op_Addition; }
 
 let _ =
-  assert_norm (3 + 39 == 42);
+  assert (3 + 39 == 42);
   assert_norm ("3" + "39" == "339")
 
 // or, even better:

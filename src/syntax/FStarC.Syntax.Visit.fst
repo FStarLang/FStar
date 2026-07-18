@@ -1,0 +1,27 @@
+module FStarC.Syntax.Visit
+
+open FStarC.Effect
+open FStarC.List
+
+open FStarC.Syntax.VisitM
+open FStarC.Class.Monad
+
+type id (a:Type) = | I : run:a -> id a
+
+(* We just reuse VisitM with the identity monad to implement this module. *)
+
+instance _ : monad id = {
+  return = (fun a -> I a);
+  bind   = (fun (I a) f -> f a);
+}
+
+let (<<) f g = fun x -> f (g x)
+
+let visit_term pq vt t : ML _ =
+  I?.run (visitM_term pq (fun x -> I (vt x)) t)
+
+let visit_term_univs pq vt vu t : ML _ =
+  I?.run (visitM_term_univs pq (fun x -> I (vt x)) (fun x -> I (vu x)) t)
+
+let visit_sigelt pq vt vu se : ML _ =
+  I?.run (visitM_sigelt pq (fun x -> I (vt x)) (fun x -> I (vu x)) se)

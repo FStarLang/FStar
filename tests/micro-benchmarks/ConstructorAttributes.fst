@@ -1,5 +1,5 @@
 module ConstructorAttributes
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let meta_implicit (#[exact (`1)]x: int) = x
 

@@ -15,7 +15,7 @@
 *)
 module Even
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type unat = | Z : unat | S : unat → unat
 let rec nat2unary (n: nat) : Tot unat = if n = 0 then Z else S (nat2unary (n - 1))

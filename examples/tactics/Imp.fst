@@ -15,10 +15,9 @@
 *)
 module Imp
 
-//#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug SMTQuery"
 
-open FStar.Mul
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Tactics.CanonCommSemiring
 open FStar.Algebra.CommMonoid
 
@@ -36,7 +35,6 @@ type inst =
     //| Seq : prog -> inst
 and prog = list inst
 
-module L = FStar.List.Tot
 
 let rec size : inst -> pos = function
   | Add _ _ _
@@ -56,7 +54,7 @@ let override r v rm =
         then v
         else rm r'
 
-let rec eval' (i:inst) (rm:regmap)
+let eval' (i:inst) (rm:regmap)
     : Tot regmap (decreases (size i))
     = match i with
       | Add r1 r2 r3 -> override r3 (rm r1 + rm r2) rm
@@ -125,7 +123,7 @@ let _ = assert_norm (forall x y. equiv (add2 x y) (add4 x y))
 let _ = assert_norm (forall x y. equiv (add3 x y) (add4 x y))
 
 (* Without normalizing, they require fuel, or else fail *)
-#push-options "--max_fuel 0"
+#push-options "--fuel 0"
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add2 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add3 x y))
 [@@expect_failure] let _ = assert (forall x y. equiv (add1 x y) (add4 x y))
@@ -197,7 +195,7 @@ let _ = assert_norm (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 
 //#set-options "--z3rlimit 10"
 //let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-#set-options "--max_fuel 0"
+#set-options "--fuel 0"
 // --tactic_trace"
 let _ = assert (forall x. poly5 x `equiv` poly5' x)
             by (let _ = forall_intros () in

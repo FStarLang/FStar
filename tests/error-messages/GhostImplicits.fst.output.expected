@@ -1,0 +1,7 @@
+* Info at GhostImplicits.fst(25,54-25,57):
+  - Expected failure:
+  - Computed type Prims.nat
+    and effect Prims.GHOST
+    is not compatible with the annotated type Prims.nat
+    and effect Tot
+

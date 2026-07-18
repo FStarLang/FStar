@@ -15,7 +15,7 @@
 *)
 module Pose
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let lem (x y : int) : squash False =
     admit ()

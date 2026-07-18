@@ -40,7 +40,7 @@ let normal #a (e:a) =
   FStar.Pervasives.norm 
            [zeta;
             iota;
-            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
+            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%Prims.op_Star]; 
             delta_attr [`%unfold_defs];
             primops;
             nbe
@@ -48,6 +48,6 @@ let normal #a (e:a) =
 
 let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()
 
-#set-options "--debug Imp.Fun.DriverNBE --debug_level print_normalized_terms --admit_smt_queries true"
+#set-options "--debug print_normalized_terms --admit_smt_queries true"
 // let _ = norm_assert (forall (x:int) rm. R.sel (eval' (Seq [Const x (reg 0)]) rm) 0 == x) // eval' (Seq [Const x (reg 0)]) rm == rm)
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))

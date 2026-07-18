@@ -17,7 +17,7 @@
 module FStar.FunctionalExtensionality
 
 inline_for_extraction
-let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
+let on_domain (a:Type) (#b:a -> Type) ([@@@strictly_positive] f:arrow a b)
   = fun (x:a) -> f x
 
 let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
@@ -26,15 +26,15 @@ let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
 let idempotence_on_domain #a #b f
   = assert_norm (on_domain a f == (on_domain a (on_domain a f)))
 
-let quantifier_as_lemma (#a:Type) (#b: a -> Type)
+let quantifier_as_lemma (#a:Type) (#b: a -> prop)
                         (f:squash (forall (x:a). b x))
                         (x:a)
     : Lemma (b x)
     = ()
 
-open FStar.Tactics.Builtins
-open FStar.Reflection.Types
-open FStar.Tactics.Types
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Tactics.Types
 open FStar.Tactics.Effect
 (* we're early enough in the module stack that we need to reimplement
    a few of the tactic helpers *)
@@ -63,7 +63,7 @@ let extensionality_1 (a:Type)
             t_trefl false)
 
 let extensionality a b f g
-  = let fwd a b (f g:arrow a b)
+  = let fwd (f g:arrow a b)
      : Lemma (requires feq #a #b f g)
              (ensures on_domain a f == on_domain a g)
              [SMTPat (feq #a #b f g)]
@@ -94,7 +94,7 @@ let extensionality_1_g (a:Type)
             t_trefl false)
 
 let extensionality_g a b f g
-  = let fwd a b (f g:arrow_g a b)
+  = let fwd (f g:arrow_g a b)
      : Lemma (requires feq_g #a #b f g)
              (ensures on_domain_g a f == on_domain_g a g)
              [SMTPat (feq_g #a #b f g)]

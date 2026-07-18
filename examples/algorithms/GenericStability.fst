@@ -120,7 +120,7 @@ val stable_append_r: #a:eqtype ->
   k:(a -> Tot int) ->
   Lemma (requires (stable l l' k))
         (ensures(stable (l@r) (l'@r) k))
-let rec stable_append_r #a l l' r k =
+let stable_append_r #a l l' r k =
   filter_eq_append l r k;
   filter_eq_append l' r k
 

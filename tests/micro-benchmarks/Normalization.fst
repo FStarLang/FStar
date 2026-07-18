@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Normalization
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 val test : unit -> Lemma (FStar.List.Tot.length [1;2;3;1;2;3;1;2;3;1;2;3;1;2;3;1;2;3] == 18)
 let test _ = assert_norm (FStar.List.Tot.length [1;2;3;1;2;3;1;2;3;1;2;3;1;2;3;1;2;3] == 18)
@@ -83,3 +83,14 @@ let test_u32_of_char () =
   assert_norm (FStar.Char.u32_of_char 'c' == 99ul);
   assert_norm (FStar.Char.u32_of_char '→' == 8594ul)
 #pop-options
+
+module T = FStar.Tactics
+let test_reveal_hide (a:Type) (x:a) =
+  let open FStar.Ghost in
+  assert (reveal (hide x) == x)
+       by T.(norm [primops]; trefl())
+
+let test_reveal_hide_nbe (a:Type) (x:a) =
+  let open FStar.Ghost in
+  assert (reveal (hide x) == x)
+       by T.(norm [nbe; primops]; trefl())

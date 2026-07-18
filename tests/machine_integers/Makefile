@@ -1,37 +1,13 @@
-.PHONY: %.run clean
-.PRECIOUS: %.exe %.out
+FSTAR_ROOT ?= ../..
+FSTAR_FILES = $(wildcard Test*.fst)
+OTHERFLAGS += --warn_error -272 # top-level effects
+include $(FSTAR_ROOT)/mk/test.mk
 
-FSTAR_HOME=../..
+all: BigList.memcheck
 
-include $(FSTAR_HOME)/examples/Makefile.include
-include $(FSTAR_HOME)/ulib/ml/Makefile.include
-
-MODULES=$(wildcard Test*.fst)
-
-all: $(patsubst %.fst,%.run,$(MODULES))
-
-accept: $(patsubst %.fst,%.run-accept,$(MODULES))
-
-%.exe: %.fst | out
-	@echo '[BUILD     $(notdir $@)]'
-	$(eval B := $(patsubst %.exe,%,$@))
-	$(Q)$(FSTAR) $(SIL) $(FSTAR_DEFAULT_ARGS) --odir out --codegen OCaml --extract '${B}' '${B}.fst'
-	$(Q)/bin/echo -e '\n\nlet _ = main ()\n' >> out/${B}.ml
-	$(Q)$(OCAMLOPT) out/${B}.ml -o $@
-
-%.out: %.exe
-	@echo '[OUTPUT    $(notdir $<)]'
-	$(Q)./$< > $@
-
-%.run: %.out
-	$(Q)diff -u --strip-trailing-cr $<.expected $<
-
-%.run-accept: %.out
-	cp $< $<.expected
-
-out:
-	mkdir -p out
-
-clean:
-	rm -rf out
-	rm -f *.exe
+# Test that this file does not use much memory (currently ~500MB),
+# we give it 1.5GB
+BigList.memcheck: BigList.fst
+	$(call msg, "MEMCHECK", $<)
+	( ulimit -d 1500000 && $(FSTAR) BigList.fst )
+	touch $@

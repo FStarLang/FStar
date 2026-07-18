@@ -150,3 +150,15 @@ let rec concatmaplemma l f x =
   | h::t ->
     concatlemma (f h) (concatMap f t) x;
     concatmaplemma t f x
+
+val test_rec_arity: bool -> int -> int
+let rec test_rec_arity (x:bool) : Tot (int -> int) (decreases x) =
+  match x with
+  | true -> (fun x -> x + 1)
+  | false -> (fun x -> x - 1)
+
+val add_n : nat -> int -> int
+let rec add_n (n:nat) : Tot (int -> int) (decreases n) =
+  if n = 0 then (fun i -> i)
+  else
+    fun i -> 1 + add_n (n-1) i

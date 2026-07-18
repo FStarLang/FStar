@@ -1,0 +1,46 @@
+* Info at ExpectFailure.fst(20,12-20,15):
+  - Expected failure:
+  - Expected expression of type Prims.int
+    got expression 'a'
+    of type FStar.Char.char
+
+* Info at ExpectFailure.fst(24,12-24,15):
+  - Expected failure:
+  - Expected expression of type Prims.int
+    got expression 'a'
+    of type FStar.Char.char
+
+* Info at ExpectFailure.fst(28,8-28,14):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Prims.l_False
+  - See also ExpectFailure.fst(28,15-28,20)
+
+* Info at ExpectFailure.fst(30,8-30,14):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env =
+  - VC = Prims.l_False
+  - See also ExpectFailure.fst(30,15-30,20)
+
+* Info at ExpectFailure.fst(43,12-43,15):
+  - Expected failure:
+  - Expected expression of type Prims.int
+    got expression 'a'
+    of type FStar.Char.char
+
+* Info at ExpectFailure.fst(50,12-50,15):
+  - Expected failure:
+  - Expected expression of type Prims.int
+    got expression 'a'
+    of type FStar.Char.char
+
+* Info at ExpectFailure.fst(61,12-61,15):
+  - Expected failure:
+  - Expected expression of type Prims.int
+    got expression 'a'
+    of type FStar.Char.char
+

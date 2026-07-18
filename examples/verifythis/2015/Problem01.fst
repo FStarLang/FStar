@@ -35,7 +35,7 @@ let rec test_prefix p n str =
   match n with
   | 0 -> prefix (remove_elem_from_list p n) str
   | n -> prefix (remove_elem_from_list p n) str || test_prefix p (n - 1) str
-
+#restart-solver
 let test_prefix_exists_to_b (p:list nat) (n:nat{n < length p}) (str:list nat)
   (h:squash (exists (i:nat). i <= n && prefix (remove_elem_from_list p i) str))
   : Lemma (test_prefix p n str)

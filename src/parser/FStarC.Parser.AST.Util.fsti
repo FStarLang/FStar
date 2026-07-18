@@ -1,0 +1,65 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   Authors: N. Swamy and Copilot
+*)
+module FStarC.Parser.AST.Util
+open FStarC.Effect
+open FStarC.List
+open FStarC.Parser.AST
+
+(* Returns every identifier mentioned in a decl (including
+the body). This is used from the interactive mode to provide
+hover information and jump-to-definition. *)
+val lidents_of_decl (t:decl) : ML (list FStarC.Ident.lident)
+
+type open_namespaces_and_abbreviations = {
+   open_namespaces: list FStarC.Ident.lident;
+   module_abbreviations: list (FStarC.Ident.ident & FStarC.Ident.lident);
+}
+
+type error_message = {
+   message: list FStarC.Pprint.document;
+   range: FStarC.Range.t;
+}
+
+type extension_parser = {
+  parse_decl_name:
+    (contents:string ->
+     FStarC.Range.t ->
+     ML (either error_message FStarC.Ident.ident));
+
+  parse_decl:
+   (open_namespaces_and_abbreviations ->
+    contents:string ->
+    p:FStarC.Range.t ->
+    ML (either error_message decl))
+}
+
+val register_extension_parser (extension_name:string) (parser:extension_parser) : ML unit
+val lookup_extension_parser (extension_name:string) : ML (option extension_parser)
+
+
+type extension_lang_parser = {
+  parse_decls:
+   (contents:string ->
+    p:FStarC.Range.t ->
+    ML (either error_message (list decl)))
+}
+
+val as_open_namespaces_and_abbrevs (ls:list decl) : ML open_namespaces_and_abbreviations
+val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : ML unit
+val lookup_extension_lang_parser (extension_name:string) : ML (option extension_lang_parser)
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStarC.Range.t) : ML (list decl)

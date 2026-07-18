@@ -1,0 +1,59 @@
+(*
+   Copyright 2019 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+(* FStarC.Interactive.Lsp and FStarC.Interactive.Ide need to push various *
+ * text fragments and update state; this file collects helpers for them *)
+
+module FStarC.Interactive.PushHelper
+open FStarC
+open FStarC.Effect
+open FStarC.Ident
+open FStarC.TypeChecker.Env
+open FStarC.Interactive.JsonHelper
+open FStarC.Interactive.Ide.Types
+
+module CTable = FStarC.Interactive.CompletionTable
+module TcEnv = FStarC.TypeChecker.Env
+
+type ctx_depth_t = int & int & solver_depth_t & int
+type deps_t = FStarC.Parser.Dep.deps
+type either_replst = either repl_state repl_state
+
+type name_tracking_event =
+| NTAlias of lid (* host *) & ident (* alias *) & lid (* aliased *)
+| NTOpen of lid (* host *) & FStarC.Syntax.Syntax.open_module_or_namespace (* opened *)
+| NTInclude of lid (* host *) & lid (* included *)
+| NTBinding of either FStarC.Syntax.Syntax.binding TcEnv.sig_binding
+
+val repl_stack : ref repl_stack_t
+val set_check_kind : env_t -> push_kind -> ML env_t
+
+val deps_and_repl_ld_tasks_of_our_file : string -> ML (list string & list repl_task & deps_t)
+
+val push_repl : string -> option push_kind -> repl_task -> repl_state -> ML repl_state
+val add_issues_to_push_fragment (issues: list json) : ML unit
+val pop_repl : string -> repl_state -> ML repl_state
+
+// Core functionality
+val run_repl_task
+: repl_fname:string -> optmod_t -> env_t -> repl_task -> FStarC.Universal.lang_decls_t ->
+  ML (optmod_t & env_t & FStarC.Universal.lang_decls_t)
+
+val commit_name_tracking : repl_state -> list name_tracking_event -> ML repl_state
+val track_name_changes : env_t -> ML (env_t & (env_t -> ML (env_t & list name_tracking_event)))
+
+val update_task_timestamps : repl_task -> ML repl_task
+val add_module_completions : string -> list string -> CTable.table -> ML CTable.table

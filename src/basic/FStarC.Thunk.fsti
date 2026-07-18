@@ -1,0 +1,32 @@
+(*
+   Copyright 2008-2019 Microsoft Research
+
+   Authors: Aseem Rastogi, Nikhil Swamy, Jonathan Protzenko
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+module FStarC.Thunk
+open FStarC.Effect
+
+val thunk (a:Type0) : Type0
+type t 'a = thunk 'a
+
+(* Creating thunks *)
+val mk : (unit -> ML 'a) -> ML (thunk 'a)
+val mkv : 'a -> ML (thunk 'a)
+
+(* Forcing *)
+val force : thunk 'a -> ML 'a
+
+(* Mapping an operation over the thunk, lazily *)
+val map : ('a -> ML 'b) -> thunk 'a -> ML (thunk 'b)

@@ -19,31 +19,25 @@ module FStar.IndefiniteDescription
 /// Indefinite description is an axiom that allows picking a witness
 /// for existentially quantified predicate.
 ///
-/// Many other axioms can be derived from this one: Use it with care!
-///
 /// For some background on the axiom, see:
 ///
 /// https://github.com/coq/coq/wiki/CoqAndAxioms#indefinite-description--hilberts-epsilon-operator
 /// https://en.wikipedia.org/wiki/Theory_of_descriptions#Indefinite_descriptions
 
-(** The main axiom:
-
-    Given a classical proof of [exists x. p x], we can exhibit an erased
-    (computationally irrelevant) a witness [x:erased a] validating
-    [p x].
-*)
-val indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
-  : Tot (w:Ghost.erased a{ p w })
-
-
-(** A version in ghost is easily derivable *)
+(** Given a classical proof of [exists x. p x], we can exhibit
+    a witness [x:erased a] validating [p x] in GTot. *)
 val indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
   : GTot (x: a { p x })
+
+(** Given a classical proof of [exists x. p x], we can exhibit an erased
+    (computationally irrelevant) a witness [x:erased a] validating [p x].  *)
+val indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
+  : Tot (w:Ghost.erased a{ p w })
     
 (** Indefinite description entails the a strong form of the excluded
     middle, i.e., one can case-analyze the truth of a proposition
     (only in [Ghost]) *)
-val strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p})
+val strong_excluded_middle (p: prop) : GTot (b: bool{b = true <==> p})
 
 (** We also can combine this with a the classical tautology converting
     with a [forall] and an [exists] to extract a witness of validity of [p] from
@@ -58,8 +52,3 @@ val stronger_markovs_principle (p: (nat -> GTot bool))
     boolean predicate *)
 val stronger_markovs_principle_prop (p: (nat -> GTot prop))
     : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n))
-
-
-(** A proof for squash p can be eliminated to get p in the Ghost effect *)
-
-val elim_squash (#p:Type u#a) (s:squash p) : GTot p

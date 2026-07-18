@@ -1,0 +1,8 @@
+* Info at Test.Matcher.fst(67,2-67,4):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      fpts_to #int r #(0.1R +. p) (hide #int 1)
+  - In the context:
+      fpts_to #int r #(p +. 0.1R) (hide #int 1)
+

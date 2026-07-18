@@ -15,14 +15,25 @@
 *)
 module OptionStack
 
+assume val p : int -> prop
+
 [@@expect_failure]
-let _ = assert False
+let t0 = assert (p 1)
+
+[@@expect_failure]
+let t1 = assert (p 2)
+
+[@@expect_failure]
+let t2 = assert False
 
 #push-options "--admit_smt_queries true"
 
-let _ = assert False
+let t3 = assert False
+let t4 = assert False
+let t5 = assert False
+let t6 = assert False
 
 #pop-options
 
 [@@expect_failure]
-let _ = assert False
+let t7 = assert False

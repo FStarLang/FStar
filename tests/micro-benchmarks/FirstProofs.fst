@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module FirstProofs
-open FStar.Mul
 
 val factorial: nat -> Tot nat
 let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
@@ -44,13 +43,13 @@ let rec factorial_is_doubling x = match x with
    non-linear theory. You can try to provide an more explicit proof
    using FStar.Math.Lemmas *)
 
-(* #set-options "--z3rlimit 100 --max_fuel 5 --initial_fuel 5 --max_ifuel 0" *)
+(* #set-options "--z3rlimit 100 --max_fuel 5 --initial_fuel 5 --ifuel 0" *)
 (* val factorial_is_squaring: x:nat{x >= 4} -> Lemma (factorial x > x * x) *)
 (* let rec factorial_is_squaring = function *)
 (*   | 4 -> () *)
 (*   | x -> factorial_is_squaring (x - 1) *)
 
-(* #set-options "--z3rlimit 100 --max_fuel 7 --initial_fuel 7 --max_ifuel 0" *)
+(* #set-options "--z3rlimit 100 --max_fuel 7 --initial_fuel 7 --ifuel 0" *)
 (* val factorial_is_cubing: x:nat{x > 5} -> Tot (u:unit{factorial x >= x * x * x}) *)
 (* let rec factorial_is_cubing = function *)
 (*   | 6 -> () *)

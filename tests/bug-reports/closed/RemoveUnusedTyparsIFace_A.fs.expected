@@ -1,0 +1,9 @@
+#light "off"
+module RemoveUnusedTyparsIFace_A
+
+type 'a t =
+'a Prims.list
+
+
+
+

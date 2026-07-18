@@ -1,9 +1,9 @@
 module NormTypesForSMT
 
-let ta = (bool * (i:int{0 <= i /\ i <= 8}))
-let tb = (bool * (i:int{0 <= i /\ i <= 9}))
-let tc = (bool * (i:int{0 <= i /\ i <9+1}))
-let td = (bool * (i:int{0 <= i /\ i < 10}))
+let ta = (bool & (i:int{0 <= i /\ i <= 8}))
+let tb = (bool & (i:int{0 <= i /\ i <= 9}))
+let tc = (bool & (i:int{0 <= i /\ i <9+1}))
+let td = (bool & (i:int{0 <= i /\ i < 10}))
 
 let a:ta = (true, 5)
 let a':ta = (true, 5)

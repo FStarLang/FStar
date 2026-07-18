@@ -16,7 +16,7 @@
 module StrictUnfolding
 (* This is a test case for the `FStar.Pervasives.strict_on_arguments` attribute *)
 open FStar.Integers
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@(strict_on_arguments [1])]
 let project #a (x:option a{Some? x}) =

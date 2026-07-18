@@ -15,7 +15,7 @@
 *)
 module Synthesis
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let a : unit = synth (fun () -> exact (`()))
 
@@ -55,10 +55,11 @@ let iszero (x : int) : int =
         set_guard_policy SMT;
         let x = quote x in
         let t_int = quote int in
-        let _f = fresh_bv t_int in
+        let _f = fresh_namedv () in
+        let tun = pack Tv_Unknown in
         let t = Tv_Match x None
-                    [(Pat_Constant (C_Int 0), pack (Tv_Const (C_Int 1)));
-                     (Pat_Wild _f, pack (Tv_Const (C_Int 0)))] in
+                    [(Pat_Constant {c=C_Int 0}, pack (Tv_Const (C_Int 1)));
+                     (Pat_Var {v=_f; sort=seal tun}, pack (Tv_Const (C_Int 0)))] in
         exact (pack t))
 
 let _ = assert (iszero 0 = 1)
@@ -84,5 +85,5 @@ let mk_let_rec () : Tac unit =
 
 let f3 : int = synth mk_let_rec
 let _ = assert_norm (f3 == 1)
-let ascribe : int = synth (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None false)))
 
+let ascribe : int = synth (fun () -> exact (pack (Tv_AscribedT (`0) (`int) None false)))

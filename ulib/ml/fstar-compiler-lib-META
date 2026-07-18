@@ -1,4 +1,0 @@
-name="fstar-compiler-lib"
-version="__FSTAR_VERSION__"
-description="FStar compiler"
-requires="batteries,compiler-libs,compiler-libs.common,dynlink,pprint,stdint,yojson,zarith,ppxlib"

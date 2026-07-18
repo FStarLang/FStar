@@ -1,21 +1,26 @@
 module FStar.SizeT
 
-open FStar.Mul
 
 module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
+new
 val t : eqtype
 
-val fits (x: nat) : Tot prop
+val fits (x : int) : Tot prop
+
+val fits_nonneg (x:int)
+  : Lemma (requires fits x)
+          (ensures x >= 0)
+          [SMTPat (fits x)]
 
 /// According to the C standard, "the bit width of t is not less than 16 since c99"
 /// (https://en.cppreference.com/w/c/types/size_t)
 
 val fits_at_least_16 (x:nat)
   : Lemma
-    (requires x < pow2 16)
+    (requires 0 <= x /\ x < pow2 16)
     (ensures fits x)
     [SMTPat (fits x)]
 
@@ -30,7 +35,7 @@ val v (x: t) : Pure nat
 /// or `fits_u64` predicates. These predicates can only be introduced through a
 /// stateful function (currently in Steel.ST.HigherArray), which will be extracted
 /// to a static_assert by krml
-val uint_to_t (x: nat) : Pure t
+val uint_to_t (x: int) : Pure t
   (requires (fits x))
   (ensures (fun y -> v y == x))
 
@@ -40,7 +45,7 @@ val size_v_inj (x: t)
     (ensures uint_to_t (v x) == x)
     [SMTPat (v x)]
 
-val size_uint_to_t_inj (x: nat)
+val size_uint_to_t_inj (x: int)
   : Lemma
     (requires fits x)
     (ensures v (uint_to_t x) == x)
@@ -54,14 +59,14 @@ val fits_u64_implies_fits_32 (_:unit)
     (requires fits_u64)
     (ensures fits_u32)
 
-val fits_u32_implies_fits (x:nat)
+val fits_u32_implies_fits (x:int)
   : Lemma
-    (requires fits_u32 /\ x < pow2 32)
+    (requires fits_u32 /\ 0 <= x /\ x < pow2 32)
     (ensures fits x)
 
-val fits_u64_implies_fits (x:nat)
+val fits_u64_implies_fits (x:int)
   : Lemma
-    (requires fits_u64 /\ x < pow2 64)
+    (requires fits_u64 /\ 0 <= x /\ x < pow2 64)
     (ensures fits x)
 
 /// Creates a size_t when given a uint32 literal. Note, this will not
@@ -69,7 +74,7 @@ val fits_u64_implies_fits (x:nat)
 /// cast, see `uint32_to_sizet` below
 noextract inline_for_extraction
 val of_u32 (x: U32.t) : Pure t
-  (requires fits_u32)
+  (requires fits_u32 \/ fits (U32.v x))
   (ensures (fun y -> v y == U32.v x))
 
 /// Creates a size_t when given a uint64 literal. Note, this will not
@@ -77,7 +82,7 @@ val of_u32 (x: U32.t) : Pure t
 /// cast, see `uint64_to_sizet` below
 noextract inline_for_extraction
 val of_u64 (x: U64.t) : Pure t
-  (requires fits_u64)
+  (requires fits_u64 \/ fits (U64.v x))
   (ensures (fun y -> v y == U64.v x))
 
 val uint16_to_sizet (x:U16.t) : Pure t
@@ -85,16 +90,20 @@ val uint16_to_sizet (x:U16.t) : Pure t
   (ensures fun y -> v y == U16.v x)
 
 val uint32_to_sizet (x:U32.t) : Pure t
-  (requires fits_u32)
+  (requires fits_u32 \/ fits (U32.v x))
   (ensures fun y -> v y == U32.v x)
 
 val uint64_to_sizet (x:U64.t) : Pure t
-  (requires fits_u64)
+  (requires fits_u64 \/ fits (U64.v x))
   (ensures fun y -> v y == U64.v x)
 
 val sizet_to_uint32 (x:t) : Pure U32.t
   (requires True)
   (ensures fun y -> U32.v y == v x % pow2 32)
+
+val sizet_to_uint64 (x:t) : Pure U64.t
+  (requires True)
+  (ensures fun y -> U64.v y == v x % pow2 64)
 
 val fits_lte (x y: nat) : Lemma
   (requires (x <= y /\ fits y))
@@ -122,8 +131,7 @@ val div (a:t) (b:t{v b <> 0}) : Pure t
 
 (** Modulo specification, similar to FStar.UInt.mod *)
 
-let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
-  let open FStar.Mul in
+let mod_spec (a:int{fits a}) (b:int{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
   let res = a - ((a/b) * b) in
   fits_lte res a;
   res
@@ -134,6 +142,16 @@ let mod_spec (a:nat{fits a}) (b:nat{fits b /\ b <> 0}) : GTot (n:nat{fits n}) =
 val rem (a:t) (b:t{v b <> 0}) : Pure t
   (requires True)
   (ensures (fun c -> mod_spec (v a) (v b) = v c))
+
+(** Equal *)
+val eq (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x = v y)))
+
+(** Not equal *)
+val ne (x y:t) : Pure bool
+  (requires True)
+  (ensures (fun z -> z == (v x <> v y)))
 
 (** Greater than *)
 val gt (x y:t) : Pure bool
@@ -157,14 +175,17 @@ val lte (x y: t) : Pure bool
 
 (** Infix notations *)
 
-unfold let ( +^ ) = add
-unfold let ( -^ ) = sub
-unfold let ( *^ ) = mul
-unfold let ( %^ ) = rem
-unfold let ( >^ ) = gt
-unfold let ( >=^ ) = gte
-unfold let ( <^ ) = lt
-unfold let ( <=^ ) = lte
+inline_for_extraction unfold let ( +^ )  = add
+inline_for_extraction unfold let ( -^ )  = sub
+inline_for_extraction unfold let ( *^ )  = mul
+inline_for_extraction unfold let ( /^ )  = div
+inline_for_extraction unfold let ( %^ )  = rem
+inline_for_extraction unfold let ( =^ )  = eq
+inline_for_extraction unfold let ( <>^ ) = ne
+inline_for_extraction unfold let ( >^ )  = gt
+inline_for_extraction unfold let ( >=^ ) = gte
+inline_for_extraction unfold let ( <^ )  = lt
+inline_for_extraction unfold let ( <=^ ) = lte
 
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants

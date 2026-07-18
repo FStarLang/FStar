@@ -15,7 +15,7 @@
 *)
 module ReifiedTc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type mint = int
 type state = mint * mint
@@ -55,3 +55,5 @@ let test1 =
 let test2 =
     assert (set_range_of 1 (range_of 2) === 1)
         by (apply_lemma (`eq_any))
+
+#pop-options

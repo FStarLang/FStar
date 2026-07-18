@@ -11,6 +11,37 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Pulse
+
+  * Pulse now distinguishes terminating from possibly-divergent computations at
+    the type and surface-syntax level. The computation type `stt` is split into
+    `stt` (terminating, surface keyword `fn`) and `stt_div` (possibly divergent,
+    surface keyword `divergent fn`). A terminating `stt` computation lifts
+    silently into `stt_div` (via `Pulse.Lib.Core.lift_stt_div`), and divergence
+    is infectious: any computation that sequences a divergent step is itself
+    divergent.
+
+    Consequences for existing code:
+    - A `while` loop with no `decreases` measure is now a divergent computation.
+      To keep such a function terminating (a plain `fn`), add a `decreases`
+      clause to the loop, placed after the `invariant`/`ensures` clauses:
+      `while (...) invariant (...) decreases (<nat measure>) { ... }`.
+      Genuinely non-terminating loops (e.g. spin/CAS-retry loops) must instead
+      live in a function declared with `divergent fn`.
+    - A recursive `fn rec` must now prove termination with a `decreases` clause,
+      or be declared `divergent fn rec`. Concurrency primitives that block or
+      spin (e.g. `Pulse.Lib.SpinLock.acquire`, `Mutex.lock`, `Par.par`, the task
+      pool's `spawn`/`await`/`teardown_pool`) are now `divergent`, so any function
+      that uses them is divergent too.
+    - `Pulse.Lib.Par` gains `par_div`, a divergent-accepting sibling of `par`.
+    - `Pulse.Lib.Task`'s task thunks (`task_f`) are now possibly divergent
+      (`stt_div`), so `spawn`/`spawn_` can spawn divergent tasks (including
+      recursively-spawning ones). A terminating task must be lifted at the call
+      site, e.g. `spawn_ p (fun () -> lift_stt_div (f ()))`.
+
+    (The PulseCore model currently defines `stt_div = stt`; a foundational model
+    of divergence is future work.)
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection
@@ -82,6 +113,15 @@ Guidelines for the changelog:
     `gather_or_solve_explicit_guards_for_resolved_goals` which
     collects all those refinement goals and presents them to the user
     tactic for furhter processing.
+
+  * A new version of the tactics and reflection engine was started by
+    PR https://github.com/FStarLang/FStar/pull/2960. The new version is
+    under the `FStar.Tactics.V2` and `FStar.Reflection.V2` namespaces
+    and should be considered *experimental* and subject to change. The
+    old version is still supported, available under the corresponding V1
+    namespaces. All the old, unqualified modules point to V1, so users
+    should not need to make any change to their code to continue using
+    V1.
 
 ## Typeclass argument syntax
 
@@ -264,6 +304,14 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * PR #2812 allows defining variants whose constructors carry
+     records, for example:
+     ```fstar
+     type foo = | A
+                | B { x: int; y: int }
+     ```
+
+     See `examples/misc/VariantsWithRecords.fst` for more examples.
 
    * PR #2727 allows for custom unicode operators. As long as a
      character belongs to the ["Math Symbol" unicode
@@ -538,6 +586,10 @@ Guidelines for the changelog:
      expected output location, we raise Warning 321.
 
 ## Command line options
+   * F* no longer supports the vcgen.optimize_bind_as_seq command line
+			  option for tweaking the verification condition generation.
+					The option was not on by-default, and hence was not maintained well.
+					Further, as issue #2868 observed, it relied on a strange SMT axiom.
 
    * [Issue #2385](https://github.com/FStarLang/FStar/issues/2385).
      The behavior of the --extract option was changed so that it no
@@ -557,6 +609,14 @@ Guidelines for the changelog:
      which to enable profiling. The output of F* on its finished
      message changed to not print the time it took to verify a module.
 
+   * [PR #2776](https://github.com/FStarLang/FStar/pull/2776): The
+     `--split_queries` option now takes an argument, one of `no`,
+     `on_failure` and `always`. The default is `on_failure`, with
+     the same behavior as previously (split a query and retry when
+     the SMT solver does not return a helpful error). Using
+     `--split_queries always` mimics the old `--split_queries`,
+     splitting all queries eagerly. Using `--split_queries no` disables
+     splitting altogether.
 
 ## Editors
 
@@ -843,7 +903,7 @@ Date:   Mon Apr 30 16:57:21 2018 -0700
   abstract alias for a 21 bit integer represented within a
   FStar.UInt32.t.
 
-* ucontrib/Platform/fst/*: These modules are deprecated. Their
+* contrib/Platform/fst/*: These modules are deprecated. Their
   functionality is now moved to FStar.Bytes, FStar.Error, FStar.Tcp,
   FStar.Udp, and FStar.Date.
 

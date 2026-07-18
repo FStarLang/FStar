@@ -1,6 +1,6 @@
 module NormLHS
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 private
 let trans (#t:Type) (b a c : t)

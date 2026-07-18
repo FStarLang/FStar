@@ -15,7 +15,7 @@
 *)
 module Synthesis
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@plugin]
 let rec fib (n : int) : Tac unit =

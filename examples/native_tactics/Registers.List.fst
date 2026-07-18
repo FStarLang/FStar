@@ -15,7 +15,7 @@
 *)
 module Registers.List
 type reg = int
-type regmap (a:Type0) = list (int * a) * a
+type regmap (a:Type0) = list (int & a) & a
 
 [@@plugin]
 let create #a (x:a) : regmap a = [], x

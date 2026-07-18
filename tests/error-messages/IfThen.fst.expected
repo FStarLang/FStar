@@ -1,5 +1,0 @@
->> Got issues: [
-IfThen.fst(5,2-6,6): (Error 189) Expected expression of type "Prims.int"; got expression "()" of type "Prims.unit"
->>]
-Verified module: IfThen
-All verification conditions discharged successfully

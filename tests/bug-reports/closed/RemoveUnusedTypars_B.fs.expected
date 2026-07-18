@@ -1,0 +1,8 @@
+#light "off"
+module RemoveUnusedTypars_B
+
+let f = (fun ( x  :  'a RemoveUnusedTypars_A.t ) -> x)
+
+
+
+

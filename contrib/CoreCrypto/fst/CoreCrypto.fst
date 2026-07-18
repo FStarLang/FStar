@@ -15,9 +15,7 @@
 *)
 module CoreCrypto
 
-open FStar.Bytes
-
-assume val now: unit -> EXT UInt32.t
+open Platform.Bytes
 
 (* ------------ Hashing ------------ *)
 type hash_alg =
@@ -62,7 +60,40 @@ let blockSize = function
   | AES_128_CBC  -> 16
   | AES_256_CBC  -> 16
 
-include CryptoTypes
+(* Authenticated Encryption for TLS.
+   Note that their AAD contents depends on the protocol version. *)
+
+type aead_cipher =
+  | AES_128_GCM
+  | AES_256_GCM
+  | CHACHA20_POLY1305
+  | AES_128_CCM   // "Counter with CBC-Message Authentication Code"
+  | AES_256_CCM
+  | AES_128_CCM_8 // variant with truncated 8-byte tags
+  | AES_256_CCM_8
+
+// the key materials consist of an encryption key, a static IV, and an authentication key.
+
+let aeadKeySize = function
+  | AES_128_CCM       -> 16
+  | AES_128_CCM_8     -> 16
+  | AES_128_GCM       -> 16
+  | AES_256_CCM       -> 32
+  | AES_256_CCM_8     -> 32
+  | AES_256_GCM       -> 32
+  | CHACHA20_POLY1305 -> 32
+
+let aeadRealIVSize (a:aead_cipher) = 12
+
+// the ciphertext ends with an authentication tag
+let aeadTagSize = function
+  | AES_128_CCM_8     ->  8
+  | AES_256_CCM_8     ->  8
+  | AES_128_CCM       -> 16
+  | AES_256_CCM       -> 16
+  | AES_128_GCM       -> 16
+  | AES_256_GCM       -> 16
+  | CHACHA20_POLY1305 -> 16
 
 //16-09-12 added precise concrete spec, matching what we implement in low-level/crypto
 //16-09-12 for robustness, we should at least test it when using external crypto.
@@ -134,11 +165,7 @@ assume val stream_decryptor : stream_cipher -> bytes -> EXT cipher_stream
 assume val stream_process : cipher_stream -> bytes -> EXT bytes
 assume val stream_fini : cipher_stream -> EXT unit
 
-assume val init : unit -> EXT int
-assume val zero : l:nat -> EXT (lbytes l)
 assume val random : l:nat -> EXT (lbytes l)
-assume val random32 : l:UInt32.t -> EXT (lbytes32 l) 
-// 18-02-25 we should probably keep just the latter
 
 assume val rsa_gen_key : int -> EXT (k:rsa_key{Some? k.rsa_prv_exp})
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
@@ -198,7 +225,7 @@ assume val ec_gen_key: p:ec_params
                   length k.ec_point.ecx = ec_bytelen k.ec_params.curve /\
                   length k.ec_point.ecy = ec_bytelen k.ec_params.curve})
 
-//TODO: keep also abstract OpenSSL representation for efficiency?
+//TODO: keep also abtsract OpenSSL representation for efficiency?
 type key =
   | KeyRSA of rsa_key
   | KeyDSA of dsa_key

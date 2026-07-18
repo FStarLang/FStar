@@ -1,0 +1,3 @@
+module:Test2DotTiny
+let:refer_fst:Test0DotFst.x
+let:refer_tiny:Test1DotTiny.export

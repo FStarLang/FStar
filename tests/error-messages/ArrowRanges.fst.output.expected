@@ -1,0 +1,13 @@
+* Info at ArrowRanges.fst(4,30-4,39):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
+  - The SMT solver could not prove the query.
+  - Env = (a : Type0)
+  - VC = Prims.hasEq (_: a -> Prims.bool)
+  - See also Prims.fst(90,23-90,30)
+
+* Info at ArrowRanges.fst(10,29-10,38):
+  - Expected failure:
+  - Expected type Prims.prop but gho_p x y has type Type
+

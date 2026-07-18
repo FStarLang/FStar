@@ -1,6 +1,6 @@
 module CommuteMatch
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type t = | X | Y
 

@@ -20,8 +20,8 @@ module Plugins
    Tactics should be generated without warnings and compile without errors.
 *)
 
-open FStar.Reflection
-open FStar.Tactics
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 
 [@@plugin]
 let int_plugin: int -> int = id
@@ -57,7 +57,7 @@ let list_plugin: list int -> (list int) = id
 let option_plugin: option term -> (option term) = id
 
 [@@plugin]
-let tuple_plugin: int -> bool -> (int * bool) = fun x y -> (x,y)
+let tuple_plugin: int -> bool -> (int & bool) = fun x y -> (x,y)
 
 [@@plugin]
 let any_plugin (#a: Type) (l: list a): list a = l

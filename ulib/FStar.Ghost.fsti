@@ -45,7 +45,8 @@ module FStar.Ghost
 
 (** [erased t] is the computationally irrelevant counterpart of [t] *)
 [@@ erasable]
-val erased: Type u#a -> Type u#a
+new
+val erased ([@@@strictly_positive] a: Type u#a) : Type u#a
 
 (** [erased t] is in a bijection with [t], as witnessed by [reveal]
     and [hide] *)
@@ -57,6 +58,7 @@ val hide_reveal (#a: Type) (x: erased a)
     : Lemma (ensures (hide (reveal x) == x)) [SMTPat (reveal x)]
 
 val reveal_hide (#a: Type) (x: a) : Lemma (ensures (reveal (hide x) == x)) [SMTPat (hide x)]
+
 
 /// The rest of this module includes several well-defined defined
 /// notions. They are not trusted.
@@ -80,7 +82,8 @@ let (let@) (x:erased 'a) (f:('a -> Tot (erased 'b))) : Tot (erased 'b) = bind x 
 (** Unary map *)
 irreducible
 let elift1 (#a #b: Type) (f: (a -> GTot b)) (x: erased a)
-    : Tot (y: erased b {reveal y == f (reveal x)}) = let@ xx = x in return (f xx)
+    : Tot (y: erased b {reveal y == f (reveal x)}) =
+  let@ xx = x in return (f xx)
 
 (** Binary map *)
 irreducible
@@ -105,7 +108,7 @@ let elift3
   return (f a b c)
 
 (** Pushing a refinement type under the [erased] constructor *)
-let push_refinement #a (#p: (a -> Type0)) (r: erased a {p (reveal r)})
+let push_refinement #a (#p: (a -> prop)) (r: erased a {p (reveal r)})
     : erased (x: a{p x /\ x == reveal r}) =
   let x:(x: a{p x}) = reveal r in
   return x
@@ -114,7 +117,7 @@ let push_refinement #a (#p: (a -> Type0)) (r: erased a {p (reveal r)})
 irreducible
 let elift1_p
       (#a #b: Type)
-      (#p: (a -> Type))
+      (#p: (a -> prop))
       ($f: (x: a{p x} -> GTot b))
       (r: erased a {p (reveal r)})
     : Tot (z: erased b {reveal z == f (reveal r)}) =
@@ -126,7 +129,7 @@ let elift1_p
 irreducible
 let elift2_p
       (#a #b #c: Type)
-      (#p: (a -> b -> Type))
+      (#p: (a -> b -> prop))
       ($f: (xa: a -> xb: b{p xa xb} -> GTot c))
       (ra: erased a)
       (rb: erased b {p (reveal ra) (reveal rb)})
@@ -140,8 +143,8 @@ let elift2_p
 irreducible
 let elift1_pq
       (#a #b: Type)
-      (#p: (a -> Type))
-      (#q: (x: a{p x} -> b -> Type))
+      (#p: (a -> prop))
+      (#q: (x: a{p x} -> b -> prop))
       ($f: (x: a{p x} -> GTot (y: b{q x y})))
       (r: erased a {p (reveal r)})
     : Tot (z: erased b {reveal z == f (reveal r)}) =
@@ -154,8 +157,8 @@ let elift1_pq
 irreducible
 let elift2_pq
       (#a #b #c: Type)
-      (#p: (a -> b -> Type))
-      (#q: (x: a -> y: b{p x y} -> c -> Type))
+      (#p: (a -> b -> prop))
+      (#q: (x: a -> y: b{p x y} -> c -> prop))
       ($f: (x: a -> y: b{p x y} -> GTot (z: c{q x y z})))
       (ra: erased a)
       (rb: erased b {p (reveal ra) (reveal rb)})

@@ -15,9 +15,9 @@
 *)
 module BV
 
-open FStar.Tactics
-open FStar.Reflection.Formula
-open FStar.Reflection.Arith
+open FStar.Tactics.V2
+open FStar.Reflection.V2.Formula
+open FStar.Reflection.V2.Arith
 open FStar.BV
 open FStar.UInt
 
@@ -253,7 +253,7 @@ let unfold64 () : Tac unit =
           (fun () -> or_else (fun () -> mapply (`unfold_logor64))
                              (fun () -> mapply (`unfold_logxor64)))
 
-let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
+let aux () : Tac unit = or_else unfold64 (fun () -> raise SKIP)
 
 /// Finally, a tactic for bitwise operations on U64.t
 [@@plugin]

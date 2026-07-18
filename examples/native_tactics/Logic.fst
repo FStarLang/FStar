@@ -15,19 +15,18 @@
 *)
 module Logic
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
-assume val phi : Type
-assume val psi : Type
-assume val  xi: Type
+assume val phi : prop
+assume val psi : prop
+assume val  xi: prop
 
 [@@plugin]
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();
-    let (h1, _) = destruct_and (pack (Tv_Var (bv_of_binder h))) in
-    apply (`FStar.Squash.return_squash);
-    exact (pack (Tv_Var (bv_of_binder h1)));
+    let (h1, _) = destruct_and (pack (Tv_Var (binding_to_namedv h))) in
+    exact (pack (Tv_Var (binding_to_namedv h1)));
     qed ()
 
 let _ =

@@ -1,0 +1,9 @@
+* Info at Bug4280.fst(9,0-9,10):
+  - Term
+    Bug4280.foo
+    has type
+
+        [@@@ Pulse.Lib.Core.mkey]r: Pulse.Lib.Reference.ref Prims.int ->
+        x: Prims.int
+      -> Pulse.Lib.Core.slprop
+

@@ -15,7 +15,7 @@
 *)
 module WeakVsHNF
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Testing weak reduction vs. HNF *)
 
@@ -113,4 +113,27 @@ let _ = assert True
              let t = norm_term [primops; weak; hnf] t0 in
              debug ("WHNF  :  " ^ term_to_string t);
              guard (term_eq t (`(fun () -> W (1 + 1))))
+        )
+
+let b = unit
+let _ = assert True
+         by (let t0 = `(b -> b) in
+             debug "";
+             debug ("Term  :  " ^ term_to_string t0);
+
+             let t = norm_term [delta] t0 in
+             debug ("Full  :  " ^ term_to_string t);
+             guard (term_eq t (`(unit -> unit)));
+
+             let t = norm_term [delta; weak] t0 in
+             debug ("Weak  :  " ^ term_to_string t);
+             guard (term_eq t (`(b -> b)));
+
+             let t = norm_term [delta; hnf] t0 in
+             debug ("HNF   :  " ^ term_to_string t);
+             guard (term_eq t (`(b -> unit)));
+
+             let t = norm_term [delta; weak; hnf] t0 in
+             debug ("WHNF  :  " ^ term_to_string t);
+             guard (term_eq t (`(b -> b)))
         )

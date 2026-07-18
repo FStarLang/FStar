@@ -284,7 +284,7 @@ elements [x] of [l] are in [l1] if [f x] holds, and in [l2]
 otherwise. Both [l1] and [l2] retain the original order of [l]. (Hides
 [List.Tot.partition], which requires, at type-checking time, [f] to be
 a pure total function.) *)
-val partition: ('a -> ML bool) -> list 'a -> ML (list 'a * list 'a)
+val partition: ('a -> ML bool) -> list 'a -> ML (list 'a & list 'a)
 let rec partition f = function
   | [] -> [], []
   | hd::tl ->
@@ -298,7 +298,7 @@ let rec partition f = function
 (** [zip] takes two lists [x1, ..., xn] and [y1, ..., yn] and returns
 the list of pairs [(x1, y1), ..., (xn, yn)]. Raises an exception if
 the two lists have different lengths. Named as in: Haskell *)
-val zip: list 'a -> list 'b -> ML (list ('a * 'b))
+val zip: list 'a -> list 'b -> ML (list ('a & 'b))
 let rec zip l1 l2 = match l1,l2 with
     | [], [] -> []
     | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
@@ -321,7 +321,7 @@ let rec sortWith f = function
 (** [splitAt n l] returns the pair of lists [(l1, l2)] such that [l1]
 contains the first [n] elements of [l] and [l2] contains the
 rest. Raises an exception if [l] has fewer than [n] elements. *)
-val splitAt: nat -> list 'a -> ML (list 'a * list 'a)
+val splitAt: nat -> list 'a -> ML (list 'a & list 'a)
 let rec splitAt n l =
   if n = 0 then [], l
   else

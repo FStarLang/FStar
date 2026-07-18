@@ -1,0 +1,62 @@
+* Info at Coercions.fst(6,38-6,39):
+  - Expected failure:
+  - Computed type Prims.int
+    and effect GTot
+    is not compatible with the annotated type Prims.int
+    and effect Tot
+
+* Info at Coercions.fst(19,37-19,38):
+  - Expected failure:
+  - Computed type 'a
+    and effect GTot
+    is not compatible with the annotated type 'a
+    and effect Tot
+
+* Info at Coercions.fst(71,4-71,8):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC =
+      forall (b:
+        (n: FStar.Ghost.erased Prims.nat -> FStar.Ghost.erased Prims.nat)).
+        (fun n -> n) == b ==> Prims.l_False
+  - See also Prims.fst(642,18-642,24)
+
+* Info at Coercions.fst(74,49-74,57):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (x : FStar.Ghost.erased Prims.int)
+  - VC = forall (any_result: Prims.int). x == any_result ==> x >= 0
+  - See also Prims.fst(642,18-642,24)
+
+* Info at Coercions.fst(76,55-76,56):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
+  - See also Prims.fst(642,18-642,24)
+
+* Info at Coercions.fst(78,50-78,51):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (x : FStar.Ghost.erased Prims.int)
+  - VC = forall (any_result: Prims.int). x == any_result ==> x >= 0
+  - See also Prims.fst(642,18-642,24)
+
+* Info at Coercions.fst(80,51-80,52):
+  - Expected failure:
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
+  - The SMT solver could not prove the query.
+  - Env = (x : Prims.int)
+  - VC = x >= 0
+  - See also Prims.fst(642,18-642,24)
+

@@ -29,8 +29,8 @@ let _ = assert False
 [@@ (expect_failure [19])]
 let _ = assert False
 
-(* Now for interaction with --lax *)
-#set-options "--lax"
+(* Now for interaction with --admit_smt_queries true *)
+#set-options "--admit_smt_queries true"
 
 (* These are ignored, since we're laxing and using the ordinary `expect_failure` *)
 [@@expect_failure]
@@ -44,7 +44,7 @@ let _ = 1 + 'a'
 
 #reset-options ""
 
-(* Expecting a lax failure can be done without --lax too, the flag
+(* Expecting a lax failure can be done without --admit_smt_queries true too, the flag
  * will be internally set when `expect_lax_failure` is specified. *)
 [@@expect_lax_failure]
 let _ = 1 + 'a'

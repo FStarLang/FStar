@@ -1,0 +1,136 @@
+open Prims
+type 'a hashable = {
+  hash: 'a -> FStarC_Hash.hash_code }
+let __proj__Mkhashable__item__hash (projectee : 'a hashable) :
+  'a -> FStarC_Hash.hash_code= match projectee with | { hash;_} -> hash
+let hash (projectee : 'a hashable) : 'a -> FStarC_Hash.hash_code=
+  match projectee with | { hash = hash1;_} -> hash1
+let showable_hash_code : FStarC_Hash.hash_code FStarC_Class_Show.showable=
+  { FStarC_Class_Show.show = FStarC_Hash.string_of_hash_code }
+let eq_hash_code : FStarC_Hash.hash_code FStarC_Class_Deq.deq=
+  { FStarC_Class_Deq.op_Equals_Question = (=) }
+let ord_hash_code : FStarC_Hash.hash_code FStarC_Class_Ord.ord=
+  {
+    FStarC_Class_Ord.super = eq_hash_code;
+    FStarC_Class_Ord.cmp =
+      (fun x y -> FStarC_Order.order_from_int (FStarC_Hash.cmp_hash x y))
+  }
+let hashable_int : Prims.int hashable= { hash = FStarC_Hash.of_int }
+let hashable_string : Prims.string hashable= { hash = FStarC_Hash.of_string }
+let hashable_bool : Prims.bool hashable=
+  {
+    hash =
+      (fun b ->
+         if b
+         then FStarC_Hash.of_int Prims.int_one
+         else FStarC_Hash.of_int (Prims.of_int 2))
+  }
+let hashable_list (uu___ : 'a hashable) : 'a Prims.list hashable=
+  {
+    hash =
+      (fun xs ->
+         FStarC_List.fold_left
+           (fun h x -> let uu___1 = hash uu___ x in FStarC_Hash.mix h uu___1)
+           (FStarC_Hash.of_int Prims.int_zero) xs)
+  }
+let hashable_option (uu___ : 'a hashable) :
+  'a FStar_Pervasives_Native.option hashable=
+  {
+    hash =
+      (fun x ->
+         match x with
+         | FStar_Pervasives_Native.None -> FStarC_Hash.of_int Prims.int_zero
+         | FStar_Pervasives_Native.Some x1 ->
+             let uu___1 = hash uu___ x1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_one) uu___1)
+  }
+let hashable_either (uu___ : 'a hashable) (uu___1 : 'b hashable) :
+  ('a, 'b) FStar_Pervasives.either hashable=
+  {
+    hash =
+      (fun x ->
+         match x with
+         | FStar_Pervasives.Inl a1 ->
+             let uu___2 = hash uu___ a1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_zero) uu___2
+         | FStar_Pervasives.Inr b1 ->
+             let uu___2 = hash uu___1 b1 in
+             FStarC_Hash.mix (FStarC_Hash.of_int Prims.int_one) uu___2)
+  }
+let hashable_tuple2 (uu___ : 'a hashable) (uu___1 : 'b hashable) :
+  ('a * 'b) hashable=
+  {
+    hash =
+      (fun uu___2 ->
+         match uu___2 with
+         | (a1, b1) ->
+             let uu___3 = hash uu___ a1 in
+             let uu___4 = hash uu___1 b1 in FStarC_Hash.mix uu___3 uu___4)
+  }
+let hashable_tuple3 (uu___ : 'a hashable) (uu___1 : 'b hashable)
+  (uu___2 : 'c hashable) : ('a * 'b * 'c) hashable=
+  {
+    hash =
+      (fun uu___3 ->
+         match uu___3 with
+         | (a1, b1, c1) ->
+             let uu___4 =
+               let uu___5 = hash uu___ a1 in
+               let uu___6 = hash uu___1 b1 in FStarC_Hash.mix uu___5 uu___6 in
+             let uu___5 = hash uu___2 c1 in FStarC_Hash.mix uu___4 uu___5)
+  }
+let hashable_tuple4 (uu___ : 'a hashable) (uu___1 : 'b hashable)
+  (uu___2 : 'c hashable) (uu___3 : 'd hashable) :
+  ('a * 'b * 'c * 'd) hashable=
+  {
+    hash =
+      (fun uu___4 ->
+         match uu___4 with
+         | (a1, b1, c1, d1) ->
+             let uu___5 =
+               let uu___6 =
+                 let uu___7 = hash uu___ a1 in
+                 let uu___8 = hash uu___1 b1 in FStarC_Hash.mix uu___7 uu___8 in
+               let uu___7 = hash uu___2 c1 in FStarC_Hash.mix uu___6 uu___7 in
+             let uu___6 = hash uu___3 d1 in FStarC_Hash.mix uu___5 uu___6)
+  }
+let hashable_tuple5 (uu___ : 'a hashable) (uu___1 : 'b hashable)
+  (uu___2 : 'c hashable) (uu___3 : 'd hashable) (uu___4 : 'e hashable) :
+  ('a * 'b * 'c * 'd * 'e) hashable=
+  {
+    hash =
+      (fun uu___5 ->
+         match uu___5 with
+         | (a1, b1, c1, d1, e1) ->
+             let uu___6 =
+               let uu___7 =
+                 let uu___8 =
+                   let uu___9 = hash uu___ a1 in
+                   let uu___10 = hash uu___1 b1 in
+                   FStarC_Hash.mix uu___9 uu___10 in
+                 let uu___9 = hash uu___2 c1 in FStarC_Hash.mix uu___8 uu___9 in
+               let uu___8 = hash uu___3 d1 in FStarC_Hash.mix uu___7 uu___8 in
+             let uu___7 = hash uu___4 e1 in FStarC_Hash.mix uu___6 uu___7)
+  }
+let hashable_tuple6 (uu___ : 'a hashable) (uu___1 : 'b hashable)
+  (uu___2 : 'c hashable) (uu___3 : 'd hashable) (uu___4 : 'e hashable)
+  (uu___5 : 'f hashable) : ('a * 'b * 'c * 'd * 'e * 'f) hashable=
+  {
+    hash =
+      (fun uu___6 ->
+         match uu___6 with
+         | (a1, b1, c1, d1, e1, f1) ->
+             let uu___7 =
+               let uu___8 =
+                 let uu___9 =
+                   let uu___10 =
+                     let uu___11 = hash uu___ a1 in
+                     let uu___12 = hash uu___1 b1 in
+                     FStarC_Hash.mix uu___11 uu___12 in
+                   let uu___11 = hash uu___2 c1 in
+                   FStarC_Hash.mix uu___10 uu___11 in
+                 let uu___10 = hash uu___3 d1 in
+                 FStarC_Hash.mix uu___9 uu___10 in
+               let uu___9 = hash uu___4 e1 in FStarC_Hash.mix uu___8 uu___9 in
+             let uu___8 = hash uu___5 f1 in FStarC_Hash.mix uu___7 uu___8)
+  }

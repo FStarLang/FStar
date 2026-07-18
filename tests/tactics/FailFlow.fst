@@ -15,7 +15,7 @@
 *)
 module FailFlow
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let fail_flow () : Tac unit =
     fail "failing";
@@ -27,8 +27,6 @@ let print_test () : Tac unit =
     print "not failing";
     assert False
 
-(* None of these succeed (as in: return Success within the monad) *)
-[@@expect_failure]
 let s_fail_flow () : TacS unit =
     fail "failing";
     assert False

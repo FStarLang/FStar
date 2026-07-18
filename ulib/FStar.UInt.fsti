@@ -18,7 +18,6 @@ module FStar.UInt
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fsti], which is mostly
  * a copy-paste of this module. *)
 
-open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
@@ -47,9 +46,10 @@ let max_int (n:nat) : Tot int = pow2 n - 1
 let min_int (n:nat) : Tot int = 0
 
 let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
-let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
+let size (x:int) (n:nat) : prop = fits x n
 
 (* Machine integer type *)
+[@@do_not_unrefine]
 type uint_t (n:nat) = x:int{size x n}
 
 /// Constants
@@ -159,27 +159,28 @@ let udiv (#n:pos) (a:uint_t n) (b:uint_t n{b <> 0}) : Tot (c:uint_t n{b <> 0 ==>
 
 (* Modulo primitives *)
 let mod (#n:nat) (a:uint_t n) (b:uint_t n{b <> 0}) : Tot (uint_t n) =
-  a - ((a/b) * b)
+  a - ((a / b) * b)
 
 (* Comparison operators *)
-let eq #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)
-let gt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a > b)
+let eq  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a = b)
+let ne  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <> b)
+let gt  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a > b)
 let gte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a >= b)
-let lt #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
+let lt  #n (a:uint_t n) (b:uint_t n) : Tot bool = (a < b)
 let lte #n (a:uint_t n) (b:uint_t n) : Tot bool = (a <= b)
 
 /// Casts
 
 let to_uint_t (m:nat) (a:int) : Tot (uint_t m) = a % pow2 m
 
-open FStar.Seq
+open FStar.Seq.Base
 
 (* WARNING: Mind the big endian vs little endian definition *)
 
 (* Casts *)
 let rec to_vec (#n:nat) (num:uint_t n) : Tot (bv_t n) =
-  if n = 0 then Seq.empty #bool
-  else Seq.append (to_vec #(n - 1) (num / 2)) (Seq.create 1 (num % 2 = 1))
+  if n = 0 then empty #bool
+  else append (to_vec #(n - 1) (num / 2)) (create 1 (num % 2 = 1))
 
 let rec from_vec (#n:nat) (vec:bv_t n) : Tot (uint_t n) =
   if n = 0 then 0
@@ -450,6 +451,14 @@ let shift_left (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
 let shift_right (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
   from_vec (shift_right_vec #n (to_vec #n a) s)
 
+(* Rotate operators *)
+
+let rotate_left (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
+  from_vec (rotate_left_vec #n (to_vec #n a) s)
+
+let rotate_right (#n:pos) (a:uint_t n) (s:nat) : Tot (uint_t n) =
+  from_vec (rotate_right_vec #n (to_vec #n a) s)
+
 (* Shift operators lemmas *)
 val shift_left_lemma_1: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n && i >= n - s} ->
   Lemma (requires True)
@@ -495,6 +504,35 @@ val shift_left_logor_lemma: #n:pos -> a:uint_t n -> b:uint_t n -> s:nat ->
 val shift_right_logor_lemma: #n:pos -> a:uint_t n -> b:uint_t n -> s:nat ->
   Lemma (requires True)
         (ensures (shift_right #n (logor #n a b) s = logor #n (shift_right #n a s) (shift_right #n b s)))
+
+(* Rotate operators lemmas *)
+
+val rotate_left_lemma: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_left #n a s) i = nth #n a ((i + s) % n)))
+        [SMTPat (nth (rotate_left #n a s) i)]
+
+val rotate_right_lemma: #n:pos -> a:uint_t n -> s:nat -> i:nat{i < n} ->
+  Lemma (requires True)
+        (ensures (nth (rotate_right #n a s) i = nth #n a ((i + n - (s % n)) % n)))
+
+(** Rotate left by n is identity *)
+val rotate_left_full_identity: #n:pos -> a:uint_t n ->
+  Lemma (rotate_left #n a n = a)
+  [SMTPat (rotate_left #n a n)]
+
+(** Rotate right by n is identity *)
+val rotate_right_full_identity: #n:pos -> a:uint_t n ->
+  Lemma (rotate_right #n a n = a)
+  [SMTPat (rotate_right #n a n)]
+
+(** Rotate left and right are inverses *)
+val rotate_left_right_inverse: #n:pos -> a:uint_t n -> s:nat ->
+  Lemma (rotate_right #n (rotate_left #n a s) s = a)
+
+(** Rotate right and left are inverses *)
+val rotate_right_left_inverse: #n:pos -> a:uint_t n -> s:nat ->
+  Lemma (rotate_left #n (rotate_right #n a s) s = a)
 
 
 (* Lemmas about value after shift operations *)
@@ -560,15 +598,21 @@ val lemma_mod_sub_distr_l: a:int -> b:int -> p:pos ->
 val lemma_sub_add_cancel: #n:pos -> a:uint_t n -> b:uint_t n ->
   Lemma (sub_mod (add_mod a b) b = a)
 
-let zero_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = Seq.append (Seq.create 1 false) a
-let one_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = Seq.append (Seq.create 1 true) a
+let zero_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 false) a
+let zero_extends_vec (#n:pos) (m: pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+m)) = append (zero_vec #m) a
+let one_extend_vec (#n:pos) (a:BitVector.bv_t n): Tot (BitVector.bv_t (n+1)) = append (create 1 true) a
 
 let zero_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (zero_extend_vec (to_vec a))
+let zero_extends (#n:pos) (m: pos) (a:uint_t n): Tot (uint_t (n+m)) = from_vec (zero_extends_vec m (to_vec a))
 let one_extend (#n:pos) (a:uint_t n): Tot (uint_t (n+1)) = from_vec (one_extend_vec (to_vec a))
 
 val lemma_zero_extend: #n:pos -> a:uint_t n ->
   Lemma (zero_extend a = a)
   [SMTPat (zero_extend a)]
+
+val lemma_zero_extends: #n:pos -> m: pos -> a:uint_t n ->
+  Lemma (zero_extends #n m a = a)
+  [SMTPat (zero_extends #n m a)]
 
 val lemma_one_extend: #n:pos -> a:uint_t n ->
   Lemma (one_extend a = pow2 n + a)

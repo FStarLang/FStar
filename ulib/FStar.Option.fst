@@ -56,7 +56,7 @@ let (let?) (x: option 'a) (f: 'a -> option 'b): option 'b
   | Some x -> f x
   | None   -> None
 
-let (and?) (x: option 'a) (y: option 'b): option ('a * 'b)
+let (and?) (x: option 'a) (y: option 'b): option ('a & 'b)
   = match x, y with
   | Some x, Some y -> Some (x, y)
   | _ -> None

@@ -38,7 +38,7 @@ module FStar.DependentMap
 
 (** Abstract type of dependent maps, with universe polymorphic values
     and keys in universe 0 with decidable equality *)
-val t (key: eqtype) (value: (key -> Type u#v)) : Type u#v
+val t (key: eqtype) ([@@@strictly_positive] value: (key -> Type u#v)) : Type u#v
 
 (** Creating a new map from a function *)
 val create (#key: eqtype) (#value: (key -> Tot Type)) (f: (k: key -> Tot (value k)))
@@ -102,14 +102,14 @@ val equal_elim (#key: eqtype) (#value: (key -> Tot Type)) (m1 m2: t key value)
 (**** Restricting the domain of a map *)
 
 (** Restricts the domain of the map to those keys satisfying [p] *)
-val restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> Tot Type0)) (m: t key value)
+val restrict (#key: eqtype) (#value: (key -> Tot Type)) (p: (key -> prop)) (m: t key value)
     : Tot (t (k: key{p k}) value)
 
 (** The action of [sel] on [restrict] : the contents of the map isn't changed *)
 val sel_restrict
       (#key: eqtype)
       (#value: (key -> Tot Type))
-      (p: (key -> Tot Type0))
+      (p: (key -> prop))
       (m: t key value)
       (k: key{p k})
     : Lemma (ensures (sel (restrict p m) k == sel m k))

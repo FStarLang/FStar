@@ -2,7 +2,7 @@ module Alg
 
 (*** Algebraic effects. ***)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.Universe
 //module WF = FStar.WellFounded
@@ -798,6 +798,8 @@ let interp_full #a (#labs:list baseop)
 (* Doing it directly. *)
 
 type sem0 (a:Type) : Type = state -> Tot (either exn a & state)
+
+#restart-solver
 
 let abides' (f : sem0 'a) (labs:list baseop) : prop =
     (Read  `memP` labs \/ (forall s0 s1. fst (f s0) == fst (f s1)))

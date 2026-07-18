@@ -1,0 +1,1 @@
+{"query":"full-buffer","args":{"kind":"verify-to-position","with-symbols":false,"code":"module TestNoFile\n\nmodule L = FStar.List.Tot let test x = L.length x","line":0,"column":0,"to-position":{"line":3,"column":9}},"query-id":"2"}

@@ -15,7 +15,7 @@
 *)
 module Print.Test
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open Print
 
 let test_print_goal1 =

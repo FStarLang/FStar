@@ -15,7 +15,7 @@
 *)
 module Trans
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val t : Type0
 assume val a : t

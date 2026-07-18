@@ -1,0 +1,17 @@
+/* krml header omitted for test repeatability */
+
+
+#include "ExtractPulseFnIface.h"
+
+extern krml_checked_int_t Prims_op_Addition(krml_checked_int_t x, krml_checked_int_t y);
+
+krml_checked_int_t ExtractPulseFnIface_pure_add(krml_checked_int_t x, krml_checked_int_t y)
+{
+  return Prims_op_Addition(x, y);
+}
+
+krml_checked_int_t ExtractPulseFnIface_pulse_read_ref(krml_checked_int_t *r)
+{
+  return *r;
+}
+

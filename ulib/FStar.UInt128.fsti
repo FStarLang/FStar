@@ -16,7 +16,6 @@
 module FStar.UInt128
 
 open FStar.UInt
-open FStar.Mul
 
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
@@ -126,6 +125,7 @@ val lte (a:t) (b:t) : Pure bool
   (ensures (fun r -> r == lte #n (v a) (v b)))
 
 val eq_mask: a:t -> b:t -> Tot (c:t{(v a = v b ==> v c = pow2 n - 1) /\ (v a <> v b ==> v c = 0)})
+
 val gte_mask: a:t -> b:t -> Tot (c:t{(v a >= v b ==> v c = pow2 n - 1) /\ (v a < v b ==> v c = 0)})
 
 (* Casts *)

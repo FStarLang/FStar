@@ -1,73 +1,37 @@
-include Makefile.include
+SUBDIRS += algorithms
+SUBDIRS += data_structures
+SUBDIRS += dsls
+SUBDIRS += layeredeffects
+SUBDIRS += metatheory
+SUBDIRS += misc
+SUBDIRS += oplss2021
+SUBDIRS += paradoxes
+SUBDIRS += param
 
-# Note: native_tactics is not included in the list below, it is called
-# explicitly by the uexamples rule from the Makefile in ../src/Makefile.
-# These examples are excluded since the binary package can't verify
-# them.
+SUBDIRS += printf
+SUBDIRS += software_foundations
+SUBDIRS += tactics
+SUBDIRS += termination
+SUBDIRS += typeclasses
+SUBDIRS += verifythis
 
-ALL_EXAMPLE_DIRS :=\
-data_structures \
-algorithms \
-crypto \
-termination \
-software_foundations \
-maths \
-rel \
-paradoxes \
-printf \
-metatheory \
-verifythis \
-preorders \
-tactics \
-param \
-typeclasses \
-low-mitls-experiments \
-seplogic \
-csl \
-demos \
-indexed_effects \
-doublylinkedlist \
-regional \
-generic \
-calc \
-steel \
-steel_tutorial \
-layeredeffects \
-misc \
-sequence \
-oplss2021
+# SUBDIRS += sample_project # requires fstar.exe in the PATH!?!?
 
-HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
+# These have custom makefiles
 
-ifdef HAS_OCAML
-ALL_EXAMPLE_DIRS+=\
-  hello \
-  extraction \
+SUBDIRS_ALL += hello
+SUBDIRS_CLEAN += hello
 
+SUBDIRS_ALL += dependencies
+SUBDIRS_CLEAN += dependencies
+
+HAS_OCAML ?= 1
+ifneq (,$(HAS_OCAML))
+SUBDIRS_ALL += native_tactics
 endif
+SUBDIRS_CLEAN += native_tactics
 
-ifdef KRML_HOME
-ALL_EXAMPLE_DIRS+=\
-  kv_parsing \
-  miniparse \
+FSTAR_ROOT ?= ..
+include $(FSTAR_ROOT)/mk/test.mk
 
-endif
-
-# low-level \  ... NS: removing from CI for this branch
-
-all: $(addsuffix .all, $(ALL_EXAMPLE_DIRS))
-
-%.all: %
-	+$(MAKE) -C $^ all
-
-test: all
-
-stdlib: $(addprefix ../lib/, FStar.List.fst FStar.String.fsti partialmap.fst FStar.ST.fst)
-	mkdir -p ../cache
-	$(FSTAR) $^ --serialize_mods
-
-clean:
-	rm ../cache/*.cache
-
-wc:
-	find . -name "*.fst" | grep -v -e to_be_ported | xargs sloccount
+# F# tests live in fsharp/tests/ and are run via `make fsharp-lib`

@@ -13,16 +13,10 @@ val isInj_admit (x:_) (y:_)
           [SMTPat (i x);
            SMTPat (i y)]
 
-let p (x : Type u#1) : Type u#0 =
+// With the prop refactoring (prop : Type0 opaque), the paradox below
+// is no longer expressible because ~(a x) requires a x : prop,
+// but a : Type u#1 -> Type u#0, not -> prop.
+// The paradox relied on Type0/prop confusion.
+[@@(expect_failure [12])]
+let p (x : Type u#1) : prop =
   exists a. i a == x /\ ~(a x)
-
-let w : i p = Mkinj
-
-let q = i p
-
-val false_of_pq : p q -> Lemma False
-let false_of_pq pq = ()
-
-let pq : p q = assert (exists a. i a == q /\ ~(a q))
-
-let falso () : Lemma False = false_of_pq pq

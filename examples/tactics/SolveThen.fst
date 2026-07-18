@@ -15,7 +15,7 @@
 *)
 module SolveThen
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec fib n : Tac unit = if n < 2 then exact (`1) else (apply (`(+)); fib (n - 1); fib (n - 2))
 
@@ -29,6 +29,6 @@ let constr (a b : prop) : squash (a ==> b ==> b /\ a)
        (let ha = implies_intro () in
         let hb = implies_intro () in
         split ();
-        hyp hb;
-        hyp ha;
+        hyp (binding_to_namedv hb);
+        hyp (binding_to_namedv ha);
         qed ())

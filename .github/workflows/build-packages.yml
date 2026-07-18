@@ -1,0 +1,46 @@
+name: Build F* packages
+
+# This builds F* for Linux for the purposes of CI. It runs on a
+# recent Ubuntu-based container and also generates a source package.
+# For the purposes of binary releases, see build-linux.yml.
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: mtzguido/dev-base:v2
+    steps:
+      - name: Cleanup
+        run: sudo find . -delete
+      - run: echo "HOME=/home/user" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/checkout@master
+        with:
+          path: FStar
+          submodules: true
+
+      - name: Produce binary package + source package
+        run: |
+          # Note: we don't package Z3 for the CI artifact as the images
+          # already have the relevant Z3.
+          make -skj$(nproc) package package-src FSTAR_TAG= FSTAR_PACKAGE_Z3=false ADMIT=1
+        working-directory: FStar
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: FStar/fstar.tar.gz
+          name: fstar.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v7
+        with:
+          path: FStar/fstar-src.tar.gz
+          name: fstar-src.tar.gz
+          retention-days: 3

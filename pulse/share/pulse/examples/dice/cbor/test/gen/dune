@@ -1,0 +1,10 @@
+(include_subdirs unqualified)
+(executable
+ (name GenCBORTest)
+ (public_name GenCBORTest)
+ (libraries
+    yojson
+ )
+ (modes native)
+ (flags (:standard -w -A))
+)

@@ -9,34 +9,38 @@ More information on F\* can be found at www.fstar-lang.org
 
 See [INSTALL.md](https://github.com/FStarLang/FStar/blob/master/INSTALL.md)
 
-### Tutorial
+### Online book
 
-The [F\* tutorial] provides a first taste of verified programming in
-F\*, explaining things by example.
+An online book _Proof-oriented Programming In F*_ is available and updates are
+posted online periodically. The book is available as a [PDF], or you can read it while trying out
+examples and exercises in your browser interface from this [tutorial page].
 
-[F\* tutorial]: https://www.fstar-lang.org/tutorial/
-
-### Wiki
-
-The [F\* wiki] contains additional, usually more in-depth, technical
-documentation on F\*.
-
-[F\* wiki]: https://github.com/FStarLang/FStar/wiki
+[tutorial page]: https://www.fstar-lang.org/tutorial/
+[PDF]: http://fstar-lang.org/tutorial/proof-oriented-programming-in-fstar.pdf
 
 ### Editing F* code
 
-You can edit F\* code using your favourite text editor, but Emacs, Visual Studio
-Code, Atom, and Vim have extensions that add special support for F\*, including
-for instance syntax highlighting, code completion, quick navigation, type hints,
-and interactive development.  More details on [editor support] on the [F\* wiki].
+You can edit F\* code using various text editors, with Emacs and VSCode currently having 
+the most substantial support, including syntax highlighting, code completion and navigation,
+and incremental, interactive development.
+
+* [fstar-mode.el]: Emacs mode for F*
+* [fstar-vscode-assistant]: VS Code plugin for F*
+
+More details on [editor support] are available on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
+[fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
+[fstar-vscode-assistant]: https://github.com/FStarLang/fstar-vscode-assistant
 
-You can also edit simple examples directly in your browser by using
-either the [online F\* editor] that's part of the [F\* tutorial].
+### AI Agents
 
-[online F\* editor]: https://www.fstar-lang.org/run.php
-[F\* tutorial]: https://www.fstar-lang.org/tutorial
+AI agents are proficient at using F* and Pulse.
+
+Especially if you are using Copilot CLI or Claude Code, we recommend installing the [proof-copilot] plugin, 
+which provides agents and skills with prompts for specific features of the language and its tooling.
+
+[proof-copilot]: https://github.com/FStarLang/proof-copilot
 
 ### Extracting and executing F* code
 
@@ -48,51 +52,23 @@ More details on [executing F\* code via OCaml] on the [F\* wiki].
 
 [executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
-Also, code written in a C-like shallowly embedded DSL can be extracted to
-[C](https://arxiv.org/abs/1703.00053)
-or [WASM](https://doi.ieeecomputersociety.org/10.1109/SP.2019.00064)
-by the [KaRaMeL tool](https://github.com/FStarLang/karamel),
-and code written in an ASM-like deeply embedded DSL can be extracted
+Also, code written in Pulse, a DSL in F* for concurrent, imperative programming,
+can be extracted to C or Rust by the [KaRaMeL tool](https://github.com/FStarLang/karamel).
+
+Additionally, code written in an ASM-like deeply embedded DSL can be extracted
 to ASM by the [Vale tool](https://github.com/project-everest/vale).
 
-### Chatting about F* on Slack and Zulip
+### Chatting about F* on Zulip
 
-The F* developers and many users interact on this [Slack
-forum](https://everestexpedition.slack.com)---you should be able to
-join automatically by [clicking
-here](https://aka.ms/JoinEverestSlack),
-but if that doesn't work, please contact the mailing list mentioned
-below.
-
-Users can also chat about F* or ask questions at this [Zulip
+F* developers and users can chat about F* or ask questions at this [Zulip
 forum](https://fstar.zulipchat.com).
 
-### Community mailing list
-
-The [fstar-club mailing list] is where
-various F* announcements are made to the general public (e.g. for
-releases, new papers, etc) and where users can ask questions, ask for
-help, discuss, provide feedback, announce jobs requiring at least 10
-years of F* experience, etc.
-[List archives] are public and [searchable], but only members can post.
-[Join here][fstar-club mailing list]!
-
-[fstar-club mailing list]: http://lists.gforge.inria.fr/mailman/listinfo/fstar-club
-
-[List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
-[searchable]: https://mail-archive.com/fstar-club@lists.gforge.inria.fr/
-
-### Blog
-
-The [F\* for the masses] blog is also expected to become an important
-source of information and news on the F\* project.
-
-[F\* for the masses]: https://fstarlang.github.io/
+(An older forum on Slack is no longer used.)
 
 ### Reporting issues
 
 Please report issues using the [F\* issue tracker] on GitHub.
-Before filing please use search to make sure the issue doesn't already exist.
+Before filing please search to make sure the issue doesn't already exist.
 We don't maintain old releases, so if possible please use the
 [online F\* editor] or directly [the GitHub sources] to check
 that your problem still exists on the `master` branch.
@@ -100,6 +76,13 @@ that your problem still exists on the `master` branch.
 [F\* issue tracker]: https://github.com/FStarLang/FStar/issues
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
+
+### Other Documentation
+
+The [F\* wiki] contains additional technical documentation on F\*, and is especially useful
+for topics that are not yet covered by the book.
+
+[F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
 ### Contributing
 

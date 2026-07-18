@@ -1,0 +1,2 @@
+{"query-id":"1","query":"push-partial-checked-file","args":{"until-lid":"Harness.always_foo"}, "comment": "this test checks that we can access private definitions that are not exported in the interface file"}
+{"query-id":"2","query":"push","args":{"kind":"full","code":"let always_foo x : Lemma (foo x) = introduce forall z. bar x z with aux x z","line":1,"column":0}, "comment": "should succeed (aux is not in the interface file)"}

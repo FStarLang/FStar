@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module Registers.Imp
-//#set-options "--debug Imp --debug_level SMTQuery"
-open FStar.Mul
+//#set-options "--debug SMTQuery"
 module R = Registers.List
 
 type rval   = int
@@ -159,7 +158,7 @@ let normal #a (e:a) =
   FStar.Pervasives.norm 
            [zeta;
             iota;
-            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%FStar.Mul.op_Star]; 
+            delta_only [`%eval; `%eval'; `%R.upd; `%R.sel; `%R.eta_map; `%L.append; `%Prims.op_Star]; 
             delta_attr [`%unfold_defs]; 
             primops;
             nbe
@@ -167,11 +166,11 @@ let normal #a (e:a) =
 
 let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()
 
-#set-options "--debug Registers.Imp --debug_level print_normalized_terms --admit_smt_queries true"
+#set-options "--debug print_normalized_terms --admit_smt_queries true"
 // let _ = norm_assert (forall (x:int) rm. R.sel (eval' (Seq [Const x (reg 0)]) rm) 0 == x) // eval' (Seq [Const x (reg 0)]) rm == rm)
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 // let _ = norm_assert (forall x. eval (x_times_42 x) == 42 * x)
 
 
@@ -214,11 +213,11 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // let _ = norm_assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 
 // (* Bunch of fuel to even prove ground facts *)
-// #reset-options "--initial_fuel 20 --max_fuel 20"
+// #reset-options "--fuel 20"
 // let _ = assert (eval (poly5 1) == 6)
 // let _ = assert (eval (poly5 2) == 63)
 // let _ = assert (eval (poly5 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 
 // (* A different way of computing it *)
 // [@@unfold_defs]
@@ -245,16 +244,16 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // let _ = norm_assert (forall x. eval (poly5 x) == eval (poly5' x))
 
 // (* Same *)
-// #reset-options "--initial_fuel 20 --max_fuel 20"
+// #reset-options "--fuel 20"
 // let _ = assert (eval (poly5' 1) == 6)
 // let _ = assert (eval (poly5' 2) == 63)
 // let _ = assert (eval (poly5' 3) == 3*3*3*3*3 + 3*3*3*3 + 3*3*3 + 3*3 + 3 + 1)
 // let _ = assert (forall x. (eval (poly5 x) == eval (poly5' x)))
-// #reset-options "--max_fuel 0"
+// #reset-options "--fuel 0"
 
 // //--------------------------------------------------------------------------------
 
-// // open FStar.Tactics
+// // open FStar.Tactics.V2
 // // open FStar.Tactics.CanonCommSemiring
 // // open FStar.Algebra.CommMonoid
 
@@ -264,7 +263,7 @@ let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))
 // // #set-options "--z3rlimit 10"
 // // let _ = assert_norm (forall x. (poly5 (eval (poly5 x)) `equiv` poly5' (eval (poly5' x))))
 
-// // #set-options "--max_fuel 0"
+// // #set-options "--fuel 0"
 // // // --tactic_trace"
 // // let _ = assert (forall x. poly5 x `equiv` poly5' x)
 // //           by (let _ = forall_intros () in

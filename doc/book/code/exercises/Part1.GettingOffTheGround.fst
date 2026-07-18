@@ -5,7 +5,6 @@ let incr (x:int) : int = x + 1
 val max (x:int) (y:int) : int
 let max = admit() //remove the admit and write a definition
 
-open FStar.Mul
 val factorial (n:nat) : nat //replace this `val` with some others
 let rec factorial n
   = if n = 0

@@ -3,7 +3,7 @@ module RunST
 (* Similar to LatticeAlg, but ignoring exceptions to start with
 a simpler example. The interaction between state+exn can be tricky. *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List.Tot
 open FStar.Universe
 open FStar.Ghost
@@ -29,7 +29,7 @@ type eff_label =
   | WR
   | EXN
 
-type annot = eff_label -> Type0
+type annot = eff_label -> prop
 
 noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
@@ -167,7 +167,7 @@ let subcomp (a:Type)
          (ensures (fun _ -> True))
   = f
 
-let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
+let ite (p q r : prop) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
   (a : Type)

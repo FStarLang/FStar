@@ -1,0 +1,1 @@
+module FStarC.Class.Tagged

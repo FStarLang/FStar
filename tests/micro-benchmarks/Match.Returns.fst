@@ -5,7 +5,7 @@ let test1 (n:int) =
   | 0 -> 1
   | _ -> n+2
 
-open FStar.ST
+open FStar.All
 
 // With returns annotation, the scrutinee must be pure/ghost
 

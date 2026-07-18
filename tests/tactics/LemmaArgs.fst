@@ -15,7 +15,7 @@
 *)
 module LemmaArgs
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let lemma_example1 (a:int) (b:int{b <> a})
   :Lemma (requires True)

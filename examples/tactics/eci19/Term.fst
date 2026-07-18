@@ -1,6 +1,6 @@
 module Term
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (*
 When using tactics and metaprogramming, it is crucial to both be able

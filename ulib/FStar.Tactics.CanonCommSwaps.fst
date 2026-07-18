@@ -15,7 +15,7 @@
 *)
 module FStar.Tactics.CanonCommSwaps
 
-open FStar.List.Tot
+open FStar.List.Tot.Base
 
 let swap (n:nat) :Type = x:nat{x < n-1}
 
@@ -37,7 +37,7 @@ let rec apply_swaps (#a:Type) (xs:list a) (ss:list (swap (length xs))) :
   | [] -> xs
   | s::ss' -> apply_swaps (apply_swap xs s) ss'
 
-let equal_counts (#a:eqtype) (xs ys:list a) : Type0 =
+let equal_counts (#a:eqtype) (xs ys:list a) : prop =
   (forall (e:a).{:pattern (count e xs) \/ (count e ys)} count e xs == count e ys)
 
 let extend_equal_counts (#a:eqtype) (h:a) (xs ys:list a) : Lemma

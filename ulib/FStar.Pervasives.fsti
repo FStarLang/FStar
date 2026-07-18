@@ -13,12 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
+[@@"no_prelude"]
 module FStar.Pervasives
 
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
-include FStar.Pervasives.Native
+open FStar.Pervasives.Native
 
 /// This module is implicitly opened in the scope of all other
 /// modules.
@@ -76,7 +76,7 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
 (** eqtype is defined in prims at universe 0
     
     Although, usually, only universe 0 types have decidable equality,
-    sometimes it is possible to define a type in a higher univese also
+    sometimes it is possible to define a type in a higher universe also
     with decidable equality (e.g., type t : Type u#1 = | Unit)
 
     Further, sometimes, as in Lemma below, we need to use a
@@ -109,17 +109,21 @@ type eqtype_u = a:Type{hasEq a}
    the squash argument on the postcondition allows to assume the
    precondition for the *well-formedness* of the postcondition.
 *)
-effect Lemma (a: eqtype_u) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+effect Lemma (a: eqtype_u) (pre: prop) (post: (squash pre -> prop)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
 (** IN the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
     spawned off into a separate SMT query *)
-val spinoff (p: Type0) : Type0
+val spinoff (p: prop) : prop
+
+val spinoff_eq (p:prop) : Lemma (spinoff p == p)
+
+val spinoff_equiv (p:prop) : Lemma (p <==> spinoff p) [SMTPat (spinoff p)]
 
 (** Logically equivalent to assert, but spins off separate query *)
-val assert_spinoff (p: Type) : Pure unit (requires (spinoff (squash p))) (ensures (fun x -> p))
+val assert_spinoff (p: prop) : Pure unit (requires (spinoff p)) (ensures (fun x -> p))
 
 (** The polymorphic identity function *)
 unfold
@@ -137,192 +141,47 @@ let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
     Use [intro_ambient t] for that.
     See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none *)
 [@@ remove_unused_type_parameters [0; 1;]]
-val ambient (#a: Type) (x: a) : Type0
+val ambient (#a: Type) (x: a) : prop
 
 (** cf. [ambient], above *)
 val intro_ambient (#a: Type) (x: a) : Tot (squash (ambient x))
 
+open FStar.NormSteps
 
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of
     [normalize_term e] is reduced to the full normal for of [e]. *)
+noextract
 val normalize_term (#a: Type) (x: a) : Tot a
 
 (** In any invocation of the F* normalizer, every occurrence of
     [normalize e] is reduced to the full normal for of [e]. *)
-val normalize (a: Type0) : Type0
-
-(** Value of [norm_step] are used to enable specific normalization
-    steps, controlling how the normalizer reduces terms. *)
-val norm_step : Type0
-
-(** Logical simplification, e.g., [P /\ True ~> P] *)
-val simplify : norm_step
-
-(** Weak reduction: Do not reduce under binders *)
-val weak : norm_step
-
-(** Head normal form *)
-val hnf : norm_step
-
-(** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
-val primops : norm_step
-
-(** Unfold all non-recursive definitions *)
-val delta : norm_step
-
-(** Unroll recursive calls
-
-    Note: Since F*'s termination check is semantic rather than
-    syntactically structural, recursive calls in inconsistent contexts,
-    or recursive evaluation of open terms can diverge.
-
-    When asking for the [zeta] step, F* implements a heuristic to
-    disable [zeta] when reducing terms beneath a blocked match. This
-    helps prevent some trivial looping behavior. However, it also
-    means that with [zeta] alone, your term may not reduce as much as
-    you might want. See [zeta_full] for that.
-  *)
-val zeta : norm_step
-
-(** Unroll recursive calls
-
-    Unlike [zeta], [zeta_full] has no looping prevention
-    heuristics. F* will try to unroll recursive functions as much as
-    it can, potentially looping. Use with care.
-
-    Note, [zeta_full] implies [zeta].
-    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
- *)
-val zeta_full : norm_step
-
-(** Reduce case analysis (i.e., match) *)
-val iota : norm_step
-
-(** Use normalization-by-evaluation, instead of interpretation (experimental) *)
-val nbe : norm_step
-
-(** Reify effectful definitions into their representations *)
-val reify_ : norm_step
-
-(** Unlike [delta], unfold definitions for only the names in the given
-    list. Each string is a fully qualified name like [A.M.f] *)
-val delta_only (s: list string) : Tot norm_step
-
-(** Unfold definitions for only the names in the given list, but
-    unfold each definition encountered after unfolding as well.
-
-    For example, given
-
-      {[
-        let f0 = 0
-        let f1 = f0 + 1
-      ]}
-
-    [norm [delta_only [`%f1]] f1] will reduce to [f0 + 1].
-    [norm [delta_fully [`%f1]] f1] will reduce to [0 + 1].
-
-    Each string is a fully qualified name like [A.M.f], typically
-    constructed using a quotation, as in the example above. *)
-val delta_fully (s: list string) : Tot norm_step
-
-(** Rather than mention a symbol to unfold by name, it can be
-    convenient to tag a collection of related symbols with a common
-    attribute and then to ask the normalizer to reduce them all.
-
-    For example, given:
-
-      {[
-        irreducible let my_attr = ()
-
-        [@@my_attr]
-        let f0 = 0
-
-        [@@my_attr]
-        let f1 = f0 + 1
-      ]}
-
-   {[norm [delta_attr [`%my_attr]] f1]}
-
-   will reduce to [0 + 1].
-
-  *)
-val delta_attr (s: list string) : Tot norm_step
-
-(**
-    For example, given:
-
-      {[
-        unfold
-        let f0 = 0
-
-        inline_for_extraction
-        let f1 = f0 + 1
-
-      ]}
-
-   {[norm [delta_qualifier ["unfold"; "inline_for_extraction"]] f1]}
-
-   will reduce to [0 + 1].
-
-  *)
-val delta_qualifier (s: list string) : Tot norm_step
-
-val delta_namespace (s: list string) : Tot norm_step
-
-(**
-    This step removes the some internal meta nodes during normalization
-
-    In most cases you shouldn't need to use this step explicitly
-
-   *)
-val unmeta : norm_step
-
-(**
-    This step removes ascriptions during normalization
-
-    An ascription is a type or computation type annotation on
-      an expression, written as (e <: t) or (e <: C)
-
-    normalize (e <: (t|C)) usually would normalize both the expression e
-      and the ascription
-
-    However, with unascribe step on, it will drop the ascription
-      and return the result of (normalize e),
-
-    Removing ascriptions may improve the performance,
-      as the normalization has less work to do
-
-    However, ascriptions help in re-typechecking of the terms,
-      and in some cases, are necessary for doing so
-
-    Use it with care
-
-   *)
-val unascribe : norm_step
+noextract
+val normalize (a: prop) : prop
 
 (** [norm s e] requests normalization of [e] with the reduction steps
     [s]. *)
+noextract
 val norm (s: list norm_step) (#a: Type) (x: a) : Tot a
 
 (** [assert_norm p] reduces [p] as much as possible and then asks the
     SMT solver to prove the reduct, concluding [p] *)
-val assert_norm (p: Type) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
+val assert_norm (p: prop) : Pure unit (requires (normalize p)) (ensures (fun _ -> p))
 
 (** Sometimes it is convenient to introduce an equation between a term
     and its normal form in the context. *)
 val normalize_term_spec (#a: Type) (x: a) : Lemma (normalize_term #a x == x)
 
 (** Like [normalize_term_spec], but specialized to [Type0] *)
-val normalize_spec (a: Type0) : Lemma (normalize a == a)
+val normalize_spec (a: prop) : Lemma (normalize a == a)
 
 (** Like [normalize_term_spec], but with specific normalization steps *)
 val norm_spec (s: list norm_step) (#a: Type) (x: a) : Lemma (norm s #a x == x)
 
 (** Use the following to expose an ["opaque_to_smt"] definition to the
-    solver as: [reveal_opaque (`%defn) defn] *)
-let reveal_opaque (s: string) = norm_spec [delta_only [s]]
+    solver as: [reveal_opaque (`%defn) defn]. *)
+let reveal_opaque (s: string) = norm_spec [delta_once [s]]
 
 (** Wrappers over pure wp combinators that return a pure_wp type
     (with monotonicity refinement) *)
@@ -338,7 +197,7 @@ let pure_bind_wp (a b:Type) (wp1:pure_wp a) (wp2:(a -> Tot (pure_wp b))) : Tot (
   pure_bind_wp0 a b wp1 wp2
 
 unfold
-let pure_if_then_else (a p:Type) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
+let pure_if_then_else (a:Type) (p: prop) (wp_then wp_else:pure_wp a) : Tot (pure_wp a) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_if_then_else0 a p wp_then wp_else
 
@@ -359,13 +218,13 @@ let pure_null_wp (a:Type) : Tot (pure_wp a) =
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp (p:Type) : Tot (pure_wp unit) =
+let pure_assert_wp (p:prop) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assert_wp0 p
 
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp (p:Type) : Tot (pure_wp unit) =
+let pure_assume_wp (p:prop) : Tot (pure_wp unit) =
   reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
   pure_assume_wp0 p
 
@@ -393,12 +252,15 @@ new_effect {
 (** [PURE] computations can be silently promoted for use in a [DIV] context *)
 sub_effect PURE ~> DIV { lift_wp = purewp_id }
 
+private unfold let pure_wp_intro #a (wp: pure_wp' a { pure_wp_monotonic0 a wp }) : pure_wp a =
+  // GE: FIXME: this only works if pure_wp_monotonic is fully applied
+  reveal_opaque (`%pure_wp_monotonic) (pure_wp_monotonic a wp);
+  wp
 
 (** [Div] is the Hoare-style counterpart of the wp-indexed [DIV] *)
 unfold
 let div_hoare_to_wp (#a:Type) (#pre:pure_pre) (post:pure_post' a pre) : Tot (pure_wp a) =
-  reveal_opaque (`%pure_wp_monotonic) pure_wp_monotonic;
-  fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
+  pure_wp_intro fun (p:pure_post a) -> pre /\ (forall a. post a ==> p a)
 
 effect Div (a: Type) (pre: pure_pre) (post: pure_post' a pre) =
   DIV a (div_hoare_to_wp post)
@@ -418,7 +280,7 @@ effect EXT (a: Type) = Dv a
 /// Note, [STATE_h] is itself not a computation type in F*, since it
 /// is parameterized by the type of heap. However, instantiations of
 /// [STATE_h] with specific types of the heap are computation
-/// types. See, e.g., [FStar.ST] for such instantiations.
+/// types. See, e.g., [FStar.All] for such instantiations.
 ///
 /// Weakest preconditions for stateful computations transform
 /// [st_post_h] postconditions to [st_pre_h] preconditions. Both are
@@ -426,12 +288,12 @@ effect EXT (a: Type) = Dv a
 /// [heap:Type] variable.
 
 (** Preconditions are predicates on the [heap] *)
-let st_pre_h (heap: Type) = heap -> GTot Type0
+let st_pre_h (heap: Type) = heap -> prop
 
 (** Postconditions relate [a]-typed results to the final [heap], here
     refined by some pure proposition [pre], typically instantiated to
     the precondition applied to the initial [heap] *)
-let st_post_h' (heap a pre: Type) = a -> _: heap{pre} -> GTot Type0
+let st_post_h' (heap a: Type) (pre: prop) = a -> _: heap{pre} -> prop
 
 (** Postconditions without refinements *)
 let st_post_h (heap a: Type) = st_post_h' heap a True
@@ -449,7 +311,7 @@ let st_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: st_wp_h heap a)
-      (wp2: (a -> GTot (st_wp_h heap b)))
+      (wp2: (a -> st_wp_h heap b))
       (p: st_post_h heap b)
       (h0: heap)
      = wp1 (fun a h1 -> wp2 a p h1) h0
@@ -457,7 +319,7 @@ let st_bind_wp
 (** Branching for stateful WPs *)
 unfold
 let st_if_then_else
-      (heap a p: Type)
+      (heap a: Type) (p: prop)
       (wp_then wp_else: st_wp_h heap a)
       (post: st_post_h heap a)
       (h0: heap)
@@ -514,26 +376,26 @@ type result (a: Type) =
   | Err : msg: string -> result a
 
 (** Exceptional preconditions are just propositions *)
-let ex_pre = Type0
+let ex_pre = prop
 
 (** Postconditions on results refined by a precondition *)
-let ex_post' (a pre: Type) = _: result a {pre} -> GTot Type0
+let ex_post' (a: Type) (pre: prop) = _: result a {pre} -> prop
 
 (** Postconditions on results *)
 let ex_post (a: Type) = ex_post' a True
 
 (** Exceptions WP-predicate transformers *)
-let ex_wp (a: Type) = ex_post a -> GTot ex_pre
+let ex_wp (a: Type) = ex_post a -> ex_pre
 
 (** Returning a value [x] normally promotes it to the [V x] result *)
 unfold
-let ex_return (a: Type) (x: a) (p: ex_post a) : GTot Type0 = p (V x)
+let ex_return (a: Type) (x: a) (p: ex_post a) : prop = p (V x)
 
 (** Sequential composition of exception-raising code requires case analysing
     the result of the first computation before "running" the second one *)
 unfold
-let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_post b)
-    : GTot Type0 =
+let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> (ex_wp b))) (p: ex_post b)
+    : prop =
   forall (k: ex_post b).
     (forall (rb: result b). {:pattern (guard_free (k rb))} p rb ==> k rb) ==>
     (wp1 (function
@@ -544,7 +406,7 @@ let ex_bind_wp (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b))) (p: ex_po
 (** As for other effects, branching in [ex_wp] appears in two forms.
     First, a simple case analysis on [p] *)
 unfold
-let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
+let ex_if_then_else (a: Type) (p: prop) (wp_then wp_else: ex_wp a) (post: ex_post a) =
   wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
@@ -609,16 +471,16 @@ effect Ex (a: Type) = Exn a True (fun v -> True)
 /// instantiation with a specific type of [heap] (in FStar.All) is.
 
 (** [all_pre_h] is a predicate on the initial state *)
-let all_pre_h (h: Type) = h -> GTot Type0
+let all_pre_h (h: Type) = h -> prop
 
 (** Postconditions relate [result]s to final [heap]s refined by a precondition *)
-let all_post_h' (h a pre: Type) = result a -> _: h{pre} -> GTot Type0
+let all_post_h' (h a: Type) (pre: prop) = result a -> _: h{pre} -> prop
 
 (** A variant of [all_post_h'] without the precondition refinement *)
 let all_post_h (h a: Type) = all_post_h' h a True
 
 (** WP predicate transformers for the [All_h] effect template *)
-let all_wp_h (h a: Type) = all_post_h h a -> Tot (all_pre_h h)
+let all_wp_h (h a: Type) = all_post_h h a -> all_pre_h h
 
 (** Returning a value [x] normally promotes it to the [V x] result
     without touching the [heap] *)
@@ -632,10 +494,10 @@ let all_bind_wp
       (heap: Type)
       (a b: Type)
       (wp1: all_wp_h heap a)
-      (wp2: (a -> GTot (all_wp_h heap b)))
+      (wp2: (a -> (all_wp_h heap b)))
       (p: all_post_h heap b)
       (h0: heap)
-    : GTot Type0 =
+    : prop =
   wp1 (fun ra h1 ->
         (match ra with
           | V v -> wp2 v p h1
@@ -646,7 +508,7 @@ let all_bind_wp
 (** Case analysis in [ALL_h] *)
 unfold
 let all_if_then_else
-      (heap a p: Type)
+      (heap a: Type) (p: prop)
       (wp_then wp_else: all_wp_h heap a)
       (post: all_post_h heap a)
       (h0: heap)
@@ -707,7 +569,7 @@ new_effect {
  setting. If used unwisely, this can lead to very poor SMT solver
  performance.  *)
 [@@ remove_unused_type_parameters [0]]
-val inversion (a: Type) : Type0
+val inversion (a: Type) : prop
 
 (** To introduce [inversion t] in the SMT solver's context, call
     [allow_inversion t]. *)
@@ -744,6 +606,14 @@ type dtuple4
   (d: (x: a -> y: b x -> z: c x y -> GTot Type))
   = | Mkdtuple4 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> dtuple4 a b c d
 
+(** Dependent quadruples, with sugar [x:a & y:b x & z:c x y & d x y z] *)
+unopteq
+type dtuple5
+  (a: Type) (b: (x: a -> GTot Type)) (c: (x: a -> b x -> GTot Type))
+  (d: (x: a -> y: b x -> z: c x y -> GTot Type))
+  (e: (x: a -> y: b x -> z: c x y -> w: d x y z -> GTot Type))
+  = | Mkdtuple5 : _1: a -> _2: b _1 -> _3: c _1 _2 -> _4: d _1 _2 _3 -> _5: e _1 _2 _3 _4 -> dtuple5 a b c d e
+
 (** Explicitly discarding a value *)
 let ignore (#a: Type) (x: a) : Tot unit = ()
 
@@ -754,250 +624,25 @@ let ignore (#a: Type) (x: a) : Tot unit = ()
     infinitely looping function, since the termination check succeeds
     in a [False] context. *)
 val false_elim (#a: Type) (u: unit{False}) : Tot a
+(** Pure and ghost inner let bindings are now always inlined during
+    the wp computation, if: the return type is not unit and the head
+    symbol is not marked irreducible.
 
-/// Attributes:
-///
-/// An attribute is any F* term.
-///
-/// Attributes are desugared and checked for being well-scoped. But,
-/// they are not type-checked.
-///
-/// It is associated with a definition using the [[@@attribute]]
-/// notation, just preceding the definition.
+    To circumvent this behavior, singleton can be used.
+    See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
+val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
 
-(** We collect several internal ocaml attributes into a single
-    inductive type.
+(** A weakening coercion from eqtype to Type.
 
-    This may be unnecessary. In the future, we are likely to flatten
-    this definition into several definitions of abstract top-level
-    names.
+    One of its uses is in types of layered effect combinators that
+    are subjected to stricter typing discipline (no subtyping) *)
+unfold let eqtype_as_type (a:eqtype) : Type = a
 
-    An example:
-
-     {[
-        [@@ CInline ] let f x = UInt32.(x +%^ 1)
-      ]}
-
-    is extracted to C by KaRaMeL to a C definition tagged with the
-    [inline] qualifier. *)
-type __internal_ocaml_attributes =
-  | PpxDerivingShow
-  | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
-  | PpxDerivingYoJson (* Similar, but for constant printers. *)
-  | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
-  (* KaRaMeL-only: generates a C "inline" attribute on the resulting
-     * function declaration. *)
-  | Substitute
-  (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
-     * deprecated and the recommended way is now to use F*'s
-     * [inline_for_extraction], which now also works for stateful functions. *)
-  | Gc
-  (* KaRaMeL-only: instructs KaRaMeL to heap-allocate any value of this
-     * data-type; this requires running with a conservative GC as the
-     * allocations are not freed. *)
-  | Comment of string
-  (* KaRaMeL-only: attach a comment to the declaration. Note that using F*-doc
-     * syntax automatically fills in this attribute. *)
-  | CPrologue of string
-  (* KaRaMeL-only: verbatim C code to be prepended to the declaration.
-     * Multiple attributes are valid and accumulate, separated by newlines. *)
-  | CEpilogue of string
-  | CConst of string (* Ibid. *)
-  (* KaRaMeL-only: indicates that the parameter with that name is to be marked
-     * as C const.  This will be checked by the C compiler, not by KaRaMeL or F*.
-     *
-     * This is deprecated and doesn't work as intended. Use
-     * LowStar.ConstBuffer.fst instead! *)
-  | CCConv of string
-  | CAbstractStruct (* A calling convention for C, one of stdcall, cdecl, fastcall *)
-  (* KaRaMeL-only: for types that compile to struct types (records and
-     * inductives), indicate that the header file should only contain a forward
-     * declaration, which in turn forces the client to only ever use this type
-     * through a pointer. *)
-  | CIfDef
-  | CMacro (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
-(* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
-
-(** The [inline_let] attribute on a local let-binding, instructs the
-    extraction pipeline to inline the definition. This may be both to
-    avoid generating unnecessary intermediate variables, and also to
-    enable further partial evaluation. Note, use this with care, since
-    inlining all lets can lead to an exponential blowup in code
-    size. *)
-val inline_let : unit
-
-(** The [rename_let] attribute support a form of metaprogramming for
-    the names of let-bound variables used in extracted code.
-
-    This is useful, particularly in conjunction with partial
-    evaluation, to ensure that names reflect their usage context.
-
-    See tests/micro-benchmarks/Renaming*.fst *)
-val rename_let (new_name: string) : Tot unit
-
-(** The [plugin] attribute is used in conjunction with native
-    compilation of F* components, accelerating their reduction
-    relative to the default strategy of just interpreting them.
-
-    See examples/native_tactics for several examples. *)
-val plugin (x: int) : Tot unit
-
-(** An attribute to mark things that the typechecker should *first*
-    elaborate and typecheck, but unfold before verification. *)
-val tcnorm : unit
-
-(** We erase all ghost functions and unit-returning pure functions to
-    [()] at extraction. This creates a small issue with abstract
-    types. Consider a module that defines an abstract type [t] whose
-    (internal) definition is [unit] and also defines [f: int -> t]. [f]
-    would be erased to be just [()] inside the module, while the
-    client calls to [f] would not, since [t] is abstract. To get
-    around this, when extracting interfaces, if we encounter an
-    abstract type, we tag it with this attribute, so that
-    extraction can treat it specially.
-
-    Note, since the use of cross-module inlining (the [--cmi] option),
-    this attribute is no longer necessary. We retain it for legacy,
-    but will remove it in the future. *)
-val must_erase_for_extraction : unit
-
-(** This attribute is used with the Dijkstra Monads for Free
-    construction to track position information in generated VCs *)
-val dm4f_bind_range : unit
-
-(** When attached a top-level definition, the typechecker will succeed
-    if and only if checking the definition results in an error. The
-    error number list is actually OPTIONAL. If present, it will be
-    checked that the definition raises exactly those errors in the
-    specified multiplicity, but order does not matter. *)
-val expect_failure (errs: list int) : Tot unit
-
-(** When --lax is present, with the previous attribute since some
-  definitions only fail when verification is turned on. With this
-  attribute, one can ensure that a definition fails while lax-checking
-  too. Same semantics as above, but lax mode will be turned on for the
-  definition.  *)
-val expect_lax_failure (errs: list int) : Tot unit
-
-(** Print the time it took to typecheck a top-level definition *)
-val tcdecltime : unit
-
-(** This attribute is to be used as a hint for the unifier.  A
-    function-typed symbol `t` marked with this attribute will be treated
-    as being injective in all its arguments by the unifier.  That is,
-    given a problem `t a1..an =?= t b1..bn` the unifier will solve it by
-    proving `ai =?= bi` for all `i`, without trying to unfold the
-    definition of `t`. *)
-val unifier_hint_injective : unit
-
-(**
- This attribute is used to control the evaluation order
- and unfolding strategy for certain definitions.
-
-  In particular, given
-     {[
-        [@@(strict_on_arguments [1;2])]
-        let f x0 (x1:list x0) (x1:option x0) = e
-     ]}
-
- An application [f e0 e1 e2] is reduced by the normalizer by:
-
-     1. evaluating [e0 ~>* v0, e1 ~>* v1, e2 ~>* v2]
-
-     2 a.
-        If, according to the positional arguments [1;2],
-        if v1 and v2 have constant head symbols
-              (e.g., v1 = Cons _ _ _, and v2 = None _)
-       then [f] is unfolded to [e] and reduced as
-         {[e[v0/x0][v1/x1][v2/x2]]}
-
-     2 b.
-
-      Otherwise, [f] is not unfolded and the term is [f e0 e1 e2]
-      reduces to [f v0 v1 v2]. *)
-val strict_on_arguments (x: list int) : Tot unit
-
-(**
- * An attribute to tag a tactic designated to solve any
- * unsolved implicit arguments remaining at the end of type inference.
- **)
-val resolve_implicits : unit
-
-(**
- * Implicit arguments can be tagged with an attribute [abc] to dispatch 
- * their solving to a user-defined tactic also tagged with the same 
- * attribute and resolve_implicits [@@abc; resolve_implicits]. 
- 
- * However, sometimes it is useful to have multiple such 
- * [abc]-tagged tactics in scope. In such a scenario, to choose among them, 
- * one can use the attribute as shown below to declare that [t] overrides
- * all the tactics [t1...tn] and should be used to solve [abc]-tagged 
- * implicits, so long as [t] is not iself overridden by some other tactic.
-
-   [@@resolve_implicits; abc; override_resolve_implicits_handler abc [`%t1; ... `%tn]]
-   let t = e
-
- **)
-val override_resolve_implicits_handler : #a:Type -> a -> list string -> Tot unit
-
-(** A tactic registered to solve implicits with the (handle_smt_goals)
-    attribute will receive the SMT goal generated during typechecking
-    just before it is passed to the SMT solver.
-   *)
-val handle_smt_goals : unit
-
-(** This attribute can be added to an inductive type definition,
-    indicating that it should be erased on extraction to `unit`.
-
-    However, any pattern matching on the inductive type results
-    in a `Ghost` effect, ensuring that computationally relevant
-    code cannot rely on the values of the erasable type.
-
-    See tests/micro-benchmarks/Erasable.fst, for examples.  Also
-    see https://github.com/FStarLang/FStar/issues/1844 *)
-val erasable : unit
-
-(** [commute_nested_matches]
-    This attribute can be used to decorate an inductive type [t]
-
-    During normalization, if reduction is blocked on matching the
-    constructors of [t] in the following sense:
-
-    [
-     match (match e0 with | P1 -> e1 | ... | Pn -> en) with
-     | Q1 -> f1 ... | Qm -> fm
-    ]
-
-    i.e., the outer match is stuck due to the inner match on [e0]
-    being stuck, and if the head constructor the outer [Qi] patterns
-    are the constructors of the decorated inductive type [t], then,
-    this is reduced to
-
-    [
-     match e0 with
-     | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
-     | ...
-     | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm)
-    ]
-
-    This is sometimes useful when partially evaluating code before
-    extraction, particularly when aiming to obtain first-order code
-    for KaRaMeL. However, this attribute should be used with care,
-    since if after the rewriting the inner matches do not reduce, then
-    this can cause an explosion in code size.
-
-    See tests/micro-benchmarks/CommuteNestedMatches.fst
-    and examples/layeredeffects/LowParseWriters.fsti
-  *)
-val commute_nested_matches : unit
-
-(** This attribute controls extraction: it can be used to disable
-    extraction of a given top-level definition into a specific backend,
-    such as "OCaml". If any extracted code must call into an erased
-    function, an error will be raised (code 340).
-  *)
-val noextract_to (backend:string) : Tot unit
-
+(** A coercion of the [x] from [a] to [b], when [a] is provably equal
+    to [b]. In most cases, F* will silently coerce from [a] to [b]
+    along a provable equality (as in the body of this
+    function). Occasionally, you may need to apply this explicitly *)
+let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
 
 (** This attribute decorates a let binding, e.g.,
 
@@ -1027,131 +672,6 @@ val noextract_to (backend:string) : Tot unit
   *)
 val normalize_for_extraction (steps:list norm_step) : Tot unit
 
-
-(** A layered effect definition may optionally be annotated with
-    (ite_soundness_by t) attribute, where t is another attribute
-    When so, the implicits and the smt guard generated when
-    checking the soundness of the if-then-else combinator, are
-    dispatched to the tactic in scope that has the t attribute (in addition
-    to the resolve_implicits attribute as usual)
-
-    See examples/layeredeffects/IteSoundess.fst for a few examples
-  *)
-val ite_soundness_by (attribute: unit): Tot unit
-
-(** By-default functions that have a layered effect, need to have a type
-    annotation for their bodies
-    However, a layered effect definition may contain the default_effect
-    attribute to indicate to the typechecker that for missing annotations,
-    use the default effect.
-    The default effect attribute takes as argument a string, that is the name
-    of the default effect, two caveats:
-      - The argument must be a string constant (not a name, for example)
-      - The argument should be the fully qualified name
-    For example, the TAC effect in FStar.Tactics.Effect.fsti specifies
-    its default effect as FStar.Tactics.Tac
-    F* will typecheck that the default effect only takes one argument,
-      the result type of the computation
-  *)
-val default_effect (s:string) : Tot unit
-
-(** A layered effect may optionally be annotated with the
-    top_level_effect attribute so indicate that this effect may
-    appear at the top-level
-    (e.g., a top-level let x = e, where e has a layered effect type)
-
-    The top_level_effect attribute takes (optional) string argument, that is the
-    name of the effect abbreviation that may constrain effect arguments
-    for the top-level effect
-
-    As with default effect, the string argument must be a string constant,
-    and fully qualified
-
-    E.g. a Hoare-style effect `M a pre post`, may have the attribute
-    `@@ top_level_effect "N"`, where the effect abbreviation `N` may be:
-
-    effect N a post = M a True post
-
-    i.e., enforcing a trivial precondition if `M` appears at the top-level
-
-    If the argument to `top_level_effect` is absent, then the effect itself
-    is allowed at the top-level with any effect arguments
-
-    See tests/micro-benchmarks/TopLevelIndexedEffects.fst for examples
-
-    *)
-val top_level_effect (s:string) : Tot unit
-
-(** This attribute can be annotated on the binders in an effect signature
-    to indicate that they are effect parameters. For example, for a
-    state effect that is parametric in the type of the state, the state
-    index may be marked as an effect parameter.
-
-    Also see https://github.com/FStarLang/FStar/wiki/Indexed-effects
-
-    *)
-val effect_param : unit
-
-(** Bind definition for a layered effect may optionally contain range
-    arguments, that are provided by the typechecker during reification
-    This attribute on the effect definition indicates that the bind
-    has range arguments.
-    See for example the TAC effect in FStar.Tactics.Effect.fsti
-  *)
-val bind_has_range_args : unit
-
-(** A binder in a definition/declaration may optionally be annotated as strictly_positive
-    When the let definition is used in a data constructor type in an inductive
-    definition, this annotation is used to check the positivity of the inductive
-
-    Further F* checks that the binder is actually positive in the let definition
-
-    See tests/micro-benchmarks/Positivity.fst and NegativeTests.Positivity.fst for a few examples
-  *)
-val strictly_positive : unit
-
-(** This attribute may be added to an inductive type
-    to disable auto generated projectors
-
-    Normally there should not be any need to use this unless:
-    for some reason F* cannot typecheck the auto-generated projectors.
-    
-    Another reason to use this attribute may be to avoid generating and
-    typechecking lot of projectors, most of which are not going to be used
-    in the rest of the program
-  *)
-val no_auto_projectors : unit
-
-(** This attribute can be added to a let definition
-    and indicates to the typechecker to typecheck the signature of the definition
-    without using subtyping. This is sometimes useful for indicating that a lemma
-    can be applied by the tactic engine without requiring to check additional
-    subtyping obligations
-*)
-val no_subtyping : unit
-
-(** Pure and ghost inner let bindings are now always inlined during
-    the wp computation, if: the return type is not unit and the head
-    symbol is not marked irreducible.
-
-    To circumvent this behavior, singleton can be used.
-    See the example usage in ulib/FStar.Algebra.Monoid.fst. *)
-val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
-
-(** [with_type t e] is just an identity function, but it receives
-    special treatment in the SMT encoding, where in addition to being
-    an identity function, we have an SMT axiom:
-    [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
-val with_type (#t: Type) (e: t) : Tot t
-
-(** A weakening coercion from eqtype to Type.
-
-    One of its uses is in types of layered effect combinators that
-    are subjected to stricter typing discipline (no subtyping) *)
-unfold let eqtype_as_type (a:eqtype) : Type = a
-
-(** A coercion of the [x] from [a] to [b], when [a] is provably equal
-    to [b]. In most cases, F* will silently coerce from [a] to [b]
-    along a provable equality (as in the body of this
-    function). Occasionally, you may need to apply this explicitly *)
-let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
+(* When using [normalize_for_extraction] this flag indicates that the type
+ * of the definition should also be normalized. *)
+val normalize_for_extraction_type : unit

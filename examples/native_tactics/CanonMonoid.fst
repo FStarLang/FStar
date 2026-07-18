@@ -17,8 +17,8 @@ module CanonMonoid
 
 open FStar.Algebra.Monoid
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Tactics.V2
+open FStar.Reflection.V2
 
 (* "A Monoid Expression Simplifier" ported from
    http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html *)

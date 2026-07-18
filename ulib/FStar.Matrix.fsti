@@ -32,7 +32,6 @@ module SB = FStar.Seq.Base
 module ML = FStar.Math.Lemmas
 
 open FStar.IntegerIntervals   
-open FStar.Mul
 
 (* This is similar to lambdas passed to FStar.Seq.Base.init *)
 type matrix_generator c (m n: pos) = under m -> under n -> c

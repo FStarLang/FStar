@@ -15,7 +15,7 @@
 *)
 module Normalization
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* A tactic that returns its argument after some steps of normalization *)
 (* NOTE: This is relying on our unusual quote, which can inspect the shape of `x`
@@ -40,7 +40,7 @@ let def_of (#t:Type) (x:t) : Tac term =
     in
     match inspect_sigelt se with
     | Sg_Let r lbs -> begin
-      let lbv = lookup_lb_view lbs (inspect_fv fv) in
+      let lbv = lookup_lb lbs (inspect_fv fv) in
       lbv.lb_def
       end
     | _ -> fail "not a sig_let"

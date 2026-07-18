@@ -18,9 +18,8 @@ module FStar.Int128
 (**** THIS MODULE IS GENERATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
 
 open FStar.Int
-open FStar.Mul
 
-#set-options "--max_fuel 0 --max_ifuel 0"
+#set-options "--fuel 0 --ifuel 0"
 
 (* NOTE: anything that you fix/update here should be reflected in [FStar.UIntN.fstp], which is mostly
  * a copy-paste of this module. *)
@@ -31,6 +30,7 @@ type t : eqtype =
 
 let v x = x.v
 
+irreducible
 let int_to_t x = Mk x
 
 let uv_inv _ = ()
@@ -68,6 +68,10 @@ let shift_right a s = Mk (shift_right (v a) (UInt32.v s))
 let shift_left a s = Mk (shift_left (v a) (UInt32.v s))
 
 let shift_arithmetic_right a s = Mk (shift_arithmetic_right (v a) (UInt32.v s))
+
+let rotate_right a s = Mk (rotate_right (v a) (UInt32.v s))
+
+let rotate_left a s = Mk (rotate_left (v a) (UInt32.v s))
 
 let to_string _ = admit ()
 

@@ -1,4 +1,4 @@
-(*
+(*  
    Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,16 @@
 *)
 module FStar.Tactics.Effect
 
-open FStar.Reflection.Types
-open FStar.Tactics.Types
-open FStar.Tactics.Result
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Tactics.Types
 
 /// This admit is to typecheck the bind implementation when the
 ///   interface is interleaved
 
 #push-options "--admit_smt_queries true"
-let tac_bind_interleave_begin = ()
+let lift_div_tac_interleave_begin = ()
 #pop-options
-let tac_bind_interleave_end = ()
+let lift_div_tac_interleave_end = ()
 
 let with_tactic _ p = p
 
@@ -33,9 +32,7 @@ let rewrite_with_tactic _ p = p
 
 let synth_by_tactic #_ _ = admit ()
 
-#push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
 let assert_by_tactic _ _ = ()
-#pop-options
 
 let by_tactic_seman _ _ = ()
 
@@ -44,6 +41,8 @@ let preprocess_with _ = ()
 let postprocess_with _ = ()
 
 let postprocess_for_extraction_with _ = ()
+
+let postprocess_type = ()
 
 #set-options "--no_tactics"
 

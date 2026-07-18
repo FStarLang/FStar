@@ -33,8 +33,8 @@ type tree (r:int) =
         -> n    :int
         -> right:option (tree r){l <= n
                                  /\ n <= r
-                                 /\ (None? right <==> n=r)
-                                 /\ (None? left <==> n=l)}
+                                 /\ (None? right == (n=r))
+                                 /\ (None? left == (n=l))}
         -> tree r
 
 (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
@@ -78,7 +78,7 @@ val index_is_max : #max:int
                 -> x:int
                 -> Lemma (ensures (List.Tot.mem x (in_order_opt t) ==> x <= max))
                          (decreases t)
-let rec index_is_max (#max:int) t x = admit()
+let index_is_max (#max:int) t x = admit()
 (* CH: 2016-07-28 This started failing recently with:
   ./BinarySearchTreeFirst.fst(91,23-91,24): Subtyping check failed;
   expected type (x#105346:Prims.int{(Prims.precedes (Prims.LexCons left
@@ -98,7 +98,7 @@ val index_is_max2 : #max:int
                 -> x:int
                 -> Lemma (ensures (List.Tot.mem x (in_order_opt t) ==> x <= max))
                          (decreases t)
-let rec index_is_max2 (#max:int) t x = admit()
+let index_is_max2 (#max:int) t x = admit()
 (* CH: 2016-07-28 This started failing recently
   match t with
   | None -> ()

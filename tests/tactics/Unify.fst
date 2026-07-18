@@ -15,7 +15,7 @@
 *)
 module Unify
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let h : int =
     synth_by_tactic (fun () ->

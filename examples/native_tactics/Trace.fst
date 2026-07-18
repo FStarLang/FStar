@@ -21,7 +21,7 @@ open FStar.List.Tot
 (* Do not warn about recursive functions not used in their bodies:
 since we metaprogram them, the desugaring phase wrongly concludes
 they do not have to be recursive, but they do. *)
-#push-options "--warn_error -328"
+#push-options "--warn_error -328" //Warning_UnusedLetRec
 
 (* We take a function such as
  *
@@ -49,7 +49,7 @@ they do not have to be recursive, but they do. *)
  * is also tail-recursive (and the trace is "backwards").
  *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type mynat =
     | Z
@@ -91,9 +91,9 @@ let rec instrument_body (ii : ins_info) (t : term) : Tac term =
     pack (Tv_Match t ret_opt brs')
     end
   // descend into lets
-  | Tv_Let r attrs b t1 t2 -> begin
+  | Tv_Let r attrs b ty t1 t2 -> begin
     let t2' = instrument_body ii t2 in
-    pack (Tv_Let r attrs b t1 t2')
+    pack (Tv_Let r attrs b ty t1 t2')
     end
   | _ -> begin
     let hd, args = collect_app t in
@@ -132,7 +132,7 @@ let instrument (f : 'a) : Tac unit =
     if length all_args = 0 then
       fail "Function has no arguments?";
     let real, trace_arg = cutlast all_args in 
-    let real = map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
+    let real = map (fun b -> pack (Tv_Var (binding_to_namedv b))) real in
     if length real > 8 then
       fail "Too many arguments to instrument function";
     assert (length real <= 8);
@@ -140,7 +140,7 @@ let instrument (f : 'a) : Tac unit =
         orig_name = n;
         ins_name = n';
         args = real;
-        trace_arg = pack (Tv_Var (bv_of_binder trace_arg))
+        trace_arg = pack (Tv_Var (binding_to_namedv trace_arg))
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
@@ -174,7 +174,7 @@ let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 let rec fact_aux (n acc : nat) : Tot nat =
     if n = 0
     then acc
-    else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
+    else let acc' = acc * n in fact_aux (n - 1) acc'
 
 let fact (n : nat) : Tot nat = fact_aux n 1
 
@@ -194,3 +194,5 @@ let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
 #pop-options
 
 let _ = assert (fact' 5 [] == ([5], 120))
+
+#pop-options

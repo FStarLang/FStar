@@ -1,4 +1,4 @@
-{"query-id":"1","query":"push","args":{"kind":"full","code":"module FailRange\nopen FStar.Tactics\n","line":1,"column":0}}
+{"query-id":"1","query":"push","args":{"kind":"full","code":"module FailRange\nopen FStar.Tactics.V2\n","line":1,"column":0}}
 {"query-id":"2","query":"push","args":{"kind":"full","code":"\nlet a : unit =\n  assert_by_tactic (True /\\ True)\n    (fun () -> split (); fail \"A\")\n","line":3,"column":0}}
 {"query-id":"3","query":"push","args":{"kind":"lax","code":"\nlet a : unit =\n  assert_by_tactic (True /\\ True)\n    (fun () -> split (); fail \"A\")\n","line":3,"column":0}}
 {"query-id":"4","query":"push","args":{"kind":"full","code":"\nlet b () : unit =\n  assert_by_tactic (True /\\ True)\n    (fun () -> split (); fail \"B\")\n","line":7,"column":0}}

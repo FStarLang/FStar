@@ -60,7 +60,7 @@ let char_of_int (i: nat{i < 0xd7ff \/ (i >= 0xe000 /\ i <= 0x10ffff)}) : char = 
 val lowercase: char -> Tot char
 val uppercase: char -> Tot char
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 (** This private primitive is used internally by the compiler to
     translate character literals with a desugaring-time check of the

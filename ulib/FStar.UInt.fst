@@ -18,7 +18,6 @@ module FStar.UInt
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
  * a copy-paste of this module. *)
 
-open FStar.Mul
 open FStar.BitVector
 open FStar.Math.Lemmas
 
@@ -96,7 +95,7 @@ let from_vec_aux #n a s1 s2 =
 
 let seq_slice_lemma #n a s1 t1 s2 t2 = ()
 
-#push-options "--initial_fuel 1 --max_fuel 1"
+#push-options "--fuel 1"
 let rec from_vec_propriety #n a s =
   if s = n - 1 then () else begin
     from_vec_propriety #n a (s + 1);
@@ -133,10 +132,13 @@ let zero_from_vec_lemma #n = to_vec_lemma_2 (from_vec (zero_vec #n)) (zero n)
 let one_to_vec_lemma #n i =
   if i = n - 1 then () else zero_to_vec_lemma #n i
 
+#push-options "--z3rlimit_factor 8"
+#restart-solver
 let rec pow2_to_vec_lemma #n p i =
   if i = n - 1 then ()
   else if p = 0 then one_to_vec_lemma #n i
   else pow2_to_vec_lemma #(n - 1) (p - 1) i
+#pop-options
 
 let pow2_from_vec_lemma #n p =
   to_vec_lemma_2 (from_vec (elem_vec #n p)) (pow2_n #n (n - p - 1))
@@ -318,6 +320,7 @@ let logor_disjoint #n a b m =
   small_modulo_lemma_1 b (pow2 m);
   assert (from_vec #m (slice (to_vec b) (n - m) n) == b)
 
+#push-options "--z3rlimit_factor 2"
 let logand_mask #n a m =
   pow2_lt_compat n m;
   Seq.lemma_split (logand_vec (to_vec a) (to_vec (pow2 m - 1))) (n - m);
@@ -325,10 +328,18 @@ let logand_mask #n a m =
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
   append_lemma #(n - m) #m (zero_vec #(n - m)) (slice (to_vec a) (n - m) n);
+  calc (==) {
+    0 * pow2 m + a % pow2 m;
+    == { }
+    0 + a % pow2 m;
+    == { }
+    a % pow2 m;
+  };
   assert (0 * pow2 m + a % pow2 m == a % pow2 m);
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
   assert (from_vec #m (slice (to_vec a) (n - m) n) == a % pow2 m)
+#pop-options
 
 let shift_left_lemma_1 #n a s i = ()
 
@@ -349,6 +360,20 @@ let shift_right_logxor_lemma #n a b s = nth_lemma (shift_right #n (logxor #n a b
 let shift_left_logor_lemma #n a b s = nth_lemma (shift_left #n (logor #n a b) s) (logor #n (shift_left #n a s) (shift_left #n b s))
 
 let shift_right_logor_lemma #n a b s = nth_lemma (shift_right #n (logor #n a b) s) (logor #n (shift_right #n a s) (shift_right #n b s))
+
+(* Rotate operators lemmas *)
+
+let rotate_left_lemma #n a s i = ()
+
+let rotate_right_lemma #n a s i = ()
+
+let rotate_left_full_identity #n a = nth_lemma (rotate_left #n a n) a
+
+let rotate_right_full_identity #n a = nth_lemma (rotate_right #n a n) a
+
+let rotate_left_right_inverse #n a s = nth_lemma (rotate_right #n (rotate_left #n a s) s) a
+
+let rotate_right_left_inverse #n a s = nth_lemma (rotate_left #n (rotate_right #n a s) s) a
 
 
 let shift_left_value_aux_1 #n a s = pow2_multiplication_modulo_lemma_1 a n s
@@ -373,7 +398,7 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 50"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
@@ -384,7 +409,9 @@ let shift_right_value_lemma #n a s =
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
+#push-options "--z3rlimit 10"
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
+#pop-options
 
 val plus_one_mod : p:pos -> a:nat ->
     Lemma (requires (a < p /\ ((a + 1) % p == 0))) (ensures (a == p - 1))
@@ -407,7 +434,7 @@ let lemma_msb_gte #n a b =
 
 (* Lemmas toward showing ~n + 1 = -a *)
 
-// #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+// #set-options "--fuel 1 --ifuel 1"
 
 #push-options "--z3rlimit 80"
 let lemma_uint_mod #n a = ()
@@ -451,6 +478,18 @@ let lemma_zero_extend #n a =
   from_vec_propriety #(n+1) eav 1;
   assert (r = a)
 
+let lemma_zero_extends #n m a =
+  let hd0 = zero_vec #m in
+  let av = to_vec a in
+  let eav = Seq.append hd0 av in
+  let r = zero_extends m a in
+  append_lemma #m #n hd0 av;
+  assert (r = from_vec eav);
+  from_vec_propriety #(n+m) eav 1;
+  assert (from_vec #m hd0 = 0);
+  assert (r = a)
+
+#push-options "--z3rlimit 40"
 let lemma_one_extend #n a =
   let hd1 = Seq.create 1 true in
   let av = to_vec a in
@@ -460,6 +499,7 @@ let lemma_one_extend #n a =
   assert (r = from_vec eav);
   from_vec_propriety #(n+1) eav 1;
   assert (r = pow2 n + a)
+#pop-options
 
 #push-options "--fuel 1 --ifuel 0 --z3rlimit 40"
 let lemma_lognot_zero_ext #n a =
@@ -474,8 +514,8 @@ let lemma_lognot_zero_ext #n a =
   let eav = Seq.append hd0 av in
 
   append_lemma #1 #n hd0 av;
-  assert (from_vec #(n+1) eav = op_Multiply (from_vec #1 hd0) (pow2 n) + from_vec av);
-  assert (op_Multiply (from_vec #1 hd0) (pow2 n) = 0);
+  assert (from_vec #(n+1) eav = from_vec #1 hd0 * pow2 n + from_vec av);
+  assert (from_vec #1 hd0 * pow2 n = 0);
   assert (from_vec #(n+1) eav = from_vec #n av);
   assert (from_vec #(n+1) eav < pow2 n);
 
@@ -483,8 +523,8 @@ let lemma_lognot_zero_ext #n a =
   let neav_r = BitVector.lognot_vec #(n+1) eav in
   let neav_l = Seq.append hd1 nav in
   append_lemma #1 #n hd1 nav;
-  assert (from_vec #(n+1) neav_l = (op_Multiply (from_vec #1 hd1) (pow2 n)) + (from_vec #n nav));
-  assert (op_Multiply (from_vec #1 hd1) (pow2 n) = pow2 n);
+  assert (from_vec #(n+1) neav_l = (from_vec #1 hd1 * pow2 n) + (from_vec #n nav));
+  assert (from_vec #1 hd1 * pow2 n = pow2 n);
   assert (from_vec #(n+1) neav_l = pow2 n + from_vec #n nav);
   assert (pow2 n + from_vec #n nav = rhs);
 
@@ -520,12 +560,11 @@ let rec lemma_lognot_value_mod #n a =
       let tl = from_vec #(n-1) (Seq.slice (to_vec a) 1 n) in
 
       assert (hd = 0 || hd = 1);
-      let hdpow = op_Multiply hd (pow2 (n-1)) in
+      let hdpow = hd * pow2 (n-1) in
 
       from_vec_propriety (to_vec a) 1;
-      assert (from_vec av = (op_Multiply
-                              (from_vec #1     (Seq.slice av 0 1)) (pow2 (n-1))) +
-                              (from_vec #(n-1) (Seq.slice av 1 n)));
+      assert (from_vec av = (from_vec #1     (Seq.slice av 0 1) * pow2 (n-1)) +
+                             from_vec #(n-1) (Seq.slice av 1 n));
 
       let ntl = lognot tl in
       lemma_lognot_value_mod #(n-1) tl;
@@ -573,7 +612,7 @@ let lemma_lognot_value_zero #n a =
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
-let lemma_mod_variation #n a = ()
+let lemma_mod_variation #n a = assert (pow2 n =!= 0)
 #pop-options
 
 let lemma_one_mod_pow2 #n = ()

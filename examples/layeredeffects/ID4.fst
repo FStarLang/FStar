@@ -3,7 +3,7 @@ module ID4
 open FStar.Ghost
 
 // The base type of WPs
-val wp0 (a : Type u#a) : Type u#(max 1 a)
+val wp0 (a : Type u#a) : Type u#a
 let wp0 a = pure_wp a //(a -> Type0) -> Type0
 
 // We require monotonicity of them
@@ -13,9 +13,9 @@ let monotonic (w:wp0 'a) =
 //val wp (a : Type u#a) : Type u#(max 1 a)
 //let wp a = w:(wp0 a){monotonic w}
 
-let repr (a : Type u#aa) (w : wp0 a) : Type u#(max 1 aa) =
+let repr (a : Type u#aa) (w : wp0 a) : Type u#aa =
   // Hmmm, the explicit post bumps the universe level
-  ( squash (monotonic w) & (p:erased (a -> Type0) -> squash (w p) -> v:a{reveal p v}))
+  ( squash (monotonic w) & (p:erased (a -> prop) -> squash (w p) -> v:a{reveal p v}))
 
 open FStar.Monotonic.Pure
 
@@ -30,18 +30,19 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   (_, (fun p _ -> x))
   
 unfold
-let bind_wp #a #b
+let bind_wp (#a:Type u#a) (#b:Type u#b)
   (wp_v : wp0 a)
   (wp_f : (x:a -> wp0 b))
   : wp0 b
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity_forall u#a ();
+    elim_pure_wp_monotonicity_forall u#b ();
     as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp0 a) (wp_f: a -> wp0 b)
     (v : repr a wp_v)
     (f : (x:a -> repr b (wp_f x)))
 : repr b (bind_wp wp_v wp_f)
-= let vf (p : erased (b -> Type0)) (_ : squash (bind_wp wp_v wp_f p)) : v:b{reveal p v} =
+= let vf (p : erased (b -> prop)) (_ : squash (bind_wp wp_v wp_f p)) : v:b{reveal p v} =
     let x = snd v (fun x -> wp_f x p) () in
     snd (f x) p ()
   in
@@ -63,26 +64,26 @@ let subcomp (a:Type) (w1 w2: wp0 a)
 = let (m, r) = f in
   (m, r)
 
-let ite_wp #a (wp1 wp2 : wp0 a) (b : bool) : wp0 a =
-  elim_pure_wp_monotonicity_forall ();
-  as_pure_wp ((fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
+let ite_wp (#a:Type u#a) (wp1 wp2 : wp0 a) (b : bool) : wp0 a =
+  elim_pure_wp_monotonicity_forall u#a ();
+  as_pure_wp ((fun (p:a -> prop) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp0 a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
 
 let default_if_then_else (a:Type u#aa) (wp:wp0 a) (f:repr a wp) (g:repr a wp) (p:bool)
-: Type u#(max 1 aa)
+: Type u#aa
 = repr a wp
 
-//let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
+//let strengthen #a #w (p:prop) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
 //  fun post _ -> f () post ()
 //  
-//let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
+//let weaken #a #w (p:prop) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
 //                                                 (requires p)
 //                                                 (ensures (fun _ -> True))
 //  = fun post _ -> f post ()
 //
-//let cut #a #w (p:Type0) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
+//let cut #a #w (p:prop) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
 //  strengthen p (fun _ -> weaken p f)
 
 total
@@ -93,12 +94,22 @@ effect {
   with {repr; return; bind; subcomp; if_then_else}
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp) : repr a wp
+let run_pure (#a:Type u#a) 
+             (#p:a -> prop)
+             (#wp:pure_wp a)
+             (f: unit -> PURE a wp)
+             (_: squash (wp p))
+: x:a{p x}
+= FStar.Monotonic.Pure.elim_pure #a #wp f p
+
+let lift_pure_nd (a:Type u#a) (wp:pure_wp a) (f:unit -> PURE a wp) : repr a wp
   = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
-    (_, (fun (p:erased (a -> Type0)) _ -> // need the type annot
-         let r = f () in
-         assert (reveal p r);
-         r))
+    let ff (p: erased (a -> prop))
+           (pf_wp: squash (wp p))
+      : v:a{reveal p v}
+      = run_pure #a #(reveal p) #wp f ()
+    in
+    (), ff
 
 sub_effect PURE ~> ID = lift_pure_nd
 
@@ -114,7 +125,7 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let br (n:nat) : I bool =
  if n = 0 then true else false

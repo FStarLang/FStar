@@ -1,0 +1,111 @@
+name: Build F* (Linux)
+
+# This builds F* for Linux for a binary package release.
+# See build.yml for the build used in normal CI runs.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          # We prefer slightly older Ubuntu so we get binaries that work on
+          # all more recent versions.
+          - ubuntu-22.04
+
+          - ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+        with:
+          ref: ${{ inputs.ref || '' }}
+          submodules: true
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.3.0
+
+      - name: Prepare
+        run: |
+          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
+          opam install --deps-only ./fstar.opam
+
+      - name: Set version
+        run: |
+          # Setting FSTAR_VERSION for nightly and release builds. If unset,
+          # we use $(version.txt)~dev. Setting it avoids the ~dev.
+          if [[ "${{github.workflow_ref}}" =~ "nightly-build.yml" ]]; then
+            REF="${{ inputs.ref }}"
+            if [[ -n "$REF" && "$REF" != "master" ]]; then
+              echo FSTAR_VERSION="nightly-${REF}-$(date -I)" >> $GITHUB_ENV
+            else
+              echo FSTAR_VERSION="nightly-$(date -I)" >> $GITHUB_ENV
+            fi
+          elif [[ "${{github.workflow_ref}}" =~ "release.yml" ]]; then
+            echo FSTAR_VERSION="$(cat version.txt)" >> $GITHUB_ENV
+            echo FSTAR_RELEASE=1 >> $GITHUB_ENV
+          fi
+
+      # NB: release workflow later adds version number to the name
+      - name: Build packages
+        run: |
+          eval $(opam env)
+          KERNEL=$(uname -s)
+          ARCH=$(uname -m)
+          export FSTAR_TAG=-$KERNEL-$ARCH
+          make -skj$(nproc) package ADMIT=1
+          # Currently creating the source package in a separate job
+          # make -skj$(nproc) package-src FSTAR_TAG=
+          # # ^ no tag in source package
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: fstar-Linux-*
+          name: package-linux-${{ matrix.os }}
+      # - uses: actions/upload-artifact@v7
+      #   with:
+      #     path: fstar-src.tar.gz
+      #     name: package-src
+
+  smoke_test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          pattern: package-linux-*
+          merge-multiple: true
+
+      - run: tar xzf fstar-Linux-$(uname -m).tar.gz
+
+      - name: Smoke test
+        run: |
+          ./fstar/bin/fstar.exe fstar/lib/fstar/ulib/Prims.fst -f
+          echo -e "module A\nlet _ = assert (forall x. 1 + x*x > 0)" > A.fst
+          ./fstar/bin/fstar.exe A.fst
+          echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
+          ./fstar/bin/fstar.exe --admit_smt_queries true B.fst
+          # Check that karamel is there
+          ./fstar/bin/krml -version

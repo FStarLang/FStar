@@ -4,18 +4,14 @@ open FStar.All
 open FStar.IO
 open FStar.Int.Cast
 open FStar.Int.Cast.Full
-open FStar.Tactics
+open FStar.Tactics.V2
 
 module I8   = FStar.Int8
-module I16  = FStar.Int16
 module I32  = FStar.Int32
-module I64  = FStar.Int64
-module I128 = FStar.Int128
 module U8   = FStar.UInt8
-module U16  = FStar.UInt16
 module U32  = FStar.UInt32
-module U64  = FStar.UInt64
-module U128 = FStar.UInt128
+
+#set-options "--z3rlimit 40"
 
 let check s (b:bool) : ML unit =
     if not b then failwith s
@@ -33,7 +29,6 @@ let test_u32 () : ML unit =
         (U32.to_string (U32.uint_to_t (pow2 32 - 1) `U32.shift_right` 24ul) = "255");
     check "u32r31"
         (U32.to_string (U32.uint_to_t (pow2 32 - 1) `U32.shift_right` 31ul) = "1");
-
     check "u32l0"
         (U32.to_string (U32.uint_to_t 1 `U32.shift_left` 0ul)  = "1");
     check "u32l1"
@@ -94,7 +89,7 @@ let test_i32_arith_right () : ML unit =
         (I32.to_string (I32.int_to_t (- pow2 31) `I32.shift_arithmetic_right` 31ul) = "-1");
     ()
 
-#push-options "--lax" // sigh, it's this or a huge rlimit
+#push-options "--admit_smt_queries true" // sigh, it's this or a huge rlimit
 let test_i32_left () : ML unit =
     check "i32l0"
         (I32.to_string (I32.int_to_t 1 `I32.shift_left` 0ul)  = "1");
@@ -163,3 +158,5 @@ let main () : ML int =
     test_i8 ();
     print_string "correct\n";
     0
+
+let _ = main ()

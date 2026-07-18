@@ -49,7 +49,7 @@ let test_elim_forall_1 p (_:squash (forall x y. p x y))
   = eliminate forall x y. p x y
     with 0 1
 
-let test_elim_forall_2 (p: nat -> nat -> Type)
+let test_elim_forall_2 (p: nat -> nat -> prop)
   : Lemma
     (requires (forall x y. p x y))
     (ensures p 0 1)
@@ -99,27 +99,27 @@ let test_elim_and_2 p q r (f: squash p -> squash q -> Lemma r)
     with pf_p pf_q. f pf_p pf_q
 
 ////////////////////////////////////////////////////////////////////////////////
-let test_forall_intro_1 #a #b #c (p: a -> b -> c -> Type)
+let test_forall_intro_1 #a #b #c (p: a -> b -> c -> prop)
                       (f:(x:a -> y:b -> z:c -> squash (p x y z)))
   : squash (forall x y z. p x y z)
   = introduce forall x y z. p x y z
     with f x y z
 
-let test_forall_intro_2 #a #b #c (p: a -> b -> c -> Type)
+let test_forall_intro_2 #a #b #c (p: a -> b -> c -> prop)
                       (f:(x:a -> y:b -> z:c -> Lemma (p x y z)))
   : Lemma (forall x y z. p x y z)
   = introduce
     forall x y z. p x y z
         with f x y z
 
-let test_exists_intro_1 #a #b #c (p: a -> b -> c -> Type) va vb vc
+let test_exists_intro_1 #a #b #c (p: a -> b -> c -> prop) va vb vc
                         (f:squash (p va vb vc))
   : squash (exists x y z. p x y z)
   = introduce exists x y z. p x y z
     with va vb vc
     and f
 
-let test_exists_intro_2 #a #b #c (p: a -> b -> c -> Type) va vb vc
+let test_exists_intro_2 #a #b #c (p: a -> b -> c -> prop) va vb vc
                         (f:unit -> Lemma (p va vb vc))
   : Lemma (exists x y z. p x y z)
   = introduce exists x y z. p x y z
@@ -180,7 +180,7 @@ let test_excluded_middle p r
     with _. f ()
     and  _. g ()
 
-let test_forall_implies a (p:a -> Type) (q:a -> Type) (f: (x:a -> squash (p x) -> squash (q x)))
+let test_forall_implies a (p:a -> prop) (q:a -> prop) (f: (x:a -> squash (p x) -> squash (q x)))
   : squash (forall x. p x ==> q x)
   = introduce forall x. p x ==> q x
     with introduce _ ==> _
@@ -188,7 +188,7 @@ let test_forall_implies a (p:a -> Type) (q:a -> Type) (f: (x:a -> squash (p x) -
            f x px
          )
 
-let test_forall_implies_2_1 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
+let test_forall_implies_2_1 a (p:a -> prop) (q:a -> prop) (f: (x:a -> Lemma (requires p x) (ensures q x)))
   : Lemma (forall x. p x ==> q x)
   = introduce forall x. p x ==> q x
     with introduce _ ==> _
@@ -198,13 +198,13 @@ let test_forall_implies_2_1 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (req
            assert (q x)
          )
 
-let test_forall_implies_2_2 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
+let test_forall_implies_2_2 a (p:a -> prop) (q:a -> prop) (f: (x:a -> Lemma (requires p x) (ensures q x)))
   : Lemma (forall x. p x ==> q x)
   = introduce forall x. _
     with introduce p x ==> q x
          with _. f x
 
-let test_forall_implies_2_3 a (p:a -> Type) (q:a -> Type) (f: (x:a -> Lemma (requires p x) (ensures q x)))
+let test_forall_implies_2_3 a (p:a -> prop) (q:a -> prop) (f: (x:a -> Lemma (requires p x) (ensures q x)))
   : Lemma (forall x. p x ==> q x)
   = introduce forall x. _
     with introduce p x ==> _

@@ -32,7 +32,7 @@ let product #a #b (l1: list a) (l2: list b) =
 
 type bin_tree =
 | Leaf
-| Branch of bin_tree * bin_tree
+| Branch of bin_tree & bin_tree
 
 let rec size bt : nat =
   match bt with
@@ -53,7 +53,7 @@ let rec trees_of_size (s: nat) : list (bt_with_size s) =
   else
     List.Tot.concatMap #(prod_with_sum (s - 1))
       (fun (s1, s2) ->
-       List.Tot.map #((bt_with_size s1) * (bt_with_size s2))
+       List.Tot.map #((bt_with_size s1) & (bt_with_size s2))
                     #(bt_with_size s)
          (fun (t1, t2) -> Branch (t1, t2))
          (product (trees_of_size s1) (trees_of_size s2)))
@@ -94,8 +94,6 @@ let rec concatMap_flatten_map #a #b (f:a -> list b) l :
    This version may answer some of the questions above. *)
 
 (* These utilities are better moved to the squash library *)
-let bind = FStar.Squash.bind_squash
-let return = FStar.Squash.return_squash
 let pure_as_squash (#a:Type) 
                    (#p:_)
                    (#q:_)
@@ -106,32 +104,30 @@ let pure_as_squash (#a:Type)
 let rec memP_append_aux #a (x: a) (l: list a) :
   Lemma
     (requires (List.memP x l))
-    (ensures (exists (l12: (list a * list a)). l == fst l12 @ x :: snd l12))
-    =  let goal = exists l12. l == fst l12 @ x :: snd l12 in
-       let x : squash goal =
-         match l with
-         | [] -> ()
-         | h :: t ->
-           let pf : squash (x == h \/ List.memP x t) = () in
-           p <-- FStar.Squash.join_squash pf ;
-           match p with 
-           | Prims.Left x_eq_h -> 
-             let l12 = [], t in
-             assert (l == (fst l12) @ (x :: snd l12)) //trigger
-           | Prims.Right mem_x_t -> 
-             FStar.Classical.exists_elim 
-                 goal
-                 (pure_as_squash (memP_append_aux x) t)
-                 (fun l12' -> 
-                   let l12 = h::fst l12', snd l12' in
-                   assert (l == (fst l12) @ (x :: snd l12))) //trigger
-       in
-       FStar.Squash.give_proof x
+    (ensures (exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12))
+    =  match l with
+       | [] -> ()
+       | h :: t ->
+         FStar.Classical.or_elim
+           #(x == h)
+           #(List.memP x t)
+           #(fun () -> exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12)
+           (fun (_:squash (x == h)) ->
+             let l12 = ([], t) in
+             assert (l == (fst l12) @ (x :: snd l12)))
+           (fun (_:squash (List.memP x t)) ->
+             memP_append_aux x t;
+             FStar.Classical.exists_elim
+               (exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12)
+               (pure_as_squash (memP_append_aux x) t)
+               (fun l12' ->
+                 let l12 = (h::fst l12', snd l12') in
+                 assert (l == (fst l12) @ (x :: snd l12))))
 
 let memP_append #a (x: a) (l: list a) :
   Lemma
     (ensures (List.memP x l ==>
-              (exists (l12: (list a * list a)). l == (fst l12) @ (x :: (snd l12))))) =
+              (exists (l12: (list a & list a)). l == (fst l12) @ (x :: (snd l12))))) =
   FStar.Classical.move_requires (memP_append_aux x) l
 
 (*> * Should this be in the stdlib? *)
@@ -174,50 +170,28 @@ let memP_flatten_intro #a (x: a) (l: list a) (ls: list (list a)) :
   Lemma (List.memP x l ==>
          List.memP l ls ==>
          List.memP x (List.Tot.flatten ls)) =
-    FStar.Classical.arrow_to_impl
-      #(List.memP x l)
-      #(List.memP l ls ==>
-        List.memP x (List.Tot.flatten ls))
-      (fun memP_x_l_proof ->
-         FStar.Classical.arrow_to_impl
-           #(List.memP l ls)
-           #(List.memP x (List.Tot.flatten ls))
-           (fun memP_l_ls_proof ->
-              memP_append x l;
-              FStar.Squash.bind_squash
-                (FStar.Squash.get_proof (List.memP x l ==>
-                                         (exists l12. l == (fst l12) @ (x :: (snd l12)))))
-                (fun memP_x_l_split ->
-                   let l_split_pr = FStar.Classical.impl_to_arrow
-                                      #(List.memP x l)
-                                      #(exists l12. l == (fst l12) @ (x :: (snd l12)))
-                                      memP_x_l_split memP_x_l_proof in
-                   FStar.Classical.exists_elim
-                     (List.memP x (List.Tot.flatten ls))
-                     #_
-                     #(fun l12 -> l == (fst l12) @ (x :: (snd l12)))
-                     l_split_pr
-                     (fun l12 -> memP_append l ls;
-                              FStar.Squash.bind_squash
-                                (FStar.Squash.get_proof (List.memP l ls ==>
-                                                         (exists ls12. ls == (fst ls12) @ (l :: (snd ls12)))))
-                                (fun memP_l_ls_split ->
-                                   let ls_split_pr = FStar.Classical.impl_to_arrow
-                                                      #(List.memP l ls)
-                                                      #(exists ls12. ls == (fst ls12) @ (l :: (snd ls12)))
-                                                      memP_l_ls_split memP_l_ls_proof in
-                                   FStar.Classical.exists_elim
-                                     (List.memP x (List.Tot.flatten ls))
-                                     #_
-                                     #(fun ls12 -> ls == (fst ls12) @ (l :: (snd ls12)))
-                                     ls_split_pr
-                                     (fun ls12 ->
-                                        let (l1, l2) = l12 in
-                                        let (ls1, ls2) = ls12 in
-                                        flatten_app ls1 (l :: ls2);
-                                        memP_app_intro_r x (flatten ls1) ((l1 @ x :: l2) @ flatten ls2);
-                                        memP_app_intro_l x (l1 @ x :: l2) (flatten ls2);
-                                        memP_app_intro_r x l1 (x :: l2)))))))
+    introduce List.memP x l ==> (List.memP l ls ==> List.memP x (List.Tot.flatten ls))
+    with memP_x_l_proof. introduce List.memP l ls ==> List.memP x (List.Tot.flatten ls)
+    with memP_l_ls_proof. begin
+      memP_append_aux x l;
+      eliminate exists (l12: (list a & list a)). l == fst l12 @ x :: snd l12
+      returns List.memP x (List.Tot.flatten ls)
+      with _. begin
+        memP_append_aux l ls;
+        eliminate exists (ls12: (list (list a) & list (list a))). ls == fst ls12 @ l :: snd ls12
+        returns List.memP x (List.Tot.flatten ls)
+        with _. begin
+          let l1 = fst l12 in
+          let l2 = snd l12 in
+          let ls1 = fst ls12 in
+          let ls2 = snd ls12 in
+          flatten_app #a ls1 (l :: ls2);
+          memP_app_intro_r x (flatten ls1) ((l1 @ x :: l2) @ flatten ls2);
+          memP_app_intro_l x (l1 @ x :: l2) (flatten ls2);
+          memP_app_intro_r x l1 (x :: l2)
+        end
+      end
+    end
 
 let memP_concatMap_intro #a #b (x: a) (y: b) (f:a -> list b) (l: list a) :
   Lemma (List.memP x l ==>
@@ -235,16 +209,17 @@ let memP_concatMap_intro #a #b (x: a) (y: b) (f:a -> list b) (l: list a) :
       can I get rid of them without cluttering the rest of the proof with many
       copies of the same function?  Can I infer them by unifying with the
       current “goal”? *)
-let product_complete (#a #b: Type) (l1: list a) (l2: list b) x1 x2 :
+module T = FStar.Tactics
+let product_complete (#a:Type u#a) (#b: Type u#b) (l1: list a) (l2: list b) x1 x2 :
   Lemma (List.memP x1 l1 ==>
          List.memP x2 l2 ==>
          List.memP (x1, x2) (product #a l1 l2)) =
     let x = (x1, x2) in
-    let f2 x1 = fun x2 -> (x1, x2) in
-    let f1 = fun x1 -> List.Tot.map (f2 x1) l2 in
+    let unfold f2 x1 = fun x2 -> (x1, x2) in
+    let unfold f1 = fun x1 -> List.Tot.map (f2 x1) l2 in
     let l = f1 x1 in
     let ls = List.Tot.map f1 l1 in
-    assert (product l1 l2 == List.Tot.concatMap f1 l1);
+    assert (product l1 l2 == List.Tot.concatMap f1 l1) by (T.trefl());
 
     memP_map_intro (f2 x1) x2 l2
       <: Lemma (List.memP x2 l2 ==> List.memP x l);
@@ -264,7 +239,7 @@ let unfold_tos (s: nat) :
           else
             List.Tot.concatMap #(prod_with_sum (s - 1))
               (fun (s1, s2) ->
-               List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+               List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                             #(bt_with_size s)
                  (fun (t1, t2) -> Branch (t1, t2))
                  (product (trees_of_size s1) (trees_of_size s2)))
@@ -275,7 +250,7 @@ let unfold_tos (s: nat) :
                 else
                   List.Tot.concatMap #(prod_with_sum (s - 1))
                     (fun (s1, s2) ->
-                     List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+                     List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                                   #(bt_with_size s)
                        (fun (t1, t2) -> Branch (t1, t2))
                        (product (trees_of_size s1) (trees_of_size s2)))
@@ -283,7 +258,7 @@ let unfold_tos (s: nat) :
 
 (*> The error message if I omit this isn't the best.
     Could the resource exhaustion be detected and reported? *)
-#set-options "--z3rlimit 40 --initial_fuel 1 --max_fuel 1"
+#set-options "--z3rlimit 40 --fuel 1"
 
 (*> I ran into a few problems while writing this proof:
     - I had trouble supplying the right arguments for each lemma: In Coq I can just
@@ -318,7 +293,7 @@ let rec tos_complete (bt0: bin_tree) :
       product_complete trees1 trees2 t1 t2;
       (* assert (List.memP (t1, t2) (product trees1 trees2)); *)
 
-      memP_map_intro #(bt_with_size s1 * bt_with_size s2)
+      memP_map_intro #(bt_with_size s1 & bt_with_size s2)
         (fun (t1, t2) -> Branch (t1, t2) <: (bt_with_size s))
         (t1, t2)
         (product trees1 trees2);
@@ -337,7 +312,7 @@ let rec tos_complete (bt0: bin_tree) :
         (s1, s2)
         (Branch (t1, t2))
         (fun (s1, s2) ->
-         List.Tot.map #(bt_with_size s1 * bt_with_size s2)
+         List.Tot.map #(bt_with_size s1 & bt_with_size s2)
                       #(bt_with_size s)
            (fun (t1, t2) -> Branch (t1, t2))
            (product (trees_of_size s1) (trees_of_size s2)))

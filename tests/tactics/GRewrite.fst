@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module GRewrite
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* Tests for the grewrite function *)
 

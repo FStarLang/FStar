@@ -24,7 +24,7 @@ pushd ulib
 FST_FILES=(FStar.*.fst FStar.*.fsti)
 
 # In case some files needs to be removed use this:
-# FST_FILES=( ${FST_FILES[@]/"prims.fst"} )
+# FST_FILES=( ${FST_FILES[@]/"Prims.fst"} )
 
 ../bin/fstar-any.sh --odir "../$FSDOC_ODIR" --doc ${FST_FILES[*]} 
 popd
@@ -52,7 +52,7 @@ if [ ! -d fstarlang.github.io ]; then
     git clone git@github.com:FStarLang/fstarlang.github.io
 fi
 pushd fstarlang.github.io
-git config user.email "everbld@microsoft.com"
+git config user.email "24394600+dzomo@users.noreply.github.com"
 git config user.name "Dzomo the everest Yak"
 
 pushd docs

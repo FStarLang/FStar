@@ -1,0 +1,7 @@
+module Bug1614f
+
+// With prop refactoring, squash p : Type0 (not prop),
+// so it can't be used directly where prop is expected.
+// Test that p (which is prop) works directly in requires/ensures.
+
+let test1 (p:prop) : Pure unit (requires p) (ensures (fun _ -> p)) = ()

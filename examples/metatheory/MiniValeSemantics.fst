@@ -210,10 +210,10 @@ let lemma_merge (c:code) (cs:list code) (s0:state) (f0:fuel) (sM:state) (fM:fuel
 //      instances for computing their WPs
 /////////////////////////////////////////////////////////////////
 [@@qattr]
-let t_post = state -> Type0
+let t_post = state -> prop
 
 [@@qattr]
-let t_pre = state -> Type0
+let t_pre = state -> prop
 
 /// t_wp: The type of weakest preconditions
 let t_wp = t_post -> t_pre
@@ -222,14 +222,14 @@ let t_wp = t_post -> t_pre
 let has_wp (c:code) (wp:t_wp) : Type =
   k:t_post -> //for any post-condition
   s0:state -> //and initial state
-  Ghost (state * fuel)
+  Ghost (state & fuel)
     (requires wp k s0) //Given the precondition
     (ensures fun (sM, f0) -> //we can compute the fuel f0 needed so that
       eval_code c f0 s0 == Some sM /\  //eval_code with that fuel returns sM
       k sM) //and the post-condition is true on sM
 
 /// An abbreviation for a thunked lemma
-let t_lemma (pre:Type0) (post:Type0) =
+let t_lemma (pre:prop) (post:prop) =
   unit -> Lemma (requires pre) (ensures post)
 
 
@@ -254,15 +254,15 @@ type with_wps : list code -> Type =
 
 | QLemma: //augmenting an instruction sequence with a lemma
    #cs:list code ->
-   pre:Type0 ->
-   post:Type0 ->
+   pre:prop ->
+   post:prop ->
    t_lemma pre post ->
    with_wps cs ->
    with_wps cs
 
 [@@qattr]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
-  : Tot (state -> Tot Type0 (decreases qcs))
+  : Tot (state -> Tot prop (decreases qcs))
   =
   fun s0 ->
   match qcs with
@@ -282,9 +282,9 @@ let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
 /// The vc-generator is sound
 let rec vc_sound (cs:list code)
                  (qcs:with_wps cs)
-                 (k:state -> Type0)
+                 (k:state -> prop)
                  (s0:state)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
     (requires vc_gen cs qcs k s0)
     (ensures fun (sN, fN) -> eval_code (Block cs) fN s0 == Some sN /\ k sN)
   = match qcs with
@@ -310,7 +310,7 @@ let vc_sound' (cs:list code) (qcs:with_wps cs)
 //Instance for Mov
 ////////////////////////////////////////////////////////////////////////////////
 let lemma_Move (s0:state) (dst:operand) (src:operand)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
   (requires OReg? dst)
   (ensures fun (sM, fM) ->
     eval_code (Ins (Mov64 dst src)) fM s0 == Some sM /\
@@ -322,14 +322,14 @@ let lemma_Move (s0:state) (dst:operand) (src:operand)
   (sM, 0)
 
 [@@qattr]
-let wp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
+let wp_Move (dst:operand) (src:operand) (k:state -> prop) (s0:state) : prop =
   OReg? dst /\
   (forall (x:nat64).
     let sM = update_reg s0 (OReg?.r dst) x in
     eval_operand dst sM == eval_operand src s0 ==> k sM
   )
 
-let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
+let hasWp_Move (dst:operand) (src:operand) (k:state -> prop) (s0:state) : Ghost (state & fuel)
   (requires wp_Move dst src k s0)
   (ensures fun (sM, f0) -> eval_code (Ins (Mov64 dst src)) f0 s0 == Some sM /\ k sM)
   =
@@ -342,7 +342,7 @@ let inst_Move (dst:operand) (src:operand) : with_wp (Ins (Mov64 dst src)) =
 ////////////////////////////////////////////////////////////////////////////////
 //Instance for Add
 ////////////////////////////////////////////////////////////////////////////////
-let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state * fuel)
+let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state & fuel)
   (requires OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64)
   (ensures fun (sM, fM) ->
     eval_code (Ins (Add64 dst src)) fM s0 == Some sM /\
@@ -354,14 +354,14 @@ let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state * fuel)
   (sM, 0)
 
 [@@qattr]
-let wp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
+let wp_Add (dst:operand) (src:operand) (k:state -> prop) (s0:state) : prop =
   OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64 /\
   (forall (x:nat64).
     let sM = update_reg s0 (OReg?.r dst) x in
     eval_operand dst sM == eval_operand dst s0 + eval_operand src s0 ==> k sM
   )
 
-let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
+let hasWp_Add (dst:operand) (src:operand) (k:state -> prop) (s0:state) : Ghost (state & fuel)
   (requires wp_Add dst src k s0)
   (ensures fun (sM, f0) -> eval_code (Ins (Add64 dst src)) f0 s0 == Some sM /\ k sM)
   =
@@ -383,15 +383,15 @@ let normal_steps : list string =
   ]
 
 unfold
-let normal (x:Type0) : Type0 =
+let normal (x:prop) : prop =
   norm [nbe; iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 let vc_sound_norm
      (cs:list code)
      (qcs:with_wps cs)
-     (k:state -> Type0)
+     (k:state -> prop)
      (s0:state)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
     (requires
       normal (vc_gen cs qcs k s0))
     (ensures fun (sN, fN) ->
@@ -944,7 +944,6 @@ let inst_Triple : with_wps codes_Triple = //A typeclass instance for our program
   ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
   ))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 open FStar.FunctionalExtensionality
-open FStar.Mul
 
 (*
 procedure Triple()
@@ -959,7 +958,7 @@ procedure Triple()
 *)
 
 [@@qattr]
-let state_eq (s0 s1:state) : Ghost Type0
+let state_eq (s0 s1:state) : Ghost prop
   (requires True)
   (ensures fun b -> b ==> s0 `feq` s1)
   =
@@ -1003,3 +1002,4 @@ let lemma_Triple_opt (s0:state)
     inst_Triple
     (fun sM -> sM Rbx == 3 * s0 Rax /\ state_eq sM (update_state Rax sM (update_state Rbx sM s0)))
     s0
+#pop-options

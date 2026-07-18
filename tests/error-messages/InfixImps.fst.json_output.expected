@@ -1,0 +1,24 @@
+Module after desugaring:
+module InfixImps
+Declarations: [
+let op_Plus_Plus #t xs ys = xs
+let foo = [1] ++ [2]
+]
+
+Module before type checking:
+module InfixImps
+Declarations: [
+let op_Plus_Plus #t xs ys = xs
+let foo = [1] ++ [2]
+]
+
+Module after type checking:
+module InfixImps
+Declarations: [
+let op_Plus_Plus #t xs ys = xs
+let foo =
+  InfixImps.op_Plus_Plus #Prims.int
+    (Prims.Cons #Prims.int 1 (Prims.Nil #Prims.int))
+    (Prims.Cons #Prims.int 2 (Prims.Nil #Prims.int))
+]
+

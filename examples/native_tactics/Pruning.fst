@@ -16,22 +16,15 @@
 module Pruning
 
 open FStar.Algebra.Monoid
-open FStar.Array
-open FStar.Axiomatic.Array
-open FStar.BaseTypes
 open FStar.BitVector
 open FStar.Bytes
 open FStar.Char
 open FStar.Classical
 open FStar.Constructive
-open FStar.Crypto
 open FStar.DependentMap
-open FStar.ErasedLogic
 open FStar.Fin
-open FStar.Float
 open FStar.FunctionalExtensionality
 open FStar.Ghost
-open FStar.Heap
 open FStar.IndefiniteDescription
 open FStar.Int
 open FStar.Int128
@@ -50,9 +43,6 @@ open FStar.Map
 open FStar.MarkovsPrinciple
 open FStar.Math.Lemmas
 open FStar.Math.Lib
-open FStar.Matrix2
-open FStar.MRef
-open FStar.Mul
 open FStar.Option
 open FStar.Order
 open FStar.OrdMap
@@ -61,9 +51,9 @@ open FStar.OrdSet
 open FStar.OrdSetProps
 open FStar.PredicateExtensionality
 open FStar.PropositionalExtensionality
-open FStar.Reflection
+open FStar.Reflection.V2
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List
 
 // This query will go the SMT, in the default proof namespace

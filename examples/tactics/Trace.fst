@@ -21,7 +21,7 @@ open FStar.List.Tot
 (* Do not warn about recursive functions not used in their bodies:
 since we metaprogram them, the desugaring phase wrongly concludes
 they do not have to be recursive, but they do. *)
-#push-options "--warn_error -328"
+#set-options "--warn_error -328"
 
 (* We take a function such as
  *
@@ -49,7 +49,7 @@ they do not have to be recursive, but they do. *)
  * is also tail-recursive (and the trace is "backwards").
  *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 type mynat =
     | Z
@@ -65,7 +65,7 @@ let tick (nm : fv) : fv =
   let ns = inspect_fv nm in
   pack_fv (tick_last ns)
 
-let cons_fst (x : 'a) (p : list 'a * 'b) : list 'a * 'b =
+let cons_fst (x : 'a) (p : list 'a & 'b) : list 'a & 'b =
     let (y, z) = p in (x :: y, z)
 
 let cons_fst_qn = ["Trace"; "cons_fst"]
@@ -115,7 +115,7 @@ and ins_br (ii : ins_info) (br : branch) : Tac branch =
   let t' = instrument_body ii t in
   (p, t')
 
-let rec cutlast (l : list 'a{length l > 0}) : list 'a * 'a =
+let rec cutlast (l : list 'a{length l > 0}) : list 'a & 'a =
     match l with
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
@@ -132,7 +132,7 @@ let instrument (f : 'a) : Tac unit =
     if length all_args = 0 then
       fail "Function has no arguments?";
     let real, trace_arg = cutlast all_args in 
-    let real = map (fun b -> pack (Tv_Var (bv_of_binder b))) real in
+    let real = map (fun b -> pack (Tv_Var (binding_to_namedv b))) real in
     if length real > 8 then
       fail "Too many arguments to instrument function";
     assert (length real <= 8);
@@ -140,7 +140,7 @@ let instrument (f : 'a) : Tac unit =
         orig_name = n;
         ins_name = n';
         args = real;
-        trace_arg = pack (Tv_Var (bv_of_binder trace_arg))
+        trace_arg = pack (Tv_Var (binding_to_namedv trace_arg))
     } in
     (* Apply the function to the arguments and unfold it. This will only
      * unfold it once, so recursive calls are present *)
@@ -163,7 +163,7 @@ let rec fall (n : mynat) : Tot mynat =
 let rec fall' (n : mynat) (l : list mynat) =
     // We need to annotate the result type.. which sucks.
     // But we could use a tactic later :)
-    synth_by_tactic #(mynat -> list mynat -> (list mynat * mynat)) (fun () -> instrument fall) n l
+    synth_by_tactic #(mynat -> list mynat -> (list mynat & mynat)) (fun () -> instrument fall) n l
 #pop-options
 
 let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
@@ -174,13 +174,13 @@ let _ = assert (fall' (S (S (S Z))) [] == ([Z; S Z; S (S Z); S (S (S Z))], Z))
 let rec fact_aux (n acc : nat) : Tot nat =
     if n = 0
     then acc
-    else let acc' = acc `op_Multiply` n in fact_aux (n - 1) acc'
+    else let acc' = acc * n in fact_aux (n - 1) acc'
 
 let fact (n : nat) : Tot nat = fact_aux n 1
 
 #push-options "--admit_smt_queries true"
-let rec fact_aux' (n acc : nat) (tr : list (nat * nat)) : Tot (list (nat * nat) * nat) =
-    synth_by_tactic #(nat -> nat -> list (nat * nat) -> (list (nat * nat) * nat)) (fun () -> instrument fact_aux) n acc tr
+let rec fact_aux' (n acc : nat) (tr : list (nat & nat)) : Tot (list (nat & nat) & nat) =
+    synth_by_tactic #(nat -> nat -> list (nat & nat) -> (list (nat & nat) & nat)) (fun () -> instrument fact_aux) n acc tr
 #pop-options
 
 let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 5); (5, 1)], 120))
@@ -189,8 +189,8 @@ let _ = assert (fact_aux' 5 1 [] == ([(0, 120); (1, 120); (2, 60); (3, 20); (4, 
  * interesting as that's not the tail-recursive function *)
 #push-options "--admit_smt_queries true"
 // TODO: I have to use `int` for the codomains or it complains... why? I'm even admitting SMT
-let rec fact' (n : nat) (tr : list nat) : Tot (list nat * int) =
-    synth_by_tactic #(nat -> list nat -> (list nat * int)) (fun () -> instrument fact) n tr
+let rec fact' (n : nat) (tr : list nat) : Tot (list nat & int) =
+    synth_by_tactic #(nat -> list nat -> (list nat & int)) (fun () -> instrument fact) n tr
 #pop-options
 
 let _ = assert (fact' 5 [] == ([5], 120))

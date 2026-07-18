@@ -82,7 +82,7 @@ and subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 val subst_extensional: e:exp -> s1:sub -> s2:sub{feq s1 s2} ->
                Lemma (requires True) (ensures (subst e s1 = subst e s2))

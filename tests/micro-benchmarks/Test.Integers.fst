@@ -173,3 +173,10 @@ let g5 = f1 ()
 /// problem instance, we commit to it immediately even if the chosen
 /// solution is incompatible with other problems that may be in scope;
 /// global backtracking is too expensive and unpredictable.
+
+(* A test to check that we can prove that FStar.Integers.int
+is equal to Prims.int with just the unifier. *)
+#push-options "--no_smt"
+let mk_option_int () : option int
+  = (); Some #int 5
+#pop-options

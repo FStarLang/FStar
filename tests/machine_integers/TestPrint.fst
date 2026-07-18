@@ -127,3 +127,5 @@ let main () =
     test_hex_pad ();
     test_dec_pad ();
     ()
+
+let _ = main ()

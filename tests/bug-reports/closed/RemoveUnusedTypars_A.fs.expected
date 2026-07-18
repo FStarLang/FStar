@@ -1,0 +1,9 @@
+#light "off"
+module RemoveUnusedTypars_A
+
+type 'a t =
+'a Prims.list
+
+
+
+

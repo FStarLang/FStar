@@ -5,7 +5,7 @@ let op t0 t1 = match t0, t1 with _, RW | RW, _ -> RW | _ -> R
 let gst (a:Type) (t:tag) =
   match t with
   | R -> (state -> a)
-  | RW -> (state -> a * state)
+  | RW -> (state -> a & state)
 let return a (x:a)
   : gst a R
   = fun s -> x

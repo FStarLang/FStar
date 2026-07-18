@@ -15,15 +15,15 @@
 *)
 module Unbound
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let tau () : Tac unit =
     split ();
-    let x = bv_of_binder (implies_intro ()) in
-    squash_intro (); exact (pack (Tv_Var x));
+    let x = binding_to_namedv (implies_intro ()) in
+    exact (pack (Tv_Var x));
     // `x` is unbound in this environment, we should fail
     // (if it succeeds: is the use_bv_sorts flag on? it should be off)
-    squash_intro (); exact (pack (Tv_Var x))
+    exact (pack (Tv_Var x))
 
-[@@(expect_failure [228])]
+[@@(expect_failure [230])]
 let _ = assert ((False ==> False) /\ False) by tau ()

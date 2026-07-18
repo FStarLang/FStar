@@ -7,7 +7,7 @@ assume type ident
 assume val text_of_id  : ident -> string
 
 noeq
-type t = { tm : ident * int }
+type t = { tm : ident & int }
 
 [@@(expect_failure [54])]
 let f1 e : bool =

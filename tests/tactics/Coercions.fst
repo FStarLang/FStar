@@ -1,7 +1,9 @@
 module Coercions
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
+// Disabling this whole file until we get user-level coercions.
+// Then, we can just set pack/inspect to be coercions.
 
 let tm () : Tac term = Tv_App (Tv_App (`op_Addition) (`1, Q_Explicit)) (`2, Q_Explicit)
 

@@ -15,7 +15,7 @@
 *)
 module UnitTests
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True by trivial ()
 let _ = assert (1 + 1 = 2) by trivial ()
@@ -36,7 +36,7 @@ let _ = assert (fib 5 = 5) by trivial ()
 let _ = assert (fib 5 == 5) by trivial ()
 
 let _ =
-    let x = 1 in
+    let unfold x = 1 in
     assert (1 == x) by trefl ()
 
 let va1    = assert (1 == 1) by trefl ()
@@ -65,8 +65,8 @@ let _ = assert (A? A == true) by trivial ()
 let _ = assert (D? (D 5) == true) by trivial ()
 let _ = assert (D?.x (D 5) == 5) by trivial ()
 
-assume val p1 : Type
-assume val p2 : Type
+assume val p1 : prop
+assume val p2 : prop
 assume val proof_1 : squash p1
 assume val l : unit -> unit -> Lemma (requires p1) (ensures p2)
 
@@ -81,7 +81,7 @@ let _ =
 (*     assert p2 by (apply_lemma (quote (l () ())); *)
 (*                   exact (quote proof_1)) *)
 
-assume val pp1 : Type0
+assume val pp1 : prop
 
 val l2 : x:(squash pp1) -> Lemma pp1
 let l2 x =

@@ -23,7 +23,6 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-open FStar.Mul
 
 /// Definition of little and big-endianness
 /// ---------------------------------------
@@ -218,7 +217,7 @@ let rec be_of_seq_uint64 s =
 /// Pure indexing & update over sequences
 /// -------------------------------------
 
-#set-options "--max_fuel 1 --max_ifuel 0 --z3rlimit 50"
+#set-options "--max_fuel 1 --ifuel 0 --z3rlimit 50"
 
 let rec offset_uint32_be (b: bytes) (n: nat) (i: nat) =
   if S.length b = 0 then
@@ -280,16 +279,30 @@ let le_of_seq_uint32_base s1 s2 = ()
 let be_of_seq_uint64_base s1 s2 = ()
 
 let rec be_of_seq_uint32_append s1 s2 =
-  Classical.forall_intro_2 (tail_cons #U32.t); // TODO: this is a local pattern, remove once tail_cons lands in FStar.Seq.Properties
   if S.length s1 = 0 then begin
     assert (S.equal (be_of_seq_uint32 s1) S.empty);
+    assert (S.equal s1 S.empty);
+    S.append_empty_l s2;
+    S.append_empty_l (be_of_seq_uint32 s2);
     assert (S.equal (S.append s1 s2) s2);
     ()
   end else begin
-    assert (S.equal (S.append s1 s2) (S.cons (S.head s1) (S.append (S.tail s1) s2)));
-    assert (S.equal (be_of_seq_uint32 (S.append s1 s2))
-      (S.append (be_of_uint32 (S.head s1)) (be_of_seq_uint32 (S.append (S.tail s1) s2))));
-    be_of_seq_uint32_append (S.tail s1) s2
+    calc S.equal {
+      be_of_seq_uint32 (S.append s1 s2);
+      S.equal { () }
+      be_of_seq_uint32 (S.append (S.cons (S.head s1) (S.tail s1)) s2);
+      S.equal { S.append_cons (S.head s1) (S.tail s1) s2 }
+      be_of_seq_uint32 (S.cons (S.head s1) (S.append (S.tail s1) s2));
+      S.equal { () }
+      be_of_seq_uint32 (S.cons (S.head s1) (S.append (S.tail s1) s2));
+      S.equal { S.head_cons (S.head s1) (S.append (S.tail s1) s2);
+                tail_cons (S.head s1) (S.append (S.tail s1) s2) }
+      S.append (be_of_uint32 (S.head s1))
+               (be_of_seq_uint32 (S.append (S.tail s1) s2));
+      S.equal { be_of_seq_uint32_append (S.tail s1) s2 }
+      S.append (be_of_uint32 (S.head s1))
+               (S.append (be_of_seq_uint32 (S.tail s1)) (be_of_seq_uint32 s2));
+    }
   end
 
 let rec le_of_seq_uint32_append s1 s2 =

@@ -1,0 +1,6 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": null, "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "failure"}
+{"kind": "response", "query-id": "2", "response": [], "status": "failure"}
+{"kind": "response", "query-id": "2", "response": [], "status": "failure"}
+{"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "Expected expression of type \"bool\"; got expression \"0\" of type \"int\"", "number": 189, "ranges": [{"beg": [4, 19], "end": [4, 20], "fname": "<input>"}]}], "status": "failure"}

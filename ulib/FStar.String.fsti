@@ -75,7 +75,8 @@ val split:   list char -> string -> Tot (list string)
 /// `concat s l` concatentates the strings in `l` delimited by `s`
 val concat:  string -> list string -> Tot string
 
-/// `compare s0 s1`: lexicographic ordering on strings
+/// `compare s0 s1`: lexicographic ordering on strings.
+/// Negative if s1<s2, zero if equal, positive if s1>s2
 val compare: string -> string -> Tot int
 
 /// `lowercase`: transform each character to its lowercase variant

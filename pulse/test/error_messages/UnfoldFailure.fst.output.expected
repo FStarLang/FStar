@@ -1,0 +1,8 @@
+* Info at UnfoldFailure.fst(13,4-13,6):
+  - Expected failure:
+  - Tactic failed
+  - Cannot prove:
+      pts_to_uninit r
+  - In the context:
+      my_pred r
+

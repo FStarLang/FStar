@@ -17,7 +17,7 @@ module Retype
 
 // Changing the type of a binder
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : prop
 assume val q : prop
@@ -27,7 +27,6 @@ assume val l : unit -> Lemma (p == r)
 assume val l2 : unit -> Lemma (requires r) (ensures q)
 
 let assumption' () : Tac unit =
-    apply_raw (`FStar.Squash.return_squash);
     assumption ()
 
 let tau () : Tac unit =
@@ -36,7 +35,7 @@ let tau () : Tac unit =
     let _ = implies_intro () in
     let b = implies_intro () in
 
-    binder_retype b; // call retype, get a goal `p == ?u`
+    var_retype b; // call retype, get a goal `p == ?u`
     let pp = quote p in
     let rr = quote r in
     grewrite pp rr; // rewrite p to q, get `q == ?u`
@@ -45,11 +44,12 @@ let tau () : Tac unit =
     apply_lemma (quote l); //prove (p == q), asked by grewrite
 
     let e = cur_env () in
-    match binders_of_env e with
+    match vars_of_env e with
     | [_;_;_;b] ->
-        let t = type_of_binder b in
+        let t = b.sort in
         let t = norm_term [] t in // contains uvar redexes.
-        if FStar.Order.ne (compare_term t rr)
+        let rr' = norm_term [] (`(squash r)) in
+        if FStar.Order.ne (compare_term t rr')
         then fail "binder was not retyped?"
         else ();
 

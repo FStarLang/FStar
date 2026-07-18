@@ -1,0 +1,101 @@
+# This Dockerfile creates a base image suitable to start building F*.
+#
+# It is used by the CI job. It MAY miss some dependency, these are
+# anyway re-checked and installed if needed when running the CI job. We
+# only install them here to speed up that process.
+#
+# The ONLY file read by this dockerfile is fstar.opam in the root,
+# and it is copied into the home directory on the image. CI jobs
+# will NOT use this file.
+
+# FIXME: z3.4.8.5-1 can no longer be installed on Ubuntu 24.04 because python3-distutils disappeared, and the z3 opam package has not been fixed for version 4.8.5, and 23.10 and all prior non-LTS are now EOL. Reverting to the previous LTS
+FROM ubuntu:22.04
+
+RUN apt-get update
+
+# Install editors, for the rare cases where we spin up a container to
+# see the status. Not a big deal to have them here, only installed
+# nightly and the files are shared by all subcontainers due to
+# overlayfs.
+RUN apt-get -y --no-install-recommends install vim emacs
+
+# Base dependencies: opam
+# CI dependencies: jq (to identify F* branch)
+# python3 (for interactive tests)
+RUN apt-get install -y --no-install-recommends \
+      jq \
+      bc \
+      ca-certificates \
+      curl \
+      wget \
+      git \
+      gnupg \
+      sudo \
+      python3 \
+      python-is-python3 \
+      pkg-config \
+      opam \
+      && apt-get clean -y
+
+# Install the relevant Z3 versions.
+COPY ./bin/get_fstar_z3.sh /usr/local/bin
+RUN get_fstar_z3.sh /usr/local/bin
+
+# Create a new user and give them sudo rights
+# NOTE: we give them the name "opam" to keep compatibility with
+# derived hierarchical CI
+RUN useradd -d /home/opam opam
+RUN echo 'opam ALL=NOPASSWD: ALL' >> /etc/sudoers
+RUN mkdir /home/opam
+RUN chown opam:opam /home/opam
+USER opam
+ENV HOME /home/opam
+WORKDIR $HOME
+SHELL ["/bin/bash", "--login", "-c"]
+
+# Install GitHub CLI
+# From https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
+# This is only used by the workflow that makes a release and publishes
+# it, but no harm in having it in the base.
+RUN { type -p curl >/dev/null || sudo apt-get install curl -y ; } \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt-get update \
+    && sudo apt-get install gh -y \
+    && sudo apt-get clean
+
+# CI dependencies: .NET Core
+# Repository install may incur some (transient?) failures (see for instance https://github.com/dotnet/sdk/issues/27082 )
+# So, we use manual install instead, from https://docs.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#manual-install
+ENV DOTNET_ROOT /home/opam/dotnet
+RUN wget -nv https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.419/dotnet-sdk-8.0.419-linux-x64.tar.gz && \
+    mkdir -p $DOTNET_ROOT && \
+    tar xf dotnet-sdk-8.0.419-linux-x64.tar.gz -C $DOTNET_ROOT && \
+    echo 'export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile && \
+    rm -f dotnet-sdk*.tar.gz
+
+# Install OCaml
+ARG OCAML_VERSION=4.14.2
+RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing 
+RUN opam env --set-switch | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+RUN opam option depext-run-installs=true
+ENV OPAMYES=1
+
+# F* dependencies. This is the only place where we read a file from
+# the F* repo.
+ADD fstar.opam $HOME/fstar.opam
+RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean
+
+# Some karamel dependencies
+RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex uucp && opam clean
+
+# Set up $HOME/bin. Note, binaries here take precedence over OPAM
+RUN mkdir $HOME/bin
+RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+
+WORKDIR $HOME
+
+# Configure the git user for hint refresh
+RUN git config --global user.name "Dzomo, the Everest Yak" && \
+    git config --global user.email "24394600+dzomo@users.noreply.github.com"

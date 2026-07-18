@@ -2,14 +2,14 @@ module ID1
 
 open FStar.Ghost
 
-val wp (a : Type u#a) : Type u#(max 1 a)
+val wp (a : Type u#a) : Type u#a
 let wp a = pure_wp a
 
 open FStar.Monotonic.Pure
 
-let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
+let repr (a : Type u#aa) (w : wp a) : Type u#aa =
   // Hmmm, the explicit post bumps the universe level
-  p:erased (a -> Type0) -> squash (w p) -> v:a{reveal p v}
+  p:erased (a -> prop) -> squash (w p) -> v:a{reveal p v}
 
 unfold
 let return_wp #a (x:a) : wp a =
@@ -22,11 +22,12 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   fun p _ -> x
   
 unfold
-let bind_wp #a #b
+let bind_wp (#a:Type u#a) (#b:Type u#b)
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
   : wp b
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity_forall u#a ();
+    elim_pure_wp_monotonicity_forall u#b ();
     as_pure_wp (fun p -> wp_v (fun x -> wp_f x p))
 
 let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
@@ -52,9 +53,9 @@ let subcomp (a:Type u#uu) (w1 w2:wp a)
 //= fun p pf -> f (hide (fun x -> reveal p x)) ()
 
 unfold
-let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
-  elim_pure_wp_monotonicity_forall ();
-  (as_pure_wp (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
+let ite_wp (#a:Type u#a) (wp1 wp2 : wp a) (b : bool) : wp a =
+  elim_pure_wp_monotonicity_forall u#a ();
+  (as_pure_wp (fun (p:a -> prop) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p)))
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
@@ -65,15 +66,15 @@ let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
 
 // AR: 05/19: commenting this code, see ID5.fst that contains these functions too
 
-// let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
+// let strengthen #a #w (p:prop) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
 //   fun post _ -> f () post ()
   
-// let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
+// let weaken #a #w (p:prop) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
 //                                                  (requires p)
 //                                                  (ensures (fun _ -> True))
 //   = fun post _ -> f post ()
 
-// let cut #a #w (p:Type0) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
+// let cut #a #w (p:prop) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
 //   strengthen p (fun _ -> weaken p f)
   
 
@@ -90,16 +91,16 @@ effect {
   with {repr; return; bind; subcomp; if_then_else}
 }
 
-effect Id (a:Type) (pre:Type0) (post:a->Type0) =
+effect Id (a:Type) (pre:prop) (post:a->prop) =
         ID a (as_pure_wp (fun p -> pre /\ (forall x. post x ==> p x)))
 
 effect I (a:Type) = Id a True (fun _ -> True)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))
- = FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+ = FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
    f ()
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
@@ -109,10 +110,10 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:unit -> PURE a wp) :
 
 sub_effect PURE ~> ID = lift_pure_nd
 
-let iassert (q:Type0) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
+let iassert (q:prop) : ID unit (as_pure_wp (fun p -> q /\ (q ==> p ()))) = ()
 
 assume
-val iassume (q:Type0) : ID unit (as_pure_wp (fun p -> q ==> p ()))
+val iassume (q:prop) : ID unit (as_pure_wp (fun p -> q ==> p ()))
 
 (* Checking that it's kind of usable *)
 
@@ -189,11 +190,13 @@ let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
   then 0
   else 1 + idiv (a-b) b
   
+#push-options "--admit_smt_queries true"
 let rec ack (m n : nat) : I nat =
   match m, n with
   | 0, n -> n+1
   | m, 0 -> ack (m-1) 1
   | m, n -> ack (m-1) (ack m (n-1))
+#pop-options
 
 let add1 (x:int) : Id int (requires (x > 0)) (ensures (fun r -> r == x+1)) = x + 1
 

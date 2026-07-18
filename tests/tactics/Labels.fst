@@ -15,6 +15,6 @@
 *)
 module Labels
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert ((1 == 1)/\ (True /\ True)) by (explode (); iseq [(fun () -> tlabel "Left"); (fun () -> tlabel "Right")]; dump "dump msg")

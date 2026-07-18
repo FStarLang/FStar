@@ -19,7 +19,7 @@ module Tutorial
 /// (July 23rd, 2017) state. It is mostly aimed at users and power users, leaving
 /// some details about the implementation out of this.
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.List
 
 /// **First, what are tactics supposed to be?**

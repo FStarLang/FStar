@@ -15,9 +15,10 @@
 *)
 module ReflectionMisc
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
-let mk (#a: Type u#a) (u: universe_view) (#[exact (pack_ln (Tv_Type (pack_universe u)))]r: a) (): a = r
+let mk (#a: Type u#a) (u: universe_view) (#[exact (pack (Tv_Type (pack_universe u)))]r: a) (): a = r
+
 let univs (_: Type u#a) (_: Type u#b): _ = 
   assert (mk (Uv_Name ("a", range_of 1)) () == Type u#a);
   assert (mk (
@@ -71,7 +72,7 @@ let _ = assert True
 //   match inspect t with
 //   | Tv_Arrow _ c ->
 //     (match inspect_comp c with
-//      | C_Total _ u _ -> pack_ln (Tv_Type (pack_universe (Uv_Succ u)))
+//      | C_Total _ u _ -> pack (Tv_Type (pack_universe (Uv_Succ u)))
 //      | _ -> fail "2")
 //   | _ -> fail "3"
 

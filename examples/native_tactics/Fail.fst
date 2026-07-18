@@ -17,11 +17,11 @@ module Fail
 
 // Making sure the unification engine respects failures
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
-assume val p : Type
-assume val q : Type
-assume val r : Type
+assume val p : prop
+assume val q : prop
+assume val r : prop
 
 assume val f : squash p -> squash r
 assume val g : squash q -> squash r

@@ -15,7 +15,7 @@
 *)
 module UnitTests.Test
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open UnitTests
 
 let _ = assert True by (let i = testnat 42 in ())

@@ -1171,7 +1171,7 @@ val op_Division           : int -> nonzero -> Tot int
 let rec pow2 (x:nat) : Tot pos =
   match x with
   | 0  -> 1
-  | _  -> 2 `op_Multiply` (pow2 (x-1))
+  | _  -> 2 * (pow2 (x-1))
 ```
 
 TODO: maybe move this to FStar.Int

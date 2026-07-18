@@ -15,7 +15,7 @@
 *)
 module Bug1299
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let id () : Tac unit = ()
 

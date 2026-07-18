@@ -1,0 +1,4 @@
+* Info at Bug4149.fst(5,8-5,15):
+  - Expected failure:
+  - include: Module Bug4149 cannot include itself
+

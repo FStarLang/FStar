@@ -1,6 +1,5 @@
 module FStar.Math.Fermat
 
-open FStar.Mul
 open FStar.Math.Lemmas
 open FStar.Math.Euclid
 
@@ -392,7 +391,7 @@ let binomial_prime p k =
       factorial_mod_prime p (p - k)
     end
 
-val freshman_aux (p:int{is_prime p}) (a b:int) (i:pos{i < p}): Lemma
+val freshman_aux (p:nat{is_prime p}) (a b:int) (i:pos{i < p}): Lemma
   ((binomial p i * pow a (p - i) * pow b i) % p == 0)
 let freshman_aux p a b i =
   calc (==) {
@@ -401,7 +400,8 @@ let freshman_aux p a b i =
     (binomial p i * (pow a (p - i) * pow b i)) % p;
     == { lemma_mod_mul_distr_l (binomial p i) (pow a (p - i) * pow b i) p }
     (binomial p i % p * (pow a (p - i) * pow b i)) % p;
-    == { binomial_prime p i }
+    == { binomial_prime p i;
+         lemma_mod_mul_distr_l (binomial p i) (pow a (p - i) * pow b i) p }
     0;
   }
 
@@ -455,7 +455,7 @@ let rec fermat_aux p a =
       == { }
       a % p;
     }
-
+#push-options "--fuel 0 --ifuel 0 --retry 2"
 let fermat p a =
   if a % p = 0 then
     begin
@@ -473,15 +473,19 @@ let fermat p a =
       == { lemma_mod_twice a p }
       a % p;
     }
+#pop-options
 
 val mod_mult_congr_aux (p:int{is_prime p}) (a b c:int) : Lemma
   (requires (a * c) % p = (b * c) % p /\ 0 <= b /\ b <= a /\ a < p /\ c % p <> 0)
   (ensures  a = b)
+#push-options "--retry 3" // proof below is brittle
 let mod_mult_congr_aux p a b c =
   let open FStar.Math.Lemmas in
   calc (==>) {
     (a * c) % p == (b * c) % p;
     ==> { mod_add_both (a * c) (b * c) (-b * c) p }
+    (a * c + (- b * c)) % p == (b * c + (- b * c)) % p;
+    ==> {}
     (a * c - b * c) % p == (b * c - b * c) % p;
     ==> { swap_mul a c; swap_mul b c; lemma_mul_sub_distr c a b }
     (c * (a - b)) % p == (b * c - b * c) % p;
@@ -491,6 +495,7 @@ let mod_mult_congr_aux p a b c =
   let r, s = FStar.Math.Euclid.bezout_prime p (c % p) in
   FStar.Math.Euclid.euclid p (c % p) (a - b) r s;
   small_mod (a - b) p
+#pop-options
 
 let mod_mult_congr p a b c =
   let open FStar.Math.Lemmas in

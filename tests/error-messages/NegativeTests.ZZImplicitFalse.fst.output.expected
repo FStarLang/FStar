@@ -1,0 +1,15 @@
+* Info at NegativeTests.ZZImplicitFalse.fst(20,12-20,34):
+  - Expected failure:
+  - Assertion failed
+  - The SMT solver could not prove the query.
+  - Env = (uu___ : Prims.unit)
+  - VC = forall (p: Prims.pure_post Prims.unit). Prims.l_False
+  - See also Prims.fst(427,77-427,89)
+
+* Warning 240 at NegativeTests.ZZImplicitFalse.fst(18,4-18,8):
+  - NegativeTests.ZZImplicitFalse.test is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.ZZImplicitFalse.fst(20,0-20,34):
+  - Missing definitions in module NegativeTests.ZZImplicitFalse: test
+

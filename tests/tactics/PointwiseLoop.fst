@@ -1,7 +1,7 @@
 module PointwiseLoop
 
 open FStar.List
-open FStar.Tactics
+open FStar.Tactics.V2
 
 (* This tactic can unfold recursive functions inside of [match] statements and others... *)
 let rec_norm direction (steps : list norm_step) : Tac unit =

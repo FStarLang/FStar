@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 module AnnoyingVCs
-open FStar.Tactics
+open FStar.Tactics.V2
 
-assume val p : nat -> Type
+assume val p : nat -> prop
 
 let dump s =
     (* dump s; *)

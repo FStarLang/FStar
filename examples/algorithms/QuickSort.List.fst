@@ -48,7 +48,7 @@ let rec mem_count #a x = function
   | [] -> ()
   | _::tl -> mem_count x tl
 
-val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
+val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a & list 'a)
 let rec partition f = function
   | [] -> [], []
   | hd::tl ->

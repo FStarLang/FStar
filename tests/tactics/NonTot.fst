@@ -15,7 +15,7 @@
 *)
 module NonTot
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 val h : unit -> Pure (squash False) (requires False) (ensures (fun _ -> True))
 let h x = ()

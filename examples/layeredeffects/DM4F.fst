@@ -6,10 +6,10 @@ open FStar.Monotonic.Pure
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
-type wp0 (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
-  st -> (a & st -> Type0) -> Type0
+type wp0 (st:Type u#0) (a:Type u#ua) : Type u#ua =
+  st -> (a & st -> prop) -> prop
 
-let st_monotonic #st #a (w : wp0 st a) : Type0 =
+let st_monotonic #st #a (w : wp0 st a) : prop =
   //forall s0 p1 p2. (forall r. p1 r ==> p2 r) ==> w s0 p1 ==> w s0 p2
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
@@ -56,7 +56,7 @@ unfold
 let stronger
   (#a:Type) (#st:Type0)
   (w1 w2 : wp st a)
-  : Type0
+  : prop
   = forall s0 p. w1 s0 p ==> w2 s0 p
 
 let subcomp
@@ -78,13 +78,13 @@ effect {
 }
 
 unfold
-let lift_wp (#a:Type) (#st:Type0) (w:pure_wp a) : wp st a =
-  elim_pure_wp_monotonicity_forall ();
+let lift_wp (#a:Type u#a) (#st:Type0) (w:pure_wp a) : wp st a =
+  elim_pure_wp_monotonicity_forall u#a ();
   fun s0 p -> w (fun x -> p (x, s0))
 
-let lift_pure_st a wp st (f : unit -> PURE a wp)
+let lift_pure_st (a:Type u#a) wp st (f : unit -> PURE a wp)
   : repr a st (lift_wp wp)
-  = elim_pure_wp_monotonicity_forall ();
+  = elim_pure_wp_monotonicity_forall u#a ();
     fun s0 -> (f (), s0)
 
 sub_effect PURE ~> ST = lift_pure_st

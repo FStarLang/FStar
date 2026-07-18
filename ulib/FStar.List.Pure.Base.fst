@@ -56,7 +56,7 @@ let rec map3 #a1 #a2 #a3 #b f l1 l2 l3 =
 (** [zip] takes a pair of list of the same length and returns
     the list of index-wise pairs *)
 val zip (#a1 #a2:Type) (l1:list a1) (l2:list a2)
-  : Pure (list (a1 * a2))
+  : Pure (list (a1 & a2))
     (requires (let n = length l1 in n == length l2))
     (ensures (fun _ -> True))
 let zip #a1 #a2 l1 l2 = map2 (fun x y -> x, y) l1 l2
@@ -64,7 +64,7 @@ let zip #a1 #a2 l1 l2 = map2 (fun x y -> x, y) l1 l2
 (** [zip3] takes a 3-tuple of list of the same length and returns
     the list of index-wise 3-tuples *)
 val zip3 (#a1 #a2 #a3:Type) (l1:list a1) (l2:list a2) (l3:list a3)
-  : Pure (list (a1 * a2 * a3))
+  : Pure (list (a1 & a2 & a3))
     (requires (let n = length l1 in n == length l2 /\ n == length l3))
     (ensures (fun _ -> True))
 let zip3 #a1 #a2 #a3 l1 l2 l3 = map3 (fun x y z -> x,y,z) l1 l2 l3

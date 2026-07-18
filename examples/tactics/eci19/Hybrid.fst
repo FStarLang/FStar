@@ -1,7 +1,6 @@
 module Hybrid
 
-open FStar.Tactics
-open FStar.Mul
+open FStar.Tactics.V2
 
 (*
 Meta-F* supports a "hybrid" style of proof, where we can just

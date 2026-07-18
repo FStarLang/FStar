@@ -41,7 +41,7 @@ let (let?) (x: option 'a) (f: 'a -> option 'b): option 'b
   | None   -> None
 
 // Sort of applicative
-let (and?) (x: option 'a) (y: option 'b): option ('a * 'b)
+let (and?) (x: option 'a) (y: option 'b): option ('a & 'b)
   = match x, y with
   | Some x, Some y -> Some (x, y)
   | _ -> None
@@ -50,7 +50,7 @@ let head: list _ -> option _
   = function | v::_ -> Some v
              |   _ -> None
 
-let option_example (a b: list (int * int)) (c: option bool) =
+let option_example (a b: list (int & int)) (c: option bool) =
   let? haL, haR = head a
   and? hbL, hbR = head b in
   match? c with
@@ -108,12 +108,12 @@ let desugared4 op_let_Question ex a b
 let ( let:: ) (l: list 'a) (f: 'a -> list 'b): list 'b
   = flatten (map f l)
 
-let rec zip (a: list 'a) (b: list 'b): list ('a * 'b)
+let rec zip (a: list 'a) (b: list 'b): list ('a & 'b)
   = match a, b with
   | ha::ta, hb::tb -> (ha,hb)::zip ta tb
   | _            -> []
 
-let ( and:: ) (a: list 'a) (b: list 'b): list ('a * 'b)
+let ( and:: ) (a: list 'a) (b: list 'b): list ('a & 'b)
   = zip a b
 
 let list_example1 =
@@ -151,10 +151,10 @@ let rec eval (e: exp): option int
 // Section 7 of McBride & Patterson "Applicative programming with
 // effects" [https://www.staff.city.ac.uk/~ross/papers/Applicative.pdf]
 let applicative_eq (m: Type -> Type) (fmap: (#a:Type -> #b:Type -> (a -> b) -> m a -> m b)) =
-  let (<*>) (pair: (#a:Type -> #b:Type -> m a -> m b -> m (a * b)))
+  let (<*>) (pair: (#a:Type -> #b:Type -> m a -> m b -> m (a & b)))
     : #a:Type -> #b:Type -> m (a -> b) -> m a -> m b
     = fun f o -> fmap (fun (f, x) -> f x) (pair f o) in
   let pair ((<*>): (#a:Type -> #b:Type -> m (a -> b) -> m a -> m b))
-    : #a:Type -> #b:Type -> m a -> m b -> m (a * b)
+    : #a:Type -> #b:Type -> m a -> m b -> m (a & b)
     = fun x y -> fmap Mktuple2 x <*> y in
   ()

@@ -74,10 +74,9 @@ let len_t = U32.t
 /// A raw vector.
 ///   - `vector a n` is extracted to an `a*` in C by KaRaMeL
 ///   - Does not support decidable equality
-val raw:
-    a:Type u#a
-  -> l:len_t
-  -> Type u#a
+val raw ([@@@strictly_positive] a:Type u#a)
+        (l:len_t)
+  : Type u#a
 
 /// A convenience to use `nat` for the length of vector in specs and proofs
 let raw_length (#a:Type) (#l:len_t) (v:raw a l) : GTot nat = U32.v l

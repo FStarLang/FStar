@@ -1,0 +1,10 @@
+{
+	"fstar_exe": "fstar.exe",
+	"options": [
+	],
+	"include_dirs": [
+		"bool_refinement",
+		"dependent_bool_refinement",
+		"stlc"
+	]
+}

@@ -60,3 +60,22 @@ val length_spec (#a:Type u#a) (s:t a)
 val index_spec (#a:Type u#a) (s:t a) (i:nat{ i < length s })
   : Lemma (index s i == FStar.List.Tot.index (to_list s) i)
           [SMTPat (index s i)]
+
+(* The list of elements precedes the array.*)
+val to_list_precedes (#a:Type u#a) (s:t a)
+  : Lemma (to_list s << s)
+
+(* Idem. *)
+let of_list_precedes (#a:Type u#a) (l:list a)
+  : Lemma (l << of_list l)
+  = to_list_precedes (of_list l)
+
+(* An explicit proof that elements of the array precede the array. *)
+let elem_precedes (#a:Type u#a) (s:t a) (i : nat{i < length s})
+  : Lemma (index s i << s)
+  = FStar.List.Tot.(
+      to_list_precedes s;
+      let l = to_list s in
+      assert (memP (index l i) l);
+      memP_precedes (index l i) l
+    )

@@ -2,7 +2,7 @@ module Univs
 
 (* Basic tests on universes *)
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 #set-options "--print_universes --print_implicits"
 

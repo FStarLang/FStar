@@ -49,13 +49,11 @@ val lemma_tail_append: #a:Type -> s1:seq a{length s1 > 0} -> s2:seq a -> Lemma
 
 let last (#a:Type) (s:seq a{length s > 0}) : Tot a = index s (length s - 1)
 
-let cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = append (create 1 x) s
-
 val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
   -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
           (ensures (v1 == v2 /\ equal s1 s2))
 
-let split (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)}) : Tot (seq a * seq a)
+let split (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)}) : Tot (seq a & seq a)
   = slice s 0 i, slice s i (length s)
 
 val lemma_split : #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
@@ -63,7 +61,7 @@ val lemma_split : #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Lemm
 
 let split_eq (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)})
 : Pure
-  (seq a * seq a)
+  (seq a & seq a)
   (requires True)
   (ensures (fun x -> (append (fst x) (snd x) == s)))
 = let x = split s i in
@@ -196,6 +194,11 @@ val lemma_swap_permutes_aux: #a:eqtype -> s:seq a -> i:nat{i<length s} -> j:nat{
 
 type permutation (a:eqtype) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
+
+val append_permutations: #a:eqtype -> s1:seq a -> s2:seq a -> s1':seq a -> s2':seq a -> Lemma
+    (requires permutation a s1 s1' /\ permutation a s2 s2')
+    (ensures permutation a (append s1 s2) (append s1' s2'))
+
 val lemma_swap_permutes (#a:eqtype) (s:seq a) (i:nat{i<length s}) (j:nat{i <= j && j<length s})
   : Lemma (permutation a s (swap s i j))
 
@@ -359,7 +362,7 @@ val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
                                  | None -> find_l f s == None /\ not (f x)
                                  | Some y -> res == find_l f s \/ (f x /\ x==y)))
 
-let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
+let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a & a){s == snoc (fst r) (snd r)}) =
   let s', a = split s (length s - 1) in
   assert (Seq.equal (snoc s' (Seq.index a 0)) s);
   s', Seq.index a 0
@@ -422,18 +425,6 @@ val seq_mem_k: #a:eqtype -> s:seq a -> n:nat{n < Seq.length s} ->
 
 module L = FStar.List.Tot
 
-let rec seq_to_list (#a:Type) (s:seq a)
-: Tot (l:list a{L.length l = length s})
-  (decreases (length s))
-= if length s = 0 then []
-  else index s 0::seq_to_list (slice s 1 (length s))
-
-[@@"opaque_to_smt"]
-let rec seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{L.length l = length s})  =
-  match l with
-  | [] -> Seq.empty #a
-  | hd::tl -> create 1 hd @| seq_of_list tl
-
 val lemma_seq_of_list_induction (#a:Type) (l:list a)
   :Lemma (requires True)
          (ensures (let s = seq_of_list l in
@@ -450,7 +441,7 @@ val lemma_list_seq_bij: #a:Type -> l:list a -> Lemma
   (requires (True))
   (ensures  (seq_to_list (seq_of_list l) == l))
 
-unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : GTot Type0 =
+unfold let createL_post (#a:Type0) (l:list a) (s:seq a) : prop =
   normalize (L.length l = length s) /\ seq_to_list s == l /\ seq_of_list l == s
 
 let createL (#a:Type0) (l:list a)
@@ -471,7 +462,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
 [@@ remove_unused_type_parameters [0; 1; 2]]
-val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
+val contains (#a:Type) (s:seq a) (x:a) : Tot prop
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
   : Lemma (k < Seq.length s /\ Seq.index s k == x
@@ -668,7 +659,7 @@ let rec explode_and (#a: Type)
   (i: nat)
   (s: seq a { i <= length s })
   (l: list a { List.Tot.length l + i = length s }):
-  Tot Type
+  Tot prop
   (decreases (List.Tot.length l))
 = match l with
   | [] -> True

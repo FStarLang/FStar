@@ -1,15 +1,18 @@
-FSTAR_HOME=../..
-include ../../examples/Makefile.include
+FSTAR_ROOT ?= ../..
+SUBDIRS += emacs
+include $(FSTAR_ROOT)/mk/test.mk
 
-ALL_TEST_DIRS=\
-lsp \
-emacs
+INCR_TEST_FILES := $(wildcard $(FSTAR_ROOT)/ulib/*.fst  $(FSTAR_ROOT)/ulib/*.fsti)
 
-all: $(addsuffix .all, $(ALL_TEST_DIRS))
-clean: $(addsuffix .clean, $(ALL_TEST_DIRS))
+.PHONY: test_incremental test_ide_without_file
+test_incremental: $(patsubst $(FSTAR_ROOT)/ulib/%, %.test-incr, $(INCR_TEST_FILES))
 
-%.all: %
-	+$(MAKE) -C $^ all
+test_ide_without_file:
+	$(FSTAR_EXE) --ide TestNoFile.fst < idewithoutfile.in
 
-%.clean: %
-	+$(MAKE) -C $^ clean
+%.test-incr: $(FSTAR_ROOT)/ulib/%
+	$(call msg, "IDE_INCR", $<)
+	python3 test-incremental.py $(FSTAR_EXE) $< $(if $(V),,>/dev/null)
+	@touch $@
+
+all: test_incremental test_ide_without_file

@@ -2,3 +2,4 @@
 [Oo]bj/
 packages/
 _output/
+*.run

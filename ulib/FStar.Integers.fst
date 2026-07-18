@@ -15,7 +15,7 @@
 *)
 module FStar.Integers
 
-#set-options "--initial_ifuel 2 --max_ifuel 2 --initial_fuel 0 --max_fuel 0"
+#set-options "--ifuel 2 --fuel 0"
 
 irreducible
 let mark_for_norm = ()
@@ -266,7 +266,6 @@ let op_Minus
     | W64 -> FStar.Int64.(0L -^ x)
     | W128 -> FStar.Int128.(int_to_t 0 -^ x)
 
-open FStar.Mul
 [@@mark_for_norm; strict_on_arguments [0]]
 unfold
 noextract
@@ -391,7 +390,7 @@ let ( / ) (#sw:signed_width{sw <> Unsigned W128})
           (y:int_t sw{0 <> (v y <: Prims.int) /\
                       (match sw with
                        | Unsigned _ -> within_bounds sw (v x / v y)
-                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash` v y))})
+                       | Signed _ -> within_bounds sw (v x `FStar.Int.op_Slash_Subtraction` v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x / y
@@ -415,7 +414,7 @@ let ( % ) (#sw:signed_width{sw <> Unsigned W128})
                        | Unsigned _ -> within_bounds sw (FStar.UInt.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))
                        | Signed Winfinite -> True
                        | Signed _ -> within_bounds sw (FStar.Int.mod #(nat_of_fixed_width (width_of_sw sw)) (v x) (v y))) /\
-                       within_bounds sw (FStar.Int.op_Slash (v x) (v y))})
+                       within_bounds sw (FStar.Int.op_Slash_Subtraction (v x) (v y))})
    : Tot (int_t sw)
    = match sw with
      | Signed Winfinite -> x % y
