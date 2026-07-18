@@ -710,8 +710,7 @@ let term_as_formula' (t : FStar_Tactics_NamedView.term) :
           (Obj.repr
              (FStarC_Tactics_V2_Builtins.raise_core
                 (FStarC_Tactics_Common.TacticFailure
-                   ([FStar_Pprint.arbitrary_string
-                       "Unexpected: term_as_formula"],
+                   ((FStar_Errors_Msg.mkmsg "Unexpected: term_as_formula"),
                      FStar_Pervasives_Native.None)) ps))
 let _ =
   FStarC_Tactics_Native.register_tactic

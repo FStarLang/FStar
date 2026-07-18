@@ -96,7 +96,7 @@ let fail (m : Prims.string) : ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
     Obj.magic
       (FStarC_Tactics_V2_Builtins.raise_core
          (FStarC_Tactics_Common.TacticFailure
-            ((FStarC_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None)) ps)
+            ((FStar_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None)) ps)
 let rec mk_arr (bs : FStar_Tactics_NamedView.binder Prims.list)
   (cod : FStar_Tactics_NamedView.comp) :
   (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=

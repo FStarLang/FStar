@@ -61,7 +61,7 @@ let map_optRO (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr)
   | FStar_Pervasives_Native.Some x1 ->
       FStar_Tactics_Effect.tac_bind () () (f x1)
         (fun uu___ uu___1 -> FStar_Pervasives_Native.Some uu___)
-let fail_doc_at (m : FStarC_Errors_Msg.error_message)
+let fail_doc_at (m : FStar_Errors_Msg.error_message)
   (r : FStar_Range.range FStar_Pervasives_Native.option) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -69,7 +69,7 @@ let fail_doc_at (m : FStarC_Errors_Msg.error_message)
     Obj.magic
       (FStarC_Tactics_V2_Builtins.raise_core
          (FStarC_Tactics_Common.TacticFailure (m, x)) ps)
-let fail_doc (m : FStarC_Errors_Msg.error_message) :
+let fail_doc (m : FStar_Errors_Msg.error_message) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     Obj.magic
@@ -79,10 +79,10 @@ let fail_doc (m : FStarC_Errors_Msg.error_message) :
 let fail_at (m : Prims.string)
   (r : FStar_Range.range FStar_Pervasives_Native.option) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fail_doc_at (FStarC_Errors_Msg.mkmsg m) r
+  fail_doc_at (FStar_Errors_Msg.mkmsg m) r
 let fail (m : Prims.string) : ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
   fail_at m FStar_Pervasives_Native.None
-let fail_silently_doc (m : FStarC_Errors_Msg.error_message) :
+let fail_silently_doc (m : FStar_Errors_Msg.error_message) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStarC_Tactics_V2_Builtins.set_urgency Prims.int_zero ps;
@@ -92,7 +92,7 @@ let fail_silently_doc (m : FStarC_Errors_Msg.error_message) :
             (m, FStar_Pervasives_Native.None)) ps)
 let fail_silently (m : Prims.string) :
   ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
-  fail_silently_doc (FStarC_Errors_Msg.mkmsg m)
+  fail_silently_doc (FStar_Errors_Msg.mkmsg m)
 let _cur_goal (uu___ : unit) :
   (FStarC_Tactics_Types.goal, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->

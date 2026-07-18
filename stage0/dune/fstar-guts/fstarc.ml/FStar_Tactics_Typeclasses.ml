@@ -662,9 +662,9 @@ let rec tcresolve' (st : st_t) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
         then
           (FStarC_Tactics_V2_Builtins.log_issues
              [FStar_Issue.mk_issue_doc "Warning"
-                [FStar_Pprint.arbitrary_string
+                [FStar_Errors_Msg.text
                    "Warning: fuel exhausted during typeclass resolution.";
-                FStar_Pprint.arbitrary_string
+                FStar_Errors_Msg.text
                   "This usually indicates a loop in your instances."]
                 (FStar_Pervasives_Native.Some (st.rng))
                 FStar_Pervasives_Native.None []] ps;
@@ -743,15 +743,15 @@ let __tcresolve (dbg : Prims.bool) :
                           FStarC_Tactics_V2_Builtins.term_to_doc x11 ps1 in
                         fquotes x10 in
                       FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
-                        (FStar_Pprint.arbitrary_string
+                        (FStar_Errors_Msg.text
                            "Could not solve typeclass constraint") x9 in
                     [x8] in
                   FStar_Tactics_V2_Derived.fail_doc x7 ps1)
            | FStarC_Tactics_Common.TacticFailure (msg, r) ->
                FStar_Tactics_V2_Derived.fail_doc_at
                  (op_At ()
-                    [FStar_Pprint.arbitrary_string
-                       "Typeclass resolution failed."] msg) r
+                    [FStar_Errors_Msg.text "Typeclass resolution failed."]
+                    msg) r
            | e ->
                FStar_Tactics_Effect.tac_bind () ()
                  (FStarC_Tactics_V2_Builtins.raise_core e)
