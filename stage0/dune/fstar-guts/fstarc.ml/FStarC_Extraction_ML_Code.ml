@@ -108,8 +108,8 @@ let path_of_ns (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
             let cg_len = FStarC_List.length cg_path in
             if (FStarC_List.length cg_path) < ns_len
             then
-              let uu___1 = FStarC_Util.first_N cg_len ns in
-              match uu___1 with
+              let uu___ = FStarC_Util.first_N cg_len ns in
+              match uu___ with
               | (pfx, sfx) ->
                   (if pfx = cg_path
                    then
@@ -146,13 +146,13 @@ let ptsym (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   if Prims.uu___is_Nil (FStar_Pervasives_Native.fst mlp)
   then ptsym_of_symbol (FStar_Pervasives_Native.snd mlp)
   else
-    (let uu___1 = mlpath_of_mlpath currentModule mlp in
-     match uu___1 with
+    (let uu___ = mlpath_of_mlpath currentModule mlp in
+     match uu___ with
      | (p, s) ->
-         let uu___2 =
-           let uu___3 = let uu___4 = ptsym_of_symbol s in [uu___4] in
-           FStarC_List.op_At p uu___3 in
-         FStarC_String.concat "." uu___2)
+         let uu___1 =
+           let uu___2 = let uu___3 = ptsym_of_symbol s in [uu___3] in
+           FStarC_List.op_At p uu___2 in
+         FStarC_String.concat "." uu___1)
 let ptctor (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   (mlp : FStarC_Extraction_ML_Syntax.mlpath) :
   FStarC_Extraction_ML_Syntax.mlsymbol=
@@ -314,9 +314,9 @@ let string_of_mlconstant (sctt : FStarC_Extraction_ML_Syntax.mlconstant) :
       then Prims.strcat "'" (Prims.strcat (FStarC_Util.string_of_char c) "'")
       else
         (let nc = FStar_Char.int_of_char c in
-         let uu___2 =
+         let uu___1 =
            FStarC_Class_Show.show FStarC_Class_Show.showable_nat nc in
-         Prims.strcat uu___2
+         Prims.strcat uu___1
            (if
               ((nc >= (Prims.of_int 32)) && (nc = (Prims.of_int 127))) &&
                 (nc < (Prims.of_int 34))
@@ -435,8 +435,8 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
         let uu___1 = reduce [text "Prims.unsafe_coerce "; doc1] in
         parens uu___1
       else
-        (let uu___2 = reduce [text "Obj.magic "; parens doc1] in
-         parens uu___2)
+        (let uu___1 = reduce [text "Obj.magic "; parens doc1] in
+         parens uu___1)
   | FStarC_Extraction_ML_Syntax.MLE_Seq es ->
       let docs =
         FStarC_List.map (doc_of_expr currentModule (min_op_prec, NonAssoc))
@@ -627,15 +627,15 @@ let rec doc_of_expr (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
         if uu___
         then reduce [e2; text "."; text (FStar_Pervasives_Native.snd f)]
         else
-          (let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 = ptsym currentModule f in text uu___6 in
-                 [uu___5] in
-               (text ".") :: uu___4 in
-             e2 :: uu___3 in
-           reduce uu___2) in
+          (let uu___1 =
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 = ptsym currentModule f in text uu___5 in
+                 [uu___4] in
+               (text ".") :: uu___3 in
+             e2 :: uu___2 in
+           reduce uu___1) in
       doc1
   | FStarC_Extraction_ML_Syntax.MLE_Fun (ids, body) ->
       let bvar_annot x xt =
@@ -905,15 +905,15 @@ and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
               if Prims.op_Negation pt
               then text ""
               else
-                (let uu___6 =
-                   let uu___7 = FStarC_Extraction_ML_Util.codegen_fsharp () in
-                   if uu___7
+                (let uu___5 =
+                   let uu___6 = FStarC_Extraction_ML_Util.codegen_fsharp () in
+                   if uu___6
                    then (rec_ = FStarC_Extraction_ML_Syntax.Rec) || top_level
                    else false in
-                 if uu___6
+                 if uu___5
                  then
                    match tys with
-                   | FStar_Pervasives_Native.Some (uu___7::uu___8, uu___9) ->
+                   | FStar_Pervasives_Native.Some (uu___6::uu___7, uu___8) ->
                        text ""
                    | FStar_Pervasives_Native.None -> text ""
                    | FStar_Pervasives_Native.Some ([], ty) ->
@@ -936,16 +936,16 @@ and doc_of_lets (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
                             doc_of_mltype currentModule
                               (min_op_prec, NonAssoc) ty in
                           let vars =
-                            let uu___8 =
-                              let uu___9 =
+                            let uu___6 =
+                              let uu___7 =
                                 FStarC_Extraction_ML_Syntax.ty_param_names vs in
                               FStarC_List.map
                                 (fun x ->
                                    doc_of_mltype currentModule
                                      (min_op_prec, NonAssoc)
                                      (FStarC_Extraction_ML_Syntax.MLTY_Var x))
-                                uu___9 in
-                            reduce1 uu___8 in
+                                uu___7 in
+                            reduce1 uu___6 in
                           reduce1 [text ":"; vars; text "."; ty1])
                    else text "") in
             let uu___5 =
@@ -980,12 +980,12 @@ and doc_of_loc (arg : (Prims.int * Prims.string)) : doc=
       then empty
       else
         (let file1 = FStarC_Filepath.basename file in
-         let uu___3 =
-           let uu___4 =
-             let uu___5 = num lineno in
-             [uu___5; text (Prims.strcat "\"" (Prims.strcat file1 "\""))] in
-           (text "#") :: uu___4 in
-         reduce1 uu___3)
+         let uu___2 =
+           let uu___3 =
+             let uu___4 = num lineno in
+             [uu___4; text (Prims.strcat "\"" (Prims.strcat file1 "\""))] in
+           (text "#") :: uu___3 in
+         reduce1 uu___2)
 let doc_of_mltydecl (currentModule : FStarC_Extraction_ML_Syntax.mlsymbol)
   (decls : FStarC_Extraction_ML_Syntax.mltydecl) : doc=
   let for1 uu___ =

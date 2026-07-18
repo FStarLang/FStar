@@ -472,11 +472,11 @@ let show_options (uu___ : unit) : Prims.string=
                            (FStarC_PSMap.try_find s k) in
                        let v0 =
                          list_try_find FStarC_Class_Deq.deq_string k defaults in
-                       let uu___3 =
+                       let uu___2 =
                          FStarC_Class_Deq.op_Equals_Question
                            (FStarC_Class_Deq.deq_option deq_option_val) v0
                            (FStar_Pervasives_Native.Some v) in
-                       if uu___3
+                       if uu___2
                        then Obj.repr []
                        else
                          Obj.repr
@@ -1018,8 +1018,7 @@ let interp_quake_arg (s : Prims.string) :
       if f2 = "k"
       then let uu___ = ios f1 in let uu___1 = ios f1 in (uu___, uu___1, true)
       else
-        (let uu___1 = ios f1 in
-         let uu___2 = ios f2 in (uu___1, uu___2, false))
+        (let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, false))
   | f1::f2::k::[] ->
       if k = "k"
       then let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
@@ -3078,10 +3077,10 @@ let settable_specs :
            else
              (let h' =
                 match h with
-                | FStarC_Getopt.ZeroArgs uu___3 ->
+                | FStarC_Getopt.ZeroArgs uu___2 ->
                     FStarC_Getopt.ZeroArgs
-                      ((fun uu___4 -> FStarC_Effect.raise (NotSettable x)))
-                | FStarC_Getopt.OneArg (uu___3, k) ->
+                      ((fun uu___3 -> FStarC_Effect.raise (NotSettable x)))
+                | FStarC_Getopt.OneArg (uu___2, k) ->
                     FStarC_Getopt.OneArg
                       (((fun s -> FStarC_Effect.raise (NotSettable x))), k) in
               ((c, x, h'), doc))) all_specs
@@ -3136,10 +3135,10 @@ let rec parse_filename_arg (specs1 : FStarC_Getopt.opt Prims.list)
   else
     (if enable_filenames
      then
-       (let uu___4 =
-          let uu___5 = FStarC_Effect.op_Bang file_list_ in
-          FStarC_List.op_At uu___5 [arg] in
-        FStarC_Effect.op_Colon_Equals file_list_ uu___4)
+       (let uu___3 =
+          let uu___4 = FStarC_Effect.op_Bang file_list_ in
+          FStarC_List.op_At uu___4 [arg] in
+        FStarC_Effect.op_Colon_Equals file_list_ uu___3)
      else ();
      FStarC_Getopt.Success)
 let parsed_args_state :
@@ -3246,8 +3245,8 @@ let parse_settings (ns : Prims.string Prims.list) :
         if FStarC_Util.starts_with s "-"
         then
           (let path =
-             let uu___4 = FStarC_Util.substring_from s Prims.int_one in
-             path_of_text uu___4 in
+             let uu___ = FStarC_Util.substring_from s Prims.int_one in
+             path_of_text uu___ in
            (path, false))
         else
           (let s1 =
@@ -3265,13 +3264,13 @@ let parse_settings (ns : Prims.string Prims.list) :
            with_cache
              (fun s2 ->
                 let s3 = FStarC_Util.replace_char s2 32 44 in
-                let uu___4 =
-                  let uu___5 =
+                let uu___3 =
+                  let uu___4 =
                     FStarC_List.concatMap
                       (fun s4 -> FStarC_Util.split s4 ",")
                       (FStarC_Util.splitlines s3) in
-                  FStarC_List.filter (fun s4 -> s4 <> "") uu___5 in
-                FStarC_List.map parse_one_setting uu___4) s1) ns in
+                  FStarC_List.filter (fun s4 -> s4 <> "") uu___4 in
+                FStarC_List.map parse_one_setting uu___3) s1) ns in
   FStarC_List.rev uu___
 let admit_smt_queries (uu___ : unit) : Prims.bool= get_admit_smt_queries ()
 let admit_except (uu___ : unit) :
@@ -3357,12 +3356,12 @@ let message_format (uu___ : unit) : message_format_t=
       if uu___4
       then Human
       else
-        (let uu___6 =
+        (let uu___5 =
            FStarC_Util.expand_environment_variable "GITHUB_ACTIONS" in
-         match uu___6 with
+         match uu___5 with
          | FStar_Pervasives_Native.None -> Human
          | FStar_Pervasives_Native.Some "" -> Human
-         | FStar_Pervasives_Native.Some uu___7 -> Github)
+         | FStar_Pervasives_Native.Some uu___6 -> Github)
   | "human" -> Human
   | "json" -> Json
   | "github" -> Github
@@ -3705,8 +3704,8 @@ let extract_settings :
         if set1
         then result
         else
-          (let uu___5 = get_extract () in
-           match uu___5 with
+          (let uu___4 = get_extract () in
+           match uu___4 with
            | FStar_Pervasives_Native.None ->
                (FStarC_Effect.op_Colon_Equals memo
                   (FStar_Pervasives_Native.None, true);
@@ -3727,7 +3726,7 @@ let extract_settings :
                         | FStar_Pervasives_Native.Some tgt ->
                             FStar_Pervasives.Inl
                               (tgt, (FStarC_Util.trim_string setting))
-                        | uu___6 -> fail t_setting) in
+                        | uu___5 -> fail t_setting) in
                  let settings =
                    FStarC_List.map split_one tgt_specific_settings in
                  let fail_duplicate msg tgt =
@@ -3749,16 +3748,16 @@ let extract_settings :
                                    default_settings =
                                      (FStar_Pervasives_Native.Some def)
                                  }
-                             | FStar_Pervasives_Native.Some uu___6 ->
+                             | FStar_Pervasives_Native.Some uu___5 ->
                                  fail_duplicate def "default")
                         | FStar_Pervasives.Inl (target, setting1) ->
-                            let uu___6 =
+                            let uu___5 =
                               FStarC_Util.try_find
-                                (fun uu___7 ->
-                                   match uu___7 with
-                                   | (x, uu___8) -> x = target)
+                                (fun uu___6 ->
+                                   match uu___6 with
+                                   | (x, uu___7) -> x = target)
                                 out.target_specific_settings in
-                            (match uu___6 with
+                            (match uu___5 with
                              | FStar_Pervasives_Native.None ->
                                  {
                                    target_specific_settings =
@@ -3766,7 +3765,7 @@ let extract_settings :
                                      (out.target_specific_settings));
                                    default_settings = (out.default_settings)
                                  }
-                             | FStar_Pervasives_Native.Some uu___7 ->
+                             | FStar_Pervasives_Native.Some uu___6 ->
                                  fail_duplicate setting1
                                    (print_codegen target))) settings
                      {
@@ -3782,8 +3781,8 @@ let extract_settings :
                let pes =
                  FStarC_List.fold_right
                    (fun setting pes1 ->
-                      let uu___6 = parse_one_setting setting in
-                      merge_parsed_extract_settings pes1 uu___6)
+                      let uu___5 = parse_one_setting setting in
+                      merge_parsed_extract_settings pes1 uu___5)
                    extract_settings1 empty_pes in
                (FStarC_Effect.op_Colon_Equals memo
                   ((FStar_Pervasives_Native.Some pes), true);
@@ -3793,22 +3792,22 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
   if m1 = "prims"
   then false
   else
-    (let uu___3 = extract_settings () in
-     match uu___3 with
+    (let uu___ = extract_settings () in
+     match uu___ with
      | FStar_Pervasives_Native.Some pes ->
-         ((let uu___5 =
-             let uu___6 = get_no_extract () in
-             let uu___7 = get_extract_namespace () in
-             let uu___8 = get_extract_module () in (uu___6, uu___7, uu___8) in
-           match uu___5 with
+         ((let uu___4 =
+             let uu___5 = get_no_extract () in
+             let uu___6 = get_extract_namespace () in
+             let uu___7 = get_extract_module () in (uu___5, uu___6, uu___7) in
+           match uu___4 with
            | ([], [], []) -> ()
-           | uu___6 ->
+           | uu___5 ->
                FStarC_Effect.failwith
                  "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
           (let tsetting =
-             let uu___5 =
+             let uu___4 =
                find_setting_for_target tgt pes.target_specific_settings in
-             match uu___5 with
+             match uu___4 with
              | FStar_Pervasives_Native.Some s -> s
              | FStar_Pervasives_Native.None ->
                  (match pes.default_settings with
@@ -3817,8 +3816,8 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
            module_matches_namespace_filter m1 [tsetting]))
      | FStar_Pervasives_Native.None ->
          let should_extract_namespace m2 =
-           let uu___4 = get_extract_namespace () in
-           match uu___4 with
+           let uu___3 = get_extract_namespace () in
+           match uu___3 with
            | [] -> false
            | ns ->
                FStarC_Util.for_some
@@ -3826,23 +3825,23 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
                     FStarC_Util.starts_with m2 (FStarC_String.lowercase n))
                  ns in
          let should_extract_module m2 =
-           let uu___4 = get_extract_module () in
-           match uu___4 with
+           let uu___3 = get_extract_module () in
+           match uu___3 with
            | [] -> false
            | l ->
                FStarC_Util.for_some
                  (fun n -> (FStarC_String.lowercase n) = m2) l in
-         let uu___4 = let uu___5 = no_extract m1 in Prims.op_Negation uu___5 in
-         if uu___4
+         let uu___3 = let uu___4 = no_extract m1 in Prims.op_Negation uu___4 in
+         if uu___3
          then
-           let uu___5 =
-             let uu___6 = get_extract_namespace () in
-             let uu___7 = get_extract_module () in (uu___6, uu___7) in
-           (match uu___5 with
+           let uu___4 =
+             let uu___5 = get_extract_namespace () in
+             let uu___6 = get_extract_module () in (uu___5, uu___6) in
+           (match uu___4 with
             | ([], []) -> if tgt = Krml then true else should_check m1
-            | uu___6 ->
-                let uu___7 = should_extract_namespace m1 in
-                if uu___7 then true else should_extract_module m1)
+            | uu___5 ->
+                let uu___6 = should_extract_namespace m1 in
+                if uu___6 then true else should_extract_module m1)
          else false)
 let should_be_already_cached (m : Prims.string) : Prims.bool=
   let uu___ = let uu___3 = should_check m in Prims.op_Negation uu___3 in

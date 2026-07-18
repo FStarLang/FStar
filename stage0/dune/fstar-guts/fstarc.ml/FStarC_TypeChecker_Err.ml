@@ -99,29 +99,29 @@ let errors_smt_detail (env : FStarC_TypeChecker_Env.env)
                          (FStarC_TypeChecker_Env.get_range env))
                   then
                     let msg2 =
-                      let uu___3 =
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 =
+                              FStarC_Range_Ops.string_of_use_range r in
+                            Prims.strcat "Also see: " uu___5 in
+                          FStar_Pprint.doc_of_string uu___4 in
                         let uu___4 =
                           let uu___5 =
-                            let uu___6 =
-                              FStarC_Range_Ops.string_of_use_range r in
-                            Prims.strcat "Also see: " uu___6 in
-                          FStar_Pprint.doc_of_string uu___5 in
-                        let uu___5 =
-                          let uu___6 =
                             if
                               (FStarC_Range_Type.use_range r) <>
                                 (FStarC_Range_Type.def_range r)
                             then
-                              let uu___7 =
-                                let uu___8 =
+                              let uu___6 =
+                                let uu___7 =
                                   FStarC_Range_Ops.string_of_def_range r in
                                 Prims.strcat "Other related locations: "
-                                  uu___8 in
-                              FStar_Pprint.doc_of_string uu___7
+                                  uu___7 in
+                              FStar_Pprint.doc_of_string uu___6
                             else FStar_Pprint.empty in
-                          [uu___6] in
-                        uu___4 :: uu___5 in
-                      FStar_List_Tot_Base.op_At msg1 uu___3 in
+                          [uu___5] in
+                        uu___3 :: uu___4 in
+                      FStar_List_Tot_Base.op_At msg1 uu___2 in
                     (e, msg2, (FStarC_TypeChecker_Env.get_range env), ctx)
                   else (e, msg1, r, ctx)) in
              (match uu___1 with

@@ -204,111 +204,111 @@ let max_uniformly_recursive_parameters (env : FStarC_TypeChecker_Env.env_t)
       if uu___2
       then n_params
       else
-        (let uu___4 =
-           let uu___5 = FStarC_Syntax_Subst.compress ty2 in
-           uu___5.FStarC_Syntax_Syntax.n in
-         match uu___4 with
-         | FStarC_Syntax_Syntax.Tm_name uu___5 -> n_params
-         | FStarC_Syntax_Syntax.Tm_fvar uu___5 -> n_params
-         | FStarC_Syntax_Syntax.Tm_uinst uu___5 -> n_params
-         | FStarC_Syntax_Syntax.Tm_type uu___5 -> n_params
-         | FStarC_Syntax_Syntax.Tm_constant uu___5 -> n_params
+        (let uu___3 =
+           let uu___4 = FStarC_Syntax_Subst.compress ty2 in
+           uu___4.FStarC_Syntax_Syntax.n in
+         match uu___3 with
+         | FStarC_Syntax_Syntax.Tm_name uu___4 -> n_params
+         | FStarC_Syntax_Syntax.Tm_fvar uu___4 -> n_params
+         | FStarC_Syntax_Syntax.Tm_uinst uu___4 -> n_params
+         | FStarC_Syntax_Syntax.Tm_type uu___4 -> n_params
+         | FStarC_Syntax_Syntax.Tm_constant uu___4 -> n_params
          | FStarC_Syntax_Syntax.Tm_refine
              { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = f;_} ->
-             let uu___5 = aux x.FStarC_Syntax_Syntax.sort in
-             let uu___6 =
-               let uu___7 =
+             let uu___4 = aux x.FStarC_Syntax_Syntax.sort in
+             let uu___5 =
+               let uu___6 =
                  FStarC_Syntax_Subst.open_term
                    [FStarC_Syntax_Syntax.mk_binder x] f in
-               match uu___7 with | (uu___8, f1) -> aux f1 in
-             Prims.min uu___5 uu___6
-         | FStarC_Syntax_Syntax.Tm_app uu___5 ->
-             let uu___6 = FStarC_Syntax_Util.head_and_args ty2 in
-             (match uu___6 with
+               match uu___6 with | (uu___7, f1) -> aux f1 in
+             Prims.min uu___4 uu___5
+         | FStarC_Syntax_Syntax.Tm_app uu___4 ->
+             let uu___5 = FStarC_Syntax_Util.head_and_args ty2 in
+             (match uu___5 with
               | (head, args) ->
-                  let uu___7 =
-                    let uu___8 = FStarC_Syntax_Util.un_uinst head in
-                    uu___8.FStarC_Syntax_Syntax.n in
-                  (match uu___7 with
+                  let uu___6 =
+                    let uu___7 = FStarC_Syntax_Util.un_uinst head in
+                    uu___7.FStarC_Syntax_Syntax.n in
+                  (match uu___6 with
                    | FStarC_Syntax_Syntax.Tm_fvar fv ->
-                       let uu___8 =
+                       let uu___7 =
                          FStarC_List.existsML
                            (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals in
-                       if uu___8
+                       if uu___7
                        then
                          (debug_positivity env
-                            (fun uu___10 ->
-                               let uu___11 = params_to_string () in
-                               let uu___12 =
+                            (fun uu___9 ->
+                               let uu___10 = params_to_string () in
+                               let uu___11 =
                                  FStarC_Syntax_Print.args_to_string args in
                                FStarC_Format.fmt2
                                  "Searching for max matching prefix of params=%s in args=%s"
-                                 uu___11 uu___12);
-                          (let uu___10 =
+                                 uu___10 uu___11);
+                          (let uu___9 =
                              max_matching_prefix args params compare_name_bv in
-                           match uu___10 with
+                           match uu___9 with
                            | FStar_Pervasives_Native.None -> Prims.int_zero
                            | FStar_Pervasives_Native.Some n -> n))
                        else
                          min_l1 args
-                           (fun uu___10 ->
-                              match uu___10 with | (arg, uu___11) -> aux arg)
-                   | uu___8 ->
-                       let uu___9 = aux head in
-                       let uu___10 =
+                           (fun uu___8 ->
+                              match uu___8 with | (arg, uu___9) -> aux arg)
+                   | uu___7 ->
+                       let uu___8 = aux head in
+                       let uu___9 =
                          min_l1 args
-                           (fun uu___11 ->
-                              match uu___11 with | (arg, uu___12) -> aux arg) in
-                       Prims.min uu___9 uu___10))
-         | FStarC_Syntax_Syntax.Tm_abs uu___5 ->
-             let uu___6 = FStarC_Syntax_Util.abs_formals ty2 in
-             (match uu___6 with
-              | (bs, body, uu___7) ->
-                  let uu___8 =
-                    min_l1 bs
-                      (fun b ->
-                         aux
-                           (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-                  let uu___9 = aux body in Prims.min uu___8 uu___9)
-         | FStarC_Syntax_Syntax.Tm_arrow uu___5 ->
-             let uu___6 = FStarC_Syntax_Util.arrow_formals ty2 in
-             (match uu___6 with
-              | (bs, r) ->
+                           (fun uu___10 ->
+                              match uu___10 with | (arg, uu___11) -> aux arg) in
+                       Prims.min uu___8 uu___9))
+         | FStarC_Syntax_Syntax.Tm_abs uu___4 ->
+             let uu___5 = FStarC_Syntax_Util.abs_formals ty2 in
+             (match uu___5 with
+              | (bs, body, uu___6) ->
                   let uu___7 =
                     min_l1 bs
                       (fun b ->
                          aux
                            (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-                  let uu___8 = aux r in Prims.min uu___7 uu___8)
+                  let uu___8 = aux body in Prims.min uu___7 uu___8)
+         | FStarC_Syntax_Syntax.Tm_arrow uu___4 ->
+             let uu___5 = FStarC_Syntax_Util.arrow_formals ty2 in
+             (match uu___5 with
+              | (bs, r) ->
+                  let uu___6 =
+                    min_l1 bs
+                      (fun b ->
+                         aux
+                           (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                  let uu___7 = aux r in Prims.min uu___6 uu___7)
          | FStarC_Syntax_Syntax.Tm_match
              { FStarC_Syntax_Syntax.scrutinee = scrutinee;
-               FStarC_Syntax_Syntax.ret_opt = uu___5;
+               FStarC_Syntax_Syntax.ret_opt = uu___4;
                FStarC_Syntax_Syntax.brs = branches;
-               FStarC_Syntax_Syntax.rc_opt1 = uu___6;_}
+               FStarC_Syntax_Syntax.rc_opt1 = uu___5;_}
              ->
-             let uu___7 = aux scrutinee in
-             let uu___8 =
+             let uu___6 = aux scrutinee in
+             let uu___7 =
                min_l1 branches
-                 (fun uu___9 ->
-                    match uu___9 with
-                    | (p, uu___10, t) ->
+                 (fun uu___8 ->
+                    match uu___8 with
+                    | (p, uu___9, t) ->
                         let bs =
-                          let uu___11 = FStarC_Syntax_Syntax.pat_bvs p in
+                          let uu___10 = FStarC_Syntax_Syntax.pat_bvs p in
                           FStarC_List.map FStarC_Syntax_Syntax.mk_binder
-                            uu___11 in
-                        let uu___11 = FStarC_Syntax_Subst.open_term bs t in
-                        (match uu___11 with | (bs1, t1) -> aux t1)) in
-             Prims.min uu___7 uu___8
+                            uu___10 in
+                        let uu___10 = FStarC_Syntax_Subst.open_term bs t in
+                        (match uu___10 with | (bs1, t1) -> aux t1)) in
+             Prims.min uu___6 uu___7
          | FStarC_Syntax_Syntax.Tm_meta
              { FStarC_Syntax_Syntax.tm2 = t;
-               FStarC_Syntax_Syntax.meta = uu___5;_}
+               FStarC_Syntax_Syntax.meta = uu___4;_}
              -> aux t
          | FStarC_Syntax_Syntax.Tm_ascribed
              { FStarC_Syntax_Syntax.tm = t;
-               FStarC_Syntax_Syntax.asc = uu___5;
-               FStarC_Syntax_Syntax.eff_opt = uu___6;_}
+               FStarC_Syntax_Syntax.asc = uu___4;
+               FStarC_Syntax_Syntax.eff_opt = uu___5;_}
              -> aux t
-         | uu___5 -> Prims.int_zero)) in
+         | uu___4 -> Prims.int_zero)) in
    let res = aux ty1 in
    debug_positivity env
      (fun uu___2 ->
@@ -671,79 +671,79 @@ let check_no_index_occurrences_in_arities (env : FStarC_TypeChecker_Env.env)
                  if (FStarC_List.length args) <= n
                  then ()
                  else
-                   (let uu___5 =
+                   (let uu___4 =
                       FStarC_TypeChecker_Env.try_lookup_lid env
                         fv.FStarC_Syntax_Syntax.fv_name in
-                    match uu___5 with
+                    match uu___4 with
                     | FStar_Pervasives_Native.None ->
                         no_occurrence_in_indexes
                           fv.FStarC_Syntax_Syntax.fv_name mutuals args
-                    | FStar_Pervasives_Native.Some ((_us, i_typ), uu___6) ->
+                    | FStar_Pervasives_Native.Some ((_us, i_typ), uu___5) ->
                         (debug_positivity env
-                           (fun uu___8 ->
-                              let uu___9 =
+                           (fun uu___7 ->
+                              let uu___8 =
                                 FStarC_Class_Show.show
                                   FStarC_Syntax_Print.showable_term t in
-                              let uu___10 =
+                              let uu___9 =
                                 FStarC_Class_Show.show
                                   FStarC_Class_Show.showable_int n in
                               FStarC_Format.fmt2
                                 "Checking arity indexes of %s (num uniform params = %s)"
-                                uu___9 uu___10);
-                         (let uu___8 = FStarC_List.splitAt n args in
-                          match uu___8 with
+                                uu___8 uu___9);
+                         (let uu___7 = FStarC_List.splitAt n args in
+                          match uu___7 with
                           | (params, indices) ->
                               let inst_i_typ =
                                 apply_constr_arrow
                                   fv.FStarC_Syntax_Syntax.fv_name i_typ
                                   params in
-                              let uu___9 =
+                              let uu___8 =
                                 FStarC_Syntax_Util.arrow_formals inst_i_typ in
-                              (match uu___9 with
+                              (match uu___8 with
                                | (formals, _sort) ->
                                    let rec aux subst formals1 indices1 =
                                      match (formals1, indices1) with
-                                     | (uu___10, []) -> ()
+                                     | (uu___9, []) -> ()
                                      | (f::formals2, i::indices2) ->
                                          let f_t =
                                            FStarC_Syntax_Subst.subst subst
                                              (f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-                                         ((let uu___11 =
+                                         ((let uu___10 =
                                              may_be_an_arity env f_t in
-                                           if uu___11
+                                           if uu___10
                                            then
                                              (debug_positivity env
-                                                (fun uu___13 ->
-                                                   let uu___14 =
+                                                (fun uu___12 ->
+                                                   let uu___13 =
                                                      FStarC_Class_Show.show
                                                        FStarC_Syntax_Print.showable_term
                                                        (FStar_Pervasives_Native.fst
                                                           i) in
-                                                   let uu___15 =
+                                                   let uu___14 =
                                                      FStarC_Class_Show.show
                                                        FStarC_Syntax_Print.showable_term
                                                        f_t in
                                                    FStarC_Format.fmt2
                                                      "Checking %s : %s (arity)"
-                                                     uu___14 uu___15);
+                                                     uu___13 uu___14);
                                               no_occurrence_in_index
                                                 fv.FStarC_Syntax_Syntax.fv_name
                                                 mutuals i)
                                            else
                                              debug_positivity env
-                                               (fun uu___13 ->
-                                                  let uu___14 =
+                                               (fun uu___11 ->
+                                                  let uu___12 =
                                                     FStarC_Class_Show.show
                                                       FStarC_Syntax_Print.showable_term
                                                       (FStar_Pervasives_Native.fst
                                                          i) in
-                                                  let uu___15 =
+                                                  let uu___13 =
                                                     FStarC_Class_Show.show
                                                       FStarC_Syntax_Print.showable_term
                                                       f_t in
                                                   FStarC_Format.fmt2
                                                     "Skipping %s : %s (non-arity)"
-                                                    uu___14 uu___15));
+                                                    uu___12 uu___13));
                                           (let subst1 =
                                              (FStarC_Syntax_Syntax.NT
                                                 ((f.FStarC_Syntax_Syntax.binder_bv),
@@ -751,7 +751,7 @@ let check_no_index_occurrences_in_arities (env : FStarC_TypeChecker_Env.env)
                                                      i)))
                                              :: subst in
                                            aux subst1 formals2 indices2))
-                                     | ([], uu___10) ->
+                                     | ([], uu___9) ->
                                          no_occurrence_in_indexes
                                            fv.FStarC_Syntax_Syntax.fv_name
                                            mutuals indices1 in
@@ -766,82 +766,82 @@ let mutuals_unused_in_type (mutuals : FStarC_Ident.lident Prims.list)
     if uu___
     then true
     else
-      (let uu___2 =
-         let uu___3 = FStarC_Syntax_Subst.compress t1 in
-         uu___3.FStarC_Syntax_Syntax.n in
-       match uu___2 with
-       | FStarC_Syntax_Syntax.Tm_bvar uu___3 -> true
-       | FStarC_Syntax_Syntax.Tm_name uu___3 -> true
-       | FStarC_Syntax_Syntax.Tm_constant uu___3 -> true
-       | FStarC_Syntax_Syntax.Tm_type uu___3 -> true
-       | FStarC_Syntax_Syntax.Tm_fvar uu___3 -> false
-       | FStarC_Syntax_Syntax.Tm_uinst uu___3 -> false
+      (let uu___1 =
+         let uu___2 = FStarC_Syntax_Subst.compress t1 in
+         uu___2.FStarC_Syntax_Syntax.n in
+       match uu___1 with
+       | FStarC_Syntax_Syntax.Tm_bvar uu___2 -> true
+       | FStarC_Syntax_Syntax.Tm_name uu___2 -> true
+       | FStarC_Syntax_Syntax.Tm_constant uu___2 -> true
+       | FStarC_Syntax_Syntax.Tm_type uu___2 -> true
+       | FStarC_Syntax_Syntax.Tm_fvar uu___2 -> false
+       | FStarC_Syntax_Syntax.Tm_uinst uu___2 -> false
        | FStarC_Syntax_Syntax.Tm_abs
            { FStarC_Syntax_Syntax.bs = bs; FStarC_Syntax_Syntax.body = t2;
-             FStarC_Syntax_Syntax.rc_opt = uu___3;_}
-           -> let uu___4 = binders_ok bs in if uu___4 then ok t2 else false
+             FStarC_Syntax_Syntax.rc_opt = uu___2;_}
+           -> let uu___3 = binders_ok bs in if uu___3 then ok t2 else false
        | FStarC_Syntax_Syntax.Tm_arrow
            { FStarC_Syntax_Syntax.bs1 = bs; FStarC_Syntax_Syntax.comp = c;_}
            ->
-           let uu___3 = binders_ok bs in if uu___3 then ok_comp c else false
+           let uu___2 = binders_ok bs in if uu___2 then ok_comp c else false
        | FStarC_Syntax_Syntax.Tm_refine
            { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = t2;_} ->
-           let uu___3 = ok bv.FStarC_Syntax_Syntax.sort in
-           if uu___3 then ok t2 else false
+           let uu___2 = ok bv.FStarC_Syntax_Syntax.sort in
+           if uu___2 then ok t2 else false
        | FStarC_Syntax_Syntax.Tm_app
            { FStarC_Syntax_Syntax.hd = head;
              FStarC_Syntax_Syntax.args = args;_}
            ->
-           let uu___3 = mutuals_occur_in head in
-           if uu___3
+           let uu___2 = mutuals_occur_in head in
+           if uu___2
            then false
            else
              FStarC_List.for_all
-               (fun uu___5 ->
-                  match uu___5 with
+               (fun uu___3 ->
+                  match uu___3 with
                   | (a, qual) ->
-                      let uu___6 =
+                      let uu___4 =
                         match qual with
                         | FStar_Pervasives_Native.None -> false
                         | FStar_Pervasives_Native.Some q ->
                             FStarC_Syntax_Util.contains_unused_attribute
                               q.FStarC_Syntax_Syntax.aqual_attributes in
-                      if uu___6 then true else ok a) args
+                      if uu___4 then true else ok a) args
        | FStarC_Syntax_Syntax.Tm_match
            { FStarC_Syntax_Syntax.scrutinee = t2;
-             FStarC_Syntax_Syntax.ret_opt = uu___3;
+             FStarC_Syntax_Syntax.ret_opt = uu___2;
              FStarC_Syntax_Syntax.brs = branches;
-             FStarC_Syntax_Syntax.rc_opt1 = uu___4;_}
+             FStarC_Syntax_Syntax.rc_opt1 = uu___3;_}
            ->
-           let uu___5 = ok t2 in
-           if uu___5
+           let uu___4 = ok t2 in
+           if uu___4
            then
              FStarC_List.for_all
-               (fun uu___6 ->
-                  match uu___6 with | (uu___7, uu___8, br) -> ok br) branches
+               (fun uu___5 ->
+                  match uu___5 with | (uu___6, uu___7, br) -> ok br) branches
            else false
        | FStarC_Syntax_Syntax.Tm_ascribed
            { FStarC_Syntax_Syntax.tm = t2; FStarC_Syntax_Syntax.asc = asc;
-             FStarC_Syntax_Syntax.eff_opt = uu___3;_}
+             FStarC_Syntax_Syntax.eff_opt = uu___2;_}
            -> ok t2
        | FStarC_Syntax_Syntax.Tm_let
-           { FStarC_Syntax_Syntax.lbs = (uu___3, lbs);
+           { FStarC_Syntax_Syntax.lbs = (uu___2, lbs);
              FStarC_Syntax_Syntax.body1 = t2;_}
            ->
-           let uu___4 =
+           let uu___3 =
              FStarC_List.for_all
                (fun lb ->
-                  let uu___5 = ok lb.FStarC_Syntax_Syntax.lbtyp in
-                  if uu___5 then ok lb.FStarC_Syntax_Syntax.lbdef else false)
+                  let uu___4 = ok lb.FStarC_Syntax_Syntax.lbtyp in
+                  if uu___4 then ok lb.FStarC_Syntax_Syntax.lbdef else false)
                lbs in
-           if uu___4 then ok t2 else false
-       | FStarC_Syntax_Syntax.Tm_uvar uu___3 -> false
-       | FStarC_Syntax_Syntax.Tm_delayed uu___3 -> false
+           if uu___3 then ok t2 else false
+       | FStarC_Syntax_Syntax.Tm_uvar uu___2 -> false
+       | FStarC_Syntax_Syntax.Tm_delayed uu___2 -> false
        | FStarC_Syntax_Syntax.Tm_meta
            { FStarC_Syntax_Syntax.tm2 = t2;
-             FStarC_Syntax_Syntax.meta = uu___3;_}
+             FStarC_Syntax_Syntax.meta = uu___2;_}
            -> ok t2
-       | uu___3 -> false)
+       | uu___2 -> false)
   and binders_ok bs =
     FStarC_List.for_all
       (fun b ->
@@ -906,70 +906,70 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
    if uu___1
    then true
    else
-     (debug_positivity env (fun uu___4 -> "ty does occur in this type");
-      (let uu___4 =
-         let uu___5 = FStarC_Syntax_Subst.compress in_type1 in
-         uu___5.FStarC_Syntax_Syntax.n in
-       match uu___4 with
-       | FStarC_Syntax_Syntax.Tm_fvar uu___5 ->
+     (debug_positivity env (fun uu___3 -> "ty does occur in this type");
+      (let uu___3 =
+         let uu___4 = FStarC_Syntax_Subst.compress in_type1 in
+         uu___4.FStarC_Syntax_Syntax.n in
+       match uu___3 with
+       | FStarC_Syntax_Syntax.Tm_fvar uu___4 ->
            (debug_positivity env
-              (fun uu___7 ->
+              (fun uu___6 ->
                  "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
             true)
-       | FStarC_Syntax_Syntax.Tm_uinst uu___5 ->
+       | FStarC_Syntax_Syntax.Tm_uinst uu___4 ->
            (debug_positivity env
-              (fun uu___7 ->
+              (fun uu___6 ->
                  "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
             true)
-       | FStarC_Syntax_Syntax.Tm_type uu___5 ->
+       | FStarC_Syntax_Syntax.Tm_type uu___4 ->
            (debug_positivity env
-              (fun uu___7 ->
+              (fun uu___6 ->
                  "Checking strict positivity in an fvar/Tm_uinst/Tm_type, return true");
             true)
        | FStarC_Syntax_Syntax.Tm_ascribed
-           { FStarC_Syntax_Syntax.tm = t; FStarC_Syntax_Syntax.asc = uu___5;
-             FStarC_Syntax_Syntax.eff_opt = uu___6;_}
+           { FStarC_Syntax_Syntax.tm = t; FStarC_Syntax_Syntax.asc = uu___4;
+             FStarC_Syntax_Syntax.eff_opt = uu___5;_}
            -> ty_strictly_positive_in_type env mutuals t unfolded
        | FStarC_Syntax_Syntax.Tm_meta
            { FStarC_Syntax_Syntax.tm2 = t;
-             FStarC_Syntax_Syntax.meta = uu___5;_}
+             FStarC_Syntax_Syntax.meta = uu___4;_}
            -> ty_strictly_positive_in_type env mutuals t unfolded
-       | FStarC_Syntax_Syntax.Tm_app uu___5 ->
-           let uu___6 = FStarC_Syntax_Util.head_and_args_full in_type1 in
-           (match uu___6 with
+       | FStarC_Syntax_Syntax.Tm_app uu___4 ->
+           let uu___5 = FStarC_Syntax_Util.head_and_args_full in_type1 in
+           (match uu___5 with
             | (t, args) ->
                 let fv_or_name_opt = term_as_fv_or_name t in
                 (match fv_or_name_opt with
                  | FStar_Pervasives_Native.None ->
                      (debug_positivity env
-                        (fun uu___8 ->
-                           let uu___9 = string_of_lids mutuals in
-                           let uu___10 =
+                        (fun uu___7 ->
+                           let uu___8 = string_of_lids mutuals in
+                           let uu___9 =
                              FStarC_Class_Show.show
                                FStarC_Syntax_Print.showable_term t in
                            FStarC_Format.fmt2
                              "Failed to check positivity of %s in a term with head %s"
-                             uu___9 uu___10);
+                             uu___8 uu___9);
                       false)
                  | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr x) ->
-                     let uu___7 = FStarC_TypeChecker_Env.lookup_bv env x in
-                     (match uu___7 with
+                     let uu___6 = FStarC_TypeChecker_Env.lookup_bv env x in
+                     (match uu___6 with
                       | (head_ty, _pos) ->
                           (debug_positivity env
-                             (fun uu___9 ->
-                                let uu___10 =
+                             (fun uu___8 ->
+                                let uu___9 =
                                   FStarC_Class_Show.show
                                     FStarC_Syntax_Print.showable_term
                                     in_type1 in
-                                let uu___11 =
+                                let uu___10 =
                                   FStarC_Class_Show.show
                                     FStarC_Syntax_Print.showable_bv x in
-                                let uu___12 =
+                                let uu___11 =
                                   FStarC_Class_Show.show
                                     FStarC_Syntax_Print.showable_term head_ty in
                                 FStarC_Format.fmt3
                                   "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
-                                  uu___10 uu___11 uu___12);
+                                  uu___9 uu___10 uu___11);
                            ty_strictly_positive_in_args env mutuals head_ty
                              args unfolded))
                  | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
@@ -977,210 +977,210 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                      FStarC_Syntax_Syntax.fv_eq_lid hd
                        FStarC_Parser_Const.eq2_lid
                      ->
-                     let uu___7 =
-                       let uu___8 =
-                         let uu___9 =
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
                            FStarC_Syntax_Util.fvar_const
                              FStarC_Parser_Const.c_eq2_lid in
-                         FStarC_Syntax_Syntax.mk_Tm_uinst uu___9 [u] in
-                       FStarC_Syntax_Util.mk_app uu___8 args in
-                     ty_strictly_positive_in_type env mutuals uu___7 unfolded
+                         FStarC_Syntax_Syntax.mk_Tm_uinst uu___8 [u] in
+                       FStarC_Syntax_Util.mk_app uu___7 args in
+                     ty_strictly_positive_in_type env mutuals uu___6 unfolded
                  | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl
                      (fv, us)) ->
-                     let uu___7 =
+                     let uu___6 =
                        FStarC_List.existsML
                          (FStarC_Ident.lid_equals
                             fv.FStarC_Syntax_Syntax.fv_name) mutuals in
-                     if uu___7
+                     if uu___6
                      then
                        (debug_positivity env
-                          (fun uu___9 ->
+                          (fun uu___8 ->
                              FStarC_Format.fmt1
                                "Checking strict positivity in the Tm_app node where head lid is %s itself, checking that ty does not occur in the arguments"
                                (FStarC_Ident.string_of_lid
                                   fv.FStarC_Syntax_Syntax.fv_name));
                         FStarC_List.for_all
-                          (fun uu___9 ->
-                             match uu___9 with
-                             | (t1, uu___10) ->
+                          (fun uu___8 ->
+                             match uu___8 with
+                             | (t1, uu___9) ->
                                  mutuals_unused_in_type mutuals t1) args)
                      else
                        (debug_positivity env
-                          (fun uu___10 ->
-                             let uu___11 = string_of_lids mutuals in
+                          (fun uu___8 ->
+                             let uu___9 = string_of_lids mutuals in
                              FStarC_Format.fmt1
                                "Checking strict positivity in the Tm_app node, head lid is not in %s, so checking nested positivity"
-                               uu___11);
+                               uu___9);
                         ty_strictly_positive_in_arguments_to_fvar env mutuals
                           in_type1 fv.FStarC_Syntax_Syntax.fv_name us args
                           unfolded)))
        | FStarC_Syntax_Syntax.Tm_arrow
-           { FStarC_Syntax_Syntax.bs1 = uu___5;
+           { FStarC_Syntax_Syntax.bs1 = uu___4;
              FStarC_Syntax_Syntax.comp = c;_}
            ->
            (debug_positivity env
-              (fun uu___7 -> "Checking strict positivity in Tm_arrow");
+              (fun uu___6 -> "Checking strict positivity in Tm_arrow");
             (let check_comp =
-               let uu___7 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
-               if uu___7
+               let uu___6 = FStarC_Syntax_Util.is_pure_or_ghost_comp c in
+               if uu___6
                then true
                else
-                 (let uu___8 =
-                    let uu___9 =
+                 (let uu___7 =
+                    let uu___8 =
                       FStarC_TypeChecker_Env.norm_eff_name env
                         (FStarC_Syntax_Util.comp_effect_name c) in
-                    FStarC_TypeChecker_Env.lookup_effect_quals env uu___9 in
+                    FStarC_TypeChecker_Env.lookup_effect_quals env uu___8 in
                   FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect
-                    uu___8) in
+                    uu___7) in
              if Prims.op_Negation check_comp
              then
                (debug_positivity env
-                  (fun uu___8 ->
+                  (fun uu___7 ->
                      "Checking strict positivity , the arrow is impure, so return true");
                 true)
              else
                (debug_positivity env
-                  (fun uu___9 ->
+                  (fun uu___7 ->
                      "Checking strict positivity for an arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type");
-                (let uu___9 = FStarC_Syntax_Util.arrow_formals_comp in_type1 in
-                 match uu___9 with
+                (let uu___7 = FStarC_Syntax_Util.arrow_formals_comp in_type1 in
+                 match uu___7 with
                  | (sbs, c1) ->
                      let return_type = FStarC_Syntax_Util.comp_result c1 in
                      let effect_args = FStarC_Syntax_Util.comp_effect_args c1 in
                      let ty_lid_not_to_left_of_arrow =
                        FStarC_List.for_all
-                         (fun uu___10 ->
-                            match uu___10 with
+                         (fun uu___8 ->
+                            match uu___8 with
                             | { FStarC_Syntax_Syntax.binder_bv = b;
-                                FStarC_Syntax_Syntax.binder_qual = uu___11;
+                                FStarC_Syntax_Syntax.binder_qual = uu___9;
                                 FStarC_Syntax_Syntax.binder_positivity =
-                                  uu___12;
-                                FStarC_Syntax_Syntax.binder_attrs = uu___13;_}
+                                  uu___10;
+                                FStarC_Syntax_Syntax.binder_attrs = uu___11;_}
                                 ->
                                 mutuals_unused_in_type mutuals
                                   b.FStarC_Syntax_Syntax.sort) sbs in
                      let mutuals_unused_in_effect_args =
                        FStarC_List.for_all
-                         (fun uu___10 ->
-                            match uu___10 with
-                            | (a, uu___11) ->
-                                mutuals_unused_in_type mutuals a) effect_args in
+                         (fun uu___8 ->
+                            match uu___8 with
+                            | (a, uu___9) -> mutuals_unused_in_type mutuals a)
+                         effect_args in
                      if
                        ty_lid_not_to_left_of_arrow &&
                          mutuals_unused_in_effect_args
                      then
-                       let uu___10 =
+                       let uu___8 =
                          FStarC_TypeChecker_Env.push_binders env sbs in
-                       ty_strictly_positive_in_type uu___10 mutuals
+                       ty_strictly_positive_in_type uu___8 mutuals
                          return_type unfolded
                      else false))))
        | FStarC_Syntax_Syntax.Tm_refine
            { FStarC_Syntax_Syntax.b = bv; FStarC_Syntax_Syntax.phi = f;_} ->
            (debug_positivity env
-              (fun uu___6 ->
+              (fun uu___5 ->
                  "Checking strict positivity in an Tm_refine, recur in the bv sort)");
-            (let uu___6 =
+            (let uu___5 =
                FStarC_Syntax_Subst.open_term
                  [FStarC_Syntax_Syntax.mk_binder bv] f in
-             match uu___6 with
+             match uu___5 with
              | (b::[], f1) ->
-                 let uu___7 =
+                 let uu___6 =
                    ty_strictly_positive_in_type env mutuals
                      (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
                      unfolded in
-                 if uu___7
+                 if uu___6
                  then
                    let env1 = FStarC_TypeChecker_Env.push_binders env [b] in
                    ty_strictly_positive_in_type env1 mutuals f1 unfolded
                  else false))
        | FStarC_Syntax_Syntax.Tm_match
            { FStarC_Syntax_Syntax.scrutinee = scrutinee;
-             FStarC_Syntax_Syntax.ret_opt = uu___5;
+             FStarC_Syntax_Syntax.ret_opt = uu___4;
              FStarC_Syntax_Syntax.brs = branches;
-             FStarC_Syntax_Syntax.rc_opt1 = uu___6;_}
+             FStarC_Syntax_Syntax.rc_opt1 = uu___5;_}
            ->
            (debug_positivity env
-              (fun uu___8 ->
+              (fun uu___7 ->
                  "Checking strict positivity in an Tm_match, recur in the branches)");
-            (let uu___8 =
+            (let uu___7 =
                FStarC_List.existsML
                  (fun mutual -> ty_occurs_in mutual scrutinee) mutuals in
-             if uu___8
+             if uu___7
              then
                FStarC_List.for_all
-                 (fun uu___9 ->
-                    match uu___9 with
-                    | (p, uu___10, t) ->
+                 (fun uu___8 ->
+                    match uu___8 with
+                    | (p, uu___9, t) ->
                         let bs =
-                          let uu___11 = FStarC_Syntax_Syntax.pat_bvs p in
+                          let uu___10 = FStarC_Syntax_Syntax.pat_bvs p in
                           FStarC_List.map FStarC_Syntax_Syntax.mk_binder
-                            uu___11 in
-                        let uu___11 = FStarC_Syntax_Subst.open_term bs t in
-                        (match uu___11 with
+                            uu___10 in
+                        let uu___10 = FStarC_Syntax_Subst.open_term bs t in
+                        (match uu___10 with
                          | (bs1, t1) ->
-                             let uu___12 =
+                             let uu___11 =
                                FStarC_List.fold_left
-                                 (fun uu___13 b ->
-                                    match uu___13 with
+                                 (fun uu___12 b ->
+                                    match uu___12 with
                                     | (t2, lids) ->
-                                        let uu___14 =
+                                        let uu___13 =
                                           name_as_fv_in_t t2
                                             b.FStarC_Syntax_Syntax.binder_bv in
-                                        (match uu___14 with
+                                        (match uu___13 with
                                          | (t3, lid) -> (t3, (lid :: lids))))
                                  (t1, mutuals) bs1 in
-                             (match uu___12 with
+                             (match uu___11 with
                               | (t2, mutuals1) ->
                                   ty_strictly_positive_in_type env mutuals1
                                     t2 unfolded))) branches
              else
                FStarC_List.for_all
-                 (fun uu___10 ->
-                    match uu___10 with
-                    | (p, uu___11, t) ->
+                 (fun uu___8 ->
+                    match uu___8 with
+                    | (p, uu___9, t) ->
                         let bs =
-                          let uu___12 = FStarC_Syntax_Syntax.pat_bvs p in
+                          let uu___10 = FStarC_Syntax_Syntax.pat_bvs p in
                           FStarC_List.map FStarC_Syntax_Syntax.mk_binder
-                            uu___12 in
-                        let uu___12 = FStarC_Syntax_Subst.open_term bs t in
-                        (match uu___12 with
+                            uu___10 in
+                        let uu___10 = FStarC_Syntax_Subst.open_term bs t in
+                        (match uu___10 with
                          | (bs1, t1) ->
-                             let uu___13 =
+                             let uu___11 =
                                FStarC_TypeChecker_Env.push_binders env bs1 in
-                             ty_strictly_positive_in_type uu___13 mutuals t1
+                             ty_strictly_positive_in_type uu___11 mutuals t1
                                unfolded)) branches))
-       | FStarC_Syntax_Syntax.Tm_abs uu___5 ->
-           let uu___6 = FStarC_Syntax_Util.abs_formals in_type1 in
-           (match uu___6 with
-            | (bs, body, uu___7) ->
+       | FStarC_Syntax_Syntax.Tm_abs uu___4 ->
+           let uu___5 = FStarC_Syntax_Util.abs_formals in_type1 in
+           (match uu___5 with
+            | (bs, body, uu___6) ->
                 let rec aux env1 bs1 =
                   match bs1 with
                   | [] ->
                       ty_strictly_positive_in_type env1 mutuals body unfolded
                   | b::bs2 ->
-                      let uu___8 =
+                      let uu___7 =
                         ty_strictly_positive_in_type env1 mutuals
                           (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort
                           unfolded in
-                      if uu___8
+                      if uu___7
                       then
                         let env2 =
                           FStarC_TypeChecker_Env.push_binders env1 [b] in
                         aux env2 bs2
                       else false in
                 aux env bs)
-       | uu___5 ->
+       | uu___4 ->
            (debug_positivity env
-              (fun uu___7 ->
-                 let uu___8 =
+              (fun uu___6 ->
+                 let uu___7 =
                    FStarC_Class_Tagged.tag_of
                      FStarC_Syntax_Syntax.tagged_term in_type1 in
-                 let uu___9 =
+                 let uu___8 =
                    FStarC_Class_Show.show FStarC_Syntax_Print.showable_term
                      in_type1 in
                  FStarC_Format.fmt2
                    "Checking strict positivity, unexpected tag: %s and term %s"
-                   uu___8 uu___9);
+                   uu___7 uu___8);
             false))))
 and ty_strictly_positive_in_args (env : FStarC_TypeChecker_Env.env)
   (mutuals : FStarC_Ident.lident Prims.list)
@@ -1264,10 +1264,10 @@ and ty_strictly_positive_in_arguments_to_fvar
               ty_strictly_positive_in_type env mutuals a unfolded) args
    else
      (let fv_ty =
-        let uu___3 = FStarC_TypeChecker_Env.try_lookup_lid env fv in
-        match uu___3 with
-        | FStar_Pervasives_Native.Some ((uu___4, fv_ty1), uu___5) -> fv_ty1
-        | uu___4 ->
+        let uu___2 = FStarC_TypeChecker_Env.try_lookup_lid env fv in
+        match uu___2 with
+        | FStar_Pervasives_Native.Some ((uu___3, fv_ty1), uu___4) -> fv_ty1
+        | uu___3 ->
             FStarC_Errors.raise_error FStarC_Ident.hasrange_lident fv
               FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition
               () (Obj.magic FStarC_Errors_Msg.is_error_message_string)
@@ -1275,8 +1275,8 @@ and ty_strictly_positive_in_arguments_to_fvar
                  (FStarC_Format.fmt1
                     "Type of %s not found when checking positivity"
                     (FStarC_Ident.string_of_lid fv))) in
-      let uu___3 = FStarC_TypeChecker_Env.datacons_of_typ env fv in
-      match uu___3 with
+      let uu___2 = FStarC_TypeChecker_Env.datacons_of_typ env fv in
+      match uu___2 with
       | (b, idatas) ->
           if Prims.op_Negation b
           then ty_strictly_positive_in_args env mutuals fv_ty args unfolded
@@ -1284,40 +1284,40 @@ and ty_strictly_positive_in_arguments_to_fvar
             (check_no_index_occurrences_in_arities env mutuals t;
              (let ilid = fv in
               let num_uniform_params =
-                let uu___6 =
+                let uu___4 =
                   FStarC_TypeChecker_Env.num_inductive_uniform_ty_params env
                     ilid in
-                match uu___6 with
+                match uu___4 with
                 | FStar_Pervasives_Native.None ->
                     FStarC_Effect.failwith "Unexpected type"
                 | FStar_Pervasives_Native.Some n -> n in
-              let uu___6 = FStarC_List.splitAt num_uniform_params args in
-              match uu___6 with
+              let uu___4 = FStarC_List.splitAt num_uniform_params args in
+              match uu___4 with
               | (params, _rest) ->
-                  let uu___7 = already_unfolded ilid args unfolded env in
-                  if uu___7
+                  let uu___5 = already_unfolded ilid args unfolded env in
+                  if uu___5
                   then
                     (debug_positivity env
-                       (fun uu___9 ->
+                       (fun uu___7 ->
                           "Checking nested positivity, we have already unfolded this inductive with these args");
                      true)
                   else
                     (debug_positivity env
-                       (fun uu___10 ->
-                          let uu___11 =
+                       (fun uu___7 ->
+                          let uu___8 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_int
                               num_uniform_params in
-                          let uu___12 =
+                          let uu___9 =
                             FStarC_Syntax_Print.args_to_string params in
                           FStarC_Format.fmt3
                             "Checking positivity in datacon, number of type parameters is %s, adding %s %s to the memo table"
-                            uu___11 (FStarC_Ident.string_of_lid ilid) uu___12);
-                     (let uu___11 =
-                        let uu___12 = FStarC_Effect.op_Bang unfolded in
-                        FStar_List_Tot_Base.op_At uu___12
+                            uu___8 (FStarC_Ident.string_of_lid ilid) uu___9);
+                     (let uu___8 =
+                        let uu___9 = FStarC_Effect.op_Bang unfolded in
+                        FStar_List_Tot_Base.op_At uu___9
                           [(ilid, params, num_uniform_params)] in
-                      FStarC_Effect.op_Colon_Equals unfolded uu___11);
+                      FStarC_Effect.op_Colon_Equals unfolded uu___8);
                      FStarC_List.for_all
                        (fun d ->
                           ty_strictly_positive_in_datacon_of_applied_inductive

@@ -57,9 +57,9 @@ let dynlink (fname : Prims.string) : unit=
   else
     (pout (Prims.strcat "Attempting to load " (Prims.strcat fname "\n"));
      do_dynlink fname;
-     (let uu___5 =
-        let uu___6 = FStarC_Effect.op_Bang loaded in fname :: uu___6 in
-      FStarC_Effect.op_Colon_Equals loaded uu___5);
+     (let uu___4 =
+        let uu___5 = FStarC_Effect.op_Bang loaded in fname :: uu___5 in
+      FStarC_Effect.op_Colon_Equals loaded uu___4);
      pout1 "Loaded %s\n" fname)
 let load_plugin (tac : Prims.string) : unit=
   (let uu___1 =
@@ -160,22 +160,22 @@ let autoload_plugin (ext : Prims.string) : Prims.bool=
   if uu___
   then false
   else
-    ((let uu___3 = FStarC_Effect.op_Bang dbg_Plugin in
-      if uu___3
+    ((let uu___2 = FStarC_Effect.op_Bang dbg_Plugin in
+      if uu___2
       then
         FStarC_Format.print1 "Trying to find a plugin for extension %s\n" ext
       else ());
-     (let uu___3 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
-      match uu___3 with
+     (let uu___2 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
+      match uu___2 with
       | FStar_Pervasives_Native.Some fn ->
-          let uu___4 =
-            let uu___5 = FStarC_Effect.op_Bang loaded in
-            FStarC_List.mem fn uu___5 in
-          if uu___4
+          let uu___3 =
+            let uu___4 = FStarC_Effect.op_Bang loaded in
+            FStarC_List.mem fn uu___4 in
+          if uu___3
           then false
           else
-            ((let uu___7 = FStarC_Effect.op_Bang dbg_Plugin in
-              if uu___7
+            ((let uu___5 = FStarC_Effect.op_Bang dbg_Plugin in
+              if uu___5
               then FStarC_Format.print1 "Autoloading plugin %s ...\n" fn
               else ());
              load_plugin fn;

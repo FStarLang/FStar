@@ -2826,25 +2826,25 @@ let should_reduce_local_let (cfg1 : cfg)
   if (cfg1.steps).do_not_unfold_pure_lets
   then false
   else
-    (let uu___1 =
+    (let uu___ =
        if (cfg1.steps).pure_subterms_within_computations
        then
          FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
            FStarC_Parser_Const.inline_let_attr
        else false in
-     if uu___1
+     if uu___
      then true
      else
-       (let uu___3 =
+       (let uu___1 =
           FStarC_Syntax_Util.has_attribute lb.FStarC_Syntax_Syntax.lbattrs
             FStarC_Parser_Const.no_inline_let_attr in
-        if uu___3
+        if uu___1
         then false
         else
           (let n =
              FStarC_TypeChecker_Env.norm_eff_name cfg1.tcenv
                lb.FStarC_Syntax_Syntax.lbeff in
-           let uu___5 =
+           let uu___2 =
              if FStarC_Syntax_Util.is_pure_effect n
              then
                (if cfg1.normalize_pure_lets
@@ -2854,7 +2854,7 @@ let should_reduce_local_let (cfg1 : cfg)
                     lb.FStarC_Syntax_Syntax.lbattrs
                     FStarC_Parser_Const.inline_let_attr)
              else false in
-           if uu___5
+           if uu___2
            then true
            else
              (FStarC_Syntax_Util.is_ghost_effect n) &&

@@ -32,7 +32,7 @@ let rollback (msg : Prims.string) (pop : unit -> 'a)
      else
        if n = Prims.int_one
        then pop ()
-       else ((let uu___4 = pop () in ()); aux (n - Prims.int_one)) in
+       else ((let uu___2 = pop () in ()); aux (n - Prims.int_one)) in
    let curdepth =
      let uu___1 = FStarC_Effect.op_Bang stackref in FStarC_List.length uu___1 in
    let n =

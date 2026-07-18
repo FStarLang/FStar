@@ -39,10 +39,10 @@ let lazy_embed (pa : 'a printer) (et : unit -> FStarC_Syntax_Syntax.emb_typ)
    then f ()
    else
      (let thunk = FStarC_Thunk.mk f in
-      let uu___3 =
-        let uu___4 = let uu___5 = et () in (uu___5, thunk) in
-        FStarC_Syntax_Syntax.Lazy_embedding uu___4 in
-      FStarC_Syntax_Util.mk_lazy x FStarC_Syntax_Syntax.tun uu___3
+      let uu___2 =
+        let uu___3 = let uu___4 = et () in (uu___4, thunk) in
+        FStarC_Syntax_Syntax.Lazy_embedding uu___3 in
+      FStarC_Syntax_Util.mk_lazy x FStarC_Syntax_Syntax.tun uu___2
         (FStar_Pervasives_Native.Some rng)))
 let lazy_unembed (pa : 'a printer)
   (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : FStarC_Syntax_Syntax.term)
@@ -87,15 +87,15 @@ let lazy_unembed (pa : 'a printer)
          res)
       else
         (let a1 = FStar_Dyn.undyn b in
-         (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___5
+         (let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___4
           then
-            let uu___6 =
+            let uu___5 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
                 et1 in
-            let uu___7 = pa a1 in
+            let uu___6 = pa a1 in
             FStarC_Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-              uu___6 uu___7
+              uu___5 uu___6
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->

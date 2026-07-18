@@ -585,11 +585,11 @@ let smt_output_sections
         if tag = l
         then FStar_Pervasives_Native.Some ([], lines2)
         else
-          (let uu___1 = until tag lines2 in
+          (let uu___ = until tag lines2 in
            FStarC_Option.map
-             (fun uu___2 ->
-                match uu___2 with
-                | (until_tag, rest) -> ((l :: until_tag), rest)) uu___1) in
+             (fun uu___1 ->
+                match uu___1 with
+                | (until_tag, rest) -> ((l :: until_tag), rest)) uu___) in
   let start_tag tag = Prims.strcat "<" (Prims.strcat tag ">") in
   let end_tag tag = Prims.strcat "</" (Prims.strcat tag ">") in
   let find_section tag lines1 =
@@ -721,10 +721,10 @@ let doZ3Exe (log_file : Prims.string FStar_Pervasives_Native.option)
           if FStarC_Util.starts_with s2 "error"
           then FStar_Pervasives_Native.None
           else
-            (let uu___1 =
+            (let uu___ =
                FStarC_Util.sort_with FStarC_String.compare
                  (FStarC_Util.split s2 " ") in
-             FStar_Pervasives_Native.Some uu___1) in
+             FStar_Pervasives_Native.Some uu___) in
     let labels =
       match smt_output1.smt_labels with
       | FStar_Pervasives_Native.None -> []
@@ -890,10 +890,10 @@ let doZ3Exe (log_file : Prims.string FStar_Pervasives_Native.option)
      r1)
   else
     (let out =
-       let uu___1 = FStarC_Effect.op_Bang bg_z3_proc in uu___1.ask input in
+       let uu___ = FStarC_Effect.op_Bang bg_z3_proc in uu___.ask input in
      let r1 = parse (FStarC_Util.trim_string out) in
      log_result
-       (fun _fname s -> let uu___2 = query_logging.append_to_log s in ()) r1;
+       (fun _fname s -> let uu___1 = query_logging.append_to_log s in ()) r1;
      r1)
 let z3_options (ver : Prims.string) : Prims.string=
   let opts =
@@ -1048,12 +1048,12 @@ let mk_input (fresh : Prims.bool)
              FStar_Pervasives_Native.Some uu___5 in
            ((Prims.strcat ps (Prims.strcat "\n" ss)), uu___4)
      else
-       (let uu___4 =
-          let uu___5 =
+       (let uu___3 =
+          let uu___4 =
             FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options2)
               theory1 in
-          FStarC_String.concat "\n" uu___5 in
-        (uu___4, FStar_Pervasives_Native.None)) in
+          FStarC_String.concat "\n" uu___4 in
+        (uu___3, FStar_Pervasives_Native.None)) in
    match uu___1 with
    | (r, hash) ->
        let log_file_name =

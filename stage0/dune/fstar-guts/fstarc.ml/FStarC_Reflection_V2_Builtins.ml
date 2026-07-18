@@ -222,7 +222,7 @@ let rec inspect_ln (t : FStarC_Syntax_Syntax.term) :
       then FStarC_Reflection_V2_Data.Tv_Unsupp
       else
         (match lb.FStarC_Syntax_Syntax.lbname with
-         | FStar_Pervasives.Inr uu___1 -> FStarC_Reflection_V2_Data.Tv_Unsupp
+         | FStar_Pervasives.Inr uu___ -> FStarC_Reflection_V2_Data.Tv_Unsupp
          | FStar_Pervasives.Inl bv ->
              FStarC_Reflection_V2_Data.Tv_Let
                (isrec, (lb.FStarC_Syntax_Syntax.lbattrs),
@@ -305,17 +305,17 @@ let inspect_comp (c : FStarC_Syntax_Syntax.comp) :
              FStarC_Effect.failwith
                "inspect_comp: Lemma does not have enough arguments?")
       else
-        (let inspect_arg uu___1 =
-           match uu___1 with | (a, q) -> (a, (inspect_aqual q)) in
-         let uu___1 =
-           let uu___2 =
+        (let inspect_arg uu___ =
+           match uu___ with | (a, q) -> (a, (inspect_aqual q)) in
+         let uu___ =
+           let uu___1 =
              FStarC_Ident.path_of_lid ct.FStarC_Syntax_Syntax.effect_name in
-           let uu___3 =
+           let uu___2 =
              FStarC_List.map inspect_arg ct.FStarC_Syntax_Syntax.effect_args in
-           let uu___4 = get_dec ct.FStarC_Syntax_Syntax.flags in
-           ((ct.FStarC_Syntax_Syntax.comp_univs), uu___2,
-             (ct.FStarC_Syntax_Syntax.result_typ), uu___3, uu___4) in
-         FStarC_Reflection_V2_Data.C_Eff uu___1)
+           let uu___3 = get_dec ct.FStarC_Syntax_Syntax.flags in
+           ((ct.FStarC_Syntax_Syntax.comp_univs), uu___1,
+             (ct.FStarC_Syntax_Syntax.result_typ), uu___2, uu___3) in
+         FStarC_Reflection_V2_Data.C_Eff uu___)
 let pack_comp (cv : FStarC_Reflection_V2_Data.comp_view) :
   FStarC_Syntax_Syntax.comp=
   let urefl_to_univs u =

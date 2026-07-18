@@ -39,10 +39,10 @@ let finished_message (fmods : (Prims.bool * FStarC_Ident.lident) Prims.list)
        (if errs = Prims.int_one
         then FStarC_Format.print_error "1 error was reported (see above)\n"
         else
-          (let uu___3 =
+          (let uu___2 =
              FStarC_Class_Show.show FStarC_Class_Show.showable_int errs in
            FStarC_Format.print1_error "%s errors were reported (see above)\n"
-             uu___3))
+             uu___2))
      else
        FStarC_Format.print1 "%s\n"
          (FStarC_Format.colorize_bold
@@ -81,31 +81,31 @@ let load_native_tactics (uu___ : unit) : unit=
             (Obj.magic FStarC_Errors_Msg.is_error_message_string)
             (Obj.magic (FStarC_Format.fmt1 "Could not find %s to load" cmxs))
         else
-          (let uu___3 =
-             let uu___4 = ml_file m in FStarC_Find.find_file_odir uu___4 in
-           match uu___3 with
+          (let uu___2 =
+             let uu___3 = ml_file m in FStarC_Find.find_file_odir uu___3 in
+           match uu___2 with
            | FStar_Pervasives_Native.None ->
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 =
-                     let uu___7 =
-                       let uu___8 = ml_file m in
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 = ml_file m in
                        FStarC_Format.fmt1 "Extracted module %s not found."
-                         uu___8 in
-                     FStarC_Errors_Msg.text uu___7 in
-                   [uu___6] in
+                         uu___7 in
+                     FStarC_Errors_Msg.text uu___6 in
+                   [uu___5] in
                  (FStarC_Errors_Msg.text "Failed to compile native tactic.")
-                   :: uu___5 in
+                   :: uu___4 in
                FStarC_Errors.raise_error0
                  FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ()
                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                 (Obj.magic uu___4)
+                 (Obj.magic uu___3)
            | FStar_Pervasives_Native.Some ml ->
                let dir = FStarC_Filepath.dirname ml in
-               ((let uu___5 = let uu___6 = ml_module_name m in [uu___6] in
-                 FStarC_Plugins.compile_modules dir uu___5);
-                (let uu___5 = FStarC_Find.find_file_odir cmxs in
-                 match uu___5 with
+               ((let uu___4 = let uu___5 = ml_module_name m in [uu___5] in
+                 FStarC_Plugins.compile_modules dir uu___4);
+                (let uu___4 = FStarC_Find.find_file_odir cmxs in
+                 match uu___4 with
                  | FStar_Pervasives_Native.None ->
                      FStarC_Errors.raise_error0
                        FStarC_Errors_Codes.Fatal_FailToCompileNativeTactic ()
@@ -196,25 +196,25 @@ let go_normal (uu___ : unit) : unit=
                if Prims.op_Negation (FStarC_Filepath.file_exists f)
                then f
                else
-                 (let uu___4 = checked_of f in
-                  match uu___4 with
+                 (let uu___3 = checked_of f in
+                  match uu___3 with
                   | FStar_Pervasives_Native.Some f' ->
-                      ((let uu___6 = FStarC_Debug.any () in
-                        if uu___6
+                      ((let uu___5 = FStarC_Debug.any () in
+                        if uu___5
                         then
                           FStarC_Format.print1
                             "Rewriting argument file %s to its source file\n"
                             f
                         else ());
-                       (let uu___6 =
+                       (let uu___5 =
                           FStarC_Find.find_file (FStarC_Filepath.basename f') in
-                        match uu___6 with
+                        match uu___5 with
                         | FStar_Pervasives_Native.Some r -> r
                         | FStar_Pervasives_Native.None ->
-                            let uu___7 =
+                            let uu___6 =
                               FStarC_Effect.failwith
                                 "Couldn't find source for file" in
-                            Prims.strcat uu___7 (Prims.strcat f' "!\n")))
+                            Prims.strcat uu___6 (Prims.strcat f' "!\n")))
                   | FStar_Pervasives_Native.None -> f)) filenames0 in
         (let uu___4 = FStarC_Debug.high () in
          if uu___4
@@ -559,45 +559,45 @@ let go_normal (uu___ : unit) : unit=
                              FStarC_Errors_Msg.is_error_message_string)
                           (Obj.magic "No file provided")
                       else ();
-                      (let uu___15 =
-                         let uu___16 = FStarC_Parser_Dep.fly_deps_enabled () in
-                         if uu___16
+                      (let uu___14 =
+                         let uu___15 = FStarC_Parser_Dep.fly_deps_enabled () in
+                         if uu___15
                          then
                            match filenames with
                            | fn::[] ->
                                let m =
                                  FStarC_Parser_Dep.lowercase_module_name fn in
                                (FStarC_Options.add_verify_module m;
-                                (let default_flydeps uu___18 =
+                                (let default_flydeps uu___17 =
                                    let deps =
                                      FStarC_Parser_Dep.empty_deps [fn] in
                                    let filenames1 =
-                                     let uu___19 =
+                                     let uu___18 =
                                        FStarC_Parser_Dep.is_implementation fn in
-                                     if uu___19
+                                     if uu___18
                                      then
-                                       let uu___20 =
+                                       let uu___19 =
                                          FStarC_Parser_Dep.interface_of deps
                                            m in
-                                       match uu___20 with
+                                       match uu___19 with
                                        | FStar_Pervasives_Native.None -> [fn]
                                        | FStar_Pervasives_Native.Some iface
                                            -> [iface; fn]
                                      else [fn] in
                                    (filenames1, deps, true) in
-                                 let uu___18 = FStarC_Options.force () in
-                                 if uu___18
+                                 let uu___17 = FStarC_Options.force () in
+                                 if uu___17
                                  then default_flydeps ()
                                  else
-                                   (let uu___20 =
+                                   (let uu___18 =
                                       FStarC_CheckedFiles.scan_deps_and_check_cache_validity
                                         fn in
-                                    match uu___20 with
+                                    match uu___18 with
                                     | FStar_Pervasives_Native.Some
                                         (files, deps) -> (files, deps, false)
                                     | FStar_Pervasives_Native.None ->
                                         default_flydeps ())))
-                           | uu___17 ->
+                           | uu___16 ->
                                FStarC_Errors.raise_error0
                                  FStarC_Errors_Codes.Error_TooManyFiles ()
                                  (Obj.magic
@@ -605,20 +605,20 @@ let go_normal (uu___ : unit) : unit=
                                  (Obj.magic
                                     "When using --ext fly_deps, only one file can be provided.")
                          else
-                           (let uu___18 =
+                           (let uu___16 =
                               FStarC_Dependencies.find_deps_if_needed
                                 filenames
                                 FStarC_CheckedFiles.load_parsing_data_from_cache in
-                            match uu___18 with
+                            match uu___16 with
                             | (files, deps) -> (files, deps, false)) in
-                       match uu___15 with
+                       match uu___14 with
                        | (filenames1, dep_graph, fly_deps) ->
-                           let uu___16 =
+                           let uu___15 =
                              FStarC_Universal.batch_mode_tc fly_deps
                                filenames1 dep_graph in
-                           (match uu___16 with
+                           (match uu___15 with
                             | (tcrs, env, cleanup1) ->
-                                ((let uu___18 = cleanup1 env in ());
+                                ((let uu___17 = cleanup1 env in ());
                                  (let module_names =
                                     FStarC_List.map
                                       (fun tcr ->
@@ -647,13 +647,13 @@ let handle_error (e : Prims.exn) : unit=
   if FStarC_Errors.handleable e
   then FStarC_Errors.err_exn e
   else
-    ((let uu___3 = FStarC_Util.message_of_exn e in
-      FStarC_Format.print1_error "Unexpected error: %s\n" uu___3);
-     (let uu___3 = FStarC_Options.trace_error () in
-      if uu___3
+    ((let uu___2 = FStarC_Util.message_of_exn e in
+      FStarC_Format.print1_error "Unexpected error: %s\n" uu___2);
+     (let uu___2 = FStarC_Options.trace_error () in
+      if uu___2
       then
-        let uu___4 = FStarC_Util.trace_of_exn e in
-        FStarC_Format.print1_error "Trace:\n%s\n" uu___4
+        let uu___3 = FStarC_Util.trace_of_exn e in
+        FStarC_Format.print1_error "Trace:\n%s\n" uu___3
       else
         FStarC_Format.print_error
           "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"));

@@ -79,7 +79,7 @@ let rec snoc :
     | [] -> [y]
     | x::xx' ->
         let uu___1 = FStarC_Class_Deq.op_Equals_Question uu___ x y in
-        if uu___1 then xx else (let uu___3 = snoc uu___ xx' y in x :: uu___3)
+        if uu___1 then xx else (let uu___2 = snoc uu___ xx' y in x :: uu___2)
 let op_At_At (uu___ : 'a FStarC_Class_Deq.deq) (xs : 'a Prims.list)
   (ys : 'a Prims.list) : 'a Prims.list=
   FStarC_List.fold_left (fun xs1 y -> snoc uu___ xs1 y) xs ys
@@ -502,13 +502,13 @@ and free_names_and_uvars_comp
            FStar_Pervasives_Native.None;
          free_names_and_uvars_comp c use_cache)
       else
-        (let uu___2 =
+        (let uu___1 =
            Obj.magic
              (FStarC_Class_Setlike.empty ()
                 (Obj.magic
                    (FStarC_RBSet.setlike_rbset FStarC_Syntax_Syntax.ord_fv))
                 ()) in
-         (n, uu___2))
+         (n, uu___1))
   | uu___ ->
       let n =
         match c.FStarC_Syntax_Syntax.n with

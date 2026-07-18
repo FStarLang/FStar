@@ -81,7 +81,7 @@ let args_of_non_null_binders (binders : FStarC_Syntax_Syntax.binders) :
     (fun b ->
        if FStarC_Syntax_Syntax.is_null_binder b
        then []
-       else (let uu___1 = arg_of_non_null_binder b in [uu___1])) binders
+       else (let uu___ = arg_of_non_null_binder b in [uu___])) binders
 let args_of_binders (binders : FStarC_Syntax_Syntax.binders) :
   (FStarC_Syntax_Syntax.binders * FStarC_Syntax_Syntax.args)=
   let uu___ =
@@ -103,7 +103,7 @@ let args_of_binders (binders : FStarC_Syntax_Syntax.binders) :
                  (b.FStarC_Syntax_Syntax.binder_attrs)
              } in
            let uu___1 = arg_of_non_null_binder b1 in (b1, uu___1)
-         else (let uu___2 = arg_of_non_null_binder b in (b, uu___2))) binders in
+         else (let uu___1 = arg_of_non_null_binder b in (b, uu___1))) binders in
   FStarC_List.unzip uu___
 let name_binders (binders : FStarC_Syntax_Syntax.binders) :
   FStarC_Syntax_Syntax.binders=
@@ -274,8 +274,8 @@ let rec compare_univs (u1 : FStarC_Syntax_Syntax.universe)
         else
           (let copt =
              FStarC_Util.find_map (FStarC_List.zip us1 us2)
-               (fun uu___2 ->
-                  match uu___2 with
+               (fun uu___1 ->
+                  match uu___1 with
                   | (u11, u21) ->
                       let c = compare_univs u11 u21 in
                       if c <> Prims.int_zero
@@ -358,13 +358,12 @@ let effect_indices_from_repr (repr : FStarC_Syntax_Syntax.term)
   else
     (match repr1.FStarC_Syntax_Syntax.n with
      | FStarC_Syntax_Syntax.Tm_arrow
-         { FStarC_Syntax_Syntax.bs1 = uu___1;
-           FStarC_Syntax_Syntax.comp = c;_}
+         { FStarC_Syntax_Syntax.bs1 = uu___; FStarC_Syntax_Syntax.comp = c;_}
          ->
          (match comp_eff_name_res_and_args c with
-          | (uu___2, uu___3, args) ->
+          | (uu___1, uu___2, args) ->
               FStarC_List.map FStar_Pervasives_Native.fst args)
-     | uu___1 -> err1 ())
+     | uu___ -> err1 ())
 let destruct_comp (c : FStarC_Syntax_Syntax.comp_typ) :
   (FStarC_Syntax_Syntax.universe * FStarC_Syntax_Syntax.typ *
     FStarC_Syntax_Syntax.typ)=
@@ -722,15 +721,15 @@ let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind)
       if uu___3
       then FStar_Dyn.undyn v
       else
-        (let uu___5 =
-           let uu___6 =
+        (let uu___4 =
+           let uu___5 =
              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_lazy_kind k in
-           let uu___7 =
+           let uu___6 =
              FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_lazy_kind
                k' in
-           FStarC_Format.fmt2 "Expected Tm_lazy of kind %s, got %s" uu___6
-             uu___7 in
-         FStarC_Effect.failwith uu___5)
+           FStarC_Format.fmt2 "Expected Tm_lazy of kind %s, got %s" uu___5
+             uu___6 in
+         FStarC_Effect.failwith uu___4)
   | uu___1 -> FStarC_Effect.failwith "Not a Tm_lazy of the expected kind"
 let mk_lazy (t : 'a) (typ : FStarC_Syntax_Syntax.typ)
   (k : FStarC_Syntax_Syntax.lazy_kind)
@@ -1720,14 +1719,14 @@ let mk_conj_simp (t1 : FStarC_Syntax_Syntax.term)
   let uu___ = is_t_true t1 in
   if uu___
   then t2
-  else (let uu___2 = is_t_true t2 in if uu___2 then t1 else mk_conj t1 t2)
+  else (let uu___1 = is_t_true t2 in if uu___1 then t1 else mk_conj t1 t2)
 let mk_disj_simp (t1 : FStarC_Syntax_Syntax.term)
   (t2 : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let uu___ = is_t_true t1 in
   if uu___
   then t_true
   else
-    (let uu___2 = is_t_true t2 in if uu___2 then t_true else mk_disj t1 t2)
+    (let uu___1 = is_t_true t2 in if uu___1 then t_true else mk_disj t1 t2)
 let teq : FStarC_Syntax_Syntax.term= fvar_const FStarC_Parser_Const.eq2_lid
 let mk_untyped_eq2 (e1 : FStarC_Syntax_Syntax.term)
   (e2 : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
@@ -3777,12 +3776,12 @@ let check_mutual_universes (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
                (Obj.magic
                   "Mutually recursive definitions do not abstract over the same universes")
            else
-             (let uu___2 =
-                let uu___3 =
+             (let uu___1 =
+                let uu___2 =
                   FStarC_List.forall2 FStarC_Ident.ident_equals
                     lb1.FStarC_Syntax_Syntax.lbunivs expected in
-                Prims.op_Negation uu___3 in
-              if uu___2
+                Prims.op_Negation uu___2 in
+              if uu___1
               then
                 FStarC_Errors.raise_error
                   FStarC_Class_HasRange.hasRange_range
@@ -3853,8 +3852,8 @@ let parse_positivity_attributes
   then
     ((FStar_Pervasives_Native.Some FStarC_Syntax_Syntax.BinderUnused), attrs)
   else
-    (let uu___2 = contains_strictly_positive_attribute attrs in
-     if uu___2
+    (let uu___1 = contains_strictly_positive_attribute attrs in
+     if uu___1
      then
        ((FStar_Pervasives_Native.Some
            FStarC_Syntax_Syntax.BinderStrictlyPositive), attrs)
@@ -3872,23 +3871,23 @@ let encode_positivity_attributes
       if uu___
       then attrs
       else
-        (let uu___2 =
+        (let uu___1 =
            FStarC_Syntax_Syntax.fv_to_tm
              (FStarC_Syntax_Syntax.lid_as_fv
                 FStarC_Parser_Const.binder_strictly_positive_attr
                 FStar_Pervasives_Native.None) in
-         uu___2 :: attrs)
+         uu___1 :: attrs)
   | FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.BinderUnused) ->
       let uu___ = contains_unused_attribute attrs in
       if uu___
       then attrs
       else
-        (let uu___2 =
+        (let uu___1 =
            FStarC_Syntax_Syntax.fv_to_tm
              (FStarC_Syntax_Syntax.lid_as_fv
                 FStarC_Parser_Const.binder_unused_attr
                 FStar_Pervasives_Native.None) in
-         uu___2 :: attrs)
+         uu___1 :: attrs)
 let is_binder_strictly_positive (b : FStarC_Syntax_Syntax.binder) :
   Prims.bool=
   b.FStarC_Syntax_Syntax.binder_positivity =

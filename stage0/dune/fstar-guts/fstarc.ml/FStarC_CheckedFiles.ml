@@ -146,7 +146,7 @@ let load_checked_file (fn : Prims.string) (checked_fn : Prims.string) :
                 if x.digest <> current_digest
                 then
                   (debug
-                     (fun uu___5 ->
+                     (fun uu___2 ->
                         FStarC_Format.print4
                           "Checked file %s is stale since incorrect digest of %s, expected: %s, found: %s\n"
                           checked_fn fn current_digest x.digest);
@@ -350,41 +350,41 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                    (validate_iface_cache (); FStar_Pervasives.Inr tc_result1)
                  else
                    (debug
-                      (fun uu___6 ->
-                         (let uu___8 =
+                      (fun uu___5 ->
+                         (let uu___7 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_nat
                               (FStarC_List.length deps_dig') in
-                          let uu___9 =
+                          let uu___8 =
                             FStarC_Parser_Dep.print_digest deps_dig' in
-                          let uu___10 =
+                          let uu___9 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_nat
                               (FStarC_List.length deps_dig) in
-                          let uu___11 =
+                          let uu___10 =
                             FStarC_Parser_Dep.print_digest deps_dig in
                           FStarC_Format.print4
                             "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n"
-                            uu___8 uu___9 uu___10 uu___11);
+                            uu___7 uu___8 uu___9 uu___10);
                          if
                            (FStarC_List.length deps_dig) =
                              (FStarC_List.length deps_dig')
                          then
                            FStarC_List.iter2
-                             (fun uu___8 uu___9 ->
-                                match (uu___8, uu___9) with
+                             (fun uu___7 uu___8 ->
+                                match (uu___7, uu___8) with
                                 | ((x, y), (x', y')) ->
                                     if (x <> x') || (y <> y')
                                     then
-                                      let uu___10 =
+                                      let uu___9 =
                                         FStarC_Parser_Dep.print_digest
                                           [(x, y)] in
-                                      let uu___11 =
+                                      let uu___10 =
                                         FStarC_Parser_Dep.print_digest
                                           [(x', y')] in
                                       FStarC_Format.print2
                                         "Differ at: Expected %s\n Got %s\n"
-                                        uu___10 uu___11
+                                        uu___9 uu___10
                                     else ()) deps_dig deps_dig'
                          else ());
                     (let msg =
@@ -392,7 +392,7 @@ let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps)
                          "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)"
                          checked_fn in
                      let elt1 = ((Invalid msg), (FStar_Pervasives.Inl msg)) in
-                     let uu___6 = add_and_return checked_fn elt1 in
+                     let uu___5 = add_and_return checked_fn elt1 in
                      FStar_Pervasives.Inl msg)))))
 let load_parsing_data_from_cache (file_name : Prims.string) :
   FStarC_Parser_Dep.parsing_data FStar_Pervasives_Native.option=

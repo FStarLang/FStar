@@ -68,24 +68,24 @@ let profile (f : unit -> 'a)
      then f ()
      else
        (try
-          (fun uu___3 ->
+          (fun uu___2 ->
              match () with
              | () ->
                  (FStarC_Effect.op_Colon_Equals c.running true;
-                  (let uu___5 = FStarC_Timing.record_ns f in
-                   match uu___5 with
+                  (let uu___4 = FStarC_Timing.record_ns f in
+                   match uu___4 with
                    | (res, elapsed) ->
-                       ((let uu___7 =
-                           let uu___8 = FStarC_Effect.op_Bang c.total_time in
-                           uu___8 + elapsed in
-                         FStarC_Effect.op_Colon_Equals c.total_time uu___7);
+                       ((let uu___6 =
+                           let uu___7 = FStarC_Effect.op_Bang c.total_time in
+                           uu___7 + elapsed in
+                         FStarC_Effect.op_Colon_Equals c.total_time uu___6);
                         FStarC_Effect.op_Colon_Equals c.running false;
                         res)))) ()
         with
-        | uu___3 ->
+        | uu___2 ->
             (FStarC_Effect.op_Colon_Equals c.running false;
              FStarC_Effect.op_Colon_Equals c.undercount true;
-             FStarC_Effect.raise uu___3)))
+             FStarC_Effect.raise uu___2)))
   else f ()
 let report_json (tag : Prims.string) (c : counter) : unit=
   let counter1 = json_of_counter c in
@@ -99,8 +99,8 @@ let report_human (tag : Prims.string) (c : counter) : unit=
     if uu___
     then " (Warning, this counter is still running)"
     else
-      (let uu___2 = FStarC_Effect.op_Bang c.undercount in
-       if uu___2
+      (let uu___1 = FStarC_Effect.op_Bang c.undercount in
+       if uu___1
        then
          " (Warning, some operations raised exceptions and we not accounted for)"
        else "") in

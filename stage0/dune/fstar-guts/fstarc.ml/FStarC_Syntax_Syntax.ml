@@ -2435,8 +2435,8 @@ let freshen_bv (bv1 : bv) : bv=
   if is_null_bv bv1
   then new_bv (FStar_Pervasives_Native.Some (range_of_bv bv1)) bv1.sort
   else
-    (let uu___1 = FStarC_GenSym.next_id () in
-     { ppname = (bv1.ppname); index = uu___1; sort = (bv1.sort) })
+    (let uu___ = FStarC_GenSym.next_id () in
+     { ppname = (bv1.ppname); index = uu___; sort = (bv1.sort) })
 let freshen_binder (b : binder) : binder=
   let uu___ = freshen_bv b.binder_bv in
   {

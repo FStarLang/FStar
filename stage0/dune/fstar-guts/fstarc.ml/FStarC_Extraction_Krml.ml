@@ -1436,7 +1436,7 @@ let valid_float_literal (s : Prims.string) : Prims.bool=
                | 45::exp2 -> exp2
                | exp2 -> exp2 in
              (has_digits exp1) && ((consume_digits exp1) = [])
-         | uu___2 -> false)
+         | uu___1 -> false)
 let mk_bool_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
   | "op_Negation" -> FStar_Pervasives_Native.Some Not
@@ -1701,8 +1701,8 @@ let translate_type_decl (env1 : env)
       ty.FStarC_Extraction_ML_Syntax.tydecl_meta
   then FStar_Pervasives_Native.None
   else
-    (let uu___1 = FStarC_Effect.op_Bang ref_translate_type_decl in
-     uu___1 env1 ty)
+    (let uu___ = FStarC_Effect.op_Bang ref_translate_type_decl in
+     uu___ env1 ty)
 type env_and_pat = (env * pattern)
 let rec translate_type_without_decay' (env1 : env)
   (t : FStarC_Extraction_ML_Syntax.mlty) : typ=
@@ -3100,58 +3100,57 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
       else
         if (FStarC_Util.ends_with c "uint32") && is_known_type
         then
-          (let uu___3 =
-             let uu___4 = translate_expr env1 arg in (uu___4, (TInt UInt32)) in
-           ECast uu___3)
+          (let uu___2 =
+             let uu___3 = translate_expr env1 arg in (uu___3, (TInt UInt32)) in
+           ECast uu___2)
         else
           if (FStarC_Util.ends_with c "uint16") && is_known_type
           then
-            (let uu___4 =
-               let uu___5 = translate_expr env1 arg in
-               (uu___5, (TInt UInt16)) in
-             ECast uu___4)
+            (let uu___2 =
+               let uu___3 = translate_expr env1 arg in
+               (uu___3, (TInt UInt16)) in
+             ECast uu___2)
           else
             if (FStarC_Util.ends_with c "uint8") && is_known_type
             then
-              (let uu___5 =
-                 let uu___6 = translate_expr env1 arg in
-                 (uu___6, (TInt UInt8)) in
-               ECast uu___5)
+              (let uu___2 =
+                 let uu___3 = translate_expr env1 arg in
+                 (uu___3, (TInt UInt8)) in
+               ECast uu___2)
             else
               if (FStarC_Util.ends_with c "int64") && is_known_type
               then
-                (let uu___6 =
-                   let uu___7 = translate_expr env1 arg in
-                   (uu___7, (TInt Int64)) in
-                 ECast uu___6)
+                (let uu___2 =
+                   let uu___3 = translate_expr env1 arg in
+                   (uu___3, (TInt Int64)) in
+                 ECast uu___2)
               else
                 if (FStarC_Util.ends_with c "int32") && is_known_type
                 then
-                  (let uu___7 =
-                     let uu___8 = translate_expr env1 arg in
-                     (uu___8, (TInt Int32)) in
-                   ECast uu___7)
+                  (let uu___2 =
+                     let uu___3 = translate_expr env1 arg in
+                     (uu___3, (TInt Int32)) in
+                   ECast uu___2)
                 else
                   if (FStarC_Util.ends_with c "int16") && is_known_type
                   then
-                    (let uu___8 =
-                       let uu___9 = translate_expr env1 arg in
-                       (uu___9, (TInt Int16)) in
-                     ECast uu___8)
+                    (let uu___2 =
+                       let uu___3 = translate_expr env1 arg in
+                       (uu___3, (TInt Int16)) in
+                     ECast uu___2)
                   else
                     if (FStarC_Util.ends_with c "int8") && is_known_type
                     then
-                      (let uu___9 =
-                         let uu___10 = translate_expr env1 arg in
-                         (uu___10, (TInt Int8)) in
-                       ECast uu___9)
+                      (let uu___2 =
+                         let uu___3 = translate_expr env1 arg in
+                         (uu___3, (TInt Int8)) in
+                       ECast uu___2)
                     else
-                      (let uu___10 =
-                         let uu___11 =
-                           let uu___12 = translate_expr env1 arg in [uu___12] in
-                         ((EQualified (["FStar"; "Int"; "Cast"], c)),
-                           uu___11) in
-                       EApp uu___10)
+                      (let uu___2 =
+                         let uu___3 =
+                           let uu___4 = translate_expr env1 arg in [uu___4] in
+                         ((EQualified (["FStar"; "Int"; "Cast"], c)), uu___3) in
+                       EApp uu___2)
   | FStarC_Extraction_ML_Syntax.MLE_App
       ({
          FStarC_Extraction_ML_Syntax.expr =
@@ -3473,10 +3472,10 @@ let translate_type_decl' (env1 : env)
         if assumed
         then
           (let name3 = FStarC_Extraction_ML_Syntax.string_of_mlpath name2 in
-           (let uu___3 =
-              let uu___4 = FStarC_Options.silent () in
-              Prims.op_Negation uu___4 in
-            if uu___3
+           (let uu___2 =
+              let uu___3 = FStarC_Options.silent () in
+              Prims.op_Negation uu___3 in
+            if uu___2
             then
               FStarC_Format.print1_warning
                 "Not extracting type definition %s to KaRaMeL (assumed type)\n"
@@ -3484,13 +3483,13 @@ let translate_type_decl' (env1 : env)
             else ());
            FStar_Pervasives_Native.None)
         else
-          (let uu___3 =
-             let uu___4 =
-               let uu___5 = translate_flags flags in
-               let uu___6 = translate_type env2 t in
-               (name2, uu___5, (FStarC_List.length args), uu___6) in
-             DTypeAlias uu___4 in
-           FStar_Pervasives_Native.Some uu___3)
+          (let uu___1 =
+             let uu___2 =
+               let uu___3 = translate_flags flags in
+               let uu___4 = translate_type env2 t in
+               (name2, uu___3, (FStarC_List.length args), uu___4) in
+             DTypeAlias uu___2 in
+           FStar_Pervasives_Native.Some uu___1)
   | { FStarC_Extraction_ML_Syntax.tydecl_assumed = uu___;
       FStarC_Extraction_ML_Syntax.tydecl_name = name1;
       FStarC_Extraction_ML_Syntax.tydecl_ignored = uu___1;
@@ -3614,9 +3613,9 @@ let translate_let' (env1 : env)
           DExternal uu___4 in
         FStar_Pervasives_Native.Some uu___3
       else
-        ((let uu___5 =
-            let uu___6 = FStarC_Options.silent () in Prims.op_Negation uu___6 in
-          if uu___5
+        ((let uu___4 =
+            let uu___5 = FStarC_Options.silent () in Prims.op_Negation uu___5 in
+          if uu___4
           then
             FStarC_Format.print1_warning
               "Not extracting %s to KaRaMeL (polymorphic assumes are not supported)\n"
@@ -3644,28 +3643,28 @@ let translate_let' (env1 : env)
            then extend env1 name1
            else env1 in
          let env3 =
-           let uu___6 = FStarC_Extraction_ML_Syntax.ty_param_names tvars in
+           let uu___5 = FStarC_Extraction_ML_Syntax.ty_param_names tvars in
            FStarC_List.fold_left (fun env4 name2 -> extend_t env4 name2) env2
-             uu___6 in
-         let rec find_return_type eff i uu___6 =
-           match uu___6 with
-           | FStarC_Extraction_ML_Syntax.MLTY_Fun (uu___7, eff1, t) when
+             uu___5 in
+         let rec find_return_type eff i uu___5 =
+           match uu___5 with
+           | FStarC_Extraction_ML_Syntax.MLTY_Fun (uu___6, eff1, t) when
                i > Prims.int_zero ->
                find_return_type eff1 (i - Prims.int_one) t
            | t -> (i, eff, t) in
          let name2 = ((env3.module_name), name1) in
-         let uu___6 =
+         let uu___5 =
            find_return_type FStarC_Extraction_ML_Syntax.E_PURE
              (FStarC_List.length args) t0 in
-         match uu___6 with
+         match uu___5 with
          | (i, eff, t) ->
-             let uu___7 =
+             let uu___6 =
                if i > Prims.int_zero
                then
-                 let uu___8 = FStarC_Options.silent () in
-                 Prims.op_Negation uu___8
+                 let uu___7 = FStarC_Options.silent () in
+                 Prims.op_Negation uu___7
                else false in
-             if uu___7
+             if uu___6
              then
                let msg =
                  "function type annotation has less arrows than the number of arguments; please mark the return type abbreviation as inline_for_extraction" in
@@ -3680,15 +3679,15 @@ let translate_let' (env1 : env)
                 let cc1 = translate_cc meta in
                 let meta1 =
                   match (eff, t1) with
-                  | (FStarC_Extraction_ML_Syntax.E_ERASABLE, uu___9) ->
-                      let uu___10 = translate_flags meta in MustDisappear ::
-                        uu___10
+                  | (FStarC_Extraction_ML_Syntax.E_ERASABLE, uu___7) ->
+                      let uu___8 = translate_flags meta in MustDisappear ::
+                        uu___8
                   | (FStarC_Extraction_ML_Syntax.E_PURE, TUnit) ->
-                      let uu___9 = translate_flags meta in MustDisappear ::
-                        uu___9
-                  | uu___9 -> translate_flags meta in
+                      let uu___7 = translate_flags meta in MustDisappear ::
+                        uu___7
+                  | uu___7 -> translate_flags meta in
                 try
-                  (fun uu___9 ->
+                  (fun uu___7 ->
                      match () with
                      | () ->
                          let body1 = translate_expr env4 body in
@@ -3697,41 +3696,41 @@ let translate_let' (env1 : env)
                               (cc1, meta1, (FStarC_List.length tvars), t1,
                                 name2, binders, body1))) ()
                 with
-                | uu___9 ->
+                | uu___7 ->
                     let sub_msg =
-                      match uu___9 with
+                      match uu___7 with
                       | FStarC_Errors.Error (code, msg, pos, ctx) ->
-                          let uu___10 =
-                            let uu___11 =
-                              let uu___12 =
-                                let uu___13 =
-                                  let uu___14 = FStarC_Errors.errno code in
+                          let uu___8 =
+                            let uu___9 =
+                              let uu___10 =
+                                let uu___11 =
+                                  let uu___12 = FStarC_Errors.errno code in
                                   FStarC_Class_Show.show
-                                    FStarC_Class_Show.showable_int uu___14 in
-                                let uu___14 =
+                                    FStarC_Class_Show.showable_int uu___12 in
+                                let uu___12 =
                                   FStarC_Class_Show.show
                                     FStarC_Range_Ops.showable_range pos in
                                 FStarC_Format.fmt2 "Got error %s at %s."
-                                  uu___13 uu___14 in
-                              FStarC_Errors_Msg.text uu___12 in
-                            let uu___12 = FStarC_Errors_Msg.render_as_doc msg in
+                                  uu___11 uu___12 in
+                              FStarC_Errors_Msg.text uu___10 in
+                            let uu___10 = FStarC_Errors_Msg.render_as_doc msg in
                             FStar_Pprint.prefix (Prims.of_int 2)
-                              Prims.int_one uu___11 uu___12 in
-                          [uu___10]
+                              Prims.int_one uu___9 uu___10 in
+                          [uu___8]
                       | e ->
-                          let uu___10 =
-                            let uu___11 =
-                              let uu___12 = FStarC_Util.print_exn e in
-                              FStar_Pprint.arbitrary_string uu___12 in
+                          let uu___8 =
+                            let uu___9 =
+                              let uu___10 = FStarC_Util.print_exn e in
+                              FStar_Pprint.arbitrary_string uu___10 in
                             FStar_Pprint.op_Hat_Hat
                               (FStarC_Errors_Msg.text "Got an exception: ")
-                              uu___11 in
-                          [uu___10] in
-                    ((let uu___11 =
-                        let uu___12 =
-                          let uu___13 =
-                            let uu___14 =
-                              let uu___15 =
+                              uu___9 in
+                          [uu___8] in
+                    ((let uu___9 =
+                        let uu___10 =
+                          let uu___11 =
+                            let uu___12 =
+                              let uu___13 =
                                 FStarC_Class_Show.show
                                   (FStarC_Class_Show.show_tuple2
                                      (FStarC_Class_Show.show_list
@@ -3739,24 +3738,24 @@ let translate_let' (env1 : env)
                                      FStarC_Class_Show.showable_string) name2 in
                               FStarC_Format.fmt1
                                 "Error while extracting %s to KaRaMeL."
-                                uu___15 in
-                            FStarC_Errors_Msg.text uu___14 in
-                          [uu___13] in
-                        FStarC_List.op_At uu___12 sub_msg in
+                                uu___13 in
+                            FStarC_Errors_Msg.text uu___12 in
+                          [uu___11] in
+                        FStarC_List.op_At uu___10 sub_msg in
                       FStarC_Errors.log_issue0
                         FStarC_Errors_Codes.Warning_FunctionNotExtacted ()
                         (Obj.magic
                            FStarC_Errors_Msg.is_error_message_list_doc)
-                        (Obj.magic uu___11));
+                        (Obj.magic uu___9));
                      (let msg =
-                        let uu___11 =
+                        let uu___9 =
                           FStarC_Class_Show.show
                             (FStarC_Class_Show.show_tuple2
                                (FStarC_Class_Show.show_list
                                   FStarC_Class_Show.showable_string)
                                FStarC_Class_Show.showable_string) name2 in
                         Prims.strcat "This function was not extracted:\n"
-                          uu___11 in
+                          uu___9 in
                       FStar_Pervasives_Native.Some
                         (DFunction
                            (cc1, meta1, (FStarC_List.length tvars), t1,
@@ -3774,13 +3773,13 @@ let translate_let' (env1 : env)
       else
         (let meta1 = translate_flags meta in
          let env2 =
-           let uu___4 = FStarC_Extraction_ML_Syntax.ty_param_names tvars in
+           let uu___3 = FStarC_Extraction_ML_Syntax.ty_param_names tvars in
            FStarC_List.fold_left (fun env3 name2 -> extend_t env3 name2) env1
-             uu___4 in
+             uu___3 in
          let t1 = translate_type env2 t in
          let name2 = ((env2.module_name), name1) in
          try
-           (fun uu___4 ->
+           (fun uu___3 ->
               match () with
               | () ->
                   let expr2 = translate_expr env2 expr1 in
@@ -3789,21 +3788,21 @@ let translate_let' (env1 : env)
                        (meta1, name2, (FStarC_List.length tvars), t1, expr2)))
              ()
          with
-         | uu___4 ->
-             ((let uu___6 =
-                 let uu___7 =
-                   let uu___8 =
-                     let uu___9 = FStarC_Util.print_exn uu___4 in
-                     FStar_Pprint.arbitrary_string uu___9 in
-                   [uu___8] in
+         | uu___3 ->
+             ((let uu___5 =
+                 let uu___6 =
+                   let uu___7 =
+                     let uu___8 = FStarC_Util.print_exn uu___3 in
+                     FStar_Pprint.arbitrary_string uu___8 in
+                   [uu___7] in
                  (FStarC_Errors_Msg.text
                     (FStarC_Format.fmt1 "Error extracting %s to KaRaMeL."
                        (FStarC_Extraction_ML_Syntax.string_of_mlpath name2)))
-                   :: uu___7 in
+                   :: uu___6 in
                FStarC_Errors.log_issue0
                  FStarC_Errors_Codes.Warning_DefinitionNotTranslated ()
                  (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-                 (Obj.magic uu___6));
+                 (Obj.magic uu___5));
               FStar_Pervasives_Native.Some
                 (DGlobal (meta1, name2, (FStarC_List.length tvars), t1, EAny))))
   | { FStarC_Extraction_ML_Syntax.mllb_name = name1;

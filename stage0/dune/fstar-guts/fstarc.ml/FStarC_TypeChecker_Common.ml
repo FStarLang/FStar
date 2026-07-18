@@ -255,28 +255,28 @@ let check_uvar_ctx_invariant (reason : Prims.string)
   if Prims.op_Negation should_check
   then ()
   else
-    (let uu___1 =
-       let uu___2 =
+    (let uu___ =
+       let uu___1 =
          FStarC_Util.prefix_until
-           (fun uu___3 ->
-              match uu___3 with
-              | FStarC_Syntax_Syntax.Binding_var uu___4 -> true
-              | uu___4 -> false) g in
-       (uu___2, bs) in
-     match uu___1 with
+           (fun uu___2 ->
+              match uu___2 with
+              | FStarC_Syntax_Syntax.Binding_var uu___3 -> true
+              | uu___3 -> false) g in
+       (uu___1, bs) in
+     match uu___ with
      | (FStar_Pervasives_Native.None, []) -> ()
-     | (FStar_Pervasives_Native.Some (uu___2, hd, gamma_tail),
-        uu___3::uu___4) ->
-         let uu___5 = FStarC_Util.prefix bs in
-         (match uu___5 with
-          | (uu___6, x) ->
+     | (FStar_Pervasives_Native.Some (uu___1, hd, gamma_tail),
+        uu___2::uu___3) ->
+         let uu___4 = FStarC_Util.prefix bs in
+         (match uu___4 with
+          | (uu___5, x) ->
               (match hd with
                | FStarC_Syntax_Syntax.Binding_var x' when
                    FStarC_Syntax_Syntax.bv_eq
                      x.FStarC_Syntax_Syntax.binder_bv x'
                    -> ()
-               | uu___7 -> fail ()))
-     | uu___2 -> fail ())
+               | uu___6 -> fail ()))
+     | uu___1 -> fail ())
 let mk_by_tactic (tac : FStarC_Syntax_Syntax.term)
   (f : FStarC_Syntax_Syntax.term) : FStarC_Syntax_Syntax.term=
   let t_by_tactic =
@@ -702,11 +702,11 @@ let lcomp_to_string (lc : lcomp) : Prims.string=
       let uu___2 = lcomp_comp lc in FStar_Pervasives_Native.fst uu___2 in
     FStarC_Class_Show.show FStarC_Syntax_Print.showable_comp uu___1
   else
-    (let uu___2 =
+    (let uu___1 =
        FStarC_Class_Show.show FStarC_Ident.showable_lident lc.eff_name in
-     let uu___3 =
+     let uu___2 =
        FStarC_Class_Show.show FStarC_Syntax_Print.showable_term lc.res_typ in
-     FStarC_Format.fmt2 "%s %s" uu___2 uu___3)
+     FStarC_Format.fmt2 "%s %s" uu___1 uu___2)
 let lcomp_set_flags (lc : lcomp) (fs : FStarC_Syntax_Syntax.cflag Prims.list)
   : lcomp=
   let comp_typ_set_flags c =
@@ -825,10 +825,10 @@ let check_positivity_qual (subtyping : Prims.bool)
     if subtyping
     then
       (match (p0, p1) with
-       | (FStar_Pervasives_Native.Some uu___1, FStar_Pervasives_Native.None)
+       | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None)
            -> true
        | (FStar_Pervasives_Native.Some (FStarC_Syntax_Syntax.BinderUnused),
           FStar_Pervasives_Native.Some
           (FStarC_Syntax_Syntax.BinderStrictlyPositive)) -> true
-       | uu___1 -> false)
+       | uu___ -> false)
     else false

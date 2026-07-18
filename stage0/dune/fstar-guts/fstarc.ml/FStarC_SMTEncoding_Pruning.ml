@@ -439,13 +439,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                 [uu___10] in
               uu___8 :: uu___9
             else
-              (let uu___9 =
+              (let uu___8 =
                  Obj.magic
                    (FStarC_Class_Setlike.singleton ()
                       (Obj.magic
                          (FStarC_RBSet.setlike_rbset
                             FStarC_Class_Ord.ord_string)) token) in
-               [uu___9])
+               [uu___8])
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Var token, [])
             ->
             if FStarC_Util.ends_with token "@tok"
@@ -469,13 +469,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                 [uu___8] in
               uu___6 :: uu___7
             else
-              (let uu___7 =
+              (let uu___6 =
                  Obj.magic
                    (FStarC_Class_Setlike.singleton ()
                       (Obj.magic
                          (FStarC_RBSet.setlike_rbset
                             FStarC_Class_Ord.ord_string)) token) in
-               [uu___7])
+               [uu___6])
         | uu___6 -> [] in
       add_assumption_with_triggers triggers1
   | FStarC_SMTEncoding_Term.App
@@ -516,13 +516,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                 [uu___9] in
               uu___7 :: uu___8
             else
-              (let uu___8 =
+              (let uu___7 =
                  Obj.magic
                    (FStarC_Class_Setlike.singleton ()
                       (Obj.magic
                          (FStarC_RBSet.setlike_rbset
                             FStarC_Class_Ord.ord_string)) token) in
-               [uu___8])
+               [uu___7])
         | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Var token, [])
             ->
             if FStarC_Util.ends_with token "@tok"
@@ -546,13 +546,13 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
                 [uu___7] in
               uu___5 :: uu___6
             else
-              (let uu___6 =
+              (let uu___5 =
                  Obj.magic
                    (FStarC_Class_Setlike.singleton ()
                       (Obj.magic
                          (FStarC_RBSet.setlike_rbset
                             FStarC_Class_Ord.ord_string)) token) in
-               [uu___6])
+               [uu___5])
         | uu___5 -> [] in
       add_assumption_with_triggers triggers1
   | FStarC_SMTEncoding_Term.App
@@ -1088,33 +1088,33 @@ let rec scan (ds : FStarC_SMTEncoding_Term.assumption Prims.list) : unit st=
                                                           st_monad ()
                                                           (Obj.magic acc))
                                                    else
-                                                     (let uu___6 =
-                                                        let uu___7 =
+                                                     (let uu___5 =
+                                                        let uu___6 =
                                                           should_retain_assumption
                                                             assumption in
                                                         Prims.op_Negation
-                                                          uu___7 in
-                                                      if uu___6
+                                                          uu___6 in
+                                                      if uu___5
                                                       then
                                                         Obj.magic
                                                           (FStarC_Class_Monad.return
                                                              st_monad ()
                                                              (Obj.magic acc))
                                                       else
-                                                        (let uu___8 =
+                                                        (let uu___6 =
                                                            reached_assumption
                                                              assumption.FStarC_SMTEncoding_Term.assumption_name in
                                                          Obj.magic
                                                            (FStarC_Class_Monad.op_let_Bang
                                                               st_monad () ()
-                                                              uu___8
-                                                              (fun uu___9 ->
-                                                                 (fun uu___9
+                                                              uu___6
+                                                              (fun uu___7 ->
+                                                                 (fun uu___7
                                                                     ->
-                                                                    let uu___9
+                                                                    let uu___7
                                                                     =
                                                                     Obj.magic
-                                                                    uu___9 in
+                                                                    uu___7 in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
                                                                     st_monad
@@ -1122,7 +1122,7 @@ let rec scan (ds : FStarC_SMTEncoding_Term.assumption Prims.list) : unit st=
                                                                     (Obj.magic
                                                                     (assumption
                                                                     :: acc))))
-                                                                   uu___9)))))
+                                                                   uu___7)))))
                                                   uu___4))) uu___4 uu___3)
                                 (Obj.magic []) (Obj.magic triggered)) in
                          Obj.magic
@@ -1244,41 +1244,41 @@ let prune (p : pruning_state)
            if uu___4
            then []
            else
-             (let uu___6 =
-                let uu___7 =
-                  let uu___8 =
+             (let uu___5 =
+                let uu___6 =
+                  let uu___7 =
                     Obj.magic
                       (FStarC_Class_Setlike.empty ()
                          (Obj.magic
                             (FStarC_RBSet.setlike_rbset
                                FStarC_Class_Ord.ord_string)) ()) in
-                  (uu___8, []) in
+                  (uu___7, []) in
                 FStarC_List.fold_left
-                  (fun uu___8 a ->
-                     match uu___8 with
+                  (fun uu___7 a ->
+                     match uu___7 with
                      | (included_decl_names, defs_and_decls) ->
                          (match a with
                           | FStarC_SMTEncoding_Term.Assume a1 ->
                               let free_names = assumption_free_names a1 in
-                              let uu___9 =
+                              let uu___8 =
                                 FStarC_Class_Setlike.elems ()
                                   (Obj.magic
                                      (FStarC_RBSet.setlike_rbset
                                         FStarC_Class_Ord.ord_string))
                                   (Obj.magic free_names) in
                               FStarC_List.fold_left
-                                (fun uu___10 name ->
-                                   match uu___10 with
+                                (fun uu___9 name ->
+                                   match uu___9 with
                                    | (included_decl_names1, defs_and_decls1)
                                        ->
-                                       let uu___11 =
+                                       let uu___10 =
                                          FStarC_Class_Setlike.mem ()
                                            (Obj.magic
                                               (FStarC_RBSet.setlike_rbset
                                                  FStarC_Class_Ord.ord_string))
                                            name
                                            (Obj.magic included_decl_names1) in
-                                       if uu___11
+                                       if uu___10
                                        then
                                          (included_decl_names1,
                                            defs_and_decls1)
@@ -1290,7 +1290,7 @@ let prune (p : pruning_state)
                                               (included_decl_names1,
                                                 defs_and_decls1)
                                           | FStar_Pervasives_Native.Some d ->
-                                              let uu___13 =
+                                              let uu___11 =
                                                 Obj.magic
                                                   (FStarC_Class_Setlike.add
                                                      ()
@@ -1300,18 +1300,18 @@ let prune (p : pruning_state)
                                                      name
                                                      (Obj.magic
                                                         included_decl_names1)) in
-                                              (uu___13, (d ::
+                                              (uu___11, (d ::
                                                 defs_and_decls1))))
-                                (included_decl_names, defs_and_decls) uu___9
-                          | uu___9 -> (included_decl_names, defs_and_decls)))
-                  uu___7
+                                (included_decl_names, defs_and_decls) uu___8
+                          | uu___8 -> (included_decl_names, defs_and_decls)))
+                  uu___6
                   (FStar_List_Tot_Base.op_At reached_assumptions roots0) in
-              match uu___6 with
-              | (uu___7, defs_and_decls) ->
-                  let uu___8 =
+              match uu___5 with
+              | (uu___6, defs_and_decls) ->
+                  let uu___7 =
                     FStarC_List.partition
                       FStarC_SMTEncoding_Term.uu___is_DeclFun defs_and_decls in
-                  (match uu___8 with
+                  (match uu___7 with
                    | (decls, defs) -> FStar_List_Tot_Base.op_At defs decls)) in
          let print_assumption a =
            let uu___4 =

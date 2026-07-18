@@ -547,7 +547,7 @@ let rename_conventional (s : Prims.string)
     if (FStarC_List.hd cs) = 39
     then
       let uu___1 = aux (FStarC_List.tail cs) in (FStarC_List.hd cs) :: uu___1
-    else (let uu___2 = aux cs in 39 :: uu___2) in
+    else (let uu___1 = aux cs in 39 :: uu___1) in
   let sanitize_term uu___ =
     let valid c =
       ((FStarC_Util.is_letter_or_digit c) || (c = 95)) || (c = 39) in
@@ -580,8 +580,8 @@ let find_uniq (ml_ident_map : Prims.string FStarC_PSMap.t)
       if i = Prims.int_zero
       then root_name1
       else
-        (let uu___1 = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-         Prims.strcat root_name1 uu___1) in
+        (let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
+         Prims.strcat root_name1 uu___) in
     match FStarC_PSMap.try_find ml_ident_map target_mlident with
     | FStar_Pervasives_Native.Some x -> aux (i + Prims.int_one) root_name1
     | FStar_Pervasives_Native.None ->
@@ -609,10 +609,10 @@ let new_mlpath_of_lident (g : uenv) (x : FStarC_Ident.lident) :
     if uu___1
     then (([], (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid x))), g)
     else
-      (let uu___3 =
+      (let uu___2 =
          find_uniq g.env_mlident_map
            (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid x)) false in
-       match uu___3 with
+       match uu___2 with
        | (name, map) ->
            let g1 =
              {
@@ -628,8 +628,8 @@ let new_mlpath_of_lident (g : uenv) (x : FStarC_Ident.lident) :
                tydef_declarations = (g.tydef_declarations);
                currentModule = (g.currentModule)
              } in
-           let uu___4 = let uu___5 = mlns_of_lid x in (uu___5, name) in
-           (uu___4, g1)) in
+           let uu___3 = let uu___4 = mlns_of_lid x in (uu___4, name) in
+           (uu___3, g1)) in
   match uu___ with
   | (mlp, g1) ->
       let mlp1 =
@@ -843,10 +843,10 @@ let extend_fv (g : uenv) (x : FStarC_Syntax_Syntax.fv)
                 currentModule = (g1.currentModule)
               }, mlsymbol, exp_binding1))
   else
-    (let uu___2 =
-       let uu___3 = FStarC_Extraction_ML_Syntax.mltyscheme_to_string t_x in
-       FStarC_Format.fmt1 "freevars found (%s)" uu___3 in
-     FStarC_Effect.failwith uu___2)
+    (let uu___1 =
+       let uu___2 = FStarC_Extraction_ML_Syntax.mltyscheme_to_string t_x in
+       FStarC_Format.fmt1 "freevars found (%s)" uu___2 in
+     FStarC_Effect.failwith uu___1)
 let extend_erased_fv (g : uenv) (f : FStarC_Syntax_Syntax.fv) : uenv=
   {
     env_tcenv = (g.env_tcenv);
