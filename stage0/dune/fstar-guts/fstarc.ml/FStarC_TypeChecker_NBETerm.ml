@@ -1676,7 +1676,7 @@ let e_document : FStar_Pprint.document embedding=
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.document_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of
        FStarC_Syntax_Embeddings.e_document)
-let e_vconfig : FStarC_VConfig.vconfig embedding=
+let e_vconfig : FStar_VConfig.vconfig embedding=
   let em1 cb r = FStarC_Effect.failwith "e_vconfig NBE" in
   let un1 cb t1 = FStarC_Effect.failwith "e_vconfig NBE" in
   mk_emb' em1 un1

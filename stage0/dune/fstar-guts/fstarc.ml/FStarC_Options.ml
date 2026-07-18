@@ -3907,7 +3907,7 @@ let set_options (s : Prims.string) : FStarC_Getopt.parse_cmdline_res=
         ((FStarC_Format.fmt1 "File %s is not a valid option" s1), "")
 let with_options (s : Prims.string) (f : unit -> 'a) : 'a=
   with_saved_options (fun uu___ -> (let uu___4 = set_options s in ()); f ())
-let get_vconfig (uu___ : unit) : FStarC_VConfig.vconfig=
+let get_vconfig (uu___ : unit) : FStar_VConfig.vconfig=
   let vcfg =
     let uu___3 = get_initial_fuel () in
     let uu___4 = get_max_fuel () in
@@ -3936,81 +3936,81 @@ let get_vconfig (uu___ : unit) : FStarC_VConfig.vconfig=
     let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
     let uu___28 = get_reuse_hint_for () in
     {
-      FStarC_VConfig.initial_fuel = uu___3;
-      FStarC_VConfig.max_fuel = uu___4;
-      FStarC_VConfig.initial_ifuel = uu___5;
-      FStarC_VConfig.max_ifuel = uu___6;
-      FStarC_VConfig.detail_errors = uu___7;
-      FStarC_VConfig.detail_hint_replay = uu___8;
-      FStarC_VConfig.no_smt = uu___9;
-      FStarC_VConfig.quake_lo = uu___10;
-      FStarC_VConfig.quake_hi = uu___11;
-      FStarC_VConfig.quake_keep = uu___12;
-      FStarC_VConfig.retry = uu___13;
-      FStarC_VConfig.smtencoding_elim_box = uu___14;
-      FStarC_VConfig.smtencoding_nl_arith_repr = uu___15;
-      FStarC_VConfig.smtencoding_l_arith_repr = uu___16;
-      FStarC_VConfig.tcnorm = uu___17;
-      FStarC_VConfig.no_plugins = uu___18;
-      FStarC_VConfig.no_tactics = uu___19;
-      FStarC_VConfig.z3cliopt = uu___20;
-      FStarC_VConfig.z3smtopt = uu___21;
-      FStarC_VConfig.z3refresh = uu___22;
-      FStarC_VConfig.z3rlimit = uu___23;
-      FStarC_VConfig.z3rlimit_factor = uu___24;
-      FStarC_VConfig.z3seed = uu___25;
-      FStarC_VConfig.z3version = uu___26;
-      FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
-      FStarC_VConfig.reuse_hint_for = uu___28
+      FStar_VConfig.initial_fuel = uu___3;
+      FStar_VConfig.max_fuel = uu___4;
+      FStar_VConfig.initial_ifuel = uu___5;
+      FStar_VConfig.max_ifuel = uu___6;
+      FStar_VConfig.detail_errors = uu___7;
+      FStar_VConfig.detail_hint_replay = uu___8;
+      FStar_VConfig.no_smt = uu___9;
+      FStar_VConfig.quake_lo = uu___10;
+      FStar_VConfig.quake_hi = uu___11;
+      FStar_VConfig.quake_keep = uu___12;
+      FStar_VConfig.retry = uu___13;
+      FStar_VConfig.smtencoding_elim_box = uu___14;
+      FStar_VConfig.smtencoding_nl_arith_repr = uu___15;
+      FStar_VConfig.smtencoding_l_arith_repr = uu___16;
+      FStar_VConfig.tcnorm = uu___17;
+      FStar_VConfig.no_plugins = uu___18;
+      FStar_VConfig.no_tactics = uu___19;
+      FStar_VConfig.z3cliopt = uu___20;
+      FStar_VConfig.z3smtopt = uu___21;
+      FStar_VConfig.z3refresh = uu___22;
+      FStar_VConfig.z3rlimit = uu___23;
+      FStar_VConfig.z3rlimit_factor = uu___24;
+      FStar_VConfig.z3seed = uu___25;
+      FStar_VConfig.z3version = uu___26;
+      FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+      FStar_VConfig.reuse_hint_for = uu___28
     } in
   vcfg
-let set_vconfig (vcfg : FStarC_VConfig.vconfig) : unit=
+let set_vconfig (vcfg : FStar_VConfig.vconfig) : unit=
   let option_as tag o =
     match o with
     | FStar_Pervasives_Native.None -> Unset
     | FStar_Pervasives_Native.Some s -> tag s in
-  set_option "initial_fuel" (Int (vcfg.FStarC_VConfig.initial_fuel));
-  set_option "max_fuel" (Int (vcfg.FStarC_VConfig.max_fuel));
-  set_option "initial_ifuel" (Int (vcfg.FStarC_VConfig.initial_ifuel));
-  set_option "max_ifuel" (Int (vcfg.FStarC_VConfig.max_ifuel));
-  set_option "detail_errors" (Bool (vcfg.FStarC_VConfig.detail_errors));
+  set_option "initial_fuel" (Int (vcfg.FStar_VConfig.initial_fuel));
+  set_option "max_fuel" (Int (vcfg.FStar_VConfig.max_fuel));
+  set_option "initial_ifuel" (Int (vcfg.FStar_VConfig.initial_ifuel));
+  set_option "max_ifuel" (Int (vcfg.FStar_VConfig.max_ifuel));
+  set_option "detail_errors" (Bool (vcfg.FStar_VConfig.detail_errors));
   set_option "detail_hint_replay"
-    (Bool (vcfg.FStarC_VConfig.detail_hint_replay));
-  set_option "no_smt" (Bool (vcfg.FStarC_VConfig.no_smt));
-  set_option "quake_lo" (Int (vcfg.FStarC_VConfig.quake_lo));
-  set_option "quake_hi" (Int (vcfg.FStarC_VConfig.quake_hi));
-  set_option "quake_keep" (Bool (vcfg.FStarC_VConfig.quake_keep));
-  set_option "retry" (Bool (vcfg.FStarC_VConfig.retry));
+    (Bool (vcfg.FStar_VConfig.detail_hint_replay));
+  set_option "no_smt" (Bool (vcfg.FStar_VConfig.no_smt));
+  set_option "quake_lo" (Int (vcfg.FStar_VConfig.quake_lo));
+  set_option "quake_hi" (Int (vcfg.FStar_VConfig.quake_hi));
+  set_option "quake_keep" (Bool (vcfg.FStar_VConfig.quake_keep));
+  set_option "retry" (Bool (vcfg.FStar_VConfig.retry));
   set_option "smtencoding.elim_box"
-    (Bool (vcfg.FStarC_VConfig.smtencoding_elim_box));
+    (Bool (vcfg.FStar_VConfig.smtencoding_elim_box));
   set_option "smtencoding.nl_arith_repr"
-    (String (vcfg.FStarC_VConfig.smtencoding_nl_arith_repr));
+    (String (vcfg.FStar_VConfig.smtencoding_nl_arith_repr));
   set_option "smtencoding.l_arith_repr"
-    (String (vcfg.FStarC_VConfig.smtencoding_l_arith_repr));
-  set_option "tcnorm" (Bool (vcfg.FStarC_VConfig.tcnorm));
-  set_option "no_plugins" (Bool (vcfg.FStarC_VConfig.no_plugins));
-  set_option "no_tactics" (Bool (vcfg.FStarC_VConfig.no_tactics));
+    (String (vcfg.FStar_VConfig.smtencoding_l_arith_repr));
+  set_option "tcnorm" (Bool (vcfg.FStar_VConfig.tcnorm));
+  set_option "no_plugins" (Bool (vcfg.FStar_VConfig.no_plugins));
+  set_option "no_tactics" (Bool (vcfg.FStar_VConfig.no_tactics));
   (let uu___20 =
      let uu___21 =
        FStarC_List.map (fun uu___22 -> String uu___22)
-         vcfg.FStarC_VConfig.z3cliopt in
+         vcfg.FStar_VConfig.z3cliopt in
      List uu___21 in
    set_option "z3cliopt" uu___20);
   (let uu___21 =
      let uu___22 =
        FStarC_List.map (fun uu___23 -> String uu___23)
-         vcfg.FStarC_VConfig.z3smtopt in
+         vcfg.FStar_VConfig.z3smtopt in
      List uu___22 in
    set_option "z3smtopt" uu___21);
-  set_option "z3refresh" (Bool (vcfg.FStarC_VConfig.z3refresh));
-  set_option "z3rlimit" (Int (vcfg.FStarC_VConfig.z3rlimit));
-  set_option "z3rlimit_factor" (Int (vcfg.FStarC_VConfig.z3rlimit_factor));
-  set_option "z3seed" (Int (vcfg.FStarC_VConfig.z3seed));
-  set_option "z3version" (String (vcfg.FStarC_VConfig.z3version));
+  set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
+  set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
+  set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
+  set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
+  set_option "z3version" (String (vcfg.FStar_VConfig.z3version));
   set_option "trivial_pre_for_unannotated_effectful_fns"
-    (Bool (vcfg.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns));
+    (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
   set_option "reuse_hint_for"
     (option_as (fun uu___28 -> String uu___28)
-       vcfg.FStarC_VConfig.reuse_hint_for)
+       vcfg.FStar_VConfig.reuse_hint_for)
 let showable_codegen_t : codegen_t FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = print_codegen }

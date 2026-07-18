@@ -1745,7 +1745,7 @@ let e_norm_step :
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer1
     emb_t_norm_step
 let e_vconfig :
-  FStarC_VConfig.vconfig FStarC_Syntax_Embeddings_Base.embedding=
+  FStar_VConfig.vconfig FStarC_Syntax_Embeddings_Base.embedding=
   let em vcfg rng _shadow norm =
     let uu___ =
       FStarC_Syntax_Syntax.tdataconstr FStarC_Parser_Const.mkvconfig_lid in
@@ -1753,92 +1753,92 @@ let e_vconfig :
       let uu___2 =
         let uu___3 =
           FStarC_Syntax_Embeddings_Base.embed e_int
-            vcfg.FStarC_VConfig.initial_fuel rng FStar_Pervasives_Native.None
+            vcfg.FStar_VConfig.initial_fuel rng FStar_Pervasives_Native.None
             norm in
         FStarC_Syntax_Syntax.as_arg uu___3 in
       let uu___3 =
         let uu___4 =
           let uu___5 =
             FStarC_Syntax_Embeddings_Base.embed e_int
-              vcfg.FStarC_VConfig.max_fuel rng FStar_Pervasives_Native.None
+              vcfg.FStar_VConfig.max_fuel rng FStar_Pervasives_Native.None
               norm in
           FStarC_Syntax_Syntax.as_arg uu___5 in
         let uu___5 =
           let uu___6 =
             let uu___7 =
               FStarC_Syntax_Embeddings_Base.embed e_int
-                vcfg.FStarC_VConfig.initial_ifuel rng
+                vcfg.FStar_VConfig.initial_ifuel rng
                 FStar_Pervasives_Native.None norm in
             FStarC_Syntax_Syntax.as_arg uu___7 in
           let uu___7 =
             let uu___8 =
               let uu___9 =
                 FStarC_Syntax_Embeddings_Base.embed e_int
-                  vcfg.FStarC_VConfig.max_ifuel rng
+                  vcfg.FStar_VConfig.max_ifuel rng
                   FStar_Pervasives_Native.None norm in
               FStarC_Syntax_Syntax.as_arg uu___9 in
             let uu___9 =
               let uu___10 =
                 let uu___11 =
                   FStarC_Syntax_Embeddings_Base.embed e_bool
-                    vcfg.FStarC_VConfig.detail_errors rng
+                    vcfg.FStar_VConfig.detail_errors rng
                     FStar_Pervasives_Native.None norm in
                 FStarC_Syntax_Syntax.as_arg uu___11 in
               let uu___11 =
                 let uu___12 =
                   let uu___13 =
                     FStarC_Syntax_Embeddings_Base.embed e_bool
-                      vcfg.FStarC_VConfig.detail_hint_replay rng
+                      vcfg.FStar_VConfig.detail_hint_replay rng
                       FStar_Pervasives_Native.None norm in
                   FStarC_Syntax_Syntax.as_arg uu___13 in
                 let uu___13 =
                   let uu___14 =
                     let uu___15 =
                       FStarC_Syntax_Embeddings_Base.embed e_bool
-                        vcfg.FStarC_VConfig.no_smt rng
+                        vcfg.FStar_VConfig.no_smt rng
                         FStar_Pervasives_Native.None norm in
                     FStarC_Syntax_Syntax.as_arg uu___15 in
                   let uu___15 =
                     let uu___16 =
                       let uu___17 =
                         FStarC_Syntax_Embeddings_Base.embed e_int
-                          vcfg.FStarC_VConfig.quake_lo rng
+                          vcfg.FStar_VConfig.quake_lo rng
                           FStar_Pervasives_Native.None norm in
                       FStarC_Syntax_Syntax.as_arg uu___17 in
                     let uu___17 =
                       let uu___18 =
                         let uu___19 =
                           FStarC_Syntax_Embeddings_Base.embed e_int
-                            vcfg.FStarC_VConfig.quake_hi rng
+                            vcfg.FStar_VConfig.quake_hi rng
                             FStar_Pervasives_Native.None norm in
                         FStarC_Syntax_Syntax.as_arg uu___19 in
                       let uu___19 =
                         let uu___20 =
                           let uu___21 =
                             FStarC_Syntax_Embeddings_Base.embed e_bool
-                              vcfg.FStarC_VConfig.quake_keep rng
+                              vcfg.FStar_VConfig.quake_keep rng
                               FStar_Pervasives_Native.None norm in
                           FStarC_Syntax_Syntax.as_arg uu___21 in
                         let uu___21 =
                           let uu___22 =
                             let uu___23 =
                               FStarC_Syntax_Embeddings_Base.embed e_bool
-                                vcfg.FStarC_VConfig.retry rng
+                                vcfg.FStar_VConfig.retry rng
                                 FStar_Pervasives_Native.None norm in
                             FStarC_Syntax_Syntax.as_arg uu___23 in
                           let uu___23 =
                             let uu___24 =
                               let uu___25 =
                                 FStarC_Syntax_Embeddings_Base.embed e_bool
-                                  vcfg.FStarC_VConfig.smtencoding_elim_box
-                                  rng FStar_Pervasives_Native.None norm in
+                                  vcfg.FStar_VConfig.smtencoding_elim_box rng
+                                  FStar_Pervasives_Native.None norm in
                               FStarC_Syntax_Syntax.as_arg uu___25 in
                             let uu___25 =
                               let uu___26 =
                                 let uu___27 =
                                   FStarC_Syntax_Embeddings_Base.embed
                                     e_string
-                                    vcfg.FStarC_VConfig.smtencoding_nl_arith_repr
+                                    vcfg.FStar_VConfig.smtencoding_nl_arith_repr
                                     rng FStar_Pervasives_Native.None norm in
                                 FStarC_Syntax_Syntax.as_arg uu___27 in
                               let uu___27 =
@@ -1846,14 +1846,14 @@ let e_vconfig :
                                   let uu___29 =
                                     FStarC_Syntax_Embeddings_Base.embed
                                       e_string
-                                      vcfg.FStarC_VConfig.smtencoding_l_arith_repr
+                                      vcfg.FStar_VConfig.smtencoding_l_arith_repr
                                       rng FStar_Pervasives_Native.None norm in
                                   FStarC_Syntax_Syntax.as_arg uu___29 in
                                 let uu___29 =
                                   let uu___30 =
                                     let uu___31 =
                                       FStarC_Syntax_Embeddings_Base.embed
-                                        e_bool vcfg.FStarC_VConfig.tcnorm rng
+                                        e_bool vcfg.FStar_VConfig.tcnorm rng
                                         FStar_Pervasives_Native.None norm in
                                     FStarC_Syntax_Syntax.as_arg uu___31 in
                                   let uu___31 =
@@ -1861,7 +1861,7 @@ let e_vconfig :
                                       let uu___33 =
                                         FStarC_Syntax_Embeddings_Base.embed
                                           e_bool
-                                          vcfg.FStarC_VConfig.no_plugins rng
+                                          vcfg.FStar_VConfig.no_plugins rng
                                           FStar_Pervasives_Native.None norm in
                                       FStarC_Syntax_Syntax.as_arg uu___33 in
                                     let uu___33 =
@@ -1869,17 +1869,15 @@ let e_vconfig :
                                         let uu___35 =
                                           FStarC_Syntax_Embeddings_Base.embed
                                             e_bool
-                                            vcfg.FStarC_VConfig.no_tactics
-                                            rng FStar_Pervasives_Native.None
-                                            norm in
+                                            vcfg.FStar_VConfig.no_tactics rng
+                                            FStar_Pervasives_Native.None norm in
                                         FStarC_Syntax_Syntax.as_arg uu___35 in
                                       let uu___35 =
                                         let uu___36 =
                                           let uu___37 =
                                             FStarC_Syntax_Embeddings_Base.embed
                                               e_string_list
-                                              vcfg.FStarC_VConfig.z3cliopt
-                                              rng
+                                              vcfg.FStar_VConfig.z3cliopt rng
                                               FStar_Pervasives_Native.None
                                               norm in
                                           FStarC_Syntax_Syntax.as_arg uu___37 in
@@ -1888,7 +1886,7 @@ let e_vconfig :
                                             let uu___39 =
                                               FStarC_Syntax_Embeddings_Base.embed
                                                 e_string_list
-                                                vcfg.FStarC_VConfig.z3smtopt
+                                                vcfg.FStar_VConfig.z3smtopt
                                                 rng
                                                 FStar_Pervasives_Native.None
                                                 norm in
@@ -1899,7 +1897,7 @@ let e_vconfig :
                                               let uu___41 =
                                                 FStarC_Syntax_Embeddings_Base.embed
                                                   e_bool
-                                                  vcfg.FStarC_VConfig.z3refresh
+                                                  vcfg.FStar_VConfig.z3refresh
                                                   rng
                                                   FStar_Pervasives_Native.None
                                                   norm in
@@ -1910,7 +1908,7 @@ let e_vconfig :
                                                 let uu___43 =
                                                   FStarC_Syntax_Embeddings_Base.embed
                                                     e_int
-                                                    vcfg.FStarC_VConfig.z3rlimit
+                                                    vcfg.FStar_VConfig.z3rlimit
                                                     rng
                                                     FStar_Pervasives_Native.None
                                                     norm in
@@ -1921,7 +1919,7 @@ let e_vconfig :
                                                   let uu___45 =
                                                     FStarC_Syntax_Embeddings_Base.embed
                                                       e_int
-                                                      vcfg.FStarC_VConfig.z3rlimit_factor
+                                                      vcfg.FStar_VConfig.z3rlimit_factor
                                                       rng
                                                       FStar_Pervasives_Native.None
                                                       norm in
@@ -1932,7 +1930,7 @@ let e_vconfig :
                                                     let uu___47 =
                                                       FStarC_Syntax_Embeddings_Base.embed
                                                         e_int
-                                                        vcfg.FStarC_VConfig.z3seed
+                                                        vcfg.FStar_VConfig.z3seed
                                                         rng
                                                         FStar_Pervasives_Native.None
                                                         norm in
@@ -1943,7 +1941,7 @@ let e_vconfig :
                                                       let uu___49 =
                                                         FStarC_Syntax_Embeddings_Base.embed
                                                           e_string
-                                                          vcfg.FStarC_VConfig.z3version
+                                                          vcfg.FStar_VConfig.z3version
                                                           rng
                                                           FStar_Pervasives_Native.None
                                                           norm in
@@ -1954,7 +1952,7 @@ let e_vconfig :
                                                         let uu___51 =
                                                           FStarC_Syntax_Embeddings_Base.embed
                                                             e_bool
-                                                            vcfg.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns
+                                                            vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                                                             rng
                                                             FStar_Pervasives_Native.None
                                                             norm in
@@ -1966,7 +1964,7 @@ let e_vconfig :
                                                             FStarC_Syntax_Embeddings_Base.embed
                                                               (e_option
                                                                  e_string)
-                                                              vcfg.FStarC_VConfig.reuse_hint_for
+                                                              vcfg.FStar_VConfig.reuse_hint_for
                                                               rng
                                                               FStar_Pervasives_Native.None
                                                               norm in
@@ -2566,78 +2564,78 @@ let e_vconfig :
                                                                     Obj.magic
                                                                     (FStar_Pervasives_Native.Some
                                                                     {
-                                                                    FStarC_VConfig.initial_fuel
+                                                                    FStar_VConfig.initial_fuel
                                                                     =
                                                                     initial_fuel1;
-                                                                    FStarC_VConfig.max_fuel
+                                                                    FStar_VConfig.max_fuel
                                                                     =
                                                                     max_fuel1;
-                                                                    FStarC_VConfig.initial_ifuel
+                                                                    FStar_VConfig.initial_ifuel
                                                                     =
                                                                     initial_ifuel1;
-                                                                    FStarC_VConfig.max_ifuel
+                                                                    FStar_VConfig.max_ifuel
                                                                     =
                                                                     max_ifuel1;
-                                                                    FStarC_VConfig.detail_errors
+                                                                    FStar_VConfig.detail_errors
                                                                     =
                                                                     detail_errors1;
-                                                                    FStarC_VConfig.detail_hint_replay
+                                                                    FStar_VConfig.detail_hint_replay
                                                                     =
                                                                     detail_hint_replay1;
-                                                                    FStarC_VConfig.no_smt
+                                                                    FStar_VConfig.no_smt
                                                                     = no_smt1;
-                                                                    FStarC_VConfig.quake_lo
+                                                                    FStar_VConfig.quake_lo
                                                                     =
                                                                     quake_lo1;
-                                                                    FStarC_VConfig.quake_hi
+                                                                    FStar_VConfig.quake_hi
                                                                     =
                                                                     quake_hi1;
-                                                                    FStarC_VConfig.quake_keep
+                                                                    FStar_VConfig.quake_keep
                                                                     =
                                                                     quake_keep1;
-                                                                    FStarC_VConfig.retry
+                                                                    FStar_VConfig.retry
                                                                     = retry1;
-                                                                    FStarC_VConfig.smtencoding_elim_box
+                                                                    FStar_VConfig.smtencoding_elim_box
                                                                     =
                                                                     smtencoding_elim_box1;
-                                                                    FStarC_VConfig.smtencoding_nl_arith_repr
+                                                                    FStar_VConfig.smtencoding_nl_arith_repr
                                                                     =
                                                                     smtencoding_nl_arith_repr1;
-                                                                    FStarC_VConfig.smtencoding_l_arith_repr
+                                                                    FStar_VConfig.smtencoding_l_arith_repr
                                                                     =
                                                                     smtencoding_l_arith_repr1;
-                                                                    FStarC_VConfig.tcnorm
+                                                                    FStar_VConfig.tcnorm
                                                                     = tcnorm1;
-                                                                    FStarC_VConfig.no_plugins
+                                                                    FStar_VConfig.no_plugins
                                                                     =
                                                                     no_plugins1;
-                                                                    FStarC_VConfig.no_tactics
+                                                                    FStar_VConfig.no_tactics
                                                                     =
                                                                     no_tactics1;
-                                                                    FStarC_VConfig.z3cliopt
+                                                                    FStar_VConfig.z3cliopt
                                                                     =
                                                                     z3cliopt1;
-                                                                    FStarC_VConfig.z3smtopt
+                                                                    FStar_VConfig.z3smtopt
                                                                     =
                                                                     z3smtopt1;
-                                                                    FStarC_VConfig.z3refresh
+                                                                    FStar_VConfig.z3refresh
                                                                     =
                                                                     z3refresh1;
-                                                                    FStarC_VConfig.z3rlimit
+                                                                    FStar_VConfig.z3rlimit
                                                                     =
                                                                     z3rlimit1;
-                                                                    FStarC_VConfig.z3rlimit_factor
+                                                                    FStar_VConfig.z3rlimit_factor
                                                                     =
                                                                     z3rlimit_factor1;
-                                                                    FStarC_VConfig.z3seed
+                                                                    FStar_VConfig.z3seed
                                                                     = z3seed1;
-                                                                    FStarC_VConfig.z3version
+                                                                    FStar_VConfig.z3version
                                                                     =
                                                                     z3version1;
-                                                                    FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns
+                                                                    FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
                                                                     =
                                                                     trivial_pre_for_unannotated_effectful_fns1;
-                                                                    FStarC_VConfig.reuse_hint_for
+                                                                    FStar_VConfig.reuse_hint_for
                                                                     =
                                                                     reuse_hint_for1
                                                                     }))

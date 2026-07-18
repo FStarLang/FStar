@@ -21,37 +21,37 @@ let smt_sync' (fuel : Prims.nat) (ifuel : Prims.nat) :
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
     let x1 =
       {
-        FStarC_VConfig.initial_fuel = fuel;
-        FStarC_VConfig.max_fuel = fuel;
-        FStarC_VConfig.initial_ifuel = ifuel;
-        FStarC_VConfig.max_ifuel = ifuel;
-        FStarC_VConfig.detail_errors = (x.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = fuel;
+        FStar_VConfig.max_fuel = fuel;
+        FStar_VConfig.initial_ifuel = ifuel;
+        FStar_VConfig.max_ifuel = ifuel;
+        FStar_VConfig.detail_errors = (x.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.t_smt_sync x1 ps
 let _ =
@@ -70,7 +70,7 @@ let get_rlimit (uu___ : unit) :
   (Prims.int, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
-    x.FStarC_VConfig.z3rlimit
+    x.FStar_VConfig.z3rlimit
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_rlimit"
     (Prims.of_int 2)
@@ -88,37 +88,37 @@ let set_rlimit (v : Prims.int) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = (x1.FStarC_VConfig.initial_fuel);
-        FStarC_VConfig.max_fuel = (x1.FStarC_VConfig.max_fuel);
-        FStarC_VConfig.initial_ifuel = (x1.FStarC_VConfig.initial_ifuel);
-        FStarC_VConfig.max_ifuel = (x1.FStarC_VConfig.max_ifuel);
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = v;
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = (x1.FStar_VConfig.initial_fuel);
+        FStar_VConfig.max_fuel = (x1.FStar_VConfig.max_fuel);
+        FStar_VConfig.initial_ifuel = (x1.FStar_VConfig.initial_ifuel);
+        FStar_VConfig.max_ifuel = (x1.FStar_VConfig.max_ifuel);
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = v;
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -137,7 +137,7 @@ let get_initial_fuel (uu___ : unit) :
   (Prims.int, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
-    x.FStarC_VConfig.initial_fuel
+    x.FStar_VConfig.initial_fuel
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_initial_fuel"
     (Prims.of_int 2)
@@ -154,7 +154,7 @@ let get_initial_ifuel (uu___ : unit) :
   (Prims.int, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
-    x.FStarC_VConfig.initial_ifuel
+    x.FStar_VConfig.initial_ifuel
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_initial_ifuel"
     (Prims.of_int 2)
@@ -171,7 +171,7 @@ let get_max_fuel (uu___ : unit) :
   (Prims.int, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
-    x.FStarC_VConfig.max_fuel
+    x.FStar_VConfig.max_fuel
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_max_fuel"
     (Prims.of_int 2)
@@ -188,7 +188,7 @@ let get_max_ifuel (uu___ : unit) :
   (Prims.int, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
-    x.FStarC_VConfig.max_ifuel
+    x.FStar_VConfig.max_ifuel
 let _ =
   FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_max_ifuel"
     (Prims.of_int 2)
@@ -207,37 +207,37 @@ let set_initial_fuel (v : Prims.int) :
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = v;
-        FStarC_VConfig.max_fuel = (x1.FStarC_VConfig.max_fuel);
-        FStarC_VConfig.initial_ifuel = (x1.FStarC_VConfig.initial_ifuel);
-        FStarC_VConfig.max_ifuel = (x1.FStarC_VConfig.max_ifuel);
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = v;
+        FStar_VConfig.max_fuel = (x1.FStar_VConfig.max_fuel);
+        FStar_VConfig.initial_ifuel = (x1.FStar_VConfig.initial_ifuel);
+        FStar_VConfig.max_ifuel = (x1.FStar_VConfig.max_ifuel);
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -258,37 +258,37 @@ let set_initial_ifuel (v : Prims.int) :
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = (x1.FStarC_VConfig.initial_fuel);
-        FStarC_VConfig.max_fuel = (x1.FStarC_VConfig.max_fuel);
-        FStarC_VConfig.initial_ifuel = v;
-        FStarC_VConfig.max_ifuel = (x1.FStarC_VConfig.max_ifuel);
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = (x1.FStar_VConfig.initial_fuel);
+        FStar_VConfig.max_fuel = (x1.FStar_VConfig.max_fuel);
+        FStar_VConfig.initial_ifuel = v;
+        FStar_VConfig.max_ifuel = (x1.FStar_VConfig.max_ifuel);
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -309,37 +309,37 @@ let set_max_fuel (v : Prims.int) :
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = (x1.FStarC_VConfig.initial_fuel);
-        FStarC_VConfig.max_fuel = v;
-        FStarC_VConfig.initial_ifuel = (x1.FStarC_VConfig.initial_ifuel);
-        FStarC_VConfig.max_ifuel = (x1.FStarC_VConfig.max_ifuel);
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = (x1.FStar_VConfig.initial_fuel);
+        FStar_VConfig.max_fuel = v;
+        FStar_VConfig.initial_ifuel = (x1.FStar_VConfig.initial_ifuel);
+        FStar_VConfig.max_ifuel = (x1.FStar_VConfig.max_ifuel);
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -360,37 +360,37 @@ let set_max_ifuel (v : Prims.int) :
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = (x1.FStarC_VConfig.initial_fuel);
-        FStarC_VConfig.max_fuel = (x1.FStarC_VConfig.max_fuel);
-        FStarC_VConfig.initial_ifuel = (x1.FStarC_VConfig.initial_ifuel);
-        FStarC_VConfig.max_ifuel = v;
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = (x1.FStar_VConfig.initial_fuel);
+        FStar_VConfig.max_fuel = (x1.FStar_VConfig.max_fuel);
+        FStar_VConfig.initial_ifuel = (x1.FStar_VConfig.initial_ifuel);
+        FStar_VConfig.max_ifuel = v;
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -410,37 +410,37 @@ let set_fuel (v : Prims.int) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = v;
-        FStarC_VConfig.max_fuel = v;
-        FStarC_VConfig.initial_ifuel = (x1.FStarC_VConfig.initial_ifuel);
-        FStarC_VConfig.max_ifuel = (x1.FStarC_VConfig.max_ifuel);
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = v;
+        FStar_VConfig.max_fuel = v;
+        FStar_VConfig.initial_ifuel = (x1.FStar_VConfig.initial_ifuel);
+        FStar_VConfig.max_ifuel = (x1.FStar_VConfig.max_ifuel);
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =
@@ -460,37 +460,37 @@ let set_ifuel (v : Prims.int) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get_vconfig () ps in
       {
-        FStarC_VConfig.initial_fuel = (x1.FStarC_VConfig.initial_fuel);
-        FStarC_VConfig.max_fuel = (x1.FStarC_VConfig.max_fuel);
-        FStarC_VConfig.initial_ifuel = v;
-        FStarC_VConfig.max_ifuel = v;
-        FStarC_VConfig.detail_errors = (x1.FStarC_VConfig.detail_errors);
-        FStarC_VConfig.detail_hint_replay =
-          (x1.FStarC_VConfig.detail_hint_replay);
-        FStarC_VConfig.no_smt = (x1.FStarC_VConfig.no_smt);
-        FStarC_VConfig.quake_lo = (x1.FStarC_VConfig.quake_lo);
-        FStarC_VConfig.quake_hi = (x1.FStarC_VConfig.quake_hi);
-        FStarC_VConfig.quake_keep = (x1.FStarC_VConfig.quake_keep);
-        FStarC_VConfig.retry = (x1.FStarC_VConfig.retry);
-        FStarC_VConfig.smtencoding_elim_box =
-          (x1.FStarC_VConfig.smtencoding_elim_box);
-        FStarC_VConfig.smtencoding_nl_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_nl_arith_repr);
-        FStarC_VConfig.smtencoding_l_arith_repr =
-          (x1.FStarC_VConfig.smtencoding_l_arith_repr);
-        FStarC_VConfig.tcnorm = (x1.FStarC_VConfig.tcnorm);
-        FStarC_VConfig.no_plugins = (x1.FStarC_VConfig.no_plugins);
-        FStarC_VConfig.no_tactics = (x1.FStarC_VConfig.no_tactics);
-        FStarC_VConfig.z3cliopt = (x1.FStarC_VConfig.z3cliopt);
-        FStarC_VConfig.z3smtopt = (x1.FStarC_VConfig.z3smtopt);
-        FStarC_VConfig.z3refresh = (x1.FStarC_VConfig.z3refresh);
-        FStarC_VConfig.z3rlimit = (x1.FStarC_VConfig.z3rlimit);
-        FStarC_VConfig.z3rlimit_factor = (x1.FStarC_VConfig.z3rlimit_factor);
-        FStarC_VConfig.z3seed = (x1.FStarC_VConfig.z3seed);
-        FStarC_VConfig.z3version = (x1.FStarC_VConfig.z3version);
-        FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns =
-          (x1.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns);
-        FStarC_VConfig.reuse_hint_for = (x1.FStarC_VConfig.reuse_hint_for)
+        FStar_VConfig.initial_fuel = (x1.FStar_VConfig.initial_fuel);
+        FStar_VConfig.max_fuel = (x1.FStar_VConfig.max_fuel);
+        FStar_VConfig.initial_ifuel = v;
+        FStar_VConfig.max_ifuel = v;
+        FStar_VConfig.detail_errors = (x1.FStar_VConfig.detail_errors);
+        FStar_VConfig.detail_hint_replay =
+          (x1.FStar_VConfig.detail_hint_replay);
+        FStar_VConfig.no_smt = (x1.FStar_VConfig.no_smt);
+        FStar_VConfig.quake_lo = (x1.FStar_VConfig.quake_lo);
+        FStar_VConfig.quake_hi = (x1.FStar_VConfig.quake_hi);
+        FStar_VConfig.quake_keep = (x1.FStar_VConfig.quake_keep);
+        FStar_VConfig.retry = (x1.FStar_VConfig.retry);
+        FStar_VConfig.smtencoding_elim_box =
+          (x1.FStar_VConfig.smtencoding_elim_box);
+        FStar_VConfig.smtencoding_nl_arith_repr =
+          (x1.FStar_VConfig.smtencoding_nl_arith_repr);
+        FStar_VConfig.smtencoding_l_arith_repr =
+          (x1.FStar_VConfig.smtencoding_l_arith_repr);
+        FStar_VConfig.tcnorm = (x1.FStar_VConfig.tcnorm);
+        FStar_VConfig.no_plugins = (x1.FStar_VConfig.no_plugins);
+        FStar_VConfig.no_tactics = (x1.FStar_VConfig.no_tactics);
+        FStar_VConfig.z3cliopt = (x1.FStar_VConfig.z3cliopt);
+        FStar_VConfig.z3smtopt = (x1.FStar_VConfig.z3smtopt);
+        FStar_VConfig.z3refresh = (x1.FStar_VConfig.z3refresh);
+        FStar_VConfig.z3rlimit = (x1.FStar_VConfig.z3rlimit);
+        FStar_VConfig.z3rlimit_factor = (x1.FStar_VConfig.z3rlimit_factor);
+        FStar_VConfig.z3seed = (x1.FStar_VConfig.z3seed);
+        FStar_VConfig.z3version = (x1.FStar_VConfig.z3version);
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns =
+          (x1.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns);
+        FStar_VConfig.reuse_hint_for = (x1.FStar_VConfig.reuse_hint_for)
       } in
     FStarC_Tactics_V2_Builtins.set_vconfig x ps
 let _ =

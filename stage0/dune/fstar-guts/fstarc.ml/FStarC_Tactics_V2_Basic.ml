@@ -8784,7 +8784,7 @@ let with_compat_pre_core (n : Prims.int) (f : 'a FStarC_Tactics_Monad.tac) :
             let _res = FStarC_Options.set_options "--compat_pre_core 0" in
             FStarC_Tactics_Monad.run f ps))
 let get_vconfig (uu___ : unit) :
-  FStarC_VConfig.vconfig FStarC_Tactics_Monad.tac=
+  FStar_VConfig.vconfig FStarC_Tactics_Monad.tac=
   (fun uu___ ->
      Obj.magic
        (FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac () ()
@@ -8800,7 +8800,7 @@ let get_vconfig (uu___ : unit) :
                 Obj.magic
                   (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac
                      () (Obj.magic vcfg))) uu___1))) uu___
-let set_vconfig (vcfg : FStarC_VConfig.vconfig) :
+let set_vconfig (vcfg : FStar_VConfig.vconfig) :
   unit FStarC_Tactics_Monad.tac=
   FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac () ()
     (Obj.magic FStarC_Tactics_Monad.cur_goal)
@@ -8825,7 +8825,7 @@ let set_vconfig (vcfg : FStarC_VConfig.vconfig) :
               FStarC_Tactics_Types.label = (g.FStarC_Tactics_Types.label)
             } in
           Obj.magic (FStarC_Tactics_Monad.replace_cur g')) uu___)
-let t_smt_sync (vcfg : FStarC_VConfig.vconfig) :
+let t_smt_sync (vcfg : FStar_VConfig.vconfig) :
   unit FStarC_Tactics_Monad.tac=
   let uu___ =
     FStarC_Class_Monad.op_let_Bang FStarC_Tactics_Monad.monad_tac () ()

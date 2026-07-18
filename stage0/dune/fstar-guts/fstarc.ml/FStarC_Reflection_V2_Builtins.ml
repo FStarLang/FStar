@@ -696,10 +696,9 @@ let set_sigelt_quals (quals : FStarC_Reflection_V2_Data.qualifier Prims.list)
     FStarC_Syntax_Syntax.sigopts = (se.FStarC_Syntax_Syntax.sigopts)
   }
 let sigelt_opts (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_VConfig.vconfig FStar_Pervasives_Native.option=
+  FStar_VConfig.vconfig FStar_Pervasives_Native.option=
   se.FStarC_Syntax_Syntax.sigopts
-let embed_vconfig (vcfg : FStarC_VConfig.vconfig) :
-  FStarC_Syntax_Syntax.term=
+let embed_vconfig (vcfg : FStar_VConfig.vconfig) : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Embeddings_Base.embed FStarC_Syntax_Embeddings.e_vconfig vcfg
     FStarC_Range_Type.dummyRange FStar_Pervasives_Native.None
     FStarC_Syntax_Embeddings_Base.id_norm_cb

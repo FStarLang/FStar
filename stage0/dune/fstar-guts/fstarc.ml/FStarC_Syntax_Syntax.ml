@@ -1819,7 +1819,7 @@ and sigelt =
     (open_module_or_namespace, module_abbrev) FStar_Pervasives.either
       Prims.list
     ;
-  sigopts: FStarC_VConfig.vconfig FStar_Pervasives_Native.option }
+  sigopts: FStar_VConfig.vconfig FStar_Pervasives_Native.option }
 let __proj__Mksigelt'__Sig_inductive_typ__payload__item__lid
   (projectee : sigelt'__Sig_inductive_typ__payload) : FStarC_Ident.lident=
   match projectee with
@@ -2131,7 +2131,7 @@ let __proj__Mksigelt__item__sigopens_and_abbrevs (projectee : sigelt) :
   | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
       sigopts;_} -> sigopens_and_abbrevs
 let __proj__Mksigelt__item__sigopts (projectee : sigelt) :
-  FStarC_VConfig.vconfig FStar_Pervasives_Native.option=
+  FStar_VConfig.vconfig FStar_Pervasives_Native.option=
   match projectee with
   | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopens_and_abbrevs;
       sigopts;_} -> sigopts
