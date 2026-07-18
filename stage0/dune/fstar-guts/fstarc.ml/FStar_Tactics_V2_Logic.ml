@@ -12,7 +12,7 @@ let cur_goal (uu___ : unit) :
           (Obj.repr
              (FStarC_Tactics_V2_Builtins.raise_core
                 (FStarC_Tactics_Common.TacticFailure
-                   ((FStar_Errors_Msg.mkmsg "no more goals"),
+                   ([FStar_Pprint.arbitrary_string "no more goals"],
                      FStar_Pervasives_Native.None)) ps))
 let cur_formula (uu___ : unit) :
   (FStar_Reflection_V2_Formula.formula, Obj.t) FStar_Tactics_Effect.tac_repr=

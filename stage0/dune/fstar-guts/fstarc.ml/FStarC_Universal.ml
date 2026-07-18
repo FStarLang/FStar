@@ -528,7 +528,6 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
       | FStar_Pervasives_Native.Some (FStarC_Options.FSharp) -> ".fs"
       | FStar_Pervasives_Native.Some (FStarC_Options.OCaml) -> ".ml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) -> ".ml"
-      | FStar_Pervasives_Native.Some (FStarC_Options.PluginNoLib) -> ".ml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Krml) -> ".krml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> ".ast"
       | uu___ -> fail () in
@@ -614,43 +613,6 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
                        let ml = printer mlmodule in
                        FStarC_Util.write_file filename ml)) mllib)
     | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) ->
-        let printer =
-          if opt = (FStar_Pervasives_Native.Some FStarC_Options.FSharp)
-          then FStarC_Extraction_ML_PrintFS.print_fs
-          else FStarC_Extraction_ML_PrintML.print_ml in
-        ((let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
-            if uu___2
-            then (FStarC_List.length mllib) > Prims.int_one
-            else false in
-          if uu___1
-          then
-            FStarC_Errors.raise_error0
-              FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
-              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-              (Obj.magic
-                 [FStarC_Errors_Msg.text
-                    "Cannot provide -o and extract multiple modules";
-                 FStarC_Errors_Msg.text
-                   "Please use -o with a single module, or specify an output directory with --odir"])
-          else ());
-         FStarC_List.iter
-           (fun uu___1 ->
-              match uu___1 with
-              | (uu___2, mlmodule) ->
-                  let uu___3 = mlmodule in
-                  (match uu___3 with
-                   | (p, uu___4) ->
-                       let filename =
-                         let basename =
-                           Prims.strcat
-                             (FStarC_Extraction_ML_Util.flatten_mlpath p) ext in
-                         ofile basename in
-                       let ml = printer mlmodule in
-                       FStarC_Util.write_file filename ml)) mllib)
-    | FStar_Pervasives_Native.Some (FStarC_Options.PluginNoLib) ->
         let printer =
           if opt = (FStar_Pervasives_Native.Some FStarC_Options.FSharp)
           then FStarC_Extraction_ML_PrintFS.print_fs

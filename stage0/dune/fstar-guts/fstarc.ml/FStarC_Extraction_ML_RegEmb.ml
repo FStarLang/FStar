@@ -2083,8 +2083,7 @@ let maybe_register_plugin (g : FStarC_Extraction_ML_UEnv.uenv)
     let uu___1 =
       let uu___2 = FStarC_Options.codegen () in
       FStarC_List.mem uu___2
-        [FStar_Pervasives_Native.Some FStarC_Options.Plugin;
-        FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib] in
+        [FStar_Pervasives_Native.Some FStarC_Options.Plugin] in
     Prims.op_Negation uu___1 in
   if uu___
   then []

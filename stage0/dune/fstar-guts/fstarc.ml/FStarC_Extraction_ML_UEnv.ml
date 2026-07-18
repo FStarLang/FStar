@@ -50,8 +50,7 @@ let __proj__ErasedFv__item___0 (projectee : mlbinding) :
   FStarC_Syntax_Syntax.fv= match projectee with | ErasedFv _0 -> _0
 let plug (uu___ : unit) : Prims.bool=
   let c = FStarC_Options.codegen () in
-  (c = (FStar_Pervasives_Native.Some FStarC_Options.Plugin)) ||
-    (c = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib))
+  c = (FStar_Pervasives_Native.Some FStarC_Options.Plugin)
 let showable_mlbinding : mlbinding FStarC_Class_Show.showable=
   {
     FStarC_Class_Show.show =
@@ -526,8 +525,6 @@ let initial_mlident_map : unit -> Prims.string FStarC_PSMap.t=
             | FStar_Pervasives_Native.Some (FStarC_Options.OCaml) ->
                 FStarC_Extraction_ML_Syntax.ocamlkeywords
             | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) ->
-                FStarC_Extraction_ML_Syntax.ocamlkeywords
-            | FStar_Pervasives_Native.Some (FStarC_Options.PluginNoLib) ->
                 FStarC_Extraction_ML_Syntax.ocamlkeywords
             | FStar_Pervasives_Native.Some (FStarC_Options.Krml) ->
                 FStarC_Extraction_ML_Syntax.krml_keywords

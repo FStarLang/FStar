@@ -11,7 +11,6 @@ type codegen_t =
   | FSharp 
   | Krml 
   | Plugin 
-  | PluginNoLib 
   | Extension 
 let uu___is_OCaml (projectee : codegen_t) : Prims.bool=
   match projectee with | OCaml -> true | uu___ -> false
@@ -21,8 +20,6 @@ let uu___is_Krml (projectee : codegen_t) : Prims.bool=
   match projectee with | Krml -> true | uu___ -> false
 let uu___is_Plugin (projectee : codegen_t) : Prims.bool=
   match projectee with | Plugin -> true | uu___ -> false
-let uu___is_PluginNoLib (projectee : codegen_t) : Prims.bool=
-  match projectee with | PluginNoLib -> true | uu___ -> false
 let uu___is_Extension (projectee : codegen_t) : Prims.bool=
   match projectee with | Extension -> true | uu___ -> false
 type split_queries_t =
@@ -2737,7 +2734,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                              (SimpleStr
                                                                 "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'")),
                                                           (text
-                                                             "Extract only those modules whose names or namespaces match the provided options. 'TargetName' ranges over {OCaml, krml, FSharp, Plugin, PluginNoLib, Extension}. A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means for OCaml, extract everything in the A namespace only except A.B; for krml, extract everything in the A namespace only except A.C; for everything else, extract everything. Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'."))
+                                                             "Extract only those modules whose names or namespaces match the provided options. 'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means for OCaml, extract everything in the A namespace only except A.B; for krml, extract everything in the A namespace only except A.C; for everything else, extract everything. Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'."))
                                                           :: uu___30 in
                                                       (FStarC_Getopt.noshort,
                                                         "ext",
@@ -2876,7 +2873,6 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                "FSharp";
                                "krml";
                                "Plugin";
-                               "PluginNoLib";
                                "Extension"]),
                             (text
                                "Generate code for further compilation to executable code, or build a compiler plugin"))
@@ -3307,7 +3303,6 @@ let parse_codegen (uu___ : Prims.string) :
   | "FSharp" -> FStar_Pervasives_Native.Some FSharp
   | "krml" -> FStar_Pervasives_Native.Some Krml
   | "Plugin" -> FStar_Pervasives_Native.Some Plugin
-  | "PluginNoLib" -> FStar_Pervasives_Native.Some PluginNoLib
   | "Extension" -> FStar_Pervasives_Native.Some Extension
   | uu___3 -> FStar_Pervasives_Native.None
 let print_codegen (uu___ : codegen_t) : Prims.string=
@@ -3316,7 +3311,6 @@ let print_codegen (uu___ : codegen_t) : Prims.string=
   | FSharp -> "FSharp"
   | Krml -> "krml"
   | Plugin -> "Plugin"
-  | PluginNoLib -> "PluginNoLib"
   | Extension -> "Extension"
 let codegen (uu___ : unit) : codegen_t FStar_Pervasives_Native.option=
   let uu___3 = get_codegen () in
@@ -3685,7 +3679,7 @@ let extract_settings :
       | FStar_Pervasives_Native.Some x -> [(tgt, x)] in
     let uu___ =
       FStarC_List.collect merge_target
-        [OCaml; FSharp; Krml; Plugin; PluginNoLib; Extension] in
+        [OCaml; FSharp; Krml; Plugin; Extension] in
     {
       target_specific_settings = uu___;
       default_settings =

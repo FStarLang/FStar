@@ -522,7 +522,7 @@ let mk_open name =
 let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
   | Some(_sig, m) ->
-    (* Plugin codegen (Plugin and PluginNoLib) emits module references
+    (* Plugin codegen emits module references
        unqualified (no Fstarcompiler prefix). The fstarcompiler library is
        unwrapped, so its modules are top-level: modules compiled into the
        library see each other as siblings, and in-tree plugins, tests and

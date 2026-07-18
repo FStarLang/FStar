@@ -1976,8 +1976,7 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
                  let uu___7 =
                    let uu___8 = FStarC_Options.codegen () in
                    FStarC_List.mem uu___8
-                     [FStar_Pervasives_Native.Some FStarC_Options.Plugin;
-                     FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib] in
+                     [FStar_Pervasives_Native.Some FStarC_Options.Plugin] in
                  Prims.op_Negation uu___7 in
                if uu___6
                then FStarC_List.for_all (lb_is_tactic g) lbs
