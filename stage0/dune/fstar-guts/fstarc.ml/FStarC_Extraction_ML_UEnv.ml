@@ -52,9 +52,6 @@ let plug (uu___ : unit) : Prims.bool=
   let c = FStarC_Options.codegen () in
   (c = (FStar_Pervasives_Native.Some FStarC_Options.Plugin)) ||
     (c = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib))
-let plug_no_lib (uu___ : unit) : Prims.bool=
-  let uu___1 = FStarC_Options.codegen () in
-  uu___1 = (FStar_Pervasives_Native.Some FStarC_Options.PluginNoLib)
 let showable_mlbinding : mlbinding FStarC_Class_Show.showable=
   {
     FStarC_Class_Show.show =
@@ -375,7 +372,7 @@ let try_lookup_fv (r : FStarC_Range_Type.t) (g : uenv)
             uu___4 :: uu___5 in
           (FStarC_Errors_Msg.text
              (FStarC_Format.fmt1
-                "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
+                "Will not extract reference to variable \226\128\152%s\226\128\153 since it has the \226\128\152noextract\226\128\153 qualifier."
                 (FStarC_Ident.string_of_lid fv.FStarC_Syntax_Syntax.fv_name)))
             :: uu___3 in
         FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
@@ -485,14 +482,9 @@ let is_fv_type (g : uenv) (fv : FStarC_Syntax_Syntax.fv) : Prims.bool=
 let no_fstar_stubs_ns (ns : FStarC_Extraction_ML_Syntax.mlsymbol Prims.list)
   : FStarC_Extraction_ML_Syntax.mlsymbol Prims.list=
   match ns with
-  | "FStar"::"NormSteps"::rest when plug () -> "Fstarcompiler.FStarC" ::
-      "NormSteps" :: rest
-  | "FStar"::"Stubs"::rest when plug_no_lib () -> "FStarC" :: rest
-  | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
-      ["FStarC"; "Tactics"; "V2"; "Builtins"]
-  | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->
-      ["FStarC"; "Tactics"; "Unseal"]
-  | "FStar"::"Stubs"::rest when plug () -> "Fstarcompiler.FStarC" :: rest
+  | "FStar"::"NormSteps"::rest when plug () -> "FStarC" :: "NormSteps" ::
+      rest
+  | "FStar"::"Stubs"::rest when plug () -> "FStarC" :: rest
   | "FStar"::"Stubs"::rest -> "FStar" :: rest
   | uu___ -> ns
 let no_fstar_stubs (p : FStarC_Extraction_ML_Syntax.mlpath) :
@@ -640,18 +632,9 @@ let new_mlpath_of_lident (g : uenv) (x : FStarC_Ident.lident) :
            (uu___4, g1)) in
   match uu___ with
   | (mlp, g1) ->
-      let guts uu___1 =
-        match uu___1 with
-        | (p::ps, l) -> (((Prims.strcat "Fstarcompiler." p) :: ps), l) in
       let mlp1 =
         match FStarC_Ident.string_of_lid x with
-        | "Prims.dtuple2" when plug () -> guts mlp
-        | "Prims.Mkdtuple2" when plug () -> guts mlp
-        | "FStar.Pervasives.either" when plug () -> guts mlp
-        | "FStar.Pervasives.Inl" when plug () -> guts mlp
-        | "FStar.Pervasives.Inr" when plug () -> guts mlp
-        | "FStar.Stubs.Tactics.Common.Stop" ->
-            (["Fstarcompiler.FStarC"; "Errors"], "Stop")
+        | "FStar.Stubs.Tactics.Common.Stop" -> (["FStarC"; "Errors"], "Stop")
         | uu___1 -> mlp in
       let g2 =
         {

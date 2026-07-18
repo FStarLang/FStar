@@ -5290,7 +5290,8 @@ let instantiate_one_binder (env : FStarC_TypeChecker_Env.env_t)
      let uu___2 =
        FStarC_Class_Show.show FStarC_Syntax_Print.showable_binder b in
      FStarC_Format.print1
-       "instantiate_one_binder: Instantiating implicit binder %s\n" uu___2
+       "instantiate_one_binder: Instantiating implicit binder \226\128\152%s\226\128\153\n"
+       uu___2
    else ());
   (let op_Plus_Plus = FStarC_TypeChecker_Env.conj_guard in
    let uu___1 = b in
@@ -5317,8 +5318,8 @@ let instantiate_one_binder (env : FStarC_TypeChecker_Env.env_t)
                     let uu___8 =
                       FStarC_Class_Show.show FStarC_Syntax_Print.showable_bv
                         x in
-                    Prims.strcat uu___8 "'" in
-                  Prims.strcat "'" uu___7 in
+                    Prims.strcat uu___8 "\226\128\153" in
+                  Prims.strcat "\226\128\152" uu___7 in
                 if is_typeclass
                 then "Typeclass constraint argument"
                 else
@@ -6714,22 +6715,15 @@ let try_lookup_record_type (env : FStarC_TypeChecker_Env.env)
                           then
                             let uu___16 = FStarC_List.splitAt nparms formals in
                             (match uu___16 with
-                             | (uu___17, fields) ->
+                             | (parms, fields) ->
                                  let fields1 =
-                                   FStarC_List.filter
-                                     (fun b ->
-                                        match b.FStarC_Syntax_Syntax.binder_qual
-                                        with
-                                        | FStar_Pervasives_Native.Some
-                                            (FStarC_Syntax_Syntax.Implicit
-                                            uu___18) -> false
-                                        | uu___18 -> true) fields in
-                                 let fields2 =
                                    FStarC_List.map
                                      (fun b ->
                                         (((b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname),
+                                          (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
+                                             b.FStarC_Syntax_Syntax.binder_qual),
                                           ((b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)))
-                                     fields1 in
+                                     fields in
                                  let is_rec =
                                    FStarC_TypeChecker_Env.is_record env
                                      typename in
@@ -6738,8 +6732,8 @@ let try_lookup_record_type (env : FStarC_TypeChecker_Env.env)
                                      FStarC_Syntax_DsEnv.typename = typename;
                                      FStarC_Syntax_DsEnv.constrname =
                                        (FStarC_Ident.ident_of_lid dc);
-                                     FStarC_Syntax_DsEnv.parms = [];
-                                     FStarC_Syntax_DsEnv.fields = fields2;
+                                     FStarC_Syntax_DsEnv.parms = parms;
+                                     FStarC_Syntax_DsEnv.fields = fields1;
                                      FStarC_Syntax_DsEnv.is_private = false;
                                      FStarC_Syntax_DsEnv.is_record = is_rec
                                    } in
@@ -6828,7 +6822,8 @@ let find_record_or_dc_from_head_fv (env : FStarC_TypeChecker_Env.env)
         let uu___ =
           let uu___1 =
             let uu___2 =
-              FStarC_List.map FStar_Pervasives_Native.fst
+              FStarC_List.map
+                (fun uu___3 -> match uu___3 with | (i, uu___4, uu___5) -> i)
                 rdc.FStarC_Syntax_DsEnv.fields in
             ((rdc.FStarC_Syntax_DsEnv.typename), uu___2) in
           FStarC_Syntax_Syntax.Record_ctor uu___1 in
@@ -6839,14 +6834,12 @@ let find_record_or_dc_from_head_fv (env : FStarC_TypeChecker_Env.env)
 let field_name_matches (field_name : FStarC_Ident.lident)
   (rdc : FStarC_Syntax_DsEnv.record_or_dc) (field : FStarC_Ident.ident) :
   Prims.bool=
-  if FStarC_Ident.ident_equals field (FStarC_Ident.ident_of_lid field_name)
-  then
+  (FStarC_Ident.ident_equals field (FStarC_Ident.ident_of_lid field_name)) &&
     (if (FStarC_Ident.ns_of_lid field_name) <> []
      then
        (FStarC_Ident.nsstr field_name) =
          (FStarC_Ident.nsstr rdc.FStarC_Syntax_DsEnv.typename)
      else true)
-  else false
 let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
   (uc : FStarC_Syntax_Syntax.unresolved_constructor)
   (topt :
@@ -6854,15 +6847,17 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
       FStar_Pervasives.either FStar_Pervasives_Native.option)
   (rdc : FStarC_Syntax_DsEnv.record_or_dc)
   (fas : (FStarC_Ident.lident * 'a) Prims.list)
-  (not_found : FStarC_Ident.ident -> 'a FStar_Pervasives_Native.option)
-  (rng : FStarC_Range_Type.t) : 'a Prims.list=
+  (not_found :
+    FStarC_Ident.ident -> Prims.bool -> 'a FStar_Pervasives_Native.option)
+  (rng : FStarC_Range_Type.t) : ('a * Prims.bool) Prims.list=
   let debug uu___ =
     let print_rdc rdc1 =
       let uu___1 =
         let uu___2 =
           FStarC_List.map
             (fun uu___3 ->
-               match uu___3 with | (i, uu___4) -> FStarC_Ident.string_of_id i)
+               match uu___3 with
+               | (i, uu___4, uu___5) -> FStarC_Ident.string_of_id i)
             rdc1.FStarC_Syntax_DsEnv.fields in
         FStarC_String.concat "; " uu___2 in
       FStarC_Format.fmt3 "{typename=%s; constrname=%s; fields=[%s]}"
@@ -6898,7 +6893,7 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
     FStarC_List.fold_left
       (fun uu___1 uu___2 ->
          match (uu___1, uu___2) with
-         | ((fields, as_rev, missing), (field_name, uu___3)) ->
+         | ((fields, as_rev, missing), (field_name, is_imp, uu___3)) ->
              let uu___4 =
                FStarC_List.partition
                  (fun uu___5 ->
@@ -6908,14 +6903,15 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
              (match uu___4 with
               | (matching, rest) ->
                   (match matching with
-                   | (uu___5, a1)::[] -> (rest, (a1 :: as_rev), missing)
+                   | (uu___5, a1)::[] ->
+                       (rest, ((a1, is_imp) :: as_rev), missing)
                    | [] ->
-                       let uu___5 = not_found field_name in
+                       let uu___5 = not_found field_name is_imp in
                        (match uu___5 with
                         | FStar_Pervasives_Native.None ->
                             (rest, as_rev, (field_name :: missing))
                         | FStar_Pervasives_Native.Some a1 ->
-                            (rest, (a1 :: as_rev), missing))
+                            (rest, ((a1, is_imp) :: as_rev), missing))
                    | x1::x2::uu___5 ->
                        FStarC_Errors.raise_error FStarC_Ident.hasrange_lident
                          (FStar_Pervasives_Native.fst x1)
@@ -6923,7 +6919,7 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
                          (Obj.magic FStarC_Errors_Msg.is_error_message_string)
                          (Obj.magic
                             (FStarC_Format.fmt2
-                               "Field '%s' of record type '%s' is given multiple assignments."
+                               "Field \226\128\152%s\226\128\153 of record type \226\128\152%s\226\128\153 is given multiple assignments."
                                (FStarC_Ident.string_of_id field_name)
                                (FStarC_Ident.string_of_lid
                                   rdc.FStarC_Syntax_DsEnv.typename))))))
@@ -6939,7 +6935,7 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
                let uu___3 =
                  FStarC_Class_Show.show FStarC_Ident.showable_ident f in
                FStar_Pprint.doc_of_string uu___3 in
-             FStar_Pprint.squotes uu___2) missing in
+             FStarC_Errors_Msg.fquotes uu___2) missing in
       ((match (rest, missing) with
         | ([], []) -> ()
         | ((f, uu___2)::uu___3, uu___4) ->
@@ -6951,7 +6947,8 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
                   let uu___9 =
                     FStarC_Class_Show.show FStarC_Ident.showable_lident
                       rdc.FStarC_Syntax_DsEnv.typename in
-                  FStarC_Format.fmt2 "No field '%s' in record type '%s'."
+                  FStarC_Format.fmt2
+                    "No field \226\128\152%s\226\128\153 in record type \226\128\152%s\226\128\153."
                     uu___8 uu___9 in
                 FStarC_Errors_Msg.text uu___7 in
               let uu___7 =
@@ -6976,7 +6973,8 @@ let make_record_fields_in_order (env : FStarC_TypeChecker_Env.env)
                     let uu___7 =
                       FStarC_Class_Show.show FStarC_Ident.showable_lident
                         rdc.FStarC_Syntax_DsEnv.typename in
-                    FStarC_Format.fmt1 "Missing fields for record type '%s':"
+                    FStarC_Format.fmt1
+                      "Missing fields for record type \226\128\152%s\226\128\153:"
                       uu___7 in
                   FStarC_Errors_Msg.text uu___6 in
                 let uu___6 = pp_missing () in

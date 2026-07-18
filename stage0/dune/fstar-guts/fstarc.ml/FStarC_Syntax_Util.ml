@@ -3030,7 +3030,8 @@ let process_pragma (p : FStarC_Syntax_Syntax.pragma)
            (Obj.magic
               [FStarC_Errors_Msg.text
                  (FStarC_Format.fmt1
-                    "Option '%s' is not settable via a pragma." x)]) in
+                    "Option \226\128\152%s\226\128\153 is not settable via a pragma."
+                    x)]) in
    match p with
    | FStarC_Syntax_Syntax.ShowOptions -> ()
    | FStarC_Syntax_Syntax.SetOptions o -> set_options o
@@ -3913,3 +3914,25 @@ let eq_binding (b1 : FStarC_Syntax_Syntax.binding)
   | (FStarC_Syntax_Syntax.Binding_univ u1, FStarC_Syntax_Syntax.Binding_univ
      u2) -> FStarC_Ident.ident_equals u1 u2
   | uu___ -> false
+let hua (t : FStarC_Syntax_Syntax.term) :
+  (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.universe Prims.list *
+    FStarC_Syntax_Syntax.args) FStar_Pervasives_Native.option=
+  let t1 = unmeta t in
+  let uu___ = head_and_args_full t1 in
+  match uu___ with
+  | (hd, args) ->
+      let hd1 = unmeta hd in
+      let uu___1 =
+        let uu___2 = FStarC_Syntax_Subst.compress hd1 in
+        uu___2.FStarC_Syntax_Syntax.n in
+      (match uu___1 with
+       | FStarC_Syntax_Syntax.Tm_fvar fv ->
+           FStar_Pervasives_Native.Some (fv, [], args)
+       | FStarC_Syntax_Syntax.Tm_uinst
+           ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_fvar fv;
+              FStarC_Syntax_Syntax.pos = uu___2;
+              FStarC_Syntax_Syntax.vars = uu___3;
+              FStarC_Syntax_Syntax.hash_code = uu___4;_},
+            us)
+           -> FStar_Pervasives_Native.Some (fv, us, args)
+       | uu___2 -> FStar_Pervasives_Native.None)

@@ -75,28 +75,22 @@ let sort : permute=
   FStar_List_Tot_Base.sortWith (FStar_List_Tot_Base.compare_of_bool (<))
 
 let canon (e : exp) : atom Prims.list= sort (flatten e)
-let rec where_aux (uu___2 : Prims.nat)
-  (uu___1 : FStar_Tactics_NamedView.term)
-  (uu___ : FStar_Tactics_NamedView.term Prims.list) :
-  (Prims.nat FStar_Pervasives_Native.option, unit)
+let rec where_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
+  (xs : FStar_Tactics_NamedView.term Prims.list) :
+  (Prims.nat FStar_Pervasives_Native.option, Obj.t)
     FStar_Tactics_Effect.tac_repr=
-  (fun n x xs ->
-     match xs with
-     | [] -> Obj.magic (Obj.repr (fun uu___ -> FStar_Pervasives_Native.None))
-     | x'::xs' ->
-         Obj.magic
-           (Obj.repr
-              (if term_eq x x'
-               then
-                 Obj.repr
-                   (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___ -> FStar_Pervasives_Native.Some n))
-               else Obj.repr (where_aux (n + Prims.int_one) x xs')))) uu___2
-    uu___1 uu___
+  match xs with
+  | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
+  | x'::xs' ->
+      if term_eq x x'
+      then
+        FStar_Tactics_Effect.lift_div_tac ()
+          (fun uu___ -> FStar_Pervasives_Native.Some n)
+      else where_aux (n + Prims.int_one) x xs'
 let where :
   FStar_Tactics_NamedView.term ->
     FStar_Tactics_NamedView.term Prims.list ->
-      (Prims.nat FStar_Pervasives_Native.option, unit)
+      (Prims.nat FStar_Pervasives_Native.option, Obj.t)
         FStar_Tactics_Effect.tac_repr=
   where_aux Prims.int_zero
 let fatom (t : FStar_Tactics_NamedView.term)
@@ -104,7 +98,7 @@ let fatom (t : FStar_Tactics_NamedView.term)
   (am : FStar_Tactics_NamedView.term amap) :
   ((exp * FStar_Tactics_NamedView.term Prims.list *
      FStar_Tactics_NamedView.term amap),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = where t ts ps in
     match x with
@@ -122,7 +116,7 @@ let rec reification_aux (ts : FStar_Tactics_NamedView.term Prims.list)
   (t : FStar_Tactics_NamedView.term) :
   ((exp * FStar_Tactics_NamedView.term Prims.list *
      FStar_Tactics_NamedView.term amap),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_V2_SyntaxHelpers.collect_app t ps in
     match x with
@@ -154,7 +148,7 @@ let reification (eq : FStar_Tactics_NamedView.term)
   :
   ((exp * FStar_Tactics_NamedView.term Prims.list *
      FStar_Tactics_NamedView.term amap),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       FStar_Tactics_V2_Derived.norm_term
@@ -195,7 +189,7 @@ let reification (eq : FStar_Tactics_NamedView.term)
     reification_aux ts am x x1 x2 ps
 let rec repeat_cong_right_identity (eq : FStar_Tactics_NamedView.term)
   (m : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.or_else
     (fun uu___ ->
        FStar_Tactics_V2_Derived.apply_lemma
@@ -332,7 +326,7 @@ let rec quote_exp (e : exp) : FStar_Tactics_NamedView.term=
 let canon_lhs_rhs (eq : FStar_Tactics_NamedView.term)
   (m : FStar_Tactics_NamedView.term) (lhs : FStar_Tactics_NamedView.term)
   (rhs : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       FStar_Tactics_V2_Derived.norm_term
@@ -471,7 +465,7 @@ let canon_lhs_rhs (eq : FStar_Tactics_NamedView.term)
                 (fun uu___1 -> repeat_cong_right_identity eq m) ps))
 let canon_monoid (eq : FStar_Tactics_NamedView.term)
   (m : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStarC_Tactics_V2_Builtins.norm
       [Fstarcompiler.FStarC_NormSteps.iota;

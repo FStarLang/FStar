@@ -480,7 +480,8 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state)
                  FStarC_Interactive_Ide_Types.Cancel uu___2
              | uu___2 ->
                  FStarC_Interactive_Ide_Types.ProtocolViolation
-                   (FStarC_Format.fmt1 "Unknown query '%s'" query) in
+                   (FStarC_Format.fmt1
+                      "Unknown query \226\128\152%s\226\128\153" query) in
            {
              FStarC_Interactive_Ide_Types.qq = uu___1;
              FStarC_Interactive_Ide_Types.qid = qid

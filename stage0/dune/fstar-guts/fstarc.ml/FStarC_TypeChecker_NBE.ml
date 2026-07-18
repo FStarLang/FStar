@@ -185,7 +185,9 @@ let zeta_false (cfg : config) : config=
              FStarC_TypeChecker_Cfg.default_univs_to_zero =
                (uu___.FStarC_TypeChecker_Cfg.default_univs_to_zero);
              FStarC_TypeChecker_Cfg.tactics =
-               (uu___.FStarC_TypeChecker_Cfg.tactics)
+               (uu___.FStarC_TypeChecker_Cfg.tactics);
+             FStarC_TypeChecker_Cfg.reduce_projections =
+               (uu___.FStarC_TypeChecker_Cfg.reduce_projections)
            });
         FStarC_TypeChecker_Cfg.tcenv =
           (cfg_core.FStarC_TypeChecker_Cfg.tcenv);
@@ -1569,7 +1571,8 @@ and translate_fv (cfg : config)
   then FStarC_TypeChecker_NBETerm.mkConstruct fvar [] []
   else
     (let uu___1 =
-       FStarC_TypeChecker_Normalize_Unfolding.should_unfold cfg.core_cfg
+       FStarC_TypeChecker_Normalize_Unfolding.should_unfold false
+         cfg.core_cfg
          (fun uu___2 -> (cfg.core_cfg).FStarC_TypeChecker_Cfg.reifying) fvar
          qninfo in
      match uu___1 with
@@ -2944,7 +2947,9 @@ let normalize
            FStarC_TypeChecker_Cfg.default_univs_to_zero =
              (uu___.FStarC_TypeChecker_Cfg.default_univs_to_zero);
            FStarC_TypeChecker_Cfg.tactics =
-             (uu___.FStarC_TypeChecker_Cfg.tactics)
+             (uu___.FStarC_TypeChecker_Cfg.tactics);
+           FStarC_TypeChecker_Cfg.reduce_projections =
+             (uu___.FStarC_TypeChecker_Cfg.reduce_projections)
          });
       FStarC_TypeChecker_Cfg.tcenv = (cfg.FStarC_TypeChecker_Cfg.tcenv);
       FStarC_TypeChecker_Cfg.debug = (cfg.FStarC_TypeChecker_Cfg.debug);
@@ -3048,7 +3053,9 @@ let normalize_for_unit_test (steps : FStarC_TypeChecker_Env.step Prims.list)
            FStarC_TypeChecker_Cfg.default_univs_to_zero =
              (uu___.FStarC_TypeChecker_Cfg.default_univs_to_zero);
            FStarC_TypeChecker_Cfg.tactics =
-             (uu___.FStarC_TypeChecker_Cfg.tactics)
+             (uu___.FStarC_TypeChecker_Cfg.tactics);
+           FStarC_TypeChecker_Cfg.reduce_projections =
+             (uu___.FStarC_TypeChecker_Cfg.reduce_projections)
          });
       FStarC_TypeChecker_Cfg.tcenv = (cfg.FStarC_TypeChecker_Cfg.tcenv);
       FStarC_TypeChecker_Cfg.debug = (cfg.FStarC_TypeChecker_Cfg.debug);

@@ -355,9 +355,7 @@ let convert_rlimit (r : Prims.int) : Prims.int=
   let uu___ =
     let uu___1 = FStarC_Options.z3_version () in
     FStarC_Misc.version_ge uu___1 "4.12.3" in
-  if uu___
-  then Prims.op_Star (Prims.of_int 500000) r
-  else Prims.op_Star (Prims.of_int 544656) r
+  if uu___ then (Prims.of_int 500000) * r else (Prims.of_int 544656) * r
 let with_fuel_and_diagnostics (settings : query_settings)
   (label_assumptions : FStarC_SMTEncoding_Term.decl Prims.list) :
   FStarC_SMTEncoding_Term.decl Prims.list=
@@ -588,7 +586,7 @@ let errors_to_report (tried_recovery : Prims.bool)
                        && (incomplete_count > Prims.int_zero)
                      ->
                      [FStarC_Errors_Msg.text
-                        "The SMT solver could not prove the query. Use --query_stats for more details."]
+                        "The SMT solver could not prove the query."]
                  | (uu___4, uu___5, uu___6) when
                      ((uu___4 = Prims.int_zero) && (uu___6 = Prims.int_zero))
                        && (canceled_count > Prims.int_zero)
@@ -599,6 +597,42 @@ let errors_to_report (tried_recovery : Prims.bool)
                      [FStarC_Errors_Msg.text
                         "Try with --query_stats to get more details"] in
                FStarC_List.op_At base recovery_failed_msg))) in
+    let vc_detail =
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            FStarC_TypeChecker_Env.all_binders
+              (settings.query_env).FStarC_SMTEncoding_Env.tcenv in
+          FStarC_Pprint.flow_map (FStar_Pprint.break_ Prims.int_one)
+            (fun b ->
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
+                       FStarC_Class_PP.pp FStarC_Ident.pretty_ident
+                         (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname in
+                     let uu___7 =
+                       let uu___8 =
+                         FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
+                           (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
+                       FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon
+                         uu___8 in
+                     FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                   FStar_Pprint.nest (Prims.of_int 2) uu___5 in
+                 FStar_Pprint.parens uu___4 in
+               FStar_Pprint.group uu___3) uu___2 in
+        FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
+          (FStarC_Errors_Msg.text "Env =") uu___1 in
+      let uu___1 =
+        let uu___2 =
+          let uu___3 =
+            FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term
+              settings.query_term in
+          FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
+            (FStarC_Errors_Msg.text "VC =") uu___3 in
+        [uu___2] in
+      uu___ :: uu___1 in
+    let smt_error1 = FStarC_List.op_At smt_error vc_detail in
     let uu___ =
       let uu___1 = find_localized_errors settings.query_errors in
       (uu___1, (settings.query_all_labels)) in
@@ -606,7 +640,7 @@ let errors_to_report (tried_recovery : Prims.bool)
     | (FStar_Pervasives_Native.Some err, uu___1) ->
         FStarC_TypeChecker_Err.errors_smt_detail
           (settings.query_env).FStarC_SMTEncoding_Env.tcenv
-          err.error_messages smt_error
+          err.error_messages smt_error1
     | (FStar_Pervasives_Native.None, (uu___1, msg, rng)::[]) ->
         let uu___2 =
           let uu___3 =
@@ -747,10 +781,10 @@ let div_with_decimals (ndec : Prims.nat) (x : Prims.int) (y : Prims.int) :
     let rec aux n =
       if n = Prims.int_zero
       then Prims.int_one
-      else Prims.op_Star (Prims.of_int 10) (aux (n - Prims.int_one)) in
+      else (Prims.of_int 10) * (aux (n - Prims.int_one)) in
     aux ndec in
   let intg = x / y in
-  let frac = (mod) ((Prims.op_Star mul x) / y) mul in
+  let frac = (mod) ((mul * x) / y) mul in
   let frac1 =
     let len =
       let uu___ = FStarC_Class_Show.show FStarC_Class_Show.showable_int frac in
@@ -1221,8 +1255,7 @@ let make_solver_configs (can_split : Prims.bool) (is_retry : Prims.bool)
       let uu___1 =
         let rlimit =
           let uu___2 = FStarC_Options.z3_rlimit_factor () in
-          let uu___3 = FStarC_Options.z3_rlimit () in
-          Prims.op_Star uu___2 uu___3 in
+          let uu___3 = FStarC_Options.z3_rlimit () in uu___2 * uu___3 in
         let next_hint = get_hint_for qname index in
         let default_settings =
           let uu___2 = FStarC_Options.initial_fuel () in
@@ -1682,7 +1715,7 @@ let ask_solver_recover (configs : query_settings Prims.list) : answer=
                 query_range = (cfg.query_range);
                 query_fuel = (cfg.query_fuel);
                 query_ifuel = (cfg.query_ifuel);
-                query_rlimit = (Prims.op_Star n cfg.query_rlimit);
+                query_rlimit = (n * cfg.query_rlimit);
                 query_hint = (cfg.query_hint);
                 query_errors = (cfg.query_errors);
                 query_all_labels = (cfg.query_all_labels);
@@ -1992,76 +2025,60 @@ type solver_cfg =
   cliopt: Prims.string Prims.list ;
   smtopt: Prims.string Prims.list ;
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
-  valid_intro: Prims.bool ;
-  valid_elim: Prims.bool ;
   z3version: Prims.string ;
   context_pruning: Prims.bool ;
   record_hints: Prims.bool }
 let __proj__Mksolver_cfg__item__seed (projectee : solver_cfg) : Prims.int=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> seed
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> seed
 let __proj__Mksolver_cfg__item__cliopt (projectee : solver_cfg) :
   Prims.string Prims.list=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> cliopt
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> cliopt
 let __proj__Mksolver_cfg__item__smtopt (projectee : solver_cfg) :
   Prims.string Prims.list=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> smtopt
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> smtopt
 let __proj__Mksolver_cfg__item__facts (projectee : solver_cfg) :
   (Prims.string Prims.list * Prims.bool) Prims.list=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> facts
-let __proj__Mksolver_cfg__item__valid_intro (projectee : solver_cfg) :
-  Prims.bool=
-  match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> valid_intro
-let __proj__Mksolver_cfg__item__valid_elim (projectee : solver_cfg) :
-  Prims.bool=
-  match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> valid_elim
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> facts
 let __proj__Mksolver_cfg__item__z3version (projectee : solver_cfg) :
   Prims.string=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> z3version
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> z3version
 let __proj__Mksolver_cfg__item__context_pruning (projectee : solver_cfg) :
   Prims.bool=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> context_pruning
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> context_pruning
 let __proj__Mksolver_cfg__item__record_hints (projectee : solver_cfg) :
   Prims.bool=
   match projectee with
-  | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
-      context_pruning; record_hints;_} -> record_hints
+  | { seed; cliopt; smtopt; facts; z3version; context_pruning;
+      record_hints;_} -> record_hints
 let _last_cfg : solver_cfg FStar_Pervasives_Native.option FStarC_Effect.ref=
   FStarC_Effect.mk_ref FStar_Pervasives_Native.None
 let get_cfg (env : FStarC_TypeChecker_Env.env) : solver_cfg=
   let uu___ = FStarC_Options.z3_seed () in
   let uu___1 = FStarC_Options.z3_cliopt () in
   let uu___2 = FStarC_Options.z3_smtopt () in
-  let uu___3 = FStarC_Options.smtencoding_valid_intro () in
-  let uu___4 = FStarC_Options.smtencoding_valid_elim () in
-  let uu___5 = FStarC_Options.z3_version () in
-  let uu___6 = FStarC_Options_Ext.enabled "context_pruning" in
-  let uu___7 = FStarC_Options.record_hints () in
+  let uu___3 = FStarC_Options.z3_version () in
+  let uu___4 = FStarC_Options_Ext.enabled "context_pruning" in
+  let uu___5 = FStarC_Options.record_hints () in
   {
     seed = uu___;
     cliopt = uu___1;
     smtopt = uu___2;
     facts = (env.FStarC_TypeChecker_Env.proof_ns);
-    valid_intro = uu___3;
-    valid_elim = uu___4;
-    z3version = uu___5;
-    context_pruning = uu___6;
-    record_hints = uu___7
+    z3version = uu___3;
+    context_pruning = uu___4;
+    record_hints = uu___5
   }
 let save_cfg (env : FStarC_TypeChecker_Env.env) : unit=
   let uu___ = let uu___1 = get_cfg env in FStar_Pervasives_Native.Some uu___1 in

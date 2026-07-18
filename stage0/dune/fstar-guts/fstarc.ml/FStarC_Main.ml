@@ -475,7 +475,8 @@ let go_normal (uu___ : unit) : unit=
                              (FStarC_List.op_At
                                 [FStarC_Errors_Msg.text
                                    (FStarC_Format.fmt1
-                                      "Z3 version '%s' was not found." v)]
+                                      "Z3 version \226\128\152%s\226\128\153 was not found."
+                                      v)]
                                 (FStarC_Find_Z3.z3_install_suggestion v)));
                         report_errors [];
                         FStarC_Effect.exit Prims.int_one)
@@ -657,7 +658,7 @@ let handle_error (e : Prims.exn) : unit=
         FStarC_Format.print_error
           "Please file a bug report, ideally with a minimized version of the source program that triggered the error.\n"));
   report_errors []
-let main (uu___ : unit) : 'uuuuu=
+let main (uu___ : unit) : unit=
   try
     (fun uu___1 ->
        match () with

@@ -54,7 +54,7 @@ let mktuple2_ (a : FStar_Tactics_NamedView.term)
                 (a, FStarC_Reflection_V2_Data.Q_Explicit)))),
          (b, FStarC_Reflection_V2_Data.Q_Explicit)))
 let get_inductive_typ (nm : Prims.string) :
-  (FStar_Tactics_NamedView.sigelt_view, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.sigelt_view, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.top_env () ps in
     let x1 =
@@ -71,28 +71,24 @@ let get_inductive_typ (nm : Prims.string) :
           FStar_Tactics_V2_Derived.fail "ctors_of_typ: not an inductive type"
             ps
 let alg_ctor (ty : FStarC_Reflection_Types.typ) :
-  (FStarC_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.typ, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_V2_SyntaxHelpers.collect_arr ty ps in
     match x with
     | (tys, c) ->
-        FStar_Tactics_Util.fold_right
-          (fun uu___1 uu___ ->
-             (fun ty1 acc -> Obj.magic (fun uu___ -> tuple2_ ty1 acc)) uu___1
-               uu___) tys unitt_ ps
+        FStar_Tactics_Util.fold_right (fun ty1 acc uu___ -> tuple2_ ty1 acc)
+          tys unitt_ ps
 let generate_repr_typ (params : FStar_Tactics_NamedView.binders)
   (ctors : FStarC_Reflection_V2_Data.ctor Prims.list) :
-  (FStarC_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.typ, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       FStar_Tactics_Util.map
         (fun uu___ -> match uu___ with | (uu___1, ty) -> alg_ctor ty) ctors
         ps in
     let x1 =
-      FStar_Tactics_Util.fold_right
-        (fun uu___1 uu___ ->
-           (fun ty acc -> Obj.magic (fun uu___ -> either_ ty acc)) uu___1
-             uu___) x empty_ ps in
+      FStar_Tactics_Util.fold_right (fun ty acc uu___ -> either_ ty acc) x
+        empty_ ps in
     x1
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -115,7 +111,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term psc ncb
                us args)
 let generate_down (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.intro () ps in
     let x1 =
@@ -125,41 +121,31 @@ let generate_down (uu___ : unit) :
       (fun i uu___1 ->
          match uu___1 with
          | (c, n) ->
-             FStar_Tactics_Effect.tac_bind
-               (Obj.magic
-                  (FStar_Tactics_Util.repeatn n
-                     (fun uu___2 -> FStarC_Tactics_V2_Builtins.intro ())))
-               (fun uu___2 ->
-                  (fun bs ->
-                     Obj.magic
-                       (fun ps1 ->
-                          let x2 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-                          let x3 =
-                            FStar_Tactics_Util.fold_right
-                              (fun uu___3 uu___2 ->
-                                 (fun b acc ->
-                                    Obj.magic
-                                      (fun uu___2 ->
-                                         mktuple2_
-                                           (FStar_Tactics_V2_SyntaxCoercions.binding_to_term
-                                              b) acc)) uu___3 uu___2) bs
-                              unitv_ ps1 in
-                          let x4 =
-                            FStar_Tactics_Util.repeatn i
-                              (fun uu___2 ->
-                                 FStar_Tactics_V2_Derived.apply
-                                   (FStarC_Reflection_V2_Builtins.pack_ln
-                                      (FStarC_Reflection_V2_Data.Tv_FVar
-                                         (FStarC_Reflection_V2_Builtins.pack_fv
-                                            ["FStar"; "Pervasives"; "Inr"]))))
-                              ps1 in
-                          FStar_Tactics_V2_Derived.apply
-                            (FStarC_Reflection_V2_Builtins.pack_ln
-                               (FStarC_Reflection_V2_Data.Tv_FVar
-                                  (FStarC_Reflection_V2_Builtins.pack_fv
-                                     ["FStar"; "Pervasives"; "Inl"]))) ps1;
-                          FStar_Tactics_V2_Derived.exact x3 ps1)) uu___2)) x1
-      ps
+             FStar_Tactics_Effect.tac_bind () ()
+               (FStar_Tactics_Util.repeatn n
+                  (fun uu___2 -> FStarC_Tactics_V2_Builtins.intro ()))
+               (fun bs ps1 ->
+                  let x2 = FStarC_Tactics_V2_Builtins.intro () ps1 in
+                  let x3 =
+                    FStar_Tactics_Util.fold_right
+                      (fun b acc uu___2 ->
+                         mktuple2_
+                           (FStar_Tactics_V2_SyntaxCoercions.binding_to_term
+                              b) acc) bs unitv_ ps1 in
+                  let x4 =
+                    FStar_Tactics_Util.repeatn i
+                      (fun uu___2 ->
+                         FStar_Tactics_V2_Derived.apply
+                           (FStarC_Reflection_V2_Builtins.pack_ln
+                              (FStarC_Reflection_V2_Data.Tv_FVar
+                                 (FStarC_Reflection_V2_Builtins.pack_fv
+                                    ["FStar"; "Pervasives"; "Inr"])))) ps1 in
+                  FStar_Tactics_V2_Derived.apply
+                    (FStarC_Reflection_V2_Builtins.pack_ln
+                       (FStarC_Reflection_V2_Data.Tv_FVar
+                          (FStarC_Reflection_V2_Builtins.pack_fv
+                             ["FStar"; "Pervasives"; "Inl"]))) ps1;
+                  FStar_Tactics_V2_Derived.exact x3 ps1)) x1 ps
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.TypeRepr.generate_down" (Prims.of_int 2)
@@ -174,7 +160,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
-  (FStar_Tactics_NamedView.binding Prims.list, unit)
+  (FStar_Tactics_NamedView.binding Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
@@ -263,7 +249,7 @@ let rec get_apply_tuple (b : FStar_Tactics_NamedView.binding) :
              FStar_Tactics_V2_Derived.fail x2 ps)
 let rec generate_up_aux (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
   (b : FStar_Tactics_NamedView.binding) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   match ctors with
   | [] ->
       (fun ps ->
@@ -275,41 +261,36 @@ let rec generate_up_aux (ctors : FStarC_Reflection_V2_Data.ctor Prims.list)
          FStar_Tactics_V2_Derived.exact
            (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps)
   | c::cs ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStarC_Tactics_V2_Builtins.t_destruct
-              (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b)))
-        (fun uu___ ->
-           (fun cases ->
-              Obj.magic
-                (fun ps ->
-                   if (FStar_List_Tot_Base.length cases) <> (Prims.of_int 2)
-                   then
-                     FStar_Tactics_V2_Derived.fail
-                       "generate_up_aux: expected Inl/Inr???" ps
-                   else ();
-                   FStar_Tactics_V2_Derived.focus
-                     (fun uu___ ps1 ->
-                        let x2 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-                        let x3 = FStarC_Tactics_V2_Builtins.intro () ps1 in
-                        let x4 = FStar_Pervasives_Native.fst c in
-                        let x5 = get_apply_tuple x2 ps1 in
-                        FStar_Tactics_V2_Derived.apply
-                          (FStar_Tactics_NamedView.pack
-                             (FStar_Tactics_NamedView.Tv_FVar
-                                (FStarC_Reflection_V2_Builtins.pack_fv x4)))
-                          ps1;
-                        FStar_Tactics_Util.iter
-                          (fun b1 ->
-                             FStar_Tactics_V2_Derived.exact
-                               (FStar_Tactics_V2_SyntaxCoercions.binding_to_term
-                                  b1)) x5 ps1;
-                        FStar_Tactics_V2_Derived.qed () ps1) ps;
-                   (let x2 = FStarC_Tactics_V2_Builtins.intro () ps in
-                    let x3 = FStarC_Tactics_V2_Builtins.intro () ps in
-                    generate_up_aux cs x2 ps))) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStarC_Tactics_V2_Builtins.t_destruct
+           (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b))
+        (fun cases ps ->
+           if (FStar_List_Tot_Base.length cases) <> (Prims.of_int 2)
+           then
+             FStar_Tactics_V2_Derived.fail
+               "generate_up_aux: expected Inl/Inr???" ps
+           else ();
+           FStar_Tactics_V2_Derived.focus
+             (fun uu___ ps1 ->
+                let x2 = FStarC_Tactics_V2_Builtins.intro () ps1 in
+                let x3 = FStarC_Tactics_V2_Builtins.intro () ps1 in
+                let x4 = FStar_Pervasives_Native.fst c in
+                let x5 = get_apply_tuple x2 ps1 in
+                FStar_Tactics_V2_Derived.apply
+                  (FStar_Tactics_NamedView.pack
+                     (FStar_Tactics_NamedView.Tv_FVar
+                        (FStarC_Reflection_V2_Builtins.pack_fv x4))) ps1;
+                FStar_Tactics_Util.iter
+                  (fun b1 ->
+                     FStar_Tactics_V2_Derived.exact
+                       (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b1))
+                  x5 ps1;
+                FStar_Tactics_V2_Derived.qed () ps1) ps;
+           (let x2 = FStarC_Tactics_V2_Builtins.intro () ps in
+            let x3 = FStarC_Tactics_V2_Builtins.intro () ps in
+            generate_up_aux cs x2 ps))
 let generate_up (nm : Prims.string) (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = get_inductive_typ nm ps in
     match x with
@@ -359,7 +340,7 @@ let binder_to_argv (b : FStar_Tactics_NamedView.binder) :
 let generate_all (nm : FStarC_Reflection_Types.name)
   (params : FStar_Tactics_NamedView.binders)
   (ctors : FStarC_Reflection_V2_Data.ctor Prims.list) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = make_implicits params in
     let x1 =
@@ -529,7 +510,7 @@ let generate_all (nm : FStarC_Reflection_Types.name)
       FStar_Tactics_NamedView.pack_sigelt x11 ps in
     [x3; x6; x9]
 let entry (nm : Prims.string) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = get_inductive_typ nm ps in
     match x with

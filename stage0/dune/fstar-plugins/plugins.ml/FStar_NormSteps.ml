@@ -20,6 +20,7 @@ type norm_step =
   | UnfoldNamespace of Prims.string Prims.list 
   | Unmeta 
   | Unascribe 
+  | ReduceProjections 
 let uu___is_Simpl (projectee : Fstarcompiler.FStarC_NormSteps.norm_step) :
   Prims.bool=
   match projectee with
@@ -140,6 +141,11 @@ let uu___is_Unascribe (projectee : Fstarcompiler.FStarC_NormSteps.norm_step)
   match projectee with
   | Fstarcompiler.FStarC_NormSteps.Unascribe -> true
   | uu___ -> false
+let uu___is_ReduceProjections
+  (projectee : Fstarcompiler.FStarC_NormSteps.norm_step) : Prims.bool=
+  match projectee with
+  | Fstarcompiler.FStarC_NormSteps.ReduceProjections -> true
+  | uu___ -> false
 let simplify : Fstarcompiler.FStarC_NormSteps.norm_step=
   Fstarcompiler.FStarC_NormSteps.Simpl
 let weak : Fstarcompiler.FStarC_NormSteps.norm_step=
@@ -184,3 +190,5 @@ let unmeta : Fstarcompiler.FStarC_NormSteps.norm_step=
   Fstarcompiler.FStarC_NormSteps.Unmeta
 let unascribe : Fstarcompiler.FStarC_NormSteps.norm_step=
   Fstarcompiler.FStarC_NormSteps.Unascribe
+let reduce_projections : Fstarcompiler.FStarC_NormSteps.norm_step=
+  Fstarcompiler.FStarC_NormSteps.ReduceProjections

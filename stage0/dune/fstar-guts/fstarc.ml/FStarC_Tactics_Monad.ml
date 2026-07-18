@@ -640,7 +640,8 @@ let wrap_err_doc (pref : FStarC_Errors_Msg.error_message) (t : 'a tac) :
        | e -> FStarC_Effect.raise e)
 let wrap_err (pref : Prims.string) (t : 'a tac) : 'a tac=
   wrap_err_doc
-    [FStarC_Errors_Msg.text (Prims.strcat "'" (Prims.strcat pref "' failed"))]
+    [FStarC_Errors_Msg.text
+       (Prims.strcat "\226\128\152" (Prims.strcat pref "\226\128\153 failed"))]
     t
 let mlog (f : unit -> unit) (cont : unit -> 'a tac) : 'a tac=
   bind (log f) (fun uu___ -> cont ())

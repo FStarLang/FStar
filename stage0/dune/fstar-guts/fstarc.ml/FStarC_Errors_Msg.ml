@@ -23,6 +23,9 @@ let vconcat (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
 let text (s : Prims.string) : FStar_Pprint.document=
   FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
     (FStar_Pprint.words s)
+let fquotes (d : FStar_Pprint.document) : FStar_Pprint.document=
+  FStar_Pprint.enclose (FStar_Pprint.utf8string "\226\128\152")
+    (FStar_Pprint.utf8string "\226\128\153") d
 let sublist (h : FStar_Pprint.document)
   (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
   let uu___ =

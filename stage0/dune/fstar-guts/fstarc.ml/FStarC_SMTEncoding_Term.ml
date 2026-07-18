@@ -2128,29 +2128,12 @@ and mkPrelude (z3options : Prims.string) : Prims.string=
     "\n(declare-fun Prims.precedes@tok (Universe Universe) Term)\n(assert\n(forall ((u0 Universe) (u1 Universe) (@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)\n(Prims.precedes u0 u1 @x0 @x1 @x2 @x3))\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)))))\n" in
   let lex_ordering =
     "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(declare-fun LexTop () Term)\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes u0 u1 t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 t1 t2 e1 e2))\n(Valid (Prims.precedes U_zero U_zero Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes u0 u1 t1 t2 e1 e2))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)) \n(Prec t1 t2))\n:pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
-  let valid_intro =
-    "(assert (forall ((e Term) (t Term))\n(! (implies (HasType e t)\n(Valid t))\n:pattern ((HasType e t)\n(Valid t))\n:qid __prelude_valid_intro)))\n" in
-  let valid_elim =
-    "(assert (forall ((t Term))\n(! (implies (Valid t)\n(exists ((e Term)) (HasType e t)))\n:pattern ((Valid t))\n:qid __prelude_valid_elim)))\n" in
   let tm_type_typing =
     "(assert (forall ((u Universe) (t Term))\n(! (iff (HasType (Tm_type u) t)\n(= t (Tm_type (U_succ u))))\n:pattern ((HasType (Tm_type u) t)))))\n" in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = FStarC_Options.smtencoding_valid_intro () in
-            if uu___5 then valid_intro else "" in
-          let uu___5 =
-            let uu___6 =
-              let uu___7 = FStarC_Options.smtencoding_valid_elim () in
-              if uu___7 then valid_elim else "" in
-            Prims.strcat uu___6 tm_type_typing in
-          Prims.strcat uu___4 uu___5 in
-        Prims.strcat lex_ordering uu___3 in
-      Prims.strcat precedes_partial_app uu___2 in
-    Prims.strcat bcons uu___1 in
-  Prims.strcat basic uu___
+  Prims.strcat basic
+    (Prims.strcat bcons
+       (Prims.strcat precedes_partial_app
+          (Prims.strcat lex_ordering tm_type_typing)))
 let declsToSmt (z3options : Prims.string) (decls : decl Prims.list) :
   Prims.string=
   let uu___ = FStarC_List.map (declToSmt z3options) decls in

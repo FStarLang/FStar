@@ -1,471 +1,329 @@
 open Fstarcompiler
 open Prims
 let rec arith_expr_to_bv (e : FStar_Reflection_V2_Arith.expr) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   match e with
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.MulMod
       (e1, uu___)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_mul"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvmul"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_mul"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvmul"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.MulMod (e1, uu___) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_mul"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvmul"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_mul"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvmul"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Umod
       (e1, uu___)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_mod"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvmod"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_mod"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvmod"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.Umod (e1, uu___) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_mod"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvmod"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_mod"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvmod"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Udiv
       (e1, uu___)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_div"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvdiv"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_div"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvdiv"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.Udiv (e1, uu___) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_div"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvdiv"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_div"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvdiv"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Shl
       (e1, uu___)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_shl"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvshl"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_shl"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvshl"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.Shl (e1, uu___) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_shl"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvshl"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_shl"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvshl"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Shr
       (e1, uu___)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_shr"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvshr"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_shr"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvshr"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.Shr (e1, uu___) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_shr"])))))
-        (fun uu___1 ->
-           (fun uu___1 ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvshr"]))) ps;
-                   arith_expr_to_bv e1 ps)) uu___1)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_shr"]))))
+        (fun uu___1 ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvshr"])))
+             ps;
+           arith_expr_to_bv e1 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Land
       (e1, e2)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logand"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvand"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logand"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvand"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.Land (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logand"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvand"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logand"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvand"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Lxor
       (e1, e2)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logxor"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvxor"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logxor"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvxor"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.Lxor (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logxor"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvxor"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logxor"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvxor"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Lor
       (e1, e2)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logor"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvor"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logor"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvor"]))) ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.Lor (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_logor"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvor"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_logor"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvor"]))) ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Ladd
       (e1, e2)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_add"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvadd"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_add"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvadd"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.Ladd (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_add"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvadd"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_add"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvadd"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.NatToBv (FStar_Reflection_V2_Arith.Lsub
       (e1, e2)) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_sub"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvsub"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_sub"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvsub"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | FStar_Reflection_V2_Arith.Lsub (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind
-        (Obj.magic
-           (FStar_Tactics_V2_Derived.apply_lemma
-              (FStarC_Reflection_V2_Builtins.pack_ln
-                 (FStarC_Reflection_V2_Data.Tv_FVar
-                    (FStarC_Reflection_V2_Builtins.pack_fv
-                       ["FStar"; "BV"; "int2bv_sub"])))))
-        (fun uu___ ->
-           (fun uu___ ->
-              Obj.magic
-                (fun ps ->
-                   FStar_Tactics_V2_Derived.apply_lemma
-                     (FStarC_Reflection_V2_Builtins.pack_ln
-                        (FStarC_Reflection_V2_Data.Tv_FVar
-                           (FStarC_Reflection_V2_Builtins.pack_fv
-                              ["FStar";
-                              "Tactics";
-                              "BV";
-                              "Lemmas";
-                              "cong_bvsub"]))) ps;
-                   arith_expr_to_bv e1 ps;
-                   arith_expr_to_bv e2 ps)) uu___)
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_V2_Derived.apply_lemma
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "BV"; "int2bv_sub"]))))
+        (fun uu___ ps ->
+           FStar_Tactics_V2_Derived.apply_lemma
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv
+                      ["FStar"; "Tactics"; "BV"; "Lemmas"; "cong_bvsub"])))
+             ps;
+           arith_expr_to_bv e1 ps;
+           arith_expr_to_bv e2 ps)
   | uu___ -> FStar_Tactics_V2_Derived.trefl ()
 let arith_to_bv_tac (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStarC_Tactics_V2_Builtins.norm
@@ -504,7 +362,7 @@ let _ =
                   arith_to_bv_tac)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let bv_tac (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let bv_tac (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStar_Tactics_MApply0.mapply0
@@ -536,7 +394,7 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 bv_tac)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let bv_tac_lt (n : Prims.int) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let bv_tac_lt (n : Prims.int) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___ ps ->
        let x =
@@ -568,7 +426,7 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 bv_tac_lt)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_int
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let to_bv_tac (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let to_bv_tac (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___1 ps ->
        FStar_Tactics_V2_Derived.apply_lemma

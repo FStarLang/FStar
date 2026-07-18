@@ -1489,7 +1489,7 @@ let optimized_haseq_soundness_for_data (ty_lid : FStarC_Ident.lident)
                      let uu___5 =
                        let uu___6 =
                          FStarC_Class_PP.pp FStarC_Ident.pretty_lident ty_lid in
-                       FStar_Pprint.squotes uu___6 in
+                       FStarC_Errors_Msg.fquotes uu___6 in
                      FStar_Pprint.op_Hat_Slash_Hat uu___5
                        (FStarC_Errors_Msg.text
                           "supports decidable equality because of this argument.") in
@@ -1498,7 +1498,7 @@ let optimized_haseq_soundness_for_data (ty_lid : FStarC_Ident.lident)
                      uu___4 in
                  [uu___3;
                  FStarC_Errors_Msg.text
-                   "Add either the 'noeq' or 'unopteq' qualifier"] in
+                   "Add either the \226\128\152noeq\226\128\153 or \226\128\152unopteq\226\128\153 qualifier"] in
                FStarC_TypeChecker_Util.label uu___2 sort_range haseq_b in
              FStarC_Syntax_Util.mk_conj t haseq_b1) FStarC_Syntax_Util.t_true
           dbs3 in

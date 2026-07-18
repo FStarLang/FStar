@@ -71,7 +71,8 @@ let load_plugin (tac : Prims.string) : unit=
       (let uu___4 =
          let uu___5 =
            let uu___6 = FStarC_Util.get_exec_dir () in
-           Prims.strcat uu___6 "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs" in
+           Prims.strcat uu___6
+             "/../lib/fstar/compiler/plugins/fstar_pluginlib.cmxs" in
          FStarC_Filepath.normalize_file_path uu___5 in
        do_dynlink uu___4);
       pout "Loaded fstar.pluginlib OK\n";
@@ -96,7 +97,7 @@ let load_plugins_dir (dir : Prims.string) : unit=
 let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
   unit=
   let compile m =
-    let packages = ["fstar.pluginlib"] in
+    let packages = ["fstar.compiler.plugins"] in
     let pkg pname = Prims.strcat "-package " pname in
     let args =
       let uu___ =
@@ -104,7 +105,8 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
           let uu___2 =
             let uu___3 = FStarC_List.map pkg packages in
             FStar_List_Tot_Base.op_At uu___3
-              ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"] in
+              (FStar_List_Tot_Base.op_At ["-open"; "Fstarcompiler"]
+                 ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"]) in
           FStar_List_Tot_Base.op_At ["-w"; "-8-11-20-21-26-28"] uu___2 in
         FStar_List_Tot_Base.op_At ["-I"; dir] uu___1 in
       FStar_List_Tot_Base.op_At ["ocamlopt"; "-shared"] uu___ in
@@ -127,7 +129,8 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
             let uu___3 =
               let uu___4 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
-              FStarC_Format.fmt2 "Command\n`%s`\nreturned with exit code %s"
+              FStarC_Format.fmt2
+                "Command\n\226\128\152%s\226\128\153\nreturned with exit code %s"
                 cmd uu___4 in
             FStarC_Errors_Msg.text uu___3 in
           [uu___2] in

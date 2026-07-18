@@ -500,7 +500,7 @@ let __expected_eff_expression (effname : Prims.string)
                     let uu___10 = name_and_result c in
                     FStar_Pervasives_Native.fst uu___10 in
                   FStar_Pprint.doc_of_string uu___9 in
-                FStar_Pprint.squotes uu___8 in
+                FStarC_Errors_Msg.fquotes uu___8 in
               FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                 (FStarC_Errors_Msg.text "with effect") uu___7 in
             FStar_Pprint.op_Hat_Hat uu___6 FStar_Pprint.dot in

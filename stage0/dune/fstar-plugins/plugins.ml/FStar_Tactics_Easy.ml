@@ -1,6 +1,6 @@
 open Fstarcompiler
 open Prims
-let easy_fill (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let easy_fill (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       FStar_Tactics_V2_Derived.repeat FStarC_Tactics_V2_Builtins.intro ps in

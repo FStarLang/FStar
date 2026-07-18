@@ -1,7 +1,7 @@
 open Fstarcompiler
 open Prims
-let step (t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+let step (t : unit -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr) :
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -10,10 +10,10 @@ let step (t : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) :
                ["FStar"; "Tactics"; "Canon"; "Lemmas"; "trans"]))) ps;
     t () ps
 let step_lemma (lem : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   step (fun uu___ -> FStar_Tactics_V2_Derived.apply_lemma lem)
 let rec canon_point (e : FStar_Reflection_V2_Arith.expr) :
-  (FStar_Reflection_V2_Arith.expr, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Reflection_V2_Arith.expr, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x uu___ ps1 = FStar_Tactics_V2_Derived.trefl () ps1; e in
     match e with
@@ -28,7 +28,7 @@ let rec canon_point (e : FStar_Reflection_V2_Arith.expr) :
         (FStarC_Tactics_V2_Builtins.norm
            [Fstarcompiler.FStarC_NormSteps.primops] ps;
          FStar_Tactics_V2_Derived.trefl () ps;
-         FStar_Reflection_V2_Arith.Lit (Prims.op_Star a b))
+         FStar_Reflection_V2_Arith.Lit (a * b))
     | FStar_Reflection_V2_Arith.Neg e1 ->
         (step_lemma
            (FStarC_Reflection_V2_Builtins.pack_ln
@@ -246,7 +246,7 @@ let rec canon_point (e : FStar_Reflection_V2_Arith.expr) :
           canon_point (FStar_Reflection_V2_Arith.Plus (a, x5)) ps))
     | uu___ -> x () ps
 let canon_point_entry (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStarC_Tactics_V2_Builtins.norm [Fstarcompiler.FStarC_NormSteps.primops]
       ps;
@@ -268,7 +268,7 @@ let canon_point_entry (uu___ : unit) :
            let x4 = FStarC_Tactics_V2_Builtins.term_to_string x1 ps in
            Prims.strcat "impossible: " x4 in
          FStar_Tactics_V2_Derived.fail x3 ps)
-let canon (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let canon (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.pointwise canon_point_entry
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic

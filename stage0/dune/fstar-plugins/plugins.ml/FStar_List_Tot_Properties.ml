@@ -14,4 +14,3 @@ let rec sorted : 'a . ('a -> 'a -> Prims.bool) -> 'a Prims.list -> Prims.bool
     | [] -> true
     | uu___1::[] -> true
     | x::y::tl -> (f x y) && (sorted f (y :: tl))
-type ('a, 'f) total_order = unit

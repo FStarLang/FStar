@@ -1095,7 +1095,7 @@ let check_linear_pattern_variables
                                         FStarC_Ident.showable_ident
                                         duplicate_bv.FStarC_Syntax_Syntax.ppname in
                                     FStarC_Format.fmt1
-                                      "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
+                                      "Non-linear patterns are not permitted: \226\128\152%s\226\128\153 appears more than once in this pattern."
                                       uu___7 in
                                   FStarC_Errors.raise_error
                                     FStarC_Syntax_Syntax.hasRange_bv
@@ -2439,7 +2439,7 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
                      let uu___7 =
                        let uu___8 =
                          FStarC_Class_PP.pp FStarC_Ident.pretty_ident id in
-                       FStar_Pprint.squotes uu___8 in
+                       FStarC_Errors_Msg.fquotes uu___8 in
                      FStar_Pprint.op_Hat_Slash_Hat uu___7
                        (FStarC_Errors_Msg.text
                           " appears more than once in this function definition.") in
@@ -2804,7 +2804,8 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
          | FStar_Pervasives_Native.None ->
              let uu___2 =
                let uu___3 = FStarC_Parser_AST.term_to_string rty in
-               FStarC_Format.fmt1 "Not a record type: `%s`" uu___3 in
+               FStarC_Format.fmt1
+                 "Not a record type: \226\128\152%s\226\128\153" uu___3 in
              FStarC_Errors.raise_error FStarC_Parser_AST.hasRange_term rty
                FStarC_Errors_Codes.Error_BadLetOpenRecord ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_string)
@@ -2823,10 +2824,15 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
                  FStarC_List.map
                    (fun uu___4 ->
                       match uu___4 with
-                      | (field, uu___5) ->
+                      | (field, is_imp, uu___5) ->
                           mk_pattern
                             (FStarC_Parser_AST.PatVar
-                               (field, FStar_Pervasives_Native.None, [])))
+                               (field,
+                                 (if is_imp
+                                  then
+                                    FStar_Pervasives_Native.Some
+                                      FStarC_Parser_AST.Implicit
+                                  else FStar_Pervasives_Native.None), [])))
                    record.FStarC_Syntax_DsEnv.fields in
                ((mk_pattern (FStarC_Parser_AST.PatName constrname)), uu___3) in
              FStarC_Parser_AST.PatApp uu___2 in
@@ -3140,7 +3146,7 @@ and desugar_term_maybe_top (top_level : Prims.bool) (env : env_t)
                                                     Prims.int_one
                                                     (FStarC_Errors_Msg.text
                                                        gl)
-                                                    (FStar_Pprint.squotes
+                                                    (FStarC_Errors_Msg.fquotes
                                                        (FStar_Pprint.doc_of_string
                                                           nm))
                                                     (FStarC_Errors_Msg.text
@@ -6264,7 +6270,7 @@ let parse_attr_with_list (warn : Prims.bool) (at : FStarC_Syntax_Syntax.term)
         (Obj.magic FStarC_Errors_Msg.is_error_message_string)
         (Obj.magic
            (FStarC_Format.fmt1
-              "Found ill-applied '%s', argument should be a non-empty list of integer literals"
+              "Found ill-applied \226\128\152%s\226\128\153, argument should be a non-empty list of integer literals"
               (FStarC_Ident.string_of_lid head)))
     else () in
   let uu___ = FStarC_Syntax_Util.head_and_args at in
@@ -7627,32 +7633,30 @@ and desugar_decl_core (env : FStarC_Syntax_DsEnv.env)
   | FStarC_Parser_AST.TopLevelLet (isrec, lets) ->
       let quals = d.FStarC_Parser_AST.quals in
       let expand_toplevel_pattern =
-        if isrec = FStarC_Parser_AST.NoLetQualifier
-        then
-          match lets with
-          | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
-               FStarC_Parser_AST.prange = uu___1;_},
-             uu___2)::[] -> false
-          | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
-               FStarC_Parser_AST.prange = uu___1;_},
-             uu___2)::[] -> false
-          | ({
-               FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
-                 ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
-                    FStarC_Parser_AST.prange = uu___1;_},
-                  uu___2);
-               FStarC_Parser_AST.prange = uu___3;_},
-             uu___4)::[] -> false
-          | ({
-               FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
-                 ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
-                    FStarC_Parser_AST.prange = uu___1;_},
-                  uu___2);
-               FStarC_Parser_AST.prange = uu___3;_},
-             uu___4)::[] -> false
-          | (p, uu___)::[] -> Prims.op_Negation (is_app_pattern p)
-          | uu___ -> false
-        else false in
+        (isrec = FStarC_Parser_AST.NoLetQualifier) &&
+          (match lets with
+           | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
+                FStarC_Parser_AST.prange = uu___1;_},
+              uu___2)::[] -> false
+           | ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
+                FStarC_Parser_AST.prange = uu___1;_},
+              uu___2)::[] -> false
+           | ({
+                FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
+                  ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatOp uu___;
+                     FStarC_Parser_AST.prange = uu___1;_},
+                   uu___2);
+                FStarC_Parser_AST.prange = uu___3;_},
+              uu___4)::[] -> false
+           | ({
+                FStarC_Parser_AST.pat = FStarC_Parser_AST.PatAscribed
+                  ({ FStarC_Parser_AST.pat = FStarC_Parser_AST.PatVar uu___;
+                     FStarC_Parser_AST.prange = uu___1;_},
+                   uu___2);
+                FStarC_Parser_AST.prange = uu___3;_},
+              uu___4)::[] -> false
+           | (p, uu___)::[] -> Prims.op_Negation (is_app_pattern p)
+           | uu___ -> false) in
       if Prims.op_Negation expand_toplevel_pattern
       then
         let lets1 =

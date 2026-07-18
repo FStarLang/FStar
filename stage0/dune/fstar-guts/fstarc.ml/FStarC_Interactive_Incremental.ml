@@ -173,9 +173,7 @@ let pop_entries
   map (fun uu___ -> as_query FStarC_Interactive_Ide_Types.Pop) e
 let push_kind_geq (pk1 : FStarC_Interactive_Ide_Types.push_kind)
   (pk2 : FStarC_Interactive_Ide_Types.push_kind) : Prims.bool=
-  if pk1 = pk2
-  then true
-  else
+  (pk1 = pk2) ||
     (match (pk1, pk2) with
      | (FStarC_Interactive_Ide_Types.FullCheck,
         FStarC_Interactive_Ide_Types.LaxCheck) -> true

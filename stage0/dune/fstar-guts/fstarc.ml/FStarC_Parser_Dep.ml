@@ -266,7 +266,8 @@ let module_name_of_file (f : Prims.string) : Prims.string=
         (Obj.magic
            (FStarC_List.op_At
               [FStarC_Errors_Msg.text
-                 (FStarC_Format.fmt1 "Not a valid FStar file: '%s'" f)]
+                 (FStarC_Format.fmt1
+                    "Not a valid FStar file: \226\128\152%s\226\128\153" f)]
               (if FStarC_Platform.windows && (f = "..")
                then
                  [FStarC_Errors_Msg.text
@@ -883,7 +884,9 @@ let is_valid_namespace (deps1 : deps) (ns : FStarC_Ident.lident) :
   then
     (let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_lident ns in
      let uu___2 =
-       let uu___3 = FStarC_SMap.keys deps1.valid_namespaces in
+       let uu___3 =
+         let uu___4 = FStarC_SMap.keys deps1.valid_namespaces in
+         FStarC_List.sortWith FStarC_String.compare uu___4 in
        FStarC_Class_Show.show
          (FStarC_Class_Show.show_list FStarC_Class_Show.showable_string)
          uu___3 in
@@ -1011,19 +1014,19 @@ let enter_namespace (original_map : files_for_module_name)
                 (Obj.magic
                    [FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
                       [FStarC_Errors_Msg.text "Implicitly opening namespace";
-                      FStar_Pprint.squotes
+                      FStarC_Errors_Msg.fquotes
                         (FStar_Pprint.doc_of_string sprefix1);
                       FStarC_Errors_Msg.text "shadows module";
-                      FStar_Pprint.squotes
+                      FStarC_Errors_Msg.fquotes
                         (FStar_Pprint.doc_of_string suffix);
                       FStarC_Errors_Msg.text "in file";
                       FStar_Pprint.op_Hat_Hat
-                        (FStar_Pprint.dquotes
+                        (FStarC_Errors_Msg.fquotes
                            (FStar_Pprint.doc_of_string str)) FStar_Pprint.dot];
                    FStar_Pprint.op_Hat_Slash_Hat
                      (FStarC_Errors_Msg.text "Rename")
                      (FStar_Pprint.op_Hat_Slash_Hat
-                        (FStar_Pprint.dquotes
+                        (FStarC_Errors_Msg.fquotes
                            (FStar_Pprint.doc_of_string str))
                         (FStarC_Errors_Msg.text "to avoid conflicts."))]))
            else ());

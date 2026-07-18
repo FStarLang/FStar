@@ -1046,6 +1046,7 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                  match uu___9 with
                  | (sbs, c1) ->
                      let return_type = FStarC_Syntax_Util.comp_result c1 in
+                     let effect_args = FStarC_Syntax_Util.comp_effect_args c1 in
                      let ty_lid_not_to_left_of_arrow =
                        FStarC_List.for_all
                          (fun uu___10 ->
@@ -1058,7 +1059,15 @@ let rec ty_strictly_positive_in_type (env : FStarC_TypeChecker_Env.env)
                                 ->
                                 mutuals_unused_in_type mutuals
                                   b.FStarC_Syntax_Syntax.sort) sbs in
-                     if ty_lid_not_to_left_of_arrow
+                     let mutuals_unused_in_effect_args =
+                       FStarC_List.for_all
+                         (fun uu___10 ->
+                            match uu___10 with
+                            | (a, uu___11) ->
+                                mutuals_unused_in_type mutuals a) effect_args in
+                     if
+                       ty_lid_not_to_left_of_arrow &&
+                         mutuals_unused_in_effect_args
                      then
                        let uu___10 =
                          FStarC_TypeChecker_Env.push_binders env sbs in

@@ -57,7 +57,6 @@ let rec slice' : 'a . 'a seq -> Prims.nat -> Prims.nat -> 'a seq =
       then MkSeq []
       else _cons (hd s) (slice' (tl s) i (j - Prims.int_one))
 let slice : 'a seq -> Prims.nat -> Prims.nat -> 'a seq= slice'
-type ('a, 's1, 's2) equal = unit
 let rec eq_i' : 'a . 'a seq -> 'a seq -> Prims.nat -> Prims.bool =
   fun s1 s2 i ->
     if i = (length s1)

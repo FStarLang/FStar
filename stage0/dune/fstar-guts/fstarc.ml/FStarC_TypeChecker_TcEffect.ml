@@ -2852,7 +2852,8 @@ let tc_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
   (attrs : FStarC_Syntax_Syntax.attribute Prims.list) :
   FStarC_Syntax_Syntax.eff_decl=
   FStarC_Errors.with_ctx
-    (FStarC_Format.fmt1 "While checking layered effect definition `%s`"
+    (FStarC_Format.fmt1
+       "While checking layered effect definition \226\128\152%s\226\128\153"
        (FStarC_Ident.string_of_lid ed.FStarC_Syntax_Syntax.mname))
     (fun uu___ ->
        (let uu___2 = FStarC_Effect.op_Bang dbg_LayeredEffectsTc in
@@ -5232,7 +5233,8 @@ let tc_non_layered_eff_decl (env0 : FStarC_TypeChecker_Env.env)
   (_attrs : FStarC_Syntax_Syntax.attribute Prims.list) :
   FStarC_Syntax_Syntax.eff_decl=
   FStarC_Errors.with_ctx
-    (FStarC_Format.fmt1 "While checking effect definition `%s`"
+    (FStarC_Format.fmt1
+       "While checking effect definition \226\128\152%s\226\128\153"
        (FStarC_Ident.string_of_lid ed.FStarC_Syntax_Syntax.mname))
     (fun uu___ ->
        (let uu___2 = FStarC_Effect.op_Bang dbg in
@@ -7838,7 +7840,7 @@ let tc_effect_abbrev (env : FStarC_TypeChecker_Env.env)
                                     FStarC_Syntax_Print.showable_term
                                     def_result_typ in
                                 FStarC_Format.fmt2
-                                  "Result type of effect abbreviation `%s` does not match the result type of its definition `%s`"
+                                  "Result type of effect abbreviation \226\128\152%s\226\128\153 does not match the result type of its definition \226\128\152%s\226\128\153"
                                   uu___9 uu___10 in
                               FStarC_Errors.raise_error
                                 FStarC_Class_HasRange.hasRange_range r

@@ -1,7 +1,7 @@
 open Fstarcompiler
 open Prims
 let cur_goal (uu___ : unit) :
-  (FStarC_Reflection_Types.typ, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.typ, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       let x1 = FStarC_Tactics_V2_Builtins.get () ps in
@@ -16,14 +16,14 @@ let cur_goal (uu___ : unit) :
                    ([FStar_Pprint.arbitrary_string "no more goals"],
                      FStar_Pervasives_Native.None)) ps))
 let cur_formula (uu___ : unit) :
-  (FStar_Reflection_V2_Formula.formula, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Reflection_V2_Formula.formula, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = cur_goal () ps in
     FStar_Reflection_V2_Formula.term_as_formula x ps
 let term_eq :
   FStarC_Reflection_Types.term -> FStarC_Reflection_Types.term -> Prims.bool=
   FStar_Reflection_TermEq_Simple.term_eq
-let l_revert (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let l_revert (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStarC_Tactics_V2_Builtins.revert () ps;
     FStar_Tactics_V2_Derived.apply
@@ -43,18 +43,13 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 l_revert)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec l_revert_all (uu___ : FStar_Tactics_NamedView.binding Prims.list) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
-  (fun bs ->
-     match bs with
-     | [] -> Obj.magic (Obj.repr (fun uu___ -> ()))
-     | uu___::tl ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.tac_bind (Obj.magic (l_revert ()))
-                 (fun uu___1 ->
-                    (fun uu___1 -> Obj.magic (l_revert_all tl)) uu___1))))
-    uu___
+let rec l_revert_all (bs : FStar_Tactics_NamedView.binding Prims.list) :
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  match bs with
+  | [] -> (fun uu___ -> ())
+  | uu___::tl ->
+      FStar_Tactics_Effect.tac_bind () () (l_revert ())
+        (fun uu___1 -> l_revert_all tl)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.l_revert_all" (Prims.of_int 2)
@@ -70,7 +65,7 @@ let _ =
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let forall_intro (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -92,7 +87,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
 let forall_intro_as (s : Prims.string) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -115,7 +110,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
 let forall_intros (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding Prims.list, unit)
+  (FStar_Tactics_NamedView.binding Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.repeat1 forall_intro
 let _ =
@@ -133,7 +128,7 @@ let _ =
                (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                psc ncb us args)
-let split (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let split (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___1 ->
        match () with
@@ -157,7 +152,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let implies_intro (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -180,7 +175,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
 let implies_intro_as (s : Prims.string) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -203,7 +198,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
 let implies_intros (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding Prims.list, unit)
+  (FStar_Tactics_NamedView.binding Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.repeat1 implies_intro
 let _ =
@@ -222,7 +217,7 @@ let _ =
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                psc ncb us args)
 let l_intro (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.or_else forall_intro implies_intro
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -238,7 +233,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
 let l_intros (uu___ : unit) :
-  (FStar_Tactics_NamedView.binding Prims.list, unit)
+  (FStar_Tactics_NamedView.binding Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.repeat l_intro
 let _ =
@@ -255,29 +250,9 @@ let _ =
                (Fstarcompiler.FStarC_Syntax_Embeddings.e_list
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                psc ncb us args)
-let squash_intro (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
-  FStar_Tactics_V2_Derived.apply
-    (FStarC_Reflection_V2_Builtins.pack_ln
-       (FStarC_Reflection_V2_Data.Tv_FVar
-          (FStarC_Reflection_V2_Builtins.pack_fv
-             ["FStar"; "Squash"; "return_squash"])))
-let _ =
-  Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.squash_intro" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             Fstarcompiler.FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.squash_intro (plugin)"
-               (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1
-                  squash_intro) Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
-               Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let l_exact (t : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
-  FStar_Tactics_V2_Derived.try_with
-    (fun uu___ -> match () with | () -> FStar_Tactics_V2_Derived.exact t)
-    (fun uu___ ps -> squash_intro () ps; FStar_Tactics_V2_Derived.exact t ps)
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
+  FStar_Tactics_V2_Derived.exact t
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.l_exact" (Prims.of_int 2)
@@ -291,7 +266,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let hyp (x : FStar_Tactics_NamedView.namedv) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   l_exact (FStar_Tactics_V2_SyntaxCoercions.namedv_to_term x)
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -306,7 +281,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_namedv_view
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let pose_lemma (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       let x1 = FStar_Tactics_V2_Derived.cur_env () ps in
@@ -440,7 +415,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding psc
                ncb us args)
-let explode (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let explode (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.repeatseq
       (fun uu___1 ->
@@ -459,8 +434,9 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 explode)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let rec visit (callback : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
-  : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let rec visit
+  (callback : unit -> (unit, Obj.t) FStar_Tactics_Effect.tac_repr) :
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___ ->
        FStar_Tactics_V2_Derived.or_else callback
@@ -481,7 +457,7 @@ let rec visit (callback : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr)
                   l_revert ps
             | uu___2 -> ()))
 let rec simplify_eq_implication (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_V2_Derived.cur_env () ps in
     let x1 = FStar_Tactics_V2_Derived.cur_goal () ps in
@@ -508,7 +484,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let rewrite_all_equalities (uu___ : unit) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr= visit simplify_eq_implication
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr= visit simplify_eq_implication
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.V2.Logic.rewrite_all_equalities" (Prims.of_int 2)
@@ -523,7 +499,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let rec unfold_definition_and_simplify_eq (tm : FStar_Tactics_NamedView.term)
-  : (unit, unit) FStar_Tactics_Effect.tac_repr=
+  : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_V2_Derived.cur_goal () ps in
     let x1 = FStar_Reflection_V2_Formula.term_as_formula x ps in
@@ -554,35 +530,8 @@ let _ =
                   unfold_definition_and_simplify_eq)
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let unsquash (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
-  fun ps ->
-    let x =
-      FStarC_Reflection_V2_Builtins.pack_ln
-        (FStarC_Reflection_V2_Data.Tv_FVar
-           (FStarC_Reflection_V2_Builtins.pack_fv
-              ["FStar"; "Tactics"; "Logic"; "Lemmas"; "vbind"])) in
-    FStar_Tactics_V2_Derived.apply_lemma
-      (FStar_Reflection_V2_Derived.mk_e_app x [t]) ps;
-    (let x2 = FStarC_Tactics_V2_Builtins.intro () ps in
-     FStar_Tactics_NamedView.pack
-       (FStar_Tactics_NamedView.Tv_Var
-          (FStar_Tactics_V2_SyntaxCoercions.binding_to_namedv x2)))
-let _ =
-  Fstarcompiler.FStarC_Tactics_Native.register_tactic
-    "FStar.Tactics.V2.Logic.unsquash" (Prims.of_int 2)
-    (fun psc ->
-       fun ncb ->
-         fun us ->
-           fun args ->
-             Fstarcompiler.FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1
-               "FStar.Tactics.V2.Logic.unsquash (plugin)"
-               (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 unsquash)
-               Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
-               Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term psc ncb
-               us args)
 let cases_or (o : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.apply_lemma
     (FStar_Reflection_V2_Derived.mk_e_app
        (FStarC_Reflection_V2_Builtins.pack_ln
@@ -603,7 +552,7 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let cases_bool (b : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       FStarC_Reflection_V2_Builtins.pack_ln
@@ -634,7 +583,7 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 cases_bool)
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let left (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let left (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.apply_lemma
     (FStarC_Reflection_V2_Builtins.pack_ln
        (FStarC_Reflection_V2_Data.Tv_FVar
@@ -652,7 +601,7 @@ let _ =
                (Fstarcompiler.FStarC_Tactics_Native.from_tactic_1 left)
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
-let right (uu___ : unit) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+let right (uu___ : unit) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.apply_lemma
     (FStarC_Reflection_V2_Builtins.pack_ln
        (FStarC_Reflection_V2_Data.Tv_FVar
@@ -671,7 +620,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let and_elim (t : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ ->
        match () with
@@ -714,8 +663,8 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let destruct_and (t : FStar_Tactics_NamedView.term) :
-  ((FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding), 
-    unit) FStar_Tactics_Effect.tac_repr=
+  ((FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding),
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     and_elim t ps;
     (let x1 = implies_intro () ps in let x2 = implies_intro () ps in (x1, x2))
@@ -736,7 +685,7 @@ let _ =
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding)
                psc ncb us args)
 let witness (t : FStar_Tactics_NamedView.term) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_raw
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -757,8 +706,8 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let elim_exists (t : FStar_Tactics_NamedView.term) :
-  ((FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding), 
-    unit) FStar_Tactics_Effect.tac_repr=
+  ((FStar_Tactics_NamedView.binding * FStar_Tactics_NamedView.binding),
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     FStar_Tactics_V2_Derived.apply_lemma
       (FStarC_Reflection_V2_Builtins.pack_ln
@@ -791,7 +740,7 @@ let _ =
                psc ncb us args)
 let instantiate (fa : FStar_Tactics_NamedView.term)
   (x : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ ->
        match () with
@@ -848,7 +797,7 @@ let _ =
                ncb us args)
 let instantiate_as (fa : FStar_Tactics_NamedView.term)
   (x : FStar_Tactics_NamedView.term) (s : Prims.string) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x1 = instantiate fa x ps in
     FStarC_Tactics_V2_Builtins.rename_to x1 s ps
@@ -872,7 +821,7 @@ let rec sk_binder' (acc : FStar_Tactics_NamedView.binding Prims.list)
   (b : FStar_Tactics_NamedView.binding) :
   ((FStar_Tactics_NamedView.binding Prims.list *
      FStar_Tactics_NamedView.binding),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.focus
     (fun uu___ ->
        FStar_Tactics_V2_Derived.try_with
@@ -902,17 +851,16 @@ let rec sk_binder' (acc : FStar_Tactics_NamedView.binding Prims.list)
                    (let x3 = forall_intro () ps in
                     let x4 = implies_intro () ps in
                     sk_binder' (x3 :: acc) x4 ps)))
-         (fun uu___1 ->
-            (fun uu___1 -> Obj.magic (fun uu___2 -> (acc, b))) uu___1))
+         (fun uu___1 uu___2 -> (acc, b)))
 let sk_binder (b : FStar_Tactics_NamedView.binding) :
   ((FStar_Tactics_NamedView.binding Prims.list *
      FStar_Tactics_NamedView.binding),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   sk_binder' [] b
 let skolem (uu___ : unit) :
   ((FStar_Tactics_NamedView.binding Prims.list *
      FStar_Tactics_NamedView.binding) Prims.list,
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       let x1 = FStar_Tactics_V2_Derived.cur_env () ps in
@@ -936,7 +884,7 @@ let _ =
                      Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_binding))
                psc ncb us args)
 let using_lemma (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.binding, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.binding, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ ->
        match () with

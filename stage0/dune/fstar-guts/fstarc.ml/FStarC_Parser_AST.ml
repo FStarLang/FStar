@@ -2398,7 +2398,7 @@ let check_id (id : FStarC_Ident.ident) : unit=
     let uu___ =
       let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_ident id in
       FStarC_Format.fmt1
-        "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
+        "Invalid identifer \226\128\152%s\226\128\153; expected a symbol that begins with a lower-case character"
         uu___1 in
     FStarC_Errors.raise_error FStarC_Ident.hasrange_ident id
       FStarC_Errors_Codes.Fatal_InvalidIdentifier ()

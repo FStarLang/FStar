@@ -35,6 +35,7 @@ type step =
   | NormDebug 
   | DefaultUnivsToZero 
   | Tactics 
+  | ReduceProjections 
 let uu___is_Beta (projectee : step) : Prims.bool=
   match projectee with | Beta -> true | uu___ -> false
 let uu___is_Iota (projectee : step) : Prims.bool=
@@ -126,6 +127,8 @@ let uu___is_DefaultUnivsToZero (projectee : step) : Prims.bool=
   match projectee with | DefaultUnivsToZero -> true | uu___ -> false
 let uu___is_Tactics (projectee : step) : Prims.bool=
   match projectee with | Tactics -> true | uu___ -> false
+let uu___is_ReduceProjections (projectee : step) : Prims.bool=
+  match projectee with | ReduceProjections -> true | uu___ -> false
 type steps = step Prims.list
 let dbg_ImplicitTrace : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "ImplicitTrace"
@@ -196,6 +199,7 @@ let rec eq_step (s1 : step) (s2 : step) : Prims.bool=
   | (NormDebug, NormDebug) -> true
   | (DefaultUnivsToZero, DefaultUnivsToZero) -> true
   | (Tactics, Tactics) -> true
+  | (ReduceProjections, ReduceProjections) -> true
   | uu___ -> false
 let deq_step : step FStarC_Class_Deq.deq=
   { FStarC_Class_Deq.op_Equals_Question = eq_step }
@@ -270,6 +274,7 @@ let rec step_to_string (s : step) : Prims.string=
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
   | Tactics -> "Tactics"
+  | ReduceProjections -> "ReduceProjections"
   | uu___ -> FStarC_Effect.failwith "fixme: step_to_string incomplete"
 let showable_step : step FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = step_to_string }
@@ -4039,6 +4044,23 @@ let lookup_projector (env1 : env) (lid : FStarC_Ident.lident) (i : Prims.int)
 let is_projector (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   let uu___ = lookup_qname env1 l in
   match uu___ with
+  | FStar_Pervasives_Native.Some
+      (FStar_Pervasives.Inr
+       ({ FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let uu___1;
+          FStarC_Syntax_Syntax.sigrng = uu___2;
+          FStarC_Syntax_Syntax.sigquals = quals;
+          FStarC_Syntax_Syntax.sigmeta = uu___3;
+          FStarC_Syntax_Syntax.sigattrs = uu___4;
+          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+          FStarC_Syntax_Syntax.sigopts = uu___6;_},
+        uu___7),
+       uu___8)
+      ->
+      FStarC_Util.for_some
+        (fun uu___9 ->
+           match uu___9 with
+           | FStarC_Syntax_Syntax.Projector uu___10 -> true
+           | uu___10 -> false) quals
   | FStar_Pervasives_Native.Some
       (FStar_Pervasives.Inr
        ({

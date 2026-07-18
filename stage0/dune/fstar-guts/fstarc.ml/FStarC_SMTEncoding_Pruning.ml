@@ -328,349 +328,326 @@ let maybe_add_ambient (a : FStarC_SMTEncoding_Term.assumption)
     | FStarC_SMTEncoding_Term.App
         (FStarC_SMTEncoding_Term.Var "Prims.squash", uu___::t::[]) -> t
     | uu___ -> ty in
-  if
-    a.FStarC_SMTEncoding_Term.assumption_name =
-      "function_token_typing_Prims.__cache_version_number__"
-  then
-    {
-      defs_and_decls = (p.defs_and_decls);
-      defs_and_decls_map = (p.defs_and_decls_map);
-      macro_freenames = (p.macro_freenames);
-      trigger_to_assumption = (p.trigger_to_assumption);
-      assumption_to_triggers = (p.assumption_to_triggers);
-      assumption_name_map = (p.assumption_name_map);
-      ambients = ((a.FStarC_SMTEncoding_Term.assumption_name) ::
-        (p.ambients));
-      extra_roots = (p.extra_roots);
-      pruned_ambients = (p.pruned_ambients)
-    }
-  else
-    (match (a.FStarC_SMTEncoding_Term.assumption_term).FStarC_SMTEncoding_Term.tm
-     with
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Iff, t0::t1::[])
-         when
-         FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
-           "l_quant_interp"
-         ->
-         let triggers_lhs = free_top_level_names t0 in
-         add_assumption_with_triggers [triggers_lhs]
-     | uu___ when
-         FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
-           "assumption_"
-         ->
-         let triggers1 =
-           triggers_of_term a.FStarC_SMTEncoding_Term.assumption_term in
-         let uu___1 = is_empty triggers1 in
-         if uu___1
-         then
-           let triggers2 =
-             let uu___2 =
-               free_top_level_names a.FStarC_SMTEncoding_Term.assumption_term in
-             [uu___2] in
-           add_assumption_with_triggers triggers2
-         else add_assumption_with_triggers triggers1
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "HasType", term::ty::[]) when
-         is_ambient_refinement ty ->
-         let triggers1 = triggers_of_term (ambient_refinement_payload ty) in
-         let uu___ = is_empty triggers1 in
-         if uu___
-         then
-           let p1 =
-             {
-               defs_and_decls = (p.defs_and_decls);
-               defs_and_decls_map = (p.defs_and_decls_map);
-               macro_freenames = (p.macro_freenames);
-               trigger_to_assumption = (p.trigger_to_assumption);
-               assumption_to_triggers = (p.assumption_to_triggers);
-               assumption_name_map = (p.assumption_name_map);
-               ambients = (p.ambients);
-               extra_roots = (a :: (p.extra_roots));
-               pruned_ambients = (p.pruned_ambients)
-             } in
-           let uu___1 = no_ambients () in
-           (if uu___1
-            then
-              {
-                defs_and_decls = (p1.defs_and_decls);
-                defs_and_decls_map = (p1.defs_and_decls_map);
-                macro_freenames = (p1.macro_freenames);
-                trigger_to_assumption = (p1.trigger_to_assumption);
-                assumption_to_triggers = (p1.assumption_to_triggers);
-                assumption_name_map = (p1.assumption_name_map);
-                ambients = (p1.ambients);
-                extra_roots = (p1.extra_roots);
-                pruned_ambients =
-                  ((a.FStarC_SMTEncoding_Term.assumption_name) ::
-                  (p1.pruned_ambients))
-              }
-            else
-              {
-                defs_and_decls = (p1.defs_and_decls);
-                defs_and_decls_map = (p1.defs_and_decls_map);
-                macro_freenames = (p1.macro_freenames);
-                trigger_to_assumption = (p1.trigger_to_assumption);
-                assumption_to_triggers = (p1.assumption_to_triggers);
-                assumption_name_map = (p1.assumption_name_map);
-                ambients = ((a.FStarC_SMTEncoding_Term.assumption_name) ::
-                  (p1.ambients));
-                extra_roots = (p1.extra_roots);
-                pruned_ambients = (p1.pruned_ambients)
-              })
-         else add_assumption_with_triggers triggers1
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "Valid",
+  match (a.FStarC_SMTEncoding_Term.assumption_term).FStarC_SMTEncoding_Term.tm
+  with
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Iff, t0::t1::[])
+      when
+      FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
+        "l_quant_interp"
+      ->
+      let triggers_lhs = free_top_level_names t0 in
+      add_assumption_with_triggers [triggers_lhs]
+  | uu___ when
+      FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
+        "assumption_"
+      ->
+      let triggers1 =
+        triggers_of_term a.FStarC_SMTEncoding_Term.assumption_term in
+      let uu___1 = is_empty triggers1 in
+      if uu___1
+      then
+        let triggers2 =
+          let uu___2 =
+            free_top_level_names a.FStarC_SMTEncoding_Term.assumption_term in
+          [uu___2] in
+        add_assumption_with_triggers triggers2
+      else add_assumption_with_triggers triggers1
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "HasType", term::ty::[]) when
+      is_ambient_refinement ty ->
+      let triggers1 = triggers_of_term (ambient_refinement_payload ty) in
+      let uu___ = is_empty triggers1 in
+      if uu___
+      then
+        let p1 =
           {
-            FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-              (FStarC_SMTEncoding_Term.Var "ApplyTT",
-               {
-                 FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.FreeV
-                   (FStarC_SMTEncoding_Term.FV
-                   ("__uu__PartialApp", uu___, uu___1));
-                 FStarC_SMTEncoding_Term.freevars = uu___2;
-                 FStarC_SMTEncoding_Term.rng = uu___3;_}::term::[]);
-            FStarC_SMTEncoding_Term.freevars = uu___4;
-            FStarC_SMTEncoding_Term.rng = uu___5;_}::[])
-         ->
-         let triggers1 =
-           match term.FStarC_SMTEncoding_Term.tm with
-           | FStarC_SMTEncoding_Term.FreeV (FStarC_SMTEncoding_Term.FV
-               (token, uu___6, uu___7)) ->
-               if FStarC_Util.ends_with token "@tok"
-               then
-                 let uu___8 =
-                   Obj.magic
-                     (FStarC_Class_Setlike.singleton ()
-                        (Obj.magic
-                           (FStarC_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) token) in
-                 let uu___9 =
-                   let uu___10 =
-                     let uu___11 =
-                       FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int 4)) in
-                     Obj.magic
-                       (FStarC_Class_Setlike.singleton ()
-                          (Obj.magic
-                             (FStarC_RBSet.setlike_rbset
-                                FStarC_Class_Ord.ord_string)) uu___11) in
-                   [uu___10] in
-                 uu___8 :: uu___9
-               else
-                 (let uu___9 =
-                    Obj.magic
-                      (FStarC_Class_Setlike.singleton ()
-                         (Obj.magic
-                            (FStarC_RBSet.setlike_rbset
-                               FStarC_Class_Ord.ord_string)) token) in
-                  [uu___9])
-           | FStarC_SMTEncoding_Term.App
-               (FStarC_SMTEncoding_Term.Var token, []) ->
-               if FStarC_Util.ends_with token "@tok"
-               then
-                 let uu___6 =
-                   Obj.magic
-                     (FStarC_Class_Setlike.singleton ()
-                        (Obj.magic
-                           (FStarC_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) token) in
-                 let uu___7 =
-                   let uu___8 =
-                     let uu___9 =
-                       FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int 4)) in
-                     Obj.magic
-                       (FStarC_Class_Setlike.singleton ()
-                          (Obj.magic
-                             (FStarC_RBSet.setlike_rbset
-                                FStarC_Class_Ord.ord_string)) uu___9) in
-                   [uu___8] in
-                 uu___6 :: uu___7
-               else
-                 (let uu___7 =
-                    Obj.magic
-                      (FStarC_Class_Setlike.singleton ()
-                         (Obj.magic
-                            (FStarC_RBSet.setlike_rbset
-                               FStarC_Class_Ord.ord_string)) token) in
-                  [uu___7])
-           | uu___6 -> [] in
-         add_assumption_with_triggers triggers1
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "Valid",
-          {
-            FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-              (FStarC_SMTEncoding_Term.Var "ApplyTT",
-               {
-                 FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-                   (FStarC_SMTEncoding_Term.Var "__uu__PartialApp", uu___);
-                 FStarC_SMTEncoding_Term.freevars = uu___1;
-                 FStarC_SMTEncoding_Term.rng = uu___2;_}::term::[]);
-            FStarC_SMTEncoding_Term.freevars = uu___3;
-            FStarC_SMTEncoding_Term.rng = uu___4;_}::[])
-         ->
-         let triggers1 =
-           match term.FStarC_SMTEncoding_Term.tm with
-           | FStarC_SMTEncoding_Term.FreeV (FStarC_SMTEncoding_Term.FV
-               (token, uu___5, uu___6)) ->
-               if FStarC_Util.ends_with token "@tok"
-               then
-                 let uu___7 =
-                   Obj.magic
-                     (FStarC_Class_Setlike.singleton ()
-                        (Obj.magic
-                           (FStarC_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) token) in
-                 let uu___8 =
-                   let uu___9 =
-                     let uu___10 =
-                       FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int 4)) in
-                     Obj.magic
-                       (FStarC_Class_Setlike.singleton ()
-                          (Obj.magic
-                             (FStarC_RBSet.setlike_rbset
-                                FStarC_Class_Ord.ord_string)) uu___10) in
-                   [uu___9] in
-                 uu___7 :: uu___8
-               else
-                 (let uu___8 =
-                    Obj.magic
-                      (FStarC_Class_Setlike.singleton ()
-                         (Obj.magic
-                            (FStarC_RBSet.setlike_rbset
-                               FStarC_Class_Ord.ord_string)) token) in
-                  [uu___8])
-           | FStarC_SMTEncoding_Term.App
-               (FStarC_SMTEncoding_Term.Var token, []) ->
-               if FStarC_Util.ends_with token "@tok"
-               then
-                 let uu___5 =
-                   Obj.magic
-                     (FStarC_Class_Setlike.singleton ()
-                        (Obj.magic
-                           (FStarC_RBSet.setlike_rbset
-                              FStarC_Class_Ord.ord_string)) token) in
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
-                       FStarC_Util.substring token Prims.int_zero
-                         ((FStarC_String.length token) - (Prims.of_int 4)) in
-                     Obj.magic
-                       (FStarC_Class_Setlike.singleton ()
-                          (Obj.magic
-                             (FStarC_RBSet.setlike_rbset
-                                FStarC_Class_Ord.ord_string)) uu___8) in
-                   [uu___7] in
-                 uu___5 :: uu___6
-               else
-                 (let uu___6 =
-                    Obj.magic
-                      (FStarC_Class_Setlike.singleton ()
-                         (Obj.magic
-                            (FStarC_RBSet.setlike_rbset
-                               FStarC_Class_Ord.ord_string)) token) in
-                  [uu___6])
-           | uu___5 -> [] in
-         add_assumption_with_triggers triggers1
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "Valid", term::[]) ->
-         let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
-         add_assumption_with_triggers uu___
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "HasType", term::uu___::[]) ->
-         let uu___1 = let uu___2 = free_top_level_names term in [uu___2] in
-         add_assumption_with_triggers uu___1
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "IsTotFun", term::[]) ->
-         let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
-         add_assumption_with_triggers uu___
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Var "is-Tm_arrow", term::[]) ->
-         let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
-         add_assumption_with_triggers uu___
-     | FStarC_SMTEncoding_Term.App
-         (FStarC_SMTEncoding_Term.Eq,
-          uu___::{
-                   FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-                     (FStarC_SMTEncoding_Term.Var "Term_constr_id", term::[]);
-                   FStarC_SMTEncoding_Term.freevars = uu___1;
-                   FStarC_SMTEncoding_Term.rng = uu___2;_}::[])
-         ->
-         let uu___3 = let uu___4 = free_top_level_names term in [uu___4] in
-         add_assumption_with_triggers uu___3
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, tms) ->
-         let t1 = FStarC_List.collect triggers_of_term tms in
-         add_assumption_with_triggers t1
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, t0::t1::[])
-         when
-         FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
-           "equation_"
-         ->
-         let t01 = free_top_level_names t0 in
-         add_assumption_with_triggers [t01]
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Iff, t0::t1::[])
-         ->
-         (match ((t0.FStarC_SMTEncoding_Term.tm),
-                  (t1.FStarC_SMTEncoding_Term.tm))
-          with
-          | (FStarC_SMTEncoding_Term.App
-             (FStarC_SMTEncoding_Term.Var "Valid",
-              {
-                FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-                  (FStarC_SMTEncoding_Term.Var "Prims.hasEq", _u::lhs::[]);
-                FStarC_SMTEncoding_Term.freevars = uu___;
-                FStarC_SMTEncoding_Term.rng = uu___1;_}::[]),
-             FStarC_SMTEncoding_Term.App
-             (FStarC_SMTEncoding_Term.Var "Valid",
-              {
-                FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
-                  (FStarC_SMTEncoding_Term.Var "Prims.hasEq", _v::rhs::[]);
-                FStarC_SMTEncoding_Term.freevars = uu___2;
-                FStarC_SMTEncoding_Term.rng = uu___3;_}::[]))
-              ->
-              let triggers1 = free_top_level_names lhs in
-              add_assumption_with_triggers [triggers1]
-          | uu___ ->
-              let t01 = free_top_level_names t0 in
-              let t11 = free_top_level_names t1 in
-              add_assumption_with_triggers [t01; t11])
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, t0::t1::[])
-         ->
-         let t01 = free_top_level_names t0 in
-         let t11 = free_top_level_names t1 in
-         add_assumption_with_triggers [t01; t11]
-     | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.TrueOp, uu___) ->
-         p
-     | uu___ ->
-         let uu___1 = no_ambients () in
-         if uu___1
+            defs_and_decls = (p.defs_and_decls);
+            defs_and_decls_map = (p.defs_and_decls_map);
+            macro_freenames = (p.macro_freenames);
+            trigger_to_assumption = (p.trigger_to_assumption);
+            assumption_to_triggers = (p.assumption_to_triggers);
+            assumption_name_map = (p.assumption_name_map);
+            ambients = (p.ambients);
+            extra_roots = (a :: (p.extra_roots));
+            pruned_ambients = (p.pruned_ambients)
+          } in
+        let uu___1 = no_ambients () in
+        (if uu___1
          then
            {
-             defs_and_decls = (p.defs_and_decls);
-             defs_and_decls_map = (p.defs_and_decls_map);
-             macro_freenames = (p.macro_freenames);
-             trigger_to_assumption = (p.trigger_to_assumption);
-             assumption_to_triggers = (p.assumption_to_triggers);
-             assumption_name_map = (p.assumption_name_map);
-             ambients = (p.ambients);
-             extra_roots = (p.extra_roots);
+             defs_and_decls = (p1.defs_and_decls);
+             defs_and_decls_map = (p1.defs_and_decls_map);
+             macro_freenames = (p1.macro_freenames);
+             trigger_to_assumption = (p1.trigger_to_assumption);
+             assumption_to_triggers = (p1.assumption_to_triggers);
+             assumption_name_map = (p1.assumption_name_map);
+             ambients = (p1.ambients);
+             extra_roots = (p1.extra_roots);
              pruned_ambients = ((a.FStarC_SMTEncoding_Term.assumption_name)
-               :: (p.pruned_ambients))
+               :: (p1.pruned_ambients))
            }
          else
            {
-             defs_and_decls = (p.defs_and_decls);
-             defs_and_decls_map = (p.defs_and_decls_map);
-             macro_freenames = (p.macro_freenames);
-             trigger_to_assumption = (p.trigger_to_assumption);
-             assumption_to_triggers = (p.assumption_to_triggers);
-             assumption_name_map = (p.assumption_name_map);
+             defs_and_decls = (p1.defs_and_decls);
+             defs_and_decls_map = (p1.defs_and_decls_map);
+             macro_freenames = (p1.macro_freenames);
+             trigger_to_assumption = (p1.trigger_to_assumption);
+             assumption_to_triggers = (p1.assumption_to_triggers);
+             assumption_name_map = (p1.assumption_name_map);
              ambients = ((a.FStarC_SMTEncoding_Term.assumption_name) ::
-               (p.ambients));
-             extra_roots = (p.extra_roots);
-             pruned_ambients = (p.pruned_ambients)
+               (p1.ambients));
+             extra_roots = (p1.extra_roots);
+             pruned_ambients = (p1.pruned_ambients)
            })
+      else add_assumption_with_triggers triggers1
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "Valid",
+       {
+         FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+           (FStarC_SMTEncoding_Term.Var "ApplyTT",
+            {
+              FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.FreeV
+                (FStarC_SMTEncoding_Term.FV
+                ("__uu__PartialApp", uu___, uu___1));
+              FStarC_SMTEncoding_Term.freevars = uu___2;
+              FStarC_SMTEncoding_Term.rng = uu___3;_}::term::[]);
+         FStarC_SMTEncoding_Term.freevars = uu___4;
+         FStarC_SMTEncoding_Term.rng = uu___5;_}::[])
+      ->
+      let triggers1 =
+        match term.FStarC_SMTEncoding_Term.tm with
+        | FStarC_SMTEncoding_Term.FreeV (FStarC_SMTEncoding_Term.FV
+            (token, uu___6, uu___7)) ->
+            if FStarC_Util.ends_with token "@tok"
+            then
+              let uu___8 =
+                Obj.magic
+                  (FStarC_Class_Setlike.singleton ()
+                     (Obj.magic
+                        (FStarC_RBSet.setlike_rbset
+                           FStarC_Class_Ord.ord_string)) token) in
+              let uu___9 =
+                let uu___10 =
+                  let uu___11 =
+                    FStarC_Util.substring token Prims.int_zero
+                      ((FStarC_String.length token) - (Prims.of_int 4)) in
+                  Obj.magic
+                    (FStarC_Class_Setlike.singleton ()
+                       (Obj.magic
+                          (FStarC_RBSet.setlike_rbset
+                             FStarC_Class_Ord.ord_string)) uu___11) in
+                [uu___10] in
+              uu___8 :: uu___9
+            else
+              (let uu___9 =
+                 Obj.magic
+                   (FStarC_Class_Setlike.singleton ()
+                      (Obj.magic
+                         (FStarC_RBSet.setlike_rbset
+                            FStarC_Class_Ord.ord_string)) token) in
+               [uu___9])
+        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Var token, [])
+            ->
+            if FStarC_Util.ends_with token "@tok"
+            then
+              let uu___6 =
+                Obj.magic
+                  (FStarC_Class_Setlike.singleton ()
+                     (Obj.magic
+                        (FStarC_RBSet.setlike_rbset
+                           FStarC_Class_Ord.ord_string)) token) in
+              let uu___7 =
+                let uu___8 =
+                  let uu___9 =
+                    FStarC_Util.substring token Prims.int_zero
+                      ((FStarC_String.length token) - (Prims.of_int 4)) in
+                  Obj.magic
+                    (FStarC_Class_Setlike.singleton ()
+                       (Obj.magic
+                          (FStarC_RBSet.setlike_rbset
+                             FStarC_Class_Ord.ord_string)) uu___9) in
+                [uu___8] in
+              uu___6 :: uu___7
+            else
+              (let uu___7 =
+                 Obj.magic
+                   (FStarC_Class_Setlike.singleton ()
+                      (Obj.magic
+                         (FStarC_RBSet.setlike_rbset
+                            FStarC_Class_Ord.ord_string)) token) in
+               [uu___7])
+        | uu___6 -> [] in
+      add_assumption_with_triggers triggers1
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "Valid",
+       {
+         FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+           (FStarC_SMTEncoding_Term.Var "ApplyTT",
+            {
+              FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+                (FStarC_SMTEncoding_Term.Var "__uu__PartialApp", uu___);
+              FStarC_SMTEncoding_Term.freevars = uu___1;
+              FStarC_SMTEncoding_Term.rng = uu___2;_}::term::[]);
+         FStarC_SMTEncoding_Term.freevars = uu___3;
+         FStarC_SMTEncoding_Term.rng = uu___4;_}::[])
+      ->
+      let triggers1 =
+        match term.FStarC_SMTEncoding_Term.tm with
+        | FStarC_SMTEncoding_Term.FreeV (FStarC_SMTEncoding_Term.FV
+            (token, uu___5, uu___6)) ->
+            if FStarC_Util.ends_with token "@tok"
+            then
+              let uu___7 =
+                Obj.magic
+                  (FStarC_Class_Setlike.singleton ()
+                     (Obj.magic
+                        (FStarC_RBSet.setlike_rbset
+                           FStarC_Class_Ord.ord_string)) token) in
+              let uu___8 =
+                let uu___9 =
+                  let uu___10 =
+                    FStarC_Util.substring token Prims.int_zero
+                      ((FStarC_String.length token) - (Prims.of_int 4)) in
+                  Obj.magic
+                    (FStarC_Class_Setlike.singleton ()
+                       (Obj.magic
+                          (FStarC_RBSet.setlike_rbset
+                             FStarC_Class_Ord.ord_string)) uu___10) in
+                [uu___9] in
+              uu___7 :: uu___8
+            else
+              (let uu___8 =
+                 Obj.magic
+                   (FStarC_Class_Setlike.singleton ()
+                      (Obj.magic
+                         (FStarC_RBSet.setlike_rbset
+                            FStarC_Class_Ord.ord_string)) token) in
+               [uu___8])
+        | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Var token, [])
+            ->
+            if FStarC_Util.ends_with token "@tok"
+            then
+              let uu___5 =
+                Obj.magic
+                  (FStarC_Class_Setlike.singleton ()
+                     (Obj.magic
+                        (FStarC_RBSet.setlike_rbset
+                           FStarC_Class_Ord.ord_string)) token) in
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
+                    FStarC_Util.substring token Prims.int_zero
+                      ((FStarC_String.length token) - (Prims.of_int 4)) in
+                  Obj.magic
+                    (FStarC_Class_Setlike.singleton ()
+                       (Obj.magic
+                          (FStarC_RBSet.setlike_rbset
+                             FStarC_Class_Ord.ord_string)) uu___8) in
+                [uu___7] in
+              uu___5 :: uu___6
+            else
+              (let uu___6 =
+                 Obj.magic
+                   (FStarC_Class_Setlike.singleton ()
+                      (Obj.magic
+                         (FStarC_RBSet.setlike_rbset
+                            FStarC_Class_Ord.ord_string)) token) in
+               [uu___6])
+        | uu___5 -> [] in
+      add_assumption_with_triggers triggers1
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "Valid", term::[]) ->
+      let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
+      add_assumption_with_triggers uu___
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "HasType", term::uu___::[]) ->
+      let uu___1 = let uu___2 = free_top_level_names term in [uu___2] in
+      add_assumption_with_triggers uu___1
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "IsTotFun", term::[]) ->
+      let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
+      add_assumption_with_triggers uu___
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Var "is-Tm_arrow", term::[]) ->
+      let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
+      add_assumption_with_triggers uu___
+  | FStarC_SMTEncoding_Term.App
+      (FStarC_SMTEncoding_Term.Eq,
+       uu___::{
+                FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+                  (FStarC_SMTEncoding_Term.Var "Term_constr_id", term::[]);
+                FStarC_SMTEncoding_Term.freevars = uu___1;
+                FStarC_SMTEncoding_Term.rng = uu___2;_}::[])
+      ->
+      let uu___3 = let uu___4 = free_top_level_names term in [uu___4] in
+      add_assumption_with_triggers uu___3
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, tms) ->
+      let t1 = FStarC_List.collect triggers_of_term tms in
+      add_assumption_with_triggers t1
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, t0::t1::[]) when
+      FStarC_Util.starts_with a.FStarC_SMTEncoding_Term.assumption_name
+        "equation_"
+      ->
+      let t01 = free_top_level_names t0 in add_assumption_with_triggers [t01]
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Iff, t0::t1::[]) ->
+      (match ((t0.FStarC_SMTEncoding_Term.tm),
+               (t1.FStarC_SMTEncoding_Term.tm))
+       with
+       | (FStarC_SMTEncoding_Term.App
+          (FStarC_SMTEncoding_Term.Var "Valid",
+           {
+             FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+               (FStarC_SMTEncoding_Term.Var "Prims.hasEq", _u::lhs::[]);
+             FStarC_SMTEncoding_Term.freevars = uu___;
+             FStarC_SMTEncoding_Term.rng = uu___1;_}::[]),
+          FStarC_SMTEncoding_Term.App
+          (FStarC_SMTEncoding_Term.Var "Valid",
+           {
+             FStarC_SMTEncoding_Term.tm = FStarC_SMTEncoding_Term.App
+               (FStarC_SMTEncoding_Term.Var "Prims.hasEq", _v::rhs::[]);
+             FStarC_SMTEncoding_Term.freevars = uu___2;
+             FStarC_SMTEncoding_Term.rng = uu___3;_}::[]))
+           ->
+           let triggers1 = free_top_level_names lhs in
+           add_assumption_with_triggers [triggers1]
+       | uu___ ->
+           let t01 = free_top_level_names t0 in
+           let t11 = free_top_level_names t1 in
+           add_assumption_with_triggers [t01; t11])
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Eq, t0::t1::[]) ->
+      let t01 = free_top_level_names t0 in
+      let t11 = free_top_level_names t1 in
+      add_assumption_with_triggers [t01; t11]
+  | FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.TrueOp, uu___) -> p
+  | uu___ ->
+      let uu___1 = no_ambients () in
+      if uu___1
+      then
+        {
+          defs_and_decls = (p.defs_and_decls);
+          defs_and_decls_map = (p.defs_and_decls_map);
+          macro_freenames = (p.macro_freenames);
+          trigger_to_assumption = (p.trigger_to_assumption);
+          assumption_to_triggers = (p.assumption_to_triggers);
+          assumption_name_map = (p.assumption_name_map);
+          ambients = (p.ambients);
+          extra_roots = (p.extra_roots);
+          pruned_ambients = ((a.FStarC_SMTEncoding_Term.assumption_name) ::
+            (p.pruned_ambients))
+        }
+      else
+        {
+          defs_and_decls = (p.defs_and_decls);
+          defs_and_decls_map = (p.defs_and_decls_map);
+          macro_freenames = (p.macro_freenames);
+          trigger_to_assumption = (p.trigger_to_assumption);
+          assumption_to_triggers = (p.assumption_to_triggers);
+          assumption_name_map = (p.assumption_name_map);
+          ambients = ((a.FStarC_SMTEncoding_Term.assumption_name) ::
+            (p.ambients));
+          extra_roots = (p.extra_roots);
+          pruned_ambients = (p.pruned_ambients)
+        }
 let add_assumption_to_triggers (a : FStarC_SMTEncoding_Term.assumption)
   (p : pruning_state) (trigs : triggers_set) : pruning_state=
   let p1 =

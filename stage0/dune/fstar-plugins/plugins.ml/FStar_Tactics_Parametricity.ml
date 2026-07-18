@@ -29,24 +29,17 @@ let __proj__Mkparam_state__item__recs (projectee : param_state) : fvmap=
   match projectee with | { bvmap = bvmap1; fresh; recs;_} -> recs
 let rec fold_right2 :
   'a 'b 'c .
-    ('a -> 'b -> 'c -> ('c, unit) FStar_Tactics_Effect.tac_repr) ->
+    ('a -> 'b -> 'c -> ('c, Obj.t) FStar_Tactics_Effect.tac_repr) ->
       'a Prims.list ->
-        'b Prims.list -> 'c -> ('c, unit) FStar_Tactics_Effect.tac_repr
+        'b Prims.list -> 'c -> ('c, Obj.t) FStar_Tactics_Effect.tac_repr
   =
-  fun uu___3 uu___2 uu___1 uu___ ->
-    (fun f l1 l2 c1 ->
-       match (l1, l2) with
-       | (h1::t1, h2::t2) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind
-                   (Obj.magic (fold_right2 f t1 t2 c1))
-                   (fun uu___ ->
-                      (fun uu___ -> Obj.magic (f h1 h2 uu___)) uu___)))
-       | ([], []) -> Obj.magic (Obj.repr (fun uu___ -> c1))
-       | uu___ ->
-           Obj.magic (Obj.repr (FStar_Tactics_V2_Derived.fail "fold_right2")))
-      uu___3 uu___2 uu___1 uu___
+  fun f l1 l2 c1 ->
+    match (l1, l2) with
+    | (h1::t1, h2::t2) ->
+        FStar_Tactics_Effect.tac_bind () () (fold_right2 f t1 t2 c1)
+          (fun uu___ -> f h1 h2 uu___)
+    | ([], []) -> (fun uu___ -> c1)
+    | uu___ -> FStar_Tactics_V2_Derived.fail "fold_right2"
 let rec zip3 :
   'a 'b 'c .
     'a Prims.list ->
@@ -56,26 +49,17 @@ let rec zip3 :
     match (l1, l2, l3) with
     | (h1::t1, h2::t2, h3::t3) -> (h1, h2, h3) :: (zip3 t1 t2 t3)
     | uu___ -> []
-let last (uu___ : 'a Prims.list) : ('a, unit) FStar_Tactics_Effect.tac_repr=
-  (fun xs ->
-     match FStar_List_Tot_Base.rev xs with
-     | h::uu___ ->
-         Obj.magic
-           (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> h)))
-     | [] ->
-         Obj.magic
-           (Obj.repr (FStar_Tactics_V2_Derived.fail "last: empty list")))
-    uu___
-let app_binders (uu___1 : FStar_Tactics_NamedView.term)
-  (uu___ : FStar_Tactics_NamedView.binder Prims.list) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
-  (fun t bs ->
-     Obj.magic
-       (fun uu___ ->
-          FStar_Reflection_V2_Derived.mk_e_app t
-            (FStar_List_Tot_Base.map
-               FStar_Tactics_V2_SyntaxCoercions.binder_to_term bs))) uu___1
-    uu___
+let last (xs : 'a Prims.list) : ('a, Obj.t) FStar_Tactics_Effect.tac_repr=
+  match FStar_List_Tot_Base.rev xs with
+  | h::uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> h)
+  | [] -> FStar_Tactics_V2_Derived.fail "last: empty list"
+let app_binders (t : FStar_Tactics_NamedView.term)
+  (bs : FStar_Tactics_NamedView.binder Prims.list) :
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
+  fun uu___ ->
+    FStar_Reflection_V2_Derived.mk_e_app t
+      (FStar_List_Tot_Base.map
+         FStar_Tactics_V2_SyntaxCoercions.binder_to_term bs)
 let push_var_to_state (v : FStar_Tactics_NamedView.namedv)
   (b0 : FStar_Tactics_NamedView.binder) (b1 : FStar_Tactics_NamedView.binder)
   (b2 : FStar_Tactics_NamedView.binder) (s : param_state) : param_state=
@@ -94,26 +78,16 @@ let __proj__NotFoundBV__item__uu___ (projectee : Prims.exn) :
   FStar_Tactics_NamedView.namedv=
   match projectee with | NotFoundBV uu___ -> uu___
 let lookup_rec_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
-  (FStarC_Reflection_Types.fv, unit) FStar_Tactics_Effect.tac_repr=
-  let rec aux uu___ =
-    (fun m ->
-       match m with
-       | [] ->
-           Obj.magic
-             (Obj.repr
-                (fun ps ->
-                   Obj.magic
-                     (FStarC_Tactics_V2_Builtins.raise_core NotARecFV ps)))
-       | (f1, k)::fs ->
-           Obj.magic
-             (Obj.repr
-                (if
-                   (FStar_Reflection_V2_Compare.compare_fv f f1) =
-                     FStar_Order.Eq
-                 then
-                   Obj.repr
-                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> k))
-                 else Obj.repr (aux fs)))) uu___ in
+  (FStarC_Reflection_Types.fv, Obj.t) FStar_Tactics_Effect.tac_repr=
+  let rec aux m =
+    match m with
+    | [] ->
+        (fun ps ->
+           Obj.magic (FStarC_Tactics_V2_Builtins.raise_core NotARecFV ps))
+    | (f1, k)::fs ->
+        if (FStar_Reflection_V2_Compare.compare_fv f f1) = FStar_Order.Eq
+        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> k)
+        else aux fs in
   aux s.recs
 let push_fv (f1 : FStarC_Reflection_Types.fv)
   (f2 : FStarC_Reflection_Types.fv) (s : param_state) : param_state=
@@ -121,31 +95,24 @@ let push_fv (f1 : FStarC_Reflection_Types.fv)
 let lookup (s : param_state) (v : FStar_Tactics_NamedView.namedv) :
   ((FStar_Tactics_NamedView.binder * FStar_Tactics_NamedView.binder *
      FStar_Tactics_NamedView.binder),
-    unit) FStar_Tactics_Effect.tac_repr=
-  let rec aux uu___ =
-    (fun bvm ->
-       match bvm with
-       | [] ->
+    Obj.t) FStar_Tactics_Effect.tac_repr=
+  let rec aux bvm =
+    match bvm with
+    | [] ->
+        (fun ps ->
            Obj.magic
-             (Obj.repr
-                (fun ps ->
-                   Obj.magic
-                     (FStarC_Tactics_V2_Builtins.raise_core (NotFoundBV v) ps)))
-       | (v', r)::tl ->
-           Obj.magic
-             (Obj.repr
-                (if
-                   (FStar_Tactics_NamedView.inspect_namedv v).FStarC_Reflection_V2_Data.uniq
-                     =
-                     (FStar_Tactics_NamedView.inspect_namedv v').FStarC_Reflection_V2_Data.uniq
-                 then
-                   Obj.repr
-                     (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> r))
-                 else Obj.repr (aux tl)))) uu___ in
+             (FStarC_Tactics_V2_Builtins.raise_core (NotFoundBV v) ps))
+    | (v', r)::tl ->
+        if
+          (FStar_Tactics_NamedView.inspect_namedv v).FStarC_Reflection_V2_Data.uniq
+            =
+            (FStar_Tactics_NamedView.inspect_namedv v').FStarC_Reflection_V2_Data.uniq
+        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> r)
+        else aux tl in
   aux s.bvmap
 let replace_var (s : param_state) (b : Prims.bool)
   (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_NamedView.inspect t ps in
     match x with
@@ -163,38 +130,29 @@ let replace_var (s : param_state) (b : Prims.bool)
                              (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv
                                 (if b then y else x2)))))
           (fun uu___ ->
-             (fun uu___ ->
-                match uu___ with
-                | NotFoundBV uu___1 ->
-                    Obj.magic
-                      (Obj.repr
-                         (FStar_Tactics_Effect.lift_div_tac (fun uu___2 -> t)))
-                | e ->
-                    Obj.magic
-                      (Obj.repr
-                         (FStar_Tactics_Effect.tac_bind
-                            (Obj.magic
-                               (FStarC_Tactics_V2_Builtins.raise_core e))
-                            (fun uu___1 uu___2 -> Obj.magic ())))) uu___) ps
+             match uu___ with
+             | NotFoundBV uu___1 ->
+                 FStar_Tactics_Effect.lift_div_tac () (fun uu___2 -> t)
+             | e ->
+                 FStar_Tactics_Effect.tac_bind () ()
+                   (FStarC_Tactics_V2_Builtins.raise_core e)
+                   (fun uu___1 uu___2 -> Obj.magic ())) ps
     | uu___ -> t
 let replace_by (s : param_state) (b : Prims.bool)
   (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = FStar_Tactics_Visit.visit_tm (replace_var s b) t ps in x
 let tapp (q : FStarC_Reflection_V2_Data.aqualv)
   (t1 : FStar_Tactics_NamedView.term) (t2 : FStarC_Reflection_Types.term) :
   FStar_Tactics_NamedView.term=
   FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_App (t1, (t2, q)))
-let tabs (uu___1 : FStar_Tactics_NamedView.binder)
-  (uu___ : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
-  (fun b t ->
-     Obj.magic
-       (fun uu___ ->
-          FStar_Tactics_NamedView.pack
-            (FStar_Tactics_NamedView.Tv_Abs (b, t)))) uu___1 uu___
+let tabs (b : FStar_Tactics_NamedView.binder)
+  (t : FStar_Tactics_NamedView.term) :
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
+  fun uu___ ->
+    FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Abs (b, t))
 let rec param' (s : param_state) (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       let x1 = FStar_Tactics_NamedView.inspect t ps in
@@ -296,13 +254,9 @@ let rec param' (s : param_state) (t : FStar_Tactics_NamedView.term) :
       | FStar_Tactics_NamedView.Tv_Abs (b, t1) ->
           Obj.magic
             (Obj.repr
-               (let x2 uu___1 uu___ =
-                  (fun b1 t2 ->
-                     Obj.magic
-                       (fun uu___ ->
-                          FStar_Tactics_NamedView.pack
-                            (FStar_Tactics_NamedView.Tv_Abs (b1, t2))))
-                    uu___1 uu___ in
+               (let x2 b1 t2 uu___ =
+                  FStar_Tactics_NamedView.pack
+                    (FStar_Tactics_NamedView.Tv_Abs (b1, t2)) in
                 let x3 = push_binder b s ps in
                 match x3 with
                 | (s', (bx0, bx1, bxR)) ->
@@ -352,7 +306,7 @@ let rec param' (s : param_state) (t : FStar_Tactics_NamedView.term) :
                 FStarC_Tactics_V2_Builtins.raise_core x2 ps)) in
     x
 and param_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
-  (FStarC_Reflection_Types.fv, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.fv, Obj.t) FStar_Tactics_Effect.tac_repr=
   FStar_Tactics_V2_Derived.try_with
     (fun uu___ -> match () with | () -> lookup_rec_fv s f)
     (fun uu___ ps ->
@@ -417,15 +371,12 @@ and param_fv (s : param_state) (f : FStarC_Reflection_Types.fv) :
 and param_pat (s : param_state) (p : FStar_Tactics_NamedView.pattern) :
   ((param_state * (FStar_Tactics_NamedView.pattern *
      FStar_Tactics_NamedView.pattern * FStar_Tactics_NamedView.pattern)),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
-    let x uu___ =
-      (fun p1 ->
-         Obj.magic
-           (fun uu___ ->
-              match p1 with
-              | FStar_Tactics_NamedView.Pat_Dot_Term uu___1 -> true
-              | uu___1 -> false)) uu___ in
+    let x p1 uu___ =
+      match p1 with
+      | FStar_Tactics_NamedView.Pat_Dot_Term uu___1 -> true
+      | uu___1 -> false in
     match p with
     | FStar_Tactics_NamedView.Pat_Cons
         { FStar_Tactics_NamedView.head = fv;
@@ -438,27 +389,20 @@ and param_pat (s : param_state) (p : FStar_Tactics_NamedView.pattern) :
             (fun uu___ uu___1 ->
                match (uu___, uu___1) with
                | ((s1, (pats0, pats1, patsr)), (p1, i)) ->
-                   FStar_Tactics_Effect.tac_bind (Obj.magic (x p1))
+                   FStar_Tactics_Effect.tac_bind () () (x p1)
                      (fun uu___2 ->
-                        (fun uu___2 ->
-                           if uu___2
-                           then
-                             Obj.magic
-                               (Obj.repr
-                                  (fun uu___3 -> (s1, (pats0, pats1, patsr))))
-                           else
-                             Obj.magic
-                               (Obj.repr
-                                  (FStar_Tactics_Effect.tac_bind
-                                     (Obj.magic (param_pat s1 p1))
-                                     (fun uu___4 uu___5 ->
-                                        match uu___4 with
-                                        | (s', (p0, p11, pr)) ->
-                                            (s',
-                                              (((p0, i) :: pats0), ((p11, i)
-                                                :: pats1), ((pr, false) ::
-                                                (p11, i) :: (p0, i) ::
-                                                patsr))))))) uu___2))
+                        if uu___2
+                        then fun uu___3 -> (s1, (pats0, pats1, patsr))
+                        else
+                          FStar_Tactics_Effect.tac_bind () ()
+                            (param_pat s1 p1)
+                            (fun uu___4 uu___5 ->
+                               match uu___4 with
+                               | (s', (p0, p11, pr)) ->
+                                   (s',
+                                     (((p0, i) :: pats0), ((p11, i) ::
+                                       pats1), ((pr, false) :: (p11, i) ::
+                                       (p0, i) :: patsr))))))
             (s, ([], [], [])) pats ps in
         (match x2 with
          | (s', (pats0, pats1, patsr)) ->
@@ -539,7 +483,7 @@ and param_pat (s : param_state) (p : FStar_Tactics_NamedView.pattern) :
                          FStarC_Reflection_V2_Data.Tv_Unknown))
                })))
 and param_br (s : param_state) (br : FStar_Tactics_NamedView.branch) :
-  (FStar_Tactics_NamedView.branch, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.branch, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = br in
     match x with
@@ -551,13 +495,12 @@ and param_br (s : param_state) (br : FStar_Tactics_NamedView.branch) :
 and push_binder (b : FStar_Tactics_NamedView.binder) (s : param_state) :
   ((param_state * (FStar_Tactics_NamedView.binder *
      FStar_Tactics_NamedView.binder * FStar_Tactics_NamedView.binder)),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = b.FStar_Tactics_NamedView.qual in
     let x1 = b.FStar_Tactics_NamedView.sort in
     let x2 = FStarC_Tactics_Unseal.unseal b.FStar_Tactics_NamedView.ppname ps in
-    let x3 uu___1 uu___ =
-      (fun s1 t -> Obj.magic (fun uu___ -> Prims.strcat s1 t)) uu___1 uu___ in
+    let x3 s1 t uu___ = Prims.strcat s1 t in
     let x4 =
       let x5 = x3 x2 "0" ps in
       let x6 = replace_by s false x1 ps in
@@ -630,7 +573,7 @@ and push_binder (b : FStar_Tactics_NamedView.binder) (s : param_state) :
 let init_param_state : param_state=
   { bvmap = []; fresh = Prims.int_zero; recs = [] }
 let param (t : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = param' init_param_state t ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -645,16 +588,13 @@ let _ =
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term
                Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_term psc ncb
                us args)
-let fv_to_tm (uu___ : FStarC_Reflection_Types.fv) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
-  (fun f ->
-     Obj.magic
-       (fun uu___ ->
-          FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar f)))
-    uu___
+let fv_to_tm (f : FStarC_Reflection_Types.fv) :
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
+  fun uu___ ->
+    FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar f)
 let param_ctor (nm_ty : FStarC_Reflection_Types.name) (s : param_state)
   (c : FStarC_Reflection_V2_Data.ctor) :
-  (FStarC_Reflection_V2_Data.ctor, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_V2_Data.ctor, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = c in
     match x with
@@ -676,8 +616,8 @@ let param_ctor (nm_ty : FStarC_Reflection_Types.name) (s : param_state)
                  (fun uu___ b ->
                     match uu___ with
                     | (s1, bvs) ->
-                        FStar_Tactics_Effect.tac_bind
-                          (Obj.magic (push_binder b s1))
+                        FStar_Tactics_Effect.tac_bind () ()
+                          (push_binder b s1)
                           (fun uu___1 uu___2 ->
                              match uu___1 with
                              | (s2, (bx0, bx1, bxr)) ->
@@ -703,7 +643,7 @@ let param_ctor (nm_ty : FStarC_Reflection_Types.name) (s : param_state)
                   (x1, x8)))
 let param_inductive (se : FStarC_Reflection_Types.sigelt)
   (fv0 : FStarC_Reflection_Types.fv) (fv1 : FStarC_Reflection_Types.fv) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_NamedView.inspect_sigelt se ps in
     match x with
@@ -723,8 +663,7 @@ let param_inductive (se : FStarC_Reflection_Types.sigelt)
             (fun uu___ b ->
                match uu___ with
                | (s, bvs) ->
-                   FStar_Tactics_Effect.tac_bind
-                     (Obj.magic (push_binder b s))
+                   FStar_Tactics_Effect.tac_bind () () (push_binder b s)
                      (fun uu___1 uu___2 ->
                         match uu___1 with
                         | (s1, (bx0, bx1, bxr)) ->
@@ -755,7 +694,7 @@ let param_inductive (se : FStarC_Reflection_Types.sigelt)
     | uu___ -> FStar_Tactics_V2_Derived.fail "" ps
 let param_letbinding (se : FStarC_Reflection_Types.sigelt)
   (fv0 : FStarC_Reflection_Types.fv) (fv1 : FStarC_Reflection_Types.fv) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_NamedView.inspect_sigelt se ps in
     match x with
@@ -792,7 +731,7 @@ let param_letbinding (se : FStarC_Reflection_Types.sigelt)
         let x4 = FStar_Tactics_NamedView.pack_sigelt x3 ps in [x4]
     | uu___ -> FStar_Tactics_V2_Derived.fail "no mutual recursion" ps
 let paramd (nm : Prims.string) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x =
       let x1 =
@@ -843,7 +782,7 @@ let _ =
                   Fstarcompiler.FStarC_Reflection_V2_Embeddings.e_sigelt) psc
                ncb us args)
 let paramds (nms : Prims.string Prims.list) :
-  (FStarC_Reflection_Types.decls, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.decls, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStar_Tactics_Util.map paramd nms ps in
     FStar_List_Tot_Base.flatten x

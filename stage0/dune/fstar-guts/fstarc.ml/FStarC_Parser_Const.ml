@@ -269,6 +269,8 @@ let steps_unfoldnamespace : FStarC_Ident.lident=
 let steps_unascribe : FStarC_Ident.lident= mk_norm_step_lid "unascribe"
 let steps_nbe : FStarC_Ident.lident= mk_norm_step_lid "nbe"
 let steps_unmeta : FStarC_Ident.lident= mk_norm_step_lid "unmeta"
+let steps_reduce_projections : FStarC_Ident.lident=
+  mk_norm_step_lid "reduce_projections"
 let deprecated_attr : FStarC_Ident.lident= pconst "deprecated"
 let warn_on_use_attr : FStarC_Ident.lident= pconst "warn_on_use"
 let inline_let_attr : FStarC_Ident.lident= attr "inline_let"

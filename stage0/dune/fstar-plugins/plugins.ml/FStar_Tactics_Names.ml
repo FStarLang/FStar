@@ -5,7 +5,7 @@ let uu___is_Appears (projectee : Prims.exn) : Prims.bool=
   match projectee with | Appears -> true | uu___ -> false
 let name_appears_in (nm : FStarC_Reflection_Types.name)
   (t : FStar_Tactics_NamedView.term) :
-  (Prims.bool, unit) FStar_Tactics_Effect.tac_repr=
+  (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x t1 ps1 =
       let x1 = FStar_Tactics_NamedView.inspect t1 ps1 in

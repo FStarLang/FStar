@@ -1,20 +1,5 @@
 open Fstarcompiler
 open Prims
-type ('a, 'pred, 'l) allP0 = Obj.t
-type ('a, 'b, 'top, 'pred, 'l) allP = Obj.t
-type ('a, 'pred, 'o) optP0 = Obj.t
-type ('a, 'b, 'top, 'pred, 'o) optP = Obj.t
-type 'u faithful_univ = Obj.t
-type 'c faithful_const = unit
-type 't faithful = Obj.t
-type 'a faithful_arg = Obj.t
-type 'q faithful_qual = Obj.t
-type 'b faithful_binder = Obj.t
-type 'b faithful_branch = Obj.t
-type 'p faithful_pattern = Obj.t
-type 'pb faithful_pattern_arg = Obj.t
-type 'ats faithful_attrs = Obj.t
-type 'c faithful_comp = Obj.t
 type faithful_term = FStarC_Reflection_Types.term
 type faithful_universe = FStarC_Reflection_Types.universe
 type _cmpres =
@@ -27,7 +12,6 @@ let uu___is_Neq (projectee : _cmpres) : Prims.bool=
   match projectee with | Neq -> true | uu___ -> false
 let uu___is_Unknown (projectee : _cmpres) : Prims.bool=
   match projectee with | Unknown -> true | uu___ -> false
-type ('t, 'c, 'x, 'y) valid = Obj.t
 type ('t, 'x, 'y) cmpres = _cmpres
 type 't comparator_for = 't -> 't -> ('t, Obj.t, Obj.t) cmpres
 let op_Amp_Amp_Amp (x : 's) (y : 's) (w : 't) (z : 't)
@@ -413,8 +397,6 @@ and pat_arg_cmp :
     match (uu___, uu___1) with
     | ((p1, b1), (p2, b2)) ->
         op_Amp_Amp_Amp p1 p2 b1 b2 (pat_cmp p1 p2) (eq_cmp b1 b2)
-type 'r defined = unit
-type ('uuuuu, 'uuuuu1, 'f, 'l1, 'l2) def2 = unit
 let term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) : Prims.bool=
   uu___is_Eq (term_cmp t1 t2)

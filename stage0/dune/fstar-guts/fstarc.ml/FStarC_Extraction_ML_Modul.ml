@@ -1905,7 +1905,9 @@ let rec extract_sig (g : env_t) (se : FStarC_Syntax_Syntax.sigelt) :
   (env_t * FStarC_Extraction_ML_Syntax.mlmodule1 Prims.list)=
   let uu___ =
     let uu___1 = FStarC_Syntax_Print.sigelt_to_string_short se in
-    FStarC_Format.fmt1 "While extracting top-level definition `%s`" uu___1 in
+    FStarC_Format.fmt1
+      "While extracting top-level definition \226\128\152%s\226\128\153"
+      uu___1 in
   FStarC_Errors.with_ctx uu___
     (fun uu___1 ->
        FStarC_Extraction_ML_UEnv.debug g
@@ -2276,7 +2278,7 @@ and extract_sig_let (g : FStarC_Extraction_ML_UEnv.uenv)
                             FStarC_Class_Show.show
                               FStarC_Syntax_Print.showable_term steps1 in
                           FStarC_Format.fmt1
-                            "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
+                            "Ill-formed application of \226\128\152normalize_for_extraction\226\128\153: normalization steps \226\128\152%s\226\128\153 could not be interpreted"
                             uu___10 in
                         FStarC_Errors.log_issue
                           FStarC_Syntax_Syntax.has_range_sigelt se1

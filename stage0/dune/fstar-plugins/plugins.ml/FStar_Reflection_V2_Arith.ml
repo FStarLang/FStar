@@ -168,11 +168,9 @@ type st = (Prims.nat * FStarC_Reflection_Types.term Prims.list)
 type 'a tm =
   st ->
     ((Prims.string, ('a * st)) Fstarcompiler.FStar_Pervasives.either, 
-      unit) FStar_Tactics_Effect.tac_repr
-let return (uu___ : 'a) : 'a tm=
-  (fun x i ->
-     Obj.magic (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inr (x, i)))
-    uu___
+      Obj.t) FStar_Tactics_Effect.tac_repr
+let return (x : 'a) : 'a tm=
+  fun i uu___ -> Fstarcompiler.FStar_Pervasives.Inr (x, i)
 let op_let_Bang (m : 'a tm) (f : 'a -> 'b tm) : 'b tm=
   fun i ps ->
     let x = m i ps in
@@ -181,7 +179,7 @@ let op_let_Bang (m : 'a tm) (f : 'a -> 'b tm) : 'b tm=
     | s ->
         Fstarcompiler.FStar_Pervasives.Inl
           (FStar_Pervasives.__proj__Inl__item__v s)
-let lift (f : 'a -> ('b, unit) FStar_Tactics_Effect.tac_repr) (x : 'a) :
+let lift (f : 'a -> ('b, Obj.t) FStar_Tactics_Effect.tac_repr) (x : 'a) :
   'b tm=
   fun st1 ps ->
     let x1 = let x2 = f x ps in (x2, st1) in
@@ -198,56 +196,37 @@ let liftM3 (f : 'a -> 'b -> 'c -> 'd) (x : 'a tm) (y : 'b tm) (z : 'c tm) :
          (fun yy -> op_let_Bang z (fun zz -> return (f xx yy zz))))
 let rec find_idx :
   'a .
-    ('a -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr) ->
+    ('a -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr) ->
       'a Prims.list ->
-        ((Prims.nat * 'a) FStar_Pervasives_Native.option, unit)
+        ((Prims.nat * 'a) FStar_Pervasives_Native.option, Obj.t)
           FStar_Tactics_Effect.tac_repr
   =
-  fun uu___1 uu___ ->
-    (fun f l ->
-       match l with
-       | [] ->
-           Obj.magic (Obj.repr (fun uu___ -> FStar_Pervasives_Native.None))
-       | x::xs ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind (Obj.magic (f x))
-                   (fun uu___ ->
-                      (fun uu___ ->
-                         if uu___
-                         then
-                           Obj.magic
-                             (Obj.repr
-                                (fun uu___1 ->
-                                   FStar_Pervasives_Native.Some
-                                     (Prims.int_zero, x)))
-                         else
-                           Obj.magic
-                             (Obj.repr
-                                (FStar_Tactics_Effect.tac_bind
-                                   (Obj.magic (find_idx f xs))
-                                   (fun uu___2 uu___3 ->
-                                      match uu___2 with
-                                      | FStar_Pervasives_Native.None ->
-                                          FStar_Pervasives_Native.None
-                                      | FStar_Pervasives_Native.Some 
-                                          (i, x1) ->
-                                          FStar_Pervasives_Native.Some
-                                            ((i + Prims.int_one), x1)))))
-                        uu___)))) uu___1 uu___
+  fun f l ->
+    match l with
+    | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
+    | x::xs ->
+        FStar_Tactics_Effect.tac_bind () () (f x)
+          (fun uu___ ->
+             if uu___
+             then
+               fun uu___1 -> FStar_Pervasives_Native.Some (Prims.int_zero, x)
+             else
+               FStar_Tactics_Effect.tac_bind () () (find_idx f xs)
+                 (fun uu___2 uu___3 ->
+                    match uu___2 with
+                    | FStar_Pervasives_Native.None ->
+                        FStar_Pervasives_Native.None
+                    | FStar_Pervasives_Native.Some (i, x1) ->
+                        FStar_Pervasives_Native.Some
+                          ((i + Prims.int_one), x1)))
 let atom (t : FStarC_Reflection_Types.term) : expr tm=
   fun uu___ ->
     match uu___ with
     | (n, atoms) ->
-        FStar_Tactics_Effect.tac_bind
-          (Obj.magic
-             (find_idx
-                (fun uu___1 ->
-                   (fun a ->
-                      Obj.magic
-                        (fun uu___1 ->
-                           FStar_Reflection_TermEq_Simple.term_eq t a))
-                     uu___1) atoms))
+        FStar_Tactics_Effect.tac_bind () ()
+          (find_idx
+             (fun a uu___1 -> FStar_Reflection_TermEq_Simple.term_eq t a)
+             atoms)
           (fun uu___1 uu___2 ->
              match uu___1 with
              | FStar_Pervasives_Native.None ->
@@ -256,9 +235,8 @@ let atom (t : FStarC_Reflection_Types.term) : expr tm=
              | FStar_Pervasives_Native.Some (i, t1) ->
                  Fstarcompiler.FStar_Pervasives.Inr
                    ((Atom (((n - Prims.int_one) - i), t1)), (n, atoms)))
-let fail (uu___ : Prims.string) : 'a tm=
-  (fun s i -> Obj.magic (fun uu___ -> Fstarcompiler.FStar_Pervasives.Inl s))
-    uu___
+let fail (s : Prims.string) : 'a tm=
+  fun i uu___ -> Fstarcompiler.FStar_Pervasives.Inl s
 let rec as_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
   let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
   match uu___ with
@@ -377,7 +355,7 @@ let is_arith_expr (t : FStarC_Reflection_Types.term) : expr tm=
        | uu___ -> return a)
 let rec is_arith_prop (t : FStarC_Reflection_Types.term) (i : st) :
   ((Prims.string, (prop * st)) Fstarcompiler.FStar_Pervasives.either, 
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   op_let_Bang
     (lift (fun t1 -> FStar_Reflection_V2_Formula.term_as_formula t1) t)
     (fun f ->
@@ -405,7 +383,7 @@ let rec is_arith_prop (t : FStarC_Reflection_Types.term) (i : st) :
              (fun s -> fail (Prims.strcat "connector (" (Prims.strcat s ")"))))
     i
 let run_tm (m : 'a tm) :
-  ((Prims.string, 'a) Fstarcompiler.FStar_Pervasives.either, unit)
+  ((Prims.string, 'a) Fstarcompiler.FStar_Pervasives.either, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = m (Prims.int_zero, []) ps in

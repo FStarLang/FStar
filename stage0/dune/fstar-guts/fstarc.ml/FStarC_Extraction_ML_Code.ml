@@ -248,22 +248,20 @@ let maybe_paren (uu___ : ((Prims.int * fixity) * assoc))
             let uu___2 = _outer in
             (match uu___2 with
              | (po, fo) ->
-                 if pi > po
-                 then true
-                 else
-                   (match (fi, side1) with
-                    | (Postfix, Left) -> true
-                    | (Prefix, Right) -> true
-                    | (Infix (Left), Left) ->
-                        (pi = po) && (fo = (Infix Left))
-                    | (Infix (Right), Right) ->
-                        (pi = po) && (fo = (Infix Right))
-                    | (Infix (Left), ILeft) ->
-                        (pi = po) && (fo = (Infix Left))
-                    | (Infix (Right), IRight) ->
-                        (pi = po) && (fo = (Infix Right))
-                    | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
-                    | (uu___3, uu___4) -> false)) in
+                 (pi > po) ||
+                   ((match (fi, side1) with
+                     | (Postfix, Left) -> true
+                     | (Prefix, Right) -> true
+                     | (Infix (Left), Left) ->
+                         (pi = po) && (fo = (Infix Left))
+                     | (Infix (Right), Right) ->
+                         (pi = po) && (fo = (Infix Right))
+                     | (Infix (Left), ILeft) ->
+                         (pi = po) && (fo = (Infix Left))
+                     | (Infix (Right), IRight) ->
+                         (pi = po) && (fo = (Infix Right))
+                     | (uu___3, NonAssoc) -> (pi = po) && (fi = fo)
+                     | (uu___3, uu___4) -> false))) in
       if noparens inner outer side then doc1 else parens doc1
 let escape_byte_hex (x : FStarC_BaseTypes.byte) : Prims.string=
   Prims.strcat "\\x" (FStarC_Util.hex_string_of_byte x)

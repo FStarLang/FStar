@@ -1,73 +1,46 @@
 open Fstarcompiler
 open Prims
 type 't comparator_for =
-  't -> 't -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr
-let opt_eq (uu___ : 'a comparator_for) :
+  't -> 't -> (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr
+let opt_eq (cmp : 'a comparator_for) :
   'a FStar_Pervasives_Native.option comparator_for=
-  (fun cmp o1 o2 ->
-     match (o1, o2) with
-     | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-         Obj.magic (Obj.repr (fun uu___ -> true))
-     | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
-         Obj.magic (Obj.repr (cmp x y))
-     | uu___ ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false))))
-    uu___
-let either_eq (uu___1 : 'a comparator_for) (uu___ : 'b comparator_for) :
+  fun o1 o2 ->
+    match (o1, o2) with
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+        (fun uu___ -> true)
+    | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
+        cmp x y
+    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
+let either_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
   ('a, 'b) Fstarcompiler.FStar_Pervasives.either comparator_for=
-  (fun cmpa cmpb e1 e2 ->
-     match (e1, e2) with
-     | (Fstarcompiler.FStar_Pervasives.Inl x,
-        Fstarcompiler.FStar_Pervasives.Inl y) ->
-         Obj.magic (Obj.repr (cmpa x y))
-     | (Fstarcompiler.FStar_Pervasives.Inr x,
-        Fstarcompiler.FStar_Pervasives.Inr y) ->
-         Obj.magic (Obj.repr (cmpb x y))
-     | uu___ ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false))))
-    uu___1 uu___
+  fun e1 e2 ->
+    match (e1, e2) with
+    | (Fstarcompiler.FStar_Pervasives.Inl x,
+       Fstarcompiler.FStar_Pervasives.Inl y) -> cmpa x y
+    | (Fstarcompiler.FStar_Pervasives.Inr x,
+       Fstarcompiler.FStar_Pervasives.Inr y) -> cmpb x y
+    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
 let pair_eq (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
   ('a * 'b) comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((a1, b1), (a2, b2)) ->
-        FStar_Tactics_Effect.tac_bind (Obj.magic (cmpa a1 a2))
+        FStar_Tactics_Effect.tac_bind () () (cmpa a1 a2)
           (fun uu___2 ->
-             (fun uu___2 ->
-                if uu___2
-                then Obj.magic (Obj.repr (cmpb b1 b2))
-                else
-                  Obj.magic
-                    (Obj.repr
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___4 -> false)))) uu___2)
+             if uu___2
+             then cmpb b1 b2
+             else FStar_Tactics_Effect.lift_div_tac () (fun uu___4 -> false))
 let rec list_eq : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
-  fun uu___ ->
-    (fun cmp l1 l2 ->
-       match (l1, l2) with
-       | ([], []) -> Obj.magic (Obj.repr (fun uu___ -> true))
-       | (x::xs, y::ys) ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.tac_bind (Obj.magic (cmp x y))
-                   (fun uu___ ->
-                      (fun uu___ ->
-                         if uu___
-                         then Obj.magic (Obj.repr (list_eq cmp xs ys))
-                         else
-                           Obj.magic
-                             (Obj.repr
-                                (FStar_Tactics_Effect.lift_div_tac
-                                   (fun uu___2 -> false)))) uu___)))
-       | uu___ ->
-           Obj.magic
-             (Obj.repr
-                (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false))))
-      uu___
+  fun cmp l1 l2 ->
+    match (l1, l2) with
+    | ([], []) -> (fun uu___ -> true)
+    | (x::xs, y::ys) ->
+        FStar_Tactics_Effect.tac_bind () () (cmp x y)
+          (fun uu___ ->
+             if uu___
+             then list_eq cmp xs ys
+             else FStar_Tactics_Effect.lift_div_tac () (fun uu___2 -> false))
+    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
 let rec univ_eq : FStarC_Reflection_Types.universe comparator_for=
   fun u1 u2 ps ->
     let x = FStarC_Tactics_V2_Builtins.compress_univ u1 ps in
@@ -96,31 +69,29 @@ let rec univ_eq : FStarC_Reflection_Types.universe comparator_for=
         false
     | uu___ -> false
 let const_eq : FStarC_Reflection_V2_Data.vconst comparator_for=
-  fun c1 c2 ->
-    Obj.magic
-      (fun uu___ ->
-         match (c1, c2) with
-         | (FStarC_Reflection_V2_Data.C_Unit,
-            FStarC_Reflection_V2_Data.C_Unit) -> true
-         | (FStarC_Reflection_V2_Data.C_Int i1,
-            FStarC_Reflection_V2_Data.C_Int i2) -> i1 = i2
-         | (FStarC_Reflection_V2_Data.C_True,
-            FStarC_Reflection_V2_Data.C_True) -> true
-         | (FStarC_Reflection_V2_Data.C_False,
-            FStarC_Reflection_V2_Data.C_False) -> true
-         | (FStarC_Reflection_V2_Data.C_String s1,
-            FStarC_Reflection_V2_Data.C_String s2) -> s1 = s2
-         | (FStarC_Reflection_V2_Data.C_Range r1,
-            FStarC_Reflection_V2_Data.C_Range r2) -> true
-         | (FStarC_Reflection_V2_Data.C_Reify,
-            FStarC_Reflection_V2_Data.C_Reify) -> true
-         | (FStarC_Reflection_V2_Data.C_Reflect n1,
-            FStarC_Reflection_V2_Data.C_Reflect n2) -> n1 = n2
-         | (FStarC_Reflection_V2_Data.C_Real s1,
-            FStarC_Reflection_V2_Data.C_Real s2) -> s1 = s2
-         | (FStarC_Reflection_V2_Data.C_Char s1,
-            FStarC_Reflection_V2_Data.C_Char s2) -> s1 = s2
-         | uu___1 -> false)
+  fun c1 c2 uu___ ->
+    match (c1, c2) with
+    | (FStarC_Reflection_V2_Data.C_Unit, FStarC_Reflection_V2_Data.C_Unit) ->
+        true
+    | (FStarC_Reflection_V2_Data.C_Int i1, FStarC_Reflection_V2_Data.C_Int
+       i2) -> i1 = i2
+    | (FStarC_Reflection_V2_Data.C_True, FStarC_Reflection_V2_Data.C_True) ->
+        true
+    | (FStarC_Reflection_V2_Data.C_False, FStarC_Reflection_V2_Data.C_False)
+        -> true
+    | (FStarC_Reflection_V2_Data.C_String s1,
+       FStarC_Reflection_V2_Data.C_String s2) -> s1 = s2
+    | (FStarC_Reflection_V2_Data.C_Range r1,
+       FStarC_Reflection_V2_Data.C_Range r2) -> true
+    | (FStarC_Reflection_V2_Data.C_Reify, FStarC_Reflection_V2_Data.C_Reify)
+        -> true
+    | (FStarC_Reflection_V2_Data.C_Reflect n1,
+       FStarC_Reflection_V2_Data.C_Reflect n2) -> n1 = n2
+    | (FStarC_Reflection_V2_Data.C_Real s1, FStarC_Reflection_V2_Data.C_Real
+       s2) -> s1 = s2
+    | (FStarC_Reflection_V2_Data.C_Char s1, FStarC_Reflection_V2_Data.C_Char
+       s2) -> s1 = s2
+    | uu___1 -> false
 let rec term_eq : FStarC_Reflection_Types.term comparator_for=
   fun t1 t2 ps ->
     let x = FStarC_Tactics_V2_Builtins.compress t1 ps in
@@ -211,33 +182,23 @@ and arg_eq : FStarC_Reflection_V2_Data.argv comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((a1, q1), (a2, q2)) ->
-        FStar_Tactics_Effect.tac_bind (Obj.magic (term_eq a1 a2))
+        FStar_Tactics_Effect.tac_bind () () (term_eq a1 a2)
           (fun uu___2 ->
-             (fun uu___2 ->
-                if uu___2
-                then Obj.magic (Obj.repr (aqual_eq q1 q2))
-                else
-                  Obj.magic
-                    (Obj.repr
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___4 -> false)))) uu___2)
+             if uu___2
+             then aqual_eq q1 q2
+             else FStar_Tactics_Effect.lift_div_tac () (fun uu___4 -> false))
 and aqual_eq : FStarC_Reflection_V2_Data.aqualv comparator_for=
   fun a1 a2 ->
     match (a1, a2) with
     | (FStarC_Reflection_V2_Data.Q_Implicit,
-       FStarC_Reflection_V2_Data.Q_Implicit) ->
-        Obj.magic (Obj.repr (fun uu___ -> true))
+       FStarC_Reflection_V2_Data.Q_Implicit) -> (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Q_Explicit,
-       FStarC_Reflection_V2_Data.Q_Explicit) ->
-        Obj.magic (Obj.repr (fun uu___ -> true))
+       FStarC_Reflection_V2_Data.Q_Explicit) -> (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Q_Equality,
-       FStarC_Reflection_V2_Data.Q_Equality) ->
-        Obj.magic (Obj.repr (fun uu___ -> true))
+       FStarC_Reflection_V2_Data.Q_Equality) -> (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Q_Meta m1, FStarC_Reflection_V2_Data.Q_Meta
-       m2) -> Obj.magic (Obj.repr (term_eq m1 m2))
-    | uu___ ->
-        Obj.magic
-          (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false)))
+       m2) -> term_eq m1 m2
+    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
 and match_returns_ascription_eq :
   FStarC_Syntax_Syntax.match_returns_ascription comparator_for=
   fun asc1 asc2 ps ->
@@ -325,42 +286,32 @@ and pat_eq : FStarC_Reflection_V2_Data.pattern comparator_for=
     match (p1, p2) with
     | (FStarC_Reflection_V2_Data.Pat_Var (v1, sort1),
        FStarC_Reflection_V2_Data.Pat_Var (v2, sort2)) ->
-        Obj.magic
-          (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> true)))
+        FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> true)
     | (FStarC_Reflection_V2_Data.Pat_Constant x1,
-       FStarC_Reflection_V2_Data.Pat_Constant x2) ->
-        Obj.magic (Obj.repr (const_eq x1 x2))
+       FStarC_Reflection_V2_Data.Pat_Constant x2) -> const_eq x1 x2
     | (FStarC_Reflection_V2_Data.Pat_Dot_Term x1,
-       FStarC_Reflection_V2_Data.Pat_Dot_Term x2) ->
-        Obj.magic (Obj.repr (opt_eq term_eq x1 x2))
+       FStarC_Reflection_V2_Data.Pat_Dot_Term x2) -> opt_eq term_eq x1 x2
     | (FStarC_Reflection_V2_Data.Pat_Cons (head1, us1, subpats1),
        FStarC_Reflection_V2_Data.Pat_Cons (head2, us2, subpats2)) ->
-        Obj.magic
-          (Obj.repr
-             (if
-                Prims.op_Negation
-                  ((FStarC_Reflection_V2_Builtins.inspect_fv head1) =
-                     (FStarC_Reflection_V2_Builtins.inspect_fv head2))
-              then
-                Obj.repr
-                  (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> false))
-              else Obj.repr (list_eq pat_arg_eq subpats1 subpats2)))
-    | uu___ ->
-        Obj.magic
-          (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> false)))
+        if
+          Prims.op_Negation
+            ((FStarC_Reflection_V2_Builtins.inspect_fv head1) =
+               (FStarC_Reflection_V2_Builtins.inspect_fv head2))
+        then FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> false)
+        else list_eq pat_arg_eq subpats1 subpats2
+    | uu___ -> FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> false)
 and pat_arg_eq :
   (FStarC_Reflection_V2_Data.pattern * Prims.bool) comparator_for=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((p1, b1), (p2, b2)) ->
-        FStar_Tactics_Effect.tac_bind
-          (Obj.magic
-             (FStar_Tactics_Effect.tac_bind (Obj.magic (pat_eq p1 p2))
-                (fun uu___2 uu___3 -> Prims.op_Negation uu___2)))
+        FStar_Tactics_Effect.tac_bind () ()
+          (FStar_Tactics_Effect.tac_bind () () (pat_eq p1 p2)
+             (fun uu___2 uu___3 -> Prims.op_Negation uu___2))
           (fun uu___2 uu___3 -> if uu___2 then false else b1 = b2)
 let lax_term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) :
-  (Prims.bool, unit) FStar_Tactics_Effect.tac_repr=
+  (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps -> let x = term_eq t1 t2 ps in x
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
@@ -377,7 +328,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_bool psc ncb us args)
 let lax_univ_eq (u1 : FStarC_Reflection_Types.universe)
   (u2 : FStarC_Reflection_Types.universe) :
-  (Prims.bool, unit) FStar_Tactics_Effect.tac_repr= univ_eq u1 u2
+  (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr= univ_eq u1 u2
 let _ =
   Fstarcompiler.FStarC_Tactics_Native.register_tactic
     "FStar.Tactics.LaxTermEq.lax_univ_eq" (Prims.of_int 3)

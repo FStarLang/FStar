@@ -4,7 +4,6 @@ let max_int (n : Prims.nat) : Prims.int= (Prims.pow2 n) - Prims.int_one
 let min_int (n : Prims.nat) : Prims.int= Prims.int_zero
 let fits (x : Prims.int) (n : Prims.nat) : Prims.bool=
   ((min_int n) <= x) && (x <= (max_int n))
-type ('x, 'n) size = unit
 type 'n uint_t = Prims.int
 let zero (n : Prims.nat) : Obj.t uint_t= Prims.int_zero
 let pow2_n (n : Prims.pos) (p : Prims.nat) : Obj.t uint_t= Prims.pow2 p
@@ -33,14 +32,13 @@ let sub_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
 let sub_mod (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
   Obj.t uint_t= (mod) (a - b) (Prims.pow2 n)
 let mul (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Obj.t uint_t=
-  Prims.op_Star a b
+  a * b
 let mul_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t=
-  if fits (Prims.op_Star a b) n then Prims.op_Star a b else Prims.int_zero
+  Obj.t uint_t= if fits (a * b) n then a * b else Prims.int_zero
 let mul_mod (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= (mod) (Prims.op_Star a b) (Prims.pow2 n)
+  Obj.t uint_t= (mod) (a * b) (Prims.pow2 n)
 let mul_div (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= (Prims.op_Star a b) / (Prims.pow2 n)
+  Obj.t uint_t= (a * b) / (Prims.pow2 n)
 let div (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Obj.t uint_t=
   a / b
 let div_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
@@ -48,7 +46,7 @@ let div_underspec (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
 let udiv (n : Prims.pos) (a : Obj.t uint_t) (b : Obj.t uint_t) :
   Obj.t uint_t= a / b
 let mod1 (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) :
-  Obj.t uint_t= a - (Prims.op_Star (a / b) b)
+  Obj.t uint_t= a - ((a / b) * b)
 let eq (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Prims.bool=
   a = b
 let ne (n : Prims.nat) (a : Obj.t uint_t) (b : Obj.t uint_t) : Prims.bool=
@@ -77,7 +75,7 @@ let rec from_vec (n : Prims.nat) (vec : Obj.t FStar_BitVector.bv_t) :
   if n = Prims.int_zero
   then Prims.int_zero
   else
-    (Prims.op_Star (Prims.of_int 2)
+    ((Prims.of_int 2) *
        (from_vec (n - Prims.int_one)
           (FStar_Seq_Base.slice vec Prims.int_zero (n - Prims.int_one))))
       +

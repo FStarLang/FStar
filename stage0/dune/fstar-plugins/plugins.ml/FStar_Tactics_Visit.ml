@@ -3,9 +3,9 @@ open Prims
 let on_sort_binder
   (f :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
   (b : FStarC_Reflection_Types.binder) :
-  (FStarC_Reflection_Types.binder, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.binder, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Reflection_V2_Builtins.inspect_binder b in
     let x1 =
@@ -21,9 +21,9 @@ let on_sort_binder
 let on_sort_simple_binder
   (f :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
   (b : FStarC_Reflection_V2_Data.simple_binder) :
-  (FStarC_Reflection_V2_Data.simple_binder, unit)
+  (FStarC_Reflection_V2_Data.simple_binder, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Reflection_V2_Builtins.inspect_binder b in
@@ -40,9 +40,9 @@ let on_sort_simple_binder
 let rec visit_tm
   (ff :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
   (t : FStarC_Reflection_Types.term) :
-  (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Reflection_V2_Builtins.inspect_ln t in
     let x1 =
@@ -89,35 +89,30 @@ let rec visit_tm
               (fun uu___ ->
                  match uu___ with
                  | (b, asc) ->
-                     FStar_Tactics_Effect.tac_bind
-                       (Obj.magic (on_sort_binder (visit_tm ff) b))
-                       (fun uu___1 ->
-                          (fun b1 ->
-                             Obj.magic
-                               (fun ps1 ->
-                                  let x4 =
-                                    match asc with
-                                    | (Fstarcompiler.FStar_Pervasives.Inl t1,
-                                       tacopt, use_eq) ->
-                                        let x5 =
-                                          let x6 = visit_tm ff t1 ps1 in
-                                          Fstarcompiler.FStar_Pervasives.Inl
-                                            x6 in
-                                        let x6 =
-                                          FStar_Tactics_Util.map_opt
-                                            (visit_tm ff) tacopt ps1 in
-                                        (x5, x6, use_eq)
-                                    | (Fstarcompiler.FStar_Pervasives.Inr c,
-                                       tacopt, use_eq) ->
-                                        let x5 =
-                                          let x6 = visit_comp ff c ps1 in
-                                          Fstarcompiler.FStar_Pervasives.Inr
-                                            x6 in
-                                        let x6 =
-                                          FStar_Tactics_Util.map_opt
-                                            (visit_tm ff) tacopt ps1 in
-                                        (x5, x6, use_eq) in
-                                  (b1, x4))) uu___1)) ret_opt ps in
+                     FStar_Tactics_Effect.tac_bind () ()
+                       (on_sort_binder (visit_tm ff) b)
+                       (fun b1 ps1 ->
+                          let x4 =
+                            match asc with
+                            | (Fstarcompiler.FStar_Pervasives.Inl t1, tacopt,
+                               use_eq) ->
+                                let x5 =
+                                  let x6 = visit_tm ff t1 ps1 in
+                                  Fstarcompiler.FStar_Pervasives.Inl x6 in
+                                let x6 =
+                                  FStar_Tactics_Util.map_opt (visit_tm ff)
+                                    tacopt ps1 in
+                                (x5, x6, use_eq)
+                            | (Fstarcompiler.FStar_Pervasives.Inr c, tacopt,
+                               use_eq) ->
+                                let x5 =
+                                  let x6 = visit_comp ff c ps1 in
+                                  Fstarcompiler.FStar_Pervasives.Inr x6 in
+                                let x6 =
+                                  FStar_Tactics_Util.map_opt (visit_tm ff)
+                                    tacopt ps1 in
+                                (x5, x6, use_eq) in
+                          (b1, x4))) ret_opt ps in
           let x4 = FStar_Tactics_Util.map (visit_br ff) brs ps in
           FStarC_Reflection_V2_Data.Tv_Match (x2, x3, x4)
       | FStarC_Reflection_V2_Data.Tv_AscribedT (e, t1, topt, use_eq) ->
@@ -132,58 +127,46 @@ let rec visit_tm
 and visit_br
   (ff :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
   (b : FStarC_Reflection_V2_Data.branch) :
-  (FStarC_Reflection_V2_Data.branch, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_V2_Data.branch, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = b in
     match x with
     | (p, t) ->
         let x1 = visit_pat ff p ps in let x2 = visit_tm ff t ps in (x1, x2)
 and visit_pat
-  (uu___1 :
+  (ff :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
-  (uu___ : FStarC_Reflection_V2_Data.pattern) :
-  (FStarC_Reflection_V2_Data.pattern, unit) FStar_Tactics_Effect.tac_repr=
-  (fun ff p ->
-     match p with
-     | FStarC_Reflection_V2_Data.Pat_Constant uu___ ->
-         Obj.magic
-           (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___1 -> p)))
-     | FStarC_Reflection_V2_Data.Pat_Var (v, s) ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___ -> FStarC_Reflection_V2_Data.Pat_Var (v, s))))
-     | FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.tac_bind
-                 (Obj.magic
-                    (FStar_Tactics_Util.map
-                       (fun uu___ ->
-                          match uu___ with
-                          | (p1, b) ->
-                              FStar_Tactics_Effect.tac_bind
-                                (Obj.magic (visit_pat ff p1))
-                                (fun uu___1 uu___2 -> (uu___1, b))) subpats))
-                 (fun subpats1 uu___ ->
-                    FStarC_Reflection_V2_Data.Pat_Cons
-                      (head, univs, subpats1))))
-     | FStarC_Reflection_V2_Data.Pat_Dot_Term t ->
-         Obj.magic
-           (Obj.repr
-              (FStar_Tactics_Effect.tac_bind
-                 (Obj.magic (FStar_Tactics_Util.map_opt (visit_tm ff) t))
-                 (fun t1 uu___ -> FStarC_Reflection_V2_Data.Pat_Dot_Term t1))))
-    uu___1 uu___
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
+  (p : FStarC_Reflection_V2_Data.pattern) :
+  (FStarC_Reflection_V2_Data.pattern, Obj.t) FStar_Tactics_Effect.tac_repr=
+  match p with
+  | FStarC_Reflection_V2_Data.Pat_Constant uu___ ->
+      FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> p)
+  | FStarC_Reflection_V2_Data.Pat_Var (v, s) ->
+      FStar_Tactics_Effect.lift_div_tac ()
+        (fun uu___ -> FStarC_Reflection_V2_Data.Pat_Var (v, s))
+  | FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats) ->
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_Util.map
+           (fun uu___ ->
+              match uu___ with
+              | (p1, b) ->
+                  FStar_Tactics_Effect.tac_bind () () (visit_pat ff p1)
+                    (fun uu___1 uu___2 -> (uu___1, b))) subpats)
+        (fun subpats1 uu___ ->
+           FStarC_Reflection_V2_Data.Pat_Cons (head, univs, subpats1))
+  | FStarC_Reflection_V2_Data.Pat_Dot_Term t ->
+      FStar_Tactics_Effect.tac_bind () ()
+        (FStar_Tactics_Util.map_opt (visit_tm ff) t)
+        (fun t1 uu___ -> FStarC_Reflection_V2_Data.Pat_Dot_Term t1)
 and visit_comp
   (ff :
     FStarC_Reflection_Types.term ->
-      (FStarC_Reflection_Types.term, unit) FStar_Tactics_Effect.tac_repr)
+      (FStarC_Reflection_Types.term, Obj.t) FStar_Tactics_Effect.tac_repr)
   (c : FStarC_Reflection_Types.comp) :
-  (FStarC_Reflection_Types.comp, unit) FStar_Tactics_Effect.tac_repr=
+  (FStarC_Reflection_Types.comp, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Reflection_V2_Builtins.inspect_comp c in
     let x1 =
@@ -205,8 +188,7 @@ and visit_comp
               (fun uu___ ->
                  match uu___ with
                  | (a, q) ->
-                     FStar_Tactics_Effect.tac_bind
-                       (Obj.magic (visit_tm ff a))
+                     FStar_Tactics_Effect.tac_bind () () (visit_tm ff a)
                        (fun uu___1 uu___2 -> (uu___1, q))) args ps in
           let x4 = FStar_Tactics_Util.map (visit_tm ff) decrs ps in
           FStarC_Reflection_V2_Data.C_Eff (us, eff, x2, x3, x4) in

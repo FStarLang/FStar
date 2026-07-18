@@ -695,7 +695,9 @@ let is_type (g : env) (t : FStarC_Syntax_Syntax.term) :
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+              let uu___5 =
+                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+              FStarC_Errors_Msg.fquotes uu___5 in
             FStar_Pprint.op_Hat_Slash_Hat
               (FStarC_Errors_Msg.text "Expected a type, got") uu___4 in
           [uu___3] in
@@ -774,8 +776,10 @@ let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
                     let uu___4 =
                       let uu___5 =
                         let uu___6 =
-                          FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                            (FStarC_Syntax_Util.comp_effect_name c) in
+                          let uu___7 =
+                            FStarC_Class_PP.pp FStarC_Ident.pretty_lident
+                              (FStarC_Syntax_Util.comp_effect_name c) in
+                          FStarC_Errors_Msg.fquotes uu___7 in
                         FStar_Pprint.op_Hat_Slash_Hat
                           (FStarC_Errors_Msg.text
                              "Expected total or gtot arrow, got") uu___6 in
@@ -891,7 +895,9 @@ let rec is_arrow (g : env) (t : FStarC_Syntax_Syntax.term) :
                 FStar_Pprint.doc_of_string uu___6 in
               let uu___6 =
                 let uu___7 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                  let uu___8 =
+                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                  FStarC_Errors_Msg.fquotes uu___8 in
                 FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon uu___7 in
               FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
             FStar_Pprint.op_Hat_Slash_Hat
@@ -1046,10 +1052,14 @@ let check_aqual (a0 : FStarC_Syntax_Syntax.aqual)
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a0 in
+              let uu___5 =
+                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a0 in
+              FStarC_Errors_Msg.fquotes uu___5 in
             let uu___5 =
               let uu___6 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a1 in
+                let uu___7 =
+                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_aqual a1 in
+                FStarC_Errors_Msg.fquotes uu___7 in
               FStar_Pprint.op_Hat_Slash_Hat
                 (FStarC_Errors_Msg.text "and rhs") uu___6 in
             FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
@@ -1977,10 +1987,14 @@ let rec check_relation' (g : env) (rel : relation)
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
+                  let uu___5 =
+                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
+                  FStarC_Errors_Msg.fquotes uu___5 in
                 let uu___5 =
                   let uu___6 =
-                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                    let uu___7 =
+                      FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                    FStarC_Errors_Msg.fquotes uu___7 in
                   FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "<>")
                     uu___6 in
                 FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
@@ -1995,10 +2009,14 @@ let rec check_relation' (g : env) (rel : relation)
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
+                let uu___5 =
+                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t0 in
+                FStarC_Errors_Msg.fquotes uu___5 in
               let uu___5 =
                 let uu___6 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                  let uu___7 =
+                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t1 in
+                  FStarC_Errors_Msg.fquotes uu___7 in
                 FStar_Pprint.op_Hat_Slash_Hat
                   (FStarC_Errors_Msg.text "is not a subtype of") uu___6 in
               FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
@@ -3894,13 +3912,18 @@ and check_relation_comp (g : env) (rel : relation)
                           let uu___9 =
                             let uu___10 =
                               let uu___11 =
-                                FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                                  ct0.FStarC_Syntax_Syntax.effect_name in
-                              let uu___12 =
-                                let uu___13 =
+                                let uu___12 =
                                   FStarC_Class_PP.pp
                                     FStarC_Ident.pretty_lident
-                                    ct1.FStarC_Syntax_Syntax.effect_name in
+                                    ct0.FStarC_Syntax_Syntax.effect_name in
+                                FStarC_Errors_Msg.fquotes uu___12 in
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 =
+                                    FStarC_Class_PP.pp
+                                      FStarC_Ident.pretty_lident
+                                      ct1.FStarC_Syntax_Syntax.effect_name in
+                                  FStarC_Errors_Msg.fquotes uu___14 in
                                 FStar_Pprint.op_Hat_Slash_Hat
                                   (FStar_Pprint.doc_of_string "and") uu___13 in
                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
@@ -3965,13 +3988,18 @@ and check_relation_comp (g : env) (rel : relation)
                           let uu___9 =
                             let uu___10 =
                               let uu___11 =
-                                FStarC_Class_PP.pp FStarC_Ident.pretty_lident
-                                  ct0.FStarC_Syntax_Syntax.effect_name in
-                              let uu___12 =
-                                let uu___13 =
+                                let uu___12 =
                                   FStarC_Class_PP.pp
                                     FStarC_Ident.pretty_lident
-                                    ct1.FStarC_Syntax_Syntax.effect_name in
+                                    ct0.FStarC_Syntax_Syntax.effect_name in
+                                FStarC_Errors_Msg.fquotes uu___12 in
+                              let uu___12 =
+                                let uu___13 =
+                                  let uu___14 =
+                                    FStarC_Class_PP.pp
+                                      FStarC_Ident.pretty_lident
+                                      ct1.FStarC_Syntax_Syntax.effect_name in
+                                  FStarC_Errors_Msg.fquotes uu___14 in
                                 FStar_Pprint.op_Hat_Slash_Hat
                                   (FStar_Pprint.doc_of_string "and") uu___13 in
                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
@@ -7106,17 +7134,23 @@ and check_comp (g : env) (c : FStarC_Syntax_Syntax.comp) :
                                                let uu___14 =
                                                  let uu___15 =
                                                    let uu___16 =
-                                                     FStarC_Class_PP.pp
-                                                       FStarC_Ident.pretty_lident
-                                                       (FStarC_Syntax_Util.comp_effect_name
-                                                          c) in
+                                                     let uu___17 =
+                                                       FStarC_Class_PP.pp
+                                                         FStarC_Ident.pretty_lident
+                                                         (FStarC_Syntax_Util.comp_effect_name
+                                                            c) in
+                                                     FStarC_Errors_Msg.fquotes
+                                                       uu___17 in
                                                    let uu___17 =
                                                      let uu___18 =
                                                        let uu___19 =
                                                          let uu___20 =
-                                                           FStarC_Class_PP.pp
-                                                             FStarC_Ident.pretty_lident
-                                                             c_lid in
+                                                           let uu___21 =
+                                                             FStarC_Class_PP.pp
+                                                               FStarC_Ident.pretty_lident
+                                                               c_lid in
+                                                           FStarC_Errors_Msg.fquotes
+                                                             uu___21 in
                                                          FStar_Pprint.op_Hat_Hat
                                                            uu___20
                                                            (FStar_Pprint.doc_of_string
@@ -7624,11 +7658,15 @@ and check_scrutinee_pattern_type_compatible (g : env)
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_sc in
+              let uu___5 =
+                FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_sc in
+              FStarC_Errors_Msg.fquotes uu___5 in
             let uu___5 =
               let uu___6 =
                 let uu___7 =
-                  FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_pat in
+                  let uu___8 =
+                    FStarC_Class_PP.pp FStarC_Syntax_Print.pretty_term t_pat in
+                  FStarC_Errors_Msg.fquotes uu___8 in
                 [uu___7;
                 FStarC_Errors_Msg.text "are not compatible because";
                 FStarC_Errors_Msg.text s] in

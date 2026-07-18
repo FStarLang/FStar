@@ -1307,27 +1307,39 @@ let do_match (uu___3 : Prims.bool) (uu___2 : FStarC_TypeChecker_Env.env)
                            let r = Obj.magic r in
                            if r
                            then
-                             let uvs2 = FStarC_Syntax_Free.uvars_uncached t1 in
+                             let check1 v =
+                               let uu___1 =
+                                 FStarC_Syntax_Unionfind.find
+                                   v.FStarC_Syntax_Syntax.ctx_uvar_head in
+                               match uu___1 with
+                               | FStar_Pervasives_Native.None -> true
+                               | FStar_Pervasives_Native.Some t ->
+                                   let uu___2 =
+                                     let uu___3 =
+                                       FStarC_Syntax_Subst.compress t in
+                                     uu___3.FStarC_Syntax_Syntax.n in
+                                   (match uu___2 with
+                                    | FStarC_Syntax_Syntax.Tm_uvar uu___3 ->
+                                        true
+                                    | uu___3 -> false) in
                              let uu___1 =
-                               let uu___2 =
-                                 FStarC_Class_Setlike.equal ()
-                                   (Obj.magic
-                                      (FStarC_FlatSet.setlike_flat_set
-                                         FStarC_Syntax_Free.ord_ctx_uvar))
-                                   (Obj.magic uvs1) (Obj.magic uvs2) in
-                               Prims.op_Negation uu___2 in
+                               FStarC_Class_Setlike.for_all ()
+                                 (Obj.magic
+                                    (FStarC_FlatSet.setlike_flat_set
+                                       FStarC_Syntax_Free.ord_ctx_uvar))
+                                 check1 (Obj.magic uvs1) in
                              (if uu___1
                               then
+                                Obj.magic
+                                  (FStarC_Class_Monad.return
+                                     FStarC_Tactics_Monad.monad_tac ()
+                                     (Obj.magic true))
+                              else
                                 (FStarC_Syntax_Unionfind.rollback tx;
                                  Obj.magic
                                    (FStarC_Class_Monad.return
                                       FStarC_Tactics_Monad.monad_tac ()
-                                      (Obj.magic false)))
-                              else
-                                Obj.magic
-                                  (FStarC_Class_Monad.return
-                                     FStarC_Tactics_Monad.monad_tac ()
-                                     (Obj.magic true)))
+                                      (Obj.magic false))))
                            else
                              Obj.magic
                                (FStarC_Class_Monad.return
@@ -3470,7 +3482,7 @@ let t_apply (uopt : Prims.bool) (only_match : Prims.bool)
                                                                if uu___7
                                                                then
                                                                  FStarC_Tactics_Monad.fail
-                                                                   "t_apply: only_match is on, but the type of the term to apply is not a uvar"
+                                                                   "t_apply: only_match is on, but the type of the term to apply contains uvars"
                                                                else
                                                                  FStarC_Class_Monad.return
                                                                    FStarC_Tactics_Monad.monad_tac
@@ -6215,8 +6227,10 @@ let set_options (s : Prims.string) : unit FStarC_Tactics_Monad.tac=
                     } in
                   Obj.magic (FStarC_Tactics_Monad.replace_cur g')
               | FStarC_Getopt.Error (err, uu___4) ->
-                  Obj.magic (fail2 "Setting options `%s` failed: %s" s err))))
-           uu___1) in
+                  Obj.magic
+                    (fail2
+                       "Setting options \226\128\152%s\226\128\153 failed: %s"
+                       s err)))) uu___1) in
   FStarC_Tactics_Monad.wrap_err "set_options" uu___
 let top_env (uu___ : unit) : env FStarC_Tactics_Monad.tac=
   (fun uu___ ->

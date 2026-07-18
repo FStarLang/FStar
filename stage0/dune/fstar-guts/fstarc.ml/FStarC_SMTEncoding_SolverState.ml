@@ -755,3 +755,6 @@ let flush (s : solver_state) :
     FStar_List_Tot_Base.op_At (FStarC_List.rev s1.pending_flushes_rev)
       to_flush in
   (flushed, s11)
+let all_decls (s : solver_state) : FStarC_SMTEncoding_Term.decl Prims.list=
+  let s1 = reset s.using_facts_from s in
+  let uu___ = flush s1 in match uu___ with | (flushed, uu___1) -> flushed

@@ -1,6 +1,6 @@
 open Prims
 type version = Prims.int
-let current_version : version= Prims.of_int 31
+let current_version : version= Prims.of_int 32
 type decl =
   | DGlobal of (flag Prims.list * (Prims.string Prims.list * Prims.string) *
   Prims.int * typ * expr) 
@@ -88,6 +88,7 @@ and expr =
   | EAddrOf of expr 
   | EBufNull of typ 
   | EBufDiff of (expr * expr) 
+  | ESizeof of typ 
 and op =
   | Add 
   | AddW 
@@ -135,6 +136,8 @@ and width =
   | CInt 
   | SizeT 
   | PtrdiffT 
+  | Float32 
+  | Float64 
 and binder =
   {
   name: Prims.string ;
@@ -427,6 +430,10 @@ let uu___is_EBufDiff (projectee : expr) : Prims.bool=
   match projectee with | EBufDiff _0 -> true | uu___ -> false
 let __proj__EBufDiff__item___0 (projectee : expr) : (expr * expr)=
   match projectee with | EBufDiff _0 -> _0
+let uu___is_ESizeof (projectee : expr) : Prims.bool=
+  match projectee with | ESizeof _0 -> true | uu___ -> false
+let __proj__ESizeof__item___0 (projectee : expr) : typ=
+  match projectee with | ESizeof _0 -> _0
 let uu___is_Add (projectee : op) : Prims.bool=
   match projectee with | Add -> true | uu___ -> false
 let uu___is_AddW (projectee : op) : Prims.bool=
@@ -528,6 +535,10 @@ let uu___is_SizeT (projectee : width) : Prims.bool=
   match projectee with | SizeT -> true | uu___ -> false
 let uu___is_PtrdiffT (projectee : width) : Prims.bool=
   match projectee with | PtrdiffT -> true | uu___ -> false
+let uu___is_Float32 (projectee : width) : Prims.bool=
+  match projectee with | Float32 -> true | uu___ -> false
+let uu___is_Float64 (projectee : width) : Prims.bool=
+  match projectee with | Float64 -> true | uu___ -> false
 let __proj__Mkbinder__item__name (projectee : binder) : Prims.string=
   match projectee with | { name; typ = typ1; mut; meta;_} -> name
 let __proj__Mkbinder__item__typ (projectee : binder) : typ=
@@ -606,8 +617,12 @@ let pretty_width : width FStarC_Class_PP.pretty=
          | Bool -> FStar_Pprint.doc_of_string "Bool"
          | CInt -> FStar_Pprint.doc_of_string "CInt"
          | SizeT -> FStar_Pprint.doc_of_string "SizeT"
-         | PtrdiffT -> FStar_Pprint.doc_of_string "PtrdiffT")
+         | PtrdiffT -> FStar_Pprint.doc_of_string "PtrdiffT"
+         | Float32 -> FStar_Pprint.doc_of_string "Float32"
+         | Float64 -> FStar_Pprint.doc_of_string "Float64")
   }
+let showable_width : width FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_width
 let ctor (n : Prims.string) (args : FStar_Pprint.document Prims.list) :
   FStar_Pprint.document=
   FStar_Pprint.nest (Prims.of_int 2)
@@ -696,6 +711,8 @@ let rec typ_to_doc (t : typ) : FStar_Pprint.document=
       ctor "TArray" uu___
 let pretty_typ : typ FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = typ_to_doc }
+let showable_typ : typ FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_typ
 let pretty_string : Prims.string FStarC_Class_PP.pretty=
   {
     FStarC_Class_PP.pp =
@@ -783,6 +800,8 @@ let pretty_binder : binder FStarC_Class_PP.pretty=
            uu___1 :: uu___2 in
          record uu___)
   }
+let showable_binder : binder FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_binder
 let pretty_lifetime : lifetime FStarC_Class_PP.pretty=
   {
     FStarC_Class_PP.pp =
@@ -792,6 +811,8 @@ let pretty_lifetime : lifetime FStarC_Class_PP.pretty=
          | Stack -> FStar_Pprint.doc_of_string "Stack"
          | ManuallyManaged -> FStar_Pprint.doc_of_string "ManuallyManaged")
   }
+let showable_lifetime : lifetime FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_lifetime
 let pretty_op : op FStarC_Class_PP.pretty=
   {
     FStarC_Class_PP.pp =
@@ -823,6 +844,8 @@ let pretty_op : op FStarC_Class_PP.pretty=
          | Xor -> FStar_Pprint.doc_of_string "Xor"
          | Not -> FStar_Pprint.doc_of_string "Not")
   }
+let showable_op : op FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_op
 let pretty_cc : cc FStarC_Class_PP.pretty=
   {
     FStarC_Class_PP.pp =
@@ -832,6 +855,8 @@ let pretty_cc : cc FStarC_Class_PP.pretty=
          | CDecl -> FStar_Pprint.doc_of_string "CDecl"
          | FastCall -> FStar_Pprint.doc_of_string "FastCall")
   }
+let showable_cc : cc FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_cc
 let rec pattern_to_doc (p : pattern) : FStar_Pprint.document=
   match p with
   | PUnit -> FStar_Pprint.doc_of_string "PUnit"
@@ -872,6 +897,8 @@ let rec pattern_to_doc (p : pattern) : FStar_Pprint.document=
       ctor "PConstant" uu___
 let pretty_pattern : pattern FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = pattern_to_doc }
+let showable_pattern : pattern FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_pattern
 let rec decl_to_doc (d : decl) : FStar_Pprint.document=
   match d with
   | DGlobal (fs, x, i, t, e) ->
@@ -1311,6 +1338,9 @@ and expr_to_doc (e : expr) : FStar_Pprint.document=
         let uu___2 = let uu___3 = expr_to_doc y in [uu___3] in uu___1 ::
           uu___2 in
       ctor "EBufDiff" uu___
+  | ESizeof t ->
+      let uu___ = let uu___1 = FStarC_Class_PP.pp pretty_typ t in [uu___1] in
+      ctor "ESizeof" uu___
 and pp_branch (b : branch) : FStar_Pprint.document=
   let uu___ = b in
   match uu___ with
@@ -1322,13 +1352,21 @@ and pp_branch (b : branch) : FStar_Pprint.document=
           FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.comma uu___4 in
         FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
       FStar_Pprint.parens uu___1
+let pretty_expr : expr FStarC_Class_PP.pretty=
+  { FStarC_Class_PP.pp = expr_to_doc }
 let pretty_decl : decl FStarC_Class_PP.pretty=
   { FStarC_Class_PP.pp = decl_to_doc }
+let pretty_branch : branch FStarC_Class_PP.pretty=
+  { FStarC_Class_PP.pp = pp_branch }
+let showable_expr : expr FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_expr
 let showable_decl : decl FStarC_Class_Show.showable=
   FStarC_Class_PP.showable_from_pretty pretty_decl
 type program = decl Prims.list
 type file = (Prims.string * program)
 type binary_format = (version * file Prims.list)
+let showable_branch : branch FStarC_Class_Show.showable=
+  FStarC_Class_PP.showable_from_pretty pretty_branch
 let fst3 (uu___ : ('uuuuu * 'uuuuu1 * 'uuuuu2)) : 'uuuuu=
   match uu___ with | (x, uu___1, uu___2) -> x
 let snd3 (uu___ : ('uuuuu * 'uuuuu1 * 'uuuuu2)) : 'uuuuu1=
@@ -1347,7 +1385,58 @@ let mk_width (uu___ : Prims.string) : width FStar_Pervasives_Native.option=
   | "Int64" -> FStar_Pervasives_Native.Some Int64
   | "SizeT" -> FStar_Pervasives_Native.Some SizeT
   | "PtrdiffT" -> FStar_Pervasives_Native.Some PtrdiffT
+  | "Float32" -> FStar_Pervasives_Native.Some Float32
+  | "Float64" -> FStar_Pervasives_Native.Some Float64
   | uu___1 -> FStar_Pervasives_Native.None
+let is_float_width (uu___ : width FStar_Pervasives_Native.option) :
+  Prims.bool=
+  match uu___ with
+  | FStar_Pervasives_Native.Some (Float32) -> true
+  | FStar_Pervasives_Native.Some (Float64) -> true
+  | uu___1 -> false
+let valid_float_literal (s : Prims.string) : Prims.bool=
+  let is_digit c =
+    let i = FStarC_Util.int_of_char c in
+    (i >= (Prims.of_int 48)) && (i <= (Prims.of_int 57)) in
+  let rec consume_digits cs =
+    match cs with
+    | c::cs' when is_digit c -> consume_digits cs'
+    | uu___ -> cs in
+  let has_digits cs = (consume_digits cs) <> cs in
+  let cs =
+    match FStar_String.list_of_string s with
+    | 43::cs1 -> cs1
+    | 45::cs1 -> cs1
+    | cs1 -> cs1 in
+  let before_dot = consume_digits cs in
+  let uu___ =
+    match before_dot with
+    | 46::cs' ->
+        let after_dot = consume_digits cs' in
+        (after_dot, ((before_dot <> cs) || (after_dot <> cs')))
+    | uu___1 -> (before_dot, (before_dot <> cs)) in
+  match uu___ with
+  | (after_mantissa, has_mantissa_digit) ->
+      if Prims.op_Negation has_mantissa_digit
+      then false
+      else
+        (match after_mantissa with
+         | [] -> true
+         | 101::exp ->
+             let exp1 =
+               match exp with
+               | 43::exp2 -> exp2
+               | 45::exp2 -> exp2
+               | exp2 -> exp2 in
+             (has_digits exp1) && ((consume_digits exp1) = [])
+         | 69::exp ->
+             let exp1 =
+               match exp with
+               | 43::exp2 -> exp2
+               | 45::exp2 -> exp2
+               | exp2 -> exp2 in
+             (has_digits exp1) && ((consume_digits exp1) = [])
+         | uu___2 -> false)
 let mk_bool_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   match uu___ with
   | "op_Negation" -> FStar_Pervasives_Native.Some Not
@@ -1379,6 +1468,7 @@ let mk_op (uu___ : Prims.string) : op FStar_Pervasives_Native.option=
   | "shift_right" -> FStar_Pervasives_Native.Some BShiftR
   | "shift_left" -> FStar_Pervasives_Native.Some BShiftL
   | "eq" -> FStar_Pervasives_Native.Some Eq
+  | "ieee_eq" -> FStar_Pervasives_Native.Some Eq
   | "gt" -> FStar_Pervasives_Native.Some Gt
   | "gte" -> FStar_Pervasives_Native.Some Gte
   | "lt" -> FStar_Pervasives_Native.Some Lt
@@ -2750,6 +2840,44 @@ and translate_expr' (env1 : env) (e : FStarC_Extraction_ML_Syntax.mlexpr) :
       when (FStarC_Extraction_ML_Syntax.string_of_mlpath p) = "Obj.repr" ->
       let uu___2 = let uu___3 = translate_expr env1 e1 in (uu___3, TAny) in
       ECast uu___2
+  | FStarC_Extraction_ML_Syntax.MLE_App
+      ({
+         FStarC_Extraction_ML_Syntax.expr =
+           FStarC_Extraction_ML_Syntax.MLE_Name ("FStar"::m::[], "of_int");
+         FStarC_Extraction_ML_Syntax.mlty = uu___;
+         FStarC_Extraction_ML_Syntax.loc = uu___1;_},
+       e1::[])
+      when is_float_width (mk_width m) ->
+      let uu___2 =
+        let uu___3 = translate_expr env1 e1 in
+        let uu___4 =
+          let uu___5 = FStarC_Option.must (mk_width m) in TInt uu___5 in
+        (uu___3, uu___4) in
+      ECast uu___2
+  | FStarC_Extraction_ML_Syntax.MLE_App
+      ({
+         FStarC_Extraction_ML_Syntax.expr =
+           FStarC_Extraction_ML_Syntax.MLE_Name
+           ("FStar"::m::[], "of_literal");
+         FStarC_Extraction_ML_Syntax.mlty = uu___;
+         FStarC_Extraction_ML_Syntax.loc = uu___1;_},
+       {
+         FStarC_Extraction_ML_Syntax.expr =
+           FStarC_Extraction_ML_Syntax.MLE_Const
+           (FStarC_Extraction_ML_Syntax.MLC_String s);
+         FStarC_Extraction_ML_Syntax.mlty = uu___2;
+         FStarC_Extraction_ML_Syntax.loc = uu___3;_}::[])
+      when is_float_width (mk_width m) ->
+      (if Prims.op_Negation (valid_float_literal s)
+       then
+         FStarC_Effect.failwith
+           (FStarC_Format.fmt2
+              "Refusing to extract invalid %s.of_literal argument as a C floating-point constant: %s"
+              m s)
+       else ();
+       (let uu___5 =
+          let uu___6 = FStarC_Option.must (mk_width m) in (uu___6, s) in
+        EConstant uu___5))
   | FStarC_Extraction_ML_Syntax.MLE_App
       ({
          FStarC_Extraction_ML_Syntax.expr =

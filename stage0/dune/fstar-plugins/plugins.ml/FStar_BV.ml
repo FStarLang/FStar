@@ -1,8 +1,7 @@
 open Fstarcompiler
 open Prims
 type 'n bv_t = 'n FStar_BitVector.bv_t
-let bv_uext (n : Prims.pos) (i : Prims.pos) (a : Obj.t bv_t) :
-  Prims.bool FStar_Seq_Base.seq=
+let bv_uext (n : Prims.pos) (i : Prims.pos) (a : Obj.t bv_t) : Obj.t bv_t=
   FStar_Seq_Base.append (FStar_Seq_Base.create i false) a
 let int2bv : Prims.pos -> Obj.t FStar_UInt.uint_t -> Obj.t bv_t=
   FStar_UInt.to_vec

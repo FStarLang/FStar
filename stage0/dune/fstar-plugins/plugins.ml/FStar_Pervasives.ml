@@ -4,31 +4,22 @@ type pattern = unit
 
 
 type eqtype_u = unit
-type 'p spinoff = 'p
 let id (x : 'a) : 'a= x
-type ('a, 'uuuuu) trivial_pure_post = unit
-type ('uuuuu, 'uuuuu1) ambient = unit
-type ('a, 'x, 'uuuuu) pure_return = unit
-type ('a, 'b, 'wp1, 'wp2, 'uuuuu) pure_bind_wp = 'wp1
-type ('a, 'p, 'wputhen, 'wpuelse, 'uuuuu) pure_if_then_else = unit
-type ('a, 'wp, 'uuuuu) pure_ite_wp = unit
-type ('a, 'b, 'wp, 'uuuuu) pure_close_wp = unit
-type ('a, 'uuuuu) pure_null_wp = unit
-type ('p, 'uuuuu) pure_assert_wp = unit
-type ('p, 'uuuuu) pure_assume_wp = unit
-type ('a, 'wp, 'uuuuu) pure_wp_intro = 'wp
-type ('a, 'pre, 'post, 'uuuuu) div_hoare_to_wp = unit
+
+
+
+
+
+
+
+
+
+
+
 type 'heap st_pre_h = unit
 type ('heap, 'a, 'pre) st_post_h' = unit
 type ('heap, 'a) st_post_h = unit
 type ('heap, 'a) st_wp_h = unit
-type ('heap, 'a, 'x, 'p, 'uuuuu) st_return = 'p
-type ('heap, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) st_bind_wp = 'wp1
-type ('heap, 'a, 'p, 'wputhen, 'wpuelse, 'post, 'h0) st_if_then_else = unit
-type ('heap, 'a, 'wp, 'post, 'h0) st_ite_wp = unit
-type ('heap, 'a, 'wp1, 'wp2) st_stronger = unit
-type ('heap, 'a, 'b, 'wp, 'p, 'h) st_close_wp = unit
-type ('heap, 'a, 'wp) st_trivial = unit
 type 'a result =
   | V of 'a 
   | E of Prims.exn 
@@ -49,26 +40,12 @@ type ex_pre = unit
 type ('a, 'pre) ex_post' = unit
 type 'a ex_post = unit
 type 'a ex_wp = unit
-type ('a, 'x, 'p) ex_return = 'p
-type ('a, 'b, 'wp1, 'wp2, 'p) ex_bind_wp = unit
-type ('a, 'p, 'wputhen, 'wpuelse, 'post) ex_if_then_else = unit
-type ('a, 'wp, 'post) ex_ite_wp = unit
-type ('a, 'wp1, 'wp2) ex_stronger = unit
-type ('a, 'b, 'wp, 'p) ex_close_wp = unit
-type ('a, 'wp) ex_trivial = 'wp
-type ('a, 'wp, 'p) lift_div_exn = 'wp
+
+
 type 'h all_pre_h = unit
 type ('h, 'a, 'pre) all_post_h' = unit
 type ('h, 'a) all_post_h = unit
 type ('h, 'a) all_wp_h = unit
-type ('heap, 'a, 'x, 'p, 'uuuuu) all_return = 'p
-type ('heap, 'a, 'b, 'wp1, 'wp2, 'p, 'h0) all_bind_wp = 'wp1
-type ('heap, 'a, 'p, 'wputhen, 'wpuelse, 'post, 'h0) all_if_then_else = unit
-type ('heap, 'a, 'wp, 'post, 'h0) all_ite_wp = unit
-type ('heap, 'a, 'wp1, 'wp2) all_stronger = unit
-type ('heap, 'a, 'b, 'wp, 'p, 'h) all_close_wp = unit
-type ('heap, 'a, 'wp) all_trivial = unit
-type 'uuuuu inversion = unit
 type ('a, 'b) either =
   | Inl of 'a 
   | Inr of 'b 

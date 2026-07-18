@@ -38,7 +38,8 @@ type fsteps =
   for_extraction: Prims.bool ;
   unrefine: Prims.bool ;
   default_univs_to_zero: Prims.bool ;
-  tactics: Prims.bool }
+  tactics: Prims.bool ;
+  reduce_projections: Prims.bool }
 let __proj__Mkfsteps__item__beta (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -48,7 +49,7 @@ let __proj__Mkfsteps__item__beta (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> beta
+      default_univs_to_zero; tactics; reduce_projections;_} -> beta
 let __proj__Mkfsteps__item__iota (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -58,7 +59,7 @@ let __proj__Mkfsteps__item__iota (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> iota
+      default_univs_to_zero; tactics; reduce_projections;_} -> iota
 let __proj__Mkfsteps__item__zeta (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -68,7 +69,7 @@ let __proj__Mkfsteps__item__zeta (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> zeta
+      default_univs_to_zero; tactics; reduce_projections;_} -> zeta
 let __proj__Mkfsteps__item__zeta_full (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -78,7 +79,7 @@ let __proj__Mkfsteps__item__zeta_full (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> zeta_full
+      default_univs_to_zero; tactics; reduce_projections;_} -> zeta_full
 let __proj__Mkfsteps__item__weak (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -88,7 +89,7 @@ let __proj__Mkfsteps__item__weak (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> weak
+      default_univs_to_zero; tactics; reduce_projections;_} -> weak
 let __proj__Mkfsteps__item__hnf (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -98,7 +99,7 @@ let __proj__Mkfsteps__item__hnf (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> hnf
+      default_univs_to_zero; tactics; reduce_projections;_} -> hnf
 let __proj__Mkfsteps__item__primops (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -108,7 +109,7 @@ let __proj__Mkfsteps__item__primops (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> primops
+      default_univs_to_zero; tactics; reduce_projections;_} -> primops
 let __proj__Mkfsteps__item__do_not_unfold_pure_lets (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -119,7 +120,8 @@ let __proj__Mkfsteps__item__do_not_unfold_pure_lets (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> do_not_unfold_pure_lets
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      do_not_unfold_pure_lets
 let __proj__Mkfsteps__item__unfold_until (projectee : fsteps) :
   FStarC_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option=
   match projectee with
@@ -130,7 +132,7 @@ let __proj__Mkfsteps__item__unfold_until (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_until
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_until
 let __proj__Mkfsteps__item__unfold_only (projectee : fsteps) :
   FStarC_Ident.lid Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -141,7 +143,7 @@ let __proj__Mkfsteps__item__unfold_only (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_only
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_only
 let __proj__Mkfsteps__item__unfold_once (projectee : fsteps) :
   FStarC_Ident.lid Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -152,7 +154,7 @@ let __proj__Mkfsteps__item__unfold_once (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_once
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_once
 let __proj__Mkfsteps__item__unfold_fully (projectee : fsteps) :
   FStarC_Ident.lid Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -163,7 +165,7 @@ let __proj__Mkfsteps__item__unfold_fully (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_fully
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_fully
 let __proj__Mkfsteps__item__unfold_attr (projectee : fsteps) :
   FStarC_Ident.lid Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -174,7 +176,7 @@ let __proj__Mkfsteps__item__unfold_attr (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_attr
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_attr
 let __proj__Mkfsteps__item__unfold_qual (projectee : fsteps) :
   Prims.string Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -185,7 +187,7 @@ let __proj__Mkfsteps__item__unfold_qual (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_qual
+      default_univs_to_zero; tactics; reduce_projections;_} -> unfold_qual
 let __proj__Mkfsteps__item__unfold_namespace (projectee : fsteps) :
   (Prims.string, Prims.bool) FStarC_Path.forest
     FStar_Pervasives_Native.option=
@@ -197,7 +199,8 @@ let __proj__Mkfsteps__item__unfold_namespace (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unfold_namespace
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      unfold_namespace
 let __proj__Mkfsteps__item__dont_unfold_attr (projectee : fsteps) :
   FStarC_Ident.lid Prims.list FStar_Pervasives_Native.option=
   match projectee with
@@ -208,7 +211,8 @@ let __proj__Mkfsteps__item__dont_unfold_attr (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> dont_unfold_attr
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      dont_unfold_attr
 let __proj__Mkfsteps__item__pure_subterms_within_computations
   (projectee : fsteps) : Prims.bool=
   match projectee with
@@ -219,7 +223,8 @@ let __proj__Mkfsteps__item__pure_subterms_within_computations
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> pure_subterms_within_computations
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      pure_subterms_within_computations
 let __proj__Mkfsteps__item__simplify (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -229,7 +234,7 @@ let __proj__Mkfsteps__item__simplify (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> simplify
+      default_univs_to_zero; tactics; reduce_projections;_} -> simplify
 let __proj__Mkfsteps__item__erase_universes (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -240,7 +245,8 @@ let __proj__Mkfsteps__item__erase_universes (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> erase_universes
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      erase_universes
 let __proj__Mkfsteps__item__allow_unbound_universes (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -251,7 +257,8 @@ let __proj__Mkfsteps__item__allow_unbound_universes (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> allow_unbound_universes
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      allow_unbound_universes
 let __proj__Mkfsteps__item__reify_ (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -261,7 +268,7 @@ let __proj__Mkfsteps__item__reify_ (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> reify_
+      default_univs_to_zero; tactics; reduce_projections;_} -> reify_
 let __proj__Mkfsteps__item__compress_uvars (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -271,7 +278,7 @@ let __proj__Mkfsteps__item__compress_uvars (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> compress_uvars
+      default_univs_to_zero; tactics; reduce_projections;_} -> compress_uvars
 let __proj__Mkfsteps__item__no_full_norm (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -281,7 +288,7 @@ let __proj__Mkfsteps__item__no_full_norm (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> no_full_norm
+      default_univs_to_zero; tactics; reduce_projections;_} -> no_full_norm
 let __proj__Mkfsteps__item__check_no_uvars (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -291,7 +298,7 @@ let __proj__Mkfsteps__item__check_no_uvars (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> check_no_uvars
+      default_univs_to_zero; tactics; reduce_projections;_} -> check_no_uvars
 let __proj__Mkfsteps__item__unmeta (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -301,7 +308,7 @@ let __proj__Mkfsteps__item__unmeta (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unmeta
+      default_univs_to_zero; tactics; reduce_projections;_} -> unmeta
 let __proj__Mkfsteps__item__unascribe (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -311,7 +318,7 @@ let __proj__Mkfsteps__item__unascribe (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unascribe
+      default_univs_to_zero; tactics; reduce_projections;_} -> unascribe
 let __proj__Mkfsteps__item__in_full_norm_request (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -322,7 +329,8 @@ let __proj__Mkfsteps__item__in_full_norm_request (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> in_full_norm_request
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      in_full_norm_request
 let __proj__Mkfsteps__item__weakly_reduce_scrutinee (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -333,7 +341,8 @@ let __proj__Mkfsteps__item__weakly_reduce_scrutinee (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> weakly_reduce_scrutinee
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      weakly_reduce_scrutinee
 let __proj__Mkfsteps__item__nbe_step (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -343,7 +352,7 @@ let __proj__Mkfsteps__item__nbe_step (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> nbe_step
+      default_univs_to_zero; tactics; reduce_projections;_} -> nbe_step
 let __proj__Mkfsteps__item__for_extraction (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -353,7 +362,7 @@ let __proj__Mkfsteps__item__for_extraction (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> for_extraction
+      default_univs_to_zero; tactics; reduce_projections;_} -> for_extraction
 let __proj__Mkfsteps__item__unrefine (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -363,7 +372,7 @@ let __proj__Mkfsteps__item__unrefine (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> unrefine
+      default_univs_to_zero; tactics; reduce_projections;_} -> unrefine
 let __proj__Mkfsteps__item__default_univs_to_zero (projectee : fsteps) :
   Prims.bool=
   match projectee with
@@ -374,7 +383,8 @@ let __proj__Mkfsteps__item__default_univs_to_zero (projectee : fsteps) :
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> default_univs_to_zero
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      default_univs_to_zero
 let __proj__Mkfsteps__item__tactics (projectee : fsteps) : Prims.bool=
   match projectee with
   | { beta; iota; zeta; zeta_full; weak; hnf; primops;
@@ -384,7 +394,19 @@ let __proj__Mkfsteps__item__tactics (projectee : fsteps) : Prims.bool=
       erase_universes; allow_unbound_universes; reify_; compress_uvars;
       no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
       weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
-      default_univs_to_zero; tactics;_} -> tactics
+      default_univs_to_zero; tactics; reduce_projections;_} -> tactics
+let __proj__Mkfsteps__item__reduce_projections (projectee : fsteps) :
+  Prims.bool=
+  match projectee with
+  | { beta; iota; zeta; zeta_full; weak; hnf; primops;
+      do_not_unfold_pure_lets; unfold_until; unfold_only; unfold_once;
+      unfold_fully; unfold_attr; unfold_qual; unfold_namespace;
+      dont_unfold_attr; pure_subterms_within_computations; simplify;
+      erase_universes; allow_unbound_universes; reify_; compress_uvars;
+      no_full_norm; check_no_uvars; unmeta; unascribe; in_full_norm_request;
+      weakly_reduce_scrutinee; nbe_step; for_extraction; unrefine;
+      default_univs_to_zero; tactics; reduce_projections;_} ->
+      reduce_projections
 let steps_to_string (f : fsteps) : Prims.string=
   let format_opt f1 o =
     match o with
@@ -559,7 +581,16 @@ let steps_to_string (f : fsteps) : Prims.string=
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Class_Show.showable_bool
                                                                     f.tactics in
-                                                                  [uu___63] in
+                                                                  let uu___64
+                                                                    =
+                                                                    let uu___65
+                                                                    =
+                                                                    FStarC_Class_Show.show
+                                                                    FStarC_Class_Show.showable_bool
+                                                                    f.reduce_projections in
+                                                                    [uu___65] in
+                                                                  uu___63 ::
+                                                                    uu___64 in
                                                                 uu___61 ::
                                                                   uu___62 in
                                                               uu___59 ::
@@ -595,7 +626,7 @@ let steps_to_string (f : fsteps) : Prims.string=
       uu___3 :: uu___4 in
     uu___1 :: uu___2 in
   FStarC_Format.fmt
-    "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_once = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\ndont_unfold_attr = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\ndefault_univs_to_zero = %s;\ntactics = %s;\n}"
+    "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_once = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_qual = %s;\nunfold_namespace = %s;\ndont_unfold_attr = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\nunrefine = %s;\ndefault_univs_to_zero = %s;\ntactics = %s;\nreduce_projections = %s;\n}"
     uu___
 let deq_fsteps : fsteps FStarC_Class_Deq.deq=
   {
@@ -635,13 +666,15 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
                                                                     =
                                                                     let uu___30
                                                                     =
+                                                                    let uu___31
+                                                                    =
                                                                     FStarC_Class_Deq.op_Equals_Question
                                                                     (FStarC_Class_Ord.ord_eq
                                                                     FStarC_Class_Ord.ord_bool)
                                                                     f1.beta
                                                                     f2.beta in
                                                                     if
-                                                                    uu___30
+                                                                    uu___31
                                                                     then
                                                                     FStarC_Class_Deq.op_Equals_Question
                                                                     (FStarC_Class_Ord.ord_eq
@@ -650,61 +683,73 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
                                                                     f2.iota
                                                                     else
                                                                     false in
-                                                                   if uu___29
-                                                                   then
+                                                                    if
+                                                                    uu___30
+                                                                    then
                                                                     FStarC_Class_Deq.op_Equals_Question
                                                                     (FStarC_Class_Ord.ord_eq
                                                                     FStarC_Class_Ord.ord_bool)
                                                                     f1.zeta
                                                                     f2.zeta
+                                                                    else
+                                                                    false in
+                                                                   if uu___29
+                                                                   then
+                                                                    FStarC_Class_Deq.op_Equals_Question
+                                                                    (FStarC_Class_Ord.ord_eq
+                                                                    FStarC_Class_Ord.ord_bool)
+                                                                    f1.zeta_full
+                                                                    f2.zeta_full
                                                                    else false in
                                                                  if uu___28
                                                                  then
                                                                    FStarC_Class_Deq.op_Equals_Question
                                                                     (FStarC_Class_Ord.ord_eq
                                                                     FStarC_Class_Ord.ord_bool)
-                                                                    f1.zeta_full
-                                                                    f2.zeta_full
+                                                                    f1.weak
+                                                                    f2.weak
                                                                  else false in
                                                                if uu___27
                                                                then
                                                                  FStarC_Class_Deq.op_Equals_Question
                                                                    (FStarC_Class_Ord.ord_eq
                                                                     FStarC_Class_Ord.ord_bool)
-                                                                   f1.weak
-                                                                   f2.weak
+                                                                   f1.hnf
+                                                                   f2.hnf
                                                                else false in
                                                              if uu___26
                                                              then
                                                                FStarC_Class_Deq.op_Equals_Question
                                                                  (FStarC_Class_Ord.ord_eq
                                                                     FStarC_Class_Ord.ord_bool)
-                                                                 f1.hnf
-                                                                 f2.hnf
+                                                                 f1.primops
+                                                                 f2.primops
                                                              else false in
                                                            if uu___25
                                                            then
                                                              FStarC_Class_Deq.op_Equals_Question
                                                                (FStarC_Class_Ord.ord_eq
                                                                   FStarC_Class_Ord.ord_bool)
-                                                               f1.primops
-                                                               f2.primops
+                                                               f1.do_not_unfold_pure_lets
+                                                               f2.do_not_unfold_pure_lets
                                                            else false in
                                                          if uu___24
                                                          then
                                                            FStarC_Class_Deq.op_Equals_Question
-                                                             (FStarC_Class_Ord.ord_eq
-                                                                FStarC_Class_Ord.ord_bool)
-                                                             f1.do_not_unfold_pure_lets
-                                                             f2.do_not_unfold_pure_lets
+                                                             (FStarC_Class_Deq.deq_option
+                                                                FStarC_Syntax_Syntax.deq_delta_depth)
+                                                             f1.unfold_until
+                                                             f2.unfold_until
                                                          else false in
                                                        if uu___23
                                                        then
                                                          FStarC_Class_Deq.op_Equals_Question
-                                                           (FStarC_Class_Deq.deq_option
-                                                              FStarC_Syntax_Syntax.deq_delta_depth)
-                                                           f1.unfold_until
-                                                           f2.unfold_until
+                                                           (FStarC_Class_Ord.ord_eq
+                                                              (FStarC_Class_Ord.ord_option
+                                                                 (FStarC_Class_Ord.ord_list
+                                                                    FStarC_Syntax_Syntax.ord_fv)))
+                                                           f1.unfold_only
+                                                           f2.unfold_only
                                                        else false in
                                                      if uu___22
                                                      then
@@ -713,8 +758,8 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
                                                             (FStarC_Class_Ord.ord_option
                                                                (FStarC_Class_Ord.ord_list
                                                                   FStarC_Syntax_Syntax.ord_fv)))
-                                                         f1.unfold_only
-                                                         f2.unfold_only
+                                                         f1.unfold_fully
+                                                         f2.unfold_fully
                                                      else false in
                                                    if uu___21
                                                    then
@@ -723,8 +768,8 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
                                                           (FStarC_Class_Ord.ord_option
                                                              (FStarC_Class_Ord.ord_list
                                                                 FStarC_Syntax_Syntax.ord_fv)))
-                                                       f1.unfold_fully
-                                                       f2.unfold_fully
+                                                       f1.unfold_attr
+                                                       f2.unfold_attr
                                                    else false in
                                                  if uu___20
                                                  then
@@ -732,158 +777,156 @@ let deq_fsteps : fsteps FStarC_Class_Deq.deq=
                                                      (FStarC_Class_Ord.ord_eq
                                                         (FStarC_Class_Ord.ord_option
                                                            (FStarC_Class_Ord.ord_list
-                                                              FStarC_Syntax_Syntax.ord_fv)))
-                                                     f1.unfold_attr
-                                                     f2.unfold_attr
+                                                              FStarC_Class_Ord.ord_string)))
+                                                     f1.unfold_qual
+                                                     f2.unfold_qual
                                                  else false in
                                                if uu___19
                                                then
                                                  FStarC_Class_Deq.op_Equals_Question
                                                    (FStarC_Class_Ord.ord_eq
                                                       (FStarC_Class_Ord.ord_option
-                                                         (FStarC_Class_Ord.ord_list
-                                                            FStarC_Class_Ord.ord_string)))
-                                                   f1.unfold_qual
-                                                   f2.unfold_qual
+                                                         (FStarC_Class_Ord.ord_tuple2
+                                                            (FStarC_Class_Ord.ord_list
+                                                               (FStarC_Class_Ord.ord_tuple2
+                                                                  (FStarC_Class_Ord.ord_list
+                                                                    FStarC_Class_Ord.ord_string)
+                                                                  FStarC_Class_Ord.ord_bool))
+                                                            FStarC_Class_Ord.ord_bool)))
+                                                   f1.unfold_namespace
+                                                   f2.unfold_namespace
                                                else false in
                                              if uu___18
                                              then
                                                FStarC_Class_Deq.op_Equals_Question
                                                  (FStarC_Class_Ord.ord_eq
                                                     (FStarC_Class_Ord.ord_option
-                                                       (FStarC_Class_Ord.ord_tuple2
-                                                          (FStarC_Class_Ord.ord_list
-                                                             (FStarC_Class_Ord.ord_tuple2
-                                                                (FStarC_Class_Ord.ord_list
-                                                                   FStarC_Class_Ord.ord_string)
-                                                                FStarC_Class_Ord.ord_bool))
-                                                          FStarC_Class_Ord.ord_bool)))
-                                                 f1.unfold_namespace
-                                                 f2.unfold_namespace
+                                                       (FStarC_Class_Ord.ord_list
+                                                          FStarC_Syntax_Syntax.ord_fv)))
+                                                 f1.dont_unfold_attr
+                                                 f2.dont_unfold_attr
                                              else false in
                                            if uu___17
                                            then
                                              FStarC_Class_Deq.op_Equals_Question
                                                (FStarC_Class_Ord.ord_eq
-                                                  (FStarC_Class_Ord.ord_option
-                                                     (FStarC_Class_Ord.ord_list
-                                                        FStarC_Syntax_Syntax.ord_fv)))
-                                               f1.dont_unfold_attr
-                                               f2.dont_unfold_attr
+                                                  FStarC_Class_Ord.ord_bool)
+                                               f1.pure_subterms_within_computations
+                                               f2.pure_subterms_within_computations
                                            else false in
                                          if uu___16
                                          then
                                            FStarC_Class_Deq.op_Equals_Question
                                              (FStarC_Class_Ord.ord_eq
                                                 FStarC_Class_Ord.ord_bool)
-                                             f1.pure_subterms_within_computations
-                                             f2.pure_subterms_within_computations
+                                             f1.simplify f2.simplify
                                          else false in
                                        if uu___15
                                        then
                                          FStarC_Class_Deq.op_Equals_Question
                                            (FStarC_Class_Ord.ord_eq
                                               FStarC_Class_Ord.ord_bool)
-                                           f1.simplify f2.simplify
+                                           f1.erase_universes
+                                           f2.erase_universes
                                        else false in
                                      if uu___14
                                      then
                                        FStarC_Class_Deq.op_Equals_Question
                                          (FStarC_Class_Ord.ord_eq
                                             FStarC_Class_Ord.ord_bool)
-                                         f1.erase_universes
-                                         f2.erase_universes
+                                         f1.allow_unbound_universes
+                                         f2.allow_unbound_universes
                                      else false in
                                    if uu___13
                                    then
                                      FStarC_Class_Deq.op_Equals_Question
                                        (FStarC_Class_Ord.ord_eq
                                           FStarC_Class_Ord.ord_bool)
-                                       f1.allow_unbound_universes
-                                       f2.allow_unbound_universes
+                                       f1.reify_ f2.reify_
                                    else false in
                                  if uu___12
                                  then
                                    FStarC_Class_Deq.op_Equals_Question
                                      (FStarC_Class_Ord.ord_eq
-                                        FStarC_Class_Ord.ord_bool) f1.reify_
-                                     f2.reify_
+                                        FStarC_Class_Ord.ord_bool)
+                                     f1.compress_uvars f2.compress_uvars
                                  else false in
                                if uu___11
                                then
                                  FStarC_Class_Deq.op_Equals_Question
                                    (FStarC_Class_Ord.ord_eq
                                       FStarC_Class_Ord.ord_bool)
-                                   f1.compress_uvars f2.compress_uvars
+                                   f1.no_full_norm f2.no_full_norm
                                else false in
                              if uu___10
                              then
                                FStarC_Class_Deq.op_Equals_Question
                                  (FStarC_Class_Ord.ord_eq
                                     FStarC_Class_Ord.ord_bool)
-                                 f1.no_full_norm f2.no_full_norm
+                                 f1.check_no_uvars f2.check_no_uvars
                              else false in
                            if uu___9
                            then
                              FStarC_Class_Deq.op_Equals_Question
                                (FStarC_Class_Ord.ord_eq
-                                  FStarC_Class_Ord.ord_bool)
-                               f1.check_no_uvars f2.check_no_uvars
+                                  FStarC_Class_Ord.ord_bool) f1.unmeta
+                               f2.unmeta
                            else false in
                          if uu___8
                          then
                            FStarC_Class_Deq.op_Equals_Question
                              (FStarC_Class_Ord.ord_eq
-                                FStarC_Class_Ord.ord_bool) f1.unmeta
-                             f2.unmeta
+                                FStarC_Class_Ord.ord_bool) f1.unascribe
+                             f2.unascribe
                          else false in
                        if uu___7
                        then
                          FStarC_Class_Deq.op_Equals_Question
                            (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                           f1.unascribe f2.unascribe
+                           f1.in_full_norm_request f2.in_full_norm_request
                        else false in
                      if uu___6
                      then
                        FStarC_Class_Deq.op_Equals_Question
                          (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                         f1.in_full_norm_request f2.in_full_norm_request
+                         f1.weakly_reduce_scrutinee
+                         f2.weakly_reduce_scrutinee
                      else false in
                    if uu___5
                    then
                      FStarC_Class_Deq.op_Equals_Question
                        (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                       f1.weakly_reduce_scrutinee f2.weakly_reduce_scrutinee
+                       f1.nbe_step f2.nbe_step
                    else false in
                  if uu___4
                  then
                    FStarC_Class_Deq.op_Equals_Question
                      (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                     f1.nbe_step f2.nbe_step
+                     f1.for_extraction f2.for_extraction
                  else false in
                if uu___3
                then
                  FStarC_Class_Deq.op_Equals_Question
                    (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                   f1.for_extraction f2.for_extraction
+                   f1.unrefine f2.unrefine
                else false in
              if uu___2
              then
                FStarC_Class_Deq.op_Equals_Question
                  (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-                 f1.unrefine f2.unrefine
+                 f1.default_univs_to_zero f2.default_univs_to_zero
              else false in
            if uu___1
            then
              FStarC_Class_Deq.op_Equals_Question
-               (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
-               f1.default_univs_to_zero f2.default_univs_to_zero
+               (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.tactics
+               f2.tactics
            else false in
          if uu___
          then
            FStarC_Class_Deq.op_Equals_Question
-             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool) f1.tactics
-             f2.tactics
+             (FStarC_Class_Ord.ord_eq FStarC_Class_Ord.ord_bool)
+             f1.reduce_projections f2.reduce_projections
          else false)
   }
 let default_steps : fsteps=
@@ -920,7 +963,8 @@ let default_steps : fsteps=
     for_extraction = false;
     unrefine = false;
     default_univs_to_zero = false;
-    tactics = false
+    tactics = false;
+    reduce_projections = false
   }
 let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
   let optlist uu___ =
@@ -963,7 +1007,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Iota ->
       {
@@ -1000,7 +1045,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Zeta ->
       {
@@ -1037,7 +1083,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.ZetaFull ->
       {
@@ -1074,7 +1121,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Beta) ->
       {
@@ -1111,7 +1159,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Iota) ->
       {
@@ -1148,7 +1197,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta) ->
       {
@@ -1185,7 +1235,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Exclude uu___ ->
       FStarC_Effect.failwith "Bad exclude"
@@ -1224,7 +1275,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.HNF ->
       {
@@ -1261,7 +1313,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Primops ->
       {
@@ -1298,7 +1351,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Eager_unfolding -> fs
   | FStarC_TypeChecker_Env.Inlining -> fs
@@ -1337,7 +1391,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldUntil d ->
       {
@@ -1374,7 +1429,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldOnly lids ->
       {
@@ -1413,7 +1469,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldOnce lids ->
       {
@@ -1452,7 +1509,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldFully lids ->
       {
@@ -1491,7 +1549,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldAttr lids ->
       {
@@ -1530,7 +1589,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.DontUnfoldAttr lids ->
       {
@@ -1569,7 +1629,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.UnfoldQual strs ->
       let fs1 =
@@ -1607,7 +1668,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
           for_extraction = (fs.for_extraction);
           unrefine = (fs.unrefine);
           default_univs_to_zero = (fs.default_univs_to_zero);
-          tactics = (fs.tactics)
+          tactics = (fs.tactics);
+          reduce_projections = (fs.reduce_projections)
         } in
       if FStarC_List.contains "pure_subterms_within_computations" strs
       then
@@ -1644,7 +1706,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
           for_extraction = (fs1.for_extraction);
           unrefine = (fs1.unrefine);
           default_univs_to_zero = (fs1.default_univs_to_zero);
-          tactics = (fs1.tactics)
+          tactics = (fs1.tactics);
+          reduce_projections = (fs1.reduce_projections)
         }
       else fs1
   | FStarC_TypeChecker_Env.UnfoldNamespace strs ->
@@ -1689,7 +1752,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.PureSubtermsWithinComputations ->
       {
@@ -1725,7 +1789,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Simplify ->
       {
@@ -1762,7 +1827,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.EraseUniverses ->
       {
@@ -1799,7 +1865,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.AllowUnboundUniverses ->
       {
@@ -1836,7 +1903,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Reify ->
       {
@@ -1873,7 +1941,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.CompressUvars ->
       {
@@ -1910,7 +1979,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.NoFullNorm ->
       {
@@ -1947,7 +2017,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.CheckNoUvars ->
       {
@@ -1984,7 +2055,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Unmeta ->
       {
@@ -2021,7 +2093,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Unascribe ->
       {
@@ -2058,7 +2131,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.NBE ->
       {
@@ -2095,7 +2169,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.ForExtraction ->
       {
@@ -2132,7 +2207,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = true;
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Unrefine ->
       {
@@ -2169,7 +2245,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = true;
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.NormDebug -> fs
   | FStarC_TypeChecker_Env.DefaultUnivsToZero ->
@@ -2207,7 +2284,8 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = true;
-        tactics = (fs.tactics)
+        tactics = (fs.tactics);
+        reduce_projections = (fs.reduce_projections)
       }
   | FStarC_TypeChecker_Env.Tactics ->
       {
@@ -2244,7 +2322,46 @@ let fstep_add_one (s : FStarC_TypeChecker_Env.step) (fs : fsteps) : fsteps=
         for_extraction = (fs.for_extraction);
         unrefine = (fs.unrefine);
         default_univs_to_zero = (fs.default_univs_to_zero);
-        tactics = true
+        tactics = true;
+        reduce_projections = (fs.reduce_projections)
+      }
+  | FStarC_TypeChecker_Env.ReduceProjections ->
+      {
+        beta = (fs.beta);
+        iota = (fs.iota);
+        zeta = (fs.zeta);
+        zeta_full = (fs.zeta_full);
+        weak = (fs.weak);
+        hnf = (fs.hnf);
+        primops = (fs.primops);
+        do_not_unfold_pure_lets = (fs.do_not_unfold_pure_lets);
+        unfold_until = (fs.unfold_until);
+        unfold_only = (fs.unfold_only);
+        unfold_once = (fs.unfold_once);
+        unfold_fully = (fs.unfold_fully);
+        unfold_attr = (fs.unfold_attr);
+        unfold_qual = (fs.unfold_qual);
+        unfold_namespace = (fs.unfold_namespace);
+        dont_unfold_attr = (fs.dont_unfold_attr);
+        pure_subterms_within_computations =
+          (fs.pure_subterms_within_computations);
+        simplify = (fs.simplify);
+        erase_universes = (fs.erase_universes);
+        allow_unbound_universes = (fs.allow_unbound_universes);
+        reify_ = (fs.reify_);
+        compress_uvars = (fs.compress_uvars);
+        no_full_norm = (fs.no_full_norm);
+        check_no_uvars = (fs.check_no_uvars);
+        unmeta = (fs.unmeta);
+        unascribe = (fs.unascribe);
+        in_full_norm_request = (fs.in_full_norm_request);
+        weakly_reduce_scrutinee = (fs.weakly_reduce_scrutinee);
+        nbe_step = (fs.nbe_step);
+        for_extraction = (fs.for_extraction);
+        unrefine = (fs.unrefine);
+        default_univs_to_zero = (fs.default_univs_to_zero);
+        tactics = (fs.tactics);
+        reduce_projections = true
       }
 let to_fsteps (s : FStarC_TypeChecker_Env.step Prims.list) : fsteps=
   FStarC_List.fold_right fstep_add_one s default_steps
@@ -2593,7 +2710,8 @@ let add_nbe (s : fsteps) : fsteps=
       for_extraction = (s.for_extraction);
       unrefine = (s.unrefine);
       default_univs_to_zero = (s.default_univs_to_zero);
-      tactics = (s.tactics)
+      tactics = (s.tactics);
+      reduce_projections = (s.reduce_projections)
     }
   else s
 let dbg_Norm : Prims.bool FStarC_Effect.ref= FStarC_Debug.get_toggle "Norm"
@@ -2797,6 +2915,8 @@ let translate_norm_step (s : FStarC_NormSteps.norm_step) :
   | FStarC_NormSteps.Unascribe -> [FStarC_TypeChecker_Env.Unascribe]
   | FStarC_NormSteps.NBE -> [FStarC_TypeChecker_Env.NBE]
   | FStarC_NormSteps.Unmeta -> [FStarC_TypeChecker_Env.Unmeta]
+  | FStarC_NormSteps.ReduceProjections ->
+      [FStarC_TypeChecker_Env.ReduceProjections]
 let translate_norm_steps (s : FStarC_NormSteps.norm_step Prims.list) :
   FStarC_TypeChecker_Env.step Prims.list=
   let s1 = FStarC_List.concatMap translate_norm_step s in

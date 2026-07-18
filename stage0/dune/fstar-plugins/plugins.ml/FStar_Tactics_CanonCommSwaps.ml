@@ -17,7 +17,6 @@ let rec apply_swaps :
   'a . 'a Prims.list -> Obj.t swap Prims.list -> 'a Prims.list =
   fun xs ss ->
     match ss with | [] -> xs | s::ss' -> apply_swaps (apply_swap () xs s) ss'
-type ('a, 'xs, 'ys) equal_counts = unit
 type ('a, 'xs) swap_for = Obj.t swap
 type ('a, 'xs) swaps_for = Obj.t swap Prims.list
 let rec lift_swaps_cons :

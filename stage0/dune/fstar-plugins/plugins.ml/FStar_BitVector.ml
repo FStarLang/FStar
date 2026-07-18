@@ -60,8 +60,6 @@ let rec lognot_vec (n : Prims.pos) (a : Obj.t bv_t) : Obj.t bv_t=
          (Prims.op_Negation (FStar_Seq_Base.index a Prims.int_zero)))
       (lognot_vec (n - Prims.int_one)
          (FStar_Seq_Base.slice a Prims.int_one n))
-type ('n, 'a, 'b) is_subset_vec = unit
-type ('n, 'a, 'b) is_superset_vec = unit
 let shift_left_vec (n : Prims.pos) (a : Obj.t bv_t) (s : Prims.nat) :
   Obj.t bv_t=
   if s >= n

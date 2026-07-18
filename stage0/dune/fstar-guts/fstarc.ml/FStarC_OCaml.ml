@@ -26,7 +26,7 @@ let exec_in_ocamlenv (cmd : Prims.string) (args : Prims.string Prims.list) :
    | FStar_Pervasives.Inl rc1 -> FStarC_Effect.exit rc1
    | FStar_Pervasives.Inr uu___1 -> FStarC_Effect.exit Prims.int_one)
 let app_lib : Prims.string= "fstar.lib"
-let plugin_lib : Prims.string= "fstar.pluginlib"
+let plugin_lib : Prims.string= "fstar.compiler.plugins"
 let wstr : Prims.string= "-8"
 let common_args : Prims.string Prims.list= ["-w"; wstr; "-thread"]
 let exec_ocamlc (args : Prims.string Prims.list) : 'a=
@@ -40,4 +40,4 @@ let exec_ocamlopt (args : Prims.string Prims.list) : 'a=
 let exec_ocamlopt_plugin (args : Prims.string Prims.list) : 'a=
   exec_in_ocamlenv "ocamlfind"
     (FStar_List_Tot_Base.op_At ("opt" :: common_args) ("-shared" ::
-       "-package" :: plugin_lib :: args))
+       "-package" :: plugin_lib :: "-open" :: "Fstarcompiler" :: args))

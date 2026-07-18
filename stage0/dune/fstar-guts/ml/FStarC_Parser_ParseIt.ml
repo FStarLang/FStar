@@ -89,7 +89,7 @@ let take_lang_extension file =
 
 let check_extension fn =
   if (not (has_extension fn (fst_extensions ()))) then
-    let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
+    let message = FStarC_Format.fmt1 "Unrecognized extension ‘%s’" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
@@ -340,6 +340,7 @@ let string_of_token =
   | PRAGMA_POP_OPTIONS -> "PRAGMA_POP_OPTIONS"
   | PRAGMA_RESTART_SOLVER -> "PRAGMA_RESTART_SOLVER"
   | PRAGMA_PRINT_EFFECTS_GRAPH -> "PRAGMA_PRINT_EFFECTS_GRAPH"
+  | PRAGMA_EVAL -> "PRAGMA_EVAL"
   | SUBTYPE -> "SUBTYPE"
   | EQUALTYPE -> "EQUALTYPE"
   | SUBKIND -> "SUBKIND"

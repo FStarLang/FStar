@@ -182,7 +182,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                     let uu___8 =
                       FStarC_Syntax_Print.sigelt_to_string_short se in
                     FStar_Pprint.doc_of_string uu___8 in
-                  FStar_Pprint.bquotes uu___7 in
+                  FStarC_Errors_Msg.fquotes uu___7 in
                 FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                   (FStarC_Errors_Msg.text
                      "Invalid qualifiers for declaration") uu___6 in
@@ -204,14 +204,14 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env)
                       let uu___9 =
                         FStarC_Class_PP.pp
                           FStarC_Syntax_Print.pretty_qualifier q in
-                      FStar_Pprint.bquotes uu___9 in
+                      FStarC_Errors_Msg.fquotes uu___9 in
                     let uu___9 =
                       let uu___10 =
                         let uu___11 =
                           let uu___12 =
                             FStarC_Class_PP.pp
                               FStarC_Syntax_Print.pretty_qualifier q' in
-                          FStar_Pprint.bquotes uu___12 in
+                          FStarC_Errors_Msg.fquotes uu___12 in
                         FStar_Pprint.op_Hat_Slash_Hat uu___11
                           (FStarC_Errors_Msg.text "are not compatible.") in
                       FStar_Pprint.op_Hat_Slash_Hat
@@ -431,7 +431,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                                     FStarC_Class_Show.show
                                       FStarC_Syntax_Syntax.showable_fv lbname in
                                   FStarC_Format.fmt1
-                                    "Values of type `%s` will be erased during extraction, but its interface hides this fact."
+                                    "Values of type \226\128\152%s\226\128\153 will be erased during extraction, but its interface hides this fact."
                                     uu___15 in
                                 FStarC_Errors_Msg.text uu___14 in
                               let uu___14 =
@@ -442,7 +442,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                                         FStarC_Syntax_Syntax.showable_fv
                                         lbname in
                                     FStarC_Format.fmt1
-                                      "Add the `erasable` attribute to the `val %s` declaration for this symbol in the interface"
+                                      "Add the \226\128\152erasable\226\128\153 attribute to the \226\128\152val %s\226\128\153 declaration for this symbol in the interface"
                                       uu___17 in
                                   FStarC_Errors_Msg.text uu___16 in
                                 [uu___15] in
@@ -476,7 +476,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
              (Obj.magic
                 [FStarC_Errors_Msg.text
-                   "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`."])
+                   "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked \226\128\152noeq\226\128\153."])
          else ()
      | FStarC_Syntax_Syntax.Sig_declare_typ uu___3 -> ()
      | FStarC_Syntax_Syntax.Sig_fail uu___3 -> ()
@@ -508,7 +508,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
                         (FStarC_Errors_Msg.text "The term") uu___11 in
                     [uu___10] in
                   (FStarC_Errors_Msg.text
-                     "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types.")
+                     "Illegal attribute: the \226\128\152erasable\226\128\153 attribute is only permitted on inductive type definitions and abbreviations for non-informative types.")
                     :: uu___9 in
                 FStarC_Errors.raise_error
                   (FStarC_Syntax_Syntax.has_range_syntax ()) body
@@ -553,7 +553,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
            (Obj.magic
               [FStarC_Errors_Msg.text
-                 "Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types."]))
+                 "Illegal attribute: the \226\128\152erasable\226\128\153 attribute is only permitted on inductive type definitions and abbreviations for non-informative types."]))
   else ()
 let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : unit=
@@ -599,7 +599,7 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
                                 FStarC_Class_Show.show
                                   FStarC_Syntax_Syntax.showable_fv lbname in
                               FStarC_Format.fmt1
-                                "Values of type `%s` will be erased during extraction, but its interface hides this fact."
+                                "Values of type \226\128\152%s\226\128\153 will be erased during extraction, but its interface hides this fact."
                                 uu___6 in
                             FStarC_Errors_Msg.text uu___5 in
                           let uu___5 =
@@ -609,7 +609,7 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
                                   FStarC_Class_Show.show
                                     FStarC_Syntax_Syntax.showable_fv lbname in
                                 FStarC_Format.fmt1
-                                  "Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
+                                  "Add the \226\128\152must_erase_for_extraction\226\128\153 attribute to the \226\128\152val %s\226\128\153 declaration for this symbol in the interface"
                                   uu___8 in
                               FStarC_Errors_Msg.text uu___7 in
                             [uu___6] in
@@ -630,7 +630,7 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
                                    FStarC_Class_Show.show
                                      FStarC_Syntax_Syntax.showable_fv lbname in
                                  FStarC_Format.fmt1
-                                   "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can."
+                                   "Values of type \226\128\152%s\226\128\153 cannot be erased during extraction, but the \226\128\152must_erase_for_extraction\226\128\153 attribute claims that it can."
                                    uu___7 in
                                FStarC_Errors_Msg.text uu___6 in
                              [uu___5;
@@ -743,12 +743,12 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
                 let uu___5 =
                   let uu___6 = FStarC_Syntax_Print.sigelt_to_string_short se in
                   FStar_Pprint.arbitrary_string uu___6 in
-                FStar_Pprint.squotes uu___5 in
+                FStarC_Errors_Msg.fquotes uu___5 in
               FStar_Pprint.op_Hat_Slash_Hat
                 (FStarC_Errors_Msg.text "It is not allowed for") uu___4 in
             [uu___3] in
           (FStarC_Errors_Msg.text
-             "The `instance` attribute is only allowed on `let` and `val` declarations.")
+             "The \226\128\152instance\226\128\153 attribute is only allowed on \226\128\152let\226\128\153 and \226\128\152val\226\128\153 declarations.")
             :: uu___2 in
         FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range rng
           FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance ()

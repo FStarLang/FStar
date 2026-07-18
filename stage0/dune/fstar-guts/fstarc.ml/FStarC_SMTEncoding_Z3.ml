@@ -328,7 +328,7 @@ let check_z3version (p : FStarC_Util.proc) : unit=
            (FStarC_List.op_At
               [FStarC_Errors_Msg.text
                  (FStarC_Format.fmt3
-                    "Unexpected Z3 version for '%s': expected '%s', got '%s'."
+                    "Unexpected Z3 version for \226\128\152%s\226\128\153: expected \226\128\152%s\226\128\153, got \226\128\152%s\226\128\153."
                     (FStarC_Util.proc_prog p) ver_conf ver_found)]
               (FStarC_Find_Z3.z3_install_suggestion ver_conf)));
       FStarC_Errors.stop_if_err ();
@@ -360,7 +360,7 @@ let new_z3proc (id : Prims.string)
               [uu___4] in
             (FStar_Pprint.prefix (Prims.of_int 2) Prims.int_one
                (FStarC_Errors_Msg.text "Command:")
-               (FStar_Pprint.squotes
+               (FStarC_Errors_Msg.fquotes
                   (FStar_Pprint.arbitrary_string
                      (FStar_Pervasives_Native.fst cmd_and_args))))
               :: uu___3 in
@@ -1134,7 +1134,7 @@ let ask_text (r : FStarC_Range_Type.t)
   let theory =
     match core with
     | FStar_Pervasives_Native.None ->
-        with_solver_state FStarC_SMTEncoding_SolverState.flush
+        reading_solver_state FStarC_SMTEncoding_SolverState.all_decls
     | FStar_Pervasives_Native.Some core1 ->
         reading_solver_state
           (FStarC_SMTEncoding_SolverState.filter_with_unsat_core queryid

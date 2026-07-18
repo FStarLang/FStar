@@ -3,15 +3,15 @@ open Prims
 exception NotFound 
 let uu___is_NotFound (projectee : Prims.exn) : Prims.bool=
   match projectee with | NotFound -> true | uu___ -> false
-let debug (f : unit -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+let debug (f : unit -> (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr) :
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     let x = FStarC_Tactics_V2_Builtins.debugging () ps in
     if x
     then let x1 = f () ps in FStarC_Tactics_V2_Builtins.print x1 ps
     else ()
 let mk_one_projector (unf : Prims.string Prims.list) (np : Prims.nat)
-  (i : Prims.nat) : (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (i : Prims.nat) : (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     debug
       (fun uu___ ps1 ->
@@ -59,7 +59,7 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_int
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let mk_one_method (proj : Prims.string) (np : Prims.nat) :
-  (unit, unit) FStar_Tactics_Effect.tac_repr=
+  (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     debug
       (fun uu___ ps1 ->
@@ -96,25 +96,21 @@ let _ =
                Fstarcompiler.FStarC_Syntax_Embeddings.e_int
                Fstarcompiler.FStarC_Syntax_Embeddings.e_unit psc ncb us args)
 let subst_map
-  (uu___2 :
+  (ss :
     (FStar_Tactics_NamedView.namedv * FStarC_Reflection_Types.fv) Prims.list)
-  (uu___1 : FStar_Tactics_NamedView.term)
-  (uu___ : FStar_Tactics_NamedView.term) :
-  (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr=
-  (fun ss r t ->
-     Obj.magic
-       (fun uu___ ->
-          FStarC_Reflection_V2_Builtins.subst_term
-            (FStar_List_Tot_Base.map
-               (fun uu___1 ->
-                  match uu___1 with
-                  | (x, fv) ->
-                      FStarC_Syntax_Syntax.NT
-                        ((FStarC_Reflection_V2_Builtins.pack_namedv x),
-                          (FStar_Reflection_V2_Derived.mk_e_app
-                             (FStar_Tactics_NamedView.pack
-                                (FStar_Tactics_NamedView.Tv_FVar fv)) 
-                             [r]))) ss) t)) uu___2 uu___1 uu___
+  (r : FStar_Tactics_NamedView.term) (t : FStar_Tactics_NamedView.term) :
+  (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=
+  fun uu___ ->
+    FStarC_Reflection_V2_Builtins.subst_term
+      (FStar_List_Tot_Base.map
+         (fun uu___1 ->
+            match uu___1 with
+            | (x, fv) ->
+                FStarC_Syntax_Syntax.NT
+                  ((FStarC_Reflection_V2_Builtins.pack_namedv x),
+                    (FStar_Reflection_V2_Derived.mk_e_app
+                       (FStar_Tactics_NamedView.pack
+                          (FStar_Tactics_NamedView.Tv_FVar fv)) [r]))) ss) t
 let binder_mk_implicit (b : FStar_Tactics_NamedView.binder) :
   FStar_Tactics_NamedView.binder=
   let q =
@@ -143,17 +139,12 @@ let binder_argv (b : FStar_Tactics_NamedView.binder) :
     | q1 -> q1 in
   ((binder_to_term b), q)
 let rec list_last :
-  'a . 'a Prims.list -> ('a, unit) FStar_Tactics_Effect.tac_repr =
-  fun uu___ ->
-    (fun xs ->
-       match xs with
-       | [] ->
-           Obj.magic
-             (Obj.repr (FStar_Tactics_V2_Derived.fail "list_last: empty"))
-       | x::[] ->
-           Obj.magic
-             (Obj.repr (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> x)))
-       | uu___::xs1 -> Obj.magic (Obj.repr (list_last xs1))) uu___
+  'a . 'a Prims.list -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr =
+  fun xs ->
+    match xs with
+    | [] -> FStar_Tactics_V2_Derived.fail "list_last: empty"
+    | x::[] -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> x)
+    | uu___::xs1 -> list_last xs1
 let embed_int (i : Prims.int) : FStar_Tactics_NamedView.term=
   FStarC_Reflection_V2_Builtins.pack_ln
     (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_Int i))
@@ -176,7 +167,7 @@ let mk_proj_decl (is_method : Prims.bool)
     (FStar_Tactics_NamedView.namedv * FStarC_Reflection_Types.fv) Prims.list)
   :
   ((FStarC_Reflection_Types.sigelt Prims.list * FStarC_Reflection_Types.fv),
-    unit) FStar_Tactics_Effect.tac_repr=
+    Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
     debug
       (fun uu___ ps1 ->
@@ -399,16 +390,12 @@ let mk_proj_decl (is_method : Prims.bool)
               (FStarC_Reflection_V2_Builtins.sigelt_attrs x10)) x10) :: x11),
         x5)))
 let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
-  (FStarC_Reflection_Types.sigelt Prims.list, unit)
+  (FStarC_Reflection_Types.sigelt Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   fun ps ->
     debug
-      (fun uu___ ->
-         (fun uu___ ->
-            Obj.magic
-              (fun uu___1 ->
-                 Prims.strcat "!! mk_projs tactic called on: " tyname)) uu___)
-      ps;
+      (fun uu___ uu___1 ->
+         Prims.strcat "!! mk_projs tactic called on: " tyname) ps;
     (let x1 = FStarC_Reflection_V2_Builtins.explode_qn tyname in
      let x2 =
        let x3 = FStarC_Tactics_V2_Builtins.top_env () ps in
@@ -471,11 +458,10 @@ let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
                                       match uu___1 with
                                       | (decls, smap, unfold_names_tm, idx)
                                           ->
-                                          FStar_Tactics_Effect.tac_bind
-                                            (Obj.magic
-                                               (mk_proj_decl is_class x1
-                                                  ctorname univs params idx
-                                                  field unfold_names_tm smap))
+                                          FStar_Tactics_Effect.tac_bind () ()
+                                            (mk_proj_decl is_class x1
+                                               ctorname univs params idx
+                                               field unfold_names_tm smap)
                                             (fun uu___2 uu___3 ->
                                                match uu___2 with
                                                | (ds, fv) ->

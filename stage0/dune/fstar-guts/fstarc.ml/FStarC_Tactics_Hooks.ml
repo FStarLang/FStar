@@ -266,7 +266,9 @@ let rec traverse
               FStarC_Syntax_Syntax.hash_code = uu___3;_};
           FStarC_Syntax_Syntax.args = (p, uu___4)::(q, uu___5)::[];_}
         when FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid ->
-        let x = FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None p in
+        let x =
+          let uu___6 = FStarC_Syntax_Util.mk_squash p in
+          FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None uu___6 in
         let r1 = traverse f (flip pol1) e p in
         let r2 = traverse f pol1 (FStarC_TypeChecker_Env.push_bv e x) q in
         comb2
@@ -282,8 +284,12 @@ let rec traverse
               FStarC_Syntax_Syntax.hash_code = uu___3;_};
           FStarC_Syntax_Syntax.args = (p, uu___4)::(q, uu___5)::[];_}
         when FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.iff_lid ->
-        let xp = FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None p in
-        let xq = FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None q in
+        let xp =
+          let uu___6 = FStarC_Syntax_Util.mk_squash p in
+          FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None uu___6 in
+        let xq =
+          let uu___6 = FStarC_Syntax_Util.mk_squash q in
+          FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None uu___6 in
         let r1 = traverse f Both (FStarC_TypeChecker_Env.push_bv e xq) p in
         let r2 = traverse f Both (FStarC_TypeChecker_Env.push_bv e xp) q in
         (match (r1, r2) with
@@ -1009,7 +1015,9 @@ let rec traverse_for_spinoff (pol1 : pol)
                FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid
                ->
                let x =
-                 FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None p in
+                 let uu___9 = FStarC_Syntax_Util.mk_squash p in
+                 FStarC_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
+                   uu___9 in
                let r1 = traverse1 (flip pol1) e p in
                let r2 = traverse1 pol1 (FStarC_TypeChecker_Env.push_bv e x) q in
                comb2

@@ -67,7 +67,8 @@ type record_or_dc =
   typename: FStarC_Ident.lident ;
   constrname: FStarC_Ident.ident ;
   parms: FStarC_Syntax_Syntax.binders ;
-  fields: (FStarC_Ident.ident * FStarC_Syntax_Syntax.typ) Prims.list ;
+  fields:
+    (FStarC_Ident.ident * Prims.bool * FStarC_Syntax_Syntax.typ) Prims.list ;
   is_private: Prims.bool ;
   is_record: Prims.bool }
 let __proj__Mkrecord_or_dc__item__typename (projectee : record_or_dc) :
@@ -85,7 +86,7 @@ let __proj__Mkrecord_or_dc__item__parms (projectee : record_or_dc) :
   match projectee with
   | { typename; constrname; parms; fields; is_private; is_record;_} -> parms
 let __proj__Mkrecord_or_dc__item__fields (projectee : record_or_dc) :
-  (FStarC_Ident.ident * FStarC_Syntax_Syntax.typ) Prims.list=
+  (FStarC_Ident.ident * Prims.bool * FStarC_Syntax_Syntax.typ) Prims.list=
   match projectee with
   | { typename; constrname; parms; fields; is_private; is_record;_} -> fields
 let __proj__Mkrecord_or_dc__item__is_private (projectee : record_or_dc) :
@@ -871,7 +872,7 @@ let find_in_record (ns : FStarC_Ident.ident Prims.list)
       FStarC_Util.find_map record.fields
         (fun uu___ ->
            match uu___ with
-           | (f, uu___2) ->
+           | (f, uu___2, uu___3) ->
                if
                  (FStarC_Ident.string_of_id id) =
                    (FStarC_Ident.string_of_id f)
@@ -887,7 +888,7 @@ let find_in_record_many (ids : FStarC_Ident.ident Prims.list)
     FStarC_Util.multiset_equiv
       (fun uu___ id ->
          match uu___ with
-         | (fn, uu___2) ->
+         | (fn, uu___2, uu___3) ->
              (FStarC_Ident.string_of_id id) = (FStarC_Ident.string_of_id fn))
       record.fields ids in
   if found then cont record else Cont_ignore
@@ -1963,25 +1964,14 @@ let extract_record (e : env)
                          (match uu___26 with
                           | (_params, formals) ->
                               let is_rec = is_record typename_quals in
-                              let formals' =
-                                FStarC_List.collect
-                                  (fun f ->
-                                     if
-                                       (FStarC_Syntax_Syntax.is_null_bv
-                                          f.FStarC_Syntax_Syntax.binder_bv)
-                                         ||
-                                         (is_rec &&
-                                            (FStarC_Syntax_Syntax.is_bqual_implicit
-                                               f.FStarC_Syntax_Syntax.binder_qual))
-                                     then []
-                                     else [f]) formals in
-                              let fields' =
+                              let fields =
                                 FStarC_List.map
                                   (fun f ->
                                      (((f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname),
+                                       (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta
+                                          f.FStarC_Syntax_Syntax.binder_qual),
                                        ((f.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)))
-                                  formals' in
-                              let fields = fields' in
+                                  formals in
                               let record =
                                 {
                                   typename;
@@ -2005,23 +1995,23 @@ let extract_record (e : env)
                                 | () ->
                                     ((let add_field uu___29 =
                                         match uu___29 with
-                                        | (id, uu___30) ->
+                                        | (id, uu___30, uu___31) ->
                                             let modul =
-                                              let uu___31 =
+                                              let uu___32 =
                                                 FStarC_Ident.lid_of_ids
                                                   (FStarC_Ident.ns_of_lid
                                                      constrname) in
                                               FStarC_Ident.string_of_lid
-                                                uu___31 in
-                                            let uu___31 =
+                                                uu___32 in
+                                            let uu___32 =
                                               get_exported_id_set e modul in
-                                            (match uu___31 with
+                                            (match uu___32 with
                                              | FStar_Pervasives_Native.Some
                                                  my_ex ->
                                                  let my_exported_ids =
                                                    my_ex Exported_id_field in
-                                                 ((let uu___33 =
-                                                     let uu___34 =
+                                                 ((let uu___34 =
+                                                     let uu___35 =
                                                        FStarC_Effect.op_Bang
                                                          my_exported_ids in
                                                      Obj.magic
@@ -2032,22 +2022,22 @@ let extract_record (e : env)
                                                                 FStarC_Class_Ord.ord_string))
                                                           (FStarC_Ident.string_of_id
                                                              id)
-                                                          (Obj.magic uu___34)) in
+                                                          (Obj.magic uu___35)) in
                                                    FStarC_Effect.op_Colon_Equals
-                                                     my_exported_ids uu___33);
+                                                     my_exported_ids uu___34);
                                                   (match () with
                                                    | () ->
                                                        let projname =
-                                                         let uu___33 =
-                                                           let uu___34 =
+                                                         let uu___34 =
+                                                           let uu___35 =
                                                              FStarC_Syntax_Util.mk_field_projector_name_from_ident
                                                                constrname id in
                                                            FStarC_Ident.ident_of_lid
-                                                             uu___34 in
+                                                             uu___35 in
                                                          FStarC_Ident.string_of_id
-                                                           uu___33 in
-                                                       let uu___34 =
-                                                         let uu___35 =
+                                                           uu___34 in
+                                                       let uu___35 =
+                                                         let uu___36 =
                                                            FStarC_Effect.op_Bang
                                                              my_exported_ids in
                                                          Obj.magic
@@ -2058,13 +2048,13 @@ let extract_record (e : env)
                                                                     FStarC_Class_Ord.ord_string))
                                                               projname
                                                               (Obj.magic
-                                                                 uu___35)) in
+                                                                 uu___36)) in
                                                        FStarC_Effect.op_Colon_Equals
                                                          my_exported_ids
-                                                         uu___34))
+                                                         uu___35))
                                              | FStar_Pervasives_Native.None
                                                  -> ()) in
-                                      FStarC_List.iter add_field fields');
+                                      FStarC_List.iter add_field fields);
                                      (match () with
                                       | () -> insert_record_cache record))))))
                 | uu___13 -> ())
@@ -2915,7 +2905,7 @@ let elab_restriction
                                FStarC_List.map
                                  (fun uu___14 ->
                                     match uu___14 with
-                                    | (id1, uu___15) ->
+                                    | (id1, uu___15, uu___16) ->
                                         (id1, FStar_Pervasives_Native.None))
                                  fields
                            | FStar_Pervasives_Native.None -> [] in
@@ -3058,7 +3048,8 @@ let push_namespace' (env1 : env) (ns : FStarC_Ident.lident)
                 typo_msg (FStarC_Ident.string_of_lid ns) uu___7 in
               [uu___6] in
             (FStarC_Errors_Msg.text
-               (FStarC_Format.fmt1 "Namespace '%s' cannot be found."
+               (FStarC_Format.fmt1
+                  "Namespace \226\128\152%s\226\128\153 cannot be found."
                   (FStarC_Ident.string_of_lid ns)))
               :: uu___5 in
           FStarC_Errors.raise_error FStarC_Ident.hasrange_lident ns

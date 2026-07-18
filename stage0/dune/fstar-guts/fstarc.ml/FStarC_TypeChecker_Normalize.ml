@@ -36,6 +36,151 @@ let cases (f : 'uuuuu -> 'uuuuu1) (d : 'uuuuu1)
   match uu___ with
   | FStar_Pervasives_Native.Some x -> f x
   | FStar_Pervasives_Native.None -> d
+let head_of_term_is_evaluated (env : FStarC_TypeChecker_Env.env)
+  (t : FStarC_Syntax_Syntax.term) : Prims.bool=
+  let uu___ = FStarC_Syntax_Util.head_and_args_full t in
+  match uu___ with
+  | (h, uu___1) ->
+      let h1 =
+        let uu___2 =
+          let uu___3 = FStarC_Syntax_Util.unlazy h in
+          FStarC_Syntax_Util.unmeta uu___3 in
+        FStarC_Syntax_Util.un_uinst uu___2 in
+      let uu___2 =
+        let uu___3 = FStarC_Syntax_Subst.compress h1 in
+        uu___3.FStarC_Syntax_Syntax.n in
+      (match uu___2 with
+       | FStarC_Syntax_Syntax.Tm_constant uu___3 -> true
+       | FStarC_Syntax_Syntax.Tm_fvar fv ->
+           FStarC_TypeChecker_Env.is_datacon env
+             fv.FStarC_Syntax_Syntax.fv_name
+       | uu___3 -> false)
+let guard (b : Prims.bool) : unit FStar_Pervasives_Native.option=
+  if b then FStar_Pervasives_Native.Some () else FStar_Pervasives_Native.None
+let check_strict_app (cfg : FStarC_TypeChecker_Cfg.cfg)
+  (hua :
+    (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.universes *
+      FStarC_Syntax_Syntax.args))
+  : Prims.bool=
+  let uu___ = hua in
+  match uu___ with
+  | (h, u, a) ->
+      let uu___1 =
+        FStarC_TypeChecker_Env.fv_has_strict_args
+          cfg.FStarC_TypeChecker_Cfg.tcenv h in
+      (match uu___1 with
+       | FStar_Pervasives_Native.None -> false
+       | FStar_Pervasives_Native.Some strict_indices ->
+           (FStarC_TypeChecker_Cfg.log cfg
+              (fun uu___3 ->
+                 let uu___4 =
+                   FStarC_Class_Show.show
+                     (FStarC_Class_Show.show_tuple3
+                        FStarC_Syntax_Syntax.showable_fv
+                        (FStarC_Class_Show.show_list
+                           FStarC_Syntax_Print.showable_univ)
+                        (FStarC_Class_Show.show_list
+                           (FStarC_Class_Show.show_tuple2
+                              FStarC_Syntax_Print.showable_term
+                              FStarC_Syntax_Print.showable_aqual))) hua in
+                 let uu___5 =
+                   FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv h in
+                 let uu___6 =
+                   FStarC_Class_Show.show
+                     (FStarC_Class_Show.show_list
+                        FStarC_Class_Show.showable_int) strict_indices in
+                 FStarC_Format.print3
+                   "Checking strict application for %s, head=%s, strict_indices=%s\n"
+                   uu___4 uu___5 uu___6);
+            (let len_a = FStarC_List.length a in
+             let all_ok =
+               FStarC_List.for_all
+                 (fun i ->
+                    if i >= len_a
+                    then false
+                    else
+                      head_of_term_is_evaluated
+                        cfg.FStarC_TypeChecker_Cfg.tcenv
+                        (FStar_Pervasives_Native.fst (FStarC_List.nth a i)))
+                 strict_indices in
+             all_ok)))
+let check_strict_projector (cfg : FStarC_TypeChecker_Cfg.cfg)
+  (hua :
+    (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.universes *
+      FStarC_Syntax_Syntax.args))
+  : Prims.bool=
+  let uu___ = hua in
+  match uu___ with
+  | (h, u, a) ->
+      let uu___1 =
+        let uu___2 =
+          FStarC_TypeChecker_Env.is_projector
+            cfg.FStarC_TypeChecker_Cfg.tcenv h.FStarC_Syntax_Syntax.fv_name in
+        Prims.op_Negation uu___2 in
+      if uu___1
+      then false
+      else
+        (let rec check args =
+           match args with
+           | [] -> false
+           | (last, last_q)::[] ->
+               if FStar_Pervasives_Native.uu___is_None last_q
+               then
+                 head_of_term_is_evaluated cfg.FStarC_TypeChecker_Cfg.tcenv
+                   last
+               else false
+           | a1::args' ->
+               if
+                 FStar_Pervasives_Native.uu___is_Some
+                   (FStar_Pervasives_Native.snd a1)
+               then check args'
+               else false in
+         check a)
+let check_strict (cfg : FStarC_TypeChecker_Cfg.cfg)
+  (hua :
+    (FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.universes *
+      FStarC_Syntax_Syntax.args))
+  : Prims.bool FStar_Pervasives_Native.option=
+  let uu___ = check_strict_app cfg hua in
+  if uu___
+  then
+    (FStarC_TypeChecker_Cfg.log cfg
+       (fun uu___2 ->
+          let uu___3 =
+            FStarC_Class_Show.show
+              (FStarC_Class_Show.show_tuple3 FStarC_Syntax_Syntax.showable_fv
+                 (FStarC_Class_Show.show_list
+                    FStarC_Syntax_Print.showable_univ)
+                 (FStarC_Class_Show.show_list
+                    (FStarC_Class_Show.show_tuple2
+                       FStarC_Syntax_Print.showable_term
+                       FStarC_Syntax_Print.showable_aqual))) hua in
+          FStarC_Format.print1 "Strict application detected for %s\n" uu___3);
+     FStar_Pervasives_Native.Some false)
+  else
+    (let uu___2 =
+       if
+         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.reduce_projections
+           && (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.iota
+       then check_strict_projector cfg hua
+       else false in
+     if uu___2
+     then
+       (FStarC_TypeChecker_Cfg.log cfg
+          (fun uu___4 ->
+             let uu___5 =
+               FStarC_Class_Show.show
+                 (FStarC_Class_Show.show_tuple3
+                    FStarC_Syntax_Syntax.showable_fv
+                    (FStarC_Class_Show.show_list
+                       FStarC_Syntax_Print.showable_univ)
+                    (FStarC_Class_Show.show_list
+                       (FStarC_Class_Show.show_tuple2
+                          FStarC_Syntax_Print.showable_term
+                          FStarC_Syntax_Print.showable_aqual))) hua in
+             FStarC_Format.print1 "Strict projector detected for %s\n" uu___5);
+        FStar_Pervasives_Native.Some true)
+     else FStar_Pervasives_Native.None)
 type 'a cfg_memo =
   (FStarC_TypeChecker_Cfg.cfg * 'a) FStarC_Syntax_Syntax.memo
 let fresh_memo (uu___ : unit) : 'a FStarC_Syntax_Syntax.memo=
@@ -218,7 +363,9 @@ let closure_to_string (uu___ : closure) : Prims.string=
           (FStarC_List.length env1) in
       let uu___4 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_term t in
       FStarC_Format.fmt2 "(env=%s elts; %s)" uu___3 uu___4
-  | Univ uu___1 -> "Univ"
+  | Univ u ->
+      let uu___1 = FStarC_Class_Show.show FStarC_Syntax_Print.showable_univ u in
+      Prims.strcat "Univ " uu___1
   | Dummy -> "dummy"
 let showable_closure : closure FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = closure_to_string }
@@ -236,7 +383,14 @@ let showable_stack_elt : stack_elt FStarC_Class_Show.showable=
                FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                  (FStarC_List.length bs) in
              FStarC_Format.fmt1 "Abs %s" uu___5
-         | UnivArgs uu___1 -> "UnivArgs"
+         | UnivArgs us ->
+             let uu___1 =
+               FStarC_Class_Show.show
+                 (FStarC_Class_Show.show_tuple2
+                    (FStarC_Class_Show.show_list
+                       FStarC_Syntax_Print.showable_univ)
+                    FStarC_Range_Ops.showable_range) us in
+             Prims.strcat "UnivArgs " uu___1
          | Match uu___1 -> "Match"
          | App (uu___1, t, uu___2, uu___3) ->
              let uu___4 =
@@ -306,36 +460,28 @@ let norm_universe (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
     let u2 = FStarC_Syntax_Subst.compress_univ u1 in
     match u2 with
     | FStarC_Syntax_Syntax.U_bvar x ->
-        (try
-           (fun uu___ ->
-              match () with
-              | () ->
-                  (match FStar_Pervasives_Native.__proj__Mktuple3__item___2
-                           (FStarC_List.nth env1 x)
-                   with
-                   | Univ u3 ->
-                       ((let uu___2 = FStarC_Effect.op_Bang dbg_univ_norm in
-                         if uu___2
-                         then
-                           let uu___3 =
-                             FStarC_Class_Show.show
-                               FStarC_Syntax_Print.showable_univ u3 in
-                           FStarC_Format.print1
-                             "Univ (in norm_universe): %s\n" uu___3
-                         else ());
-                        aux u3)
-                   | Dummy -> [u2]
-                   | uu___1 ->
-                       let uu___2 =
-                         let uu___3 =
-                           FStarC_Class_Show.show
-                             FStarC_Class_Show.showable_int x in
-                         FStarC_Format.fmt1
-                           "Impossible: universe variable u@%s bound to a term"
-                           uu___3 in
-                       FStarC_Effect.failwith uu___2)) ()
-         with
-         | uu___ ->
+        let vo =
+          try
+            (fun uu___ ->
+               match () with
+               | () ->
+                   FStar_Pervasives_Native.Some
+                     (FStar_Pervasives_Native.__proj__Mktuple3__item___2
+                        (FStarC_List.nth env1 x))) ()
+          with | uu___ -> FStar_Pervasives_Native.None in
+        (match vo with
+         | FStar_Pervasives_Native.Some (Univ u3) ->
+             ((let uu___1 = FStarC_Effect.op_Bang dbg_univ_norm in
+               if uu___1
+               then
+                 let uu___2 =
+                   FStarC_Class_Show.show FStarC_Syntax_Print.showable_univ
+                     u3 in
+                 FStarC_Format.print1 "Univ (in norm_universe): %s\n" uu___2
+               else ());
+              aux u3)
+         | FStar_Pervasives_Native.Some (Dummy) -> [u2]
+         | FStar_Pervasives_Native.Some uu___ ->
              if
                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.allow_unbound_universes
              then [FStarC_Syntax_Syntax.U_unknown]
@@ -343,8 +489,20 @@ let norm_universe (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                (let uu___2 =
                   let uu___3 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int x in
-                  Prims.strcat "Universe variable not found: u@" uu___3 in
-                FStarC_Effect.failwith uu___2))
+                  FStarC_Format.fmt1
+                    "Impossible: universe variable u@%s bound to a term"
+                    uu___3 in
+                FStarC_Effect.failwith uu___2)
+         | FStar_Pervasives_Native.None ->
+             if
+               (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.allow_unbound_universes
+             then [FStarC_Syntax_Syntax.U_unknown]
+             else
+               (let uu___1 =
+                  let uu___2 =
+                    FStarC_Class_Show.show FStarC_Class_Show.showable_int x in
+                  Prims.strcat "Universe variable not found: u@" uu___2 in
+                FStarC_Effect.failwith uu___1))
     | FStarC_Syntax_Syntax.U_unif uu___ when
         (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.default_univs_to_zero
         -> [FStarC_Syntax_Syntax.U_zero]
@@ -831,7 +989,9 @@ let reduce_equality (norm_cb : FStarC_Syntax_Embeddings_Base.norm_cb)
           FStarC_TypeChecker_Cfg.default_univs_to_zero =
             (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.default_univs_to_zero);
           FStarC_TypeChecker_Cfg.tactics =
-            (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.tactics)
+            (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.tactics);
+          FStarC_TypeChecker_Cfg.reduce_projections =
+            (FStarC_TypeChecker_Cfg.default_steps.FStarC_TypeChecker_Cfg.reduce_projections)
         };
       FStarC_TypeChecker_Cfg.tcenv = (cfg.FStarC_TypeChecker_Cfg.tcenv);
       FStarC_TypeChecker_Cfg.debug = (cfg.FStarC_TypeChecker_Cfg.debug);
@@ -997,13 +1157,12 @@ let rec maybe_weakly_reduced
          | FStarC_Syntax_Syntax.Meta_labeled uu___1 -> false
          | FStarC_Syntax_Syntax.Meta_desugared uu___1 -> false
          | FStarC_Syntax_Syntax.Meta_named uu___1 -> false)
-let decide_unfolding (cfg : FStarC_TypeChecker_Cfg.cfg)
-  (stack1 : stack_elt Prims.list) (fv : FStarC_Syntax_Syntax.fv)
-  (qninfo : FStarC_TypeChecker_Env.qninfo) :
-  (FStarC_TypeChecker_Cfg.cfg FStar_Pervasives_Native.option * stack_elt
-    Prims.list) FStar_Pervasives_Native.option=
+let decide_unfolding (cfg : FStarC_TypeChecker_Cfg.cfg) (stack1 : stack)
+  (fv : FStarC_Syntax_Syntax.fv) (qninfo : FStarC_TypeChecker_Env.qninfo) :
+  (FStarC_TypeChecker_Cfg.cfg FStar_Pervasives_Native.option * stack)
+    FStar_Pervasives_Native.option=
   let res =
-    FStarC_TypeChecker_Normalize_Unfolding.should_unfold cfg
+    FStarC_TypeChecker_Normalize_Unfolding.should_unfold false cfg
       (fun cfg1 -> should_reify cfg1 stack1) fv qninfo in
   match res with
   | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_no ->
@@ -1090,7 +1249,9 @@ let decide_unfolding (cfg : FStarC_TypeChecker_Cfg.cfg)
                  FStarC_TypeChecker_Cfg.default_univs_to_zero =
                    (uu___2.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                  FStarC_TypeChecker_Cfg.tactics =
-                   (uu___2.FStarC_TypeChecker_Cfg.tactics)
+                   (uu___2.FStarC_TypeChecker_Cfg.tactics);
+                 FStarC_TypeChecker_Cfg.reduce_projections =
+                   (uu___2.FStarC_TypeChecker_Cfg.reduce_projections)
                } in
              {
                FStarC_TypeChecker_Cfg.steps = uu___1;
@@ -1187,7 +1348,9 @@ let decide_unfolding (cfg : FStarC_TypeChecker_Cfg.cfg)
                FStarC_TypeChecker_Cfg.default_univs_to_zero =
                  (uu___.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                FStarC_TypeChecker_Cfg.tactics =
-                 (uu___.FStarC_TypeChecker_Cfg.tactics)
+                 (uu___.FStarC_TypeChecker_Cfg.tactics);
+               FStarC_TypeChecker_Cfg.reduce_projections =
+                 (uu___.FStarC_TypeChecker_Cfg.reduce_projections)
              });
           FStarC_TypeChecker_Cfg.tcenv = (cfg.FStarC_TypeChecker_Cfg.tcenv);
           FStarC_TypeChecker_Cfg.debug = (cfg.FStarC_TypeChecker_Cfg.debug);
@@ -1362,7 +1525,7 @@ let is_quantified_const (uu___2 : FStarC_TypeChecker_Cfg.cfg)
   (uu___1 : FStarC_Syntax_Syntax.bv) (uu___ : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term FStar_Pervasives_Native.option=
   (fun cfg bv phi ->
-     let guard b =
+     let guard1 b =
        if b
        then FStar_Pervasives_Native.Some ()
        else FStar_Pervasives_Native.None in
@@ -1536,7 +1699,7 @@ let is_quantified_const (uu___2 : FStarC_TypeChecker_Cfg.cfg)
                                                         (FStarC_Class_Monad.op_let_Bang
                                                            FStarC_Class_Monad.monad_option
                                                            () ()
-                                                           (guard
+                                                           (guard1
                                                               (FStarC_Syntax_Syntax.bv_eq
                                                                  bv bv'))
                                                            (fun uu___8 ->
@@ -1566,7 +1729,7 @@ let is_quantified_const (uu___2 : FStarC_TypeChecker_Cfg.cfg)
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Class_Monad.monad_option
                                                                     () ()
-                                                                    (guard
+                                                                    (guard1
                                                                     chgd)
                                                                     (fun
                                                                     uu___11
@@ -1603,7 +1766,7 @@ let is_quantified_const (uu___2 : FStarC_TypeChecker_Cfg.cfg)
                                                         (FStarC_Class_Monad.op_let_Bang
                                                            FStarC_Class_Monad.monad_option
                                                            () ()
-                                                           (guard
+                                                           (guard1
                                                               (FStarC_Syntax_Syntax.bv_eq
                                                                  bv bv'))
                                                            (fun uu___9 ->
@@ -1633,7 +1796,7 @@ let is_quantified_const (uu___2 : FStarC_TypeChecker_Cfg.cfg)
                                                                     (FStarC_Class_Monad.op_let_Bang
                                                                     FStarC_Class_Monad.monad_option
                                                                     () ()
-                                                                    (guard
+                                                                    (guard1
                                                                     chgd)
                                                                     (fun
                                                                     uu___12
@@ -2072,130 +2235,49 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
    | FStarC_Syntax_Syntax.Tm_app
        { FStarC_Syntax_Syntax.hd = head; FStarC_Syntax_Syntax.args = args;_}
        ->
-       let strict_args =
-         let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Syntax_Util.unascribe head in
-             FStarC_Syntax_Util.un_uinst uu___4 in
-           uu___3.FStarC_Syntax_Syntax.n in
-         match uu___2 with
-         | FStarC_Syntax_Syntax.Tm_fvar fv ->
-             FStarC_TypeChecker_Env.fv_has_strict_args
-               cfg.FStarC_TypeChecker_Cfg.tcenv fv
-         | uu___3 -> FStar_Pervasives_Native.None in
-       (match strict_args with
-        | FStar_Pervasives_Native.None ->
-            let stack3 =
-              FStarC_List.fold_right
-                (fun uu___2 stack4 ->
-                   match uu___2 with
-                   | (a, aq) ->
-                       let a1 =
-                         let uu___3 =
-                           if
-                             ((FStarC_TypeChecker_Cfg.cfg_env cfg).FStarC_TypeChecker_Env.erase_erasable_args
-                                ||
-                                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
-                               ||
-                               (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args
-                           then FStarC_Syntax_Util.aqual_is_erasable aq
-                           else false in
-                         if uu___3 then FStarC_Syntax_Util.exp_unit else a in
-                       let env2 =
-                         let uu___3 =
-                           let uu___4 = FStarC_Syntax_Subst.compress a1 in
-                           uu___4.FStarC_Syntax_Syntax.n in
-                         match uu___3 with
-                         | FStarC_Syntax_Syntax.Tm_name uu___4 -> empty_env
-                         | FStarC_Syntax_Syntax.Tm_constant uu___4 ->
-                             empty_env
-                         | FStarC_Syntax_Syntax.Tm_lazy uu___4 -> empty_env
-                         | FStarC_Syntax_Syntax.Tm_fvar uu___4 -> empty_env
-                         | uu___4 -> env1 in
-                       let uu___3 =
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 =
-                               let uu___7 = fresh_memo () in
-                               (env2, a1, uu___7, false) in
-                             Clos uu___6 in
-                           (uu___5, aq, (t1.FStarC_Syntax_Syntax.pos)) in
-                         Arg uu___4 in
-                       uu___3 :: stack4) args stack2 in
-            (FStarC_TypeChecker_Cfg.log cfg
-               (fun uu___3 ->
-                  let uu___4 =
-                    FStarC_Class_Show.show FStarC_Class_Show.showable_nat
-                      (FStarC_List.length args) in
-                  FStarC_Format.print1 "\tPushed %s arguments\n" uu___4);
-             norm cfg env1 stack3 head)
-        | FStar_Pervasives_Native.Some strict_args1 ->
-            let norm_args =
-              FStarC_List.map
-                (fun uu___2 ->
-                   match uu___2 with
-                   | (a, i) -> let uu___3 = norm cfg env1 [] a in (uu___3, i))
-                args in
-            let norm_args_len = FStarC_List.length norm_args in
-            let uu___2 =
-              FStarC_List.for_all
-                (fun i ->
-                   if i >= norm_args_len
-                   then false
-                   else
-                     (let uu___4 = FStarC_List.nth norm_args i in
-                      match uu___4 with
-                      | (arg_i, uu___5) ->
-                          let uu___6 =
-                            let uu___7 = FStarC_Syntax_Util.unmeta_safe arg_i in
-                            FStarC_Syntax_Util.head_and_args uu___7 in
-                          (match uu___6 with
-                           | (head1, uu___7) ->
-                               let uu___8 =
-                                 let uu___9 =
-                                   FStarC_Syntax_Util.un_uinst head1 in
-                                 uu___9.FStarC_Syntax_Syntax.n in
-                               (match uu___8 with
-                                | FStarC_Syntax_Syntax.Tm_constant uu___9 ->
-                                    true
-                                | FStarC_Syntax_Syntax.Tm_fvar fv ->
-                                    FStarC_TypeChecker_Env.is_datacon
-                                      cfg.FStarC_TypeChecker_Cfg.tcenv
-                                      (FStarC_Syntax_Syntax.lid_of_fv fv)
-                                | uu___9 -> false)))) strict_args1 in
-            if uu___2
-            then
-              let stack3 =
-                FStarC_List.fold_right
-                  (fun uu___3 stack4 ->
-                     match uu___3 with
-                     | (a, aq) ->
-                         let uu___4 =
-                           let uu___5 =
-                             let uu___6 =
-                               let uu___7 =
-                                 let uu___8 =
-                                   FStarC_Effect.mk_ref
-                                     (FStar_Pervasives_Native.Some
-                                        (cfg, ([], a))) in
-                                 (env1, a, uu___8, false) in
-                               Clos uu___7 in
-                             (uu___6, aq, (t1.FStarC_Syntax_Syntax.pos)) in
-                           Arg uu___5 in
-                         uu___4 :: stack4) norm_args stack2 in
-              (FStarC_TypeChecker_Cfg.log cfg
-                 (fun uu___4 ->
-                    let uu___5 =
-                      FStarC_Class_Show.show FStarC_Class_Show.showable_nat
-                        (FStarC_List.length args) in
-                    FStarC_Format.print1 "\tPushed %s arguments\n" uu___5);
-               norm cfg env1 stack3 head)
-            else
-              (let head1 = closure_as_term cfg env1 head in
-               let term =
-                 FStarC_Syntax_Syntax.mk_Tm_app head1 norm_args
-                   t1.FStarC_Syntax_Syntax.pos in
-               rebuild cfg env1 stack2 term))
+       let stack3 =
+         FStarC_List.fold_right
+           (fun uu___2 stack4 ->
+              match uu___2 with
+              | (a, aq) ->
+                  let a1 =
+                    let uu___3 =
+                      if
+                        ((FStarC_TypeChecker_Cfg.cfg_env cfg).FStarC_TypeChecker_Env.erase_erasable_args
+                           ||
+                           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction)
+                          ||
+                          (cfg.FStarC_TypeChecker_Cfg.debug).FStarC_TypeChecker_Cfg.erase_erasable_args
+                      then FStarC_Syntax_Util.aqual_is_erasable aq
+                      else false in
+                    if uu___3 then FStarC_Syntax_Util.exp_unit else a in
+                  let env2 =
+                    let uu___3 =
+                      let uu___4 = FStarC_Syntax_Subst.compress a1 in
+                      uu___4.FStarC_Syntax_Syntax.n in
+                    match uu___3 with
+                    | FStarC_Syntax_Syntax.Tm_name uu___4 -> empty_env
+                    | FStarC_Syntax_Syntax.Tm_constant uu___4 -> empty_env
+                    | FStarC_Syntax_Syntax.Tm_lazy uu___4 -> empty_env
+                    | FStarC_Syntax_Syntax.Tm_fvar uu___4 -> empty_env
+                    | uu___4 -> env1 in
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 = fresh_memo () in
+                          (env2, a1, uu___7, false) in
+                        Clos uu___6 in
+                      (uu___5, aq, (t1.FStarC_Syntax_Syntax.pos)) in
+                    Arg uu___4 in
+                  uu___3 :: stack4) args stack2 in
+       (FStarC_TypeChecker_Cfg.log cfg
+          (fun uu___3 ->
+             let uu___4 =
+               FStarC_Class_Show.show FStarC_Class_Show.showable_nat
+                 (FStarC_List.length args) in
+             FStarC_Format.print1 "\tPushed %s arguments\n" uu___4);
+        norm cfg env1 stack3 head)
    | FStarC_Syntax_Syntax.Tm_refine
        { FStarC_Syntax_Syntax.b = x; FStarC_Syntax_Syntax.phi = uu___2;_}
        when
@@ -2431,7 +2513,9 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
                   FStarC_TypeChecker_Cfg.default_univs_to_zero =
                     (uu___2.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                   FStarC_TypeChecker_Cfg.tactics =
-                    (uu___2.FStarC_TypeChecker_Cfg.tactics)
+                    (uu___2.FStarC_TypeChecker_Cfg.tactics);
+                  FStarC_TypeChecker_Cfg.reduce_projections =
+                    (uu___2.FStarC_TypeChecker_Cfg.reduce_projections)
                 });
              FStarC_TypeChecker_Cfg.tcenv =
                (cfg.FStarC_TypeChecker_Cfg.tcenv);
@@ -3016,10 +3100,9 @@ let rec norm (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
            FStarC_Errors.with_ctx "inlining"
              (fun uu___4 -> closure_as_term cfg env1 t1) in
          rebuild cfg env1 stack2 t2)))
-and do_unfold_fv (cfg : FStarC_TypeChecker_Cfg.cfg)
-  (stack1 : stack_elt Prims.list) (t0 : FStarC_Syntax_Syntax.term)
-  (qninfo : FStarC_TypeChecker_Env.qninfo) (f : FStarC_Syntax_Syntax.fv) :
-  FStarC_Syntax_Syntax.term=
+and do_unfold_fv (cfg : FStarC_TypeChecker_Cfg.cfg) (stack1 : stack)
+  (t0 : FStarC_Syntax_Syntax.term) (qninfo : FStarC_TypeChecker_Env.qninfo)
+  (f : FStarC_Syntax_Syntax.fv) : FStarC_Syntax_Syntax.term=
   let defn uu___ =
     FStarC_TypeChecker_Env.lookup_definition_qninfo
       cfg.FStarC_TypeChecker_Cfg.delta_level f.FStarC_Syntax_Syntax.fv_name
@@ -3323,7 +3406,9 @@ and handle_norm_request (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                   FStarC_TypeChecker_Cfg.default_univs_to_zero =
                     (uu___16.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                   FStarC_TypeChecker_Cfg.tactics =
-                    (uu___16.FStarC_TypeChecker_Cfg.tactics)
+                    (uu___16.FStarC_TypeChecker_Cfg.tactics);
+                  FStarC_TypeChecker_Cfg.reduce_projections =
+                    (uu___16.FStarC_TypeChecker_Cfg.reduce_projections)
                 });
              FStarC_TypeChecker_Cfg.tcenv =
                (cfg.FStarC_TypeChecker_Cfg.tcenv);
@@ -3448,7 +3533,9 @@ and handle_norm_request (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                   FStarC_TypeChecker_Cfg.default_univs_to_zero =
                     (uu___15.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                   FStarC_TypeChecker_Cfg.tactics =
-                    (uu___15.FStarC_TypeChecker_Cfg.tactics)
+                    (uu___15.FStarC_TypeChecker_Cfg.tactics);
+                  FStarC_TypeChecker_Cfg.reduce_projections =
+                    (uu___15.FStarC_TypeChecker_Cfg.reduce_projections)
                 });
              FStarC_TypeChecker_Cfg.tcenv =
                (cfg.FStarC_TypeChecker_Cfg.tcenv);
@@ -3661,7 +3748,9 @@ and handle_norm_request (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                FStarC_TypeChecker_Cfg.default_univs_to_zero =
                  (uu___3.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                FStarC_TypeChecker_Cfg.tactics =
-                 (uu___3.FStarC_TypeChecker_Cfg.tactics)
+                 (uu___3.FStarC_TypeChecker_Cfg.tactics);
+               FStarC_TypeChecker_Cfg.reduce_projections =
+                 (uu___3.FStarC_TypeChecker_Cfg.reduce_projections)
              } in
            {
              FStarC_TypeChecker_Cfg.steps = uu___2;
@@ -5464,9 +5553,8 @@ and rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
         else ()));
   (let f_opt = is_fext_on_domain t in
    if
-     (if FStar_Pervasives_Native.uu___is_Some f_opt
-      then match stack1 with | (Arg uu___1)::uu___2 -> true | uu___1 -> false
-      else false)
+     (FStar_Pervasives_Native.uu___is_Some f_opt) &&
+       (match stack1 with | (Arg uu___1)::uu___2 -> true | uu___1 -> false)
    then let uu___1 = FStarC_Option.must f_opt in norm cfg env1 stack1 uu___1
    else
      (let uu___2 = maybe_simplify cfg env1 stack1 t in
@@ -5474,7 +5562,204 @@ and rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env) (stack1 : stack)
       | (t1, renorm) ->
           if renorm
           then norm cfg env1 stack1 t1
-          else do_rebuild cfg env1 stack1 t1))
+          else
+            (let uu___4 = FStarC_Syntax_Util.hua t1 in
+             match uu___4 with
+             | FStar_Pervasives_Native.None -> do_rebuild cfg env1 stack1 t1
+             | FStar_Pervasives_Native.Some hua ->
+                 let uu___5 = check_strict cfg hua in
+                 (match uu___5 with
+                  | FStar_Pervasives_Native.Some force ->
+                      let uu___6 = hua in
+                      (match uu___6 with
+                       | (h, u, a) ->
+                           (FStarC_TypeChecker_Cfg.log cfg
+                              (fun uu___8 ->
+                                 let uu___9 =
+                                   FStarC_Class_Show.show
+                                     FStarC_Syntax_Print.showable_term t1 in
+                                 FStarC_Format.print1
+                                   "Strict application detected, trying to unfold the head: %s\n"
+                                   uu___9);
+                            (let fv = FStarC_Syntax_Syntax.lid_of_fv h in
+                             let qninfo =
+                               FStarC_TypeChecker_Env.lookup_qname
+                                 cfg.FStarC_TypeChecker_Cfg.tcenv fv in
+                             let defn =
+                               FStarC_TypeChecker_Env.lookup_definition_qninfo
+                                 cfg.FStarC_TypeChecker_Cfg.delta_level
+                                 h.FStarC_Syntax_Syntax.fv_name qninfo in
+                             if FStar_Pervasives_Native.uu___is_None defn
+                             then do_rebuild cfg env1 stack1 t1
+                             else
+                               (let cfg_zeta =
+                                  {
+                                    FStarC_TypeChecker_Cfg.steps =
+                                      (let uu___9 =
+                                         cfg.FStarC_TypeChecker_Cfg.steps in
+                                       {
+                                         FStarC_TypeChecker_Cfg.beta =
+                                           (uu___9.FStarC_TypeChecker_Cfg.beta);
+                                         FStarC_TypeChecker_Cfg.iota =
+                                           (uu___9.FStarC_TypeChecker_Cfg.iota);
+                                         FStarC_TypeChecker_Cfg.zeta = true;
+                                         FStarC_TypeChecker_Cfg.zeta_full =
+                                           (uu___9.FStarC_TypeChecker_Cfg.zeta_full);
+                                         FStarC_TypeChecker_Cfg.weak =
+                                           (uu___9.FStarC_TypeChecker_Cfg.weak);
+                                         FStarC_TypeChecker_Cfg.hnf =
+                                           (uu___9.FStarC_TypeChecker_Cfg.hnf);
+                                         FStarC_TypeChecker_Cfg.primops =
+                                           (uu___9.FStarC_TypeChecker_Cfg.primops);
+                                         FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.do_not_unfold_pure_lets);
+                                         FStarC_TypeChecker_Cfg.unfold_until
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_until);
+                                         FStarC_TypeChecker_Cfg.unfold_only =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_only);
+                                         FStarC_TypeChecker_Cfg.unfold_once =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_once);
+                                         FStarC_TypeChecker_Cfg.unfold_fully
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_fully);
+                                         FStarC_TypeChecker_Cfg.unfold_attr =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_attr);
+                                         FStarC_TypeChecker_Cfg.unfold_qual =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_qual);
+                                         FStarC_TypeChecker_Cfg.unfold_namespace
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unfold_namespace);
+                                         FStarC_TypeChecker_Cfg.dont_unfold_attr
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.dont_unfold_attr);
+                                         FStarC_TypeChecker_Cfg.pure_subterms_within_computations
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.pure_subterms_within_computations);
+                                         FStarC_TypeChecker_Cfg.simplify =
+                                           (uu___9.FStarC_TypeChecker_Cfg.simplify);
+                                         FStarC_TypeChecker_Cfg.erase_universes
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.erase_universes);
+                                         FStarC_TypeChecker_Cfg.allow_unbound_universes
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.allow_unbound_universes);
+                                         FStarC_TypeChecker_Cfg.reify_ =
+                                           (uu___9.FStarC_TypeChecker_Cfg.reify_);
+                                         FStarC_TypeChecker_Cfg.compress_uvars
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.compress_uvars);
+                                         FStarC_TypeChecker_Cfg.no_full_norm
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.no_full_norm);
+                                         FStarC_TypeChecker_Cfg.check_no_uvars
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.check_no_uvars);
+                                         FStarC_TypeChecker_Cfg.unmeta =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unmeta);
+                                         FStarC_TypeChecker_Cfg.unascribe =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unascribe);
+                                         FStarC_TypeChecker_Cfg.in_full_norm_request
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.in_full_norm_request);
+                                         FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.weakly_reduce_scrutinee);
+                                         FStarC_TypeChecker_Cfg.nbe_step =
+                                           (uu___9.FStarC_TypeChecker_Cfg.nbe_step);
+                                         FStarC_TypeChecker_Cfg.for_extraction
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.for_extraction);
+                                         FStarC_TypeChecker_Cfg.unrefine =
+                                           (uu___9.FStarC_TypeChecker_Cfg.unrefine);
+                                         FStarC_TypeChecker_Cfg.default_univs_to_zero
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.default_univs_to_zero);
+                                         FStarC_TypeChecker_Cfg.tactics =
+                                           (uu___9.FStarC_TypeChecker_Cfg.tactics);
+                                         FStarC_TypeChecker_Cfg.reduce_projections
+                                           =
+                                           (uu___9.FStarC_TypeChecker_Cfg.reduce_projections)
+                                       });
+                                    FStarC_TypeChecker_Cfg.tcenv =
+                                      (cfg.FStarC_TypeChecker_Cfg.tcenv);
+                                    FStarC_TypeChecker_Cfg.debug =
+                                      (cfg.FStarC_TypeChecker_Cfg.debug);
+                                    FStarC_TypeChecker_Cfg.delta_level =
+                                      (cfg.FStarC_TypeChecker_Cfg.delta_level);
+                                    FStarC_TypeChecker_Cfg.primitive_steps =
+                                      (cfg.FStarC_TypeChecker_Cfg.primitive_steps);
+                                    FStarC_TypeChecker_Cfg.strong =
+                                      (cfg.FStarC_TypeChecker_Cfg.strong);
+                                    FStarC_TypeChecker_Cfg.memoize_lazy =
+                                      (cfg.FStarC_TypeChecker_Cfg.memoize_lazy);
+                                    FStarC_TypeChecker_Cfg.normalize_pure_lets
+                                      =
+                                      (cfg.FStarC_TypeChecker_Cfg.normalize_pure_lets);
+                                    FStarC_TypeChecker_Cfg.reifying =
+                                      (cfg.FStarC_TypeChecker_Cfg.reifying);
+                                    FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg
+                                      =
+                                      (cfg.FStarC_TypeChecker_Cfg.compat_memo_ignore_cfg)
+                                  } in
+                                let uu___9 =
+                                  if force
+                                  then true
+                                  else
+                                    (let uu___10 =
+                                       FStarC_TypeChecker_Normalize_Unfolding.should_unfold
+                                         true cfg_zeta (fun uu___11 -> false)
+                                         h qninfo in
+                                     FStarC_TypeChecker_Normalize_Unfolding.uu___is_Should_unfold_yes
+                                       uu___10) in
+                                if uu___9
+                                then
+                                  let stack2 =
+                                    FStarC_List.fold_right
+                                      (fun arg acc ->
+                                         let memo = fresh_memo () in
+                                         let uu___10 =
+                                           let uu___11 =
+                                             let uu___12 =
+                                               FStarC_Class_HasRange.pos
+                                                 (FStarC_Syntax_Syntax.has_range_syntax
+                                                    ())
+                                                 (FStar_Pervasives_Native.fst
+                                                    arg) in
+                                             ((Clos
+                                                 (env1,
+                                                   (FStar_Pervasives_Native.fst
+                                                      arg), memo, false)),
+                                               (FStar_Pervasives_Native.snd
+                                                  arg), uu___12) in
+                                           Arg uu___11 in
+                                         uu___10 :: acc) a stack1 in
+                                  let stack3 =
+                                    if Prims.uu___is_Cons u
+                                    then
+                                      (UnivArgs
+                                         (u, (t1.FStarC_Syntax_Syntax.pos)))
+                                      :: stack2
+                                    else stack2 in
+                                  let t0 = FStarC_Syntax_Syntax.fv_to_tm h in
+                                  (FStarC_TypeChecker_Cfg.log cfg
+                                     (fun uu___11 ->
+                                        let uu___12 =
+                                          FStarC_Class_Show.show
+                                            FStarC_Syntax_Print.showable_term
+                                            t0 in
+                                        let uu___13 =
+                                          FStarC_Class_Show.show
+                                            (FStarC_Class_Show.show_list
+                                               showable_stack_elt) stack3 in
+                                        FStarC_Format.print2
+                                          "Continuing with t=%s, stack=%s\n"
+                                          uu___12 uu___13);
+                                   do_unfold_fv cfg stack3 t0 qninfo h)
+                                else do_rebuild cfg env1 stack1 t1))))
+                  | FStar_Pervasives_Native.None ->
+                      do_rebuild cfg env1 stack1 t1))))
 and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
   (stack1 : stack) (t : FStarC_Syntax_Syntax.term) :
   FStarC_Syntax_Syntax.term=
@@ -5934,7 +6219,9 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                     FStarC_TypeChecker_Cfg.default_univs_to_zero =
                       (uu___4.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                     FStarC_TypeChecker_Cfg.tactics =
-                      (uu___4.FStarC_TypeChecker_Cfg.tactics)
+                      (uu___4.FStarC_TypeChecker_Cfg.tactics);
+                    FStarC_TypeChecker_Cfg.reduce_projections =
+                      (uu___4.FStarC_TypeChecker_Cfg.reduce_projections)
                   } in
                 {
                   FStarC_TypeChecker_Cfg.steps = steps;
@@ -6178,7 +6465,9 @@ and do_rebuild (cfg : FStarC_TypeChecker_Cfg.cfg) (env1 : env)
                               FStarC_TypeChecker_Cfg.default_univs_to_zero =
                                 (uu___7.FStarC_TypeChecker_Cfg.default_univs_to_zero);
                               FStarC_TypeChecker_Cfg.tactics =
-                                (uu___7.FStarC_TypeChecker_Cfg.tactics)
+                                (uu___7.FStarC_TypeChecker_Cfg.tactics);
+                              FStarC_TypeChecker_Cfg.reduce_projections =
+                                (uu___7.FStarC_TypeChecker_Cfg.reduce_projections)
                             });
                          FStarC_TypeChecker_Cfg.tcenv =
                            (cfg1.FStarC_TypeChecker_Cfg.tcenv);
