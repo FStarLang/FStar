@@ -106,8 +106,8 @@ let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
 let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
 
 let maybe_guts (s:string) : string =
-  (* Plugin codegen no longer qualifies with the Fstarcompiler namespace;
-     [-open Fstarcompiler] is passed to the OCaml compiler instead. *)
+  (* Plugin codegen does not qualify module references with any namespace;
+     the fstarcompiler library is unwrapped, so its modules are top-level. *)
   s
 
 (* mapping functions from F* ML AST to Parsetree *)
@@ -522,13 +522,14 @@ let mk_open name =
 let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
   | Some(_sig, m) ->
-    (* Plugin codegen (Plugin and PluginNoLib) no longer emits an explicit
-       [open Fstarcompiler]. Instead, [-open Fstarcompiler] is passed to the
-       OCaml compiler at every compile site: implicitly for modules compiled
-       into the wrapped fstarcompiler library itself, and explicitly (via dune
-       flags / ocamlfind -open) for the in-tree plugins, tests and out-of-tree
-       plugins. This lets the same extracted code be compiled either inside the
-       fstarcompiler library or against it as an external dependency. *)
+    (* Plugin codegen (Plugin and PluginNoLib) emits module references
+       unqualified (no Fstarcompiler prefix). The fstarcompiler library is
+       unwrapped, so its modules are top-level: modules compiled into the
+       library see each other as siblings, and in-tree plugins, tests and
+       out-of-tree plugins resolve the same bare names against the
+       fstar.compiler package directly. This lets the same extracted code be
+       compiled either inside the fstarcompiler library or against it as an
+       external dependency. *)
     let open_prims = [mk_open "Prims"] in
     open_prims @ (map build_module1 m |> flatmap opt_to_list)
   | None -> []

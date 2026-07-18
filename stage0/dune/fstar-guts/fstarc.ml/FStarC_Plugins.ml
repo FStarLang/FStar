@@ -86,8 +86,7 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
           let uu___2 =
             let uu___3 = FStarC_List.map pkg packages in
             FStar_List_Tot_Base.op_At uu___3
-              (FStar_List_Tot_Base.op_At ["-open"; "Fstarcompiler"]
-                 ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"]) in
+              ["-o"; Prims.strcat m ".cmxs"; Prims.strcat m ".ml"] in
           FStar_List_Tot_Base.op_At ["-w"; "-8-11-20-21-26-28"] uu___2 in
         FStar_List_Tot_Base.op_At ["-I"; dir] uu___1 in
       FStar_List_Tot_Base.op_At ["ocamlopt"; "-shared"] uu___ in

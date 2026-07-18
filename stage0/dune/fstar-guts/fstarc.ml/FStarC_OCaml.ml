@@ -40,4 +40,4 @@ let exec_ocamlopt (args : Prims.string Prims.list) : 'a=
 let exec_ocamlopt_plugin (args : Prims.string Prims.list) : 'a=
   exec_in_ocamlenv "ocamlfind"
     (FStar_List_Tot_Base.op_At ("opt" :: common_args) ("-shared" ::
-       "-package" :: plugin_lib :: "-open" :: "Fstarcompiler" :: args))
+       "-package" :: plugin_lib :: args))
