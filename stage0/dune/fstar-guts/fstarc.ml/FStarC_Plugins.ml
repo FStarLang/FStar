@@ -1,8 +1,6 @@
 open Prims
 let loaded : Prims.string Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
-let loaded_plugin_lib : Prims.bool FStarC_Effect.ref=
-  FStarC_Effect.mk_ref false
 let dbg_Plugin : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "Plugin"
 let pout (s : Prims.string) : unit=
@@ -61,24 +59,7 @@ let dynlink (fname : Prims.string) : unit=
         let uu___5 = FStarC_Effect.op_Bang loaded in fname :: uu___5 in
       FStarC_Effect.op_Colon_Equals loaded uu___4);
      pout1 "Loaded %s\n" fname)
-let load_plugin (tac : Prims.string) : unit=
-  (let uu___1 =
-     let uu___2 = FStarC_Effect.op_Bang loaded_plugin_lib in
-     Prims.op_Negation uu___2 in
-   if uu___1
-   then
-     (pout "Loading fstar.pluginlib before first plugin\n";
-      (let uu___4 =
-         let uu___5 =
-           let uu___6 = FStarC_Util.get_exec_dir () in
-           Prims.strcat uu___6
-             "/../lib/fstar/compiler/plugins/fstar_pluginlib.cmxs" in
-         FStarC_Filepath.normalize_file_path uu___5 in
-       do_dynlink uu___4);
-      pout "Loaded fstar.pluginlib OK\n";
-      FStarC_Effect.op_Colon_Equals loaded_plugin_lib true)
-   else ());
-  dynlink tac
+let load_plugin (tac : Prims.string) : unit= dynlink tac
 let load_plugins (tacs : Prims.string Prims.list) : unit=
   FStarC_List.iter load_plugin tacs
 let load_plugins_dir (dir : Prims.string) : unit=
@@ -97,7 +78,7 @@ let load_plugins_dir (dir : Prims.string) : unit=
 let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
   unit=
   let compile m =
-    let packages = ["fstar.compiler.plugins"] in
+    let packages = ["fstar.compiler"] in
     let pkg pname = Prims.strcat "-package " pname in
     let args =
       let uu___ =
