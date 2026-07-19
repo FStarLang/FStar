@@ -243,8 +243,45 @@ let check
         match ctag_of_effect_annot p.effect_annot with
         | Some c -> c
         | None -> STT_Atomic in
-      check_core g ctxt post_hint res_ppname st (Some ctag)
-      
+      // If we are returning an application, introduce an intermediate binding
+      // for it. This makes sure whatever logical payload the call provides (as
+      // a postcondition) is available to prove the postcondition of the current
+      // function (the caller). See #4314.
+      let _, args = T.collect_app_ln f.term in
+      if Cons? args then (
+        let x = fresh g in
+        let expected_type =
+          match post_hint with
+          | PostHint t -> t.ret_ty
+          | TypeHint t -> t
+          | NoHint -> f.expected_type // This seems always = to tm_unknown, oh well
+        in
+        Pulse.Checker.Util.debug g "pulse.return" (fun _ ->
+          Printf.sprintf "About to let-bind return, expected type = %s" 
+            (Pulse.Show.show expected_type));
+        let b = mk_binder_ppname expected_type res_ppname in
+        let body =
+          mk_term (Tm_Return { expected_type
+                             ; insert_eq = false
+                             ; term = term_of_no_name_var x }) st.range in
+        (* Add a rewrites_to, so the extra alias does not prevent slprop proving. *)
+        let assertion =
+          ASSERT { elaborated=true;
+                   p = tm_pure (mk_rewrites_to_p u_unknown expected_type (term_of_no_name_var x) f.term)
+                   }
+        in
+        let tt = { st with term = Tm_ProofHintWithBinders {
+                                    hint_type = assertion;
+                                    binders = [];
+                                    t = body; } } in
+        let tt = close_st_term tt x in
+        let tt = { st with term = Tm_TotBind { binder = b; head = f.term; body=tt } } in
+        Pulse.Checker.Util.debug g "pulse.return" (fun _ ->
+          Printf.sprintf "Sequencing tail return (#4314): %s"
+            (Pulse.Syntax.Printer.st_term_to_string tt));
+        check g ctxt post_hint res_ppname tt
+      ) else
+        check_core g ctxt post_hint res_ppname st (Some ctag)
     )
     | _ ->  check_core g ctxt post_hint res_ppname st None
   )

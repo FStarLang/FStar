@@ -468,6 +468,11 @@ fn read_node
   let n = !p;
   rewrite p |-> n as Some?.v tree |-> n;
   (n.left, n.data, n.right, ())
+  // let x
+  //   : (tree_t a & a & tree_t a & squash (Some? tree))
+  //   = (n.left, n.data, n.right, ());
+  // assert rewrites_to x (n.left, n.data, n.right, ());
+  // x
 }
 
 fn write_node
