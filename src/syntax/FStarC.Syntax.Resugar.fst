@@ -711,10 +711,12 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
             || starts_with op "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list args)*)
           let rec uncurry xs pats (t:A.term) flavor_matches =
+            if not (flavor_matches t) then xs, pats, t
+            else
             match t.tm with
             | A.QExists(xs', (_, pats'), body)
             | A.QForall(xs', (_, pats'), body)
-            | A.QuantOp(_, xs', (_, pats'), body) when flavor_matches t ->
+            | A.QuantOp(_, xs', (_, pats'), body) ->
                 uncurry (xs@xs') (pats@pats') body flavor_matches
             | _ ->
                 xs, pats, t
