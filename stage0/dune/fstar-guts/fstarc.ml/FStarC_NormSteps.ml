@@ -19,6 +19,7 @@ type norm_step =
   | UnfoldNamespace of Prims.string Prims.list 
   | Unmeta 
   | Unascribe 
+  | ReduceProjections 
 let uu___is_Simpl (projectee : norm_step) : Prims.bool=
   match projectee with | Simpl -> true | uu___ -> false
 let uu___is_Weak (projectee : norm_step) : Prims.bool=
@@ -69,6 +70,8 @@ let uu___is_Unmeta (projectee : norm_step) : Prims.bool=
   match projectee with | Unmeta -> true | uu___ -> false
 let uu___is_Unascribe (projectee : norm_step) : Prims.bool=
   match projectee with | Unascribe -> true | uu___ -> false
+let uu___is_ReduceProjections (projectee : norm_step) : Prims.bool=
+  match projectee with | ReduceProjections -> true | uu___ -> false
 let simplify : norm_step= Simpl
 let weak : norm_step= Weak
 let hnf : norm_step= HNF
@@ -89,3 +92,4 @@ let delta_namespace (s : Prims.string Prims.list) : norm_step=
   UnfoldNamespace s
 let unmeta : norm_step= Unmeta
 let unascribe : norm_step= Unascribe
+let reduce_projections : norm_step= ReduceProjections

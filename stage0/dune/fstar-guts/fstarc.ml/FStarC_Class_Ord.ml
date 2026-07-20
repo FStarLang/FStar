@@ -9,9 +9,9 @@ let __proj__Mkord__item__cmp (projectee : 'a ord) :
   'a -> 'a -> FStarC_Order.order=
   match projectee with | { super; cmp;_} -> cmp
 let super (projectee : 'a ord) : 'a FStarC_Class_Deq.deq=
-  match projectee with | { super = super1; cmp;_} -> super1
+  __proj__Mkord__item__super projectee
 let cmp (projectee : 'a ord) : 'a -> 'a -> FStarC_Order.order=
-  match projectee with | { super = super1; cmp = cmp1;_} -> cmp1
+  __proj__Mkord__item__cmp projectee
 let op_Less_Question (uu___ : 'a ord) (x : 'a) (y : 'a) : Prims.bool=
   let uu___1 = cmp uu___ x y in uu___1 = FStarC_Order.Lt
 let op_Less_Equals_Question (uu___ : 'a ord) (x : 'a) (y : 'a) : Prims.bool=
@@ -35,7 +35,7 @@ let rec sort : 'a . 'a ord -> 'a Prims.list -> 'a Prims.list =
           let uu___1 = op_Less_Equals_Question uu___ x y in
           if uu___1
           then x :: y :: ys
-          else (let uu___3 = insert x ys in y :: uu___3) in
+          else (let uu___2 = insert x ys in y :: uu___2) in
     match xs with
     | [] -> []
     | x::xs1 -> let uu___1 = sort uu___ xs1 in insert x uu___1

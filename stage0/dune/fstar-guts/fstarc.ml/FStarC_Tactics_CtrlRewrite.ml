@@ -31,13 +31,13 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
      else
        (let res =
           try
-            (fun uu___1 ->
+            (fun uu___ ->
                match () with
                | () ->
                    FStarC_Errors.with_ctx
                      "While typechecking a subterm for ctrl_rewrite"
-                     (fun uu___2 ->
-                        let uu___3 =
+                     (fun uu___1 ->
+                        let uu___2 =
                           env.FStarC_TypeChecker_Env.tc_term
                             {
                               FStarC_TypeChecker_Env.solver =
@@ -145,11 +145,11 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                               FStarC_TypeChecker_Env.missing_decl =
                                 (env.FStarC_TypeChecker_Env.missing_decl)
                             } tm in
-                        FStar_Pervasives_Native.Some uu___3)) ()
+                        FStar_Pervasives_Native.Some uu___2)) ()
           with
           | FStarC_Errors.Error
-              (FStarC_Errors_Codes.Error_LayeredMissingAnnot, uu___2, uu___3,
-               uu___4)
+              (FStarC_Errors_Codes.Error_LayeredMissingAnnot, uu___1, uu___2,
+               uu___3)
               -> FStar_Pervasives_Native.None
           | e -> FStarC_Effect.raise e in
         match res with
@@ -157,12 +157,12 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
             Obj.magic
               (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
                  (Obj.magic tm))
-        | FStar_Pervasives_Native.Some (uu___1, lcomp, g) ->
-            let uu___2 =
-              let uu___3 =
+        | FStar_Pervasives_Native.Some (uu___, lcomp, g) ->
+            let uu___1 =
+              let uu___2 =
                 FStarC_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
-              Prims.op_Negation uu___3 in
-            if uu___2
+              Prims.op_Negation uu___2 in
+            if uu___1
             then
               Obj.magic
                 (FStarC_Class_Monad.return FStarC_Tactics_Monad.monad_tac ()
@@ -172,19 +172,19 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                  FStarC_TypeChecker_Rel.solve_deferred_constraints env g in
                let typ = lcomp.FStarC_TypeChecker_Common.res_typ in
                let typ1 =
-                 let uu___4 = FStarC_Options_Ext.enabled "__unrefine" in
-                 if uu___4
+                 let uu___2 = FStarC_Options_Ext.enabled "__unrefine" in
+                 if uu___2
                  then
                    let typ_norm =
                      FStarC_TypeChecker_Normalize.unfold_whnf'
                        [FStarC_TypeChecker_Env.DontUnfoldAttr
                           [FStarC_Parser_Const.do_not_unrefine_attr]] env typ in
-                   let uu___5 =
-                     let uu___6 =
-                       let uu___7 = FStarC_Syntax_Subst.compress typ_norm in
-                       uu___7.FStarC_Syntax_Syntax.n in
-                     FStarC_Syntax_Syntax.uu___is_Tm_refine uu___6 in
-                   (if uu___5
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStarC_Syntax_Subst.compress typ_norm in
+                       uu___5.FStarC_Syntax_Syntax.n in
+                     FStarC_Syntax_Syntax.uu___is_Tm_refine uu___4 in
+                   (if uu___3
                     then
                       let typ' =
                         FStarC_TypeChecker_Normalize.unfold_whnf'
@@ -195,72 +195,72 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                     else typ)
                  else typ in
                let should_check =
-                 let uu___4 = FStarC_TypeChecker_Common.is_total_lcomp lcomp in
-                 if uu___4
+                 let uu___2 = FStarC_TypeChecker_Common.is_total_lcomp lcomp in
+                 if uu___2
                  then FStar_Pervasives_Native.None
                  else
                    FStar_Pervasives_Native.Some
                      (FStarC_Syntax_Syntax.Allow_ghost "do_rewrite.lhs") in
-               let uu___4 =
-                 let uu___5 = FStarC_Tactics_Monad.goal_typedness_deps g0 in
+               let uu___2 =
+                 let uu___3 = FStarC_Tactics_Monad.goal_typedness_deps g0 in
                  FStarC_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ1
-                   should_check uu___5 (rangeof g0) in
+                   should_check uu___3 (rangeof g0) in
                Obj.magic
                  (FStarC_Class_Monad.op_let_Bang
-                    FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___4)
-                    (fun uu___5 ->
-                       (fun uu___5 ->
-                          let uu___5 = Obj.magic uu___5 in
-                          match uu___5 with
+                    FStarC_Tactics_Monad.monad_tac () () (Obj.magic uu___2)
+                    (fun uu___3 ->
+                       (fun uu___3 ->
+                          let uu___3 = Obj.magic uu___3 in
+                          match uu___3 with
                           | (ut, uvar_t) ->
                               Obj.magic
                                 (FStarC_Class_Monad.op_let_Bang
                                    FStarC_Tactics_Monad.monad_tac () ()
                                    (FStarC_Tactics_Monad.if_verbose
-                                      (fun uu___6 ->
-                                         let uu___7 =
+                                      (fun uu___4 ->
+                                         let uu___5 =
                                            FStarC_Class_Show.show
                                              FStarC_Syntax_Print.showable_term
                                              tm in
-                                         let uu___8 =
+                                         let uu___6 =
                                            FStarC_Class_Show.show
                                              FStarC_Syntax_Print.showable_term
                                              ut in
                                          FStarC_Format.print2
                                            "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                                           uu___7 uu___8))
-                                   (fun uu___6 ->
-                                      (fun uu___6 ->
-                                         let uu___6 = Obj.magic uu___6 in
-                                         let uu___7 =
-                                           let uu___8 =
-                                             let uu___9 =
+                                           uu___5 uu___6))
+                                   (fun uu___4 ->
+                                      (fun uu___4 ->
+                                         let uu___4 = Obj.magic uu___4 in
+                                         let uu___5 =
+                                           let uu___6 =
+                                             let uu___7 =
                                                env.FStarC_TypeChecker_Env.universe_of
                                                  env typ1 in
-                                             FStarC_Syntax_Util.mk_eq2 uu___9
+                                             FStarC_Syntax_Util.mk_eq2 uu___7
                                                typ1 tm ut in
                                            FStarC_Tactics_Monad.add_irrelevant_goal
-                                             g0 "do_rewrite.eq" env uu___8
+                                             g0 "do_rewrite.eq" env uu___6
                                              FStar_Pervasives_Native.None in
                                          Obj.magic
                                            (FStarC_Class_Monad.op_let_Bang
                                               FStarC_Tactics_Monad.monad_tac
-                                              () () uu___7
-                                              (fun uu___8 ->
-                                                 (fun uu___8 ->
-                                                    let uu___8 =
-                                                      Obj.magic uu___8 in
+                                              () () uu___5
+                                              (fun uu___6 ->
+                                                 (fun uu___6 ->
+                                                    let uu___6 =
+                                                      Obj.magic uu___6 in
                                                     Obj.magic
                                                       (FStarC_Class_Monad.op_let_Bang
                                                          FStarC_Tactics_Monad.monad_tac
                                                          () ()
                                                          (FStarC_Tactics_Monad.focus
                                                             rewriter)
-                                                         (fun uu___9 ->
-                                                            (fun uu___9 ->
-                                                               let uu___9 =
+                                                         (fun uu___7 ->
+                                                            (fun uu___7 ->
+                                                               let uu___7 =
                                                                  Obj.magic
-                                                                   uu___9 in
+                                                                   uu___7 in
                                                                let ut1 =
                                                                  FStarC_TypeChecker_Normalize.reduce_uvar_solutions
                                                                    env ut in
@@ -271,42 +271,39 @@ let __do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
                                                                     (
                                                                     FStarC_Tactics_Monad.if_verbose
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    let uu___11
+                                                                    uu___8 ->
+                                                                    let uu___9
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_term
                                                                     tm in
-                                                                    let uu___12
+                                                                    let uu___10
                                                                     =
                                                                     FStarC_Class_Show.show
                                                                     FStarC_Syntax_Print.showable_term
                                                                     ut1 in
                                                                     FStarC_Format.print2
                                                                     "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
-                                                                    uu___11
-                                                                    uu___12))
+                                                                    uu___9
+                                                                    uu___10))
                                                                     (
                                                                     fun
-                                                                    uu___10
-                                                                    ->
+                                                                    uu___8 ->
                                                                     (fun
-                                                                    uu___10
-                                                                    ->
-                                                                    let uu___10
+                                                                    uu___8 ->
+                                                                    let uu___8
                                                                     =
                                                                     Obj.magic
-                                                                    uu___10 in
+                                                                    uu___8 in
                                                                     Obj.magic
                                                                     (FStarC_Class_Monad.return
                                                                     FStarC_Tactics_Monad.monad_tac
                                                                     ()
                                                                     (Obj.magic
                                                                     ut1)))
-                                                                    uu___10)))
-                                                              uu___9)))
-                                                   uu___8))) uu___6))) uu___5)))))
+                                                                    uu___8)))
+                                                              uu___7)))
+                                                   uu___6))) uu___4))) uu___3)))))
     uu___3 uu___2 uu___1 uu___
 let do_rewrite (uu___3 : FStarC_Tactics_Types.goal) (uu___2 : rewriter_ty)
   (uu___1 : FStarC_TypeChecker_Env.env) (uu___ : FStarC_Syntax_Syntax.term) :

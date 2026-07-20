@@ -1227,34 +1227,34 @@ let mkQuant (r : FStarC_Range_Type.t) (check_pats : Prims.bool)
         if Prims.op_Negation check_pats
         then pats1
         else
-          (let uu___2 =
+          (let uu___1 =
              FStarC_Util.find_map pats1
                (fun x -> FStarC_Util.find_map x check_pattern_ok) in
-           match uu___2 with
+           match uu___1 with
            | FStar_Pervasives_Native.None -> pats1
            | FStar_Pervasives_Native.Some p ->
-               ((let uu___4 =
-                   let uu___5 = print_smt_term p in
+               ((let uu___3 =
+                   let uu___4 = print_smt_term p in
                    FStarC_Format.fmt1
                      "Pattern (%s) contains illegal symbols; dropping it"
-                     uu___5 in
+                     uu___4 in
                  FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range
                    r FStarC_Errors_Codes.Warning_SMTPatternIllFormed ()
                    (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                   (Obj.magic uu___4));
+                   (Obj.magic uu___3));
                 [])) in
       if Prims.uu___is_Nil vars
       then body
       else
         (match body.tm with
-         | App (TrueOp, uu___2) -> body
-         | uu___2 ->
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 = all_pats_ok pats in
-                 (qop1, uu___5, wopt, vars, body) in
-               Quant uu___4 in
-             mk uu___3 r)
+         | App (TrueOp, uu___1) -> body
+         | uu___1 ->
+             let uu___2 =
+               let uu___3 =
+                 let uu___4 = all_pats_ok pats in
+                 (qop1, uu___4, wopt, vars, body) in
+               Quant uu___3 in
+             mk uu___2 r)
 let mkLet (uu___ : (term Prims.list * term)) (r : FStarC_Range_Type.t) :
   term=
   match uu___ with
@@ -1609,15 +1609,15 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
                  then let uu___3 = mkApp (proj, [xx]) norng in (uu___3, [])
                  else
                    (let fi =
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 =
                             FStarC_Class_Show.show
                               FStarC_Class_Show.showable_int i in
-                          Prims.strcat "f_" uu___6 in
-                        (uu___5, s) in
-                      mk_fv uu___4 in
-                    let uu___4 = mkFreeV fi norng in (uu___4, [fi])))
+                          Prims.strcat "f_" uu___5 in
+                        (uu___4, s) in
+                      mk_fv uu___3 in
+                    let uu___3 = mkFreeV fi norng in (uu___3, [fi])))
           constr.constr_fields in
       FStarC_List.split uu___1 in
     match uu___ with
@@ -1664,10 +1664,10 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
     then []
     else
       (let arg_sorts =
-         let uu___1 =
+         let uu___ =
            FStarC_List.filter (fun f -> f.field_projectible)
              constr.constr_fields in
-         FStarC_List.map (fun f -> f.field_sort) uu___1 in
+         FStarC_List.map (fun f -> f.field_sort) uu___ in
        let base_name = Prims.strcat constr.constr_name "@base" in
        let decl1 =
          DeclFun
@@ -1676,41 +1676,41 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
        let formals =
          FStarC_List.mapi
            (fun i f ->
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 =
+              let uu___ =
+                let uu___1 =
+                  let uu___2 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-                  Prims.strcat "x" uu___3 in
-                (uu___2, (f.field_sort)) in
-              mk_fv uu___1) constr.constr_fields in
+                  Prims.strcat "x" uu___2 in
+                (uu___1, (f.field_sort)) in
+              mk_fv uu___) constr.constr_fields in
        let constructed_term =
-         let uu___1 =
-           let uu___2 =
+         let uu___ =
+           let uu___1 =
              FStarC_List.map (fun fv1 -> mkFreeV fv1 norng) formals in
-           ((constr.constr_name), uu___2) in
-         mkApp uu___1 norng in
+           ((constr.constr_name), uu___1) in
+         mkApp uu___ norng in
        let inj_formals =
-         let uu___1 =
+         let uu___ =
            FStarC_List.map2
              (fun f fld -> if fld.field_projectible then [f] else []) formals
              constr.constr_fields in
-         FStarC_List.flatten uu___1 in
+         FStarC_List.flatten uu___ in
        let base_term =
-         let uu___1 =
-           let uu___2 =
+         let uu___ =
+           let uu___1 =
              FStarC_List.map (fun fv1 -> mkFreeV fv1 norng) inj_formals in
-           (base_name, uu___2) in
-         mkApp uu___1 norng in
+           (base_name, uu___1) in
+         mkApp uu___ norng in
        let eq = mkEq (constructed_term, base_term) norng in
        let guard =
          mkApp ((discriminator_name constr), [constructed_term]) norng in
        let q =
-         let uu___1 =
-           let uu___2 = mkImp (guard, eq) norng in
-           ([[constructed_term]], formals, uu___2) in
-         mkForall rng uu___1 in
+         let uu___ =
+           let uu___1 = mkImp (guard, eq) norng in
+           ([[constructed_term]], formals, uu___1) in
+         mkForall rng uu___ in
        let a =
-         let uu___1 = free_top_level_names q in
+         let uu___ = free_top_level_names q in
          {
            assumption_term = q;
            assumption_caption =
@@ -1718,7 +1718,7 @@ let constructor_to_decl (rng : FStarC_Range_Type.t) (constr : constructor_t)
            assumption_name =
              (escape (Prims.strcat "constructor_base_" constr.constr_name));
            assumption_fact_ids = [];
-           assumption_free_names = uu___1
+           assumption_free_names = uu___
          } in
        [decl1; Assume a]) in
   FStarC_List.op_At
@@ -1780,9 +1780,9 @@ let termToSmt : Prims.bool -> Prims.string -> term -> FStar_Pprint.document=
         if n = Prims.int_zero
         then enclosing_name
         else
-          (let uu___2 =
+          (let uu___1 =
              FStarC_Class_Show.show FStarC_Class_Show.showable_int n in
-           FStarC_Format.fmt2 "%s.%s" enclosing_name uu___2) in
+           FStarC_Format.fmt2 "%s.%s" enclosing_name uu___1) in
     let remove_guard_free pats =
       FStarC_List.map
         (fun ps ->
@@ -2128,29 +2128,12 @@ and mkPrelude (z3options : Prims.string) : Prims.string=
     "\n(declare-fun Prims.precedes@tok (Universe Universe) Term)\n(assert\n(forall ((u0 Universe) (u1 Universe) (@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)\n(Prims.precedes u0 u1 @x0 @x1 @x2 @x3))\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)))))\n" in
   let lex_ordering =
     "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(declare-fun LexTop () Term)\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes u0 u1 t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 t1 t2 e1 e2))\n(Valid (Prims.precedes U_zero U_zero Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes u0 u1 t1 t2 e1 e2))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)) \n(Prec t1 t2))\n:pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
-  let valid_intro =
-    "(assert (forall ((e Term) (t Term))\n(! (implies (HasType e t)\n(Valid t))\n:pattern ((HasType e t)\n(Valid t))\n:qid __prelude_valid_intro)))\n" in
-  let valid_elim =
-    "(assert (forall ((t Term))\n(! (implies (Valid t)\n(exists ((e Term)) (HasType e t)))\n:pattern ((Valid t))\n:qid __prelude_valid_elim)))\n" in
   let tm_type_typing =
     "(assert (forall ((u Universe) (t Term))\n(! (iff (HasType (Tm_type u) t)\n(= t (Tm_type (U_succ u))))\n:pattern ((HasType (Tm_type u) t)))))\n" in
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        let uu___3 =
-          let uu___4 =
-            let uu___5 = FStarC_Options.smtencoding_valid_intro () in
-            if uu___5 then valid_intro else "" in
-          let uu___5 =
-            let uu___6 =
-              let uu___7 = FStarC_Options.smtencoding_valid_elim () in
-              if uu___7 then valid_elim else "" in
-            Prims.strcat uu___6 tm_type_typing in
-          Prims.strcat uu___4 uu___5 in
-        Prims.strcat lex_ordering uu___3 in
-      Prims.strcat precedes_partial_app uu___2 in
-    Prims.strcat bcons uu___1 in
-  Prims.strcat basic uu___
+  Prims.strcat basic
+    (Prims.strcat bcons
+       (Prims.strcat precedes_partial_app
+          (Prims.strcat lex_ordering tm_type_typing)))
 let declsToSmt (z3options : Prims.string) (decls : decl Prims.list) :
   Prims.string=
   let uu___ = FStarC_List.map (declToSmt z3options) decls in
@@ -2425,10 +2408,10 @@ let rec n_fuel (n : Prims.int) : term=
   if n = Prims.int_zero
   then mkApp ("ZFuel", []) norng
   else
-    (let uu___1 =
-       let uu___2 = let uu___3 = n_fuel (n - Prims.int_one) in [uu___3] in
-       ("SFuel", uu___2) in
-     mkApp uu___1 norng)
+    (let uu___ =
+       let uu___1 = let uu___2 = n_fuel (n - Prims.int_one) in [uu___2] in
+       ("SFuel", uu___1) in
+     mkApp uu___ norng)
 let mk_and_l (l : term Prims.list) (r : FStarC_Range_Type.t) : term=
   let uu___ = mkTrue r in
   FStarC_List.fold_right (fun p1 p2 -> mkAnd (p1, p2) r) l uu___

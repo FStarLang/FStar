@@ -1,12 +1,17 @@
 open Prims
 type error_message = FStar_Pprint.document Prims.list
+let text (s : Prims.string) : FStar_Pprint.document=
+  FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
+    (FStar_Pprint.words s)
+let mkmsg (s : Prims.string) : error_message=
+  [FStar_Pprint.arbitrary_string s]
 type 't is_error_message = {
   to_doc_list: 't -> error_message }
 let __proj__Mkis_error_message__item__to_doc_list
   (projectee : 't is_error_message) : 't -> error_message=
   match projectee with | { to_doc_list;_} -> to_doc_list
 let to_doc_list (projectee : 't is_error_message) : 't -> error_message=
-  match projectee with | { to_doc_list = to_doc_list1;_} -> to_doc_list1
+  __proj__Mkis_error_message__item__to_doc_list projectee
 let is_error_message_string : Prims.string is_error_message=
   { to_doc_list = (fun s -> [FStar_Pprint.arbitrary_string s]) }
 let is_error_message_list_doc :
@@ -20,9 +25,9 @@ let vconcat (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
            FStar_Pprint.op_Hat_Hat l
              (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline r)) h t
   | [] -> FStar_Pprint.empty
-let text (s : Prims.string) : FStar_Pprint.document=
-  FStar_Pprint.flow (FStar_Pprint.break_ Prims.int_one)
-    (FStar_Pprint.words s)
+let fquotes (d : FStar_Pprint.document) : FStar_Pprint.document=
+  FStar_Pprint.enclose (FStar_Pprint.utf8string "\226\128\152")
+    (FStar_Pprint.utf8string "\226\128\153") d
 let sublist (h : FStar_Pprint.document)
   (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
   let uu___ =
@@ -36,8 +41,6 @@ let sublist (h : FStar_Pprint.document)
   FStar_Pprint.nest (Prims.of_int 2) uu___
 let bulleted (ds : FStar_Pprint.document Prims.list) : FStar_Pprint.document=
   sublist (FStar_Pprint.doc_of_string "- ") ds
-let mkmsg (s : Prims.string) : error_message=
-  [FStar_Pprint.arbitrary_string s]
 let renderdoc (d : FStar_Pprint.document) : Prims.string=
   let one = FStarC_Util.float_of_string "1.0" in
   FStarC_Pprint.pretty_string one (Prims.of_int 80) d

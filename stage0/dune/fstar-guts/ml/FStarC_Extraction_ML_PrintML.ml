@@ -106,9 +106,9 @@ let min_of_int_const = Z.neg (Z.pow (Z.of_int 2) 30)
 let max_of_int_const = Z.sub (Z.pow (Z.of_int 2) 30) Z.one
 
 let maybe_guts (s:string) : string =
-  if FStarC_Options.codegen () = Some FStarC_Options.Plugin
-  then "Fstarcompiler." ^ s
-  else s
+  (* Plugin codegen does not qualify module references with any namespace;
+     the fstarcompiler library is unwrapped, so its modules are top-level. *)
+  s
 
 (* mapping functions from F* ML AST to Parsetree *)
 let build_constant_expr (c: mlconstant) : expression =
@@ -274,17 +274,6 @@ let resugar_prims_ops path: expression =
   | path -> path_to_ident path)
   |> pexp_ident ~loc
 
-let resugar_if_stmts ep cases =
-  if List.length cases = 2 then
-    let case1 = List.hd cases in
-    let case2 = BatList.last cases in
-    (match case1.pc_lhs.ppat_desc with
-     | Ppat_construct({txt=Lident "true"}, None) ->
-         pexp_ifthenelse ~loc ep case1.pc_rhs (Some case2.pc_rhs)
-     | _ -> pexp_match ~loc ep cases)
-  else
-    pexp_match ~loc ep cases
-
 let rec build_expr (e: mlexpr): expression =
   match e.expr with
   | MLE_Const c -> build_constant_expr c
@@ -309,7 +298,7 @@ let rec build_expr (e: mlexpr): expression =
    | MLE_Match (e, branches) ->
       let ep = build_expr e in
       let cases = map build_case branches in
-      resugar_if_stmts ep cases
+      pexp_match ~loc ep cases
    | MLE_Coerce (e, _, _) ->
       let r = pexp_ident ~loc (mk_lident "Obj.magic") in
       pexp_apply ~loc r [(Nolabel, build_expr e)]
@@ -533,18 +522,16 @@ let mk_open name =
 let build_m (md: (mlsig * mlmodulebody) option) : structure =
   match md with
   | Some(_sig, m) ->
-    let open_plugin_lib =
-      if FStarC_Options.codegen () = Some FStarC_Options.Plugin (* NB: PluginNoLib does not open the library *)
-      then [mk_open "Fstar_pluginlib"]
-      else []
-    in
-    let open_guts =
-      if FStarC_Options.codegen () = Some FStarC_Options.PluginNoLib
-      then [mk_open "Fstarcompiler"]
-      else []
-    in
+    (* Plugin codegen emits module references
+       unqualified (no Fstarcompiler prefix). The fstarcompiler library is
+       unwrapped, so its modules are top-level: modules compiled into the
+       library see each other as siblings, and in-tree plugins, tests and
+       out-of-tree plugins resolve the same bare names against the
+       fstar.compiler package directly. This lets the same extracted code be
+       compiled either inside the fstarcompiler library or against it as an
+       external dependency. *)
     let open_prims = [mk_open "Prims"] in
-    open_plugin_lib @ open_guts @ open_prims @ (map build_module1 m |> flatmap opt_to_list)
+    open_prims @ (map build_module1 m |> flatmap opt_to_list)
   | None -> []
 
 let build_ast (modul : mlmodule) =

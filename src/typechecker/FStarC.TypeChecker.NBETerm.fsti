@@ -22,7 +22,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Ident
-open FStarC.VConfig
+open FStar.VConfig
 open FStar.Char
 
 module S = FStarC.Syntax.Syntax

@@ -396,15 +396,14 @@ let __proj__Mkembedding__item__e_typ (projectee : 'a embedding) :
   unit -> FStarC_Syntax_Syntax.emb_typ=
   match projectee with | { em; un; typ; e_typ;_} -> e_typ
 let em (projectee : 'a embedding) : nbe_cbs -> 'a -> t=
-  match projectee with | { em = em1; un; typ; e_typ;_} -> em1
+  __proj__Mkembedding__item__em projectee
 let un (projectee : 'a embedding) :
   nbe_cbs -> t -> 'a FStar_Pervasives_Native.option=
-  match projectee with | { em = em1; un = un1; typ; e_typ;_} -> un1
+  __proj__Mkembedding__item__un projectee
 let typ (projectee : 'a embedding) : unit -> t=
-  match projectee with | { em = em1; un = un1; typ = typ1; e_typ;_} -> typ1
+  __proj__Mkembedding__item__typ projectee
 let e_typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.emb_typ=
-  match projectee with
-  | { em = em1; un = un1; typ = typ1; e_typ = e_typ1;_} -> e_typ1
+  __proj__Mkembedding__item__e_typ projectee
 let equal_if (uu___ : Prims.bool) :
   FStarC_TypeChecker_TermEqAndSimplify.eq_result=
   if uu___
@@ -824,7 +823,7 @@ let lazy_embed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : 'a)
    then f ()
    else
      (let thunk = FStarC_Thunk.mk f in
-      let li = let uu___3 = et () in ((FStar_Dyn.mkdyn x), uu___3) in
+      let li = let uu___2 = et () in ((FStar_Dyn.mkdyn x), uu___2) in
       mk_t (Lazy ((FStar_Pervasives.Inr li), thunk))))
 let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
   (f : t -> 'a FStar_Pervasives_Native.option) :
@@ -857,14 +856,14 @@ let lazy_unembed (et : unit -> FStarC_Syntax_Syntax.emb_typ) (x : t)
          res)
       else
         (let a1 = FStar_Dyn.undyn b in
-         (let uu___3 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___3
+         (let uu___2 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___2
           then
-            let uu___4 =
-              let uu___5 = et () in
+            let uu___3 =
+              let uu___4 = et () in
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ
-                uu___5 in
-            FStarC_Format.print1 "Unembed cancelled for %s\n" uu___4
+                uu___4 in
+            FStarC_Format.print1 "Unembed cancelled for %s\n" uu___3
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->
@@ -1677,7 +1676,7 @@ let e_document : FStar_Pprint.document embedding=
     (fun uu___ -> lid_as_typ FStarC_Parser_Const.document_lid [] [])
     (FStarC_Syntax_Embeddings_Base.emb_typ_of
        FStarC_Syntax_Embeddings.e_document)
-let e_vconfig : FStarC_VConfig.vconfig embedding=
+let e_vconfig : FStar_VConfig.vconfig embedding=
   let em1 cb r = FStarC_Effect.failwith "e_vconfig NBE" in
   let un1 cb t1 = FStarC_Effect.failwith "e_vconfig NBE" in
   mk_emb' em1 un1

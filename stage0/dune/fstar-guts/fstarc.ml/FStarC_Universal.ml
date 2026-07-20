@@ -212,10 +212,10 @@ let parse (fly_deps : Prims.bool) (env : FStarC_Extraction_ML_UEnv.uenv)
              ((FStarC_Parser_AST.lid_of_modul ast1),
                (FStar_Pervasives.Inl ast1), env1)
            else
-             (let uu___4 =
-                let uu___5 = FStarC_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in
-                with_dsenv_of_env env1 uu___5 in
-              match uu___4 with
+             (let uu___3 =
+                let uu___4 = FStarC_ToSyntax_ToSyntax.ast_modul_to_modul ast1 in
+                with_dsenv_of_env env1 uu___4 in
+              match uu___3 with
               | (mod1, env2) ->
                   ((FStarC_Parser_AST.lid_of_modul ast1),
                     (FStar_Pervasives.Inr mod1), env2)))
@@ -227,13 +227,13 @@ let core_check : FStarC_TypeChecker_Env.core_check_t=
     if uu___
     then FStar_Pervasives.Inl FStar_Pervasives_Native.None
     else
-      (let uu___2 = FStarC_TypeChecker_Core.check_term env tm t must_tot in
-       match uu___2 with
+      (let uu___1 = FStarC_TypeChecker_Core.check_term env tm t must_tot in
+       match uu___1 with
        | FStar_Pervasives.Inl (FStar_Pervasives_Native.None) ->
            FStar_Pervasives.Inl FStar_Pervasives_Native.None
        | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
-           let uu___3 = FStarC_Options.compat_pre_core_set () in
-           if uu___3
+           let uu___2 = FStarC_Options.compat_pre_core_set () in
+           if uu___2
            then FStar_Pervasives.Inl FStar_Pervasives_Native.None
            else FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g)
        | FStar_Pervasives.Inr err ->
@@ -342,12 +342,12 @@ let tc_one_fragment (is_interface : Prims.bool)
                   ast_modul1 in
               with_dsenv_of_tcenv env1 uu___3
             else
-              (let uu___4 =
-                 let uu___5 =
+              (let uu___3 =
+                 let uu___4 =
                    FStarC_ToSyntax_ToSyntax.partial_ast_modul_to_modul curmod
                      ast_modul1 in
-                 with_dsenv_of_tcenv env1 uu___5 in
-               match uu___4 with
+                 with_dsenv_of_tcenv env1 uu___4 in
+               match uu___3 with
                | (m, env2) -> FStarC_TypeChecker_Tc.tc_partial_modul env2 m) in
           match uu___2 with
           | (modul, env2) ->
@@ -414,19 +414,19 @@ let tc_one_fragment (is_interface : Prims.bool)
                    with_dsenv_of_tcenv env1 uu___3 in
                  match uu___2 with | (uu___3, env2) -> (modul, [], env2)
                else
-                 (let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
+                 (let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
                         FStarC_Class_Show.show FStarC_Ident.showable_lident
                           modul.FStarC_Syntax_Syntax.name in
-                      Prims.strcat "While desugaring module " uu___5 in
-                    FStarC_Errors.with_ctx uu___4
-                      (fun uu___5 ->
-                         let uu___6 =
+                      Prims.strcat "While desugaring module " uu___4 in
+                    FStarC_Errors.with_ctx uu___3
+                      (fun uu___4 ->
+                         let uu___5 =
                            FStarC_ToSyntax_ToSyntax.decls_to_sigelts
                              ast_decls1 in
-                         with_dsenv_of_tcenv env1 uu___6) in
-                  match uu___3 with
+                         with_dsenv_of_tcenv env1 uu___5) in
+                  match uu___2 with
                   | (ses, env2) ->
                       FStarC_TypeChecker_Tc.tc_more_partial_modul env2 modul
                         ses) in
@@ -528,7 +528,6 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
       | FStar_Pervasives_Native.Some (FStarC_Options.FSharp) -> ".fs"
       | FStar_Pervasives_Native.Some (FStarC_Options.OCaml) -> ".ml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) -> ".ml"
-      | FStar_Pervasives_Native.Some (FStarC_Options.PluginNoLib) -> ".ml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Krml) -> ".krml"
       | FStar_Pervasives_Native.Some (FStarC_Options.Extension) -> ".ast"
       | uu___ -> fail () in
@@ -614,43 +613,6 @@ let emit (dep_graph : FStarC_Parser_Dep.deps)
                        let ml = printer mlmodule in
                        FStarC_Util.write_file filename ml)) mllib)
     | FStar_Pervasives_Native.Some (FStarC_Options.Plugin) ->
-        let printer =
-          if opt = (FStar_Pervasives_Native.Some FStarC_Options.FSharp)
-          then FStarC_Extraction_ML_PrintFS.print_fs
-          else FStarC_Extraction_ML_PrintML.print_ml in
-        ((let uu___1 =
-            let uu___2 =
-              let uu___3 = FStarC_Options.output_to () in
-              FStar_Pervasives_Native.uu___is_Some uu___3 in
-            if uu___2
-            then (FStarC_List.length mllib) > Prims.int_one
-            else false in
-          if uu___1
-          then
-            FStarC_Errors.raise_error0
-              FStarC_Errors_Codes.Fatal_OptionsNotCompatible ()
-              (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-              (Obj.magic
-                 [FStarC_Errors_Msg.text
-                    "Cannot provide -o and extract multiple modules";
-                 FStarC_Errors_Msg.text
-                   "Please use -o with a single module, or specify an output directory with --odir"])
-          else ());
-         FStarC_List.iter
-           (fun uu___1 ->
-              match uu___1 with
-              | (uu___2, mlmodule) ->
-                  let uu___3 = mlmodule in
-                  (match uu___3 with
-                   | (p, uu___4) ->
-                       let filename =
-                         let basename =
-                           Prims.strcat
-                             (FStarC_Extraction_ML_Util.flatten_mlpath p) ext in
-                         ofile basename in
-                       let ml = printer mlmodule in
-                       FStarC_Util.write_file filename ml)) mllib)
-    | FStar_Pervasives_Native.Some (FStarC_Options.PluginNoLib) ->
         let printer =
           if opt = (FStar_Pervasives_Native.Some FStarC_Options.FSharp)
           then FStarC_Extraction_ML_PrintFS.print_fs
@@ -789,12 +751,12 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
               then (FStar_Pervasives_Native.None, Prims.int_zero)
               else
                 FStarC_Timing.record_ms
-                  (fun uu___5 ->
+                  (fun uu___4 ->
                      with_env env1
                        (fun env2 ->
-                          let uu___6 =
+                          let uu___5 =
                             FStarC_Extraction_ML_Modul.extract env2 tcmod in
-                          match uu___6 with | (uu___7, defs) -> defs)) in
+                          match uu___5 with | (uu___6, defs) -> defs)) in
         let maybe_extract_ml_iface tcmod env1 =
           let uu___2 =
             let uu___3 = FStarC_Options.codegen () in
@@ -803,12 +765,12 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
           then (env1, Prims.int_zero)
           else
             FStarC_Timing.record_ms
-              (fun uu___4 ->
-                 let uu___5 =
+              (fun uu___3 ->
+                 let uu___4 =
                    with_env env1
                      (fun env2 ->
                         FStarC_Extraction_ML_Modul.extract_iface env2 tcmod) in
-                 match uu___5 with | (env2, uu___6) -> env2) in
+                 match uu___4 with | (env2, uu___5) -> env2) in
         let tc_source_file uu___2 =
           let uu___3 =
             let uu___4 =
@@ -832,8 +794,8 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                              (FStar_Pervasives_Native.uu___is_Some
                                 interface_fn)
                      else
-                       (let uu___8 = fmod in
-                        match uu___8 with
+                       (let uu___7 = fmod in
+                        match uu___7 with
                         | FStar_Pervasives.Inr mod1 ->
                             with_tcenv_of_env env2
                               (fun tcenv ->
@@ -1063,9 +1025,9 @@ let rec tc_one_file_internal (fly_deps : Prims.bool)
                 let uu___4 = maybe_extract_ml_iface tcmod env1 in
                 match uu___4 with | (env2, _time) -> (tc_result, mllib, env2)))
         else
-          (let uu___4 = tc_source_file () in
-           match uu___4 with
-           | (uu___5, tc_result, mllib, env1) -> (tc_result, mllib, env1))))
+          (let uu___3 = tc_source_file () in
+           match uu___3 with
+           | (uu___4, tc_result, mllib, env1) -> (tc_result, mllib, env1))))
 and fly_deps_check (filename : Prims.string)
   (env : FStarC_Extraction_ML_UEnv.uenv) (ast_mod : FStarC_Parser_AST.modul)
   (iface_exists : Prims.bool) :

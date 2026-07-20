@@ -36,7 +36,11 @@ let with_printed_effect_args (k : unit -> 'a) : 'a=
 let term_to_string (tcenv : FStarC_TypeChecker_Env.env)
   (t : FStarC_Syntax_Syntax.term) : Prims.string=
   with_printed_effect_args
-    (fun uu___ -> FStarC_TypeChecker_Normalize.term_to_string tcenv t)
+    (fun uu___ ->
+       FStarC_Syntax_Print.term_to_string'
+         (FStarC_Syntax_DsEnv.set_current_module
+            tcenv.FStarC_TypeChecker_Env.dsenv
+            tcenv.FStarC_TypeChecker_Env.curmodule) t)
 let sigelt_to_string (tcenv : FStarC_TypeChecker_Env.env)
   (se : FStarC_Syntax_Syntax.sigelt) : Prims.string=
   with_printed_effect_args

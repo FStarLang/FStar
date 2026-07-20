@@ -26,7 +26,6 @@ open FStarC.Class.Show
 open FStar.List.Tot
 
 let loaded : ref (list string) = mk_ref []
-let loaded_plugin_lib : ref bool = mk_ref false
 
 let dbg_Plugin = Debug.get_toggle "Plugin"
 
@@ -60,12 +59,6 @@ let dynlink (fname:string) : ML unit =
   )
 
 let load_plugin tac : ML _ =
-  if not (!loaded_plugin_lib) then (
-    pout "Loading fstar.pluginlib before first plugin\n";
-    do_dynlink (Filepath.normalize_file_path <| BU.get_exec_dir () ^ "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs");
-    pout "Loaded fstar.pluginlib OK\n";
-    loaded_plugin_lib := true
-  );
   dynlink tac
 
 let load_plugins tacs : ML _ =
@@ -81,7 +74,7 @@ let load_plugins_dir dir : ML _ =
 
 let compile_modules dir ms : ML _ =
    let compile m =
-     let packages = [ "fstar.pluginlib" ] in
+     let packages = [ "fstar.compiler" ] in
      let pkg pname = "-package " ^ pname in
      let args = ["ocamlopt"; "-shared"] (* FIXME shell injection *)
                 @ ["-I"; dir]

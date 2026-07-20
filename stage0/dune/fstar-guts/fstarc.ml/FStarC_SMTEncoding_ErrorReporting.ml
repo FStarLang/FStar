@@ -256,23 +256,23 @@ let label_goals
                                                            names lhs2 in
                                                        (labels2, uu___9))
                                                 else
-                                                  (let uu___9 =
-                                                     let uu___10 =
-                                                       let uu___11 =
-                                                         let uu___12 =
-                                                           let uu___13 =
+                                                  (let uu___8 =
+                                                     let uu___9 =
+                                                       let uu___10 =
+                                                         let uu___11 =
+                                                           let uu___12 =
                                                              FStarC_SMTEncoding_Term.print_smt_term
                                                                post1 in
                                                            Prims.strcat
-                                                             "  ... " uu___13 in
+                                                             "  ... " uu___12 in
                                                          Prims.strcat
-                                                           post_name uu___12 in
+                                                           post_name uu___11 in
                                                        Prims.strcat
                                                          "Ensures clause doesn't match post name:  "
-                                                         uu___11 in
+                                                         uu___10 in
                                                      Not_a_wp_implication
-                                                       uu___10 in
-                                                   FStarC_Effect.raise uu___9)
+                                                       uu___9 in
+                                                   FStarC_Effect.raise uu___8)
                                             | uu___6 ->
                                                 let uu___7 =
                                                   let uu___8 =
@@ -684,22 +684,22 @@ let detail_errors (hint_replay : Prims.bool)
                  ((FStarC_Errors_Msg.text
                      "Hint failed to replay this sub-proof") :: msg1))
           else
-            (let uu___4 =
-               let uu___5 =
-                 let uu___6 =
-                   let uu___7 =
-                     let uu___8 =
+            (let uu___2 =
+               let uu___3 =
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 =
                        FStarC_Class_Show.show FStarC_Range_Ops.showable_range
                          r in
                      FStarC_Format.fmt1 "XX: proof obligation at %s failed."
-                       uu___8 in
-                   FStarC_Errors_Msg.text uu___7 in
-                 [uu___6] in
-               FStarC_List.op_At uu___5 msg1 in
+                       uu___6 in
+                   FStarC_Errors_Msg.text uu___5 in
+                 [uu___4] in
+               FStarC_List.op_At uu___3 msg1 in
              FStarC_Errors.log_issue FStarC_Class_HasRange.hasRange_range r
                FStarC_Errors_Codes.Error_ProofObligationFailed ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-               (Obj.magic uu___4)) in
+               (Obj.magic uu___2)) in
   let elim labs =
     FStarC_List.map
       (fun uu___ ->

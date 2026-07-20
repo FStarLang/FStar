@@ -25,10 +25,10 @@ let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
   then false
   else
-    (let uu___1 =
+    (let uu___ =
        FStarC_Class_Ord.op_Less_Equals_Question FStarC_Range_Type.ord_pos
          r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos in
-     if uu___1
+     if uu___
      then
        FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
          r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos
@@ -143,10 +143,10 @@ let intersect_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
      let end_pos =
        FStarC_Class_Ord.min FStarC_Range_Type.ord_pos
          r1.FStarC_Range_Type.end_pos r2.FStarC_Range_Type.end_pos in
-     let uu___1 =
+     let uu___ =
        FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
          start_pos end_pos in
-     if uu___1
+     if uu___
      then r2
      else
        FStarC_Range_Type.mk_rng r1.FStarC_Range_Type.file_name start_pos

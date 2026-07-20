@@ -1049,7 +1049,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : ML (env_t & list mlmodule1) =
 
     (* Ignore tactics whenever we're not extracting plugins *)
     | Sig_let {lbs=(_, lbs)}
-        when not <| List.mem (Options.codegen ()) [Some Options.Plugin; Some Options.PluginNoLib] &&
+        when not <| List.mem (Options.codegen ()) [Some Options.Plugin] &&
              List.for_all (lb_is_tactic g) lbs ->
       g, []
 

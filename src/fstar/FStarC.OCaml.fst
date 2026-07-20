@@ -44,7 +44,7 @@ let exec_in_ocamlenv #a (cmd : string) (args : list string) : ML a =
   | Inr _ -> exit 1
 
 let app_lib = "fstar.lib"
-let plugin_lib = "fstar.pluginlib"
+let plugin_lib = "fstar.compiler"
 
 (* OCaml Warning 8: this pattern-matching is not exhaustive.
 This is usually benign as we check for exhaustivenss via SMT. *)
