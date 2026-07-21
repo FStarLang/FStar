@@ -62,3 +62,39 @@ ensures  R.pts_to x 'v
     helper x;
     ()
 }
+
+(* Regression for #4366: calling a `divergent fn` from a branch of an `if` that
+   is itself in bind position (i.e. not the tail) inside a `divergent fn`. The
+   `if`'s postcondition is inferred, and the divergent branch must make the whole
+   conditional divergent instead of failing to compose against `stt`. *)
+divergent fn diverge ()
+requires emp
+ensures emp
+{
+    while (true)
+    invariant emp
+    { () }
+}
+
+divergent fn if_then_diverges () {
+    if true { diverge () };
+    ()
+}
+
+divergent fn if_else_diverges () {
+    if true { () } else { diverge () };
+    ()
+}
+
+divergent fn nested_if_diverges () {
+    if true { if true { diverge () } };
+    ()
+}
+
+(* The same `if` inside a plain `fn` is still rejected: a divergent branch cannot
+   be composed at `stt`. *)
+[@@expect_failure [228]]
+fn if_diverges_bad () {
+    if true { diverge () };
+    ()
+}
