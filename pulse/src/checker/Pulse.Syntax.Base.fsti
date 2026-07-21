@@ -30,13 +30,7 @@ let index = nat
 type universe = R.universe
 
 (* locally nameless. *)
-let range_singleton_trigger (r:FStar.Range.range) = True
-let range = r:FStar.Range.range { range_singleton_trigger r }
-let range_singleton (r:FStar.Range.range)
-  : Lemma 
-    (ensures r == FStar.Range.range_0)
-    [SMTPat (range_singleton_trigger r)]
-  = FStar.Sealed.sealed_singl r FStar.Range.range_0
+let range = FStar.Range.range
 
 noeq
 type ppname0 = {
@@ -50,13 +44,7 @@ let ppname_default =  {
     range = FStar.Range.range_0
 }
 
-let ppname_singleton_trigger (r:ppname0) = True
-let ppname_singleton (x:ppname0)
-  : Lemma 
-    (ensures x == ppname_default)
-    [SMTPat (ppname_singleton_trigger x)]
-  = FStar.Sealed.sealed_singl x.name ppname_default.name
-let ppname = p:ppname0 { ppname_singleton_trigger p }
+let ppname = ppname0
 let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
     name = name;
     range = range

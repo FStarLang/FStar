@@ -142,6 +142,7 @@ let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   | Pat_Cons f1 vs1,
     Pat_Cons f2 vs2 ->
     f1.fv_name = f2.fv_name &&
+    f1.fv_range = f2.fv_range &&
     eq_list_dec p1 p2 eq_sub_pat vs1 vs2
 
   | Pat_Constant c1, Pat_Constant c2 ->
@@ -177,8 +178,8 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
       eq_tm t2 s2 &&
       eq_tm_opt tac_opt tac_opt2 &&
       e1 = e2
-    | WILD, WILD
-    | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
+    | WILD, WILD -> true
+    | SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2 -> r1 = r2
     | _ -> false
 
 let eq_ascription (a1 a2:comp_ascription) 

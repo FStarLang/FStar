@@ -130,8 +130,8 @@ let comp_typing_from_post_hint
         x
 
 
-let extend_post_hint g p x tx conjunct =
-  let g' = push_binding g x ppname_default tx in
+let extend_post_hint g p x n tx conjunct =
+  let g' = push_binding g x n tx in
   let y = fresh g' in
   let g'' = push_binding g' y ppname_default p.ret_ty in
   let new_post = tm_star p.post conjunct in

@@ -39,7 +39,7 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
   = let conjunct = withlocal_post init_t (term_of_nvar (n, x)) in
     let g' = extend_env g x n init_t in
     let c_typing = Pulse.Checker.Pure.core_check_term (push_binding g x n (mk_ref init_t)) conjunct T.E_Total tm_slprop in
-    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct in
+    let res = Pulse.Checker.Base.extend_post_hint g p x n (mk_ref init_t) conjunct in
     res
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"

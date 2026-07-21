@@ -15,39 +15,27 @@
 *)
 module FStar.Range
 
-open FStar.Sealed
+(** [range] is the type for the internal representation of source ranges.
+   Internally, it includes a "definition" range and a "use" range, each of which
+   has a filename, a start position (line+col), and an end position.
 
-(** [__range] is a type for the internal representations of source
-   ranges. Internally, it includes a "definition" range and a "use" range, each
-   of which has a filename, a start position (line+col), and an end position.
+   We do not fully expose this type, but [explode] below allows inspecting it,
+   and [mk_range] to construct it. This type is realized in the compiler as
+   [FStarC.Range.Type.range], so that ranges are the same type everywhere.
 
-   We do not fully expose this type, but explode below allows to inspect it,
-   and __mk_range to construct it.
+   Note: [range] used to be a *sealed* type, which made all its values provably
+   equal and hence made total range-inspecting functions (like [range_of]) sound.
+   It is no longer sealed, so ranges now carry observable metadata. *)
 
-   [range] is a sealed version of [__range], meaning it does not provide
-   any facts about its values. We use this type since we have *total* functions
-   inspecting terms and returning their range metadada (like the range_of constant).
-   Given that range is sealed, it is sound to make range_of total.
-*)
-
-assume new type __range
-
-type range = sealed __range
+val range : eqtype
 
 (** A dummy range constant *)
-val __range_0 : __range
-let range_0 : range = seal __range_0
+val range_0 : range
 
 (** Building a range constant *)
-val __mk_range (file: string) (from_line from_col to_line to_col: int) : Tot __range
-
 val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
-(* This is essentially
-unfold
-let mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range =
-     seal (__mk_range file from_line from_col to_line to_col)
-but the extra indirection breaks the custom errors messages in QuickCode.
-Just retaining this as a primop for now (Guido 30/Aug/2024) *)
+(* Retained as a primop, since the extra indirection would break the custom
+error messages in QuickCode. (Guido 30/Aug/2024) *)
 
 val join_range (r1 r2 : range) : Tot range
 
@@ -56,4 +44,4 @@ val join_range (r1 r2 : range) : Tot range
 irreducible
 let labeled (r : range) (msg: string) (b: prop) : prop = b
 
-val explode (r : __range) : Tot (string & int & int & int & int)
+val explode (r : range) : Tot (string & int & int & int & int)
