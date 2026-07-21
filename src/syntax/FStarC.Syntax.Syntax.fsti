@@ -893,7 +893,6 @@ val t_real          : term
 val t_float         : term
 val t_char          : term
 val t_range         : term
-val t___range       : term
 val t_vconfig       : term
 val t_norm_step     : term
 val t_term          : term

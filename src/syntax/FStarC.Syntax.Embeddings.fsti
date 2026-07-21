@@ -55,8 +55,7 @@ instance val e_order       : embedding FStarC.Order.order
 val e_arrow       : embedding 'a -> embedding 'b -> Tot (embedding ('a -> 'b))
 instance val e_sealed      : embedding 'a -> Tot (embedding (Sealed.sealed 'a))
 
-val e___range     : embedding Range.t (* unsealed *)
-instance val e_range       : embedding Range.t (* sealed *)
+instance val e_range       : embedding Range.t
 instance val e_issue       : embedding FStarC.Errors.issue
 instance val e_document    : embedding FStarC.Pprint.document
 

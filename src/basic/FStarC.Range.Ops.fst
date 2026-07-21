@@ -22,8 +22,22 @@ friend FStarC.Range.Type
 open FStarC
 open FStarC.Json
 open FStarC.Effect 
+open FStarC.Class.Deq
 open FStarC.Class.Ord
+open FStarC.Order
 
+(* The [deq]/[ord] instances for [pos] were moved here from FStarC.Range.Type
+   so that the latter can stay below the typeclass/reflection layer (see the
+   note there). *)
+let compare_pos (p1 p2 : pos) : ML order =
+  lex (cmp p1.line p2.line) (fun _ -> cmp p1.col p2.col)
+
+instance deq_pos : deq pos = { (=?) = (=); }
+
+instance ord_pos : ord pos = {
+  super = deq_pos;
+  cmp = compare_pos;
+}
 
 let union_rng r1 r2 =
   if r1.file_name <> r2.file_name

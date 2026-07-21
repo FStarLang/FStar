@@ -16,14 +16,14 @@
 module FStarC.Range.Type
 
 open FStarC.Effect
-open FStarC.Class.Deq
-open FStarC.Class.Ord
+
+(* Note: the [deq]/[ord] instances for [pos] live in FStarC.Range.Ops, not
+   here. This module must stay below the typeclass/reflection layer so that
+   FStar.Range (which the reflection stubs depend on) can be realized by
+   [range] without creating a dependency cycle. *)
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val pos : Type0
-
-instance val deq_pos : deq pos
-instance val ord_pos : ord pos
 
 [@@ PpxDerivingYoJson; PpxDerivingShow]
 new val rng : Type0
