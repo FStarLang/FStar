@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Desugar
+friend FStar.Range
 open FStarC
 open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
@@ -52,9 +53,6 @@ let s_term_to_term (t:S.term) : Pulse.Syntax.Base.term = FStar.Pervasives.coerce
 
 [@@coercion]
 let term_to_s_term (t:Pulse.Syntax.Base.term) : S.term = FStar.Pervasives.coerce_eq (admit()) t
-
-[@@coercion]
-let fstarc_range_to_range (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Pervasives.coerce_eq (admit()) r
 
 [@@coercion]
 let fstarc_vconst_to_constant (c:FStarC.Reflection.V2.Data.vconst) : Pulse.Syntax.Base.constant = FStar.Pervasives.coerce_eq (admit()) c
