@@ -228,12 +228,9 @@ let decreases_lid : FStarC_Ident.lident= pconst "decreases"
 let reveal : FStarC_Ident.lident= p2l ["FStar"; "Ghost"; "reveal"]
 let hide : FStarC_Ident.lident= p2l ["FStar"; "Ghost"; "hide"]
 let labeled_lid : FStarC_Ident.lident= p2l ["FStar"; "Range"; "labeled"]
-let __range_lid : FStarC_Ident.lident= p2l ["FStar"; "Range"; "__range"]
 let range_lid : FStarC_Ident.lident= p2l ["FStar"; "Range"; "range"]
 let range_0 : FStarC_Ident.lident= p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid : FStarC_Ident.lident= p2l ["FStar"; "Range"; "mk_range"]
-let __mk_range_lid : FStarC_Ident.lident=
-  p2l ["FStar"; "Range"; "__mk_range"]
 let __explode_range_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Range"; "explode"]
 let join_range_lid : FStarC_Ident.lident=

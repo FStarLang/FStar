@@ -2551,7 +2551,6 @@ let t_real : term= tconst FStarC_Parser_Const.real_lid
 let t_float : term= tconst FStarC_Parser_Const.float_lid
 let t_char : term= tabbrev FStarC_Parser_Const.char_lid
 let t_range : term= tconst FStarC_Parser_Const.range_lid
-let t___range : term= tconst FStarC_Parser_Const.__range_lid
 let t_vconfig : term= tconst FStarC_Parser_Const.vconfig_lid
 let t_norm_step : term= tconst FStarC_Parser_Const.norm_step_lid
 let t_term : term= tconst FStarC_Parser_Const.term_lid

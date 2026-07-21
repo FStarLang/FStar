@@ -110,14 +110,19 @@ let either_dec_cmp (uu___5 : 'c) (uu___4 : 'c)
      | uu___ -> Obj.magic (Obj.repr Neq)) uu___5 uu___4 uu___3 uu___2 uu___1
     uu___
 let eq_cmp : 'uuuuu comparator_for= fun x y -> if x = y then Eq else Neq
-let range_cmp : FStar_Range.range comparator_for= fun r1 r2 -> Eq
+let range_cmp : FStar_Range.range comparator_for= fun r1 r2 -> eq_cmp r1 r2
 let ident_cmp : FStarC_Reflection_Types.ident comparator_for=
   fun i1 i2 ->
     let iv1 = FStarC_Reflection_V2_Builtins.inspect_ident i1 in
     let iv2 = FStarC_Reflection_V2_Builtins.inspect_ident i2 in
     Obj.magic
-      (eq_cmp (FStar_Pervasives_Native.fst iv1)
-         (FStar_Pervasives_Native.fst iv2))
+      (op_Amp_Amp_Amp (FStar_Pervasives_Native.fst iv1)
+         (FStar_Pervasives_Native.fst iv2) (FStar_Pervasives_Native.snd iv1)
+         (FStar_Pervasives_Native.snd iv2)
+         (eq_cmp (FStar_Pervasives_Native.fst iv1)
+            (FStar_Pervasives_Native.fst iv2))
+         (eq_cmp (FStar_Pervasives_Native.snd iv1)
+            (FStar_Pervasives_Native.snd iv2)))
 let rec univ_cmp : FStarC_Reflection_Types.universe comparator_for=
   fun u1 u2 ->
     let uv1 = FStarC_Reflection_V2_Builtins.inspect_universe u1 in

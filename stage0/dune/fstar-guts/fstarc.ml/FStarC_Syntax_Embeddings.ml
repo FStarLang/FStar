@@ -2908,7 +2908,7 @@ let e_sealed (ea : 'a FStarC_Syntax_Embeddings_Base.embedding) :
             | uu___2 -> Obj.magic (Obj.repr FStar_Pervasives_Native.None)))
       uu___1 uu___ in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer1 emb_ty_a
-let e___range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
+let e_range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
   let em r rng _shadow _norm =
     FStarC_Syntax_Syntax.mk
       (FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_range r)) rng in
@@ -2921,14 +2921,11 @@ let e___range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
         FStar_Pervasives_Native.Some r
     | uu___1 -> FStar_Pervasives_Native.None in
   FStarC_Syntax_Embeddings_Base.mk_emb_full em un
-    (fun uu___ -> FStarC_Syntax_Syntax.t___range)
+    (fun uu___ -> FStarC_Syntax_Syntax.t_range)
     (FStarC_Class_Show.show FStarC_Range_Ops.showable_range)
     (fun uu___ ->
        FStarC_Syntax_Syntax.ET_app
          ((FStarC_Ident.string_of_lid FStarC_Parser_Const.range_lid), []))
-let e_range : FStarC_Range_Type.t FStarC_Syntax_Embeddings_Base.embedding=
-  FStarC_Syntax_Embeddings_Base.embed_as (e_sealed e___range)
-    FStarC_Sealed.unseal FStarC_Sealed.seal FStar_Pervasives_Native.None
 let e_issue : FStarC_Errors.issue FStarC_Syntax_Embeddings_Base.embedding=
   let uu___ =
     FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.issue_lid
