@@ -98,3 +98,31 @@ fn if_diverges_bad () {
     if true { diverge () };
     ()
 }
+
+(* Regression for #4368: an `if` with an explicit `ensures` annotation but no
+   effect annotation must still infer its effect from the branches. The `ensures`
+   only fixes the postcondition slprop; a divergent branch keeps the conditional
+   divergent instead of being forced to `stt`. *)
+divergent fn if_ensures_diverges () {
+    if (true) ensures emp { diverge () };
+    ()
+}
+
+divergent fn if_ensures_else_diverges () {
+    if (true) ensures emp { diverge () } else { () };
+    ()
+}
+
+(* An annotated `if` with only terminating branches stays `stt` and is accepted
+   in a plain `fn`. *)
+fn if_ensures_terminating () {
+    if (true) ensures emp { () };
+    ()
+}
+
+(* The annotated-`if` divergent branch is still rejected inside a plain `fn`. *)
+[@@expect_failure [228]]
+fn if_ensures_diverges_bad () {
+    if (true) ensures emp { diverge () };
+    ()
+}

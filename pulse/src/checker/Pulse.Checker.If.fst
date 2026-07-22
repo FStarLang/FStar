@@ -64,6 +64,7 @@ let check
   (g:env)
   (pre:term)
   (post_hint:post_hint_opt g)
+  (annot_post:option (post_hint_for_env g))
   (res_ppname:ppname)
   (b:st_term)
   (e1 e2:st_term)
@@ -80,9 +81,22 @@ let check
 
   let hyp = fresh g in
 
+  //
+  // The hint the branches are checked against. When the surrounding context
+  // fixes the postcondition (and effect), use it directly. Otherwise, if the
+  // conditional carries an `ensures` annotation, check the branches against that
+  // postcondition slprop but leave the effect to be inferred from the branches
+  // (issue #4368); with no annotation, infer the postcondition too (issue #4366).
+  //
+  let branch_hint : post_hint_opt g =
+    match post_hint with
+    | PostHint _ -> post_hint
+    | _ -> (match annot_post with | Some ap -> PostHint ap | None -> NoHint)
+  in
+
   let g_with_eq = g_with_eq g hyp b in  
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
-  : T.Tac (checker_result_t (g_with_eq eq_v) pre post_hint)
+  : T.Tac (checker_result_t (g_with_eq eq_v) pre branch_hint)
   =
     let branch_range = br.range in
     let br =
@@ -98,7 +112,7 @@ let check
 
     let ppname = mk_ppname_no_range "_if_br" in
     let r = RU.with_error_bound branch_range (fun () ->
-      check (g_with_eq eq_v) pre post_hint ppname br) in
+      check (g_with_eq eq_v) pre branch_hint ppname br) in
     r
   in
 
@@ -114,7 +128,7 @@ let check
     ph:post_hint_for_env g & 
     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
     checker_result_t (g_with_eq tm_false) pre (PostHint ph)
-  ) = match post_hint with
+  ) = match branch_hint with
       | PostHint ph -> 
         (| ph, then_, else_ |)
       | _ ->
