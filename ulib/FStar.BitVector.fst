@@ -122,9 +122,8 @@ let rotate_left_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
     : Lemma (ensures index (rotate_left_vec #n a s) i = index a ((i + s) % n))
       [SMTPat (index (rotate_left_vec #n a s) i)] =
   let s' = s % n in
-  if s' = 0 then ()
-  else if i < n - s' then ()
-  else ()
+  Math.Lemmas.modulo_add n i s' s;
+  ()
 
 (** Relating the indexes of the rotated right vector to the original *)
 let rotate_right_vec_lemma (#n: pos) (a: bv_t n) (s: nat) (i: nat{i < n})
