@@ -466,32 +466,38 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
                       Some "l_exists_interp",
                       "l_exists_interp")]
    in
-   let prims : list (lident & (env -> string -> term -> ML (list decl))) =
-                [(Const.unit_lid,   mk_unit);
-                 (Const.bool_lid,   mk_bool);
-                 (Const.int_lid,    mk_int);
-                 (Const.real_lid,   mk_real);
-                 (Const.string_lid, mk_str);
-                 (Const.true_lid,   mk_true_interp);
-                 (Const.false_lid,  mk_false_interp);
-                 (Const.and_lid,    mk_and_interp);
-                 (Const.or_lid,     mk_or_interp);
-                 (Const.eq2_lid,    mk_eq2_interp);
-                 (Const.imp_lid,    mk_imp_interp);
-                 (Const.iff_lid,    mk_iff_interp);
-                 (Const.not_lid,    mk_not_interp);
-                 (Const.range_lid,  mk_range_interp);
-                 (Const.inversion_lid,mk_inversion_axiom);
-                ] @ (
-                  if Options.Ext.enabled "higher_order_smt"
-                  then [(Const.forall_lid, mk_forall_interp);
-                        (Const.exists_lid, mk_exists_interp);
-                        (Const.haseq_lid, mk_has_eq_refine)]
-                  else []) in
-    (fun (env:env) (t:lident) (s:string) (tt:term) ->
-        match Option.find (fun (l, _) -> lid_equals l t) prims with
-            | None -> []
-            | Some(_, f) -> f env s tt)
+   let prims_basic : list (lident & (env -> string -> term -> ML (list decl))) =
+      [(Const.unit_lid,   mk_unit);
+        (Const.bool_lid,   mk_bool);
+        (Const.int_lid,    mk_int);
+        (Const.real_lid,   mk_real);
+        (Const.string_lid, mk_str);
+        (Const.true_lid,   mk_true_interp);
+        (Const.false_lid,  mk_false_interp);
+        (Const.and_lid,    mk_and_interp);
+        (Const.or_lid,     mk_or_interp);
+        (Const.eq2_lid,    mk_eq2_interp);
+        (Const.imp_lid,    mk_imp_interp);
+        (Const.iff_lid,    mk_iff_interp);
+        (Const.not_lid,    mk_not_interp);
+        (Const.range_lid,  mk_range_interp);
+        (Const.inversion_lid,mk_inversion_axiom);
+      ]
+   in
+   let prims_ho : list (lident & (env -> string -> term -> ML (list decl))) =
+      [(Const.forall_lid, mk_forall_interp);
+       (Const.exists_lid, mk_exists_interp);
+       (Const.haseq_lid, mk_has_eq_refine)]
+   in
+   (fun (env_:env) (t:lident) (s:string) (tt:term) ->
+      let prims :  list (lident & (env -> string -> term -> ML (list decl))) = 
+        if Options.Ext.enabled "higher_order_smt"
+        then prims_ho@prims_basic
+        else prims_basic
+      in
+      match Option.find (fun (l, _) -> lid_equals l t) prims with
+      | None -> []
+      | Some(_, f) -> f env_ s tt)
 
 let forall_univs rng univ_fvs body =
   match univ_fvs with
