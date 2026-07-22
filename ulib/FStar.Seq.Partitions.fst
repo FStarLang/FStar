@@ -29,36 +29,28 @@ open FStar.IntegerIntervals
 (* As always, we are proud to require least possible resources *)
 #set-options "--z3rlimit 1 --ifuel 0 --fuel 1"
 
-(* auxiliary lemmas *)
-let count_head_lemma (#t:eqtype) (s: seq t{length s > 0}) (x:t)
-  : Lemma (requires head s = x) (ensures count x (tail s) == count x s - 1) = ()
-  
-let count_non_head_lemma (#t:eqtype) (s: seq t{length s > 0}) (x:t)
-  : Lemma (requires head s <> x) (ensures count x (tail s) == count x s) = ()
-
-(* element removal with all relevant properties assured *)
-let rec remove_element #t s x =  
+(* element removal with all relevant properties assured
+   (fuel 2 lets Z3 compute count on the singleton [create 1 (head s)]) *)
+#push-options "--fuel 2"
+let rec remove_element #t s x =
   if head s = x then tail s
-  else begin 
-    let tl = (remove_element (tail s) x) in
-    let r = cons (head s) tl in
-    lemma_eq_elim (tail r) tl; 
-    let aux_set_property (p:t) : Lemma (count p r <= 1) = 
-      if p = head s then count_head_lemma r p 
-      else count_non_head_lemma r p
-    in Classical.forall_intro aux_set_property;
-    r
-  end                             
+  else begin
+    let tl = remove_element (tail s) x in
+    lemma_append_count (create 1 (head s)) tl;
+    cons (head s) tl
+  end
+#pop-options
 
 (* subset subtraction with all relevant properties assured 
    This one occasionally fails without splitting queries,
    and gets accepted fast with the option set, so I see no
    reason why not to... *)
-#push-options "--split_queries"
 let rec subtract_subset #t a b =
-  if length b = 0 then a 
-  else subtract_subset (remove_element a (head b)) (tail b) 
-#pop-options
+  if length b = 0 then a
+  else begin
+    lemma_mem_inversion b;
+    subtract_subset (remove_element a (head b)) (tail b)
+  end
 
 (* auxiliary to establish provable equality of sequences of length zero *)
 let empty_lemma (#t:eqtype) (s: seq t) 
@@ -116,7 +108,7 @@ let is_subpartition (#t: eqtype) (s: seq t) (parts: seq (seq t))
 
 
 (* this one wants ifuel, and gets accepted really quickly with it *)
-#push-options "--ifuel 1"
+#push-options "--ifuel 1 --z3rlimit 2"
 let partition_split (#t: eqtype) (pt: partition t)
   : Pure (partition t) (requires length pt.parts > 0)
                        (ensures fun p -> is_subpartition pt.s pt.parts p.s p.parts
