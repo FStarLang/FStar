@@ -67,7 +67,7 @@ val allow_ambiguous : unit
 (***** begin slprop_equiv *****)
 
 (* A full slprop. In universe 4 (currently!) *)
-[@@erasable]
+[@@erasable; unifier_hint_injective_type]
 val slprop : Type u#4
 
 val timeless (p: slprop) : prop

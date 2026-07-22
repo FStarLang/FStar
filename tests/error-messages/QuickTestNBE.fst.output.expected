@@ -4,7 +4,7 @@
   - Env = (va_s0 : QuickTestNBE.vale_state)
   - VC =
       forall (ok: Prims.bool) (p: (_: Prims.unit -> Prims.GTot Prims.prop)).
-        (forall (u193: Prims.unit). {:pattern Prims.guard_free (p u193)} p ()) ==>
+        (forall (u194: Prims.unit). {:pattern Prims.guard_free (p u194)} p ()) ==>
         FStar.Range.labeled (FStar.Sealed.seal QuickTestNBE(1,2-3,4))
           ""
           (QuickTestNBE.f 4 - QuickTestNBE.f 4 == 0 /\ QuickTestNBE.f 4 == 0 /\

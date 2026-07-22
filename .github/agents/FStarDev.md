@@ -185,6 +185,12 @@ make -j$(nproc) 3 FSTAR_EXTERNAL_STAGE0=/path/to/fstar.exe
 3. Test: `make test-3` or run targeted tests
 4. Repeat
 
+If you make a change that modifies the behavior of the compiler and you need to test
+that it does not introduce any regressions without doing a full bootstrap, you can do
+`make clean-2` followed by `make`: this will rebuild the compiler, then the
+standard library using the new compiler, then stage3 and Pulse etc, without needing to
+rebuild stage0 and stage1.
+
 Note: as the compiler is modified and rebuilt, the tests that succeeded
 are not invalidated to make iteration faster. A final `make -C tests clean && make test`
 is usually useful.
