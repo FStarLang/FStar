@@ -282,7 +282,7 @@ test_ulib: $(FSTAR2_FULL_EXE) .force
 	  OUTPUT_DIR=test_ulib/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
-	  OTHERFLAGS='--z3version 4.15.7' \
+	  OTHERFLAGS='--z3version 4.17.1 --proof_recovery' \
 	  $(MAKE) -f mk/lib.mk ocaml verify
 
 test_ulib_ho: $(FSTAR2_FULL_EXE) .force
@@ -293,9 +293,8 @@ test_ulib_ho: $(FSTAR2_FULL_EXE) .force
 	  OUTPUT_DIR=test_ulib_ho/ulib.ml/ \
 	  CODEGEN=OCaml \
 	  TAG=lib \
-	  OTHERFLAGS='--z3version 4.15.7 --ext higher_order_smt --proof_recovery' \
+	  OTHERFLAGS='--z3version 4.17.1 --ext higher_order_smt --proof_recovery' \
 	  $(MAKE) -f mk/lib.mk ocaml verify
-
 
 	# ^ NB: also verify files we don't extract
 .alib2.touch: .alib2.src.touch .src.ml.touch $(MAYBEFORCE)
