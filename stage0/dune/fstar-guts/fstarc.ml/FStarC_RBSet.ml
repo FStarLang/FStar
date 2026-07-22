@@ -42,9 +42,9 @@ let add (uu___ : 'a FStarC_Class_Ord.ord) (x : 'a) (s : 'a rbset) : 'a rbset=
         if uu___1
         then let uu___2 = add' a1 in balance c uu___2 y b
         else
-          (let uu___3 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
-           if uu___3
-           then let uu___4 = add' b in balance c a1 y uu___4
+          (let uu___2 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
+           if uu___2
+           then let uu___3 = add' b in balance c a1 y uu___3
            else s1) in
   let uu___1 = add' s in blackroot uu___1
 let filter (uu___ : 'a FStarC_Class_Ord.ord) (predicate : 'a -> Prims.bool)
@@ -74,15 +74,15 @@ let rec remove : 'a . 'a FStarC_Class_Ord.ord -> 'a -> 'a rbset -> 'a rbset =
         if uu___1
         then let uu___2 = remove uu___ x l in balance c uu___2 y r
         else
-          (let uu___3 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
-           if uu___3
-           then let uu___4 = remove uu___ x r in balance c l y uu___4
+          (let uu___2 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
+           if uu___2
+           then let uu___3 = remove uu___ x r in balance c l y uu___3
            else
              if uu___is_L r
              then l
              else
-               (let uu___6 = extract_min uu___ r in
-                match uu___6 with | (r', y') -> balance c l y' r'))
+               (let uu___3 = extract_min uu___ r in
+                match uu___3 with | (r', y') -> balance c l y' r'))
 let rec mem : 'a . 'a FStarC_Class_Ord.ord -> 'a -> 'a rbset -> Prims.bool =
   fun uu___ x s ->
     match s with
@@ -92,8 +92,8 @@ let rec mem : 'a . 'a FStarC_Class_Ord.ord -> 'a -> 'a rbset -> Prims.bool =
         if uu___2
         then mem uu___ x a1
         else
-          (let uu___4 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
-           if uu___4 then mem uu___ x b else true)
+          (let uu___3 = FStarC_Class_Ord.op_Greater_Question uu___ x y in
+           if uu___3 then mem uu___ x b else true)
 let rec elems : 'a . 'a rbset -> 'a Prims.list =
   fun s ->
     match s with
@@ -124,7 +124,7 @@ let inter (uu___ : 'a FStarC_Class_Ord.ord) (s1 : 'a rbset) (s2 : 'a rbset) :
         then
           let uu___3 = let uu___4 = aux b acc in aux a1 uu___4 in
           add uu___ x uu___3
-        else (let uu___4 = aux b acc in aux a1 uu___4) in
+        else (let uu___3 = aux b acc in aux a1 uu___3) in
   aux s1 L
 let rec diff :
   'a . 'a FStarC_Class_Ord.ord -> 'a rbset -> 'a rbset -> 'a rbset =

@@ -173,9 +173,7 @@ let pop_entries
   map (fun uu___ -> as_query FStarC_Interactive_Ide_Types.Pop) e
 let push_kind_geq (pk1 : FStarC_Interactive_Ide_Types.push_kind)
   (pk2 : FStarC_Interactive_Ide_Types.push_kind) : Prims.bool=
-  if pk1 = pk2
-  then true
-  else
+  (pk1 = pk2) ||
     (match (pk1, pk2) with
      | (FStarC_Interactive_Ide_Types.FullCheck,
         FStarC_Interactive_Ide_Types.LaxCheck) -> true
@@ -252,11 +250,11 @@ let inspect_repl_stack (s : FStarC_Interactive_Ide_Types.repl_stack_t)
                            matching_prefix (FStarC_List.op_At issues accum)
                              lookups entries3 ds2))
                  else
-                   (let uu___4 = pop_entries (e :: entries3) in
-                    op_let_Bang uu___4
+                   (let uu___3 = pop_entries (e :: entries3) in
+                    op_let_Bang uu___3
                       (fun pops ->
-                         let uu___5 = push_decls1 (d :: ds2) in
-                         op_let_Bang uu___5
+                         let uu___4 = push_decls1 (d :: ds2) in
+                         op_let_Bang uu___4
                            (fun pushes ->
                               return
                                 ((FStarC_List.op_At pops

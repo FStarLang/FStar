@@ -93,8 +93,8 @@ let with_uf_enabled (f : unit -> 'a) : 'a=
      if uu___1
      then f ()
      else
-       (try (fun uu___3 -> match () with | () -> f ()) ()
-        with | uu___3 -> (restore (); FStarC_Effect.raise uu___3)) in
+       (try (fun uu___2 -> match () with | () -> f ()) ()
+        with | uu___2 -> (restore (); FStarC_Effect.raise uu___2)) in
    restore (); r)
 let fail_if_ro (uu___ : unit) : unit=
   let uu___1 = let uu___2 = get () in uu___2.ro in
@@ -171,36 +171,36 @@ let chk_v_t (su : FStarC_Syntax_Syntax.uvar) :
              expected.FStarC_Syntax_Syntax.minor)
       then u
       else
-        (let uu___2 =
-           let uu___3 =
-             let uu___4 =
-               let uu___5 = uvar_to_string u in
-               FStar_Pprint.doc_of_string uu___5 in
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = uvar_to_string u in
+               FStar_Pprint.doc_of_string uu___4 in
              FStar_Pprint.op_Hat_Slash_Hat
                (FStarC_Errors_Msg.text
                   "Internal error: incompatible version for term unification variable")
-               uu___4 in
-           let uu___4 =
+               uu___3 in
+           let uu___3 =
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = version_to_string expected in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat
+                 (FStarC_Errors_Msg.text "Current version: ") uu___5 in
              let uu___5 =
                let uu___6 =
-                 let uu___7 = version_to_string expected in
-                 FStar_Pprint.doc_of_string uu___7 in
-               FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text "Current version: ") uu___6 in
-             let uu___6 =
-               let uu___7 =
-                 let uu___8 =
-                   let uu___9 = version_to_string v in
-                   FStar_Pprint.doc_of_string uu___9 in
+                 let uu___7 =
+                   let uu___8 = version_to_string v in
+                   FStar_Pprint.doc_of_string uu___8 in
                  FStar_Pprint.op_Hat_Slash_Hat
-                   (FStarC_Errors_Msg.text "Got version: ") uu___8 in
-               [uu___7] in
-             uu___5 :: uu___6 in
-           uu___3 :: uu___4 in
+                   (FStarC_Errors_Msg.text "Got version: ") uu___7 in
+               [uu___6] in
+             uu___4 :: uu___5 in
+           uu___2 :: uu___3 in
          FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range rng
            FStarC_Errors_Codes.Fatal_BadUvar ()
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-           (Obj.magic uu___2))
+           (Obj.magic uu___1))
 let fresh (decoration : FStarC_Syntax_Syntax.uvar_decoration)
   (rng : FStarC_Range_Type.t) : FStarC_Syntax_Syntax.uvar=
   fail_if_ro ();
@@ -282,36 +282,36 @@ let chk_v_u
              expected.FStarC_Syntax_Syntax.minor)
       then u
       else
-        (let uu___2 =
-           let uu___3 =
-             let uu___4 =
-               let uu___5 = uvar_to_string u in
-               FStar_Pprint.doc_of_string uu___5 in
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = uvar_to_string u in
+               FStar_Pprint.doc_of_string uu___4 in
              FStar_Pprint.op_Hat_Slash_Hat
                (FStarC_Errors_Msg.text
                   "Internal error: incompatible version for universe unification variable")
-               uu___4 in
-           let uu___4 =
+               uu___3 in
+           let uu___3 =
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = version_to_string expected in
+                 FStar_Pprint.doc_of_string uu___6 in
+               FStar_Pprint.op_Hat_Slash_Hat
+                 (FStarC_Errors_Msg.text "Current version: ") uu___5 in
              let uu___5 =
                let uu___6 =
-                 let uu___7 = version_to_string expected in
-                 FStar_Pprint.doc_of_string uu___7 in
-               FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text "Current version: ") uu___6 in
-             let uu___6 =
-               let uu___7 =
-                 let uu___8 =
-                   let uu___9 = version_to_string v in
-                   FStar_Pprint.doc_of_string uu___9 in
+                 let uu___7 =
+                   let uu___8 = version_to_string v in
+                   FStar_Pprint.doc_of_string uu___8 in
                  FStar_Pprint.op_Hat_Slash_Hat
-                   (FStarC_Errors_Msg.text "Got version: ") uu___8 in
-               [uu___7] in
-             uu___5 :: uu___6 in
-           uu___3 :: uu___4 in
+                   (FStarC_Errors_Msg.text "Got version: ") uu___7 in
+               [uu___6] in
+             uu___4 :: uu___5 in
+           uu___2 :: uu___3 in
          FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range rng
            FStarC_Errors_Codes.Fatal_BadUvar ()
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-           (Obj.magic uu___2))
+           (Obj.magic uu___1))
 let set_univ_graph (ug : ugraph) : unit=
   let uu___ =
     let uu___1 = get () in

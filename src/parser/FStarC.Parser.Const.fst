@@ -169,8 +169,8 @@ let int_of_string_lid = p2l ["FStar"; "Parse"; "int_of_string"]
 let bool_of_string_lid = p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
-let vconfig_lid     = p2l ["FStar"; "Stubs"; "VConfig"; "vconfig"]
-let mkvconfig_lid   = p2l ["FStar"; "Stubs"; "VConfig"; "Mkvconfig"]
+let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
+let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -464,7 +464,7 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Stubs"; "VConfig"; "check_with"]) FStarC.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStarC.Range.dummyRange
 
 let decls_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]
 

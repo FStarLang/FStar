@@ -4,4 +4,4 @@ type 'a tagged = {
 let __proj__Mktagged__item__tag_of (projectee : 'a tagged) :
   'a -> Prims.string= match projectee with | { tag_of;_} -> tag_of
 let tag_of (projectee : 'a tagged) : 'a -> Prims.string=
-  match projectee with | { tag_of = tag_of1;_} -> tag_of1
+  __proj__Mktagged__item__tag_of projectee

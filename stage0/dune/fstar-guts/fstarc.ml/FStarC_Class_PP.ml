@@ -4,7 +4,7 @@ type 'a pretty = {
 let __proj__Mkpretty__item__pp (projectee : 'a pretty) :
   'a -> FStar_Pprint.document= match projectee with | { pp;_} -> pp
 let pp (projectee : 'a pretty) : 'a -> FStar_Pprint.document=
-  match projectee with | { pp = pp1;_} -> pp1
+  __proj__Mkpretty__item__pp projectee
 let gparens (a : FStar_Pprint.document) : FStar_Pprint.document=
   FStar_Pprint.group
     (FStar_Pprint.nest (Prims.of_int 2) (FStar_Pprint.parens a))

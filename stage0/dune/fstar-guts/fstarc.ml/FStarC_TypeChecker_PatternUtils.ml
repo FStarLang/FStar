@@ -250,16 +250,16 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
          FStarC_Syntax_Syntax.sort = FStarC_Syntax_Syntax.tun
        }, FStarC_TypeChecker_Env.trivial_guard, env1)
     else
-      (let uu___1 = FStarC_Syntax_Util.type_u () in
-       match uu___1 with
-       | (t, uu___2) ->
-           let uu___3 =
+      (let uu___ = FStarC_Syntax_Util.type_u () in
+       match uu___ with
+       | (t, uu___1) ->
+           let uu___2 =
              FStarC_TypeChecker_Env.new_implicit_var_aux "pattern bv type"
                (FStarC_Syntax_Syntax.range_of_bv x) env1 t
                (FStarC_Syntax_Syntax.Allow_untyped "pattern bv type")
                FStar_Pervasives_Native.None false in
-           (match uu___3 with
-            | (t_x, uu___4, guard) ->
+           (match uu___2 with
+            | (t_x, uu___3, guard) ->
                 let x1 =
                   {
                     FStarC_Syntax_Syntax.ppname =
@@ -369,16 +369,16 @@ let pat_as_exp (introduce_bv_uvars : Prims.bool)
                    (FStar_Pervasives_Native.uu___is_Some us_opt)
                then let uu___2 = inst_head hd us_opt in (uu___2, us_opt)
                else
-                 (let uu___3 =
+                 (let uu___2 =
                     FStarC_TypeChecker_Env.lookup_datacon env2
                       (FStarC_Syntax_Syntax.lid_of_fv fv) in
-                  match uu___3 with
-                  | (us, uu___4) ->
+                  match uu___2 with
+                  | (us, uu___3) ->
                       if Prims.uu___is_Nil us
                       then (hd, (FStar_Pervasives_Native.Some []))
                       else
-                        (let uu___6 = FStarC_Syntax_Syntax.mk_Tm_uinst hd us in
-                         (uu___6, (FStar_Pervasives_Native.Some us)))) in
+                        (let uu___4 = FStarC_Syntax_Syntax.mk_Tm_uinst hd us in
+                         (uu___4, (FStar_Pervasives_Native.Some us)))) in
              (match uu___1 with
               | (hd, us_opt1) ->
                   let e =

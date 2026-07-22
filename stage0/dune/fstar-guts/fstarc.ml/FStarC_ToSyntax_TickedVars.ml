@@ -570,17 +570,17 @@ let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
     (let binders =
        FStarC_List.map
          (fun x ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
                     FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-                  tm_type uu___4 in
-                (x, uu___3) in
-              FStarC_Parser_AST.Annotated uu___2 in
-            let uu___2 =
+                  tm_type uu___3 in
+                (x, uu___2) in
+              FStarC_Parser_AST.Annotated uu___1 in
+            let uu___1 =
               FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-            FStarC_Parser_AST.mk_binder uu___1 uu___2
+            FStarC_Parser_AST.mk_binder uu___ uu___1
               FStarC_Parser_AST.Type_level
               (FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit)) ftv in
      let result =
@@ -596,24 +596,24 @@ let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) :
     (let binders =
        FStarC_List.map
          (fun x ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 =
-                  let uu___4 =
+            let uu___ =
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
                     FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-                  tm_type uu___4 in
-                (x, uu___3) in
-              FStarC_Parser_AST.Annotated uu___2 in
-            let uu___2 =
+                  tm_type uu___3 in
+                (x, uu___2) in
+              FStarC_Parser_AST.Annotated uu___1 in
+            let uu___1 =
               FStarC_Class_HasRange.pos FStarC_Ident.hasrange_ident x in
-            FStarC_Parser_AST.mk_binder uu___1 uu___2
+            FStarC_Parser_AST.mk_binder uu___ uu___1
               FStarC_Parser_AST.Type_level
               (FStar_Pervasives_Native.Some FStarC_Parser_AST.Implicit)) ftv in
      let t1 =
-       let uu___1 = let uu___2 = unparen t in uu___2.FStarC_Parser_AST.tm in
-       match uu___1 with
-       | FStarC_Parser_AST.Product uu___2 -> t
-       | uu___2 ->
+       let uu___ = let uu___1 = unparen t in uu___1.FStarC_Parser_AST.tm in
+       match uu___ with
+       | FStarC_Parser_AST.Product uu___1 -> t
+       | uu___1 ->
            FStarC_Parser_AST.mk_term
              (FStarC_Parser_AST.App
                 ((FStarC_Parser_AST.mk_term

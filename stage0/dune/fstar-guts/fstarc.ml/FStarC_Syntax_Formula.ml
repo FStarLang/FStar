@@ -293,13 +293,13 @@ let rec destruct_sq_forall (uu___ : FStarC_Syntax_Syntax.term) :
                     then Obj.magic FStar_Pervasives_Native.None
                     else
                       (let q = FStarC_Syntax_Util.comp_result c in
-                       let uu___4 =
+                       let uu___3 =
                          FStarC_Syntax_Util.is_free_in
                            b.FStarC_Syntax_Syntax.binder_bv q in
-                       if uu___4
+                       if uu___3
                        then
-                         let uu___5 = patterns q in
-                         match uu___5 with
+                         let uu___4 = patterns q in
+                         match uu___4 with
                          | (pats, q1) ->
                              Obj.magic
                                (maybe_collect

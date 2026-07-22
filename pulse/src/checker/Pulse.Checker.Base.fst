@@ -414,6 +414,48 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
 
   k (PostHint post_hint) d
 
+//
+// Like apply_checker_result_k, but reads back the *natural* effect of the
+// checked computation instead of coercing it to the postcondition's effect.
+// This is used to infer the effect of the branches of a conditional whose
+// postcondition (and effect) were not supplied by the user: a divergent branch
+// must yield a divergent computation rather than failing to compose against the
+// tentatively-inferred stt effect (issue #4366). The result matches the given
+// postcondition's return type and postcondition, but carries its own effect.
+//
+let apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (t:st_term &
+           c:comp_st { comp_pre c == ctxt /\
+                       comp_res c == post_hint.ret_ty /\
+                       comp_u c == post_hint.u /\
+                       comp_post c == post_hint.post }) =
+
+  let (| y, g1, (u_ty, ty_y), pre', k |) = r in
+
+  let u_ty_y = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
+
+  let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
+  //
+  // Coerce the trailing return to NoHint so that composing it with the body
+  // uses the unbiased bind rules and reports the body's real effect.
+  //
+  let (| tret, cret |) = d in
+  let d' : st_typing_in_ctxt g1 pre' NoHint = (| tret, cret |) in
+
+  let (| t, c |) = k NoHint d' in
+  //
+  // mk_bind guarantees the result shares c2's return type, universe and
+  // postcondition (st_comp_with_pre), but the continuation_elaborator type
+  // does not expose this; recover it here.
+  //
+  assume (comp_res c == post_hint.ret_ty /\
+          comp_u c == post_hint.u /\
+          comp_post c == post_hint.post);
+  (| t, c |)
+
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 0"
 //TODO: refactor and merge with continuation_elaborator_with_bind
 let checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
