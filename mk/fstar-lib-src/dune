@@ -1,0 +1,22 @@
+(include_subdirs unqualified)
+(library
+ (name fstar)
+ (public_name fstar.lib)
+ (libraries
+    batteries
+    zarith
+    stdint
+    pprint
+ )
+ (modes native byte)
+ ; ^ Note: we need to compile fstar-lib in bytecode since some
+ ; clients use it (e.g. MLS* when being compiled into javascript
+ ; via js_of_ocaml, in general anything that wants to use js_of_ocaml).
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
+)
+
+(env
+  (_
+    (bin_annot false)
+    (flags (:standard -w -A))))

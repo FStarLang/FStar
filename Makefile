@@ -417,13 +417,21 @@ __do-install-stage3:
 	$(call bold_msg, "INSTALL", "STAGE 3")
 	$(MAKE) -C stage3 install FSTAR_DUNE_RELEASE=1
 
+# Directory of F*-extracted ulib OCaml sources to re-ship as fstar.lib
+# sources in the binary package (see .scripts/bin-install.sh). By default
+# it is the packaged stage's own ulib.ml, but stage3 never re-extracts ulib
+# to OCaml -- it reuses stage2's extraction (cf. the stage3/dune/libapp
+# symlink into ../../../stage2/ulib.ml) -- so package-3 overrides this to
+# point at stage2/ulib.ml.
+ULIB_ML ?= $(abspath $(BROOT))/ulib.ml
+
 __do-archive: .force
 	rm -rf $(PKGTMP)
 	# add an 'fstar' top-level directory to the archive
 	$(MAKE) $(INSTALL_RULE) PREFIX="$(abspath $(PKGTMP)/fstar)"
 	$(MAKE) -C karamel install PREFIX="$(abspath $(PKGTMP)/fstar)" LOWSTAR=false
 	$(call bold_msg, "PACKAGE", $(ARCHIVE))
-	.scripts/bin-install.sh "$(PKGTMP)/fstar"
+	.scripts/bin-install.sh "$(PKGTMP)/fstar" "$(ULIB_ML)"
 	.scripts/mk-package.sh "$(PKGTMP)" "$(ARCHIVE)"
 	rm -rf $(PKGTMP)
 
@@ -464,6 +472,7 @@ package-3: .stage3.src.touch .force
 	env \
 	  PKGTMP=_pak3 \
 	  BROOT=stage3/ \
+	  ULIB_ML=$(abspath stage2/ulib.ml) \
 	  ARCHIVE=fstar$(FSTAR_TAG) \
 	  INSTALL_RULE=__do-install-stage3 \
 	  $(MAKE) __do-archive
@@ -551,7 +560,7 @@ accept_pulse: accept_pulse_test accept_pulse_examples
 
 # Use directly only at your own risk.
 _test: FSTAR_EXE ?= $(abspath out/bin/fstar.exe)
-_test: _unit-tests _examples _doc
+_test: _unit-tests _examples _doc _test_install_lib
 
 need_fstar_exe:
 	if [ -z "$(FSTAR_EXE)" ]; then \
@@ -573,6 +582,27 @@ _unit-tests: need_fstar_exe .force
 
 _examples: need_fstar_exe .force
 	+$(MAKE) -C examples all
+
+# A source-built (or `make install`ed) F* ships a compiled fstar.lib next to
+# fstar.exe, so `--install_lib_with_deps` must detect it and be a no-op (it
+# must NOT try to rebuild fstar.lib or invoke opam). This guards against
+# regressions in that detection. We assert a 0 exit code and the "already
+# installed" message. (For a binary package, where fstar.lib is shipped as
+# sources, the command instead builds+installs it; that path is exercised
+# separately, not here.)
+.PHONY: _test_install_lib
+_test_install_lib: need_fstar_exe .force
+	$(call msg, "TEST", "install_lib no-op")
+	@out=$$($(FSTAR_EXE) --install_lib_with_deps 2>&1); rc=$$?; \
+	  printf '%s\n' "$$out"; \
+	  if [ $$rc -ne 0 ]; then \
+	    echo "ERROR: --install_lib_with_deps returned $$rc, expected a no-op"; \
+	    false; \
+	  fi; \
+	  printf '%s\n' "$$out" | grep -q 'already installed' || { \
+	    echo "ERROR: --install_lib_with_deps was not a no-op (expected 'already installed')"; \
+	    false; \
+	  }
 
 ci: .force
 	+$(MAKE) 2

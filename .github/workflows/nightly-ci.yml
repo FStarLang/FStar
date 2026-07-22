@@ -82,3 +82,46 @@ jobs:
           echo -e "module B\n#lang-pulse\nopen Pulse\nfn test (x:int) returns int { (x+1); }" > B.fst
           ./out/bin/fstar.exe B.fst
         working-directory: fstar
+
+  # Check that, given only the binary package, one can install fstar.lib
+  # into a fresh opam switch via `fstar.exe --install_lib_with_deps` and
+  # then build OCaml applications against it. The binary package ships no
+  # precompiled OCaml packages, so this exercises the from-source install
+  # of fstar.lib and the uniform application-build workflow.
+  binary-install-lib:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # We need the F* checkout for the sample applications (tests/) and
+      # the test infrastructure (mk/), which are not in the binary package.
+      - uses: actions/checkout@master
+        with:
+          submodules: true
+
+      - name: Get fstar package
+        uses: actions/download-artifact@v8
+        with:
+          name: fstar.tar.gz
+      - run: tar xzf fstar.tar.gz
+
+      - name: Install Z3
+        # Note: the packages built by build-packages.yml don't include Z3.
+        run: curl -fsSL https://raw.githubusercontent.com/FStarLang/FStar/refs/heads/master/.scripts/get_fstar_z3.sh | sudo bash -s -- /usr/local/bin
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.3.0
+
+      - name: Install fstar.lib into the opam switch
+        run: |
+          eval $(opam env)
+          ./fstar/bin/fstar.exe --install_lib_with_deps
+
+      - name: Test sample F* applications
+        run: |
+          eval $(opam env)
+          export FSTAR_EXE="$PWD/fstar/bin/fstar.exe"
+          make -C tests/simple_hello FSTAR_EXE="$FSTAR_EXE"
+          make -C tests/dune_hello FSTAR_EXE="$FSTAR_EXE"
+          make -C tests/extraction FSTAR_EXE="$FSTAR_EXE"

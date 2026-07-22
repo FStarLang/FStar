@@ -5,6 +5,7 @@
  (wrapped false)
  (libraries
     batteries
+    findlib
     zarith
     stdint
     yojson

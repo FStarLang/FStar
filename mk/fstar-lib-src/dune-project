@@ -1,0 +1,7 @@
+(lang dune 3.15)
+(name fstar)
+(generate_opam_files false)
+
+(package
+  (name fstar)
+  (synopsis "The F* application library (fstar.lib)"))

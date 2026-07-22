@@ -2,6 +2,7 @@
   bash,
   batteries,
   buildDunePackage,
+  findlib,
   installShellFiles,
   karamel-src,
   karamelOcamlDeps,
@@ -46,6 +47,7 @@ buildDunePackage {
 
   buildInputs = [
     batteries
+    findlib
     memtrace
     menhir
     menhirLib

@@ -2,6 +2,12 @@
 (library
  (name fstar)
  (public_name fstar.lib)
+ ; NB: a regular `make install` (e.g. `opam install fstar.opam`) installs a
+ ; compiled fstar.lib, built against the user's own OCaml toolchain. The
+ ; *binary* package instead strips this compiled library and ships fstar.lib
+ ; as OCaml sources + a dune project, to avoid OCaml ABI mismatches. That
+ ; stripping/source-shipping happens in .scripts/bin-install.sh (binary
+ ; packages only), see also mk/fstar-lib-src/.
  (libraries
     batteries
     zarith
