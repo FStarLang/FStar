@@ -32,5 +32,5 @@ val fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> slprop) (#post : (
   : x:a -> stt_ghost (b x) emp_inames (pre x) (post x)
 
 val fix_stt_1 (#a : Type) (#b : a -> Type) (#pre : a -> slprop) (#post : (x:a -> b x -> slprop))
-  (ff : (y:a -> stt (b y) (pre y) (post y)) -> (x:a -> stt (b x) (pre x) (post x)))
-  : x:a -> stt (b x) (pre x) (post x)
+  (ff : (y:a -> stt_div (b y) (pre y) (post y)) -> (x:a -> stt_div (b x) (pre x) (post x)))
+  : x:a -> stt_div (b x) (pre x) (post x)

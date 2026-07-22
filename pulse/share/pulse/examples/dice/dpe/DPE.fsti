@@ -356,7 +356,7 @@ let open_session_client_perm (s:option sid_t) : slprop =
     exists* t. sid_pts_to trace_ref s t ** pure (current_state t == G_SessionStart)
 
 val open_session ()
-  : stt (option sid_t)
+  : stt_div (option sid_t)
         (requires emp)
         (ensures fun r -> open_session_client_perm r)
 
@@ -369,6 +369,7 @@ let initialize_context_client_perm (sid:sid_t) (uds:Seq.seq U8.t) =
   exists* t. sid_pts_to trace_ref sid t **
              pure (current_state t == G_Available (Engine_context_repr uds))
 
+divergent
 fn initialize_context (sid:sid_t) 
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
@@ -405,6 +406,7 @@ let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
     exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (derive_child_post_trace repr t1)
 
+divergent
 fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
@@ -429,6 +431,7 @@ let session_closed_client_perm (sid:sid_t) (t0:trace) =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == G_SessionClosed (G_InUse (current_state t0)))
 
+divergent
 fn close_session
   (sid:sid_t)
   (t:G.erased trace { trace_valid_for_close t })
@@ -448,6 +451,7 @@ let certify_key_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
+divergent
 fn certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
@@ -476,6 +480,7 @@ let sign_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
+divergent
 fn sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })

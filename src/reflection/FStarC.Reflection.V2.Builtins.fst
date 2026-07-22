@@ -42,7 +42,7 @@ module DsEnv = FStarC.Syntax.DsEnv
 module RD    = FStarC.Reflection.V2.Data
 module EMB   = FStarC.Syntax.Embeddings
 module N     = FStarC.TypeChecker.Normalize
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStar.Dyn
 

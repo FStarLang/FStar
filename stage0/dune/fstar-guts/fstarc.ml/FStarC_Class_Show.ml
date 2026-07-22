@@ -4,7 +4,7 @@ type 'a showable = {
 let __proj__Mkshowable__item__show (projectee : 'a showable) :
   'a -> Prims.string= match projectee with | { show;_} -> show
 let show (projectee : 'a showable) : 'a -> Prims.string=
-  match projectee with | { show = show1;_} -> show1
+  __proj__Mkshowable__item__show projectee
 let showable_unit : unit showable= { show = (fun uu___ -> "()") }
 let showable_bool : Prims.bool showable= { show = Prims.string_of_bool }
 let showable_int : Prims.int showable= { show = Prims.string_of_int }

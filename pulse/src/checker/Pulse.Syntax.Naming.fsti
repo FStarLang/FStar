@@ -43,6 +43,7 @@ let freevars_comp (c:comp) : Tot (Set.set var) (decreases c) =
   match c with
   | C_Tot t -> freevars t
   | C_ST s -> freevars_st_comp s
+  | C_STDiv s -> freevars_st_comp s
   | C_STGhost inames s
   | C_STAtomic inames _ s ->
     freevars inames ++ freevars_st_comp s
@@ -195,6 +196,7 @@ let ln_c' (c:comp) (i:int)
   = match c with
     | C_Tot t -> ln' t i
     | C_ST s -> ln_st_comp s i
+    | C_STDiv s -> ln_st_comp s i
     | C_STGhost inames s
     | C_STAtomic inames _ s ->
       ln' inames i &&
@@ -411,6 +413,8 @@ let subst_comp (c:comp) (ss:subst)
       C_Tot (subst_term t ss)
 
     | C_ST s -> C_ST (subst_st_comp s ss)
+
+    | C_STDiv s -> C_STDiv (subst_st_comp s ss)
 
     | C_STAtomic inames obs s ->
       C_STAtomic (subst_term inames ss) obs

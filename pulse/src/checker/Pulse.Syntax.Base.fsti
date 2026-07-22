@@ -119,6 +119,7 @@ noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
+  | C_STDiv    : st_comp -> comp
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
   | C_STGhost  : inames:term -> st_comp -> comp
 
@@ -138,6 +139,7 @@ type pattern =
 
 type ctag =
   | STT
+  | STT_Div
   | STT_Atomic
   | STT_Ghost
 
@@ -148,12 +150,14 @@ let as_effect_hint (c:ctag) : effect_hint = Some c
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
+  | C_STDiv _ -> STT_Div
   | C_STAtomic _ _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
 noeq
 type effect_annot =
   | EffectAnnotSTT
+  | EffectAnnotSTTDiv
   | EffectAnnotGhost { opens:term }
   | EffectAnnotAtomic { opens:term }
   | EffectAnnotAtomicOrGhost { opens:term }
@@ -162,12 +166,14 @@ let effect_annot_of_comp (c:comp_st)
 : effect_annot
 = match c with
   | C_ST _ -> EffectAnnotSTT
+  | C_STDiv _ -> EffectAnnotSTTDiv
   | C_STGhost opens _ -> EffectAnnotGhost { opens }
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
 let ctag_of_effect_annot (x:effect_annot) : option ctag =
   match x with
   | EffectAnnotSTT -> Some STT
+  | EffectAnnotSTTDiv -> Some STT_Div
   | EffectAnnotGhost _ -> Some STT_Ghost
   | EffectAnnotAtomic _ -> Some STT_Atomic
   | EffectAnnotAtomicOrGhost _ -> None
@@ -423,18 +429,21 @@ let comp_res (c:comp) : term =
   match c with
   | C_Tot ty -> ty
   | C_ST s
+  | C_STDiv s
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s.res
 
 let st_comp_of_comp (c:comp_st) : st_comp =
   match c with
   | C_ST s
+  | C_STDiv s
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s
 
 let with_st_comp (c:comp_st) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
+  | C_STDiv _ -> C_STDiv s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
   | C_STGhost inames _ -> C_STGhost inames s
 
@@ -442,7 +451,8 @@ let comp_u (c:comp_st) = (st_comp_of_comp c).u
 
 let universe_of_comp (c:comp_st) =
   match c with
-  | C_ST _ -> RT.u_zero
+  | C_ST _
+  | C_STDiv _ -> RT.u_zero
   | _ -> Pulse.Reflection.Util.u_atomic_ghost (comp_u c)
 
 let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre

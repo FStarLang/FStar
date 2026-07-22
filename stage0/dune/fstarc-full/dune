@@ -3,9 +3,10 @@
  (name fstarc1_full)
  (public_name fstar.exe)
  (libraries
-    ; Can we just say we extend fstar_bare instead of _guts, and duplicating main?
+    ; The in-tree plugins (plugins.ml) are now folded into the wrapped
+    ; fstarcompiler library (fstar-guts), so there is no separate fstar_plugins
+    ; library to link here. -linkall still pulls in the plugin registrations.
     fstarcompiler
-    fstar_plugins
     memtrace
  )
  (link_flags "-linkall")

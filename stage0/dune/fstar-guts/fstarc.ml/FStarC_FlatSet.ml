@@ -10,7 +10,7 @@ let rec add :
         let r =
           FStarC_Class_Deq.op_Equals_Question (FStarC_Class_Ord.ord_eq uu___)
             x y in
-        if r then s else (let uu___2 = add uu___ x yy in y :: uu___2)
+        if r then s else (let uu___1 = add uu___ x yy in y :: uu___1)
 let empty (uu___ : unit) : 'a flat_set= []
 let from_list (uu___ : 'a FStarC_Class_Ord.ord) (xs : 'a Prims.list) :
   'a flat_set= FStarC_Class_Ord.dedup uu___ xs
@@ -33,7 +33,7 @@ let rec remove :
         let r =
           FStarC_Class_Deq.op_Equals_Question (FStarC_Class_Ord.ord_eq uu___)
             x y in
-        if r then yy else (let uu___2 = remove uu___ x yy in y :: uu___2)
+        if r then yy else (let uu___1 = remove uu___ x yy in y :: uu___1)
 let elems (s : 'a flat_set) : 'a Prims.list= s
 let for_all (p : 'a -> Prims.bool) (s : 'a flat_set) : Prims.bool=
   FStarC_List.for_all p (elems s)

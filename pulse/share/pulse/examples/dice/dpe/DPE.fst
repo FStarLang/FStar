@@ -428,6 +428,7 @@ fn maybe_mk_session_tbl (sopt:option st)
   }
 }
 
+divergent
 fn open_session ()
   returns r:(option sid_t)
   ensures open_session_client_perm r
@@ -517,6 +518,7 @@ fn upd_singleton
 
 #push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
 
+divergent
 fn replace_session
   (sid:sid_t)
   (t:G.erased trace)
@@ -684,6 +686,7 @@ ghost fn unrelated_session_state #x #y ()
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 
+divergent
 fn initialize_context (sid:sid_t) 
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
@@ -1126,6 +1129,7 @@ fn rewrite_session_state_related_available
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no --z3rlimit_factor 4"
 #restart-solver
+divergent
 fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
@@ -1258,6 +1262,7 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
 
 
 
+divergent
 fn close_session (sid:sid_t)
   (t:G.erased trace { trace_valid_for_close t })
   requires sid_pts_to trace_ref sid t
@@ -1281,6 +1286,7 @@ fn close_session (sid:sid_t)
 
 #push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
 
+divergent
 fn certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
@@ -1377,6 +1383,7 @@ ensures
 
 #push-options "--split_queries no"
 
+divergent
 fn sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })

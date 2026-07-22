@@ -78,6 +78,7 @@ let check_effect_annot (g:env) (e:effect_annot)
   in
   match e with
   | EffectAnnotSTT -> e
+  | EffectAnnotSTTDiv -> e
   | EffectAnnotGhost { opens } ->
     let opens = check_opens opens in
     EffectAnnotGhost { opens }
@@ -154,12 +155,14 @@ let comp_st_with_post (c:comp_st) (post:term)
   : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
   match c with
   | C_ST st -> C_ST { st with post }
+  | C_STDiv st -> C_STDiv { st with post }
   | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
+  | C_STDiv st -> C_STDiv { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
@@ -333,6 +336,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | EffectAnnotGhost _ -> STT_Ghost
     | EffectAnnotAtomicOrGhost _ -> STT_Atomic
     | EffectAnnotSTT -> STT
+    | EffectAnnotSTTDiv -> STT_Div
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
@@ -361,13 +365,21 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
 
+  let maybe_lift_to_div (c:comp_st) : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
+    match post_hint with
+    | PostHint { effect_annot = EffectAnnotSTTDiv } ->
+      if C_ST? c
+      then C_STDiv (st_comp_of_comp c)
+      else c
+    | _ -> c
+  in
   match post_hint with
   | NoHint -> c
   | TypeHint ret_ty
   | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
-    then c
+    then maybe_lift_to_div c
     else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
          | None, issues ->
            let open Pulse.PP in
@@ -383,7 +395,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
 
 
-           c'
+           maybe_lift_to_div c'
 #pop-options
 #pop-options
 
@@ -401,6 +413,48 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
 
   k (PostHint post_hint) d
+
+//
+// Like apply_checker_result_k, but reads back the *natural* effect of the
+// checked computation instead of coercing it to the postcondition's effect.
+// This is used to infer the effect of the branches of a conditional whose
+// postcondition (and effect) were not supplied by the user: a divergent branch
+// must yield a divergent computation rather than failing to compose against the
+// tentatively-inferred stt effect (issue #4366). The result matches the given
+// postcondition's return type and postcondition, but carries its own effect.
+//
+let apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (t:st_term &
+           c:comp_st { comp_pre c == ctxt /\
+                       comp_res c == post_hint.ret_ty /\
+                       comp_u c == post_hint.u /\
+                       comp_post c == post_hint.post }) =
+
+  let (| y, g1, (u_ty, ty_y), pre', k |) = r in
+
+  let u_ty_y = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
+
+  let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
+  //
+  // Coerce the trailing return to NoHint so that composing it with the body
+  // uses the unbiased bind rules and reports the body's real effect.
+  //
+  let (| tret, cret |) = d in
+  let d' : st_typing_in_ctxt g1 pre' NoHint = (| tret, cret |) in
+
+  let (| t, c |) = k NoHint d' in
+  //
+  // mk_bind guarantees the result shares c2's return type, universe and
+  // postcondition (st_comp_with_pre), but the continuation_elaborator type
+  // does not expose this; recover it here.
+  //
+  assume (comp_res c == post_hint.ret_ty /\
+          comp_u c == post_hint.u /\
+          comp_post c == post_hint.post);
+  (| t, c |)
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 0"
 //TODO: refactor and merge with continuation_elaborator_with_bind
@@ -460,6 +514,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     match c with
     | None -> None
     | Some (C_ST _)
+    | Some (C_STDiv _)
     | Some (C_STGhost _ _)
     | Some (C_STAtomic _ _ _) -> (
       match args, out with

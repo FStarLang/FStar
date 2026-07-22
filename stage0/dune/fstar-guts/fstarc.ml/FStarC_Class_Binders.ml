@@ -7,7 +7,7 @@ let __proj__MkhasNames__item__freeNames (projectee : 'a hasNames) :
   match projectee with | { freeNames;_} -> freeNames
 let freeNames (projectee : 'a hasNames) :
   'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
-  match projectee with | { freeNames = freeNames1;_} -> freeNames1
+  __proj__MkhasNames__item__freeNames projectee
 type 'a hasBinders =
   {
   boundNames: 'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set }
@@ -16,7 +16,7 @@ let __proj__MkhasBinders__item__boundNames (projectee : 'a hasBinders) :
   match projectee with | { boundNames;_} -> boundNames
 let boundNames (projectee : 'a hasBinders) :
   'a -> FStarC_Syntax_Syntax.bv FStarC_FlatSet.flat_set=
-  match projectee with | { boundNames = boundNames1;_} -> boundNames1
+  __proj__MkhasBinders__item__boundNames projectee
 let hasNames_term : FStarC_Syntax_Syntax.term hasNames=
   { freeNames = FStarC_Syntax_Free.names }
 let hasNames_comp : FStarC_Syntax_Syntax.comp hasNames=

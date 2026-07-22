@@ -117,6 +117,8 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   match c with
   | STT ->
     C_ST { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
+  | STT_Div ->
+    C_STDiv { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Atomic ->
     C_STAtomic tm_emp_inames Neutral
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
@@ -149,6 +151,7 @@ let add_frame (s:comp_st) (frame:term)
     in
     match s with
     | C_ST s -> C_ST (add_frame_s s)
+    | C_STDiv s -> C_STDiv (add_frame_s s)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
@@ -160,6 +163,7 @@ let add_frame_l (s:comp_st) (frame:term)
     in
     match s with
     | C_ST s -> C_ST (add_frame_s s)
+    | C_STDiv s -> C_STDiv (add_frame_s s)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
@@ -196,6 +200,7 @@ let bind_comp_compatible (c1 c2:comp_st)
   : prop
   = match c1, c2 with
     | C_ST _, C_ST _ -> True
+    | C_STDiv _, C_STDiv _ -> True
     | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ at_most_one_observable obs1 obs2
@@ -216,12 +221,14 @@ let bind_comp_out (c1:comp_st) (c2:comp_st{bind_comp_compatible c1 c2})
     | C_STAtomic inames obs1 _, C_STAtomic _ obs2 _ ->
       C_STAtomic inames (join_obs obs1 obs2) s
     | C_ST _, C_ST _ -> C_ST s
+    | C_STDiv _, C_STDiv _ -> C_STDiv s
 
 let st_equiv_pre (c1 c2:comp_st)
   : prop
   = comp_u c1 == comp_u c2 /\
     (match c1, c2 with
     | C_ST _, C_ST _ -> True
+    | C_STDiv _, C_STDiv _ -> True
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ obs1 == obs2
     | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
@@ -297,9 +304,9 @@ let mk_precedes u ty a b =
     b, R.Q_Explicit;
   ]
 
-let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_cond:term)
+let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_unit;
            pre=open_term' post_cond tm_true 0;
@@ -309,16 +316,18 @@ let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_
                 close_term inv (snd x) `tm_star` tm_pure dec_formula
               else
                 close_term inv (snd x))
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
-let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
+let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_unit;
            pre=tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x));
            post=tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond tm_false 0) (snd x));
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
 
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
@@ -599,6 +608,7 @@ let post_hint_opt (g:env) = p:post_hint_opt_t { PostHint? p ==> post_hint_for_en
 let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
   match c, effect_annot with
   | C_ST _, EffectAnnotSTT -> True
+  | C_STDiv _, EffectAnnotSTTDiv -> True
   | C_STGhost inames' _, EffectAnnotGhost { opens }
   | C_STAtomic inames' _ _, EffectAnnotAtomic { opens } ->
     inames' == opens

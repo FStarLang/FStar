@@ -131,6 +131,7 @@ statement s ::= a
                 }
               | while(s) 
                 invariant e
+                [decreases e]
                 { s } 
     
         
@@ -150,8 +151,15 @@ slprop     vp ::= e
               |  exists (x:t). vp
               |  forall (x:t). vp
 
-top-level d  ::= FN f (x1:t1, ..., xn:tn) : c { s }
+top-level d  ::= [DIVERGENT] FN f (x1:t1, ..., xn:tn) : c { s }
 ```
+
+A plain `FN` denotes a terminating computation (`stt`): every `while` loop in
+its body must carry a `decreases` measure (and recursion must be well-founded).
+A `DIVERGENT FN` denotes a possibly-divergent computation (`stt_div`): its
+`while` loops may omit `decreases`. A terminating computation may be used
+wherever a divergent one is expected.
+
 
 
 For example, here's how an iterative fibonacci would look

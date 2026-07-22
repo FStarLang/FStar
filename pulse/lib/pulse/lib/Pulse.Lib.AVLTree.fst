@@ -178,6 +178,7 @@ fn rec height (#t:Type0) (x:tree_t t)
   preserves is_tree x 'l
   returns n:nat
   ensures pure (n == T.height 'l)
+  decreases (T.height 'l)
 {
    match x {
     None -> {
@@ -257,6 +258,7 @@ fn rec append_left_none (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
   requires pure (None? x)
   returns y:tree_t t
   ensures is_tree y (T.Node v T.Leaf T.Leaf)
+  decreases (T.height ft)
 {
   let left = create t;
   let right = create t;
@@ -270,6 +272,7 @@ fn rec append_left (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
   requires is_tree x ft
   returns y:tree_t t
   ensures is_tree y  (T.append_left ft v)
+  decreases (T.height ft)
 {
    match x {
     None -> {
@@ -316,6 +319,7 @@ fn rec append_right (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
   requires is_tree x ft
   returns y:tree_t t
   ensures is_tree y  (T.append_right ft v)
+  decreases (T.height ft)
 {
    match x {
     None -> {
@@ -380,6 +384,7 @@ fn rec mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
     preserves is_tree x ft
     returns b:bool
     ensures pure (b <==> (T.mem ft v))
+    decreases (T.height ft)
 {
   match x {
        None -> {
@@ -545,6 +550,7 @@ fn rec is_balanced (#t:Type0) (tree:tree_t t)
   preserves is_tree tree 'l
   returns b:bool
   ensures pure (b <==> (T.is_balanced 'l))
+  decreases (T.height 'l)
 {
   match tree {
     None -> {
@@ -581,6 +587,7 @@ fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
   requires is_tree tree l
   returns y:tree_t t
   ensures (is_tree y (T.rebalance_avl l))
+  decreases (T.height l)
 {
   let b = is_balanced tree;
   match tree {
@@ -691,6 +698,7 @@ fn rec insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
   requires is_tree tree 'l
   returns y:tree_t t
   ensures (is_tree y (T.insert_avl cmp 'l key))
+  decreases (T.height 'l)
 {
   match tree {
     None -> {
@@ -761,6 +769,7 @@ fn rec tree_max_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
   preserves is_tree tree l
   returns y:t
   ensures pure (y == T.tree_max l)
+  decreases (T.height l)
 {
   match tree {
     None -> {
@@ -793,6 +802,7 @@ fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
   requires is_tree tree 'l
   returns  y : tree_t t
   ensures  is_tree y (T.delete_avl cmp 'l key)
+  decreases (T.height 'l)
 {
   match tree {
     None -> {

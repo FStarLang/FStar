@@ -126,6 +126,9 @@ let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & op
   | C_ST c ->
     let g, bs, c = preproc_stcomp c in
     g, bs, C_ST c
+  | C_STDiv c ->
+    let g, bs, c = preproc_stcomp c in
+    g, bs, C_STDiv c
   | C_STGhost is c ->
     let g, bs, c = preproc_stcomp c in
     g, bs, C_STGhost (preproc_inames is) c
@@ -342,7 +345,8 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
   | Some c ->
     match c, c_computed with
     | C_Tot _, C_Tot _
-    | C_ST _, C_ST _  -> nop
+    | C_ST _, C_ST _
+    | C_STDiv _, C_STDiv _  -> nop
     | C_STGhost i c1, C_STGhost j c2
     | C_STAtomic i Neutral c1, C_STAtomic j Neutral c2
     | C_STAtomic i Observable c1, C_STAtomic j Observable c2 ->

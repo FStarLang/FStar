@@ -104,6 +104,7 @@ ensures pure (as_prop (db_evolves d0 d1))
 
 
 //Now to run a query:
+divergent
 fn run_query (#a:Type0) (d:db_state) (#f:perm) (#d0:erased db) (q:query a)
 preserves db_lock #f d //given that the lock is alive
 requires db_snapshot d d0 //and the db was once d0
@@ -130,6 +131,7 @@ ensures
 }
 
 //Running a transaction
+divergent
 fn run_tx (d:db_state) (tx:tx) (#f:perm) (#d0:erased db)
 preserves db_lock #f d //given that the lock is alive
 requires db_snapshot d d0  //and the db was once d0

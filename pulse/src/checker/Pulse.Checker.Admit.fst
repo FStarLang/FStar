@@ -62,6 +62,7 @@ let check
 
         (match c with
          | STT -> C_ST s
+         | STT_Div -> C_STDiv s
          | STT_Ghost -> C_STGhost tm_emp_inames s
          | STT_Atomic -> C_STAtomic tm_emp_inames Neutral s)
 

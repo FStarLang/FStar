@@ -145,8 +145,8 @@ let add_op (psc : FStarC_TypeChecker_Primops_Base.psc)
       if uu___
       then FStar_Pervasives_Native.Some a2
       else
-        (let uu___2 = is_zero a2 in
-         if uu___2
+        (let uu___1 = is_zero a2 in
+         if uu___1
          then FStar_Pervasives_Native.Some a1
          else FStar_Pervasives_Native.None)
   | uu___ -> FStar_Pervasives_Native.None
@@ -161,8 +161,8 @@ let mul_op (psc : FStarC_TypeChecker_Primops_Base.psc)
       if uu___
       then FStar_Pervasives_Native.Some a2
       else
-        (let uu___2 = is_one a2 in
-         if uu___2
+        (let uu___1 = is_one a2 in
+         if uu___1
          then FStar_Pervasives_Native.Some a1
          else FStar_Pervasives_Native.None)
   | uu___ -> FStar_Pervasives_Native.None
@@ -175,8 +175,8 @@ let add_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
         if uu___
         then FStar_Pervasives_Native.Some r
         else
-          (let uu___2 = is_nbe_zero r in
-           if uu___2
+          (let uu___1 = is_nbe_zero r in
+           if uu___1
            then FStar_Pervasives_Native.Some l
            else FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
@@ -189,8 +189,8 @@ let mul_op_nbe : FStarC_TypeChecker_Primops_Base.nbe_interp_t=
         if uu___
         then FStar_Pervasives_Native.Some r
         else
-          (let uu___2 = is_nbe_one r in
-           if uu___2
+          (let uu___1 = is_nbe_one r in
+           if uu___1
            then FStar_Pervasives_Native.Some l
            else FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None

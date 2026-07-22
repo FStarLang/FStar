@@ -72,7 +72,7 @@ RUN eval $(opam env) \
  && make -j$(nproc)
 
 ENV FSTAR_EXE  $HOME/FStar/bin/fstar.exe
-ENV KRML_HOME $HOME/karamel
+ENV KRML_EXE $HOME/karamel/out/bin/krml
 
 # Instrument .profile and .bashrc to set the opam switch. Note that this
 # just appends the *call* to eval $(opam env) in these files, so we

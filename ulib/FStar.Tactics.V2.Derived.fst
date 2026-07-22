@@ -22,7 +22,7 @@ open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.Util
 open FStar.Tactics.V2.SyntaxHelpers
-open FStar.Stubs.VConfig
+open FStar.VConfig
 open FStar.Tactics.NamedView
 open FStar.Tactics.V2.SyntaxCoercions
 include FStar.Tactics.Names

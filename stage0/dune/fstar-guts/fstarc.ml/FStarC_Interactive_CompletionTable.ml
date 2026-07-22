@@ -118,16 +118,16 @@ let rec btree_from_list :
     else
       (let lbt_size = size / (Prims.of_int 2) in
        let rbt_size = (size - lbt_size) - Prims.int_one in
-       let uu___1 = btree_from_list nodes lbt_size in
-       match uu___1 with
+       let uu___ = btree_from_list nodes lbt_size in
+       match uu___ with
        | (lbt, nodes_left) ->
            (match nodes_left with
             | [] ->
                 FStarC_Effect.failwith
                   "Invalid size passed to btree_from_list"
             | (k, v)::nodes_left1 ->
-                let uu___2 = btree_from_list nodes_left1 rbt_size in
-                (match uu___2 with
+                let uu___1 = btree_from_list nodes_left1 rbt_size in
+                (match uu___1 with
                  | (rbt, nodes_left2) ->
                      ((StrBranch (k, v, lbt, rbt)), nodes_left2))))
 let rec btree_insert_replace :
@@ -180,7 +180,7 @@ let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
           else
             (match lbt with
              | StrEmpty -> bt
-             | uu___2 ->
+             | uu___ ->
                  (match btree_extract_min rbt with
                   | FStar_Pervasives_Native.None -> lbt
                   | FStar_Pervasives_Native.Some (rbt_min_k, rbt_min_v, rbt')
@@ -539,8 +539,8 @@ let register_open (tbl : table) (is_module : Prims.bool) (host_query : query)
   if is_module
   then register_include tbl host_query included_query
   else
-    (let uu___1 = trie_open_namespace tbl.tbl_lids host_query included_query in
-     { tbl_lids = uu___1; tbl_mods = (tbl.tbl_mods) })
+    (let uu___ = trie_open_namespace tbl.tbl_lids host_query included_query in
+     { tbl_lids = uu___; tbl_mods = (tbl.tbl_mods) })
 let register_module_path (tbl : table) (loaded : Prims.bool)
   (path1 : Prims.string) (mod_query : query) : table=
   let ins_ns id bindings full_name loaded1 =

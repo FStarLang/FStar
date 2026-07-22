@@ -228,8 +228,8 @@ let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state)
         if uu___
         then (debug "Skipping" task; aux st1 tasks2 previous1)
         else
-          (let uu___2 = revert_many st1 (prev :: previous1) in
-           aux uu___2 (task :: tasks2) [])
+          (let uu___1 = revert_many st1 (prev :: previous1) in
+           aux uu___1 (task :: tasks2) [])
     | (tasks2, previous1) ->
         let uu___ = revert_many st1 previous1 in aux uu___ tasks2 [] in
   aux st tasks
@@ -480,7 +480,8 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state)
                  FStarC_Interactive_Ide_Types.Cancel uu___2
              | uu___2 ->
                  FStarC_Interactive_Ide_Types.ProtocolViolation
-                   (FStarC_Format.fmt1 "Unknown query '%s'" query) in
+                   (FStarC_Format.fmt1
+                      "Unknown query \226\128\152%s\226\128\153" query) in
            {
              FStarC_Interactive_Ide_Types.qq = uu___1;
              FStarC_Interactive_Ide_Types.qid = qid
@@ -555,14 +556,14 @@ let buffer_input_queries (st : FStarC_Interactive_Ide_Types.repl_state) :
     if uu___
     then done1 qs st1
     else
-      (let uu___2 =
+      (let uu___1 =
          FStarC_Util.read_line st1.FStarC_Interactive_Ide_Types.repl_stdin in
-       match uu___2 with
+       match uu___1 with
        | FStar_Pervasives_Native.None -> done1 qs st1
        | FStar_Pervasives_Native.Some line ->
            let q = parse_interactive_query st1 line in
            (match q.FStarC_Interactive_Ide_Types.qq with
-            | FStarC_Interactive_Ide_Types.Cancel uu___3 ->
+            | FStarC_Interactive_Ide_Types.Cancel uu___2 ->
                 {
                   FStarC_Interactive_Ide_Types.repl_line =
                     (st1.FStarC_Interactive_Ide_Types.repl_line);
@@ -585,7 +586,7 @@ let buffer_input_queries (st : FStarC_Interactive_Ide_Types.repl_state) :
                   FStarC_Interactive_Ide_Types.repl_lang =
                     (st1.FStarC_Interactive_Ide_Types.repl_lang)
                 }
-            | uu___3 -> aux (q :: qs) st1)) in
+            | uu___2 -> aux (q :: qs) st1)) in
   aux [] st
 let read_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state) :
   (FStarC_Interactive_Ide_Types.query *
@@ -900,8 +901,8 @@ let fstar_options_list_cache : fstar_option Prims.list=
                     if doc = FStar_Pprint.empty
                     then FStar_Pervasives_Native.None
                     else
-                      (let uu___6 = FStarC_Errors_Msg.renderdoc doc in
-                       FStar_Pervasives_Native.Some uu___6) in
+                      (let uu___5 = FStarC_Errors_Msg.renderdoc doc in
+                       FStar_Pervasives_Native.Some uu___5) in
                   {
                     opt_name = name;
                     opt_sig = (sig_of_fstar_option name typ);
@@ -1322,30 +1323,30 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env)
                          (Prims.strcat
                             "did not find declaration with lident " until_lid)
                      else
-                       (let uu___7 =
-                          let uu___8 =
+                       (let uu___6 =
+                          let uu___7 =
                             FStarC_ToSyntax_ToSyntax.add_partial_modul_to_env
                               m tc_result.FStarC_CheckedFiles.mii
                               (FStarC_TypeChecker_Normalize.erase_universes
                                  env2) in
-                          FStarC_Universal.with_dsenv_of_tcenv env2 uu___8 in
-                        match uu___7 with
-                        | (uu___8, env3) ->
+                          FStarC_Universal.with_dsenv_of_tcenv env2 uu___7 in
+                        match uu___6 with
+                        | (uu___7, env3) ->
                             let env4 =
                               FStarC_TypeChecker_Tc.load_partial_checked_module
                                 env3 m in
-                            let uu___9 =
+                            let uu___8 =
                               FStarC_Universal.with_dsenv_of_tcenv env4
                                 (fun ds ->
                                    ((),
                                      (FStarC_Syntax_DsEnv.set_current_module
                                         ds m.FStarC_Syntax_Syntax.name))) in
-                            (match uu___9 with
-                             | (uu___10, env5) ->
+                            (match uu___8 with
+                             | (uu___9, env5) ->
                                  let env6 =
                                    FStarC_TypeChecker_Env.set_current_module
                                      env5 m.FStarC_Syntax_Syntax.name in
-                                 ((let uu___12 =
+                                 ((let uu___11 =
                                      FStarC_SMTEncoding_Encode.encode_modul
                                        env6 m in
                                    ());
@@ -1411,8 +1412,8 @@ let run_load_partial_file (st : FStarC_Interactive_Ide_Types.repl_state)
                 (FStarC_Json.JsonList [])), (FStar_Pervasives.Inl st3))
            else
              (let json_error_list =
-                let uu___4 = collect_errors () in
-                FStarC_List.map json_of_issue uu___4 in
+                let uu___3 = collect_errors () in
+                FStarC_List.map json_of_issue uu___3 in
               let json_errors = FStarC_Json.JsonList json_error_list in
               let st3 =
                 FStarC_Interactive_PushHelper.pop_repl "load partial file"
@@ -2061,18 +2062,18 @@ let run_with_parsed_and_tc_term
            if uu___1
            then aux ()
            else
-             (try (fun uu___3 -> match () with | () -> aux ()) ()
+             (try (fun uu___2 -> match () with | () -> aux ()) ()
               with
-              | uu___3 ->
-                  let uu___4 = FStarC_Errors.issue_of_exn uu___3 in
-                  (match uu___4 with
+              | uu___2 ->
+                  let uu___3 = FStarC_Errors.issue_of_exn uu___2 in
+                  (match uu___3 with
                    | FStar_Pervasives_Native.Some issue ->
-                       let uu___5 =
-                         let uu___6 = FStarC_Errors.format_issue issue in
-                         FStarC_Json.JsonStr uu___6 in
-                       (FStarC_Interactive_Ide_Types.QueryNOK, uu___5)
+                       let uu___4 =
+                         let uu___5 = FStarC_Errors.format_issue issue in
+                         FStarC_Json.JsonStr uu___5 in
+                       (FStarC_Interactive_Ide_Types.QueryNOK, uu___4)
                    | FStar_Pervasives_Native.None ->
-                       FStarC_Effect.raise uu___3)))
+                       FStarC_Effect.raise uu___2)))
 let run_compute (st : FStarC_Interactive_Ide_Types.repl_state)
   (term : Prims.string)
   (rules :
@@ -2243,13 +2244,13 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state)
                (FStarC_Format.fmt1 "Improperly quoted search term: %s" term1))
         else
           if beg_quote
-          then (let uu___1 = strip_quotes term1 in NameContainsStr uu___1)
+          then (let uu___ = strip_quotes term1 in NameContainsStr uu___)
           else
             (let lid = FStarC_Ident.lid_of_str term1 in
-             let uu___2 =
+             let uu___ =
                FStarC_Syntax_DsEnv.resolve_to_fully_qualified_name
                  tcenv.FStarC_TypeChecker_Env.dsenv lid in
-             match uu___2 with
+             match uu___ with
              | FStar_Pervasives_Native.None ->
                  FStarC_Effect.raise
                    (InvalidSearch
@@ -2671,8 +2672,8 @@ let interactive_mode (filename : Prims.string) : unit=
    if uu___3
    then interactive_mode' init
    else
-     (try (fun uu___5 -> match () with | () -> interactive_mode' init) ()
+     (try (fun uu___4 -> match () with | () -> interactive_mode' init) ()
       with
-      | uu___5 ->
+      | uu___4 ->
           (FStarC_Errors.set_handler FStarC_Errors.default_handler;
-           FStarC_Effect.raise uu___5)))
+           FStarC_Effect.raise uu___4)))

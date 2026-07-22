@@ -44,7 +44,8 @@ let effect_annot_labels_match (a1 a2:effect_annot) =
   | EffectAnnotAtomic _, EffectAnnotAtomic _
   | EffectAnnotGhost _, EffectAnnotGhost _
   | EffectAnnotAtomicOrGhost _, EffectAnnotAtomicOrGhost _
-  | EffectAnnotSTT, EffectAnnotSTT -> True
+  | EffectAnnotSTT, EffectAnnotSTT
+  | EffectAnnotSTTDiv, EffectAnnotSTTDiv -> True
   | _ -> False
 
 val intro_post_hint
@@ -185,6 +186,18 @@ val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   (r:checker_result_t g ctxt (PostHint post_hint))
   (res_ppname:ppname)
   : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint))
+
+// Like apply_checker_result_k, but returns the checked computation with its
+// natural effect (rather than coercing it to post_hint's effect). Used to infer
+// the effect of a conditional's branches when the postcondition was inferred.
+val apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (t:st_term &
+           c:comp_st { comp_pre c == ctxt /\
+                       comp_res c == post_hint.ret_ty /\
+                       comp_u c == post_hint.u /\
+                       comp_post c == post_hint.post })
 
 val checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)

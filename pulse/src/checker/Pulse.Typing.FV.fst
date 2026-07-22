@@ -54,6 +54,10 @@ let freevars_close_comp (c:comp)
       freevars_close_term' s.res x i;
       freevars_close_term' s.pre x i;      
       freevars_close_term' s.post x (i + 1)
+    | C_STDiv s ->
+      freevars_close_term' s.res x i;
+      freevars_close_term' s.pre x i;      
+      freevars_close_term' s.post x (i + 1)
     | C_STGhost n s
     | C_STAtomic n _ s ->
       freevars_close_term' n x i;    

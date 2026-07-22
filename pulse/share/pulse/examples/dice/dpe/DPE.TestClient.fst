@@ -45,6 +45,7 @@ assume val get_l0_record ()  // used only for testing a client
            (exists* repr. pure (L0_repr? repr) ** record_perm r 1.0R repr))
 
 
+divergent
 fn dpe_client ()
 {
   let sid_opt = DPE.open_session ();
@@ -79,6 +80,7 @@ fn dpe_client ()
 
 [@@ expect_failure]
 
+divergent
 fn dpe_client_err ()
 {
   let sid_opt = DPE.open_session ();

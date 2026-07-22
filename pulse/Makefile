@@ -1,4 +1,11 @@
 include mk/common.mk
+PULSE_ROOT ?= .
+include mk/fstar-tree.mk
+# This Makefile uses FSTAR_EXE only to dune-build and install the Pulse
+# plugin, which is a stage2 artifact (see mk/fstar-tree.mk). The library
+# and tests run in separate make invocations that pick stage3 themselves.
+FSTAR_EXE ?= $(FSTAR2_EXE)
+FSTAR_EXE := $(abspath $(FSTAR_EXE))
 include mk/locate.mk
 
 # Pulse's `Makefile`s rely on recent GNU Make's "shortest stem" rule,
@@ -28,15 +35,16 @@ endif
 .PHONY: .force
 .force:
 
-## Checking and extracting the plugin
+## Checking and extracting the plugin. The plugin is extracted with the
+## stage2 compiler (see mk/fstar-tree.mk).
 checker.src: .force
-	$(MAKE) -f mk/checker.mk
+	$(MAKE) -f mk/checker.mk FSTAR_EXE=$(FSTAR2_EXE)
 
 extraction.src: .force
-	$(MAKE) -f mk/extraction.mk
+	$(MAKE) -f mk/extraction.mk FSTAR_EXE=$(FSTAR2_EXE)
 
 syntax_extension.src: checker.src .force
-	$(MAKE) -f mk/syntax_extension.mk
+	$(MAKE) -f mk/syntax_extension.mk FSTAR_EXE=$(FSTAR2_EXE)
 
 plugin.src: checker.src extraction.src syntax_extension.src
 

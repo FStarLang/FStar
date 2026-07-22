@@ -132,10 +132,9 @@ let bool_of_string_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare : FStarC_Ident.lident= p2l ["FStar"; "String"; "compare"]
 let order_lid : FStarC_Ident.lident= p2l ["FStar"; "Order"; "order"]
-let vconfig_lid : FStarC_Ident.lident=
-  p2l ["FStar"; "Stubs"; "VConfig"; "vconfig"]
+let vconfig_lid : FStarC_Ident.lident= p2l ["FStar"; "VConfig"; "vconfig"]
 let mkvconfig_lid : FStarC_Ident.lident=
-  p2l ["FStar"; "Stubs"; "VConfig"; "Mkvconfig"]
+  p2l ["FStar"; "VConfig"; "Mkvconfig"]
 let op_Eq : FStarC_Ident.lident= pconst "op_Equality"
 let op_notEq : FStarC_Ident.lident= pconst "op_disEquality"
 let op_LT : FStarC_Ident.lident= pconst "op_LessThan"
@@ -269,6 +268,8 @@ let steps_unfoldnamespace : FStarC_Ident.lident=
 let steps_unascribe : FStarC_Ident.lident= mk_norm_step_lid "unascribe"
 let steps_nbe : FStarC_Ident.lident= mk_norm_step_lid "nbe"
 let steps_unmeta : FStarC_Ident.lident= mk_norm_step_lid "unmeta"
+let steps_reduce_projections : FStarC_Ident.lident=
+  mk_norm_step_lid "reduce_projections"
 let deprecated_attr : FStarC_Ident.lident= pconst "deprecated"
 let warn_on_use_attr : FStarC_Ident.lident= pconst "warn_on_use"
 let inline_let_attr : FStarC_Ident.lident= attr "inline_let"
@@ -442,7 +443,7 @@ let ctx_uvar_and_subst_lid : FStarC_Ident.lident=
 let universe_uvar_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
 let check_with_lid : FStarC_Ident.lident=
-  FStarC_Ident.lid_of_path ["FStar"; "Stubs"; "VConfig"; "check_with"]
+  FStarC_Ident.lid_of_path ["FStar"; "VConfig"; "check_with"]
     FStarC_Range_Type.dummyRange
 let decls_lid : FStarC_Ident.lident=
   p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]

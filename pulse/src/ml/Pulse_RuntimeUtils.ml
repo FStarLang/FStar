@@ -1,4 +1,3 @@
-open Fstarcompiler
 type context = ((string * FStarC_Range.range option) list) (* FStar_Sealed.sealed *)
 let extend_context (s:string) (r:FStarC_Range.range option) (c:context) = (s,r)::c
 
@@ -255,11 +254,11 @@ let norm_well_typed_term
       (k:_)
       (typing:_)
       (steps:FStarC_NormSteps.norm_step list)
-  : ((S.term, unit, unit) Fstar_pluginlib.FStar_Pervasives.dtuple3) utac
+  : ((S.term, unit, unit) FStar_Pervasives.dtuple3) utac
   = fun ps ->
     let steps = FStarC_TypeChecker_Cfg.translate_norm_steps steps in
     let t' = FStarC_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
-    Fstar_pluginlib.FStar_Pervasives.Mkdtuple3 (t', (), ())
+    FStar_Pervasives.Mkdtuple3 (t', (), ())
 
 let add_attribute (s:S.sigelt) (x:S.attribute) =
   { s with sigattrs = x::s.sigattrs }

@@ -75,7 +75,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   | None | Some (C_Tot ..) ->
     T.fail_doc_at [text "Impossible: not a stateful application type"; fquotes (pp ty)] (Some (RU.range_of_term t))
   | Some c -> match c with
-  | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } ->
+  | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } | C_STDiv { pre; post } ->
     let x = fresh g in
     let x_ppn = mk_ppname_no_range "result" in
     let g' = push_binding g x (mk_ppname_no_range "result") ty in
@@ -289,6 +289,93 @@ let tc_term_phase1_with_type_twice g t ty =
 let or_emp (t: option slprop) : slprop =
   match t with Some t -> t | None -> tm_emp
 
+(* Reflection helpers to descend into slprop-typed arguments of predicate
+   combinators when purifying impure specs (issue #4347). These mirror the
+   `type_of_fv`/`binder_is_pred` helpers in Pulse.Checker.Prover, which are
+   not exported through its interface. *)
+
+let type_of_fv (g:env) (fv:R.fv) : T.Tac (option R.term) =
+  let n = R.inspect_fv fv in
+  match R.lookup_typ (fstar_env g) n with
+  | None -> None
+  | Some se ->
+    match R.inspect_sigelt se with
+    | R.Unk -> None
+    | R.Sg_Let _ lbs ->
+      tryPick
+        (fun lb ->
+          let lbv = R.inspect_lb lb in
+          if R.inspect_fv lbv.lb_fv = n then Some lbv.lb_typ else None)
+        lbs
+    | R.Sg_Val _ _ t -> Some t
+    | R.Sg_Inductive _ _ _ _ _ -> None
+
+(* If the binder's sort is `t1 -> ... -> tn -> slprop`, returns `Some [t1;
+   ...; tn]` (the domain types of the predicate); `Some []` means the binder
+   is itself an slprop. Returns `None` otherwise. Only whether the list is
+   empty matters downstream: direct slprop arguments (`Some []`) are descended
+   into, predicate arguments (`Some (_::_)`) are not. *)
+let binder_is_pred (b:R.binder) : option (list R.term) =
+  let doms, c = R.collect_arr_ln (R.inspect_binder b).sort in
+  match R.inspect_comp c with
+  | R.C_Total res | R.C_GTotal res ->
+    if T.term_eq tm_slprop res then Some doms else None
+  | _ -> None
+
+let combinator_head_fv (t: term) : option R.fv =
+  match R.inspect_ln t with
+  | R.Tv_FVar fv
+  | R.Tv_UInst fv _ -> Some fv
+  | _ -> None
+
+let is_explicit_aqual (q:R.aqualv) : bool =
+  match q with
+  | R.Q_Explicit -> true
+  | _ -> false
+
+let is_explicit_binder (b:R.binder) : bool =
+  is_explicit_aqual (R.inspect_binder b).qual
+
+(* Classify each applied argument by the corresponding binder of the head's
+   type. The result list has the same length as `args`. Implicit arguments are
+   never descended into (classified `None`); each explicit argument is matched
+   with the next explicit binder of the head's type (implicit binders such as
+   `#p` are skipped, so a `#p:slprop` type parameter is not mistaken for a
+   descendable slprop argument). Extra explicit arguments with no matching
+   binder are classified as `None`. *)
+let rec align_preds (bs_exp: list R.binder) (args: list T.argv) : list (option (list R.term)) =
+  match args with
+  | [] -> []
+  | (_, q) :: args' ->
+    if is_explicit_aqual q then
+      match bs_exp with
+      | [] -> None :: align_preds [] args'
+      | b :: bs_exp' -> binder_is_pred b :: align_preds bs_exp' args'
+    else
+      None :: align_preds bs_exp args'
+
+(* Returns the per-argument classification when `head` is a pure combinator
+   (a total function returning an slprop) with at least one slprop/predicate
+   argument. Structural slprop connectives are excluded, so they keep their
+   existing handling. Returns `None` (meaning: do not descend) otherwise. *)
+let combinator_arg_preds (g:env) (head: term) (args: list T.argv)
+  : T.Tac (option (list (option (list R.term))))
+= match combinator_head_fv head with
+  | None -> None
+  | Some fv ->
+    let n = R.inspect_fv fv in
+    if n = forall_lid || n = exists_lid || n = star_lid || n = with_pure_lid then
+      None
+    else (
+      match type_of_fv g fv with
+      | None -> None
+      | Some ty ->
+        let bs, _ = R.collect_arr_ln_bs ty in
+        let bs_exp = filter is_explicit_binder bs in
+        let preds = align_preds bs_exp args in
+        if existsb Some? preds then Some preds else None
+    )
+
 let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (option slprop) =
   match ts with
   | [] -> None
@@ -335,13 +422,51 @@ let rec purify_spec_core (g: env) (ctxt: ctxt') (ts: list slprop) : T.Tac (optio
       | Some todo -> Some (tm_star t todo))
 
     | None ->
-      let _, t = symb_eval_subterms g ctxt t in
+      let t = purify_combinator g ctxt t in
       debug g (fun _ -> [text "purify spec atom 1"; pp t]);
       let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
 
       let steps = [unascribe; primops; iota; delta_attr ["Pulse.Lib.Core.pulse_eager_unfold"]] in
       let t = T.norm_term_env (elab_env g) steps t in
       extrude g ctxt [t] ts
+
+(* Purify a spec atom, descending with the full purification machinery into
+   the slprop-typed arguments of a predicate combinator (issue #4347). This
+   makes sibling resources inside a combinator argument (e.g. the `pts_to`
+   next to a `!r` in `id_wrap (pts_to r v ** p_pred (!r))`) available when
+   evaluating stateful reads. Falls back to `symb_eval_subterms` when `t` is
+   not such a combinator application. *)
+and purify_combinator (g: env) (ctxt: ctxt') (t: term) : T.Tac term =
+  let head, args = T.collect_app_ln t in
+  match combinator_arg_preds g head args with
+  | None -> snd (symb_eval_subterms g ctxt t)
+  | Some preds ->
+    let args = purify_args g ctxt args preds in
+    RU.mk_app_flat head args (T.range_of_term t)
+
+and purify_args (g: env) (ctxt: ctxt') (args: list T.argv) (preds: list (option (list R.term)))
+  : T.Tac (list T.argv)
+= match args, preds with
+  | (a, q)::args', pred::preds' ->
+    let a =
+      match pred with
+      | Some [] ->
+        (* Direct slprop argument: descend and purify (issue #4347) so nested
+           stars/existentials are normalized and sibling resources become
+           available to stateful reads inside the argument (e.g. the `pts_to`
+           next to a `!r` in `id_wrap (pts_to r v ** p_pred (!r))`). *)
+        purify_spec_core g ctxt [a] |> or_emp
+      | Some (_::_) ->
+        (* Predicate-abstraction argument (`fun x -> ...`): do NOT descend
+           under the lambda. Re-elaborating a predicate body is error-prone
+           (it can trip pre-existing typechecker issues with unannotated
+           binders or tuple projections, e.g. `forall+ (xy:a&b). f xy._1
+           xy._2`), so predicate arguments keep their existing handling. *)
+        snd (symb_eval_subterms g ctxt a)
+      | None -> snd (symb_eval_subterms g ctxt a)
+    in
+    (a, q) :: purify_args g ctxt args' preds'
+  | _, _ -> args
 
 and extrude (g: env) (ctxt: ctxt') (todo: list slprop) (ts: list slprop) : T.Tac (option slprop) =
   match todo with

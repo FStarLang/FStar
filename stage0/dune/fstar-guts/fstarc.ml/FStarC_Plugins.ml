@@ -1,8 +1,6 @@
 open Prims
 let loaded : Prims.string Prims.list FStarC_Effect.ref=
   FStarC_Effect.mk_ref []
-let loaded_plugin_lib : Prims.bool FStarC_Effect.ref=
-  FStarC_Effect.mk_ref false
 let dbg_Plugin : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "Plugin"
 let pout (s : Prims.string) : unit=
@@ -57,27 +55,11 @@ let dynlink (fname : Prims.string) : unit=
   else
     (pout (Prims.strcat "Attempting to load " (Prims.strcat fname "\n"));
      do_dynlink fname;
-     (let uu___5 =
-        let uu___6 = FStarC_Effect.op_Bang loaded in fname :: uu___6 in
-      FStarC_Effect.op_Colon_Equals loaded uu___5);
+     (let uu___4 =
+        let uu___5 = FStarC_Effect.op_Bang loaded in fname :: uu___5 in
+      FStarC_Effect.op_Colon_Equals loaded uu___4);
      pout1 "Loaded %s\n" fname)
-let load_plugin (tac : Prims.string) : unit=
-  (let uu___1 =
-     let uu___2 = FStarC_Effect.op_Bang loaded_plugin_lib in
-     Prims.op_Negation uu___2 in
-   if uu___1
-   then
-     (pout "Loading fstar.pluginlib before first plugin\n";
-      (let uu___4 =
-         let uu___5 =
-           let uu___6 = FStarC_Util.get_exec_dir () in
-           Prims.strcat uu___6 "/../lib/fstar/pluginlib/fstar_pluginlib.cmxs" in
-         FStarC_Filepath.normalize_file_path uu___5 in
-       do_dynlink uu___4);
-      pout "Loaded fstar.pluginlib OK\n";
-      FStarC_Effect.op_Colon_Equals loaded_plugin_lib true)
-   else ());
-  dynlink tac
+let load_plugin (tac : Prims.string) : unit= dynlink tac
 let load_plugins (tacs : Prims.string Prims.list) : unit=
   FStarC_List.iter load_plugin tacs
 let load_plugins_dir (dir : Prims.string) : unit=
@@ -96,7 +78,7 @@ let load_plugins_dir (dir : Prims.string) : unit=
 let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
   unit=
   let compile m =
-    let packages = ["fstar.pluginlib"] in
+    let packages = ["fstar.compiler"] in
     let pkg pname = Prims.strcat "-package " pname in
     let args =
       let uu___ =
@@ -127,7 +109,8 @@ let compile_modules (dir : Prims.string) (ms : Prims.string Prims.list) :
             let uu___3 =
               let uu___4 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int rc in
-              FStarC_Format.fmt2 "Command\n`%s`\nreturned with exit code %s"
+              FStarC_Format.fmt2
+                "Command\n\226\128\152%s\226\128\153\nreturned with exit code %s"
                 cmd uu___4 in
             FStarC_Errors_Msg.text uu___3 in
           [uu___2] in
@@ -157,22 +140,22 @@ let autoload_plugin (ext : Prims.string) : Prims.bool=
   if uu___
   then false
   else
-    ((let uu___3 = FStarC_Effect.op_Bang dbg_Plugin in
-      if uu___3
+    ((let uu___2 = FStarC_Effect.op_Bang dbg_Plugin in
+      if uu___2
       then
         FStarC_Format.print1 "Trying to find a plugin for extension %s\n" ext
       else ());
-     (let uu___3 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
-      match uu___3 with
+     (let uu___2 = FStarC_Find.find_file (Prims.strcat ext ".cmxs") in
+      match uu___2 with
       | FStar_Pervasives_Native.Some fn ->
-          let uu___4 =
-            let uu___5 = FStarC_Effect.op_Bang loaded in
-            FStarC_List.mem fn uu___5 in
-          if uu___4
+          let uu___3 =
+            let uu___4 = FStarC_Effect.op_Bang loaded in
+            FStarC_List.mem fn uu___4 in
+          if uu___3
           then false
           else
-            ((let uu___7 = FStarC_Effect.op_Bang dbg_Plugin in
-              if uu___7
+            ((let uu___5 = FStarC_Effect.op_Bang dbg_Plugin in
+              if uu___5
               then FStarC_Format.print1 "Autoloading plugin %s ...\n" fn
               else ());
              load_plugin fn;

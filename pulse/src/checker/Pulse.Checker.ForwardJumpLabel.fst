@@ -52,7 +52,7 @@ let check
       | PostHint ph ->
         ph
   in
-  if not (EffectAnnotSTT? post.effect_annot) then
+  if not (EffectAnnotSTT? post.effect_annot) && not (EffectAnnotSTTDiv? post.effect_annot) then
     if T.unseal lbl.name `starts_with` "_" then
       // TODO: just ignore early return/continue labels in atomic/ghost contexts for now
       let lbl_x = fresh g in
@@ -61,12 +61,14 @@ let check
     else
       fail g (Some rng) "Labels require stt"
   else
-    let lbl_c = C_ST {
+    let lbl_sc = {
       u = post.u;
       res = post.ret_ty;
       pre = post.post;
       post = tm_is_unreachable;
     } in
+    let lbl_c : comp_st =
+      if EffectAnnotSTTDiv? post.effect_annot then C_STDiv lbl_sc else C_ST lbl_sc in
     let lbl_x = fresh g in
     let g' = push_goto g lbl_x lbl lbl_c in
     let post_hint' : post_hint_opt g' =
@@ -79,10 +81,10 @@ let check
     assert comp_res body'_c == comp_res lbl_c;
     assert comp_pre body'_c == pre;
     assert comp_post body'_c == post.post;
-    assert C_ST? body'_c;
+    assert (C_ST? body'_c \/ C_STDiv? body'_c);
     assert lbl_c == goto_comp_of_block_comp body'_c;
     let body = close_st_term body' lbl_x in
-    let t = wtag (Some STT) (Tm_ForwardJumpLabel {
+    let t = wtag (Some (ctag_of_comp_st body'_c)) (Tm_ForwardJumpLabel {
       lbl = lbl;
       body = close_st_term body' lbl_x;
       post = body'_c;

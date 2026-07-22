@@ -20,6 +20,7 @@ open Pulse.Main
 open Pulse.Lib.Core
 
 
+divergent
 fn rec while_loop
   (inv:slprop)
   (post:bool -> slprop)

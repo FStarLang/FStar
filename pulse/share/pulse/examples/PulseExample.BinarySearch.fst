@@ -47,6 +47,7 @@ ensures
           j < len ==>
           Seq.index s (SZ.v i) <=? Seq.index s (SZ.v j)))
   )
+  decreases (Prims.op_Subtraction (SZ.v (!i2)) (SZ.v (!i1)))
   { 
     let v1 = !i1;
     let v2 = !i2;

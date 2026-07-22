@@ -56,52 +56,24 @@ let __proj__Mklvm__item__proc_quotes (projectee : 'm lvm) : Prims.bool=
   | { lvm_monad; f_term; f_binder; f_binding_bv; f_br; f_comp;
       f_residual_comp; f_univ; proc_quotes;_} -> proc_quotes
 let lvm_monad (projectee : 'm lvm) : 'm FStarC_Class_Monad.monad=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term; f_binder; f_binding_bv; f_br; f_comp;
-      f_residual_comp; f_univ; proc_quotes;_} -> lvm_monad1
+  __proj__Mklvm__item__lvm_monad projectee
 let f_term (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.term) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder; f_binding_bv; 
-      f_br; f_comp; f_residual_comp; f_univ; proc_quotes;_} -> f_term1
+  __proj__Mklvm__item__f_term projectee
 let f_binder (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.binder) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv; f_br; f_comp; f_residual_comp; f_univ; proc_quotes;_} ->
-      f_binder1
+  __proj__Mklvm__item__f_binder projectee
 let f_binding_bv (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.bv) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br; f_comp; f_residual_comp; f_univ;
-      proc_quotes;_} -> f_binding_bv1
+  __proj__Mklvm__item__f_binding_bv projectee
 let f_br (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.branch) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp; f_residual_comp;
-      f_univ; proc_quotes;_} -> f_br1
+  __proj__Mklvm__item__f_br projectee
 let f_comp (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.comp) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
-      f_residual_comp; f_univ; proc_quotes;_} -> f_comp1
+  __proj__Mklvm__item__f_comp projectee
 let f_residual_comp (projectee : 'm lvm) :
   ('m, FStarC_Syntax_Syntax.residual_comp) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
-      f_residual_comp = f_residual_comp1; f_univ; proc_quotes;_} ->
-      f_residual_comp1
+  __proj__Mklvm__item__f_residual_comp projectee
 let f_univ (projectee : 'm lvm) : ('m, FStarC_Syntax_Syntax.universe) endo=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
-      f_residual_comp = f_residual_comp1; f_univ = f_univ1; proc_quotes;_} ->
-      f_univ1
+  __proj__Mklvm__item__f_univ projectee
 let proc_quotes (projectee : 'm lvm) : Prims.bool=
-  match projectee with
-  | { lvm_monad = lvm_monad1; f_term = f_term1; f_binder = f_binder1;
-      f_binding_bv = f_binding_bv1; f_br = f_br1; f_comp = f_comp1;
-      f_residual_comp = f_residual_comp1; f_univ = f_univ1;
-      proc_quotes = proc_quotes1;_} -> proc_quotes1
+  __proj__Mklvm__item__proc_quotes projectee
 let _lvm_monad (uu___ : 'm lvm) : 'm FStarC_Class_Monad.monad=
   lvm_monad uu___
 let novfs (uu___ : 'm FStarC_Class_Monad.monad) : 'm lvm=

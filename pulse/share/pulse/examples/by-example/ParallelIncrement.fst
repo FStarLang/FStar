@@ -24,6 +24,7 @@ module R = Pulse.Lib.Reference
 open Pulse.Lib.Par
 
 
+divergent
 fn increment (#p:perm)
              (x:ref nat)
              (l:L.lock)
@@ -48,6 +49,7 @@ let increment_f_f (x: ref nat) (pred qpred: nat -> slprop) =
     (pred v ** qpred v ** R.pts_to x #0.5R (v + 1))
     (fun _ -> pred (v + 1) ** qpred (v + 1) ** R.pts_to x #0.5R (v + 1))
 
+divergent
 fn increment_f (x: ref nat)
                (#p:perm)
                (#pred #qpred: nat -> slprop)
@@ -77,6 +79,7 @@ let increment_f2_f (x: ref int) (pred qpred: int -> slprop) =
     (pred v ** qpred vq ** pts_to x (v + 1))
     (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))
 
+divergent
 fn increment_f2 (x: ref int)
                 (#p:perm)
                 (#pred #qpred: int -> slprop)
@@ -96,6 +99,7 @@ ensures qpred ('i + 1)
 
 #push-options "--warn_error -249"
 
+divergent
 fn parallel_increment
         (x: ref int)
 requires pts_to x 'i
@@ -148,7 +152,7 @@ ensures pts_to x ('i + 2)
 
     with pred. assert (L.lock_alive lock #1.0R (exists* v. pts_to x v ** pred v));
     L.share lock;
-    par
+    par_div
       #(requires pts_to left #0.5R 0 **
              L.lock_alive lock #0.5R (exists* v. pts_to x v ** pred v))
       #(ensures  pts_to left #0.5R 1 **
@@ -290,7 +294,7 @@ val cas (r:ref int) (u v:int) (#i:erased int)
 
 
 
-fn atomic_increment_f5
+divergent fn atomic_increment_f5
         (x: ref int)
         (#invp #tok : slprop)
         (#pred #qpred: int -> slprop)
@@ -393,6 +397,7 @@ ensures qpred ('i + 1)
 
 
 
+divergent
 fn parallel_increment_inv
         (x: ref int)
 requires pts_to x 'i

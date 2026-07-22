@@ -4,7 +4,7 @@ type 'a hashable = {
 let __proj__Mkhashable__item__hash (projectee : 'a hashable) :
   'a -> FStarC_Hash.hash_code= match projectee with | { hash;_} -> hash
 let hash (projectee : 'a hashable) : 'a -> FStarC_Hash.hash_code=
-  match projectee with | { hash = hash1;_} -> hash1
+  __proj__Mkhashable__item__hash projectee
 let showable_hash_code : FStarC_Hash.hash_code FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = FStarC_Hash.string_of_hash_code }
 let eq_hash_code : FStarC_Hash.hash_code FStarC_Class_Deq.deq=

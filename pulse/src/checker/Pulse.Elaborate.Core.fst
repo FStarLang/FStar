@@ -34,7 +34,7 @@ let elab_frame (c:comp_st) (frame:term) (e:R.term) =
   let ty = comp_res c in
   let pre = comp_pre c in
   let post = comp_post c in
-  if C_ST? c
+  if C_ST? c || C_STDiv? c
   then mk_frame_stt u ty pre (mk_abs ty R.Q_Explicit post) frame e
   else if C_STAtomic? c
   then let opened = comp_inames c in
@@ -48,7 +48,7 @@ let elab_sub (c1 c2:comp_st) (e:R.term) =
   let pre2 = comp_pre c2 in
   let post1 = mk_abs ty R.Q_Explicit (comp_post c1) in
   let post2 = mk_abs ty R.Q_Explicit (comp_post c2) in
-  if C_ST? c1
+  if C_ST? c1 || C_STDiv? c1
   then mk_sub_stt u ty pre1 pre2 post1 post2 e
   else if C_STAtomic? c1
   then let opened = comp_inames c1 in

@@ -1,4 +1,3 @@
-open Fstarcompiler
 open Lexing
 open FStar_Pervasives_Native
 open FStar_Pervasives
@@ -16,6 +15,7 @@ let rewrite_token (tok:FP.token)
     | IDENT "predicate" -> PP.PREDICATE
     | IDENT "while" -> PP.WHILE
     | IDENT "fn" -> PP.FN
+    | IDENT "divergent" -> PP.DIVERGENT
     | IDENT "each" -> PP.EACH
     | IDENT "rewrite" -> PP.REWRITE
     | IDENT "fold" -> PP.FOLD
@@ -212,7 +212,8 @@ let rewrite_token (tok:FP.token)
 
 let wrap_lexer lexbuf () =
   let tok = FStarC_Parser_LexFStar.token lexbuf in
-  rewrite_token tok, lexbuf.start_p, lexbuf.cur_p
+  let rt = rewrite_token tok in
+  rt, lexbuf.start_p, lexbuf.cur_p
 
 let lexbuf_and_lexer (s:string) (r:range) = 
   let lexbuf =
@@ -234,7 +235,7 @@ let parse_decl (s:string) (r:range) =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr (Some (FStarC_Errors_Msg.mkmsg "Syntax error", r))
+    Inr (Some (FStar_Errors_Msg.mkmsg "Syntax error", r))
 
  
 let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * range) either =
@@ -248,7 +249,7 @@ let parse_peek_id (s:string) (r:range) : (string, FStar_Pprint.document list * r
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr (FStarC_Errors_Msg.mkmsg "Syntax error", r)
+    Inr (FStar_Errors_Msg.mkmsg "Syntax error", r)
 
 
 let parse_lang (s:string) (r:range) =
@@ -266,4 +267,4 @@ let parse_lang (s:string) (r:range) =
   | e ->
     let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStarC_Range.mk_range fn pos pos in
-    Inr (Some (FStarC_Errors_Msg.mkmsg "#lang-pulse: Syntax error", r))
+    Inr (Some (FStar_Errors_Msg.mkmsg "#lang-pulse: Syntax error", r))

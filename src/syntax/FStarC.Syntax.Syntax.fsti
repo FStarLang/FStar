@@ -23,7 +23,7 @@ open FStarC.Range.Type
 open FStarC.Ident
 open FStar.Dyn
 open FStarC.Const
-open FStarC.VConfig
+open FStar.VConfig
 
 include FStarC.Class.HasRange
 open FStarC.Class.Show

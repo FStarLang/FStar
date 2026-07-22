@@ -41,12 +41,24 @@ let check'
     (match lookup_goto g v with
     | Some (lbln, lbl_c) ->
       let arg = check_tot_term g arg (comp_res lbl_c) in
-      let c' = with_st_comp lbl_c {
+      let sc = {
         u = ph.u;
         res = ph.ret_ty;
         pre = open_term' (comp_pre lbl_c) arg 0;
         post = ph.post
       } in
+      // A goto never returns (its post is `is_unreachable`), so its local
+      // effect can follow the surrounding context's effect annotation rather
+      // than the label's. This lets a `return` compose in a plain (STT) block
+      // even when the enclosing function's return label is divergent, and vice
+      // versa. Extraction uses the label's comp (see Pulse.Extract.Main), so
+      // this choice does not affect the emitted code.
+      let c' : comp_st =
+        match ph.effect_annot with
+        | EffectAnnotSTT -> C_ST sc
+        | EffectAnnotSTTDiv -> C_STDiv sc
+        | _ -> with_st_comp lbl_c sc
+      in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
       let c' = match_comp_res_with_post_hint t c' post_hint in
       prove_post_hint #g

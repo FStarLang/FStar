@@ -22,6 +22,7 @@ module L = Pulse.Lib.SpinLock
 module GR = Pulse.Lib.GhostReference
 
 //par$
+divergent
 fn par (#pf #pg #qf #qg:_)
        {| is_send pf, is_send pg, is_send qf, is_send qg |}
        (f: unit -> stt unit pf (fun _ -> qf))
@@ -36,6 +37,7 @@ ensures qg
 //end par$
 
 
+divergent
 fn incr2 (x y:ref int)
 requires pts_to x 'i
 requires pts_to y 'j
@@ -71,11 +73,13 @@ ensures pts_to x ('i + 2)
 
 
 //attempt$
+divergent
 fn attempt (x:ref int)
 requires pts_to x 'i
 ensures exists* v. pts_to x v
 {
   let l = L.new_lock (exists* (v: int). pts_to x v);
+  divergent
   fn incr ()
   preserves L.lock_alive l #0.5R (exists* v. pts_to x v)
   {
@@ -85,7 +89,7 @@ ensures exists* v. pts_to x v
     L.release l
   };
   L.share l;
-  par incr incr;
+  par_div incr incr;
   L.gather l;
   L.acquire l;
   L.free l
@@ -106,6 +110,7 @@ let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : timeless_slprop =
 //end lock_inv$
 
 //incr_left$
+divergent
 fn incr_left (x:ref int)
              (#p:perm)
              (#left:GR.ref int)
@@ -131,6 +136,7 @@ ensures GR.pts_to left #0.5R ('vl + 1)
 //end incr_left$
 
 //incr_right$
+divergent
 fn incr_right (x:ref int)
               (#p:perm)
               (#left:GR.ref int)
@@ -156,6 +162,7 @@ ensures GR.pts_to right #0.5R ('vl + 1)
 //end incr_right$
 
 //add2$
+divergent
 fn add2 (x:ref int)
 requires pts_to x 'i
 ensures  pts_to x ('i + 2)
@@ -168,7 +175,7 @@ ensures  pts_to x ('i + 2)
   fold (lock_inv x 'i left right);
   let lock = L.new_lock (lock_inv x 'i left right);
   L.share lock;
-  par (fun _ -> incr_left x #0.5R #left #right #'i lock #0)
+  par_div (fun _ -> incr_left x #0.5R #left #right #'i lock #0)
       (fun _ -> incr_right x #0.5R #left #right #'i lock #0);
   L.gather lock;
   L.acquire lock;
@@ -195,6 +202,7 @@ let incr_f (x: ref int) (refine aspec: int -> slprop) =
   v:int -> vq:int -> stt_ghost unit emp_inames
     (refine v ** aspec vq ** pts_to x (v + 1))
     (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))
+divergent
 fn incr (x: ref int)
         (#p:perm)
         (#refine #aspec: int -> slprop)
@@ -215,6 +223,7 @@ ensures aspec ('i + 1)
 //At the call-site, we instantiate incr twice, with different
 //ghost steps
 //add2_v2$
+divergent
 fn add2_v2 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
@@ -258,7 +267,7 @@ ensures pts_to x ('i + 2)
       }
     };
     L.share lock;
-    par (fun _ -> incr x #0.5R lock (step left true) #0)
+    par_div (fun _ -> incr x #0.5R lock (step left true) #0)
         (fun _ -> incr x #0.5R lock (step right false) #0);
     L.gather lock;
     L.acquire lock;
@@ -302,7 +311,7 @@ val cas (r:ref int) (u v:int) (#i:erased int)
 module C = Pulse.Lib.CancellableInvariant
 
 //incr_atomic_spec$
-fn incr_atomic
+divergent fn incr_atomic
         (x: ref int)
         (#p:perm)
         (#refine #aspec: int -> slprop)
@@ -379,7 +388,7 @@ ensures aspec ('i + 1)
 
 
 //add2_v3$
-fn add2_v3 (x: ref int)
+divergent fn add2_v3 (x: ref int)
 requires pts_to x 'i
 ensures pts_to x ('i + 2)
 {
@@ -425,7 +434,7 @@ ensures pts_to x ('i + 2)
     C.share c;
     with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
-    par (fun _ -> incr_atomic x #0.5R c (step left true) #0)
+    par_div (fun _ -> incr_atomic x #0.5R c (step left true) #0)
         (fun _ -> incr_atomic x #0.5R c (step right false) #0);
     
     C.gather c;
@@ -551,6 +560,7 @@ let add_one (n:int) : int = n + 1
 //  update the ghost state's first component if t1 = true, else the second
 // 
 
+divergent
 fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
   requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
            t1_perm ghost_r n t1
@@ -600,6 +610,7 @@ fn incr_pcm_t (r:ref int) (ghost_r:GPR.gref pcm) (l:L.lock) (t1:bool) (#n:int)
 }
 
 
+divergent
 fn incr_pcm (r:ref int) (#n:erased int)
   requires pts_to r 0
   ensures pts_to r 2
@@ -620,12 +631,12 @@ fn incr_pcm (r:ref int) (#n:erased int)
   
   L.share l;
 
-  par #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+  par_div #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
              t1_perm ghost_r 0 true)
-      #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
-             t1_perm ghost_r 0 false)
       #(ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
             t1_perm ghost_r (add_one 0) true)
+      #(requires L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
+             t1_perm ghost_r 0 false)
       #(ensures L.lock_alive l #0.5R (lock_inv_pcm r ghost_r) **
             t1_perm ghost_r (add_one 0) false)
     fn _ { incr_pcm_t r ghost_r l true }
@@ -648,6 +659,7 @@ fn incr_pcm (r:ref int) (#n:erased int)
 //////////////////////////////////////////////////////////////////////////////////////////
 
 
+divergent
 fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
   (#ghost_inv:int -> slprop)
   (#ghost_pre:slprop)
@@ -671,6 +683,7 @@ fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
 
 
 
+divergent
 fn incr_pcm_abstract (r:ref int)
   requires pts_to r 0
   ensures pts_to r 2
@@ -728,13 +741,13 @@ fn incr_pcm_abstract (r:ref int)
   let l = L.new_lock (exists* v. pts_to r v ** lock_inv_ghost ghost_r v);
   L.share l;
 
-  par
+  par_div
     #(requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
              GPR.pts_to ghost_r (half 0, None))
-    #(requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
-             GPR.pts_to ghost_r (None, half 0))
     #(ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
             GPR.pts_to ghost_r (half (add_one 0), None))
+    #(requires L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
+             GPR.pts_to ghost_r (None, half 0))
     #(ensures L.lock_alive l #0.5R (exists* v. pts_to r v ** lock_inv_ghost ghost_r v) **
             GPR.pts_to ghost_r (None, half (add_one 0)))
     fn _ { incr_pcm_t_abstract r l t1 }

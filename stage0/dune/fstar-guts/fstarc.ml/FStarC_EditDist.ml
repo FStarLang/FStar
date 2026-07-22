@@ -22,15 +22,15 @@ let edit_distance (s1 : Prims.string) (s2 : Prims.string) : Prims.int=
       if i2 = l2
       then l1 - i1
       else
-        (let uu___2 = lookup i1 i2 in
-         match uu___2 with
+        (let uu___ = lookup i1 i2 in
+         match uu___ with
          | FStar_Pervasives_Native.Some d -> d
          | FStar_Pervasives_Native.None ->
              let d =
-               let uu___3 =
-                 let uu___4 = FStarC_String.get s1 i1 in
-                 let uu___5 = FStarC_String.get s2 i2 in uu___4 = uu___5 in
-               if uu___3
+               let uu___1 =
+                 let uu___2 = FStarC_String.get s1 i1 in
+                 let uu___3 = FStarC_String.get s2 i2 in uu___2 = uu___3 in
+               if uu___1
                then go (i1 + Prims.int_one) (i2 + Prims.int_one)
                else
                  (let d1 = go (i1 + Prims.int_one) i2 in

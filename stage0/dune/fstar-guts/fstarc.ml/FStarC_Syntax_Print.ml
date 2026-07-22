@@ -62,10 +62,10 @@ let uvar_to_string (u : FStarC_Syntax_Syntax.uvar) : Prims.string=
   if uu___
   then "?"
   else
-    (let uu___2 =
-       let uu___3 = FStarC_Syntax_Unionfind.uvar_id u in
-       FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
-     Prims.strcat "?" uu___2)
+    (let uu___1 =
+       let uu___2 = FStarC_Syntax_Unionfind.uvar_id u in
+       FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___2 in
+     Prims.strcat "?" uu___1)
 let version_to_string (v : FStarC_Syntax_Syntax.version) : Prims.string=
   let uu___ =
     FStarC_Class_Show.show FStarC_Class_Show.showable_int
@@ -84,16 +84,16 @@ let univ_uvar_to_string
   if uu___
   then "?"
   else
-    (let uu___2 =
+    (let uu___1 =
+       let uu___2 =
+         let uu___3 = FStarC_Syntax_Unionfind.univ_uvar_id u in
+         FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___3 in
        let uu___3 =
-         let uu___4 = FStarC_Syntax_Unionfind.univ_uvar_id u in
-         FStarC_Class_Show.show FStarC_Class_Show.showable_int uu___4 in
-       let uu___4 =
-         let uu___5 =
-           match u with | (uu___6, u1, uu___7) -> version_to_string u1 in
-         Prims.strcat ":" uu___5 in
-       Prims.strcat uu___3 uu___4 in
-     Prims.strcat "?" uu___2)
+         let uu___4 =
+           match u with | (uu___5, u1, uu___6) -> version_to_string u1 in
+         Prims.strcat ":" uu___4 in
+       Prims.strcat uu___2 uu___3 in
+     Prims.strcat "?" uu___1)
 let rec int_of_univ (n : Prims.int) (u : FStarC_Syntax_Syntax.universe) :
   (Prims.int * FStarC_Syntax_Syntax.universe FStar_Pervasives_Native.option)=
   let uu___ = FStarC_Syntax_Subst.compress_univ u in
@@ -833,15 +833,15 @@ let binder_to_string_with_type (b : FStarC_Syntax_Syntax.binder) :
          Prims.strcat "_:" uu___2 in
        Prims.strcat attrs uu___1
      else
-       (let uu___2 =
-          let uu___3 =
-            let uu___4 = nm_to_string b.FStarC_Syntax_Syntax.binder_bv in
-            let uu___5 =
-              let uu___6 =
+       (let uu___1 =
+          let uu___2 =
+            let uu___3 = nm_to_string b.FStarC_Syntax_Syntax.binder_bv in
+            let uu___4 =
+              let uu___5 =
                 term_to_string
                   (b.FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort in
-              Prims.strcat ": " uu___6 in
-            Prims.strcat uu___4 uu___5 in
-          Prims.strcat attrs uu___3 in
-        bqual_to_string' uu___2 b.FStarC_Syntax_Syntax.binder_qual))
+              Prims.strcat ": " uu___5 in
+            Prims.strcat uu___3 uu___4 in
+          Prims.strcat attrs uu___2 in
+        bqual_to_string' uu___1 b.FStarC_Syntax_Syntax.binder_qual))
   else FStarC_Syntax_Print_Pretty.binder_to_string' false b

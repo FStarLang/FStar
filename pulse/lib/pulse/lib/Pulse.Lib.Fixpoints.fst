@@ -41,10 +41,10 @@ let fix_stt_1_div
     (#b : a -> Type)
     (#pre : a -> slprop)
     (#post : (x:a -> b x -> slprop))
-    (kk : ((y:a -> unit -> Dv (stt (b y) (pre y) (post y))) ->
-            x:a -> unit -> Dv (stt (b x) (pre x) (post x))))
-: x:a -> unit -> Dv (stt (b x) (pre x) (post x))
-=  let rec f (x:a) (_:unit) : Dv (stt (b x) (pre x) (post x)) = 
+    (kk : ((y:a -> unit -> Dv (stt_div (b y) (pre y) (post y))) ->
+            x:a -> unit -> Dv (stt_div (b x) (pre x) (post x))))
+: x:a -> unit -> Dv (stt_div (b x) (pre x) (post x))
+=  let rec f (x:a) (_:unit) : Dv (stt_div (b x) (pre x) (post x)) =
       kk (fun y () -> f y ()) x ()
    in
    f
@@ -54,8 +54,7 @@ let fix_stt_1
     (#b : a -> Type)
     (#pre : a -> slprop)
     (#post : (x:a -> b x -> slprop))
-    (kk : ((y:a -> stt (b y) (pre y) (post y)) -> x:a -> stt (b x) (pre x) (post x)))
-: x:a -> stt (b x) (pre x) (post x)
-= fun x -> 
+    (kk : ((y:a -> stt_div (b y) (pre y) (post y)) -> x:a -> stt_div (b x) (pre x) (post x)))
+: x:a -> stt_div (b x) (pre x) (post x)
+= fun x ->
     hide_div (fix_stt_1_div #a #b #pre #post (fun f x () -> kk (fun y -> hide_div (f y)) x) x)
-      

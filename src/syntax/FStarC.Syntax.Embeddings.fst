@@ -20,7 +20,7 @@ open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStarC.Class.Show
 

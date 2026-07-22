@@ -258,8 +258,67 @@ val conv_stt (#a:Type u#a)
             (pf2 : slprop_post_equiv post1 post2)
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 
-val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
-: stt a pre post
+////////////////////////////////////////////////////////////////////
+// stt_div a pre post: The type of a possibly-divergent pulse
+//  computation that when run in a state satisfying `pre`
+//  may loop forever
+//  but if it returns, it returns `x:a`
+//  such that the final state satisfies `post x`.
+//  Unlike `stt`, `stt_div` is not checked for termination; the
+//  surface syntax `divergent fn` produces `stt_div`.
+////////////////////////////////////////////////////////////////////
+[@@extract_as_impure_effect]
+val stt_div (a:Type u#a) (pre:slprop) (post:a -> slprop) : Type0
+
+val return_stt_div_noeq
+    (#a:Type u#a)
+    (x:a)
+    (p:a -> slprop)
+: stt_div a (p x) p
+
+val bind_stt_div
+  (#a:Type u#a) (#b:Type u#b)
+  (#pre1:slprop) (#post1:a -> slprop) (#post2:b -> slprop)
+  (e1:stt_div a pre1 post1)
+  (e2:(x:a -> stt_div b (post1 x) post2))
+: stt_div b pre1 post2
+
+val frame_stt_div
+  (#a:Type u#a)
+  (#pre:slprop) (#post:a -> slprop)
+  (frame:slprop)
+  (e:stt_div a pre post)
+: stt_div a (pre ** frame) (fun x -> post x ** frame)
+
+val sub_stt_div (#a:Type u#a)
+            (#pre1:slprop)
+            (pre2:slprop)
+            (#post1:a -> slprop)
+            (post2:a -> slprop)
+            (pf1 : slprop_equiv pre1 pre2)
+            (pf2 : slprop_post_equiv post1 post2)
+            (e:stt_div a pre1 post1)
+: stt_div a pre2 post2
+
+val conv_stt_div (#a:Type u#a)
+            (#pre1:slprop)
+            (#pre2:slprop)
+            (#post1:a -> slprop)
+            (#post2:a -> slprop)
+            (pf1 : slprop_equiv pre1 pre2)
+            (pf2 : slprop_post_equiv post1 post2)
+: Lemma (stt_div a pre1 post1 == stt_div a pre2 post2)
+
+(* A terminating computation may always be used where a possibly
+   divergent one is expected. *)
+val lift_stt_div
+  (#a:Type u#a)
+  (#pre:slprop) (#post:a -> slprop)
+  (e:stt a pre post)
+: stt_div a pre post
+
+val hide_div #a #pre #post (f:unit -> Dv (stt_div a pre post))
+: stt_div a pre post
 
 //////////////////////////////////////////////////////////////////////////
 // Atomic computations, in three flavors
@@ -373,6 +432,15 @@ val lift_atomic
   (#post:a -> slprop)
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
+
+val lift_atomic_div
+  (#a:Type u#a)
+  (#obs:_)
+  (#opens:inames)
+  (#pre:slprop)
+  (#post:a -> slprop)
+  (e:stt_atomic a #obs opens pre post)
+: stt_div a pre post
 
 //////////////////////////////////////////////////////////////////////////
 // Ghost computations
@@ -589,7 +657,7 @@ let non_info_tac () : T.Tac unit =
 
 val fork_core
   (pre:slprop) #l
-  (f: (l':loc_id { process_of l' == process_of l } -> stt unit (loc l' ** on l pre) (fun _ -> emp)))
+  (f: (l':loc_id { process_of l' == process_of l } -> stt_div unit (loc l' ** on l pre) (fun _ -> emp)))
 : stt unit (loc l ** pre) (fun _ -> emp)
 
 val rewrite (p:slprop) (q:slprop) (_:slprop_equiv p q)

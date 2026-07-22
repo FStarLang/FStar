@@ -102,6 +102,7 @@ ensures
       pts_to_mask a #1.0R s (fun _ -> True) **
       pure (SZ.v (R.read i) <= SZ.v n /\ Seq.length s == SZ.v n /\
         (forall (j: nat). j < SZ.v (R.read i) ==> Seq.index s j == Some x))
+    decreases (SZ.v n - SZ.v (R.read i))
   {
     mask_write a (R.read i) x;
     R.write i ((R.read i) `SZ.add` 1sz);

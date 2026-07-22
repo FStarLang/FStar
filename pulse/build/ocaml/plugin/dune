@@ -3,7 +3,7 @@
  (name pulse)
  (public_name pulse)
  (libraries
-    fstar.pluginlib
+    fstar.compiler
  )
  ; Consider using private modules here? If all we want to provide is the
  ; plugin, there's no need to provide cmi/cmt/cmx for every internal
@@ -12,8 +12,7 @@
  ; (private_modules Pulse_Util)
  (modes native)
  (wrapped false)
- ; -open Fstarcompiler: see stage3/dune/pulse-plugin/dune for details.
- (flags (:standard -w -A -open Fstarcompiler))
+ (flags (:standard -w -A))
 )
 
 (menhir

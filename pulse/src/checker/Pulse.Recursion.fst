@@ -215,6 +215,15 @@ let add_knot (g : env) (rng : R.range)
     | Some (C_ST _) ->
       (match meas with
       | Some meas -> add_decreases_refinement meas
+      | None ->
+        let open FStar.Pprint in
+        let open Pulse.PP in
+        fail_doc g (Some d.range) [
+          text "recursive functions require a 'decreases' clause to prove termination;";
+          text "use 'divergent fn' for a possibly non-terminating recursive function."])
+    | Some (C_STDiv _) ->
+      (match meas with
+      | Some meas -> add_decreases_refinement meas
       | None -> r_bs)
     | _ ->
       fail_doc g (Some d.range) [text "main: FnDefn has unexpected type"; fquotes (pp comp)]

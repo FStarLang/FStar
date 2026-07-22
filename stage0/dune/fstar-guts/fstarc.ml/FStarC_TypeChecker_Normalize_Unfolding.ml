@@ -15,7 +15,8 @@ let uu___is_Should_unfold_fully (projectee : should_unfold_res) : Prims.bool=
   match projectee with | Should_unfold_fully -> true | uu___ -> false
 let uu___is_Should_unfold_reify (projectee : should_unfold_res) : Prims.bool=
   match projectee with | Should_unfold_reify -> true | uu___ -> false
-let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
+let should_unfold (allow_strict : Prims.bool)
+  (cfg : FStarC_TypeChecker_Cfg.cfg)
   (should_reify : FStarC_TypeChecker_Cfg.cfg -> Prims.bool)
   (fv : FStarC_Syntax_Syntax.fv) (qninfo : FStarC_TypeChecker_Env.qninfo) :
   should_unfold_res=
@@ -109,216 +110,236 @@ let should_unfold (cfg : FStarC_TypeChecker_Cfg.cfg)
        if b then reif else no)
     else
       (let uu___1 =
-         let uu___2 = FStarC_TypeChecker_Cfg.find_prim_step cfg fv in
-         FStar_Pervasives_Native.uu___is_Some uu___2 in
+         if Prims.op_Negation allow_strict
+         then
+           let uu___2 =
+             FStarC_TypeChecker_Env.fv_has_strict_args
+               cfg.FStarC_TypeChecker_Cfg.tcenv fv in
+           FStar_Pervasives_Native.uu___is_Some uu___2
+         else false in
        if uu___1
        then
          (FStarC_TypeChecker_Cfg.log_unfolding cfg
             (fun uu___3 ->
                FStarC_Format.print_string
-                 " >> It's a primop, not unfolding\n");
+                 " >> Not unfolding strict_on_arguments definition\n");
           no)
        else
-         (match (qninfo, selective_unfold) with
-          | (FStar_Pervasives_Native.Some
-             (FStar_Pervasives.Inr
-              ({
-                 FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let
-                   { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___2);
-                     FStarC_Syntax_Syntax.lids1 = uu___3;_};
-                 FStarC_Syntax_Syntax.sigrng = uu___4;
-                 FStarC_Syntax_Syntax.sigquals = qs;
-                 FStarC_Syntax_Syntax.sigmeta = uu___5;
-                 FStarC_Syntax_Syntax.sigattrs = uu___6;
-                 FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
-                 FStarC_Syntax_Syntax.sigopts = uu___8;_},
-               uu___9),
-              uu___10),
-             uu___11) when
-              FStarC_List.contains FStarC_Syntax_Syntax.HasMaskedEffect qs ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___13 ->
-                    FStarC_Format.print_string
-                      " >> HasMaskedEffect, not unfolding\n");
-               no)
-          | (uu___2, true) when
-              if
-                FStar_Pervasives_Native.uu___is_Some
-                  (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
-              then
-                FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv)
-                  (FStar_Pervasives_Native.__proj__Some__item__v
-                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once)
-              else false ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___4 -> FStarC_Format.print_string " >> UnfoldOnce\n");
-               once)
-          | (FStar_Pervasives_Native.Some
-             (FStar_Pervasives.Inr
-              ({ FStarC_Syntax_Syntax.sigel = uu___2;
-                 FStarC_Syntax_Syntax.sigrng = uu___3;
-                 FStarC_Syntax_Syntax.sigquals = uu___4;
-                 FStarC_Syntax_Syntax.sigmeta = uu___5;
-                 FStarC_Syntax_Syntax.sigattrs = attrs1;
-                 FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___6;
-                 FStarC_Syntax_Syntax.sigopts = uu___7;_},
-               uu___8),
-              uu___9),
-             uu___10) when
-              if
-                (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-              then
-                let uu___11 =
-                  FStarC_Util.find_map attrs1
-                    FStarC_Parser_Const_ExtractAs.is_extract_as_attr in
-                FStar_Pervasives_Native.uu___is_Some uu___11
-              else false ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___12 ->
-                    FStarC_Format.print_string
-                      " >> Has extract_as attribute and we're extracting, unfold!");
-               yes)
-          | (FStar_Pervasives_Native.Some
-             (FStar_Pervasives.Inr
-              ({
-                 FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let
-                   { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___2);
-                     FStarC_Syntax_Syntax.lids1 = uu___3;_};
-                 FStarC_Syntax_Syntax.sigrng = uu___4;
-                 FStarC_Syntax_Syntax.sigquals = qs;
-                 FStarC_Syntax_Syntax.sigmeta = uu___5;
-                 FStarC_Syntax_Syntax.sigattrs = uu___6;
-                 FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
-                 FStarC_Syntax_Syntax.sigopts = uu___8;_},
-               uu___9),
-              uu___10),
-             uu___11) when
-              (is_rec &&
-                 (Prims.op_Negation
-                    (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta))
-                &&
-                (Prims.op_Negation
-                   (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
-              ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___13 ->
-                    FStarC_Format.print_string
-                      " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
-               no)
-          | (uu___2, true) ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___4 ->
-                    let uu___5 =
-                      FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_fv
-                        fv in
-                    FStarC_Format.print1
-                      "should_unfold: Reached a %s with selective unfolding\n"
-                      uu___5);
-               (let meets_some_criterion =
-                  let uu___4 =
-                    let uu___5 =
-                      if
-                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
-                      then
-                        let uu___6 =
-                          let uu___7 =
-                            FStarC_TypeChecker_Env.lookup_definition_qninfo
-                              [FStarC_TypeChecker_Env.Eager_unfolding_only;
-                              FStarC_TypeChecker_Env.InliningDelta]
-                              fv.FStarC_Syntax_Syntax.fv_name qninfo in
-                          FStar_Pervasives_Native.uu___is_Some uu___7 in
-                        yesno uu___6
-                      else no in
-                    let uu___6 =
-                      let uu___7 =
-                        match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only
-                        with
-                        | FStar_Pervasives_Native.None -> no
-                        | FStar_Pervasives_Native.Some lids ->
-                            let uu___8 =
-                              FStarC_Util.for_some
-                                (FStarC_Syntax_Syntax.fv_eq_lid fv) lids in
-                            yesno uu___8 in
-                      let uu___8 =
-                        let uu___9 =
-                          match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr
-                          with
-                          | FStar_Pervasives_Native.None -> no
-                          | FStar_Pervasives_Native.Some lids ->
-                              let uu___10 =
-                                FStarC_Util.for_some
-                                  (fun at ->
+         (let uu___2 =
+            let uu___3 = FStarC_TypeChecker_Cfg.find_prim_step cfg fv in
+            FStar_Pervasives_Native.uu___is_Some uu___3 in
+          if uu___2
+          then
+            (FStarC_TypeChecker_Cfg.log_unfolding cfg
+               (fun uu___4 ->
+                  FStarC_Format.print_string
+                    " >> It's a primop, not unfolding\n");
+             no)
+          else
+            (match (qninfo, selective_unfold) with
+             | (FStar_Pervasives_Native.Some
+                (FStar_Pervasives.Inr
+                 ({
+                    FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let
+                      { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___3);
+                        FStarC_Syntax_Syntax.lids1 = uu___4;_};
+                    FStarC_Syntax_Syntax.sigrng = uu___5;
+                    FStarC_Syntax_Syntax.sigquals = qs;
+                    FStarC_Syntax_Syntax.sigmeta = uu___6;
+                    FStarC_Syntax_Syntax.sigattrs = uu___7;
+                    FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
+                    FStarC_Syntax_Syntax.sigopts = uu___9;_},
+                  uu___10),
+                 uu___11),
+                uu___12) when
+                 FStarC_List.contains FStarC_Syntax_Syntax.HasMaskedEffect qs
+                 ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___14 ->
+                       FStarC_Format.print_string
+                         " >> HasMaskedEffect, not unfolding\n");
+                  no)
+             | (uu___3, true) when
+                 if
+                   FStar_Pervasives_Native.uu___is_Some
+                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once
+                 then
+                   FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv)
+                     (FStar_Pervasives_Native.__proj__Some__item__v
+                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once)
+                 else false ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___5 ->
+                       FStarC_Format.print_string " >> UnfoldOnce\n");
+                  once)
+             | (FStar_Pervasives_Native.Some
+                (FStar_Pervasives.Inr
+                 ({ FStarC_Syntax_Syntax.sigel = uu___3;
+                    FStarC_Syntax_Syntax.sigrng = uu___4;
+                    FStarC_Syntax_Syntax.sigquals = uu___5;
+                    FStarC_Syntax_Syntax.sigmeta = uu___6;
+                    FStarC_Syntax_Syntax.sigattrs = attrs1;
+                    FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___7;
+                    FStarC_Syntax_Syntax.sigopts = uu___8;_},
+                  uu___9),
+                 uu___10),
+                uu___11) when
+                 if
+                   (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+                 then
+                   let uu___12 =
+                     FStarC_Util.find_map attrs1
+                       FStarC_Parser_Const_ExtractAs.is_extract_as_attr in
+                   FStar_Pervasives_Native.uu___is_Some uu___12
+                 else false ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___13 ->
+                       FStarC_Format.print_string
+                         " >> Has extract_as attribute and we're extracting, unfold!");
+                  yes)
+             | (FStar_Pervasives_Native.Some
+                (FStar_Pervasives.Inr
+                 ({
+                    FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let
+                      { FStarC_Syntax_Syntax.lbs1 = (is_rec, uu___3);
+                        FStarC_Syntax_Syntax.lids1 = uu___4;_};
+                    FStarC_Syntax_Syntax.sigrng = uu___5;
+                    FStarC_Syntax_Syntax.sigquals = qs;
+                    FStarC_Syntax_Syntax.sigmeta = uu___6;
+                    FStarC_Syntax_Syntax.sigattrs = uu___7;
+                    FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
+                    FStarC_Syntax_Syntax.sigopts = uu___9;_},
+                  uu___10),
+                 uu___11),
+                uu___12) when
+                 (is_rec &&
+                    (Prims.op_Negation
+                       (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta))
+                   &&
+                   (Prims.op_Negation
+                      (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)
+                 ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___14 ->
+                       FStarC_Format.print_string
+                         " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
+                  no)
+             | (uu___3, true) ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___5 ->
+                       let uu___6 =
+                         FStarC_Class_Show.show
+                           FStarC_Syntax_Syntax.showable_fv fv in
+                       FStarC_Format.print1
+                         "should_unfold: Reached a %s with selective unfolding\n"
+                         uu___6);
+                  (let meets_some_criterion =
+                     let uu___5 =
+                       let uu___6 =
+                         if
+                           (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction
+                         then
+                           let uu___7 =
+                             let uu___8 =
+                               FStarC_TypeChecker_Env.lookup_definition_qninfo
+                                 [FStarC_TypeChecker_Env.Eager_unfolding_only;
+                                 FStarC_TypeChecker_Env.InliningDelta]
+                                 fv.FStarC_Syntax_Syntax.fv_name qninfo in
+                             FStar_Pervasives_Native.uu___is_Some uu___8 in
+                           yesno uu___7
+                         else no in
+                       let uu___7 =
+                         let uu___8 =
+                           match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only
+                           with
+                           | FStar_Pervasives_Native.None -> no
+                           | FStar_Pervasives_Native.Some lids ->
+                               let uu___9 =
+                                 FStarC_Util.for_some
+                                   (FStarC_Syntax_Syntax.fv_eq_lid fv) lids in
+                               yesno uu___9 in
+                         let uu___9 =
+                           let uu___10 =
+                             match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr
+                             with
+                             | FStar_Pervasives_Native.None -> no
+                             | FStar_Pervasives_Native.Some lids ->
+                                 let uu___11 =
+                                   FStarC_Util.for_some
+                                     (fun at ->
+                                        FStarC_Util.for_some
+                                          (fun lid ->
+                                             FStarC_Syntax_Util.is_fvar lid
+                                               at) lids) attrs in
+                                 yesno uu___11 in
+                           let uu___11 =
+                             let uu___12 =
+                               match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully
+                               with
+                               | FStar_Pervasives_Native.None -> no
+                               | FStar_Pervasives_Native.Some lids ->
+                                   let uu___13 =
                                      FStarC_Util.for_some
-                                       (fun lid ->
-                                          FStarC_Syntax_Util.is_fvar lid at)
-                                       lids) attrs in
-                              yesno uu___10 in
-                        let uu___10 =
-                          let uu___11 =
-                            match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully
-                            with
-                            | FStar_Pervasives_Native.None -> no
-                            | FStar_Pervasives_Native.Some lids ->
-                                let uu___12 =
-                                  FStarC_Util.for_some
-                                    (FStarC_Syntax_Syntax.fv_eq_lid fv) lids in
-                                fullyno uu___12 in
-                          let uu___12 =
-                            let uu___13 =
-                              match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual
-                              with
-                              | FStar_Pervasives_Native.None -> no
-                              | FStar_Pervasives_Native.Some qs ->
-                                  let uu___14 =
-                                    FStarC_Util.for_some
-                                      (fun q ->
-                                         FStarC_Util.for_some
-                                           (fun qual ->
-                                              let uu___15 =
-                                                FStarC_Class_Show.show
-                                                  FStarC_Syntax_Print.showable_qualifier
-                                                  qual in
-                                              uu___15 = q) quals) qs in
-                                  yesno uu___14 in
-                            let uu___14 =
-                              let uu___15 =
-                                match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace
-                                with
-                                | FStar_Pervasives_Native.None -> no
-                                | FStar_Pervasives_Native.Some namespaces ->
-                                    let p =
-                                      FStarC_Ident.path_of_lid
-                                        (FStarC_Syntax_Syntax.lid_of_fv fv) in
-                                    let r =
-                                      FStarC_Path.search_forest
-                                        (FStarC_Class_Ord.ord_eq
-                                           FStarC_Class_Ord.ord_string) p
-                                        namespaces in
-                                    yesno r in
-                              [uu___15] in
-                            uu___13 :: uu___14 in
-                          uu___11 :: uu___12 in
-                        uu___9 :: uu___10 in
-                      uu___7 :: uu___8 in
-                    uu___5 :: uu___6 in
-                  comb_or uu___4 in
-                meets_some_criterion))
-          | uu___2 when
-              if
-                FStar_Pervasives_Native.uu___is_Some
-                  (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
-              then
-                FStarC_List.existsb
-                  (fun fa -> FStarC_Syntax_Util.has_attribute attrs fa)
-                  (FStar_Pervasives_Native.__proj__Some__item__v
-                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr)
-              else false ->
-              (FStarC_TypeChecker_Cfg.log_unfolding cfg
-                 (fun uu___4 ->
-                    FStarC_Format.print_string
-                      " >> forbidden by attribute, not unfolding\n");
-               no)
-          | uu___2 -> default_unfolding ())) in
+                                       (FStarC_Syntax_Syntax.fv_eq_lid fv)
+                                       lids in
+                                   fullyno uu___13 in
+                             let uu___13 =
+                               let uu___14 =
+                                 match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual
+                                 with
+                                 | FStar_Pervasives_Native.None -> no
+                                 | FStar_Pervasives_Native.Some qs ->
+                                     let uu___15 =
+                                       FStarC_Util.for_some
+                                         (fun q ->
+                                            FStarC_Util.for_some
+                                              (fun qual ->
+                                                 let uu___16 =
+                                                   FStarC_Class_Show.show
+                                                     FStarC_Syntax_Print.showable_qualifier
+                                                     qual in
+                                                 uu___16 = q) quals) qs in
+                                     yesno uu___15 in
+                               let uu___15 =
+                                 let uu___16 =
+                                   match (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace
+                                   with
+                                   | FStar_Pervasives_Native.None -> no
+                                   | FStar_Pervasives_Native.Some namespaces
+                                       ->
+                                       let p =
+                                         FStarC_Ident.path_of_lid
+                                           (FStarC_Syntax_Syntax.lid_of_fv fv) in
+                                       let r =
+                                         FStarC_Path.search_forest
+                                           (FStarC_Class_Ord.ord_eq
+                                              FStarC_Class_Ord.ord_string) p
+                                           namespaces in
+                                       yesno r in
+                                 [uu___16] in
+                               uu___14 :: uu___15 in
+                             uu___12 :: uu___13 in
+                           uu___10 :: uu___11 in
+                         uu___8 :: uu___9 in
+                       uu___6 :: uu___7 in
+                     comb_or uu___5 in
+                   meets_some_criterion))
+             | uu___3 when
+                 if
+                   FStar_Pervasives_Native.uu___is_Some
+                     (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr
+                 then
+                   FStarC_List.existsb
+                     (fun fa -> FStarC_Syntax_Util.has_attribute attrs fa)
+                     (FStar_Pervasives_Native.__proj__Some__item__v
+                        (cfg.FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr)
+                 else false ->
+                 (FStarC_TypeChecker_Cfg.log_unfolding cfg
+                    (fun uu___5 ->
+                       FStarC_Format.print_string
+                         " >> forbidden by attribute, not unfolding\n");
+                  no)
+             | uu___3 -> default_unfolding ()))) in
   FStarC_TypeChecker_Cfg.log_unfolding cfg
     (fun uu___1 ->
        let uu___2 =

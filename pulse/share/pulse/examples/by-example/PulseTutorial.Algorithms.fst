@@ -109,6 +109,7 @@ fn majority
          // constraint for the rest of the candidates
          (forall (vcand':a). vcand' =!= vcand ==> 2 * count_until vcand' s (v vi) <= v vi - v vk)))
     )
+  decreases (v len - v (!i))
   {
     let vi = !i;
     let vk = !k;
@@ -151,6 +152,7 @@ fn majority
          pure (SZ.v vi <= Seq.length s /\
                SZ.v vk == count_until vcand s (SZ.v vi)))
     )
+    decreases (v len - v (!i))
     {
       let vi = !i;
       let vk = !k;
