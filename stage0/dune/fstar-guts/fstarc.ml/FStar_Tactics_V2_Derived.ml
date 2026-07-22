@@ -1162,3 +1162,19 @@ let check_equiv_nosmt (g : FStarC_Reflection_Types.env)
   ((unit FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
     Obj.t) FStar_Tactics_Effect.tac_repr=
   FStarC_Tactics_V2_Builtins.t_check_equiv false false g t0 t1
+let add_check_with (vcfg : FStar_VConfig.vconfig)
+  (se : FStarC_Reflection_Types.sigelt) :
+  (FStarC_Reflection_Types.sigelt, Obj.t) FStar_Tactics_Effect.tac_repr=
+  fun ps ->
+    let x =
+      FStarC_Tactics_Unseal.unseal
+        (FStarC_Reflection_V2_Builtins.sigelt_attrs se) ps in
+    FStarC_Reflection_V2_Builtins.set_sigelt_attrs
+      ((FStarC_Reflection_V2_Builtins.pack_ln
+          (FStarC_Reflection_V2_Data.Tv_App
+             ((FStarC_Reflection_V2_Builtins.pack_ln
+                 (FStarC_Reflection_V2_Data.Tv_FVar
+                    (FStarC_Reflection_V2_Builtins.pack_fv
+                       ["FStar"; "VConfig"; "check_with"]))),
+               ((FStarC_Reflection_V2_Builtins.embed_vconfig vcfg),
+                 FStarC_Reflection_V2_Data.Q_Explicit)))) :: x) se
