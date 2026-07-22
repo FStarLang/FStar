@@ -264,7 +264,7 @@ let rewrite_all rng (is_source:bool) (g:env) (p: list (term & term)) (t:term) pr
     debug_log g (fun _ -> Printf.sprintf "Rewrote %s to %s" (P.term_to_string t) (P.term_to_string rhs));
     rhs, q
 
-let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:term)
+let check_equiv_with_tac (g:env) (rng:range) (lhs rhs ty:term) (tac_tm:term)
 : T.Tac (option T.issues)
 = let g_env = elab_env g in
   match Pulse.Typing.Util.universe_of_now g_env ty with
@@ -284,7 +284,7 @@ let check_equiv_with_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_tm:ter
     let res, issues = T.call_subtac_tm g_env tac_tm u0 goal in
     if None? res then Some issues else None
 
-let check_equiv_maybe_tac (g:env) (rng:Range.range) (lhs rhs ty:term) (tac_opt:option term)
+let check_equiv_maybe_tac (g:env) (rng:range) (lhs rhs ty:term) (tac_opt:option term)
 : T.Tac (option T.issues)
 = match tac_opt with
   | None -> 

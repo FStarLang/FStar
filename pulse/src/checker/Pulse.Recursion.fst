@@ -115,7 +115,7 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
     [], ty
 
 #push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 2"
-let add_knot (g : env) (rng : R.range)
+let add_knot (g : env) (rng : range)
              (d : decl{FnDefn? d.d})
 : Tac (d : decl{FnDefn? d.d})
 = let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
@@ -195,7 +195,7 @@ let add_knot (g : env) (rng : R.range)
         let meas' = R.subst_term prime_subst meas in
         let ref = `(`#meas' << `#meas) in
         (* TODO: this is not always printed *)
-        let ref = (`labeled range_0 "Could not prove termination" (`#ref)) in
+        let ref = (`labeled FStar.Range.range_0 "Could not prove termination" (`#ref)) in
         { last with
             sort = (pack (Tv_Refine b' ref))
         }
@@ -239,10 +239,10 @@ let add_knot (g : env) (rng : R.range)
     fail g (Some d.range) "error: r_ty is Tv_unknown in add_knot?";
   let b_knot =
     let s, rng = inspect_ident id in
-    let b = mk_binder s rng (wr r_ty rng) in
+    let b = mk_binder s (seal rng) (wr r_ty (seal rng)) in
     let bv = {
       bv_index = b_knot._3.bv_index;
-      bv_ppname = { name = seal s; range = rng }
+      bv_ppname = { name = seal s; range = seal rng }
     } in
     let q = None in
     (q, b, bv)
@@ -259,7 +259,7 @@ let add_knot (g : env) (rng : R.range)
 #pop-options
 #push-options "--fuel 0 --ifuel 0"
 let tie_knot (g : env)
-             (rng : R.range)
+             (rng : range)
              (nm_orig nm_aux : string)
              (r_typ : R.typ) (blob:RT.blob)
 : Tac (r:(bool & sigelt & option RT.blob) { let (checked, _, _) = r in ~ checked })

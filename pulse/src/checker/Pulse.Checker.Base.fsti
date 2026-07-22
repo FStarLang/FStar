@@ -68,9 +68,9 @@ val comp_typing_from_post_hint
 : T.Tac unit
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
-                     (x:var{freshv g x}) (tx:term)
+                     (x:var{freshv g x}) (n:ppname) (tx:term)
                      (conjunct:term)
-  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
+  : T.Tac (q:post_hint_for_env (push_binding g x n tx) {
             q.post == tm_star p.post conjunct /\
             q.ret_ty == p.ret_ty /\
             q.u == p.u /\

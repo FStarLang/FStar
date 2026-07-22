@@ -380,11 +380,15 @@ let mk_proj_decl (is_method : Prims.bool)
                          }]
                     }) ps in
              [x16]) in
-      (((FStarC_Reflection_V2_Builtins.set_sigelt_attrs
-           (FStar_List_Tot_Base.op_At (substitute_attr ::
-              (field.FStar_Tactics_NamedView.attrs))
-              (FStarC_Reflection_V2_Builtins.sigelt_attrs x10)) x10) :: x11),
-        x5)))
+      let x12 =
+        let x13 =
+          let x14 =
+            FStarC_Tactics_Unseal.unseal
+              (FStarC_Reflection_V2_Builtins.sigelt_attrs x10) ps in
+          FStar_List_Tot_Base.op_At (substitute_attr ::
+            (field.FStar_Tactics_NamedView.attrs)) x14 in
+        FStarC_Reflection_V2_Builtins.set_sigelt_attrs x13 x10 in
+      ((x12 :: x11), x5)))
 let mk_projs (is_class : Prims.bool) (tyname : Prims.string) :
   (FStarC_Reflection_Types.sigelt Prims.list, Obj.t)
     FStar_Tactics_Effect.tac_repr=

@@ -355,8 +355,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> ML (list decl) =
         let not_valid_a = mkNot <| mkApp("Valid", [a]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_not_a]], [aa], mkIff(not_valid_a, valid)), Some "not interpretation", "l_not-interp")] in
    let mk_range_interp : env -> string -> term -> ML (list decl) = fun env range tt ->
-        let range_ty = mkApp(range, []) in
-        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
+        [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) tt, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> ML (list decl) = fun env inversion tt ->
        // (assert (forall ((u Universe) (t Term))
        //            (! (implies (Valid (FStar.Pervasives.inversion u t))

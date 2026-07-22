@@ -1352,12 +1352,11 @@ let primitive_type_axioms :
       FStarC_SMTEncoding_Util.mkAssume uu___1 in
     [uu___] in
   let mk_range_interp env range tt =
-    let range_ty = FStarC_SMTEncoding_Util.mkApp (range, []) in
     let uu___ =
       let uu___1 =
         let uu___2 =
           let uu___3 = FStarC_SMTEncoding_Term.mk_Range_const () in
-          FStarC_SMTEncoding_Term.mk_HasTypeZ uu___3 range_ty in
+          FStarC_SMTEncoding_Term.mk_HasTypeZ uu___3 tt in
         let uu___3 =
           FStarC_SMTEncoding_Env.varops.FStarC_SMTEncoding_Env.mk_unique
             "typing_range_const" in

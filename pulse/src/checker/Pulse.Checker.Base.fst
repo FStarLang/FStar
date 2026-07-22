@@ -93,7 +93,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
-      | None -> wr RT.unit_ty FStar.Range.range_0
+      | None -> wr RT.unit_ty range_0
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
@@ -130,8 +130,8 @@ let comp_typing_from_post_hint
         x
 
 
-let extend_post_hint g p x tx conjunct =
-  let g' = push_binding g x ppname_default tx in
+let extend_post_hint g p x n tx conjunct =
+  let g' = push_binding g x n tx in
   let y = fresh g' in
   let g'' = push_binding g' y ppname_default p.ret_ty in
   let new_post = tm_star p.post conjunct in
@@ -652,7 +652,7 @@ let bind_st_term (g:env) (s:st_term)
 
 (* Hoist a single F*-level Tv_Match branch body by delegating to maybe_hoist.
    Returns the body as an st_term and whether any hoisting was done. *)
-let hoist_branch_body (g:env) (body:term) (rng:Range.range)
+let hoist_branch_body (g:env) (body:term) (rng:range)
   (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
 : T.Tac (st_term & bool)
 = let body_rng = RU.range_of_term body in
@@ -674,7 +674,7 @@ let hoist_branch_body (g:env) (body:term) (rng:Range.range)
 (* Process all branches of an F*-level Tv_Match, hoisting stateful apps
    in each branch body. Returns processed branches and whether any changed. *)
 let rec process_fstar_match_branches
-  (g:env) (rng:Range.range)
+  (g:env) (rng:range)
   (brs: list (R.pattern & term))
   (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
 : T.Tac (list (R.pattern & st_term) & bool)

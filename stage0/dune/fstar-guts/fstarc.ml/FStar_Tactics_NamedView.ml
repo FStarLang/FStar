@@ -129,8 +129,7 @@ let rec __knot_e_named_universe_view _ =
              (FStarC_Syntax_Embeddings_Base.extracted_unembed
                 (FStarC_Syntax_Embeddings.e_tuple2
                    FStarC_Syntax_Embeddings.e_string
-                   (FStarC_Syntax_Embeddings.e_sealed
-                      FStarC_Syntax_Embeddings.e___range)) _0_23)
+                   FStarC_Syntax_Embeddings.e_range) _0_23)
              (fun _0_23 -> FStar_Pervasives_Native.Some (Uv_Name _0_23))
        | ("FStar.Tactics.NamedView.Uv_Unif", _0_25::[]) ->
            FStarC_Option.bind
@@ -176,8 +175,7 @@ let rec __knot_e_named_universe_view _ =
              [((FStarC_Syntax_Embeddings_Base.extracted_embed
                   (FStarC_Syntax_Embeddings.e_tuple2
                      FStarC_Syntax_Embeddings.e_string
-                     (FStarC_Syntax_Embeddings.e_sealed
-                        FStarC_Syntax_Embeddings.e___range)) _0_36),
+                     FStarC_Syntax_Embeddings.e_range) _0_36),
                 FStar_Pervasives_Native.None)]
        | Uv_Unif _0_38 ->
            FStarC_Syntax_Util.mk_app
@@ -1024,8 +1022,7 @@ let rec __knot_e_letbinding _ =
                      (FStarC_Syntax_Embeddings.e_list
                         (FStarC_Syntax_Embeddings.e_tuple2
                            FStarC_Syntax_Embeddings.e_string
-                           (FStarC_Syntax_Embeddings.e_sealed
-                              FStarC_Syntax_Embeddings.e___range))) lb_us_193)
+                           FStarC_Syntax_Embeddings.e_range)) lb_us_193)
                   (fun lb_us_193 ->
                      FStarC_Option.bind
                        (FStarC_Syntax_Embeddings_Base.extracted_unembed
@@ -1059,8 +1056,7 @@ let rec __knot_e_letbinding _ =
                  (FStarC_Syntax_Embeddings.e_list
                     (FStarC_Syntax_Embeddings.e_tuple2
                        FStarC_Syntax_Embeddings.e_string
-                       (FStarC_Syntax_Embeddings.e_sealed
-                          FStarC_Syntax_Embeddings.e___range))) lb_us_199),
+                       FStarC_Syntax_Embeddings.e_range)) lb_us_199),
                FStar_Pervasives_Native.None);
              ((FStarC_Syntax_Embeddings_Base.extracted_embed
                  FStarC_Reflection_V2_Embeddings.e_term lb_typ_200),
@@ -1149,8 +1145,7 @@ and __knot_e_named_sigelt_view__Sg_Inductive__payload _ =
                      (FStarC_Syntax_Embeddings.e_list
                         (FStarC_Syntax_Embeddings.e_tuple2
                            FStarC_Syntax_Embeddings.e_string
-                           (FStarC_Syntax_Embeddings.e_sealed
-                              FStarC_Syntax_Embeddings.e___range))) univs_213)
+                           FStarC_Syntax_Embeddings.e_range)) univs_213)
                   (fun univs_213 ->
                      FStarC_Option.bind
                        (FStarC_Syntax_Embeddings_Base.extracted_unembed
@@ -1195,8 +1190,7 @@ and __knot_e_named_sigelt_view__Sg_Inductive__payload _ =
                  (FStarC_Syntax_Embeddings.e_list
                     (FStarC_Syntax_Embeddings.e_tuple2
                        FStarC_Syntax_Embeddings.e_string
-                       (FStarC_Syntax_Embeddings.e_sealed
-                          FStarC_Syntax_Embeddings.e___range))) univs_220),
+                       FStarC_Syntax_Embeddings.e_range)) univs_220),
                FStar_Pervasives_Native.None);
              ((FStarC_Syntax_Embeddings_Base.extracted_embed
                  (FStarC_Syntax_Embeddings.e_list e_binder) params_221),
@@ -1228,8 +1222,7 @@ and __knot_e_named_sigelt_view__Sg_Val__payload _ =
                      (FStarC_Syntax_Embeddings.e_list
                         (FStarC_Syntax_Embeddings.e_tuple2
                            FStarC_Syntax_Embeddings.e_string
-                           (FStarC_Syntax_Embeddings.e_sealed
-                              FStarC_Syntax_Embeddings.e___range))) univs_227)
+                           FStarC_Syntax_Embeddings.e_range)) univs_227)
                   (fun univs_227 ->
                      FStarC_Option.bind
                        (FStarC_Syntax_Embeddings_Base.extracted_unembed
@@ -1257,8 +1250,7 @@ and __knot_e_named_sigelt_view__Sg_Val__payload _ =
                  (FStarC_Syntax_Embeddings.e_list
                     (FStarC_Syntax_Embeddings.e_tuple2
                        FStarC_Syntax_Embeddings.e_string
-                       (FStarC_Syntax_Embeddings.e_sealed
-                          FStarC_Syntax_Embeddings.e___range))) univs_232),
+                       FStarC_Syntax_Embeddings.e_range)) univs_232),
                FStar_Pervasives_Native.None);
              ((FStarC_Syntax_Embeddings_Base.extracted_embed
                  FStarC_Reflection_V2_Embeddings.e_term typ_233),

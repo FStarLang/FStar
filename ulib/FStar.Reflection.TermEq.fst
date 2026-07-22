@@ -164,8 +164,7 @@ let eq_cmp x y = if x = y then Eq else Neq
 
 val range_cmp : comparator_for range
 let range_cmp r1 r2 =
-  Sealed.sealed_singl r1 r2;
-  Eq
+  eq_cmp r1 r2
 
 val ident_cmp : comparator_for ident
 let ident_cmp i1 i2 =
@@ -173,8 +172,7 @@ let ident_cmp i1 i2 =
   let iv2 = inspect_ident i2 in
   pack_inspect_ident i1;
   pack_inspect_ident i2;
-  Sealed.sealed_singl (snd iv1) (snd iv2);
-  eq_cmp (fst iv1) (fst iv2)
+  eq_cmp (fst iv1) (fst iv2) &&& eq_cmp (snd iv1) (snd iv2)
 
 val univ_cmp : comparator_for universe
 let rec univ_cmp (u1 u2 : universe) =

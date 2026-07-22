@@ -80,7 +80,7 @@ let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (opti
     None
 
 let extract_fundeps (se : sigelt) : Tac (option (list int)) =
-  let attrs = sigelt_attrs se in
+  let attrs = unseal (sigelt_attrs se) in
   let rec aux (attrs : list term) : Tac (option (list int)) =
     match attrs with
     | [] -> None
@@ -145,7 +145,7 @@ let is_class_name (f : fv) : Tac bool =
   match se with
   | None -> false
   | Some se ->
-    let attrs = sigelt_attrs se in
+    let attrs = unseal (sigelt_attrs se) in
     L.existsb (Reflection.TermEq.Simple.term_eq (`tcclass)) attrs
 
 let class_of_typ (t:term) : Tac (option fv) =
@@ -171,7 +171,7 @@ let type_matches_class (cfv:fv) (t:term) : Tac bool =
 let build_glb_map (all_glb : list sigelt) : Tac (list glb_entry) =
   let sigelt_to_inst (se : sigelt) : Tac glb_inst =
     let inst_name = sigelt_name se in
-    let attrs = sigelt_attrs se in
+    let attrs = unseal (sigelt_attrs se) in
     let noinst = L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs in
     { inst_name; noinst; }
   in
@@ -186,7 +186,7 @@ let build_glb_map (all_glb : list sigelt) : Tac (list glb_entry) =
     match typ with
     | None -> []
     | Some typ ->
-      let attrs = sigelt_attrs se in
+      let attrs = unseal (sigelt_attrs se) in
       match class_of_typ typ with
       | None -> []
       | Some cvf -> [ { class_name = cvf; instances = [entry]; } ]
@@ -449,7 +449,7 @@ let __tcresolve (dbg : bool) : Tac unit =
       seen = [];
       glb = glb;
       fuel = 16;
-      rng = range_of_term (cur_goal ());
+      rng = unseal (range_of_term (cur_goal ()));
       warned_oof = alloc false;
       dbg = dbg;
     } in
@@ -514,7 +514,7 @@ let mk_class (nm:string) : Tac decls =
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
-    let to_propagate = L.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
+    let to_propagate = L.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (unseal (sigelt_quals se)) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive {nm=name;univs=us;params;typ=ity;ctors} = sv in
@@ -564,7 +564,7 @@ let mk_class (nm:string) : Tac decls =
         | None -> fail "mk_class: proj not found?"
         | Some se -> se
       in
-      let proj_attrs = sigelt_attrs proj_se in
+      let proj_attrs = unseal (sigelt_attrs proj_se) in
       let proj_lb =
         match inspect_sigelt proj_se with
         | Sg_Let {lbs} ->

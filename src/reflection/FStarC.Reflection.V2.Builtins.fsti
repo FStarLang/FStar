@@ -58,7 +58,7 @@ val all_defs_in_env       : Env.env -> ML (list fv)
 val defs_in_module        : Env.env -> name -> ML (list fv)
 val lookup_typ            : Env.env -> list string -> ML (option sigelt)
 
-val sigelt_attrs     : sigelt -> list attribute
+val sigelt_attrs     : sigelt -> Sealed.sealed (list attribute)
 val set_sigelt_attrs : list attribute -> sigelt -> sigelt
 
 val syntax_to_rd_qual : S.qualifier -> ML RD.qualifier
@@ -66,10 +66,10 @@ val syntax_to_rd_qual : S.qualifier -> ML RD.qualifier
 val inspect_ident : ident -> string & Range.t
 val pack_ident : string & Range.t -> ident
 
-val sigelt_quals     : sigelt -> ML (list RD.qualifier)
+val sigelt_quals     : sigelt -> ML (Sealed.sealed (list RD.qualifier))
 val set_sigelt_quals : list RD.qualifier -> sigelt -> ML sigelt
 
-val sigelt_opts           : sigelt -> option vconfig
+val sigelt_opts           : sigelt -> Sealed.sealed (option vconfig)
 val embed_vconfig         : vconfig -> ML term
 
 val inspect_sigelt : sigelt -> ML sigelt_view
@@ -103,5 +103,5 @@ val push_namedv    : Env.env -> bv     -> ML Env.env
 val subst_term : list subst_elt -> term -> ML term
 val subst_comp : list subst_elt -> comp -> ML comp
 
-val range_of_term : term -> Range.t
-val range_of_sigelt : sigelt -> Range.t
+val range_of_term : term -> Sealed.sealed Range.t
+val range_of_sigelt : sigelt -> Sealed.sealed Range.t

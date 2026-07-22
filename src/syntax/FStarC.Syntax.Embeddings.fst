@@ -1194,12 +1194,10 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
         emb_ty_a
 
 (*
- * Embed a range as a FStar.Range.__range
- * The user usually manipulates a FStar.Range.t = sealed __range
- * For embedding an actual FStar.Range.t, we compose this (automatically
- * via typeclass resolution) with e_sealed.
+ * Embed a range as a FStar.Range.range. Ranges are no longer sealed, so this is
+ * the single embedding for the (unsealed) range type.
  *)
-let e___range =
+instance e_range : embedding Range.t =
     let em (r:range) (rng:range) _shadow _norm : ML term =
         S.mk (Tm_constant (C.Const_range r)) rng
     in
@@ -1211,14 +1209,9 @@ let e___range =
     mk_emb_full
         em
         un
-        (fun () -> S.t___range)
+        (fun () -> S.t_range)
         show
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
-
-(* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed
-type internally, so we "hack" it like this. *)
-let e_range : embedding Range.t =
-  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
 let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document_lid None)

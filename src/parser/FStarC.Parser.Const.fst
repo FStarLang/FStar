@@ -293,11 +293,9 @@ let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
 (* FStar.Range *)
 let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
-let __range_lid    = p2l ["FStar"; "Range"; "__range"]
-let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
+let range_lid      = p2l ["FStar"; "Range"; "range"]
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
-let __mk_range_lid = p2l ["FStar"; "Range"; "__mk_range"]
 let __explode_range_lid = p2l ["FStar"; "Range"; "explode"]
 let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 

@@ -468,8 +468,8 @@ let lookup_typ (env:Env.env) (ns:list string) : ML (option sigelt) =
     let lid = PC.p2l ns in
     Env.lookup_sigelt env lid
 
-let sigelt_attrs (se : sigelt) : list attribute =
-    se.sigattrs
+let sigelt_attrs (se : sigelt) : Sealed.sealed (list attribute) =
+    Sealed.seal se.sigattrs
 
 let set_sigelt_attrs (attrs : list attribute) (se : sigelt) : sigelt =
     { se with sigattrs = attrs }
@@ -531,13 +531,13 @@ let inspect_ident (i:ident) : string & Range.t =
 let pack_ident (i: string & Range.t) : ident =
   Ident.mk_ident i
 
-let sigelt_quals (se : sigelt) : ML (list RD.qualifier) =
-    se.sigquals |> List.map syntax_to_rd_qual
+let sigelt_quals (se : sigelt) : ML (Sealed.sealed (list RD.qualifier)) =
+    Sealed.seal (se.sigquals |> List.map syntax_to_rd_qual)
 
 let set_sigelt_quals (quals : list RD.qualifier) (se : sigelt) : ML sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
-let sigelt_opts (se : sigelt) : option vconfig = se.sigopts
+let sigelt_opts (se : sigelt) : Sealed.sealed (option vconfig) = Sealed.seal se.sigopts
 
 let embed_vconfig (vcfg : vconfig) : ML term =
   EMB.embed vcfg Range.dummyRange None EMB.id_norm_cb
@@ -930,6 +930,6 @@ let subst_term (s : list subst_elt) (t : term) : ML term =
 let subst_comp (s : list subst_elt) (c : comp) : ML comp =
   SS.subst_comp s c
 
-let range_of_term (t:term) = t.pos
-let range_of_sigelt (s:sigelt) = s.sigrng
+let range_of_term (t:term) = Sealed.seal t.pos
+let range_of_sigelt (s:sigelt) = Sealed.seal s.sigrng
 

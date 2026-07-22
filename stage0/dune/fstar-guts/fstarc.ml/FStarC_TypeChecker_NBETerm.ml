@@ -1552,16 +1552,6 @@ let e_either (ea : 'a embedding) (eb : 'b embedding) :
        lid_as_typ FStarC_Parser_Const.either_lid
          [FStarC_Syntax_Syntax.U_zero; FStarC_Syntax_Syntax.U_zero] uu___1)
     etyp
-let e___range : FStarC_Range_Type.t embedding=
-  let em1 cb r = Constant (Range r) in
-  let un1 cb t1 =
-    match t1 with
-    | Constant (Range r) -> FStar_Pervasives_Native.Some r
-    | uu___ -> FStar_Pervasives_Native.None in
-  mk_emb' em1 un1
-    (fun uu___ -> lid_as_typ FStarC_Parser_Const.__range_lid [] [])
-    (FStarC_Syntax_Embeddings_Base.emb_typ_of
-       FStarC_Syntax_Embeddings.e_range)
 let e_sealed (ea : 'a embedding) : 'a FStarC_Sealed.sealed embedding=
   let etyp uu___ =
     let uu___1 =
@@ -1606,8 +1596,15 @@ let e_sealed (ea : 'a embedding) : 'a FStarC_Sealed.sealed embedding=
        lid_as_typ FStarC_Parser_Const.sealed_lid
          [FStarC_Syntax_Syntax.U_zero] uu___1) etyp
 let e_range : FStarC_Range_Type.t embedding=
-  embed_as (e_sealed e___range) FStarC_Sealed.unseal FStarC_Sealed.seal
-    FStar_Pervasives_Native.None
+  let em1 cb r = Constant (Range r) in
+  let un1 cb t1 =
+    match t1 with
+    | Constant (Range r) -> FStar_Pervasives_Native.Some r
+    | uu___ -> FStar_Pervasives_Native.None in
+  mk_emb' em1 un1
+    (fun uu___ -> lid_as_typ FStarC_Parser_Const.range_lid [] [])
+    (FStarC_Syntax_Embeddings_Base.emb_typ_of
+       FStarC_Syntax_Embeddings.e_range)
 let e_issue : FStarC_Errors.issue embedding=
   let t_issue =
     FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue in

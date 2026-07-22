@@ -49,7 +49,7 @@ let extend_post_hint
     | None -> mk_array_pts_to_uninit_post init_t arr) in
   let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
-  let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) conjunct in
+  let res = Pulse.Checker.Base.extend_post_hint g p x n (mk_array init_t) conjunct in
   res
 
 

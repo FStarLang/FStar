@@ -64,7 +64,7 @@ let rec extend_env'_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let n = mk_ppname ppname Range.range_0 in
+    let n = mk_ppname ppname range_0 in
     let g, (_, x) = extend_env' g n ty in
     g, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
@@ -383,7 +383,7 @@ let rec extract_dv_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, R.Pat_Constant c, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let n = mk_ppname ppname Range.range_0 in
+    let n = mk_ppname ppname range_0 in
     let g, (_, x) = extend_env' g n ty in
     g, R.Pat_Var sort ppname, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
   | Pat_Dot_Term t ->
@@ -601,7 +601,7 @@ let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
         let body = extract_dv_recursive g body rec_name in
         mk_abs (extract_dv_binder b q) (close_term body x._2)
       | _ -> //last binder used for knot; replace it with the recursively bound name
-        let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) Range.range_0)] in
+        let body = LN.subst_st_term body [RT.DT 0 (wr R.(pack_ln (Tv_FVar rec_name)) range_0)] in
         extract_pulse_dv g body
     )
 

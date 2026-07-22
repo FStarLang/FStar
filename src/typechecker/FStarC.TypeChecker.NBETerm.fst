@@ -592,17 +592,6 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
     in
     mk_emb em un (fun () -> lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
-// Embedding range (unsealed)
-let e___range : embedding Range.t =
-    let em cb r = Constant (Range r) in
-    let un cb t =
-    match t with
-    | Constant (Range r) -> Some r
-    | _ ->
-        None
-    in
-    mk_emb' em un (fun () -> lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of Range.t)
-
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.
 let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
@@ -623,8 +612,18 @@ let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
     in
     mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
 
-let e_range : embedding Range.t =
-  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
+// Embedding range (unsealed). Ranges are no longer sealed, so this is the
+// single embedding for the range type.
+instance e_range : embedding Range.t =
+    let em cb r = Constant (Range r) in
+    let un cb t =
+    match t with
+    | Constant (Range r) -> Some r
+    | _ ->
+        None
+    in
+    mk_emb' em un (fun () -> lid_as_typ PC.range_lid [] []) (SE.emb_typ_of Range.t)
+
 
 let e_issue : embedding FStarC.Errors.issue =
     let t_issue = SE.type_of SE.e_issue in

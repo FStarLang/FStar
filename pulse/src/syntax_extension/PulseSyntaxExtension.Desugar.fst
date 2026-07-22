@@ -15,6 +15,7 @@
 *)
 
 module PulseSyntaxExtension.Desugar
+friend FStar.Range
 open FStarC
 open FStarC.Effect
 module Sugar = PulseSyntaxExtension.Sugar
@@ -54,9 +55,6 @@ let s_term_to_term (t:S.term) : Pulse.Syntax.Base.term = FStar.Pervasives.coerce
 let term_to_s_term (t:Pulse.Syntax.Base.term) : S.term = FStar.Pervasives.coerce_eq (admit()) t
 
 [@@coercion]
-let fstarc_range_to_range (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Pervasives.coerce_eq (admit()) r
-
-[@@coercion]
 let fstarc_vconst_to_constant (c:FStarC.Reflection.V2.Data.vconst) : Pulse.Syntax.Base.constant = FStar.Pervasives.coerce_eq (admit()) c
 
 [@@coercion]
@@ -65,8 +63,11 @@ let fstarc_ident_to_ident (i:FStarC.Ident.ident) : FStar.Stubs.Reflection.Types.
 (* General coerce for remaining mismatches *)
 let coerce (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq (admit()) x
 
+let seal_rng (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Sealed.seal r
+let swr t (r:FStarC.Range.range) = PSBuild.with_range t (seal_rng r)
+
 let ppname_of_id (i:ident) : ppname =
-  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (Ident.range_of_id i)
+  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (FStar.Sealed.seal (Ident.range_of_id i))
 
 let sw_mk_binder (x:ident) (t:term) : binder =
   mk_binder_ppname t (ppname_of_id x)
@@ -75,10 +76,10 @@ let sw_mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder =
   { Pulse.Syntax.Base.binder_ty = t; binder_ppname = ppname_of_id x; binder_attrs = coerce attrs }
 
 let sw_mk_bv (i:Pulse.Syntax.Base.index) (name:string) (r:FStarC.Range.range) : bv =
-  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) r }
+  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) (FStar.Sealed.seal r) }
 
 let sw_mk_fv (nm:lident) (r:FStarC.Range.range) : ML fv =
-  { fv_name = Ident.path_of_lid nm; fv_range = r }
+  { fv_name = Ident.path_of_lid nm; fv_range = seal_rng r }
 
 let sw_mk_st_comp (pre:term) (ret:binder) (post:term) : st_comp =
   { u = PSP.u_unknown; res = ret.binder_ty; pre = pre; post = post }
@@ -89,12 +90,12 @@ let pat_cons (hd:fv) (ps:list pattern) (_r:FStarC.Range.range) : ML pattern =
 
 let mk_branch (p:pattern) (t:st_term) (norw:bool) : branch = PSBuild.mk_branch p t norw
 
-let fn_defn rng id isrec us bs (comp:Pulse.Syntax.Base.comp) meas body : decl =
-  PSBuild.mk_decl (PSBuild.mk_fn_defn id isrec (coerce us) (coerce bs) comp (coerce meas) body) rng
+let fn_defn (rng:FStarC.Range.range) id isrec us bs (comp:Pulse.Syntax.Base.comp) meas body : decl =
+  PSBuild.mk_decl (PSBuild.mk_fn_defn id isrec (coerce us) (coerce bs) comp (coerce meas) body) (seal_rng rng)
 let fn_decl rng id us bs (comp:Pulse.Syntax.Base.comp) : decl =
-  PSBuild.mk_decl (PSBuild.mk_fn_decl id (coerce us) (coerce bs) comp) rng
+  PSBuild.mk_decl (PSBuild.mk_fn_decl id (coerce us) (coerce bs) comp) (seal_rng rng)
 let slprop_defn rng id bs body : decl =
-  PSBuild.mk_decl (PSBuild.mk_slprop_defn id (coerce bs) body) rng
+  PSBuild.mk_decl (PSBuild.mk_slprop_defn id (coerce bs) body) (seal_rng rng)
 let rec fold_right1 (f : 'a -> 'a -> ML 'a) (l : list 'a) : ML 'a =
   match l with
   | [h] -> h
@@ -189,9 +190,9 @@ let as_term (t:S.term)
   : term
   = match t.n with
     | S.Tm_unknown ->
-      PSP.pack_term_view PSP.Tm_Unknown t.pos
+      PSP.pack_term_view PSP.Tm_Unknown (seal_rng t.pos)
     | _ ->
-      PSP.wr t t.pos
+      PSP.wr t (seal_rng t.pos)
 
 let comp_to_ast_term (c:Sugar.computation_type) : ML (err A.term) =
   let open Sugar in
@@ -266,7 +267,7 @@ type admit_or_return_t =
 let st_term_of_admit_or_return (t:admit_or_return_t) : st_term =
   match t with
   | AdmitOrReturn_STTerm t -> t
-  | AdmitOrReturn_Return t -> PSBuild.with_range (PSBuild.tm_return PSP.tm_unknown false (as_term t)) t.pos
+  | AdmitOrReturn_Return t -> swr (PSBuild.tm_return PSP.tm_unknown false (as_term t)) t.pos
 
 let admit_or_return (env:env_t) (s:S.term)
   : ML admit_or_return_t
@@ -275,7 +276,7 @@ let admit_or_return (env:env_t) (s:S.term)
     match head.n, args with
     | S.Tm_fvar fv, [_] -> (
       if S.fv_eq_lid fv admit_lid
-      then AdmitOrReturn_STTerm (PSBuild.with_range (PSBuild.tm_admit STT PSP.u_zero (PSP.pack_term_view PSP.Tm_Unknown r) None) r)
+      then AdmitOrReturn_STTerm (swr (PSBuild.tm_admit STT PSP.u_zero (PSP.pack_term_view PSP.Tm_Unknown (seal_rng r)) None) r)
       else AdmitOrReturn_Return s
     )
     | _ -> AdmitOrReturn_Return s
@@ -312,7 +313,7 @@ let desugar_term (env:env_t) (t:A.term)
 let desugar_term_opt (env:env_t) (t:option A.term)
   : ML (err term)
   = match t with
-    | None -> return (PSP.pack_term_view PSP.Tm_Unknown FStarC.Range.dummyRange)
+    | None -> return (PSP.pack_term_view PSP.Tm_Unknown (seal_rng FStarC.Range.dummyRange))
     | Some e -> desugar_term env e
 
 //
@@ -448,7 +449,7 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
     | WILD ->
       return Pulse.Syntax.Base.WILD
     | SHOW_PROOF_STATE r ->
-      return (Pulse.Syntax.Base.SHOW_PROOF_STATE r)
+      return (Pulse.Syntax.Base.SHOW_PROOF_STATE (seal_rng r))
 
 // FIXME
 // should just mimic let resolve_lid
@@ -474,7 +475,7 @@ let mk_abs_with_comp qbs comp body range : ML _ =
           | None -> None
           | Some c -> Some (PSN.close_comp c bv.bv_index) in
         let asc : comp_ascription = { annotated = comp_asc; elaborated = None } in
-        None, PSBuild.with_range (PSBuild.tm_abs b q asc body') range)
+        None, swr (PSBuild.tm_abs b q asc body') range)
       qbs (comp, body)
   in
   abs
@@ -490,7 +491,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         return (st_term_of_admit_or_return (admit_or_return env tm))
       else (
         let! args = desugar_st_args env args in
-        return (PSBuild.with_range (PSBuild.tm_st tm args) s.range)
+        return (swr (PSBuild.tm_st tm args) s.range)
       )
 
     | ArrayAssignment { arr; index; value } ->
@@ -595,7 +596,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! cpre = desugar_slprop env handler_pre in
       let! handler = desugar_stmt env defer_handler in
       let! body = desugar_stmt env s2 in
-      return (PSBuild.with_range (PSBuild.tm_defer cpre handler body) s.range)
+      return (swr (PSBuild.tm_defer cpre handler body) s.range)
 
     | Sequence { s1; s2 } ->
       desugar_sequence env s1 s2 s.range
@@ -616,17 +617,17 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! else_ =
         match else_opt with
         | None ->
-          return (PSBuild.with_range (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const R.dummyRange)) R.dummyRange)
+          return (swr (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const (seal_rng R.dummyRange))) R.dummyRange)
         | Some e ->
           desugar_stmt env e
       in
-      return (PSBuild.with_range (PSBuild.tm_if head then_ else_ join_slprop) s.range)
+      return (swr (PSBuild.tm_if head then_ else_ join_slprop) s.range)
 
     | Match { head; returns_annot; branches } ->
       let! head = desugar_stmt env head in
       let! returns_annot = map_err_opt (fun (_, t, _opens) -> desugar_slprop env t) returns_annot in
       let! branches = branches |> mapM (desugar_branch env) in
-      return (PSBuild.with_range (PSBuild.tm_match head returns_annot branches) s.range)
+      return (swr (PSBuild.tm_match head returns_annot branches) s.range)
 
     | While { guard; invariant=invs0; body } ->
       let! invs = invs0 |> mapM (function
@@ -661,22 +662,22 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
         | _ -> mapM (tosyntax env) meas_list
       in
 
-      let while = PSBuild.with_range (PSBuild.tm_while inv guard body loop_requires (coerce meas)) s.range in
+      let while = swr (PSBuild.tm_while inv guard body loop_requires (coerce meas)) s.range in
       let while = PSN.close_st_term while lblx.index in
 
       let loop_ensures = invs0 |> L.concatMap (function | LoopEnsures r -> [r] | _ -> []) in
       let! loop_ensures = mapM (tosyntax env) loop_ensures in
       let loop_ensures =
         match loop_ensures with
-        | [] -> PSP.pack_term_view PSP.Tm_Emp s.range
-        | r::rs -> PSP.pack_term_view (PSP.Tm_Pure (s_term_to_term (L.fold_left U.mk_disj r rs))) s.range in
-      let loop_ensures = C_ST (sw_mk_st_comp (PSP.pack_term_view PSP.Tm_Unknown s.range) (sw_mk_binder (id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown s.range)) loop_ensures) in
-      return (PSBuild.with_range (PSBuild.tm_forward_jump_label while (ppname_of_id breaklbl) loop_ensures) s.range)
+        | [] -> PSP.pack_term_view PSP.Tm_Emp (seal_rng s.range)
+        | r::rs -> PSP.pack_term_view (PSP.Tm_Pure (s_term_to_term (L.fold_left U.mk_disj r rs))) (seal_rng s.range) in
+      let loop_ensures = C_ST (sw_mk_st_comp (PSP.pack_term_view PSP.Tm_Unknown (seal_rng s.range)) (sw_mk_binder (id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown (seal_rng s.range))) loop_ensures) in
+      return (swr (PSBuild.tm_forward_jump_label while (ppname_of_id breaklbl) loop_ensures) s.range)
 
     | Introduce { slprop; witnesses } -> (
       let! vp = desugar_slprop env slprop in
       let! witnesses = witnesses |> mapM (desugar_term env) in
-      return (PSBuild.with_range (PSBuild.tm_intro_exists vp witnesses) s.range)
+      return (swr (PSBuild.tm_intro_exists vp witnesses) s.range)
     )
 
     | LetBinding _ ->
@@ -690,7 +691,7 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       FStarC.Syntax.Util.process_pragma (S.PushOptions <| Some options) s.range;
       let! body = desugar_stmt env body in
       FStarC.Syntax.Util.process_pragma S.PopOptions s.range;
-      return (PSBuild.with_range (PSBuild.tm_pragma_with_options options body) s.range)
+      return (swr (PSBuild.tm_pragma_with_options options body) s.range)
 
     | ForwardJumpLabel { body; lbl; post } ->
       let env', lblx = push_bv env lbl in
@@ -698,17 +699,17 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let body = PSN.close_st_term body lblx.index in
       let! post =
         match post with
-        | None -> return (PSP.pack_term_view PSP.Tm_Emp s.range)
+        | None -> return (PSP.pack_term_view PSP.Tm_Emp (seal_rng s.range))
         | Some (_, t, _opens) -> desugar_slprop env t
       in
-      let post = C_ST (sw_mk_st_comp (PSP.pack_term_view PSP.Tm_Unknown s.range) (sw_mk_binder (id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown s.range)) post) in
-      return (PSBuild.with_range (PSBuild.tm_forward_jump_label body (ppname_of_id lbl) post) s.range)
+      let post = C_ST (sw_mk_st_comp (PSP.pack_term_view PSP.Tm_Unknown (seal_rng s.range)) (sw_mk_binder (id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown (seal_rng s.range))) post) in
+      return (swr (PSBuild.tm_forward_jump_label body (ppname_of_id lbl) post) s.range)
 
     | Goto { lbl; arg } ->
       let! lbl : S.term = tosyntax env (sugar_var (id_as_lid lbl) s.range) in
       let arg = match arg with Some arg -> arg | None -> sugar_unit_const s.range in
       let! arg : S.term = tosyntax env arg in
-      return (PSBuild.with_range (PSBuild.tm_goto lbl arg) s.range)
+      return (swr (PSBuild.tm_goto lbl arg) s.range)
 
     | Defer { handler_pre; defer_handler } ->
       fail "defer must be followed by a body (use defer pre { handler }; body)" s.range
@@ -839,7 +840,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
           }
         in
         let! lam = desugar_lambda env lam in
-        return <| PSBuild.with_range (PSBuild.tm_bind b lam s2) r
+        return <| swr (PSBuild.tm_bind b lam s2) r
 
       | Sugar.Lambda_initializer {
           id; is_rec=false;
@@ -852,13 +853,13 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         let! env, bs, bvs = desugar_binders env binders in
         let! comp =
           match ascription with
-          | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown range))
+          | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown (seal_rng range)))
           | Some t -> let! t = desugar_term env t in return (C_Tot t)
         in
         let! body = desugar_lambda env body in
         let! qbs = map2 faux bs bvs in
         let abs = mk_abs_with_comp qbs (Some comp) body range in
-        return <| PSBuild.with_range (PSBuild.tm_bind b abs s2) r
+        return <| swr (PSBuild.tm_bind b abs s2) r
 
       | Sugar.Lambda_initializer _ ->
         fail "Nested functions are not yet fully supported" r
@@ -868,21 +869,21 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
         let t =
           match admit_or_return env s1 with
           | AdmitOrReturn_STTerm s1 ->
-            PSBuild.with_range (PSBuild.tm_bind b s1 s2) r
+            swr (PSBuild.tm_bind b s1 s2) r
           | AdmitOrReturn_Return s1 ->
-            PSBuild.with_range (PSBuild.tm_totbind b (as_term s1) s2) r
+            swr (PSBuild.tm_totbind b (as_term s1) s2) r
         in
         return t
 
       | Default_initializer (Some e1, args) ->
         let! s1 : S.term = tosyntax env e1 in
         let! args = desugar_st_args env args in
-        let t = PSBuild.with_range (PSBuild.tm_bind b (PSBuild.with_range (PSBuild.tm_st s1 args) r) s2) r in
+        let t = swr (PSBuild.tm_bind b (swr (PSBuild.tm_st s1 args) r) s2) r in
         return t
 
       | Stmt_initializer e ->
         let! s = desugar_stmt env e in
-        return (PSBuild.with_range (PSBuild.tm_bind b s s2) r)
+        return (swr (PSBuild.tm_bind b s s2) r)
     )
     | Some MUT //these are handled the same for now
     | Some REF ->
@@ -896,7 +897,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
             return (Some init)
           | None -> return None in
         let! len = desugar_term env len in
-        return (PSBuild.with_range (PSBuild.tm_with_local_array b init len s2) r)
+        return (swr (PSBuild.tm_with_local_array b init len s2) r)
       | Sugar.Default_initializer (init, []) ->
         let! init =
           match init with
@@ -904,7 +905,7 @@ and desugar_bind (env:env_t) (lb:_) (s2:Sugar.stmt) (r:R.range)
             let! init = desugar_term env init in
             return (Some init)
           | None -> return None in
-        return (PSBuild.with_range (PSBuild.tm_with_local b init s2) r)
+        return (swr (PSBuild.tm_with_local b init s2) r)
       | Sugar.Default_initializer (e1, args) ->
         fail "Lambda arguments not yet supported in let mut" r
 
@@ -918,8 +919,8 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
       else s1
     in
     let! s2 = desugar_stmt env s2 in
-    let annot = sw_mk_binder (Ident.id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown r) in
-    return (PSBuild.with_range (PSBuild.tm_bind annot s1 s2) r)
+    let annot = sw_mk_binder (Ident.id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown (seal_rng r)) in
+    return (swr (PSBuild.tm_bind annot s1 s2) r)
 
 and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
   : ML (err st_term)
@@ -928,13 +929,13 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let assume_fv = sw_mk_fv assume_lid r in
       let assume_ : term = PSP.tm_fvar assume_fv in
       let! p = desugar_slprop env p in
-      let s1 = PSBuild.with_range (PSBuild.tm_st (S.mk_Tm_app (term_to_s_term assume_) [term_to_s_term p, None] r) []) r in
+      let s1 = swr (PSBuild.tm_st (S.mk_Tm_app (term_to_s_term assume_) [term_to_s_term p, None] r) []) r in
       let! s2 =
         match k with
-        | None -> return (PSBuild.with_range (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const r)) r)
+        | None -> return (swr (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const (seal_rng r))) r)
         | Some s2 -> desugar_stmt env s2 in
-      let annot = sw_mk_binder (Ident.id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown r) in
-      return (PSBuild.with_range (PSBuild.tm_bind annot s1 s2) r)
+      let annot = sw_mk_binder (Ident.id_of_text "_") (PSP.pack_term_view PSP.Tm_Unknown (seal_rng r)) in
+      return (swr (PSBuild.tm_bind annot s1 s2) r)
 
     | Sugar.ProofHintWithBinders { hint_type = Sugar.ASSUME _; binders=b1::_ } ->
       fail "'assume' cannot have binders" b1.brange
@@ -945,13 +946,13 @@ and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.
       let! ht = desugar_hint_type env hint_type in
       let! s2 =
         match k with
-        | None -> return (PSBuild.with_range (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const r)) r)
+        | None -> return (swr (PSBuild.tm_return PSP.tm_unknown false (PSP.wr S.unit_const (seal_rng r))) r)
         | Some s2 -> desugar_stmt env s2 in
       let binders = L.map snd binders in
       let sub = PSN.bvs_as_subst vars in
       let s2 = PSN.subst_st_term s2 sub in
       let ht = PSN.subst_proof_hint ht sub in
-      return (PSBuild.with_range (Tm_ProofHintWithBinders { hint_type=ht; binders=PSN.close_binders binders vars; t=s2 }) r)
+      return (swr (Tm_ProofHintWithBinders { hint_type=ht; binders=PSN.close_binders binders vars; t=s2 }) r)
     | _ -> fail "Expected ProofHintWithBinders" s1.range
 
 and desugar_binders (env:env_t) (bs:Sugar.binders)
@@ -1023,7 +1024,7 @@ let desugar_decl (env:env_t) (d:Sugar.decl)
     let! (env, bs, bvs) =
       if is_rec
       then
-        let ty = PSP.pack_term_view PSP.Tm_Unknown FStarC.Range.dummyRange in
+        let ty = PSP.pack_term_view PSP.Tm_Unknown (seal_rng FStarC.Range.dummyRange) in
         let env, bv = push_bv env id in
         let b = sw_mk_binder id ty in
         return (env, bs@[(None, b)], bvs@[bv])
@@ -1040,7 +1041,7 @@ let desugar_decl (env:env_t) (d:Sugar.decl)
     let! env, bs, bvs = desugar_binders env binders in
     let! cmp =
       match ascription with
-      | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown range))
+      | None -> return (C_Tot (PSP.pack_term_view PSP.Tm_Unknown (seal_rng range)))
       | Some t -> let! t = desugar_term env t in return (C_Tot t)
     in
     let! body = desugar_lambda env body in

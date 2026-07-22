@@ -1237,7 +1237,7 @@ and readback (cfg:config) (x:t) : ML term =
     | Constant (Int i) -> with_range (U.exp_int (show i))
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
-    | Constant (Range r) -> PO.embed_simple #_ #EMB.e___range x.nbe_r r
+    | Constant (Range r) -> PO.embed_simple #_ #EMB.e_range x.nbe_r r
     | Constant (Real r) ->  PO.embed_simple x.nbe_r (Real.Real r)
     | Constant (SConst c) -> mk (S.Tm_constant c)
 

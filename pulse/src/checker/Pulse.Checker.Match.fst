@@ -103,7 +103,7 @@ let check_branch
   // T.print ("Elaborated pattern = " ^ Pulse.Show.show (fst (Some?.v elab_p)));
   let elab_p_tm = fst (Some?.v elab_p) in
   let eq_typ = mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
-  let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
+  let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let e =
     if norw

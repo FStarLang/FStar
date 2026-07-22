@@ -293,9 +293,8 @@ instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.To
 instance val e_tuple4 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> Prims.Tot (embedding ('a & 'b & 'c & 'd))
 instance val e_tuple5 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> embedding 'e -> Prims.Tot (embedding ('a & 'b & 'c & 'd & 'e))
 instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
-val e___range  : embedding Range.t (* unsealed *)
 instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStarC.Sealed.sealed 'a))
-instance val e_range  : embedding Range.t (* sealed *)
+instance val e_range  : embedding Range.t
 instance val e_issue  : embedding FStarC.Errors.issue
 instance val e_document : embedding FStarC.Pprint.document
 instance val e_vconfig  : embedding vconfig

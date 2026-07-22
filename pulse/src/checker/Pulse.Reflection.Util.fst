@@ -807,7 +807,7 @@ let fv_has_attr_string (attr_name:string) (f : R.fv) : T.Tac bool =
   match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
   | None -> false
   | Some se ->
-    let attrs = T.sigelt_attrs se in
+    let attrs = T.unseal (T.sigelt_attrs se) in
     attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
 
 let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
@@ -861,5 +861,5 @@ let fv_has_qual (qual:R.qualifier) (f : R.fv) : T.Tac bool =
   match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
   | None -> false
   | Some se ->
-    let quals = T.sigelt_quals se in
+    let quals = T.unseal (T.sigelt_quals se) in
     quals |> T.tryFind (fun x -> qual_eq qual x)

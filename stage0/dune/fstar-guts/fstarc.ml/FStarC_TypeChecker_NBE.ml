@@ -2439,8 +2439,8 @@ and readback (cfg : config) (x : FStarC_TypeChecker_NBETerm.t) :
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Range r)
        ->
        FStarC_TypeChecker_Primops_Base.embed_simple
-         FStarC_Syntax_Embeddings.e___range
-         x.FStarC_TypeChecker_NBETerm.nbe_r r
+         FStarC_Syntax_Embeddings.e_range x.FStarC_TypeChecker_NBETerm.nbe_r
+         r
    | FStarC_TypeChecker_NBETerm.Constant (FStarC_TypeChecker_NBETerm.Real r)
        ->
        FStarC_TypeChecker_Primops_Base.embed_simple

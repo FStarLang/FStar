@@ -171,17 +171,17 @@ match, etc. *)
 val push_namedv           : env -> namedv -> env
 
 (** Attributes are terms, not to be confused with Prims.attribute. *)
-val sigelt_attrs     : sigelt -> list term
+val sigelt_attrs     : sigelt -> sealed (list term)
 val set_sigelt_attrs : list term -> sigelt -> sigelt
 
 (** Setting and reading qualifiers from sigelts *)
-val sigelt_quals     : sigelt -> list qualifier
+val sigelt_quals     : sigelt -> sealed (list qualifier)
 val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 
 (** Obtains the vconfig under which a particular sigelt was typechecked.
     This function returns None if "--record_options" was not on when
     typechecking the sigelt. *)
-val sigelt_opts : sigelt -> option vconfig
+val sigelt_opts : sigelt -> sealed (option vconfig)
 
 (** Embed a vconfig as a term, for instance to use it with the check_with attribute *)
 val embed_vconfig : vconfig -> term
@@ -193,7 +193,7 @@ val subst_term : subst_t -> term -> term
 val subst_comp : subst_t -> comp -> comp
 
 (** Get the range of a term, i.e., the source location where it was defined. *)
-val range_of_term : term -> range
+val range_of_term : term -> sealed range
 
 (** Get the range of a sigelt, i.e., the source location where it was defined. *)
-val range_of_sigelt : sigelt -> range
+val range_of_sigelt : sigelt -> sealed range

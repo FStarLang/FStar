@@ -103,7 +103,7 @@ let tm_arrow (b:binder) (q:option qualifier) (c:comp) : term =
 
 let tm_type (u:universe) : term = RT.tm_type u
 
-let mk_bvar (s:string) (r:Range.range) (i:index) : term =
+let mk_bvar (s:string) (r:range) (i:index) : term =
   tm_bvar {bv_index=i;bv_ppname=mk_ppname (RT.seal_pp_name s) r}
 
 let null_var (v:var) : term =
@@ -317,7 +317,7 @@ let pack_term_view (top:term_view) (r:range)
       
     | Tm_ExistsSL u b body
     | Tm_ForallSL u b body ->
-      let t = set_range_of b.binder_ty b.binder_ppname.range in
+      let t = wr b.binder_ty b.binder_ppname.range in
       let abs = mk_abs_with_name_and_range b.binder_ppname.name b.binder_ppname.range t R.Q_Explicit body in
       if Tm_ExistsSL? top
       then w (mk_exists u t abs)
@@ -340,11 +340,11 @@ let pack_term_view (top:term_view) (r:range)
 
 let term_range (t:term) = range_of_term t
 let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
-let tm_slprop = pack_term_view_wr Tm_SLProp FStar.Range.range_0
-let tm_inames = pack_term_view_wr Tm_Inames FStar.Range.range_0
-let tm_emp = pack_term_view_wr Tm_Emp FStar.Range.range_0
-let tm_emp_inames = pack_term_view_wr Tm_EmpInames FStar.Range.range_0
-let tm_unknown = pack_term_view_wr Tm_Unknown FStar.Range.range_0
+let tm_slprop = pack_term_view_wr Tm_SLProp range_0
+let tm_inames = pack_term_view_wr Tm_Inames range_0
+let tm_emp = pack_term_view_wr Tm_Emp range_0
+let tm_emp_inames = pack_term_view_wr Tm_EmpInames range_0
+let tm_unknown = pack_term_view_wr Tm_Unknown range_0
 let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (range_of_term p)
 let tm_star (l:slprop) (r:slprop) : term =
   pack_term_view (Tm_Star l r)

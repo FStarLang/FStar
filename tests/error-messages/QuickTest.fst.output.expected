@@ -7,7 +7,7 @@
         (forall (p: (_: Prims.unit -> Prims.GTot Prims.prop)).
             (forall (u179: Prims.unit). {:pattern Prims.guard_free (p u179)}
                 p ()) ==>
-            FStar.Range.labeled (FStar.Sealed.seal QuickTest(1,2-3,4))
+            FStar.Range.labeled QuickTest(1,2-3,4)
               ""
               (QuickTest.f 4 - QuickTest.f 4 == 0 /\ QuickTest.f 4 == 0 /\
                 (forall (pure_result: Prims.unit).

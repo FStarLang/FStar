@@ -141,7 +141,7 @@ let reflection_primops : list PO.primitive_step = [
     RB.embed_vconfig;
 
   mk1 "sigelt_attrs"
-    #_ #(EMB.e_list RE.e_term)
+    #_ #(EMB.e_sealed (EMB.e_list RE.e_term))
     RB.sigelt_attrs;
 
   mk2 "set_sigelt_attrs"

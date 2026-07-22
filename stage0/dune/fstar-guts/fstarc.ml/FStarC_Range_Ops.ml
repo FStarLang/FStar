@@ -1,15 +1,28 @@
 open Prims
+let compare_pos (p1 : FStarC_Range_Type.pos) (p2 : FStarC_Range_Type.pos) :
+  FStarC_Order.order=
+  let uu___ =
+    FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.FStarC_Range_Type.line
+      p2.FStarC_Range_Type.line in
+  FStarC_Order.lex uu___
+    (fun uu___1 ->
+       FStarC_Class_Ord.cmp FStarC_Class_Ord.ord_int p1.FStarC_Range_Type.col
+         p2.FStarC_Range_Type.col)
+let deq_pos : FStarC_Range_Type.pos FStarC_Class_Deq.deq=
+  { FStarC_Class_Deq.op_Equals_Question = (=) }
+let ord_pos : FStarC_Range_Type.pos FStarC_Class_Ord.ord=
+  { FStarC_Class_Ord.super = deq_pos; FStarC_Class_Ord.cmp = compare_pos }
 let union_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   FStarC_Range_Type.rng=
   if r1.FStarC_Range_Type.file_name <> r2.FStarC_Range_Type.file_name
   then r2
   else
     (let start_pos =
-       FStarC_Class_Ord.min FStarC_Range_Type.ord_pos
-         r1.FStarC_Range_Type.start_pos r2.FStarC_Range_Type.start_pos in
+       FStarC_Class_Ord.min ord_pos r1.FStarC_Range_Type.start_pos
+         r2.FStarC_Range_Type.start_pos in
      let end_pos =
-       FStarC_Class_Ord.max FStarC_Range_Type.ord_pos
-         r1.FStarC_Range_Type.end_pos r2.FStarC_Range_Type.end_pos in
+       FStarC_Class_Ord.max ord_pos r1.FStarC_Range_Type.end_pos
+         r2.FStarC_Range_Type.end_pos in
      FStarC_Range_Type.mk_rng r1.FStarC_Range_Type.file_name start_pos
        end_pos)
 let union_ranges (r1 : FStarC_Range_Type.range)
@@ -26,11 +39,11 @@ let rng_included (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   then false
   else
     (let uu___ =
-       FStarC_Class_Ord.op_Less_Equals_Question FStarC_Range_Type.ord_pos
+       FStarC_Class_Ord.op_Less_Equals_Question ord_pos
          r2.FStarC_Range_Type.start_pos r1.FStarC_Range_Type.start_pos in
      if uu___
      then
-       FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
+       FStarC_Class_Ord.op_Greater_Equals_Question ord_pos
          r2.FStarC_Range_Type.end_pos r1.FStarC_Range_Type.end_pos
      else false)
 let string_of_pos (pos : FStarC_Range_Type.pos) : Prims.string=
@@ -106,8 +119,7 @@ let compare_use_range (r1 : FStarC_Range_Type.range)
   compare_rng r1.FStarC_Range_Type.use_range r2.FStarC_Range_Type.use_range
 let range_before_pos (m1 : FStarC_Range_Type.range)
   (p : FStarC_Range_Type.pos) : Prims.bool=
-  FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos p
-    (end_of_range m1)
+  FStarC_Class_Ord.op_Greater_Equals_Question ord_pos p (end_of_range m1)
 let end_of_line (p : FStarC_Range_Type.pos) : FStarC_Range_Type.pos=
   {
     FStarC_Range_Type.line = (p.FStarC_Range_Type.line);
@@ -138,14 +150,13 @@ let intersect_rng (r1 : FStarC_Range_Type.rng) (r2 : FStarC_Range_Type.rng) :
   then r2
   else
     (let start_pos =
-       FStarC_Class_Ord.max FStarC_Range_Type.ord_pos
-         r1.FStarC_Range_Type.start_pos r2.FStarC_Range_Type.start_pos in
+       FStarC_Class_Ord.max ord_pos r1.FStarC_Range_Type.start_pos
+         r2.FStarC_Range_Type.start_pos in
      let end_pos =
-       FStarC_Class_Ord.min FStarC_Range_Type.ord_pos
-         r1.FStarC_Range_Type.end_pos r2.FStarC_Range_Type.end_pos in
+       FStarC_Class_Ord.min ord_pos r1.FStarC_Range_Type.end_pos
+         r2.FStarC_Range_Type.end_pos in
      let uu___ =
-       FStarC_Class_Ord.op_Greater_Equals_Question FStarC_Range_Type.ord_pos
-         start_pos end_pos in
+       FStarC_Class_Ord.op_Greater_Equals_Question ord_pos start_pos end_pos in
      if uu___
      then r2
      else
