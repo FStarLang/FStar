@@ -152,7 +152,7 @@ let rec readback_pat (p : R.pattern) : option pattern =
   | R.Pat_Cons fv _ args ->
     let fv = R.inspect_fv fv in
     let? args = map_opt_dec p readback_sub_pat args in
-    Some (Pat_Cons {fv_name=fv; fv_range=Range.range_0} args)
+    Some (Pat_Cons {fv_name=fv; fv_range=range_0} args)
   | R.Pat_Constant c ->
     Some (Pat_Constant c)
   | R.Pat_Var st nm ->
@@ -163,7 +163,7 @@ let rec readback_pat (p : R.pattern) : option pattern =
     then None
     else
       let t = RU.deep_compress t in
-      let t = RU.set_range t Range.range_0 in
+      let t = RU.set_range t range_0 in
       Some (Pat_Dot_Term (Some t))
   | _ -> None
 and readback_sub_pat (pb : R.pattern & bool) : option (pattern & bool) =
@@ -184,7 +184,7 @@ let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
 
     assert (readback_pat rp ==
              (let? args = map_opt_dec rp readback_sub_pat r_subpats in
-              Some (Pat_Cons {fv_name=fv; fv_range=Range.range_0} args)))
+              Some (Pat_Cons {fv_name=fv; fv_range=range_0} args)))
         by (T.norm [delta; zeta]);
 
     let aux1 (i:nat{i < L.length r_subpats})

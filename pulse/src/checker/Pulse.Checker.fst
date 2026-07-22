@@ -153,8 +153,8 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   ] in
   (* This tweaks the range to go to the beginning of the line. *)
   let rng =
-    let (f, l1, c1, l2, c2) = FStar.Range.explode rng in
-    FStar.Range.mk_range f l1 0 l1 2
+    let (f, l1, c1, l2, c2) = FStar.Range.explode (T.unseal rng) in
+    FStar.Sealed.seal (FStar.Range.mk_range f l1 0 l1 2)
   in
   info_doc g (Some rng) msg
 

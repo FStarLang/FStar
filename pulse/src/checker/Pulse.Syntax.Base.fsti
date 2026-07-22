@@ -30,7 +30,9 @@ let index = nat
 type universe = R.universe
 
 (* locally nameless. *)
-let range = FStar.Range.range
+let range = FStar.Sealed.sealed FStar.Range.range
+
+let range_0 : range = FStar.Sealed.seal FStar.Range.range_0
 
 noeq
 type ppname0 = {
@@ -41,18 +43,18 @@ type ppname0 = {
 let ppname_default =  {
     // This used to be "_", but that is a *null binder* and behaves very magically
     name = FStar.Sealed.seal "__";
-    range = FStar.Range.range_0
+    range = range_0
 }
 
 let ppname = ppname0
-let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
+let mk_ppname (name:RT.pp_name_t) (range:range) : ppname = {
     name = name;
     range = range
 }
 
 let mk_ppname_no_range (s:string) : ppname = {
   name = FStar.Sealed.seal s;
-  range = FStar.Range.range_0;
+  range = range_0;
 }
 
 noeq
@@ -78,7 +80,7 @@ type fv = {
   fv_name : R.name;
   fv_range : range;
 }
-let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
+let as_fv l = { fv_name = l; fv_range = range_0 }
 
 type term = R.term
 type slprop = term
@@ -111,8 +113,8 @@ type comp =
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
   | C_STGhost  : inames:term -> st_comp -> comp
 
-val range_of_st_comp (st:st_comp) : R.range
-val range_of_comp (c:comp) : R.range
+val range_of_st_comp (st:st_comp) : range
+val range_of_comp (c:comp) : range
 
 
 let stateful_comp (c:comp) = not (C_Tot? c)

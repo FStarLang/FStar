@@ -45,7 +45,7 @@ let tm_false = tm_constant R.C_False
 let tm_l_false = tm_fvar (as_fv R.false_qn)
 include Pulse.Reflection.Util { tm_is_unreachable }
 
-let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
+let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -514,14 +514,14 @@ let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Ob
 
 let wrst (ct:comp_st) (t:st_term') : st_term =
   { term = t;
-    range = FStar.Range.range_0;
+    range = range_0;
     effect_tag = as_effect_hint (ctag_of_comp_st ct);
     source = false;
     seq_lhs = false;
   }
 let wtag (ct:option ctag)  (t:st_term') : st_term =
   { term = t;
-    range = FStar.Range.range_0;
+    range = range_0;
     effect_tag = ct;
     source = false;
     seq_lhs = false;
@@ -546,7 +546,7 @@ let subtyping_token g t1 t2 =
   T.subtyping_token (elab_env g) t1 t2
 
 val readback_binding : R.binding -> var_binding
-let readback_binding b = { n = { name = b.ppname; range = Range.range_0 }; x = b.uniq; ty = b.sort }
+let readback_binding b = { n = { name = b.ppname; range = range_0 }; x = b.uniq; ty = b.sort }
 
 
 let inv_disjointness (inames i:term) = 

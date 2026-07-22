@@ -449,7 +449,7 @@ let tc_type_phase1 (g: env) (t: term) : T.Tac (term & universe) =
         fquotes (pp sort);
         text "This is the type of:";
         fquotes (pp t);
-      ] (Some (RU.range_of_term t)) in
+      ] (Some (T.unseal (RU.range_of_term t))) in
   t, u
 
 let core_compute_term_type (g:env) (t:term)

@@ -378,7 +378,7 @@ let pure_eq_unif (g: env) (p: term) skip_eq_uvar : Dv bool =
   | None -> false
 
 // Restore a previously-captured error_range_bound around a thunk.
-let with_saved_bound (saved_bound: option Range.range) (f: unit -> T.Tac 'a)
+let with_saved_bound (saved_bound: option RU.range) (f: unit -> T.Tac 'a)
   : T.Tac 'a =
   match saved_bound with
   | Some r -> RU.with_error_bound r f
@@ -1421,7 +1421,7 @@ let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [
     cont_elab_equiv before,
     cont_elab_equiv after |)
 
-let prove rng (g: env) (ctxt goals: slprop) allow_amb :
+let prove (rng:range) (g: env) (ctxt goals: slprop) allow_amb :
     T.Tac (g':env { env_extends g' g } &
       ctxt': slprop &
       continuation_elaborator g ctxt g' (goals `tm_star` ctxt')) =
@@ -1436,7 +1436,7 @@ let prove rng (g: env) (ctxt goals: slprop) allow_amb :
         text "The prover was started with goal:" ^^ indent (pp goals);
         text "and initial context:" ^^ indent (pp ctxt);
       ] else []))
-    (Some rng)
+    (Some (T.unseal rng))
   else
     let (| g', ctxt', k |) = prover_result_solved_unpack res in
 

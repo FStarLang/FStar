@@ -27,9 +27,9 @@ open Pulse.Elaborate
 
 let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (wr t FStar.Range.range_0) x i)
+    (ensures (freevars (close_term' (wr t range_0) x i)
             `Set.equal`
-             (freevars (wr t FStar.Range.range_0) `set_minus` x)))
+             (freevars (wr t range_0) `set_minus` x)))
   = admit()
 
 #push-options "--z3rlimit_factor 2"

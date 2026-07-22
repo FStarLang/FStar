@@ -11,7 +11,7 @@ let tau () : Tac decls =
   match lookup_typ (top_env ()) ["SigeltOpts"; "sp1"] with
   | None -> fail "1"
   | Some se ->
-    match sigelt_opts se with
+    match unseal (sigelt_opts se) with
     | None -> fail "2"
     | Some opts ->
       let lb = {

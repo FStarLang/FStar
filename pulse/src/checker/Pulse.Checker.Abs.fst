@@ -360,7 +360,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
         nop
       ) else
       
-      let b = mk_binder "res" Range.range_0 c2.res in
+      let b = mk_binder "res" range_0 c2.res in
       let phi = tm_inames_subset j i in
       // Or:
       // let typing = core_check_tot_term g phi tm_prop in
