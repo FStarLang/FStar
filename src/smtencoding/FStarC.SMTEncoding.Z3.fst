@@ -591,7 +591,10 @@ let mk_input (fresh : bool) (theory : list decl) : ML (string & option string & 
     let options = z3_options ver in
     let options =
       options ^
-      Format.fmt1 "(set-option :smt.random-seed %s)\n" (show (Options.z3_seed ()))
+      Format.fmt1 "(set-option :smt.random-seed %s)\n" (show (Options.z3_seed ())) ^
+      (if Options.Ext.enabled "higher_order_smt"
+       then "(set-option :smt.ho_matching true)\n"
+       else "")
     in
     let options = options ^ (Options.z3_smtopt() |> String.concat "\n") ^ "\n\n" in
     if Options.print_z3_statistics() then context_profile theory;
