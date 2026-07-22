@@ -133,6 +133,7 @@ type stmt' =
 
   | LetBinding {
       norw:bool; (* add norewrite to the branch if this desugars to a match. *)
+      rw:bool; (* 'let rw x = e': follow the binding with 'assert rewrites_to x e' *)
       qualifier: option mut_or_ref;
       pat:A.pattern;
       typ:option A.term;
@@ -480,8 +481,9 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
   | Expr e1, Expr e2 -> AD.eq_term e1.e e2.e && forall2 eq_lambda e1.args e2.args
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AD.eq_term a1 a2 && AD.eq_term i1 i2 && AD.eq_term v1 v2
-  | LetBinding { norw=norw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
+  | LetBinding { norw=norw1; rw=rw1; qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { norw=norw2; rw=rw2; qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
     norw1 = norw2 &&
+    rw1 = rw2 &&
     eq_opt eq_mut_or_ref q1 q2 &&
     AD.eq_pattern pat1 pat2 &&
     eq_opt AD.eq_term t1 t2 &&
@@ -715,7 +717,7 @@ let add_decorations d ds =
 let mk_expr e args = Expr { e; args }
 let mk_unit rng = Expr { e = A.mk_term (A.Const FStarC.Const.Const_unit) rng A.Expr; args = [] }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
-let mk_let_binding norw qualifier pat typ init = LetBinding { norw; qualifier; pat; typ; init }
+let mk_let_binding norw rw qualifier pat typ init = LetBinding { norw; rw; qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
