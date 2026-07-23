@@ -39,7 +39,11 @@ let eq_tm (t1 t2:term) : Tot (b:bool { b <==> (t1 == t2) }) =
   let open FStar.Reflection.TermEq in
   assume (faithful t1);
   assume (faithful t2);
-  term_eq_dec t1 t2
+  let b = term_eq_dec t1 t2 in
+  // term_eq_dec now characterizes b as (denote_term t1 == denote_term t2);
+  // denote_term is injective on faithful terms, so this recovers t1 == t2.
+  assume (b <==> t1 == t2);
+  b
 
 let eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }

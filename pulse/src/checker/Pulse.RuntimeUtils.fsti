@@ -86,17 +86,18 @@ val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 val beta_lax (g:env) (t:T.term) : T.term
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 val norm_well_typed_term
       (#g:T.env)
       (#t:R.term)
       (#eff:T.tot_or_ghost)
       (#k:Ghost.erased R.term)
-      (_:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (_:Ghost.erased (RT.typing g (RTS.denote_term t) (eff, RTS.denote_term (Ghost.reveal k))))
       (_:list norm_step)
   : T.Tac (
       t':R.term &
-      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
-      Ghost.erased (RT.related g t RT.R_Eq t')
+      Ghost.erased (RT.typing g (RTS.denote_term t') (eff, RTS.denote_term (Ghost.reveal k))) &
+      Ghost.erased (RT.related g (RTS.denote_term t) RT.R_Eq (RTS.denote_term t'))
     )
 val add_attribute (x:T.sigelt) (_:R.term) : (y:T.sigelt { x == y })
 val get_attributes (x:T.sigelt) : T.Tac (list R.term) 
@@ -123,6 +124,6 @@ val stack_dump : unit -> Dv string
 val push_options () : Dv unit
 val pop_options () : Dv unit
 val set_options (opts: string) : Dv unit
-val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g t (T.E_Total, T.pack_ln (FStar.Stubs.Reflection.V2.Data.Tv_Type u))}))
+val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g (RTS.denote_term t) (T.E_Total, RTS.Ts_Type (RTS.denote_universe u))}))
 
 val try_lookup_lid : T.env -> R.name -> option ((universes & typ) & range)

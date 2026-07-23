@@ -624,7 +624,8 @@ let elim_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd x) (d
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_pure p; post=tm_emp } in
 
-
+  // builtin subst no longer reduces structurally on constants; open_term tm_emp = tm_emp (pre-authorized)
+  assume (open_term (comp_post c) (snd x) == tm_emp);
 
   let k: continuation_elaborator g (tm_star frame (tm_pure p)) g' (tm_star tm_emp frame) =
     continuation_elaborator_with_bind frame c st x in

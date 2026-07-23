@@ -26,6 +26,7 @@ open Pulse.Typing.Env
 module L = FStar.List.Tot
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
+module RTS = FStar.Reflection.TermSpec
 module RT = FStar.Reflection.Typing
 module PC = Pulse.Checker.Pure
 module P = Pulse.Syntax.Printer
@@ -275,10 +276,10 @@ let check_equiv_with_tac (g:env) (rng:range) (lhs rhs ty:term) (tac_tm:term)
   | Some u, _ ->
     let goal = mk_squash (RT.eq2 u ty lhs rhs) in
     let goal_typing 
-      : my_erased (squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))))
+      : my_erased (squash (T.typing_token (elab_env g) (RTS.denote_term goal) (RT.E_Total, RTS.Ts_Type (RTS.denote_universe u0))))
       = magic()
     in
-    let goal_typing_tok : squash (T.typing_token (elab_env g) goal (RT.E_Total, R.pack_ln (R.Tv_Type u0))) =
+    let goal_typing_tok : squash (T.typing_token (elab_env g) (RTS.denote_term goal) (RT.E_Total, RTS.Ts_Type (RTS.denote_universe u0))) =
       match goal_typing with | E x -> ()
     in
     let res, issues = T.call_subtac_tm g_env tac_tm u0 goal in

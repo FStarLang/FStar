@@ -4,6 +4,7 @@ open FStar.Ghost { erased }
 open Pulse.Syntax.Base
 open Pulse.Typing
 module T = FStar.Tactics.V2
+module RTS = FStar.Reflection.TermSpec
 module RU = Pulse.RuntimeUtils
 module PCP = Pulse.Checker.Pure
 
@@ -14,13 +15,13 @@ let discharge (vc : vc_t) : T.Tac (either (list issue) (discharged vc)) =
     let t1' = PCP.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t1 in
     let t2' = PCP.norm_well_typed_term (elab_env g) [NormSteps.unascribe; primops; iota] t2 in
     (* RT typing does not expose a way to prove these equal, but they are. *)
-    let eq1 : erased (RT.equiv (elab_env g) t1  t1') = RU.magic () in
-    let eq2 : erased (RT.equiv (elab_env g) t2  t2') = RU.magic () in
+    let eq1 : erased (RT.equiv (elab_env g) (RTS.denote_term t1) (RTS.denote_term t1')) = RU.magic () in
+    let eq2 : erased (RT.equiv (elab_env g) (RTS.denote_term t2) (RTS.denote_term t2')) = RU.magic () in
     match T.check_equiv (elab_env g) t1' t2' with
     | Some tok, _ ->
-      let equiv () : GTot (RT.equiv (elab_env g) t1 t2) =
+      let equiv () : GTot (RT.equiv (elab_env g) (RTS.denote_term t1) (RTS.denote_term t2)) =
         (eq1 `RT.Rel_trans _ _ _ _ _`
-            RT.Rel_eq_token (elab_env g) t1' t2' () `RT.Rel_trans _ _ _ _ _`
+            RT.Rel_eq_token (elab_env g) (RTS.denote_term t1') (RTS.denote_term t2') () `RT.Rel_trans _ _ _ _ _`
             RT.Rel_sym _ _ _ eq2)
       in
       Inr (Ghost.hide (equiv ()))
@@ -30,7 +31,7 @@ let discharge (vc : vc_t) : T.Tac (either (list issue) (discharged vc)) =
     match T.core_check_term (elab_env g) e t T.E_Ghost with
     | None, iss -> Inl iss
     | Some d, _ ->
-      Inr (Ghost.hide <| RT.T_Token (elab_env g) e (T.E_Ghost, t) ())
+      Inr (Ghost.hide <| RT.T_Token (elab_env g) (RTS.denote_term e) (T.E_Ghost, RTS.denote_term t) ())
   )
 
 let resolve #a #vc (w : with_vc vc a) : T.Tac (either (list issue) a) =

@@ -16,6 +16,7 @@
 
 module Pulse.Checker.Pure
 module T = FStar.Tactics.V2
+module RTS = FStar.Reflection.TermSpec
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Elaborate.Pure
@@ -113,7 +114,7 @@ val core_check_tot_term (g:env) (e:term) (t:typ)
   : T.Tac unit
 
 val is_non_informative (g:env) (c:comp)
-  : T.Tac (option (squash (T.non_informative_token (elab_env g) (elab_comp c))))
+  : T.Tac (option (squash (T.non_informative_token (elab_env g) (RTS.denote_term (elab_comp c)))))
 
 val check_subtyping (g:env) (t1 t2 : term)
   : T.Tac (squash (subtyping_token g t1 t2))
@@ -121,18 +122,19 @@ val check_subtyping (g:env) (t1 t2 : term)
 
 val norm_well_typed_term
   (g:T.env) (steps : list norm_step) (t:term)
-: T.Tac (t':term{T.equiv_token g t t'})
+: T.Tac (t':term{T.equiv_token g (RTS.denote_term t) (RTS.denote_term t')})
 module RT = FStar.Reflection.Typing
+module PRU = Pulse.Reflection.Util
 
 val norm_well_typed_term_alt
       (#g:T.env)
       (#t:T.term)
       (#eff:T.tot_or_ghost)
       (#k:Ghost.erased T.term)
-      (ty:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (ty:Ghost.erased (PRU.rt_typing g t (eff, Ghost.reveal k)))
       (steps:list norm_step)
 : T.Tac (
       t':T.term &
-      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
-      Ghost.erased (RT.related g t RT.R_Eq t')
+      Ghost.erased (PRU.rt_typing g t' (eff, Ghost.reveal k)) &
+      Ghost.erased (PRU.rt_related g t RT.R_Eq t')
     )

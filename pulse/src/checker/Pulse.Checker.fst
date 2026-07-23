@@ -269,8 +269,8 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 200"
 let seq_with_unit (t:st_term) = 
-  let body = mk_term (Tm_Return { expected_type=RT.unit_ty; insert_eq=false; term=`() }) t.range in
-  mk_term (Tm_Bind { binder=null_binder RT.unit_ty; head=t; body }) t.range
+  let body = mk_term (Tm_Return { expected_type=unit_tm; insert_eq=false; term=`() }) t.range in
+  mk_term (Tm_Bind { binder=null_binder unit_tm; head=t; body }) t.range
 
 let rec do_not_elim_state (t:st_term) : Dv bool =
   match t.term with

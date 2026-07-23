@@ -17,6 +17,7 @@
 module Pulse.Typing
 
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
 open FStar.List.Tot
@@ -36,7 +37,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
 
 let tm_unit = tm_fvar (as_fv unit_lid)
 let unit_const = tm_constant R.C_Unit
-let tm_bool = RT.bool_ty
+let tm_bool = RT.bool_ty_tm
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)
 let tm_szt  = szt_tm
@@ -45,7 +46,7 @@ let tm_false = tm_constant R.C_False
 let tm_l_false = tm_fvar (as_fv R.false_qn)
 include Pulse.Reflection.Util { tm_is_unreachable }
 
-let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop range_0
+let tm_prop = RU.set_range (R.pack_ln (R.Tv_FVar (R.pack_fv R.prop_qn))) range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -542,8 +543,8 @@ let tr_bindings = L.map tr_binding
 
 
 
-let subtyping_token g t1 t2 =
-  T.subtyping_token (elab_env g) t1 t2
+let subtyping_token (g:env) (t1 t2:term) =
+  T.subtyping_token (elab_env g) (RTS.denote_term t1) (RTS.denote_term t2)
 
 val readback_binding : R.binding -> var_binding
 let readback_binding b = { n = { name = b.ppname; range = range_0 }; x = b.uniq; ty = b.sort }

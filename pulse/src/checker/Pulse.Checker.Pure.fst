@@ -17,6 +17,7 @@
 module Pulse.Checker.Pure
 module RTB = FStar.Tactics.Builtins
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 open FStar.Tactics.V2
@@ -81,7 +82,7 @@ let rtb_tc_term g f e =
   res
 
 let rtb_universe_of (g:env) (f:T.env) (e: T.term)
-: T.Tac (option (u:T.universe{typing_token f e (E_Total, T.pack_ln (Tv_Type u))}) & issues)
+: T.Tac (option (u:T.universe{typing_token f (RTS.denote_term e) (E_Total, RTS.Ts_Type (RTS.denote_universe u))}) & issues)
 = debug g (fun _ ->
     Printf.sprintf "(%s) Calling universe_of on %s"
       (show (RU.range_of_term e))
@@ -90,7 +91,7 @@ let rtb_universe_of (g:env) (f:T.env) (e: T.term)
   res
 
 let universe_of_well_typed_term_internal  (g:env) (f:T.env) (e: T.term)
-: T.Tac (option (u:T.universe{typing_token f e (E_Total, pack_ln (Tv_Type u))}) & issues)
+: T.Tac (option (u:T.universe{typing_token f (RTS.denote_term e) (E_Total, RTS.Ts_Type (RTS.denote_universe u))}) & issues)
 = match RU.universe_of_well_typed_term f e with
   | None -> rtb_universe_of g f e
   | u -> u, []
@@ -137,7 +138,7 @@ let rtb_core_check_term_at_type g f e t =
   res
 
 let rtb_check_prop_validity (g:env) (sync:bool) (f:_{f == elab_env g }) (p:_) =
-  let _ : squash (typing_token f p (E_Total, (`prop))) = magic () in
+  let _ : squash (typing_token f (RTS.denote_term p) (E_Total, RTS.denote_term (`prop))) = magic () in
   debug g (fun _ -> 
     Printf.sprintf "(%s) Calling check_prop_validity on %s"
           (show (RU.range_of_term p))
@@ -308,8 +309,8 @@ let check_universe_aux (g:env) (t:term) (t_well_typed:bool)
         fail_doc_with_subissues g (Some rng) issues (ill_typed_term t (Some (tm_type u_unknown)) None)
 
       | Some ru ->
-        let proof : squash (T.typing_token f t (E_Total, R.pack_ln (R.Tv_Type ru))) = () in
-        let proof : RT.typing f t (E_Total, R.pack_ln (R.Tv_Type ru)) = RT.T_Token _ _ _ proof in
+        let proof : squash (T.typing_token f (RTS.denote_term t) (E_Total, RTS.Ts_Type (RTS.denote_universe ru))) = () in
+        let proof : RT.typing f (RTS.denote_term t) (E_Total, RTS.Ts_Type (RTS.denote_universe ru)) = RT.T_Token _ _ _ proof in
         ru
     in
     RU.record_stats "check_universe" aux
@@ -320,7 +321,7 @@ let universe_of_well_typed_term (g:env) (t:term) = check_universe_aux g t true
 let check_universe (g:env) (t:term) = check_universe_aux g t false
 
 let tc_meta_callback g (f:R.env) (e:R.term) 
-  : T.Tac (option (e:R.term & eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
+  : T.Tac (option (e:R.term & eff:T.tot_or_ghost & t:R.term & rt_typing f e (eff, t)) & issues)
   = let res =
       match catch_all (fun _ -> rtb_tc_term g f e) with
       | None, issues ->
@@ -405,7 +406,7 @@ let check_term_at_type (g:env) (e:term) (t:term)
 
 let tc_with_core g (f:R.env) (e:R.term)
 = let aux ()
-  : T.Tac (option (eff:T.tot_or_ghost & t:R.term & RT.typing f e (eff, t)) & issues)
+  : T.Tac (option (eff:T.tot_or_ghost & t:R.term & rt_typing f e (eff, t)) & issues)
   = let ropt, issues = catch_all (fun _ -> rtb_core_compute_term_type (push_context g "tc_with_core" (range_of_term e)) f e) in
     match ropt with
     | None -> None, issues
@@ -517,7 +518,7 @@ let check_slprop_with_core (g:env)
 
 let non_informative_class_typing
   (g:env) (u:universe) (ty:typ)
-  : my_erased (squash (typing_token (elab_env g) (non_informative_class u ty) (E_Total, R.pack_ln (R.Tv_Type u))))
+  : my_erased (squash (typing_token (elab_env g) (RTS.denote_term (non_informative_class u ty)) (E_Total, RTS.Ts_Type (RTS.denote_universe u))))
   = E (magic())
 
 let non_info_tac_tm : term =
@@ -549,17 +550,17 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
   = let goal = non_informative_class u ty in
     let r_env = elab_env g in
     let constraint_typing = non_informative_class_typing g u ty in
-    let goal_typing_tok : squash (typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u))) =
+    let goal_typing_tok : squash (typing_token r_env (RTS.denote_term goal) (E_Total, RTS.Ts_Type (RTS.denote_universe u))) =
       match constraint_typing with | E tok -> ()
     in
-    let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) =
-      assume (typing_token r_env r (E_Total, goal));
+    let mk_ret_t (r:term) : RTB.ret_t (w:term { typing_token r_env (RTS.denote_term w) (E_Total, RTS.denote_term goal) }) =
+      assume (typing_token r_env (RTS.denote_term r) (E_Total, RTS.denote_term goal));
       Some r, []
     in
-    let fallback () : T.Tac (RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) })) =
+    let fallback () : T.Tac (RTB.ret_t (w:term { typing_token r_env (RTS.denote_term w) (E_Total, RTS.denote_term goal) })) =
       T.call_subtac_tm r_env non_info_tac_tm u goal
     in
-    let r : RTB.ret_t (w:term { typing_token r_env w (E_Total, goal) }) = 
+    let r : RTB.ret_t (w:term { typing_token r_env (RTS.denote_term w) (E_Total, RTS.denote_term goal) }) = 
       match T.hua ty with
       | Some (fv, [], []) ->
         let nm = implode_qn (inspect_fv fv) in
@@ -585,11 +586,11 @@ let try_get_non_informative_witness_aux (g:env) (u:universe) (ty:term)
       None, issues
     | Some r_dict, issues -> (
       // T.print (Printf.sprintf "Resolved to %s" (show r_dict));
-      assert (typing_token r_env r_dict (E_Total, goal));
+      assert (typing_token r_env (RTS.denote_term r_dict) (E_Total, RTS.denote_term goal));
       assume (~(Tv_Unknown? (inspect_ln r_dict)));
       let dict = wr r_dict (RU.range_of_term ty) in
-      let r_dict_typing_token : squash (typing_token r_env r_dict (E_Total, goal)) = () in
-      let r_dict_typing : RT.typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
+      let r_dict_typing_token : squash (typing_token r_env (RTS.denote_term r_dict) (E_Total, RTS.denote_term goal)) = () in
+      let r_dict_typing : rt_typing r_env r_dict (E_Total, goal) = RT.T_Token _ _ _ () in
 
       Some dict, issues
     )
@@ -681,7 +682,7 @@ let check_subtyping g t1 t2 =
   
 let norm_well_typed_term
   (g:T.env) (steps : list norm_step) (t:term)
-: T.Tac (t':term{T.equiv_token g t t'})
+: T.Tac (t':term{T.equiv_token g (RTS.denote_term t) (RTS.denote_term t')})
 = RU.record_stats "Pulse.norm_well_typed_term" fun _ -> T.norm_well_typed_term g steps t
 
 let norm_well_typed_term_alt
@@ -689,13 +690,13 @@ let norm_well_typed_term_alt
       (#t:T.term)
       (#eff:T.tot_or_ghost)
       (#k:Ghost.erased T.term)
-      (ty:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (ty:Ghost.erased (RT.typing g (RTS.denote_term t) (eff, RTS.denote_term (Ghost.reveal k))))
       (steps:list norm_step)
  = let aux ()
    : T.Tac (
       t':T.term &
-      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
-      Ghost.erased (RT.related g t RT.R_Eq t')
+      Ghost.erased (RT.typing g (RTS.denote_term t') (eff, RTS.denote_term (Ghost.reveal k))) &
+      Ghost.erased (RT.related g (RTS.denote_term t) RT.R_Eq (RTS.denote_term t'))
     )
   = let (| t, ty, rel |) = RU.norm_well_typed_term ty steps in
     (|t, ty, rel|)

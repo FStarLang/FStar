@@ -87,7 +87,7 @@ let simple_arr (t1 t2 : R.term) : R.term =
 
 let elab_st_sub (g:env) (c1:comp) (c2:comp)
    : Tot (t:R.term
-          & RT.tot_typing (elab_env g) t (simple_arr (elab_comp c1) (elab_comp c2)))
+          & rt_tot_typing (elab_env g) t (simple_arr (elab_comp c1) (elab_comp c2)))
 = RU.magic_s "elab_st_sub"
 
 let rec elab_st_typing (g:env)

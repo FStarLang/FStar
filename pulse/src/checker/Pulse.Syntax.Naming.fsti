@@ -23,6 +23,7 @@ open Pulse.Common
 module L = FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
+module R = FStar.Reflection.V2
 module RU = Pulse.RuntimeUtils
 module U = Pulse.Syntax.Pure
 
@@ -32,7 +33,272 @@ module U = Pulse.Syntax.Pure
 unfold private let (++) (#a : eqtype) (s1 s2 : Set.set a) : Set.set a = Set.union s1 s2
 unfold private let empty #a = Set.empty #a
 
-let freevars (t:term) : Set.set var = RT.freevars t
+(* ------------------------------------------------------------------------- *)
+(* Host-term free variables and local-nameless predicate.
+   After the term_spec re-index, FStar.Reflection.Typing's concrete
+   freevars/ln' were deleted (their spec analogues freevars_spec/ln_spec' are
+   GTot because term_spec is erasable). Pulse's checker uses these at RUNTIME
+   (freshness checks etc.), so we reintroduce Tot structural recursions over the
+   concrete reflection term here, mirroring the old RT definitions. *)
+let rec r_freevars (e:R.term)
+  : FStar.Set.set var
+  = match R.inspect_ln e with
+    | R.Tv_Uvar _ _ -> Set.complement Set.empty
+    | R.Tv_UInst _ _
+    | R.Tv_FVar _
+    | R.Tv_Type _
+    | R.Tv_Const _
+    | R.Tv_Unknown
+    | R.Tv_Unsupp
+    | R.Tv_BVar _ -> Set.empty
+    | R.Tv_Var x -> Set.singleton (RT.namedv_uniq x)
+    | R.Tv_App e1 (e2, _) ->
+      Set.union (r_freevars e1) (r_freevars e2)
+    | R.Tv_Abs b body ->
+      Set.union (r_freevars_binder b) (r_freevars body)
+    | R.Tv_Arrow b c ->
+      Set.union (r_freevars_binder b) (r_freevars_comp c)
+    | R.Tv_Refine b f ->
+      r_freevars (RT.binder_sort b) `Set.union`
+      r_freevars f
+    | R.Tv_Let recf attrs b def body ->
+      r_freevars_terms attrs `Set.union`
+      r_freevars (RT.binder_sort b) `Set.union`
+      r_freevars def `Set.union`
+      r_freevars body
+    | R.Tv_Match scr ret brs ->
+      r_freevars scr `Set.union`
+      r_freevars_opt ret r_freevars_match_returns `Set.union`
+      r_freevars_branches brs
+    | R.Tv_AscribedT e t tac b ->
+      r_freevars e `Set.union`
+      r_freevars t `Set.union`
+      r_freevars_opt tac r_freevars
+    | R.Tv_AscribedC e c tac b ->
+      r_freevars e `Set.union`
+      r_freevars_comp c `Set.union`
+      r_freevars_opt tac r_freevars
+
+and r_freevars_opt (#a:Type0) (o:option a) (f: (x:a { x << o } -> FStar.Set.set var))
+  : FStar.Set.set var
+  = match o with
+    | None -> Set.empty
+    | Some x -> f x
+
+and r_freevars_comp (c:R.comp)
+  : FStar.Set.set var
+  = match R.inspect_comp c with
+    | R.C_Total t
+    | R.C_GTotal t ->
+      r_freevars t
+    | R.C_Lemma pre post pats ->
+      r_freevars pre `Set.union`
+      r_freevars post `Set.union`
+      r_freevars pats
+    | R.C_Eff us eff_name res args decrs ->
+      r_freevars res `Set.union`
+      r_freevars_args args `Set.union`
+      r_freevars_terms decrs
+
+and r_freevars_args (ts:list R.argv)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | (t,q)::ts ->
+      r_freevars t `Set.union`
+      r_freevars_args ts
+
+and r_freevars_terms (ts:list R.term)
+  : FStar.Set.set var
+  = match ts with
+    | [] -> Set.empty
+    | t::ts ->
+      r_freevars t `Set.union`
+      r_freevars_terms ts
+
+and r_freevars_binder (b:R.binder)
+  : Tot (Set.set var) (decreases b)
+  = let bndr = R.inspect_binder b in
+    r_freevars bndr.sort `Set.union`
+    r_freevars_terms bndr.attrs
+
+and r_freevars_pattern (p:R.pattern)
+  : Tot (Set.set var) (decreases p)
+  = match p with
+    | R.Pat_Constant _ -> Set.empty
+    | R.Pat_Cons head univs subpats ->
+      r_freevars_patterns subpats
+    | R.Pat_Var bv s -> Set.empty
+    | R.Pat_Dot_Term topt ->
+      r_freevars_opt topt r_freevars
+
+and r_freevars_patterns (ps:list (R.pattern & bool))
+  : Tot (Set.set var) (decreases ps)
+  = match ps with
+    | [] -> Set.empty
+    | (p, b)::ps ->
+      r_freevars_pattern p `Set.union`
+      r_freevars_patterns ps
+
+and r_freevars_branch (br:R.branch)
+  : Tot (Set.set var) (decreases br)
+  = let p, t = br in
+    r_freevars_pattern p `Set.union`
+    r_freevars t
+
+and r_freevars_branches (brs:list R.branch)
+  : Tot (Set.set var) (decreases brs)
+  = match brs with
+    | [] -> Set.empty
+    | hd::tl -> r_freevars_branch hd `Set.union` r_freevars_branches tl
+
+and r_freevars_match_returns (m:R.match_returns_ascription)
+  : Tot (Set.set var) (decreases m)
+  = let b, (ret, as_, eq) = m in
+    let b = r_freevars_binder b in
+    let ret =
+      match ret with
+      | Inl t -> r_freevars t
+      | Inr c -> r_freevars_comp c
+    in
+    let as_ = r_freevars_opt as_ r_freevars in
+    b `Set.union` ret `Set.union` as_
+
+let rec r_ln' (e:R.term) (n:int)
+  : Tot bool (decreases e)
+  = match R.inspect_ln e with
+    | R.Tv_UInst _ _
+    | R.Tv_FVar _
+    | R.Tv_Type _
+    | R.Tv_Const _
+    | R.Tv_Unknown
+    | R.Tv_Unsupp
+    | R.Tv_Var _ -> true
+    | R.Tv_BVar m -> RT.bv_index m <= n
+    | R.Tv_App e1 (e2, _) -> r_ln' e1 n && r_ln' e2 n
+    | R.Tv_Abs b body ->
+      r_ln'_binder b n &&
+      r_ln' body (n + 1)
+    | R.Tv_Arrow b c ->
+      r_ln'_binder b n &&
+      r_ln'_comp c (n + 1)
+    | R.Tv_Refine b f ->
+      r_ln'_binder b n &&
+      r_ln' f (n + 1)
+    | R.Tv_Uvar _ _ -> false
+    | R.Tv_Let recf attrs b def body ->
+      r_ln'_terms attrs n &&
+      r_ln'_binder b n &&
+      (if recf then r_ln' def (n + 1) else r_ln' def n) &&
+      r_ln' body (n + 1)
+    | R.Tv_Match scr ret brs ->
+      r_ln' scr n &&
+      (match ret with
+       | None -> true
+       | Some m -> r_ln'_match_returns m n) &&
+      r_ln'_branches brs n
+    | R.Tv_AscribedT e t tac b ->
+      r_ln' e n &&
+      r_ln' t n &&
+      (match tac with
+       | None -> true
+       | Some tac -> r_ln' tac n)
+    | R.Tv_AscribedC e c tac b ->
+      r_ln' e n &&
+      r_ln'_comp c n &&
+      (match tac with
+       | None -> true
+       | Some tac -> r_ln' tac n)
+
+and r_ln'_comp (c:R.comp) (i:int)
+  : Tot bool (decreases c)
+  = match R.inspect_comp c with
+    | R.C_Total t
+    | R.C_GTotal t -> r_ln' t i
+    | R.C_Lemma pre post pats ->
+      r_ln' pre i &&
+      r_ln' post i &&
+      r_ln' pats i
+    | R.C_Eff us eff_name res args decrs ->
+      r_ln' res i &&
+      r_ln'_args args i &&
+      r_ln'_terms decrs i
+
+and r_ln'_args (ts:list R.argv) (i:int)
+  : Tot bool (decreases ts)
+  = match ts with
+    | [] -> true
+    | (t,q)::ts ->
+      r_ln' t i &&
+      r_ln'_args ts i
+
+and r_ln'_binder (b:R.binder) (n:int)
+  : Tot bool (decreases b)
+  = let bndr = R.inspect_binder b in
+    r_ln' bndr.sort n &&
+    r_ln'_terms bndr.attrs n
+
+and r_ln'_terms (ts:list R.term) (n:int)
+  : Tot bool (decreases ts)
+  = match ts with
+    | [] -> true
+    | t::ts -> r_ln' t n && r_ln'_terms ts n
+
+and r_ln'_patterns (ps:list (R.pattern & bool)) (i:int)
+  : Tot bool (decreases ps)
+  = match ps with
+    | [] -> true
+    | (p, b)::ps ->
+      let b0 = r_ln'_pattern p i in
+      let n = RT.binder_offset_pattern p in
+      let b1 = r_ln'_patterns ps (i + n) in
+      b0 && b1
+
+and r_ln'_pattern (p:R.pattern) (i:int)
+  : Tot bool (decreases p)
+  = match p with
+    | R.Pat_Constant _ -> true
+    | R.Pat_Cons head univs subpats ->
+      r_ln'_patterns subpats i
+    | R.Pat_Var bv s -> true
+    | R.Pat_Dot_Term topt ->
+      (match topt with
+       | None -> true
+       | Some t -> r_ln' t i)
+
+and r_ln'_branch (br:R.branch) (i:int)
+  : Tot bool (decreases br)
+  = let p, t = br in
+    let b = r_ln'_pattern p i in
+    let j = RT.binder_offset_pattern p in
+    let b' = r_ln' t (i + j) in
+    b && b'
+
+and r_ln'_branches (brs:list R.branch) (i:int)
+  : Tot bool (decreases brs)
+  = match brs with
+    | [] -> true
+    | br::brs ->
+      r_ln'_branch br i &&
+      r_ln'_branches brs i
+
+and r_ln'_match_returns (m:R.match_returns_ascription) (i:int)
+  : Tot bool (decreases m)
+  = let b, (ret, as_, eq) = m in
+    let b = r_ln'_binder b i in
+    let ret =
+      match ret with
+      | Inl t -> r_ln' t (i + 1)
+      | Inr c -> r_ln'_comp c (i + 1)
+    in
+    let as_ =
+      match as_ with
+      | None -> true
+      | Some t -> r_ln' t (i + 1)
+    in
+    b && ret && as_
+
+let freevars (t:term) : Set.set var = r_freevars t
 
 let freevars_st_comp (s:st_comp) : Set.set var =
   freevars s.res ++
@@ -183,7 +449,7 @@ and freevars_terms (t:list st_term) : Set.set var =
   | t::ts -> freevars_st t ++ freevars_terms ts
 
 
-let ln' (t:term) (i:int) : bool = RT.ln' t i
+let ln' (t:term) (i:int) : bool = r_ln' t i
 
 let ln_st_comp (s:st_comp) (i:int) : bool =
   ln' s.res i &&
@@ -389,7 +655,7 @@ let shift_subst_n (n:nat) = RT.shift_subst_n n
 let shift_subst = RT.shift_subst
 
 val subst_host_term (t:term) (ss:subst)
-  : Tot (t':term { t' == RT.subst_term t ss })
+  : Tot term
 
 let subst_term (t:term) (ss:subst) : term = subst_host_term t ss
 

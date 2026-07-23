@@ -26,6 +26,7 @@ open Pulse.Checker.Base
 open FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module P = Pulse.Syntax.Printer
 module PSB = Pulse.Syntax.Builder
 
@@ -413,7 +414,7 @@ let maybe_rewrite_body_typing
             (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n"
               (show c)
               (show (C_Tot t)));
-          let sq : squash (RT.equiv_token (elab_env g) t t') = () in
+          let sq : squash (RT.equiv_token (elab_env g) (RTS.denote_term t) (RTS.denote_term t')) = () in
           C_Tot t
     )
 

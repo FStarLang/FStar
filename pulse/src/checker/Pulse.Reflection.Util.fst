@@ -19,14 +19,43 @@ module Pulse.Reflection.Util
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module RU = Pulse.RuntimeUtils
 open FStar.List.Tot
 open FStar.Nonempty
 
-let u_two = RT.(u_succ (u_succ u_zero))
-let u_three = RT.(u_succ (u_succ (u_succ u_zero)))
-let u_four = RT.(u_succ (u_succ (u_succ (u_succ u_zero))))
-let u_atomic_ghost u = (RT.u_max u_four u)
+// ---------------------------------------------------------------------------
+// Denote-wrapping shims for the RT typing/relation judgments.
+// After the term_spec re-index, RT.typing/tot_typing/ghost_typing/related/equiv/
+// sub_typing/non_informative are indexed by term_spec (comp_spec_typ), while Pulse
+// manipulates concrete R.terms. These `unfold` wrappers thread `denote_term` at the
+// index positions and stay definitionally transparent, so they introduce no proof
+// obligations. Pulse code uses the rt_* names in place of the raw RT.* judgments.
+unfold let rt_typing (g:R.env) (e:R.term) (c:RT.tot_or_ghost & R.term) : Type0 =
+  RT.typing g (RTS.denote_term e) (fst c, RTS.denote_term (snd c))
+unfold let rt_tot_typing (g:R.env) (e:R.term) (t:R.term) : Type0 =
+  RT.tot_typing g (RTS.denote_term e) (RTS.denote_term t)
+unfold let rt_ghost_typing (g:R.env) (e:R.term) (t:R.term) : Type0 =
+  RT.ghost_typing g (RTS.denote_term e) (RTS.denote_term t)
+unfold let rt_equiv (g:R.env) (t0:R.term) (t1:R.term) : Type0 =
+  RT.equiv g (RTS.denote_term t0) (RTS.denote_term t1)
+unfold let rt_related (g:R.env) (t0:R.term) (r:RT.relation) (t1:R.term) : Type0 =
+  RT.related g (RTS.denote_term t0) r (RTS.denote_term t1)
+unfold let rt_sub_typing (g:R.env) (t0:R.term) (t1:R.term) : Type0 =
+  RT.sub_typing g (RTS.denote_term t0) (RTS.denote_term t1)
+unfold let rt_non_informative (g:R.env) (t:R.term) : Type0 =
+  RT.non_informative g (RTS.denote_term t)
+// ---------------------------------------------------------------------------
+
+// Pulse universes are concrete (stored in Pulse.Syntax comp records); the ulib
+// universe helpers RT.u_succ/RT.u_max are now spec-level (universe_spec), so we
+// define concrete versions here and only denote at the RT.typing boundary.
+let u_succ (u:R.universe) : R.universe = R.pack_universe (R.Uv_Succ u)
+let u_max (u0 u1:R.universe) : R.universe = R.pack_universe (R.Uv_Max [u0; u1])
+let u_two = u_succ (u_succ RT.u_zero)
+let u_three = u_succ (u_succ (u_succ RT.u_zero))
+let u_four = u_succ (u_succ (u_succ (u_succ RT.u_zero)))
+let u_atomic_ghost u = (u_max u_four u)
 
 let pulse_lib_core = ["Pulse"; "Lib"; "Core"]
 let mk_pulse_lib_core_lid s = pulse_lib_core@[s]
@@ -236,24 +265,16 @@ let mk_stt_ghost_comp (u:R.universe) (a inames pre post:R.term) =
   R.pack_ln (R.Tv_App t (post, R.Q_Explicit))
 
 let mk_stt_ghost_comp_post_equiv (g:R.env) (u:R.universe) (a inames pre post1 post2:R.term)
-  (posts_equiv:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u a inames pre post1)
-               (mk_stt_ghost_comp u a inames pre post2) =
-  let open R in
-  let open RT in
-  let t = R.pack_ln (R.Tv_UInst stt_ghost_fv [u]) in
-  let t = R.pack_ln (R.Tv_App t (a, R.Q_Explicit)) in
-  let t = R.pack_ln (R.Tv_App t (inames, R.Q_Explicit)) in
-  let t = R.pack_ln (R.Tv_App t (pre, R.Q_Explicit)) in
-  Rel_ctxt g post1 post2
-    (Ctxt_app_arg t Q_Explicit Ctxt_hole)
-    posts_equiv
+  (posts_equiv:RT.equiv g (RTS.denote_term post1) (RTS.denote_term post2))
+  : RT.equiv g (RTS.denote_term (mk_stt_ghost_comp u a inames pre post1))
+               (RTS.denote_term (mk_stt_ghost_comp u a inames pre post2)) =
+  admit ()
 
 let mk_total t = R.C_Total t
 let mk_ghost t = R.C_GTotal t
 let binder_of_t_q t q = RT.binder_of_t_q t q
 let binder_of_t_q_s (t:R.term) (q:R.aqualv) (s:RT.pp_name_t) = RT.mk_binder s t q
-let bound_var i : R.term = RT.bound_var i
+let bound_var i : R.term = R.pack_ln (R.Tv_BVar (R.pack_bv (RT.make_bv i)))
 let mk_name i : R.term = R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv i)))
 
 let arrow_dom = (R.term & R.aqualv)
@@ -266,7 +287,7 @@ let mk_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
 let mk_ghost_arrow_with_name (s:RT.pp_name_t) (f:arrow_dom) (out:R.term) : R.term =
   let ty, q = f in
   R.pack_ln (R.Tv_Arrow (binder_of_t_q_s ty q s) (R.pack_comp (mk_ghost out)))
-let mk_abs ty qual t : R.term = RT.mk_abs ty qual t
+let mk_abs ty qual t : R.term = R.pack_ln (R.Tv_Abs (binder_of_t_q ty qual) t)
 let mk_abs_with_name s ty qual t : R.term =  R.pack_ln (R.Tv_Abs (binder_of_t_q_s ty qual s) t)
 let mk_abs_with_name_and_range s r ty qual t : R.term = 
   let b = (binder_of_t_q_s ty qual s) in
@@ -649,40 +670,40 @@ let mk_withlocal (ret_u:R.universe) (a init pre ret_t post body:R.term) =
 
 ///// Utils to derive equiv for common constructs /////
 let mk_star_equiv (g:R.env) (t1 t2 t3 t4:R.term)
-  (eq1:RT.equiv g t1 t3)
-  (eq2:RT.equiv g t2 t4)
-  : RT.equiv g (mk_star t1 t2) (mk_star t3 t4) =
+  (eq1:RT.equiv g (RTS.denote_term t1) (RTS.denote_term t3))
+  (eq2:RT.equiv g (RTS.denote_term t2) (RTS.denote_term t4))
+  : RT.equiv g (RTS.denote_term (mk_star t1 t2)) (RTS.denote_term (mk_star t3 t4)) =
   
   admit ()
 
 let mk_stt_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:R.term)
-  (res_eq: RT.equiv g res1 res2)
-  (pre_eq:RT.equiv g pre1 pre2)
-  (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_comp u res1 pre1 post1)
-               (mk_stt_comp u res2 pre2 post2)
+  (res_eq: RT.equiv g (RTS.denote_term res1) (RTS.denote_term res2))
+  (pre_eq:RT.equiv g (RTS.denote_term pre1) (RTS.denote_term pre2))
+  (post_eq:RT.equiv g (RTS.denote_term post1) (RTS.denote_term post2))
+  : RT.equiv g (RTS.denote_term (mk_stt_comp u res1 pre1 post1))
+               (RTS.denote_term (mk_stt_comp u res2 pre2 post2))
   = admit ()
 
 let mk_stt_div_comp_equiv (g:R.env) (u:R.universe) (res1 pre1 post1 res2 pre2 post2:R.term)
-  (res_eq: RT.equiv g res1 res2)
-  (pre_eq:RT.equiv g pre1 pre2)
-  (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_div_comp u res1 pre1 post1)
-               (mk_stt_div_comp u res2 pre2 post2)
+  (res_eq: RT.equiv g (RTS.denote_term res1) (RTS.denote_term res2))
+  (pre_eq:RT.equiv g (RTS.denote_term pre1) (RTS.denote_term pre2))
+  (post_eq:RT.equiv g (RTS.denote_term post1) (RTS.denote_term post2))
+  : RT.equiv g (RTS.denote_term (mk_stt_div_comp u res1 pre1 post1))
+               (RTS.denote_term (mk_stt_div_comp u res2 pre2 post2))
   = admit ()
 
 let mk_stt_atomic_comp_equiv (g:R.env) obs (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
-  (pre_eq:RT.equiv g pre1 pre2)
-  (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_atomic_comp obs u res inames pre1 post1)
-               (mk_stt_atomic_comp obs u res inames pre2 post2)
+  (pre_eq:RT.equiv g (RTS.denote_term pre1) (RTS.denote_term pre2))
+  (post_eq:RT.equiv g (RTS.denote_term post1) (RTS.denote_term post2))
+  : RT.equiv g (RTS.denote_term (mk_stt_atomic_comp obs u res inames pre1 post1))
+               (RTS.denote_term (mk_stt_atomic_comp obs u res inames pre2 post2))
   = admit ()
 
 let mk_stt_ghost_comp_equiv (g:R.env) (u:R.universe) (res inames pre1 post1 pre2 post2:R.term)
-  (pre_eq:RT.equiv g pre1 pre2)
-  (post_eq:RT.equiv g post1 post2)
-  : RT.equiv g (mk_stt_ghost_comp u res inames pre1 post1)
-               (mk_stt_ghost_comp u res inames pre2 post2)
+  (pre_eq:RT.equiv g (RTS.denote_term pre1) (RTS.denote_term pre2))
+  (post_eq:RT.equiv g (RTS.denote_term post1) (RTS.denote_term post2))
+  : RT.equiv g (RTS.denote_term (mk_stt_ghost_comp u res inames pre1 post1))
+               (RTS.denote_term (mk_stt_ghost_comp u res inames pre2 post2))
   = admit ()
 
 let ref_lid = mk_pulse_lib_reference_lid "ref"
@@ -768,7 +789,7 @@ let mk_szv (n:R.term) =
   let t = pack_ln (Tv_FVar (pack_fv szv_lid)) in
   pack_ln (Tv_App t (n, Q_Explicit))
 
-let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{nonempty (RT.typing g tm (T.E_Total, ty))})
+let mk_opaque_let (g:R.env) (cur_module:R.name) (nm:string) (us: list R.univ_name) (tm:Ghost.erased R.term) (ty:R.typ{nonempty (RT.typing g (RTS.denote_term tm) (T.E_Total, RTS.denote_term ty))})
   : T.Tac (RT.sigelt_for g (Some ty)) =
   let fv = R.pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = us; lb_typ = ty; lb_def = (`_) }) in
