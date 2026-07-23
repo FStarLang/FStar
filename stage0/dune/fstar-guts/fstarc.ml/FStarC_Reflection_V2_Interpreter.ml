@@ -182,13 +182,11 @@ let reflection_primops :
                                       let uu___36 =
                                         mk1 "sigelt_opts"
                                           FStarC_Reflection_V2_Embeddings.e_sigelt
-                                          (FStarC_Syntax_Embeddings.e_sealed
-                                             (FStarC_Syntax_Embeddings.e_option
-                                                FStarC_Syntax_Embeddings.e_vconfig))
+                                          (FStarC_Syntax_Embeddings.e_option
+                                             FStarC_Syntax_Embeddings.e_vconfig)
                                           FStarC_Reflection_V2_NBEEmbeddings.e_sigelt
-                                          (FStarC_TypeChecker_NBETerm.e_sealed
-                                             (FStarC_TypeChecker_NBETerm.e_option
-                                                FStarC_TypeChecker_NBETerm.e_vconfig))
+                                          (FStarC_TypeChecker_NBETerm.e_option
+                                             FStarC_TypeChecker_NBETerm.e_vconfig)
                                           FStarC_Reflection_V2_Builtins.sigelt_opts in
                                       let uu___37 =
                                         let uu___38 =
@@ -202,12 +200,10 @@ let reflection_primops :
                                           let uu___40 =
                                             mk1 "sigelt_attrs"
                                               FStarC_Reflection_V2_Embeddings.e_sigelt
-                                              (FStarC_Syntax_Embeddings.e_sealed
-                                                 (FStarC_Syntax_Embeddings.e_list
-                                                    FStarC_Reflection_V2_Embeddings.e_term))
+                                              (FStarC_Syntax_Embeddings.e_list
+                                                 FStarC_Reflection_V2_Embeddings.e_term)
                                               FStarC_Reflection_V2_NBEEmbeddings.e_sigelt
-                                              (FStarC_TypeChecker_NBETerm.e_sealed
-                                                 FStarC_Reflection_V2_NBEEmbeddings.e_attributes)
+                                              FStarC_Reflection_V2_NBEEmbeddings.e_attributes
                                               FStarC_Reflection_V2_Builtins.sigelt_attrs in
                                           let uu___41 =
                                             let uu___42 =
@@ -224,12 +220,10 @@ let reflection_primops :
                                               let uu___44 =
                                                 mk1 "sigelt_quals"
                                                   FStarC_Reflection_V2_Embeddings.e_sigelt
-                                                  (FStarC_Syntax_Embeddings.e_sealed
-                                                     (FStarC_Syntax_Embeddings.e_list
-                                                        FStarC_Reflection_V2_Embeddings.e_qualifier))
+                                                  (FStarC_Syntax_Embeddings.e_list
+                                                     FStarC_Reflection_V2_Embeddings.e_qualifier)
                                                   FStarC_Reflection_V2_NBEEmbeddings.e_sigelt
-                                                  (FStarC_TypeChecker_NBETerm.e_sealed
-                                                     FStarC_Reflection_V2_NBEEmbeddings.e_qualifiers)
+                                                  FStarC_Reflection_V2_NBEEmbeddings.e_qualifiers
                                                   FStarC_Reflection_V2_Builtins.sigelt_quals in
                                               let uu___45 =
                                                 let uu___46 =
@@ -456,11 +450,9 @@ let reflection_primops :
                                                                     mk1
                                                                     "range_of_term"
                                                                     FStarC_Reflection_V2_Embeddings.e_term
-                                                                    (FStarC_Syntax_Embeddings.e_sealed
-                                                                    FStarC_Syntax_Embeddings.e_range)
+                                                                    FStarC_Syntax_Embeddings.e_range
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_attribute
-                                                                    (FStarC_TypeChecker_NBETerm.e_sealed
-                                                                    FStarC_TypeChecker_NBETerm.e_range)
+                                                                    FStarC_TypeChecker_NBETerm.e_range
                                                                     FStarC_Reflection_V2_Builtins.range_of_term in
                                                                     let uu___83
                                                                     =
@@ -469,11 +461,9 @@ let reflection_primops :
                                                                     mk1
                                                                     "range_of_sigelt"
                                                                     FStarC_Reflection_V2_Embeddings.e_sigelt
-                                                                    (FStarC_Syntax_Embeddings.e_sealed
-                                                                    FStarC_Syntax_Embeddings.e_range)
+                                                                    FStarC_Syntax_Embeddings.e_range
                                                                     FStarC_Reflection_V2_NBEEmbeddings.e_sigelt
-                                                                    (FStarC_TypeChecker_NBETerm.e_sealed
-                                                                    FStarC_TypeChecker_NBETerm.e_range)
+                                                                    FStarC_TypeChecker_NBETerm.e_range
                                                                     FStarC_Reflection_V2_Builtins.range_of_sigelt in
                                                                     let uu___85
                                                                     =

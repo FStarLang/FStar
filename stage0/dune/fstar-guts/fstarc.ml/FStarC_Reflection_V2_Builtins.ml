@@ -577,8 +577,7 @@ let lookup_typ (env : FStarC_TypeChecker_Env.env)
   let lid = FStarC_Parser_Const.p2l ns in
   FStarC_TypeChecker_Env.lookup_sigelt env lid
 let sigelt_attrs (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Syntax_Syntax.attribute Prims.list FStarC_Sealed.sealed=
-  FStarC_Sealed.seal se.FStarC_Syntax_Syntax.sigattrs
+  FStarC_Syntax_Syntax.attribute Prims.list= se.FStarC_Syntax_Syntax.sigattrs
 let set_sigelt_attrs (attrs : FStarC_Syntax_Syntax.attribute Prims.list)
   (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
   {
@@ -681,10 +680,8 @@ let inspect_ident (i : FStarC_Ident.ident) :
 let pack_ident (i : (Prims.string * FStarC_Range_Type.t)) :
   FStarC_Ident.ident= FStarC_Ident.mk_ident i
 let sigelt_quals (se : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Reflection_V2_Data.qualifier Prims.list FStarC_Sealed.sealed=
-  let uu___ =
-    FStarC_List.map syntax_to_rd_qual se.FStarC_Syntax_Syntax.sigquals in
-  FStarC_Sealed.seal uu___
+  FStarC_Reflection_V2_Data.qualifier Prims.list=
+  FStarC_List.map syntax_to_rd_qual se.FStarC_Syntax_Syntax.sigquals
 let set_sigelt_quals (quals : FStarC_Reflection_V2_Data.qualifier Prims.list)
   (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt=
   let uu___ = FStarC_List.map rd_to_syntax_qual quals in
@@ -699,8 +696,8 @@ let set_sigelt_quals (quals : FStarC_Reflection_V2_Data.qualifier Prims.list)
     FStarC_Syntax_Syntax.sigopts = (se.FStarC_Syntax_Syntax.sigopts)
   }
 let sigelt_opts (se : FStarC_Syntax_Syntax.sigelt) :
-  FStar_VConfig.vconfig FStar_Pervasives_Native.option FStarC_Sealed.sealed=
-  FStarC_Sealed.seal se.FStarC_Syntax_Syntax.sigopts
+  FStar_VConfig.vconfig FStar_Pervasives_Native.option=
+  se.FStarC_Syntax_Syntax.sigopts
 let embed_vconfig (vcfg : FStar_VConfig.vconfig) : FStarC_Syntax_Syntax.term=
   FStarC_Syntax_Embeddings_Base.embed FStarC_Syntax_Embeddings.e_vconfig vcfg
     FStarC_Range_Type.dummyRange FStar_Pervasives_Native.None
@@ -1296,9 +1293,7 @@ let subst_term (s : FStarC_Syntax_Syntax.subst_elt Prims.list)
 let subst_comp (s : FStarC_Syntax_Syntax.subst_elt Prims.list)
   (c : FStarC_Syntax_Syntax.comp) : FStarC_Syntax_Syntax.comp=
   FStarC_Syntax_Subst.subst_comp s c
-let range_of_term (t : FStarC_Syntax_Syntax.term) :
-  FStarC_Range_Type.t FStarC_Sealed.sealed=
-  FStarC_Sealed.seal t.FStarC_Syntax_Syntax.pos
-let range_of_sigelt (s : FStarC_Syntax_Syntax.sigelt) :
-  FStarC_Range_Type.t FStarC_Sealed.sealed=
-  FStarC_Sealed.seal s.FStarC_Syntax_Syntax.sigrng
+let range_of_term (t : FStarC_Syntax_Syntax.term) : FStarC_Range_Type.t=
+  t.FStarC_Syntax_Syntax.pos
+let range_of_sigelt (s : FStarC_Syntax_Syntax.sigelt) : FStarC_Range_Type.t=
+  s.FStarC_Syntax_Syntax.sigrng

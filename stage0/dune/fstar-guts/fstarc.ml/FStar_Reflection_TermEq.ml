@@ -11,16 +11,102 @@ let uu___is_Neq (projectee : _cmpres) : Prims.bool=
   match projectee with | Neq -> true | uu___ -> false
 let uu___is_Unknown (projectee : _cmpres) : Prims.bool=
   match projectee with | Unknown -> true | uu___ -> false
-type ('t, 'x, 'y) cmpres = _cmpres
+type ('t, 'r, 'x, 'y) cmpres' = _cmpres
+type ('t, 'x, 'y) cmpres = ('t, Obj.t, 'x, 'y) cmpres'
 type 't comparator_for = 't -> 't -> ('t, Obj.t, Obj.t) cmpres
-let op_Amp_Amp_Amp (x : 's) (y : 's) (w : 't) (z : 't)
-  (c1 : ('s, Obj.t, Obj.t) cmpres) (c2 : ('t, Obj.t, Obj.t) cmpres) :
-  (('s * 't), Obj.t, Obj.t) cmpres=
+type ('t, 'r) comparator_for' = 't -> 't -> ('t, 'r, Obj.t, Obj.t) cmpres'
+let co (ra : unit) (rb : unit) (xa : 'a) (ya : 'a) (xb : 'b) (yb : 'b)
+  (c : ('a, Obj.t, Obj.t, Obj.t) cmpres') (uu___ : unit) :
+  ('b, Obj.t, Obj.t, Obj.t) cmpres'=
+  match c with | Eq -> Eq | Neq -> Neq | Unknown -> Unknown
+let op_Amp_Amp_Amp (rs : unit) (rt : unit) (x : 's) (y : 's) (w : 't)
+  (z : 't) (c1 : ('s, Obj.t, Obj.t, Obj.t) cmpres')
+  (c2 : ('t, Obj.t, Obj.t, Obj.t) cmpres') :
+  (('s * 't), Obj.t, Obj.t, Obj.t) cmpres'=
   match (c1, c2) with
   | (Eq, Eq) -> Eq
   | (Neq, uu___) -> Neq
   | (uu___, Neq) -> Neq
   | uu___ -> Unknown
+let opt_cmp (cmp : 'a comparator_for) :
+  'a FStar_Pervasives_Native.option comparator_for=
+  fun o1 o2 ->
+    match (o1, o2) with
+    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Eq
+    | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
+        cmp x y
+    | uu___ -> Neq
+let pair_cmp (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
+  ('a * 'b) comparator_for=
+  fun uu___ uu___1 ->
+    match (uu___, uu___1) with
+    | ((a1, b1), (a2, b2)) ->
+        co () () (a1, b1) (a2, b2) uu___ uu___1
+          (op_Amp_Amp_Amp () () a1 a2 b1 b2 (cmpa a1 a2) (cmpb b1 b2)) ()
+let rec list_cmp : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
+  fun cmp l1 l2 ->
+    match (l1, l2) with
+    | ([], []) -> Eq
+    | (x::xs, y::ys) ->
+        co () () (x, xs) (y, ys) l1 l2
+          (op_Amp_Amp_Amp () () x y xs ys (cmp x y) (list_cmp cmp xs ys)) ()
+    | uu___ -> Neq
+let rec list_dec_cmp :
+  'a 'uuuuu .
+    'uuuuu ->
+      'uuuuu ->
+        ('a -> 'a -> ('a, Obj.t, Obj.t) cmpres) ->
+          'a Prims.list ->
+            'a Prims.list -> ('a Prims.list, Obj.t, Obj.t) cmpres
+  =
+  fun top1 top2 cmp l1 l2 ->
+    match (l1, l2) with
+    | ([], []) -> Eq
+    | (x::xs, y::ys) ->
+        co () () (x, xs) (y, ys) l1 l2
+          (op_Amp_Amp_Amp () () x y xs ys (cmp x y)
+             (list_dec_cmp top1 top2 cmp xs ys)) ()
+    | uu___ -> Neq
+let eq_cmp : 'uuuuu comparator_for= fun x y -> if x = y then Eq else Neq
+let rec list_dec_cmp' :
+  'a 'b .
+    unit ->
+      'b ->
+        'b ->
+          ('a -> 'a -> ('a, Obj.t, Obj.t, Obj.t) cmpres') ->
+            'a Prims.list ->
+              'a Prims.list -> ('a Prims.list, Obj.t, Obj.t, Obj.t) cmpres'
+  =
+  fun r top1 top2 cmp l1 l2 ->
+    match (l1, l2) with
+    | ([], []) -> Eq
+    | (x::xs, y::ys) ->
+        co () () (x, xs) (y, ys) l1 l2
+          (op_Amp_Amp_Amp () () x y xs ys (cmp x y)
+             (list_dec_cmp' () top1 top2 cmp xs ys)) ()
+    | uu___ -> Neq
+let opt_dec_cmp' (r : unit) (top1 : 'b) (top2 : 'b)
+  (cmp : 'a -> 'a -> ('a, Obj.t, Obj.t, Obj.t) cmpres')
+  (o1 : 'a FStar_Pervasives_Native.option)
+  (o2 : 'a FStar_Pervasives_Native.option) :
+  ('a FStar_Pervasives_Native.option, Obj.t, Obj.t, Obj.t) cmpres'=
+  match (o1, o2) with
+  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Eq
+  | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
+      co () () x y o1 o2 (cmp x y) ()
+  | uu___ -> Neq
+let either_dec_cmp' (ra : unit) (rb : unit) (top1 : 'c) (top2 : 'c)
+  (cmpa : 'a -> 'a -> ('a, Obj.t, Obj.t, Obj.t) cmpres')
+  (cmpb : 'b -> 'b -> ('b, Obj.t, Obj.t, Obj.t) cmpres')
+  (e1 : ('a, 'b) FStar_Pervasives.either)
+  (e2 : ('a, 'b) FStar_Pervasives.either) :
+  (('a, 'b) FStar_Pervasives.either, Obj.t, Obj.t, Obj.t) cmpres'=
+  match (e1, e2) with
+  | (FStar_Pervasives.Inl x, FStar_Pervasives.Inl y) ->
+      co () () x y e1 e2 (cmpa x y) ()
+  | (FStar_Pervasives.Inr x, FStar_Pervasives.Inr y) ->
+      co () () x y e1 e2 (cmpb x y) ()
+  | uu___ -> Neq
 let bv_cmp : FStarC_Reflection_Types.bv comparator_for=
   fun x1 x2 ->
     let v1 = FStarC_Reflection_V2_Builtins.inspect_bv x1 in
@@ -41,88 +127,22 @@ let fv_cmp : FStarC_Reflection_Types.fv comparator_for=
     let n1 = FStarC_Reflection_V2_Builtins.inspect_fv f1 in
     let n2 = FStarC_Reflection_V2_Builtins.inspect_fv f2 in
     if n1 = n2 then Eq else Neq
-let opt_cmp (cmp : 'a comparator_for) :
-  'a FStar_Pervasives_Native.option comparator_for=
-  fun o1 o2 ->
-    match (o1, o2) with
-    | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Eq
-    | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
-        cmp x y
-    | uu___ -> Neq
-let either_cmp (uu___1 : 'a comparator_for) (uu___ : 'b comparator_for) :
-  ('a, 'b) FStar_Pervasives.either comparator_for=
-  (fun cmpa cmpb e1 e2 ->
-     match (e1, e2) with
-     | (FStar_Pervasives.Inl x, FStar_Pervasives.Inl y) ->
-         Obj.magic (Obj.repr (cmpa x y))
-     | (FStar_Pervasives.Inr x, FStar_Pervasives.Inr y) ->
-         Obj.magic (Obj.repr (cmpb x y))
-     | uu___ -> Obj.magic (Obj.repr Neq)) uu___1 uu___
-let pair_cmp (cmpa : 'a comparator_for) (cmpb : 'b comparator_for) :
-  ('a * 'b) comparator_for=
-  fun uu___ uu___1 ->
-    match (uu___, uu___1) with
-    | ((a1, b1), (a2, b2)) ->
-        op_Amp_Amp_Amp a1 a2 b1 b2 (cmpa a1 a2) (cmpb b1 b2)
-let rec list_cmp : 'a . 'a comparator_for -> 'a Prims.list comparator_for =
-  fun cmp l1 l2 ->
-    match (l1, l2) with
-    | ([], []) -> Eq
-    | (x::xs, y::ys) ->
-        op_Amp_Amp_Amp x y xs ys (cmp x y) (list_cmp cmp xs ys)
-    | uu___ -> Neq
-let rec list_dec_cmp :
-  'a 'uuuuu .
-    'uuuuu ->
-      'uuuuu ->
-        ('a -> 'a -> ('a, Obj.t, Obj.t) cmpres) ->
-          'a Prims.list ->
-            'a Prims.list -> ('a Prims.list, Obj.t, Obj.t) cmpres
-  =
-  fun top1 top2 cmp l1 l2 ->
-    match (l1, l2) with
-    | ([], []) -> Eq
-    | (x::xs, y::ys) ->
-        op_Amp_Amp_Amp x y xs ys (cmp x y) (list_dec_cmp top1 top2 cmp xs ys)
-    | uu___ -> Neq
-let opt_dec_cmp (top1 : 'b) (top2 : 'b)
-  (cmp : 'a -> 'a -> ('a, Obj.t, Obj.t) cmpres)
-  (o1 : 'a FStar_Pervasives_Native.option)
-  (o2 : 'a FStar_Pervasives_Native.option) :
-  ('a FStar_Pervasives_Native.option, Obj.t, Obj.t) cmpres=
-  match (o1, o2) with
-  | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> Eq
-  | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
-      cmp x y
-  | uu___ -> Neq
-let either_dec_cmp (uu___5 : 'c) (uu___4 : 'c)
-  (uu___3 : 'a -> 'a -> ('a, Obj.t, Obj.t) cmpres)
-  (uu___2 : 'b -> 'b -> ('b, Obj.t, Obj.t) cmpres)
-  (uu___1 : ('a, 'b) FStar_Pervasives.either)
-  (uu___ : ('a, 'b) FStar_Pervasives.either) :
-  (('a, 'b) FStar_Pervasives.either, Obj.t, Obj.t) cmpres=
-  (fun top1 top2 cmpa cmpb e1 e2 ->
-     match (e1, e2) with
-     | (FStar_Pervasives.Inl x, FStar_Pervasives.Inl y) ->
-         Obj.magic (Obj.repr (cmpa x y))
-     | (FStar_Pervasives.Inr x, FStar_Pervasives.Inr y) ->
-         Obj.magic (Obj.repr (cmpb x y))
-     | uu___ -> Obj.magic (Obj.repr Neq)) uu___5 uu___4 uu___3 uu___2 uu___1
-    uu___
-let eq_cmp : 'uuuuu comparator_for= fun x y -> if x = y then Eq else Neq
 let range_cmp : FStar_Range.range comparator_for= fun r1 r2 -> eq_cmp r1 r2
 let ident_cmp : FStarC_Reflection_Types.ident comparator_for=
   fun i1 i2 ->
     let iv1 = FStarC_Reflection_V2_Builtins.inspect_ident i1 in
     let iv2 = FStarC_Reflection_V2_Builtins.inspect_ident i2 in
-    Obj.magic
-      (op_Amp_Amp_Amp (FStar_Pervasives_Native.fst iv1)
+    co () ()
+      ((FStar_Pervasives_Native.fst iv1), (FStar_Pervasives_Native.snd iv1))
+      ((FStar_Pervasives_Native.fst iv2), (FStar_Pervasives_Native.snd iv2))
+      i1 i2
+      (op_Amp_Amp_Amp () () (FStar_Pervasives_Native.fst iv1)
          (FStar_Pervasives_Native.fst iv2) (FStar_Pervasives_Native.snd iv1)
          (FStar_Pervasives_Native.snd iv2)
          (eq_cmp (FStar_Pervasives_Native.fst iv1)
             (FStar_Pervasives_Native.fst iv2))
          (eq_cmp (FStar_Pervasives_Native.snd iv1)
-            (FStar_Pervasives_Native.snd iv2)))
+            (FStar_Pervasives_Native.snd iv2))) ()
 let rec univ_cmp : FStarC_Reflection_Types.universe comparator_for=
   fun u1 u2 ->
     let uv1 = FStarC_Reflection_V2_Builtins.inspect_universe u1 in
@@ -175,111 +195,153 @@ let const_cmp : FStarC_Reflection_V2_Data.vconst comparator_for=
     | uu___ -> Obj.magic (Obj.repr Neq)
 let ctxu_cmp : FStarC_Reflection_Types.ctx_uvar_and_subst comparator_for=
   fun uu___ uu___1 -> Unknown
-let rec term_cmp : FStarC_Reflection_Types.term comparator_for=
+let denote_pat_univs
+  (o :
+    FStarC_Reflection_Types.universe Prims.list
+      FStar_Pervasives_Native.option)
+  : unit Prims.list FStar_Pervasives_Native.option=
+  match o with
+  | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+  | FStar_Pervasives_Native.Some us ->
+      FStar_Pervasives_Native.Some
+        (FStar_Reflection_TermSpec.denote_universes us)
+let denote_either
+  (tc :
+    (FStarC_Reflection_Types.term, FStarC_Reflection_Types.comp)
+      FStar_Pervasives.either)
+  : (unit, unit) FStar_Pervasives.either=
+  match tc with
+  | FStar_Pervasives.Inl t -> FStar_Pervasives.Inl ()
+  | FStar_Pervasives.Inr c -> FStar_Pervasives.Inr ()
+let rec term_cmp : (FStarC_Reflection_Types.term, Obj.t) comparator_for'=
   fun t1 t2 ->
     let tv1 = FStarC_Reflection_V2_Builtins.inspect_ln t1 in
     let tv2 = FStarC_Reflection_V2_Builtins.inspect_ln t2 in
     match (tv1, tv2) with
-    | (FStarC_Reflection_V2_Data.Tv_Unsupp, uu___) ->
-        Obj.magic (Obj.repr Unknown)
-    | (uu___, FStarC_Reflection_V2_Data.Tv_Unsupp) ->
-        Obj.magic (Obj.repr Unknown)
+    | (FStarC_Reflection_V2_Data.Tv_Unsupp, uu___) -> Unknown
+    | (uu___, FStarC_Reflection_V2_Data.Tv_Unsupp) -> Unknown
     | (FStarC_Reflection_V2_Data.Tv_Var v1, FStarC_Reflection_V2_Data.Tv_Var
-       v2) -> Obj.magic (Obj.repr (namedv_cmp v1 v2))
+       v2) -> co () () v1 v2 t1 t2 (namedv_cmp v1 v2) ()
     | (FStarC_Reflection_V2_Data.Tv_BVar v1,
        FStarC_Reflection_V2_Data.Tv_BVar v2) ->
-        Obj.magic (Obj.repr (bv_cmp v1 v2))
+        co () () v1 v2 t1 t2 (bv_cmp v1 v2) ()
     | (FStarC_Reflection_V2_Data.Tv_FVar f1,
        FStarC_Reflection_V2_Data.Tv_FVar f2) ->
-        Obj.magic (Obj.repr (fv_cmp f1 f2))
-    | (FStarC_Reflection_V2_Data.Tv_UInst (f1, u1),
-       FStarC_Reflection_V2_Data.Tv_UInst (f2, u2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp f1 f2 u1 u2 (fv_cmp f1 f2)
-                (list_dec_cmp t1 t2 univ_cmp u1 u2)))
+        co () () f1 f2 t1 t2 (fv_cmp f1 f2) ()
+    | (FStarC_Reflection_V2_Data.Tv_UInst (f1, us1),
+       FStarC_Reflection_V2_Data.Tv_UInst (f2, us2)) ->
+        co () () (f1, us1) (f2, us2) t1 t2
+          (op_Amp_Amp_Amp () () f1 f2 us1 us2 (fv_cmp f1 f2)
+             (list_dec_cmp' () t1 t2 univ_cmp us1 us2)) ()
     | (FStarC_Reflection_V2_Data.Tv_App (h1, a1),
        FStarC_Reflection_V2_Data.Tv_App (h2, a2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp h1 h2 a1 a2 (term_cmp h1 h2) (arg_cmp a1 a2)))
+        co () () (h1, a1) (h2, a2) t1 t2
+          (op_Amp_Amp_Amp () () h1 h2 a1 a2 (term_cmp h1 h2) (arg_cmp a1 a2))
+          ()
     | (FStarC_Reflection_V2_Data.Tv_Abs (b1, e1),
        FStarC_Reflection_V2_Data.Tv_Abs (b2, e2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp b1 b2 e1 e2 (binder_cmp b1 b2) (term_cmp e1 e2)))
+        co () () (b1, e1) (b2, e2) t1 t2
+          (op_Amp_Amp_Amp () () b1 b2 e1 e2 (binder_cmp b1 b2)
+             (term_cmp e1 e2)) ()
     | (FStarC_Reflection_V2_Data.Tv_Arrow (b1, c1),
        FStarC_Reflection_V2_Data.Tv_Arrow (b2, c2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp b1 b2 c1 c2 (binder_cmp b1 b2) (comp_cmp c1 c2)))
+        co () () (b1, c1) (b2, c2) t1 t2
+          (op_Amp_Amp_Amp () () b1 b2 c1 c2 (binder_cmp b1 b2)
+             (comp_cmp c1 c2)) ()
     | (FStarC_Reflection_V2_Data.Tv_Type u1,
        FStarC_Reflection_V2_Data.Tv_Type u2) ->
-        Obj.magic (Obj.repr (univ_cmp u1 u2))
+        co () () u1 u2 t1 t2 (univ_cmp u1 u2) ()
     | (FStarC_Reflection_V2_Data.Tv_Refine (sb1, r1),
        FStarC_Reflection_V2_Data.Tv_Refine (sb2, r2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp sb1 sb2 r1 r2 (binder_cmp sb1 sb2)
-                (term_cmp r1 r2)))
+        co () ()
+          (((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2),
+            r1)
+          (((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2),
+            r2) t1 t2
+          (op_Amp_Amp_Amp () ()
+             (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+             (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2
+             r1 r2
+             (term_cmp
+                (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+                (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)
+             (term_cmp r1 r2)) ()
     | (FStarC_Reflection_V2_Data.Tv_Const c1,
        FStarC_Reflection_V2_Data.Tv_Const c2) ->
-        Obj.magic (Obj.repr (const_cmp c1 c2))
+        co () () c1 c2 t1 t2 (const_cmp c1 c2) ()
     | (FStarC_Reflection_V2_Data.Tv_Uvar (n1, u1),
        FStarC_Reflection_V2_Data.Tv_Uvar (n2, u2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp n1 n2 u1 u2 (eq_cmp n1 n2) (ctxu_cmp u1 u2)))
+        co () () n1 n2 t1 t2 (eq_cmp n1 n2) ()
     | (FStarC_Reflection_V2_Data.Tv_Let (r1, attrs1, sb1, e1, b1),
        FStarC_Reflection_V2_Data.Tv_Let (r2, attrs2, sb2, e2, b2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp (((r1, attrs1), sb1), e1)
-                (((r2, attrs2), sb2), e2) b1 b2
-                (op_Amp_Amp_Amp ((r1, attrs1), sb1) ((r2, attrs2), sb2) e1 e2
-                   (op_Amp_Amp_Amp (r1, attrs1) (r2, attrs2) sb1 sb2
-                      (op_Amp_Amp_Amp r1 r2 attrs1 attrs2 (eq_cmp r1 r2)
-                         (list_dec_cmp t1 t2 term_cmp attrs1 attrs2))
-                      (binder_cmp sb1 sb2)) (term_cmp e1 e2))
-                (term_cmp b1 b2)))
+        co () ()
+          ((((r1, attrs1),
+              ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
+             e1), b1)
+          ((((r2, attrs2),
+              ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
+             e2), b2) t1 t2
+          (op_Amp_Amp_Amp () ()
+             (((r1, attrs1),
+                ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2)),
+               e1)
+             (((r2, attrs2),
+                ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2)),
+               e2) b1 b2
+             (op_Amp_Amp_Amp () ()
+                ((r1, attrs1),
+                  ((FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2))
+                ((r2, attrs2),
+                  ((FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
+                e1 e2
+                (op_Amp_Amp_Amp () () (r1, attrs1) (r2, attrs2)
+                   (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+                   (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2
+                   (op_Amp_Amp_Amp () () r1 r2 attrs1 attrs2 (eq_cmp r1 r2)
+                      (list_dec_cmp' () t1 t2 term_cmp attrs1 attrs2))
+                   (term_cmp
+                      (FStarC_Reflection_V2_Builtins.inspect_binder sb1).FStarC_Reflection_V2_Data.sort2
+                      (FStarC_Reflection_V2_Builtins.inspect_binder sb2).FStarC_Reflection_V2_Data.sort2))
+                (term_cmp e1 e2)) (term_cmp b1 b2)) ()
     | (FStarC_Reflection_V2_Data.Tv_Match (sc1, o1, brs1),
        FStarC_Reflection_V2_Data.Tv_Match (sc2, o2, brs2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp (sc1, o1) (sc2, o2) brs1 brs2
-                (op_Amp_Amp_Amp sc1 sc2 o1 o2 (term_cmp sc1 sc2)
-                   (opt_dec_cmp t1 t2 match_returns_ascription_cmp o1 o2))
-                (list_dec_cmp t1 t2 br_cmp brs1 brs2)))
+        co () () ((sc1, o1), brs1) ((sc2, o2), brs2) t1 t2
+          (op_Amp_Amp_Amp () () (sc1, o1) (sc2, o2) brs1 brs2
+             (op_Amp_Amp_Amp () () sc1 sc2 o1 o2 (term_cmp sc1 sc2)
+                (opt_dec_cmp' () t1 t2 match_returns_ascription_cmp o1 o2))
+             (list_dec_cmp' () t1 t2 br_cmp brs1 brs2)) ()
     | (FStarC_Reflection_V2_Data.Tv_AscribedT (e1, ta1, tacopt1, eq1),
        FStarC_Reflection_V2_Data.Tv_AscribedT (e2, ta2, tacopt2, eq2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp ((e1, ta1), tacopt1) ((e2, ta2), tacopt2) eq1
-                eq2
-                (op_Amp_Amp_Amp (e1, ta1) (e2, ta2) tacopt1 tacopt2
-                   (op_Amp_Amp_Amp e1 e2 ta1 ta2 (term_cmp e1 e2)
-                      (term_cmp ta1 ta2))
-                   (opt_dec_cmp t1 t2 term_cmp tacopt1 tacopt2))
-                (eq_cmp eq1 eq2)))
+        co () () (((e1, ta1), tacopt1), eq1) (((e2, ta2), tacopt2), eq2) t1
+          t2
+          (op_Amp_Amp_Amp () () ((e1, ta1), tacopt1) ((e2, ta2), tacopt2) eq1
+             eq2
+             (op_Amp_Amp_Amp () () (e1, ta1) (e2, ta2) tacopt1 tacopt2
+                (op_Amp_Amp_Amp () () e1 e2 ta1 ta2 (term_cmp e1 e2)
+                   (term_cmp ta1 ta2))
+                (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
+             (eq_cmp eq1 eq2)) ()
     | (FStarC_Reflection_V2_Data.Tv_AscribedC (e1, c1, tacopt1, eq1),
        FStarC_Reflection_V2_Data.Tv_AscribedC (e2, c2, tacopt2, eq2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp ((e1, c1), tacopt1) ((e2, c2), tacopt2) eq1 eq2
-                (op_Amp_Amp_Amp (e1, c1) (e2, c2) tacopt1 tacopt2
-                   (op_Amp_Amp_Amp e1 e2 c1 c2 (term_cmp e1 e2)
-                      (comp_cmp c1 c2))
-                   (opt_dec_cmp t1 t2 term_cmp tacopt1 tacopt2))
-                (eq_cmp eq1 eq2)))
+        co () () (((e1, c1), tacopt1), eq1) (((e2, c2), tacopt2), eq2) t1 t2
+          (op_Amp_Amp_Amp () () ((e1, c1), tacopt1) ((e2, c2), tacopt2) eq1
+             eq2
+             (op_Amp_Amp_Amp () () (e1, c1) (e2, c2) tacopt1 tacopt2
+                (op_Amp_Amp_Amp () () e1 e2 c1 c2 (term_cmp e1 e2)
+                   (comp_cmp c1 c2))
+                (opt_dec_cmp' () t1 t2 term_cmp tacopt1 tacopt2))
+             (eq_cmp eq1 eq2)) ()
     | (FStarC_Reflection_V2_Data.Tv_Unknown,
-       FStarC_Reflection_V2_Data.Tv_Unknown) -> Obj.magic (Obj.repr Eq)
-    | uu___ -> Obj.magic (Obj.repr Neq)
-and arg_cmp : FStarC_Reflection_V2_Data.argv comparator_for=
+       FStarC_Reflection_V2_Data.Tv_Unknown) -> Eq
+    | uu___ -> Neq
+and arg_cmp : (FStarC_Reflection_V2_Data.argv, Obj.t) comparator_for'=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((a1, q1), (a2, q2)) ->
-        op_Amp_Amp_Amp a1 a2 q1 q2 (term_cmp a1 a2) (aqual_cmp q1 q2)
-and aqual_cmp : FStarC_Reflection_V2_Data.aqualv comparator_for=
+        co () () (a1, q1) (a2, q2) uu___ uu___1
+          (op_Amp_Amp_Amp () () a1 a2 q1 q2 (term_cmp a1 a2)
+             (aqual_cmp q1 q2)) ()
+and aqual_cmp : (FStarC_Reflection_V2_Data.aqualv, Obj.t) comparator_for'=
   fun a1 a2 ->
     match (a1, a2) with
     | (FStarC_Reflection_V2_Data.Q_Implicit,
@@ -289,10 +351,10 @@ and aqual_cmp : FStarC_Reflection_V2_Data.aqualv comparator_for=
     | (FStarC_Reflection_V2_Data.Q_Equality,
        FStarC_Reflection_V2_Data.Q_Equality) -> Eq
     | (FStarC_Reflection_V2_Data.Q_Meta m1, FStarC_Reflection_V2_Data.Q_Meta
-       m2) -> term_cmp m1 m2
+       m2) -> co () () m1 m2 a1 a2 (term_cmp m1 m2) ()
     | uu___ -> Neq
 and match_returns_ascription_cmp :
-  FStarC_Syntax_Syntax.match_returns_ascription comparator_for=
+  (FStarC_Syntax_Syntax.match_returns_ascription, Obj.t) comparator_for'=
   fun asc1 asc2 ->
     let uu___ = asc1 in
     match uu___ with
@@ -300,103 +362,106 @@ and match_returns_ascription_cmp :
         let uu___1 = asc2 in
         (match uu___1 with
          | (b2, (tc2, tacopt2, eq2)) ->
-             Obj.magic
-               (op_Amp_Amp_Amp ((b1, tc1), tacopt1) ((b2, tc2), tacopt2) eq1
-                  eq2
-                  (op_Amp_Amp_Amp (b1, tc1) (b2, tc2) tacopt1 tacopt2
-                     (op_Amp_Amp_Amp b1 b2 tc1 tc2 (binder_cmp b1 b2)
-                        (either_dec_cmp asc1 asc2 term_cmp comp_cmp tc1 tc2))
-                     (opt_dec_cmp asc1 asc2 term_cmp tacopt1 tacopt2))
-                  (eq_cmp eq1 eq2)))
-and binder_cmp : FStarC_Reflection_Types.binder comparator_for=
+             co () () (((b1, tc1), tacopt1), eq1) (((b2, tc2), tacopt2), eq2)
+               asc1 asc2
+               (op_Amp_Amp_Amp () () ((b1, tc1), tacopt1)
+                  ((b2, tc2), tacopt2) eq1 eq2
+                  (op_Amp_Amp_Amp () () (b1, tc1) (b2, tc2) tacopt1 tacopt2
+                     (op_Amp_Amp_Amp () () b1 b2 tc1 tc2 (binder_cmp b1 b2)
+                        (either_dec_cmp' () () asc1 asc2 term_cmp comp_cmp
+                           tc1 tc2))
+                     (opt_dec_cmp' () asc1 asc2 term_cmp tacopt1 tacopt2))
+                  (eq_cmp eq1 eq2)) ())
+and binder_cmp : (FStarC_Reflection_Types.binder, Obj.t) comparator_for'=
   fun b1 b2 ->
     let bv1 = FStarC_Reflection_V2_Builtins.inspect_binder b1 in
     let bv2 = FStarC_Reflection_V2_Builtins.inspect_binder b2 in
-    Obj.magic
-      (op_Amp_Amp_Amp
-         ((bv1.FStarC_Reflection_V2_Data.sort2),
-           (bv1.FStarC_Reflection_V2_Data.qual))
-         ((bv2.FStarC_Reflection_V2_Data.sort2),
-           (bv2.FStarC_Reflection_V2_Data.qual))
-         bv1.FStarC_Reflection_V2_Data.attrs
-         bv2.FStarC_Reflection_V2_Data.attrs
-         (op_Amp_Amp_Amp bv1.FStarC_Reflection_V2_Data.sort2
-            bv2.FStarC_Reflection_V2_Data.sort2
-            bv1.FStarC_Reflection_V2_Data.qual
-            bv2.FStarC_Reflection_V2_Data.qual
-            (term_cmp bv1.FStarC_Reflection_V2_Data.sort2
-               bv2.FStarC_Reflection_V2_Data.sort2)
-            (aqual_cmp bv1.FStarC_Reflection_V2_Data.qual
-               bv2.FStarC_Reflection_V2_Data.qual))
-         (list_dec_cmp b1 b2 term_cmp bv1.FStarC_Reflection_V2_Data.attrs
-            bv2.FStarC_Reflection_V2_Data.attrs))
-and comp_cmp : FStarC_Reflection_Types.comp comparator_for=
+    co () ()
+      ((bv1.FStarC_Reflection_V2_Data.sort2),
+        (bv1.FStarC_Reflection_V2_Data.qual))
+      ((bv2.FStarC_Reflection_V2_Data.sort2),
+        (bv2.FStarC_Reflection_V2_Data.qual)) b1 b2
+      (op_Amp_Amp_Amp () () bv1.FStarC_Reflection_V2_Data.sort2
+         bv2.FStarC_Reflection_V2_Data.sort2
+         bv1.FStarC_Reflection_V2_Data.qual
+         bv2.FStarC_Reflection_V2_Data.qual
+         (term_cmp bv1.FStarC_Reflection_V2_Data.sort2
+            bv2.FStarC_Reflection_V2_Data.sort2)
+         (aqual_cmp bv1.FStarC_Reflection_V2_Data.qual
+            bv2.FStarC_Reflection_V2_Data.qual)) ()
+and comp_cmp : (FStarC_Reflection_Types.comp, Obj.t) comparator_for'=
   fun c1 c2 ->
     let cv1 = FStarC_Reflection_V2_Builtins.inspect_comp c1 in
     let cv2 = FStarC_Reflection_V2_Builtins.inspect_comp c2 in
     match (cv1, cv2) with
     | (FStarC_Reflection_V2_Data.C_Total t1,
        FStarC_Reflection_V2_Data.C_Total t2) ->
-        Obj.magic (Obj.repr (term_cmp t1 t2))
+        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
     | (FStarC_Reflection_V2_Data.C_GTotal t1,
        FStarC_Reflection_V2_Data.C_GTotal t2) ->
-        Obj.magic (Obj.repr (term_cmp t1 t2))
+        co () () t1 t2 c1 c2 (term_cmp t1 t2) ()
     | (FStarC_Reflection_V2_Data.C_Lemma (pre1, post1, pat1),
        FStarC_Reflection_V2_Data.C_Lemma (pre2, post2, pat2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp (pre1, post1) (pre2, post2) pat1 pat2
-                (op_Amp_Amp_Amp pre1 pre2 post1 post2 (term_cmp pre1 pre2)
-                   (term_cmp post1 post2)) (term_cmp pat1 pat2)))
+        co () () ((pre1, post1), pat1) ((pre2, post2), pat2) c1 c2
+          (op_Amp_Amp_Amp () () (pre1, post1) (pre2, post2) pat1 pat2
+             (op_Amp_Amp_Amp () () pre1 pre2 post1 post2 (term_cmp pre1 pre2)
+                (term_cmp post1 post2)) (term_cmp pat1 pat2)) ()
     | (FStarC_Reflection_V2_Data.C_Eff (us1, ef1, t1, args1, dec1),
        FStarC_Reflection_V2_Data.C_Eff (us2, ef2, t2, args2, dec2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp (((us1, ef1), t1), args1)
-                (((us2, ef2), t2), args2) dec1 dec2
-                (op_Amp_Amp_Amp ((us1, ef1), t1) ((us2, ef2), t2) args1 args2
-                   (op_Amp_Amp_Amp (us1, ef1) (us2, ef2) t1 t2
-                      (op_Amp_Amp_Amp us1 us2 ef1 ef2
-                         (list_dec_cmp c1 c2 univ_cmp us1 us2)
-                         (eq_cmp ef1 ef2)) (term_cmp t1 t2))
-                   (list_dec_cmp c1 c2 arg_cmp args1 args2))
-                (list_dec_cmp c1 c2 term_cmp dec1 dec2)))
-    | uu___ -> Obj.magic (Obj.repr Neq)
-and br_cmp : FStarC_Reflection_V2_Data.branch comparator_for=
+        co () () ((((us1, ef1), t1), args1), dec1)
+          ((((us2, ef2), t2), args2), dec2) c1 c2
+          (op_Amp_Amp_Amp () () (((us1, ef1), t1), args1)
+             (((us2, ef2), t2), args2) dec1 dec2
+             (op_Amp_Amp_Amp () () ((us1, ef1), t1) ((us2, ef2), t2) args1
+                args2
+                (op_Amp_Amp_Amp () () (us1, ef1) (us2, ef2) t1 t2
+                   (op_Amp_Amp_Amp () () us1 us2 ef1 ef2
+                      (list_dec_cmp' () c1 c2 univ_cmp us1 us2)
+                      (eq_cmp ef1 ef2)) (term_cmp t1 t2))
+                (list_dec_cmp' () c1 c2 arg_cmp args1 args2))
+             (list_dec_cmp' () c1 c2 term_cmp dec1 dec2)) ()
+    | uu___ -> Neq
+and br_cmp : (FStarC_Reflection_V2_Data.branch, Obj.t) comparator_for'=
   fun br1 br2 ->
-    op_Amp_Amp_Amp (FStar_Pervasives_Native.fst br1)
-      (FStar_Pervasives_Native.fst br2) (FStar_Pervasives_Native.snd br1)
-      (FStar_Pervasives_Native.snd br2)
-      (pat_cmp (FStar_Pervasives_Native.fst br1)
-         (FStar_Pervasives_Native.fst br2))
-      (term_cmp (FStar_Pervasives_Native.snd br1)
-         (FStar_Pervasives_Native.snd br2))
-and pat_cmp : FStarC_Reflection_V2_Data.pattern comparator_for=
+    co () ()
+      ((FStar_Pervasives_Native.fst br1), (FStar_Pervasives_Native.snd br1))
+      ((FStar_Pervasives_Native.fst br2), (FStar_Pervasives_Native.snd br2))
+      br1 br2
+      (op_Amp_Amp_Amp () () (FStar_Pervasives_Native.fst br1)
+         (FStar_Pervasives_Native.fst br2) (FStar_Pervasives_Native.snd br1)
+         (FStar_Pervasives_Native.snd br2)
+         (pat_cmp (FStar_Pervasives_Native.fst br1)
+            (FStar_Pervasives_Native.fst br2))
+         (term_cmp (FStar_Pervasives_Native.snd br1)
+            (FStar_Pervasives_Native.snd br2))) ()
+and pat_cmp : (FStarC_Reflection_V2_Data.pattern, Obj.t) comparator_for'=
   fun p1 p2 ->
     match (p1, p2) with
     | (FStarC_Reflection_V2_Data.Pat_Var (x1, s1),
-       FStarC_Reflection_V2_Data.Pat_Var (x2, s2)) -> Obj.magic (Obj.repr Eq)
+       FStarC_Reflection_V2_Data.Pat_Var (x2, s2)) -> Eq
     | (FStarC_Reflection_V2_Data.Pat_Constant x1,
        FStarC_Reflection_V2_Data.Pat_Constant x2) ->
-        Obj.magic (Obj.repr (const_cmp x1 x2))
+        co () () x1 x2 p1 p2 (const_cmp x1 x2) ()
     | (FStarC_Reflection_V2_Data.Pat_Dot_Term x1,
        FStarC_Reflection_V2_Data.Pat_Dot_Term x2) ->
-        Obj.magic (Obj.repr (opt_dec_cmp p1 p2 term_cmp x1 x2))
+        co () () x1 x2 p1 p2 (opt_dec_cmp' () p1 p2 term_cmp x1 x2) ()
     | (FStarC_Reflection_V2_Data.Pat_Cons (head1, us1, subpats1),
        FStarC_Reflection_V2_Data.Pat_Cons (head2, us2, subpats2)) ->
-        Obj.magic
-          (Obj.repr
-             (op_Amp_Amp_Amp (head1, us1) (head2, us2) subpats1 subpats2
-                (op_Amp_Amp_Amp head1 head2 us1 us2 (fv_cmp head1 head2)
-                   (opt_dec_cmp p1 p2 (list_dec_cmp p1 p2 univ_cmp) us1 us2))
-                (list_dec_cmp p1 p2 pat_arg_cmp subpats1 subpats2)))
-    | uu___ -> Obj.magic (Obj.repr Neq)
+        co () () ((head1, us1), subpats1) ((head2, us2), subpats2) p1 p2
+          (op_Amp_Amp_Amp () () (head1, us1) (head2, us2) subpats1 subpats2
+             (op_Amp_Amp_Amp () () head1 head2 us1 us2 (fv_cmp head1 head2)
+                (opt_dec_cmp' () p1 p2 (list_dec_cmp' () p1 p2 univ_cmp) us1
+                   us2))
+             (list_dec_cmp' () p1 p2 pat_arg_cmp subpats1 subpats2)) ()
+    | uu___ -> Neq
 and pat_arg_cmp :
-  (FStarC_Reflection_V2_Data.pattern * Prims.bool) comparator_for=
+  ((FStarC_Reflection_V2_Data.pattern * Prims.bool), Obj.t) comparator_for'=
   fun uu___ uu___1 ->
     match (uu___, uu___1) with
     | ((p1, b1), (p2, b2)) ->
-        op_Amp_Amp_Amp p1 p2 b1 b2 (pat_cmp p1 p2) (eq_cmp b1 b2)
+        co () () (p1, b1) (p2, b2) uu___ uu___1
+          (op_Amp_Amp_Amp () () p1 p2 b1 b2 (pat_cmp p1 p2) (eq_cmp b1 b2))
+          ()
 let term_eq (t1 : FStarC_Reflection_Types.term)
   (t2 : FStarC_Reflection_Types.term) : Prims.bool=
   uu___is_Eq (term_cmp t1 t2)

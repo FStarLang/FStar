@@ -79,9 +79,7 @@ let extract_fundeps (se : FStarC_Reflection_Types.sigelt) :
   (Prims.int Prims.list FStar_Pervasives_Native.option, Obj.t)
     FStar_Tactics_Effect.tac_repr=
   fun ps ->
-    let x =
-      FStarC_Tactics_Unseal.unseal
-        (FStarC_Reflection_V2_Builtins.sigelt_attrs se) ps in
+    let x = FStarC_Reflection_V2_Builtins.sigelt_attrs se in
     match x with
     | [] -> FStar_Pervasives_Native.None
     | attr::attrs' ->
@@ -219,15 +217,13 @@ let is_class_name (f : FStarC_Reflection_Types.fv) :
     match x with
     | FStar_Pervasives_Native.None -> false
     | FStar_Pervasives_Native.Some se ->
-        let x1 =
-          FStarC_Tactics_Unseal.unseal
-            (FStarC_Reflection_V2_Builtins.sigelt_attrs se) ps in
         FStar_List_Tot_Base.existsb
           (FStar_Reflection_TermEq_Simple.term_eq
              (FStarC_Reflection_V2_Builtins.pack_ln
                 (FStarC_Reflection_V2_Data.Tv_FVar
                    (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar"; "Tactics"; "Typeclasses"; "tcclass"])))) x1
+                      ["FStar"; "Tactics"; "Typeclasses"; "tcclass"]))))
+          (FStarC_Reflection_V2_Builtins.sigelt_attrs se)
 let class_of_typ (t : FStar_Tactics_NamedView.term) :
   (FStarC_Reflection_Types.fv FStar_Pervasives_Native.option, Obj.t)
     FStar_Tactics_Effect.tac_repr=
@@ -262,9 +258,6 @@ let build_glb_map (all_glb : FStarC_Reflection_Types.sigelt Prims.list) :
   fun ps ->
     let x se ps1 =
       let x1 = sigelt_name se ps1 in
-      let x2 =
-        FStarC_Tactics_Unseal.unseal
-          (FStarC_Reflection_V2_Builtins.sigelt_attrs se) ps1 in
       {
         inst_name = x1;
         noinst =
@@ -273,7 +266,8 @@ let build_glb_map (all_glb : FStarC_Reflection_Types.sigelt Prims.list) :
                 (FStarC_Reflection_V2_Builtins.pack_ln
                    (FStarC_Reflection_V2_Data.Tv_FVar
                       (FStarC_Reflection_V2_Builtins.pack_fv
-                         ["FStar"; "Tactics"; "Typeclasses"; "noinst"])))) x2)
+                         ["FStar"; "Tactics"; "Typeclasses"; "noinst"]))))
+             (FStarC_Reflection_V2_Builtins.sigelt_attrs se))
       } in
     let x1 =
       FStar_Tactics_Util.concatMap
@@ -296,9 +290,7 @@ let build_glb_map (all_glb : FStarC_Reflection_Types.sigelt Prims.list) :
            match x3 with
            | FStar_Pervasives_Native.None -> []
            | FStar_Pervasives_Native.Some typ ->
-               let x4 =
-                 FStarC_Tactics_Unseal.unseal
-                   (FStarC_Reflection_V2_Builtins.sigelt_attrs se) ps1 in
+               let x4 = FStarC_Reflection_V2_Builtins.sigelt_attrs se in
                let x5 = class_of_typ typ ps1 in
                (match x5 with
                 | FStar_Pervasives_Native.None -> []
@@ -717,10 +709,8 @@ let __tcresolve (dbg : Prims.bool) :
       let x5 = build_glb_map x4 ps in
       let x6 =
         let x7 =
-          let x8 =
-            let x9 = FStar_Tactics_V2_Derived.cur_goal () ps in
-            FStarC_Reflection_V2_Builtins.range_of_term x9 in
-          FStarC_Tactics_Unseal.unseal x8 ps in
+          let x8 = FStar_Tactics_V2_Derived.cur_goal () ps in
+          FStarC_Reflection_V2_Builtins.range_of_term x8 in
         let x8 = FStarC_Tactics_V2_Builtins.alloc false ps in
         {
           seen = [];
@@ -871,15 +861,13 @@ let mk_class (nm : Prims.string) :
      match x3 with
      | FStar_Pervasives_Native.Some se ->
          let x4 =
-           let x5 =
-             FStarC_Tactics_Unseal.unseal
-               (FStarC_Reflection_V2_Builtins.sigelt_quals se) ps in
            FStar_List_Tot_Base.filter
              (fun uu___ ->
                 match uu___ with
                 | FStarC_Reflection_V2_Data.Inline_for_extraction -> true
                 | FStarC_Reflection_V2_Data.NoExtract -> true
-                | uu___1 -> false) x5 in
+                | uu___1 -> false)
+             (FStarC_Reflection_V2_Builtins.sigelt_quals se) in
          let x5 = FStar_Tactics_NamedView.inspect_sigelt se ps in
          (FStar_Tactics_V2_Derived.guard
             (FStar_Tactics_NamedView.uu___is_Sg_Inductive x5) ps;
@@ -1035,9 +1023,8 @@ let mk_class (nm : Prims.string) :
                                             | FStar_Pervasives_Native.Some
                                                 se1 -> se1 in
                                           let x35 =
-                                            FStarC_Tactics_Unseal.unseal
-                                              (FStarC_Reflection_V2_Builtins.sigelt_attrs
-                                                 x34) ps1 in
+                                            FStarC_Reflection_V2_Builtins.sigelt_attrs
+                                              x34 in
                                           let x36 =
                                             let x37 =
                                               FStar_Tactics_NamedView.inspect_sigelt
