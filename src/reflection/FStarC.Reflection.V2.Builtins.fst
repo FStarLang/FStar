@@ -367,6 +367,18 @@ let rec pack_pat p : ML S.pat =
     wrap <| Pat_var bv
   | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
 
+let rec canon_abs (t:term) : ML term =
+  let t = t |> SS.compress_subst in
+  match t.n with
+  | Tm_abs {bs; body; rc_opt=None} -> begin
+      let body = canon_abs body in
+      match (SS.compress_subst body).n with
+      | Tm_abs {bs=bs'; body=body'; rc_opt} ->
+        S.mk (Tm_abs {bs=bs@bs'; body=body'; rc_opt}) t.pos
+      | _ -> t
+    end
+  | _ -> t
+
 // TODO: pass in range?
 let pack_ln (tv:term_view) : ML term =
     match tv with
@@ -384,12 +396,14 @@ let pack_ln (tv:term_view) : ML term =
 
     | Tv_App (l, (r, q)) ->
         let q' = pack_aqual q in
-        U.mk_app l [(r, q')]
+        S.extend_app l (r, q') (pos l `Range.union_ranges` pos r)
 
     | Tv_Abs (b, t) ->
+      canon_abs <|
         mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
+      U.canon_arrow <|
         mk (Tm_arrow {bs=[b]; comp=c}) c.pos
 
     | Tv_Type u ->
