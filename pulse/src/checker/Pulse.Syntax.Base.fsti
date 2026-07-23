@@ -30,9 +30,9 @@ let index = nat
 type universe = R.universe
 
 (* locally nameless. *)
-let range = FStar.Sealed.sealed FStar.Range.range
+let range = FStar.Range.range
 
-let range_0 : range = FStar.Sealed.seal FStar.Range.range_0
+let range_0 : range = FStar.Range.range_0
 
 noeq
 type ppname0 = {

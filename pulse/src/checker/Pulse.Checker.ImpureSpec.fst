@@ -73,7 +73,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
   debug g (fun _ -> [ text "impure spec inferred type"; pp t; pp ty ]);
   match readback_comp ty with
   | None | Some (C_Tot ..) ->
-    T.fail_doc_at [text "Impossible: not a stateful application type"; fquotes (pp ty)] (Some (T.unseal (RU.range_of_term t)))
+    T.fail_doc_at [text "Impossible: not a stateful application type"; fquotes (pp ty)] (Some (RU.range_of_term t))
   | Some c -> match c with
   | C_STAtomic _ _ { pre; post } | C_STGhost _ { pre; post } | C_ST { pre; post } | C_STDiv { pre; post } ->
     let x = fresh g in
@@ -87,7 +87,7 @@ let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
       T.fail_doc_at [
         text "Cannot use" ^/^ fquotes (pp head) ^/^ text "in impure spec, cannot find rewrites_to in post:";
         fquotes (pp post);
-      ] (Some (T.unseal (RU.range_of_term t)))
+      ] (Some (RU.range_of_term t))
     | Some rwr ->
       let allow_amb = true in
       (if not (is_no_proof_app g t) then prove g pre ctxt (RU.range_of_term t));
@@ -173,7 +173,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
         if not (Some? ctxt.ctxt.ctxt_old) then
           T.fail_doc_at [
             text "'old' can only be used in postconditions";
-          ] (Some (T.unseal (RU.range_of_term t)))
+          ] (Some (RU.range_of_term t))
         else (
           (if ctxt.in_old then
             warn_doc g r [

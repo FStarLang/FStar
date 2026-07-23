@@ -19,9 +19,8 @@ open FStar.Tactics.V2
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 
-(* Ranges attached to terms/sigelts expose data outside the term/sigelt view,
-   so they must be sealed to keep range-observing functions sound. *)
-let range = FStar.Sealed.sealed FStar.Range.range
+(* Ranges are unsealed: range-observing reflection functions are now unsealed in ulib. *)
+let range = FStar.Range.range
 
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context

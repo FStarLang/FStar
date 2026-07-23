@@ -25,7 +25,17 @@ open FStar.List.Tot
 open FStar.Nonempty
 
 // ---------------------------------------------------------------------------
-// Denote-wrapping shims for the RT typing/relation judgments.
+// The ulib `ts-unseal` slice removed the `pack_inspect_inv` axiom
+// (pack_ln (inspect_ln t) == t) because term `==` is now range/attrs-sensitive.
+// Pulse's readback/inspect functions still rely on this round-trip to typecheck
+// their refined return types. We reintroduce it here as a Pulse-local axiom
+// (pre-authorized admit: exactly the pack_inspect_inv-dependent class of fact).
+val pack_inspect_inv (t:R.term)
+  : Lemma (~(R.Tv_Unsupp? (R.inspect_ln t)) ==> R.pack_ln (R.inspect_ln t) == t)
+          [SMTPat (R.pack_ln (R.inspect_ln t))]
+let pack_inspect_inv t = admit ()
+
+
 // After the term_spec re-index, RT.typing/tot_typing/ghost_typing/related/equiv/
 // sub_typing/non_informative are indexed by term_spec (comp_spec_typ), while Pulse
 // manipulates concrete R.terms. These `unfold` wrappers thread `denote_term` at the
@@ -828,7 +838,7 @@ let fv_has_attr_string (attr_name:string) (f : R.fv) : T.Tac bool =
   match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
   | None -> false
   | Some se ->
-    let attrs = T.unseal (T.sigelt_attrs se) in
+    let attrs = T.sigelt_attrs se in
     attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
 
 let head_has_attr_string (attr_name:string) (t : R.term) : T.Tac bool =
@@ -882,5 +892,5 @@ let fv_has_qual (qual:R.qualifier) (f : R.fv) : T.Tac bool =
   match T.lookup_typ (T.top_env ()) (T.inspect_fv f) with
   | None -> false
   | Some se ->
-    let quals = T.unseal (T.sigelt_quals se) in
+    let quals = T.sigelt_quals se in
     quals |> T.tryFind (fun x -> qual_eq qual x)

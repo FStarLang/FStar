@@ -228,7 +228,7 @@ let range_of_env (g:env) =
 let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
   match snd c with
   | None -> fst c
-  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string (T.unseal r))
+  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string r)
 
 let ctx_to_string (c:list (string & option range)) : T.Tac string =
     match c with
@@ -323,16 +323,16 @@ let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pp
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in
-  T.fail_doc_at msg (Some (T.unseal r))
+  T.fail_doc_at msg (Some r)
 
 let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue_doc "Warning" msg (Some (T.unseal r)) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Warning" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
 let info_doc (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue_doc "Info" msg (Some (T.unseal r)) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Info" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
 let info_doc_env (g:env) (r:option range) (msg:list Pprint.document) =

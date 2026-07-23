@@ -53,7 +53,6 @@ instance val tac_showable_post_hint_t : tac_showable post_hint_t
 instance val tac_showable_namedv : tac_showable Reflection.namedv
 
 instance val tac_showable_range  : tac_showable Range.range
-instance val tac_showable_sealed_range : tac_showable range
 
 instance val tac_showable_tuple2 (a b : Type) (_:tac_showable a) (_:tac_showable b) : tac_showable (a & b)
 instance val tac_showable_tuple3 (a b c : Type) (_:tac_showable a) (_:tac_showable b) (_:tac_showable c) : tac_showable (a & b & c)

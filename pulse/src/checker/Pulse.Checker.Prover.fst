@@ -1437,7 +1437,7 @@ let prove (rng:range) (g: env) (ctxt goals: slprop) allow_amb :
         text "The prover was started with goal:" ^^ indent (pp goals);
         text "and initial context:" ^^ indent (pp ctxt);
       ] else []))
-    (Some (T.unseal rng))
+    (Some rng)
   else
     let (| g', ctxt', k |) = prover_result_solved_unpack res in
 
