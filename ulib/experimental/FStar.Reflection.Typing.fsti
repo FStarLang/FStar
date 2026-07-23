@@ -70,11 +70,6 @@ val inspect_pack (t:R.term_view)
   : Lemma (ensures R.(inspect_ln (pack_ln t) == t))
           [SMTPat R.(inspect_ln (pack_ln t))]
   
-val pack_inspect (t:R.term)
-  : Lemma (requires ~(Tv_Unsupp? (inspect_ln t)))
-          (ensures R.(pack_ln (inspect_ln t) == t))
-          [SMTPat R.(pack_ln (inspect_ln t))]
-  
 val inspect_pack_namedv (t:R.namedv_view)
   : Lemma (ensures R.(inspect_namedv (pack_namedv t) == t))
           [SMTPat R.(inspect_namedv (pack_namedv t))]
@@ -135,11 +130,6 @@ val pack_inspect_lb (lb:R.letbinding)
 val inspect_pack_sigelt (sev:R.sigelt_view { ~ (Unk? sev) })
   : Lemma (ensures R.inspect_sigelt (R.pack_sigelt sev) == sev)
           [SMTPat (R.inspect_sigelt (R.pack_sigelt sev))]
-
-val pack_inspect_sigelt (se:R.sigelt)
-  : Lemma (requires ~ (Unk? (R.inspect_sigelt se)))
-          (ensures R.pack_sigelt (R.inspect_sigelt se) == se)
-          [SMTPat (R.pack_sigelt (R.inspect_sigelt se))]
 
 val lookup_bvar (e:env) (x:int) : GTot (option term)
 

@@ -18,7 +18,7 @@ let tau () : Tac decls =
 let test_sp1 () =
   assert True by (match lookup_typ (cur_env ()) ["Quals"; "sp1"] with
                | Some se ->
-                 begin match unseal (sigelt_quals se) with
+                 begin match sigelt_quals se with
                  | [Unfold_for_unification_and_vcgen; Inline_for_extraction] -> ()
                  | _ -> fail "1"
                  end

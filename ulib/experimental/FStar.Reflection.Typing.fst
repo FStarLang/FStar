@@ -35,7 +35,6 @@ open FStar.Tactics.Effect
 module RTB = FStar.Reflection.Typing.Builtins
 
 let inspect_pack = R.inspect_pack_inv
-let pack_inspect = R.pack_inspect_inv
   
 let inspect_pack_namedv = R.inspect_pack_namedv
 let pack_inspect_namedv = R.pack_inspect_namedv
@@ -59,7 +58,6 @@ let inspect_pack_lb = R.inspect_pack_lb
 let pack_inspect_lb = R.pack_inspect_lb
 
 let inspect_pack_sigelt = R.inspect_pack_sigelt
-let pack_inspect_sigelt = R.pack_inspect_sigelt
 
 let lookup_bvar (e:env) (x:int) : option term = magic ()
 
