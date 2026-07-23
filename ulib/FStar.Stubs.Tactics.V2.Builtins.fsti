@@ -27,6 +27,7 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.Types
 open FStar.Stubs.Tactics.Types.Reflection
+open FStar.Reflection.TermSpec
 include FStar.Stubs.Tactics.Unseal
 
 val get ()
@@ -516,59 +517,59 @@ unfold
 let ret_t (a:Type) = option a & issues
 
 val is_non_informative (g:env) (t:typ)
-  : Tac (ret_t (non_informative_token g t))
+  : Tac (ret_t (non_informative_token g (denote_term t)))
 
 val check_subtyping (g:env) (t0 t1:typ)
-  : Tac (ret_t (subtyping_token g t0 t1))
+  : Tac (ret_t (subtyping_token g (denote_term t0) (denote_term t1)))
 
 val t_check_equiv (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
-  : Tac (ret_t (equiv_token g t0 t1))
+  : Tac (ret_t (equiv_token g (denote_term t0) (denote_term t1)))
 
 //
 // Compute the type of e using the core typechecker
 //
 val core_compute_term_type (g:env) (e:term)
-  : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g e r}))
+  : Tac (ret_t (r:(tot_or_ghost & typ){typing_token g (denote_term e) (fst r, denote_term (snd r))}))
 
 //
 // Check that e:eff t using the core typechecker
 //
 val core_check_term (g:env) (e:term) (t:typ) (eff:tot_or_ghost)
-  : Tac (ret_t (typing_token g e (eff, t)))
+  : Tac (ret_t (typing_token g (denote_term e) (eff, denote_term t)))
 
 //
 // Return eff s.t. e:eff t using the core typechecker
 //
 val core_check_term_at_type (g:env) (e:term) (t:typ)
-  : Tac (ret_t (eff:tot_or_ghost{typing_token g e (eff, t)}))
+  : Tac (ret_t (eff:tot_or_ghost{typing_token g (denote_term e) (eff, denote_term t)}))
 
 //
 // Instantiate the implicits in e and compute its type
 //
 val tc_term (g:env) (e:term)
-  : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (fst r) (snd r)}))
+  : Tac (ret_t (r:(term & (tot_or_ghost & typ)){typing_token g (denote_term (fst r)) (fst (snd r), denote_term (snd (snd r)))}))
 
 val universe_of (g:env) (e:term)
-  : Tac (ret_t (u:universe{typing_token g e (E_Total, pack_ln (Tv_Type u))}))
+  : Tac (ret_t (u:universe{typing_token g (denote_term e) (E_Total, Ts_Type (denote_universe u))}))
 
 type prop_validity_token (g:env) (t:term) =
   Ghost.erased (
-    e:term{typing_token g t (E_Total, pack_ln (Tv_FVar (pack_fv prop_qn))) /\
-           typing_token g e (E_Total, t)}
+    e:term{typing_token g (denote_term t) (E_Total, denote_term (pack_ln (Tv_FVar (pack_fv prop_qn)))) /\
+           typing_token g (denote_term e) (E_Total, denote_term t)}
   )
 
-val check_prop_validity (g:env) (t:term { typing_token g t (E_Total, (`prop)) })
+val check_prop_validity (g:env) (t:term { typing_token g (denote_term t) (E_Total, denote_term (`prop)) })
   : Tac (ret_t (prop_validity_token g t))
 
 // Can't immediately move to FStar.Tactics.Types since pattern is not in scope there
-val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) (bnds:list (list binding))
+val match_complete_token (g:env) (sc:term_spec) (t:term_spec) (pats:list pattern_spec) (bnds:list (list binding))
   : prop
 
 // Returns elaborated patterns, the bindings for each one, and a token. Possibly some issues
 // too. The bindings are open.
 val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
   : Tac (ret_t (pats_bnds:(list pattern & list (list binding))
-                           {match_complete_token g sc t (fst pats_bnds) (snd pats_bnds)
+                           {match_complete_token g (denote_term sc) (denote_term t) (List.Tot.map denote_pattern (fst pats_bnds)) (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length (snd pats_bnds)
                             /\ List.Tot.length (fst pats_bnds) == List.Tot.length pats}))
 
@@ -612,7 +613,7 @@ val maybe_relate_after_unfolding (g:env) (t1 t2:term)
   : Tac (ret_t unfold_side)
 
 val maybe_unfold_head (g:env) (t0:term)
-  : Tac (ret_t (t1:term{equiv_token g t0 t1}))
+  : Tac (ret_t (t1:term{equiv_token g (denote_term t0) (denote_term t1)}))
 
 (** [norm_well_typed_term e steps t] will call the normalizer on the
 term [t] using the list of steps [steps], over environment [e]. It
@@ -622,7 +623,7 @@ not strcitly requiring yet in reflection primitives) and it will also
 return a token for the equivalence between t and t'. *)
 val norm_well_typed_term
   (g:env) (steps : list norm_step) (t:term)
-  : Tac (t':term{equiv_token g t t'})
+  : Tac (t':term{equiv_token g (denote_term t) (denote_term t')})
 
 val push_open_namespace (g:env) (ns:name)
   : Tac env
@@ -640,13 +641,13 @@ val log_issues (issues:list FStar.Issue.issue)
 solve a goal, starting from a clean state, and obtain the witness
 that solves it. *)
 val call_subtac (g:env) (t : unit -> Tac unit) (u:universe)
-                (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
-  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+                (goal_ty : term{typing_token g (denote_term goal_ty) (E_Total, Ts_Type (denote_universe u))})
+  : Tac (ret_t (w:term{typing_token g (denote_term w) (E_Total, denote_term goal_ty)}))
 
 val call_subtac_tm
     (g:env) (t : term) (u:universe)
-    (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
-  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+    (goal_ty : term{typing_token g (denote_term goal_ty) (E_Total, Ts_Type (denote_universe u))})
+  : Tac (ret_t (w:term{typing_token g (denote_term w) (E_Total, denote_term goal_ty)}))
 
 (* This will call the function [f] and log the time it takes under the stat key
 [s]. The stats can be printed by running F* with `--stats true`. Other than

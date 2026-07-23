@@ -289,6 +289,11 @@ let denote_pack_uvar (n:nat) (ctx:ctx_uvar_and_subst)
   : Lemma (denote_term (pack_ln (Tv_Uvar n ctx)) == Ts_Uvar n)
   = inspect_pack_inv (Tv_Uvar n ctx)
 
+let denote_pack_match (sc:term) (ret:option match_returns_ascription) (brs:list branch)
+  : Lemma (denote_term (pack_ln (Tv_Match sc ret brs)) ==
+           Ts_Match (denote_term sc) (denote_ret ret) (denote_branches brs))
+  = inspect_pack_inv (Tv_Match sc ret brs)
+
 (* -------------------------------------------------------------------- *)
 (* Spec-level (ghost) substitution on [term_spec]. This mirrors
    [FStar.Reflection.Typing.subst_term] exactly, but operates structurally
