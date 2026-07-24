@@ -95,6 +95,10 @@ let subtyping_token_renaming (g:env)
                              (t0 t1:term_spec)
                              (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
 
+let subtyping_token_denote_equiv (g:env)
+                                 (bs bs':bindings)
+                                 (t0 t1:term_spec) = admit ()
+
 let subtyping_token_weakening (g:env)
                               (bs0:bindings)
                               (bs1:bindings)

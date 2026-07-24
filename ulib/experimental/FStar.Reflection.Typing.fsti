@@ -548,6 +548,15 @@ let binding = var & term
 let bindings = list binding
 let rename_bindings bs x y = FStar.List.Tot.map (fun (v, t) -> (v, rename t x y)) bs
 
+(* Two binding lists are equivalent for the type theory when they bind the same
+   variables to sorts with the same denotation (ranges/names are irrelevant). *)
+let rec bindings_denote_equiv (bs bs':bindings) : prop =
+  match bs, bs' with
+  | [], [] -> True
+  | (x,t)::tl, (x',t')::tl' ->
+    x == x' /\ denote_term t == denote_term t' /\ bindings_denote_equiv tl tl'
+  | _ -> False
+
 let rec extend_env_l (g:env) (bs:bindings)
   : env
   = match bs with
@@ -1033,6 +1042,16 @@ val subtyping_token_renaming (g:env)
   : GTot (subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
                       (rename_spec' t0 x y)
                       (rename_spec' t1 x y))
+
+(* subtyping_token only depends on the denotation of the environment's binding
+   sorts (the core typechecker ignores their ranges/names), so it is preserved
+   when bindings are replaced by denotationally-equivalent ones. *)
+val subtyping_token_denote_equiv (g:env)
+                                 (bs bs':bindings)
+                                 (t0 t1:term_spec)
+  : Lemma (requires bindings_denote_equiv bs bs')
+          (ensures subtyping_token (extend_env_l g bs) t0 t1 ==>
+                   subtyping_token (extend_env_l g bs') t0 t1)
 
 val subtyping_token_weakening (g:env)
                               (bs0:bindings)
