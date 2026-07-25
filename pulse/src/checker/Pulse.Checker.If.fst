@@ -95,25 +95,31 @@ let check
   in
 
   let g_with_eq = g_with_eq g hyp b in  
+  let use_rewrites_to = Some? (term_as_subst_var b) in
   let check_branch (eq_v:term) (br:st_term) (is_then:bool)
   : T.Tac (checker_result_t (g_with_eq eq_v) pre branch_hint)
   =
     let branch_range = br.range in
+    let branch_g = g_with_eq eq_v in
     let br =
-      let t =
-        mk_term (Tm_ProofHintWithBinders {
-          binders = [];
-          hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm; elaborated=true };
-          t = br;
-        }) br.range
-      in
-      { t with effect_tag = br.effect_tag }
-    in
-
+      if use_rewrites_to
+      then br
+      else
+        let t =
+          mk_term (Tm_ProofHintWithBinders {
+            binders = [];
+            hint_type = RENAME {
+              pairs = [(b, eq_v)];
+              goal = None;
+              tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm;
+              elaborated = true
+            };
+            t = br;
+          }) br.range in
+        { t with effect_tag = br.effect_tag } in
     let ppname = mk_ppname_no_range "_if_br" in
-    let r = RU.with_error_bound branch_range (fun () ->
-      check (g_with_eq eq_v) pre branch_hint ppname br) in
-    r
+    RU.with_error_bound branch_range (fun () ->
+      check branch_g pre branch_hint ppname br)
   in
 
   let infer_post_branch (#eq_v:term) (r: checker_result_t (g_with_eq eq_v) pre NoHint) :

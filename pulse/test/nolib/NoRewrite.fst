@@ -5,6 +5,8 @@ open Pulse.Nolib
 
 assume val foo : [@@@mkey]_:int -> slprop
 
+#push-options "--no_smt"
+
 fn test1 (x : int)
   preserves foo x
 {
@@ -15,6 +17,8 @@ fn test1 (x : int)
     }
   }
 }
+
+#pop-options
 
 fn test2 (x : int)
   preserves foo x

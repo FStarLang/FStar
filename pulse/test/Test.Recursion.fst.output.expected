@@ -40,9 +40,7 @@
           -> ghost fn
                requires Pulse.Lib.Core.emp
                ensures Pulse.Lib.Core.emp)
-      (_if_hyp
-        :
-        Prims.squash (Pulse.Lib.Core.rewrites_to_p (z <> 0 && y <> 0) true))
+      (_if_hyp : Prims.squash ((z <> 0 && y <> 0) == true))
   - VC =
       y - 1 >= 0 /\
       FStar.Range.labeled FStar.Range.range_0
