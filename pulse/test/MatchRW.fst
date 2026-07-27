@@ -15,7 +15,6 @@ val foo1 () : stt_ghost unit [] (p true) (fun _ -> q)
 assume
 val foo2 () : stt_ghost unit [] (p false) (fun _ -> q)
 
-
 fn test (b:bool)
   requires p b
   ensures  q
@@ -34,9 +33,6 @@ fn test (b:bool)
   }
 }
 
-
-
-
 fn test_if (b:bool)
   requires p b
   ensures  q
@@ -52,3 +48,37 @@ fn test_if (b:bool)
   }
 }
 
+assume
+val r ([@@@mkey] x : int) : slprop
+
+assume
+val foo3 (x:int) : stt_ghost unit [] (r x) (fun _ -> q)
+
+assume
+val f (x:int) : Tot int
+
+#push-options "--no_smt"
+
+fn test_rewrites_to (x:int)
+  requires r x
+  ensures q
+{
+  match x {
+    y -> {
+      foo3 y;
+    }
+  }
+}
+
+fn test_compound_rewrite (x:int)
+  requires r (f x)
+  ensures q
+{
+  match (f x) {
+    y -> {
+      foo3 y;
+    }
+  }
+}
+
+#pop-options

@@ -35,10 +35,8 @@ let extract_rewrites_to_p (t: typ) =
     match is_rewrites_to_p t with
     | None -> None
     | Some (lhs, rhs) ->
-      match R.inspect_ln lhs with
-      | R.Tv_Var x ->
-        let x = R.inspect_namedv x in
-        Some (x.uniq, rhs)
+      match Pulse.Typing.term_as_subst_var lhs with
+      | Some x -> Some (x, rhs)
       | _ -> None
 
 let maybe_add_binding_to_subst (ss: PS.ss_t) (t: typ) =

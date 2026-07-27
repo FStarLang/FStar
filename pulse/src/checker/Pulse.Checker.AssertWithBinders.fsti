@@ -35,4 +35,3 @@ val check
   (st:st_term { Tm_ProofHintWithBinders? st.term })
   (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)
-
