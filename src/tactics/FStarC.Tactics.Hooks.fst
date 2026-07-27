@@ -111,7 +111,7 @@ let getprop (e:Env.env) (t:term) : ML (option term) =
     U.un_squash tn
 
 let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : ML tres =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     match (U.un_uinst hd).n, args with
 
     // with_tactic marker
@@ -370,7 +370,7 @@ let rec traverse_for_spinoff
     in
     let should_descend (t:term) =
         //descend only into the following connectives
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         let res =
           match (U.un_uinst hd).n with
           | Tm_fvar fv ->
@@ -418,11 +418,11 @@ let rec traverse_for_spinoff
         else Unchanged t
     in
     let rewrite_boolean_conjunction t : ML _ =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _)]
                     when S.fv_eq_lid fv PC.b2t_lid -> (
-            let hd, args = U.head_and_args t in
+            let hd, args = U.head_and_args_full t in
             match (U.un_uinst hd).n, args with
             | Tm_fvar fv, [(t0, _); (t1, _)]
               when S.fv_eq_lid fv PC.op_And ->

@@ -134,7 +134,6 @@ val is_pure_or_ghost_effect (l:lident) : bool
 val is_pure_or_ghost_function (t:typ) : ML bool
 
 val head_of (t : term) : ML term
-val head_and_args (t : term) : ML (term & args)  // Destructs a single Tm_app
 val head_and_args_full (t : term) : ML (term & args) // Collects all Tm_app nodes
 val head_and_args_full_unmeta (t : term) : ML (term & args)
 
@@ -288,6 +287,9 @@ val arrow_formals (k:term) : ML (binders & typ)
     This is used by NBE for detecting potential non-terminating loops
 *)
 val let_rec_arity (lb:letbinding) : ML (int & option (list bool))
+
+(* Collects all nested Tm_abs nodes without opening the binders. *)
+val abs_formals_ln (t:term) : ML (binders & term & option residual_comp)
 
 val abs_formals_maybe_unascribe_body : bool -> term -> ML (binders & term & option residual_comp)
 

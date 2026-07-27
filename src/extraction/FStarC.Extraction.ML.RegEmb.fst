@@ -290,7 +290,7 @@ let rec embedding_for
     embedding_for tcenv mutuals k env t
 
   | Tm_app _ ->
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     let e_head = embedding_for tcenv mutuals k env head in
     let e_args = List.map (fun (t, _) -> embedding_for tcenv mutuals k env t) args in
     mk <| MLE_App (e_head, e_args)
@@ -813,7 +813,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1) =
    *)
   let plugin_with_arity (attrs: list term) : ML (option (option int)) =
     BU.find_map attrs (fun t ->
-      let head, args = U.head_and_args t in
+      let head, args = U.head_and_args_full t in
       if not (U.is_fvar PC.plugin_attr head) then
         None
       else match args with

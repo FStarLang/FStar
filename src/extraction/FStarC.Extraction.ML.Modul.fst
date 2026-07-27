@@ -159,7 +159,7 @@ let rec extract_meta x : ML (option meta) =
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
   | { n = Tm_meta {tm=x} } -> extract_meta x
   | _ ->
-    let head, args = U.head_and_args x in
+    let head, args = U.head_and_args_full x in
     match (SS.compress head).n, args with
     | Tm_fvar fv, [_]
        when S.fv_eq_lid fv FStarC.Parser.Const.remove_unused_type_parameters_lid ->
@@ -703,7 +703,7 @@ let extract_let_rec_types se (env:uenv) (lbs:list letbinding) : ML (uenv & iface
 
 let get_noextract_to (se:sigelt) (backend:option Options.codegen_t) : ML bool =
   BU.for_some (function attr ->
-    let hd, args = U.head_and_args attr in
+    let hd, args = U.head_and_args_full attr in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
         begin match EMB.try_unembed a EMB.id_norm_cb with

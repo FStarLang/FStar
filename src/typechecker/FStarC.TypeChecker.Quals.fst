@@ -359,7 +359,7 @@ let check_typeclass_instance_attribute env (rng:Range.t) se =
       ];
 
     let t = U.comp_result res in
-    let head, _ = U.head_and_args t in
+    let head, _ = U.head_and_args_full t in
     let err () =
       FStarC.Errors.log_issue rng FStarC.Errors.Error_UnexpectedTypeclassInstance [
           text "Instances must define instances of `class` types.";

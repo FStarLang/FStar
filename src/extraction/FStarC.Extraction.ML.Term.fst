@@ -182,7 +182,7 @@ let rec is_arity_aux tcenv t : ML _ =
       | Some (_, t) -> is_arity_aux tcenv t
       end
     | Tm_app _ ->
-      let head, _ = U.head_and_args t in
+      let head, _ = U.head_and_args_full t in
       is_arity_aux tcenv head
     | Tm_uinst(head, _) ->
       is_arity_aux tcenv head
@@ -675,7 +675,7 @@ let has_extract_as_impure_effect (g:uenv) (fv:S.fv) =
   TcEnv.fv_has_attr (tcenv_of_uenv g) fv FStarC.Parser.Const.extract_as_impure_effect_lid
 
 let head_of_type_is_extract_as_impure_effect g t =
-  let hd, _ = U.head_and_args t in
+  let hd, _ = U.head_and_args_full t in
   match (U.un_uinst hd).n with
   | Tm_fvar fv -> has_extract_as_impure_effect g fv
   | _ -> false

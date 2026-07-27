@@ -2399,7 +2399,7 @@ let rec check_erased (env:Env.env) (t:term) : ML isErased =
                            Weak; HNF; Iota]
   in
   let t = norm' env t in
-  let h, args = U.head_and_args t in
+  let h, args = U.head_and_args_full t in
   let h = U.un_uinst h in
   let r =
     match (SS.compress h).n, args with
@@ -2510,7 +2510,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   (* The computed type for `e`. *)
   let computed_t = head_unfold env checked.res_typ in
-  let head, args = U.head_and_args computed_t in
+  let head, args = U.head_and_args_full computed_t in
 
   (* The expected type according to the context. *)
   let exp_t = head_unfold env exp_t in
@@ -2873,7 +2873,7 @@ let remove_reify (t: S.term): ML S.term =
   if (match (SS.compress t).n with | Tm_app _ -> false | _ -> true)
   then t
   else
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     if (match (SS.compress head).n with Tm_constant (FStarC.Const.Const_reify _) -> true | _ -> false)
     then begin match args with
         | [x] -> fst x
@@ -3198,7 +3198,7 @@ let short_circuit (head:term) (seen_args:args) : ML guard_formula =
         | _ -> Trivial
 
 let short_circuit_head l : ML _ =
-    let hd, _ = U.head_and_args l in
+    let hd, _ = U.head_and_args_full l in
     match (U.un_uinst hd).n with
         | Tm_fvar fv ->
            BU.for_some (S.fv_eq_lid fv)
@@ -3640,7 +3640,7 @@ let try_lookup_record_type env (typename:lident)
  *)
 
 let head_fv_of_typ env (t:typ) : ML (option fv) =
-    let t, _ = U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
+    let t, _ = U.head_and_args_full (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
     match (SS.compress (U.un_uinst t)).n with
     | Tm_fvar fv -> Some fv
     | _ -> None

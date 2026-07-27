@@ -865,7 +865,7 @@ let e_norm_step : embedding NormSteps.norm_step =
             t
             typ
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
                     Some Simpl
@@ -956,7 +956,7 @@ let e_vconfig =
                   rng
     in
     let un (t:term) norm : ML (option vconfig) =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         match (U.un_uinst hd).n, args with
         (* Sigh *)
         | Tm_fvar fv, [
@@ -1073,7 +1073,7 @@ let e_order =
   in
   let unembed_order (t:term) cb : ML (option order) =
       let t = U.unascribe t in
-      let hd, args = U.head_and_args t in
+      let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq

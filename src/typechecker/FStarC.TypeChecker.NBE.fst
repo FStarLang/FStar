@@ -489,7 +489,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
 
     | Tm_app {hd={n=Tm_constant (FC.Const_reify _)}; args=arg::more::args}
     | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=arg::more::args} ->
-      let head, _ = U.head_and_args e in
+      let head, _ = U.head_and_args_full e in
       let head = S.mk_Tm_app head [arg] e.pos in
       translate cfg bs (S.mk_Tm_app head (more::args) e.pos)
 

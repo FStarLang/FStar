@@ -134,7 +134,7 @@ let norm env t = norm_with_steps [Env.Beta; Env.Exclude Env.Zeta;  //we don't kn
 
 let maybe_whnf env t =
   let t' = whnf env t in
-  let head', _ = U.head_and_args t' in
+  let head', _ = U.head_and_args_full t' in
   if head_redex env head' //this wasn't reducible for some reason, e.g., not applied to strict arguments
   then None
   else Some t'
@@ -1113,12 +1113,12 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         ttm, decls@([d] |> mk_decls_trivial)
 
       | Tm_app _ ->
-        let head, args_e = U.head_and_args t0 in
+        let head, args_e = U.head_and_args_full t0 in
         let head, args_e =
           if head_redex env head
           then match maybe_whnf env t0 with
                | None -> head, args_e
-               | Some t -> U.head_and_args t
+               | Some t -> U.head_and_args_full t
           else head, args_e
         in
         begin
@@ -1602,7 +1602,7 @@ and encode_args (l:args) (env:env_t) : ML (list term & decls_t)  =
 and encode_smt_patterns (pats_l:list (list S.arg)) env : ML (list (list term) & decls_t) =
     let env = {env with use_zfuel_name=true} in
     let encode_smt_pattern t =
-        let head, args = U.head_and_args t in
+        let head, args = U.head_and_args_full t in
         let head = U.un_uinst head in
         match head.n, args with
         | Tm_fvar fv, [_; (x, _); (t, _)]

@@ -244,7 +244,7 @@ instance monoid_guard_t : monoid guard_t = {
 }
 
 let rec check_trivial (t:term) : ML guard_formula =
-    let hd, args = U.head_and_args (U.unmeta t) in
+    let hd, args = U.head_and_args_full (U.unmeta t) in
     match (U.un_uinst (U.unmeta hd)).n, args with
     | Tm_fvar tc, [] 
       when S.fv_eq_lid tc PC.true_lid ->

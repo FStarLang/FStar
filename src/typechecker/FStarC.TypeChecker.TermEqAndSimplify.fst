@@ -119,8 +119,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       | _ -> false
     in
     let heads_and_args_in_case_both_data : option (S.fv & args & S.fv & args & int) =
-      let head1, args1 = t1 |> unmeta |> head_and_args in
-      let head2, args2 = t2 |> unmeta |> head_and_args in
+      let head1, args1 = t1 |> unmeta |> head_and_args_full in
+      let head2, args2 = t2 |> unmeta |> head_and_args_full in
       match (un_uinst head1).n, (un_uinst head2).n with
       | Tm_fvar f, Tm_fvar g 
         when qual_is_inj f.fv_qual &&
@@ -374,7 +374,7 @@ let simplify (debug:bool) (env:env_t) (tm:term) : ML term =
         //     | _ ->
         //       t,q
         // in
-        // let head, args = U.head_and_args t in
+        // let head, args = U.head_and_args_full t in
         // let args = List.map maybe_un_auto_squash_arg args in
         // S.mk_Tm_app head args t.pos
         t

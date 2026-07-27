@@ -1008,7 +1008,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   in
   (* Returns the non-resugared final relation and the calc_pack *)
   let resugar_calc_finish (t:S.term) : ML (option (S.term & S.term)) =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
                    (rel, None);                         // top relation
@@ -1057,7 +1057,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   (* Resugars an application of calc_step, returning the term, the relation,
    * the justifcation, and the rest of the proof. *)
   let resugar_step (pack:S.term) : ML (option (S.term & S.term & S.term & S.term)) =
-    let hd, args = U.head_and_args pack in
+    let hd, args = U.head_and_args_full pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
                    (_, Some ({ aqual_implicit = true })); // x
@@ -1077,7 +1077,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   in
   (* Resugar an application of calc_init *)
   let resugar_init (pack:S.term) : ML (option S.term) =
-    let hd, args = U.head_and_args pack in
+    let hd, args = U.head_and_args_full pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
                    (x, None)]                // initial value

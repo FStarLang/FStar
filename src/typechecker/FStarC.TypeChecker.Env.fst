@@ -528,7 +528,7 @@ let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
 let add_se_to_attrtab env se : ML _ =
     let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
-                let hd, _ = U.head_and_args attr in
+                let hd, _ = U.head_and_args_full attr in
                 match (Subst.compress hd).n with
                 | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
@@ -2089,7 +2089,7 @@ let uvar_meta_for_binder (b:binder) : ML (option ctx_uvar_meta_t & bool) =
       layered effects checking code will sometimes call this
       function on regular explicit binders. *)
       let is_unification_tag (t:term) : ML (option term) =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         let hd = U.un_uinst hd in
         match (SS.compress hd).n, args with
         | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]

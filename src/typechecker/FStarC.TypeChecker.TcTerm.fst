@@ -197,7 +197,7 @@ let maybe_warn_on_use env fv : ML unit =
       attrs |>
       List.iter
         (fun a ->
-          let head, args = U.head_and_args a in
+          let head, args = U.head_and_args_full a in
           let msg_arg m =
               match args with
               | [{n=Tm_constant (Const_string (s, _))}, _] ->
@@ -394,7 +394,7 @@ let print_expected_ty env : ML _ = Format.print1 "%s\n" (print_expected_ty_str e
  * intersection of the sub-variables instead of the union. *)
 let rec get_pat_vars' all (andlist : bool) (pats:term) : ML (FlatSet.t bv) =
   let pats = unmeta pats in
-  let head, args = head_and_args pats in
+  let head, args = head_and_args_full pats in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
       if andlist
@@ -439,7 +439,7 @@ let check_pat_fvs (rng:Range.t) env pats bs : ML unit =
 let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
   let rec pat_terms (t:term) : ML (list term) =
     let t = unmeta t in
-    let head, args = head_and_args t in
+    let head, args = head_and_args_full t in
     match (un_uinst head).n, args with
     | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid -> []
     | Tm_fvar fv, [_; (hd, _); (tl, _)] when fv_eq_lid fv Const.cons_lid ->
@@ -1006,7 +1006,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   | Tm_app {hd={n=Tm_constant (Const_reify _)}; args=a::hd::rest}
   | Tm_app {hd={n=Tm_constant (Const_reflect _)}; args=a::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args top in
+    let unary_op, _ = U.head_and_args_full top in
     let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app {hd=head; args=rest}) top.pos in
     tc_term env t
@@ -1014,18 +1014,18 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   (* Binary operators *)
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args top in
+    let unary_op, _ = U.head_and_args_full top in
     let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
     let t = mk (Tm_app {hd=head; args=rest}) top.pos in
     tc_term env t
 
   | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(e, None)]} ->
     let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
-    let head, _ = U.head_and_args top in
+    let head, _ = U.head_and_args_full top in
     mk (Tm_app {hd=head; args=[(e, None)]}) top.pos, (TcComm.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
 
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=(t, None)::(r, None)::[]} ->
-    let head, _ = U.head_and_args top in
+    let head, _ = U.head_and_args_full top in
     let env' = Env.set_expected_typ env (tabbrev Const.range_lid) in
     let er, _, gr = tc_term env' r in
     let t, tt, gt = tc_term env t in
@@ -1090,7 +1090,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       raise_error e Errors.Fatal_EffectCannotBeReified
         (Format.fmt1 "Effect %s cannot be reflected" (string_of_lid l));
 
-    let reflect_op, _ = U.head_and_args top in
+    let reflect_op, _ = U.head_and_args_full top in
 
     begin match Env.effect_decl_opt env l with
     | None ->
@@ -1244,7 +1244,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     in
     begin
     let t0 = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env lc.res_typ in
-    let thead, _ = U.head_and_args t0 in
+    let thead, _ = U.head_and_args_full t0 in
     if !dbg_RFD
     then (
       Format.print3 "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
@@ -1285,7 +1285,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     (* Got an application of synth_by_tactic, process it *)
 
     // no "as" clause
-    let head, args = U.head_and_args top in
+    let head, args = U.head_and_args_full top in
     tc_synth head env args top.pos
 
   | Tm_app {hd=head; args}
@@ -1977,11 +1977,11 @@ and tc_comp env c : ML (comp                                      (* checked ver
          *              the unifier or the normalizer
          *)
         tc_check_tot_or_gtot_term ({ env with failhard = true }) tc S.teff None in
-      let head, args = U.head_and_args tc in
+      let head, args = U.head_and_args_full tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
         | _ -> [] in
-      let _, args = U.head_and_args tc in
+      let _, args = U.head_and_args_full tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
         | DECREASES (Decreases_lex l) ->
@@ -2944,7 +2944,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 and maybe_elaborate_short_circuit_args env0 head args
   : ML (option (term & lcomp & guard_t))
   = (* Make sure to collect args in the head. *)
-    let head, args' = U.head_and_args head in
+    let head, args' = U.head_and_args_full head in
     let args = args'@args in
     match (U.un_uinst head).n with
     | Tm_fvar fv when S.fv_eq_lid fv Const.op_And || S.fv_eq_lid fv Const.op_Or ->
@@ -3046,7 +3046,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
     let expected_pat_typ env pos scrutinee_t : ML typ  =
         let rec aux norm t : ML _ =
             let t = U.unrefine t in
-            let head, args = U.head_and_args t in
+            let head, args = U.head_and_args_full t in
             match (SS.compress head).n with
             | Tm_uinst ({n=Tm_fvar f}, us) -> unfold_once t f us args
             | Tm_fvar f -> unfold_once t f [] args
@@ -3086,11 +3086,11 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
          in
         raise_error p0.p Errors.Fatal_MismatchedPatternType msg
        in
-       let head_s, args_s = U.head_and_args scrutinee_t in
+       let head_s, args_s = U.head_and_args_full scrutinee_t in
        let pat_t = N.normalize [Env.Beta] env pat_t in
        match U.un_uinst head_s with
        | {n=Tm_fvar _} ->
-           let head_p, args_p = U.head_and_args pat_t in
+           let head_p, args_p = U.head_and_args_full pat_t in
            if Rel.teq_nosmt_force env head_p head_s
            then match (U.un_uinst head_p).n with
                 | Tm_fvar f ->
@@ -3137,7 +3137,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
            g
     in
     let type_of_simple_pat env (e:term) : ML (term & typ & list bv & guard_t & bool) =
-        let head, args = U.head_and_args e in
+        let head, args = U.head_and_args_full e in
         match head.n with
         | Tm_uinst ({n=Tm_fvar _}, _)
         | Tm_fvar _ ->
@@ -3278,7 +3278,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
           //                if we can't then (lax) typechecking later will infer them
           //
           let ty_args =
-            let hd, args = U.head_and_args t in
+            let hd, args = U.head_and_args_full t in
             match (hd |> SS.compress |> U.un_uinst).n with
             | Tm_fvar fv ->
               fv |> lid_of_fv |> Env.num_inductive_ty_params env
@@ -3497,7 +3497,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
                   | _ -> failwith "Impossible: expected a simple pattern"
               in
               let us = 
-                let hd, _ = U.head_and_args simple_pat_e in
+                let hd, _ = U.head_and_args_full simple_pat_e in
                 match (SS.compress hd).n with
                 | Tm_fvar _ -> []
                 | Tm_uinst(_, us) -> us
@@ -4807,7 +4807,7 @@ let rec universe_of_aux env e : ML term =
         | Tm_match {brs=b::_} ->  //AR: TODO: use return annotation? Or the residual_comp?
           let (pat, _, tm) = SS.open_branch b in
           let bvs = Syntax.pat_bvs pat in
-          let hd, args' = U.head_and_args tm in
+          let hd, args' = U.head_and_args_full tm in
           type_of_head retry (Env.push_bvs env bvs) hd (args'@args)
         | _ when retry ->
           //head is either an abs, so we have a beta-redex
@@ -4816,7 +4816,7 @@ let rec universe_of_aux env e : ML term =
           //     this is calling itself with the `e` from
           //     universe_of_aux and splitting it again.
           let e = N.normalize [Env.Beta; Env.DoNotUnfoldPureLets] env e in
-          let hd, args = U.head_and_args e in
+          let hd, args = U.head_and_args_full e in
           type_of_head false env hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
@@ -4912,7 +4912,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app {hd={n=Tm_constant Const_range_of}; args=a::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args t in
+    let unary_op, _ = U.head_and_args_full t in
     let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
     let t = mk (Tm_app {hd=head; args=rest}) t.pos in
     __typeof_tot_or_gtot_term_fastpath env t must_tot
@@ -4920,7 +4920,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   (* Binary operators *)
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
-    let unary_op, _ = U.head_and_args t in
+    let unary_op, _ = U.head_and_args_full t in
     let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
     let t = mk (Tm_app {hd=head; args=rest}) t.pos in
     __typeof_tot_or_gtot_term_fastpath env t must_tot

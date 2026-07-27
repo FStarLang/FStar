@@ -306,7 +306,7 @@ let max_uniformly_recursive_parameters (env:env_t)
               (let _, f = SS.open_term [S.mk_binder x] f in
                aux f)
         | Tm_app _ ->
-          let head, args = U.head_and_args ty in
+          let head, args = U.head_and_args_full ty in
           begin
           match (U.un_uinst head).n with
           | Tm_fvar fv ->
@@ -454,7 +454,7 @@ let may_be_an_arity env (t:term)
       | Tm_fvar _
       | Tm_uinst _
       | Tm_app _ -> (
-        let head, args = U.head_and_args t in
+        let head, args = U.head_and_args_full t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
           (match Env.lookup_sigelt env fv.fv_name with
@@ -527,7 +527,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) : ML _ =
        type of their third argument
    *)
    let fext_on_domain_index_sub_term index =
-     let head, args = U.head_and_args index in
+     let head, args = U.head_and_args_full index in
      match (U.un_uinst head).n, args with
      | Tm_fvar fv, [_td; _tr; (f, _)] -> 
        if S.fv_eq_lid fv C.fext_on_domain_lid 
@@ -551,7 +551,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) : ML _ =
   let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
       L.iter (no_occurrence_in_index fv mutuals) indexes
   in
-  let head, args = U.head_and_args t in
+  let head, args = U.head_and_args_full t in
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
     begin

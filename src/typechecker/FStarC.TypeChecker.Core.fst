@@ -2035,8 +2035,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
       ]
     in
 
-    let head_sc, args_sc = U.head_and_args t_sc in
-    let head_pat, args_pat = U.head_and_args t_pat in
+    let head_sc, args_sc = U.head_and_args_full t_sc in
+    let head_pat, args_pat = U.head_and_args_full t_pat in
 
     let! (t_fv:fv) =
       match (Subst.compress head_sc).n, (Subst.compress head_pat).n with

@@ -333,12 +333,6 @@ let rec head_of (t : term) : ML term =
     | Tm_meta {tm=t} -> head_of t
     | _ -> t
 
-let head_and_args t =
-    let t = compress t in
-    match t.n with
-    | Tm_app {hd=head; args} -> head, args
-    | _ -> t, []
-
 let rec __head_and_args_full acc unmeta t : ML _ =
     let t = compress t in
     match t.n with
@@ -498,7 +492,7 @@ let rec is_uvar t =
   match (compress t).n with
   | Tm_uvar _ -> true
   | Tm_uinst (t, _) -> is_uvar t
-  | Tm_app _ -> t |> head_and_args |> fst |> is_uvar
+  | Tm_app _ -> t |> head_and_args_full |> fst |> is_uvar
   | Tm_ascribed {tm=t} -> is_uvar t
   | _ -> false
 
@@ -805,6 +799,17 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
 
+let rec __abs_formals_ln t abs_body_lcomp : ML _ =
+    match (unmeta_safe t).n with
+    | Tm_abs {bs; body=t; rc_opt=what} ->
+      let bs', t, what = __abs_formals_ln t what in
+      bs@bs', t, what
+    | _ -> [], t, abs_body_lcomp
+
+(* Collects all nested Tm_abs nodes without opening the binders. *)
+let abs_formals_ln (t:term) : ML (binders & term & option residual_comp) =
+    __abs_formals_ln t None
+
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
         | Some rc ->
@@ -998,7 +1003,7 @@ let mk_imp phi1 phi2 : ML term = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2 : ML term = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app {hd=b2t_v; args=[as_arg e]}) e.pos//implicitly coerce a boolean to a type
 let unb2t (e:term) : ML (option term) =
-    let hd, args = head_and_args e in
+    let hd, args = head_and_args_full e in
     match (compress hd).n, args with
     | Tm_fvar fv, [(e, _)] when fv_eq_lid fv PC.b2t_lid -> Some e
     | _ -> None
@@ -1143,7 +1148,7 @@ let un_squash t =
       None
 
 let is_squash t =
-    let head, args = head_and_args t in
+    let head, args = head_and_args_full t in
     match (Subst.compress head).n, args with
     | Tm_fvar fv, [(t, _)]
         when Syntax.fv_eq_lid fv PC.squash_lid ->
@@ -1184,7 +1189,9 @@ let abs_one_ln (t:typ) : ML (option (binder & term)) =
     | Tm_abs {bs=[b]; body} ->
         Some (b, body)
     | Tm_abs {bs=b::bs; body; rc_opt} ->
-        Some (b, abs bs body rc_opt)
+        (* NB: bs are closed, so we just repackage the node. Using [abs] here
+           would close them a second time. *)
+        Some (b, mk (Tm_abs {bs; body; rc_opt}) body.pos)
     | _ ->
         None
 
@@ -1508,7 +1515,7 @@ let has_attribute (attrs:list Syntax.attribute) (attr:lident) =
  * takes precedence. *)
 let get_attribute (attr : lident) (attrs:list Syntax.attribute) : ML (option args) =
     List.tryPick (fun t ->
-        let head, args = head_and_args t in
+        let head, args = head_and_args_full t in
         match (Subst.compress head).n with
         | Tm_fvar fv when fv_eq_lid fv attr -> Some args
         | _ -> None) attrs
@@ -1687,7 +1694,7 @@ let extract_attr' (attr_lid:lid) (attrs:list term) : ML (option (list term & arg
         match attrs with
         | [] -> None
         | h::t ->
-            let head, args = head_and_args h in
+            let head, args = head_and_args_full h in
             begin match (compress head).n with
             | Tm_fvar fv when fv_eq_lid fv attr_lid ->
                 let attrs' = List.rev_acc acc t in
@@ -1730,7 +1737,7 @@ let is_smt_lemma t =
   | _ -> false
 
 let rec list_elements (e:term) : ML (option (list term)) =
-  let head, args = head_and_args (unmeta e) in
+  let head, args = head_and_args_full (unmeta e) in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv PC.nil_lid ->
       Some []
@@ -1744,7 +1751,7 @@ let destruct_lemma_with_smt_patterns (t:term)
 //binders, pre, post, patterns
 = let lemma_pats p =
     let smt_pat_or t =
-      let head, args = unmeta t |> head_and_args in
+      let head, args = unmeta t |> head_and_args_full in
       match (un_uinst head).n, args with
       | Tm_fvar fv, [(e, _)]
           when fv_eq_lid fv PC.smtpatOr_lid ->
@@ -1752,7 +1759,7 @@ let destruct_lemma_with_smt_patterns (t:term)
       | _ -> None
     in
     let one_pat p =
-      let head, args = unmeta p |> head_and_args in
+      let head, args = unmeta p |> head_and_args_full in
       match (un_uinst head).n, args with
       | Tm_fvar fv, [(_, _); arg] when fv_eq_lid fv PC.smtpat_lid ->
         arg
@@ -1975,7 +1982,7 @@ let aqual_is_erasable (aq:aqual) =
   | Some aq -> U.for_some (is_fvar PC.erasable_attr) aq.aqual_attributes
 
 let is_erased_head (t:term) : ML (option (universe & term)) = 
-  let head, args = head_and_args t in
+  let head, args = head_and_args_full t in
   match head.n, args with
   | Tm_uinst({n=Tm_fvar fv}, [u]), [(ty, _)]
     when fv_eq_lid fv PC.erased_lid ->

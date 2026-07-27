@@ -710,7 +710,7 @@ let __get_n_binders : ref ((env:Env.env) -> list step -> (n:int) -> (t:term) -> 
 (* Returns `true` iff the head of `t` is a primop, and
 it not applied or only partially applied. *)
 let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : ML bool =
-  let hd, args = U.head_and_args t in
+  let hd, args = U.head_and_args_full t in
   match (U.un_uinst hd).n with
   | Tm_fvar fv ->
     begin match find_prim_step cfg fv with
@@ -788,7 +788,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : ML (option term) =
     let replace_full_applications_with (bv:S.bv) (arity:int) (s:term) (t:term) : ML (term & bool) =
       let chgd = mk_ref false in
       let t' = t |> Syntax.Visit.visit_term false (fun t ->
-                      let hd, args = U.head_and_args t in
+                      let hd, args = U.head_and_args_full t in
                       if List.length args = arity && is_bv bv hd then (
                         chgd := true;
                         s
@@ -2658,7 +2658,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
             (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
           = let scrutinee = U.unmeta scrutinee_orig in
             let scrutinee = U.unlazy scrutinee in
-            let head, args = U.head_and_args scrutinee in
+            let head, args = U.head_and_args_full scrutinee in
             match p.v with
             | Pat_var bv -> Inl [(bv, scrutinee_orig)]
             | Pat_dot_term _ -> Inl []
@@ -2997,7 +2997,7 @@ let eta_expand (env:Env.env) (t:term) : ML term =
   | Tm_name x ->
       eta_expand_with_type env t x.sort
   | _ ->
-      let head, args = U.head_and_args t in
+      let head, args = U.head_and_args_full t in
       begin match (SS.compress head).n with
       | Tm_uvar (u,s) ->
         let formals, _tres = U.arrow_formals (SS.subst' s (U.ctx_uvar_typ u)) in
@@ -3227,7 +3227,7 @@ let unfold_head_once env t =
         let t' = normalize [Env.Beta; Env.Iota] env t' in
         Some t'
   in
-  let head, args = U.head_and_args t in
+  let head, args = U.head_and_args_full t in
   match (SS.compress head).n with
   | Tm_fvar fv -> aux fv [] args
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args

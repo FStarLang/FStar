@@ -532,7 +532,7 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
                | _ -> false
            in
            let is_squash t =
-               let head, _ = U.head_and_args t in
+               let head, _ = U.head_and_args_full t in
                match (U.un_uinst head).n with
                | Tm_fvar fv ->
                  Syntax.fv_eq_lid fv FStarC.Parser.Const.squash_lid
@@ -1392,7 +1392,7 @@ let encode_datacon (env:env_t) (se:sigelt)
       | _ -> [Term.fresh_token (ddtok_tm, univ_fvs, Term_sort) (varops.next_id())] in
 
   let encode_elim () =
-      let head, args = U.head_and_args t_res in
+      let head, args = U.head_and_args_full t_res in
       match (SS.compress head).n with
       | Tm_uinst({n=Tm_fvar fv}, _)
       | Tm_fvar fv ->
@@ -1511,9 +1511,9 @@ let encode_datacon (env:env_t) (se:sigelt)
                             )
                         end
                       | _ ->
-                        let head, _ = U.head_and_args t in
+                        let head, _ = U.head_and_args_full t in
                         let t' = norm t in
-                        let head', _ = U.head_and_args t' in
+                        let head', _ = U.head_and_args_full t' in
                         match TEQ.eq_tm env.tcenv head head' with
                         | TEQ.Equal -> None //no progress after whnf
                         | TEQ.NotEqual -> binder_and_codomain_type t'

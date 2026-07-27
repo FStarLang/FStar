@@ -27,7 +27,7 @@ let p2l l = lid_of_path l dummyRange
 let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
 
 let is_extract_as_attr (attr: attribute) : ML (option term) =
-  let head, args = Syntax.Util.head_and_args attr in
+  let head, args = Syntax.Util.head_and_args_full attr in
   match (Subst.compress head).n, args with
   | Tm_fvar fv, [t, _] when Syntax.fv_eq_lid fv extract_as_lid ->
     (match (Subst.compress t).n with

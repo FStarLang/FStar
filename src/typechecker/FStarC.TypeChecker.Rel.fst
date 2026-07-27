@@ -86,7 +86,7 @@ instance showable_implicit_checking_status : showable implicit_checking_status =
 let is_base_type env typ : ML _
   =
     let t = FStarC.TypeChecker.Normalize.unfold_whnf env typ in
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match (U.unascribe (U.un_uinst head)).n with
     | Tm_name _
     | Tm_fvar _
@@ -363,7 +363,7 @@ let rel_to_string  = function
 
 let term_to_string t : ML _
   =
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match head.n with
     | Tm_uvar (u, s) ->
       Format.fmt3 "%s%s %s"
@@ -717,7 +717,7 @@ let norm_with_steps profiling_tag steps env t : ML _
 
 let should_strongly_reduce t : ML _
   =
-    let h, _ = t |> U.unascribe |> U.head_and_args in
+    let h, _ = t |> U.unascribe |> U.head_and_args_full in
     match (SS.compress h).n with
     | Tm_constant (FStarC.Const.Const_reify _) -> true
     | _ -> false
@@ -897,14 +897,14 @@ let flex_t_to_string flex : ML _ =
 
 let is_flex t : ML _
   =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar _ -> true
     | _ -> false
 
 let flex_uvar_head t : ML _
   =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
@@ -958,7 +958,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       | Binding_var x -> bv_not_affected_by s x
       | _ -> true
     in
-    let head, args = U.head_and_args t0 in
+    let head, args = U.head_and_args_full t0 in
     match (SS.compress head).n with
     | Tm_uvar (uv, ([], _)) ->
       (* No subst, nothing to do *)
@@ -1044,7 +1044,7 @@ let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) hea
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : ML (flex_t & (subst_ts & term))=
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (uv, s) ->
       Flex (t, uv, args), (s,t)
@@ -1445,8 +1445,8 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : ML (match_result & opti
      * faster too) than eq_tm which is meant for decidable equality.
      *)
     let made_progress t t' =
-      let head  = U.head_and_args t  |> fst in
-      let head' = U.head_and_args t' |> fst in
+      let head  = U.head_and_args_full t  |> fst in
+      let head' = U.head_and_args_full t' |> fst in
       not (U.term_eq head head')
     in
 
@@ -1555,8 +1555,8 @@ let rank wl pr : ML (rank_t //the rank
    let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
-      let lh, lhs_args = U.head_and_args tp.lhs in
-      let rh, rhs_args = U.head_and_args tp.rhs in
+      let lh, lhs_args = U.head_and_args_full tp.lhs in
+      let rh, rhs_args = U.head_and_args_full tp.rhs in
       let rank, tp =
         match lh.n, rh.n with
         | Tm_uvar _, Tm_uvar _ ->
@@ -1627,7 +1627,7 @@ let next_prob wl : ML (option (prob & list prob & rank_t)) =
 let flex_prob_closing tcenv (bs:binders) (p:prob) : ML _
   =
     let flex_will_be_closed t =
-        let hd, _ = U.head_and_args t in
+        let hd, _ = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_uvar(u, _) ->
           u.ctx_uvar_binders |> BU.for_some (fun ({binder_bv=y}) ->
@@ -2197,7 +2197,7 @@ let payload_of_hide_reveal h args : ML (option (universe & typ & term)) =
   | _ -> None
 
 let is_reveal_or_hide t : ML _ =
-  let h, args = U.head_and_args t in
+  let h, args = U.head_and_args_full t in
   if U.is_fvar PC.reveal h
   then match payload_of_hide_reveal h args with
         | None -> None
@@ -2248,7 +2248,7 @@ let maybe_defer_to_user_tac prob reason wl : ML solution =
   match prob.relation with
   | EQ ->
     let should_defer_tac t =
-      let head, _ = U.head_and_args t in
+      let head, _ = U.head_and_args_full t in
       match (SS.compress head).n with
       | Tm_uvar(uv, _) ->
         DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
@@ -2524,8 +2524,8 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   | None -> SS.compress t1, SS.compress t2
               in
               let try_eq t1 t2 wl =
-                  let t1_hd, t1_args = U.head_and_args t1 in
-                  let t2_hd, t2_args = U.head_and_args t2 in
+                  let t1_hd, t1_args = U.head_and_args_full t1 in
+                  let t2_hd, t2_args = U.head_and_args_full t2 in
                   if List.length t1_args <> List.length t2_args then None else
                   let probs, wl =
                           List.fold_left2 (fun (probs, wl) (a1, _) (a2, _) ->
@@ -2642,13 +2642,13 @@ let solve_rigid_flex_or_flex_rigid_subtyping
   | _ ->
     if !dbg_Rel then
       Format.print1 "Trying to solve by meeting refinements:%s\n" (show tp.pid);
-    let u, _args = U.head_and_args this_flex in
+    let u, _args = U.head_and_args_full this_flex in
     let env = p_env wl (TProb tp) in
     begin
     match (SS.compress u).n with
     | Tm_uvar(ctx_uvar, _subst) ->
       let equiv (t:term) : ML bool =
-         let u', _ = U.head_and_args t in
+         let u', _ = U.head_and_args_full t in
          match (whnf env u').n with
          | Tm_uvar(ctx_uvar', _subst') ->
            UF.equiv ctx_uvar.ctx_uvar_head ctx_uvar'.ctx_uvar_head
@@ -2847,7 +2847,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
               | _ ->
                 lhs_binders, rhs_args
           in
-          let rhs_hd, rhs_args = U.head_and_args rhs in
+          let rhs_hd, rhs_args = U.head_and_args_full rhs in
           let bs, rhs_args =
             remove_matching_prefix
               (List.rev bs_orig)
@@ -2979,7 +2979,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         //    (Print.binders_to_string ", " bs_lhs)
         //    (show t_res_lhs)
         //    (show rhs);
-        let rhs_hd, args = U.head_and_args rhs in
+        let rhs_hd, args = U.head_and_args_full rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
         // if !dbg_Rel
@@ -3036,7 +3036,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         if !dbg_Rel then
           Format.print_string "imitate\n";
         let is_app rhs =
-           let _, args = U.head_and_args rhs in
+           let _, args = U.head_and_args_full rhs in
            match args with
            | [] -> false
            | _ -> true
@@ -3095,7 +3095,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                     (show rhs);
       let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
       let n_args_lhs = List.length args_lhs in
-      let head, args_rhs = U.head_and_args rhs in
+      let head, args_rhs = U.head_and_args_full rhs in
       let n_args_rhs = List.length args_rhs in
       if n_args_lhs > n_args_rhs
       then inapplicable "not enough args" None
@@ -3518,8 +3518,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             (if need_unif then "need unification" else "match")
             (show t1) (tag_of t1)
             (show t2) (tag_of t2);
-        let head1, args1 = U.head_and_args t1 in
-        let head2, args2 = U.head_and_args t2 in
+        let head1, args1 = U.head_and_args_full t1 in
+        let head2, args2 = U.head_and_args_full t2 in
         let need_unif =
           match (head1.n, args1), (head2.n, args2) with
           | (Tm_uinst(_, us1), _::_), (Tm_uinst(_, us2), _::_) ->
@@ -3608,8 +3608,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                          N.unfold_head_once env t2
                    with
                    | Some t1', Some t2' ->
-                     let head1', _ = U.head_and_args t1' in
-                     let head2', _ = U.head_and_args t2' in
+                     let head1', _ = U.head_and_args_full t1' in
+                     let head2', _ = U.head_and_args_full t2' in
                      begin
                      match TEQ.eq_tm env head1' head1, TEQ.eq_tm env head2' head2 with
                      | TEQ.Equal, TEQ.Equal -> //unfolding didn't make progress
@@ -4217,7 +4217,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                   solve_t ({problem with lhs=not_abs'; rhs=t_abs}) wl
 
                 | _ ->
-                  let head, _ = U.head_and_args not_abs in
+                  let head, _ = U.head_and_args_full not_abs in
                   if wl.smt_ok
                   && may_relate wl.tcenv (p_rel orig) head
                   then let g, wl = mk_eq2 wl orig t_abs not_abs in
@@ -4317,8 +4317,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
       | _, Tm_constant _
       | _, Tm_fvar _
       | _, Tm_app _ ->
-         let head1 = U.head_and_args t1 |> fst in
-         let head2 = U.head_and_args t2 |> fst in
+         let head1 = U.head_and_args_full t1 |> fst in
+         let head2 = U.head_and_args_full t2 |> fst in
          let _ =
              if !dbg_Rel
              then Format.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
@@ -5612,7 +5612,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
     (U.is_fvar PC.tcresolve_lid tac) || (
       match (SS.compress tac).n with
       | Tm_abs ({bs=[_]; body}) ->
-        let hd, args = U.head_and_args body in
+        let hd, args = U.head_and_args_full body in
         U.is_fvar PC.tcresolve_lid hd && List.length args = 1
       | _ -> false
     )

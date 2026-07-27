@@ -267,7 +267,7 @@ let op_as_term env arity op : ML (option S.term) =
   | Some t -> Some t
   | _ -> fallback()
 
-let head_and_args t =
+let head_and_args_full t =
     let rec aux args t : ML _ = match (unparen t).tm with
         | App(t, arg, imp) -> aux ((arg,imp)::args) t
         | Construct(l, args') -> {tm=Name l; range=t.range; level=t.level}, args'@args
@@ -2178,7 +2178,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       | _ -> false
     in
     let pre_process_comp_typ (t:AST.term) =
-      let head, args = head_and_args t in
+      let head, args = head_and_args_full t in
       match head.tm with
       | Name lemma when ((string_of_id (ident_of_lid lemma)) = "Lemma") ->
         (* need to add the unit result type and the empty smt_pat list, if n *)
@@ -2926,7 +2926,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : ML (option (list int &
       Errors.log_issue at Errors.Warning_UnappliedFail
         (Format.fmt1 "Found ill-applied ‘%s’, argument should be a non-empty list of integer literals" (string_of_lid head))
   in
-  let hd, args = U.head_and_args at in
+  let hd, args = U.head_and_args_full at in
    match (SS.compress hd).n with
    | Tm_fvar fv when S.fv_eq_lid fv head ->
      begin
@@ -3204,7 +3204,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
     let ed_lid, ed, args, cattributes =
-        let head, args = head_and_args defn in
+        let head, args = head_and_args_full defn in
         let lid = match head.tm with
           | Name l -> l
           | _ -> raise_error d Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
