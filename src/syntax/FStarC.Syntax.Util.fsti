@@ -254,6 +254,9 @@ val qualifier_equal (q1 q2 : qualifier) : ML bool
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
+(* Builds an n-ary lambda from already-closed binders; does not close them. *)
+val abs_ln (bs:binders) (t:term) (lopt:option residual_comp) : ML term
+
 val abs (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
 val arrow_ln (bs:binders) (c:comp) : ML term

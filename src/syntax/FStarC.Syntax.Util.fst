@@ -655,6 +655,10 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
+let abs_ln bs t lopt = match bs with
+  | [] -> t
+  | _ -> mk (Tm_abs {bs; body=t; rc_opt=lopt}) t.pos
+
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
       | None -> None
@@ -1191,7 +1195,7 @@ let abs_one_ln (t:typ) : ML (option (binder & term)) =
     | Tm_abs {bs=b::bs; body; rc_opt} ->
         (* NB: bs are closed, so we just repackage the node. Using [abs] here
            would close them a second time. *)
-        Some (b, mk (Tm_abs {bs; body; rc_opt}) body.pos)
+        Some (b, abs_ln bs body rc_opt)
     | _ ->
         None
 
