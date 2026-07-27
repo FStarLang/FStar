@@ -26,6 +26,7 @@ val check
   (g:env)
   (pre:term)
   (post_hint:post_hint_opt g)
+  (annot_post:option (post_hint_for_env g))
   (res_ppname:ppname)
   (b:st_term)
   (e1 e2:st_term)

@@ -365,16 +365,8 @@ let rec check
         Bind.check_tot_bind g pre post_hint res_ppname t check
 
       | Tm_If { b; then_=e1; else_=e2; post=post_if } -> (
-        let post : post_hint_opt g =
+        let annot_post : option (post_hint_for_env g) =
           match post_if, post_hint with
-          | None, PostHint p ->
-            post_hint
-          | Some p, NoHint 
-          | Some p, TypeHint _ ->
-            //We set the computation type to be STT in this case
-            //We might allow the post_if annotation to also set the effect tag
-            let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
-            PostHint <| Checker.Base.intro_post_hint g EffectAnnotSTT None p
           | Some p, PostHint q ->
             Pulse.Typing.Env.fail g (Some t.range) 
               (Printf.sprintf 
@@ -383,11 +375,18 @@ let rec check
                   but this conditional was annotated with postcondition %s"
                   (P.term_to_string (q <: post_hint_t).post)
                   (P.term_to_string p))
-          | _, _ ->
-            NoHint
+          | Some p, _ ->
+            //We set the computation type to be STT here, but the effect is
+            //re-inferred from the branches in Pulse.Checker.If, so that a
+            //divergent branch is accepted (issue #4368). This only fixes the
+            //postcondition slprop.
+            let p = ImpureSpec.purify_spec g { ctxt_old = Some pre; ctxt_now = tm_emp } p in
+            Some (Checker.Base.intro_post_hint g EffectAnnotSTT None p)
+          | None, _ ->
+            None
         in
-        let (| x, t, pre', g1, k |) : checker_result_t g pre post =
-          If.check g pre post res_ppname b e1 e2 check in
+        let (| x, t, pre', g1, k |) : checker_result_t g pre post_hint =
+          If.check g pre post_hint annot_post res_ppname b e1 e2 check in
         (| x, t, pre', g1, k |)
       )
 
