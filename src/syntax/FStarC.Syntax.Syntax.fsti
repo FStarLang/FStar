@@ -787,6 +787,12 @@ val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> range -> ML term
 
+(* n-ary lambda / arrow from ALREADY-CLOSED binders, at an explicit range.
+   These do not close anything; see FStarC.Syntax.Util.abs / arrow for the
+   variants that close their binders. *)
+val mk_Tm_abs:      binders -> term -> option residual_comp -> range -> ML term
+val mk_Tm_arrow:    binders -> comp -> range -> ML term
+
 (* This raises an exception if the term is not a Tm_fvar,
  * use with care. It has to be an Tm_fvar *immediately*,
  * there is no solving of Tm_delayed nor Tm_uvar. If it's

@@ -456,9 +456,8 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
-    then let arg_sorts = match (SS.compress t_norm).n with
-            | Tm_arrow {bs=binders} -> binders |> List.map (fun _ -> Term_sort)
-            | _ -> [] in
+    then let binders, _ = U.arrow_formals_comp_ln t_norm in
+         let arg_sorts = binders |> List.map (fun _ -> Term_sort) in
          let arity = List.length arg_sorts in
          let univ_arity = List.length us in
          let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity univ_arity in
@@ -1247,7 +1246,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
     let k =
       match tps with
       | [] -> k
-      | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
+      | _ -> S.mk_Tm_arrow tps (S.mk_Total k) k.pos
     in
     let k = norm_before_encoding env k in
     U.arrow_formals k
@@ -1714,9 +1713,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : ML (decls_t & env_t) =
               SS.subst ed_univs_subst
                 (match ed.binders with
                   | [] -> tm
-                  | _ -> S.mk (Tm_abs {bs=ed.binders;
-                                      body=tm;
-                                      rc_opt=Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])}) tm.pos)
+                  | _ -> U.abs_ln ed.binders tm
+                                      (Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL])))
             in
 
             let open_action_univs (a:S.action) =

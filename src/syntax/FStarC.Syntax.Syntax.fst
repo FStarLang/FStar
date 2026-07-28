@@ -252,6 +252,17 @@ let mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app {hd=t1; args}) p
+
+let mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
+    match bs with
+    | [] -> body
+    | _ -> mk (Tm_abs {bs; body; rc_opt=rc}) p
+
+let mk_Tm_arrow (bs:binders) (c:comp) p =
+    match bs with
+    | [] -> failwith "mk_Tm_arrow: no binders"
+    | _ -> mk (Tm_arrow {bs; comp=c}) p
+
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->

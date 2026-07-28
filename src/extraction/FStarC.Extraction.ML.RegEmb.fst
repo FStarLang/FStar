@@ -277,17 +277,13 @@ let rec embedding_for
     embedding_for tcenv mutuals k env t
 
   (* Pure arrow *)
-  | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
-    let [b], c = FStarC.Syntax.Subst.open_comp [b] c in
+  | Tm_arrow _ when (match U.arrow_one_ln t with
+                     | Some (_, c) -> U.is_pure_comp c
+                     | None -> false) ->
+    let b, c = Some?.v (U.arrow_one t) in
     let t0 = b.binder_bv.sort in
     let t1 = U.comp_result c in
     emb_arrow (embedding_for tcenv mutuals k env t0) (embedding_for tcenv mutuals k env t1)
-
-  (* More than 1 binder, curry and retry *)
-  | Tm_arrow {bs=b::more::bs; comp=c} ->
-    let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
-    let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
-    embedding_for tcenv mutuals k env t
 
   | Tm_app _ ->
     let head, args = U.head_and_args_full t in

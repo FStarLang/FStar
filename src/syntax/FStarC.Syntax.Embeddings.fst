@@ -1090,9 +1090,8 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
     let typ () =
-        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv (type_of ea))];
-                        comp=S.mk_Total (type_of eb)})
-              Range.dummyRange
+        U.arrow_ln [S.mk_binder (S.null_bv (type_of ea))]
+                   (S.mk_Total (type_of eb))
     in
     let emb_t_arr_a_b () = ET_fun(emb_typ_of 'a (), emb_typ_of 'b ()) in
     let printer (f:'a -> 'b) = "<fun>" in
