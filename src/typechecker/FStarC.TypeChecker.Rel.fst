@@ -1067,6 +1067,9 @@ let destruct_flex_t (t:term) wl : ML (flex_t & worklist) =
 
 let u_abs (k : typ) (ys : binders) (t : term) : ML term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
+        (* Phase B: relies on the arrow node's own arity (List.length bs) to
+           decide whether to open its comp directly or eta-expand, so it depends
+           on single-node arrow semantics. *)
         | Tm_arrow {bs; comp=c} ->
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c
@@ -1349,9 +1352,9 @@ let rec head_matches env t1 t2 : ML match_result =
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch false
 
-    | Tm_app {hd=head}, Tm_app {hd=head'} -> head_matches env head head' |> head_match
-    | Tm_app {hd=head}, _ -> head_matches env head t2 |> head_match
-    | _, Tm_app {hd=head} -> head_matches env t1 head |> head_match
+    | Tm_app _, Tm_app _ -> head_matches env (fst (U.head_and_args_full t1)) (fst (U.head_and_args_full t2)) |> head_match
+    | Tm_app _, _ -> head_matches env (fst (U.head_and_args_full t1)) t2 |> head_match
+    | _, Tm_app _ -> head_matches env t1 (fst (U.head_and_args_full t2)) |> head_match
 
     | Tm_let _, Tm_let _
     | Tm_match _, Tm_match _
@@ -2620,6 +2623,9 @@ let solve_rigid_flex_or_flex_rigid_subtyping
     begin
     match (SS.compress this_rigid).n with
     | Tm_arrow {bs=_bs; comp} ->
+        (* Phase B: relies on single-node arrow semantics - it inspects the top
+           node's comp to decide if this is a Tot/GTot arrow, which becomes
+           ambiguous once x:t -> y:s -> C and x:t -> Tot (y:s -> C) unify. *)
         //Although it's possible to take the meet/join of arrow types
         //we handle them separately either by imitation (for Tot/GTot arrows)
         //which provides some structural subtyping for them
@@ -4024,9 +4030,13 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         solve_one_universe_eq orig u1 u2 wl
 
       | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
+        (* Phase B: this arrow-congruence rule compares the two nodes' binder
+           lists pairwise via match_num_binders and re-abstracts the leftover
+           binders of the longer side; it depends on the per-node arity, so the
+           destructuring is left for the representation flip. *)
         let mk_c c = function
             | [] -> c
-            | bs -> mk_Total(mk (Tm_arrow {bs; comp=c}) c.pos) in
+            | bs -> mk_Total(S.mk_Tm_arrow bs c c.pos) in
 
         let (bs1, c1), (bs2, c2) =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
@@ -4040,9 +4050,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
 
       | Tm_abs {bs=bs1; body=tbody1; rc_opt=lopt1},
         Tm_abs {bs=bs2; body=tbody2; rc_opt=lopt2} ->
+        (* Phase B: like the arrow-congruence rule above, this compares the two
+           nodes' binder lists pairwise and re-abstracts the leftover binders of
+           the longer side, so the destructuring depends on the per-node arity. *)
         let mk_t t l = function
             | [] -> t
-            | bs -> mk (Tm_abs {bs; body=t; rc_opt=l}) t.pos in
+            | bs -> S.mk_Tm_abs bs t l t.pos in
         let (bs1, tbody1), (bs2, tbody2) =
             match_num_binders (bs1, mk_t tbody1 lopt1) (bs2, mk_t tbody2 lopt2) in
         solve_binders bs1 bs2 orig wl
@@ -4142,6 +4155,16 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         else fallback()
 
       (* flex-flex *)
+      (* Phase B: all of the flex detection arms below use the pattern
+         Tm_app {hd={n=Tm_uvar _}} to recognize an *applied* uvar. This only
+         works because the current n-ary representation flattens spines so the
+         head uvar is the immediate hd. Once the app node is unary, an applied
+         uvar `?u x y` nests as Tm_app {hd=Tm_app {...}} and these patterns stop
+         matching; they must be rewritten to test the leftmost head (e.g. via
+         is_flex / U.head_and_args_full). This is left for the representation
+         flip because the arms are order-sensitive `when`-guarded pair-matches
+         interleaved with the Tm_arrow/Tm_abs arms, so restructuring them is not
+         behavior-preserving here. *)
       | Tm_uvar _,                Tm_uvar _
       | Tm_app {hd={n=Tm_uvar _}}, Tm_uvar _
       | Tm_uvar _,                Tm_app {hd={n=Tm_uvar _}}
@@ -4708,12 +4731,12 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                                      match c2_decl |> U.get_wp_trivial_combinator with
                                      | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
                                      | Some t -> t in
-                                   mk (Tm_app {hd=inst_effect_fun_with [c1_univ] env c2_decl trivial;
-                                               args=[as_arg c1.result_typ; wpc1_2]}) r
+                                   S.mk_Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial)
+                                               [as_arg c1.result_typ; wpc1_2] r
                               else let c2_univ = env.universe_of env c2.result_typ in
                                    let stronger = c2_decl |> U.get_stronger_vc_combinator |> fst in
-                                   mk (Tm_app {hd=inst_effect_fun_with [c2_univ] env c2_decl stronger;
-                                               args=[as_arg c2.result_typ; as_arg wpc2; wpc1_2]}) r in
+                                   S.mk_Tm_app (inst_effect_fun_with [c2_univ] env c2_decl stronger)
+                                               [as_arg c2.result_typ; as_arg wpc2; wpc1_2] r in
                       if !dbg_Rel then
                           Format.print1 "WP guard (simplifed) is (%s)\n" (show (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
@@ -5505,6 +5528,10 @@ let check_implicit_solution_and_discharge_guard env
                *)
               let imp_tm =
                 match (SS.compress imp_tm).n with
+                (* Phase B: relies on single-node abs semantics - it clears the
+                   residual comp attached to this particular Tm_abs node (the
+                   solution lambda built in u_abs), preserving its full binder
+                   list unchanged. *)
                 | Tm_abs {bs; body; rc_opt=Some rc} ->
                   {imp_tm with n=Tm_abs {bs; body; rc_opt=Some ({rc with residual_typ=None})}}
                 | _ -> imp_tm in

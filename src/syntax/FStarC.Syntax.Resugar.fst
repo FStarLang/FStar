@@ -413,6 +413,11 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
       else typ
 
+    (* Phase B: relies on single-node abs semantics. Flattening here (e.g. via
+       U.abs_formals_ln) would also collapse genuinely nested lambdas
+       [fun x -> fun y -> e] into [fun x y -> e], changing current output, so
+       this site keeps matching the raw node. Once the representation is unary,
+       a multi-binder lambda will resugar as nested [fun x -> fun y -> ...]. *)
     | Tm_abs {bs=xs; body} -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
@@ -435,11 +440,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
 
     | Tm_arrow _ ->
       (* Flatten the arrow *)
-      let xs, body =
-        match (SS.compress (U.canon_arrow t)).n with
-        | Tm_arrow {bs=xs; comp=body} -> xs, body
-        | _ -> failwith "impossible: Tm_arrow in resugar_term"
-      in
+      let xs, body = U.arrow_formals_comp_ln_strict (U.canon_arrow t) in
       let xs, body = SS.open_comp xs body in
       let xs = filter_imp_bs xs in
       let body = resugar_comp' env body in
@@ -470,15 +471,15 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
 
     | Tm_app _ ->
       let t = U.canon_app t in
-      let Tm_app {hd=e; args} = t.n in
+      (* Flatten the whole application spine; under the unary representation
+         this recovers the full argument list rather than a single node. *)
+      let e, args = U.head_and_args_full t in
       let is_hide_or_reveal e =
         match U.un_uinst e with
         | {n=Tm_fvar fv} ->
           S.fv_eq_lid fv C.hide || S.fv_eq_lid fv C.reveal
         | _ -> false
       in
-      (* NB: This cannot fail since U.canon_app constructs a Tm_app. *)
-
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last (l:list _) : ML _ = match l with
             | hd :: [] -> [hd]
@@ -720,7 +721,13 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 xs, pats, t
           in
           let resugar_forall_body body = match (SS.compress body).n with
-            | Tm_abs {bs=xs; body} ->
+            | Tm_abs _ ->
+                (* Peel all quantifier binders. Under the unary representation
+                   [fun x1 .. xn -> body] is nested, so flatten to recover the
+                   full binder list before opening. abs_formals_ln stops at the
+                   quantifier predicate (a Prop), so this matches the previous
+                   single-node behavior exactly. *)
+                let xs, body, _ = U.abs_formals_ln body in
                 let xs, body = SS.open_term xs body in
                 let xs = filter_imp_bs xs in
                 let xs = xs |> map (fun b -> resugar_binder' env b t.pos) in
@@ -865,11 +872,18 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
             | tms -> Some (List.map (resugar_term' env) tms)
         in
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
-        let typ, def = match (SS.compress td).n with
-          | Tm_app {args=[(t, _); (d, _)]} -> t, d
+        (* [td] bundles the type and definition as a binary conjunction so both
+           are opened under the same universe substitution; recover the two
+           arguments from the (possibly nested) application spine. *)
+        let typ, def = match U.head_and_args_full td with
+          | (_, [(t, _); (d, _)]) -> t, d
           | _ -> failwith "wrong let binding format"
         in
         let binders, term, is_pat_app = match (SS.compress def).n with
+          (* Phase B: relies on single-node abs semantics. Flattening (via
+             U.abs_formals_ln) would collapse nested lambdas and change which
+             arguments become let-pattern binders; kept matching the raw node.
+             Post-flip a multi-binder [let f x y = e] def resugars nested. *)
           | Tm_abs {bs=b; body=t} ->
             let b, t = SS.open_term b t in
             let b = filter_imp_bs b in
@@ -1031,6 +1045,13 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
       | _ -> false
     in
     match (SS.compress rel).n with
+    (* Phase B: relies on multi-node (n-ary) abs/app semantics. This peels a
+       relation's two binders and inspects a >=2-argument application spine in
+       single nodes. Under the unary representation these patterns no longer
+       match a binary relation, so un-eta-expansion is simply skipped (the
+       relation resugars eta-expanded); left as-is to avoid changing current
+       output. A faithful Phase B version would peel two binders via
+       U.abs_one_ln and flatten the spine via U.head_and_args_full. *)
     | Tm_abs {bs=[b1;b2]; body} ->
         let ([b1;b2], body) = SS.open_term [b1;b2] body in
         let body = U.unascribe body in

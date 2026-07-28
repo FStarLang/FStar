@@ -87,8 +87,11 @@ let head_normal env t =
     | Tm_uvar _
     | Tm_abs _
     | Tm_constant _ -> true
-    | Tm_fvar fv
-    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
+    | Tm_fvar _
+    | Tm_app _ ->
+      (match (fst (U.head_and_args_full t)).n with
+       | Tm_fvar fv -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
+       | _ -> false)
     | _ -> false
 
 let head_redex env t =
@@ -280,6 +283,9 @@ let as_function_typ env t0 =
 let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
+  (* Phase B: relies on single-node arrow semantics -- deliberately takes only
+     the outermost arrow node's binders (no Tot-arrow flattening) so that the
+     arity here matches the function-type/application encoding. *)
   | Tm_arrow {bs; comp=c}  -> Subst.open_comp bs c
   | Tm_refine {b=bv} ->
     let args, res = curried_arrow_formals_comp bv.sort in
@@ -796,6 +802,9 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         encode_const c env
 
       | Tm_arrow {bs=binders; comp=c} ->
+        (* Phase B: relies on single-node arrow semantics -- the encoded arity
+           (and the IsTotFun partial-application axioms below) is the outermost
+           arrow node's binder count, matching curried_arrow_formals_comp. *)
         let module_name = env.current_module_name in
         let binders, res = SS.open_comp binders c in
         if  (env.encode_non_total_function_typ
@@ -1336,6 +1345,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         end
 
       | Tm_abs {bs; body; rc_opt=lopt} ->
+          (* Phase B: relies on single-node abs semantics -- the encoded function
+             arity is the outermost abstraction node's binder count. *)
           let bs, body, opening = SS.open_term' bs body in
           let fallback () =
             let arg_sorts, arg_terms =
@@ -1719,7 +1730,8 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 
-        | Tm_app {hd=head; args} ->
+        | Tm_app _ ->
+          let head, args = U.head_and_args_full phi in
           //it's okay to do (un_uinst head) in this context
           //since we are encoding primitives like has_type, labeled, and squash
           begin match (U.un_uinst head).n, args with

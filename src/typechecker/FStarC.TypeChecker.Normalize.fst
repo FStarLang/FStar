@@ -607,8 +607,9 @@ let rec maybe_weakly_reduced tm :  ML bool =
       | Tm_match _ ->
         true
 
-      | Tm_app {hd=t; args} ->
-        maybe_weakly_reduced t
+      | Tm_app _ ->
+        let hd, args = U.head_and_args_full t in
+        maybe_weakly_reduced hd
         || (args |> BU.for_some (fun (a, _) -> maybe_weakly_reduced a))
 
       | Tm_ascribed {tm=t1; asc} ->
@@ -694,13 +695,11 @@ let on_domain_lids = [ PC.fext_on_domain_lid; PC.fext_on_dom_lid; PC.fext_on_dom
 let is_fext_on_domain (t:term) : ML (option term) =
   let is_on_dom fv = on_domain_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) in
 
-  match (SS.compress t).n with
-  | Tm_app {hd; args} ->
-    (match (U.un_uinst hd).n with
-    | Tm_fvar fv when is_on_dom fv && List.length args = 3 ->  //first two are type arguments, third is the function
-      let f = args |> List.tl |> List.tl |> List.hd |> fst in  //get f
-      Some f
-    | _ -> None)
+  let hd, args = U.head_and_args_full t in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv when is_on_dom fv && List.length args = 3 ->  //first two are type arguments, third is the function
+    let f = args |> List.tl |> List.tl |> List.hd |> fst in  //get f
+    Some f
   | _ -> None
 
 (* Set below. Used by the simplifier. *)
@@ -1073,7 +1072,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                 norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
               | b::tl ->
                 log cfg  (fun () -> Format.print1 "\tShifted %s\n" (show c));
-                let body = mk (Tm_abs {bs=tl; body; rc_opt}) t.pos in
+                let body = S.mk_Tm_abs tl body rc_opt t.pos in
                 norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
               end
 
@@ -1149,6 +1148,8 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                  rebuild cfg env stack t
 
           | Tm_arrow {bs; comp=c} ->
+            (* Phase B: relies on single-node semantics — flattening would merge nested
+               arrows and lose the x:t -> Tot (y:s -> C) vs x:t -> y:s -> C distinction. *)
             if cfg.steps.weak
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
@@ -1234,7 +1235,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             (* This is important for tactics, see issue #1594 *)
             else if cfg.steps.tactics
                     && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
-            then let ffun = S.mk (Tm_abs {bs=[S.mk_binder (lb.lbname |> Inl?.v)]; body; rc_opt=None}) t.pos in
+            then let ffun = S.mk_Tm_abs [S.mk_binder (lb.lbname |> Inl?.v)] body None t.pos in
                  let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
                  log cfg (fun () -> Format.print_string "+++ Evaluating DIV Tm_let\n");
                  norm cfg env stack lb.lbdef
@@ -1663,7 +1664,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                 residual_flags=[];
                 residual_typ=Some t
               } in
-              let body = S.mk (Tm_abs {bs=[S.mk_binder x]; body; rc_opt=Some body_rc}) body.pos in
+              let body = S.mk_Tm_abs [S.mk_binder x] body (Some body_rc) body.pos in
 
               //the bind term for the effect
               let close = closure_as_term cfg env in
@@ -1698,6 +1699,8 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                   //
                   let unit_args =
                     match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
+                    (* Phase B: relies on single-node semantics — matches on the exact
+                       arity of the bind_wp arrow node. *)
                     | Tm_arrow {bs=_::_::bs} when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
@@ -1752,7 +1755,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                 let is_total_effect = Env.is_total_effect cfg.tcenv eff_name in
                 if is_total_effect
                   || Ident.lid_equals eff_name PC.effect_TAC_lid
-                then S.mk (Tm_app {hd=bind_inst; args=bind_inst_args head}) rng
+                then S.mk_Tm_app bind_inst (bind_inst_args head) rng
                 else
                   let lb_head, head_bv, head =
                     let bv = S.new_bv None x.sort in
@@ -1770,7 +1773,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                     lb, bv, S.bv_to_name bv in
                   S.mk (Tm_let {lbs=(false, [lb_head]);
                      body=SS.close [S.mk_binder head_bv] <|
-                          S.mk (Tm_app {hd=bind_inst; args=bind_inst_args head}) rng}) rng in
+                          S.mk_Tm_app bind_inst (bind_inst_args head) rng}) rng in
 
               log cfg (fun () -> Format.print2 "Reified (1) <%s> to %s\n" (show top0) (show reified));
               norm cfg env (List.tl stack) reified
@@ -1911,7 +1914,7 @@ and reify_lift cfg e msrc mtgt t : ML term =
 
     S.mk (Tm_let {lbs=(false, [lb_e]);
                   body=SS.close [S.mk_binder e_bv] <|
-                       S.mk (Tm_app {hd=return_inst; args=[as_arg t ; as_arg e]}) e.pos}
+                       S.mk_Tm_app return_inst [as_arg t ; as_arg e] e.pos}
     ) e.pos
   else
     match Env.monad_leq env msrc mtgt with
@@ -1934,10 +1937,10 @@ and reify_lift cfg e msrc mtgt t : ML term =
       let e =
         if Env.is_reifiable_effect env msrc
         then U.mk_reify e (Some msrc)
-        else S.mk
-               (Tm_abs {bs=[S.null_binder S.t_unit];
-                        body=e;
-                        rc_opt=Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] })})
+        else S.mk_Tm_abs
+               [S.null_binder S.t_unit]
+               e
+               (Some ({ residual_effect = msrc; residual_typ = Some t; residual_flags = [] }))
                e.pos in
       lift (env.universe_of env t) t e
 
@@ -2083,6 +2086,8 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
+    (* Phase B: relies on single-node semantics — the simplifier dispatches on the
+       exact arity of the outermost application node (e.g. binary /\, \/, ==>). *)
     | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
     | Tm_app {hd={n=Tm_fvar fv}; args} ->
       if S.fv_eq_lid fv PC.and_lid
@@ -2129,6 +2134,8 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
            | [(Some true, _)] ->  w U.t_false, false
            | [(Some false, _)] -> w U.t_true, false
            | _ -> tm, false
+      (* Phase B: the quantifier simplifications below rely on single-node semantics —
+         the Tm_abs {bs=[_]; body} patterns match a lambda with exactly one binder. *)
       else if S.fv_eq_lid fv PC.forall_lid
       then match args with
            (* Simplify ∀x. True to True *)
@@ -2454,6 +2461,8 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
            log cfg (fun () -> Format.print1 "Reified lift to (1): %s\n" (show lifted));
            norm cfg env (List.tl stack) lifted
 
+        (* Phase B: relies on single-node semantics — reify (reflect e) cancellation
+           matches reflect applied to exactly one argument. *)
         | Tm_app {hd={n = Tm_constant (FC.Const_reflect _)}; args=[(e, _)]} ->
            // reify (reflect e) ~> e
            // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
@@ -3015,8 +3024,8 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
       match binders, tc with
       | [], Inl t -> t
       | [], Inr c -> failwith "Impossible: empty bindes with a comp"
-      | _ , Inr c -> S.mk (Tm_arrow {bs=binders; comp=c}) c.pos
-      | _ , Inl t -> S.mk (Tm_arrow {bs=binders; comp=S.mk_Total t}) t.pos
+      | _ , Inr c -> S.mk_Tm_arrow binders c c.pos
+      | _ , Inl t -> S.mk_Tm_arrow binders (S.mk_Total t) t.pos
     in
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
@@ -3026,6 +3035,9 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
         | [] -> [], Inl t
         | _ -> begin
           match (SS.compress t).n, tc with
+          (* Phase B: relies on single-node semantics — must recover exactly the binder
+             list and comp of the single arrow built above (flattening would merge nested
+             arrows and change the returned binders/tc). *)
           | Tm_arrow {bs=binders; comp=c}, Inr _ -> binders, Inr c
           | Tm_arrow {bs=binders; comp=c}, Inl _ -> binders, Inl (U.comp_result c)
           | _,                    Inl _ -> [], Inl t
@@ -3136,7 +3148,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) : ML sigelt =
                                           eff_opt=None}) a.action_defn.pos in
             match a.action_params with
             | [] -> body
-            | _ -> S.mk (Tm_abs {bs=a.action_params; body; rc_opt=None}) a.action_defn.pos in
+            | _ -> S.mk_Tm_abs a.action_params body None a.action_defn.pos in
         let destruct_action_body body =
             match (SS.compress body).n with
             | Tm_ascribed {tm=defn; asc=(Inl typ, None, _); eff_opt=None} -> defn, typ
@@ -3144,6 +3156,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) : ML sigelt =
         in
         let destruct_action_typ_templ t =
             match (SS.compress t).n with
+            (* Phase B: relies on single-node semantics — recovers exactly the parameter
+               binders of the single abs built for the action template. *)
             | Tm_abs {bs=pars; body} ->
               let defn, typ = destruct_action_body body in
               pars, defn, typ

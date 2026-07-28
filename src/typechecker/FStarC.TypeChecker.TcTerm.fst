@@ -464,8 +464,9 @@ let check_no_smt_theory_symbols (en:env) (t:term) : ML unit =
       if Env.fv_has_attr en fv Const.smt_theory_symbol_attr_lid then [t]
       else []
 
-    | Tm_app {hd=t; args} ->
-      let ts = aux t :: List.map (fun (t, _) -> aux t) args in
+    | Tm_app _ ->
+      let hd, args = U.head_and_args_full t in
+      let ts = aux hd :: List.map (fun (t, _) -> aux t) args in
       List.flatten ts
 
     | Tm_ascribed {tm=t}
@@ -570,6 +571,7 @@ let guard_letrecs env actuals expected_c : ML (list (lbname&typ&univ_names)) =
                   | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
                   | Tm_name _, Tm_name _ -> false  //do not warn for names, e.g. in polymorphic functions, the names may be instantiated at the call sites
                   | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
+                    (* Phase B: structural comparator relying on per-node app grouping *)
                     warn h1 h2 || List.length args1 <> List.length args2 ||
                     (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2))
                   | Tm_refine {b=t1; phi=phi1}, Tm_refine {b=t2; phi=phi2} ->
@@ -710,9 +712,13 @@ let is_comp_ascribed_reflect (e:term) : ML (option (lident & term & aqual)) =
   match (SS.compress e).n with
   | Tm_ascribed {tm=e;asc=(Inr _, _, _)} ->
     (match (SS.compress e).n with
-     | Tm_app {hd=head; args} when List.length args = 1 ->
-       (match (SS.compress head).n with
-        | Tm_constant (Const_reflect l) -> args |> List.hd |> (fun (e, aqual) -> (l, e, aqual)) |> Some
+     | Tm_app _ ->
+       let head, args = U.head_and_args_full e in
+       (match args with
+        | [(e, aqual)] ->
+          (match (SS.compress head).n with
+           | Tm_constant (Const_reflect l) -> Some (l, e, aqual)
+           | _ -> None)
         | _ -> None)
      | _ -> None)
    | _ -> None
@@ -962,7 +968,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let top =
       let r = top.pos in
       let tm = mk (Tm_constant (Const_reflect effect_lid)) r in
-      let tm = mk (Tm_app {hd=tm;args=[e, aqual]}) r in
+      let tm = S.mk_Tm_app tm [e, aqual] r in
       mk (Tm_ascribed {tm; asc=(Inr expected_c, None, use_eq); eff_opt=expected_c |> U.comp_effect_name |> Some}) r in
 
     //check the expected type in the env, if present
@@ -1007,22 +1013,22 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   | Tm_app {hd={n=Tm_constant (Const_reflect _)}; args=a::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args_full top in
-    let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) top.pos in
+    let head = S.mk_Tm_app unary_op [a] (Range.union_ranges unary_op.pos (fst a).pos) in
+    let t = S.mk_Tm_app head rest top.pos in
     tc_term env t
 
   (* Binary operators *)
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args_full top in
-    let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) top.pos in
+    let head = S.mk_Tm_app unary_op [a1; a2] (Range.union_ranges unary_op.pos (fst a1).pos) in
+    let t = S.mk_Tm_app head rest top.pos in
     tc_term env t
 
   | Tm_app {hd={n=Tm_constant Const_range_of}; args=[(e, None)]} ->
     let e, c, g = tc_term (fst <| Env.clear_expected_typ env) e in
     let head, _ = U.head_and_args_full top in
-    mk (Tm_app {hd=head; args=[(e, None)]}) top.pos, (TcComm.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
+    S.mk_Tm_app head [(e, None)] top.pos, (TcComm.lcomp_of_comp <| mk_Total (tabbrev Const.range_lid)), g
 
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=(t, None)::(r, None)::[]} ->
     let head, _ = U.head_and_args_full top in
@@ -1115,8 +1121,8 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
 
       let eff_args =
-        match (SS.compress expected_repr_typ).n with
-        | Tm_app {args=_::args} -> args
+        match U.head_and_args_full expected_repr_typ with
+        | _, _::args -> args
         | _ ->
           raise_error top Errors.Fatal_UnexpectedEffect
             (Format.fmt3 "Expected repr type for %s is not an application node (%s:%s)"
@@ -1131,7 +1137,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
         flags=[]
       }) |> TcComm.lcomp_of_comp in
 
-      let e = mk (Tm_app {hd=reflect_op; args=[(e, aqual)]}) top.pos in
+      let e = S.mk_Tm_app reflect_op [(e, aqual)] top.pos in
 
       let e, c, g' = comp_check_expected_typ env e c in
 
@@ -1853,6 +1859,8 @@ and tc_value env (e:term) : ML (term
     value_check_expected_typ env e (Inl t) mzero
 
   | Tm_arrow {bs; comp=c} ->
+    (* Phase B: relies on single-node arrow semantics (must not flatten nested
+       arrows here, e.g. distinguish x:t -> y:s -> C from x:t -> Tot (y:s -> C)) *)
     let bs, c = SS.open_comp bs c in
     let env0 = env in
     let env, _ = Env.clear_expected_typ env in
@@ -1895,10 +1903,12 @@ and tc_value env (e:term) : ML (term
     value_check_expected_typ env0 e (Inl t) g
 
   | Tm_abs {bs; body} ->
+    (* Phase B: relies on single-node abs semantics (peels exactly this node's
+       binders and passes [top], with its own rc_opt, on to tc_abs) *)
     (* in case we use type variables which are implicitly quantified, we add quantifiers here *)
     let bs = TcUtil.maybe_add_implicit_binders env bs in
     if Debug.medium ()
-    then Format.print1 "Abstraction is: %s\n" (show ({top with n=Tm_abs {bs; body; rc_opt=None}}));
+    then Format.print1 "Abstraction is: %s\n" (show (S.mk_Tm_abs bs body None top.pos));
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body
 
@@ -2093,6 +2103,8 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
         Some t, bs, bs', copt, env_body, body, g_env
 
       | Tm_arrow {bs=bs_expected; comp=c_expected} ->
+        (* Phase B: relies on single-node arrow semantics; handle_more below
+           distinguishes immediate binders from an explicitly curried result *)
         let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
         (* Two main interesting bits here;
            1. The expected type may have
@@ -2123,6 +2135,7 @@ and tc_abs_expected_function_typ env (bs:binders) (t0:option (typ & bool)) (body
                   let t = N.unfold_whnf env_bs (U.comp_result c) in
                   match t.n with
                   | Tm_arrow {bs=bs_expected; comp=c_expected} ->
+                    (* Phase B: relies on single-node arrow semantics (explicit currying) *)
                     let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
                     let (env_bs_bs', bs', more, guard'_env_bs, subst) = tc_abs_check_binders env_bs more_bs bs_expected use_eq in
                     let guard'_env = Env.close_guard env_bs bs guard'_env_bs in
@@ -2354,9 +2367,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : ML (term & lcomp & guard_t)
           | _ -> None in
         if c_opt |> Some? &&
            (match (SS.compress body).n with  //body is an M.reflect
-            | Tm_app {hd=head; args} when List.length args = 1 ->
-              (match (SS.compress head).n with
-               | Tm_constant (Const_reflect _) -> true
+            | Tm_app _ ->
+              (match U.head_and_args_full body with
+               | head, [_] ->
+                 (match (SS.compress head).n with
+                  | Tm_constant (Const_reflect _) -> true
+                  | _ -> false)
                | _ -> false)
             | _ -> false)
         then
@@ -2852,6 +2868,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                 let tres = SS.compress tres |> U.unrefine |> U.unmeta_safe in
                 match tres.n with
                 | Tm_arrow {bs; comp=cres'} ->
+                        (* Phase B: relies on single-node arrow semantics (splits the
+                           remaining args against exactly this node's binders and warns
+                           on redundant explicit currying) *)
                         let bs, cres' = SS.open_comp bs cres' in
                         let head_info = (head, chead, ghead, cres') in
                         if Debug.low ()
@@ -2911,6 +2930,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             check_function_app bs_cres (g ++ guard)
 
         | Tm_arrow {bs; comp=c} ->
+            (* Phase B: relies on single-node arrow semantics; tc_args splits the
+               args against exactly this node's binders (currying-aware) *)
             let bs, c = SS.open_comp bs c in
             let head_info = head, chead, ghead, c in
             if Debug.extreme ()
@@ -2995,6 +3016,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : ML (term
     let tf = SS.compress (U.comp_result chead) in
     match tf.n with
         | Tm_arrow {bs; comp=c} when (U.is_total_comp c && List.length bs=List.length args) ->
+          (* Phase B: relies on single-node arrow semantics (arity of this node
+             must match the number of arguments to the short-circuiting operator) *)
           let res_t = U.comp_result c in
           let args, guard, ghost =
             List.fold_left2
@@ -3709,8 +3732,9 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                 then failwith "Impossible: nullary patterns must be data constructors"
                 else discriminate (force_scrutinee ()) (head_constructor pat_exp)
 
-            | Pat_cons (_, _, pat_args), Tm_app {hd=head; args} ->
+            | Pat_cons (_, _, pat_args), Tm_app _ ->
                 //application pattern
+                let head, args = U.head_and_args_full pat_exp in
                 let f = head_constructor head in
                 if not (Env.is_datacon env f)
                 || List.length pat_args <> List.length args
@@ -4413,8 +4437,8 @@ and check_let_recs env lbts : ML _ =
             else let inner = U.abs bs1 t lcomp in
                  let inner = SS.close bs0 inner in
                  let bs0 = SS.close_binders bs0 in
-                 S.mk (Tm_abs {bs=bs0;body=inner;rc_opt=None}) inner.pos
-                 // ^ using abs again would flatten the abstraction
+                 S.mk_Tm_abs bs0 inner None inner.pos
+                 // ^ mk_Tm_abs does not close/flatten; using U.abs would flatten the abstraction
         in
         (* / HACK *)
 
@@ -4683,12 +4707,14 @@ let rec apply_well_typed env (t_hd:typ) (args:args) : ML (option typ) =
   then Some t_hd
   else match (N.unfold_whnf env t_hd).n with
        | Tm_arrow {bs; comp=c} ->
+         (* Phase B: relies on single-node arrow semantics (splits args against
+            exactly this node's binders; residual binders form a new arrow) *)
          let n_args = List.length args in
          let n_bs = List.length bs in
          let bs, args, t, remaining_args =  (* bs (opened), args (length args = length bs), comp result type, remaining args *)
            if n_args < n_bs
            then let bs, rest = BU.first_N n_args bs in
-                let t = S.mk (Tm_arrow {bs=rest; comp=c}) t_hd.pos in
+                let t = S.mk_Tm_arrow rest c t_hd.pos in
                 let bs, c = SS.open_comp bs (S.mk_Total t) in
                 bs, args, U.comp_result c, []
            else let bs, c = SS.open_comp bs c in
@@ -4732,7 +4758,7 @@ let rec universe_of_aux env e : ML term =
      let e = N.normalize [] env e in
      universe_of_aux env e
    //we expect to compute (Type u); so an abstraction always fails
-   | Tm_abs {bs; body=t} ->
+   | Tm_abs _ ->
      level_of_type_fail env e "arrow type"
    //these next few cases are easy; we just use the type stored at the node
    | Tm_uvar (u, s) -> SS.subst' s (U.ctx_uvar_typ u)
@@ -4774,8 +4800,8 @@ let rec universe_of_aux env e : ML term =
    //the refinement formula plays no role in the universe computation; so skip it
    | Tm_refine {b=x} -> universe_of_aux env x.sort
    //U_max(univ_of bs, univ_of c)
-   | Tm_arrow {bs; comp=c} ->
-     let bs, c = SS.open_comp bs c in
+   | Tm_arrow _ ->
+     let bs, c = U.arrow_formals_comp_strict e in
      let env = Env.push_binders env bs in
      let us = List.map (fun ({binder_bv=b}) -> level_of_type env b.sort (universe_of_aux env b.sort)) bs in
      let u_res =
@@ -4889,6 +4915,8 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
     __typeof_tot_or_gtot_term_fastpath env (U.unfold_lazy i) must_tot
 
   | Tm_abs {bs; body; rc_opt=Some ({residual_effect=eff; residual_typ=tbody})} ->  //AR: maybe keep residual univ too?
+    (* Phase B: relies on single-node abs semantics (uses this node's binders and
+       its own residual comp to build the arrow type) *)
     let is_tot = Ident.lid_equals eff Const.effect_Tot_lid in
     let is_gtot = Ident.lid_equals eff Const.effect_GTot_lid in
     if not (is_tot || is_gtot) then None
@@ -4913,16 +4941,16 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_app {hd={n=Tm_constant Const_range_of}; args=a::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args_full t in
-    let head = mk (Tm_app {hd=unary_op; args=[a]}) (Range.union_ranges unary_op.pos (fst a).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) t.pos in
+    let head = S.mk_Tm_app unary_op [a] (Range.union_ranges unary_op.pos (fst a).pos) in
+    let t = S.mk_Tm_app head rest t.pos in
     __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   (* Binary operators *)
   | Tm_app {hd={n=Tm_constant Const_set_range_of}; args=a1::a2::hd::rest} ->
     let rest = hd::rest in //no 'as' clauses in F* yet, so we need to do this ugliness
     let unary_op, _ = U.head_and_args_full t in
-    let head = mk (Tm_app {hd=unary_op; args=[a1; a2]}) (Range.union_ranges unary_op.pos (fst a1).pos) in
-    let t = mk (Tm_app {hd=head; args=rest}) t.pos in
+    let head = S.mk_Tm_app unary_op [a1; a2] (Range.union_ranges unary_op.pos (fst a1).pos) in
+    let t = S.mk_Tm_app head rest t.pos in
     __typeof_tot_or_gtot_term_fastpath env t must_tot
 
   | Tm_app {hd={n=Tm_constant Const_range_of}; args=[_]} ->
@@ -5043,6 +5071,8 @@ let rec effectof_tot_or_gtot_term_fastpath (env:env) (t:term) : ML (option liden
             | _ -> t in
           match (maybe_arrow t_hd).n with
           | Tm_arrow {bs; comp=c} ->
+            (* Phase B: relies on single-node arrow semantics (compares the number
+               of args against exactly this node's binder count) *)
             let eff_app =
               if List.length args < List.length bs
               then Const.effect_PURE_lid

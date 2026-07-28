@@ -423,6 +423,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
       mk_t <| Type_t (translate_univ cfg bs u)
 
     | Tm_arrow {bs=xs; comp=c} ->
+      (* Phase B: relies on single-node semantics — translates exactly this arrow node's
+         binder list into the NBE Arrow value; flattening would change its shape. *)
       let norm () =
         let ctx, binders_rev =
           List.fold_left
@@ -474,6 +476,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     | Tm_abs {bs=[]} -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs {bs=xs; body; rc_opt=resc} ->
+      (* Phase B: relies on single-node semantics — the Lam value's arity and shape are
+         computed from this abstraction node's exact binder list. *)
       mk_t <| Lam {
         interp = (fun ys -> translate cfg (List.append (List.map fst ys) bs) body);
         shape = Lam_bs (bs, xs, resc);
@@ -788,6 +792,8 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
                 (show n_args_rev));
     if n_args_rev >= arity
     then let bs, body =
+           (* Phase B: relies on single-node semantics — compares List.length bs of this
+              exact abs node against the precomputed let-rec arity. *)
            match (U.unascribe lb.lbdef).n with
            | Tm_abs {bs; body} -> bs, body
            | _ -> [], lb.lbdef
@@ -1084,7 +1090,7 @@ and translate_monadic mty cfg bs e : ML t =
                 S.residual_flags=[];
                 S.residual_typ=Some ty
             } in
-           S.mk (Tm_abs {bs=[S.mk_binder (Inl?.v lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
+           S.mk_Tm_abs [S.mk_binder (Inl?.v lb.lbname)] body (Some body_rc) body.pos
        in
        let maybe_range_arg = [] in
        let t =
