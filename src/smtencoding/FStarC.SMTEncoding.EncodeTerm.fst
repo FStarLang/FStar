@@ -1293,11 +1293,13 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 let all_args = fuel_args@univs@args in
                 if List.length all_args < arity
                 then
-                  (* The head's SMT arity is computed from its fully normalized
-                     type, whose arrow spine may be longer than the one seen
-                     here (arrows are unary, so [t -> Tot (s -> c)] and
-                     [t -> s -> c] are the same term). Fall back to a curried
-                     application through the token. *)
+                  (* The head's declared SMT arity comes from the arrow *node*
+                     of its fully normalized type. A term whose arrow was not
+                     built as one node -- e.g. one a tactic assembled with
+                     [pack_ln (Tv_Arrow ..)], which cannot set [more] -- can
+                     present fewer arguments than that arity. Fall back to a
+                     curried application through the token, which is sound
+                     (if less complete) rather than crashing. *)
                   encode_partial_app None
                 else
                   let tm = maybe_curry_app t0.pos fname arity all_args in

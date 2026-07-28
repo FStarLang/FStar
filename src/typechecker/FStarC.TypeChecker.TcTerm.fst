@@ -50,6 +50,8 @@ module UF = FStarC.Syntax.Unionfind
 module Const = FStarC.Parser.Const
 module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module Print = FStarC.Syntax.Print
+module CList = FStarC.CList
+module Free = FStarC.Syntax.Free
 
 let dbg_Exports        = Debug.get_toggle "Exports"
 let dbg_LayeredEffects = Debug.get_toggle "LayeredEffects"
@@ -75,6 +77,43 @@ let norm_c env c : ML _ = N.normalize_comp (steps env) env c
 
 (* Checks that the variables in `fvs` do not appear in the free vars of `t`.
 The environment `env` must not contain fvs in its gamma for this to work properly. *)
+(* If this type is headed by an unsolved unification variable, return it. *)
+let flex_head_uvar (t:term) : ML (option ctx_uvar) =
+  match (SS.compress (U.leftmost_head (U.unmeta t))).n with
+  | Tm_uvar (u, _) -> Some u
+  | _ -> None
+
+(* Does this deferred constraint have [u] at the head of one of its sides?  If so,
+   forcing it may well determine [u]. *)
+(* If [t] is flex and some deferred subtyping constraint bounds its head uvar by a
+   fully-determined (uvar-free) type, return that type.  Using it as the expected type
+   for an argument is what enables coercion insertion and typeclass resolution, without
+   committing to a solution for the uvar.  Before applications became unary, nested
+   application nodes achieved this by forcing the deferred constraints at each node
+   boundary (see monadic_application's partial-application case); doing it here makes
+   elaboration insensitive to how an application is bracketed. *)
+let bound_of_flex (require_ground:bool) (ds : TcComm.deferred) (t : term) : ML (option term) =
+  match flex_head_uvar t with
+  | None -> None
+  | Some u ->
+    let headed_by (t:term) : ML bool =
+      match flex_head_uvar t with
+      | Some u' -> UF.equiv u.ctx_uvar_head u'.ctx_uvar_head
+      | None -> false
+    in
+    let ground (t:term) : ML bool = not require_ground || is_empty (Free.uvars t) in
+    let bound (d : deferred_reason & string & prob) : ML (option term) =
+      let (_, _, p) = d in
+      match p with
+      | TProb p ->
+        if p.relation = EQ then None
+        else if headed_by p.rhs && ground p.lhs then Some p.lhs
+        else if headed_by p.lhs && ground p.rhs then Some p.rhs
+        else None
+      | CProb _ -> None
+    in
+    List.tryPick bound (FStarC.Class.Listlike.to_list ds)
+
 let check_no_escape (head_opt : option term)
     (env : Env.env)
     (fvs:list bv)
@@ -2837,6 +2876,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             then Format.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
                              (show x) (show x.sort) (show e) (show subst) (show targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
+            (* If the formal's type is still flex, we may have a fully-determined bound
+               for it from a constraint deferred while checking an earlier argument (see
+               bound_of_flex).  Coercion insertion needs a concrete expected type,
+               so in that case check the argument bare, coerce it towards the bound, and
+               only then relate its type to the flex formal.  Note we do *not* check the
+               argument against the bound itself: the bound is only a lower bound, and the
+               formal may well end up being solved to a supertype of it. *)
+            let bound = bound_of_flex true g.deferred targ in
+            let e0 = e in
             let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if Debug.high ()
             then Format.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
@@ -2845,6 +2893,26 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
                    (show targ)
                    (bqual |> is_eq |> show);
             let e, c, g_e = tc_term env e in
+            (* Coercion insertion needs a concrete expected type, which a flex formal does
+               not provide.  If we have a bound for it and a coercion would in fact apply,
+               redo the check against the bound.  Note we do not do this unconditionally:
+               the bound is only a lower bound, and checking against it would lose the
+               joins that the deferred constraints on the formal give us. *)
+            let e, c, g_e =
+              match bound with
+              | None -> e, c, g_e
+              | Some b ->
+                (* c.res_typ has been weakened to the (flex) expected type, but the
+                   constraint we just deferred for it records the argument's own type. *)
+                match bound_of_flex false g_e.deferred targ with
+                | None -> e, c, g_e
+                | Some t_e ->
+                  let _, c', _ =
+                    TcUtil.maybe_coerce_lc env e (TcComm.lcomp_of_comp (S.mk_Total t_e)) b in
+                  if TEQ.Equal? (TEQ.eq_tm env c'.res_typ t_e)
+                  then e, c, g_e
+                  else tc_term (Env.set_expected_typ_maybe_eq env b (is_eq bqual)) e0
+            in
             let g = g_ex ++ g ++ g_e in
 //                if debug env Options.High then Format.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
             let arg = e, aq in

@@ -456,8 +456,14 @@ let encode_free_var uninterpreted env fv us tt t_norm quals : ML (decls_t & env_
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
-    then let binders, _ = U.arrow_formals_comp_ln t_norm in
-         let arg_sorts = binders |> List.map (fun _ -> Term_sort) in
+    then let arg_sorts =
+           match (SS.compress t_norm).n with
+           | Tm_arrow _ ->
+             (* NB: only the outermost arrow *node*; the arity must agree with
+                what destruct_bound_function computes for the definition. *)
+             U.arrow_node_formals_comp_ln t_norm |> fst |> List.map (fun _ -> Term_sort)
+           | _ -> []
+         in
          let arity = List.length arg_sorts in
          let univ_arity = List.length us in
          let vname, vtok, env = new_term_constant_and_tok_from_lid env lid arity univ_arity in
