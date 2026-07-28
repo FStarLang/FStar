@@ -366,10 +366,13 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       let rename_in_typ def typ =
         let typ = Subst.compress typ in
         let def_bs = match (Subst.compress def).n with
-                     | Tm_abs {bs=binders} -> binders
+                     | Tm_abs _ ->
+                       let binders, _, _ = U.abs_formals_ln def in
+                       binders
                      | _ -> [] in
         match typ with
-        | { n = Tm_arrow {bs=val_bs; comp=c}; pos = r } -> begin
+        | { n = Tm_arrow _; pos = r } -> begin
+          let val_bs, c = U.arrow_formals_comp_ln typ in
           let has_auto_name bv =
             BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
@@ -387,7 +390,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
                  //     (Format.fmt2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  val_b) :: rename_binders bt vt in
-          Syntax.mk (Tm_arrow {bs=rename_binders def_bs val_bs; comp=c}) r end
+          S.mk_Tm_arrow (rename_binders def_bs val_bs) c r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 

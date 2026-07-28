@@ -277,6 +277,11 @@ val has_decreases (c:comp) : ML bool
  *)
 val arrow_formals_comp_ln (k:term) : ML (binders & comp)
 
+(* Unlike arrow_formals_comp_ln, these do not descend into a top-level
+   refinement (which would drop its predicate). They correspond exactly to
+   matching on Tm_arrow. *)
+val arrow_formals_comp_ln_strict (k:term) : ML (binders & comp)
+val arrow_formals_comp_strict (k:term) : ML (binders & comp)
 val arrow_formals_comp (k:term) : ML (binders & comp)
 val arrow_formals_ln (k:term) : ML (binders & typ)
 val arrow_formals (k:term) : ML (binders & typ)

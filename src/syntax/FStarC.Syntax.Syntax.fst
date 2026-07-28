@@ -258,10 +258,11 @@ let mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
     | [] -> body
     | _ -> mk (Tm_abs {bs; body; rc_opt=rc}) p
 
+(* NB: an arrow with no binders is degenerate and not representable once the
+   node becomes unary, but several callers (e.g. TcInductive) build one today,
+   so we preserve that behavior for now. *)
 let mk_Tm_arrow (bs:binders) (c:comp) p =
-    match bs with
-    | [] -> failwith "mk_Tm_arrow: no binders"
-    | _ -> mk (Tm_arrow {bs; comp=c}) p
+    mk (Tm_arrow {bs; comp=c}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with

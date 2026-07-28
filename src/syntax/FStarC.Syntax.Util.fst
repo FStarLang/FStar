@@ -747,6 +747,18 @@ let rec arrow_formals_comp_ln (k:term) =
           aux s k
         | _ -> [], Syntax.mk_Total k
 
+(* Unlike arrow_formals_comp_ln, these do not descend into a top-level
+   refinement (which would drop its predicate). They correspond exactly to
+   matching on Tm_arrow. *)
+let arrow_formals_comp_ln_strict k =
+    match (Subst.compress k).n with
+    | Tm_arrow _ -> arrow_formals_comp_ln k
+    | _ -> [], Syntax.mk_Total k
+
+let arrow_formals_comp_strict k =
+    let bs, c = arrow_formals_comp_ln_strict k in
+    Subst.open_comp bs c
+
 let arrow_formals_comp k =
     let bs, c = arrow_formals_comp_ln k in
     Subst.open_comp bs c

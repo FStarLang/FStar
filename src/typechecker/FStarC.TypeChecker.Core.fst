@@ -568,7 +568,7 @@ let rec is_arrow (g:env) (t:term)
           )
 
         | Tm_arrow {bs=x::xs; comp=c} ->
-          let t = S.mk (Tm_arrow {bs=xs; comp=c}) t.pos in
+          let t = S.mk_Tm_arrow xs c t.pos in
           let g, x, t = open_term g x t in
           return (x, E_Total, t)
 
@@ -710,12 +710,12 @@ let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
 let curry_arrow (x:binder) (xs:binders) (c:comp) =
-  let tail = S.mk (Tm_arrow {bs=xs; comp=c}) R.dummyRange in
-  S.mk (Tm_arrow {bs=[x]; comp=S.mk_Total tail}) R.dummyRange
+  let tail = S.mk_Tm_arrow xs c R.dummyRange in
+  S.mk_Tm_arrow [x] (S.mk_Total tail) R.dummyRange
 
 let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option residual_comp) =
-  let tail = S.mk (Tm_abs {bs=b1::bs; body; rc_opt=ropt}) body.pos in
-  S.mk (Tm_abs {bs=[b0]; body=tail; rc_opt=None}) body.pos
+  let tail = S.mk_Tm_abs (b1::bs) body ropt body.pos in
+  S.mk_Tm_abs [b0] tail None body.pos
 
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
@@ -744,8 +744,8 @@ let rec context_included (g0 g1: list binding) : ML bool =
   | _ -> false
 
 let curry_application hd arg args p =
-    let head = S.mk (Tm_app {hd; args=[arg]}) p in
-    let t = S.mk (Tm_app {hd=head; args}) p in
+    let head = S.mk_Tm_app hd [arg] p in
+    let t = S.mk_Tm_app head args p in
     t
 
 (* Replace all the *use* ranges in [t] by the use range in [r]. *)

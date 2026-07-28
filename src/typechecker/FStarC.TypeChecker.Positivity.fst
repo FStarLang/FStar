@@ -164,18 +164,16 @@ let normalize env t : ML _ =
 let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
   : ML term 
   = let rec aux t args : ML _ =
-        match (SS.compress t).n, args with
+        match U.arrow_one_ln t, args with
         | _, [] -> U.canon_arrow t
-        | Tm_arrow {bs=b::bs; comp=c}, a::args ->
+        | Some (b, c), a::args ->
           let tail = 
-            match bs with
-            | [] -> U.comp_result c
-            | _ -> S.mk (Tm_arrow {bs; comp=c}) t.pos
+            U.comp_result c
           in
           let b, tail = SS.open_term_1 b tail in
           let tail = SS.subst [NT(b.binder_bv, fst a)] tail in
           aux tail args
-        | _ ->
+        | None, _ ->
           raise_error 
              (Ident.range_of_lid dlid)
              Errors.Error_InductiveTypeNotSatisfyPositivityCondition
@@ -632,7 +630,8 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
        binders_ok bs && ok_comp c
      | Tm_refine {b=bv; phi=t} ->
        ok bv.sort && ok t
-     | Tm_app {hd=head; args} ->
+     | Tm_app _ ->
+       let head, args = U.head_and_args_full t in
        if mutuals_occur_in head
        then false
        else L.for_all
