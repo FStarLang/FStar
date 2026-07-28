@@ -82,6 +82,11 @@ let mk_slprop_eq (e0 e1:term) : term =
 
 let rewrites_to_p_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "rewrites_to_p"
 
+let term_as_subst_var (t:term) : option var =
+  match R.inspect_ln t with
+  | R.Tv_Var x -> Some (R.inspect_namedv x).uniq
+  | _ -> None
+
 let mk_sq_rewrites_to_p u t x y =
   let open R in
   let hd = pack_fv rewrites_to_p_lid in
@@ -558,8 +563,13 @@ let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
   | _ -> T.E_Total
 
-let g_with_eq g hyp b (eq_v:term) =
-  push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
+let g_with_eq g hyp b (eq_v:term) : env =
+  // RewritesTo substitutions are defined only for variable left-hand sides.
+  let hyp_typ : term =
+    if Some? (term_as_subst_var b)
+    then mk_sq_rewrites_to_p u0 tm_bool b eq_v
+    else mk_sq_eq2 u0 tm_bool b eq_v in
+  push_binding g hyp (mk_ppname_no_range "_if_hyp") hyp_typ
 
 let goto_comp_of_block_comp (c: comp_st) : comp_st =
   let {u;res;pre;post} = st_comp_of_comp c in
