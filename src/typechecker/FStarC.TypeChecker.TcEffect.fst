@@ -1411,7 +1411,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition ‘%s’"
         | Tm_unknown ->
           let signature_ts = let (us, t, _) = signature in (us, t) in
           let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
-          let bs, _ = U.arrow_formals_comp signature_t in
+          let bs, _ = U.arrow_node_formals_comp signature_t in
           (match bs with
            | _::_ ->
              let repr_t =
@@ -1469,7 +1469,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition ‘%s’"
         | Tm_unknown ->
           let signature_ts = let (us, t, _) = signature in (us, t) in
           let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
-          let bs, _ = U.arrow_formals_comp signature_t in
+          let bs, _ = U.arrow_node_formals_comp signature_t in
           (match bs with
            | _::_ ->
              let repr_t =
@@ -1800,7 +1800,7 @@ Errors.with_ctx (Format.fmt1 "While checking layered effect definition ‘%s’"
     let act_typ =
       match (SS.compress act.action_typ).n with
       | Tm_arrow _ ->
-        let bs, c = U.arrow_formals_comp_ln act.action_typ in
+        let bs, c = U.arrow_node_formals_comp_ln act.action_typ in
         let ct = Env.comp_to_comp_typ env c in
         if lid_equals ct.effect_name ed.mname
         then

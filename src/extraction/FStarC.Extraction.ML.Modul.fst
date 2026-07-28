@@ -923,7 +923,7 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names =
-          let bs, _ = U.arrow_formals_comp_ln (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp) in
+          let bs, _ = U.arrow_node_formals_comp_ln (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp) in
           List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
         in
         let tys = (ml_tyvars, mlt) in
@@ -1251,7 +1251,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
                       // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (show lbname) (show t) (must (mllb.mllb_tysc)));
                       let lb_lid = (Inr?.v lbname).fv_name in
                       let flags'' =
-                          match U.arrow_formals_comp_ln t with
+                          match U.arrow_node_formals_comp_ln t with
                           | _, { n = Comp { effect_name = e }}
                               when string_of_lid e = "FStar.HyperStack.ST.StackInline" ->
                               [ StackInline ]
