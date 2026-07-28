@@ -101,9 +101,25 @@ let name_binders binders =
                  { b with binder_bv = bv }
             else b)
 
-let name_function_binders t = match t.n with
-    | Tm_arrow {bs=binders; comp} -> mk (Tm_arrow {bs=name_binders binders; comp}) t.pos
+(* Names the binders of the whole arrow spine, numbering them from [i]. Under
+   the unary representation the spine is what used to be a single n-ary node,
+   so the index must be threaded through the recursion. *)
+let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
+    | Tm_arrow {b; comp; more} ->
+      let b =
+        if is_null_binder b
+        then { b with binder_bv = {ppname=id_of_text ("_" ^ show i); index=0; sort=b.binder_bv.sort} }
+        else b
+      in
+      let comp =
+        match comp.n with
+        | Total res -> { comp with n = Total (name_function_binders_from (i+1) res) }
+        | _ -> comp
+      in
+      mk (Tm_arrow {b; comp; more}) t.pos
     | _ -> t
+
+let name_function_binders t = name_function_binders_from 0 t
 
 let mk_subst s = [s]
 
@@ -261,10 +277,15 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.t) (err:stri
   let err () = Errors.raise_error r Errors.Fatal_UnexpectedEffect err in
   let repr = compress repr in
   if is_layered
-  then match repr.n with
-       (* Phase B: defined above head_and_args_full, so it cannot use the helper
-          API here; migrate when the representation is flipped. *)
-       | Tm_app {args=_::is} -> is |> List.map fst
+  then (* [head_and_args_full] is not in scope yet, so collect the spine here. *)
+       let rec spine acc t : ML _ =
+         let t = compress t in
+         match t.n with
+         | Tm_app {hd; arg} -> spine (arg::acc) hd
+         | _ -> acc
+       in
+       match spine [] repr with
+       | _::is -> is |> List.map fst
        | _ -> err ()
   else match repr.n with
        | Tm_arrow {comp=c} -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
@@ -322,11 +343,16 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
 
-(* Phase B: defined above arrow_formals_comp_ln_strict, so it cannot use the
-   helper API here. Note that flipping the representation changes this function's
-   answer for an explicitly curried arrow such as x:t -> Tot (y:s -> Div r). *)
-let is_pure_or_ghost_function t = match (compress t).n with
-    | Tm_arrow {comp=c} -> is_pure_or_ghost_comp c
+(* Walks to the end of the arrow *node*, i.e. through the synthetic Tot comps
+   introduced by the unary representation only. [x:t -> y:s -> Div r] is not a
+   pure or ghost function; [x:t -> Tot (y:s -> Div r)] is. This matches the
+   pre-unary n-ary behavior. *)
+let rec is_pure_or_ghost_function t = match (compress t).n with
+    | Tm_arrow {comp=c; more} ->
+      (* [comp_result] is not in scope yet. *)
+      (match more, c.n with
+       | true, Total res -> is_pure_or_ghost_function res
+       | _ -> is_pure_or_ghost_comp c)
     | _ -> true
 
 let rec head_of (t : term) : ML term =
@@ -341,8 +367,8 @@ let rec head_of (t : term) : ML term =
 let rec __head_and_args_full acc unmeta t : ML _ =
     let t = compress t in
     match t.n with
-    | Tm_app {hd=head; args} ->
-      __head_and_args_full (args@acc) unmeta head
+    | Tm_app {hd=head; arg} ->
+      __head_and_args_full (arg::acc) unmeta head
     | Tm_meta {tm} when unmeta ->
       __head_and_args_full acc unmeta tm
     | _ -> t, acc
@@ -367,7 +393,7 @@ let leftmost_head_and_args t =
     let rec aux t args : ML _ =
       let t = compress t in
       match t.n with
-      | Tm_app {hd=t0; args=args'} -> aux t0 (args'@args)
+      | Tm_app {hd=t0; arg} -> aux t0 (arg::args)
       | Tm_meta {tm=t0; meta=Meta_pattern _}
       | Tm_meta {tm=t0; meta=Meta_named _}
       | Tm_meta {tm=t0; meta=Meta_labeled _}
@@ -655,9 +681,7 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let abs_ln bs t lopt = match bs with
-  | [] -> t
-  | _ -> mk (Tm_abs {bs; body=t; rc_opt=lopt}) t.pos
+let abs_ln bs t lopt = mk_Tm_abs bs t lopt t.pos
 
 let abs bs t lopt =
   let close_lopt lopt = match lopt with
@@ -668,45 +692,53 @@ let abs bs t lopt =
   | [] -> t
   | _ ->
     let body = compress (Subst.close bs t) in
-    match body.n with
-        | Tm_abs {bs=bs'; body=t; rc_opt=lopt'} ->  //AR: if the body is an Tm_abs, we can combine the binders and use lopt', ignoring lopt, since lopt will be Tot (non-informative anyway)
-          mk (Tm_abs {bs=close_binders bs@bs'; body=t; rc_opt=close_lopt lopt'}) t.pos
-        | _ ->
-          mk (Tm_abs {bs=close_binders bs; body; rc_opt=close_lopt lopt}) t.pos
+    (* Merging with a nested abstraction is automatic now that the node is
+       unary: the spines simply concatenate. When [body] is itself a lambda,
+       the residual comp of the merged node is the *inner* one (which the
+       inner spine already carries), and [lopt] is dropped -- this is exactly
+       what the n-ary [abs] did. *)
+    let lopt = if Tm_abs? body.n then None else close_lopt lopt in
+    mk_Tm_abs (close_binders bs) body lopt t.pos
 
-let arrow_ln bs c = match bs with
+let arrow_ln_more bs c more = match bs with
   | [] -> comp_result c
-  | _ -> mk (Tm_arrow {bs; comp=c})
+  | _ -> mk_Tm_arrow_more bs c more
             (List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs)
 
-let arrow bs c =
+let arrow_ln bs c = arrow_ln_more bs c false
+
+let arrow_more bs c more =
   let c = Subst.close_comp bs c in
   let bs = close_binders bs in
-  arrow_ln bs c
+  arrow_ln_more bs c more
 
-let flat_arrow bs c =
-  let t = arrow bs c in
-  match (Subst.compress t).n with
-  | Tm_arrow {bs; comp=c} ->
-    begin match c.n with
-        | Total tres ->
-          begin match (Subst.compress tres).n with
-               | Tm_arrow {bs=bs'; comp=c'} -> mk (Tm_arrow {bs=bs@bs'; comp=c'}) t.pos
-               | _ -> t
-          end
-        | _ -> t
-    end
-  | _ -> t
+let arrow bs c = arrow_more bs c false
 
+(* Now that the arrow node is unary, an arrow spine is inherently "flat": the
+   n-ary reading of [x:t -> Tot (y:s -> C)] and [x:t -> y:s -> C] is the same
+   term. This is kept as an alias so callers need not change. *)
+(* True when [c] is a Tot whose result is an arrow, i.e. when an arrow ending in
+   [c] can be merged with it into a single node. *)
+let comp_continues_arrow (c:comp) : ML bool =
+  match c.n with
+  | Total tres -> Tm_arrow? (Subst.compress tres).n
+  | _ -> false
+
+(* Builds the arrow as a single node together with the arrow inside [c], if any:
+   the result reads as [bs @ bs'] rather than [bs] followed by a nested arrow. *)
+let flat_arrow bs c = arrow_more bs c (comp_continues_arrow c)
+
+(* Merges the whole spine into a single node. *)
 let rec canon_arrow t =
   match (compress t).n with
-  | Tm_arrow {bs; comp=c} ->
+  | Tm_arrow {b; comp=c} ->
       let cn = match c.n with
                | Total t -> Total (canon_arrow t)
                | _ -> c.n
       in
       let c = { c with n = cn } in
-      flat_arrow bs c
+      (* [b] is already closed, so do not go through [arrow]. *)
+      mk (Tm_arrow {b; comp=c; more=comp_continues_arrow c}) t.pos
   | _ -> t
 
 let refine b t = mk (Tm_refine {b; phi=Subst.close [mk_binder b] t}) (Range.union_ranges (range_of_bv b) t.pos)
@@ -729,11 +761,11 @@ let has_decreases (c:comp) : ML bool =
 let rec arrow_formals_comp_ln (k:term) =
     let k = Subst.compress k in
     match k.n with
-        | Tm_arrow {bs; comp=c} ->
+        | Tm_arrow {b; comp=c} ->
             if is_total_comp c && not (has_decreases c)
             then let bs', k = arrow_formals_comp_ln (comp_result c) in
-                 bs@bs', k
-            else bs, c
+                 b::bs', k
+            else [b], c
         | Tm_refine {b={ sort = s }} ->
           (*
            * AR: start descending into s, but if s does not turn out to be an arrow later, we want to return k itself
@@ -747,17 +779,31 @@ let rec arrow_formals_comp_ln (k:term) =
           aux s k
         | _ -> [], Syntax.mk_Total k
 
-(* Unlike arrow_formals_comp_ln, these do not descend into a top-level
-   refinement (which would drop its predicate). They correspond exactly to
-   matching on Tm_arrow. *)
-let arrow_formals_comp_ln_strict k =
+(* Destructs one arrow *node*: the maximal spine of arrows linked by the [more]
+   marker, i.e. exactly the binders that were written (or built) as a single
+   n-ary arrow before the representation was made unary. This does not flatten a
+   user-written intermediate [Tot], and never descends into a refinement, so it
+   is the faithful reading of what used to be a single [Tm_arrow] match. The
+   grouping is observable: the SMT encoding derives a symbol's arity from it. *)
+let rec arrow_node_formals_comp_ln (k:term) : ML (binders & comp) =
     match (Subst.compress k).n with
-    | Tm_arrow _ -> arrow_formals_comp_ln k
+    | Tm_arrow {b; comp; more} ->
+      if more
+      then let bs, c = arrow_node_formals_comp_ln (comp_result comp) in
+           b::bs, c
+      else [b], comp
     | _ -> [], Syntax.mk_Total k
 
-let arrow_formals_comp_strict k =
-    let bs, c = arrow_formals_comp_ln_strict k in
+let arrow_node_formals_comp k =
+    let bs, c = arrow_node_formals_comp_ln k in
     Subst.open_comp bs c
+
+(* [_strict] is the same thing under its historical name: unlike
+   arrow_formals_comp_ln it does not flatten and does not descend into a
+   top-level refinement (which would drop its predicate). *)
+let arrow_formals_comp_ln_strict k = arrow_node_formals_comp_ln k
+
+let arrow_formals_comp_strict k = arrow_node_formals_comp k
 
 let arrow_formals_comp k =
     let bs, c = arrow_formals_comp_ln k in
@@ -783,8 +829,8 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
     let rec arrow_until_decreases (k:term) : ML _ =
         let k = Subst.compress k in
         match k.n with
-        | Tm_arrow {bs; comp=c} ->
-            let bs, c = Subst.open_comp bs c in
+        | Tm_arrow {b; comp=c} ->
+            let bs, c = Subst.open_comp [b] c in
            (match
                 c |> comp_flags |> Option.find (function DECREASES _ -> true | _ -> false)
             with
@@ -817,14 +863,26 @@ let let_rec_arity (lb:letbinding) : ML (int & option (list bool)) =
 
 let rec __abs_formals_ln t abs_body_lcomp : ML _ =
     match (unmeta_safe t).n with
-    | Tm_abs {bs; body=t; rc_opt=what} ->
+    | Tm_abs {b; body=t; rc_opt=what} ->
       let bs', t, what = __abs_formals_ln t what in
-      bs@bs', t, what
+      b::bs', t, what
     | _ -> [], t, abs_body_lcomp
 
 (* Collects all nested Tm_abs nodes without opening the binders. *)
 let abs_formals_ln (t:term) : ML (binders & term & option residual_comp) =
     __abs_formals_ln t None
+
+(* Peels exactly the lambda spine that used to be a single n-ary Tm_abs node:
+   it does not look through metas or ascriptions, and it stops at the binder
+   carrying the residual comp (which is where [mk_Tm_abs] puts it). Binders are
+   not opened. *)
+let rec abs_one_group_ln (t:term) : ML (binders & term & option residual_comp) =
+    match (Subst.compress t).n with
+    | Tm_abs {b; body; rc_opt=Some rc} -> [b], body, Some rc
+    | Tm_abs {b; body} ->
+      let bs, body, rc = abs_one_group_ln body in
+      b::bs, body, rc
+    | _ -> [], t, None
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
@@ -832,13 +890,24 @@ let abs_formals_maybe_unascribe_body maybe_unascribe t =
           Some ({rc with residual_typ = Option.map (Subst.subst s) rc.residual_typ})
         | _ -> l
     in
+    (* A single n-ary Tm_abs node is a maximal contiguous spine of unary nodes,
+       so [maybe_unascribe=false] still walks the spine; it just does not look
+       through Tm_meta between the levels. *)
+    let rec spine t abs_body_lcomp : ML _ =
+        match (Subst.compress t).n with
+        | Tm_abs {b; body=t; rc_opt=what} ->
+          let bs', t, what = spine t what in
+          b::bs', t, what
+        | _ -> [], t, abs_body_lcomp
+    in
     let rec aux t abs_body_lcomp : ML _ =
         match (unmeta_safe t).n with
-        | Tm_abs {bs; body=t; rc_opt=what} ->
+        | Tm_abs {b; body=t; rc_opt=what} ->
           if maybe_unascribe
           then let bs',t, what = aux t what in
-               bs@bs', t, what
-          else bs, t, what
+               b::bs', t, what
+          else let bs', t, what = spine t what in
+               b::bs', t, what
         | _ -> [], t, abs_body_lcomp
     in
     let bs, t, abs_body_lcomp = aux t None in
@@ -894,12 +963,11 @@ let open_univ_vars_binders_and_comp uvs binders c =
         | _ ->
           let t' = arrow binders c in
           let uvs, t' = Subst.open_univ_vars uvs t' in
-          match (Subst.compress t').n with
-            (* Phase B: relies on single-node arrow semantics — this must
-               recover exactly the binders/comp packed by [arrow] above, so it
-               cannot use the flattening arrow_formals helpers. *)
-            | Tm_arrow {bs=binders; comp=c} -> uvs, binders, c
-            | _ -> failwith "Impossible"
+          (* Recovers exactly the binders/comp packed by [arrow] above. *)
+          let binders, c = arrow_formals_comp_ln_strict t' in
+          if Nil? binders
+          then failwith "Impossible"
+          else uvs, binders, c
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
@@ -1180,17 +1248,8 @@ let mk_t2b t = mk_app (fvar_with_dd PC.t2b_lid None) [as_arg t]
 
 let arrow_one_ln (t:typ) : ML (option (binder & comp)) =
     match (compress t).n with
-    | Tm_arrow {bs=[]} ->
-        failwith "fatal: empty binders on arrow?"
-    | Tm_arrow {bs=[b]; comp=c} ->
-        Some (b, c)
-    | Tm_arrow {bs=b::bs; comp=c} ->
-        (* NB: bs are closed, so we just repackage the node *)
-        let rng' = List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs in
-        let c' = mk_Total (mk (Tm_arrow {bs; comp=c}) rng') in
-        Some (b, c')
-    | _ ->
-        None
+    | Tm_arrow {b; comp=c} -> Some (b, c)
+    | _ -> None
 
 let arrow_one (t:typ) : ML (option (binder & comp)) =
     Option.bind (arrow_one_ln t) (fun (b, c) ->
@@ -1203,14 +1262,8 @@ let arrow_one (t:typ) : ML (option (binder & comp)) =
 
 let abs_one_ln (t:typ) : ML (option (binder & term)) =
     match (compress t).n with
-    | Tm_abs {bs=[]} ->
-        failwith "fatal: empty binders on abs?"
-    | Tm_abs {bs=[b]; body} ->
+    | Tm_abs {b; body} ->
         Some (b, body)
-    | Tm_abs {bs=b::bs; body; rc_opt} ->
-        (* NB: bs are closed, so we just repackage the node. Using [abs] here
-           would close them a second time. *)
-        Some (b, abs_ln bs body rc_opt)
     | _ ->
         None
 
@@ -1330,22 +1383,22 @@ let rec term_eq_dbg (dbg : bool) (t1 t2 : term) : ML bool =
   | Tm_constant c1 , Tm_constant c2 -> check "const" (eq_const c1 c2)
   | Tm_type _, Tm_type _ -> true // x = y
 
-  | Tm_abs {bs=b1;body=t1;rc_opt=k1}, Tm_abs {bs=b2;body=t2;rc_opt=k2} ->
-    (check "abs binders"  (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+  | Tm_abs {b=b1;body=t1;rc_opt=k1}, Tm_abs {b=b2;body=t2;rc_opt=k2} ->
+    (check "abs binders"  (binder_eq_dbg dbg b1 b2)) &&
     (check "abs bodies"   (term_eq_dbg dbg t1 t2))
     //&& eqopt (eqsum lcomp_eq_dbg dbg residual_eq) k1 k2
 
-  | Tm_arrow {bs=b1;comp=c1}, Tm_arrow {bs=b2;comp=c2} ->
-    (check "arrow binders" (eqlist (binder_eq_dbg dbg) b1 b2)) &&
+  | Tm_arrow {b=b1;comp=c1}, Tm_arrow {b=b2;comp=c2} ->
+    (check "arrow binders" (binder_eq_dbg dbg b1 b2)) &&
     (check "arrow comp"    (comp_eq_dbg dbg c1 c2))
 
   | Tm_refine {b=b1;phi=t1}, Tm_refine {b=b2;phi=t2} ->
     (check "refine bv sort" (term_eq_dbg dbg b1.sort b2.sort)) &&
     (check "refine formula" (term_eq_dbg dbg t1 t2))
 
-  | Tm_app {hd=f1; args=a1}, Tm_app {hd=f2; args=a2} ->
+  | Tm_app {hd=f1; arg=a1}, Tm_app {hd=f2; arg=a2} ->
     (check "app head"  (term_eq_dbg dbg f1 f2)) &&
-    (check "app args"  (eqlist (arg_eq_dbg dbg) a1 a2))
+    (check "app args"  (arg_eq_dbg dbg a1 a2))
 
   | Tm_match {scrutinee=t1;brs=bs1},
     Tm_match {scrutinee=t2;brs=bs2} ->
@@ -1513,8 +1566,8 @@ let rec sizeof (t:term) : ML int =
     | Tm_bvar bv
     | Tm_name bv -> 1 + sizeof bv.sort
     | Tm_uinst (t,us) -> List.length us + sizeof t
-    | Tm_abs {bs; body=t} -> sizeof t  + List.fold_left (fun acc b -> acc + sizeof b.binder_bv.sort) 0 bs
-    | Tm_app {hd; args} -> sizeof hd + List.fold_left (fun acc (arg, _) -> acc + sizeof arg) 0 args
+    | Tm_abs {b; body=t} -> sizeof t  + sizeof b.binder_bv.sort
+    | Tm_app {hd; arg=(a, _)} -> sizeof hd + sizeof a
     // TODO: obviously want much more
     | _ -> 1
 
@@ -1621,13 +1674,13 @@ let rec unbound_variables tm : ML (list bv) =
       | Tm_uinst(t, us) ->
         unbound_variables t
 
-      | Tm_abs {bs; body=t} ->
-        let bs, t = Subst.open_term bs t in
+      | Tm_abs {b; body=t} ->
+        let bs, t = Subst.open_term [b] t in
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables t
 
-      | Tm_arrow {bs; comp=c} ->
-        let bs, c = Subst.open_comp bs c in
+      | Tm_arrow {b; comp=c} ->
+        let bs, c = Subst.open_comp [b] c in
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables_comp c
 
@@ -1636,8 +1689,8 @@ let rec unbound_variables tm : ML (list bv) =
         List.collect (fun b -> unbound_variables b.binder_bv.sort) bs
         @ unbound_variables t
 
-      | Tm_app {hd=t; args} ->
-        List.collect (fun (x, _) -> unbound_variables x) args
+      | Tm_app {hd=t; arg=(x, _)} ->
+        unbound_variables x
         @ unbound_variables t
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats} ->
@@ -1835,10 +1888,7 @@ let triggers_of_smt_lemma (t:term)
 has some other shape just apply it to `()`. *)
 let unthunk (t:term) : ML term =
     match (compress t).n with
-    (* Phase B: relies on single-node abs semantics — it must fire only for a
-       lambda with exactly one binder, which the flattening abs helpers cannot
-       express. *)
-    | Tm_abs {bs=[b]; body=e} ->
+    | Tm_abs {b; body=e} ->
         let bs, e = open_term [b] e in
         let b = List.hd bs in
         if is_free_in b.binder_bv e

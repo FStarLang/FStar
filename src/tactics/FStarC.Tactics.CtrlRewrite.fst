@@ -341,7 +341,8 @@ and on_subterms
                           in
                           Tm_refine {b=x; phi})
 
-      | Tm_arrow { bs = bs; comp = comp } ->
+      | Tm_arrow { b; comp } ->
+        let bs = [b] in
         (match comp.n with
         | Total t ->
           let bs_orig, t = SS.open_term bs t in

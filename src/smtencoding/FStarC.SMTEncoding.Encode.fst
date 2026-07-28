@@ -773,12 +773,12 @@ let encode_top_level_let :
       in
 
       let rec arrow_formals_comp_norm norm t : ML (S.binders & S.comp) =
-        //NS: tried using U.arrow_formals_comp here
-        //    but that flattens Tot effects quite aggressively
         let t = U.unascribe <| SS.compress t in
         match t.n with
-        | Tm_arrow {bs=formals; comp} ->
-          SS.open_comp formals comp
+        //NS: tried using U.arrow_formals_comp here
+        //    but that flattens Tot effects quite aggressively
+        | Tm_arrow _ ->
+          U.arrow_node_formals_comp t
 
         | Tm_refine _ ->
           arrow_formals_comp_norm norm (U.unrefine t)

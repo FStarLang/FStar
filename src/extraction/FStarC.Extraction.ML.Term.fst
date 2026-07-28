@@ -357,10 +357,7 @@ let normalize_abs (t0:term) : ML term =
     let rec aux bs t copt : ML _ =
         let t = SS.compress t in
         match t.n with
-            (* Phase B: relies on single-node abs semantics -- this helper's whole
-               purpose is to collect adjacent abstraction nodes into one n-ary
-               abstraction, so it stays a direct pattern for now. *)
-            | Tm_abs {bs=bs'; body; rc_opt=copt} -> aux (bs@bs') body copt
+            | Tm_abs {b; body; rc_opt=copt} -> aux (bs@[b]) body copt
             | _ ->
               let e' = U.unascribe t in
               if U.is_fun e'
@@ -1244,12 +1241,8 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
               then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (show lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
-                (* Phase B: relies on single-node arrow semantics -- generalization
-                   splits the outermost arrow node's binders into leading type
-                   binders and the rest, so the arity/type-param count depends on
-                   the single node and must not be flattened here. *)
-                | Tm_arrow {bs; comp=c} when (List.hd bs |> is_type_binder g) ->
-                   let bs, c = SS.open_comp bs c in
+                | Tm_arrow {b} when (is_type_binder g b) ->
+                   let bs, c = U.arrow_formals_comp_strict lbtyp in
                   //need to generalize, but will erase all the type abstractions;
                   //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity
                   //and to circumvent the value restriction
@@ -1272,10 +1265,8 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                      ty_param_name = (UEnv.lookup_ty env x).ty_b_name;
                      ty_param_attrs = List.map (fun attr -> let e, _, _ = term_as_mlexpr g attr in e) binder_attrs}) in
                    begin match lbdef.n with
-                      (* Phase B: relies on single-node abs semantics -- compares the
-                         number of type binders against the outermost abstraction
-                         node's binder count and splits it, so it must not flatten. *)
-                      | Tm_abs {bs; body; rc_opt=copt} ->
+                      | Tm_abs _ ->
+                        let bs, body, copt = U.abs_formals_ln lbdef in
                         let bs, body = SS.open_term bs body in
                         if n_tbinders <= List.length bs
                         then let targs, rest_args = BU.first_N n_tbinders bs in
@@ -1303,9 +1294,8 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) (orig_lbdefs: list (option ter
                                 | Some orig_def ->
                                   let orig_def = normalize_abs orig_def |> U.unmeta in
                                   begin match orig_def.n with
-                                  (* Phase B: relies on single-node abs semantics --
-                                     same outermost-node binder-count split as above. *)
-                                  | Tm_abs {bs=orig_bs; body=orig_body} ->
+                                  | Tm_abs _ ->
+                                    let orig_bs, orig_body, _ = U.abs_formals_ln orig_def in
                                     let orig_bs, orig_body = SS.open_term orig_bs orig_body in
                                     if n_tbinders <= List.length orig_bs then
                                       let _, orig_rest = BU.first_N n_tbinders orig_bs in
@@ -1618,13 +1608,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
                  end
           end
 
-        (* Phase B: relies on single-node abs semantics -- the generated MLE_Fun
-           takes exactly the outermost abstraction node's binders (an inner
-           lambda is extracted by the recursive call), and the residual comp
-           rcopt is that same node's. Flattening would change the ML function
-           arity, so this stays a direct pattern. *)
-        | Tm_abs {bs;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
-          let bs, body = SS.open_term bs body in
+        | Tm_abs {b;body;rc_opt=rcopt} (* the annotated computation type of the body *) ->
+          let bs, body = SS.open_term [b] body in
           let ml_bs, env = binders_as_ml_binders g bs in
           let ml_bs = List.map2 (fun (x,t) b -> {
             mlbinder_name=x;

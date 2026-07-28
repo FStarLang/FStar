@@ -365,15 +365,14 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let rename_parameters lb =
       let rename_in_typ def typ =
         let typ = Subst.compress typ in
-        (* Phase B: relies on single-node abs/arrow semantics -- it renames the
-           binders of exactly one arrow node against those of exactly one
-           abstraction node and repacks that node. Flattening destructors here
-           merge nested arrows into the rebuilt type. *)
         let def_bs = match (Subst.compress def).n with
-                     | Tm_abs {bs=binders} -> binders
+                     | Tm_abs _ ->
+                       let binders, _, _ = U.abs_formals_ln def in
+                       binders
                      | _ -> [] in
         match typ with
-        | { n = Tm_arrow {bs=val_bs; comp=c}; pos = r } -> begin
+        | { n = Tm_arrow _; pos = r } -> begin
+          let val_bs, c = U.arrow_formals_comp_ln_strict typ in
           let has_auto_name bv =
             BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =

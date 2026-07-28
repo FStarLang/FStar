@@ -239,11 +239,8 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
             let t = U.canon_arrow t in
             match (SS.compress t).n with
-                (* Phase B: relies on single-node arrow semantics -- [canon_arrow] above
-                   flattens the type into exactly one arrow node, and the code below
-                   splits *that* node's binder list at [ntps]. A flattening destructor
-                   would additionally descend through refinements. *)
-                | Tm_arrow {bs; comp=res} ->
+                | Tm_arrow _ ->
+                  let bs, res = U.arrow_formals_comp_ln_strict t in
                   //the type of each datacon is already a function with the type params as arguments
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
@@ -370,10 +367,8 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas
             | Sig_inductive_typ {lid=tc; params=tps; num_uniform_params=num_uniform; mutuals; ds=datas} ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
-                (* Phase B: relies on single-node arrow semantics -- it splits exactly
-                   this node's binder list at [List.length tps] and repacks the rest.
-                   A flattening destructor would pull in binders from nested arrows. *)
-                | Tm_arrow {bs=binders; comp=c} ->
+                | Tm_arrow _ ->
+                  let binders, c = U.arrow_formals_comp_ln_strict ty in
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> U.comp_result c

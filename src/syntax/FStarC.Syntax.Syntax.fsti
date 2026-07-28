@@ -127,22 +127,29 @@ type term' =
   | Tm_uinst      of term & universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
-  | Tm_abs        {  (* fun (xi:ti) -> t : (M t' wp | N) *)
-      bs:binders;
+  | Tm_abs        {  (* fun (x:t) -> t' : (M t'' wp | N) *)
+      b:binder;
       body:term;
       rc_opt:option residual_comp
     }
-  | Tm_arrow      {  (* (xi:ti) -> M t' wp *)
-      bs:binders;
-      comp:comp
+  | Tm_arrow      {  (* (x:t) -> M t' wp *)
+      b:binder;
+      comp:comp;
+      (* [more] records that this arrow and the arrow inside [comp] were written
+         as a single arrow, i.e. that [comp] is a synthetic [Tot] introduced only
+         to make the node unary. It is an annotation, not structure: it never
+         changes what the type means, but it preserves the grouping that the SMT
+         encoding uses to pick a symbol's arity. When [more] is true, [comp] is
+         always [Total t] with [t] an arrow. *)
+      more:bool
     }
   | Tm_refine     {  (* x:t{phi} *)
       b:bv;
       phi:term
     }
-  | Tm_app        {  (* h tau_1 ... tau_n, args in order from left to right *)
+  | Tm_app        {  (* h tau, a single argument *)
       hd:term;
-      args:args
+      arg:arg
     }
   | Tm_match      {  (* (match e (as x returns asc)? with b1 ... bn) : (C | N)) *)
       scrutinee:term;
@@ -791,6 +798,11 @@ val mk_Tm_app:      term -> args -> range -> ML term
    These do not close anything; see FStarC.Syntax.Util.abs / arrow for the
    variants that close their binders. *)
 val mk_Tm_abs:      binders -> term -> option residual_comp -> range -> ML term
+(* Like [mk_Tm_arrow], but marks the innermost arrow as continuing into the
+   arrow inside [c]. Use it when rebuilding an arrow that was destructed with
+   [Util.arrow_node_formals_comp] or by matching a single [Tm_arrow], so that
+   the node grouping survives. *)
+val mk_Tm_arrow_more: binders -> comp -> bool -> range -> ML term
 val mk_Tm_arrow:    binders -> comp -> range -> ML term
 
 (* This raises an exception if the term is not a Tm_fvar,

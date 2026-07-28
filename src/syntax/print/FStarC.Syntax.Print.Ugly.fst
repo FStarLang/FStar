@@ -150,7 +150,6 @@ let rec term_to_string x : ML string =
       let x = if Options.print_implicits() then x else SU.unmeta x in
       match x.n with
       | Tm_delayed _ ->   failwith "impossible"
-      | Tm_app {args=[]} ->  failwith "Empty args!"
 
       // TODO: add an option to mark where this happens
       | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
@@ -211,13 +210,11 @@ let rec term_to_string x : ML string =
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then Format.fmt1 "Type u#(%s)" (univ_to_string u) else "Type"
-      (* Phase B: relies on single-node arrow semantics. Flattening here (e.g.
-         via SU.arrow_formals_comp_ln) would drop the surface distinction
-         between [x:t -> y:s -> C] and [x:t -> Tot (y:s -> C)] and thus change
-         current output, so this site is left matching the raw node. Once the
-         representation is unary, a multi-binder arrow will print with one
-         [->] per binder node instead of a single flattened list. *)
-      | Tm_arrow {bs; comp=c} ->  Format.fmt2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
+      (* [x:t -> y:s -> C] and [x:t -> Tot (y:s -> C)] are the same term under
+         the unary representation, so we flatten the whole arrow spine. *)
+      | Tm_arrow _ ->
+        let bs, c = SU.arrow_formals_comp_ln_strict x in
+        Format.fmt2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
       | Tm_abs _ ->
         let bs, t2, lc = SU.abs_formals_ln x in
         begin match lc with

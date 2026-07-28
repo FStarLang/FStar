@@ -259,7 +259,13 @@ val abs_ln (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
 val abs (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
+(* [arrow_more bs c true] marks the arrow as continuing into the arrow inside
+   [c], i.e. as having been one n-ary arrow node before the representation was
+   made unary. Use when rebuilding a node destructed by
+   [arrow_node_formals_comp] or by a single [Tm_arrow] match. *)
+val arrow_ln_more (bs:binders) (c:comp) (more:bool) : ML term
 val arrow_ln (bs:binders) (c:comp) : ML term
+val arrow_more (bs:binders) (c:comp) (more:bool) : ML term
 val arrow (bs:binders) (c:comp) : ML term
 val flat_arrow (bs:binders) (c:comp) : ML term
 
@@ -280,6 +286,8 @@ val arrow_formals_comp_ln (k:term) : ML (binders & comp)
 (* Unlike arrow_formals_comp_ln, these do not descend into a top-level
    refinement (which would drop its predicate). They correspond exactly to
    matching on Tm_arrow. *)
+val arrow_node_formals_comp_ln (k:term) : ML (binders & comp)
+val arrow_node_formals_comp (k:term) : ML (binders & comp)
 val arrow_formals_comp_ln_strict (k:term) : ML (binders & comp)
 val arrow_formals_comp_strict (k:term) : ML (binders & comp)
 val arrow_formals_comp (k:term) : ML (binders & comp)
@@ -298,6 +306,11 @@ val let_rec_arity (lb:letbinding) : ML (int & option (list bool))
 
 (* Collects all nested Tm_abs nodes without opening the binders. *)
 val abs_formals_ln (t:term) : ML (binders & term & option residual_comp)
+
+(* Peels exactly the lambda spine that used to be a single n-ary Tm_abs node:
+   it does not look through metas or ascriptions, and stops at the binder
+   carrying the residual comp. Binders are not opened. *)
+val abs_one_group_ln (t:term) : ML (binders & term & option residual_comp)
 
 val abs_formals_maybe_unascribe_body : bool -> term -> ML (binders & term & option residual_comp)
 

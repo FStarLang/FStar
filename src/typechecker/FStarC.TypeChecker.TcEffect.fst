@@ -2596,14 +2596,20 @@ let tc_effect_abbrev env (lid_uvs_tps_c: lident & univ_names & binders & comp) r
   in
   let tps = SS.close_binders tps in
   let c = SS.close_comp tps c in
-  (* NB: this deliberately uses single-node Tm_arrow, including the degenerate
-     zero-binder arrow built when [tps] is empty. Flattening here would grow
-     [tps] whenever [c] is a Tot arrow. Revisit when the node becomes unary. *)
-  let uvs, t = Gen.generalize_universes env0 (mk (Tm_arrow {bs=tps; comp=c}) r) in
-  let tps, c = match tps, (SS.compress t).n with
-    | [], Tm_arrow {comp=c} -> [], c
-    | _,  Tm_arrow {bs=tps; comp=c} -> tps, c
+  (* The unary representation has no zero-binder arrow, so when [tps] is empty
+     we generalize under a synthetic unit binder and drop it afterwards.  We
+     then peel back exactly as many arrow nodes as we added, rather than
+     flattening, which would grow [tps] whenever [c] is a Tot arrow. *)
+  let gen_tps = if Nil? tps then [S.null_binder S.t_unit] else tps in
+  let uvs, t = Gen.generalize_universes env0 (S.mk_Tm_arrow gen_tps c r) in
+  let rec peel (n:int) (t:term) : ML (list binder & comp) =
+    match (SS.compress t).n with
+    | Tm_arrow {b; comp=c} ->
+      if n <= 1 then [b], c
+      else let bs, c = peel (n-1) (U.comp_result c) in b::bs, c
     | _ -> failwith "Impossible (t is an arrow)" in
+  let tps', c = peel (List.length gen_tps) t in
+  let tps, c = if Nil? tps then [], c else tps', c in
   if List.length uvs <> 1
   then begin
     let _, t = Subst.open_univ_vars uvs t in

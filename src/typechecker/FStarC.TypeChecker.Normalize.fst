@@ -995,7 +995,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                    else norm cfg env stack t0 //Fixpoint steps are excluded; so don't take the recursive knot
             end
 
-          | Tm_abs {bs; body; rc_opt=rc_opt} ->
+          | Tm_abs {b; body; rc_opt=rc_opt} ->
             //
             //AR/NS: 04/26/2022:
             //       In the case of metaprograms, we reduce DIV computations in the
@@ -1039,7 +1039,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               if cfg.steps.weak
               then let t = closure_as_term cfg env t in
                    rebuild cfg env stack t
-              else let bs, body, opening = open_term' bs body in
+              else let bs, body, opening = open_term' [b] body in
                    let env' = bs |> List.fold_left (fun env _ -> dummy () ::env) env in
                    let rc_opt =
                      let open FStarC.Class.Monad in
@@ -1061,20 +1061,10 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               // universe variables do not have explicit binders
 
             | Arg (c, _, _)::stack_rest ->
-              (* Note: we peel off one application at a time.
-                       An optimization to attempt would be to push n-args are once,
-                       and try to pop all of them at once, in the common case of a full application.
-               *)
-              begin match bs with
-              | [] -> failwith "Impossible"
-              | [b] ->
-                log cfg  (fun () -> Format.print1 "\tShifted %s\n" (show c));
-                norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
-              | b::tl ->
-                log cfg  (fun () -> Format.print1 "\tShifted %s\n" (show c));
-                let body = S.mk_Tm_abs tl body rc_opt t.pos in
-                norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
-              end
+              (* Each abstraction node now binds exactly one binder, so we peel
+                 off a single application here and continue with the body. *)
+              log cfg  (fun () -> Format.print1 "\tShifted %s\n" (show c));
+              norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
 
             | MemoLazy r :: stack ->
               set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
@@ -1098,7 +1088,10 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               fallback ()
             end
 
-          | Tm_app {hd=head; args} ->
+          | Tm_app _ ->
+            (* Recover the whole application spine (head and all arguments); the
+               node is now unary, holding a single argument. *)
+            let head, args = U.head_and_args_full t in
             let stack =
               List.fold_right
                 (fun (a, aq) stack ->
@@ -1147,12 +1140,11 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
                  let t = mk (Tm_refine {b={x with sort=t_x}; phi=close closing f}) t.pos in
                  rebuild cfg env stack t
 
-          | Tm_arrow {bs; comp=c} ->
-            (* Phase B: relies on single-node semantics — flattening would merge nested
-               arrows and lose the x:t -> Tot (y:s -> C) vs x:t -> y:s -> C distinction. *)
+          | Tm_arrow _ ->
             if cfg.steps.weak
             then rebuild cfg env stack (closure_as_term cfg env t)
-            else let bs, c = open_comp bs c in
+            else let bs, c = U.arrow_formals_comp_ln_strict t in
+                 let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy () ::env) env) c in
                  let close_binders env (bs:binders) : ML binders =
                    SS.subst_binders (env_subst env) bs
@@ -1698,10 +1690,9 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
                   //for bind binders that are not fixed, we apply ()
                   //
                   let unit_args =
-                    match (ed |> U.get_bind_vc_combinator |> fst |> snd |> SS.compress).n with
-                    (* Phase B: relies on single-node semantics — matches on the exact
-                       arity of the bind_wp arrow node. *)
-                    | Tm_arrow {bs=_::_::bs} when List.length bs >= num_fixed_binders ->
+                    match U.arrow_formals_comp_ln_strict
+                            (ed |> U.get_bind_vc_combinator |> fst |> snd) |> fst with
+                    | _::_::bs when List.length bs >= num_fixed_binders ->
                       bs
                       |> List.splitAt (List.length bs - num_fixed_binders)
                       |> fst
@@ -1779,7 +1770,7 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
               norm cfg env (List.tl stack) reified
             )
       end
-    | Tm_app {hd=head; args} ->
+    | Tm_app _ ->
         (* ****************************************************************************)
         (* Monadic application                                                        *)
         (*                                                                            *)
@@ -1794,6 +1785,9 @@ and do_reify_monadic (fallback: unit -> ML term) cfg env stack (top : term) (m :
         (* If head is an action then it is unfolded otherwise the                     *)
         (* resulting application is reified again                                     *)
         (* ****************************************************************************)
+
+        (* Recover the full application spine of the (now unary) node. *)
+        let head, args = U.head_and_args_full top in
 
         (* Checking that the typechecker did its job correctly and hoisted all impure *)
         (* terms to explicit let-bindings (see TcTerm, monadic_application) *)
@@ -2086,142 +2080,144 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
     (* Otherwise try to simplify this point *)
     | None ->
     match (SS.compress tm).n with
-    (* Phase B: relies on single-node semantics — the simplifier dispatches on the
-       exact arity of the outermost application node (e.g. binary /\, \/, ==>). *)
-    | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
-    | Tm_app {hd={n=Tm_fvar fv}; args} ->
-      if S.fv_eq_lid fv PC.and_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some true, _)] -> arg, false
-           | [(Some false, _); _]
-           | [_; (Some false, _)] -> w U.t_false, false
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.or_lid
-      then match args |> List.map simplify with
-           | [(Some true, _); _]
-           | [_; (Some true, _)] -> w U.t_true, false
-           | [(Some false, _); (_, (arg, _))]
-           | [(_, (arg, _)); (Some false, _)] -> arg, false
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.imp_lid
-      then match args |> List.map simplify with
-           | [_; (Some true, _)]
-           | [(Some false, _); _] -> w U.t_true, false
-           | [(Some true, _); (_, (arg, _))] -> arg, false
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true, false
-             else tm, false
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.iff_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)  ; (Some true, _)]
-           | [(Some false, _) ; (Some false, _)] -> w U.t_true, false
-           | [(Some true, _)  ; (Some false, _)]
-           | [(Some false, _) ; (Some true, _)]  -> w U.t_false, false
-           | [(_, (arg, _))   ; (Some true, _)]
-           | [(Some true, _)  ; (_, (arg, _))]   -> arg, false
-           | [(_, (arg, _))   ; (Some false, _)]
-           | [(Some false, _) ; (_, (arg, _))]   -> U.mk_neg arg, false
-           | [(_, (p, _)); (_, (q, _))] ->
-             if U.term_eq p q
-             then w U.t_true, false
-             else tm, false
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.not_lid
-      then match args |> List.map simplify with
-           | [(Some true, _)] ->  w U.t_false, false
-           | [(Some false, _)] -> w U.t_true, false
-           | _ -> tm, false
-      (* Phase B: the quantifier simplifications below rely on single-node semantics —
-         the Tm_abs {bs=[_]; body} patterns match a lambda with exactly one binder. *)
-      else if S.fv_eq_lid fv PC.forall_lid
-      then match args with
-           (* Simplify ∀x. True to True *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true, false
-                     | _ -> tm, false)
-                   | _ -> tm, false
-             end
-           (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
-           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some true -> w U.t_true, false
-                     | Some false when clearly_inhabited ty -> w U.t_false, false
-                     | _ -> tm, false)
-                   | _ -> tm, false
-             end
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.exists_lid
-      then match args with
-           (* Simplify ∃x. False to False *)
-           | [(t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false, false
-                     | _ -> tm, false)
-                   | _ -> tm, false
-             end
-           (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
-           | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
-             begin match (SS.compress t).n with
-                   | Tm_abs {bs=[_]; body} ->
-                     (match simp_t body with
-                     | Some false -> w U.t_false, false
-                     | Some true when clearly_inhabited ty -> w U.t_true, false
-                     | _ -> tm, false)
-                   | _ -> tm, false
-             end
-           | _ -> tm, false
-      else if S.fv_eq_lid fv PC.b2t_lid
-      then match args with
-           | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true, false
-           | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false, false
-           | _ -> tm, false //its arg is a bool, can't unsquash
-      else if S.fv_eq_lid fv PC.haseq_lid
-      then begin
-        (*
-         * AR: We try to mimic the hasEq related axioms in Prims
-         *       and the axiom related to refinements
-         *     For other types, such as lists, whose hasEq is derived by the typechecker,
-         *       we leave them as is
-         *)
-        let t_has_eq_for_sure (t:S.term) : ML bool =
-          //Axioms from prims
-          let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
-          match (SS.compress t).n with
-          | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
-          | _ -> false
-        in
-        if List.length args = 1 then
-          let t = args |> List.hd |> fst in
-          if t |> t_has_eq_for_sure then w U.t_true, false
-          else
+    | Tm_app _ ->
+      (* The application node is now unary, so recover the head and the full
+         argument list before dispatching on the logical connective. *)
+      let hd, args = U.head_and_args_full tm in
+      begin match (U.un_uinst hd).n with
+      | Tm_fvar fv ->
+        if S.fv_eq_lid fv PC.and_lid
+        then match args |> List.map simplify with
+             | [(Some true, _); (_, (arg, _))]
+             | [(_, (arg, _)); (Some true, _)] -> arg, false
+             | [(Some false, _); _]
+             | [_; (Some false, _)] -> w U.t_false, false
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.or_lid
+        then match args |> List.map simplify with
+             | [(Some true, _); _]
+             | [_; (Some true, _)] -> w U.t_true, false
+             | [(Some false, _); (_, (arg, _))]
+             | [(_, (arg, _)); (Some false, _)] -> arg, false
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.imp_lid
+        then match args |> List.map simplify with
+             | [_; (Some true, _)]
+             | [(Some false, _); _] -> w U.t_true, false
+             | [(Some true, _); (_, (arg, _))] -> arg, false
+             | [(_, (p, _)); (_, (q, _))] ->
+               if U.term_eq p q
+               then w U.t_true, false
+               else tm, false
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.iff_lid
+        then match args |> List.map simplify with
+             | [(Some true, _)  ; (Some true, _)]
+             | [(Some false, _) ; (Some false, _)] -> w U.t_true, false
+             | [(Some true, _)  ; (Some false, _)]
+             | [(Some false, _) ; (Some true, _)]  -> w U.t_false, false
+             | [(_, (arg, _))   ; (Some true, _)]
+             | [(Some true, _)  ; (_, (arg, _))]   -> arg, false
+             | [(_, (arg, _))   ; (Some false, _)]
+             | [(Some false, _) ; (_, (arg, _))]   -> U.mk_neg arg, false
+             | [(_, (p, _)); (_, (q, _))] ->
+               if U.term_eq p q
+               then w U.t_true, false
+               else tm, false
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.not_lid
+        then match args |> List.map simplify with
+             | [(Some true, _)] ->  w U.t_false, false
+             | [(Some false, _)] -> w U.t_true, false
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.forall_lid
+        then match args with
+             (* Simplify ∀x. True to True *)
+             | [(t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {body} ->
+                       (match simp_t body with
+                       | Some true -> w U.t_true, false
+                       | _ -> tm, false)
+                     | _ -> tm, false
+               end
+             (* Simplify ∀x. True to True, and ∀x. False to False, if the domain is not empty *)
+             | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {body} ->
+                       (match simp_t body with
+                       | Some true -> w U.t_true, false
+                       | Some false when clearly_inhabited ty -> w U.t_false, false
+                       | _ -> tm, false)
+                     | _ -> tm, false
+               end
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.exists_lid
+        then match args with
+             (* Simplify ∃x. False to False *)
+             | [(t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {body} ->
+                       (match simp_t body with
+                       | Some false -> w U.t_false, false
+                       | _ -> tm, false)
+                     | _ -> tm, false
+               end
+             (* Simplify ∃x. False to False and ∃x. True to True, if the domain is not empty *)
+             | [(ty, Some ({ aqual_implicit = true })); (t, _)] ->
+               begin match (SS.compress t).n with
+                     | Tm_abs {body} ->
+                       (match simp_t body with
+                       | Some false -> w U.t_false, false
+                       | Some true when clearly_inhabited ty -> w U.t_true, false
+                       | _ -> tm, false)
+                     | _ -> tm, false
+               end
+             | _ -> tm, false
+        else if S.fv_eq_lid fv PC.b2t_lid
+        then match args with
+             | [{n=Tm_constant (Const_bool true)}, _] -> w U.t_true, false
+             | [{n=Tm_constant (Const_bool false)}, _] -> w U.t_false, false
+             | _ -> tm, false //its arg is a bool, can't unsquash
+        else if S.fv_eq_lid fv PC.haseq_lid
+        then begin
+          (*
+           * AR: We try to mimic the hasEq related axioms in Prims
+           *       and the axiom related to refinements
+           *     For other types, such as lists, whose hasEq is derived by the typechecker,
+           *       we leave them as is
+           *)
+          let t_has_eq_for_sure (t:S.term) : ML bool =
+            //Axioms from prims
+            let haseq_lids = [PC.int_lid; PC.bool_lid; PC.unit_lid; PC.string_lid] in
             match (SS.compress t).n with
-            | Tm_refine _ ->
-              let t = U.unrefine t in
-              if t |> t_has_eq_for_sure then w U.t_true, false
-              else
-                //get the hasEq term itself
-                let haseq_tm =
-                  match (SS.compress tm).n with
-                  | Tm_app {hd} -> hd
-                  | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
-                in
-                //and apply it to the unrefined type
-                mk_app (haseq_tm) [t |> as_arg], false
-            | _ -> tm, false
-        else tm, false
+            | Tm_fvar fv when haseq_lids |> List.existsb (fun l -> S.fv_eq_lid fv l) -> true
+            | _ -> false
+          in
+          if List.length args = 1 then
+            let t = args |> List.hd |> fst in
+            if t |> t_has_eq_for_sure then w U.t_true, false
+            else
+              match (SS.compress t).n with
+              | Tm_refine _ ->
+                let t = U.unrefine t in
+                if t |> t_has_eq_for_sure then w U.t_true, false
+                else
+                  //get the hasEq term itself
+                  let haseq_tm =
+                    match (SS.compress tm).n with
+                    | Tm_app {hd} -> hd
+                    | _ -> failwith "Impossible! We have already checked that this is a Tm_app"
+                  in
+                  //and apply it to the unrefined type
+                  mk_app (haseq_tm) [t |> as_arg], false
+              | _ -> tm, false
+          else tm, false
+        end
+        else
+          reduce_equality (norm_cb cfg) cfg env tm
+      | _ -> tm, false
       end
-      else
-        reduce_equality (norm_cb cfg) cfg env tm
     | Tm_refine {b=bv; phi=t} ->
         begin match simp_t t with
         | Some true -> bv.sort, false
@@ -2461,9 +2457,9 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
            log cfg (fun () -> Format.print1 "Reified lift to (1): %s\n" (show lifted));
            norm cfg env (List.tl stack) lifted
 
-        (* Phase B: relies on single-node semantics — reify (reflect e) cancellation
-           matches reflect applied to exactly one argument. *)
-        | Tm_app {hd={n = Tm_constant (FC.Const_reflect _)}; args=[(e, _)]} ->
+        (* reify (reflect e) cancellation: reflect applied to exactly one
+           argument is a single (unary) application node. *)
+        | Tm_app {hd={n = Tm_constant (FC.Const_reflect _)}; arg=(e, _)} ->
            // reify (reflect e) ~> e
            // Although shouldn't `e` ALWAYS be marked with a Meta_monadic?
            norm cfg env stack' e
@@ -3034,12 +3030,22 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
         match binders with
         | [] -> [], Inl t
         | _ -> begin
+          (* Recover exactly the binder list (and comp) that was packed into the
+             arrow above. We peel precisely as many nodes as there were binders,
+             so that a nested arrow inside the comp is not flattened in. *)
+          let n = List.length binders in
+          let rec unpack (n:int) (t:term) : ML (list binder & comp) =
+            match (SS.compress t).n with
+            | Tm_arrow {b; comp=c} ->
+              if n <= 1
+              then [b], c
+              else let bs, c = unpack (n-1) (U.comp_result c) in
+                   b::bs, c
+            | _ -> failwith "Impossible: elim_uvars_aux_tc expected an arrow"
+          in
           match (SS.compress t).n, tc with
-          (* Phase B: relies on single-node semantics — must recover exactly the binder
-             list and comp of the single arrow built above (flattening would merge nested
-             arrows and change the returned binders/tc). *)
-          | Tm_arrow {bs=binders; comp=c}, Inr _ -> binders, Inr c
-          | Tm_arrow {bs=binders; comp=c}, Inl _ -> binders, Inl (U.comp_result c)
+          | Tm_arrow _, Inr _ -> let binders, c = unpack n t in binders, Inr c
+          | Tm_arrow _, Inl _ -> let binders, c = unpack n t in binders, Inl (U.comp_result c)
           | _,                    Inl _ -> [], Inl t
           | _ -> failwith "Impossible"
           end
@@ -3155,15 +3161,12 @@ let rec elim_uvars (env:Env.env) (s:sigelt) : ML sigelt =
             | _ -> failwith "Impossible"
         in
         let destruct_action_typ_templ t =
-            match (SS.compress t).n with
-            (* Phase B: relies on single-node semantics — recovers exactly the parameter
-               binders of the single abs built for the action template. *)
-            | Tm_abs {bs=pars; body} ->
-              let defn, typ = destruct_action_body body in
-              pars, defn, typ
-            | _ ->
-              let defn, typ = destruct_action_body t in
-              [], defn, typ
+            (* Recover exactly the parameter binders of the abstraction spine
+               built for the action template (its body is a Tm_ascribed, which
+               terminates the spine). *)
+            let pars, body, _ = U.abs_formals_ln t in
+            let defn, typ = destruct_action_body body in
+            pars, defn, typ
         in
         let action_univs, t = elim_tscheme (a.action_univs, action_typ_templ) in
         let action_params, action_defn, action_typ = destruct_action_typ_templ t in

@@ -248,21 +248,34 @@ let mk_sigelt (e: sigelt') = {
     sigopts = None;
     sigopens_and_abbrevs = [] }
 
-let mk_Tm_app (t1:typ) (args:list arg) p =
+let rec mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app {hd=t1; args}) p
+    | arg::args -> mk_Tm_app (mk (Tm_app {hd=t1; arg}) p) args p
 
-let mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
+(* The innermost lambda carries the residual comp; the outer ones get None. *)
+let rec mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
     match bs with
     | [] -> body
-    | _ -> mk (Tm_abs {bs; body; rc_opt=rc}) p
+    | [b] -> mk (Tm_abs {b; body; rc_opt=rc}) p
+    | b::bs -> mk (Tm_abs {b; body=mk_Tm_abs bs body rc p; rc_opt=None}) p
 
-(* NB: an arrow with no binders is degenerate and not representable once the
-   node becomes unary, but several callers (e.g. TcInductive) build one today,
-   so we preserve that behavior for now. *)
-let mk_Tm_arrow (bs:binders) (c:comp) p =
-    mk (Tm_arrow {bs; comp=c}) p
+(* An arrow with no binders is degenerate and unrepresentable now that the node
+   is unary. It only ever made sense for a Tot computation, where it denotes the
+   result type itself. *)
+let rec mk_Tm_arrow_more (bs:binders) (c:comp) (more:bool) p =
+    match bs with
+    | [] ->
+      begin match c.n with
+      | Total t -> t
+      | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
+      end
+    | [b] -> mk (Tm_arrow {b; comp=c; more}) p
+    | b::bs ->
+      let tail = mk_Tm_arrow_more bs c more p in
+      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos; more=true}) p
+
+let mk_Tm_arrow (bs:binders) (c:comp) p = mk_Tm_arrow_more bs c false p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
@@ -273,9 +286,7 @@ let mk_Tm_uinst (t:term) (us:universes) =
     end
   | _ -> failwith "Unexpected universe instantiation"
 
-let extend_app_n t args' r = match t.n with
-    | Tm_app {hd; args} -> mk_Tm_app hd (args@args') r
-    | _ -> mk_Tm_app t args' r
+let extend_app_n t args' r = mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : ML term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
 let mk_Total t : ML comp = mk (Total t) t.pos

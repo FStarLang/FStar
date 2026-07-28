@@ -204,13 +204,11 @@ let extract_let_rec_annotation env (lb:letbinding) :
                  (show t);
   let env = Env.push_univ_vars env univ_vars in
   let un_arrow t =
-    //Rather than use U.arrow_formals_comp, we use un_arrow here
-    //since the former collapses adjacent Tot annotations, e.g.,
-    //    x:t -> Tot (y:t -> M)
-    // is collapsed, possibly breaking arities.
+    (* Under the unary representation an n-ary arrow *is* a Tot-nested spine, so
+       flattening recovers exactly the binders the arrow was built with. *)
       match (SS.compress t).n with
-      | Tm_arrow {bs; comp=c} ->
-        Subst.open_comp bs c
+      | Tm_arrow _ ->
+        U.arrow_formals_comp_strict t
       | _ ->
         raise_error rng Errors.Fatal_LetRecArgumentMismatch [
             text "Recursive functions must be introduced at arrow types.";

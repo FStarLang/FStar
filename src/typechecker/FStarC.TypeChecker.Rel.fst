@@ -1067,10 +1067,8 @@ let destruct_flex_t (t:term) wl : ML (flex_t & worklist) =
 
 let u_abs (k : typ) (ys : binders) (t : term) : ML term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
-        (* Phase B: relies on the arrow node's own arity (List.length bs) to
-           decide whether to open its comp directly or eta-expand, so it depends
-           on single-node arrow semantics. *)
-        | Tm_arrow {bs; comp=c} ->
+        | Tm_arrow _ ->
+          let bs, c = U.arrow_formals_comp_ln_strict k in
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c
           else let ys', t, _ = U.abs_formals t in
@@ -2622,10 +2620,10 @@ let solve_rigid_flex_or_flex_rigid_subtyping
     let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
     begin
     match (SS.compress this_rigid).n with
-    | Tm_arrow {bs=_bs; comp} ->
-        (* Phase B: relies on single-node arrow semantics - it inspects the top
-           node's comp to decide if this is a Tot/GTot arrow, which becomes
-           ambiguous once x:t -> y:s -> C and x:t -> Tot (y:s -> C) unify. *)
+    | Tm_arrow _ ->
+        (* Inspect the arrow's *final* comp (walking the whole spine via the
+           strict destructor) to decide if this is a Tot/GTot arrow. *)
+        let _bs, comp = U.arrow_formals_comp_ln_strict this_rigid in
         //Although it's possible to take the meet/join of arrow types
         //we handle them separately either by imitation (for Tot/GTot arrows)
         //which provides some structural subtyping for them
@@ -4029,11 +4027,14 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
       | Tm_type u1, Tm_type u2 ->
         solve_one_universe_eq orig u1 u2 wl
 
-      | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
-        (* Phase B: this arrow-congruence rule compares the two nodes' binder
+      | Tm_arrow _, Tm_arrow _ ->
+        (* This arrow-congruence rule compares the two arrows' full binder
            lists pairwise via match_num_binders and re-abstracts the leftover
-           binders of the longer side; it depends on the per-node arity, so the
-           destructuring is left for the representation flip. *)
+           binders of the longer side, so we collect each side's whole spine
+           with the strict destructor (which does not descend into a top-level
+           refinement). *)
+        let bs1, c1 = U.arrow_formals_comp_ln_strict t1 in
+        let bs2, c2 = U.arrow_formals_comp_ln_strict t2 in
         let mk_c c = function
             | [] -> c
             | bs -> mk_Total(S.mk_Tm_arrow bs c c.pos) in
@@ -4048,11 +4049,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             mk_c_problem wl scope orig c1 rel c2 None "function co-domain")
 
-      | Tm_abs {bs=bs1; body=tbody1; rc_opt=lopt1},
-        Tm_abs {bs=bs2; body=tbody2; rc_opt=lopt2} ->
-        (* Phase B: like the arrow-congruence rule above, this compares the two
-           nodes' binder lists pairwise and re-abstracts the leftover binders of
-           the longer side, so the destructuring depends on the per-node arity. *)
+      | Tm_abs _, Tm_abs _ ->
+        (* Like the arrow-congruence rule above, this compares the two lambdas'
+           full binder lists pairwise and re-abstracts the leftover binders of
+           the longer side, so we collect each side's whole spine. *)
+        let bs1, tbody1, lopt1 = U.abs_formals_ln t1 in
+        let bs2, tbody2, lopt2 = U.abs_formals_ln t2 in
         let mk_t t l = function
             | [] -> t
             | bs -> S.mk_Tm_abs bs t l t.pos in
@@ -4155,20 +4157,11 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         else fallback()
 
       (* flex-flex *)
-      (* Phase B: all of the flex detection arms below use the pattern
-         Tm_app {hd={n=Tm_uvar _}} to recognize an *applied* uvar. This only
-         works because the current n-ary representation flattens spines so the
-         head uvar is the immediate hd. Once the app node is unary, an applied
-         uvar `?u x y` nests as Tm_app {hd=Tm_app {...}} and these patterns stop
-         matching; they must be rewritten to test the leftmost head (e.g. via
-         is_flex / U.head_and_args_full). This is left for the representation
-         flip because the arms are order-sensitive `when`-guarded pair-matches
-         interleaved with the Tm_arrow/Tm_abs arms, so restructuring them is not
-         behavior-preserving here. *)
-      | Tm_uvar _,                Tm_uvar _
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_uvar _
-      | Tm_uvar _,                Tm_app {hd={n=Tm_uvar _}}
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_app {hd={n=Tm_uvar _}} ->
+      (* Under the unary application node an applied uvar `?u x y` nests as
+         Tm_app {hd=Tm_app {...}}, so we test the *leftmost* head via is_flex
+         (which walks the spine with U.head_and_args_full) rather than matching
+         on the immediate hd. *)
+      | _, _ when is_flex t1 && is_flex t2 ->
       (* In the case that we have the same uvar on both sides, we cannot
        * simply call destruct_flex_t on them, and instead we need to do
        * both ensure_no_uvar_subst calls before destructing.
@@ -4194,29 +4187,23 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
-      | Tm_uvar _, _
-      | Tm_app {hd={n=Tm_uvar _}}, _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
+      | _, _ when is_flex t1 && (problem.relation=EQ) -> (* just imitate/project ... no slack *)
         let f1 = destruct_flex_t' t1 in
         solve_t_flex_rigid_eq orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
-      | _, Tm_uvar _
-      | _, Tm_app {hd={n=Tm_uvar _}} when (problem.relation = EQ) ->
+      | _, _ when is_flex t2 && (problem.relation = EQ) ->
         solve_t' (invert problem) wl
 
       (* flex-rigid wrt an arrow: ?u _ <: t1 -> t2 *)
-      | Tm_uvar _, Tm_arrow _
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_arrow _ ->
+      | _, Tm_arrow _ when is_flex t1 ->
         //FIXME! This is weird; it should be handled by imitate_arrow
         //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
         //besides, in the case of arrows, if we delay it, the arity of various terms built by the unifier goes awry
         //so, don't delay!
         solve_t' ({problem with relation=EQ}) wl
 
-      | _, Tm_uvar _
-      | _, Tm_app {hd={n=Tm_uvar _}}
-      | Tm_uvar _, _
-      | Tm_app {hd={n=Tm_uvar _}}, _ ->
+      | _, _ when is_flex t1 || is_flex t2 ->
         //flex-rigid subtyping is handled in the top-loop
         solve (attempt [TProb problem] wl)
 
@@ -5528,12 +5515,16 @@ let check_implicit_solution_and_discharge_guard env
                *)
               let imp_tm =
                 match (SS.compress imp_tm).n with
-                (* Phase B: relies on single-node abs semantics - it clears the
-                   residual comp attached to this particular Tm_abs node (the
-                   solution lambda built in u_abs), preserving its full binder
-                   list unchanged. *)
-                | Tm_abs {bs; body; rc_opt=Some rc} ->
-                  {imp_tm with n=Tm_abs {bs; body; rc_opt=Some ({rc with residual_typ=None})}}
+                (* Clear the residual comp attached to the solution lambda built
+                   in u_abs. Under the unary node the residual comp lives on the
+                   innermost Tm_abs, so we collect the whole spine and rebuild it
+                   with the residual type cleared, preserving all binders. *)
+                | Tm_abs _ ->
+                  let bs, body, rc_opt = U.abs_formals_ln imp_tm in
+                  (match rc_opt with
+                   | Some rc ->
+                     S.mk_Tm_abs bs body (Some ({rc with residual_typ=None})) imp_tm.pos
+                   | None -> imp_tm)
                 | _ -> imp_tm in
 
               let k', g =
@@ -5638,7 +5629,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
     mostly in support of solve, which has to be written eta expanded. *)
     (U.is_fvar PC.tcresolve_lid tac) || (
       match (SS.compress tac).n with
-      | Tm_abs ({bs=[_]; body}) ->
+      | Tm_abs {body} ->
         let hd, args = U.head_and_args_full body in
         U.is_fvar PC.tcresolve_lid hd && List.length args = 1
       | _ -> false

@@ -624,10 +624,10 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
      | Tm_uinst _ ->
       //in these cases, fv_lid is used in t
        false
-     | Tm_abs {bs; body=t} ->
-       binders_ok bs && ok t
-     | Tm_arrow {bs; comp=c} ->
-       binders_ok bs && ok_comp c
+     | Tm_abs {b; body=t} ->
+       binders_ok [b] && ok t
+     | Tm_arrow {b; comp=c} ->
+       binders_ok [b] && ok_comp c
      | Tm_refine {b=bv; phi=t} ->
        ok bv.sort && ok t
      | Tm_app _ ->
@@ -852,8 +852,9 @@ let rec ty_strictly_positive_in_type (env:env)
           end
      end
 
-   | Tm_arrow {comp=c} ->  //in_type is an arrow
+   | Tm_arrow _ ->  //in_type is an arrow
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
+     let c = snd (U.arrow_formals_comp_ln_strict in_type) in
      let check_comp =
        U.is_pure_or_ghost_comp c ||
        (c |> U.comp_effect_name

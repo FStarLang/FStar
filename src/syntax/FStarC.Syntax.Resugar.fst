@@ -413,15 +413,10 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
       else typ
 
-    (* Phase B: relies on single-node abs semantics. Flattening here (e.g. via
-       U.abs_formals_ln) would also collapse genuinely nested lambdas
-       [fun x -> fun y -> e] into [fun x y -> e], changing current output, so
-       this site keeps matching the raw node. Once the representation is unary,
-       a multi-binder lambda will resugar as nested [fun x -> fun y -> ...]. *)
-    | Tm_abs {bs=xs; body} -> //fun x1 .. xn -> body
+    | Tm_abs _ -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
-      let xs, body = SS.open_term xs body in
+      let xs, body, _ = U.abs_formals_maybe_unascribe_body false t in
       let xs = filter_imp_bs xs in
       let body_bv = FStarC.Syntax.Free.names body in
       let patterns = xs |> List.map (fun x ->
@@ -459,13 +454,15 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       mk (A.Refine(b, resugar_term' env phi))
 
     (* Drop b2t unless --print_implicits() *)
-    | Tm_app {hd={n=Tm_fvar fv}; args=[(e, _)]}
+    | Tm_app _
       when not (Options.print_implicits())
-           && S.fv_eq_lid fv C.b2t_lid ->
-      resugar_term' env e
+           && Some? (U.unb2t t) ->
+      resugar_term' env (Some?.v (U.unb2t t))
 
-    | Tm_app {hd; args}
-      when Some? (can_resugar_machine_integer hd args) ->
+    | Tm_app _
+      when (let hd, args = U.head_and_args_full t in
+            Some? (can_resugar_machine_integer hd args)) ->
+      let hd, args = U.head_and_args_full t in
       let Some (fv, i) = can_resugar_machine_integer hd args in
       resugar_machine_integer fv i t.pos
 
@@ -662,8 +659,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 failwith("wrong arguments to try_with")
             in
             let decomp term = match (SS.compress term).n with
-              | Tm_abs {bs=x; body=e} ->
-                let x, e = SS.open_term x e in
+              | Tm_abs {b; body=e} ->
+                let _, e = SS.open_term [b] e in
                 e
               | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
             let body = resugar_term' env (decomp body) in
@@ -880,12 +877,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
           | _ -> failwith "wrong let binding format"
         in
         let binders, term, is_pat_app = match (SS.compress def).n with
-          (* Phase B: relies on single-node abs semantics. Flattening (via
-             U.abs_formals_ln) would collapse nested lambdas and change which
-             arguments become let-pattern binders; kept matching the raw node.
-             Post-flip a multi-binder [let f x y = e] def resugars nested. *)
-          | Tm_abs {bs=b; body=t} ->
-            let b, t = SS.open_term b t in
+          | Tm_abs _ ->
+            let b, t, _ = U.abs_formals_maybe_unascribe_body false def in
             let b = filter_imp_bs b in
             b, t, true
           | _ -> [], def, false
@@ -1045,22 +1038,19 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
       | _ -> false
     in
     match (SS.compress rel).n with
-    (* Phase B: relies on multi-node (n-ary) abs/app semantics. This peels a
-       relation's two binders and inspects a >=2-argument application spine in
-       single nodes. Under the unary representation these patterns no longer
-       match a binary relation, so un-eta-expansion is simply skipped (the
-       relation resugars eta-expanded); left as-is to avoid changing current
-       output. A faithful Phase B version would peel two binders via
-       U.abs_one_ln and flatten the spine via U.head_and_args_full. *)
-    | Tm_abs {bs=[b1;b2]; body} ->
-        let ([b1;b2], body) = SS.open_term [b1;b2] body in
+    (* Un-eta-expand a binary relation: peel exactly two binders and look for a
+       >=2-argument application spine underneath. *)
+    | Tm_abs _ when (let bs, _, _ = U.abs_formals_maybe_unascribe_body false rel in
+                     List.length bs = 2) ->
+        let ([b1;b2], body, _) = U.abs_formals_maybe_unascribe_body false rel in
         let body = U.unascribe body in
         let body = match (U.unb2t body) with
                    | Some body -> body
                    | None -> body
         in
         begin match (SS.compress body).n with
-        | Tm_app {hd=e; args} when List.length args >= 2 ->
+        | Tm_app _ when (let _, args = U.head_and_args_full body in List.length args >= 2) ->
+          let e, args = U.head_and_args_full body in
           begin match List.rev args with
           | (a1, None)::(a2, None)::rest ->
             if bv_eq_tm b1.binder_bv a2 && bv_eq_tm b2.binder_bv a1 // mind the flip

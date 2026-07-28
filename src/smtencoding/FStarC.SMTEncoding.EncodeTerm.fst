@@ -283,10 +283,10 @@ let as_function_typ env t0 =
 let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  (* Phase B: relies on single-node arrow semantics -- deliberately takes only
-     the outermost arrow node's binders (no Tot-arrow flattening) so that the
-     arity here matches the function-type/application encoding. *)
-  | Tm_arrow {bs; comp=c}  -> Subst.open_comp bs c
+  (* Deliberately takes only the outermost arrow *node* (no flattening through
+     a user-written Tot) so that the arity here matches the function-type and
+     application encodings. *)
+  | Tm_arrow _  -> U.arrow_node_formals_comp k
   | Tm_refine {b=bv} ->
     let args, res = curried_arrow_formals_comp bv.sort in
     begin
@@ -801,12 +801,12 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
       | Tm_constant c ->
         encode_const c env
 
-      | Tm_arrow {bs=binders; comp=c} ->
-        (* Phase B: relies on single-node arrow semantics -- the encoded arity
-           (and the IsTotFun partial-application axioms below) is the outermost
-           arrow node's binder count, matching curried_arrow_formals_comp. *)
+      | Tm_arrow _ ->
+        (* One arrow *node* only: the encoded arity (and the IsTotFun
+           partial-application axioms below) must match the arity that
+           curried_arrow_formals_comp assigns to the head symbol. *)
         let module_name = env.current_module_name in
-        let binders, res = SS.open_comp binders c in
+        let binders, res = U.arrow_node_formals_comp t in
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
@@ -1289,8 +1289,19 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 //           (string_of_int (List.length fuel_args))
                 //           (string_of_int (List.length univs))
                 //           (string_of_int (List.length args));
-                let tm = maybe_curry_app t0.pos fname (arity+List.length univs) (fuel_args@univs@args) in
-                tm, decls
+                let arity = arity + List.length univs in
+                let all_args = fuel_args@univs@args in
+                if List.length all_args < arity
+                then
+                  (* The head's SMT arity is computed from its fully normalized
+                     type, whose arrow spine may be longer than the one seen
+                     here (arrows are unary, so [t -> Tot (s -> c)] and
+                     [t -> s -> c] are the same term). Fall back to a curried
+                     application through the token. *)
+                  encode_partial_app None
+                else
+                  let tm = maybe_curry_app t0.pos fname arity all_args in
+                  tm, decls
             in
 
             let head = SS.compress head in
@@ -1344,10 +1355,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
 
         end
 
-      | Tm_abs {bs; body; rc_opt=lopt} ->
-          (* Phase B: relies on single-node abs semantics -- the encoded function
-             arity is the outermost abstraction node's binder count. *)
-          let bs, body, opening = SS.open_term' bs body in
+      | Tm_abs _ ->
+          let bs, body, lopt = U.abs_formals_maybe_unascribe_body false t in
           let fallback () =
             let arg_sorts, arg_terms =
               (* We need to compute all free variables of this lambda
