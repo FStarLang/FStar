@@ -1189,7 +1189,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 #pop-options
 
 // After setting root to last element and popping, we get almost_heap_sift_down at 0
-#push-options "--z3rlimit 10 --fuel 1 --ifuel 1 --split_queries always"
+#push-options "--z3rlimit 40 --fuel 1 --ifuel 1 --split_queries always"
 let extract_almost_heap #t {| total_order t |} (s:Seq.seq t) (v:t)
   : Lemma (requires is_heap s /\ Seq.length s > 1)
           (ensures almost_heap_sift_down (Seq.slice (Seq.upd s 0 v) 0 (Seq.length s - 1)) 0)
