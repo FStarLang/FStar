@@ -7,8 +7,8 @@ open FStar.Reflection.Typing
 
 assume val tyc : term -> Type0
 
-let test (x : tyc bool_ty)
- : tyc (binder_sort (mk_binder (Sealed.seal "x") bool_ty Q_Explicit))
+let test (x : tyc bool_ty_tm)
+ : tyc (binder_sort (mk_binder (Sealed.seal "x") bool_ty_tm Q_Explicit))
  = x
 
 assume val p : prop

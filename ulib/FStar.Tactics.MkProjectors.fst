@@ -182,7 +182,7 @@ let mk_proj_decl (is_method:bool)
   in
   (* Propagate binder attributes, i.e. attributes in the field
   decl, to the method itself. *)
-  let se_proj = set_sigelt_attrs (substitute_attr :: field.attrs @ unseal (sigelt_attrs se_proj)) se_proj in
+  let se_proj = set_sigelt_attrs (substitute_attr :: field.attrs @ sigelt_attrs se_proj) se_proj in
 
   (* Do we need to set the sigelt's Projector qual? If so,
   here is how to do it, but F* currently rejects tactics

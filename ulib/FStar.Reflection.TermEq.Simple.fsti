@@ -10,15 +10,16 @@ more convenient to use: one can write `if term_eq (foo _) _` for an
 effectful foo without running into a variable escaping its scope. *)
 
 open FStar.Stubs.Reflection.Types
+open FStar.Reflection.TermSpec
 
 (* A conservative version: works on all terms, returns `true` if they
-are guaranteed to be equal. *)
+are guaranteed to have the same denotation. *)
 [@@plugin]
 val term_eq (t1 t2 : term) : bool
 
 val term_eq_ok (t1 t2 : term)
   : Lemma (requires term_eq t1 t2)
-          (ensures t1 == t2)
+          (ensures denote_term t1 == denote_term t2)
           [SMTPat (term_eq t1 t2)]
 
 (* Idem for universes *)

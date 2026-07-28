@@ -10,14 +10,15 @@ let min =
     tt e1
 
 open FStar.Tactics.V2
+open FStar.Reflection.TermSpec
 
-let test0 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 t2)) =
+let test0 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g (denote_term t1) (denote_term t2))) =
   fun (g:env) (t1 t2:term) ->
     let e2 = t2 in
     check_subtyping g t1 e2
 
 [@@expect_failure [66]]
-let test1 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g t1 _)) =
+let test1 : g:env -> t1:term -> t2:term -> Tac (ret_t (subtyping_token g (denote_term t1) _)) =
   fun (g:env) (t1 t2:term) ->
     let e2 = t2 in
     check_subtyping g t1 e2

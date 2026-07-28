@@ -17,6 +17,7 @@
 module Pulse.Checker.Base
 
 module RT = FStar.Reflection.Typing
+module PRU = Pulse.Reflection.Util
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
@@ -35,9 +36,9 @@ val intro_comp_typing (g:env)
 
 val post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  : FStar.Ghost.erased (RT.tot_typing (elab_env g)
-                             (RT.mk_abs ty T.Q_Explicit t)
-                             (RT.mk_arrow ty T.Q_Explicit tm_slprop))
+  : FStar.Ghost.erased (PRU.rt_tot_typing (elab_env g)
+                             (PRU.mk_abs ty T.Q_Explicit t)
+                             (PRU.mk_arrow (ty, T.Q_Explicit) tm_slprop))
 
 let effect_annot_labels_match (a1 a2:effect_annot) =
   match a1, a2 with

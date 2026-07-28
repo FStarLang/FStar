@@ -6,6 +6,7 @@ open Pulse.Typing
 open FStar.Issue
 module T = FStar.Tactics.Effect
 module RT = FStar.Reflection.Typing
+module PRU = Pulse.Reflection.Util
 
 (* Recall: pulse terms are F* terms *)
 
@@ -21,9 +22,9 @@ let discharged (vc : vc_t) : Type =
   match vc with
   | Trivial -> unit
   | Equiv g t1 t2 ->
-    erased (RT.equiv (elab_env g) t1 t2)
+    erased (PRU.rt_equiv (elab_env g) t1 t2)
   | WellTypedGhost g e t ->
-    erased (RT.typing (elab_env g) e (RT.E_Ghost, t))
+    erased (PRU.rt_typing (elab_env g) e (RT.E_Ghost, t))
 
 (* Discharge a VC, producing evidence for it. May fail. *)
 val discharge (vc : vc_t) : T.Tac (either (list issue) (discharged vc))

@@ -269,6 +269,19 @@ let binder_set_qual (q : FStarC_Reflection_V2_Data.aqualv)
       FStarC_Reflection_V2_Data.ppname2 =
         (bview.FStarC_Reflection_V2_Data.ppname2)
     }
+let add_check_with (vcfg : FStar_VConfig.vconfig)
+  (se : FStarC_Reflection_Types.sigelt) : FStarC_Reflection_Types.sigelt=
+  let attrs = FStarC_Reflection_V2_Builtins.sigelt_attrs se in
+  let vcfg_t = FStarC_Reflection_V2_Builtins.embed_vconfig vcfg in
+  let t =
+    FStarC_Reflection_V2_Builtins.pack_ln
+      (FStarC_Reflection_V2_Data.Tv_App
+         ((FStarC_Reflection_V2_Builtins.pack_ln
+             (FStarC_Reflection_V2_Data.Tv_FVar
+                (FStarC_Reflection_V2_Builtins.pack_fv
+                   ["FStar"; "VConfig"; "check_with"]))),
+           (vcfg_t, FStarC_Reflection_V2_Data.Q_Explicit))) in
+  FStarC_Reflection_V2_Builtins.set_sigelt_attrs (t :: attrs) se
 let un_uinst (t : FStarC_Reflection_Types.term) :
   FStarC_Reflection_Types.term=
   match FStarC_Reflection_V2_Builtins.inspect_ln t with

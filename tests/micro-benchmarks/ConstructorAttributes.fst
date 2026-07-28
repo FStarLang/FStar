@@ -25,7 +25,7 @@ let lookup_sigelt (name: string): Tac sigelt
   | _       -> fail ("lookup_sigelt: sigelt '"^name^"' not found")
 
 let lookup_sigelt_attrs (name: string): Tac (list term) =
-  unseal (sigelt_attrs (lookup_sigelt name))
+  sigelt_attrs (lookup_sigelt name)
 
 open FStar.List.Tot
 let terms_eq (x y: list term): bool

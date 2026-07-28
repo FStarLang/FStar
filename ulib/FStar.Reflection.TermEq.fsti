@@ -3,6 +3,7 @@ module FStar.Reflection.TermEq
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Stubs.Reflection.V2.Builtins
+open FStar.Reflection.TermSpec
 
 (* Auxiliary... would be good to move. *)
 let rec allP0 #a (pred : a -> prop) (l : list a) : prop =
@@ -142,13 +143,13 @@ let faithful_term     = t:term{faithful t}
 let faithful_universe = u:universe{faithful_univ u}
 
 (* A conservative version: works on all terms, returns `true` if they
-are guaranteed to be equal. *)
+are guaranteed to have the same denotation. *)
 [@@plugin]
-val term_eq (t1 t2 : term) : (b:bool{b ==> t1 == t2})
+val term_eq (t1 t2 : term) : (b:bool{b ==> denote_term t1 == denote_term t2})
 
 (* A fully decidable version, for faithful terms. *)
 [@@plugin]
-val term_eq_dec (t1 t2 : faithful_term) : (b:bool{b <==> t1 == t2})
+val term_eq_dec (t1 t2 : faithful_term) : (b:bool{b <==> denote_term t1 == denote_term t2})
 
 (* Idem for universes *)
 [@@plugin]

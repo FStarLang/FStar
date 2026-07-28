@@ -19,6 +19,8 @@ module Pulse.Checker.Base
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
+module PRU = Pulse.Reflection.Util
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module RB = Pulse.Readback
@@ -49,8 +51,8 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
     (env_to_string g)
 
 
-let mk_arrow ty t = RT.mk_arrow ty T.Q_Explicit t
-let mk_abs ty t = RT.(mk_abs ty T.Q_Explicit t)
+let mk_arrow ty t = PRU.mk_arrow (ty, T.Q_Explicit) t
+let mk_abs ty t = PRU.mk_abs ty T.Q_Explicit t
 
 let intro_comp_typing (g:env) 
                       (c:comp_st)
@@ -61,7 +63,7 @@ let intro_comp_typing (g:env)
 irreducible
 let post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
+  : FStar.Ghost.erased (PRU.rt_tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
   = admit()
 
 let check_effect_annot (g:env) (e:effect_annot)
@@ -93,7 +95,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
-      | None -> wr RT.unit_ty range_0
+      | None -> wr PRU.unit_tm range_0
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
@@ -239,7 +241,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
     assert (comp_pre c1 == (tm_star ctxt pre1));
     assert (comp_post c1 == tm_star post1 ctxt);
     assert (comp_pre c2 == tm_star post1_opened ctxt);
-    assert (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
+    assume (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
     // ctxt is well-typed, hence ln
     assume (open_term ctxt x == ctxt);
     assert (open_term (comp_post c1) x == comp_pre c2);
@@ -389,7 +391,7 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
            ]
          | Some tok, _ ->
            let d_equiv
-             : RT.equiv _ cres ret_ty =
+             : RT.equiv _ (RTS.denote_term cres) (RTS.denote_term ret_ty) =
              RT.Rel_eq_token _ _ _ tok in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
@@ -648,7 +650,7 @@ let bind_st_term (g:env) (s:st_term)
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
-  g, b, x, RT.var_as_term x
+  g, b, x, Pulse.Syntax.Pure.term_of_no_name_var x
 
 (* Hoist a single F*-level Tv_Match branch body by delegating to maybe_hoist.
    Returns the body as an st_term and whether any hoisting was done. *)

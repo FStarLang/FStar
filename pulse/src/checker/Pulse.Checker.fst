@@ -153,8 +153,8 @@ let trace (t:st_term) (g:env) (pre:term) (rng:range) : T.Tac unit =
   ] in
   (* This tweaks the range to go to the beginning of the line. *)
   let rng =
-    let (f, l1, c1, l2, c2) = FStar.Range.explode (T.unseal rng) in
-    FStar.Sealed.seal (FStar.Range.mk_range f l1 0 l1 2)
+    let (f, l1, c1, l2, c2) = FStar.Range.explode rng in
+    FStar.Range.mk_range f l1 0 l1 2
   in
   info_doc g (Some rng) msg
 
@@ -269,8 +269,8 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 200"
 let seq_with_unit (t:st_term) = 
-  let body = mk_term (Tm_Return { expected_type=RT.unit_ty; insert_eq=false; term=`() }) t.range in
-  mk_term (Tm_Bind { binder=null_binder RT.unit_ty; head=t; body }) t.range
+  let body = mk_term (Tm_Return { expected_type=unit_tm; insert_eq=false; term=`() }) t.range in
+  mk_term (Tm_Bind { binder=null_binder unit_tm; head=t; body }) t.range
 
 let rec do_not_elim_state (t:st_term) : Dv bool =
   match t.term with

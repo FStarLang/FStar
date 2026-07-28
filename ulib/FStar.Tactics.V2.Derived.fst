@@ -937,10 +937,3 @@ let smt_sync' (fuel ifuel : nat) : Tac unit =
 (* t_check_equiv wrappers. *)
 let check_equiv       g t0 t1 = t_check_equiv true true g t0 t1
 let check_equiv_nosmt g t0 t1 = t_check_equiv false false g t0 t1
-
-(** Set a vconfig for a sigelt *)
-let add_check_with (vcfg : vconfig) (se : sigelt) : Tac sigelt =
-  let attrs = unseal (sigelt_attrs se) in
-  let vcfg_t = embed_vconfig vcfg in
-  let t = `(check_with (`#vcfg_t)) in
-  set_sigelt_attrs (t :: attrs) se

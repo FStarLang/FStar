@@ -228,7 +228,7 @@ let range_of_env (g:env) =
 let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
   match snd c with
   | None -> fst c
-  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string (T.unseal r))
+  | Some r -> Printf.sprintf ("%s @ %s") (fst c) (T.range_to_string r)
 
 let ctx_to_string (c:list (string & option range)) : T.Tac string =
     match c with
@@ -323,16 +323,16 @@ let fail_doc_env (#a:Type) (with_env:bool) (g:env) (r:option range) (msg:list Pp
     then msg @ [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
     else msg
   in
-  T.fail_doc_at msg (Some (T.unseal r))
+  T.fail_doc_at msg (Some r)
 
 let warn_doc (g:env) (r:option range) (msg:list Pprint.document) : T.Tac unit =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue_doc "Warning" msg (Some (T.unseal r)) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Warning" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
 let info_doc (g:env) (r:option range) (msg:list Pprint.document) =
   let r = get_range g r in
-  let issue = FStar.Issue.mk_issue_doc "Info" msg (Some (T.unseal r)) None (ctxt_to_list g) in
+  let issue = FStar.Issue.mk_issue_doc "Info" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
 let info_doc_env (g:env) (r:option range) (msg:list Pprint.document) =
@@ -393,8 +393,8 @@ let info_doc_with_subissues (g:env) (r:option range)
   info_doc g r msg
 
 let has_stt_bindings (f:RT.fstar_top_env) =
-    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
-    RT.lookup_fvar f Pulse.Reflection.Util.slprop_fv == Some (RT.tm_type Pulse.Syntax.Pure.u2) /\ True
+    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type_tm RT.u_zero) /\
+    RT.lookup_fvar f Pulse.Reflection.Util.slprop_fv == Some (RT.tm_type_tm Pulse.Syntax.Pure.u2) /\ True
 
 let check_top_level_environment (f:RT.fstar_top_env)
   : option (g:stt_env{fstar_env g == f /\ bindings g == []})

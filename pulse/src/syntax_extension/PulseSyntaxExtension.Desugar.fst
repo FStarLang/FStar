@@ -63,11 +63,11 @@ let fstarc_ident_to_ident (i:FStarC.Ident.ident) : FStar.Stubs.Reflection.Types.
 (* General coerce for remaining mismatches *)
 let coerce (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq (admit()) x
 
-let seal_rng (r:FStarC.Range.range) : Pulse.Syntax.Base.range = FStar.Sealed.seal r
-let swr t (r:FStarC.Range.range) = PSBuild.with_range t (seal_rng r)
+let seal_rng (r:FStarC.Range.range) : Pulse.Syntax.Base.range = r
+let swr t (r:FStarC.Range.range) = PSBuild.with_range t r
 
 let ppname_of_id (i:ident) : ppname =
-  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (FStar.Sealed.seal (Ident.range_of_id i))
+  mk_ppname (coerce (FStarC.Sealed.seal (Ident.string_of_id i))) (Ident.range_of_id i)
 
 let sw_mk_binder (x:ident) (t:term) : binder =
   mk_binder_ppname t (ppname_of_id x)
@@ -76,7 +76,7 @@ let sw_mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder =
   { Pulse.Syntax.Base.binder_ty = t; binder_ppname = ppname_of_id x; binder_attrs = coerce attrs }
 
 let sw_mk_bv (i:Pulse.Syntax.Base.index) (name:string) (r:FStarC.Range.range) : bv =
-  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) (FStar.Sealed.seal r) }
+  { bv_index = i; bv_ppname = mk_ppname (coerce (FStarC.Sealed.seal name)) r }
 
 let sw_mk_fv (nm:lident) (r:FStarC.Range.range) : ML fv =
   { fv_name = Ident.path_of_lid nm; fv_range = seal_rng r }

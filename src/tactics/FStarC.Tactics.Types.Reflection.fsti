@@ -22,6 +22,13 @@ open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
 
 (*** These are here for userspace, the library has an interface into this module. *)
+
+(* The DSL typing tokens are re-indexed over the erasable [term_spec] model
+   on the library side; [comp_spec_typ] there is [tot_or_ghost & term_spec],
+   which erases to [tot_or_ghost & unit]. We mirror that erasure here so the
+   extracted metatheory type-checks against this realization. *)
+let comp_spec_typ = Core.tot_or_ghost & unit
+
 val non_informative_token (g:env) (t:typ) : Type0
 val subtyping_token (g:env) (t0 t1:typ) : Type0
 val equiv_token (g:env) (t0 t1:typ) : Type0

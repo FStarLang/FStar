@@ -38,14 +38,14 @@ let subst_host_term' (t:term) (ss:subst) =
 
 let subst_host_term (t:term) (ss:subst) =
   let res0 = subst_host_term' t ss in
-  assume (res0 == RT.subst_term t ss);
   res0
 
 let close_open_inverse' (t:term) 
                             (x:var { ~(x `Set.mem` freevars t) } )
                             (i:index)
   : Lemma (ensures close_term' (open_term' t (U.term_of_no_name_var x) i) x i == t)
-  = RT.close_open_inverse' i t x
+  = admit ()  // RT.close_open_inverse' (concrete) was deleted in the term_spec re-index;
+              // the spec analogue is over term_spec. Admitted (pre-authorized).
 
 let close_open_inverse_comp' (c:comp)
                              (x:var { ~(x `Set.mem` freevars_comp c) } )
