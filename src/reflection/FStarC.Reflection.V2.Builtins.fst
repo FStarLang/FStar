@@ -150,6 +150,28 @@ let inspect_const (c:sconst) : ML vconst =
     | FStarC.Const.Const_char c -> C_Char c
     | _ -> failwith (Format.fmt1 "unknown constant: %s" (show c))
 
+let inspect_int_signedness (s:C.signedness) : RD.int_signedness =
+    match s with
+    | C.Signed -> RD.Signed
+    | C.Unsigned -> RD.Unsigned
+
+let inspect_int_width (w:C.width) : RD.int_width =
+    match w with
+    | C.Int8 -> RD.Int8
+    | C.Int16 -> RD.Int16
+    | C.Int32 -> RD.Int32
+    | C.Int64 -> RD.Int64
+    | C.Sizet -> RD.Sizet
+
+let inspect_pattern_const (c:sconst) : ML vconst =
+    match c with
+    | C.Const_int (s, Some (signedness, width)) ->
+      C_MachineInt (
+        BU.int_of_string s,
+        inspect_int_signedness signedness,
+        inspect_int_width width)
+    | _ -> inspect_const c
+
 let inspect_universe u =
   match u with
   | U_zero -> Uv_Zero
@@ -172,7 +194,7 @@ let pack_universe uv =
 
 let rec inspect_pat p : ML pattern =
   match p.v with
-  | Pat_constant c -> Pat_Constant (inspect_const c)
+  | Pat_constant c -> Pat_Constant (inspect_pattern_const c)
   | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
   | Pat_var bv -> Pat_Var (Sealed.seal bv.sort) (Sealed.seal <| string_of_id bv.ppname)
   | Pat_dot_term eopt -> Pat_Dot_Term eopt
@@ -348,6 +370,21 @@ let pack_const (c:vconst) : ML sconst =
     match c with
     | C_Unit         -> C.Const_unit
     | C_Int i        -> C.Const_int (show i, None)
+    | C_MachineInt (i, signedness, width) ->
+      let signedness =
+        match signedness with
+        | RD.Signed -> C.Signed
+        | RD.Unsigned -> C.Unsigned
+      in
+      let width =
+        match width with
+        | RD.Int8 -> C.Int8
+        | RD.Int16 -> C.Int16
+        | RD.Int32 -> C.Int32
+        | RD.Int64 -> C.Int64
+        | RD.Sizet -> C.Sizet
+      in
+      C.Const_int (show i, Some (signedness, width))
     | C_True         -> C.Const_bool true
     | C_False        -> C.Const_bool false
     | C_String s     -> C.Const_string (s, Range.dummyRange)
@@ -932,4 +969,3 @@ let subst_comp (s : list subst_elt) (c : comp) : ML comp =
 
 let range_of_term (t:term) = t.pos
 let range_of_sigelt (s:sigelt) = s.sigrng
-
