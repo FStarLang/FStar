@@ -247,14 +247,17 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : ML (option (list 
               in
               //now, with the uvars gone, we can close over the newly introduced type names
               let tvars_bs = gen_tvars |> List.map (fun (x, q) -> S.mk_binder_with_attrs x q None []) in
-              let t =
-                let cod_t = SS.compress (U.comp_result c) in
-                match cod_t.n with
-                | Tm_arrow _ ->
-                  let bs, cod = U.arrow_formals_comp cod_t in
-                  U.arrow (tvars_bs@bs) cod
-                | _ ->
-                  U.arrow tvars_bs c in
+              (* Phase B: relies on single-node arrow semantics -- it must peel exactly
+                 this arrow node's binders and prepend the generalized type variables to
+                 them. Using arrow_formals_comp here flattens nested arrows (and descends
+                 into refinements), which changes the generalized type. *)
+              let t = match (SS.compress (U.comp_result c)).n with
+                    | Tm_arrow {bs; comp=cod} ->
+                      let bs, cod = SS.open_comp bs cod in
+                      U.arrow (tvars_bs@bs) cod
+
+                    | _ ->
+                      U.arrow tvars_bs c in
               let e' = U.abs tvars_bs e (Some (U.residual_comp_of_comp c)) in
               e', S.mk_Total t, tvars_bs in
           (lbname, gen_univs, e, c, gvs))

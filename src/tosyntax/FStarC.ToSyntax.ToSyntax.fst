@@ -3103,8 +3103,10 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
  
         let eff_t, num_effect_params =
           match (SS.compress eff_t).n with
-          | Tm_arrow _ ->
-            let bs, c = U.arrow_formals_comp_ln eff_t in
+          (* Phase B: relies on single-node arrow semantics -- it rewrites the
+             binders of exactly this arrow node and repacks that node. A
+             flattening destructor would merge nested arrows into the result. *)
+          | Tm_arrow {bs; comp=c} ->
             // peel off the first a:Type binder
             let a::bs = bs in
             //
@@ -3123,7 +3125,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
               (if is_param then n+1 else n),
               allow_param && is_param,
               bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
-            S.mk_Tm_arrow (a::bs) c eff_t.pos,
+            {eff_t with n=Tm_arrow {bs=a::bs; comp=c}},
             n
           | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
 
