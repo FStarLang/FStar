@@ -113,14 +113,14 @@ and pattern_spec =
 
 let rec map_dec (#a:Type u#aa) (#b:Type u#bb) (#tb:Type u#tt)
                 (top:tb) (f : (x:a{x << top} -> b)) (l:list a{l << top})
-  : Tot (list b) (decreases l)
+  : GTot (list b) (decreases l)
   = match l with
     | [] -> []
     | x::xs -> f x :: map_dec top f xs
 
 let opt_dec (#a:Type u#aa) (#b:Type u#bb) (#tb:Type u#tt)
             (top:tb) (f : (x:a{x << top} -> b)) (o:option a{o << top})
-  : option b
+  : GTot (option b)
   = match o with
     | None -> None
     | Some x -> Some (f x)
@@ -138,7 +138,7 @@ let rec denote_universe (u:universe) : Tot universe_spec (decreases u) =
   | Uv_Unif uv -> Us_Unif uv
   | Uv_Unk     -> Us_Unk
 
-let denote_universes (us:list universe) : list universe_spec =
+let denote_universes (us:list universe) : GTot (list universe_spec) =
   L.map denote_universe us
 
 (* -------------------------------------------------------------------- *)
@@ -171,7 +171,7 @@ let rec denote_term (t:term) : Tot term_spec (decreases t) =
   | Tv_Unknown -> Ts_Unknown
   | Tv_Unsupp  -> Ts_Unsupp
 
-and denote_terms (ts:list term) : Tot (list term_spec) (decreases ts) =
+and denote_terms (ts:list term) : GTot (list term_spec) (decreases ts) =
   match ts with
   | [] -> []
   | t::ts -> denote_term t :: denote_terms ts
@@ -197,18 +197,18 @@ and denote_comp (c:comp) : Tot comp_spec (decreases c) =
            (denote_args args)
            (denote_terms decrs)
 
-and denote_args (a:list argv) : Tot (list (term_spec & aqualv_spec)) (decreases a) =
+and denote_args (a:list argv) : GTot (list (term_spec & aqualv_spec)) (decreases a) =
   match a with
   | [] -> []
   | (t,q)::a -> (denote_term t, denote_aqualv q) :: denote_args a
 
-and denote_opt_term (o:option term) : Tot (option term_spec) (decreases o) =
+and denote_opt_term (o:option term) : GTot (option term_spec) (decreases o) =
   match o with
   | None -> None
   | Some t -> Some (denote_term t)
 
 and denote_ret (o:option match_returns_ascription)
-  : Tot (option (binder_spec & (either term_spec comp_spec & option term_spec & bool)))
+  : GTot (option (binder_spec & (either term_spec comp_spec & option term_spec & bool)))
         (decreases o) =
   match o with
   | None -> None
@@ -217,7 +217,7 @@ and denote_ret (o:option match_returns_ascription)
   | Some (b, (Inr c, tacopt, eq)) ->
     Some (denote_binder b, (Inr (denote_comp c), denote_opt_term tacopt, eq))
 
-and denote_branches (brs:list branch) : Tot (list (pattern_spec & term_spec)) (decreases brs) =
+and denote_branches (brs:list branch) : GTot (list (pattern_spec & term_spec)) (decreases brs) =
   match brs with
   | [] -> []
   | (p,t)::brs -> (denote_pattern p, denote_term t) :: denote_branches brs
@@ -232,7 +232,7 @@ and denote_pattern (p:pattern) : Tot pattern_spec (decreases p) =
   | Pat_Var _ _ -> Ps_Var
   | Pat_Dot_Term o -> Ps_Dot_Term (denote_opt_term o)
 
-and denote_subpats (ps:list (pattern & bool)) : Tot (list (pattern_spec & bool)) (decreases ps) =
+and denote_subpats (ps:list (pattern & bool)) : GTot (list (pattern_spec & bool)) (decreases ps) =
   match ps with
   | [] -> []
   | (p,b)::ps -> (denote_pattern p, b) :: denote_subpats ps
@@ -304,6 +304,7 @@ let denote_pack_match (sc:term) (ret:option match_returns_ascription) (brs:list 
    [aqualv] (it keeps [snd argv]) nor into a binder's qualifier, so the
    spec mirror leaves [aqualv_spec] and the [qual] field untouched. *)
 
+[@@erasable]
 noeq
 type subst_spec_elt =
   | DTs : nat -> term_spec -> subst_spec_elt
@@ -315,9 +316,9 @@ let shift_subst_spec_elt (n:nat) = function
   | NTs x t -> NTs x t
   | NDs x i -> NDs x (i + n)
 
-let subst_spec = list subst_spec_elt
+let subst_spec = Ghost.erased (list subst_spec_elt)
 
-let shift_subst_spec_n (n:nat) = L.map (shift_subst_spec_elt n)
+let shift_subst_spec_n (n:nat) (s:subst_spec) : subst_spec = L.map (shift_subst_spec_elt n) s
 
 let shift_subst_spec = shift_subst_spec_n 1
 
@@ -326,7 +327,7 @@ let maybe_uniq_of_spec (ts:term_spec) : GTot (option nat) =
   | Ts_Var k -> Some k
   | _ -> None
 
-let rec find_matching_subst_spec_elt_bv (s:subst_spec) (i:nat) : option subst_spec_elt =
+let rec find_matching_subst_spec_elt_bv (s:subst_spec) (i:nat) : GTot (option subst_spec_elt) =
   match s with
   | [] -> None
   | (DTs j t)::ss ->
@@ -341,7 +342,7 @@ let subst_db_spec (i:nat) (s:subst_spec) : GTot term_spec =
      | Some k -> Ts_Var k)
   | _ -> Ts_BVar i
 
-let rec find_matching_subst_spec_elt_var (s:subst_spec) (uniq:nat) : option subst_spec_elt =
+let rec find_matching_subst_spec_elt_var (s:subst_spec) (uniq:nat) : GTot (option subst_spec_elt) =
   match s with
   | [] -> None
   | (NTs y _)::rest
