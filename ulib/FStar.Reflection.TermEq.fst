@@ -432,7 +432,7 @@ let bridge_ret (o1 o2 : option match_returns_ascription)
     | _ -> ()
 
 (* The [option (list universe)] that appears in [Pat_Cons]. *)
-let denote_pat_univs (o : option (list universe)) : option (list universe_spec) =
+let denote_pat_univs (o : option (list universe)) : GTot (option (list universe_spec)) =
   match o with
   | None -> None
   | Some us -> Some (denote_universes us)
@@ -444,7 +444,7 @@ let bridge_pat_univs (o1 o2 : option (list universe))
     | _ -> ()
 
 (* The [either term comp] under a match ascription. *)
-let denote_either (tc : either term comp) : either term_spec comp_spec =
+let denote_either (tc : either term comp) : GTot (either term_spec comp_spec) =
   match tc with
   | Inl t -> Inl (denote_term t)
   | Inr c -> Inr (denote_comp c)
