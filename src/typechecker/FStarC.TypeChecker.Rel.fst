@@ -2674,6 +2674,31 @@ let solve_rigid_flex_or_flex_rigid_subtyping
 
            | _ -> false)
       in
+      (* A flex variable that is going to be solved by typeclass resolution is
+         widened (its refinements dropped) only when we solve it from its lower
+         bounds; from an upper bound we would pick the refined expected type,
+         which no instance matches.  With the unary application representation
+         tc_app no longer solves the deferred constraints between two arguments,
+         so such a variable can reach here with both a lower bound (from an
+         earlier argument) and an upper bound (from the expected type), and
+         Flex_rigid outranks Rigid_flex.  Defer, so the lower bounds win. *)
+      let has_lower_bound () : ML bool =
+          flip
+       && has_typeclass_constraint ctx_uvar wl
+       && wl.attempting |> BU.for_some
+            (function
+             | TProb tp ->
+               let tp = maybe_invert tp in
+               (match tp.rank with
+                | Some Rigid_flex -> equiv tp.rhs
+                | _ -> false)
+             | _ -> false)
+      in
+      if has_lower_bound ()
+      then solve (defer_lit Deferred_flex
+                    "solving a typeclass variable from its lower bounds first"
+                    (TProb tp) wl)
+      else
       let bounds_typs =
           whnf env this_rigid
           :: List.collect (function

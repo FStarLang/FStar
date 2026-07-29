@@ -214,7 +214,12 @@ let extract_let_rec_annotation env (lb:letbinding) :
             text "Recursive functions must be introduced at arrow types.";
         ]
   in
-  let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt =
+  (* [n_opt], when given, is the arity the definition is written at, i.e. the
+     number of binders of its outermost lambda. It cannot be recovered from
+     [tarr] alone: the arrow node is unary, so a definition ascribed
+     [Tot (int -> int)] is indistinguishable from one ascribed [int -> int],
+     while [annot] may stop earlier because it carries a decreases clause. *)
+  let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (n_opt:option int) =
       let get_decreases c =
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
@@ -231,7 +236,11 @@ let extract_let_rec_annotation env (lb:letbinding) :
         fallback()
 
       | Some annot ->
-        let bs, c = un_arrow tarr in
+        let bs, c =
+          match n_opt with
+          | Some n -> N.get_n_binders env n tarr
+          | None -> un_arrow tarr
+        in
         let n_bs = List.length bs in
         let bs', c' = N.get_n_binders env n_bs annot in
         if List.length bs' <> n_bs
@@ -276,7 +285,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
 
           | Tm_ascribed {tm=e'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
             if U.is_total_comp c
-            then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
+            then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt None in
                  let e = { e with n = Tm_ascribed {tm=e';
                                                    asc=(Inr (S.mk_Total t), tac_opt, use_eq);
                                                    eff_opt=lopt} } in
@@ -287,7 +296,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
                    ]
 
           | Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} ->
-            let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
+            let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt None in
             let e = { e with n = Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} } in
             lbtyp, e, recheck
 
@@ -328,8 +337,9 @@ let extract_let_rec_annotation env (lb:letbinding) :
 
               | Tm_ascribed {tm=body'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
                 let tarr = mk_arrow c in
-                let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
                 let n_bs = List.length bs in
+                let tarr, lbtyp, recheck =
+                  reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (Some n_bs) in
                 let bs', c = N.get_n_binders env n_bs tarr in
                 if List.length bs' <> n_bs
                 then failwith "Impossible"
