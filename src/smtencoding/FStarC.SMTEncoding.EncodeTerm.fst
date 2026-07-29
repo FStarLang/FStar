@@ -1293,13 +1293,12 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 let all_args = fuel_args@univs@args in
                 if List.length all_args < arity
                 then
-                  (* The head's declared SMT arity comes from the arrow *node*
-                     of its fully normalized type. A term whose arrow was not
-                     built as one node -- e.g. one a tactic assembled with
-                     [pack_ln (Tv_Arrow ..)], which cannot set [more] -- can
-                     present fewer arguments than that arity. Fall back to a
-                     curried application through the token, which is sound
-                     (if less complete) rather than crashing. *)
+                  (* The head's declared SMT arity comes from the arrow spine
+                     of its fully normalized type, or from an [smt_arity]
+                     attribute, so an application can legitimately present
+                     fewer arguments than that arity. Fall back to a curried
+                     application through the token, which is sound (if less
+                     complete) rather than crashing. *)
                   encode_partial_app None
                 else
                   let tm = maybe_curry_app t0.pos fname arity all_args in
@@ -1344,10 +1343,22 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                             (show args_e);
 
                 begin
+                (* [formals] is derived from the head's type, whose arrow spine need
+                   not match the arity the symbol was declared with (a projector of
+                   a function-typed field, say).  The declared arity is what the
+                   symbol's axioms are stated at, so accept it too. *)
+                let declared_arity_matches (l:lident) =
+                  match FStarC.SMTEncoding.Env.lookup_fvar_binding env l with
+                  | Some fvb -> fvb.smt_arity = List.length args
+                  | None -> false
+                in
                 match head.n with
-                | Tm_uinst({n=Tm_fvar fv}, us) when (List.length formals = List.length args) ->
+                | Tm_uinst({n=Tm_fvar fv}, us)
+                    when (List.length formals = List.length args
+                          || declared_arity_matches fv.fv_name) ->
                   encode_full_app fv.fv_name (List.map encode_universe us)
-                | Tm_fvar fv when (List.length formals = List.length args) ->
+                | Tm_fvar fv when (List.length formals = List.length args
+                                   || declared_arity_matches fv.fv_name) ->
                   encode_full_app fv.fv_name []
                 | _ ->
                     if List.length formals > List.length args

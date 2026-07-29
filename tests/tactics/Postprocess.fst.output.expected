@@ -350,10 +350,10 @@ visible (Discriminator C1) let  uu___is_C1  : (projectee:t1 -> Tot bool) = (fun 
 	| (C1 _0#152)  -> true
 	|uu___#154  -> false))
 [@ (Substitute); (projector)]
-(Projector C1 _0) val Postprocess.__proj__C1__item___0  : (projectee:(uu___#23:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t1))
+(Projector C1 _0) val Postprocess.__proj__C1__item___0  : (projectee:(uu___#23:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> uu___:int -> Tot t1)
 [@ (Substitute); (projector)]
-visible (Projector C1 _0) let  __proj__C1__item___0  : (projectee:(uu___#23:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t1)) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t1) with
-	| (C1 _0#228)  -> _0@0:(Tm_unknown)))
+visible (Projector C1 _0) let  __proj__C1__item___0  : (projectee:(uu___#23:t1{(b2t (uu___is_C1 uu___@0:(Tm_unknown)))}) -> uu___:int -> Tot t1) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t1) with
+	| (C1 _0#230)  -> _0@0:(Tm_unknown)))
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t2  : Type
@@ -387,10 +387,10 @@ visible (Discriminator C2) let  uu___is_C2  : (projectee:t2 -> Tot bool) = (fun 
 	| (C2 _0#152)  -> true
 	|uu___#154  -> false))
 [@ (Substitute); (projector)]
-(Projector C2 _0) val Postprocess.__proj__C2__item___0  : (projectee:(uu___#23:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t2))
+(Projector C2 _0) val Postprocess.__proj__C2__item___0  : (projectee:(uu___#23:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> uu___:int -> Tot t2)
 [@ (Substitute); (projector)]
-visible (Projector C2 _0) let  __proj__C2__item___0  : (projectee:(uu___#23:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> Tot (uu___:int -> Tot t2)) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t2) with
-	| (C2 _0#228)  -> _0@0:(Tm_unknown)))
+visible (Projector C2 _0) let  __proj__C2__item___0  : (projectee:(uu___#23:t2{(b2t (uu___is_C2 uu___@0:(Tm_unknown)))}) -> uu___:int -> Tot t2) = (fun projectee -> (match projectee@0:(Tm_unknown) as proj_ret returns$ (uu___:int -> Tot t2) with
+	| (C2 _0#230)  -> _0@0:(Tm_unknown)))
 [@ ]
 visible let rec lift  : (uu___:t1 -> Tot t2) = (fun uu___1 -> (match uu___1@0:(Tm_unknown) with
 	| (A1 )  -> A2

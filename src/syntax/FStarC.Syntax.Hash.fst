@@ -113,7 +113,7 @@ and hash_term' (t:term)
                                         (mix (hash_binder b)
                                                     (mix (hash_term t)
                                                                 (hash_option hash_rc rcopt)))
-    | Tm_arrow {b; comp=c; more} -> mix (of_int 23) (mix (hash_bool more) (mix (hash_binder b) (hash_comp c)))
+    | Tm_arrow {b; comp=c} -> mix (of_int 23) (mix (hash_binder b) (hash_comp c))
     | Tm_refine {b; phi=t} -> mix (of_int 29) (mix (hash_bv b) (hash_term t))
     | Tm_app _ ->
       let hd, args = FStarC.Syntax.Util.head_and_args_full t in
@@ -428,8 +428,7 @@ let rec equal_term (t1 t2:term)
       equal_binder b1 b2 &&
       equal_term t1 t2 &&
       equal_opt equal_rc rc1 rc2
-    | Tm_arrow {b=b1; comp=c1; more=m1}, Tm_arrow {b=b2; comp=c2; more=m2} ->
-      m1 = m2 &&
+    | Tm_arrow {b=b1; comp=c1}, Tm_arrow {b=b2; comp=c2} ->
       equal_binder b1 b2 &&
       equal_comp c1 c2
     | Tm_refine {b=b1; phi=t1}, Tm_refine {b=b2; phi=t2} ->

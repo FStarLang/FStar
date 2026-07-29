@@ -165,7 +165,7 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
   : ML term 
   = let rec aux t args : ML _ =
         match U.arrow_one_ln t, args with
-        | _, [] -> U.canon_arrow t
+        | _, [] -> t
         | Some (b, c), a::args ->
           let tail = 
             U.comp_result c

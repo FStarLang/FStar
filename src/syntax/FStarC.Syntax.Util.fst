@@ -105,7 +105,7 @@ let name_binders binders =
    the unary representation the spine is what used to be a single n-ary node,
    so the index must be threaded through the recursion. *)
 let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
-    | Tm_arrow {b; comp; more} ->
+    | Tm_arrow {b; comp} ->
       let b =
         if is_null_binder b
         then { b with binder_bv = {ppname=id_of_text ("_" ^ show i); index=0; sort=b.binder_bv.sort} }
@@ -116,7 +116,7 @@ let rec name_function_binders_from (i:int) (t:term) : ML term = match t.n with
         | Total res -> { comp with n = Total (name_function_binders_from (i+1) res) }
         | _ -> comp
       in
-      mk (Tm_arrow {b; comp; more}) t.pos
+      mk (Tm_arrow {b; comp}) t.pos
     | _ -> t
 
 let name_function_binders t = name_function_binders_from 0 t
@@ -343,15 +343,14 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_or_ghost_effect l = is_pure_effect l || is_ghost_effect l
 
-(* Walks to the end of the arrow *node*, i.e. through the synthetic Tot comps
-   introduced by the unary representation only. [x:t -> y:s -> Div r] is not a
-   pure or ghost function; [x:t -> Tot (y:s -> Div r)] is. This matches the
-   pre-unary n-ary behavior. *)
+(* Walks to the end of the arrow spine: [x:t -> y:s -> Div r] is not a pure or
+   ghost function. Since the node is unary, that arrow *is* [x:t -> Tot (y:s ->
+   Div r)], so the intermediate [Tot]s have to be looked through. *)
 let rec is_pure_or_ghost_function t = match (compress t).n with
-    | Tm_arrow {comp=c; more} ->
+    | Tm_arrow {comp=c} ->
       (* [comp_result] is not in scope yet. *)
-      (match more, c.n with
-       | true, Total res -> is_pure_or_ghost_function res
+      (match c.n with
+       | Total res when Tm_arrow? (compress res).n -> is_pure_or_ghost_function res
        | _ -> is_pure_or_ghost_comp c)
     | _ -> true
 
@@ -700,46 +699,15 @@ let abs bs t lopt =
     let lopt = if Tm_abs? body.n then None else close_lopt lopt in
     mk_Tm_abs (close_binders bs) body lopt t.pos
 
-let arrow_ln_more bs c more = match bs with
+let arrow_ln bs c = match bs with
   | [] -> comp_result c
-  | _ -> mk_Tm_arrow_more bs c more
+  | _ -> mk_Tm_arrow bs c
             (List.fold_left (fun a b -> Range.union_ranges a b.binder_bv.sort.pos) c.pos bs)
 
-let arrow_ln bs c = arrow_ln_more bs c false
-
-let arrow_more bs c more =
+let arrow bs c =
   let c = Subst.close_comp bs c in
   let bs = close_binders bs in
-  arrow_ln_more bs c more
-
-let arrow bs c = arrow_more bs c false
-
-(* Now that the arrow node is unary, an arrow spine is inherently "flat": the
-   n-ary reading of [x:t -> Tot (y:s -> C)] and [x:t -> y:s -> C] is the same
-   term. This is kept as an alias so callers need not change. *)
-(* True when [c] is a Tot whose result is an arrow, i.e. when an arrow ending in
-   [c] can be merged with it into a single node. *)
-let comp_continues_arrow (c:comp) : ML bool =
-  match c.n with
-  | Total tres -> Tm_arrow? (Subst.compress tres).n
-  | _ -> false
-
-(* Builds the arrow as a single node together with the arrow inside [c], if any:
-   the result reads as [bs @ bs'] rather than [bs] followed by a nested arrow. *)
-let flat_arrow bs c = arrow_more bs c (comp_continues_arrow c)
-
-(* Merges the whole spine into a single node. *)
-let rec canon_arrow t =
-  match (compress t).n with
-  | Tm_arrow {b; comp=c} ->
-      let cn = match c.n with
-               | Total t -> Total (canon_arrow t)
-               | _ -> c.n
-      in
-      let c = { c with n = cn } in
-      (* [b] is already closed, so do not go through [arrow]. *)
-      mk (Tm_arrow {b; comp=c; more=comp_continues_arrow c}) t.pos
-  | _ -> t
+  arrow_ln bs c
 
 let refine b t = mk (Tm_refine {b; phi=Subst.close [mk_binder b] t}) (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
@@ -779,16 +747,14 @@ let rec arrow_formals_comp_ln (k:term) =
           aux s k
         | _ -> [], Syntax.mk_Total k
 
-(* Destructs one arrow *node*: the maximal spine of arrows linked by the [more]
-   marker, i.e. exactly the binders that were written (or built) as a single
-   n-ary arrow before the representation was made unary. This does not flatten a
-   user-written intermediate [Tot], and never descends into a refinement, so it
-   is the faithful reading of what used to be a single [Tm_arrow] match. The
-   grouping is observable: the SMT encoding derives a symbol's arity from it. *)
+(* Destructs the arrow spine: every binder reachable through total comps
+   without a decreases clause. Unlike [arrow_formals_comp_ln] it never descends
+   into a refinement (which would drop its predicate), so it is the faithful
+   reading of what used to be a single [Tm_arrow] match. *)
 let rec arrow_node_formals_comp_ln (k:term) : ML (binders & comp) =
     match (Subst.compress k).n with
-    | Tm_arrow {b; comp; more} ->
-      if more
+    | Tm_arrow {b; comp} ->
+      if is_total_comp comp && not (has_decreases comp) && Tm_arrow? (Subst.compress (comp_result comp)).n
       then let bs, c = arrow_node_formals_comp_ln (comp_result comp) in
            b::bs, c
       else [b], comp

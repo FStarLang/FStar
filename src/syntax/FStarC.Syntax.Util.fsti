@@ -259,17 +259,11 @@ val abs_ln (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
 val abs (bs:binders) (t:term) (lopt:option residual_comp) : ML term
 
-(* [arrow_more bs c true] marks the arrow as continuing into the arrow inside
-   [c], i.e. as having been one n-ary arrow node before the representation was
-   made unary. Use when rebuilding a node destructed by
-   [arrow_node_formals_comp] or by a single [Tm_arrow] match. *)
-val arrow_ln_more (bs:binders) (c:comp) (more:bool) : ML term
+(* [arrow bs c] builds the arrow [bs -> c]; since the node is unary this is a
+   spine of one arrow per binder, linked by synthetic [Tot] comps.
+   [arrow_ln] is the variant for already-closed binders. *)
 val arrow_ln (bs:binders) (c:comp) : ML term
-val arrow_more (bs:binders) (c:comp) (more:bool) : ML term
 val arrow (bs:binders) (c:comp) : ML term
-val flat_arrow (bs:binders) (c:comp) : ML term
-
-val canon_arrow (t:term) : ML term
 
 val refine (b:bv) (t:term) : ML term
 val branch (b:branch) : ML branch // awful name

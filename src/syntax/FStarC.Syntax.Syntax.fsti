@@ -134,14 +134,7 @@ type term' =
     }
   | Tm_arrow      {  (* (x:t) -> M t' wp *)
       b:binder;
-      comp:comp;
-      (* [more] records that this arrow and the arrow inside [comp] were written
-         as a single arrow, i.e. that [comp] is a synthetic [Tot] introduced only
-         to make the node unary. It is an annotation, not structure: it never
-         changes what the type means, but it preserves the grouping that the SMT
-         encoding uses to pick a symbol's arity. When [more] is true, [comp] is
-         always [Total t] with [t] an arrow. *)
-      more:bool
+      comp:comp
     }
   | Tm_refine     {  (* x:t{phi} *)
       b:bv;
@@ -798,11 +791,6 @@ val mk_Tm_app:      term -> args -> range -> ML term
    These do not close anything; see FStarC.Syntax.Util.abs / arrow for the
    variants that close their binders. *)
 val mk_Tm_abs:      binders -> term -> option residual_comp -> range -> ML term
-(* Like [mk_Tm_arrow], but marks the innermost arrow as continuing into the
-   arrow inside [c]. Use it when rebuilding an arrow that was destructed with
-   [Util.arrow_node_formals_comp] or by matching a single [Tm_arrow], so that
-   the node grouping survives. *)
-val mk_Tm_arrow_more: binders -> comp -> bool -> range -> ML term
 val mk_Tm_arrow:    binders -> comp -> range -> ML term
 
 (* This raises an exception if the term is not a Tm_fvar,

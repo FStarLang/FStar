@@ -370,7 +370,7 @@ let pack_ln (tv:term_view) : ML term =
         mk (Tm_abs {b; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow {b; comp=c; more=false}) c.pos
+        mk (Tm_arrow {b; comp=c}) c.pos
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange

@@ -424,8 +424,8 @@ let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
         let s' = shift_subst' 1 s in
         mk (Tm_abs {b=subst_binder' s b; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
 
-    | Tm_arrow {b; comp; more} ->
-        mk (Tm_arrow {b=subst_binder' s b; comp=subst_comp' (shift_subst' 1 s) comp; more})
+    | Tm_arrow {b; comp} ->
+        mk (Tm_arrow {b=subst_binder' s b; comp=subst_comp' (shift_subst' 1 s) comp})
 
     | Tm_refine {b=x; phi} ->
         let x = {x with sort=subst' s x.sort} in

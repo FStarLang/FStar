@@ -237,7 +237,6 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
 
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
-            let t = U.canon_arrow t in
             match (SS.compress t).n with
                 | Tm_arrow _ ->
                   let bs, res = U.arrow_formals_comp_ln_strict t in

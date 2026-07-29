@@ -263,19 +263,17 @@ let rec mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
 (* An arrow with no binders is degenerate and unrepresentable now that the node
    is unary. It only ever made sense for a Tot computation, where it denotes the
    result type itself. *)
-let rec mk_Tm_arrow_more (bs:binders) (c:comp) (more:bool) p =
+let rec mk_Tm_arrow (bs:binders) (c:comp) p =
     match bs with
     | [] ->
       begin match c.n with
       | Total t -> t
       | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
       end
-    | [b] -> mk (Tm_arrow {b; comp=c; more}) p
+    | [b] -> mk (Tm_arrow {b; comp=c}) p
     | b::bs ->
-      let tail = mk_Tm_arrow_more bs c more p in
-      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos; more=true}) p
-
-let mk_Tm_arrow (bs:binders) (c:comp) p = mk_Tm_arrow_more bs c false p
+      let tail = mk_Tm_arrow bs c p in
+      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos}) p
 
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with

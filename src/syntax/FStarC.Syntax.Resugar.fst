@@ -435,7 +435,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
 
     | Tm_arrow _ ->
       (* Flatten the arrow *)
-      let xs, body = U.arrow_formals_comp_ln_strict (U.canon_arrow t) in
+      let xs, body = U.arrow_formals_comp_ln_strict t in
       let xs, body = SS.open_comp xs body in
       let xs = filter_imp_bs xs in
       let body = resugar_comp' env body in

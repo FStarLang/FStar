@@ -70,6 +70,10 @@ let feq (#a: Type) (#b: (a -> Type)) (f g: arrow a b) = forall x. {:pattern (f x
         will be exercised as part of cross-module inlining across
         interface boundaries)
 *)
+(* [on_domain a f] is habitually applied to just [a] and [f] — [feq_on_domain]
+   below even has an SMT pattern on that partial application — so its arity must
+   not be read off its type, whose codomain is an arrow. *)
+[@@FStar.Attributes.smt_arity 3]
 inline_for_extraction
 val on_domain (a: Type) (#b: (a -> Type)) ([@@@strictly_positive] f: arrow a b) : Tot (arrow a b)
 
@@ -147,6 +151,7 @@ let feq_g (#a: Type) (#b: (a -> Type)) (f g: arrow_g a b) =
   forall x. {:pattern (f x)\/(g x)} f x == g x
 
 (** The counterpart of [on_domain] for ghost functions *)
+[@@FStar.Attributes.smt_arity 3]
 val on_domain_g (a: Type) (#b: (a -> Type)) (f: arrow_g a b) : Tot (arrow_g a b)
 
 (** [on_domain_g a f] is pointwise equal to [f] *)

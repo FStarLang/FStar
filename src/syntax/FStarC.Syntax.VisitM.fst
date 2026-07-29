@@ -156,10 +156,10 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : ML (m term) =
     let! rc_opt = map_optM f_residual_comp rc_opt in
     return <| mk (Tm_abs {b; body=t; rc_opt})
 
-  | Tm_arrow {b; comp=c; more} ->
+  | Tm_arrow {b; comp=c} ->
     let! b     = f_binder b in
     let! c     = f_comp c in
-    return <| mk (Tm_arrow {b; comp=c; more})
+    return <| mk (Tm_arrow {b; comp=c})
 
   | Tm_refine {b=bv; phi} ->
     let! bv    = f_binding_bv bv in

@@ -78,6 +78,9 @@ noeq
 type coprod (f g: ([@@@strictly_positive]Type -> Type)) ([@@@strictly_positive]a:Type) =
   | Inl of f a
   | Inr of g a
+(* Pin the SMT arity: these are habitually used partially applied, and their
+   result type is itself a function. *)
+[@@FStar.Attributes.smt_arity 2]
 let ( ++ ) f g = coprod f g
 //SNIPPET_END: coprod$
 
@@ -150,10 +153,14 @@ instance leq_cong_right
 
 //SNIPPET_START: inject project$
 let compose (#a #b #c:Type) (f:b -> c) (g: a -> b) (x:a) : c = f (g x)
+(* Pin the SMT arity: these are habitually used partially applied, and their
+   result type is itself a function. *)
+[@@FStar.Attributes.smt_arity 3]
 let inject #f #g {| gf: leq g f |}
 : g (expr f) -> expr f 
 = compose In gf.inj
 
+[@@FStar.Attributes.smt_arity 3]
 let project #g #f {| gf: leq g f |}
 : x:expr f -> option (g (expr f)) 
 = fun (In x) -> gf.proj x

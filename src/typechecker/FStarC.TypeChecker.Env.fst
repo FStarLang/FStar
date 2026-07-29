@@ -655,13 +655,13 @@ let try_lookup_lid_aux us_opt env lid : ML _ =
     | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, None) ->
       begin match tps with
         | [] -> Some (inst_tscheme (uvs, k), rng)
-        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
+        | _ ->  Some (inst_tscheme (uvs, U.arrow tps (mk_Total k)), rng)
       end
 
     | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, Some us) ->
       begin match tps with
         | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
+        | _ ->  Some (inst_tscheme_with (uvs, U.arrow tps (mk_Total k)) us, rng)
       end
 
     | Inr se ->

@@ -50,10 +50,10 @@ let rec inst (s:term -> fv -> ML term) t : ML term =
         let body = inst s body in
         mk (Tm_abs {b; body; rc_opt=inst_lcomp_opt s lopt})
 
-      | Tm_arrow {b; comp=c; more} ->
+      | Tm_arrow {b; comp=c} ->
         let b = List.hd (inst_binders s [b]) in
         let c = inst_comp s c in
-        mk (Tm_arrow {b; comp=c; more})
+        mk (Tm_arrow {b; comp=c})
 
       | Tm_refine {b=bv; phi=t} ->
         let bv = {bv with sort=inst s bv.sort} in
