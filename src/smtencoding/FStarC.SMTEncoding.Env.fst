@@ -27,6 +27,7 @@ open FStarC.Ident
 open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
+module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 
 open FStarC.Class.Show
@@ -48,8 +49,8 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (Format.fmt2 "Projector %s on data constructor %s not found" (show i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow {bs; comp=c} ->
-          let binders, _ = SS.open_comp bs c in
+        | Tm_arrow _ ->
+          let binders, _ = U.arrow_node_formals_comp t in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in

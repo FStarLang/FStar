@@ -22,7 +22,7 @@
   - VC = forall (i: Prims.int). i >= 0
   - See also Prims.fst(642,18-642,24)
 
-* Info at Bug100.fst(23,11-23,17):
+* Info at Bug100.fst(23,11-23,27):
   - Expected failure:
   - Ill-typed term
   - Assertion failed

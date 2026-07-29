@@ -207,38 +207,18 @@ let rec inspect_ln (t:term) : ML term_view =
     | Tm_ascribed {tm=t; asc=(Inr cty, tacopt, eq)} ->
         Tv_AscribedC (t, cty, tacopt, eq)
 
-    | Tm_app {args=[]} ->
-        failwith "inspect_ln: empty arguments on Tm_app"
-
-    | Tm_app {hd; args} ->
-        // We split at the last argument, since the term_view does not
-        // expose n-ary lambdas buy unary ones.
-        let (a, q) = last args in
+    | Tm_app {hd; arg=(a, q)} ->
         let q' = inspect_aqual q in
-        Tv_App (U.mk_app hd (init args), (a, q'))
+        Tv_App (hd, (a, q'))
 
-    | Tm_abs {bs=[]} ->
-        failwith "inspect_ln: empty arguments on Tm_abs"
-
-    | Tm_abs {bs=b::bs; body=t; rc_opt=k} ->
-        let body =
-            match bs with
-            | [] -> t
-            | bs -> S.mk (Tm_abs {bs; body=t; rc_opt=k}) t.pos
-        in
+    | Tm_abs {b; body} ->
         Tv_Abs (b, body)
 
     | Tm_type u ->
         Tv_Type u
 
-    | Tm_arrow {bs=[]} ->
-        failwith "inspect_ln: empty binders on arrow"
-
-    | Tm_arrow _ ->
-        begin match U.arrow_one_ln t with
-        | Some (b, c) -> Tv_Arrow (b, c)
-        | None -> failwith "impossible"
-        end
+    | Tm_arrow {b; comp=c} ->
+        Tv_Arrow (b, c)
 
     | Tm_refine {b=bv; phi=t} ->
         Tv_Refine (S.mk_binder bv, t)
@@ -387,10 +367,10 @@ let pack_ln (tv:term_view) : ML term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs {bs=[b]; body=t; rc_opt=None}) t.pos // TODO: effect?
+        mk (Tm_abs {b; body=t; rc_opt=None}) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow {bs=[b]; comp=c}) c.pos
+        mk (Tm_arrow {b; comp=c}) c.pos
 
     | Tv_Type u ->
         mk (Tm_type u) Range.dummyRange

@@ -267,7 +267,7 @@ let is_general_prefix_op op =
   (op_starting_char = '~' && Ident.string_of_id op <> "~")
 
 (* might already exist somewhere *)
-let head_and_args e =
+let head_and_args_full e =
   let rec aux e acc = match e.tm with
   | App (head, arg, imp) -> aux head ((arg,imp)::acc)
   | _ -> e, acc
@@ -2025,7 +2025,7 @@ and p_simpleDef ps lid_e : ML _ =
 
 and p_appTerm e : ML _ = match e.tm with
   | App _ when is_general_application e ->
-      let head, args = head_and_args e in
+      let head, args = head_and_args_full e in
       (match args with
       | [e1; e2] when snd e1 = Infix ->
         p_argTerm e1 ^/^ group (str "`" ^^ (p_indexingTerm head) ^^ str "`") ^/^ p_argTerm e2
@@ -2260,7 +2260,7 @@ and p_universeFrom u : ML _ = match u.tm with
   | Op(id, [u1 ; u2]) when string_of_id id = "+" ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
-    let head, args = head_and_args u in
+    let head, args = head_and_args_full u in
     begin match head.tm with
       | Var maybe_max_lid when lid_equals maybe_max_lid C.max_lid ->
         group (p_qlident C.max_lid ^/+^

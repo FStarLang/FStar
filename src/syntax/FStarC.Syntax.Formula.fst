@@ -113,18 +113,25 @@ let destruct_q_conn t : ML (option connective) =
         let t, args = U.head_and_args_full t in
         U.un_uinst t, args |> List.map (fun (t, imp) -> U.unascribe t, imp)
     in
-    let rec aux qopt out t : ML (option connective) = match qopt, flat t with
-        | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
-        | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
+    let rec aux qopt out t : ML (option connective) =
+      let hd, args = flat t in
+      (* The quantifier body is the last argument, which must be a lambda. *)
+      let body_of_last_abs =
+        match args with
+        | [(a, _)]
+        | [_; (a, _)] -> U.abs_one_ln a
+        | _ -> None
+      in
+      match qopt, hd.n, body_of_last_abs with
+        | Some fa, Tm_fvar tc, Some (b, t2)
             when (is_q fa tc) ->
           aux qopt (b::out) t2
 
-        | None, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
-        | None, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
+        | None, Tm_fvar tc, Some (b, t2)
             when (U.is_qlid tc.fv_name) ->
           aux (Some (U.is_forall tc.fv_name)) (b::out) t2
 
-        | Some b, _ ->
+        | Some b, _, _ ->
           let bs = List.rev out in
           let bs, t = Subst.open_term bs t in
           let pats, body = patterns t in
@@ -160,8 +167,8 @@ and destruct_sq_exists t : ML (option connective) =
     match (U.un_uinst hd).n, args with
     | Tm_fvar fv, [(a1, _); (a2, _)]
         when fv_eq_lid fv PC.lid_dtuple2 ->
-            begin match (SS.compress a2).n with
-            | Tm_abs {bs=[b]; body=q} ->
+            begin match U.abs_one_ln a2 with
+            | Some (b, q) ->
                 let bs, q = SS.open_term [b] q in
                 let b = match bs with // coverage...
                         | [b] -> b

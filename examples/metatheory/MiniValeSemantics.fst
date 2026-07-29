@@ -260,7 +260,9 @@ type with_wps : list code -> Type =
    with_wps cs ->
    with_wps cs
 
-[@@qattr]
+(* The SMT encoding would otherwise pick the arity of the flattened arrow
+   spine (4); the proofs below rely on partial applications of [vc_gen]. *)
+[@@qattr; FStar.Attributes.smt_arity 3]
 let rec vc_gen (cs:list code) (qcs:with_wps cs) (k:t_post)
   : Tot (state -> Tot prop (decreases qcs))
   =

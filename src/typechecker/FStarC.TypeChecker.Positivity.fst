@@ -164,18 +164,16 @@ let normalize env t : ML _ =
 let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
   : ML term 
   = let rec aux t args : ML _ =
-        match (SS.compress t).n, args with
-        | _, [] -> U.canon_arrow t
-        | Tm_arrow {bs=b::bs; comp=c}, a::args ->
+        match U.arrow_one_ln t, args with
+        | _, [] -> t
+        | Some (b, c), a::args ->
           let tail = 
-            match bs with
-            | [] -> U.comp_result c
-            | _ -> S.mk (Tm_arrow {bs; comp=c}) t.pos
+            U.comp_result c
           in
           let b, tail = SS.open_term_1 b tail in
           let tail = SS.subst [NT(b.binder_bv, fst a)] tail in
           aux tail args
-        | _ ->
+        | None, _ ->
           raise_error 
              (Ident.range_of_lid dlid)
              Errors.Error_InductiveTypeNotSatisfyPositivityCondition
@@ -306,7 +304,7 @@ let max_uniformly_recursive_parameters (env:env_t)
               (let _, f = SS.open_term [S.mk_binder x] f in
                aux f)
         | Tm_app _ ->
-          let head, args = U.head_and_args ty in
+          let head, args = U.head_and_args_full ty in
           begin
           match (U.un_uinst head).n with
           | Tm_fvar fv ->
@@ -454,7 +452,7 @@ let may_be_an_arity env (t:term)
       | Tm_fvar _
       | Tm_uinst _
       | Tm_app _ -> (
-        let head, args = U.head_and_args t in
+        let head, args = U.head_and_args_full t in
         match (U.un_uinst head).n with
         | Tm_fvar fv ->
           (match Env.lookup_sigelt env fv.fv_name with
@@ -527,7 +525,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) : ML _ =
        type of their third argument
    *)
    let fext_on_domain_index_sub_term index =
-     let head, args = U.head_and_args index in
+     let head, args = U.head_and_args_full index in
      match (U.un_uinst head).n, args with
      | Tm_fvar fv, [_td; _tr; (f, _)] -> 
        if S.fv_eq_lid fv C.fext_on_domain_lid 
@@ -551,7 +549,7 @@ let check_no_index_occurrences_in_arities env mutuals (t:term) : ML _ =
   let no_occurrence_in_indexes fv mutuals (indexes:list arg) =
       L.iter (no_occurrence_in_index fv mutuals) indexes
   in
-  let head, args = U.head_and_args t in
+  let head, args = U.head_and_args_full t in
   match (U.un_uinst head).n with
   | Tm_fvar fv -> 
     begin
@@ -626,13 +624,14 @@ let mutuals_unused_in_type (mutuals:list lident) t : ML _ =
      | Tm_uinst _ ->
       //in these cases, fv_lid is used in t
        false
-     | Tm_abs {bs; body=t} ->
-       binders_ok bs && ok t
-     | Tm_arrow {bs; comp=c} ->
-       binders_ok bs && ok_comp c
+     | Tm_abs {b; body=t} ->
+       binders_ok [b] && ok t
+     | Tm_arrow {b; comp=c} ->
+       binders_ok [b] && ok_comp c
      | Tm_refine {b=bv; phi=t} ->
        ok bv.sort && ok t
-     | Tm_app {hd=head; args} ->
+     | Tm_app _ ->
+       let head, args = U.head_and_args_full t in
        if mutuals_occur_in head
        then false
        else L.for_all
@@ -853,8 +852,9 @@ let rec ty_strictly_positive_in_type (env:env)
           end
      end
 
-   | Tm_arrow {comp=c} ->  //in_type is an arrow
+   | Tm_arrow _ ->  //in_type is an arrow
      debug_positivity env (fun () -> "Checking strict positivity in Tm_arrow");
+     let c = snd (U.arrow_formals_comp_ln_strict in_type) in
      let check_comp =
        U.is_pure_or_ghost_comp c ||
        (c |> U.comp_effect_name

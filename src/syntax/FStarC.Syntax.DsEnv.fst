@@ -1547,7 +1547,7 @@ let finish env modul : ML _ =
                   SMap.remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type
-                       let sigel = Sig_declare_typ {lid;us=univ_names;t=S.mk (Tm_arrow {bs=binders; comp=S.mk_Total typ}) (Ident.range_of_lid lid)} in
+                       let sigel = Sig_declare_typ {lid;us=univ_names;t=S.mk_Tm_arrow binders (S.mk_Total typ) (Ident.range_of_lid lid)} in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
                        SMap.add (sigmap env) (string_of_lid lid) (se, false)
                 | _ -> ())

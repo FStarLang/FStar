@@ -267,7 +267,7 @@ let op_as_term env arity op : ML (option S.term) =
   | Some t -> Some t
   | _ -> fallback()
 
-let head_and_args t =
+let head_and_args_full t =
     let rec aux args t : ML _ = match (unparen t).tm with
         | App(t, arg, imp) -> aux ((arg,imp)::args) t
         | Construct(l, args') -> {tm=Name l; range=t.range; level=t.level}, args'@args
@@ -934,7 +934,7 @@ and desugar_machine_integer env repr (_sw_:(FStarC.Const.signedness & FStarC.Con
       raise_error range Errors.Fatal_UnexpectedNumericLiteral
         (Format.fmt1 "Unexpected numeric literal.  Restart F* to load %s." tnm) in
   let repr' = S.mk (Tm_constant (Const_int (repr, None))) range in
-  let app = S.mk (Tm_app {hd=lid; args=[repr', S.as_aqual_implicit false]}) range in
+  let app = S.mk_Tm_app lid [repr', S.as_aqual_implicit false] range in
   S.mk (Tm_meta {tm=app;
                  meta=Meta_desugared (Machine_integer (signedness, width))}) range
 
@@ -1012,7 +1012,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
             if Cons? args then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
                                                          (t', None), s) |> List.unzip in
-              mk (Tm_app {hd=op; args}), join_aqs aqs
+              S.mk_Tm_app op args top.range, join_aqs aqs
             else
               op, noaqs
       end
@@ -1089,7 +1089,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                 let tm =
                   if Nil? args
                   then head
-                  else mk (Tm_app {hd=head; args}) in
+                  else S.mk_Tm_app head args top.range in
                 tm, join_aqs aqs
             end
         | None ->
@@ -1116,7 +1116,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         List.unzip
       in
       let tup = fail_or env (Env.try_lookup_lid env) (C.mk_tuple_lid (List.length targs) top.range) in
-      mk (Tm_app {hd=tup; args=targs}), join_aqs aqs
+      S.mk_Tm_app tup targs top.range, join_aqs aqs
 
     | Sum(binders, t) -> //dependent tuple
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
@@ -1134,7 +1134,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
         (env, [], [])
         (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
       let tup = fail_or env (try_lookup_lid env) (C.mk_dtuple_lid (List.length targs) top.range) in
-      mk <| Tm_app {hd=tup; args=targs}, noaqs
+      S.mk_Tm_app tup targs top.range, noaqs
 
     | Product(binders, t) ->
       let bs, t = uncurry binders t in
@@ -1250,14 +1250,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
                           match sc.n, p'.v with
                           | Tm_name _, _ ->
                             let tup2 = S.lid_and_dd_as_fv (C.mk_tuple_data_lid 2 top.range) (Some Data_ctor) in
-                            let sc = S.mk (Tm_app {hd=mk (Tm_fvar tup2);
-                                                   args=[as_arg sc; as_arg <| S.bv_to_name x]}) top.range in
+                            let sc = S.mk_Tm_app (mk (Tm_fvar tup2))
+                                                 [as_arg sc; as_arg <| S.bv_to_name x] top.range in
                             let p = withinfo (Pat_cons(tup2, None, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
-                          | Tm_app {args}, Pat_cons(_, _, pats) ->
+                          | Tm_app _, Pat_cons(_, _, pats) ->
+                            let _, args = U.head_and_args_full sc in
                             let tupn = S.lid_and_dd_as_fv (C.mk_tuple_data_lid (1 + List.length args) top.range) (Some Data_ctor) in
-                            let sc = mk (Tm_app {hd=mk (Tm_fvar tupn);
-                                                 args=args@[as_arg <| S.bv_to_name x]}) in
+                            let sc = S.mk_Tm_app (mk (Tm_fvar tupn))
+                                                 (args@[as_arg <| S.bv_to_name x]) top.range in
                             let p = withinfo (Pat_cons(tupn, None, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | _ -> failwith "Impossible"
@@ -1706,7 +1707,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : ML (S.term 
       in
       //The fvar at the head of the term just records the fieldname that the user wrote
       //and in TcTerm, we use that field name combined with type info to disambiguate
-      mk <| Tm_app {hd=head; args=[as_arg e]}, s
+      S.mk_Tm_app head [as_arg e] top.range, s
 
     | NamedTyp(n, e) ->
       (* See issue #1905 *)
@@ -2178,7 +2179,7 @@ and desugar_comp r (allow_type_promotion:bool) env t : ML _ =
       | _ -> false
     in
     let pre_process_comp_typ (t:AST.term) =
-      let head, args = head_and_args t in
+      let head, args = head_and_args_full t in
       match head.tm with
       | Name lemma when ((string_of_id (ident_of_lid lemma)) = "Lemma") ->
         (* need to add the unit result type and the empty smt_pat list, if n *)
@@ -2419,8 +2420,7 @@ and desugar_formula env (f:term) : ML S.term =
         let body = desugar_formula env body in
         let body = with_pats env pats body in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app {hd=q_head;
-                      args=[as_arg body]}
+        S.mk_Tm_app q_head [as_arg body] f.range
 
       | _ -> failwith "impossible" in
 
@@ -2706,7 +2706,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                                S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
-                | _ -> mk (Tm_arrow {bs=typars; comp=mk_Total k}) se.sigrng in
+                | _ -> S.mk_Tm_arrow typars (mk_Total k) se.sigrng in
              { se with sigel = Sig_declare_typ {lid=l; us=[]; t};
                        sigquals = quals }
            | _ -> failwith "Impossible" in
@@ -2926,7 +2926,7 @@ let parse_attr_with_list warn (at:S.term) (head:lident) : ML (option (list int &
       Errors.log_issue at Errors.Warning_UnappliedFail
         (Format.fmt1 "Found ill-applied ‘%s’, argument should be a non-empty list of integer literals" (string_of_lid head))
   in
-  let hd, args = U.head_and_args at in
+  let hd, args = U.head_and_args_full at in
    match (SS.compress hd).n with
    | Tm_fvar fv when S.fv_eq_lid fv head ->
      begin
@@ -3103,7 +3103,8 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
  
         let eff_t, num_effect_params =
           match (SS.compress eff_t).n with
-          | Tm_arrow {bs; comp=c} ->
+          | Tm_arrow _ ->
+            let bs, c = U.arrow_formals_comp_ln_strict eff_t in
             // peel off the first a:Type binder
             let a::bs = bs in
             //
@@ -3122,7 +3123,7 @@ let rec desugar_effect env d (d_attrs:list S.term) (quals: qualifiers) (is_layer
               (if is_param then n+1 else n),
               allow_param && is_param,
               bs@[{b with binder_attrs=b_attrs}]) (0, true, []) bs in
-            {eff_t with n=Tm_arrow {bs=a::bs; comp=c}},
+            S.mk_Tm_arrow (a::bs) c eff_t.pos,
             n
           | _ -> failwith "desugaring indexed effect: effect type not an arrow" in
 
@@ -3204,7 +3205,7 @@ and desugar_redefine_effect env d d_attrs trans_qual quals eff_name eff_binders 
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
     let ed_lid, ed, args, cattributes =
-        let head, args = head_and_args defn in
+        let head, args = head_and_args_full defn in
         let lid = match head.tm with
           | Name l -> l
           | _ -> raise_error d Errors.Fatal_EffectNotFound ("Effect " ^AST.term_to_string head^ " not found")
@@ -4049,10 +4050,9 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
               match bs with
               | [] -> []
               | _ ->
-                let t = erase_univs (S.mk (Tm_abs {bs; body=S.t_unit; rc_opt=None}) Range.dummyRange) in
-                match (Subst.compress t).n with
-                | Tm_abs {bs} -> bs
-                | _ -> failwith "Impossible"
+                let t = erase_univs (S.mk_Tm_abs bs S.t_unit None Range.dummyRange) in
+                let bs, _, _ = U.abs_formals_ln t in
+                if Nil? bs then failwith "Impossible" else bs
           in
           let binders, _, binders_opening =
               Subst.open_term' (erase_binders ed.binders) S.t_unit in
@@ -4070,10 +4070,9 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
                   | [] -> []
                   | _ ->
                     let bs = erase_binders <| Subst.subst_binders opening action.action_params in
-                    let t = S.mk (Tm_abs {bs; body=S.t_unit; rc_opt=None}) Range.dummyRange in
-                    match (Subst.compress (Subst.close binders t)).n with
-                    | Tm_abs {bs} -> bs
-                    | _ -> failwith "Impossible"
+                    let t = S.mk_Tm_abs bs S.t_unit None Range.dummyRange in
+                    let bs, _, _ = U.abs_formals_ln (Subst.close binders t) in
+                    if Nil? bs then failwith "Impossible" else bs
               in
               let erase_term t =
                   Subst.close binders (erase_univs (Subst.subst opening t))

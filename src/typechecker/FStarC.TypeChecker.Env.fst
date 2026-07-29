@@ -528,7 +528,7 @@ let lookup_attr (env:env) (attr:string) : ML (list sigelt) =
 let add_se_to_attrtab env se : ML _ =
     let add_one env se attr = SMap.add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
-                let hd, _ = U.head_and_args attr in
+                let hd, _ = U.head_and_args_full attr in
                 match (Subst.compress hd).n with
                 | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
@@ -655,13 +655,13 @@ let try_lookup_lid_aux us_opt env lid : ML _ =
     | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, None) ->
       begin match tps with
         | [] -> Some (inst_tscheme (uvs, k), rng)
-        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
+        | _ ->  Some (inst_tscheme (uvs, U.arrow tps (mk_Total k)), rng)
       end
 
     | Inr ({sigel = Sig_inductive_typ {lid; us=uvs; params=tps; t=k} }, Some us) ->
       begin match tps with
         | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
+        | _ ->  Some (inst_tscheme_with (uvs, U.arrow tps (mk_Total k)) us, rng)
       end
 
     | Inr se ->
@@ -925,9 +925,15 @@ and delta_depth_of_term env t : ML _ =
     | Tm_uinst(t, _)
     | Tm_refine {b={sort=t}}
     | Tm_ascribed {tm=t}
-    | Tm_app {hd=t}
-    | Tm_abs {body=t}
     | Tm_let {body=t} -> delta_depth_of_term env t
+
+    | Tm_app _ ->
+      let hd, _ = U.head_and_args_full t in
+      delta_depth_of_term env hd
+
+    | Tm_abs _ ->
+      let _, body, _ = U.abs_formals_ln t in
+      delta_depth_of_term env body
 
 let quals_of_qninfo (qninfo : qninfo) : option (list qualifier) =
   match qninfo with
@@ -1026,11 +1032,10 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 : ML _ =
                            (show lid) (show <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
-                    begin match (Subst.compress t).n with
-                        | Tm_arrow {bs=binders; comp=c} ->
-                          Some (binders, c)
-                        | _ -> failwith "Impossible"
-                    end
+                    let binders, c = U.arrow_formals_comp_ln_strict t in
+                    if Nil? binders
+                    then failwith "Impossible"
+                    else Some (binders, c)
           end
     | _ -> None
 
@@ -1070,10 +1075,15 @@ let rec non_informative env t : ML _ =
       || fv_eq_lid fv Const.squash_lid
       || fv_eq_lid fv Const.erased_lid
       || fv_has_erasable_attr env fv
-    | Tm_app {hd=head} -> non_informative env head
-    | Tm_abs {body} -> non_informative env body
+    | Tm_app _ ->
+      let head, _ = U.head_and_args_full (U.unrefine t) in
+      non_informative env head
+    | Tm_abs _ ->
+      let _, body, _ = U.abs_formals_ln (U.unrefine t) in
+      non_informative env body
     | Tm_uinst (t, _) -> non_informative env t
-    | Tm_arrow {comp=c} ->
+    | Tm_arrow _ ->
+      let _, c = U.arrow_formals_comp_ln (U.unrefine t) in
       (is_pure_or_ghost_comp c && non_informative env (comp_result c))
       || is_erasable_effect env (comp_effect_name c)
     | Tm_meta {tm} -> non_informative env tm
@@ -1081,8 +1091,9 @@ let rec non_informative env t : ML _ =
 
 let num_effect_indices env name r =
   let sig_t = name |> lookup_effect_lid env |> SS.compress in
-  match sig_t.n with
-  | Tm_arrow {bs=_a::bs} -> List.length bs
+  let bs, _ = U.arrow_formals_comp_ln_strict sig_t in
+  match bs with
+  | _a::bs -> List.length bs
   | _ ->
     raise_error r Errors.Fatal_UnexpectedSignatureForMonad
       (Format.fmt2 "Signature for %s not an arrow (%s)" (show name) (show sig_t))
@@ -1097,13 +1108,13 @@ let lookup_effect_quals env l : ML _ =
 let lookup_projector env lid i : ML _ =
     let fail () = failwith (Format.fmt2 "Impossible: projecting field #%s from constructor %s is undefined" (show i) (show lid)) in
     let _, t = lookup_datacon env lid in
-    match (compress t).n with
-        | Tm_arrow {bs=binders} ->
-          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
-          then fail ()
-          else let b = List.nth binders i in
-               U.mk_field_projector_name lid b.binder_bv i
-        | _ -> fail ()
+    let binders, _ = U.arrow_formals_comp_ln_strict t in
+    if Nil? binders
+    then fail ()
+    else if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+    then fail ()
+    else let b = List.nth binders i in
+         U.mk_field_projector_name lid b.binder_bv i
 
 let is_projector env (l:lident) : ML (bool) =
     match lookup_qname env l with
@@ -1284,8 +1295,9 @@ let wp_sig_aux decls m : ML _ =
      *)
     let _, s = md.signature |> U.effect_sig_ts |> inst_tscheme in
     let s = Subst.compress s in
-    match md.binders, s.n with
-      | [], Tm_arrow {bs=[b; wp_b]; comp=c} when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
+    let bs, c = U.arrow_formals_comp_ln_strict s in
+    match md.binders, bs with
+      | [], [b; wp_b] when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m : ML _ = wp_sig_aux env.effects.decls m
@@ -1386,7 +1398,7 @@ let effect_repr_aux only_reifiable env c u_res : ML _ =
       let res_typ = c.result_typ in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       check_partial_application effect_name c.effect_args;
-      Some (S.mk (Tm_app {hd=repr; args=((res_typ |> S.as_arg)::c.effect_args)}) (get_range env))
+      Some (S.mk_Tm_app repr ((res_typ |> S.as_arg)::c.effect_args) (get_range env))
 
 let effect_repr env c u_res : ML (option term) = effect_repr_aux false env c u_res
 
@@ -1427,7 +1439,9 @@ let is_reifiable_comp (env:env) (c:S.comp) : ML (bool) =
 
 let is_reifiable_function (env:env) (t:S.term) : ML (bool) =
     match (compress t).n with
-    | Tm_arrow {comp=c} -> is_reifiable_comp env c
+    | Tm_arrow _ ->
+      let _, c = U.arrow_formals_comp_ln t in
+      is_reifiable_comp env c
     | _ -> false
 
 let reify_comp env c u_c : ML (term) =
@@ -1965,7 +1979,7 @@ let too_early_in_prims env : ML _ =
 
 let apply_guard g e : ML guard_t = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app {hd=f; args=[as_arg e]}) f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| S.mk_Tm_app f [as_arg e] f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g
@@ -2089,7 +2103,7 @@ let uvar_meta_for_binder (b:binder) : ML (option ctx_uvar_meta_t & bool) =
       layered effects checking code will sometimes call this
       function on regular explicit binders. *)
       let is_unification_tag (t:term) : ML (option term) =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         let hd = U.un_uinst hd in
         match (SS.compress hd).n, args with
         | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]

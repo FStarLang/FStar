@@ -55,7 +55,7 @@ let curry5 f x y z w v = f (x,y,z,w,v)
 
 let head_fv_and_args (t : term) : ML (option (fv & args)) =
   let t = U.unascribe t in
-  let hd, args = U.head_and_args t in
+  let hd, args = U.head_and_args_full t in
   match (U.un_uinst hd).n with
   | Tm_fvar fv -> Some (fv, args)
   | _ -> None

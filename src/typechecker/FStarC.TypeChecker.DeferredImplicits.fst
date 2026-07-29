@@ -90,7 +90,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : ML (option sigelt) =
        
        So, the type arguments of the Cons may be missing *)
     let rec attr_list_elements (e:term) : ML (option (list string)) =
-      let head, args = U.head_and_args (U.unmeta e) in
+      let head, args = U.head_and_args_full (U.unmeta e) in
       match (U.un_uinst head).n, args with
       | Tm_fvar fv, _ when fv_eq_lid fv FStarC.Parser.Const.nil_lid ->
         Some []
@@ -139,7 +139,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : ML (option sigelt) =
                other.sigattrs |>
                BU.for_some 
                (fun attr -> 
-                 let head, args = U.head_and_args attr in
+                 let head, args = U.head_and_args_full attr in
                  match (U.un_uinst head).n, args with
                  | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
                  | Tm_fvar fv, [(a', _); (overrides, _)]                 

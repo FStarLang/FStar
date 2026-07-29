@@ -422,7 +422,10 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     | Tm_type u ->
       mk_t <| Type_t (translate_univ cfg bs u)
 
-    | Tm_arrow {bs=xs; comp=c} ->
+    | Tm_arrow _ ->
+      (* The arrow node is now unary; recover the whole binder spine and the
+         final comp so the NBE Arrow value keeps its arity. *)
+      let xs, c = U.arrow_formals_comp_ln_strict e in
       let norm () =
         let ctx, binders_rev =
           List.fold_left
@@ -471,9 +474,10 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     | Tm_name x ->
       mkAccuVar x
 
-    | Tm_abs {bs=[]} -> failwith "Impossible: abstraction with no binders"
-
-    | Tm_abs {bs=xs; body; rc_opt=resc} ->
+    | Tm_abs _ ->
+      (* The abstraction node is now unary; recover the whole binder spine so
+         the Lam value keeps its arity and shape. *)
+      let xs, body, resc = U.abs_formals_ln e in
       mk_t <| Lam {
         interp = (fun ys -> translate cfg (List.append (List.map fst ys) bs) body);
         shape = Lam_bs (bs, xs, resc);
@@ -487,52 +491,61 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
       | _ -> translate_fv cfg bs (S.set_range_of_fv fvar e.pos)
       end
 
-    | Tm_app {hd={n=Tm_constant (FC.Const_reify _)}; args=arg::more::args}
-    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=arg::more::args} ->
-      let head, _ = U.head_and_args e in
-      let head = S.mk_Tm_app head [arg] e.pos in
-      translate cfg bs (S.mk_Tm_app head (more::args) e.pos)
+    | Tm_app _ ->
+      (* Application nodes are now unary; recover the whole spine (leftmost head
+         and full argument list) before dispatching. *)
+      let head, args = U.head_and_args_full e in
+      begin match (SS.compress head).n, args with
+      | Tm_constant (FC.Const_reify _), arg::more::args
+      | Tm_constant (FC.Const_reflect _), arg::more::args ->
+        (* Reduce the reify/reflect applied to its first argument to a value,
+           then apply the remaining arguments. We cannot rebuild and re-translate
+           the whole application, as the spine would just be flattened again. *)
+        let h = translate cfg bs (S.mk_Tm_app head [arg] e.pos) in
+        iapp cfg h (List.map (fun x -> translate cfg bs (fst x), snd x) (more::args))
 
-    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} when cfg.core_cfg.reifying ->
-      let cfg = reifying_false cfg in
-      translate cfg bs (fst arg)
+      | Tm_constant (FC.Const_reflect _), [arg] when cfg.core_cfg.reifying ->
+        let cfg = reifying_false cfg in
+        translate cfg bs (fst arg)
 
-    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} ->
-      mk_t <| Reflect (translate cfg bs (fst arg))
+      | Tm_constant (FC.Const_reflect _), [arg] ->
+        mk_t <| Reflect (translate cfg bs (fst arg))
 
-    | Tm_app {hd={n=Tm_constant (FC.Const_reify _)}; args=[arg]}
-        when cfg.core_cfg.steps.reify_ ->
-      assert (not cfg.core_cfg.reifying);
-      let cfg = reifying_true cfg in
-      translate cfg bs (fst arg)
+      | Tm_constant (FC.Const_reify _), [arg]
+          when cfg.core_cfg.steps.reify_ ->
+        assert (not cfg.core_cfg.reifying);
+        let cfg = reifying_true cfg in
+        translate cfg bs (fst arg)
 
-    | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[arg]} ->
-      mk_t <| Reflect (translate cfg bs (fst arg))
+      | Tm_constant (FC.Const_reflect _), [arg] ->
+        mk_t <| Reflect (translate cfg bs (fst arg))
 
-    | Tm_app {hd={n=Tm_fvar fv}; args=[_]}
-         when S.fv_eq_lid fv PC.assert_lid ||
-              S.fv_eq_lid fv PC.assert_norm_lid ->
-      debug (fun () -> Format.print_string "Eliminated assertion\n");
-      mk_t (Constant Unit)
+      | Tm_fvar fv, [_]
+           when S.fv_eq_lid fv PC.assert_lid ||
+                S.fv_eq_lid fv PC.assert_norm_lid ->
+        debug (fun () -> Format.print_string "Eliminated assertion\n");
+        mk_t (Constant Unit)
 
-    | Tm_app {hd=head; args}
-         when (Cfg.cfg_env cfg.core_cfg).erase_erasable_args
+      | _ ->
+        if (Cfg.cfg_env cfg.core_cfg).erase_erasable_args
             || cfg.core_cfg.steps.for_extraction
-            || cfg.core_cfg.debug.erase_erasable_args (* for debugging *) ->
-      iapp cfg (translate cfg bs head)
-               (List.map
-                 (fun x ->
-                   if U.aqual_is_erasable (snd x)
-                   then (
-                     debug (fun () -> Format.print1 "Erasing %s\n" (show (fst x)));
-                     mk_t (Constant Unit), snd x
-                   )
-                   else translate cfg bs (fst x), snd x)
-                 args)
-
-    | Tm_app {hd=head; args} ->
-      debug (fun () -> Format.print2 "Application: %s @ %s\n" (show head) (show args));
-      iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
+            || cfg.core_cfg.debug.erase_erasable_args (* for debugging *)
+        then
+          iapp cfg (translate cfg bs head)
+                   (List.map
+                     (fun x ->
+                       if U.aqual_is_erasable (snd x)
+                       then (
+                         debug (fun () -> Format.print1 "Erasing %s\n" (show (fst x)));
+                         mk_t (Constant Unit), snd x
+                       )
+                       else translate cfg bs (fst x), snd x)
+                     args)
+        else (
+          debug (fun () -> Format.print2 "Application: %s @ %s\n" (show head) (show args));
+          iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
+        )
+      end
 
     | Tm_match {scrutinee=scrut; ret_opt; brs=branches; rc_opt=rc} ->
       (* Thunked computation to reconstrct the returns annotation *)
@@ -788,8 +801,12 @@ and iapp (cfg : config) (f:t) (args:args) : ML t =
                 (show n_args_rev));
     if n_args_rev >= arity
     then let bs, body =
+           (* Recover the full binder spine of the (now unary) abstraction so its
+              length can be compared against the precomputed let-rec arity. *)
            match (U.unascribe lb.lbdef).n with
-           | Tm_abs {bs; body} -> bs, body
+           | Tm_abs _ ->
+             let bs, body, _ = U.abs_formals_ln (U.unascribe lb.lbdef) in
+             bs, body
            | _ -> [], lb.lbdef
          in
          if n_univs + List.length bs = arity
@@ -1084,7 +1101,7 @@ and translate_monadic mty cfg bs e : ML t =
                 S.residual_flags=[];
                 S.residual_typ=Some ty
             } in
-           S.mk (Tm_abs {bs=[S.mk_binder (Inl?.v lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
+           S.mk_Tm_abs [S.mk_binder (Inl?.v lb.lbname)] body (Some body_rc) body.pos
        in
        let maybe_range_arg = [] in
        let t =
@@ -1109,10 +1126,11 @@ and translate_monadic mty cfg bs e : ML t =
 
       end
 
-   | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; args=[(e, _)]} ->
+   | Tm_app {hd={n=Tm_constant (FC.Const_reflect _)}; arg=(e, _)} ->
      translate (reifying_false cfg) bs e
 
-   | Tm_app {hd=head; args} ->
+   | Tm_app _ ->
+     let head, args = U.head_and_args_full e in
      debug cfg (fun () -> Format.print2 "translate_monadic app (%s) @ (%s)\n" (show head)
                                                                           (show args));
      let fallback1 () =

@@ -10,7 +10,7 @@ fn takes_two (x y: int)
   ()
 }
 
-[@@expect_failure [71]]
+[@@expect_failure [173]]
 fn wrong_args ()
   requires emp
   ensures emp
