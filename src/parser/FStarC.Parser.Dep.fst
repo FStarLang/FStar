@@ -188,8 +188,40 @@ let list_of_option = function Some x -> [x] | None -> []
 let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
+(* Given a source file path, if it lives (possibly transitively, through
+   subdirectories) under one of the include directories, recover its full
+   dotted module name. We match against the *longest* include directory that is
+   a path-boundary prefix of the file and turn the remaining relative path into
+   a dotted name: an include directory [d] and a file [d/X/Y/Z.fst] yield
+   "X.Y.Z". Returns None if the file is not under any include directory or is
+   not a valid F* source file. *)
+let module_name_from_include_path (f:string) : ML (option string) =
+  let f = Filepath.normalize_file_path f in
+  let include_dirs = List.map Filepath.normalize_file_path (Find.full_include_path ()) in
+  let best =
+    List.fold_left (fun (acc:option string) d ->
+      if Util.starts_with f (d ^ "/")
+      && (match acc with Some a -> String.length d > String.length a | None -> true)
+      then Some d
+      else acc)
+      None include_dirs
+  in
+  match best with
+  | None -> None
+  | Some d ->
+    let rel = Util.substring_from f (String.length d + 1) in
+    match check_and_strip_suffix rel with
+    | None -> None
+    | Some stem -> Some (Util.replace_char (Util.replace_char stem '\\' '.') '/' '.')
+
 (* In public interface *)
-let maybe_module_name_of_file f = check_and_strip_suffix (Filepath.basename f)
+let maybe_module_name_of_file f =
+  if Options.hierarchical_namespaces () then
+    match module_name_from_include_path f with
+    | Some longname -> Some longname
+    | None -> check_and_strip_suffix (Filepath.basename f)
+  else
+    check_and_strip_suffix (Filepath.basename f)
 let module_name_of_file f =
     match maybe_module_name_of_file f with
     | Some longname ->
@@ -358,8 +390,23 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
  *)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
-      let cache_fn = fn ^ ".checked" in
       let mname = fn |> module_name_of_file in
+      (* The checked file is named after the module's full (possibly namespaced)
+         name rather than the flat basename of [fn]. For a flat source file this
+         is a no-op (e.g. [FStar.List.Tot.fst] -> [FStar.List.Tot.fst.checked]),
+         but for a hierarchical source such as [A/B/C.fst] it yields
+         [A.B.C.fst.checked] instead of [C.fst.checked], so that modules living
+         in different namespaces do not collide in the cache directory. We keep
+         [fn]'s own extension (e.g. .fst / .fsti) rather than assuming one. *)
+      let cache_fn =
+        if Options.hierarchical_namespaces ()
+        then let bn = Filepath.basename fn in
+             let ext = match check_and_strip_suffix bn with
+                       | Some stem -> Util.substring_from bn (String.length stem)
+                       | None -> "" in
+             mname ^ ext ^ ".checked"
+        else fn ^ ".checked"
+      in
       match Find.find_file (cache_fn |> Filepath.basename) with
       | Some path ->
         let expected_cache_file = Find.prepend_cache_dir cache_fn in
@@ -518,25 +565,56 @@ let safe_readdir_for_include (d:string) : ML (list string) =
   | _ -> []
 
 (** Enumerate all F* files in include directories.
-    Return a list of pairs of long names and full paths. *)
+    Return a list of pairs of long names and full paths.
+
+    Normally only files that sit directly in an include directory are
+    considered (e.g. [X.Y.Z.fst], mapped to the long name [X.Y.Z]).
+
+    When the [--hierarchical_namespaces] option is enabled, we additionally
+    descend into subdirectories and support hierarchical namespaces: a file
+    found at [X/Y/Z.fst] (relative to an include directory) is also mapped to
+    the long name [X.Y.Z]. Subdirectory names are treated exactly like the
+    components of a flat filename: matching is case-insensitive (long names are
+    lowercased in [build_map]).
+
+    Directories whose name starts with a '.' (e.g. [.git]) are skipped, since
+    they can never be a valid namespace component. *)
 (* In public interface *)
 let build_inclusion_candidates_list (): ML (list (string & string)) =
+  let hierarchical = Options.hierarchical_namespaces () in
   let include_directories = Find.full_include_path () in
   let include_directories = List.map Filepath.normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
    * always override the precedence order. *)
   let include_directories = List.unique include_directories in
   let cwd = Filepath.normalize_file_path (getcwd ()) in
-  include_directories |> List.concatMap (fun d ->
-    let files = safe_readdir_for_include d in
-    files |> List.filter_map (fun f ->
-      let f = Filepath.basename f in
-      check_and_strip_suffix f
-      |> Option.map (fun longname ->
-            let full_path = if d = cwd then f else Filepath.join_paths d f in
-            (longname, full_path))
+  (* Recursively enumerate source files under [dir]. [root] is the include
+     directory we started from; [ns_prefix] is the list of namespace components
+     corresponding to the subdirectories walked so far (in order); [rel] is the
+     path of [dir] relative to [root] ("" for [root] itself). *)
+  let rec walk (root:string) (dir:string) (ns_prefix:list string) (rel:string)
+    : ML (list (string & string)) =
+    let entries = safe_readdir_for_include dir in
+    entries |> List.concatMap (fun entry ->
+      let entry = Filepath.basename entry in
+      let rel' = if rel = "" then entry else Filepath.join_paths rel entry in
+      let entry_path = Filepath.join_paths dir entry in
+      if Filepath.is_directory entry_path then
+        (* Only descend into subdirectories for hierarchical namespaces, and
+           never into hidden directories (they cannot be namespace components). *)
+        if not hierarchical || (String.length entry > 0 && String.get entry 0 = '.')
+        then []
+        else walk root entry_path (ns_prefix @ [entry]) rel'
+      else
+        match check_and_strip_suffix entry with
+        | None -> []
+        | Some modname ->
+          let longname = String.concat "." (ns_prefix @ [modname]) in
+          let full_path = if root = cwd then rel' else Filepath.join_paths root rel' in
+          [(longname, full_path)]
     )
-  )
+  in
+  include_directories |> List.concatMap (fun d -> walk d d [] "")
 
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are

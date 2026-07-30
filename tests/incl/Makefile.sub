@@ -3,7 +3,9 @@
 # from the name of the subdirectory.
 
 FSTAR_ROOT?=../../..
-NODEPEND=1
+# Most incl tests do not need dependency analysis (they just check Test.fst
+# directly). Use ?= so that a specific test can opt back in with 'NODEPEND='.
+NODEPEND?=1
 include $(FSTAR_ROOT)/mk/test.mk
 
 # Do not warn about missing checked files in these tests.
