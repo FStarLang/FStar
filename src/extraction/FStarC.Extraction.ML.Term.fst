@@ -1957,6 +1957,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
 
          | Tm_let {lbs=(is_rec, lbs); body=e'} ->
           let top_level = is_top_level lbs in
+          let is_noextract (fv : S.fv) : ML bool =
+            match TcEnv.lookup_sigelt (tcenv_of_uenv g) fv.fv_name with
+            | None -> failwith "wtf?"
+            | Some se -> List.contains S.NoExtract se.sigquals
+          in
           let lbs, e' =
             if is_rec
             then SS.open_let_rec lbs e'
@@ -1971,18 +1976,15 @@ and term_as_mlexpr' (g:uenv) (top:term) : ML (mlexpr & e_tag & mlty) =
           // extract_lb_sig can compute add_unit from the un-inlined body.
           let orig_lbs = lbs in
           let lbs =
-            if top_level
+            if top_level && not (is_noextract (Inr?.v (List.hd lbs).lbname))
             then
             let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                                 (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
             lbs |> List.map (fun lb ->
                     let lbdef =
                         let norm_call () =
-                            Profiling.profile
-                              (fun () ->
-                                N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::(extraction_norm_steps())) tcenv lb.lbdef)
-                              (Some (Ident.string_of_lid (Env.current_module tcenv)))
-                              "FStarC.Extraction.ML.Term.normalize_lb_def"
+                          Stats.record "Extraction.ML.Term.normalize_top_level_let" fun () ->
+                          N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::(extraction_norm_steps())) tcenv lb.lbdef
                         in
                         if !dbg_Extraction || !dbg_ExtractionNorm
                         then let _ = Format.print2 "Starting to normalize top-level let %s = %s\n"

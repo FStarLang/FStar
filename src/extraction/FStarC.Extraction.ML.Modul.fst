@@ -921,6 +921,7 @@ let extract_bundle env se : ML (env_t & list mlmodule1) =
                      (ctor: data_constructor):
         ML (env_t & (mlsymbol & list (mlsymbol & mlty)))
         =
+        Stats.record "extract_bundle" fun () ->
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names =
@@ -1162,13 +1163,14 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
     let se = TypeChecker.Tc.run_postprocess true (tcenv_of_uenv g) se in
     let Sig_let { lbs } = se.sigel in
     let maybe_normalize_for_extraction lbs = 
-      let norm_steps =
+      let norm_steps : option (list norm_step) =
         match U.extract_attr' PC.normalize_for_extraction_lid attrs with
         | None -> None
         | Some (_, (steps, None)::_) ->
           let steps = 
             //just normalizing the steps themselves, so that the user
             //does not have to write a literal at every use of the attribute
+            Stats.record "norm steps norm" fun () ->
             N.normalize 
               [Env.UnfoldUntil delta_constant; Env.Zeta; Env.Iota; Env.Primops]
               (tcenv_of_uenv g)
@@ -1194,15 +1196,23 @@ and extract_sig_let (g:uenv) (se:sigelt) : ML (uenv & list mlmodule1) =
       let norm_one_lb steps lb =
         let env = tcenv_of_uenv g in
         let env = {env with erase_erasable_args=true} in
-        let lbd = 
+        let lbd =
+          (* Do not normalize definitions that will anyway be dropped.
+          We could still be processing them if we are extracting to karamel,
+          since the stubs are anyway needed. But the body does not matter. *)
+          if List.contains S.NoExtract se.sigquals
+          then lb.lbdef
+          else
+          Stats.record "norm lbdef" fun () ->
           Profiling.profile
                 (fun () -> N.normalize steps env lb.lbdef)
                 (Some (Ident.string_of_lid (Env.current_module env)))
                 "FStarC.Extraction.ML.Module.normalize_for_extraction.1"
         in
         let lbt =
-          if norm_type
+          if norm_type && not (List.contains S.NoExtract se.sigquals)
           then
+            Stats.record "norm lbtyp" fun () ->
             Profiling.profile
                   (fun () -> N.normalize steps env lb.lbtyp)
                   (Some (Ident.string_of_lid (Env.current_module env)))
