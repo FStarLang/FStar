@@ -15,6 +15,7 @@
 *)
 module FStarC.Extraction.ML.RegEmb
 
+open FStarC.Extraction.ML
 (* This module handles registering plugins and generating
 embeddings for their types. *)
 

@@ -1,5 +1,7 @@
 module FStarC.Class.HasRange
 
+open FStarC.Range.Type
+open FStarC.Effect
 open FStarC.Range
 
 instance hasRange_range : hasRange range = {

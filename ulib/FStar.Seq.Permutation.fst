@@ -16,6 +16,7 @@
    Authors: N. Swamy, A. Rastogi, A. Rozanov
 *)
 module FStar.Seq.Permutation
+open FStar.IntegerIntervals
 open FStar.Seq
 open FStar.Calc
 

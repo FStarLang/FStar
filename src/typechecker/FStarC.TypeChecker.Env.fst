@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Env
+open FStarC.Class.Binders
+open FStarC.Class.Deq
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -176,7 +178,7 @@ let dep_graph e = DsEnv.dep_graph e.dsenv
 //Used in fly_deps mode for loading a module on the fly and then
 //restoring the local environment to what it was
 let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
-  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[] } in
+  let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[]; iface_todo=[]; iface_lids=None; iface_val_lids=empty() } in
   env.solver.refresh None;
   let res, env =
     FStarC.Options.with_restored_cmd_line_options (fun _ -> 
@@ -192,7 +194,10 @@ let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
                 admit=e.admit;
                 gamma=e.gamma;
                 gamma_sig=e.gamma_sig;
-                proof_ns=e.proof_ns}
+                proof_ns=e.proof_ns;
+                iface_todo=e.iface_todo;
+                iface_lids=e.iface_lids;
+                iface_val_lids=e.iface_val_lids}
     )
   in
   env.solver.refresh (Some env.proof_ns);
@@ -209,6 +214,26 @@ let record_definition_for (e:env) (l:lident) : ML env =
 
 let missing_definition_list (e:env) : ML (list lident) =
   elems e.missing_decl
+
+let set_iface_todo (e:env) (ses:list sigelt) : env =
+  { e with iface_todo = ses }
+
+let iface_todo (e:env) : list sigelt =
+  e.iface_todo
+
+let set_iface_lids (e:env) (ls:list lident) (vals:list lident) : ML env =
+  { e with iface_lids = Some (from_list ls); iface_val_lids = from_list vals }
+
+let has_iface (e:env) : bool =
+  Some? e.iface_lids
+
+let declared_in_iface (e:env) (l:lident) : ML bool =
+  match e.iface_lids with
+  | None -> false
+  | Some ls -> mem l ls
+
+let has_iface_val (e:env) (l:lident) : ML bool =
+  mem l e.iface_val_lids
 
 type sigtable = SMap.t sigelt
 
@@ -297,6 +322,9 @@ let initial_env deps
     core_check;
 
     missing_decl = empty();
+    iface_todo = [];
+    iface_lids = None;
+    iface_val_lids = empty();
   }
 
 let dsenv env = env.dsenv
@@ -566,6 +594,25 @@ let rec add_sigelt force env se : ML _ = match se.sigel with
     | _ ->
       let lids = lids_of_sigelt se in
       List.iter (try_add_sigelt force env se) lids;
+      (* The delta depth and strictness of a name change when its `val` is
+         superseded by the actual definition. This happens when checking the
+         implementation of an interface, whose `val`s have already been checked
+         and possibly queried (e.g. while encoding the interface to SMT), so
+         drop any memoized information about these names. *)
+      lids |> List.iter (fun l ->
+        let s = string_of_lid l in
+        (* If the name used to be abstract (i.e. it was a `val` of the interface
+           we are now implementing), then the memoized delta depth of every other
+           name of this module may be stale too, since it may have been computed
+           while this name was still abstract. Flush them. *)
+        (match SMap.try_find env.fv_delta_depths s with
+         | Some (Delta_abstract _) ->
+           let ns = nsstr l ^ "." in
+           SMap.keys env.fv_delta_depths |> List.iter (fun k ->
+             if BU.starts_with k ns then SMap.remove env.fv_delta_depths k)
+         | _ -> ());
+        SMap.remove env.fv_delta_depths s;
+        SMap.remove env.strict_args_tab s);
       add_se_to_attrtab env se
 
 and add_sigelts force env ses : ML _ =
@@ -869,10 +916,10 @@ and delta_depth_of_qninfo env (fv:fv) (qn:qninfo) : ML delta_depth =
 (* Computes the canonical delta_depth of a given fvar, by looking at its
 definition (and recursing) if needed. Results are memoized in the env.
 
-NB: The cache is never invalidated. A potential problem here would be
-if we memoize the delta_depth of a `val` before seeing the corresponding
-`let`, but I don't think that can happen. Before seeing the `let`, other code
-cannot refer to the name. *)
+NB: [add_sigelt] drops the memoized entry for the names it adds, so that
+memoizing the delta_depth of a `val` before seeing the corresponding `let`
+is harmless. This does happen when checking the implementation of an
+interface: the interface's `val`s are checked and encoded to SMT first. *)
 and delta_depth_of_fv (env:env) (fv:S.fv) : ML (delta_depth) =
   let lid = fv.fv_name in
   (string_of_lid lid) |> SMap.try_find env.fv_delta_depths |> (function

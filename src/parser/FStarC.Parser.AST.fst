@@ -15,6 +15,8 @@
 *)
 module FStarC.Parser.AST
 
+open FStarC.Class.PP
+open FStarC.Class.HasRange
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -1005,7 +1007,7 @@ let add_decorations d decorations : ML decl =
   { d with quals=qualifiers; attrs=attributes_ }
 
 let mk_decl d r decorations : ML decl =
-  let d = { d=d; drange=r; quals=[]; attrs=[]; interleaved=false } in
+  let d = { d=d; drange=r; quals=[]; attrs=[] } in
   add_decorations d decorations
 
 instance pretty_quote_kind : pretty quote_kind = {

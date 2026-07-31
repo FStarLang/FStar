@@ -1,5 +1,6 @@
 module FStar.PtrdiffT
 friend FStar.SizeT
+module I16 = FStar.Int16
 module Cast = FStar.Int.Cast
 module I64 = FStar.Int64
 

@@ -15,6 +15,7 @@
 *)
 module FStarC.Tactics.V2.Basic
 
+module Range  = FStarC.Range
 open FStarC
 open FStarC.Effect
 open FStarC.List

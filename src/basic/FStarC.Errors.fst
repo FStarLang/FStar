@@ -15,6 +15,11 @@
 *)
 module FStarC.Errors
 
+open FStarC.Json {json}
+module Range = FStarC.Range
+include FStarC.Errors.Codes
+include FStarC.Errors.Msg
+open FStarC.Class.HasRange
 open FStar.String
 open FStarC
 open FStarC.Effect

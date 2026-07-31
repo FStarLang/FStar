@@ -15,6 +15,11 @@
 *)
 module X64.Poly1305.Math_i
 
+open X64.Machine_s
+open X64.Vale.Decls
+open X64.Poly1305.Spec_s
+open Opaque_i
+module F = FStar.FunctionalExtensionality
 open FStar.Tactics.V2
 open FStar.Tactics.Canon
 open FStar.Math.Lemmas

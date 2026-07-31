@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Syntax.Printer
+open Pulse.Syntax.Base
+open FStar.Pprint
 open FStar.Printf
 open Pulse.Syntax
 

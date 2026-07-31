@@ -1,5 +1,6 @@
 module SpliceVal
 
+open FStar.List.Tot
 open FStar.Tactics.V2
 
 let test = "the string"

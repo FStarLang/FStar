@@ -640,6 +640,10 @@ type sig_metadata = {
     sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
     sigmeta_spliced:bool;
     sigmeta_already_checked:bool;
+    sigmeta_extension_decl:bool;
+    // ^ This sigelt was produced by a language extension (e.g. a Pulse `fn`)
+    // rather than by a plain F* declaration. Such declarations in an interface
+    // are matched against the implementation out of order.
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
     sigmeta_extension_data: list (string & dyn) //each extension can register some data with a sig

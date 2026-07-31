@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Reflection.V2.Embeddings
+open FStarC.TypeChecker.Env
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data

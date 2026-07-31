@@ -15,6 +15,10 @@
 *)
 module FStarC.TypeChecker.Common
 
+open FStarC.Class.Show
+open FStarC.Class.Monoid
+open FStarC.CList
+open FStarC.Range.Type
 open FStarC.Effect
 open FStarC.List
 

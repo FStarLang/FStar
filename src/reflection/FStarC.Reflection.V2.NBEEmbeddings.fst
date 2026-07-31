@@ -15,6 +15,7 @@
 *)
 module FStarC.Reflection.V2.NBEEmbeddings
 
+module RD = FStarC.Reflection.V2.Data
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data

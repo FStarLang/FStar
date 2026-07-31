@@ -57,7 +57,7 @@ let parse_mod mod_name dsenv =
 let add_mods mod_names dsenv env =
   List.fold_left (fun (dsenv,env) mod_name ->
       let dsenv, string_mod = parse_mod mod_name dsenv in
-      let _mod, env = Tc.check_module env string_mod false in
+      let _mod, env = Tc.check_module env string_mod in
       (dsenv, env)
   ) (dsenv,env) mod_names
 
@@ -86,7 +86,7 @@ let do_init () =
     parse_mod prelude_file (DsEnv.empty_env (Parser.Dep.empty_deps []))
   in
   let env = {env with dsenv=dsenv} in
-  let _prims_mod, env = Tc.check_module env prims_mod false in
+  let _prims_mod, env = Tc.check_module env prims_mod in
   // needed to run tests with chars
   // let dsenv, env = add_mods ["FStar.Pervasives.Native.fst"; "FStar.Pervasives.fst"; "FStar.Squash.fsti";
   //                            "FStar.Classical.fst"; "FStarC.List.Tot.Base.fst"; "FStarC.List.Tot.Properties.fst"; "FStarC.List.Tot.fst";

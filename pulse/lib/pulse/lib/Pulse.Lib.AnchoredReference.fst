@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.AnchoredReference
+open Pulse.Lib.Pervasives
 #lang-pulse
 open Pulse.Lib.Core
 open PulseCore.FractionalPermission

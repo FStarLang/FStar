@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module PulseCore.Heap
+open FStar.Ghost
 open FStar.FunctionalExtensionality
 open FStar.PCM
 

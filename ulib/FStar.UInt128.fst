@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.UInt128
+open FStar.UInt
 
 
 module UInt = FStar.UInt

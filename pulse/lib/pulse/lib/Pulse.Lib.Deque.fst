@@ -1,4 +1,5 @@
 module Pulse.Lib.Deque
+open Pulse
 #lang-pulse
 
 open Pulse.Lib.Pervasives

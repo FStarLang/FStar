@@ -15,6 +15,7 @@
 *)
 module FStarC.SMTEncoding.Encode
 
+module ErrorReporting = FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
 open FStarC.List
 open FStarC
@@ -2239,7 +2240,13 @@ instance instance_showable_smap (#a:Type) {|_:showable a|} : Tot (showable (SMap
   show = (fun smap -> SMap.fold smap (fun k v acc -> Format.fmt3 "%s -> %s\n%s" (show k) (show v) acc) "")
 }
 
-let encode_modul tcenv modul =
+(* [give_to_z3=false] computes the module's encoding (so that it can be stored in
+   its .checked file) without handing it to the solver and without recording it
+   in the global SMT encoding environment. This is used for A.fsti when it is
+   loaded only in order to check A.fst: the interface's abstract view of the
+   module (in particular any assumed val, whose SMT patterns would otherwise be
+   live axioms) must not be visible while checking the implementation. *)
+let encode_modul_aux (give_to_z3:bool) tcenv modul =
   begin
     let tcenv = Env.set_current_module tcenv modul.name in
     UF.with_uf_enabled (fun () ->
@@ -2297,10 +2304,13 @@ let encode_modul tcenv modul =
       List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
-    give_decls_to_z3_and_set_env env name decls;
+    if give_to_z3 then give_decls_to_z3_and_set_env env name decls;
     if Debug.medium () then Format.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
   ) end
+
+let encode_modul tcenv modul = encode_modul_aux true tcenv modul
+let encode_modul_no_solver tcenv modul = encode_modul_aux false tcenv modul
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   let tcenv = Env.set_current_module tcenv tcmod.name in

@@ -91,7 +91,13 @@ let varops =
       if !dbg_Snapshot then Format.print_string "SMTEncoding.scopes.pop\n";
       scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
-    let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in
+    let rollback depth =
+      (* [reset_scope] below may have dropped the scope stack below [depth];
+         in that case there is nothing left to pop. *)
+      match depth with
+      | Some n when List.length !scopes <= n -> ()
+      | _ -> FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth
+    in
     {push=push;
      pop=pop;
      snapshot=snapshot;

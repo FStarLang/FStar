@@ -2,6 +2,7 @@ SUBDIRS += bug-reports
 SUBDIRS += semiring
 SUBDIRS += coercions
 SUBDIRS += error-messages
+SUBDIRS += interfaces
 SUBDIRS += tactics
 SUBDIRS += ide
 SUBDIRS += machine_integers

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Core
+open FStarC.TypeChecker.Common
 (*
 
 This module implements a core typechecker for pure and ghost F* terms.

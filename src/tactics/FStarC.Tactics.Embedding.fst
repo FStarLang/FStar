@@ -16,6 +16,7 @@
 
 module FStarC.Tactics.Embedding
 
+open FStarC.Ident
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
