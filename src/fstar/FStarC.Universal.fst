@@ -83,53 +83,67 @@ let with_env env (f:uenv -> ML 'a) : ML 'a =
     let _ = pop_env env in
     res
 
-(* When A.fsti is checked (or loaded from its .checked file) right before A.fst,
-   its SMT encoding must not be visible while checking A.fst: the interface
-   encodes the module's abstract view (e.g. an abstract `val t : Type0` becomes an
-   uninterpreted symbol), which clashes with the definitions that the
-   implementation encodes for the very same names. We therefore snapshot the
-   solver state before processing the interface and roll it back before starting
-   on the implementation. The interface sigelts that the implementation copies
-   verbatim are encoded by the typechecker as it walks the to-do list.
+(* When A.fsti is checked (or loaded from its .checked file) only in order to
+   check A.fst, its SMT encoding must not be visible while checking A.fst: the
+   interface encodes the module's abstract view (e.g. an abstract `val t : Type0`
+   becomes an uninterpreted symbol, and an assumed `val` with an SMTPat becomes a
+   live axiom), which clashes with --- and in the SMTPat case is unsound with
+   respect to --- the definitions that the implementation encodes for the very
+   same names. The interface sigelts that the implementation copies verbatim are
+   encoded by the typechecker as it walks the to-do list.
+
+   Its declarations reach the solver in two ways: incrementally, via
+   [encode_sig], as the interface is checked declaration by declaration; and in
+   one go via [encode_modul] at the end. We suppress the latter (see
+   [encode_modul_no_solver]) and undo the former by rolling the solver back to a
+   snapshot taken before the interface was processed.
 
    Rolling the solver back also undoes the encoding of the modules that were
-   loaded on the fly while checking the interface, so we record them as we go
-   and replay them right after the rollback. *)
-let iface_solver_snapshot : ref (option (string & TcEnv.solver_depth_t)) = mk_ref None
-let iface_pending_moduls
-  : ref (list (Syntax.modul &
-               (FStarC.SMTEncoding.Term.decls_t & list FStarC.SMTEncoding.Env.fvar_binding)))
+   loaded on the fly while checking the interface, so we record them as we go and
+   replay them right after the rollback. Frames nest: checking A.fsti may load a
+   befriended module B, which in turn loads B.fsti in order to check B.fst. *)
+let iface_solver_frames
+  : ref (list (TcEnv.solver_depth_t &
+               list (Syntax.modul &
+                     (FStarC.SMTEncoding.Term.decls_t &
+                      list FStarC.SMTEncoding.Env.fvar_binding))))
   = mk_ref []
 
 (* Called at every point where a module's SMT encoding is handed to the solver. *)
 let record_encoded_modul (m:Syntax.modul) smt_decls : ML unit =
-  if Some? !iface_solver_snapshot
-  then iface_pending_moduls := (m, smt_decls) :: !iface_pending_moduls
+  iface_solver_frames :=
+    !iface_solver_frames |> List.map (fun (depth, pending) -> depth, (m, smt_decls) :: pending)
 
-let snapshot_solver_for_iface (env:uenv) (mname:string) : ML unit =
+let push_iface_solver_frame (env:uenv) (name:string) : ML unit =
   let tcenv = tcenv_of_uenv env in
-  let depth, () = tcenv.solver.snapshot ("interface of " ^ mname) in
-  iface_pending_moduls := [];
-  iface_solver_snapshot := Some (mname, depth)
+  let depth, () = tcenv.solver.snapshot name in
+  iface_solver_frames := (depth, []) :: !iface_solver_frames
 
-let rollback_solver_after_iface (env:uenv) (mname:string) : ML unit =
-  match !iface_solver_snapshot with
-  | Some (m, depth) when m = mname ->
-    let pending = List.rev !iface_pending_moduls in
-    iface_solver_snapshot := None;
-    iface_pending_moduls := [];
+let pop_iface_solver_frame (env:uenv) (name:string) : ML unit =
+  match !iface_solver_frames with
+  | [] -> ()
+  | (depth, pending) :: rest ->
+    iface_solver_frames := rest;
     let tcenv = tcenv_of_uenv env in
-    tcenv.solver.rollback ("interface of " ^ mname) (Some depth);
-    (* [encode_modul] leaves the interface's names registered in the SMT name
+    tcenv.solver.rollback name (Some depth);
+    (* The interface's declarations left their names registered in the SMT name
        scope; free them so that the implementation encodes the very same lids
        under their canonical names. *)
     if not (Options.interactive ()) then FStarC.SMTEncoding.Env.varops.reset_scope ();
-    (* Replay the encodings of everything except this module's interface. *)
-    pending |> List.iter (fun (tcmod, smt_decls) ->
-      if not (Ident.string_of_lid tcmod.Syntax.name = mname)
-      && (fst smt_decls <> [] || snd smt_decls <> [])
-      then FStarC.SMTEncoding.Encode.encode_modul_from_cache tcenv tcmod smt_decls)
-  | _ -> ()
+    (* Replay the encodings of the modules that were loaded on the fly while the
+       interface was being processed; they are legitimate dependences. *)
+    List.rev pending |> List.iter (fun (tcmod, smt_decls) ->
+      if fst smt_decls <> [] || snd smt_decls <> []
+      then FStarC.SMTEncoding.Encode.encode_modul_from_cache tcenv tcmod smt_decls;
+      record_encoded_modul tcmod smt_decls)
+
+let is_iface_of (fn:string) (root:option string) : ML bool =
+  Dep.is_interface fn
+  && (match root with
+      | Some r ->
+        Dep.is_implementation r
+        && Dep.module_name_of_file r = Dep.module_name_of_file fn
+      | None -> false)
 
 let env_of_tcenv (env:TcEnv.env) : ML _ =
     FStarC.Extraction.ML.UEnv.new_uenv env
@@ -399,8 +413,27 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
 
 let rec tc_one_file_internal
         (fly_deps:bool)
+        (skip_solver:bool) (* this module's encoding must not survive the call *)
         (env:uenv)
         (fn:string) //file name
+    : ML (tc_result
+    & option MLSyntax.mlmodule
+    & uenv) =
+  if skip_solver
+  then (
+    let name = "interface of " ^ Dep.module_name_of_file fn in
+    push_iface_solver_frame env name;
+    let res = tc_one_file_no_frame fly_deps true env fn in
+    pop_iface_solver_frame env name;
+    res
+  )
+  else tc_one_file_no_frame fly_deps false env fn
+
+and tc_one_file_no_frame
+        (fly_deps:bool)
+        (skip_solver:bool)
+        (env:uenv)
+        (fn:string)
     : ML (tc_result
     & option MLSyntax.mlmodule
     & uenv) =
@@ -454,9 +487,11 @@ let rec tc_one_file_internal
               //AR: encode the module to to smt
             restore_opts ();
             let smt_decls =
-              FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
+              if skip_solver
+              then FStarC.SMTEncoding.Encode.encode_modul_no_solver (tcenv_of_uenv env) modul
+              else FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
             in
-            record_encoded_modul modul smt_decls;
+            if not skip_solver then record_encoded_modul modul smt_decls;
             ((modul, smt_decls), env)
           in
 
@@ -562,9 +597,11 @@ let rec tc_one_file_internal
             let env = FStarC.TypeChecker.Tc.load_checked_module tcenv tcmod in
             restore_opts ();
             //AR: encode smt module and do post processing
-            if fst smt_decls <> [] || snd smt_decls <> [] then
-              FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
-            record_encoded_modul tcmod smt_decls;
+            if not skip_solver then (
+              if fst smt_decls <> [] || snd smt_decls <> [] then
+                FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
+              record_encoded_modul tcmod smt_decls
+            );
             (), env
         in
 
@@ -647,7 +684,7 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
     | [] -> env //if nothing to load, just return to avoid resetting solver, etc.
     | _ ->
       let run_load_tasks env filenames =
-        let _, _, env = tc_fold_interleave false ([], [], env) filenames in
+        let _, _, env = tc_fold_interleave false (Some filename) ([], [], env) filenames in
         env
       in
       let _, env = 
@@ -722,6 +759,7 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
 
 and tc_one_file_from_remaining 
       (fly_deps:bool)
+      (root:option string) (* the file we are ultimately going to check, if any *)
       (remaining:list string) 
       (env:uenv)
 : ML (list string & tc_result & option MLSyntax.mlmodule & uenv) =
@@ -729,16 +767,17 @@ and tc_one_file_from_remaining
     match remaining with
         | intf_or_impl :: rest ->
           let mname = Dep.module_name_of_file intf_or_impl in
-          (* If the previous file was this module's interface, drop its SMT
-             encoding before checking the implementation. *)
-          if not (Dep.is_interface intf_or_impl)
-          then rollback_solver_after_iface env mname;
-          if Dep.is_interface intf_or_impl
-          && (match rest with
-              | next :: _ -> not (Dep.is_interface next) && Dep.module_name_of_file next = mname
-              | [] -> false)
-          then snapshot_solver_for_iface env mname;
-          let m, mllib, env = tc_one_file_internal fly_deps env intf_or_impl in
+          (* Is this the interface of the module whose implementation we are
+             about to check --- either the very next file in this batch, or the
+             root file for which the on-the-fly dependences are being loaded? *)
+          let skip_solver =
+            is_iface_of intf_or_impl root
+            || (Dep.is_interface intf_or_impl
+                && (match rest with
+                    | next :: _ -> not (Dep.is_interface next) && Dep.module_name_of_file next = mname
+                    | [] -> false))
+          in
+          let m, mllib, env = tc_one_file_internal fly_deps skip_solver env intf_or_impl in
           rest, (m, mllib, env)
         | [] -> failwith "Impossible: Empty remaining modules"
   in
@@ -746,6 +785,7 @@ and tc_one_file_from_remaining
 
 and tc_fold_interleave
       (fly_deps:bool) 
+      (root:option string)
       (acc:list tc_result &
            list (uenv & MLSyntax.mlmodule) &  // initial env in which this module is extracted
            uenv)
@@ -759,10 +799,10 @@ and tc_fold_interleave
     | [] -> acc
     | _  ->
       let mods, mllibs, env_before = acc in
-      let remaining, nmod, mllib, env = tc_one_file_from_remaining fly_deps remaining env_before in
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining fly_deps root remaining env_before in
       if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave fly_deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
+      tc_fold_interleave fly_deps root (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 
 let load_file
@@ -770,18 +810,14 @@ let load_file
         (fn:string) //file name
 : ML TcEnv.env_t
 = let env = env_of_tcenv env in
-  let tc_result, _, env = tc_one_file_internal false env fn in
+  let tc_result, _, env = tc_one_file_internal false false env fn in
   tcenv_of_uenv env
 
 (* Load the interface of the file currently being edited in interactive mode.
-   Its SMT encoding must not be visible while checking the implementation, so
-   we snapshot the solver around the load, exactly as the batch driver does. *)
+   Its SMT encoding must not be visible while checking the implementation. *)
 let load_interface_of_current_file (env:TcEnv.env_t) (fn:string) : ML TcEnv.env_t
 = let uenv = env_of_tcenv env in
-  let mname = Dep.module_name_of_file fn in
-  snapshot_solver_for_iface uenv mname;
-  let _, _, uenv = tc_one_file_internal false uenv fn in
-  rollback_solver_after_iface uenv mname;
+  let _, _, uenv = tc_one_file_internal false true uenv fn in
   tcenv_of_uenv uenv
 
 let scan_and_load_fly_deps
@@ -879,7 +915,7 @@ let batch_mode_tc fly_deps filenames dep_graph
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
   let env = FStarC.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
-  let all_mods, mllibs, env = tc_fold_interleave fly_deps ([], [], env) filenames in
+  let all_mods, mllibs, env = tc_fold_interleave fly_deps None ([], [], env) filenames in
   if FStarC.Errors.get_err_count() = 0 then
     emit dep_graph mllibs;
   let solver_refresh env =

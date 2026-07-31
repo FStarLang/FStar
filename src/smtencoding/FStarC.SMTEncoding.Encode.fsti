@@ -28,6 +28,10 @@ val push_encoding_state: string -> ML unit
 val pop_encoding_state:  string -> ML unit
 val encode_sig: Env.env -> S.sigelt -> ML unit
 val encode_modul: Env.env -> S.modul -> ML (decls_t & list FStarC.SMTEncoding.Env.fvar_binding)
+(* Computes the encoding, but does not hand it to the solver nor record it in the
+   global encoding environment. Used for the interface of the module that is
+   about to be checked. *)
+val encode_modul_no_solver: Env.env -> S.modul -> ML (decls_t & list FStarC.SMTEncoding.Env.fvar_binding)
 //the lident is the module name
 val encode_modul_from_cache: Env.env -> S.modul -> (decls_t & list FStarC.SMTEncoding.Env.fvar_binding) -> ML unit
 val encode_query: option (unit -> ML string)
