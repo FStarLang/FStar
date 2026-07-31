@@ -564,35 +564,21 @@ let safe_readdir_for_include (d:string) : ML (list string) =
   with
   | _ -> []
 
-(** Enumerate all F* files in include directories.
-    Return a list of pairs of long names and full paths.
-
-    Normally only files that sit directly in an include directory are
-    considered (e.g. [X.Y.Z.fst], mapped to the long name [X.Y.Z]).
-
-    When the [--hierarchical_namespaces] option is enabled, we additionally
-    descend into subdirectories and support hierarchical namespaces: a file
-    found at [X/Y/Z.fst] (relative to an include directory) is also mapped to
-    the long name [X.Y.Z]. Subdirectory names are treated exactly like the
-    components of a flat filename: matching is case-insensitive (long names are
-    lowercased in [build_map]).
-
-    Directories whose name starts with a '.' (e.g. [.git]) are skipped, since
-    they can never be a valid namespace component. *)
-(* In public interface *)
-let build_inclusion_candidates_list (): ML (list (string & string)) =
-  let hierarchical = Options.hierarchical_namespaces () in
-  let include_directories = Find.full_include_path () in
-  let include_directories = List.map Filepath.normalize_file_path include_directories in
-  (* Note that [BatList.unique] keeps the last occurrence, that way one can
-   * always override the precedence order. *)
-  let include_directories = List.unique include_directories in
-  let cwd = Filepath.normalize_file_path (getcwd ()) in
-  (* Recursively enumerate source files under [dir]. [root] is the include
-     directory we started from; [ns_prefix] is the list of namespace components
-     corresponding to the subdirectories walked so far (in order); [rel] is the
-     path of [dir] relative to [root] ("" for [root] itself). *)
-  let rec walk (root:string) (dir:string) (ns_prefix:list string) (rel:string)
+(* Enumerate the (long name, file path) candidates found under a single include
+   directory [root]. In non-hierarchical mode only files sitting directly in
+   [root] are considered (e.g. [X.Y.Z.fst], mapped to the long name [X.Y.Z]). In
+   hierarchical mode we additionally descend into subdirectories, turning each
+   directory name into a namespace component: a file at [X/Y/Z.fst] (relative to
+   [root]) is mapped to the long name [X.Y.Z]. Directories whose name starts
+   with a '.' (e.g. [.git]) are skipped, since they can never be a valid
+   namespace component. [cwd] is the normalized current directory: files under
+   it are reported by their bare path relative to [cwd]. *)
+let inclusion_candidates_for_dir (hierarchical:bool) (cwd:string) (root:string)
+  : ML (list (string & string)) =
+  (* [ns_prefix] is the list of namespace components corresponding to the
+     subdirectories walked so far (in order); [rel] is the path of [dir]
+     relative to [root] ("" for [root] itself). *)
+  let rec walk (dir:string) (ns_prefix:list string) (rel:string)
     : ML (list (string & string)) =
     let entries = safe_readdir_for_include dir in
     entries |> List.concatMap (fun entry ->
@@ -604,7 +590,7 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
            never into hidden directories (they cannot be namespace components). *)
         if not hierarchical || (String.length entry > 0 && String.get entry 0 = '.')
         then []
-        else walk root entry_path (ns_prefix @ [entry]) rel'
+        else walk entry_path (ns_prefix @ [entry]) rel'
       else
         match check_and_strip_suffix entry with
         | None -> []
@@ -614,7 +600,59 @@ let build_inclusion_candidates_list (): ML (list (string & string)) =
           [(longname, full_path)]
     )
   in
-  include_directories |> List.concatMap (fun d -> walk d d [] "")
+  walk root [] ""
+
+(* Build a map from module long name (and interface/implementation role) to the
+   file providing it within a single include directory, and check that this map
+   is unique: fail hard if any module long name is provided by more than one
+   file of the same role. Under [--hierarchical_namespaces] this catches, e.g., a
+   flat [X.Y.Z.fst] and a nested [X/Y/Z.fst] both defining module [X.Y.Z], rather
+   than silently picking one. A no-op in non-hierarchical mode, where a single
+   directory cannot contain two files with the same long name anyway. Duplicates
+   *across* different include directories remain allowed; later directories
+   override earlier ones (see [build_map]). *)
+let check_unique_module_names_for_dir (hierarchical:bool) (dir:string)
+                                      (candidates : list (string & string))
+  : ML unit =
+  if not hierarchical then ()
+  else begin
+    let seen : SMap.t string = SMap.create 100 in
+    candidates |> List.iter (fun (longname, path) ->
+      let key = String.lowercase longname ^ (if is_interface path then ":i" else ":") in
+      match SMap.try_find seen key with
+      | Some prev ->
+        raise_error0 Errors.Fatal_DuplicateModuleOrInterface [
+          text (Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path);
+          text "With --hierarchical_namespaces a module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module."
+        ]
+      | None -> SMap.add seen key path)
+  end
+
+(** Enumerate all F* files in all include directories, returning a list of pairs
+    of long names and full paths.
+
+    In non-hierarchical mode only files that sit directly in an include
+    directory are considered (e.g. [X.Y.Z.fst], mapped to [X.Y.Z]). Under
+    [--hierarchical_namespaces] we also descend into subdirectories, mapping a
+    file at [X/Y/Z.fst] to the long name [X.Y.Z] (matching is case-insensitive;
+    long names are lowercased in [build_map]).
+
+    In hierarchical mode we additionally fail hard if any module long name is
+    provided by more than one file of the same role within a single include
+    directory (e.g. both a flat [X.Y.Z.fst] and a nested [X/Y/Z.fst]). *)
+(* In public interface *)
+let build_inclusion_candidates_list (): ML (list (string & string)) =
+  let hierarchical = Options.hierarchical_namespaces () in
+  let include_directories = Find.full_include_path () in
+  let include_directories = List.map Filepath.normalize_file_path include_directories in
+  (* Note that [BatList.unique] keeps the last occurrence, that way one can
+   * always override the precedence order. *)
+  let include_directories = List.unique include_directories in
+  let cwd = Filepath.normalize_file_path (getcwd ()) in
+  include_directories |> List.concatMap (fun d ->
+    let candidates = inclusion_candidates_for_dir hierarchical cwd d in
+    check_unique_module_names_for_dir hierarchical d candidates;
+    candidates)
 
 (** List the contents of all include directories, then build a map from long
     names (e.g. a.b) to pairs of filenames (/path/to/A.B.fst). Long names are
