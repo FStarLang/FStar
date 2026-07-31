@@ -1,4 +1,6 @@
 module PulseCore.BaseHeapSig
+open FStar.Ghost
+open FStar.PCM
 module H2 = PulseCore.Heap2
 open PulseCore.Tags
 

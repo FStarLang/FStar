@@ -3390,7 +3390,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
   | TopLevelModule id -> env, []
 
   | Open (lid, restriction) ->
-    let env = Env.push_namespace env lid restriction in
+    let env = Env.reshadow_iface_defs (Env.push_namespace env lid restriction) in
     env, []
 
   | Friend lid ->
@@ -3420,7 +3420,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     env, []
 
   | Include (lid, restriction) ->
-    let env = Env.push_include env lid restriction in
+    let env = Env.reshadow_iface_defs (Env.push_include env lid restriction) in
     env, []
 
   | ModuleAbbrev(x, l) ->
@@ -3878,11 +3878,6 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
       sigopens_and_abbrevs = opens_and_abbrevs env }]
 
   | Splice (is_typed, ids, t) ->
-    let ids =
-      if d.interleaved
-      then []
-      else ids
-    in
     let t = desugar_term env t in
     let top_attrs = d_attrs in    
     let se = { sigel = Sig_splice {is_typed; lids=List.map (qualify env) ids; tac=t};
@@ -3919,7 +3914,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
       | Inr d' ->
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
-        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
+        desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange }
            (attrs |> List.map (desugar_term env) |> U.deduplicate_terms)
   )
 
@@ -3931,20 +3926,11 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : ML (env_t & sigelts) 
     | Some desugar ->
       let mk_sig sigel = 
         let top_attrs = d_attrs in
-        let sigel =
-          if d.interleaved
-          then (
-            match sigel with
-            | Sig_splice s -> Sig_splice { s with lids = [] }
-            | _ -> sigel
-          )
-          else sigel
-        in
         let se = { 
             sigel;
             sigquals = List.map (trans_qual None) d.quals;
             sigrng = d.drange;
-            sigmeta = default_sigmeta;
+            sigmeta = { default_sigmeta with sigmeta_extension_decl = true };
             sigattrs = top_attrs;
             sigopts = None;
             sigopens_and_abbrevs = opens_and_abbrevs env
@@ -4096,9 +4082,9 @@ let add_modul_to_env_core (finish: bool) (m:Syntax.modul)
           match se.sigel with
           | Sig_new_effect ed ->
             let se' = {se with sigel=Sig_new_effect (erase_univs_ed ed)} in
-            let env = Env.push_sigelt env se' in
+            let env = Env.push_sigelt_force env se' in
             push_reflect_effect env se.sigquals ed.mname se.sigrng
-          | _ -> Env.push_sigelt env se
+          | _ -> Env.push_sigelt_force env se
       in
       let en, pop_when_done = Env.prepare_module_or_interface false false false en m.name mii in
       let en = List.fold_left

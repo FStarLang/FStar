@@ -15,6 +15,9 @@
 *)
 
 module PulseCore.IndirectionTheorySep
+module B = PulseCore.BaseHeapSig
+open Pulse.Lib.Loc
+open FStar.Ghost
 open PulseCore.KnotInstantiation
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality

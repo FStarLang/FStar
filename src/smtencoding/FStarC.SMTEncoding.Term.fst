@@ -18,6 +18,9 @@ module FStarC.SMTEncoding.Term
 open FStarC
 open FStarC.Effect
 open FStarC.Pprint
+open FStarC.Class.Show
+open FStarC.Class.Ord { deq, ord }
+open FStarC.List
 
 module BU  = FStarC.Util
 

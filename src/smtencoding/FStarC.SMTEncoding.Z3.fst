@@ -15,6 +15,7 @@
 *)
 module FStarC.SMTEncoding.Z3
 
+module U = FStarC.SMTEncoding.UnsatCore
 open FStarC
 open FStarC.Effect
 open FStarC.List

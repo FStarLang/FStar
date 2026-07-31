@@ -15,6 +15,10 @@
 *)
 module FStarC.Reflection.V2.Builtins
 
+open FStarC.Order
+open FStarC.Syntax.Embeddings
+open FStarC.Ident
+module S   = FStarC.Syntax.Syntax
 open FStarC
 open FStarC.Effect
 open FStarC.Reflection.V2.Data

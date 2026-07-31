@@ -15,6 +15,11 @@
 *)
 module FStarC.Syntax.Syntax
 
+open FStarC.Range.Type
+include FStarC.Class.HasRange
+open FStarC.Class.Show
+open FStarC.Class.Deq
+open FStarC.Class.Tagged
 open FStarC.Effect
 open FStarC.List
 (* Type definitions for the core AST *)
@@ -235,6 +240,7 @@ let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
     sigmeta_spliced=false;
+    sigmeta_extension_decl=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
     sigmeta_extension_data=[]

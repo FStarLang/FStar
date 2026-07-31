@@ -15,4 +15,6 @@
 *)
 
 module Pulse.Lib.HashTable.Type
+open Pulse.Lib.Pervasives
+open Pulse.Lib.HashTable.Spec
 #lang-pulse

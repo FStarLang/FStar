@@ -20,6 +20,7 @@
 
 module FStarC.TypeChecker.Rel
 
+open FStarC.Range
 open FStarC
 open FStarC.Effect
 open FStarC.List

@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Hash
+open FStarC.Class.Hashable
 open FStarC
 open FStarC.Effect
 open FStarC.Util

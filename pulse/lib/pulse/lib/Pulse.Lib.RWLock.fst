@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.RWLock
+open PulseCore.FractionalPermission
 #lang-pulse
 
 open Pulse.Lib.Pervasives

@@ -25,6 +25,8 @@
 *)
 module FStarC.Parser.Dep
 
+open FStarC.Util { out_channel }
+open FStarC.Ident
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -438,6 +440,10 @@ let file_of_dep_aux
     | PreferInterface key //key for module 'a'
         when has_interface file_system_map key ->  //so long as 'a.fsti' exists
       if None? (Options.dep()) // unless we're not just doing a dependency scan using `--dep _`
+      && not (fly_deps_enabled ())
+         (* In fly_deps mode the "command line" files are really just the roots
+            of an incremental scan, and an implementation among them typically
+            comes from a `friend` declaration, which is legitimate. *)
       && cmd_line_has_impl key // and the cmd line contains 'a.fst'
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.must (implementation_of_internal file_system_map key))
@@ -1595,6 +1601,7 @@ let all_files_in_include_paths () =
 
 let build_dep_graph_for_files
       (files:list string)
+      (all_cmd_line_files:list string)
       (file_system_map:_)
       (dep_graph:_)
       (parse_results:_)
@@ -1640,13 +1647,16 @@ let build_dep_graph_for_files
       deps_add_dep dep_graph file_name dep_node;
       List.iter
             discover_one
-            (List.map (file_of_dep file_system_map files)
+            (List.map (file_of_dep file_system_map all_cmd_line_files)
                       (deps @ mo_roots))
     end
   in
   profile (fun () -> List.iter discover_one files) "FStarC.Parser.Dep.discover"; 
   !interfaces_needing_inlining
 
+
+let root_friends : ref (list lident) = mk_ref []
+let set_root_friends (ls:list lident) : ML unit = root_friends := ls
 
 let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   (scope_pds: list parsing_data_elt)
@@ -1674,13 +1684,43 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
   let pd = collect_module_or_decls filename roots in
   debug_print (fun _ -> 
     Format.print2 "Got pds=%s and scope_pds=%s\n" (show pd.elts) (show scope_pds));
-  let pd = { pd with elts = List.rev scope_pds@List.rev pd.elts } in
+  (* Scanning the module header of an implementation makes its own interface a
+     dependence: the interface's checked sigelts seed the to-do list against
+     which the implementation is checked. The interface may itself depend on
+     modules that the implementation befriends, and a friend dependence has to
+     be the first dependence on a module; so the whole file is scanned for
+     [friend] declarations here, even though only the header is being processed. *)
+  let own_interface, own_friends =
+    match ds with
+    | {d=TopLevelModule _}::_ when is_implementation filename -> (
+      match interface_of_internal deps.file_system_map (lowercase_module_name filename) with
+      | None -> None, []
+      | Some iface ->
+        let ast, _ = Driver.parse_file filename in
+        let friends =
+          decls_of_modul ast |> List.collect (fun d ->
+            match d.d with
+            | Friend lid -> [P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str))]
+            | _ -> [])
+        in
+        Some iface, friends
+    )
+    | _ -> None, []
+  in
+  let pd = { pd with elts = List.map (fun l -> P_dep (true, l)) !root_friends
+                             @ own_friends
+                             @ List.rev scope_pds@List.rev pd.elts } in
   let direct_deps, _has_inline_for_extraction, _additional_roots = deps_from_parsing_data pd deps.file_system_map filename in
   debug_print (fun _ ->
      Format.print3 "direct deps of %s is %s, mo_roots=%s\n" 
       (show ds) (show direct_deps) (show _additional_roots)); 
   let files = List.map (file_of_dep deps.file_system_map []) direct_deps in
-  let inline_ifaces = build_dep_graph_for_files files deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in
+  let files =
+    match own_interface with
+    | None -> files
+    | Some iface -> files @ [iface]
+  in
+  let inline_ifaces = build_dep_graph_for_files files [] deps.file_system_map deps.dep_graph deps.parse_results get_parsing_data_from_cache in
   let filenames, _ = topological_dependences_of deps.file_system_map deps.dep_graph inline_ifaces files false in
   deps.all_files := RBSet.union (!deps.all_files) (RBSet.from_list filenames);
   filenames
@@ -1752,7 +1792,7 @@ let collect (all_cmd_line_files: list file_name)
   let valid_namespaces = SMap.create 41 in
   build_map file_system_map valid_namespaces all_cmd_line_files;
   let inlining_ifaces =
-    build_dep_graph_for_files all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache
+    build_dep_graph_for_files all_cmd_line_files all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache
   in
 
   debug_print (fun () -> print_graph stdout "stdout" dep_graph file_system_map all_cmd_line_files);

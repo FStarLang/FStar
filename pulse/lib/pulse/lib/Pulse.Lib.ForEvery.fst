@@ -1,5 +1,6 @@
 module Pulse.Lib.ForEvery
 
+open Pulse
 #lang-pulse
 open FStar.Fin
 open FStar.Bijection

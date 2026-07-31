@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Syntax.Base
+open FStar.List.Tot
 module RU = Pulse.RuntimeUtils
 module R = FStar.Reflection.V2
 

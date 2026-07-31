@@ -19,6 +19,9 @@
 module FStarC.Range.Ops
 friend FStarC.Range.Type
 
+open FStarC.Range.Type
+open FStarC.Class.Show
+open FStarC.Class.PP
 open FStarC
 open FStarC.Json
 open FStarC.Effect 

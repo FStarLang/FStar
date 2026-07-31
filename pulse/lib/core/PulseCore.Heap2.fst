@@ -1,4 +1,6 @@
 module PulseCore.Heap2
+open FStar.Ghost
+module T = FStar.Tactics
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open FStar.PCM

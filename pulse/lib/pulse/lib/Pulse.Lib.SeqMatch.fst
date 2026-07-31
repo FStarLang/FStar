@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.SeqMatch
+include Pulse.Lib.Pervasives
+open Pulse.Lib.Trade
 #lang-pulse
 open Pulse.Lib.ForEvery
 open Pulse.Lib.ForEvery.Range

@@ -15,6 +15,11 @@
 *)
 module Pulse.Lib.Core
 friend PulseCore.InstantiatedSemantics
+open FStar.Ghost
+open FStar.PCM
+open Pulse.Lib.Dv {}
+open FStar.ExtractAs
+include Pulse.Lib.Loc
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2

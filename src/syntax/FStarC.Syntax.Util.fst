@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.Syntax.Util
+open FStarC.Range.Type
 open FStarC.Effect
 open FStarC.List
 

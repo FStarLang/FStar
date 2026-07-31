@@ -15,6 +15,14 @@
 *)
 
 module Pulse.Lib.Primitives
+open PulseCore.Observability
+open Pulse.Lib.Core
+open PulseCore.FractionalPermission
+open Pulse.Lib.Reference
+open FStar.Ghost
+open Pulse.Class.PtsTo
+module U32 = FStar.UInt32
+module B = Pulse.Lib.Box
 #lang-pulse
 
 

@@ -15,6 +15,10 @@
 *)
 
 module Pulse.Lib.Array
+include Pulse.Lib.Array.Basic
+open PulseCore.FractionalPermission
+module SZ = FStar.SizeT
+module Seq = FStar.Seq
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Lib.Reference

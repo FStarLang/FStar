@@ -15,6 +15,7 @@
 *)
 module FStarC.SMTEncoding.Encode
 
+module ErrorReporting = FStarC.SMTEncoding.ErrorReporting
 open FStarC.Effect
 open FStarC.List
 open FStarC

@@ -15,6 +15,7 @@
 *)
 module FStar.UInt
 
+open FStar.Seq.Base
 (* NOTE: anything that you fix/update here should be reflected in [FStar.Int.fst], which is mostly
  * a copy-paste of this module. *)
 

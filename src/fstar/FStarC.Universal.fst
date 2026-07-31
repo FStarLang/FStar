@@ -83,41 +83,65 @@ let with_env env (f:uenv -> ML 'a) : ML 'a =
     let _ = pop_env env in
     res
 
+(* When A.fsti is checked (or loaded from its .checked file) right before A.fst,
+   its SMT encoding must not be visible while checking A.fst: the interface
+   encodes the module's abstract view (e.g. an abstract `val t : Type0` becomes an
+   uninterpreted symbol), which clashes with the definitions that the
+   implementation encodes for the very same names. We therefore snapshot the
+   solver state before processing the interface and roll it back before starting
+   on the implementation. The interface sigelts that the implementation copies
+   verbatim are encoded by the typechecker as it walks the to-do list.
+
+   Rolling the solver back also undoes the encoding of the modules that were
+   loaded on the fly while checking the interface, so we record them as we go
+   and replay them right after the rollback. *)
+let iface_solver_snapshot : ref (option (string & TcEnv.solver_depth_t)) = mk_ref None
+let iface_pending_moduls
+  : ref (list (Syntax.modul &
+               (FStarC.SMTEncoding.Term.decls_t & list FStarC.SMTEncoding.Env.fvar_binding)))
+  = mk_ref []
+
+(* Called at every point where a module's SMT encoding is handed to the solver. *)
+let record_encoded_modul (m:Syntax.modul) smt_decls : ML unit =
+  if Some? !iface_solver_snapshot
+  then iface_pending_moduls := (m, smt_decls) :: !iface_pending_moduls
+
+let snapshot_solver_for_iface (env:uenv) (mname:string) : ML unit =
+  let tcenv = tcenv_of_uenv env in
+  let depth, () = tcenv.solver.snapshot ("interface of " ^ mname) in
+  iface_pending_moduls := [];
+  iface_solver_snapshot := Some (mname, depth)
+
+let rollback_solver_after_iface (env:uenv) (mname:string) : ML unit =
+  match !iface_solver_snapshot with
+  | Some (m, depth) when m = mname ->
+    let pending = List.rev !iface_pending_moduls in
+    iface_solver_snapshot := None;
+    iface_pending_moduls := [];
+    let tcenv = tcenv_of_uenv env in
+    tcenv.solver.rollback ("interface of " ^ mname) (Some depth);
+    (* [encode_modul] leaves the interface's names registered in the SMT name
+       scope; free them so that the implementation encodes the very same lids
+       under their canonical names. *)
+    if not (Options.interactive ()) then FStarC.SMTEncoding.Env.varops.reset_scope ();
+    (* Replay the encodings of everything except this module's interface. *)
+    pending |> List.iter (fun (tcmod, smt_decls) ->
+      if not (Ident.string_of_lid tcmod.Syntax.name = mname)
+      && (fst smt_decls <> [] || snd smt_decls <> [])
+      then FStarC.SMTEncoding.Encode.encode_modul_from_cache tcenv tcmod smt_decls)
+  | _ -> ()
+
 let env_of_tcenv (env:TcEnv.env) : ML _ =
     FStarC.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
 (* Parse and maybe interleave & desugar a file with its interface      *)
 (***********************************************************************)
-let parse (fly_deps:bool) (env:uenv) (interface_fn: option string) (fn:string)
+let parse (fly_deps:bool) (env:uenv) (fn:string)
   : ML (lident
   & either FStarC.Parser.AST.modul FStarC.Syntax.Syntax.modul
   & uenv) =
   let ast, _ = Parser.Driver.parse_file fn in
-  let ast, env = match interface_fn with
-    | None ->
-        ast, env
-    | Some interface_fn ->
-        let pre_ast, _ = Parser.Driver.parse_file interface_fn in
-        match pre_ast, ast with
-        | Parser.AST.Interface {mname=lid1; decls=decls1}, Parser.AST.Module {mname=lid2; decls=decls2}
-          when Ident.lid_equals lid1 lid2 ->
-          let _, env =
-            with_dsenv_of_env env (FStarC.ToSyntax.Interleave.initialize_interface lid1 decls1)
-          in
-          with_dsenv_of_env env (FStarC.ToSyntax.Interleave.interleave_module ast true)
-
-        | Parser.AST.Interface {mname=lid1}, Parser.AST.Interface {mname=lid2} ->
-          (* Names do not match *)
-          Errors.raise_error lid1
-            Errors.Fatal_PreModuleMismatch
-            "Module name in implementation does not match that of interface."
-
-        | _ ->
-          Errors.raise_error0
-            Errors.Fatal_PreModuleMismatch
-            "Module name in implementation does not match that of interface."
-  in
   if fly_deps
   then Ast.lid_of_modul ast, Inl ast, env
   else let mod, env = with_dsenv_of_env env (Desugar.ast_modul_to_modul ast) in
@@ -179,11 +203,6 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
          it type-checks a fragment, can actually parse an entire module.
          Actually, this is an abuse, and just means that we're type-checking the
          first chunk. *)
-      let ast_modul, env =
-        if Options.interactive () && not <| Dep.fly_deps_enabled()
-        then with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.interleave_module ast_modul false
-        else ast_modul, env
-      in
       if not (acceptable_mod_name ast_modul) then
       begin
         let msg : string =
@@ -219,21 +238,6 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
       let { Parser.AST.drange = rng } = List.hd ast_decls in
       Errors.raise_error rng Errors.Fatal_ModuleFirstStatement "First statement must be a module declaration"
     | Some modul ->
-      let env, ast_decls_l =
-        if Options.interactive () && not (Dep.fly_deps_enabled())
-        then 
-          BU.fold_map
-                (fun env a_decl ->
-                    let decls, env =
-                        with_dsenv_of_tcenv env <|
-                        FStarC.ToSyntax.Interleave.prefix_with_interface_decls a_decl
-                    in
-                    env, decls)
-                env
-                ast_decls 
-        else env, [ast_decls]
-      in
-      let ast_decls = List.flatten ast_decls_l in
       let modul, _, env  = 
         if DsEnv.syntax_only env.dsenv 
         then let _, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts ast_decls in
@@ -282,20 +286,6 @@ let tc_one_fragment is_interface curmod (env:TcEnv.env_t) frag
       check_decls ast_decls
   )
     
-let load_interface_decls env interface_file_name : ML TcEnv.env_t =
-  let r = Pars.parse None (Pars.Filename interface_file_name) in
-  match r with
-  | Pars.ASTFragment (Inl (FStarC.Parser.AST.Interface {mname=l; decls}), _) ->
-    snd (with_dsenv_of_tcenv env <| FStarC.ToSyntax.Interleave.initialize_interface l decls)
-  | Pars.ASTFragment _ ->
-    Errors.raise_error0 FStarC.Errors.Fatal_ParseErrors
-      (Format.fmt1 "Unexpected result from parsing %s; expected a single interface" interface_file_name)
-  | Pars.ParseError (err, msg, rng) ->
-    raise (FStarC.Errors.Error(err, msg, rng, []))
-  | Pars.Term _ ->
-     failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
-
-
 (***********************************************************************)
 (* Batch mode: checking a file                                         *)
 (***********************************************************************)
@@ -378,6 +368,21 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
       let programs =
         mllib |> List.collect (fun (ue, m) -> Extraction.Krml.translate ue [m])
       in
+      (* An interface and its implementation are two separately checked modules
+         but a single Karamel program: the checked implementation already
+         contains the declarations copied from the interface. Keep only the
+         last program for each name, i.e. the implementation's. *)
+      let programs =
+        let rec dedup seen ps : ML _ =
+          match ps with
+          | [] -> []
+          | (name, decls)::ps ->
+            if seen |> List.existsb (fun n -> n = name)
+            then dedup seen ps
+            else (name, decls) :: dedup (name::seen) ps
+        in
+        List.rev (dedup [] (List.rev programs))
+      in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       let oname : string =
         (* note: -o implies --krmloutput *)
@@ -392,17 +397,9 @@ let emit dep_graph (mllib : list (uenv & MLSyntax.mlmodule)) : ML unit =
 
     | _ -> fail ()
 
-let needs_interleaving intf impl : ML bool =
-  let m1 = Parser.Dep.lowercase_module_name intf in
-  let m2 = Parser.Dep.lowercase_module_name impl in
-  m1 = m2 &&
-  List.mem (Filepath.get_file_extension intf) ["fsti"; "fsi"] &&
-  List.mem (Filepath.get_file_extension impl) ["fst"; "fs"]
-
 let rec tc_one_file_internal
         (fly_deps:bool)
         (env:uenv)
-        (interface_fn:option string) //interface file name
         (fn:string) //file name
     : ML (tc_result
     & option MLSyntax.mlmodule
@@ -440,7 +437,7 @@ let rec tc_one_file_internal
   in
   let tc_source_file () =
       let mname, fmod, env = 
-        Profiling.profile (fun () -> parse fly_deps env interface_fn fn)
+        Profiling.profile (fun () -> parse fly_deps env fn)
                           (Some (Parser.Dep.module_name_of_file fn))
                           "FStarC.Universal.tc_source_file.parse"  
       in
@@ -450,15 +447,16 @@ let rec tc_one_file_internal
             let modul, env =
               if fly_deps
               then let Inl ast_mod = fmod in
-                    fly_deps_check fn env ast_mod (Some? interface_fn)
+                    fly_deps_check fn env ast_mod
               else let Inr mod = fmod in
-                    with_tcenv_of_env env (fun tcenv -> Tc.check_module tcenv mod (Some? interface_fn))
+                    with_tcenv_of_env env (fun tcenv -> Tc.check_module tcenv mod)
             in
               //AR: encode the module to to smt
             restore_opts ();
             let smt_decls =
               FStarC.SMTEncoding.Encode.encode_modul (tcenv_of_uenv env) modul
             in
+            record_encoded_modul modul smt_decls;
             ((modul, smt_decls), env)
           in
 
@@ -566,6 +564,7 @@ let rec tc_one_file_internal
             //AR: encode smt module and do post processing
             if fst smt_decls <> [] || snd smt_decls <> [] then
               FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
+            record_encoded_modul tcmod smt_decls;
             (), env
         in
 
@@ -597,7 +596,7 @@ let rec tc_one_file_internal
   else let _, tc_result, mllib, env = tc_source_file () in
        tc_result, mllib, env
 
-and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exists:bool) : ML (Syntax.modul & uenv) =
+and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) : ML (Syntax.modul & uenv) =
   let decls = Ast.decls_of_modul ast_mod in
   let mname = match decls with
     | {d=Ast.TopLevelModule lid} :: rest -> lid
@@ -606,6 +605,15 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
   if Dep.debug_fly_deps() then Format.print1 "Before fly load deps: %s\n" (FStarC.Pprint.render <| FStarC.Class.PP.pp decls);
   Dep.populate_parsing_data filename ast_mod (DsEnv.dep_graph (tcenv_of_uenv env).dsenv);
   let is_interface = FStarC.Parser.Dep.is_interface filename in
+  (* A `friend M` declaration must be honoured before anything else pulls in the
+     interface of M --- in particular before this module's own interface, which
+     is loaded when the module header is scanned. So resolve the friends first. *)
+  let env =
+    decls |> List.fold_left (fun env d ->
+      match d.Ast.d with
+      | Ast.Friend _ -> fst (scan_and_load_fly_deps_internal filename env (Inr d))
+      | _ -> env) env
+  in
   let mod, env =
     List.fold_left
       (fun (mod, env) decl ->
@@ -630,7 +638,7 @@ and fly_deps_check (filename:string) (env:uenv) (ast_mod:Ast.modul) (iface_exist
     with_tcenv_of_env env (fun tcenv ->
       let dsenv, mod = DsEnv.finish_module_or_interface tcenv.dsenv mod in
       let tcenv = {tcenv with dsenv=dsenv} in
-      Tc.finish_partial_modul false false iface_exists tcenv mod) in
+      Tc.finish_partial_modul false false tcenv mod) in
   mod, env
 
 and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv & list string) =
@@ -685,15 +693,27 @@ and scan_and_load_fly_deps_internal filename (env:uenv) frag_or_decl: ML (uenv &
       Format.print1 "Additional files to load: %s\n" (show filenames_to_load)
     );
     let filenames = List.filter (fun fn -> fn <> filename) <| List.rev filenames_to_load in
-    filenames |> List.iter
-      (fun fn ->
-        if env.modules |> List.existsb (fun m -> Dep.module_name_of_file fn = Ident.string_of_lid m.name)
-        then begin
-          raise_error (Env.get_range env) Errors.Fatal_CyclicDependence [
-            text "Friend dependences must be declared as the first dependence on a module.";
-            text (Format.fmt1 "A non-friend dependence was already found on module %s." (Dep.module_name_of_file fn))
-          ]
-        end);
+    (* Files whose module is already in the environment need not (and must not)
+       be loaded again. The one case that is a genuine error is a `friend`
+       declaration on a module of which only the interface has been loaded:
+       the implementation cannot be revealed after the fact. *)
+    let already_loaded fn =
+      let mname = Dep.module_name_of_file fn in
+      env.modules |> List.filter (fun m -> mname = Ident.string_of_lid m.name)
+    in
+    let filenames =
+      filenames |> List.filter (fun fn ->
+        match already_loaded fn with
+        | [] -> true
+        | ms ->
+          if Dep.is_implementation fn && not (ms |> List.existsb (fun m -> not m.is_interface))
+          then
+            raise_error (Env.get_range env) Errors.Fatal_CyclicDependence [
+              text "Friend dependences must be declared as the first dependence on a module.";
+              text (Format.fmt1 "A non-friend dependence was already found on module %s." (Dep.module_name_of_file fn))
+            ]
+          else false)
+    in
     filenames, env
   in  
   let filenames, env = with_tcenv_of_env env (fun tcenv -> scan_fragment_deps tcenv frag_or_decl) in
@@ -707,12 +727,19 @@ and tc_one_file_from_remaining
 : ML (list string & tc_result & option MLSyntax.mlmodule & uenv) =
   let remaining, (nmods, mllib, env) =
     match remaining with
-        | intf :: impl :: remaining when needs_interleaving intf impl ->
-          let m, mllib, env = tc_one_file_internal fly_deps env (Some intf) impl in
-          remaining, (m, mllib, env)
-        | intf_or_impl :: remaining ->
-          let m, mllib, env = tc_one_file_internal fly_deps env None intf_or_impl in
-          remaining, (m, mllib, env)
+        | intf_or_impl :: rest ->
+          let mname = Dep.module_name_of_file intf_or_impl in
+          (* If the previous file was this module's interface, drop its SMT
+             encoding before checking the implementation. *)
+          if not (Dep.is_interface intf_or_impl)
+          then rollback_solver_after_iface env mname;
+          if Dep.is_interface intf_or_impl
+          && (match rest with
+              | next :: _ -> not (Dep.is_interface next) && Dep.module_name_of_file next = mname
+              | [] -> false)
+          then snapshot_solver_for_iface env mname;
+          let m, mllib, env = tc_one_file_internal fly_deps env intf_or_impl in
+          rest, (m, mllib, env)
         | [] -> failwith "Impossible: Empty remaining modules"
   in
   remaining, nmods, mllib, env
@@ -740,12 +767,22 @@ and tc_fold_interleave
 
 let load_file
         (env:TcEnv.env_t)
-        (interface_fn:option string) //interface file name
         (fn:string) //file name
 : ML TcEnv.env_t
 = let env = env_of_tcenv env in
-  let tc_result, _, env = tc_one_file_internal false env interface_fn fn in
+  let tc_result, _, env = tc_one_file_internal false env fn in
   tcenv_of_uenv env
+
+(* Load the interface of the file currently being edited in interactive mode.
+   Its SMT encoding must not be visible while checking the implementation, so
+   we snapshot the solver around the load, exactly as the batch driver does. *)
+let load_interface_of_current_file (env:TcEnv.env_t) (fn:string) : ML TcEnv.env_t
+= let uenv = env_of_tcenv env in
+  let mname = Dep.module_name_of_file fn in
+  snapshot_solver_for_iface uenv mname;
+  let _, _, uenv = tc_one_file_internal false uenv fn in
+  rollback_solver_after_iface uenv mname;
+  tcenv_of_uenv uenv
 
 let scan_and_load_fly_deps
     (filename:string)
@@ -764,24 +801,7 @@ let load_fly_deps_and_tc_one_fragment
   TcEnv.env &
   lang_decls_t &
   list string) //filenames that were loaded
-= let tcenv =
-    if Options.interactive()
-    && not (iface_interleaving_init tcenv.dsenv) // dsenv is not yet initialized for interleaving
-    && FStarC.Parser.Dep.is_implementation filename
-    then ( //initialize DsEnv for interface interleaving
-      let deps = FStarC.Syntax.DsEnv.dep_graph tcenv.dsenv in
-      let m = FStarC.Parser.Dep.lowercase_module_name filename in
-      match FStarC.Parser.Dep.interface_of deps m with
-      | None -> 
-        tcenv
-      | Some fn ->
-        load_interface_decls tcenv fn
-    )
-    else (
-      tcenv
-    )
-  in
-  //parse, if needed
+= //parse, if needed
   let ast_decls = 
     match frag_or_decl with
     | Inl (frag, lang_decls) -> (
@@ -797,18 +817,6 @@ let load_fly_deps_and_tc_one_fragment
     )
     | Inr d -> [d]
   in
-  //interleave
-  let tcenv, interleaved_decls =
-     BU.fold_map
-      (fun env a_decl ->
-          let decls, env =
-              with_dsenv_of_tcenv env <|
-              FStarC.ToSyntax.Interleave.prefix_with_interface_decls a_decl
-          in
-          env, decls)
-      tcenv
-      ast_decls
-  in
   //scan and check, one by one
   let (tcenv, curmod), langs_filenames =
     BU.fold_map
@@ -817,7 +825,7 @@ let load_fly_deps_and_tc_one_fragment
         let curmod, tcenv, langs = tc_one_fragment is_interface curmod tcenv (Inr a_decl) in
         (tcenv, curmod), (langs, filenames))
       (tcenv, mod)
-      (List.flatten interleaved_decls)
+      ast_decls
   in
   let langs_l, filenames_l = List.unzip langs_filenames in
   curmod, tcenv, List.flatten langs_l, List.flatten filenames_l

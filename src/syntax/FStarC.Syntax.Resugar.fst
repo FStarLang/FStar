@@ -1465,7 +1465,6 @@ let mk_decl r q d' =
     drange = r ;
     quals = List.choose resugar_qualifier q ;
     attrs = [] ; // We fill in the attrs in resugar_sigelt'
-    interleaved = false;
   }
 
 let decl'_to_decl se d' =

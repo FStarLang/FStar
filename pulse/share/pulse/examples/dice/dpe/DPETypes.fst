@@ -15,3 +15,9 @@
 *)
 
 module DPETypes
+open Pulse.Lib.Pervasives
+open HACL
+open EngineTypes
+open EngineCore
+open L0Types
+open L0Core

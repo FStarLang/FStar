@@ -15,6 +15,8 @@
 *)
 module PulseCore.InstantiatedSemantics
 
+include PulseCore.IndirectionTheorySep { on, loc, somewhere }
+open Pulse.Lib.Loc
 module Sem = PulseCore.Semantics
 module Sep = PulseCore.IndirectionTheorySep
 module F = FStar.FunctionalExtensionality

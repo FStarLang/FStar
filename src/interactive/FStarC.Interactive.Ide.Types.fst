@@ -15,6 +15,8 @@
 *)
 
 module FStarC.Interactive.Ide.Types
+open FStarC.Util
+include FStarC.Json
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -63,10 +65,6 @@ let dummy_tf_of_fname fname : ML _ =
     tf_modtime = t0 }
 
 
-let mk_ld_interleaved (iface impl:string) : ML repl_task =
-  let tod = Time.get_time_of_day () in
-  LDInterleaved ({tf_fname=iface; tf_modtime=tod}, {tf_fname=impl; tf_modtime=tod})
-
 let mk_ld_single (filename:string) : ML repl_task =
   let tod = Time.get_time_of_day () in
   LDSingle {tf_fname=filename; tf_modtime=tod}
@@ -76,8 +74,6 @@ let string_of_timed_fname x : ML _ = let { tf_fname = fname; tf_modtime = modtim
   else Format.fmt2 "{ %s; %s }" fname (show modtime)
 
 let string_of_repl_task t : ML _ = match t with
-  | LDInterleaved (intf, impl) ->
-    Format.fmt2 "LDInterleaved (%s, %s)" (string_of_timed_fname intf) (string_of_timed_fname impl)
   | LDSingle intf_or_impl ->
     Format.fmt1 "LDSingle %s" (string_of_timed_fname intf_or_impl)
   | LDInterfaceOfCurrentFile intf ->

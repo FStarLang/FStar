@@ -16,6 +16,9 @@
 
 module FStarC.Syntax.Embeddings
 
+open FStar.Char
+include FStarC.Syntax.Embeddings.Base
+module Range = FStarC.Range.Type
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax

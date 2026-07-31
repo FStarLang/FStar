@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Task
+open Pulse.Lib.Send
+module T = FStar.Tactics.V2
 #lang-pulse
 
 open Pulse.Lib.Pervasives

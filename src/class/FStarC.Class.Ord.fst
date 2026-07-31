@@ -1,5 +1,8 @@
 module FStarC.Class.Ord
 
+open FStarC.Order
+include FStarC.Class.Deq
+open FStarC.Class.Deq
 open FStarC
 open FStarC.Effect
 open FStar.Tactics.Typeclasses

@@ -16,6 +16,8 @@
 
 module FStarC.Syntax.Print
 
+open FStarC.Class.Show
+open FStarC.Class.PP
 open FStarC.Effect
 
 open FStarC

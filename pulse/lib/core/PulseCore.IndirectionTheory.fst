@@ -16,6 +16,7 @@
 
 module PulseCore.IndirectionTheory
 
+open FStar.FunctionalExtensionality
 let pred' #f (ff: functor u#a f) (n: nat) (knot_t: (m:nat {m<n} -> Type u#(a+1))) : Type u#(a+1) =
   restricted_t (m:nat {m<n}) fun m -> knot_t m ^-> prop
 
