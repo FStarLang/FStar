@@ -27,6 +27,7 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
   requires A.pts_to_range a lo hi s0
   requires pure (pure_pre_quicksort a lo hi lb rb s0)
   ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
+  decreases (Prims.op_Subtraction hi lo)
 {
   if (lo < hi - 1)
   {

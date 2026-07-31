@@ -54,8 +54,6 @@ open FStarC.Class.Show
 let plug () =
   let c = Options.codegen () in
   c = Some Options.Plugin
-  || c = Some Options.PluginNoLib
-let plug_no_lib () = Options.codegen () = Some Options.PluginNoLib
 
 instance showable_mlbinding : showable mlbinding = {
   show = function 
@@ -287,20 +285,16 @@ let is_fv_type g fv =
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 let no_fstar_stubs_ns (ns : list mlsymbol) : ML (list mlsymbol) =
+  (* In plugin codegen, F* stub modules are remapped to their FStarC
+     counterparts. These names are emitted *unqualified* (no Fstarcompiler
+     prefix): the fstarcompiler library is unwrapped, so modules compiled
+     into it see them as siblings, and external consumers get them as
+     top-level modules of the fstar.compiler package. *)
   match ns with
   | "FStar"::"NormSteps"::rest when plug () ->
-    "Fstarcompiler.FStarC"::"NormSteps"::rest
+    "FStarC"::"NormSteps"::rest
 
-  | "FStar"::"Stubs"::rest when plug_no_lib () -> "FStarC"::rest
-
-  (* These 3 modules are special, and are not in the guts. They live in src/ml/full and
-  are visible at the ambient namespace when building the plugin lib. *)
-  | "FStar"::"Stubs"::"Tactics"::"V2"::"Builtins"::[] when plug () ->
-    "FStarC"::"Tactics"::"V2"::"Builtins"::[]
-  | "FStar"::"Stubs"::"Tactics"::"Unseal"::[] when plug () ->
-    "FStarC"::"Tactics"::"Unseal"::[]
-
-  | "FStar"::"Stubs"::rest when plug () -> "Fstarcompiler.FStarC"::rest // review, but I think it's right
+  | "FStar"::"Stubs"::rest when plug () -> "FStarC"::rest
 
   | "FStar"::"Stubs"::rest -> "FStar"::rest // review, wrong
 
@@ -351,8 +345,7 @@ let initial_mlident_map =
             (match Options.codegen() with
               | Some Options.FSharp -> fsharpkeywords
               | Some Options.OCaml
-              | Some Options.Plugin
-              | Some Options.PluginNoLib ->
+              | Some Options.Plugin ->
                 ocamlkeywords
               | Some Options.Krml -> krml_keywords
               | Some Options.Extension -> []  // TODO
@@ -466,22 +459,14 @@ let new_mlpath_of_lident (g:uenv) (x : lident) : ML (mlpath & uenv) =
          let g = { g with env_mlident_map = map } in
          (mlns_of_lid x, name), g
   in
-  let guts (p::ps, l) = ("Fstarcompiler."^p) :: ps, l in
   let mlp =
     match string_of_lid x with
-    (* This sucks, but these are the types in the interface
-    to tactic primitives. Tuples/lists are not here since they
-    get extracted to the OCaml native ones. *)
-    | "Prims.dtuple2"
-    | "Prims.Mkdtuple2"
-    | "FStar.Pervasives.either"
-    | "FStar.Pervasives.Inl"
-    | "FStar.Pervasives.Inr"
-      when plug () -> guts mlp
-
-    (* special case to not expose FStarC.Errors *)
+    (* Map the tactic-primitive-interface name for exceptions to the compiler's
+       FStarC.Errors.Stop, so we don't expose FStarC.Errors. Emitted unqualified;
+       resolved as a top-level module of the (unwrapped) fstarcompiler
+       library, both for sibling modules and for external plugins. *)
     | "FStar.Stubs.Tactics.Common.Stop" ->
-      "Fstarcompiler.FStarC"::"Errors"::[], "Stop"
+      "FStarC"::"Errors"::[], "Stop"
 
     | _ -> mlp
   in

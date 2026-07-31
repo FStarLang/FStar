@@ -152,20 +152,20 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : ML free_vars_and_fvars 
         let f = free_names_and_uvars t use_cache in
         List.fold_left (fun out u -> out ++ free_univs u) f us
 
-      | Tm_abs {bs; body=t; rc_opt=ropt} ->
-        aux_binders bs (free_names_and_uvars t use_cache) ++
+      | Tm_abs {b; body=t; rc_opt=ropt} ->
+        aux_binders [b] (free_names_and_uvars t use_cache) ++
         (match ropt with
          | Some { residual_typ = Some t } ->  free_names_and_uvars t use_cache
          | _ -> no_free_vars)
 
-      | Tm_arrow {bs; comp=c} ->
-        aux_binders bs (free_names_and_uvars_comp c use_cache)
+      | Tm_arrow {b; comp=c} ->
+        aux_binders [b] (free_names_and_uvars_comp c use_cache)
 
       | Tm_refine {b=bv; phi=t} ->
         aux_binders [mk_binder bv] (free_names_and_uvars t use_cache)
 
-      | Tm_app {hd=t; args} ->
-        free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
+      | Tm_app {hd=t; arg} ->
+        free_names_and_uvars_args [arg] (free_names_and_uvars t use_cache) use_cache
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt} ->
         (match rc_opt with

@@ -18,6 +18,9 @@
 
 module FStarC.CList
 
+open FStarC.Class.Deq
+open FStarC.Class.Show
+open FStarC.Class.Monoid
 open FStarC.Effect
 open FStar.Tactics.Typeclasses
 open FStarC.Class.Ord

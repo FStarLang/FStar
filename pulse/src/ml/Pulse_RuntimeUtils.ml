@@ -1,5 +1,5 @@
-open Fstarcompiler
 type context = ((string * FStarC_Range.range option) list) (* FStar_Sealed.sealed *)
+type range = FStarC_Range.range
 let extend_context (s:string) (r:FStarC_Range.range option) (c:context) = (s,r)::c
 
 type 'a utac = 'a FStarC_Tactics_Monad.tac
@@ -119,25 +119,9 @@ let builtin_lids = [
     stick_lid
 ]
 
-let deep_transform_to_unary_applications (t:S.term) =
-  FStarC_Syntax_Visit.visit_term
-    false
-    (fun t -> 
-      let open S in
-      match t.n with
-      | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_constructor _)}} }
-      | Tm_app { hd={n=Tm_fvar {fv_qual=Some (Unresolved_projector _)}} } ->
-        t
-      | Tm_app { hd; args=_::_::_ as args } -> (
-        match (FStarC_Syntax_Util.un_uinst hd).n with
-        | Tm_fvar fv
-          when FStarC_List.existsb (S.fv_eq_lid fv) builtin_lids ->
-          t
-        | _ -> 
-         List.fold_left (fun t arg -> { t with n = Tm_app {hd=t; args=[arg]} }) hd args
-      )
-      | _ -> t)
-    t
+(* Tm_app is unary in FStarC.Syntax.Syntax, so every application is already
+   in unary form and there is nothing to do here. *)
+let deep_transform_to_unary_applications (t:S.term) = t
 
 let deep_compress (t:S.term) = FStarC_Syntax_Compress.deep_compress_uvars t
 let deep_compress_safe (t:S.term) = FStarC_Syntax_Compress.deep_compress true true t
@@ -255,11 +239,11 @@ let norm_well_typed_term
       (k:_)
       (typing:_)
       (steps:FStarC_NormSteps.norm_step list)
-  : ((S.term, unit, unit) Fstar_pluginlib.FStar_Pervasives.dtuple3) utac
+  : ((S.term, unit, unit) FStar_Pervasives.dtuple3) utac
   = fun ps ->
     let steps = FStarC_TypeChecker_Cfg.translate_norm_steps steps in
     let t' = FStarC_TypeChecker_Normalize.normalize (TcEnv.Unascribe::steps) g t in
-    Fstar_pluginlib.FStar_Pervasives.Mkdtuple3 (t', (), ())
+    FStar_Pervasives.Mkdtuple3 (t', (), ())
 
 let add_attribute (s:S.sigelt) (x:S.attribute) =
   { s with sigattrs = x::s.sigattrs }

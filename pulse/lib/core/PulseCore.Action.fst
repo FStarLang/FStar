@@ -16,6 +16,7 @@
 
 module PulseCore.Action
 friend PulseCore.InstantiatedSemantics
+open Pulse.Lib.Loc
 module Sem = PulseCore.Semantics
 module Sep = PulseCore.IndirectionTheorySep
 module ITA = PulseCore.IndirectionTheoryActions

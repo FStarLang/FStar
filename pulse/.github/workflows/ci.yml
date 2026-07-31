@@ -79,7 +79,7 @@ jobs:
           path: karamel
           key: karamel-${{ runner.os }}-${{ runner.arch }}-${{ steps.checkout-fstar.outputs.commit }}-${{ steps.checkout-karamel.outputs.commit }}
 
-      - run: echo "KRML_HOME=$(pwd)/karamel" | sudo tee -a $GITHUB_ENV
+      - run: echo "KRML_EXE=$(pwd)/karamel/out/bin/krml" | sudo tee -a $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:

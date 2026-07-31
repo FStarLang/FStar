@@ -21,7 +21,7 @@ open FStarC.Order
 open FStarC.Reflection.V2.Data
 open FStarC.Syntax.Embeddings
 open FStarC.Syntax.Syntax
-open FStarC.VConfig
+open FStar.VConfig
 open FStarC.Ident
 
 module Env = FStarC.TypeChecker.Env

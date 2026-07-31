@@ -198,6 +198,9 @@ let consequence (p:program) (pre pre' post post':state -> prop)
 // WPs
 ////////////////////////////////////////////////////////////////////////////////
 
+(* The SMT encoding would otherwise pick the arity of the flattened arrow
+   spine (3); the soundness proof below relies on partial applications. *)
+[@@FStar.Attributes.smt_arity 2]
 //SNIPPET_START: wp$
 let rec wp (c:program) (post: state -> prop) 
   : state -> prop 

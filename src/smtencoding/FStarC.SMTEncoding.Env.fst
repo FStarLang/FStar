@@ -27,6 +27,7 @@ open FStarC.Ident
 open FStarC.SMTEncoding.Util
 
 module SS = FStarC.Syntax.Subst
+module U = FStarC.Syntax.Util
 module BU = FStarC.Util
 
 open FStarC.Class.Show
@@ -48,8 +49,8 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (Format.fmt2 "Projector %s on data constructor %s not found" (show i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow {bs; comp=c} ->
-          let binders, _ = SS.open_comp bs c in
+        | Tm_arrow _ ->
+          let binders, _ = U.arrow_node_formals_comp t in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
@@ -90,7 +91,13 @@ let varops =
       if !dbg_Snapshot then Format.print_string "SMTEncoding.scopes.pop\n";
       scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStarC.Common.snapshot "SMTEncoding.scopes" push scopes () in
-    let rollback depth = FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth in
+    let rollback depth =
+      (* [reset_scope] below may have dropped the scope stack below [depth];
+         in that case there is nothing left to pop. *)
+      match depth with
+      | Some n when List.length !scopes <= n -> ()
+      | _ -> FStarC.Common.rollback "SMTEncoding.scopes" pop scopes depth
+    in
     {push=push;
      pop=pop;
      snapshot=snapshot;

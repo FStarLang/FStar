@@ -132,7 +132,6 @@ ensures is_list_cases x l
       with w tail. _;
       let v = Some?.v x;
       rewrite each w as v;
-      rewrite each tail as (({ head; tail }).tail) in (is_list tail tl);
       fold (is_list_cases (Some v) l);
       rewrite each (Some #(ref (node t)) v) as x;
     }
@@ -181,6 +180,7 @@ fn rec length (#t:Type0) (x:llist t)
 preserves is_list x 'l
 returns n:nat
 ensures pure (n == List.Tot.length 'l)
+decreases (reveal 'l)
 {
   match x {
     norewrite None -> {
@@ -205,6 +205,7 @@ fn rec length_tail (#t:Type0) (x:llist t) (k:nat)
 preserves is_list x 'l
 returns n:nat
 ensures pure (n == k + List.Tot.length 'l)
+decreases (reveal 'l)
 {
   match x {
     norewrite None -> {
@@ -283,6 +284,7 @@ ensures pure (n == List.Tot.length 'l)
     is_list ll suffix **
     pure (n == List.Tot.length 'l - List.Tot.length suffix) **
     (is_list ll suffix @==> is_list x 'l)
+  decreases (List.Tot.length 'l - !ctr)
   {
     let n = !ctr;
     let ll = !cur;
@@ -306,6 +308,7 @@ requires is_list x 'l1
 requires is_list y 'l2
 requires pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
+decreases (reveal 'l1)
 {
   let np = Some?.v x;
   is_list_case_some x np;
@@ -392,7 +395,6 @@ ensures
   elim_is_list_nil _node.tail;
   let node = !np;
   np := { node with tail = y };
-  rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
   intro_is_list_cons x np; 
 }
 //end append_at_last_cell$
@@ -407,7 +409,6 @@ ensures pure (Some? x)
     elim_is_list_cons x _ (Cons?.hd 'l) (Cons?.tl 'l);
     with v tail. _;
     with n tl. assert (pts_to v n ** is_list tail tl);
-    rewrite each tail as n.tail;
     intro_is_list_cons x v #n #tl;
 }
 //end non_empty_list$
@@ -422,7 +423,7 @@ ensures pure (b == (List.Tot.length 'l <> 1))
 }
 
 //append_iter$
-fn append_iter (#t:Type) (x y:llist t)
+divergent fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1
 requires is_list y 'l2
 requires pure (Some? x)

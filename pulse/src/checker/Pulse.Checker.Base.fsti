@@ -17,6 +17,7 @@
 module Pulse.Checker.Base
 
 module RT = FStar.Reflection.Typing
+module PRU = Pulse.Reflection.Util
 module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
@@ -35,16 +36,17 @@ val intro_comp_typing (g:env)
 
 val post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  : FStar.Ghost.erased (RT.tot_typing (elab_env g)
-                             (RT.mk_abs ty T.Q_Explicit t)
-                             (RT.mk_arrow ty T.Q_Explicit tm_slprop))
+  : FStar.Ghost.erased (PRU.rt_tot_typing (elab_env g)
+                             (PRU.mk_abs ty T.Q_Explicit t)
+                             (PRU.mk_arrow (ty, T.Q_Explicit) tm_slprop))
 
 let effect_annot_labels_match (a1 a2:effect_annot) =
   match a1, a2 with
   | EffectAnnotAtomic _, EffectAnnotAtomic _
   | EffectAnnotGhost _, EffectAnnotGhost _
   | EffectAnnotAtomicOrGhost _, EffectAnnotAtomicOrGhost _
-  | EffectAnnotSTT, EffectAnnotSTT -> True
+  | EffectAnnotSTT, EffectAnnotSTT
+  | EffectAnnotSTTDiv, EffectAnnotSTTDiv -> True
   | _ -> False
 
 val intro_post_hint
@@ -67,9 +69,9 @@ val comp_typing_from_post_hint
 : T.Tac unit
 
 val extend_post_hint (g:env) (p:post_hint_for_env g)
-                     (x:var{freshv g x}) (tx:term)
+                     (x:var{freshv g x}) (n:ppname) (tx:term)
                      (conjunct:term)
-  : T.Tac (q:post_hint_for_env (push_binding g x ppname_default tx) {
+  : T.Tac (q:post_hint_for_env (push_binding g x n tx) {
             q.post == tm_star p.post conjunct /\
             q.ret_ty == p.ret_ty /\
             q.u == p.u /\
@@ -185,6 +187,18 @@ val apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
   (r:checker_result_t g ctxt (PostHint post_hint))
   (res_ppname:ppname)
   : T.Tac (st_typing_in_ctxt g ctxt (PostHint post_hint))
+
+// Like apply_checker_result_k, but returns the checked computation with its
+// natural effect (rather than coercing it to post_hint's effect). Used to infer
+// the effect of a conditional's branches when the postcondition was inferred.
+val apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (t:st_term &
+           c:comp_st { comp_pre c == ctxt /\
+                       comp_res c == post_hint.ret_ty /\
+                       comp_u c == post_hint.u /\
+                       comp_post c == post_hint.post })
 
 val checker_result_for_st_typing (#g:env) (#ctxt:slprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)

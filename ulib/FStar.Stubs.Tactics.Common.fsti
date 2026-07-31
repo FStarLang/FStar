@@ -1,6 +1,6 @@
 module FStar.Stubs.Tactics.Common
 
-include FStar.Stubs.Errors.Msg
+include FStar.Errors.Msg
 
 (* This module is realized by FStar.Tactics.Common in the F* sources.
 Any change must be reflected there. *)

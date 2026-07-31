@@ -77,7 +77,7 @@ fn apply_with_imps_explicit
 
 
 
-fn rec loop (x:int)
+divergent fn rec loop (x:int)
     returns y:int
 {
     let res = loop x;

@@ -18,8 +18,13 @@ module FStarC.Range.Ops
 open FStarC
 open FStarC.Range.Type
 open FStarC.Effect
+open FStarC.Class.Deq
+open FStarC.Class.Ord
 open FStarC.Class.Show
 open FStarC.Class.PP
+
+instance val deq_pos : deq pos
+instance val ord_pos : ord pos
 
 val union_rng: rng -> rng -> ML rng
 val union_ranges: range -> range -> ML range

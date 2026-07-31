@@ -16,6 +16,7 @@
 
 module Pulse.Lib.Core.Typing
 
+open Pulse.Syntax.Pure
 open FStar.Reflection.V2
 open Pulse.Reflection.Util
 

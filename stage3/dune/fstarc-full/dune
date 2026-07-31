@@ -3,9 +3,14 @@
  (name fstarc3_full)
  (public_name fstar.exe)
  (libraries
-    ; Can we just say we extend fstar_bare instead of _guts, and duplicating main?
     fstarcompiler
-    fstar_plugins
+    ; The in-tree plugins (plugins.ml) are folded into the fstarcompiler
+    ; library, so there is no separate fstar_plugins library. The Pulse
+    ; plugin (pulse_plugin) links against the (unwrapped) fstarcompiler
+    ; library directly, so there is no separate flat fstar_pluginlib
+    ; library. Pulse's flat modules do NOT collide with fstarcompiler's
+    ; modules (disjoint names), and any double plugin registration is
+    ; benign (name-keyed psmap, last-wins).
     pulse_plugin
     memtrace
  )

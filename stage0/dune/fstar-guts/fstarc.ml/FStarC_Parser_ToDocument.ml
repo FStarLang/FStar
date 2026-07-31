@@ -168,7 +168,7 @@ let separate_map_or_flow (sep : FStar_Pprint.document)
   FStar_Pprint.document=
   if (FStarC_List.length l) < (Prims.of_int 10)
   then let uu___ = FStarC_List.map f l in FStar_Pprint.separate sep uu___
-  else (let uu___1 = FStarC_List.map f l in FStar_Pprint.flow sep uu___1)
+  else (let uu___ = FStarC_List.map f l in FStar_Pprint.flow sep uu___)
 let flow_map_last (sep : FStar_Pprint.document)
   (f : Prims.bool -> 'uuuuu -> FStar_Pprint.document)
   (es : 'uuuuu Prims.list) : FStar_Pprint.document=
@@ -198,8 +198,8 @@ let soft_surround_separate_map (n : Prims.int) (b : Prims.int)
   if xs = []
   then void_
   else
-    (let uu___1 = FStarC_Pprint.separate_map sep f xs in
-     FStar_Pprint.soft_surround n b opening uu___1 closing)
+    (let uu___ = FStarC_Pprint.separate_map sep f xs in
+     FStar_Pprint.soft_surround n b opening uu___ closing)
 let soft_surround_map_or_flow (n : Prims.int) (b : Prims.int)
   (void_ : FStar_Pprint.document) (opening : FStar_Pprint.document)
   (sep : FStar_Pprint.document) (closing : FStar_Pprint.document)
@@ -208,8 +208,8 @@ let soft_surround_map_or_flow (n : Prims.int) (b : Prims.int)
   if xs = []
   then void_
   else
-    (let uu___1 = separate_map_or_flow sep f xs in
-     FStar_Pprint.soft_surround n b opening uu___1 closing)
+    (let uu___ = separate_map_or_flow sep f xs in
+     FStar_Pprint.soft_surround n b opening uu___ closing)
 let is_unit (e : FStarC_Parser_AST.term) : Prims.bool=
   match e.FStarC_Parser_AST.tm with
   | FStarC_Parser_AST.Const (FStarC_Const.Const_unit) -> true
@@ -470,11 +470,11 @@ let handleable_args_length (op : FStarC_Ident.ident) : Prims.int=
   if uu___
   then Prims.int_one
   else
-    (let uu___2 =
-       let uu___3 =
-         let uu___4 = is_operatorInfix0ad12 op in
-         if uu___4 then true else is_operatorInfix34 op in
-       if uu___3
+    (let uu___1 =
+       let uu___2 =
+         let uu___3 = is_operatorInfix0ad12 op in
+         if uu___3 then true else is_operatorInfix34 op in
+       if uu___2
        then true
        else
          FStarC_List.mem op_s
@@ -489,7 +489,7 @@ let handleable_args_length (op : FStarC_Ident.ident) : Prims.int=
            ".[]";
            ".(||)";
            ".[||]"] in
-     if uu___2
+     if uu___1
      then Prims.of_int 2
      else
        if FStarC_List.mem op_s [".()<-"; ".[]<-"; ".(||)<-"; ".[||]<-"]
@@ -593,9 +593,9 @@ let with_comment (printer : 'uuuuu -> FStar_Pprint.document) (tm : 'uuuuu)
            comments_before_pos (FStar_Pprint.op_Hat_Hat acc comment)
              print_pos lookahead_pos)
         else
-          (let uu___3 =
+          (let uu___2 =
              FStarC_Range_Ops.range_before_pos crange lookahead_pos in
-           (acc, uu___3)) in
+           (acc, uu___2)) in
   let uu___ =
     comments_before_pos FStar_Pprint.empty
       (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange))
@@ -633,9 +633,9 @@ let with_comment_sep (printer : 'uuuuu -> 'uuuuu1) (tm : 'uuuuu)
                   (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline comment))
              print_pos lookahead_pos)
         else
-          (let uu___3 =
+          (let uu___2 =
              FStarC_Range_Ops.range_before_pos crange lookahead_pos in
-           (acc, uu___3)) in
+           (acc, uu___2)) in
   let uu___ =
     comments_before_pos FStar_Pprint.empty
       (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange))
@@ -1358,8 +1358,8 @@ and p_letlhs (kw : FStar_Pprint.document)
                     let uu___7 = pats_as_binders_if_possible pats in
                     match uu___7 with | (bs, style) -> (bs, style)
                   else
-                    (let uu___8 = pats_as_binders_if_possible pats in
-                     match uu___8 with | (bs, style) -> (bs, style)) in
+                    (let uu___7 = pats_as_binders_if_possible pats in
+                     match uu___7 with | (bs, style) -> (bs, style)) in
                 (match uu___6 with
                  | (terms, style) ->
                      let uu___7 =
@@ -2160,53 +2160,53 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
       else
         (let e2_doc =
            match e2.FStarC_Parser_AST.tm with
-           | FStarC_Parser_AST.If (uu___1, uu___2, uu___3, uu___4, e31) when
+           | FStarC_Parser_AST.If (uu___, uu___1, uu___2, uu___3, e31) when
                is_unit e31 ->
-               let uu___5 = p_noSeqTermAndComment false false e2 in
-               soft_parens_with_nesting uu___5
-           | uu___1 -> p_noSeqTermAndComment false false e2 in
+               let uu___4 = p_noSeqTermAndComment false false e2 in
+               soft_parens_with_nesting uu___4
+           | uu___ -> p_noSeqTermAndComment false false e2 in
          match ret_opt with
          | FStar_Pervasives_Native.None ->
-             let uu___1 =
+             let uu___ =
+               let uu___1 =
+                 let uu___2 = p_noSeqTermAndComment false false e1 in
+                 op_Hat_Slash_Plus_Hat (str "if") uu___2 in
                let uu___2 =
-                 let uu___3 = p_noSeqTermAndComment false false e1 in
-                 op_Hat_Slash_Plus_Hat (str "if") uu___3 in
-               let uu___3 =
-                 let uu___4 =
-                   let uu___5 = p_noSeqTermAndComment ps pb e3 in
-                   op_Hat_Slash_Plus_Hat (str "else") uu___5 in
+                 let uu___3 =
+                   let uu___4 = p_noSeqTermAndComment ps pb e3 in
+                   op_Hat_Slash_Plus_Hat (str "else") uu___4 in
                  FStar_Pprint.op_Hat_Slash_Hat
-                   (op_Hat_Slash_Plus_Hat (str "then") e2_doc) uu___4 in
-               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-             FStar_Pprint.group uu___1
+                   (op_Hat_Slash_Plus_Hat (str "then") e2_doc) uu___3 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+             FStar_Pprint.group uu___
          | FStar_Pervasives_Native.Some (as_opt, ret, use_eq) ->
-             let uu___1 =
+             let uu___ =
+               let uu___1 =
+                 let uu___2 = p_noSeqTermAndComment false false e1 in
+                 op_Hat_Slash_Plus_Hat (str "if") uu___2 in
                let uu___2 =
-                 let uu___3 = p_noSeqTermAndComment false false e1 in
-                 op_Hat_Slash_Plus_Hat (str "if") uu___3 in
-               let uu___3 =
-                 let uu___4 =
-                   let uu___5 =
+                 let uu___3 =
+                   let uu___4 =
                      match as_opt with
                      | FStar_Pervasives_Native.None -> FStar_Pprint.empty
                      | FStar_Pervasives_Native.Some as_ident ->
-                         let uu___6 = p_ident as_ident in
-                         FStar_Pprint.op_Hat_Slash_Hat (str "as") uu___6 in
-                   let uu___6 =
-                     let uu___7 = p_tmIff ret in
+                         let uu___5 = p_ident as_ident in
+                         FStar_Pprint.op_Hat_Slash_Hat (str "as") uu___5 in
+                   let uu___5 =
+                     let uu___6 = p_tmIff ret in
                      op_Hat_Slash_Plus_Hat
                        (str (if use_eq then "returns$" else "returns"))
-                       uu___7 in
-                   FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
-                 let uu___5 =
-                   let uu___6 =
-                     let uu___7 = p_noSeqTermAndComment ps pb e3 in
-                     op_Hat_Slash_Plus_Hat (str "else") uu___7 in
+                       uu___6 in
+                   FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                 let uu___4 =
+                   let uu___5 =
+                     let uu___6 = p_noSeqTermAndComment ps pb e3 in
+                     op_Hat_Slash_Plus_Hat (str "else") uu___6 in
                    FStar_Pprint.op_Hat_Slash_Hat
-                     (op_Hat_Slash_Plus_Hat (str "then") e2_doc) uu___6 in
-                 FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
-               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
-             FStar_Pprint.group uu___1)
+                     (op_Hat_Slash_Plus_Hat (str "then") e2_doc) uu___5 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+               FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
+             FStar_Pprint.group uu___)
   | FStarC_Parser_AST.TryWith (e1, branches) ->
       let uu___ =
         let uu___1 =
@@ -2397,10 +2397,10 @@ and p_noSeqTerm' (ps : Prims.bool) (pb : Prims.bool)
                    (i = (l - Prims.int_one)) in
                FStar_Pprint.group uu___
              else
-               (let uu___1 =
+               (let uu___ =
                   p_lb FStar_Pervasives_Native.None lb
                     (i = (l - Prims.int_one)) in
-                FStar_Pprint.group uu___1)) lbs in
+                FStar_Pprint.group uu___)) lbs in
       let lbs_doc =
         FStar_Pprint.group (FStar_Pprint.separate break1 lbs_docs) in
       let uu___ =
@@ -2876,14 +2876,14 @@ and sig_as_binders_if_possible (t : FStarC_Parser_AST.term)
         false t in
     FStar_Pprint.op_Hat_Hat s uu___1
   else
-    (let uu___2 =
-       let uu___3 =
-         let uu___4 =
+    (let uu___1 =
+       let uu___2 =
+         let uu___3 =
            p_typ_top (Arrows ((Prims.of_int 2), (Prims.of_int 2))) false
              false t in
-         FStar_Pprint.op_Hat_Hat s uu___4 in
-       FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___3 in
-     FStar_Pprint.group uu___2)
+         FStar_Pprint.op_Hat_Hat s uu___3 in
+       FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___2 in
+     FStar_Pprint.group uu___1)
 and collapse_pats
   (pats :
     (FStar_Pprint.document * FStar_Pprint.document * Prims.bool * Prims.bool)
@@ -3088,20 +3088,20 @@ and p_patternBranch (pb : Prims.bool)
               (if comm = FStar_Pprint.empty
                then FStar_Pprint.group (op_Hat_Slash_Plus_Hat branch doc)
                else
-                 (let uu___3 =
-                    let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
+                 (let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
                           inline_comment_or_above comm doc FStar_Pprint.empty in
-                        jump2 uu___6 in
-                      FStar_Pprint.op_Hat_Hat branch uu___5 in
+                        jump2 uu___5 in
+                      FStar_Pprint.op_Hat_Hat branch uu___4 in
                     FStar_Pprint.ifflat
                       (FStar_Pprint.group
                          (op_Hat_Slash_Plus_Hat branch
                             (FStar_Pprint.op_Hat_Hat doc
                                (FStar_Pprint.op_Hat_Hat break1 comm))))
-                      uu___4 in
-                  FStar_Pprint.group uu___3))
+                      uu___3 in
+                  FStar_Pprint.group uu___2))
             else
               if comm <> FStar_Pprint.empty
               then

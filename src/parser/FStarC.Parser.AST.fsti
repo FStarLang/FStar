@@ -283,7 +283,6 @@ and decl = {
   drange:range;
   quals: qualifiers;
   attrs: attributes_;
-  interleaved: bool;
 }
 and effect_decl =
   (* KM : Is there really need of the generality of decl here instead of e.g. lid * term ? *)

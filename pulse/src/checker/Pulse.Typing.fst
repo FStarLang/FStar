@@ -17,6 +17,7 @@
 module Pulse.Typing
 
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module R = FStar.Reflection.V2
 open Pulse.Reflection.Util
 open FStar.List.Tot
@@ -36,7 +37,7 @@ let debug_log (level:string)  (g:env) (f: unit -> T.Tac string) : T.Tac unit =
 
 let tm_unit = tm_fvar (as_fv unit_lid)
 let unit_const = tm_constant R.C_Unit
-let tm_bool = RT.bool_ty
+let tm_bool = RT.bool_ty_tm
 let tm_int  = tm_fvar (as_fv int_lid)
 let tm_nat  = tm_fvar (as_fv nat_lid)
 let tm_szt  = szt_tm
@@ -45,7 +46,7 @@ let tm_false = tm_constant R.C_False
 let tm_l_false = tm_fvar (as_fv R.false_qn)
 include Pulse.Reflection.Util { tm_is_unreachable }
 
-let tm_prop = RU.set_range FStar.Reflection.Typing.tm_prop Range.range_0
+let tm_prop = RU.set_range (R.pack_ln (R.Tv_FVar (R.pack_fv R.prop_qn))) range_0
 
 let mk_erased (u:universe) (t:term) : term =
   let hd = tm_uinst (as_fv erased_lid) [u] in
@@ -80,6 +81,11 @@ let mk_slprop_eq (e0 e1:term) : term =
   mk_eq2 u2 tm_slprop e0 e1
 
 let rewrites_to_p_lid = Pulse.Reflection.Util.mk_pulse_lib_core_lid "rewrites_to_p"
+
+let term_as_subst_var (t:term) : option var =
+  match R.inspect_ln t with
+  | R.Tv_Var x -> Some (R.inspect_namedv x).uniq
+  | _ -> None
 
 let mk_sq_rewrites_to_p u t x y =
   let open R in
@@ -117,6 +123,8 @@ let comp_return (c:ctag) (use_eq:bool) (u:universe) (t:term) (e:term) (post:term
   match c with
   | STT ->
     C_ST { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
+  | STT_Div ->
+    C_STDiv { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
   | STT_Atomic ->
     C_STAtomic tm_emp_inames Neutral
       { u; res = t; pre = open_term' post e 0; post = post_maybe_eq }
@@ -149,6 +157,7 @@ let add_frame (s:comp_st) (frame:term)
     in
     match s with
     | C_ST s -> C_ST (add_frame_s s)
+    | C_STDiv s -> C_STDiv (add_frame_s s)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
@@ -160,6 +169,7 @@ let add_frame_l (s:comp_st) (frame:term)
     in
     match s with
     | C_ST s -> C_ST (add_frame_s s)
+    | C_STDiv s -> C_STDiv (add_frame_s s)
     | C_STAtomic inames obs s -> C_STAtomic inames obs (add_frame_s s)
     | C_STGhost inames s -> C_STGhost inames (add_frame_s s)
 
@@ -196,6 +206,7 @@ let bind_comp_compatible (c1 c2:comp_st)
   : prop
   = match c1, c2 with
     | C_ST _, C_ST _ -> True
+    | C_STDiv _, C_STDiv _ -> True
     | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ at_most_one_observable obs1 obs2
@@ -216,12 +227,14 @@ let bind_comp_out (c1:comp_st) (c2:comp_st{bind_comp_compatible c1 c2})
     | C_STAtomic inames obs1 _, C_STAtomic _ obs2 _ ->
       C_STAtomic inames (join_obs obs1 obs2) s
     | C_ST _, C_ST _ -> C_ST s
+    | C_STDiv _, C_STDiv _ -> C_STDiv s
 
 let st_equiv_pre (c1 c2:comp_st)
   : prop
   = comp_u c1 == comp_u c2 /\
     (match c1, c2 with
     | C_ST _, C_ST _ -> True
+    | C_STDiv _, C_STDiv _ -> True
     | C_STAtomic inames1 obs1 _, C_STAtomic inames2 obs2 _ ->
       inames1 == inames2 /\ obs1 == obs2
     | C_STGhost inames1 _, C_STGhost inames2 _ -> inames1 == inames2
@@ -297,9 +310,9 @@ let mk_precedes u ty a b =
     b, R.Q_Explicit;
   ]
 
-let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_cond:term)
+let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_unit;
            pre=open_term' post_cond tm_true 0;
@@ -309,16 +322,18 @@ let comp_while_body u_meas ty_meas is_tot (dec_formula:term) x (inv:term) (post_
                 close_term inv (snd x) `tm_star` tm_pure dec_formula
               else
                 close_term inv (snd x))
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
-let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term)
+let comp_while u_meas ty_meas (x:nvar) (inv:term) (post_cond:term) (div:bool)
   : comp
-  = C_ST {
+  = let sc = {
            u=u0;
            res=tm_unit;
            pre=tm_exists_sl u_meas (as_binder ty_meas) (close_term inv (snd x));
            post=tm_exists_sl u_meas (as_binder ty_meas) (close_term (open_term' post_cond tm_false 0) (snd x));
-         }
+         } in
+    if div then C_STDiv sc else C_ST sc
 
 
 let mk_tuple2 (u1 u2:universe) (t1 t2:term) : term =
@@ -505,14 +520,14 @@ let sub_observability (o1 o2:observability) = o1 = Neutral || o1 = o2 || o2 = Ob
 
 let wrst (ct:comp_st) (t:st_term') : st_term =
   { term = t;
-    range = FStar.Range.range_0;
+    range = range_0;
     effect_tag = as_effect_hint (ctag_of_comp_st ct);
     source = false;
     seq_lhs = false;
   }
 let wtag (ct:option ctag)  (t:st_term') : st_term =
   { term = t;
-    range = FStar.Range.range_0;
+    range = range_0;
     effect_tag = ct;
     source = false;
     seq_lhs = false;
@@ -533,11 +548,11 @@ let tr_bindings = L.map tr_binding
 
 
 
-let subtyping_token g t1 t2 =
-  T.subtyping_token (elab_env g) t1 t2
+let subtyping_token (g:env) (t1 t2:term) =
+  T.subtyping_token (elab_env g) (RTS.denote_term t1) (RTS.denote_term t2)
 
 val readback_binding : R.binding -> var_binding
-let readback_binding b = { n = { name = b.ppname; range = Range.range_0 }; x = b.uniq; ty = b.sort }
+let readback_binding b = { n = { name = b.ppname; range = range_0 }; x = b.uniq; ty = b.sort }
 
 
 let inv_disjointness (inames i:term) = 
@@ -548,8 +563,13 @@ let eff_of_ctag = function
   | STT_Ghost -> T.E_Ghost
   | _ -> T.E_Total
 
-let g_with_eq g hyp b (eq_v:term) =
-  push_binding g hyp (mk_ppname_no_range "_if_hyp") (mk_sq_rewrites_to_p u0 tm_bool b eq_v)
+let g_with_eq g hyp b (eq_v:term) : env =
+  // RewritesTo substitutions are defined only for variable left-hand sides.
+  let hyp_typ : term =
+    if Some? (term_as_subst_var b)
+    then mk_sq_rewrites_to_p u0 tm_bool b eq_v
+    else mk_sq_eq2 u0 tm_bool b eq_v in
+  push_binding g hyp (mk_ppname_no_range "_if_hyp") hyp_typ
 
 let goto_comp_of_block_comp (c: comp_st) : comp_st =
   let {u;res;pre;post} = st_comp_of_comp c in
@@ -599,6 +619,7 @@ let post_hint_opt (g:env) = p:post_hint_opt_t { PostHint? p ==> post_hint_for_en
 let effect_annot_matches (c:comp_st) (effect_annot:effect_annot) : prop =
   match c, effect_annot with
   | C_ST _, EffectAnnotSTT -> True
+  | C_STDiv _, EffectAnnotSTTDiv -> True
   | C_STGhost inames' _, EffectAnnotGhost { opens }
   | C_STAtomic inames' _ _, EffectAnnotAtomic { opens } ->
     inames' == opens

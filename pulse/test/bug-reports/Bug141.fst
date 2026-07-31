@@ -21,7 +21,7 @@ open Pulse.Main
 open Pulse.Lib.Pervasives
 
 
-fn rec loop (#t:Type0) (l:list t)
+divergent fn rec loop (#t:Type0) (l:list t)
 {
   loop l;
 }

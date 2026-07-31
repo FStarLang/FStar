@@ -73,6 +73,7 @@ ensures lock_alive l p
 
 
 //acquire_sig$
+divergent
 fn rec acquire (#p:slprop) (l:lock)
 preserves lock_alive l p
 ensures p

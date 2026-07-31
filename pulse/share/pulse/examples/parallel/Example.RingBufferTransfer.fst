@@ -203,6 +203,7 @@ fn create_channel (#t:Type0) (capacity:SZ.t{SZ.v capacity > 0}) (init:t)
   c
 }
 
+divergent
 fn destroy_channel_lock (#t:Type0) (c:channel t)
   requires channel_perm #0.5R c ** channel_perm #0.5R c
   ensures exists* s. channel_exactly c.ch s
@@ -224,6 +225,7 @@ ensures emp
   drop_ (stream_exactly c.ch _);
 }
 
+divergent
 fn rec write (#t:Type) (c:channel t) (m:t) (#s:stream t)
   preserves channel_perm #0.5R c
   requires writer_state c s
@@ -258,6 +260,7 @@ fn rec write (#t:Type) (c:channel t) (m:t) (#s:stream t)
   }
 }
 
+divergent
 fn rec read (#t:Type) (c:channel t) (#s:stream t)
   preserves channel_perm #0.5R c
   requires reader_state c s
@@ -345,6 +348,7 @@ let is_id_seq_len (s:Seq.seq nat) (n:nat) : prop =
   Seq.length s == n /\
   (forall (i:nat { i < n }). Seq.index s i == i)
 
+divergent
 fn writer (c:channel nat)
   preserves channel_perm #0.5R c
   requires writer_state c empty_stream
@@ -362,6 +366,7 @@ fn writer (c:channel nat)
   };
 }
 
+divergent
 fn reader (c:channel nat)
   preserves channel_perm #0.5R c
   requires reader_state c empty_stream
@@ -379,9 +384,10 @@ fn reader (c:channel nat)
 }
 
 //assume a primitive to spawn two threads in parallel and joining, similar to Pulse.Lib.Par
+divergent
 fn par (#preL: slprop) #postL #preR #postR
-  (f:unit -> stt unit preL (fun _ -> postL))
-  (g:unit -> stt unit preR (fun _ -> postR))
+  (f:unit -> stt_div unit preL (fun _ -> postL))
+  (g:unit -> stt_div unit preR (fun _ -> postR))
   requires preL
   requires preR
   ensures postL
@@ -390,6 +396,7 @@ fn par (#preL: slprop) #postL #preR #postR
   f(); g() //just some scaffolding for this example; not really running them in parallel 
 }
 
+divergent
 fn main ()
 {
   let c = create_channel #nat 10sz 0; //create a channel with capacity 10

@@ -1,5 +1,6 @@
 module Pulse.Lib.Tactics
 
+open FStar.Tactics.Effect
 open FStar.Tactics.V2
 open Pulse.Lib.NonInformative
 

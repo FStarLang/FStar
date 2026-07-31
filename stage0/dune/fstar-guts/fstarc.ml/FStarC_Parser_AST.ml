@@ -1282,8 +1282,8 @@ let focusLetBindings (lbs : (Prims.bool * (pattern * term)) Prims.list)
               if f
               then lb
               else
-                (let uu___3 = mkAdmitMagic r in
-                 ((FStar_Pervasives_Native.fst lb), uu___3))) lbs)
+                (let uu___2 = mkAdmitMagic r in
+                 ((FStar_Pervasives_Native.fst lb), uu___2))) lbs)
   else FStarC_List.map FStar_Pervasives_Native.snd lbs
 let focusAttrLetBindings
   (lbs :
@@ -1308,13 +1308,13 @@ let focusAttrLetBindings
               if f
               then (attr, lb)
               else
-                (let uu___3 =
-                   let uu___4 = mkAdmitMagic r in
-                   ((FStar_Pervasives_Native.fst lb), uu___4) in
-                 (attr, uu___3))) lbs)
+                (let uu___2 =
+                   let uu___3 = mkAdmitMagic r in
+                   ((FStar_Pervasives_Native.fst lb), uu___3) in
+                 (attr, uu___2))) lbs)
   else
     FStarC_List.map
-      (fun uu___1 -> match uu___1 with | (attr, (uu___2, lb)) -> (attr, lb))
+      (fun uu___ -> match uu___ with | (attr, (uu___1, lb)) -> (attr, lb))
       lbs
 let mkTuple (args : term Prims.list) (r : FStarC_Range_Type.range) : 
   term=
@@ -1540,12 +1540,12 @@ let compile_op (arity : Prims.int) (s : Prims.string)
             (FStarC_Util.starts_with s "exists") ||
               (FStarC_Util.starts_with s "forall")
           then
-            (let uu___3 =
-               let uu___4 =
+            (let uu___2 =
+               let uu___3 =
                  FStarC_Util.substring s Prims.int_zero (Prims.of_int 6) in
-               Prims.strcat uu___4 "_" in
-             let uu___4 = FStarC_Util.substring_from s (Prims.of_int 6) in
-             (uu___3, uu___4))
+               Prims.strcat uu___3 "_" in
+             let uu___3 = FStarC_Util.substring_from s (Prims.of_int 6) in
+             (uu___2, uu___3))
           else ("", s) in
       (match uu___1 with
        | (prefix, s1) ->
@@ -2398,7 +2398,7 @@ let check_id (id : FStarC_Ident.ident) : unit=
     let uu___ =
       let uu___1 = FStarC_Class_Show.show FStarC_Ident.showable_ident id in
       FStarC_Format.fmt1
-        "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
+        "Invalid identifer \226\128\152%s\226\128\153; expected a symbol that begins with a lower-case character"
         uu___1 in
     FStarC_Errors.raise_error FStarC_Ident.hasrange_ident id
       FStarC_Errors_Codes.Fatal_InvalidIdentifier ()

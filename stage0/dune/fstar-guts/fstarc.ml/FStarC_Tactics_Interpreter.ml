@@ -712,15 +712,15 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
                    if uu___6
                    then ()
                    else
-                     (let uu___8 =
-                        let uu___9 =
-                          let uu___10 = FStarC_Tactics_Types.goal_witness g in
+                     (let uu___7 =
+                        let uu___8 =
+                          let uu___9 = FStarC_Tactics_Types.goal_witness g in
                           FStarC_Class_Show.show
-                            FStarC_Syntax_Print.showable_term uu___10 in
+                            FStarC_Syntax_Print.showable_term uu___9 in
                         FStarC_Format.fmt1
                           "Irrelevant tactic witness does not unify with (): %s"
-                          uu___9 in
-                      FStarC_Effect.failwith uu___8)))
+                          uu___8 in
+                      FStarC_Effect.failwith uu___7)))
                else ())) remaining_smt_goals;
          FStarC_Errors.with_ctx "While checking implicits left by a tactic"
            (fun uu___4 ->
@@ -857,7 +857,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.t)
                else
                  (match rng with
                   | FStar_Pervasives_Native.Some r -> r
-                  | uu___4 -> ps2.FStarC_Tactics_Types.entry_range) in
+                  | uu___3 -> ps2.FStarC_Tactics_Types.entry_range) in
              FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range
                rng1 FStarC_Errors_Codes.Fatal_UserTacticFailure ()
                (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
@@ -889,11 +889,11 @@ let run_tactic_on_ps' (rng_call : FStarC_Range_Type.t)
      if tactic_already_typed
      then FStarC_TypeChecker_Env.trivial_guard
      else
-       (let uu___2 =
-          let uu___3 = FStarC_Syntax_Embeddings_Base.type_of e_arg in
-          let uu___4 = FStarC_Syntax_Embeddings_Base.type_of e_res in
-          FStarC_TypeChecker_TcTerm.tc_tactic uu___3 uu___4 env tactic in
-        match uu___2 with | (uu___3, uu___4, g1) -> g1) in
+       (let uu___1 =
+          let uu___2 = FStarC_Syntax_Embeddings_Base.type_of e_arg in
+          let uu___3 = FStarC_Syntax_Embeddings_Base.type_of e_res in
+          FStarC_TypeChecker_TcTerm.tc_tactic uu___2 uu___3 env tactic in
+        match uu___1 with | (uu___2, uu___3, g1) -> g1) in
    (let uu___2 = FStarC_Effect.op_Bang dbg_Tac in
     if uu___2 then FStarC_Format.print_string "}\n" else ());
    FStarC_TypeChecker_Rel.force_trivial_guard env g;

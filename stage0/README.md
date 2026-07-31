@@ -11,29 +11,36 @@ See [INSTALL.md](https://github.com/FStarLang/FStar/blob/master/INSTALL.md)
 
 ### Online book
 
-An online book _Proof-oriented Programming In F*_ is in the works and regular updates are
-posted online. The book is available as a [PDF], or you can read it while trying out
+An online book _Proof-oriented Programming In F*_ is available and updates are
+posted online periodically. The book is available as a [PDF], or you can read it while trying out
 examples and exercises in your browser interface from this [tutorial page].
 
 [tutorial page]: https://www.fstar-lang.org/tutorial/
 [PDF]: http://fstar-lang.org/tutorial/proof-oriented-programming-in-fstar.pdf
 
-### Wiki
-
-The [F\* wiki] contains additional technical documentation on F\*, and is especially useful
-for topics that are not yet covered by the book.
-
-[F\* wiki]: https://github.com/FStarLang/FStar/wiki
-
 ### Editing F* code
 
-You can edit F\* code using various text editor. Emacs has the best support currently,
-providing syntax highlighting, code completion and navigation, and interactive development,
-using [fstar-mode.el]. However, other editors also have limited support.
+You can edit F\* code using various text editors, with Emacs and VSCode currently having 
+the most substantial support, including syntax highlighting, code completion and navigation,
+and incremental, interactive development.
+
+* [fstar-mode.el]: Emacs mode for F*
+* [fstar-vscode-assistant]: VS Code plugin for F*
+
 More details on [editor support] are available on the [F\* wiki].
 
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 [fstar-mode.el]: https://github.com/FStarLang/fstar-mode.el
+[fstar-vscode-assistant]: https://github.com/FStarLang/fstar-vscode-assistant
+
+### AI Agents
+
+AI agents are proficient at using F* and Pulse.
+
+Especially if you are using Copilot CLI or Claude Code, we recommend installing the [proof-copilot] plugin, 
+which provides agents and skills with prompts for specific features of the language and its tooling.
+
+[proof-copilot]: https://github.com/FStarLang/proof-copilot
 
 ### Extracting and executing F* code
 
@@ -45,30 +52,18 @@ More details on [executing F\* code via OCaml] on the [F\* wiki].
 
 [executing F\* code via OCaml]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
-Also, code written in a C-like shallowly embedded DSL can be extracted to
-[C](https://arxiv.org/abs/1703.00053)
-or [WASM](https://doi.ieeecomputersociety.org/10.1109/SP.2019.00064)
-by the [KaRaMeL tool](https://github.com/FStarLang/karamel),
-and code written in an ASM-like deeply embedded DSL can be extracted
+Also, code written in Pulse, a DSL in F* for concurrent, imperative programming,
+can be extracted to C or Rust by the [KaRaMeL tool](https://github.com/FStarLang/karamel).
+
+Additionally, code written in an ASM-like deeply embedded DSL can be extracted
 to ASM by the [Vale tool](https://github.com/project-everest/vale).
 
-### Chatting about F* on Slack and Zulip
+### Chatting about F* on Zulip
 
-The F* developers and many users interact on this [Slack
-forum](https://everestexpedition.slack.com)---you should be able to
-join automatically by [clicking
-here](https://aka.ms/JoinEverestSlack),
-but if that doesn't work, please contact the mailing list mentioned
-below.
-
-Users can also chat about F* or ask questions at this [Zulip
+F* developers and users can chat about F* or ask questions at this [Zulip
 forum](https://fstar.zulipchat.com).
 
-### Mailing list
-
-We also have a [mailing list] which we use mainly for announcements. 
-
-[mailing list]: https://groups.google.com/g/fstar-mailing-list
+(An older forum on Slack is no longer used.)
 
 ### Reporting issues
 
@@ -81,6 +76,13 @@ that your problem still exists on the `master` branch.
 [F\* issue tracker]: https://github.com/FStarLang/FStar/issues
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
+
+### Other Documentation
+
+The [F\* wiki] contains additional technical documentation on F\*, and is especially useful
+for topics that are not yet covered by the book.
+
+[F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
 ### Contributing
 

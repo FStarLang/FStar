@@ -9,6 +9,7 @@ open MSort.Base
 open Pulse.Lib.Par
 
 
+divergent
 fn
 rec
 msort
@@ -31,7 +32,7 @@ msort
     with s1. assert (pts_to_range a (SZ.v lo) (SZ.v mid) s1);
     with s2. assert (pts_to_range a (SZ.v mid) (SZ.v hi) s2);
 
-    par #(requires pts_to_range a (SZ.v lo) (SZ.v mid) (reveal s1))
+    par_div #(requires pts_to_range a (SZ.v lo) (SZ.v mid) (reveal s1))
         #(ensures pts_to_range a (SZ.v lo) (SZ.v mid) (sort (reveal s1)))
         #(requires pts_to_range a (SZ.v mid) (SZ.v hi) (reveal s2))
         #(ensures pts_to_range a (SZ.v mid) (SZ.v hi) (sort (reveal s2)))

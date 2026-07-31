@@ -7,6 +7,7 @@ open FStarC_Sedlexing
 open FStarC_Errors_Codes
 module Codes = FStarC_Errors_Codes
 module Msg = FStarC_Errors_Msg
+module UMsg = FStar_Errors_Msg
 module Filepath = FStarC_Filepath
 module SMap = FStarC_SMap
 
@@ -89,7 +90,7 @@ let take_lang_extension file =
 
 let check_extension fn =
   if (not (has_extension fn (fst_extensions ()))) then
-    let message = FStarC_Format.fmt1 "Unrecognized extension '%s'" fn in
+    let message = FStarC_Format.fmt1 "Unrecognized extension ‘%s’" fn in
     raise_error_text FStarC_Range.dummyRange Fatal_UnrecognizedExtension message
 
 type parse_frag =
@@ -98,7 +99,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Codes.error_code * Msg.error_message * FStarC_Range.t)
+type parse_error = (Codes.error_code * UMsg.error_message * FStarC_Range.t)
 
 
 type code_fragment = {
@@ -130,7 +131,7 @@ let err_of_parse_error filename lexbuf tag =
       | Some tag -> tag
     in
     Fatal_SyntaxError,
-    Msg.mkmsg tag,
+    UMsg.mkmsg tag,
     range_of_positions filename pos pos
 
 let parse_incremental_decls
@@ -340,6 +341,7 @@ let string_of_token =
   | PRAGMA_POP_OPTIONS -> "PRAGMA_POP_OPTIONS"
   | PRAGMA_RESTART_SOLVER -> "PRAGMA_RESTART_SOLVER"
   | PRAGMA_PRINT_EFFECTS_GRAPH -> "PRAGMA_PRINT_EFFECTS_GRAPH"
+  | PRAGMA_EVAL -> "PRAGMA_EVAL"
   | SUBTYPE -> "SUBTYPE"
   | EQUALTYPE -> "EQUALTYPE"
   | SUBKIND -> "SUBKIND"
@@ -513,7 +515,7 @@ let parse_fstar_incrementally
       | e ->
         let pos = FStarC_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
         let r = FStarC_Range.mk_range filename pos pos in
-        let err : FStarC_Parser_AST_Util.error_message = { message = FStarC_Errors_Msg.mkmsg "Syntax error parsing #lang-fstar block: "; range = r } in
+        let err : FStarC_Parser_AST_Util.error_message = { message = FStar_Errors_Msg.mkmsg "Syntax error parsing #lang-fstar block: "; range = r } in
         Inl err
   in
   { parse_decls = f }

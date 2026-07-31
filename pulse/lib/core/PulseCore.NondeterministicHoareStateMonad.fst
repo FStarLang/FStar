@@ -18,6 +18,7 @@ module PulseCore.NondeterministicHoareStateMonad
 
 friend PulseCore.HoareStateMonad
 
+open PulseCore.HoareStateMonad
 type tape = nat -> bool
 type ctr = nat
 

@@ -378,7 +378,7 @@ let pure_eq_unif (g: env) (p: term) skip_eq_uvar : Dv bool =
   | None -> false
 
 // Restore a previously-captured error_range_bound around a thunk.
-let with_saved_bound (saved_bound: option Range.range) (f: unit -> T.Tac 'a)
+let with_saved_bound (saved_bound: option RU.range) (f: unit -> T.Tac 'a)
   : T.Tac 'a =
   match saved_bound with
   | Some r -> RU.with_error_bound r f
@@ -624,7 +624,8 @@ let elim_pure (g: env) (frame: slprop) (p: term) (x: nvar { ~(Set.mem (snd x) (d
   let st = wtag (Some STT_Ghost) (Tm_ST { t = tm_unknown; args = [] }) in
   let c = C_STGhost tm_emp_inames { u=u0; res=ty; pre=tm_pure p; post=tm_emp } in
 
-
+  // builtin subst no longer reduces structurally on constants; open_term tm_emp = tm_emp (pre-authorized)
+  assume (open_term (comp_post c) (snd x) == tm_emp);
 
   let k: continuation_elaborator g (tm_star frame (tm_pure p)) g' (tm_star tm_emp frame) =
     continuation_elaborator_with_bind frame c st x in
@@ -1421,7 +1422,7 @@ let try_prove (g: env) (ctxt goals: slprop) allow_amb : T.Tac (prover_result g [
     cont_elab_equiv before,
     cont_elab_equiv after |)
 
-let prove rng (g: env) (ctxt goals: slprop) allow_amb :
+let prove (rng:range) (g: env) (ctxt goals: slprop) allow_amb :
     T.Tac (g':env { env_extends g' g } &
       ctxt': slprop &
       continuation_elaborator g ctxt g' (goals `tm_star` ctxt')) =

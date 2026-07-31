@@ -115,7 +115,7 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
     [], ty
 
 #push-options "--fuel 2 --ifuel 0 --z3rlimit_factor 2"
-let add_knot (g : env) (rng : R.range)
+let add_knot (g : env) (rng : range)
              (d : decl{FnDefn? d.d})
 : Tac (d : decl{FnDefn? d.d})
 = let FnDefn { id; isrec; us; bs; comp; meas; body } = d.d in
@@ -195,7 +195,7 @@ let add_knot (g : env) (rng : R.range)
         let meas' = R.subst_term prime_subst meas in
         let ref = `(`#meas' << `#meas) in
         (* TODO: this is not always printed *)
-        let ref = (`labeled range_0 "Could not prove termination" (`#ref)) in
+        let ref = (`labeled FStar.Range.range_0 "Could not prove termination" (`#ref)) in
         { last with
             sort = (pack (Tv_Refine b' ref))
         }
@@ -213,6 +213,15 @@ let add_knot (g : env) (rng : R.range)
       | Some meas ->
         add_decreases_refinement meas)
     | Some (C_ST _) ->
+      (match meas with
+      | Some meas -> add_decreases_refinement meas
+      | None ->
+        let open FStar.Pprint in
+        let open Pulse.PP in
+        fail_doc g (Some d.range) [
+          text "recursive functions require a 'decreases' clause to prove termination;";
+          text "use 'divergent fn' for a possibly non-terminating recursive function."])
+    | Some (C_STDiv _) ->
       (match meas with
       | Some meas -> add_decreases_refinement meas
       | None -> r_bs)
@@ -250,7 +259,7 @@ let add_knot (g : env) (rng : R.range)
 #pop-options
 #push-options "--fuel 0 --ifuel 0"
 let tie_knot (g : env)
-             (rng : R.range)
+             (rng : range)
              (nm_orig nm_aux : string)
              (r_typ : R.typ) (blob:RT.blob)
 : Tac (r:(bool & sigelt & option RT.blob) { let (checked, _, _) = r in ~ checked })

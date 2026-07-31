@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 module PulseCore.IndirectionTheoryActions
+open PulseCore.IndirectionTheorySep
+open Pulse.Lib.Loc
 module PM = PulseCore.MemoryAlt
 module B = PulseCore.BaseHeapSig
 open FStar.Ghost

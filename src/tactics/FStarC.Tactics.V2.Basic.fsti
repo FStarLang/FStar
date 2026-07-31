@@ -107,9 +107,9 @@ val comp_to_doc            : comp -> ML (tac Pprint.document)
 val range_to_string        : Range.t -> ML (tac string)
 val with_compat_pre_core   : int -> tac 'a -> ML (tac 'a)
 
-val get_vconfig            : unit -> ML (tac FStarC.VConfig.vconfig)
-val set_vconfig            : FStarC.VConfig.vconfig -> ML (tac unit)
-val t_smt_sync             : FStarC.VConfig.vconfig -> ML (tac unit)
+val get_vconfig            : unit -> ML (tac FStar.VConfig.vconfig)
+val set_vconfig            : FStar.VConfig.vconfig -> ML (tac unit)
+val t_smt_sync             : FStar.VConfig.vconfig -> ML (tac unit)
 val free_uvars             : term -> ML (tac (list int))
 
 val all_ext_options        : unit -> ML (tac (list (string & string)))

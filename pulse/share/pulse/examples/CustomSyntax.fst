@@ -157,7 +157,7 @@ val read_pred () (#b:erased bool)
     : stt bool (pred b) (fun r -> pred r)
 
 
-fn while_test_alt (r:ref U32.t)
+divergent fn while_test_alt (r:ref U32.t)
   requires 
     exists* b n.
       (pts_to r n  **
@@ -187,6 +187,8 @@ fn infer_read_ex (r:ref U32.t)
 
 
 
+let dist10 (x:U32.t) : nat = let v = U32.v x in if v <= 10 then 10 - v else v - 10
+
 fn while_count2 (r:ref U32.t)
   requires exists* (n:U32.t). (pts_to r n)
   ensures (pts_to r 10ul)
@@ -194,6 +196,7 @@ fn while_count2 (r:ref U32.t)
   open FStar.UInt32;
   while (let x = !r; (x <> 10ul))
   invariant live r
+  decreases (dist10 (!r))
   {
     let x = !r;
     if (x <^ 10ul)
@@ -210,6 +213,7 @@ fn while_count2 (r:ref U32.t)
 
 
 
+divergent
 fn test_par (r1 r2:ref U32.t)
   requires 
      pts_to r1 'n1  **
@@ -253,7 +257,7 @@ fn test_local (r:ref U32.t)
 
 
 
-fn count_local (r:ref int) (n:int)
+divergent fn count_local (r:ref int) (n:int)
    requires (pts_to r (hide 0))
    ensures (pts_to r n)
 {
@@ -279,7 +283,7 @@ inline_for_extraction
 let zero : nat = 0
 
 
-fn sum (r:ref nat) (n:nat)
+divergent fn sum (r:ref nat) (n:nat)
    requires exists* i. (pts_to r i)
    ensures (pts_to r (sum_spec n))
 {
@@ -327,7 +331,9 @@ fn sum2 (r:ref nat) (n:nat)
    while (let m = !i; (m <> n))
     invariant live i
     invariant live sum
+    invariant pure (!i <= n)
     invariant pure (!sum == sum_spec (!i))
+    decreases (Prims.op_Subtraction n (!i))
    {
      let m = !i;
      let s = !sum;

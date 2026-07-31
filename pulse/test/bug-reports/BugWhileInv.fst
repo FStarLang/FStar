@@ -36,5 +36,6 @@ ensures  R.pts_to x 0
     }
   )
   invariant live x
+  decreases (!x)
   { () };
  }

@@ -9,7 +9,8 @@ EXTRACT_NS += -FStar.Char
 EXTRACT_NS += -FStar.CommonST
 EXTRACT_NS += -FStar.Constructive
 EXTRACT_NS += -FStar.Dyn
-EXTRACT_NS += -FStar.Float
+EXTRACT_NS += -FStar.Float32
+EXTRACT_NS += -FStar.Float64
 EXTRACT_NS += -FStar.Ghost
 EXTRACT_NS += -FStar.Heap
 EXTRACT_NS += -FStar.Monotonic.Heap
@@ -57,7 +58,8 @@ EXTRACT_NS += +FStar.List.Pure.Base
 EXTRACT_NS += +FStar.List.Tot.Properties
 EXTRACT_NS += +FStar.Int.Cast.Full
 
-# Note: the pluginlib rules will enable these.
+# Tactics/Reflection are not extracted into the app library (fstar.lib);
+# they are extracted into the compiler library via the unified fstarc pass.
 EXTRACT_NS += -FStar.Tactics
 EXTRACT_NS += -FStar.Reflection
 

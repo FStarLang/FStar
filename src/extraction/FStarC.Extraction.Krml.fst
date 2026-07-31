@@ -170,6 +170,7 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
+  | Float32 | Float64
 
 and constant = width & string
 
@@ -216,6 +217,8 @@ instance pretty_width = { pp = function
   | CInt -> doc_of_string "CInt"
   | SizeT -> doc_of_string "SizeT"
   | PtrdiffT -> doc_of_string "PtrdiffT"
+  | Float32 -> doc_of_string "Float32"
+  | Float64 -> doc_of_string "Float64"
 }
 instance showable_width : showable width = showable_from_pretty
 
@@ -423,7 +426,53 @@ let mk_width = function
   | "Int64" -> Some Int64
   | "SizeT" -> Some SizeT
   | "PtrdiffT" -> Some PtrdiffT
+  | "Float32" -> Some Float32
+  | "Float64" -> Some Float64
   | _ -> None
+
+(* Floating-point modules (FStar.Float32, FStar.Float64). They reuse the
+   machine-integer machinery for their type and arithmetic operators, but
+   have a few extra constructors (of_int, of_literal) handled specially. *)
+let is_float_width = function
+  | Some Float32 | Some Float64 -> true
+  | _ -> false
+
+(* Float literals are emitted by KaRaMeL as raw C tokens. Accept only a
+   conservative decimal grammar here instead of forwarding arbitrary strings
+   into generated C. *)
+let valid_float_literal (s:string) : bool =
+  let is_digit (c:FStar.Char.char) =
+    let i = BU.int_of_char c in
+    i >= 48 && i <= 57 in
+  let rec consume_digits cs =
+    match cs with
+    | c :: cs' when is_digit c -> consume_digits cs'
+    | _ -> cs in
+  let has_digits cs = consume_digits cs <> cs in
+  let cs =
+    match FStar.String.list_of_string s with
+    | '+' :: cs | '-' :: cs -> cs
+    | cs -> cs in
+  let before_dot = consume_digits cs in
+  let after_mantissa, has_mantissa_digit =
+    match before_dot with
+    | '.' :: cs' ->
+        let after_dot = consume_digits cs' in
+        after_dot, before_dot <> cs || after_dot <> cs'
+    | _ ->
+        before_dot, before_dot <> cs in
+  if not has_mantissa_digit
+  then false
+  else
+    match after_mantissa with
+    | [] -> true
+    | 'e' :: exp | 'E' :: exp ->
+        let exp =
+          match exp with
+          | '+' :: exp | '-' :: exp -> exp
+          | exp -> exp in
+        has_digits exp && consume_digits exp = []
+    | _ -> false
 
 let mk_bool_op = function
   | "op_Negation" ->
@@ -459,6 +508,7 @@ let mk_op = function
   | "shift_right"            -> Some BShiftR
   | "shift_left"             -> Some BShiftL
   | "eq"                     -> Some Eq
+  | "ieee_eq"                -> Some Eq
   |  "gt"                    -> Some Gt
   |  "gte"                   -> Some Gte
   | "lt"                     -> Some Lt
@@ -1064,6 +1114,20 @@ and translate_expr' env e: ML expr =
 
   | MLE_App ({ expr = MLE_Name p }, [ e ]) when string_of_mlpath p = "Obj.repr" ->
       ECast (translate_expr env e, TAny)
+
+  // Float modules: of_int n is an integer-to-float cast.
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "of_int") }, [ e ]) when is_float_width (mk_width m) ->
+      ECast (translate_expr env e, TInt (Option.must (mk_width m)))
+
+  // Float modules: of_literal "3.14" is a floating-point constant.
+  | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], "of_literal") }, [ { expr = MLE_Const (MLC_String s) } ]) when is_float_width (mk_width m) ->
+      if not (valid_float_literal s)
+      then
+        failwith
+          (Format.fmt2
+             "Refusing to extract invalid %s.of_literal argument as a C floating-point constant: %s"
+             m s);
+      EConstant (Option.must (mk_width m), s)
 
   // Operators from fixed-width integer modules, e.g. [FStar.Int32.addw].
   | MLE_App ({ expr = MLE_Name ([ "FStar"; m ], op) }, args) when (is_machine_int m && is_op op) ->

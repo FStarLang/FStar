@@ -45,23 +45,23 @@ let rec inst (s:term -> fv -> ML term) t : ML term =
       | Tm_fvar fv ->
         s t fv
 
-      | Tm_abs {bs; body; rc_opt=lopt} ->
-        let bs = inst_binders s bs in
+      | Tm_abs {b; body; rc_opt=lopt} ->
+        let b = List.hd (inst_binders s [b]) in
         let body = inst s body in
-        mk (Tm_abs {bs; body; rc_opt=inst_lcomp_opt s lopt})
+        mk (Tm_abs {b; body; rc_opt=inst_lcomp_opt s lopt})
 
-      | Tm_arrow {bs; comp=c} ->
-        let bs = inst_binders s bs in
+      | Tm_arrow {b; comp=c} ->
+        let b = List.hd (inst_binders s [b]) in
         let c = inst_comp s c in
-        mk (Tm_arrow {bs; comp=c})
+        mk (Tm_arrow {b; comp=c})
 
       | Tm_refine {b=bv; phi=t} ->
         let bv = {bv with sort=inst s bv.sort} in
         let t = inst s t in
         mk (Tm_refine {b=bv; phi=t})
 
-      | Tm_app {hd=t; args} ->
-        mk (Tm_app {hd=inst s t; args=inst_args s args})
+      | Tm_app {hd=t; arg} ->
+        mk (Tm_app {hd=inst s t; arg=List.hd (inst_args s [arg])})
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt=lopt} ->
         let pats = pats |> List.map (fun (p, wopt, t) ->

@@ -889,12 +889,14 @@ ghost fn push_new_root_internal (a: lifetime) (q: slprop) (#n: unat) (#y #z: slp
   requires rt_stored a n z
   requires later q
   ensures a >:> q
-  ensures rt_borrowed a (Succ n) (emp ** y)
+  ensures rt_borrowed a (Succ n) y
   ensures rt_stored a (Succ n) (later q ** z)
   ensures owns_end a (Succ n)
 {
   push_new_root a q true; with e. _;
-  drop_ (pts_to e.rt_returned #0.5R true)
+  drop_ (pts_to e.rt_returned #0.5R true);
+  slprop_equivs ();
+  rewrite (rt_borrowed a (Succ n) (emp ** y)) as (rt_borrowed a (Succ n) y)
 }
 
 ghost fn use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
@@ -924,7 +926,7 @@ ghost fn end_use_borrow' (a: lifetime) (p: slprop) (#qs: list slprop)
 {
   unfold lifetime_opened a (p::qs); with y n. _;
   push_new_root_internal a p;
-  intro (trade (later p ** trade (star_later_slprops (p :: qs)) y) (trade (star_later_slprops qs) (emp ** y))) fn _ {
+  intro (trade (later p ** trade (star_later_slprops (p :: qs)) y) (trade (star_later_slprops qs) y)) fn _ {
     rewrite later p ** star_later_slprops qs as star_later_slprops (p :: qs);
     elim_trade _ _;
   };

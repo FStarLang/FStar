@@ -494,15 +494,15 @@ let fixup_issue_range
           if use_rng <> FStarC_Range_Type.dummy_rng
           then use_rng
           else
-            (let uu___1 =
-               let uu___2 = FStarC_Effect.op_Bang fallback_range in
-               FStar_Pervasives_Native.uu___is_Some uu___2 in
-             if uu___1
+            (let uu___ =
+               let uu___1 = FStarC_Effect.op_Bang fallback_range in
+               FStar_Pervasives_Native.uu___is_Some uu___1 in
+             if uu___
              then
-               let uu___2 =
-                 let uu___3 = FStarC_Effect.op_Bang fallback_range in
-                 FStar_Pervasives_Native.__proj__Some__item__v uu___3 in
-               FStarC_Range_Type.use_range uu___2
+               let uu___1 =
+                 let uu___2 = FStarC_Effect.op_Bang fallback_range in
+                 FStar_Pervasives_Native.__proj__Some__item__v uu___2 in
+               FStarC_Range_Type.use_range uu___1
              else use_rng) in
         FStar_Pervasives_Native.Some
           (FStarC_Range_Type.set_use_range range use_rng') in
@@ -818,12 +818,12 @@ let log_issue_ctx (r : FStarC_Range_Type.t)
            if uu___3
            then add_one i
            else
-             (let uu___5 =
-                let uu___6 = format_issue i in
+             (let uu___4 =
+                let uu___5 = format_issue i in
                 Prims.strcat
                   "don't use log_issue to report fatal error, should use raise_error: "
-                  uu___6 in
-              FStarC_Effect.failwith uu___5))
+                  uu___5 in
+              FStarC_Effect.failwith uu___4))
 let info (uu___ : 'posut FStarC_Class_HasRange.hasRange) (r : 'posut)
   (uu___1 : unit) (uu___2 : Obj.t FStarC_Errors_Msg.is_error_message)
   (msg : Obj.t) : unit=
@@ -893,8 +893,8 @@ let err_exn (exn : Prims.exn) : unit=
   if exn = Stop
   then ()
   else
-    (let uu___1 = issue_of_exn exn in
-     match uu___1 with
+    (let uu___ = issue_of_exn exn in
+     match uu___ with
      | FStar_Pervasives_Native.Some issue1 -> add_one issue1
      | FStar_Pervasives_Native.None -> FStarC_Effect.raise exn)
 let handleable (uu___ : Prims.exn) : Prims.bool=
@@ -910,22 +910,22 @@ let with_ctx (s : Prims.string) (f : unit -> 'a) : 'a=
      then let uu___2 = f () in FStar_Pervasives.Inr uu___2
      else
        (try
-          (fun uu___3 ->
+          (fun uu___2 ->
              match () with
-             | () -> let uu___4 = f () in FStar_Pervasives.Inr uu___4) ()
+             | () -> let uu___3 = f () in FStar_Pervasives.Inr uu___3) ()
         with
         | FStarC_Effect.Failure msg ->
-            let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
-                    let uu___8 =
-                      let uu___9 = error_context.get () in ctx_doc uu___9 in
-                    [uu___8] in
-                  FStarC_Errors_Msg.rendermsg uu___7 in
-                Prims.strcat msg uu___6 in
-              FStarC_Effect.Failure uu___5 in
-            FStar_Pervasives.Inl uu___4
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 = error_context.get () in ctx_doc uu___8 in
+                    [uu___7] in
+                  FStarC_Errors_Msg.rendermsg uu___6 in
+                Prims.strcat msg uu___5 in
+              FStarC_Effect.Failure uu___4 in
+            FStar_Pervasives.Inl uu___3
         | ex -> FStar_Pervasives.Inl ex) in
    (let uu___2 = error_context.pop () in ());
    (match r with

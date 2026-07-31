@@ -211,6 +211,7 @@ let partition_pred (s:Seq.seq int) (lo hi:nat) (r: (nat & nat & int))
     (r._1 <= kk /\ kk < r._2  ==> Seq.index s k == r._3) /\
     (r._2 <= kk /\ kk < hi    ==> Seq.index s k >  r._3))
 
+#push-options "--z3rlimit_factor 4"
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)
   (#s0: Ghost.erased (Seq.seq int))
@@ -252,6 +253,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
         /\ permutation s0 s
         /\ between_bounds s lb rb
       ))
+  decreases (hi - 1 - !k)
   { 
     let vk = !k;
     let ak = a.(SZ.uint_to_t vk);
@@ -285,6 +287,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   swap a vj (hi - 1);
   (vi, vj', pivot)
 }
+#pop-options
 
 
 #restart-solver

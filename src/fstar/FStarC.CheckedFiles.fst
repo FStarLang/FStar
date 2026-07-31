@@ -15,6 +15,8 @@
 *)
 
 module FStarC.CheckedFiles
+open FStarC.TypeChecker.Env
+open FStarC.Syntax
 open FStarC
 open FStarC.Effect
 open FStarC.SMap
@@ -34,7 +36,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 78
+let cache_version_number = 82
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -171,14 +173,11 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
   let has_interface = Some? (Dep.interface_of deps module_name) in
-  let interface_checked_file_name =
+  let interface_source_file_name =
     if Dep.is_implementation fn
     && has_interface
     then module_name
       |> Dep.interface_of deps
-      |> Option.must
-      |> Dep.cache_file_name
-      |> Some
     else None
   in
   let binary_deps = deps_of_fn
@@ -191,25 +190,23 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
     binary_deps in
+  (* The implementation's checked file records the digest of its interface's
+     *source*, not of the interface's checked file. Every dependence of the
+     interface is also a dependence of the implementation, so they are already
+     accounted for in [binary_deps]; and the interface's checked file may
+     legitimately have been produced under a different dependence graph (e.g.
+     one where the implementation's `friend` declarations did not widen an
+     interface dependence into a dependence on an implementation). *)
   let maybe_add_iface_hash out =
-    match interface_checked_file_name with
+    match interface_source_file_name with
     | None -> Inr (("source", source_hash)::out)
     | Some iface ->
-       (match try_find_in_cache iface with
-       | None ->
-         let msg = Format.fmt1
-           "hash_dependences::the interface checked file %s does not exist\n"
-           iface in
-       
-         debug (fun _ -> Format.print1 "%s\n" msg);
-         
-         Inl msg
-       | Some (Invalid msg, _) -> Inl msg
-       | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
-       | Some (Unknown, _) ->
-         failwith (Format.fmt1
-           "Impossible: unknown entry in the cache for interface %s\n"
-           iface))
+      let iface =
+        match Find.find_file iface with
+        | Some f -> f
+        | None -> iface
+      in
+      Inr (("source", source_hash)::("interface", BU.digest_of_file iface)::out)
   in
 
   let rec hash_deps out (l:list string) : ML (either string (list (string & string))) = match l with

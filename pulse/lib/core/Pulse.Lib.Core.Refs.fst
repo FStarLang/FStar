@@ -16,6 +16,10 @@
 module Pulse.Lib.Core.Refs
 friend PulseCore.InstantiatedSemantics
 friend Pulse.Lib.Core
+open FStar.Ghost
+open FStar.PCM
+open Pulse.Lib.Dv {}
+open FStar.ExtractAs
 module A = PulseCore.Atomic
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission

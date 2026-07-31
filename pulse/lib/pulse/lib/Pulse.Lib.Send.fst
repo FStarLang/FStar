@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Send
+open PulseCore.Observability
+module T = FStar.Tactics.V2
 open Pulse.Lib.Core
 open Pulse.Class.Duplicable
 open Pulse.Main
@@ -479,7 +481,7 @@ ghost fn is_send_sendable p : is_send (sendable p) = l1 l2 {
 
 inline_for_extraction noextract fn fork'
   (pre:slprop) {| is_send pre |}
-  (f: (unit -> stt unit pre (fun _ -> emp)))
+  (f: (unit -> stt_div unit pre (fun _ -> emp)))
   requires pre
 {
   let l = loc_get ();

@@ -15,6 +15,7 @@
 *)
 module FStarC.Tactics.V2.Basic
 
+module Range  = FStarC.Range
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -30,7 +31,7 @@ open FStarC.Tactics.Types
 open FStarC.Tactics.Monad
 open FStarC.Tactics.Printing
 open FStarC.Syntax.Syntax
-open FStarC.VConfig
+open FStar.VConfig
 open FStarC.Errors.Msg
 module Listlike = FStarC.Class.Listlike
 
@@ -496,10 +497,29 @@ let do_match (must_tot:bool) (env:Env.env) (t1:term) (t2:term)  : ML (tac bool) 
   let uvs1 = SF.uvars_uncached t1 in
   let! r = do_unify_aux must_tot Check_right_only env t1 t2 in
   if r then begin
-      let uvs2 = SF.uvars_uncached t1 in
-      if not (equal uvs1 uvs2)
-      then (UF.rollback tx; return false)
-      else return true
+      (* Check that none of the variables in uvs1 is now solved
+         to something that is not also a uvar (i.e. they could be
+         solved to a different uvar, that is unsolved, due to flex-flex problems).
+         We previously used to do another call of uvars_uncached and compare
+         the sets, but this is too brittle. *)
+      let check1 (v : ctx_uvar) : ML bool =
+        match Syntax.Unionfind.find v.ctx_uvar_head with
+        | None -> true
+        | Some t ->
+          match (SS.compress t).n with
+          | Tm_uvar _ -> true
+          | _ ->
+            // Format.print2 "failing, uvar %s is solved to %s\n" (show v) (show t);
+            false
+      in
+      if for_all check1 uvs1
+      then (
+        UF.commit tx;
+        return true
+      ) else (
+        UF.rollback tx;
+        return false
+      )
   end
   else return false
 
@@ -987,7 +1007,7 @@ let apply_implicits_as_goals
   : ML (tac (list (list goal))) =
 
   let one_implicit_as_goal (term, ctx_uvar) =
-    let hd, _ = U.head_and_args term in
+    let hd, _ = U.head_and_args_full term in
     match (SS.compress hd).n with
     | Tm_uvar (ctx_uvar, _) ->
       let gl =
@@ -1043,7 +1063,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : M
     // Focus helps keep the goal order
     let typ = bnorm e typ in
     if only_match && not (is_empty (Free.uvars_uncached typ)) then
-      fail "t_apply: only_match is on, but the type of the term to apply is not a uvar"
+      fail "t_apply: only_match is on, but the type of the term to apply contains uvars"
     else return ();!
     let! uvs = try_unify_by_application (Some should_check) only_match e typ (goal_type goal) (rangeof goal) in
     if_verbose
@@ -1181,7 +1201,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
         in
         let appears uv goals = List.existsML (fun g' -> is_free_uvar uv (goal_type g')) goals in
         let checkone t goals =
-            let hd, _ = U.head_and_args t in
+            let hd, _ = U.head_and_args_full t in
             begin match hd.n with
             | Tm_uvar (uv, _) -> appears uv.ctx_uvar_head goals
             | _ -> false
@@ -1755,7 +1775,7 @@ let unshelve (t : term) : ML (tac unit) = wrap_err "unshelve" <| (
                | g::_ -> g.opts
                | _ -> FStarC.Options.peek ()
     in
-    match U.head_and_args t with
+    match U.head_and_args_full t with
     | { n = Tm_uvar (ctx_uvar, _) }, _ ->
         let env = {env with gamma=ctx_uvar.ctx_uvar_gamma} in
         let g = mk_goal env ctx_uvar opts false "" in

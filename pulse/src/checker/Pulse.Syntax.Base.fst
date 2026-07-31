@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Syntax.Base
+open FStar.List.Tot
 module RU = Pulse.RuntimeUtils
 module R = FStar.Reflection.V2
 
@@ -25,6 +26,7 @@ let range_of_comp (c:comp) =
   match c with
   | C_Tot t -> RU.range_of_term t
   | C_ST st -> range_of_st_comp st
+  | C_STDiv st -> range_of_st_comp st
   | C_STAtomic _ _ st -> range_of_st_comp st
   | C_STGhost _ st -> range_of_st_comp st
 
@@ -38,7 +40,11 @@ let eq_tm (t1 t2:term) : Tot (b:bool { b <==> (t1 == t2) }) =
   let open FStar.Reflection.TermEq in
   assume (faithful t1);
   assume (faithful t2);
-  term_eq_dec t1 t2
+  let b = term_eq_dec t1 t2 in
+  // term_eq_dec now characterizes b as (denote_term t1 == denote_term t2);
+  // denote_term is injective on faithful terms, so this recovers t1 == t2.
+  assume (b <==> t1 == t2);
+  b
 
 let eq_st_comp (s1 s2:st_comp)  
   : b:bool { b <==> (s1 == s2) }
@@ -53,6 +59,8 @@ let eq_comp (c1 c2:comp)
     | C_Tot t1, C_Tot t2 ->
       eq_tm t1 t2
     | C_ST s1, C_ST s2 ->
+      eq_st_comp s1 s2
+    | C_STDiv s1, C_STDiv s2 ->
       eq_st_comp s1 s2
     | C_STAtomic i1 o1 s1, C_STAtomic i2 o2 s2 ->
       eq_tm i1 i2 &&
@@ -139,6 +147,7 @@ let rec eq_pattern (p1 p2 : pattern) : b:bool{ b <==> (p1 == p2) } =
   | Pat_Cons f1 vs1,
     Pat_Cons f2 vs2 ->
     f1.fv_name = f2.fv_name &&
+    f1.fv_range = f2.fv_range &&
     eq_list_dec p1 p2 eq_sub_pat vs1 vs2
 
   | Pat_Constant c1, Pat_Constant c2 ->
@@ -174,8 +183,8 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
       eq_tm t2 s2 &&
       eq_tm_opt tac_opt tac_opt2 &&
       e1 = e2
-    | WILD, WILD
-    | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
+    | WILD, WILD -> true
+    | SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2 -> r1 = r2
     | _ -> false
 
 let eq_ascription (a1 a2:comp_ascription) 

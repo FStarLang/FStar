@@ -15,6 +15,8 @@
 *)
 module FStarC.Real
 
+open FStarC.Effect
+open FStarC.Order
 module BU = FStarC.Util
 
 let rec dropWhile f xs =

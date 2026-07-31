@@ -15,6 +15,8 @@
 *)
 
 module PulseCore.KnotInstantiation
+open Pulse.Lib.Loc
+module PM = PulseCore.MemoryAlt
 open PulseCore.IndirectionTheory
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality

@@ -15,6 +15,9 @@
 *)
 
 module Pulse.Lib.Swap.Slice
+open Pulse.Lib.Pervasives
+module SZ = FStar.SizeT
+module S = Pulse.Lib.Slice
 #lang-pulse
 module Prf = Pulse.Lib.Swap.Spec
 open Pulse.Lib.Swap.Common
@@ -51,6 +54,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
         SZ.v i < SZ.v (S.len a) /\
         Prf.array_swap_outer_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i)
       )
+    decreases (SZ.v d - SZ.v !pi)
   {
     let i = !pi;
     let save = S.op_Array_Access a i;
@@ -67,6 +71,7 @@ fn slice_swap_aux (#t: Type0) (a: S.slice t)
           SZ.v idx < SZ.v (S.len a) /\
           Prf.array_swap_inner_invariant s0 (SZ.v (S.len a)) (SZ.v mb) bz s (SZ.v i) (SZ.v j) (SZ.v idx) 
         )
+      decreases (SZ.v q - 1 - SZ.v !pj)
     {
       let j = !pj;
       let idx = !pidx;

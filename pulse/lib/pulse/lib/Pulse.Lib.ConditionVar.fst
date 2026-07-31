@@ -234,6 +234,7 @@ ensures
   ()
 }
 
+divergent
 fn rec wait (b:cvar_t) (#p:slprop)
 requires 
   recv b p

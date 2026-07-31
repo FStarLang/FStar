@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostSet
+include FStar.GhostSet
 open FStar.List.Tot { (@) }
 
 let rec mem_as_set' x = function

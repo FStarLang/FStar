@@ -25,7 +25,7 @@ let maybe_memoize (h : 'a FStarC_Syntax_Syntax.syntax)
                     (FStar_Pervasives_Native.Some c)
                 else ();
                 (c, should_memo2)))
-    else (let uu___1 = f h in uu___1 should_memo1)
+    else (let uu___ = f h in uu___ should_memo1)
 let of_int (i : Prims.int) : FStarC_Hash.hash_code mm=
   ret (FStarC_Hash.of_int i)
 let of_string (s : Prims.string) : FStarC_Hash.hash_code mm=
@@ -584,21 +584,21 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
         t2.FStarC_Syntax_Syntax.n
     then true
     else
-      (let uu___2 =
-         let uu___3 = ext_hash_term t1 in
-         let uu___4 = ext_hash_term t2 in uu___3 <> uu___4 in
-       if uu___2
+      (let uu___ =
+         let uu___1 = ext_hash_term t1 in
+         let uu___2 = ext_hash_term t2 in uu___1 <> uu___2 in
+       if uu___
        then false
        else
-         (let uu___4 =
-            let uu___5 =
-              let uu___6 = FStarC_Syntax_Subst.compress t1 in
-              uu___6.FStarC_Syntax_Syntax.n in
-            let uu___6 =
-              let uu___7 = FStarC_Syntax_Subst.compress t2 in
-              uu___7.FStarC_Syntax_Syntax.n in
-            (uu___5, uu___6) in
-          match uu___4 with
+         (let uu___1 =
+            let uu___2 =
+              let uu___3 = FStarC_Syntax_Subst.compress t1 in
+              uu___3.FStarC_Syntax_Syntax.n in
+            let uu___3 =
+              let uu___4 = FStarC_Syntax_Subst.compress t2 in
+              uu___4.FStarC_Syntax_Syntax.n in
+            (uu___2, uu___3) in
+          match uu___1 with
           | (FStarC_Syntax_Syntax.Tm_bvar x, FStarC_Syntax_Syntax.Tm_bvar y)
               -> x.FStarC_Syntax_Syntax.index = y.FStarC_Syntax_Syntax.index
           | (FStarC_Syntax_Syntax.Tm_name x, FStarC_Syntax_Syntax.Tm_name y)
@@ -607,8 +607,8 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
               -> equal_fv f g
           | (FStarC_Syntax_Syntax.Tm_uinst (t11, u1),
              FStarC_Syntax_Syntax.Tm_uinst (t21, u2)) ->
-              let uu___5 = equal_term t11 t21 in
-              if uu___5 then equal_list equal_universe u1 u2 else false
+              let uu___2 = equal_term t11 t21 in
+              if uu___2 then equal_list equal_universe u1 u2 else false
           | (FStarC_Syntax_Syntax.Tm_constant c1,
              FStarC_Syntax_Syntax.Tm_constant c2) -> equal_constant c1 c2
           | (FStarC_Syntax_Syntax.Tm_type u1, FStarC_Syntax_Syntax.Tm_type
@@ -622,10 +622,10 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
                FStarC_Syntax_Syntax.body = t21;
                FStarC_Syntax_Syntax.rc_opt = rc2;_})
               ->
-              let uu___5 =
-                let uu___6 = equal_list equal_binder bs1 bs2 in
-                if uu___6 then equal_term t11 t21 else false in
-              if uu___5 then equal_opt equal_rc rc1 rc2 else false
+              let uu___2 =
+                let uu___3 = equal_list equal_binder bs1 bs2 in
+                if uu___3 then equal_term t11 t21 else false in
+              if uu___2 then equal_opt equal_rc rc1 rc2 else false
           | (FStarC_Syntax_Syntax.Tm_arrow
              { FStarC_Syntax_Syntax.bs1 = bs1;
                FStarC_Syntax_Syntax.comp = c1;_},
@@ -633,25 +633,25 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
              { FStarC_Syntax_Syntax.bs1 = bs2;
                FStarC_Syntax_Syntax.comp = c2;_})
               ->
-              let uu___5 = equal_list equal_binder bs1 bs2 in
-              if uu___5 then equal_comp c1 c2 else false
+              let uu___2 = equal_list equal_binder bs1 bs2 in
+              if uu___2 then equal_comp c1 c2 else false
           | (FStarC_Syntax_Syntax.Tm_refine
              { FStarC_Syntax_Syntax.b = b1; FStarC_Syntax_Syntax.phi = t11;_},
              FStarC_Syntax_Syntax.Tm_refine
              { FStarC_Syntax_Syntax.b = b2; FStarC_Syntax_Syntax.phi = t21;_})
               ->
-              let uu___5 = equal_bv b1 b2 in
-              if uu___5 then equal_term t11 t21 else false
-          | (FStarC_Syntax_Syntax.Tm_app uu___5, FStarC_Syntax_Syntax.Tm_app
-             uu___6) ->
-              let uu___7 = FStarC_Syntax_Util.head_and_args_full t1 in
-              (match uu___7 with
+              let uu___2 = equal_bv b1 b2 in
+              if uu___2 then equal_term t11 t21 else false
+          | (FStarC_Syntax_Syntax.Tm_app uu___2, FStarC_Syntax_Syntax.Tm_app
+             uu___3) ->
+              let uu___4 = FStarC_Syntax_Util.head_and_args_full t1 in
+              (match uu___4 with
                | (hd1, args1) ->
-                   let uu___8 = FStarC_Syntax_Util.head_and_args_full t2 in
-                   (match uu___8 with
+                   let uu___5 = FStarC_Syntax_Util.head_and_args_full t2 in
+                   (match uu___5 with
                     | (hd2, args2) ->
-                        let uu___9 = equal_term hd1 hd2 in
-                        if uu___9
+                        let uu___6 = equal_term hd1 hd2 in
+                        if uu___6
                         then equal_list equal_arg args1 args2
                         else false))
           | (FStarC_Syntax_Syntax.Tm_match
@@ -665,14 +665,14 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
                FStarC_Syntax_Syntax.brs = bs2;
                FStarC_Syntax_Syntax.rc_opt1 = ropt2;_})
               ->
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 = equal_term t11 t21 in
-                  if uu___7
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = equal_term t11 t21 in
+                  if uu___4
                   then equal_opt equal_match_returns asc_opt1 asc_opt2
                   else false in
-                if uu___6 then equal_list equal_branch bs1 bs2 else false in
-              if uu___5 then equal_opt equal_rc ropt1 ropt2 else false
+                if uu___3 then equal_list equal_branch bs1 bs2 else false in
+              if uu___2 then equal_opt equal_rc ropt1 ropt2 else false
           | (FStarC_Syntax_Syntax.Tm_ascribed
              { FStarC_Syntax_Syntax.tm = t11; FStarC_Syntax_Syntax.asc = a1;
                FStarC_Syntax_Syntax.eff_opt = l1;_},
@@ -680,10 +680,10 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
              { FStarC_Syntax_Syntax.tm = t21; FStarC_Syntax_Syntax.asc = a2;
                FStarC_Syntax_Syntax.eff_opt = l2;_})
               ->
-              let uu___5 =
-                let uu___6 = equal_term t11 t21 in
-                if uu___6 then equal_ascription a1 a2 else false in
-              if uu___5
+              let uu___2 =
+                let uu___3 = equal_term t11 t21 in
+                if uu___3 then equal_ascription a1 a2 else false in
+              if uu___2
               then equal_opt FStarC_Ident.lid_equals l1 l2
               else false
           | (FStarC_Syntax_Syntax.Tm_let
@@ -693,11 +693,11 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
              { FStarC_Syntax_Syntax.lbs = (r2, lbs2);
                FStarC_Syntax_Syntax.body1 = t21;_})
               ->
-              let uu___5 =
+              let uu___2 =
                 if r1 = r2
                 then equal_list equal_letbinding lbs1 lbs2
                 else false in
-              if uu___5 then equal_term t11 t21 else false
+              if uu___2 then equal_term t11 t21 else false
           | (FStarC_Syntax_Syntax.Tm_uvar u1, FStarC_Syntax_Syntax.Tm_uvar
              u2) -> equal_uvar u1 u2
           | (FStarC_Syntax_Syntax.Tm_meta
@@ -707,17 +707,17 @@ let rec equal_term (t1 : FStarC_Syntax_Syntax.term)
              { FStarC_Syntax_Syntax.tm2 = t21;
                FStarC_Syntax_Syntax.meta = m2;_})
               ->
-              let uu___5 = equal_term t11 t21 in
-              if uu___5 then equal_meta m1 m2 else false
+              let uu___2 = equal_term t11 t21 in
+              if uu___2 then equal_meta m1 m2 else false
           | (FStarC_Syntax_Syntax.Tm_lazy l1, FStarC_Syntax_Syntax.Tm_lazy
              l2) -> equal_lazyinfo l1 l2
           | (FStarC_Syntax_Syntax.Tm_quoted (t11, q1),
              FStarC_Syntax_Syntax.Tm_quoted (t21, q2)) ->
-              let uu___5 = equal_term t11 t21 in
-              if uu___5 then equal_quoteinfo q1 q2 else false
+              let uu___2 = equal_term t11 t21 in
+              if uu___2 then equal_quoteinfo q1 q2 else false
           | (FStarC_Syntax_Syntax.Tm_unknown,
              FStarC_Syntax_Syntax.Tm_unknown) -> true
-          | uu___5 -> false))
+          | uu___2 -> false))
 and equal_comp (c1 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
   (c2 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax) : Prims.bool=
   if FStarC_Util.physical_equality c1 c2
@@ -729,9 +729,9 @@ and equal_comp (c1 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
      | (FStarC_Syntax_Syntax.GTotal t1, FStarC_Syntax_Syntax.GTotal t2) ->
          equal_term t1 t2
      | (FStarC_Syntax_Syntax.Comp ct1, FStarC_Syntax_Syntax.Comp ct2) ->
-         let uu___1 =
-           let uu___2 =
-             let uu___3 =
+         let uu___ =
+           let uu___1 =
+             let uu___2 =
                if
                  FStarC_Ident.lid_equals ct1.FStarC_Syntax_Syntax.effect_name
                    ct2.FStarC_Syntax_Syntax.effect_name
@@ -740,37 +740,37 @@ and equal_comp (c1 : FStarC_Syntax_Syntax.comp' FStarC_Syntax_Syntax.syntax)
                    ct1.FStarC_Syntax_Syntax.comp_univs
                    ct2.FStarC_Syntax_Syntax.comp_univs
                else false in
-             if uu___3
+             if uu___2
              then
                equal_term ct1.FStarC_Syntax_Syntax.result_typ
                  ct2.FStarC_Syntax_Syntax.result_typ
              else false in
-           if uu___2
+           if uu___1
            then
              equal_list equal_arg ct1.FStarC_Syntax_Syntax.effect_args
                ct2.FStarC_Syntax_Syntax.effect_args
            else false in
-         if uu___1
+         if uu___
          then
            equal_list equal_flag ct1.FStarC_Syntax_Syntax.flags
              ct2.FStarC_Syntax_Syntax.flags
          else false
-     | uu___1 -> false)
+     | uu___ -> false)
 and equal_binder (b1 : FStarC_Syntax_Syntax.binder)
   (b2 : FStarC_Syntax_Syntax.binder) : Prims.bool=
   if FStarC_Util.physical_equality b1 b2
   then true
   else
-    (let uu___1 =
-       let uu___2 =
+    (let uu___ =
+       let uu___1 =
          equal_bv b1.FStarC_Syntax_Syntax.binder_bv
            b2.FStarC_Syntax_Syntax.binder_bv in
-       if uu___2
+       if uu___1
        then
          equal_bqual b1.FStarC_Syntax_Syntax.binder_qual
            b2.FStarC_Syntax_Syntax.binder_qual
        else false in
-     if uu___1
+     if uu___
      then
        equal_list equal_term b1.FStarC_Syntax_Syntax.binder_attrs
          b2.FStarC_Syntax_Syntax.binder_attrs
@@ -816,56 +816,56 @@ and equal_ascription
   if FStarC_Util.physical_equality x1 x2
   then true
   else
-    (let uu___1 = x1 in
-     match uu___1 with
+    (let uu___ = x1 in
+     match uu___ with
      | (a1, t1, b1) ->
-         let uu___2 = x2 in
-         (match uu___2 with
+         let uu___1 = x2 in
+         (match uu___1 with
           | (a2, t2, b2) ->
-              let uu___3 =
-                let uu___4 =
+              let uu___2 =
+                let uu___3 =
                   match (a1, a2) with
                   | (FStar_Pervasives.Inl t11, FStar_Pervasives.Inl t21) ->
                       equal_term t11 t21
                   | (FStar_Pervasives.Inr c1, FStar_Pervasives.Inr c2) ->
                       equal_comp c1 c2
-                  | uu___5 -> false in
-                if uu___4 then equal_opt equal_term t1 t2 else false in
-              if uu___3 then b1 = b2 else false))
+                  | uu___4 -> false in
+                if uu___3 then equal_opt equal_term t1 t2 else false in
+              if uu___2 then b1 = b2 else false))
 and equal_letbinding (l1 : FStarC_Syntax_Syntax.letbinding)
   (l2 : FStarC_Syntax_Syntax.letbinding) : Prims.bool=
   if FStarC_Util.physical_equality l1 l2
   then true
   else
-    (let uu___1 =
-       let uu___2 =
-         let uu___3 =
-           let uu___4 =
-             let uu___5 =
+    (let uu___ =
+       let uu___1 =
+         let uu___2 =
+           let uu___3 =
+             let uu___4 =
                equal_lbname l1.FStarC_Syntax_Syntax.lbname
                  l2.FStarC_Syntax_Syntax.lbname in
-             if uu___5
+             if uu___4
              then
                equal_list FStarC_Ident.ident_equals
                  l1.FStarC_Syntax_Syntax.lbunivs
                  l2.FStarC_Syntax_Syntax.lbunivs
              else false in
-           if uu___4
+           if uu___3
            then
              equal_term l1.FStarC_Syntax_Syntax.lbtyp
                l2.FStarC_Syntax_Syntax.lbtyp
            else false in
-         if uu___3
+         if uu___2
          then
            FStarC_Ident.lid_equals l1.FStarC_Syntax_Syntax.lbeff
              l2.FStarC_Syntax_Syntax.lbeff
          else false in
-       if uu___2
+       if uu___1
        then
          equal_term l1.FStarC_Syntax_Syntax.lbdef
            l2.FStarC_Syntax_Syntax.lbdef
        else false in
-     if uu___1
+     if uu___
      then
        equal_list equal_term l1.FStarC_Syntax_Syntax.lbattrs
          l2.FStarC_Syntax_Syntax.lbattrs
@@ -913,10 +913,10 @@ and equal_universe (u1 : FStarC_Syntax_Syntax.universe)
   if FStarC_Util.physical_equality u1 u2
   then true
   else
-    (let uu___1 =
-       let uu___2 = FStarC_Syntax_Subst.compress_univ u1 in
-       let uu___3 = FStarC_Syntax_Subst.compress_univ u2 in (uu___2, uu___3) in
-     match uu___1 with
+    (let uu___ =
+       let uu___1 = FStarC_Syntax_Subst.compress_univ u1 in
+       let uu___2 = FStarC_Syntax_Subst.compress_univ u2 in (uu___1, uu___2) in
+     match uu___ with
      | (FStarC_Syntax_Syntax.U_zero, FStarC_Syntax_Syntax.U_zero) -> true
      | (FStarC_Syntax_Syntax.U_succ u11, FStarC_Syntax_Syntax.U_succ u21) ->
          equal_universe u11 u21
@@ -930,7 +930,7 @@ and equal_universe (u1 : FStarC_Syntax_Syntax.universe)
          FStarC_Syntax_Unionfind.univ_equiv u11 u21
      | (FStarC_Syntax_Syntax.U_unknown, FStarC_Syntax_Syntax.U_unknown) ->
          true
-     | uu___2 -> false)
+     | uu___1 -> false)
 and equal_constant (c1 : FStarC_Syntax_Syntax.sconst)
   (c2 : FStarC_Syntax_Syntax.sconst) : Prims.bool=
   if FStarC_Util.physical_equality c1 c2
@@ -945,18 +945,18 @@ and equal_constant (c1 : FStarC_Syntax_Syntax.sconst)
      | (FStarC_Const.Const_char c11, FStarC_Const.Const_char c21) ->
          c11 = c21
      | (FStarC_Const.Const_real s1, FStarC_Const.Const_real s2) -> s1 = s2
-     | (FStarC_Const.Const_string (s1, uu___1), FStarC_Const.Const_string
-        (s2, uu___2)) -> s1 = s2
+     | (FStarC_Const.Const_string (s1, uu___), FStarC_Const.Const_string
+        (s2, uu___1)) -> s1 = s2
      | (FStarC_Const.Const_range_of, FStarC_Const.Const_range_of) -> true
      | (FStarC_Const.Const_set_range_of, FStarC_Const.Const_set_range_of) ->
          true
      | (FStarC_Const.Const_range r1, FStarC_Const.Const_range r2) ->
          (FStarC_Range_Ops.compare r1 r2) = Prims.int_zero
-     | (FStarC_Const.Const_reify uu___1, FStarC_Const.Const_reify uu___2) ->
+     | (FStarC_Const.Const_reify uu___, FStarC_Const.Const_reify uu___1) ->
          true
      | (FStarC_Const.Const_reflect l1, FStarC_Const.Const_reflect l2) ->
          FStarC_Ident.lid_equals l1 l2
-     | uu___1 -> false)
+     | uu___ -> false)
 and equal_arg
   (arg1 :
     (FStarC_Syntax_Syntax.term' FStarC_Syntax_Syntax.syntax *
@@ -968,14 +968,14 @@ and equal_arg
   if FStarC_Util.physical_equality arg1 arg2
   then true
   else
-    (let uu___1 = arg1 in
-     match uu___1 with
+    (let uu___ = arg1 in
+     match uu___ with
      | (t1, a1) ->
-         let uu___2 = arg2 in
-         (match uu___2 with
+         let uu___1 = arg2 in
+         (match uu___1 with
           | (t2, a2) ->
-              let uu___3 = equal_term t1 t2 in
-              if uu___3 then equal_opt equal_arg_qualifier a1 a2 else false))
+              let uu___2 = equal_term t1 t2 in
+              if uu___2 then equal_opt equal_arg_qualifier a1 a2 else false))
 and equal_bqual
   (b1 : FStarC_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
   (b2 : FStarC_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option)
@@ -1023,19 +1023,19 @@ and equal_pat
         FStarC_Syntax_Syntax.Pat_constant c2) -> equal_constant c1 c2
      | (FStarC_Syntax_Syntax.Pat_cons (fv1, us1, args1),
         FStarC_Syntax_Syntax.Pat_cons (fv2, us2, args2)) ->
-         let uu___1 =
-           let uu___2 = equal_fv fv1 fv2 in
-           if uu___2
+         let uu___ =
+           let uu___1 = equal_fv fv1 fv2 in
+           if uu___1
            then equal_opt (equal_list equal_universe) us1 us2
            else false in
-         if uu___1
+         if uu___
          then equal_list (equal_pair equal_pat equal_poly) args1 args2
          else false
      | (FStarC_Syntax_Syntax.Pat_var bv1, FStarC_Syntax_Syntax.Pat_var bv2)
          -> equal_bv bv1 bv2
      | (FStarC_Syntax_Syntax.Pat_dot_term t1,
         FStarC_Syntax_Syntax.Pat_dot_term t2) -> equal_opt equal_term t1 t2
-     | uu___1 -> false)
+     | uu___ -> false)
 and equal_meta (m1 : FStarC_Syntax_Syntax.metadata)
   (m2 : FStarC_Syntax_Syntax.metadata) : Prims.bool=
   match (m1, m2) with

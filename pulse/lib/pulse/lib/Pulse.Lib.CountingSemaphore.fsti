@@ -88,6 +88,7 @@ fn try_acquire (#p: slprop) (#f: perm) (s: sem p)
   ensures (if b then permit s 1 ** p else emp)
 
 (** Release resource to the semaphore. *)
+divergent
 fn release (#p: slprop) (#f: perm) (s: sem p)
   preserves sem_alive s #f
   requires permit s 1 ** p

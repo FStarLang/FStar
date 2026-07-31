@@ -38,6 +38,7 @@ fn mult (x y:nat)
         pts_to acc a **
         pure (a == (c * y) /\
               c <= x)
+    decreases (x - !ctr)
     {
         acc := !acc + y;
         ctr := !ctr + 1;
@@ -61,6 +62,7 @@ fn mult32 (x y:U32.t)
         pts_to acc a **
         pure (c <= x /\
               v a == (v c * v y))
+    decreases (Prims.op_Subtraction (U32.v x) (U32.v (!ctr)))
     {
         acc := !acc + y;
         ctr := !ctr + 1ul;
@@ -85,6 +87,7 @@ fn mult32' (x y:U32.t)
         pts_to acc a **
         pure (c <=^ x /\
               i a == (i c * i y))
+    decreases (Prims.op_Subtraction (U32.v x) (U32.v (!ctr)))
     {
         acc := !acc +^ y;
         ctr := !ctr +^ 1ul;

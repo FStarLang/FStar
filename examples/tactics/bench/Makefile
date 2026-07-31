@@ -1,8 +1,14 @@
 FSTAR_HOME=../../..
 INCLUDE_PATHS=..
-KRML_HOME?=$(FSTAR_HOME)/../Karamel
-INCLUDE_PATHS=$(KRML_HOME)/krmllib ..
 EXCLUDED_FSTAR_FILES=PolyStub.fst
+
+# If a Karamel executable is provided, add its krmllib to the F* include path.
+# Pass it to F* directly via --include (quoted) instead of through INCLUDE_PATHS,
+# which is expanded with $(addprefix --include , ...) and would split a path
+# containing whitespace (e.g. C:\Program Files on Windows).
+ifdef KRML_EXE
+KRMLLIB_INCLUDE = --include "$(shell "$(KRML_EXE)" -locate-krmllib)"
+endif
 
 POLYS=$(foreach FACTOR,1 2 3,\
       $(foreach SE, 0 1,\
@@ -35,6 +41,6 @@ CanonCommSemiring.cmxs: ../CanonCommSemiring.cmxs
 	ln -sf $< $@
 
 _cache/Bench.%.fst.checked: Bench.%.fst CanonCommSemiring.cmxs
-	$(FSTAR) --cache_off --odir _output --cache_dir _cache $< --load CanonCommSemiring --include ..
+	$(FSTAR) --cache_off --odir _output --cache_dir _cache $(KRMLLIB_INCLUDE) $< --load CanonCommSemiring --include ..
 
 verify-all: $(CACHE_DIR) $(addsuffix .checked, $(addprefix $(CACHE_DIR)/, $(FSTAR_FILES)))

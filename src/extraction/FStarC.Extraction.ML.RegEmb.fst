@@ -15,6 +15,7 @@
 *)
 module FStarC.Extraction.ML.RegEmb
 
+open FStarC.Extraction.ML
 (* This module handles registering plugins and generating
 embeddings for their types. *)
 
@@ -79,27 +80,27 @@ let ml_none : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "None"))
 let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
 
 let s_tdataconstr =
-  mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Syntax"; "tdataconstr"]))
+  mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Syntax"; "tdataconstr"]))
 let mk_app =
-  mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Util"; "mk_app"]))
+  mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Util"; "mk_app"]))
 
 let tm_fvar =
-  mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Syntax"; "Tm_fvar"]))
+  mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Syntax"; "Tm_fvar"]))
 let fv_eq_lid =
-  mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Syntax"; "fv_eq_lid"]))
+  mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Syntax"; "fv_eq_lid"]))
 let lid_of_str =
-  mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Ident"; "lid_of_str"]))
+  mk (MLE_Name (splitlast ["FStarC"; "Ident"; "lid_of_str"]))
 
 let nil_lid        = Ident.lid_of_str "Prims.Nil"
 let cons_lid       = Ident.lid_of_str "Prims.Cons"
 
-let embed      = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_embed"]))
-let unembed    = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_unembed"]))
-let bind_opt   = mk (MLE_Name (splitlast ["Fstarcompiler.FStarC"; "Option"; "bind"]))
+let embed      = mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_embed"]))
+let unembed    = mk (MLE_Name (splitlast ["FStarC"; "Syntax"; "Embeddings"; "Base"; "extracted_unembed"]))
+let bind_opt   = mk (MLE_Name (splitlast ["FStarC"; "Option"; "bind"]))
 
 let ml_nbe_unsupported : mlexpr =
   (* extraction thunks this definition *)
-  let hd = mk (MLE_Name (["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"], "e_unsupported")) in
+  let hd = mk (MLE_Name (["FStarC"; "TypeChecker"; "NBETerm"], "e_unsupported")) in
   mk (MLE_App (hd, [ml_unit]))
 
 let ml_magic : mlexpr =
@@ -148,17 +149,17 @@ type embedding_data = {
 
 (*** List of registered embeddings ***)
 let builtin_embeddings : list (Ident.lident & embedding_data) =
-  let syn_emb_lid s      = Ident.lid_of_path ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; s] Range.dummyRange in
-  let nbe_emb_lid s      = Ident.lid_of_path ["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"; s] Range.dummyRange in
-  let refl_emb_lid s     = Ident.lid_of_path ["Fstarcompiler.FStarC"; "Reflection"; "V2"; "Embeddings"; s] Range.dummyRange in
-  let nbe_refl_emb_lid s = Ident.lid_of_path ["Fstarcompiler.FStarC"; "Reflection"; "V2"; "NBEEmbeddings"; s] Range.dummyRange in
+  let syn_emb_lid s      = Ident.lid_of_path ["FStarC"; "Syntax"; "Embeddings"; s] Range.dummyRange in
+  let nbe_emb_lid s      = Ident.lid_of_path ["FStarC"; "TypeChecker"; "NBETerm"; s] Range.dummyRange in
+  let refl_emb_lid s     = Ident.lid_of_path ["FStarC"; "Reflection"; "V2"; "Embeddings"; s] Range.dummyRange in
+  let nbe_refl_emb_lid s = Ident.lid_of_path ["FStarC"; "Reflection"; "V2"; "NBEEmbeddings"; s] Range.dummyRange in
   [
     (PC.int_lid,                          {arity=0; syn_emb=syn_emb_lid  "e_int";        nbe_emb=Some(nbe_emb_lid "e_int")});
     (PC.bool_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_bool";       nbe_emb=Some(nbe_emb_lid "e_bool")});
     (PC.unit_lid,                         {arity=0; syn_emb=syn_emb_lid  "e_unit";       nbe_emb=Some(nbe_emb_lid "e_unit")});
     (PC.string_lid,                       {arity=0; syn_emb=syn_emb_lid  "e_string";     nbe_emb=Some(nbe_emb_lid "e_string")});
     (PC.norm_step_lid,                    {arity=0; syn_emb=syn_emb_lid  "e_norm_step";  nbe_emb=Some(nbe_emb_lid "e_norm_step")});
-    (PC.__range_lid,                      {arity=0; syn_emb=syn_emb_lid  "e___range";    nbe_emb=Some(nbe_emb_lid "e___range")});
+    (PC.range_lid,                        {arity=0; syn_emb=syn_emb_lid  "e_range";      nbe_emb=Some(nbe_emb_lid "e_range")});
 
     (PC.vconfig_lid,                      {arity=0; syn_emb=syn_emb_lid  "e_vconfig";    nbe_emb=Some(nbe_emb_lid "e_vconfig")});
 
@@ -243,8 +244,8 @@ let rec embedding_for
   let emb_arrow e1 e2 =
     let comb =
       match k with
-      | SyntaxTerm -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"], "e_arrow")
-      | NBETerm    -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"], "e_arrow")
+      | SyntaxTerm -> mk <| MLE_Name (["FStarC"; "Syntax"; "Embeddings"], "e_arrow")
+      | NBETerm    -> mk <| MLE_Name (["FStarC"; "TypeChecker"; "NBETerm"], "e_arrow")
     in
     mk (MLE_App (comb, [e1; e2]))
   in
@@ -262,8 +263,8 @@ let rec embedding_for
   | Tm_name bv when BU.for_some (find_env_entry bv) env ->
     let comb =
       match k with
-      | SyntaxTerm -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"], "mk_any_emb")
-      | NBETerm    -> mk <| MLE_Name (["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"], "mk_any_emb")
+      | SyntaxTerm -> mk <| MLE_Name (["FStarC"; "Syntax"; "Embeddings"], "mk_any_emb")
+      | NBETerm    -> mk <| MLE_Name (["FStarC"; "TypeChecker"; "NBETerm"], "mk_any_emb")
     in
     let s = snd (Some?.v (Option.find (find_env_entry bv) env)) in
     mk <| MLE_App(comb, [str_to_name s])
@@ -277,20 +278,16 @@ let rec embedding_for
     embedding_for tcenv mutuals k env t
 
   (* Pure arrow *)
-  | Tm_arrow {bs=[b]; comp=c} when U.is_pure_comp c ->
-    let [b], c = FStarC.Syntax.Subst.open_comp [b] c in
+  | Tm_arrow _ when (match U.arrow_one_ln t with
+                     | Some (_, c) -> U.is_pure_comp c
+                     | None -> false) ->
+    let b, c = Some?.v (U.arrow_one t) in
     let t0 = b.binder_bv.sort in
     let t1 = U.comp_result c in
     emb_arrow (embedding_for tcenv mutuals k env t0) (embedding_for tcenv mutuals k env t1)
 
-  (* More than 1 binder, curry and retry *)
-  | Tm_arrow {bs=b::more::bs; comp=c} ->
-    let tail = S.mk (Tm_arrow {bs=more::bs; comp=c}) t.pos in
-    let t = S.mk (Tm_arrow {bs=[b]; comp=S.mk_Total tail}) t.pos in
-    embedding_for tcenv mutuals k env t
-
   | Tm_app _ ->
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     let e_head = embedding_for tcenv mutuals k env head in
     let e_args = List.map (fun (t, _) -> embedding_for tcenv mutuals k env t) args in
     mk <| MLE_App (e_head, e_args)
@@ -363,7 +360,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let str_to_name s     = as_name ([], s) in
     let fv_lid_embedded =
         with_ty MLTY_Top <|
-            MLE_App (as_name (["Fstarcompiler.FStarC_Ident"],"lid_of_str"),
+            MLE_App (as_name (["FStarC_Ident"],"lid_of_str"),
                      [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
     in
     let mk_tactic_interpretation l arity =
@@ -375,7 +372,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "mk_tactic_interpretation_"
         | NBETerm    -> "mk_nbe_tactic_interpretation_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_InterpFuns"], idroot^show arity)
+      as_name (["FStarC_Tactics_InterpFuns"], idroot^show arity)
     in
     let mk_from_tactic l arity =
       let idroot =
@@ -383,13 +380,13 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | SyntaxTerm -> "from_tactic_"
         | NBETerm    -> "from_nbe_tactic_"
       in
-      as_name (["Fstarcompiler.FStarC_Tactics_Native"], idroot^show arity)
+      as_name (["FStarC_Tactics_Native"], idroot^show arity)
     in
     let mk_arrow_as_prim_step k (arity: int) : ML mlexpr =
       let modul =
         match k with
-        | SyntaxTerm -> ["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"]
-        | NBETerm    -> ["Fstarcompiler.FStarC"; "TypeChecker"; "NBETerm"]
+        | SyntaxTerm -> ["FStarC"; "Syntax"; "Embeddings"]
+        | NBETerm    -> ["FStarC"; "TypeChecker"; "NBETerm"]
       in
       as_name (modul, "arrow_as_prim_step_" ^ show arity)
     in
@@ -409,7 +406,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         match tvar_names with
         | [] ->
           let body =
-              mk <| MLE_App(as_name (["Fstarcompiler.FStarC_Syntax_Embeddings"], "debug_wrap"),
+              mk <| MLE_App(as_name (["FStarC_Syntax_Embeddings"], "debug_wrap"),
                             [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
                              ml_lam "_" (mk <| MLE_App(body, [str_to_name "args"]))])
           in
@@ -443,7 +440,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
               mk <| MLE_Match(as_name ([], "args"), [branch; default_branch])
           in
           let body =
-              mk <| MLE_App(as_name (["Fstarcompiler.FStarC_Syntax_Embeddings"], "debug_wrap"),
+              mk <| MLE_App(as_name (["FStarC_Syntax_Embeddings"], "debug_wrap"),
                             [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
                              ml_lam "_" body])
           in
@@ -697,8 +694,8 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : ML (list
          | Some (interp, nbe_interp, arity, plugin) ->
              let register, args =
                if plugin
-               then (["Fstarcompiler.FStarC_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
-               else (["Fstarcompiler.FStarC_Tactics_Native"], "register_tactic"), [interp]
+               then (["FStarC_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
+               else (["FStarC_Tactics_Native"], "register_tactic"), [interp]
              in
              let h = with_ty MLTY_Top <| MLE_Name register in
              let arity  = MLE_Const (MLC_Int(show arity, None)) in
@@ -737,7 +734,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : ML (list
       let tcenv = tcenv_of_uenv g in
       let ml_unembed = mk_unembed tcenv mutual_lids record_fields ctors in
       let ml_embed   = mk_embed   tcenv mutual_lids record_fields ctors in
-      let def = mk (MLE_App (mk (MLE_Name (["Fstarcompiler.FStarC"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
+      let def = mk (MLE_App (mk (MLE_Name (["FStarC"; "Syntax"; "Embeddings"; "Base"], "mk_extracted_embedding")), [
                       ml_name;
                       ml_unembed;
                       ml_embed]))
@@ -813,7 +810,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1) =
    *)
   let plugin_with_arity (attrs: list term) : ML (option (option int)) =
     BU.find_map attrs (fun t ->
-      let head, args = U.head_and_args t in
+      let head, args = U.head_and_args_full t in
       if not (U.is_fvar PC.plugin_attr head) then
         None
       else match args with
@@ -824,7 +821,7 @@ let maybe_register_plugin (g:uenv) (se:sigelt) : ML (list mlmodule1) =
       | _ -> Some None
     )
   in
-  if not <| List.mem (Options.codegen()) [Some Options.Plugin; Some Options.PluginNoLib]
+  if not <| List.mem (Options.codegen()) [Some Options.Plugin]
   then
     []
   else

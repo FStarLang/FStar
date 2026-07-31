@@ -1,12 +1,9 @@
 ## Table of Contents ##
 
+  * [Binary package](#binary-package)
   * [Online editor](#online-editor)
   * [OPAM package](#opam-package)
-  * [Binary package](#binary-package)
-    * [Installing a binary package](#installing-a-binary-package)
-    * [Testing a binary package](#testing-a-binary-package)
   * [Running F* from a docker image](#running-f-from-a-docker-image)
-  * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
   * [Nix Package](#nix-package)
   * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
@@ -16,9 +13,43 @@
     * [Building F* and the libraries](#building-f-and-its-libraries)
   * [Runtime dependency: Particular version of Z3](#runtime-dependency-particular-version-of-z3)
 
+## Binary package ##
+
+The easiest way to get a recent binary installation of F\* is to use the 
+.scripts/install-fstar.sh script.
+
+The simplest way is to run the following command, which will install the latest
+weekly binary release for your platform, including the necessary Z3 binaries.
+
+```
+curl -fsSL https://aka.ms/install-fstar | bash -s -- --release
+```
+
+The installer will instruct you to add the F* installation directory to your path.
+
+You can also manually download the binary of your choice from 
+[F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
+
+Using a binary package allows you to use F* even if you do not want to
+install OCaml on your machine. You will be able to verify F* code, and
+to generate OCaml code from F*; but if you want to compile such
+generated OCaml code, then you will need OCaml.
+
+### Testing a binary package ###
+
+After installing a F* binary package as described above, you can quickly test
+that the binary works on a simple example from the library by doing the following
+and observing the expected output shown below.
+
+```
+$ fstar.exe -f FStar.List.Tot.Base.fst              
+Verified module: FStar.List.Tot.Base
+All verification conditions discharged successfully
+```
+
 ## Online editor ##
 
-The easiest way to try out F\* quickly is directly in your browser by
+You can also try out F\* quickly in your browser by
 using the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
@@ -26,19 +57,20 @@ using the [online F\* editor] that's part of the [F\* tutorial].
 
 ## Runtime dependency: Particular version of Z3 ##
 
-F\* requires specific versions of Z3 to work correctly,
+If you install from an F* binary package, then it comes with its
+own versions of Z3 and you should not need to configure anything
+else.
+
+Otherwise, F\* requires specific versions of Z3 to work correctly,
 and will refuse to run if the version string does not match.
-You should have `z3-4.8.5` and `z3-4.13.3` in your `$PATH`:
+You should have `z3-4.13.3` in your `$PATH`:
 
 ```
-❯ z3-4.8.5 --version
-Z3 version 4.8.5 - 64 bit
-
 ❯ z3-4.13.3 --version
 Z3 version 4.13.3 - 64 bit
 ```
 
-On Linux you can install these two versions with the following command:
+On Linux you can install several Z3 versions usable with F* with the following command:
 ```bash
 sudo .scripts/get_fstar_z3.sh /usr/local/bin
 ```
@@ -61,81 +93,6 @@ Note: To install OCaml and OPAM on your platform please read the
 section further below, steps 0 to 3.
 
 
-## Binary package ##
-
-Every week or so we release [F\* binaries on GitHub] (for Windows and Linux).
-This is a way to get F\* quickly running on your machine,
-but if the build you use is old you might be missing out on new
-features and bug fixes. Please do not report bugs in old releases
-until making sure they still exist in the `master` branch (see
-[OPAM package](#opam-package) above and
-[Building F\* from sources](#building-f-from-the-ocaml-sources) below).
-
-[F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
-
-Using a binary package allows you to use F* even if you do not want to
-install OCaml on your machine. You will be able to verify F* code, and
-to generate OCaml code from F*; but if you want to compile such
-generated OCaml code, then you will need OCaml.
-
-### Installing a binary package ###
-
-After downloading a binary package and extracting its contents, you
-need to perform the following step before your first use:
-
-   Add `fstar.exe` and `z3` to your `PATH`, either permanently
-   or temporarily, for instance by running this:
-
-        $ export PATH=/path/to/fstar/bin:$PATH
-        $ fstar.exe --version
-        F* 0.9.8.0~dev
-        platform=Linux_x86_64
-        compiler=OCaml 4.14.0
-        date=yyyy-mm-ddThh:nn:ss+02:00
-        commit=xxxxxxxx
-        $ z3-4.13.3 --version
-        Z3 version 4.13.3 - 64 bit
-
-   Note: if you are using the binary package and extracted it to, say, the
-   `/path/to/fstar` directory, then both `fstar.exe` and the right version of
-   `z3` are in the `path/to/fstar/bin` directory.
-
-### Testing a binary package ###
-
-After installing a F* binary package as described above, you can test
-that the binary is good if you wish, by running the following
-commands. (Note: On Windows this requires Cygwin and `make`)
-
-1. You can run the micro benchmarks:
-
-        $ make -C tests/micro-benchmarks
-
-
-2. You can also verify all the examples, keep in mind that this will
-   take a long time, use a lot of resources, and there are also some quirks
-   explained in the notes below.
-
-        $ make -C examples -j6 HAS_OCAML=
-        $ echo $?    # non-zero means build failed! scroll up for error message!
-
-   Note: Some of the examples need to generate and compile OCaml
-         code. The `HAS_OCAML=` argument to `make` disables those
-         parts of those examples that rely on OCaml. If, however, you
-         remove that option, then you will most likely encounter
-         version discrepancies between the OCaml support libraries
-         included in the F\* binary packages and the OCaml libraries
-         and packages installed on your system. This is why, to avoid
-         such discrepancies, you should install F\* via opam if you
-         are interested in compiling these examples.
-
-   Note: Some of the examples currently require having [KaRaMeL](https://github.com/FStarLang/karamel)
-         installed and the `KRML_HOME` variable pointing to its location.
-         If KaRaMeL is absent, then these examples will be skipped.
-
-   Note: On Linux if you get a file descriptor exhaustion error that looks
-         like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
-         you can increase the limits with `ulimit -n 4000`.
-
 ## Running F\* from a docker image ##
 
 An alternative to installing binaries is to install a docker image.
@@ -146,21 +103,6 @@ The image is automatically kept up to date through a cloud build.
 You only have to install docker and an X server for your platform and you are good to go.
 See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image)
 for the details on how to use docker.
-
-## Chocolatey Package on Windows ##
-
-On windows you can use chocolatey package manager to install and update the
-latest released version of F\*. (Keep in mind that you will often get an old
-version of F\* this way, so unless a release happened recently we don't really
-recommend it.)
-
-    > choco install fstar
-
-or
-
-    > cinst fstar
-
-you can find the package description [here](https://chocolatey.org/packages/FStar)
 
 ## Nix Package ##
 

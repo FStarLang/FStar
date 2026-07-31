@@ -19,11 +19,14 @@ open FStar.Tactics.V2
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 
+(* Ranges are unsealed: range-observing reflection functions are now unsealed in ulib. *)
+let range = FStar.Range.range
+
 type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
-val with_error_bound (r:Range.range) (f:unit -> T.Tac 'a) : T.Tac 'a
-val get_error_bound (_:unit) : T.Tac (option Range.range)
+val with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a
+val get_error_bound (_:unit) : T.Tac (option range)
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string
 val debug_at_level_no_module (s:string) : bool
@@ -69,7 +72,7 @@ val no_uvars_in_term (t:T.term) : Dv bool
    nodes. If and when that is fixed, we should remove this function *)
 val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
-val float_one : FStar.Float.float
+val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 val try_solve_single_valued_implicits : env -> list term -> Dv unit
@@ -82,17 +85,18 @@ val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 val beta_lax (g:env) (t:T.term) : T.term
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 val norm_well_typed_term
       (#g:T.env)
       (#t:R.term)
       (#eff:T.tot_or_ghost)
       (#k:Ghost.erased R.term)
-      (_:Ghost.erased (RT.typing g t (eff, Ghost.reveal k)))
+      (_:Ghost.erased (RT.typing g (RTS.denote_term t) (eff, RTS.denote_term (Ghost.reveal k))))
       (_:list norm_step)
   : T.Tac (
       t':R.term &
-      Ghost.erased (RT.typing g t' (eff, Ghost.reveal k)) &
-      Ghost.erased (RT.related g t RT.R_Eq t')
+      Ghost.erased (RT.typing g (RTS.denote_term t') (eff, RTS.denote_term (Ghost.reveal k))) &
+      Ghost.erased (RT.related g (RTS.denote_term t) RT.R_Eq (RTS.denote_term t'))
     )
 val add_attribute (x:T.sigelt) (_:R.term) : (y:T.sigelt { x == y })
 val get_attributes (x:T.sigelt) : T.Tac (list R.term) 
@@ -119,6 +123,6 @@ val stack_dump : unit -> Dv string
 val push_options () : Dv unit
 val pop_options () : Dv unit
 val set_options (opts: string) : Dv unit
-val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g t (T.E_Total, T.pack_ln (FStar.Stubs.Reflection.V2.Data.Tv_Type u))}))
+val universe_of_well_typed_term (g:T.env) (t:T.term) : Tac (option (u:T.universe{T.typing_token g (RTS.denote_term t) (T.E_Total, RTS.Ts_Type (RTS.denote_universe u))}))
 
 val try_lookup_lid : T.env -> R.name -> option ((universes & typ) & range)

@@ -50,20 +50,16 @@ let __proj__Mkembedding__item__e_typ (projectee : 'a embedding) :
   unit -> FStarC_Syntax_Syntax.emb_typ=
   match projectee with | { em; un; print; typ; e_typ;_} -> e_typ
 let em (projectee : 'a embedding) : 'a -> embed_t=
-  match projectee with | { em = em1; un; print; typ; e_typ;_} -> em1
+  __proj__Mkembedding__item__em projectee
 let un (projectee : 'a embedding) :
   FStarC_Syntax_Syntax.term -> 'a unembed_t=
-  match projectee with | { em = em1; un = un1; print; typ; e_typ;_} -> un1
+  __proj__Mkembedding__item__un projectee
 let print (projectee : 'a embedding) : 'a printer=
-  match projectee with
-  | { em = em1; un = un1; print = print1; typ; e_typ;_} -> print1
+  __proj__Mkembedding__item__print projectee
 let typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.typ=
-  match projectee with
-  | { em = em1; un = un1; print = print1; typ = typ1; e_typ;_} -> typ1
+  __proj__Mkembedding__item__typ projectee
 let e_typ (projectee : 'a embedding) : unit -> FStarC_Syntax_Syntax.emb_typ=
-  match projectee with
-  | { em = em1; un = un1; print = print1; typ = typ1; e_typ = e_typ1;_} ->
-      e_typ1
+  __proj__Mkembedding__item__e_typ projectee
 let emb_typ_of (e : 'a embedding) (uu___ : unit) :
   FStarC_Syntax_Syntax.emb_typ= e.e_typ ()
 let unknown_printer (typ1 : FStarC_Syntax_Syntax.term) (uu___ : 'a) :
@@ -305,14 +301,14 @@ let lazy_unembed (pa : 'a printer) (et : FStarC_Syntax_Syntax.emb_typ)
          res)
       else
         (let a1 = FStar_Dyn.undyn b in
-         (let uu___5 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
-          if uu___5
+         (let uu___4 = FStarC_Effect.op_Bang FStarC_Options.debug_embedding in
+          if uu___4
           then
-            let uu___6 =
+            let uu___5 =
               FStarC_Class_Show.show FStarC_Syntax_Syntax.showable_emb_typ et in
-            let uu___7 = pa a1 in
+            let uu___6 = pa a1 in
             FStarC_Format.print2 "Unembed cancelled for %s\n\tvalue is %s\n"
-              uu___6 uu___7
+              uu___5 uu___6
           else ());
          FStar_Pervasives_Native.Some a1)
   | uu___ ->

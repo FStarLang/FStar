@@ -49,6 +49,7 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
       (forall (i:nat). i < US.v vi ==> Seq.index s1 i == Seq.index s2 i)
     )
   )
+  decreases (US.v l - US.v (!i))
   {
     let vi = !i; 
     i := US.(vi +^ 1sz);
@@ -79,6 +80,7 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
             Seq.length s == A.length a /\
             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )
+   decreases (US.v l - US.v (!i))
    {
       let vi = !i; 
       a.(vi) <- v;

@@ -14,7 +14,6 @@
       | QID | INTLIT
 *)
 (* I wrote this in OCaml to avoid needing to extract ... maybe bad idea *)
-open Fstarcompiler
 open FStar_Pervasives
 
 module I    = FStarC_Ident

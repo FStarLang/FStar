@@ -22,6 +22,7 @@ open Pulse.Lib.Par
 
 
 
+divergent
 fn par (#p #q #r #s:_)
         {| is_send p, is_send q, is_send r, is_send s |}
        (f: (unit -> stt unit p (fun _ -> q)))
@@ -60,6 +61,7 @@ ensures pts_to x (i + 1)
 //end incr_explicit_i$
 
 //par_incr$
+divergent
 fn par_incr (x y:ref int)
 requires pts_to x 'i
 requires pts_to y 'j

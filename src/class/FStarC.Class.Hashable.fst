@@ -1,5 +1,7 @@
 module FStarC.Class.Hashable
 
+open FStarC.Effect
+include FStarC.Hash
 open FStarC
 open FStarC.Hash
 open FStarC.Class.Show

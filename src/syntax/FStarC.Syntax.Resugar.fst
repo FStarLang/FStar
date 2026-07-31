@@ -413,10 +413,10 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       then mk (A.App (typ, resugar_universe u t.pos, UnivApp))
       else typ
 
-    | Tm_abs {bs=xs; body} -> //fun x1 .. xn -> body
+    | Tm_abs _ -> //fun x1 .. xn -> body
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
-      let xs, body = SS.open_term xs body in
+      let xs, body, _ = U.abs_formals_maybe_unascribe_body false t in
       let xs = filter_imp_bs xs in
       let body_bv = FStarC.Syntax.Free.names body in
       let patterns = xs |> List.map (fun x ->
@@ -435,11 +435,7 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
 
     | Tm_arrow _ ->
       (* Flatten the arrow *)
-      let xs, body =
-        match (SS.compress (U.canon_arrow t)).n with
-        | Tm_arrow {bs=xs; comp=body} -> xs, body
-        | _ -> failwith "impossible: Tm_arrow in resugar_term"
-      in
+      let xs, body = U.arrow_formals_comp_ln_strict t in
       let xs, body = SS.open_comp xs body in
       let xs = filter_imp_bs xs in
       let body = resugar_comp' env body in
@@ -458,27 +454,29 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
       mk (A.Refine(b, resugar_term' env phi))
 
     (* Drop b2t unless --print_implicits() *)
-    | Tm_app {hd={n=Tm_fvar fv}; args=[(e, _)]}
+    | Tm_app _
       when not (Options.print_implicits())
-           && S.fv_eq_lid fv C.b2t_lid ->
-      resugar_term' env e
+           && Some? (U.unb2t t) ->
+      resugar_term' env (Some?.v (U.unb2t t))
 
-    | Tm_app {hd; args}
-      when Some? (can_resugar_machine_integer hd args) ->
+    | Tm_app _
+      when (let hd, args = U.head_and_args_full t in
+            Some? (can_resugar_machine_integer hd args)) ->
+      let hd, args = U.head_and_args_full t in
       let Some (fv, i) = can_resugar_machine_integer hd args in
       resugar_machine_integer fv i t.pos
 
     | Tm_app _ ->
       let t = U.canon_app t in
-      let Tm_app {hd=e; args} = t.n in
+      (* Flatten the whole application spine; under the unary representation
+         this recovers the full argument list rather than a single node. *)
+      let e, args = U.head_and_args_full t in
       let is_hide_or_reveal e =
         match U.un_uinst e with
         | {n=Tm_fvar fv} ->
           S.fv_eq_lid fv C.hide || S.fv_eq_lid fv C.reveal
         | _ -> false
       in
-      (* NB: This cannot fail since U.canon_app constructs a Tm_app. *)
-
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last (l:list _) : ML _ = match l with
             | hd :: [] -> [hd]
@@ -661,8 +659,8 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 failwith("wrong arguments to try_with")
             in
             let decomp term = match (SS.compress term).n with
-              | Tm_abs {bs=x; body=e} ->
-                let x, e = SS.open_term x e in
+              | Tm_abs {b; body=e} ->
+                let _, e = SS.open_term [b] e in
                 e
               | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
             let body = resugar_term' env (decomp body) in
@@ -720,7 +718,13 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
                 xs, pats, t
           in
           let resugar_forall_body body = match (SS.compress body).n with
-            | Tm_abs {bs=xs; body} ->
+            | Tm_abs _ ->
+                (* Peel all quantifier binders. Under the unary representation
+                   [fun x1 .. xn -> body] is nested, so flatten to recover the
+                   full binder list before opening. abs_formals_ln stops at the
+                   quantifier predicate (a Prop), so this matches the previous
+                   single-node behavior exactly. *)
+                let xs, body, _ = U.abs_formals_ln body in
                 let xs, body = SS.open_term xs body in
                 let xs = filter_imp_bs xs in
                 let xs = xs |> map (fun b -> resugar_binder' env b t.pos) in
@@ -865,13 +869,16 @@ let rec resugar_term_base' (env: DsEnv.env) (t : S.term) : ML A.term =
             | tms -> Some (List.map (resugar_term' env) tms)
         in
         let univs, td = SS.open_univ_vars bnd.lbunivs (U.mk_conj bnd.lbtyp bnd.lbdef) in
-        let typ, def = match (SS.compress td).n with
-          | Tm_app {args=[(t, _); (d, _)]} -> t, d
+        (* [td] bundles the type and definition as a binary conjunction so both
+           are opened under the same universe substitution; recover the two
+           arguments from the (possibly nested) application spine. *)
+        let typ, def = match U.head_and_args_full td with
+          | (_, [(t, _); (d, _)]) -> t, d
           | _ -> failwith "wrong let binding format"
         in
         let binders, term, is_pat_app = match (SS.compress def).n with
-          | Tm_abs {bs=b; body=t} ->
-            let b, t = SS.open_term b t in
+          | Tm_abs _ ->
+            let b, t, _ = U.abs_formals_maybe_unascribe_body false def in
             let b = filter_imp_bs b in
             b, t, true
           | _ -> [], def, false
@@ -1008,7 +1015,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   in
   (* Returns the non-resugared final relation and the calc_pack *)
   let resugar_calc_finish (t:S.term) : ML (option (S.term & S.term)) =
-    let hd, args = U.head_and_args t in
+    let hd, args = U.head_and_args_full t in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
                    (rel, None);                         // top relation
@@ -1031,15 +1038,19 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
       | _ -> false
     in
     match (SS.compress rel).n with
-    | Tm_abs {bs=[b1;b2]; body} ->
-        let ([b1;b2], body) = SS.open_term [b1;b2] body in
+    (* Un-eta-expand a binary relation: peel exactly two binders and look for a
+       >=2-argument application spine underneath. *)
+    | Tm_abs _ when (let bs, _, _ = U.abs_formals_maybe_unascribe_body false rel in
+                     List.length bs = 2) ->
+        let ([b1;b2], body, _) = U.abs_formals_maybe_unascribe_body false rel in
         let body = U.unascribe body in
         let body = match (U.unb2t body) with
                    | Some body -> body
                    | None -> body
         in
         begin match (SS.compress body).n with
-        | Tm_app {hd=e; args} when List.length args >= 2 ->
+        | Tm_app _ when (let _, args = U.head_and_args_full body in List.length args >= 2) ->
+          let e, args = U.head_and_args_full body in
           begin match List.rev args with
           | (a1, None)::(a2, None)::rest ->
             if bv_eq_tm b1.binder_bv a2 && bv_eq_tm b2.binder_bv a1 // mind the flip
@@ -1057,7 +1068,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   (* Resugars an application of calc_step, returning the term, the relation,
    * the justifcation, and the rest of the proof. *)
   let resugar_step (pack:S.term) : ML (option (S.term & S.term & S.term & S.term)) =
-    let hd, args = U.head_and_args pack in
+    let hd, args = U.head_and_args_full pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
                    (_, Some ({ aqual_implicit = true })); // x
@@ -1077,7 +1088,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : ML (option A.term) =
   in
   (* Resugar an application of calc_init *)
   let resugar_init (pack:S.term) : ML (option S.term) =
-    let hd, args = U.head_and_args pack in
+    let hd, args = U.head_and_args_full pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
                    (x, None)]                // initial value
@@ -1454,7 +1465,6 @@ let mk_decl r q d' =
     drange = r ;
     quals = List.choose resugar_qualifier q ;
     attrs = [] ; // We fill in the attrs in resugar_sigelt'
-    interleaved = false;
   }
 
 let decl'_to_decl se d' =

@@ -1,0 +1,15 @@
+open Prims
+let rec fold :
+  'k 'v 't .
+    'k FStar_OrdMap.cmp ->
+      ('k -> 'v -> 't -> 't) ->
+        ('k, 'v, Obj.t) FStar_OrdMap.ordmap -> 't -> 't
+  =
+  fun f g m a ->
+    if (FStar_OrdMap.size f m) = Prims.int_zero
+    then a
+    else
+      (let uu___ = FStar_OrdMap.choose f m in
+       match uu___ with
+       | FStar_Pervasives_Native.Some (k1, v1) ->
+           fold f g (FStar_OrdMap.remove f k1 m) (g k1 v1 a))

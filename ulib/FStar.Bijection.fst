@@ -1,5 +1,8 @@
 module FStar.Bijection
 
+open FStar.Fin { fin }
+open FStar.Ghost
+open FStar.Injection
 open FStar.Functions { pigeon }
 
 let bij_inv_nopat (#a #b : _) (d : a =~ b) (x:a) (y:b)

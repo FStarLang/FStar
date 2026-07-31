@@ -79,6 +79,7 @@ fn write10 (x:ref U32.t)
       pts_to ctr i **
       pure (i <=^ 10ul /\ 
            (i <^ 10ul ==> n == 0ul))
+  decreases (U32.v (!ctr))
   {
     test_write_10 x;
     ctr := !ctr -^ 1ul;
@@ -105,6 +106,7 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
       pure (SZ.(vi <=^ n) /\
             Seq.length s == Seq.length 's /\
             (forall (j:nat). j < SZ.v vi ==> Seq.index s j == v))
+  decreases (SZ.v n - SZ.v (!i))
   {
     x.(!i) <- v;
     i := !i `SZ.add` 1sz;
@@ -178,6 +180,7 @@ fn extract_match (x:opt bool)
 
 fn rec fib (x:nat)
   returns y:nat
+  decreases x
 {
   if (x <= 1)
   {

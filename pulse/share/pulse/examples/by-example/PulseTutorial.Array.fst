@@ -109,6 +109,7 @@ fn compare
       (forall (i:nat). i < SZ.v vi ==> Seq.index 's1 i == Seq.index 's2 i)
     )
   )
+  decreases (SZ.v l - SZ.v (!i))
   {
     i := !i +^ 1sz
   };
@@ -148,6 +149,7 @@ fn copy
       (forall (i:nat). i < SZ.v vi ==> Seq.index s1 i == Seq.index 's2 i)
     )
   )
+  decreases (SZ.v l - SZ.v (!i))
   {
     let vi = !i;
     a1.(vi) <- a2.(vi);
@@ -189,6 +191,7 @@ fn copy2
       (forall (i:nat). i < SZ.v vi ==> Seq.index s1 i == Seq.index 's2 i)
     )
   )
+  decreases (SZ.v l - SZ.v (!i))
   {
     let vi = !i;
     let v = a2.(vi);

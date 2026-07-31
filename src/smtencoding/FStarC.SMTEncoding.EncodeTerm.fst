@@ -87,8 +87,11 @@ let head_normal env t =
     | Tm_uvar _
     | Tm_abs _
     | Tm_constant _ -> true
-    | Tm_fvar fv
-    | Tm_app {hd={n=Tm_fvar fv}} -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
+    | Tm_fvar _
+    | Tm_app _ ->
+      (match (fst (U.head_and_args_full t)).n with
+       | Tm_fvar fv -> Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name |> None?
+       | _ -> false)
     | _ -> false
 
 let head_redex env t =
@@ -134,7 +137,7 @@ let norm env t = norm_with_steps [Env.Beta; Env.Exclude Env.Zeta;  //we don't kn
 
 let maybe_whnf env t =
   let t' = whnf env t in
-  let head', _ = U.head_and_args t' in
+  let head', _ = U.head_and_args_full t' in
   if head_redex env head' //this wasn't reducible for some reason, e.g., not applied to strict arguments
   then None
   else Some t'
@@ -280,7 +283,10 @@ let as_function_typ env t0 =
 let rec curried_arrow_formals_comp k =
   let k = Subst.compress k in
   match k.n with
-  | Tm_arrow {bs; comp=c}  -> Subst.open_comp bs c
+  (* Deliberately takes only the outermost arrow *node* (no flattening through
+     a user-written Tot) so that the arity here matches the function-type and
+     application encodings. *)
+  | Tm_arrow _  -> U.arrow_node_formals_comp k
   | Tm_refine {b=bv} ->
     let args, res = curried_arrow_formals_comp bv.sort in
     begin
@@ -795,9 +801,12 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
       | Tm_constant c ->
         encode_const c env
 
-      | Tm_arrow {bs=binders; comp=c} ->
+      | Tm_arrow _ ->
+        (* One arrow *node* only: the encoded arity (and the IsTotFun
+           partial-application axioms below) must match the arity that
+           curried_arrow_formals_comp assigns to the head symbol. *)
         let module_name = env.current_module_name in
-        let binders, res = SS.open_comp binders c in
+        let binders, res = U.arrow_node_formals_comp t in
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
@@ -1113,12 +1122,12 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
         ttm, decls@([d] |> mk_decls_trivial)
 
       | Tm_app _ ->
-        let head, args_e = U.head_and_args t0 in
+        let head, args_e = U.head_and_args_full t0 in
         let head, args_e =
           if head_redex env head
           then match maybe_whnf env t0 with
                | None -> head, args_e
-               | Some t -> U.head_and_args t
+               | Some t -> U.head_and_args_full t
           else head, args_e
         in
         begin
@@ -1280,8 +1289,20 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                 //           (string_of_int (List.length fuel_args))
                 //           (string_of_int (List.length univs))
                 //           (string_of_int (List.length args));
-                let tm = maybe_curry_app t0.pos fname (arity+List.length univs) (fuel_args@univs@args) in
-                tm, decls
+                let arity = arity + List.length univs in
+                let all_args = fuel_args@univs@args in
+                if List.length all_args < arity
+                then
+                  (* The head's declared SMT arity comes from the arrow spine
+                     of its fully normalized type, or from an [smt_arity]
+                     attribute, so an application can legitimately present
+                     fewer arguments than that arity. Fall back to a curried
+                     application through the token, which is sound (if less
+                     complete) rather than crashing. *)
+                  encode_partial_app None
+                else
+                  let tm = maybe_curry_app t0.pos fname arity all_args in
+                  tm, decls
             in
 
             let head = SS.compress head in
@@ -1322,10 +1343,22 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
                             (show args_e);
 
                 begin
+                (* [formals] is derived from the head's type, whose arrow spine need
+                   not match the arity the symbol was declared with (a projector of
+                   a function-typed field, say).  The declared arity is what the
+                   symbol's axioms are stated at, so accept it too. *)
+                let declared_arity_matches (l:lident) =
+                  match FStarC.SMTEncoding.Env.lookup_fvar_binding env l with
+                  | Some fvb -> fvb.smt_arity = List.length args
+                  | None -> false
+                in
                 match head.n with
-                | Tm_uinst({n=Tm_fvar fv}, us) when (List.length formals = List.length args) ->
+                | Tm_uinst({n=Tm_fvar fv}, us)
+                    when (List.length formals = List.length args
+                          || declared_arity_matches fv.fv_name) ->
                   encode_full_app fv.fv_name (List.map encode_universe us)
-                | Tm_fvar fv when (List.length formals = List.length args) ->
+                | Tm_fvar fv when (List.length formals = List.length args
+                                   || declared_arity_matches fv.fv_name) ->
                   encode_full_app fv.fv_name []
                 | _ ->
                     if List.length formals > List.length args
@@ -1335,8 +1368,8 @@ and encode_term (t:typ) (env:env_t) : ML (term         (* encoding of t, expects
 
         end
 
-      | Tm_abs {bs; body; rc_opt=lopt} ->
-          let bs, body, opening = SS.open_term' bs body in
+      | Tm_abs _ ->
+          let bs, body, lopt = U.abs_formals_maybe_unascribe_body false t in
           let fallback () =
             let arg_sorts, arg_terms =
               (* We need to compute all free variables of this lambda
@@ -1602,7 +1635,7 @@ and encode_args (l:args) (env:env_t) : ML (list term & decls_t)  =
 and encode_smt_patterns (pats_l:list (list S.arg)) env : ML (list (list term) & decls_t) =
     let env = {env with use_zfuel_name=true} in
     let encode_smt_pattern t =
-        let head, args = U.head_and_args t in
+        let head, args = U.head_and_args_full t in
         let head = U.un_uinst head in
         match head.n, args with
         | Tm_fvar fv, [_; (x, _); (t, _)]
@@ -1719,7 +1752,8 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, decls
 
-        | Tm_app {hd=head; args} ->
+        | Tm_app _ ->
+          let head, args = U.head_and_args_full phi in
           //it's okay to do (un_uinst head) in this context
           //since we are encoding primitives like has_type, labeled, and squash
           begin match (U.un_uinst head).n, args with

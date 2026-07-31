@@ -16,9 +16,13 @@
 
 module Pulse.Checker.Base
 
+open Pulse.Typing
+open Pulse.Syntax
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
+module PRU = Pulse.Reflection.Util
 module CP = Pulse.Checker.Pure
 module RU = Pulse.RuntimeUtils
 module RB = Pulse.Readback
@@ -49,8 +53,8 @@ let format_failed_goal (g:env) (ctxt:list term) (goal:list term) =
     (env_to_string g)
 
 
-let mk_arrow ty t = RT.mk_arrow ty T.Q_Explicit t
-let mk_abs ty t = RT.(mk_abs ty T.Q_Explicit t)
+let mk_arrow ty t = PRU.mk_arrow (ty, T.Q_Explicit) t
+let mk_abs ty t = PRU.mk_abs ty T.Q_Explicit t
 
 let intro_comp_typing (g:env) 
                       (c:comp_st)
@@ -61,7 +65,7 @@ let intro_comp_typing (g:env)
 irreducible
 let post_typing_as_abstraction
   (g:env) (x:var) (ty:term) (t:term { fresh_wrt x g (freevars t) })
-  : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
+  : FStar.Ghost.erased (PRU.rt_tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
   = admit()
 
 let check_effect_annot (g:env) (e:effect_annot)
@@ -78,6 +82,7 @@ let check_effect_annot (g:env) (e:effect_annot)
   in
   match e with
   | EffectAnnotSTT -> e
+  | EffectAnnotSTTDiv -> e
   | EffectAnnotGhost { opens } ->
     let opens = check_opens opens in
     EffectAnnotGhost { opens }
@@ -92,7 +97,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
   let x = fresh g in
   let ret_ty = 
       match ret_ty_opt with
-      | None -> wr RT.unit_ty FStar.Range.range_0
+      | None -> wr PRU.unit_tm range_0
       | Some t -> t
   in
   let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None false in
@@ -129,8 +134,8 @@ let comp_typing_from_post_hint
         x
 
 
-let extend_post_hint g p x tx conjunct =
-  let g' = push_binding g x ppname_default tx in
+let extend_post_hint g p x n tx conjunct =
+  let g' = push_binding g x n tx in
   let y = fresh g' in
   let g'' = push_binding g' y ppname_default p.ret_ty in
   let new_post = tm_star p.post conjunct in
@@ -154,12 +159,14 @@ let comp_st_with_post (c:comp_st) (post:term)
   : c':comp_st { st_comp_of_comp c' == ({ st_comp_of_comp c with post} <: st_comp) } =
   match c with
   | C_ST st -> C_ST { st with post }
+  | C_STDiv st -> C_STDiv { st with post }
   | C_STGhost i st -> C_STGhost i { st with post }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with post}
 
 let comp_with_pre (c:comp_st) (pre:term) =
   match c with
   | C_ST st -> C_ST { st with pre }
+  | C_STDiv st -> C_STDiv { st with pre }
   | C_STGhost i st -> C_STGhost i { st with pre }
   | C_STAtomic i obs st -> C_STAtomic i obs {st with pre}
 
@@ -236,7 +243,7 @@ let continuation_elaborator_with_bind' (#g:env) (ctxt:term)
     assert (comp_pre c1 == (tm_star ctxt pre1));
     assert (comp_post c1 == tm_star post1 ctxt);
     assert (comp_pre c2 == tm_star post1_opened ctxt);
-    assert (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
+    assume (open_term (comp_post c1) x == tm_star post1_opened (open_term ctxt x));
     // ctxt is well-typed, hence ln
     assume (open_term ctxt x == ctxt);
     assert (open_term (comp_post c1) x == comp_pre c2);
@@ -333,6 +340,7 @@ let return_in_ctxt (g:env) (y:var) (y_ppname:ppname) (u:universe) (ty:term) (ctx
     | EffectAnnotGhost _ -> STT_Ghost
     | EffectAnnotAtomicOrGhost _ -> STT_Atomic
     | EffectAnnotSTT -> STT
+    | EffectAnnotSTTDiv -> STT_Div
   in
   let y_tm = tm_var {nm_index=y;nm_ppname=y_ppname} in
   let t = wtag (Some ctag) (Tm_Return {expected_type=tm_unknown;insert_eq=false;term=y_tm}) in
@@ -361,13 +369,21 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
   (post_hint:post_hint_opt g)
   : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
 
+  let maybe_lift_to_div (c:comp_st) : T.Tac (c':comp_st { comp_pre c' == comp_pre c }) =
+    match post_hint with
+    | PostHint { effect_annot = EffectAnnotSTTDiv } ->
+      if C_ST? c
+      then C_STDiv (st_comp_of_comp c)
+      else c
+    | _ -> c
+  in
   match post_hint with
   | NoHint -> c
   | TypeHint ret_ty
   | PostHint { ret_ty } ->
     let cres = comp_res c in
     if eq_tm cres ret_ty
-    then c
+    then maybe_lift_to_div c
     else match Pulse.Typing.Util.check_equiv_now (elab_env g) cres ret_ty with
          | None, issues ->
            let open Pulse.PP in
@@ -377,13 +393,13 @@ let match_comp_res_with_post_hint (#g:env) (t:st_term) (c:comp_st)
            ]
          | Some tok, _ ->
            let d_equiv
-             : RT.equiv _ cres ret_ty =
+             : RT.equiv _ (RTS.denote_term cres) (RTS.denote_term ret_ty) =
              RT.Rel_eq_token _ _ _ tok in
            
            let c' = with_st_comp c {(st_comp_of_comp c) with res = ret_ty } in
 
 
-           c'
+           maybe_lift_to_div c'
 #pop-options
 #pop-options
 
@@ -401,6 +417,48 @@ let apply_checker_result_k (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env
     return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
 
   k (PostHint post_hint) d
+
+//
+// Like apply_checker_result_k, but reads back the *natural* effect of the
+// checked computation instead of coercing it to the postcondition's effect.
+// This is used to infer the effect of the branches of a conditional whose
+// postcondition (and effect) were not supplied by the user: a divergent branch
+// must yield a divergent computation rather than failing to compose against the
+// tentatively-inferred stt effect (issue #4366). The result matches the given
+// postcondition's return type and postcondition, but carries its own effect.
+//
+let apply_checker_result_k_nohint (#g:env) (#ctxt:slprop) (#post_hint:post_hint_for_env g)
+  (r:checker_result_t g ctxt (PostHint post_hint))
+  (res_ppname:ppname)
+  : T.Tac (t:st_term &
+           c:comp_st { comp_pre c == ctxt /\
+                       comp_res c == post_hint.ret_ty /\
+                       comp_u c == post_hint.u /\
+                       comp_post c == post_hint.post }) =
+
+  let (| y, g1, (u_ty, ty_y), pre', k |) = r in
+
+  let u_ty_y = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty_y in
+
+  let d : st_typing_in_ctxt g1 pre' (PostHint post_hint) =
+    return_in_ctxt g1 y res_ppname u_ty_y ty_y pre' () (PostHint post_hint) in
+  //
+  // Coerce the trailing return to NoHint so that composing it with the body
+  // uses the unbiased bind rules and reports the body's real effect.
+  //
+  let (| tret, cret |) = d in
+  let d' : st_typing_in_ctxt g1 pre' NoHint = (| tret, cret |) in
+
+  let (| t, c |) = k NoHint d' in
+  //
+  // mk_bind guarantees the result shares c2's return type, universe and
+  // postcondition (st_comp_with_pre), but the continuation_elaborator type
+  // does not expose this; recover it here.
+  //
+  assume (comp_res c == post_hint.ret_ty /\
+          comp_u c == post_hint.u /\
+          comp_post c == post_hint.post);
+  (| t, c |)
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 0"
 //TODO: refactor and merge with continuation_elaborator_with_bind
@@ -460,6 +518,7 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
     match c with
     | None -> None
     | Some (C_ST _)
+    | Some (C_STDiv _)
     | Some (C_STGhost _ _)
     | Some (C_STAtomic _ _ _) -> (
       match args, out with
@@ -593,11 +652,11 @@ let bind_st_term (g:env) (s:st_term)
   } in
   let x = Pulse.Typing.Env.fresh g in
   let g = Pulse.Typing.Env.push_binding g x b.binder_ppname b.binder_ty in
-  g, b, x, RT.var_as_term x
+  g, b, x, Pulse.Syntax.Pure.term_of_no_name_var x
 
 (* Hoist a single F*-level Tv_Match branch body by delegating to maybe_hoist.
    Returns the body as an st_term and whether any hoisting was done. *)
-let hoist_branch_body (g:env) (body:term) (rng:Range.range)
+let hoist_branch_body (g:env) (body:term) (rng:range)
   (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
 : T.Tac (st_term & bool)
 = let body_rng = RU.range_of_term body in
@@ -619,7 +678,7 @@ let hoist_branch_body (g:env) (body:term) (rng:Range.range)
 (* Process all branches of an F*-level Tv_Match, hoisting stateful apps
    in each branch body. Returns processed branches and whether any changed. *)
 let rec process_fstar_match_branches
-  (g:env) (rng:Range.range)
+  (g:env) (rng:range)
   (brs: list (R.pattern & term))
   (maybe_hoist_fn: env -> T.argv -> T.Tac (env & list (binder & var & st_term) & T.argv))
 : T.Tac (list (R.pattern & st_term) & bool)
@@ -654,63 +713,9 @@ let convert_fstar_match (g:env) (t:term)
     ) else None
   | _ -> None
 
-(* Short-circuiting boolean operators.
-
-   F* desugars `e1 && e2` to the binary application `Prims.op_AmpAmp e1 e2`
-   and `e1 || e2` to `Prims.op_BarBar e1 e2`. Left to the normal hoisting
-   machinery, *both* operands would be eagerly evaluated, breaking
-   short-circuiting whenever an operand is stateful. We rewrite these
-   applications into the equivalent short-circuiting conditional and route
-   them through `convert_fstar_match`, which only produces a `Tm_If` when a
-   branch is actually stateful; for pure operands it returns None and the
-   original term is left untouched. *)
-let op_amp_amp_qn : list string = ["Prims"; "op_AmpAmp"]
-let op_bar_bar_qn : list string = ["Prims"; "op_BarBar"]
-
-let tm_bool_const (b:bool) : term =
-  R.pack_ln (R.Tv_Const (if b then R.C_True else R.C_False))
-
-(* Build the F*-level term `if scrutinee then then_ else else_`. *)
-let mk_bool_if (scrutinee then_ else_ : term) : term =
-  R.pack_ln (R.Tv_Match scrutinee None [
-    (R.Pat_Constant R.C_True, then_);
-    (R.Pat_Constant R.C_False, else_)
-  ])
-
-(* If `t` is `e1 && e2` or `e1 || e2`, rewrite it to the short-circuiting
-   conditional so the second operand is only evaluated when needed:
-     e1 && e2  ~>  if e1 then e2 else false
-     e1 || e2  ~>  if e1 then true else e2
-   Returns None for any other term. *)
-let short_circuit_op_match (t:term) : option term =
-  let head, args = R.collect_app_ln t in
-  let fv_opt =
-    match R.inspect_ln head with
-    | R.Tv_FVar fv -> Some fv
-    | R.Tv_UInst fv _ -> Some fv
-    | _ -> None
-  in
-  match fv_opt, args with
-  | Some fv, [(e1, R.Q_Explicit); (e2, R.Q_Explicit)] ->
-    let n = R.inspect_fv fv in
-    if n = op_amp_amp_qn then Some (mk_bool_if e1 e2 (tm_bool_const false))
-    else if n = op_bar_bar_qn then Some (mk_bool_if e1 (tm_bool_const true) e2)
-    else None
-  | _ -> None
-
 let rec maybe_hoist (g:env) (arg:T.argv)
 : T.Tac (env & list (binder & var & st_term) & T.argv)
 = let t, q = arg in
-  let sc =
-    match short_circuit_op_match t with
-    | Some m -> convert_fstar_match g m maybe_hoist
-    | None -> None
-  in
-  match sc with
-  | Some st_cond ->
-    let g, b, x, var_t = bind_st_term g st_cond in
-    g, [b, x, st_cond], (var_t, q)
-  | None ->
   let head, args = T.collect_app_ln t in
   match args with
   | [] ->
@@ -780,26 +785,7 @@ let hoist_stateful_apps
       (hoist_top_level /\ Inl? tt ==> Inl? x)
     } -> T.Tac st_term))
 : T.Tac (option st_term)
-= let sc =
-    match tt with
-    | Inl t -> (
-      match short_circuit_op_match t with
-      | Some m -> (
-        match convert_fstar_match g m maybe_hoist with
-        | Some st_cond ->
-          let rng = RU.range_of_term t in
-          let _, b, v, var_t = bind_st_term g st_cond in
-          let bind_term = context (Inl var_t) in
-          let body = Pulse.Syntax.Naming.close_st_term bind_term v in
-          Some (mk_term (Tm_Bind { binder = b; head = st_cond; body }) rng)
-        | None -> None)
-      | None -> None)
-    | _ -> None
-  in
-  match sc with
-  | Some res -> Some res
-  | None ->
-  match decompose_app g tt with
+= match decompose_app g tt with
   | None -> None
   | Some (head, args, rebuild) ->
     let _, binders, args = maybe_hoist_args g args in

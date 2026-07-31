@@ -123,8 +123,9 @@ let div_perm (p:perm) (n:pos) : perm =
 
 inline_for_extraction
 let simple_for_f (pre post : nat -> slprop) (r : slprop) =
-  i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))
+  i:nat -> stt_div unit (r ** pre i) (fun () -> (r ** post i))
 
+divergent
 fn rec simple_for
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
@@ -153,6 +154,7 @@ fn rec simple_for
 
 
 
+divergent
 fn for_loop
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
@@ -210,6 +212,7 @@ fn rec redeem_range
   preserves f
   requires (forall+ (k:nat{0 <= k /\ k < n}). (fun i -> pledge emp_inames f (p i)) k)
   ensures (forall+ (k:nat{0 <= k /\ k < n}). p k)
+  decreases n
 {
   if (n = 0) {
     rewrite each n as 0;
@@ -232,6 +235,7 @@ fn rec redeem_range
 
 
 
+divergent
 fn
 parallel_for
   (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
@@ -261,7 +265,7 @@ parallel_for
     n
     fn i
   {
-    let _h = spawn_ p #(div_perm 1.0R n) #(pre i) #(post i) (fun () -> f i);
+    let _h = spawn_ p #(div_perm 1.0R n) #(pre i) #(post i) (fun () -> lift_stt_div (f i));
     ()
   };
 
@@ -285,6 +289,7 @@ parallel_for
 (* Alternative; not splitting the pool_alive resource. We are anyway
 spawning sequentially. *)
 
+divergent
 fn
 parallel_for_alt
   (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
@@ -297,7 +302,7 @@ parallel_for_alt
   let p = setup_pool 42;
 
   simple_for pre (fun i -> pledge emp_inames (pool_done p) (post i)) (pool_alive p) n fn i {
-    let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> f i);
+    let _h = spawn_ p #1.0R #(pre i) #(post i) (fun () -> lift_stt_div (f i));
     ()
   };
 
@@ -344,6 +349,7 @@ fn rec ffold
   requires fp i
   requires (forall+ (k:nat{i <= k /\ k < n}). p k)
   ensures fp n
+  decreases (n - i)
 {
    if (i = n) {
      range_rebound p i n n n;
@@ -370,6 +376,7 @@ fn rec funfold
   requires fp n
   ensures fp 0
   ensures (forall+ (k:nat{0 <= k /\ k < n}). p k)
+  decreases n
 {
    if (n = 0) {
      rewrite fp n as fp 0;
@@ -389,6 +396,7 @@ fn rec funfold
 
 
 
+divergent
 fn
 parallel_for_wsr
   (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}
@@ -419,6 +427,7 @@ val frame_stt_left
   : stt a (frame ** pre) (fun x -> frame ** post x)
 
 
+divergent
 fn rec h_for_task
   (p:pool)
   (e:perm)
@@ -497,6 +506,7 @@ val wait_pool
   : stt unit (pool_alive #e p) (fun _ -> pool_done p)
 
 
+divergent
 fn
 parallel_for_hier
   (pre : (nat -> slprop)) {| (x:nat -> is_send (pre x)) |}

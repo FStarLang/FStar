@@ -55,8 +55,8 @@ let lib_root (uu___ : unit) : Prims.string FStar_Pervasives_Native.option=
   if uu___1
   then FStar_Pervasives_Native.None
   else
-    (let uu___3 = FStarC_Util.expand_environment_variable "FSTAR_LIB" in
-     match uu___3 with
+    (let uu___2 = FStarC_Util.expand_environment_variable "FSTAR_LIB" in
+     match uu___2 with
      | FStar_Pervasives_Native.Some s -> FStar_Pervasives_Native.Some s
      | FStar_Pervasives_Native.None ->
          FStar_Pervasives_Native.Some
@@ -150,7 +150,7 @@ let do_find (paths : Prims.string Prims.list) (filename : Prims.string) :
      else FStar_Pervasives_Native.None)
   else
     (try
-       (fun uu___1 ->
+       (fun uu___ ->
           match () with
           | () ->
               FStarC_Util.find_map (FStarC_List.rev paths)
@@ -162,7 +162,7 @@ let do_find (paths : Prims.string Prims.list) (filename : Prims.string) :
                    if FStarC_Filepath.file_exists path
                    then FStar_Pervasives_Native.Some path
                    else FStar_Pervasives_Native.None)) ()
-     with | uu___1 -> FStar_Pervasives_Native.None)
+     with | uu___ -> FStar_Pervasives_Native.None)
 let find_file : Prims.string -> Prims.string FStar_Pervasives_Native.option=
   cached_fun find_file_cache
     (fun s -> let uu___ = full_include_path () in do_find uu___ s)

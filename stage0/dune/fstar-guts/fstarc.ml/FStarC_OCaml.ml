@@ -26,7 +26,7 @@ let exec_in_ocamlenv (cmd : Prims.string) (args : Prims.string Prims.list) :
    | FStar_Pervasives.Inl rc1 -> FStarC_Effect.exit rc1
    | FStar_Pervasives.Inr uu___1 -> FStarC_Effect.exit Prims.int_one)
 let app_lib : Prims.string= "fstar.lib"
-let plugin_lib : Prims.string= "fstar.pluginlib"
+let plugin_lib : Prims.string= "fstar.compiler"
 let wstr : Prims.string= "-8"
 let common_args : Prims.string Prims.list= ["-w"; wstr; "-thread"]
 let exec_ocamlc (args : Prims.string Prims.list) : 'a=

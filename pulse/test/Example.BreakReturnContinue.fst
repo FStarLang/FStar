@@ -3,7 +3,7 @@ module Example.BreakReturnContinue
 open Pulse
 module SZ = FStar.SizeT
 
-fn find_element (#a:eqtype) (x:array a) (len:SZ.t) (v:a) #p
+divergent fn find_element (#a:eqtype) (x:array a) (len:SZ.t) (v:a) #p
 preserves live x #p
 requires pure (Seq.mem v (value_of x))
 requires pure (length x == SZ.v len)
@@ -30,7 +30,7 @@ ensures pure (
   unreachable();
 }
 
-fn find_element_out_return (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) #p
+divergent fn find_element_out_return (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) #p
 preserves live x #p
 preserves live res
 requires pure (Seq.mem v (value_of x))
@@ -58,7 +58,7 @@ ensures pure (
 }
 
 //In more explicit form:
-fn find_element_out_return_explicit (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) #p
+divergent fn find_element_out_return_explicit (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) #p
 preserves live x #p
 preserves live res
 requires pure (Seq.mem v (value_of x))
@@ -92,7 +92,7 @@ ensures pure (
   unreachable();
 }
 
-fn find_element_out_with_break (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) (#p:perm)
+divergent fn find_element_out_with_break (#a:eqtype) (x:array a) (len:SZ.t) (v:a) (res:ref SZ.t) (#p:perm)
 preserves live x #p
 preserves live res
 requires pure (Seq.mem v (value_of x))
@@ -128,7 +128,7 @@ ensures pure (
   assert pure (SZ.v !i < SZ.v len); //exclude the normal loop exit
 }
 
-fn sum_non_neg (x:array int) (len:SZ.t)
+divergent fn sum_non_neg (x:array int) (len:SZ.t)
 preserves live x
 requires pure (length x == SZ.v len)
 returns i:nat

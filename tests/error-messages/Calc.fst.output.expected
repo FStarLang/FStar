@@ -29,7 +29,7 @@
                       ]
                       10
                       11))).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.int) (y: Prims.int).
                 (exists (w: Prims.int).
@@ -45,7 +45,7 @@
   - The SMT solver could not prove the query.
   - Env = (uu___ : Prims.unit)
   - VC =
-      FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+      FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
         "Could not prove that this calc-chain is compatible"
         (forall (x: Prims.int) (y: Prims.int).
             (exists (w: Prims.int).
@@ -59,7 +59,7 @@
   - The SMT solver could not prove the query.
   - Env = (uu___ : Prims.unit)
   - VC =
-      FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+      FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
         "Could not prove that this calc-chain is compatible"
         (forall (x: Prims.int) (y: Prims.int). x == y ==> x < y)
   - See also Calc.fst(32,7-32,10)
@@ -72,7 +72,7 @@
   - VC =
       forall (p: Prims.pure_post Prims.unit).
         (forall (pure_result: Prims.unit). p pure_result) ==>
-        FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+        FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
           "Could not prove that this calc-chain is compatible"
           (forall (x: Prims.int) (y: Prims.int).
               (exists (w: Prims.int). x == w /\ w == y) ==> x > y)
@@ -102,7 +102,7 @@
                       ]
                       1
                       4))).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.int) (y: Prims.int).
                 (exists (w: Prims.int).
@@ -134,7 +134,7 @@
                       ]
                       1
                       4))).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.int) (y: Prims.int).
                 (exists (w: Prims.int).
@@ -164,7 +164,7 @@
                       ]
                       1
                       4))).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.int) (y: Prims.int).
                 (exists (w: Prims.int).
@@ -191,7 +191,7 @@
           (_: Prims.unit
               -> Prims.squash (FStar.Calc.calc_pack [Prims.l_imp] Calc.p Calc.q)
           )).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.prop) (y: Prims.prop).
                 (exists (w: Prims.prop). x == w /\ (w ==> y)) ==> x ==> y))
@@ -217,7 +217,7 @@
                       ]
                       Calc.p
                       Calc.q))).
-          FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+          FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
             "Could not prove that this calc-chain is compatible"
             (forall (x: Prims.prop) (y: Prims.prop).
                 (exists (w: Prims.prop). x == w /\ (w ==> y)) ==> x ==> y))
@@ -245,7 +245,7 @@
                         ]
                         x
                         x))).
-            FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
               "Could not prove that this calc-chain is compatible"
               (forall (x: Prims.int) (y: Prims.int).
                   (exists (w: Prims.int).
@@ -275,7 +275,7 @@
                         ]
                         x
                         x))).
-            FStar.Range.labeled (FStar.Sealed.seal FStar.Calc.fsti(80,37-80,50))
+            FStar.Range.labeled FStar.Calc.fsti(80,37-80,50)
               "Could not prove that this calc-chain is compatible"
               (forall (x: Prims.int) (y: Prims.int).
                   (exists (w: Prims.int).

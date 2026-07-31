@@ -60,6 +60,9 @@ let check (g:env)
     | C_ST st -> 
       let stc = check_st_comp st in
       ()
+    | C_STDiv st -> 
+      let stc = check_st_comp st in
+      ()
     | C_STAtomic i obs st -> 
       let stc = check_st_comp st in
       let ty = core_compute_tot_term_type g i in

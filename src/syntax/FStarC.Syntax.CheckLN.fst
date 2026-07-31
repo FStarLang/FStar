@@ -30,21 +30,21 @@ let rec is_ln' (n:int) (t:term) : ML bool =
     is_ln' n t &&
     is_ln'_univs n us
 
-  | Tm_abs {bs;body;rc_opt} ->
-    is_ln'_binders n bs &&
-    is_ln' (n + L.length bs) body
+  | Tm_abs {b;body;rc_opt} ->
+    is_ln'_binders n [b] &&
+    is_ln' (n + 1) body
 
-  | Tm_arrow {bs;comp} ->
-    is_ln'_binders n bs &&
-    is_ln'_comp (n + L.length bs) comp
+  | Tm_arrow {b;comp} ->
+    is_ln'_binders n [b] &&
+    is_ln'_comp (n + 1) comp
 
   | Tm_refine {b;phi} ->
     is_ln'_bv n b &&
     is_ln' (n+1) phi
 
-  | Tm_app {hd; args} ->
+  | Tm_app {hd; arg} ->
     is_ln' n hd &&
-    L.for_all (fun (t, aq) -> is_ln' n t) args
+    (let (t, aq) = arg in is_ln' n t)
 
   | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
     is_ln' n scrutinee &&

@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Inv
+open Pulse.Lib.Send
+open PulseCore.Observability
 #lang-pulse
 open Pulse.Lib.Core
 open Pulse.Class.Duplicable

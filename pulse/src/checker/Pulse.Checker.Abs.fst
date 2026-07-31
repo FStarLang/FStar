@@ -26,6 +26,7 @@ open Pulse.Checker.Base
 open FStar.List.Tot
 
 module RT = FStar.Reflection.Typing
+module RTS = FStar.Reflection.TermSpec
 module P = Pulse.Syntax.Printer
 module PSB = Pulse.Syntax.Builder
 
@@ -126,6 +127,9 @@ let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & op
   | C_ST c ->
     let g, bs, c = preproc_stcomp c in
     g, bs, C_ST c
+  | C_STDiv c ->
+    let g, bs, c = preproc_stcomp c in
+    g, bs, C_STDiv c
   | C_STGhost is c ->
     let g, bs, c = preproc_stcomp c in
     g, bs, C_STGhost (preproc_inames is) c
@@ -342,7 +346,8 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
   | Some c ->
     match c, c_computed with
     | C_Tot _, C_Tot _
-    | C_ST _, C_ST _  -> nop
+    | C_ST _, C_ST _
+    | C_STDiv _, C_STDiv _  -> nop
     | C_STGhost i c1, C_STGhost j c2
     | C_STAtomic i Neutral c1, C_STAtomic j Neutral c2
     | C_STAtomic i Observable c1, C_STAtomic j Observable c2 ->
@@ -356,7 +361,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
         nop
       ) else
       
-      let b = mk_binder "res" Range.range_0 c2.res in
+      let b = mk_binder "res" range_0 c2.res in
       let phi = tm_inames_subset j i in
       // Or:
       // let typing = core_check_tot_term g phi tm_prop in
@@ -409,7 +414,7 @@ let maybe_rewrite_body_typing
             (fun _ -> Printf.sprintf "maybe_rewrite_body_typing:{\nfrom %s\nto %s}\n"
               (show c)
               (show (C_Tot t)));
-          let sq : squash (RT.equiv_token (elab_env g) t t') = () in
+          let sq : squash (RT.equiv_token (elab_env g) (RTS.denote_term t) (RTS.denote_term t')) = () in
           C_Tot t
     )
 

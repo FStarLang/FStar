@@ -4,6 +4,12 @@ open FStarC
 open FStarC.Effect
 open FStarC.Pprint
 
+let text (s:string) : document =
+  flow (break_ 1) (words s)
+
+let mkmsg (s:string) : list document =
+  [arbitrary_string s]
+
 instance is_error_message_string   : is_error_message string = {
   to_doc_list = (fun s -> [arbitrary_string s]);
 }
@@ -19,9 +25,6 @@ let vconcat (ds:list document) : ML document =
   | [] ->
     empty
 
-let text (s:string) : document =
-  flow (break_ 1) (words s)
-
 let fquotes (d:document) : document =
   enclose (utf8string "‘") (utf8string "’") d
 
@@ -30,9 +33,6 @@ let sublist (h:document) (ds:list document) : ML document =
 
 let bulleted (ds:list document) : ML document =
   sublist (doc_of_string "- ") ds
-
-let mkmsg (s:string) : list document =
-  [arbitrary_string s]
 
 let renderdoc (d : document) : ML string =
   let one = Util.float_of_string "1.0" in

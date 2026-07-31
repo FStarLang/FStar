@@ -13,7 +13,7 @@ let z3_install_suggestion (v : Prims.string) :
         (FStar_Pprint.op_Hat_Slash_Hat
            (FStarC_Errors_Msg.text "and install it into your $PATH as")
            (FStar_Pprint.op_Hat_Hat
-              (FStar_Pprint.squotes
+              (FStarC_Errors_Msg.fquotes
                  (FStar_Pprint.doc_of_string
                     (FStarC_Platform.exe (Prims.strcat "z3-" v))))
               FStar_Pprint.dot)));

@@ -1,4 +1,5 @@
 module Pulse.Lib.Trade.Util
+include Pulse.Lib.Trade
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
@@ -59,8 +60,7 @@ fn assoc_hyp_l (#is: inames) (p q r s:slprop)
    requires trade #is (p ** (q ** r)) s
    ensures trade #is ((p ** q) ** r) s
 {
-  slprop_equivs ();
-  rewrite (trade #is (p ** (q ** r)) s) as (trade #is ((p ** q) ** r) s)
+  slprop_equivs ()
 }
 
 ghost
@@ -68,8 +68,7 @@ fn assoc_hyp_r (#is: inames) (p q r s:slprop)
    requires trade #is ((p ** q) ** r) s
    ensures trade #is (p ** (q ** r)) s
 {
-  slprop_equivs ();
-  rewrite (trade #is ((p ** q) ** r) s) as (trade #is (p ** (q ** r)) s)
+  slprop_equivs ()
 }
 
 ghost
@@ -77,8 +76,7 @@ fn assoc_concl_l (#is: inames) (p q r s:slprop)
    requires trade #is p ((q ** r) ** s)
    ensures trade #is p (q ** (r ** s))
 {
-  slprop_equivs ();
-  rewrite (trade #is p ((q ** r) ** s)) as (trade #is p (q ** (r ** s)))
+  slprop_equivs ()
 }
 
 ghost
@@ -86,8 +84,7 @@ fn assoc_concl_r (#is: inames) (p q r s:slprop)
    requires trade #is p (q ** (r ** s))
    ensures trade #is p ((q ** r) ** s)
 {
-  slprop_equivs ();
-  rewrite (trade #is p (q ** (r ** s))) as (trade #is p ((q ** r) ** s))
+  slprop_equivs ()
 }
 
 ghost

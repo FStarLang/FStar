@@ -16,6 +16,11 @@
 
 module PulseCore.Atomic
 
+open FStar.Ghost
+open PulseCore.Observability
+open Pulse.Lib.Loc
+module Sep = PulseCore.IndirectionTheorySep
+open FStar.PCM
 module A = PulseCore.Action
 module I = PulseCore.InstantiatedSemantics
 module Set = FStar.GhostSet

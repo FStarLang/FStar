@@ -1,5 +1,8 @@
 module FStar.Class.Ord.Raw
 
+open FStar.Class.Eq.Raw { deq }
+open FStar.Order
+open FStar.Class
 open FStar.Tactics.Typeclasses { solve }
 open FStar.Class.Eq.Raw { (=) as (=?) }
 

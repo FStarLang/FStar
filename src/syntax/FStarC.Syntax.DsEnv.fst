@@ -143,6 +143,11 @@ type env = {
   curmonad:             option ident;                    (* current monad being desugared *)
   modules:              list (lident & modul);           (* previously desugared modules *)
   scope_mods:           list scope_mod;                  (* a STACK of toplevel or definition-local scope modifiers *)
+  iface_scope_mods:     list scope_mod;                  (* scope modifiers for the names declared by the interface of the
+                                                            module being implemented. They behave as if they were defined
+                                                            in the implementation itself, so they must keep shadowing the
+                                                            modules the implementation opens; [push_scope_mod] re-pushes
+                                                            them on top of every `open`. *)
   exported_ids:         SMap.t exported_id_set;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
                                                              declarations. Used only to handle such shadowings,
@@ -161,8 +166,6 @@ type env = {
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-  remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
-  iface_interleaving_init:bool;
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
   dep_graph:            FStarC.Parser.Dep.deps;
@@ -198,15 +201,15 @@ let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
   res, 
   {e1 with 
       scope_mods=e.scope_mods;
+      iface_scope_mods=e.iface_scope_mods;
       curmodule=e.curmodule;
       curmonad=e.curmonad;
       sigaccum=e.sigaccum;
       iface=e.iface;
       admitted_iface=e.admitted_iface;
       expect_typ=e.expect_typ;
-      remaining_iface_decls=e.remaining_iface_decls;
       no_prelude=e.no_prelude;
-      iface_interleaving_init=e.iface_interleaving_init}
+}
 
 (* For typo suggestions *)
 let all_local_names (env:env) : ML (list string) =
@@ -279,22 +282,10 @@ let module_abbrevs env : ML (list (ident & lident))=
                    | _ -> None)
     env.scope_mods
 let set_current_module e l = {e with curmodule=Some l}
-let clear_scope_mods e = {e with scope_mods=[]}
+let clear_scope_mods e = {e with scope_mods=[]; iface_scope_mods=[]}
 let current_module env : ML _ = match env.curmodule with
     | None -> failwith "Unset current module"
     | Some m -> m
-let iface_decls env l : ML _ =
-    match env.remaining_iface_decls |>
-          List.tryFind (fun (m, _) -> Ident.lid_equals l m) with
-    | None -> None
-    | Some (_, decls) -> Some decls
-let set_iface_decls env l ds =
-    let _, rest =
-        FStarC.List.partition
-            (fun (m, _) -> Ident.lid_equals l m)
-            env.remaining_iface_decls in
-    {env with remaining_iface_decls=(l, ds)::rest; iface_interleaving_init=true}
-let iface_interleaving_init e = e.iface_interleaving_init
 let qual = qual_id
 let qualify env id : ML _ =
     match env.curmonad with
@@ -309,6 +300,7 @@ let empty_env deps : ML _ = {curmodule=None;
                     curmonad=None;
                     modules=[];
                     scope_mods=[];
+                    iface_scope_mods=[];
                     exported_ids=new_sigmap();
                     trans_exported_ids=new_sigmap();
                     includes=new_sigmap();
@@ -317,12 +309,10 @@ let empty_env deps : ML _ = {curmodule=None;
                     iface=false;
                     admitted_iface=false;
                     expect_typ=false;
-                    remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
                     dep_graph=deps;
                     no_prelude=false;
-                    iface_interleaving_init=false;
                     }
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}
@@ -922,7 +912,7 @@ let shorten_lid env lid0 : ML _ =
   | _ -> shorten_lid' env lid0
 
 let try_lookup_lid_with_attributes_no_resolve (env: env) l : ML (option (term & list attribute)) =
-  let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
+  let env' = {env with scope_mods = [] ; iface_scope_mods = []; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
   try_lookup_lid_with_attributes env' l
 
@@ -1491,6 +1481,14 @@ let push_include' env ns restriction : ML _ =
         (Format.fmt1 "include: Module %s cannot be found" (string_of_lid ns))
 
 let push_namespace = elab_restriction push_namespace'
+
+(* The names declared by the interface of the module being implemented behave as
+   if they were defined in the implementation itself, so they must keep shadowing
+   the modules that the implementation opens at the top level. Called after a
+   top-level `open` or `include`; local `let open ... in` must NOT re-shadow. *)
+let reshadow_iface_defs env : ML _ =
+  {env with scope_mods = env.iface_scope_mods @ env.scope_mods}
+
 let push_include   = elab_restriction push_include'
 
 let push_module_abbrev env x l : ML _ =
@@ -1547,7 +1545,7 @@ let finish env modul : ML _ =
                   SMap.remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type
-                       let sigel = Sig_declare_typ {lid;us=univ_names;t=S.mk (Tm_arrow {bs=binders; comp=S.mk_Total typ}) (Ident.range_of_lid lid)} in
+                       let sigel = Sig_declare_typ {lid;us=univ_names;t=S.mk_Tm_arrow binders (S.mk_Total typ) (Ident.range_of_lid lid)} in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
                        SMap.add (sigmap env) (string_of_lid lid) (se, false)
                 | _ -> ())
@@ -1582,6 +1580,7 @@ let finish env modul : ML _ =
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
     scope_mods = [];
+    iface_scope_mods = [];
     sigaccum=[];
   }
 
@@ -1604,6 +1603,48 @@ let pop () : ML _ = BU.atomically (fun () ->
 
 let snapshot env : ML _ = Common.snapshot "DsEnv" push stack env
 let rollback depth : ML _ = Common.rollback "DsEnv" pop stack depth
+
+(* Flip the "declared in an interface" flag of every sigmap entry belonging to
+   module [m]. Setting it lets the implementation of [m] define the names its
+   interface declares ([unique]'s [exclude_interface] check skips such
+   entries); it is cleared again once the implementation is finished, so that
+   other modules can see them.
+
+   The Assumption qualifier of the interface's `val`s follows the same fate: a
+   `val` of the interface of the module we are currently implementing is not an
+   assumption, it is a declaration awaiting its definition. *)
+let set_module_iface_flag (env:env) (m:lident) (from_ to_ : bool) : ML unit =
+  let sigelt_in_m se =
+    match U.lids_of_sigelt se with
+    | l::_ -> nsstr l = string_of_lid m
+    | _ -> false
+  in
+  (* Only the interface's genuine `val`s are hidden from the implementation:
+     everything else (definitions, inductives, and the auto-generated
+     projectors and discriminators) is copied over as-is and must stay
+     visible, both so the implementation can use it and so that a
+     redefinition is reported as a duplicate. *)
+  let is_iface_val se =
+    Sig_declare_typ? se.sigel &&
+    not (se.sigquals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false)) &&
+    (match U.lids_of_sigelt se with
+     | l::_ ->
+       let n = string_of_id (ident_of_lid l) in
+       not (BU.starts_with n "uu___is_") && not (BU.starts_with n "__proj__")
+     | _ -> false)
+  in
+  let adjust_quals se =
+    if to_
+    then { se with sigquals = se.sigquals |> List.filter (fun q -> q <> Assumption) }
+    else { se with sigquals = Assumption :: se.sigquals }
+  in
+  let sm = sigmap env in
+  SMap.keys sm |> List.iter (fun k ->
+    match SMap.try_find sm k with
+    | Some (se, b) when b = from_ && sigelt_in_m se && is_iface_val se ->
+      SMap.remove sm k;
+      SMap.add sm k (adjust_quals se, to_)
+    | _ -> ())
 
 let export_interface (m:lident) env : ML _ =
 //    printfn "Exporting interface %s" (string_of_lid m);
@@ -1630,6 +1671,9 @@ let export_interface (m:lident) env : ML _ =
 
 let finish_module_or_interface env modul : ML _ =
   let modul = if not modul.is_interface then check_admits env modul else modul in
+  (* The implementation is done: its interface's declarations are visible to
+     everyone again. *)
+  if not modul.is_interface then set_module_iface_flag env modul.name true false;
   finish env modul, modul
 
 type exported_ids = {
@@ -1705,8 +1749,45 @@ let inclusion_info env (l:lident) : ML _ =
       mii_no_prelude = env.no_prelude;
    }
 
+(* [prepare_module_or_interface] resets [scope_mods], and the interface of the
+   module we are about to implement was loaded in a separate scope, so the
+   [Record_or_dc] entries its record types introduced are gone. Recreate them,
+   otherwise the implementation cannot resolve its own record fields. *)
+(* Likewise, the names the interface declares must shadow any `open`ed name,
+   exactly as the implementation's own definitions do. *)
+let iface_top_level_defs (env:env) (m:lident) : ML scope_mod =
+  let sm = sigmap env in
+  let ids =
+    SMap.keys sm |> List.fold_left (fun ids k ->
+      match SMap.try_find sm k with
+      | Some (se, _) ->
+        U.lids_of_sigelt se |> List.fold_left (fun ids l ->
+          if nsstr l = string_of_lid m
+          then PSMap.add ids (string_of_id (ident_of_lid l)) ()
+          else ids) ids
+      | None -> ids) (PSMap.empty ())
+  in
+  Top_level_defs ids
+
+let iface_record_scope_mods (env:env) (m:lident) : ML (list scope_mod) =
+  let sm = sigmap env in
+  let globals = mk_ref [] in
+  SMap.keys sm |> List.iter (fun k ->
+    match SMap.try_find sm k with
+    | Some (se, _) ->
+      (match se.sigel with
+       | Sig_inductive_typ {lid; ds=[dc]} when nsstr lid = string_of_lid m ->
+         (match SMap.try_find sm (string_of_lid dc) with
+          | Some (dcse, _) ->
+            let bundle = mk_sigelt (Sig_bundle {ses=[se;dcse]; lids=[lid;dc]}) in
+            extract_record env globals { bundle with sigquals = se.sigquals }
+          | None -> ())
+       | _ -> ())
+    | _ -> ());
+  !globals
+
 let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_inclusion_info) : ML _ = (* AR: open the pervasives namespace *)
-  let prep env =
+  let prep env (mii:module_inclusion_info) =
     let auto_open = if mii.mii_no_prelude || no_prelude then [] else FStarC.Parser.Dep.prelude in
     let auto_open =
       let convert_kind = function
@@ -1728,6 +1809,7 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
       env with curmodule=Some mname;
       sigmap=env.sigmap;
       scope_mods = List.map (fun x -> Open_module_or_namespace (x,true)) auto_open;
+      iface_scope_mods = [];
       iface=intf;
       admitted_iface=admitted } in
     List.iter (fun op -> env.ds_hooks.ds_push_open_hook env' op) (List.rev auto_open);
@@ -1736,13 +1818,41 @@ let prepare_module_or_interface no_prelude intf admitted env mname (mii:module_i
 
   match env.modules |> Option.find (fun (l, _) -> lid_equals l mname) with
     | None ->
-        prep env, false
+        prep env mii, false
     | Some (_, m) ->
         if not (Options.interactive ()) && (not m.is_interface || intf)
         then raise_error mname Errors.Fatal_DuplicateModuleOrInterface
                (Format.fmt1 "Duplicate module or interface name: %s" (string_of_lid mname));
-        //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-        prep (push env), true //push a context so that we can pop it when we're done // FIXME PUSH POP
+        (* We are checking the implementation of an interface that has already
+           been checked and loaded. Flag the interface's declarations as such,
+           so that the implementation is allowed to define them; the flag is
+           cleared again by [finish_module_or_interface]. There is no need to
+           push a scope: the interface's names must stay visible while the
+           implementation is checked. *)
+        if m.is_interface && not intf
+        then (
+          (* [finish] dropped the interface's private declarations from the
+             sigmap when the interface was finished; the implementation must
+             still see them. Restore them before computing the scope below,
+             which is derived from the sigmap. *)
+          let env =
+            m.declarations |> List.fold_left (fun env se ->
+              match U.lids_of_sigelt se with
+              | l::_ when None? (SMap.try_find (sigmap env) (string_of_lid l)) ->
+                push_sigelt_force env se
+              | _ -> env) env
+          in
+          let recs = iface_record_scope_mods env mname @ [iface_top_level_defs env mname] in
+          (* Keep the names exported by the interface in scope. *)
+          let mii = { inclusion_info env mname with mii_no_prelude = mii.mii_no_prelude } in
+          let env' = prep env mii in
+          let env' = { env' with scope_mods = recs @ env'.scope_mods; iface_scope_mods = recs } in
+          set_module_iface_flag env' mname false true;
+          env', false
+        )
+        else
+          //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+          prep (push env) mii, true //push a context so that we can pop it when we're done // FIXME PUSH POP
 
 let enter_monad_scope env mname : ML _ =
   match env.curmonad with

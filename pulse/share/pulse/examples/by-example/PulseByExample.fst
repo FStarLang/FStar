@@ -168,6 +168,7 @@ fn max (n:SZ.t) (a:larray nat (v n))
     max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
+  decreases (Prims.op_Subtraction (v n) (v (!i)))
   {
     let vi = !i;
     let v = a.(vi);
@@ -198,6 +199,7 @@ fn max_alt (n:SZ.t) (a:larray nat (v n))
     max |-> vmax **
     pure (vi <= n
        /\ (forall (j:nat). j < v vi ==> Seq.index 's j <= vmax))
+  decreases (Prims.op_Subtraction (v n) (v (!i)))
   {
     let v = a.(!i);
     i := !i + 1sz;

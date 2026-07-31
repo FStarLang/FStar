@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# -f makes sure to fail on HTTP errors (like rate limit, etc)
+# -sS makes it silent, but prints errors.
+CURL="curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors"
+
 full_install=false
 
 kernel="$(uname -s)"
@@ -66,7 +70,7 @@ download_z3() {
   if [ "$kernel" = Windows ]; then z3_path="$z3_path.exe"; fi
 
   pushd "$tmp_dir" > /dev/null
-  curl -s -L "$url" -o "$base_name"
+  $CURL "$url" -o "$base_name"
 
   unzip -q "$base_name" "$z3_path"
   popd > /dev/null
@@ -86,7 +90,7 @@ full_install_z3() {
 
   echo ">>> Downloading Z3 $version from $url ..."
   base_name="$(basename "$url")"
-  curl -s -L "$url" -o "$base_name"
+  $CURL "$url" -o "$base_name"
 
   unzip -q "$base_name"
   mv "${base_name%.zip}"/* .

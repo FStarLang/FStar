@@ -16,6 +16,9 @@
 
 module Pulse.Typing.Env
 
+module R = FStar.Reflection.V2
+module T = FStar.Tactics.V2
+module Pprint = FStar.Pprint
 open Pulse.Syntax
 
 module G = FStar.Ghost
@@ -223,7 +226,7 @@ let range_of_env (g:env) =
           | Some r -> 
             if not (RU.is_range_zero r) then Some r else None) ctx with
     | Some r -> r
-    | _ -> FStar.Range.range_0
+    | _ -> range_0
   
 let ctxt_elt_to_string (c : (string & option range)) : T.Tac string = 
   match snd c with
@@ -393,8 +396,8 @@ let info_doc_with_subissues (g:env) (r:option range)
   info_doc g r msg
 
 let has_stt_bindings (f:RT.fstar_top_env) =
-    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
-    RT.lookup_fvar f Pulse.Reflection.Util.slprop_fv == Some (RT.tm_type Pulse.Syntax.Pure.u2) /\ True
+    RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type_tm RT.u_zero) /\
+    RT.lookup_fvar f Pulse.Reflection.Util.slprop_fv == Some (RT.tm_type_tm Pulse.Syntax.Pure.u2) /\ True
 
 let check_top_level_environment (f:RT.fstar_top_env)
   : option (g:stt_env{fstar_env g == f /\ bindings g == []})

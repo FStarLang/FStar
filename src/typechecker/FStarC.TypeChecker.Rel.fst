@@ -20,6 +20,7 @@
 
 module FStarC.TypeChecker.Rel
 
+open FStarC.Range
 open FStarC
 open FStarC.Effect
 open FStarC.List
@@ -86,7 +87,7 @@ instance showable_implicit_checking_status : showable implicit_checking_status =
 let is_base_type env typ : ML _
   =
     let t = FStarC.TypeChecker.Normalize.unfold_whnf env typ in
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match (U.unascribe (U.un_uinst head)).n with
     | Tm_name _
     | Tm_fvar _
@@ -363,7 +364,7 @@ let rel_to_string  = function
 
 let term_to_string t : ML _
   =
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match head.n with
     | Tm_uvar (u, s) ->
       Format.fmt3 "%s%s %s"
@@ -717,7 +718,7 @@ let norm_with_steps profiling_tag steps env t : ML _
 
 let should_strongly_reduce t : ML _
   =
-    let h, _ = t |> U.unascribe |> U.head_and_args in
+    let h, _ = t |> U.unascribe |> U.head_and_args_full in
     match (SS.compress h).n with
     | Tm_constant (FStarC.Const.Const_reify _) -> true
     | _ -> false
@@ -897,14 +898,14 @@ let flex_t_to_string flex : ML _ =
 
 let is_flex t : ML _
   =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar _ -> true
     | _ -> false
 
 let flex_uvar_head t : ML _
   =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
@@ -958,7 +959,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       | Binding_var x -> bv_not_affected_by s x
       | _ -> true
     in
-    let head, args = U.head_and_args t0 in
+    let head, args = U.head_and_args_full t0 in
     match (SS.compress head).n with
     | Tm_uvar (uv, ([], _)) ->
       (* No subst, nothing to do *)
@@ -1044,7 +1045,7 @@ let may_relate env prel head  = may_relate_with_logical_guard env (EQ? prel) hea
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : ML (flex_t & (subst_ts & term))=
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (uv, s) ->
       Flex (t, uv, args), (s,t)
@@ -1067,7 +1068,8 @@ let destruct_flex_t (t:term) wl : ML (flex_t & worklist) =
 
 let u_abs (k : typ) (ys : binders) (t : term) : ML term =
     let (ys, t), (xs, c) = match (SS.compress k).n with
-        | Tm_arrow {bs; comp=c} ->
+        | Tm_arrow _ ->
+          let bs, c = U.arrow_formals_comp_ln_strict k in
           if List.length bs = List.length ys
           then (ys, t), SS.open_comp bs c
           else let ys', t, _ = U.abs_formals t in
@@ -1349,9 +1351,9 @@ let rec head_matches env t1 t2 : ML match_result =
     | Tm_type _, Tm_type _
     | Tm_arrow _, Tm_arrow _ -> HeadMatch false
 
-    | Tm_app {hd=head}, Tm_app {hd=head'} -> head_matches env head head' |> head_match
-    | Tm_app {hd=head}, _ -> head_matches env head t2 |> head_match
-    | _, Tm_app {hd=head} -> head_matches env t1 head |> head_match
+    | Tm_app _, Tm_app _ -> head_matches env (fst (U.head_and_args_full t1)) (fst (U.head_and_args_full t2)) |> head_match
+    | Tm_app _, _ -> head_matches env (fst (U.head_and_args_full t1)) t2 |> head_match
+    | _, Tm_app _ -> head_matches env t1 (fst (U.head_and_args_full t2)) |> head_match
 
     | Tm_let _, Tm_let _
     | Tm_match _, Tm_match _
@@ -1445,8 +1447,8 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : ML (match_result & opti
      * faster too) than eq_tm which is meant for decidable equality.
      *)
     let made_progress t t' =
-      let head  = U.head_and_args t  |> fst in
-      let head' = U.head_and_args t' |> fst in
+      let head  = U.head_and_args_full t  |> fst in
+      let head' = U.head_and_args_full t' |> fst in
       not (U.term_eq head head')
     in
 
@@ -1555,8 +1557,8 @@ let rank wl pr : ML (rank_t //the rank
    let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
-      let lh, lhs_args = U.head_and_args tp.lhs in
-      let rh, rhs_args = U.head_and_args tp.rhs in
+      let lh, lhs_args = U.head_and_args_full tp.lhs in
+      let rh, rhs_args = U.head_and_args_full tp.rhs in
       let rank, tp =
         match lh.n, rh.n with
         | Tm_uvar _, Tm_uvar _ ->
@@ -1627,7 +1629,7 @@ let next_prob wl : ML (option (prob & list prob & rank_t)) =
 let flex_prob_closing tcenv (bs:binders) (p:prob) : ML _
   =
     let flex_will_be_closed t =
-        let hd, _ = U.head_and_args t in
+        let hd, _ = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_uvar(u, _) ->
           u.ctx_uvar_binders |> BU.for_some (fun ({binder_bv=y}) ->
@@ -2197,7 +2199,7 @@ let payload_of_hide_reveal h args : ML (option (universe & typ & term)) =
   | _ -> None
 
 let is_reveal_or_hide t : ML _ =
-  let h, args = U.head_and_args t in
+  let h, args = U.head_and_args_full t in
   if U.is_fvar PC.reveal h
   then match payload_of_hide_reveal h args with
         | None -> None
@@ -2248,7 +2250,7 @@ let maybe_defer_to_user_tac prob reason wl : ML solution =
   match prob.relation with
   | EQ ->
     let should_defer_tac t =
-      let head, _ = U.head_and_args t in
+      let head, _ = U.head_and_args_full t in
       match (SS.compress head).n with
       | Tm_uvar(uv, _) ->
         DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv uv, uv.ctx_uvar_reason
@@ -2524,8 +2526,8 @@ let solve_rigid_flex_or_flex_rigid_subtyping
                   | None -> SS.compress t1, SS.compress t2
               in
               let try_eq t1 t2 wl =
-                  let t1_hd, t1_args = U.head_and_args t1 in
-                  let t2_hd, t2_args = U.head_and_args t2 in
+                  let t1_hd, t1_args = U.head_and_args_full t1 in
+                  let t2_hd, t2_args = U.head_and_args_full t2 in
                   if List.length t1_args <> List.length t2_args then None else
                   let probs, wl =
                           List.fold_left2 (fun (probs, wl) (a1, _) (a2, _) ->
@@ -2619,7 +2621,10 @@ let solve_rigid_flex_or_flex_rigid_subtyping
     let this_flex, this_rigid = if flip then tp.lhs, tp.rhs else tp.rhs, tp.lhs in
     begin
     match (SS.compress this_rigid).n with
-    | Tm_arrow {bs=_bs; comp} ->
+    | Tm_arrow _ ->
+        (* Inspect the arrow's *final* comp (walking the whole spine via the
+           strict destructor) to decide if this is a Tot/GTot arrow. *)
+        let _bs, comp = U.arrow_formals_comp_ln_strict this_rigid in
         //Although it's possible to take the meet/join of arrow types
         //we handle them separately either by imitation (for Tot/GTot arrows)
         //which provides some structural subtyping for them
@@ -2642,13 +2647,13 @@ let solve_rigid_flex_or_flex_rigid_subtyping
   | _ ->
     if !dbg_Rel then
       Format.print1 "Trying to solve by meeting refinements:%s\n" (show tp.pid);
-    let u, _args = U.head_and_args this_flex in
+    let u, _args = U.head_and_args_full this_flex in
     let env = p_env wl (TProb tp) in
     begin
     match (SS.compress u).n with
     | Tm_uvar(ctx_uvar, _subst) ->
       let equiv (t:term) : ML bool =
-         let u', _ = U.head_and_args t in
+         let u', _ = U.head_and_args_full t in
          match (whnf env u').n with
          | Tm_uvar(ctx_uvar', _subst') ->
            UF.equiv ctx_uvar.ctx_uvar_head ctx_uvar'.ctx_uvar_head
@@ -2670,6 +2675,36 @@ let solve_rigid_flex_or_flex_rigid_subtyping
 
            | _ -> false)
       in
+      (* A flex variable that is going to be solved by typeclass resolution is
+         widened (its refinements dropped) only when we solve it from its lower
+         bounds; from a *refined* upper bound we would pick the refinement
+         itself, which no instance matches.  With the unary application
+         representation tc_app no longer solves the deferred constraints between
+         two arguments, so such a variable can reach here with both a lower
+         bound (from an earlier argument) and a refined upper bound (from the
+         expected type), and Flex_rigid outranks Rigid_flex.  Defer in that
+         case, so the lower bounds win and get widened.  We deliberately do not
+         defer for unrefined upper bounds: they carry no more information than
+         the lower bounds do, and preferring the lower bounds there loses the
+         expected type. *)
+      let prefer_lower_bounds () : ML bool =
+          flip
+       && has_typeclass_constraint ctx_uvar wl
+       && Tm_refine? (SS.compress (whnf env this_rigid)).n
+       && wl.attempting |> BU.for_some
+            (function
+             | TProb tp ->
+               let tp = maybe_invert tp in
+               (match tp.rank with
+                | Some Rigid_flex -> equiv tp.rhs
+                | _ -> false)
+             | _ -> false)
+      in
+      if prefer_lower_bounds ()
+      then solve (defer_lit Deferred_flex
+                    "solving a typeclass variable from its lower bounds first"
+                    (TProb tp) wl)
+      else
       let bounds_typs =
           whnf env this_rigid
           :: List.collect (function
@@ -2847,7 +2882,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
               | _ ->
                 lhs_binders, rhs_args
           in
-          let rhs_hd, rhs_args = U.head_and_args rhs in
+          let rhs_hd, rhs_args = U.head_and_args_full rhs in
           let bs, rhs_args =
             remove_matching_prefix
               (List.rev bs_orig)
@@ -2979,7 +3014,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         //    (Print.binders_to_string ", " bs_lhs)
         //    (show t_res_lhs)
         //    (show rhs);
-        let rhs_hd, args = U.head_and_args rhs in
+        let rhs_hd, args = U.head_and_args_full rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
         // if !dbg_Rel
@@ -3036,7 +3071,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         if !dbg_Rel then
           Format.print_string "imitate\n";
         let is_app rhs =
-           let _, args = U.head_and_args rhs in
+           let _, args = U.head_and_args_full rhs in
            match args with
            | [] -> false
            | _ -> true
@@ -3095,7 +3130,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
                     (show rhs);
       let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
       let n_args_lhs = List.length args_lhs in
-      let head, args_rhs = U.head_and_args rhs in
+      let head, args_rhs = U.head_and_args_full rhs in
       let n_args_rhs = List.length args_rhs in
       if n_args_lhs > n_args_rhs
       then inapplicable "not enough args" None
@@ -3518,8 +3553,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             (if need_unif then "need unification" else "match")
             (show t1) (tag_of t1)
             (show t2) (tag_of t2);
-        let head1, args1 = U.head_and_args t1 in
-        let head2, args2 = U.head_and_args t2 in
+        let head1, args1 = U.head_and_args_full t1 in
+        let head2, args2 = U.head_and_args_full t2 in
         let need_unif =
           match (head1.n, args1), (head2.n, args2) with
           | (Tm_uinst(_, us1), _::_), (Tm_uinst(_, us2), _::_) ->
@@ -3608,8 +3643,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                          N.unfold_head_once env t2
                    with
                    | Some t1', Some t2' ->
-                     let head1', _ = U.head_and_args t1' in
-                     let head2', _ = U.head_and_args t2' in
+                     let head1', _ = U.head_and_args_full t1' in
+                     let head2', _ = U.head_and_args_full t2' in
                      begin
                      match TEQ.eq_tm env head1' head1, TEQ.eq_tm env head2' head2 with
                      | TEQ.Equal, TEQ.Equal -> //unfolding didn't make progress
@@ -4023,10 +4058,17 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
       | Tm_type u1, Tm_type u2 ->
         solve_one_universe_eq orig u1 u2 wl
 
-      | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2} ->
+      | Tm_arrow _, Tm_arrow _ ->
+        (* This arrow-congruence rule compares the two arrows' full binder
+           lists pairwise via match_num_binders and re-abstracts the leftover
+           binders of the longer side, so we collect each side's whole spine
+           with the strict destructor (which does not descend into a top-level
+           refinement). *)
+        let bs1, c1 = U.arrow_formals_comp_ln_strict t1 in
+        let bs2, c2 = U.arrow_formals_comp_ln_strict t2 in
         let mk_c c = function
             | [] -> c
-            | bs -> mk_Total(mk (Tm_arrow {bs; comp=c}) c.pos) in
+            | bs -> mk_Total(S.mk_Tm_arrow bs c c.pos) in
 
         let (bs1, c1), (bs2, c2) =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
@@ -4038,11 +4080,15 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             let rel = if (Options.use_eq_at_higher_order()) then EQ else problem.relation in
             mk_c_problem wl scope orig c1 rel c2 None "function co-domain")
 
-      | Tm_abs {bs=bs1; body=tbody1; rc_opt=lopt1},
-        Tm_abs {bs=bs2; body=tbody2; rc_opt=lopt2} ->
+      | Tm_abs _, Tm_abs _ ->
+        (* Like the arrow-congruence rule above, this compares the two lambdas'
+           full binder lists pairwise and re-abstracts the leftover binders of
+           the longer side, so we collect each side's whole spine. *)
+        let bs1, tbody1, lopt1 = U.abs_formals_ln t1 in
+        let bs2, tbody2, lopt2 = U.abs_formals_ln t2 in
         let mk_t t l = function
             | [] -> t
-            | bs -> mk (Tm_abs {bs; body=t; rc_opt=l}) t.pos in
+            | bs -> S.mk_Tm_abs bs t l t.pos in
         let (bs1, tbody1), (bs2, tbody2) =
             match_num_binders (bs1, mk_t tbody1 lopt1) (bs2, mk_t tbody2 lopt2) in
         solve_binders bs1 bs2 orig wl
@@ -4142,10 +4188,11 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         else fallback()
 
       (* flex-flex *)
-      | Tm_uvar _,                Tm_uvar _
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_uvar _
-      | Tm_uvar _,                Tm_app {hd={n=Tm_uvar _}}
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_app {hd={n=Tm_uvar _}} ->
+      (* Under the unary application node an applied uvar `?u x y` nests as
+         Tm_app {hd=Tm_app {...}}, so we test the *leftmost* head via is_flex
+         (which walks the spine with U.head_and_args_full) rather than matching
+         on the immediate hd. *)
+      | _, _ when is_flex t1 && is_flex t2 ->
       (* In the case that we have the same uvar on both sides, we cannot
        * simply call destruct_flex_t on them, and instead we need to do
        * both ensure_no_uvar_subst calls before destructing.
@@ -4171,29 +4218,23 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
         solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
-      | Tm_uvar _, _
-      | Tm_app {hd={n=Tm_uvar _}}, _ when (problem.relation=EQ) -> (* just imitate/project ... no slack *)
+      | _, _ when is_flex t1 && (problem.relation=EQ) -> (* just imitate/project ... no slack *)
         let f1 = destruct_flex_t' t1 in
         solve_t_flex_rigid_eq orig wl f1 t2
 
       (* rigid-flex: reorient if it is an equality constraint *)
-      | _, Tm_uvar _
-      | _, Tm_app {hd={n=Tm_uvar _}} when (problem.relation = EQ) ->
+      | _, _ when is_flex t2 && (problem.relation = EQ) ->
         solve_t' (invert problem) wl
 
       (* flex-rigid wrt an arrow: ?u _ <: t1 -> t2 *)
-      | Tm_uvar _, Tm_arrow _
-      | Tm_app {hd={n=Tm_uvar _}}, Tm_arrow _ ->
+      | _, Tm_arrow _ when is_flex t1 ->
         //FIXME! This is weird; it should be handled by imitate_arrow
         //this case is so common, that even though we could delay, it is almost always ok to solve it immediately as an equality
         //besides, in the case of arrows, if we delay it, the arity of various terms built by the unifier goes awry
         //so, don't delay!
         solve_t' ({problem with relation=EQ}) wl
 
-      | _, Tm_uvar _
-      | _, Tm_app {hd={n=Tm_uvar _}}
-      | Tm_uvar _, _
-      | Tm_app {hd={n=Tm_uvar _}}, _ ->
+      | _, _ when is_flex t1 || is_flex t2 ->
         //flex-rigid subtyping is handled in the top-loop
         solve (attempt [TProb problem] wl)
 
@@ -4217,7 +4258,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
                   solve_t ({problem with lhs=not_abs'; rhs=t_abs}) wl
 
                 | _ ->
-                  let head, _ = U.head_and_args not_abs in
+                  let head, _ = U.head_and_args_full not_abs in
                   if wl.smt_ok
                   && may_relate wl.tcenv (p_rel orig) head
                   then let g, wl = mk_eq2 wl orig t_abs not_abs in
@@ -4317,8 +4358,8 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
       | _, Tm_constant _
       | _, Tm_fvar _
       | _, Tm_app _ ->
-         let head1 = U.head_and_args t1 |> fst in
-         let head2 = U.head_and_args t2 |> fst in
+         let head1 = U.head_and_args_full t1 |> fst in
+         let head2 = U.head_and_args_full t2 |> fst in
          let _ =
              if !dbg_Rel
              then Format.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
@@ -4708,12 +4749,12 @@ let solve_c_aux (problem:problem comp) (wl:worklist) : ML solution =
                                      match c2_decl |> U.get_wp_trivial_combinator with
                                      | None -> failwith "Rel doesn't yet handle undefined trivial combinator in an effect"
                                      | Some t -> t in
-                                   mk (Tm_app {hd=inst_effect_fun_with [c1_univ] env c2_decl trivial;
-                                               args=[as_arg c1.result_typ; wpc1_2]}) r
+                                   S.mk_Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial)
+                                               [as_arg c1.result_typ; wpc1_2] r
                               else let c2_univ = env.universe_of env c2.result_typ in
                                    let stronger = c2_decl |> U.get_stronger_vc_combinator |> fst in
-                                   mk (Tm_app {hd=inst_effect_fun_with [c2_univ] env c2_decl stronger;
-                                               args=[as_arg c2.result_typ; as_arg wpc2; wpc1_2]}) r in
+                                   S.mk_Tm_app (inst_effect_fun_with [c2_univ] env c2_decl stronger)
+                                               [as_arg c2.result_typ; as_arg wpc2; wpc1_2] r in
                       if !dbg_Rel then
                           Format.print1 "WP guard (simplifed) is (%s)\n" (show (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
@@ -5505,8 +5546,16 @@ let check_implicit_solution_and_discharge_guard env
                *)
               let imp_tm =
                 match (SS.compress imp_tm).n with
-                | Tm_abs {bs; body; rc_opt=Some rc} ->
-                  {imp_tm with n=Tm_abs {bs; body; rc_opt=Some ({rc with residual_typ=None})}}
+                (* Clear the residual comp attached to the solution lambda built
+                   in u_abs. Under the unary node the residual comp lives on the
+                   innermost Tm_abs, so we collect the whole spine and rebuild it
+                   with the residual type cleared, preserving all binders. *)
+                | Tm_abs _ ->
+                  let bs, body, rc_opt = U.abs_formals_ln imp_tm in
+                  (match rc_opt with
+                   | Some rc ->
+                     S.mk_Tm_abs bs body (Some ({rc with residual_typ=None})) imp_tm.pos
+                   | None -> imp_tm)
                 | _ -> imp_tm in
 
               let k', g =
@@ -5611,8 +5660,8 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
     mostly in support of solve, which has to be written eta expanded. *)
     (U.is_fvar PC.tcresolve_lid tac) || (
       match (SS.compress tac).n with
-      | Tm_abs ({bs=[_]; body}) ->
-        let hd, args = U.head_and_args body in
+      | Tm_abs {body} ->
+        let hd, args = U.head_and_args_full body in
         U.is_fvar PC.tcresolve_lid hd && List.length args = 1
       | _ -> false
     )

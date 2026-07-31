@@ -39,7 +39,7 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
   = let conjunct = withlocal_post init_t (term_of_nvar (n, x)) in
     let g' = extend_env g x n init_t in
     let c_typing = Pulse.Checker.Pure.core_check_term (push_binding g x n (mk_ref init_t)) conjunct T.E_Total tm_slprop in
-    let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) conjunct in
+    let res = Pulse.Checker.Base.extend_post_hint g p x n (mk_ref init_t) conjunct in
     res
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 0"
@@ -135,7 +135,8 @@ let check
           let (| opened_body, c_body |) = apply_checker_result_k #g_extended #body_pre #body_post r binder.binder_ppname in
           let body = close_st_term opened_body x in
           assume (open_st_term (close_st_term opened_body x) x == opened_body);
-          let c = C_ST {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
+          let c_st = {u=comp_u c_body;res=comp_res c_body;pre;post=post.post} in
+          let c = if C_STDiv? c_body then C_STDiv c_st else C_ST c_st in
           let c_typing =
             intro_comp_typing g c
               x

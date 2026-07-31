@@ -385,11 +385,11 @@ let string_of_timed_fname (x : timed_fname) : Prims.string=
       if modtime = t0
       then FStarC_Format.fmt1 "{ %s }" fname
       else
-        (let uu___2 =
+        (let uu___1 =
            FStarC_Class_Show.show
              { FStarC_Class_Show.show = FStarC_Time.string_of_time_of_day }
              modtime in
-         FStarC_Format.fmt2 "{ %s; %s }" fname uu___2)
+         FStarC_Format.fmt2 "{ %s; %s }" fname uu___1)
 let string_of_repl_task (t : repl_task) : Prims.string=
   match t with
   | LDInterleaved (intf, impl) ->

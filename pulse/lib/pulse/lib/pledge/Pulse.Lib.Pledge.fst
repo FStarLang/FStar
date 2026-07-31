@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Pledge
+open Pulse.Lib.GhostSet {is_finite}
+open Pulse.Class.Introducable
 #lang-pulse
 
 open Pulse.Lib.Pervasives

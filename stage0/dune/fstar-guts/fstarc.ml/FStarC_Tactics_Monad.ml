@@ -640,7 +640,8 @@ let wrap_err_doc (pref : FStarC_Errors_Msg.error_message) (t : 'a tac) :
        | e -> FStarC_Effect.raise e)
 let wrap_err (pref : Prims.string) (t : 'a tac) : 'a tac=
   wrap_err_doc
-    [FStarC_Errors_Msg.text (Prims.strcat "'" (Prims.strcat pref "' failed"))]
+    [FStarC_Errors_Msg.text
+       (Prims.strcat "\226\128\152" (Prims.strcat pref "\226\128\153 failed"))]
     t
 let mlog (f : unit -> unit) (cont : unit -> 'a tac) : 'a tac=
   bind (log f) (fun uu___ -> cont ())
@@ -728,21 +729,21 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
   then ()
   else
     (let env = FStarC_Tactics_Types.goal_env g in
-     let uu___2 =
+     let uu___1 =
        if env.FStarC_TypeChecker_Env.phase1
        then true
        else FStarC_Options.admit_smt_queries () in
-     if uu___2
+     if uu___1
      then ()
      else
        (let uv = g.FStarC_Tactics_Types.goal_ctx_uvar in
         let i = FStarC_TypeChecker_Core.incr_goal_ctr () in
-        let uu___4 =
-          let uu___5 =
+        let uu___2 =
+          let uu___3 =
             FStarC_Syntax_Util.ctx_uvar_should_check
               g.FStarC_Tactics_Types.goal_ctx_uvar in
-          FStarC_Syntax_Syntax.uu___is_Allow_untyped uu___5 in
-        if uu___4
+          FStarC_Syntax_Syntax.uu___is_Allow_untyped uu___3 in
+        if uu___2
         then ()
         else
           (let env1 =
@@ -849,66 +850,65 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit=
                FStarC_TypeChecker_Env.missing_decl =
                  (env.FStarC_TypeChecker_Env.missing_decl)
              } in
-           (let uu___7 = FStarC_Effect.op_Bang dbg_CoreEq in
-            if uu___7
+           (let uu___4 = FStarC_Effect.op_Bang dbg_CoreEq in
+            if uu___4
             then
-              let uu___8 =
+              let uu___5 =
                 FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-              FStarC_Format.print1 "(%s) Registering goal\n" uu___8
+              FStarC_Format.print1 "(%s) Registering goal\n" uu___5
             else ());
            (let should_register = is_goal_safe_as_well_typed g in
             if Prims.op_Negation should_register
             then
-              let uu___8 =
-                let uu___9 = FStarC_Effect.op_Bang dbg_Core in
-                if uu___9
+              let uu___5 =
+                let uu___6 = FStarC_Effect.op_Bang dbg_Core in
+                if uu___6
                 then true
                 else FStarC_Effect.op_Bang dbg_RegisterGoal in
-              (if uu___8
+              (if uu___5
                then
-                 let uu___9 =
+                 let uu___6 =
                    FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
                  FStarC_Format.print1
                    "(%s) Not registering goal since it has unresolved uvar deps\n"
-                   uu___9
+                   uu___6
                else ())
             else
-              ((let uu___9 =
-                  let uu___10 = FStarC_Effect.op_Bang dbg_Core in
-                  if uu___10
+              ((let uu___5 =
+                  let uu___6 = FStarC_Effect.op_Bang dbg_Core in
+                  if uu___6
                   then true
                   else FStarC_Effect.op_Bang dbg_RegisterGoal in
-                if uu___9
+                if uu___5
                 then
-                  let uu___10 =
+                  let uu___6 =
                     FStarC_Class_Show.show FStarC_Class_Show.showable_int i in
-                  let uu___11 =
+                  let uu___7 =
                     FStarC_Class_Show.show FStarC_Syntax_Print.showable_ctxu
                       uv in
                   FStarC_Format.print2 "(%s) Registering goal for %s\n"
-                    uu___10 uu___11
+                    uu___6 uu___7
                 else ());
                (let goal_ty = FStarC_Syntax_Util.ctx_uvar_typ uv in
-                let uu___9 =
+                let uu___5 =
                   FStarC_TypeChecker_Core.compute_term_type env1 goal_ty in
-                match uu___9 with
+                match uu___5 with
                 | FStar_Pervasives.Inl
-                    (uu___10, uu___11, FStar_Pervasives_Native.None) -> ()
+                    (uu___6, uu___7, FStar_Pervasives_Native.None) -> ()
                 | FStar_Pervasives.Inl
-                    (uu___10, uu___11, FStar_Pervasives_Native.Some
-                     (g1, tok))
+                    (uu___6, uu___7, FStar_Pervasives_Native.Some (g1, tok))
                     -> FStarC_TypeChecker_Core.commit_guard tok
                 | FStar_Pervasives.Inr err ->
                     let msg =
-                      let uu___10 =
-                        let uu___11 = FStarC_Syntax_Util.ctx_uvar_typ uv in
+                      let uu___6 =
+                        let uu___7 = FStarC_Syntax_Util.ctx_uvar_typ uv in
                         FStarC_Class_Show.show
-                          FStarC_Syntax_Print.showable_term uu___11 in
-                      let uu___11 =
+                          FStarC_Syntax_Print.showable_term uu___7 in
+                      let uu___7 =
                         FStarC_TypeChecker_Core.print_error_short err in
                       FStarC_Format.fmt2
                         "Failed to check initial tactic goal %s because %s"
-                        uu___10 uu___11 in
+                        uu___6 uu___7 in
                     FStarC_Errors.log_issue
                       FStarC_Class_HasRange.hasRange_range
                       uv.FStarC_Syntax_Syntax.ctx_uvar_range

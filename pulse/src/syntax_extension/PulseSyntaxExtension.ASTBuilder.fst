@@ -106,7 +106,7 @@ let parse_decl
                       r
         in
         let d = Splice (true, [Ident.id_of_text id], splicer) in
-        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]; interleaved = false  } in
+        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"] } in
         Inr d
 
 let maybe_report_error first_error decls : ML _ =

@@ -1206,11 +1206,13 @@ singleBinder:
        | _ -> raise_error_text (rr $loc(bs)) Fatal_SyntaxError "Syntax error: expected a single binder"
     }
 
+%public
 calcRel:
   | i=binop_name { mk_term (Op (i, [])) (rr $loc(i)) Expr }
   | BACKTICK id=qlident BACKTICK { mk_term (Var id) (rr $loc) Un }
   | t=atomicTerm { t }
 
+%public
 calcStep:
    | rel=calcRel LBRACE justif=option(term) RBRACE next=noSeqTerm SEMICOLON
      {

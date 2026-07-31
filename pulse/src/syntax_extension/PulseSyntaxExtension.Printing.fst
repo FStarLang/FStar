@@ -108,6 +108,10 @@ let resugar_pulse_type (e:DsEnv.env) (t:S.term) : ML A.term =
       when S.fv_eq_lid fv stt_lid ->
         ("", a, tm_emp_inames, pre, post)
 
+    | [(a, None); (pre, None); (post, None)]
+      when S.fv_eq_lid fv stt_div_lid ->
+        ("divergent", a, tm_emp_inames, pre, post)
+
     | [(a, None); _obs; (opens, None); (pre, None); (post, None)]
       when S.fv_eq_lid fv stt_atomic_lid ->
         ("atomic", a, opens, pre, post)

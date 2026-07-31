@@ -150,7 +150,6 @@ let rec term_to_string x : ML string =
       let x = if Options.print_implicits() then x else SU.unmeta x in
       match x.n with
       | Tm_delayed _ ->   failwith "impossible"
-      | Tm_app {args=[]} ->  failwith "Empty args!"
 
       // TODO: add an option to mark where this happens
       | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
@@ -211,8 +210,13 @@ let rec term_to_string x : ML string =
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then Format.fmt1 "Type u#(%s)" (univ_to_string u) else "Type"
-      | Tm_arrow {bs; comp=c} ->  Format.fmt2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-      | Tm_abs {bs; body=t2; rc_opt=lc} ->
+      (* [x:t -> y:s -> C] and [x:t -> Tot (y:s -> C)] are the same term under
+         the unary representation, so we flatten the whole arrow spine. *)
+      | Tm_arrow _ ->
+        let bs, c = SU.arrow_formals_comp_ln_strict x in
+        Format.fmt2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
+      | Tm_abs _ ->
+        let bs, t2, lc = SU.abs_formals_ln x in
         begin match lc with
             | Some rc when (Options.print_implicits()) ->
               Format.fmt4 "(fun %s -> (%s $$ (residual) %s %s))"
@@ -224,7 +228,9 @@ let rec term_to_string x : ML string =
               Format.fmt2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
         end
       | Tm_refine {b=xt; phi=f} -> Format.fmt3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
-      | Tm_app {hd=t; args} ->  Format.fmt2 "(%s %s)" (term_to_string t) (args_to_string args)
+      | Tm_app _ ->
+        let t, args = SU.head_and_args_full x in
+        Format.fmt2 "(%s %s)" (term_to_string t) (args_to_string args)
       | Tm_let {lbs; body=e} ->   Format.fmt2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
       | Tm_ascribed {tm=e;asc=(annot, topt, b);eff_opt=eff_name} ->
         let annot = match annot with
@@ -646,10 +652,8 @@ let rec sigelt_to_string (x: sigelt) : ML string =
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev {lid=l; us=univs; bs=tps; comp=c; cflags=flags} ->
         if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow {bs=tps; comp=c}) Range.dummyRange) in
-             let tps, c = match (Subst.compress t).n with
-                | Tm_arrow {bs; comp=c} -> bs, c
-                | _ -> failwith "impossible" in
+        then let univs, t = Subst.open_univ_vars univs (mk_Tm_arrow tps c Range.dummyRange) in
+             let tps, c = SU.arrow_formals_comp_ln_strict t in
              Format.fmt4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
         else Format.fmt3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
       | Sig_splice {is_typed; lids; tac=t} ->

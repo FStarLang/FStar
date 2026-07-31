@@ -23,14 +23,11 @@ let __proj__Mklistlike__item__view (projectee : ('e, 's) listlike) :
   's -> ('e, 's) view_t=
   match projectee with | { empty; cons; view;_} -> view
 let empty (s : unit) (projectee : ('e, Obj.t) listlike) : Obj.t=
-  match projectee with | { empty = empty1; cons; view;_} -> empty1
+  __proj__Mklistlike__item__empty projectee
 let cons (s : unit) (projectee : ('e, Obj.t) listlike) :
-  'e -> Obj.t -> Obj.t=
-  match projectee with | { empty = empty1; cons = cons1; view;_} -> cons1
+  'e -> Obj.t -> Obj.t= __proj__Mklistlike__item__cons projectee
 let view (s : unit) (projectee : ('e, Obj.t) listlike) :
-  Obj.t -> ('e, Obj.t) view_t=
-  match projectee with
-  | { empty = empty1; cons = cons1; view = view1;_} -> view1
+  Obj.t -> ('e, Obj.t) view_t= __proj__Mklistlike__item__view projectee
 let is_empty (uu___ : ('e, 's) listlike) (l : 's) : Prims.bool=
   match Obj.magic (view () (Obj.magic uu___) (Obj.magic l)) with
   | VNil -> true

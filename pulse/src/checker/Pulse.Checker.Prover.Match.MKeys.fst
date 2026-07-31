@@ -16,6 +16,8 @@
 
 module Pulse.Checker.Prover.Match.MKeys
 
+open FStar.Tactics.V2
+open Pulse.Typing.Env
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing

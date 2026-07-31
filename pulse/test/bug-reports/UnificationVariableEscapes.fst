@@ -40,6 +40,7 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
             Seq.length s == A.length a /\
             (forall (i:nat). i < US.v vi ==> Seq.index s i == v))
    )
+   decreases (US.v l - US.v (!i))
    {
       let vi = !i; 
       (a.(vi) <- v);

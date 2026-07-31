@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Readback
+open Pulse.Elaborate.Pure
 module R = FStar.Reflection.V2
 open Pulse.Syntax.Base
 open Pulse.Reflection.Util
@@ -72,6 +73,30 @@ let try_readback_st_comp (t:R.term)
               Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
             | _ -> None)
          | _ -> None
+    else if fv_lid = stt_div_lid
+    then match args with
+         | [res; pre; post] ->
+          (match inspect_ln (fst post) with
+           | Tv_Abs b body ->
+             let { qual=aq; attrs=attrs; sort=sort } =
+                 inspect_binder b
+             in    
+             assume (fv == stt_div_fv);
+             assume (aq == Q_Explicit           /\
+                     attrs == []                /\
+                     sort == fst res /\
+                     snd res == Q_Explicit      /\
+                     snd pre == Q_Explicit      /\
+                     snd post == Q_Explicit);
+
+             assume (t == mk_stt_div_comp u (fst res) (fst pre) (mk_abs (fst res) R.Q_Explicit body));
+             let res' = fst res in
+             let pre' = fst pre in
+             let post' = body in
+             let c = C_STDiv {u; res=res'; pre=pre';post=post'} in
+             Some (c <: c:Pulse.Syntax.Base.comp{ elab_comp c == t })
+           | _ -> None)
+         | _ -> None
     else if fv_lid = stt_atomic_lid
     then match args with
          | [res; obs; opened; pre; post] ->
@@ -128,7 +153,7 @@ let rec readback_pat (p : R.pattern) : option pattern =
   | R.Pat_Cons fv _ args ->
     let fv = R.inspect_fv fv in
     let? args = map_opt_dec p readback_sub_pat args in
-    Some (Pat_Cons {fv_name=fv; fv_range=Range.range_0} args)
+    Some (Pat_Cons {fv_name=fv; fv_range=range_0} args)
   | R.Pat_Constant c ->
     Some (Pat_Constant c)
   | R.Pat_Var st nm ->
@@ -139,7 +164,7 @@ let rec readback_pat (p : R.pattern) : option pattern =
     then None
     else
       let t = RU.deep_compress t in
-      let t = RU.set_range t Range.range_0 in
+      let t = RU.set_range t range_0 in
       Some (Pat_Dot_Term (Some t))
   | _ -> None
 and readback_sub_pat (pb : R.pattern & bool) : option (pattern & bool) =
@@ -160,7 +185,7 @@ let rec elab_readback_pat_x (rp : R.pattern) (p : pattern)
 
     assert (readback_pat rp ==
              (let? args = map_opt_dec rp readback_sub_pat r_subpats in
-              Some (Pat_Cons {fv_name=fv; fv_range=Range.range_0} args)))
+              Some (Pat_Cons {fv_name=fv; fv_range=range_0} args)))
         by (T.norm [delta; zeta]);
 
     let aux1 (i:nat{i < L.length r_subpats})

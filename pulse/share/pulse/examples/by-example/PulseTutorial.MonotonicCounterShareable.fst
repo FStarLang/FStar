@@ -78,6 +78,7 @@ ensures exists* j. c.inv j
     assert pure (v1 < v2);
 }
 
+divergent
 fn test_counter ()
 {
     let c = new_counter ();
@@ -100,6 +101,7 @@ ensures named name (exists* j. c.inv j)
     fold (named name (exists* j. c.inv j));
 }
 
+divergent
 fn test_counter' ()
 {
     let c = new_counter ();

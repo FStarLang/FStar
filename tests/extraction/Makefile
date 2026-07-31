@@ -17,6 +17,16 @@ RUN += ParseTest.fst
 
 include $(FSTAR_ROOT)/mk/test.mk
 
+all: $(OUTPUT_DIR)/FloatLiteralExtraction.krml
+all: $(OUTPUT_DIR)/FloatLiteralInjection.rejected
+
+$(OUTPUT_DIR)/FloatLiteralInjection.rejected: $(CACHE_DIR)/FloatLiteralInjection.fst.checked $(FSTAR_EXE)
+	@mkdir -p $(OUTPUT_DIR)
+	@$(FSTAR) $< --codegen krml --extract_module FloatLiteralInjection >$(OUTPUT_DIR)/FloatLiteralInjection.out 2>&1 || true
+	@grep -q "Warning 242" $(OUTPUT_DIR)/FloatLiteralInjection.out
+	@grep -q "Refusing to extract invalid Float64.of_literal argument" $(OUTPUT_DIR)/FloatLiteralInjection.out
+	@touch $@
+
 # Overriding the default rule for this one. We need to wrap this in a timeout.
 $(OUTPUT_DIR)/Div.out: $(OUTPUT_DIR)/Div.exe
 	$(call msg,TIMEOUT,$<)

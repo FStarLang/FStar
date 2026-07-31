@@ -10,7 +10,7 @@ should not affect the result. *)
 assume
 val p : int -> slprop
 
-fn test (m:mutex int)
+divergent fn test (m:mutex int)
   preserves mutex_live m p
 {
   let r = lock m;
@@ -20,7 +20,7 @@ fn test (m:mutex int)
 
 
 
-fn test2 (m:mutex int)
+divergent fn test2 (m:mutex int)
   preserves mutex_live m p
 {
   let r = lock m;
@@ -32,7 +32,7 @@ fn test2 (m:mutex int)
 
 
 
-fn test3 (m:mutex int)
+divergent fn test3 (m:mutex int)
   preserves mutex_live m p
 {
   let r = lock m;

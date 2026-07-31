@@ -28,6 +28,7 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
       SZ.v l < SZ.v n /\
       (Prf.mk_bezout (SZ.v n0) (SZ.v l0)).d == (Prf.mk_bezout (SZ.v n) (SZ.v l)).d
     ))
+  decreases (SZ.v !pl)
   {
     let n = !pn;
     let l = !pl;

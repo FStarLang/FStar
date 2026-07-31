@@ -17,7 +17,7 @@ module FStar.Pprint
 
 (* Unfortunate *)
 open FStar.Char
-open FStar.Float
+open FStar.Float64
 
 (* The rest of this file is taken almost verbatim from src/prettyprint/FStar.Pprint.fsti *)
 
@@ -386,7 +386,7 @@ val surround_separate_map: int -> int -> document -> document -> document -> doc
 // [print_out_channel] uses the ToChannel:RENDERER one.
 (** Note: this exists in the underlying module, but userspace cannot really
 call it since we have no support for floats. See [render] below. *)
-val pretty_string : float -> int -> document -> string
+val pretty_string : float64 -> int -> document -> string
 
 (** Render a document. Equivalent to [pretty_string 1.0 80]. *)
 val render : document -> string

@@ -61,7 +61,7 @@ val print_uint64_dec_pad : FStar.UInt64.t -> ML unit
 val print_any : 'a -> ML unit
 val input_line : unit -> ML string
 val input_int : unit -> ML int
-val input_float : unit -> ML FStar.Float.float
+val input_float : unit -> ML FStar.Float64.float64
 val open_read_file : string -> ML fd_read
 val open_write_file : string -> ML fd_write
 val close_read_file : fd_read -> ML unit

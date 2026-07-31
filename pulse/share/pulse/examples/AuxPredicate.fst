@@ -34,7 +34,7 @@ let my_inv (r:R.ref int) : slprop
 
 
 
-fn invar_introduces_ghost (r:R.ref int)
+divergent fn invar_introduces_ghost (r:R.ref int)
   requires pts_to r 0
   ensures  pts_to r 1
 {
@@ -76,6 +76,7 @@ fn invar_introduces_ghost_alt (r:R.ref int)
   while (let vr = !r; (vr = 0))
     invariant live r
     invariant pure (!r == 0 \/ !r == 1)
+    decreases (if !r = 0 then 1 else 0)
   {
     r := 1;
   }

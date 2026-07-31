@@ -122,8 +122,7 @@ let lpad (len : Prims.int) (s : Prims.string) : Prims.string=
   let l = FStarC_String.length s in
   if l >= len
   then s
-  else
-    (let uu___1 = FStarC_String.make (len - l) 32 in Prims.strcat uu___1 s)
+  else (let uu___ = FStarC_String.make (len - l) 32 in Prims.strcat uu___ s)
 let max (x : Prims.int) (y : Prims.int) : Prims.int= if x > y then x else y
 let print_all (uu___ : unit) : Prims.string=
   let keys = FStarC_SMap.keys st in

@@ -40,6 +40,7 @@ fn invar_introduces_ghost (r:R.ref int)
   while (let vr = !r; (vr = 0))
   invariant live r  // FAILS: trying to prove: my_inv (reveal (hide true)) r
                            // but typing context has: my_inv true r
+  decreases (if !r = 0 then 1 else 0)
   {
     r := 1;
   };

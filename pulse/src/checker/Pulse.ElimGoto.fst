@@ -55,7 +55,7 @@ let rec push_pattern g (p:Pulse.Syntax.Base.pattern) :
     g, []
   | Pat_Var ppname sort ->
     let ty = T.unseal sort in
-    let n = mk_ppname ppname Range.range_0 in
+    let n = mk_ppname ppname range_0 in
     let x = fresh g in
     let g = push_binding g x n ty in
     g, [{n; x; ty} <: Pulse.Typing.Env.var_binding]
@@ -72,7 +72,7 @@ and push_patterns g (ps:list Pulse.Syntax.Base.pattern) :
 
 let wtag ct (t:st_term') : st_term =
   { term = t;
-    range = FStar.Range.range_0;
+    range = range_0;
     effect_tag = ct;
     source = false;
     seq_lhs = false;

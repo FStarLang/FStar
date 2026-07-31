@@ -412,9 +412,9 @@ let run_repl_task (repl_fname : Prims.string)
           FStarC_Universal.load_fly_deps_and_tc_one_fragment repl_fname
             is_interface curmod env frag1
         else
-          (let uu___5 =
+          (let uu___4 =
              FStarC_Universal.tc_one_fragment is_interface curmod env frag1 in
-           match uu___5 with | (o, e, langs) -> (o, e, langs, [])) in
+           match uu___4 with | (o, e, langs) -> (o, e, langs, [])) in
       (match uu___2 with
        | (o, e, langs, filenames) ->
            (add_filenames_to_push_fragment filenames; (o, e, langs)))
@@ -598,10 +598,10 @@ let add_module_completions (this_fname : Prims.string)
     then str
     else
       (let first = FStarC_String.substring str Prims.int_zero Prims.int_one in
-       let uu___1 =
+       let uu___ =
          FStarC_String.substring str Prims.int_one
            ((FStarC_String.length str) - Prims.int_one) in
-       Prims.strcat (FStarC_String.uppercase first) uu___1) in
+       Prims.strcat (FStarC_String.uppercase first) uu___) in
   let mods = FStarC_Parser_Dep.build_inclusion_candidates_list () in
   let loaded_mods_set =
     FStarC_List.fold_left
@@ -620,8 +620,8 @@ let add_module_completions (this_fname : Prims.string)
            then table1
            else
              (let ns_query =
-                let uu___2 = capitalize modname in
-                FStarC_Util.split uu___2 "." in
+                let uu___1 = capitalize modname in
+                FStarC_Util.split uu___1 "." in
               FStarC_Interactive_CompletionTable.register_module_path table1
                 (loaded mod_key) mod_path ns_query)) table
     (FStarC_List.rev mods)

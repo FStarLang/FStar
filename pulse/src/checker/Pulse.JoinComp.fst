@@ -298,6 +298,9 @@ let rec join_slprop g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 let rec join_effect_annot g (e1 e2:effect_annot)
 : T.Tac effect_annot
 = match e1, e2 with
+  | EffectAnnotSTTDiv, _
+  | _, EffectAnnotSTTDiv -> EffectAnnotSTTDiv
+
   | _, EffectAnnotSTT
   | EffectAnnotSTT, _ -> EffectAnnotSTT
   
@@ -415,6 +418,7 @@ let rec join_comps
 
     c
   | C_STGhost _ _, C_STGhost _ _
+  | C_STDiv _, C_STDiv _
   | C_ST _, C_ST _ -> c_then
 
   | _ ->

@@ -65,6 +65,7 @@ fn new_mutex (#a:Type0) (v:a -> slprop) (x:a)
 
 val belongs_to (#a:Type0) (mg:mutex_guard a) (m:mutex a) : slprop
 
+divergent
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   preserves mutex_live m #p v
   returns r:mutex_guard a

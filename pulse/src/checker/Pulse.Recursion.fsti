@@ -23,11 +23,11 @@ open FStar.Tactics.V2
 open Pulse.Syntax
 open Pulse.Typing
 
-val add_knot (g : env)  (rng : R.range)
+val add_knot (g : env)  (rng : range)
              (d : decl{FnDefn? d.d})
 : Tac (d:decl{FnDefn? d.d})
 
-val tie_knot (g : env)  (rng : R.range)
+val tie_knot (g : env)  (rng : range)
              (nm_orig : string) (nm_aux : string)
              (r_typ : R.term) (blob:RT.blob)
 : Tac (r:(bool & sigelt & option RT.blob) { let (checked, _, _) = r in ~ checked })

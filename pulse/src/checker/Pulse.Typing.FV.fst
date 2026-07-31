@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Typing.FV
+open Pulse.Syntax.Naming
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -27,9 +28,9 @@ open Pulse.Elaborate
 
 let freevars_close_term_host_term (t:term) (x:var) (i:index)
   : Lemma
-    (ensures (freevars (close_term' (wr t FStar.Range.range_0) x i)
+    (ensures (freevars (close_term' (wr t range_0) x i)
             `Set.equal`
-             (freevars (wr t FStar.Range.range_0) `set_minus` x)))
+             (freevars (wr t range_0) `set_minus` x)))
   = admit()
 
 #push-options "--z3rlimit_factor 2"
@@ -51,6 +52,10 @@ let freevars_close_comp (c:comp)
       freevars_close_term' t x i
 
     | C_ST s ->
+      freevars_close_term' s.res x i;
+      freevars_close_term' s.pre x i;      
+      freevars_close_term' s.post x (i + 1)
+    | C_STDiv s ->
       freevars_close_term' s.res x i;
       freevars_close_term' s.pre x i;      
       freevars_close_term' s.post x (i + 1)

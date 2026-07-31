@@ -140,12 +140,12 @@ let try_subst (ts : FStarC_Extraction_ML_Syntax.mltyscheme)
       if (FStarC_List.length formals) <> (FStarC_List.length args)
       then FStar_Pervasives_Native.None
       else
-        (let uu___2 =
-           let uu___3 =
-             let uu___4 = FStarC_Extraction_ML_Syntax.ty_param_names formals in
-             FStarC_List.zip uu___4 args in
-           subst_aux uu___3 t in
-         FStar_Pervasives_Native.Some uu___2)
+        (let uu___1 =
+           let uu___2 =
+             let uu___3 = FStarC_Extraction_ML_Syntax.ty_param_names formals in
+             FStarC_List.zip uu___3 args in
+           subst_aux uu___2 t in
+         FStar_Pervasives_Native.Some uu___1)
 let subst
   (ts :
     (FStarC_Extraction_ML_Syntax.ty_param Prims.list *
@@ -311,19 +311,19 @@ let rec type_leq_c (unfold_ty : unfold_t)
                    (true, uu___4)
                  else (false, FStar_Pervasives_Native.None))
               else
-                (let uu___4 =
-                   let uu___5 =
-                     let uu___6 = mk_fun xs body in
-                     FStar_Pervasives_Native.Some uu___6 in
-                   type_leq_c unfold_ty uu___5 t2 t2' in
-                 match uu___4 with
+                (let uu___3 =
+                   let uu___4 =
+                     let uu___5 = mk_fun xs body in
+                     FStar_Pervasives_Native.Some uu___5 in
+                   type_leq_c unfold_ty uu___4 t2 t2' in
+                 match uu___3 with
                  | (ok, body1) ->
                      let res =
                        match body1 with
                        | FStar_Pervasives_Native.Some body2 ->
-                           let uu___5 = mk_fun [x] body2 in
-                           FStar_Pervasives_Native.Some uu___5
-                       | uu___5 -> FStar_Pervasives_Native.None in
+                           let uu___4 = mk_fun [x] body2 in
+                           FStar_Pervasives_Native.Some uu___4
+                       | uu___4 -> FStar_Pervasives_Native.None in
                      (ok, res)))
            else (false, FStar_Pervasives_Native.None)
        | uu___ ->
@@ -342,12 +342,12 @@ let rec type_leq_c (unfold_ty : unfold_t)
         let uu___ = FStarC_List.forall2 (type_leq unfold_ty) args args' in
         (if uu___ then (true, e) else (false, FStar_Pervasives_Native.None))
       else
-        (let uu___1 = unfold_ty t in
-         match uu___1 with
+        (let uu___ = unfold_ty t in
+         match uu___ with
          | FStar_Pervasives_Native.Some t1 -> type_leq_c unfold_ty e t1 t'
          | FStar_Pervasives_Native.None ->
-             let uu___2 = unfold_ty t' in
-             (match uu___2 with
+             let uu___1 = unfold_ty t' in
+             (match uu___1 with
               | FStar_Pervasives_Native.None ->
                   (false, FStar_Pervasives_Native.None)
               | FStar_Pervasives_Native.Some t'1 ->
@@ -454,18 +454,18 @@ let rec erasableType (unfold_ty : unfold_t)
     else
       (match t1 with
        | FStarC_Extraction_ML_Syntax.MLTY_Named
-           (uu___1, ("FStar"::"Ghost"::[], "erased")) -> true
+           (uu___, ("FStar"::"Ghost"::[], "erased")) -> true
        | FStarC_Extraction_ML_Syntax.MLTY_Named
-           (uu___1, ("FStar"::"Tactics"::"Effect"::[], "tactic")) ->
+           (uu___, ("FStar"::"Tactics"::"Effect"::[], "tactic")) ->
            let c = FStarC_Options.codegen () in
            c <> (FStar_Pervasives_Native.Some FStarC_Options.Plugin)
-       | uu___1 -> false) in
+       | uu___ -> false) in
   let uu___ = erasableTypeNoDelta t in
   if uu___
   then true
   else
-    (let uu___2 = unfold_ty t in
-     match uu___2 with
+    (let uu___1 = unfold_ty t in
+     match uu___1 with
      | FStar_Pervasives_Native.Some t1 -> erasableType unfold_ty t1
      | FStar_Pervasives_Native.None -> false)
 let rec eraseTypeDeep (unfold_ty : unfold_t)
@@ -484,10 +484,10 @@ let rec eraseTypeDeep (unfold_ty : unfold_t)
       if uu___
       then FStarC_Extraction_ML_Syntax.MLTY_Erased
       else
-        (let uu___2 =
-           let uu___3 = FStarC_List.map (eraseTypeDeep unfold_ty) lty in
-           (uu___3, mlp) in
-         FStarC_Extraction_ML_Syntax.MLTY_Named uu___2)
+        (let uu___1 =
+           let uu___2 = FStarC_List.map (eraseTypeDeep unfold_ty) lty in
+           (uu___2, mlp) in
+         FStarC_Extraction_ML_Syntax.MLTY_Named uu___1)
   | FStarC_Extraction_ML_Syntax.MLTY_Tuple lty ->
       let uu___ = FStarC_List.map (eraseTypeDeep unfold_ty) lty in
       FStarC_Extraction_ML_Syntax.MLTY_Tuple uu___

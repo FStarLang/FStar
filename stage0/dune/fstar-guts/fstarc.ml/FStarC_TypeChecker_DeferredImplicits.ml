@@ -215,8 +215,8 @@ let should_defer_uvar_to_user_tac (env : FStarC_TypeChecker_Env.env)
   if Prims.op_Negation env.FStarC_TypeChecker_Env.enable_defer_to_tac
   then false
   else
-    (let uu___1 = find_user_tac_for_uvar env u in
-     FStar_Pervasives_Native.uu___is_Some uu___1)
+    (let uu___ = find_user_tac_for_uvar env u in
+     FStar_Pervasives_Native.uu___is_Some uu___)
 let solve_goals_with_tac (env : FStarC_TypeChecker_Env.env) (g : 'uuuuu)
   (deferred_goals : FStarC_TypeChecker_Common.implicits)
   (tac : FStarC_Syntax_Syntax.sigelt) : unit=
@@ -351,17 +351,17 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
   else
     (let deferred = g.FStarC_TypeChecker_Common.deferred_to_tac in
      let prob_as_implicit x =
-       let uu___1 = x in
-       match uu___1 with
-       | (uu___2, reason, prob) ->
+       let uu___ = x in
+       match uu___ with
+       | (uu___1, reason, prob) ->
            (match prob with
             | FStarC_TypeChecker_Common.TProb tp when
                 tp.FStarC_TypeChecker_Common.relation =
                   FStarC_TypeChecker_Common.EQ
                 ->
-                let uu___3 = FStarC_TypeChecker_Env.clear_expected_typ env in
-                (match uu___3 with
-                 | (env1, uu___4) ->
+                let uu___2 = FStarC_TypeChecker_Env.clear_expected_typ env in
+                (match uu___2 with
+                 | (env1, uu___3) ->
                      let env2 =
                        {
                          FStarC_TypeChecker_Env.solver =
@@ -572,32 +572,32 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                          FStarC_TypeChecker_Env.missing_decl =
                            (env2.FStarC_TypeChecker_Env.missing_decl)
                        } in
-                     let uu___5 =
+                     let uu___4 =
                        let t =
-                         let uu___6 =
+                         let uu___5 =
                            is_flex tp.FStarC_TypeChecker_Common.lhs in
-                         if uu___6
+                         if uu___5
                          then tp.FStarC_TypeChecker_Common.lhs
                          else tp.FStarC_TypeChecker_Common.rhs in
                        env2.FStarC_TypeChecker_Env.typeof_tot_or_gtot_term
                          env_lax t true in
-                     (match uu___5 with
-                      | (uu___6, t_eq, uu___7) ->
+                     (match uu___4 with
+                      | (uu___5, t_eq, uu___6) ->
                           let goal_ty =
-                            let uu___8 =
+                            let uu___7 =
                               env2.FStarC_TypeChecker_Env.universe_of env_lax
                                 t_eq in
-                            FStarC_Syntax_Util.mk_eq2 uu___8 t_eq
+                            FStarC_Syntax_Util.mk_eq2 uu___7 t_eq
                               tp.FStarC_TypeChecker_Common.lhs
                               tp.FStarC_TypeChecker_Common.rhs in
-                          let uu___8 =
+                          let uu___7 =
                             FStarC_TypeChecker_Env.new_implicit_var_aux
                               reason
                               (tp.FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos
                               env2 goal_ty FStarC_Syntax_Syntax.Strict
                               FStar_Pervasives_Native.None false in
-                          (match uu___8 with
-                           | (goal, ctx_uvar, uu___9) ->
+                          (match uu___7 with
+                           | (goal, ctx_uvar, uu___8) ->
                                let imp =
                                  {
                                    FStarC_TypeChecker_Common.imp_reason = "";
@@ -608,38 +608,38 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                                      ((tp.FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos)
                                  } in
                                let sigelt =
-                                 let uu___10 =
+                                 let uu___9 =
                                    is_flex tp.FStarC_TypeChecker_Common.lhs in
-                                 if uu___10
+                                 if uu___9
                                  then
-                                   let uu___11 =
-                                     let uu___12 =
+                                   let uu___10 =
+                                     let uu___11 =
                                        flex_uvar_head
                                          tp.FStarC_TypeChecker_Common.lhs in
-                                     find_user_tac_for_uvar env2 uu___12 in
-                                   match uu___11 with
+                                     find_user_tac_for_uvar env2 uu___11 in
+                                   match uu___10 with
                                    | FStar_Pervasives_Native.None ->
-                                       let uu___12 =
+                                       let uu___11 =
                                          is_flex
                                            tp.FStarC_TypeChecker_Common.rhs in
-                                       (if uu___12
+                                       (if uu___11
                                         then
-                                          let uu___13 =
+                                          let uu___12 =
                                             flex_uvar_head
                                               tp.FStarC_TypeChecker_Common.rhs in
-                                          find_user_tac_for_uvar env2 uu___13
+                                          find_user_tac_for_uvar env2 uu___12
                                         else FStar_Pervasives_Native.None)
                                    | v -> v
                                  else
-                                   (let uu___12 =
+                                   (let uu___10 =
                                       is_flex
                                         tp.FStarC_TypeChecker_Common.rhs in
-                                    if uu___12
+                                    if uu___10
                                     then
-                                      let uu___13 =
+                                      let uu___11 =
                                         flex_uvar_head
                                           tp.FStarC_TypeChecker_Common.rhs in
-                                      find_user_tac_for_uvar env2 uu___13
+                                      find_user_tac_for_uvar env2 uu___11
                                     else FStar_Pervasives_Native.None) in
                                (match sigelt with
                                 | FStar_Pervasives_Native.None ->
@@ -647,27 +647,27 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                                       "Impossible: No tactic associated with deferred problem"
                                 | FStar_Pervasives_Native.Some se ->
                                     (imp, se)))))
-            | uu___3 ->
+            | uu___2 ->
                 FStarC_Effect.failwith
                   "Unexpected problem deferred to tactic") in
      let eqs =
-       let uu___1 =
+       let uu___ =
          FStarC_Class_Listlike.to_list (FStarC_CList.listlike_clist ())
            g.FStarC_TypeChecker_Common.deferred_to_tac in
-       FStarC_List.map prob_as_implicit uu___1 in
-     let uu___1 =
-       let uu___2 =
+       FStarC_List.map prob_as_implicit uu___ in
+     let uu___ =
+       let uu___1 =
          FStarC_Class_Listlike.to_list (FStarC_CList.listlike_clist ())
            g.FStarC_TypeChecker_Common.implicits in
        FStarC_List.fold_right
-         (fun imp uu___3 ->
-            match uu___3 with
+         (fun imp uu___2 ->
+            match uu___2 with
             | (more, imps) ->
-                let uu___4 =
+                let uu___3 =
                   FStarC_Syntax_Unionfind.find
                     (imp.FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head in
-                (match uu___4 with
-                 | FStar_Pervasives_Native.Some uu___5 ->
+                (match uu___3 with
+                 | FStar_Pervasives_Native.Some uu___4 ->
                      (more, (imp :: imps))
                  | FStar_Pervasives_Native.None ->
                      let se =
@@ -676,14 +676,14 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                      (match se with
                       | FStar_Pervasives_Native.None -> (more, (imp :: imps))
                       | FStar_Pervasives_Native.Some se1 ->
-                          (((imp, se1) :: more), imps)))) uu___2 ([], []) in
-     match uu___1 with
+                          (((imp, se1) :: more), imps)))) uu___1 ([], []) in
+     match uu___ with
      | (more, imps) ->
          let bucketize is =
            let map = FStarC_SMap.create (Prims.of_int 17) in
            FStarC_List.iter
-             (fun uu___3 ->
-                match uu___3 with
+             (fun uu___2 ->
+                match uu___2 with
                 | (i, s) ->
                     (match FStarC_Syntax_Util.lid_of_sigelt s with
                      | FStar_Pervasives_Native.None ->
@@ -691,22 +691,22 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                            "Unexpected: tactic without a name"
                      | FStar_Pervasives_Native.Some l ->
                          let lstr = FStarC_Ident.string_of_lid l in
-                         let uu___4 = FStarC_SMap.try_find map lstr in
-                         (match uu___4 with
+                         let uu___3 = FStarC_SMap.try_find map lstr in
+                         (match uu___3 with
                           | FStar_Pervasives_Native.None ->
                               FStarC_SMap.add map lstr ([i], s)
                           | FStar_Pervasives_Native.Some (is1, s1) ->
                               (FStarC_SMap.remove map lstr;
                                FStarC_SMap.add map lstr ((i :: is1), s1)))))
              is;
-           FStarC_SMap.fold map (fun uu___3 is1 out -> is1 :: out) [] in
+           FStarC_SMap.fold map (fun uu___2 is1 out -> is1 :: out) [] in
          let buckets = bucketize (FStarC_List.op_At eqs more) in
          (FStarC_List.iter
-            (fun uu___3 ->
-               match uu___3 with
+            (fun uu___2 ->
+               match uu___2 with
                | (imps1, sigel) -> solve_goals_with_tac env g imps1 sigel)
             buckets;
-          (let uu___3 =
+          (let uu___2 =
              FStarC_Class_Listlike.from_list (FStarC_CList.listlike_clist ())
                imps in
            {
@@ -720,5 +720,5 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env)
                (g.FStarC_TypeChecker_Common.deferred);
              FStarC_TypeChecker_Common.univ_ineqs =
                (g.FStarC_TypeChecker_Common.univ_ineqs);
-             FStarC_TypeChecker_Common.implicits = uu___3
+             FStarC_TypeChecker_Common.implicits = uu___2
            })))

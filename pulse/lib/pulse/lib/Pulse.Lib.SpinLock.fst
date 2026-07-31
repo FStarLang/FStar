@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SpinLock
+open Pulse.Lib.Trade
 #lang-pulse
 
 open Pulse.Lib.Pervasives
@@ -78,6 +79,7 @@ fn new_lock (v:slprop)
   l
 }
 
+divergent
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   preserves lock_alive l #p v
   ensures v

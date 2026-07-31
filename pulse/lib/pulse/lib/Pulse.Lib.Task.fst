@@ -15,6 +15,8 @@
 *)
 
 module Pulse.Lib.Task
+open Pulse.Lib.Send
+module T = FStar.Tactics.V2
 #lang-pulse
 
 open Pulse.Lib.Pervasives
@@ -511,6 +513,7 @@ noextract
 instance non_informative_slprop_ref : Pulse.Lib.NonInformative.non_informative slprop_ref =
   { reveal = (fun (x: erased slprop_ref) -> reveal x) }
 
+divergent
 fn spawn (p:pool)
     (#pf:perm)
     (#pre : slprop)
@@ -622,6 +625,7 @@ fn claim_done_task
   ()
 }
 
+divergent
 fn try_await
          (#p:pool)
          (#post : slprop)
@@ -881,12 +885,13 @@ fn disown (#p:pool)
   };
 }
 
+divergent
 fn spawn_ (p:pool)
     (#pf:perm)
     (#pre : slprop)
     (#post : slprop)
     {| is_send pre, is_send post |}
-    (f : unit -> stt unit (pre) (fun _ -> post))
+    (f : unit -> task_f pre post)
     preserves pool_alive #pf p
     requires pre
     ensures pledge [] (pool_done p) (post)
@@ -896,6 +901,7 @@ fn spawn_ (p:pool)
 }
 
 // Busy waiting version of await
+divergent
 fn await (#p:pool)
          (#post : slprop)
          (h : handle)
@@ -1041,6 +1047,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
   ensures  all_state_pred v_runnable
         ** vopt topt (fun t ->
              up t.pre ** pts_to t.h.state #0.5R Running ** pure (List.memP t v_runnable) ** task_thunk_typing t)
+  decreases v_runnable
 {
   match v_runnable {
     [] -> {
@@ -1100,7 +1107,7 @@ fn rec grab_work'' (p:pool) (v_runnable : list task_t)
 
 
 (* Called with pool lock taken *)
-fn rec grab_work' (p:pool)
+fn grab_work' (p:pool)
   requires lock_inv p.runnable p.g_runnable
   returns  topt : option task_t
   ensures  lock_inv p.runnable p.g_runnable
@@ -1128,6 +1135,7 @@ fn rec grab_work' (p:pool)
   topt
 }
 
+divergent
 fn grab_work (p:pool) #f
   requires pool_alive #f p
   returns  topt : option task_t
@@ -1143,9 +1151,10 @@ fn grab_work (p:pool) #f
   res
 }
 
-let undyn pre post (d: Dyn.dyn { Dyn.dyn_has_ty d (task_type pre post) }) : stt unit pre (fun _ -> post) =
+let undyn pre post (d: Dyn.dyn { Dyn.dyn_has_ty d (task_type pre post) }) : stt_div unit pre (fun _ -> post) =
   hide_div (fun _ -> let f = Dyn.undyn #(task_type pre post) d in f ())
 
+divergent
 fn perf_work (t : task_t)
   requires up t.pre
   requires task_thunk_typing t
@@ -1166,6 +1175,7 @@ fn perf_work (t : task_t)
   with v vinst. assert is_send_tag v vinst;
   drop_ (is_send_tag v _);
 }
+divergent
 fn put_back_result (p:pool) #f (t : task_t)
   requires pool_alive #f p **
            task_spotted p t **
@@ -1208,6 +1218,7 @@ fn put_back_result (p:pool) #f (t : task_t)
   fold (pool_alive #f p);
 }
 
+divergent
 fn do_work_once (#f:perm) (p : pool)
   preserves pool_alive #f p
 {
@@ -1226,6 +1237,7 @@ fn do_work_once (#f:perm) (p : pool)
 }
 
 
+divergent
 fn rec worker (#f:perm) (p : pool)
   preserves pool_alive #f p
 {
@@ -1234,6 +1246,7 @@ fn rec worker (#f:perm) (p : pool)
 }
 
 // Await with a bit of helping
+divergent
 fn await_help
          (#p:pool)
          (#post : slprop)
@@ -1260,6 +1273,7 @@ fn rec check_if_all_done
   preserves all_state_pred ts
   returns  b : bool
   ensures ite b (all_tasks_done ts) emp
+  decreases ts
 {
   match ts {
     [] -> {
@@ -1313,6 +1327,7 @@ fn rec check_if_all_done
   }
 }
 
+divergent
 fn try_await_pool
   (p:pool)
   #is (#f:perm)
@@ -1364,6 +1379,7 @@ fn try_await_pool
   }
 }
 
+divergent
 fn await_pool
   (p:pool)
   (#is: inames) (#f: perm)
@@ -1382,6 +1398,7 @@ fn await_pool
   unreachable ();
 }
 
+divergent
 fn rec teardown_pool
   (p:pool)
   requires pool_alive p
@@ -1445,6 +1462,7 @@ fn gather_alive
   fold (pool_alive #f p);
 }
 
+divergent
 fn worker_thread (#f:perm) (p : pool)
   requires pool_alive #f p
 {
@@ -1464,6 +1482,7 @@ fn rec spawn_workers
   (p:pool) (#f:perm)
   (n:pos)
   requires pool_alive #f p
+  decreases n
 {
   if (n = 1) {
     spawn_worker p;

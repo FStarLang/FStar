@@ -25,6 +25,7 @@ open MSort.Base
 open Pulse.Lib.Task
 
 
+divergent
 fn rec t_msort_par
   (p : pool)
   (f : perm)
@@ -62,6 +63,7 @@ fn rec t_msort_par
 
 
 
+divergent
 fn rec msort
   (nthr : pos)
   (a : array int)

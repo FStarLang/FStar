@@ -178,6 +178,9 @@ There are a few things to note here:
     type may have observable side effects, like IO, raising
     exceptions, etc.
 
+  * The ``module Q = ...`` syntax will be explained :ref:`later
+    <Part1_modules>`, but is probably understandable in context.
+
   * The end of the file contains ``let _ = main ()``, a top-level term
     that has a side-effect (printing to ``stdout``) when executed. In
     a scenario where we have multiple modules, the runtime behavior of

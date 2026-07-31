@@ -17,7 +17,7 @@ module FStar.Stubs.Reflection.V2.Builtins
 
 open FStar.Order
 open FStar.Stubs.Syntax.Syntax
-open FStar.Stubs.VConfig
+open FStar.VConfig
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data
 
@@ -76,8 +76,10 @@ val pack_universe    : universe_view -> universe
 val inspect_ident : i:ident -> iv:ident_view{iv << i}
 val pack_ident    : ident_view -> ident
 
-(* The bijection lemmas: the view exposes all details of terms. *)
-val pack_inspect_inv : (t:term) -> Lemma (~(Tv_Unsupp? (inspect_ln t)) ==> pack_ln (inspect_ln t) == t)
+(* The view exposes all details of the term_view, but is not injective:
+   [pack_ln] discards the range (and other non-view data), so
+   [pack_ln (inspect_ln t)] is only denotationally equal to [t], not [==].
+   See [FStar.Reflection.TermSpec.denote_term]. *)
 val inspect_pack_inv : (tv:term_view) -> Lemma (inspect_ln (pack_ln tv) == tv)
 
 val pack_inspect_comp_inv : (c:comp) -> Lemma (pack_comp (inspect_comp c) == c)
@@ -104,7 +106,9 @@ val inspect_pack_ident (uv:ident_view) : Lemma (inspect_ident (pack_ident uv) ==
 val pack_inspect_lb (lb:letbinding) : Lemma (pack_lb (inspect_lb lb) == lb)
 val inspect_pack_lb (lbv:lb_view) : Lemma (inspect_lb (pack_lb lbv) == lbv)
 
-val pack_inspect_sigelt (se:sigelt) : Lemma ((~(Unk? (inspect_sigelt se))) ==> pack_sigelt (inspect_sigelt se) == se)
+(* The sigelt view is likewise not injective: [pack_sigelt] discards the
+   attributes/quals/opts/range, so [pack_sigelt (inspect_sigelt se)] is
+   only view-equal to [se], not [==]. *)
 val inspect_pack_sigelt (sev:sigelt_view { ~ (Unk? sev) }) : Lemma (inspect_sigelt (pack_sigelt sev) == sev)
 
 

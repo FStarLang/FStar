@@ -173,20 +173,20 @@ let tag_with_range (t : FStarC_Syntax_Syntax.term)
          let t' =
            match t.FStarC_Syntax_Syntax.n with
            | FStarC_Syntax_Syntax.Tm_bvar bv ->
-               let uu___2 =
+               let uu___1 =
                  FStarC_Class_HasRange.setPos
                    FStarC_Syntax_Syntax.hasRange_bv r1 bv in
-               FStarC_Syntax_Syntax.Tm_bvar uu___2
+               FStarC_Syntax_Syntax.Tm_bvar uu___1
            | FStarC_Syntax_Syntax.Tm_name bv ->
-               let uu___2 =
+               let uu___1 =
                  FStarC_Class_HasRange.setPos
                    FStarC_Syntax_Syntax.hasRange_bv r1 bv in
-               FStarC_Syntax_Syntax.Tm_name uu___2
+               FStarC_Syntax_Syntax.Tm_name uu___1
            | FStarC_Syntax_Syntax.Tm_fvar fv ->
-               let uu___2 =
+               let uu___1 =
                  FStarC_Class_HasRange.setPos
                    FStarC_Syntax_Syntax.hasRange_fv r1 fv in
-               FStarC_Syntax_Syntax.Tm_fvar uu___2
+               FStarC_Syntax_Syntax.Tm_fvar uu___1
            | t'1 -> t'1 in
          {
            FStarC_Syntax_Syntax.n = t';
@@ -408,7 +408,7 @@ let subst_binders'
     (fun i b ->
        if i = Prims.int_zero
        then subst_binder' s b
-       else (let uu___1 = shift_subst' i s in subst_binder' uu___1 b)) bs
+       else (let uu___ = shift_subst' i s in subst_binder' uu___ b)) bs
 let subst_binders (s : FStarC_Syntax_Syntax.subst_elt Prims.list)
   (bs : FStarC_Syntax_Syntax.binders) : FStarC_Syntax_Syntax.binders=
   subst_binders' ([s], FStarC_Syntax_Syntax.NoUseRange) bs
@@ -598,9 +598,9 @@ let rec push_subst_aux (resolve_uvars : Prims.bool)
       if Prims.op_Negation resolve_uvars
       then fallback ()
       else
-        (let uu___1 =
+        (let uu___ =
            FStarC_Syntax_Unionfind.find uv.FStarC_Syntax_Syntax.ctx_uvar_head in
-         match uu___1 with
+         match uu___ with
          | FStar_Pervasives_Native.None -> fallback ()
          | FStar_Pervasives_Native.Some t1 ->
              push_subst_aux resolve_uvars (compose_subst s0 s) t1)
@@ -1187,8 +1187,8 @@ let open_let_rec (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
     then (Prims.int_zero, lbs, [])
     else
       FStarC_List.fold_right
-        (fun lb uu___2 ->
-           match uu___2 with
+        (fun lb uu___1 ->
+           match uu___1 with
            | (i, lbs1, out) ->
                let x =
                  FStarC_Syntax_Syntax.freshen_bv
@@ -1257,8 +1257,8 @@ let close_let_rec (lbs : FStarC_Syntax_Syntax.letbinding Prims.list)
     then (Prims.int_zero, [])
     else
       FStarC_List.fold_right
-        (fun lb uu___2 ->
-           match uu___2 with
+        (fun lb uu___1 ->
+           match uu___1 with
            | (i, out) ->
                ((i + Prims.int_one),
                  ((FStarC_Syntax_Syntax.NM

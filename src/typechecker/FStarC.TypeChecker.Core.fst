@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Core
+open FStarC.TypeChecker.Common
 (*
 
 This module implements a core typechecker for pure and ghost F* terms.
@@ -514,7 +515,7 @@ let rec is_arrow (g:env) (t:term)
   : result (binder & tot_or_ghost & typ)
   = let rec aux t : ML _ =
         match (Subst.compress t).n with
-        | Tm_arrow {bs=[x]; comp=c} ->
+        | Tm_arrow {b=x; comp=c} ->
           if U.is_tot_or_gtot_comp c
           then
             let g, x, c = open_comp g x c in
@@ -566,11 +567,6 @@ let rec is_arrow (g:env) (t:term)
               let x = { x with binder_bv = xbv } in
               return (x, e_tag, res_typ)
           )
-
-        | Tm_arrow {bs=x::xs; comp=c} ->
-          let t = S.mk (Tm_arrow {bs=xs; comp=c}) t.pos in
-          let g, x, t = open_term g x t in
-          return (x, E_Total, t)
 
         | Tm_refine {b=x} ->
           is_arrow g x.sort
@@ -709,14 +705,6 @@ let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.
 
 let apply_predicate x p = fun e -> Subst.subst [NT(x.binder_bv, e)] p
 
-let curry_arrow (x:binder) (xs:binders) (c:comp) =
-  let tail = S.mk (Tm_arrow {bs=xs; comp=c}) R.dummyRange in
-  S.mk (Tm_arrow {bs=[x]; comp=S.mk_Total tail}) R.dummyRange
-
-let curry_abs (b0:binder) (b1:binder) (bs:binders) (body:term) (ropt: option residual_comp) =
-  let tail = S.mk (Tm_abs {bs=b1::bs; body; rc_opt=ropt}) body.pos in
-  S.mk (Tm_abs {bs=[b0]; body=tail; rc_opt=None}) body.pos
-
 let is_gtot_comp c = U.is_tot_or_gtot_comp c && not (U.is_total_comp c)
 
 let rec context_included (g0 g1: list binding) : ML bool =
@@ -742,11 +730,6 @@ let rec context_included (g0 g1: list binding) : ML bool =
      end
 
   | _ -> false
-
-let curry_application hd arg args p =
-    let head = S.mk (Tm_app {hd; args=[arg]}) p in
-    let t = S.mk (Tm_app {hd=head; args}) p in
-    t
 
 (* Replace all the *use* ranges in [t] by the use range in [r]. *)
 let replace_all_use_ranges (r:Range.t) (t:term) : ML term =
@@ -1332,15 +1315,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           else compare_head_and_args ()
         )
 
-      | Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt}, _ ->
-        let t0 = curry_abs b0 b1 bs body ropt in
-        check_relation g rel t0 t1
-
-      | _, Tm_abs {bs=b0::b1::bs; body; rc_opt=ropt} ->
-        let t1 = curry_abs b0 b1 bs body ropt in
-        check_relation g rel t0 t1
-
-      | Tm_abs {bs=[b0]; body=body0}, Tm_abs {bs=[b1]; body=body1} ->
+      | Tm_abs {b=b0; body=body0}, Tm_abs {b=b1; body=body1} ->
         check_relation g EQUALITY b0.binder_bv.sort b1.binder_bv.sort;!
         check_bqual b0.binder_qual b1.binder_qual;!
         check_positivity_qual EQUALITY b0.binder_positivity b1.binder_positivity;!
@@ -1351,13 +1326,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         with_binders g0 [b0] [u]
           (check_relation g EQUALITY body0 body1)
 
-      | Tm_arrow {bs=x0::x1::xs; comp=c0}, _ ->
-        check_relation g rel (curry_arrow x0 (x1::xs) c0) t1
-
-      | _, Tm_arrow {bs=x0::x1::xs; comp=c1} ->
-        check_relation g rel t0 (curry_arrow x0 (x1::xs) c1)
-
-      | Tm_arrow {bs=[x0]; comp=c0}, Tm_arrow {bs=[x1]; comp=c1} ->
+      | Tm_arrow {b=x0; comp=c0}, Tm_arrow {b=x1; comp=c1} ->
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
           check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
@@ -1644,7 +1613,8 @@ and do_check (g:env) (e:term)
       return (E_Total, t)
     )
 
-  | Tm_abs {bs=xs; body} ->
+  | Tm_abs _ ->
+    let xs, body, _ = U.abs_formals_ln e in
     let g', xs, body = open_term_binders g xs body in
     let! us = with_context "abs binders" None (fun _ -> check_binders g xs) in
     with_binders g xs us (
@@ -1652,7 +1622,8 @@ and do_check (g:env) (e:term)
       return (E_Total, U.arrow xs (as_comp g t))
     )
 
-  | Tm_arrow {bs=xs; comp=c} ->
+  | Tm_arrow _ ->
+    let xs, c = U.arrow_formals_comp_ln_strict e in
     let g', xs, c = open_comp_binders g xs c in
     let! us = with_context "arrow binders" None (fun _ -> check_binders g xs) in
     with_binders g xs us (
@@ -2035,8 +2006,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
       ]
     in
 
-    let head_sc, args_sc = U.head_and_args t_sc in
-    let head_pat, args_pat = U.head_and_args t_pat in
+    let head_sc, args_sc = U.head_and_args_full t_sc in
+    let head_pat, args_pat = U.head_and_args_full t_pat in
 
     let! (t_fv:fv) =
       match (Subst.compress head_sc).n, (Subst.compress head_pat).n with

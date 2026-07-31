@@ -128,133 +128,45 @@ let __proj__Mksetlike__item__addn (projectee : ('e, 's) setlike) :
       inter; diff; for_all; for_any; elems; filter; collect; from_list;
       addn;_} -> addn
 let empty (s : unit) (projectee : ('e, Obj.t) setlike) : unit -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton; is_empty; add; remove; mem; equal; subset;
-      union; inter; diff; for_all; for_any; elems; filter; collect;
-      from_list; addn;_} -> empty1
+  __proj__Mksetlike__item__empty projectee
 let singleton (s : unit) (projectee : ('e, Obj.t) setlike) : 'e -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty; add; remove; 
-      mem; equal; subset; union; inter; diff; for_all; for_any; elems;
-      filter; collect; from_list; addn;_} -> singleton1
+  __proj__Mksetlike__item__singleton projectee
 let is_empty (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1; add;
-      remove; mem; equal; subset; union; inter; diff; for_all; for_any;
-      elems; filter; collect; from_list; addn;_} -> is_empty1
+  Obj.t -> Prims.bool= __proj__Mksetlike__item__is_empty projectee
 let add (s : unit) (projectee : ('e, Obj.t) setlike) : 'e -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove; mem; equal; subset; union; inter; diff; for_all;
-      for_any; elems; filter; collect; from_list; addn;_} -> add1
+  __proj__Mksetlike__item__add projectee
 let remove (s : unit) (projectee : ('e, Obj.t) setlike) :
-  'e -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem; equal; subset; union; inter; 
-      diff; for_all; for_any; elems; filter; collect; from_list; addn;_} ->
-      remove1
+  'e -> Obj.t -> Obj.t= __proj__Mksetlike__item__remove projectee
 let mem (s : unit) (projectee : ('e, Obj.t) setlike) :
-  'e -> Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal; subset; union; 
-      inter; diff; for_all; for_any; elems; filter; collect; from_list;
-      addn;_} -> mem1
+  'e -> Obj.t -> Prims.bool= __proj__Mksetlike__item__mem projectee
 let equal (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1; subset;
-      union; inter; diff; for_all; for_any; elems; filter; collect;
-      from_list; addn;_} -> equal1
+  Obj.t -> Obj.t -> Prims.bool= __proj__Mksetlike__item__equal projectee
 let subset (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union; inter; diff; for_all; for_any; elems; 
-      filter; collect; from_list; addn;_} -> subset1
+  Obj.t -> Obj.t -> Prims.bool= __proj__Mksetlike__item__subset projectee
 let union (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter; diff; for_all; for_any; 
-      elems; filter; collect; from_list; addn;_} -> union1
+  Obj.t -> Obj.t -> Obj.t= __proj__Mksetlike__item__union projectee
 let inter (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff; for_all;
-      for_any; elems; filter; collect; from_list; addn;_} -> inter1
+  Obj.t -> Obj.t -> Obj.t= __proj__Mksetlike__item__inter projectee
 let diff (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all; for_any; elems; filter; collect; from_list; addn;_} -> diff1
+  Obj.t -> Obj.t -> Obj.t= __proj__Mksetlike__item__diff projectee
 let for_all (s : unit) (projectee : ('e, Obj.t) setlike) :
   ('e -> Prims.bool) -> Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any; elems; filter; collect; from_list; 
-      addn;_} -> for_all1
+  __proj__Mksetlike__item__for_all projectee
 let for_any (s : unit) (projectee : ('e, Obj.t) setlike) :
   ('e -> Prims.bool) -> Obj.t -> Prims.bool=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems; filter; collect;
-      from_list; addn;_} -> for_any1
+  __proj__Mksetlike__item__for_any projectee
 let elems (s : unit) (projectee : ('e, Obj.t) setlike) :
-  Obj.t -> 'e Prims.list=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems = elems1; filter;
-      collect; from_list; addn;_} -> elems1
+  Obj.t -> 'e Prims.list= __proj__Mksetlike__item__elems projectee
 let filter (s : unit) (projectee : ('e, Obj.t) setlike) :
   ('e -> Prims.bool) -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems = elems1;
-      filter = filter1; collect; from_list; addn;_} -> filter1
+  __proj__Mksetlike__item__filter projectee
 let collect (s : unit) (projectee : ('e, Obj.t) setlike) :
   ('e -> Obj.t) -> 'e Prims.list -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems = elems1;
-      filter = filter1; collect = collect1; from_list; addn;_} -> collect1
+  __proj__Mksetlike__item__collect projectee
 let from_list (s : unit) (projectee : ('e, Obj.t) setlike) :
-  'e Prims.list -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems = elems1;
-      filter = filter1; collect = collect1; from_list = from_list1; addn;_}
-      -> from_list1
+  'e Prims.list -> Obj.t= __proj__Mksetlike__item__from_list projectee
 let addn (s : unit) (projectee : ('e, Obj.t) setlike) :
-  'e Prims.list -> Obj.t -> Obj.t=
-  match projectee with
-  | { empty = empty1; singleton = singleton1; is_empty = is_empty1;
-      add = add1; remove = remove1; mem = mem1; equal = equal1;
-      subset = subset1; union = union1; inter = inter1; diff = diff1;
-      for_all = for_all1; for_any = for_any1; elems = elems1;
-      filter = filter1; collect = collect1; from_list = from_list1;
-      addn = addn1;_} -> addn1
+  'e Prims.list -> Obj.t -> Obj.t= __proj__Mksetlike__item__addn projectee
 let symdiff (uu___2 : ('e, 's) setlike) (uu___1 : 's) (uu___ : 's) : 
   's=
   (fun uu___ s1 s2 ->

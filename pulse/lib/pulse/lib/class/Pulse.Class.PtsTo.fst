@@ -25,7 +25,7 @@ let live #p #r {| has_pts_to p r |} (x: p) (#[full_default()] f: perm) =
   exists* y. pts_to x #f y
 
 (* We can always have an erased value. *)
-[@@pulse_unfold]
+[@@pulse_unfold; noinst]
 instance pts_to_erased (p r : Type) (_ : has_pts_to p r) : has_pts_to p (erased r) = {
   pts_to = (fun r #f v -> pts_to r #f (reveal v));
 }
@@ -40,7 +40,7 @@ instance pts_to_frac (p a : Type) (d : has_pts_to p a) : has_pts_to p (frac a) =
 }
 
 (* Handle lseq by ignoring the refinement. *)
-[@@pulse_unfold]
+[@@pulse_unfold; noinst]
 instance pts_to_lseq (p a : Type) (n : nat) (d : has_pts_to p (Seq.seq a)) : has_pts_to p (Seq.lseq a n) = {
   pts_to = d.pts_to;
 }

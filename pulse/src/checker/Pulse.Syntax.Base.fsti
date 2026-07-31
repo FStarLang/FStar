@@ -30,13 +30,9 @@ let index = nat
 type universe = R.universe
 
 (* locally nameless. *)
-let range_singleton_trigger (r:FStar.Range.range) = True
-let range = r:FStar.Range.range { range_singleton_trigger r }
-let range_singleton (r:FStar.Range.range)
-  : Lemma 
-    (ensures r == FStar.Range.range_0)
-    [SMTPat (range_singleton_trigger r)]
-  = FStar.Sealed.sealed_singl r FStar.Range.range_0
+let range = FStar.Range.range
+
+let range_0 : range = FStar.Range.range_0
 
 noeq
 type ppname0 = {
@@ -47,24 +43,18 @@ type ppname0 = {
 let ppname_default =  {
     // This used to be "_", but that is a *null binder* and behaves very magically
     name = FStar.Sealed.seal "__";
-    range = FStar.Range.range_0
+    range = range_0
 }
 
-let ppname_singleton_trigger (r:ppname0) = True
-let ppname_singleton (x:ppname0)
-  : Lemma 
-    (ensures x == ppname_default)
-    [SMTPat (ppname_singleton_trigger x)]
-  = FStar.Sealed.sealed_singl x.name ppname_default.name
-let ppname = p:ppname0 { ppname_singleton_trigger p }
-let mk_ppname (name:RT.pp_name_t) (range:FStar.Range.range) : ppname = {
+let ppname = ppname0
+let mk_ppname (name:RT.pp_name_t) (range:range) : ppname = {
     name = name;
     range = range
 }
 
 let mk_ppname_no_range (s:string) : ppname = {
   name = FStar.Sealed.seal s;
-  range = FStar.Range.range_0;
+  range = range_0;
 }
 
 noeq
@@ -90,7 +80,7 @@ type fv = {
   fv_name : R.name;
   fv_range : range;
 }
-let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
+let as_fv l = { fv_name = l; fv_range = range_0 }
 
 type term = R.term
 type slprop = term
@@ -119,11 +109,12 @@ noeq
 type comp =
   | C_Tot      : term -> comp
   | C_ST       : st_comp -> comp
+  | C_STDiv    : st_comp -> comp
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
   | C_STGhost  : inames:term -> st_comp -> comp
 
-val range_of_st_comp (st:st_comp) : R.range
-val range_of_comp (c:comp) : R.range
+val range_of_st_comp (st:st_comp) : range
+val range_of_comp (c:comp) : range
 
 
 let stateful_comp (c:comp) = not (C_Tot? c)
@@ -138,6 +129,7 @@ type pattern =
 
 type ctag =
   | STT
+  | STT_Div
   | STT_Atomic
   | STT_Ghost
 
@@ -148,12 +140,14 @@ let as_effect_hint (c:ctag) : effect_hint = Some c
 let ctag_of_comp_st (c:comp_st) : ctag =
   match c with
   | C_ST _ -> STT
+  | C_STDiv _ -> STT_Div
   | C_STAtomic _ _ _ -> STT_Atomic
   | C_STGhost _ _ -> STT_Ghost
 
 noeq
 type effect_annot =
   | EffectAnnotSTT
+  | EffectAnnotSTTDiv
   | EffectAnnotGhost { opens:term }
   | EffectAnnotAtomic { opens:term }
   | EffectAnnotAtomicOrGhost { opens:term }
@@ -162,12 +156,14 @@ let effect_annot_of_comp (c:comp_st)
 : effect_annot
 = match c with
   | C_ST _ -> EffectAnnotSTT
+  | C_STDiv _ -> EffectAnnotSTTDiv
   | C_STGhost opens _ -> EffectAnnotGhost { opens }
   | C_STAtomic opens _ _ -> EffectAnnotAtomic { opens }
 
 let ctag_of_effect_annot (x:effect_annot) : option ctag =
   match x with
   | EffectAnnotSTT -> Some STT
+  | EffectAnnotSTTDiv -> Some STT_Div
   | EffectAnnotGhost _ -> Some STT_Ghost
   | EffectAnnotAtomic _ -> Some STT_Atomic
   | EffectAnnotAtomicOrGhost _ -> None
@@ -423,18 +419,21 @@ let comp_res (c:comp) : term =
   match c with
   | C_Tot ty -> ty
   | C_ST s
+  | C_STDiv s
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s.res
 
 let st_comp_of_comp (c:comp_st) : st_comp =
   match c with
   | C_ST s
+  | C_STDiv s
   | C_STAtomic _ _ s
   | C_STGhost _ s -> s
 
 let with_st_comp (c:comp_st) (s:st_comp) : comp =
   match c with
   | C_ST _ -> C_ST s
+  | C_STDiv _ -> C_STDiv s
   | C_STAtomic inames obs _ -> C_STAtomic inames obs s
   | C_STGhost inames _ -> C_STGhost inames s
 
@@ -442,7 +441,8 @@ let comp_u (c:comp_st) = (st_comp_of_comp c).u
 
 let universe_of_comp (c:comp_st) =
   match c with
-  | C_ST _ -> RT.u_zero
+  | C_ST _
+  | C_STDiv _ -> RT.u_zero
   | _ -> Pulse.Reflection.Util.u_atomic_ghost (comp_u c)
 
 let comp_pre (c:comp { stateful_comp c }) = (st_comp_of_comp c).pre

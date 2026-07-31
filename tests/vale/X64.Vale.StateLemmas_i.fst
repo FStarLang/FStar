@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module X64.Vale.StateLemmas_i
+open FStar.FunctionalExtensionality
 open X64.Machine_s
 open X64.Vale.State_i
 open FStar.UInt

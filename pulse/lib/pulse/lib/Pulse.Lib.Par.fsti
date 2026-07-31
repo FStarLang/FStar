@@ -19,10 +19,23 @@ open Pulse.Lib.Core
 open Pulse.Lib.Send
 open PulseCore.Observability
 
+divergent
 fn par (#preL: slprop) #postL #preR #postR
   {| is_send preL, is_send postL, is_send preR, is_send postR |}
   (f:unit -> stt unit preL (fun _ -> postL))
   (g:unit -> stt unit preR (fun _ -> postR))
+  requires preL
+  requires preR
+  ensures postL
+  ensures postR
+
+(* A possibly-divergent variant of [par]: the two sub-computations may
+   themselves diverge (e.g. spin/CAS-retry loops), so the whole parallel
+   composition is divergent. *)
+divergent fn par_div (#preL: slprop) #postL #preR #postR
+  {| is_send preL, is_send postL, is_send preR, is_send postR |}
+  (f:unit -> stt_div unit preL (fun _ -> postL))
+  (g:unit -> stt_div unit preR (fun _ -> postR))
   requires preL
   requires preR
   ensures postL

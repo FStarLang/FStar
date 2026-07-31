@@ -102,26 +102,30 @@ let check_branch
     fail g (Some e.range) "should not happen: pattern elaboration missed some binders";
   // T.print ("Elaborated pattern = " ^ Pulse.Show.show (fst (Some?.v elab_p)));
   let elab_p_tm = fst (Some?.v elab_p) in
-  let eq_typ = mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
-  let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
+  let use_rewrites_to =
+    not norw && Some? (term_as_subst_var sc) in
+  let eq_typ =
+    if use_rewrites_to
+    then mk_sq_rewrites_to_p sc_u sc_ty sc elab_p_tm
+    else mk_sq_eq2 sc_u sc_ty sc elab_p_tm in
+  let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
   let e =
-    if norw
+    if norw || use_rewrites_to
     then e
     else
       let t =
         mk_term (Tm_ProofHintWithBinders {
-                   binders = [];
-                   hint_type = RENAME { pairs = [(sc, elab_p_tm)];
-                                        goal = None;
-                                        tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm;
-                                        elaborated = true };
-                   t = e; })
-                e.range
-      in
-      { t with effect_tag = e.effect_tag }
-  in
- // weakened w/ binders and branch eq
+          binders = [];
+          hint_type = RENAME {
+            pairs = [(sc, elab_p_tm)];
+            goal = None;
+            tac_opt = Some Pulse.Reflection.Util.match_rename_tac_tm;
+            elaborated = true
+          };
+          t = e;
+        }) e.range in
+      { t with effect_tag = e.effect_tag } in
 
   let (| e, c |) =
     let ppname = mk_ppname_no_range "_br" in
@@ -207,6 +211,7 @@ let rec max_obs
   | c'::rest -> 
     match c' with
     | C_ST _
+    | C_STDiv _
     | C_STGhost _ _ ->
       max_obs rest obs
     | C_STAtomic _ obs' _ ->
@@ -225,6 +230,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| br, c |) = checked_br in
     match c with
     | C_ST _ 
+    | C_STDiv _
     | C_STGhost _ _ ->
       let rest = 
         List.Tot.map 
@@ -250,6 +256,7 @@ let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     let (| _, c |) = checked_br in
     match c with
     | C_ST _ -> STT
+    | C_STDiv _ -> STT_Div
     | C_STGhost _ _ -> least_tag rest
     | C_STAtomic i _ _ -> STT_Atomic
 
@@ -280,6 +287,9 @@ let weaken_branch_tag_to
       let c' = Pulse.Typing.Combinators.st_ghost_as_atomic c in
       (| pe, c' |)
     )
+
+    | _ ->
+      fail g (Some r) "Cannot lift this branch effect"
     
 
 

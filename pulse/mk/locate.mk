@@ -4,11 +4,7 @@ FSTAR_EXE ?= fstar.exe
 $(call need_exe, FSTAR_EXE)
 
 ifeq ($(KRML_EXE),)
-ifneq ($(KRML_HOME),)
-KRML_EXE := $(KRML_HOME)/krml
-else
 KRML_EXE := krml
-endif
 endif
 
 export KRML_EXE

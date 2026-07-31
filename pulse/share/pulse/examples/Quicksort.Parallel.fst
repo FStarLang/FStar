@@ -24,6 +24,7 @@ module A = Pulse.Lib.Array
 open Quicksort.Base
 
 
+divergent
 fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: erased int) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0
   requires pure (pure_pre_quicksort a lo hi lb rb s0)
@@ -37,7 +38,7 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
     with s2. assert (A.pts_to_range a r._1 r._2 s2);
     with s3. assert (A.pts_to_range a r._2 hi s3);
 
-    par  
+    par_div  
       #(requires (A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot s1)))
       #(ensures (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s))))
       #(requires A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb s3))
@@ -57,6 +58,7 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
 
 (* This version cuts the recursion off when the array is small enough. *)
 
+divergent
 fn rec autostop_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: erased int) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0
   requires pure (pure_pre_quicksort a lo hi lb rb s0)
@@ -71,35 +73,33 @@ fn rec autostop_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb
     with s3. assert (A.pts_to_range a r._2 hi s3);
 
     if (lo + 1000 < hi) // worth parallelizing
-      ensures 
-          (exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s))) **
-          (exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s))) **
-          A.pts_to_range a r._1 r._2 s2 **
-          pure (Seq.length s0 == hi - lo
-                /\ lb <= pivot /\ pivot <= rb
-                /\ permutation s0 (Seq.append s1 (Seq.append s2 s3))
-                /\ between_bounds s2 pivot pivot)
     {
-      par
+      par_div
         #(requires A.pts_to_range a lo r._1 s1 ** pure (pure_pre_quicksort a lo r._1 lb pivot s1))
         #(ensures exists* s. (A.pts_to_range a lo r._1 s ** pure (pure_post_quicksort a lo r._1 lb pivot s1 s)))
         #(requires A.pts_to_range a r._2 hi s3 ** pure (pure_pre_quicksort a r._2 hi pivot rb s3))
         #(ensures exists* s. (A.pts_to_range a r._2 hi s ** pure (pure_post_quicksort a r._2 hi pivot rb s3 s)))
         fn _ { autostop_quicksort a lo r._1 lb pivot; }
         fn _ { autostop_quicksort a r._2 hi pivot rb; };
-      ()
+
+      with s1'. assert (A.pts_to_range a lo r._1 s1');
+      with s3'. assert (A.pts_to_range a r._2 hi s3');
+
+      let _ = append_permutations_3_squash s1 s2 s3 s1' s3' ();
+
+      quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
     } else {
       // else run sequentially
       autostop_quicksort a lo r._1 lb pivot;
       autostop_quicksort a r._2 hi pivot rb;
-    };
-    
-    with s1'. assert (A.pts_to_range a lo r._1 s1');
-    with s3'. assert (A.pts_to_range a r._2 hi s3');
-    
-    let _ = append_permutations_3_squash s1 s2 s3 s1' s3' ();
 
-    quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
+      with s1'. assert (A.pts_to_range a lo r._1 s1');
+      with s3'. assert (A.pts_to_range a r._2 hi s3');
+
+      let _ = append_permutations_3_squash s1 s2 s3 s1' s3' ();
+
+      quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
+    }
   }
 }
 

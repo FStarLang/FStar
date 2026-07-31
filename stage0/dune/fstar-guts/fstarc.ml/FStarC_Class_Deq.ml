@@ -5,8 +5,7 @@ let __proj__Mkdeq__item__op_Equals_Question (projectee : 'a deq) :
   'a -> 'a -> Prims.bool=
   match projectee with | { op_Equals_Question;_} -> op_Equals_Question
 let op_Equals_Question (projectee : 'a deq) : 'a -> 'a -> Prims.bool=
-  match projectee with
-  | { op_Equals_Question = op_Equals_Question1;_} -> op_Equals_Question1
+  __proj__Mkdeq__item__op_Equals_Question projectee
 let op_Less_Greater_Question (uu___ : 'a deq) (x : 'a) (y : 'a) : Prims.bool=
   let uu___1 = op_Equals_Question uu___ x y in Prims.op_Negation uu___1
 let deq_int : Prims.int deq= { op_Equals_Question = (fun x y -> x = y) }

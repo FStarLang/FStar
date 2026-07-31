@@ -4,7 +4,6 @@ type typ = FStarC_Syntax_Syntax.term
 type binders = FStarC_Syntax_Syntax.binder Prims.list
 type ppname_t = Prims.string FStarC_Sealed.sealed
 let as_ppname (x : Prims.string) : ppname_t= FStarC_Sealed.seal x
-type 'b binder_is_simple = unit
 type simple_binder = FStarC_Syntax_Syntax.binder
 type ident_view = (Prims.string * FStarC_Range_Type.t)
 type namedv = FStarC_Syntax_Syntax.bv

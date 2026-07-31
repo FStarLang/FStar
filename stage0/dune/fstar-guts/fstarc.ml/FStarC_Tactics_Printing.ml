@@ -127,12 +127,12 @@ let goal_to_doc (kind : Prims.string)
       let uu___1 = FStarC_Tactics_Types.goal_witness g in
       term_to_doc (FStarC_Tactics_Types.goal_env g) uu___1
     else
-      (let uu___2 = FStarC_Tactics_Types.check_goal_solved' g in
-       match uu___2 with
+      (let uu___1 = FStarC_Tactics_Types.check_goal_solved' g in
+       match uu___1 with
        | FStar_Pervasives_Native.None -> FStar_Pprint.doc_of_string "_"
        | FStar_Pervasives_Native.Some t ->
-           let uu___3 = FStarC_Tactics_Types.goal_witness g in
-           term_to_doc (FStarC_Tactics_Types.goal_env g) uu___3) in
+           let uu___2 = FStarC_Tactics_Types.goal_witness g in
+           term_to_doc (FStarC_Tactics_Types.goal_env g) uu___2) in
   let num =
     match maybe_num with
     | FStar_Pervasives_Native.None -> FStar_Pprint.empty

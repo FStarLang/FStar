@@ -40,8 +40,8 @@ val bij_inv_bk (#a #b : _) (d : a =~ b) (y:b)
 (* Sometimes useful to specify implicits. See #3804. *)
 let mk_bijection
   (#a #b : _)
-  (right : a -> b)
-  (left  : b -> a)
+  (right : a -> GTot b)
+  (left  : b -> GTot a)
   (right_left : (x:b -> squash (right (left x) == x)))
   (left_right : (x:a -> squash (left (right x) == x)))
   : (a =~ b) =

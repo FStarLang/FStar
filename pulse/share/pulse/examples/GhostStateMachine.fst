@@ -126,6 +126,7 @@ fn init ()
 let global_locked_state : locked_state_t = run_stt (init ())
 
 
+divergent
 fn next ()
   requires pure_handle_has_state global_locked_state.ph Init **
            lock_alive global_locked_state.lk #1.0R (lock_inv global_locked_state.h global_locked_state.ph)
@@ -164,6 +165,7 @@ fn next ()
 
 
 
+divergent
 fn close ()
   requires pure_handle_has_state global_locked_state.ph Next **
            lock_alive global_locked_state.lk #1.0R (lock_inv global_locked_state.h global_locked_state.ph)

@@ -15,6 +15,11 @@
 *)
 
 module Pulse.Lib.ArrayPtr
+open FStar.Tactics.V2
+open Pulse.Lib.Pervasives
+module SZ = FStar.SizeT
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 #lang-pulse
 
 type base_t t = A.array t
@@ -52,6 +57,22 @@ ensures
 {
   unfold (pts_to s #p v);
   A.pts_to_range_prop s.base;
+  fold (pts_to s #p v);
+}
+
+ghost fn pts_to_len
+  (#t:Type)
+  (s:ptr t)
+  (#p:perm)
+  (#v : Seq.seq t)
+requires
+  (pts_to s #p v)
+ensures
+  (pts_to s #p v ** pure (SZ.fits (Seq.length v)))
+{
+  unfold (pts_to s #p v);
+  A.pts_to_range_prop s.base;
+  SZ.fits_lte (Seq.length v) (A.length s.base);
   fold (pts_to s #p v);
 }
 
@@ -366,6 +387,7 @@ fn memcpy
         Seq.length s1' == Seq.length s1 /\
         forall (j:nat). j < Seq.length s1' ==>
           Seq.index s1' j == (if j < SZ.v vi then Seq.index s0 j else Seq.index s1 j))
+  decreases (SZ.v len - SZ.v !i)
   {
     let vi = !i;
     let x = src.(vi);

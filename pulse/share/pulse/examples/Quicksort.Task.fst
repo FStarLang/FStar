@@ -27,6 +27,7 @@ open Pulse.Lib.Pledge
 let quicksort_post a lo hi s0 lb rb : slprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
 
+divergent
 fn rec t_quicksort
   (p : T.pool)
   (#f : perm)
@@ -95,6 +96,7 @@ fn rec t_quicksort
   }
 }
 
+divergent
 fn rec quicksort
   (nthr : pos)
   (a : A.array int)

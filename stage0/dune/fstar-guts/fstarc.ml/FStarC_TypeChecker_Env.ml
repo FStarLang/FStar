@@ -35,6 +35,7 @@ type step =
   | NormDebug 
   | DefaultUnivsToZero 
   | Tactics 
+  | ReduceProjections 
 let uu___is_Beta (projectee : step) : Prims.bool=
   match projectee with | Beta -> true | uu___ -> false
 let uu___is_Iota (projectee : step) : Prims.bool=
@@ -126,6 +127,8 @@ let uu___is_DefaultUnivsToZero (projectee : step) : Prims.bool=
   match projectee with | DefaultUnivsToZero -> true | uu___ -> false
 let uu___is_Tactics (projectee : step) : Prims.bool=
   match projectee with | Tactics -> true | uu___ -> false
+let uu___is_ReduceProjections (projectee : step) : Prims.bool=
+  match projectee with | ReduceProjections -> true | uu___ -> false
 type steps = step Prims.list
 let dbg_ImplicitTrace : Prims.bool FStarC_Effect.ref=
   FStarC_Debug.get_toggle "ImplicitTrace"
@@ -196,6 +199,7 @@ let rec eq_step (s1 : step) (s2 : step) : Prims.bool=
   | (NormDebug, NormDebug) -> true
   | (DefaultUnivsToZero, DefaultUnivsToZero) -> true
   | (Tactics, Tactics) -> true
+  | (ReduceProjections, ReduceProjections) -> true
   | uu___ -> false
 let deq_step : step FStarC_Class_Deq.deq=
   { FStarC_Class_Deq.op_Equals_Question = eq_step }
@@ -270,6 +274,7 @@ let rec step_to_string (s : step) : Prims.string=
   | NormDebug -> "NormDebug"
   | DefaultUnivsToZero -> "DefaultUnivsToZero"
   | Tactics -> "Tactics"
+  | ReduceProjections -> "ReduceProjections"
   | uu___ -> FStarC_Effect.failwith "fixme: step_to_string incomplete"
 let showable_step : step FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = step_to_string }
@@ -2771,12 +2776,12 @@ let in_cur_mod (env1 : env) (l : FStarC_Ident.lident) : tri=
            [FStarC_Ident.ident_of_lid cur] in
        let rec aux c l1 =
          match (c, l1) with
-         | ([], uu___1) -> Maybe
-         | (uu___1, []) -> No
+         | ([], uu___) -> Maybe
+         | (uu___, []) -> No
          | (hd::tl, hd'::tl') when
              (FStarC_Ident.string_of_id hd) = (FStarC_Ident.string_of_id hd')
              -> aux tl tl'
-         | uu___1 -> No in
+         | uu___ -> No in
        aux cur1 lns)
     else No
 let lookup_qname (env1 : env) (lid : FStarC_Ident.lident) : qninfo=
@@ -2810,8 +2815,8 @@ let lookup_qname (env1 : env) (lid : FStarC_Ident.lident) : qninfo=
   if FStar_Pervasives_Native.uu___is_Some found
   then found
   else
-    (let uu___1 = find_in_sigtab env1 lid in
-     match uu___1 with
+    (let uu___ = find_in_sigtab env1 lid in
+     match uu___ with
      | FStar_Pervasives_Native.Some se ->
          FStar_Pervasives_Native.Some
            ((FStar_Pervasives.Inr (se, FStar_Pervasives_Native.None)),
@@ -2879,25 +2884,25 @@ let try_add_sigelt (force : Prims.bool) (env1 : env)
                 se.FStarC_Syntax_Syntax.sigel))
       then ()
       else
-        (let uu___3 =
-           let uu___4 =
-             let uu___5 =
-               let uu___6 =
-                 let uu___7 =
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 =
                    FStarC_Range_Ops.string_of_range
                      (FStarC_Ident.range_of_lid l) in
-                 FStar_Pprint.arbitrary_string uu___7 in
+                 FStar_Pprint.arbitrary_string uu___6 in
                FStar_Pprint.op_Hat_Slash_Hat
-                 (FStarC_Errors_Msg.text "Previously declared at") uu___6 in
-             [uu___5] in
+                 (FStarC_Errors_Msg.text "Previously declared at") uu___5 in
+             [uu___4] in
            (FStar_Pprint.op_Hat_Slash_Hat
               (FStarC_Errors_Msg.text "Duplicate top-level names")
               (FStar_Pprint.arbitrary_string s))
-             :: uu___4 in
+             :: uu___3 in
          FStarC_Errors.raise_error FStarC_Ident.hasrange_lident l
            FStarC_Errors_Codes.Fatal_DuplicateTopLevelNames ()
            (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
-           (Obj.magic uu___3)))
+           (Obj.magic uu___2)))
    else ());
   FStarC_SMap.add (sigtab env1) s se
 let rec add_sigelt (force : Prims.bool) (env1 : env)
@@ -3115,9 +3120,9 @@ let try_lookup_lid_aux
                   FStar_Pervasives_Native.Some uu___7
                 else FStar_Pervasives_Native.None)
              else
-               (let uu___8 =
-                  let uu___9 = inst_tscheme1 (uvs, t) in (uu___9, rng) in
-                FStar_Pervasives_Native.Some uu___8)
+               (let uu___7 =
+                  let uu___8 = inst_tscheme1 (uvs, t) in (uu___8, rng) in
+                FStar_Pervasives_Native.Some uu___7)
          | FStar_Pervasives.Inr
              ({
                 FStarC_Syntax_Syntax.sigel =
@@ -3846,53 +3851,53 @@ let lookup_effect_abbrev (env1 : env)
            if (FStarC_List.length univ_insts) = (FStarC_List.length univs)
            then univ_insts
            else
-             (let uu___11 =
-                let uu___12 =
+             (let uu___9 =
+                let uu___10 =
                   FStarC_Range_Ops.string_of_range (get_range env1) in
-                let uu___13 =
+                let uu___11 =
                   FStarC_Class_Show.show FStarC_Ident.showable_lident lid1 in
-                let uu___14 =
+                let uu___12 =
                   FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                     (FStarC_List.length univ_insts) in
                 FStarC_Format.fmt3
                   "(%s) Unexpected instantiation of effect %s with %s universes"
-                  uu___12 uu___13 uu___14 in
-              FStarC_Effect.failwith uu___11) in
+                  uu___10 uu___11 uu___12 in
+              FStarC_Effect.failwith uu___9) in
          match (binders, univs) with
-         | ([], uu___10) ->
+         | ([], uu___9) ->
              FStarC_Effect.failwith
                "Unexpected effect abbreviation with no arguments"
-         | (uu___10, uu___11::uu___12::uu___13) ->
-             let uu___14 =
-               let uu___15 =
+         | (uu___9, uu___10::uu___11::uu___12) ->
+             let uu___13 =
+               let uu___14 =
                  FStarC_Class_Show.show FStarC_Ident.showable_lident lid1 in
-               let uu___16 =
+               let uu___15 =
                  FStarC_Class_Show.show FStarC_Class_Show.showable_nat
                    (FStarC_List.length univs) in
                FStarC_Format.fmt2
                  "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                 uu___15 uu___16 in
-             FStarC_Effect.failwith uu___14
-         | uu___10 ->
-             let uu___11 =
-               let uu___12 =
-                 let uu___13 = FStarC_Syntax_Util.arrow binders c in
-                 (univs, uu___13) in
-               inst_tscheme_with uu___12 insts in
-             (match uu___11 with
-              | (uu___12, t) ->
+                 uu___14 uu___15 in
+             FStarC_Effect.failwith uu___13
+         | uu___9 ->
+             let uu___10 =
+               let uu___11 =
+                 let uu___12 = FStarC_Syntax_Util.arrow binders c in
+                 (univs, uu___12) in
+               inst_tscheme_with uu___11 insts in
+             (match uu___10 with
+              | (uu___11, t) ->
                   let t1 =
                     FStarC_Syntax_Subst.set_use_range
                       (FStarC_Ident.range_of_lid lid1) t in
-                  let uu___13 =
-                    let uu___14 = FStarC_Syntax_Subst.compress t1 in
-                    uu___14.FStarC_Syntax_Syntax.n in
-                  (match uu___13 with
+                  let uu___12 =
+                    let uu___13 = FStarC_Syntax_Subst.compress t1 in
+                    uu___13.FStarC_Syntax_Syntax.n in
+                  (match uu___12 with
                    | FStarC_Syntax_Syntax.Tm_arrow
                        { FStarC_Syntax_Syntax.bs1 = binders1;
                          FStarC_Syntax_Syntax.comp = c1;_}
                        -> FStar_Pervasives_Native.Some (binders1, c1)
-                   | uu___14 -> FStarC_Effect.failwith "Impossible")))
+                   | uu___13 -> FStarC_Effect.failwith "Impossible")))
   | uu___1 -> FStar_Pervasives_Native.None
 let norm_eff_name (env1 : env) (l : FStarC_Ident.lident) :
   FStarC_Ident.lident=
@@ -4039,6 +4044,23 @@ let lookup_projector (env1 : env) (lid : FStarC_Ident.lident) (i : Prims.int)
 let is_projector (env1 : env) (l : FStarC_Ident.lident) : Prims.bool=
   let uu___ = lookup_qname env1 l in
   match uu___ with
+  | FStar_Pervasives_Native.Some
+      (FStar_Pervasives.Inr
+       ({ FStarC_Syntax_Syntax.sigel = FStarC_Syntax_Syntax.Sig_let uu___1;
+          FStarC_Syntax_Syntax.sigrng = uu___2;
+          FStarC_Syntax_Syntax.sigquals = quals;
+          FStarC_Syntax_Syntax.sigmeta = uu___3;
+          FStarC_Syntax_Syntax.sigattrs = uu___4;
+          FStarC_Syntax_Syntax.sigopens_and_abbrevs = uu___5;
+          FStarC_Syntax_Syntax.sigopts = uu___6;_},
+        uu___7),
+       uu___8)
+      ->
+      FStarC_Util.for_some
+        (fun uu___9 ->
+           match uu___9 with
+           | FStarC_Syntax_Syntax.Projector uu___10 -> true
+           | uu___10 -> false) quals
   | FStar_Pervasives_Native.Some
       (FStar_Pervasives.Inr
        ({
@@ -4287,31 +4309,31 @@ let get_lid_valued_effect_attr (env1 : env) (eff_lid : FStarC_Ident.lident)
       then default_if_attr_has_no_arg
       else
         (match FStarC_List.hd args with
-         | (t, uu___1) ->
-             let uu___2 =
-               let uu___3 = FStarC_Syntax_Subst.compress t in
-               uu___3.FStarC_Syntax_Syntax.n in
-             (match uu___2 with
+         | (t, uu___) ->
+             let uu___1 =
+               let uu___2 = FStarC_Syntax_Subst.compress t in
+               uu___2.FStarC_Syntax_Syntax.n in
+             (match uu___1 with
               | FStarC_Syntax_Syntax.Tm_constant (FStarC_Const.Const_string
-                  (s, uu___3)) ->
-                  let uu___4 = FStarC_Ident.lid_of_str s in
-                  FStar_Pervasives_Native.Some uu___4
-              | uu___3 ->
-                  let uu___4 =
-                    let uu___5 =
+                  (s, uu___2)) ->
+                  let uu___3 = FStarC_Ident.lid_of_str s in
+                  FStar_Pervasives_Native.Some uu___3
+              | uu___2 ->
+                  let uu___3 =
+                    let uu___4 =
                       FStarC_Class_Show.show FStarC_Ident.showable_lident
                         eff_lid in
-                    let uu___6 =
+                    let uu___5 =
                       FStarC_Class_Show.show
                         FStarC_Syntax_Print.showable_term t in
                     FStarC_Format.fmt2
                       "The argument for the effect attribute for %s is not a constant string, it is %s\n"
-                      uu___5 uu___6 in
+                      uu___4 uu___5 in
                   FStarC_Errors.raise_error
                     (FStarC_Syntax_Syntax.has_range_syntax ()) t
                     FStarC_Errors_Codes.Fatal_UnexpectedEffect ()
                     (Obj.magic FStarC_Errors_Msg.is_error_message_string)
-                    (Obj.magic uu___4)))
+                    (Obj.magic uu___3)))
 let get_default_effect (env1 : env) (lid : FStarC_Ident.lident) :
   FStarC_Ident.lident FStar_Pervasives_Native.option=
   get_lid_valued_effect_attr env1 lid FStarC_Parser_Const.default_effect_attr
@@ -4344,16 +4366,16 @@ let join_opt (env1 : env) (l1 : FStarC_Ident.lident)
       FStar_Pervasives_Native.Some
         (FStarC_Parser_Const.effect_GTot_lid, identity_mlift, identity_mlift)
     else
-      (let uu___2 =
+      (let uu___ =
          FStarC_Option.find
-           (fun uu___3 ->
-              match uu___3 with
-              | (m1, m2, uu___4, uu___5, uu___6) ->
+           (fun uu___1 ->
+              match uu___1 with
+              | (m1, m2, uu___2, uu___3, uu___4) ->
                   (FStarC_Ident.lid_equals l1 m1) &&
                     (FStarC_Ident.lid_equals l2 m2)) (env1.effects).joins in
-       match uu___2 with
+       match uu___ with
        | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-       | FStar_Pervasives_Native.Some (uu___3, uu___4, m3, j1, j2) ->
+       | FStar_Pervasives_Native.Some (uu___1, uu___2, m3, j1, j2) ->
            FStar_Pervasives_Native.Some (m3, j1, j2))
 let join (env1 : env) (l1 : FStarC_Ident.lident) (l2 : FStarC_Ident.lident) :
   (FStarC_Ident.lident * mlift * mlift)=
@@ -4636,13 +4658,13 @@ let effect_repr_aux (only_reifiable : 'uuuuu) (env1 : env)
         then ()
         else
           (let message =
-             let uu___2 =
+             let uu___1 =
                FStarC_Class_Show.show FStarC_Class_Show.showable_nat given in
-             let uu___3 =
+             let uu___2 =
                FStarC_Class_Show.show FStarC_Class_Show.showable_int expected in
              FStarC_Format.fmt3
                "Not enough arguments for effect %s (given:%s, expected:%s)."
-               (FStarC_Ident.string_of_lid eff_name) uu___2 uu___3 in
+               (FStarC_Ident.string_of_lid eff_name) uu___1 uu___2 in
            FStarC_Errors.raise_error FStarC_Class_HasRange.hasRange_range r
              FStarC_Errors_Codes.Fatal_NotEnoughArgumentsForEffect ()
              (Obj.magic FStarC_Errors_Msg.is_error_message_string)
@@ -5077,8 +5099,8 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
          if FStarC_Ident.lid_equals i edge1.msource
          then edges
          else
-           (let uu___1 = find_edge (env1.effects).order (i, (edge1.msource)) in
-            match uu___1 with
+           (let uu___ = find_edge (env1.effects).order (i, (edge1.msource)) in
+            match uu___ with
             | FStar_Pervasives_Native.Some e -> e :: edges
             | FStar_Pervasives_Native.None -> edges)) [] ms in
   let all_tgt_j =
@@ -5087,8 +5109,8 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
          if FStarC_Ident.lid_equals edge1.mtarget j
          then edges
          else
-           (let uu___1 = find_edge (env1.effects).order ((edge1.mtarget), j) in
-            match uu___1 with
+           (let uu___ = find_edge (env1.effects).order ((edge1.mtarget), j) in
+            match uu___ with
             | FStar_Pervasives_Native.Some e -> e :: edges
             | FStar_Pervasives_Native.None -> edges)) [] ms in
   let check_cycle src1 tgt1 =
@@ -5179,15 +5201,15 @@ let update_effect_lattice (env1 : env) (src : FStarC_Ident.lident)
                else
                  FStarC_List.iter
                    (fun k ->
-                      let uu___3 =
-                        let uu___4 = find_edge order (i, k) in
-                        let uu___5 = find_edge order (j, k) in
-                        (uu___4, uu___5) in
-                      match uu___3 with
+                      let uu___2 =
+                        let uu___3 = find_edge order (i, k) in
+                        let uu___4 = find_edge order (j, k) in
+                        (uu___3, uu___4) in
+                      match uu___2 with
                       | (FStar_Pervasives_Native.Some ik,
                          FStar_Pervasives_Native.Some jk) ->
                           add_ub i j k ik.mlift jk.mlift
-                      | uu___4 -> ()) ms) ms) ms;
+                      | uu___3 -> ()) ms) ms) ms;
      FStarC_SMap.fold ubs
        (fun s l joins1 ->
           let lubs =

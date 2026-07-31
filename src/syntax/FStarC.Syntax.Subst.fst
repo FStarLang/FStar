@@ -415,19 +415,17 @@ let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
         let us = List.map (subst_univ (fst s)) us in
         tag_with_range (mk (Tm_uinst (t', us))) s
 
-    | Tm_app {hd=t0; args} -> mk (Tm_app {hd=subst' s t0; args=subst_args' s args})
+    | Tm_app {hd=t0; arg} -> mk (Tm_app {hd=subst' s t0; arg=subst_arg' s arg})
 
     | Tm_ascribed {tm=t0; asc; eff_opt=lopt} ->
       mk (Tm_ascribed {tm=subst' s t0; asc=subst_ascription' s asc; eff_opt=lopt})
 
-    | Tm_abs {bs; body; rc_opt=lopt} ->
-        let n = List.length bs in
-        let s' = shift_subst' n s in
-        mk (Tm_abs {bs=subst_binders' s bs; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
+    | Tm_abs {b; body; rc_opt=lopt} ->
+        let s' = shift_subst' 1 s in
+        mk (Tm_abs {b=subst_binder' s b; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
 
-    | Tm_arrow {bs; comp} ->
-        let n = List.length bs in
-        mk (Tm_arrow {bs=subst_binders' s bs;comp=subst_comp' (shift_subst' n s) comp})
+    | Tm_arrow {b; comp} ->
+        mk (Tm_arrow {b=subst_binder' s b; comp=subst_comp' (shift_subst' 1 s) comp})
 
     | Tm_refine {b=x; phi} ->
         let x = {x with sort=subst' s x.sort} in

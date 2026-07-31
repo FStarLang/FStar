@@ -104,6 +104,7 @@ fn compare (#t:eqtype) #p1 #p2 (a1 a2:A.array t) (l:SZ.t)
       (forall (i:nat). i < v vi ==> Seq.index 's1 i == Seq.index 's2 i)
     )
   )
+  decreases (Prims.op_Subtraction (v l) (v (!i)))
   {
     let vi = !i; 
     i := vi + 1sz

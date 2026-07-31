@@ -204,19 +204,22 @@ let extract_let_rec_annotation env (lb:letbinding) :
                  (show t);
   let env = Env.push_univ_vars env univ_vars in
   let un_arrow t =
-    //Rather than use U.arrow_formals_comp, we use un_arrow here
-    //since the former collapses adjacent Tot annotations, e.g.,
-    //    x:t -> Tot (y:t -> M)
-    // is collapsed, possibly breaking arities.
+    (* Under the unary representation an n-ary arrow *is* a Tot-nested spine, so
+       flattening recovers exactly the binders the arrow was built with. *)
       match (SS.compress t).n with
-      | Tm_arrow {bs; comp=c} ->
-        Subst.open_comp bs c
+      | Tm_arrow _ ->
+        U.arrow_formals_comp_strict t
       | _ ->
         raise_error rng Errors.Fatal_LetRecArgumentMismatch [
             text "Recursive functions must be introduced at arrow types.";
         ]
   in
-  let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt =
+  (* [n_opt], when given, is the arity the definition is written at, i.e. the
+     number of binders of its outermost lambda. It cannot be recovered from
+     [tarr] alone: the arrow node is unary, so a definition ascribed
+     [Tot (int -> int)] is indistinguishable from one ascribed [int -> int],
+     while [annot] may stop earlier because it carries a decreases clause. *)
+  let reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (n_opt:option int) =
       let get_decreases c =
           U.comp_flags c |> BU.prefix_until (function DECREASES _ -> true | _ -> false)
       in
@@ -233,7 +236,11 @@ let extract_let_rec_annotation env (lb:letbinding) :
         fallback()
 
       | Some annot ->
-        let bs, c = un_arrow tarr in
+        let bs, c =
+          match n_opt with
+          | Some n -> N.get_n_binders env n tarr
+          | None -> un_arrow tarr
+        in
         let n_bs = List.length bs in
         let bs', c' = N.get_n_binders env n_bs annot in
         if List.length bs' <> n_bs
@@ -278,7 +285,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
 
           | Tm_ascribed {tm=e'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
             if U.is_total_comp c
-            then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt in
+            then let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type (U.comp_result c) lbtyp_opt None in
                  let e = { e with n = Tm_ascribed {tm=e';
                                                    asc=(Inr (S.mk_Total t), tac_opt, use_eq);
                                                    eff_opt=lopt} } in
@@ -289,7 +296,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
                    ]
 
           | Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} ->
-            let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt in
+            let t, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type t lbtyp_opt None in
             let e = { e with n = Tm_ascribed {tm=e'; asc=(Inl t, tac_opt, use_eq); eff_opt=lopt} } in
             lbtyp, e, recheck
 
@@ -330,8 +337,9 @@ let extract_let_rec_annotation env (lb:letbinding) :
 
               | Tm_ascribed {tm=body'; asc=(Inr c, tac_opt, use_eq); eff_opt=lopt} ->
                 let tarr = mk_arrow c in
-                let tarr, lbtyp, recheck = reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt in
                 let n_bs = List.length bs in
+                let tarr, lbtyp, recheck =
+                  reconcile_let_rec_ascription_and_body_type tarr lbtyp_opt (Some n_bs) in
                 let bs', c = N.get_n_binders env n_bs tarr in
                 if List.length bs' <> n_bs
                 then failwith "Impossible"
@@ -472,7 +480,7 @@ let extract_let_rec_annotation env (lb:letbinding) :
           | None -> head
           | Some us -> S.mk_Tm_uinst head us
         in
-        vars,  mk (Tm_app {hd=head; args})
+        vars,  S.mk_Tm_app head args pat.p
 
     | Pat_dot_term eopt ->
         (match eopt with
@@ -514,10 +522,18 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.t) : ML (list t
   let repr = SS.compress repr in
   if is_layered
   then match repr.n with
-       | Tm_app {args=_::is} -> is |> List.map fst
+       | Tm_app _ ->
+         begin match U.head_and_args_full repr with
+         | _, _::is -> is |> List.map fst
+         | _ -> err ()
+         end
        | _ -> err ()
   else match repr.n with
-       | Tm_arrow {comp=c} -> c |> U.comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
+       | Tm_arrow _ ->
+         let bs, c = U.arrow_formals_comp_ln_strict repr in
+         if Nil? bs
+         then err ()
+         else c |> U.comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
 
@@ -751,8 +767,8 @@ let close_layered_comp_with_combinator (env:env) (bvs:list bv) (c:comp) : ML com
     let close_bs, close_body, _ = U.abs_formals close_t in
     let ss = substitutive_indexed_close_substs
       env_bvs close_bs ct.result_typ x args num_effect_params r in
-    match (SS.compress (SS.subst ss close_body)).n with
-    | Tm_app { args = _::args} -> args
+    match U.head_and_args_full (SS.compress (SS.subst ss close_body)) with
+    | _, _::args -> args
     | _ -> raise_error r Errors.Fatal_UnexpectedEffect "Unexpected close combinator shape"
   ) bvs ct.effect_args in
   S.mk_Comp {ct with effect_args}
@@ -1049,9 +1065,9 @@ let ad_hoc_indexed_bind_substs env
       | Some x -> S.mk_binder {x with sort=ct1.result_typ} in
 
     let g_sort_is : list term =
-      match (SS.compress g_b.binder_bv.sort).n with
-      | Tm_arrow {bs; comp=c} ->
-        let bs, c = SS.open_comp bs c in
+      let bs, c = U.arrow_formals_comp_strict g_b.binder_bv.sort in
+      match bs with
+      | _::_ ->
         let bs_subst = NT ((List.hd bs).binder_bv, x_a.binder_bv |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
@@ -1102,9 +1118,9 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     ]
   in
   let a_b, x_b, rest_bs, return_typ =
-    match (SS.compress return_t).n with
-    | Tm_arrow {bs; comp=c} when List.length bs >= 2 ->
-      let ((a_b::x_b::bs, c)) = SS.open_comp bs c in
+    let bs, c = U.arrow_formals_comp_strict return_t in
+    match bs with
+    | a_b::x_b::bs ->
       a_b, x_b, bs, U.comp_result c
     | _ -> return_t_shape_error r "Either not an arrow or not enough binders" in
 
@@ -1992,8 +2008,8 @@ let ad_hoc_indexed_ite_substs (env:env)
 
   let f_guard =
     let f_sort_is =
-      match (SS.compress f_b.binder_bv.sort).n with
-      | Tm_app {args=_::is} ->
+      match U.head_and_args_full (SS.compress f_b.binder_bv.sort) with
+      | _, _::is ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> conjunction_t_error r "f's type is not a repr type" in
     List.fold_left2
@@ -2005,8 +2021,8 @@ let ad_hoc_indexed_ite_substs (env:env)
 
   let g_guard =
     let g_sort_is =
-      match (SS.compress g_b.binder_bv.sort).n with
-      | Tm_app {args=_::is} ->
+      match U.head_and_args_full (SS.compress g_b.binder_bv.sort) with
+      | _, _::is ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> conjunction_t_error r "g's type is not a repr type" in
     List.fold_left2
@@ -2052,8 +2068,8 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
   let body = SS.subst substs body in
 
   let is =
-    match (SS.compress body).n with
-    | Tm_app {args=a::args} -> List.map fst args
+    match U.head_and_args_full (SS.compress body) with
+    | _, _a::args -> List.map fst args
     | _ -> conjunction_t_error r "body is not a repr type" in
 
   let c = mk_Comp ({
@@ -2399,7 +2415,7 @@ let rec check_erased (env:Env.env) (t:term) : ML isErased =
                            Weak; HNF; Iota]
   in
   let t = norm' env t in
-  let h, args = U.head_and_args t in
+  let h, args = U.head_and_args_full t in
   let h = U.un_uinst h in
   let r =
     match (SS.compress h).n, args with
@@ -2478,11 +2494,15 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
   let is_type = is_type true in
   let rec head_of (t : term) : ML term =
       match (compress t).n with
-      | Tm_app {hd=t}
       | Tm_match {scrutinee=t}
-      | Tm_abs {body=t}
       | Tm_ascribed {tm=t}
       | Tm_meta {tm=t} -> head_of t
+      | Tm_app _ ->
+        let t, _ = U.head_and_args_full t in
+        head_of t
+      | Tm_abs _ ->
+        let _, t, _ = U.abs_formals_ln t in
+        head_of t
       | Tm_refine {b} -> head_of b.sort
       | _ -> t
   in
@@ -2510,7 +2530,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
   (* The computed type for `e`. *)
   let computed_t = head_unfold env checked.res_typ in
-  let head, args = U.head_and_args computed_t in
+  let head, args = U.head_and_args_full computed_t in
 
   (* The expected type according to the context. *)
   let exp_t = head_unfold env exp_t in
@@ -2770,7 +2790,10 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : ML (term &
                   //try to normalize one more time, since more unification variables may be resolved now
                   let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
                   match (SS.compress f).n with
-                      | Tm_abs {body={n=Tm_fvar fv}} when S.fv_eq_lid fv C.true_lid ->
+                      | Tm_abs _ when
+                          (match U.abs_formals_ln f with
+                           | _, {n=Tm_fvar fv}, _ -> S.fv_eq_lid fv C.true_lid
+                           | _ -> false) ->
                         //it's trivial
                         let lc = {lc with res_typ=t} in //NS: what's the point of this?
                         TcComm.lcomp_comp lc
@@ -2873,7 +2896,7 @@ let remove_reify (t: S.term): ML S.term =
   if (match (SS.compress t).n with | Tm_app _ -> false | _ -> true)
   then t
   else
-    let head, args = U.head_and_args t in
+    let head, args = U.head_and_args_full t in
     if (match (SS.compress head).n with Tm_constant (FStarC.Const.Const_reify _) -> true | _ -> false)
     then begin match args with
         | [x] -> fst x
@@ -3198,7 +3221,7 @@ let short_circuit (head:term) (seen_args:args) : ML guard_formula =
         | _ -> Trivial
 
 let short_circuit_head l : ML _ =
-    let hd, _ = U.head_and_args l in
+    let hd, _ = U.head_and_args_full l in
     match (U.un_uinst hd).n with
         | Tm_fvar fv ->
            BU.for_some (S.fv_eq_lid fv)
@@ -3241,8 +3264,9 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : ML binders =
           match Env.expected_typ env with
             | None -> bs
             | Some (t, _) ->  //the use_eq flag is not relevant
-                match (SS.compress t).n with
-                    | Tm_arrow {bs=bs'} ->
+                let bs', _ = U.arrow_formals_comp_ln_strict t in
+                match bs' with
+                    | _::_ ->
                       begin match BU.prefix_until (fun b -> not (is_implicit_binder b)) bs' with
                         | None -> bs
                         | Some ([], _, _) -> bs // no implicits in the prefix
@@ -3278,10 +3302,8 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
    * For each binder in bs, create a fresh uvar
    * But keep substituting [a/a_tm, b_i/?ui] in the sorts of the subsequent binders
    *)
-  match (SS.compress signature).n with
-  | Tm_arrow {bs} ->
-    let bs = SS.open_binders bs in
-    (match bs with
+  let bs, _ = U.arrow_formals_comp_strict signature in
+  match bs with
      | a::bs ->
        //is is all the uvars, and g is their collective guard
        let is, g =
@@ -3300,7 +3322,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
             result_typ = a_tm;
             effect_args = List.map S.as_arg is;
             flags = [] }) in
-          S.mk (Tm_arrow {bs=[S.null_binder S.t_unit]; comp=eff_c}) r
+          S.mk_Tm_arrow [S.null_binder S.t_unit] eff_c r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
           let is_args = List.map2 (fun i b -> (i, U.aqual_of_binder b)) is bs in
@@ -3308,8 +3330,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm : ML _ =
             repr
             (S.as_arg a_tm::is_args)
             r), g
-     | _ -> fail signature)
-  | _ -> fail signature
+     | _ -> fail signature
 
 let fresh_effect_repr_en env r eff_name u a_tm : ML _ =
   eff_name
@@ -3321,13 +3342,10 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm : ML _ =
 
   let fail t = Err.unexpected_signature_for_monad env r eff_name t in
 
-  match (SS.compress sig_tm).n with
-  | Tm_arrow {bs} ->
-    let bs = SS.open_binders bs in
-    (match bs with
+  let bs, _ = U.arrow_formals_comp_strict sig_tm in
+  match bs with
      | ({binder_bv=a'})::bs -> bs |> SS.subst_binders [NT (a', a_tm)]
-     | _ -> fail sig_tm)
-  | _ -> fail sig_tm
+     | _ -> fail sig_tm
 
 
 let check_non_informative_type_for_lift env m1 m2 t (r:Range.t) : ML unit =
@@ -3494,8 +3512,9 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
 
   let rest_bs =
     let lift_t = sub.lift_wp |> Option.must in
-    match (lift_t |> snd |> SS.compress).n with
-    | Tm_arrow {bs=_::bs} when Cons? bs ->
+    let bs, _ = U.arrow_formals_comp_ln_strict (snd lift_t) in
+    match bs with
+    | _::bs when Cons? bs ->
       bs |> List.splitAt (List.length bs - 1) |> fst
     | _ ->
       raise_error (snd lift_t) Errors.Fatal_UnexpectedEffect
@@ -3504,7 +3523,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
   in
 
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
-  mk (Tm_app {hd=lift; args}) e.pos
+  S.mk_Tm_app lift args e.pos
 
 let get_field_projector_name env datacon index : ML _ =
   let _, t = Env.lookup_datacon env datacon in
@@ -3512,8 +3531,9 @@ let get_field_projector_name env datacon index : ML _ =
     raise_error env Errors.Fatal_UnexpectedDataConstructor
       (Format.fmt3 "Data constructor %s does not have enough binders (has %s, tried %s)"
         (show datacon) (show n) (show index))  in
-  match (SS.compress t).n with
-  | Tm_arrow {bs} ->
+  let bs, _ = U.arrow_formals_comp_ln_strict t in
+  match bs with
+  | _::_ ->
     let bs = bs |> List.filter (fun ({binder_qual=q}) -> match q with | Some (Implicit true) -> false | _ -> true) in
     if List.length bs <= index then err (List.length bs)
     else
@@ -3538,13 +3558,13 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : ML Env.mlift =
       S.mk_Comp ({ ct with
         effect_name = sub.target;
         effect_args =
-          [mk (Tm_app {hd=lift_t; args=[as_arg ct.result_typ; wp]}) (fst wp).pos |> S.as_arg]
+          [S.mk_Tm_app lift_t [as_arg ct.result_typ; wp] (fst wp).pos |> S.as_arg]
       }), TcComm.trivial_guard
     in
 
     let mk_mlift_term ts u r e =
       let _, lift_t = inst_tscheme_with ts [u] in
-      mk (Tm_app {hd=lift_t; args=[as_arg r; as_arg S.tun; as_arg e]}) e.pos
+      S.mk_Tm_app lift_t [as_arg r; as_arg S.tun; as_arg e] e.pos
     in
 
     ({ mlift_wp = sub.lift_wp |> Option.must |> mk_mlift_wp;
@@ -3640,7 +3660,7 @@ let try_lookup_record_type env (typename:lident)
  *)
 
 let head_fv_of_typ env (t:typ) : ML (option fv) =
-    let t, _ = U.head_and_args (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
+    let t, _ = U.head_and_args_full (N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t) in
     match (SS.compress (U.un_uinst t)).n with
     | Tm_fvar fv -> Some fv
     | _ -> None

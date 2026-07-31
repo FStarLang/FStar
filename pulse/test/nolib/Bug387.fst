@@ -17,6 +17,7 @@ fn is_tree_case_none (t:Type0) (l:st t)
  
 fn rec height (t:Type0) (l : st t)
   requires tag l
+  decreases l
 {
   is_tree_case_none _ _;
 }

@@ -27,13 +27,13 @@ val elab_open_commute' (e:term)
                        (v:term)
                        (n:index)
   : Lemma (ensures
-              RT.subst_term e [ RT.DT n v ] ==
+              subst_term e [ RT.DT n v ] ==
               (open_term' e v n))
 
 val elab_close_commute' (e:term)
                         (v:var)
                         (n:index)
-  : Lemma (RT.subst_term e [ RT.ND v n ] ==
+  : Lemma (subst_term e [ RT.ND v n ] ==
            (close_term' e v n))
 
 val elab_comp_close_commute (c:comp) (x:var)
@@ -43,4 +43,4 @@ val elab_comp_open_commute (c:comp) (x:term)
   : Lemma (elab_comp (open_comp_with c x) == RT.open_with (elab_comp c) x)
 
 val elab_ln_comp (c:comp) (i:int)
-  : Lemma (requires ln_c' c i) (ensures RT.ln' (elab_comp c) i)
+  : Lemma (requires ln_c' c i) (ensures ln' (elab_comp c) i)

@@ -45,6 +45,7 @@ fn signal (c:cvar_t) (#p:slprop)
   requires send c p
   requires p
 
+divergent
 fn wait (b:cvar_t) (#p:slprop)
   requires recv b p
   ensures p

@@ -11,7 +11,6 @@ type codegen_t =
   | FSharp 
   | Krml 
   | Plugin 
-  | PluginNoLib 
   | Extension 
 let uu___is_OCaml (projectee : codegen_t) : Prims.bool=
   match projectee with | OCaml -> true | uu___ -> false
@@ -21,8 +20,6 @@ let uu___is_Krml (projectee : codegen_t) : Prims.bool=
   match projectee with | Krml -> true | uu___ -> false
 let uu___is_Plugin (projectee : codegen_t) : Prims.bool=
   match projectee with | Plugin -> true | uu___ -> false
-let uu___is_PluginNoLib (projectee : codegen_t) : Prims.bool=
-  match projectee with | PluginNoLib -> true | uu___ -> false
 let uu___is_Extension (projectee : codegen_t) : Prims.bool=
   match projectee with | Extension -> true | uu___ -> false
 type split_queries_t =
@@ -355,8 +352,6 @@ let defaults : (Prims.string * option_val) Prims.list=
   ("smtencoding.elim_box", (Bool false));
   ("smtencoding.l_arith_repr", (String "boxwrap"));
   ("smtencoding.nl_arith_repr", (String "boxwrap"));
-  ("smtencoding.valid_elim", (Bool false));
-  ("smtencoding.valid_intro", (Bool true));
   ("smt", Unset);
   ("split_queries", (String "on_failure"));
   ("stats", (Bool false));
@@ -474,11 +469,11 @@ let show_options (uu___ : unit) : Prims.string=
                            (FStarC_PSMap.try_find s k) in
                        let v0 =
                          list_try_find FStarC_Class_Deq.deq_string k defaults in
-                       let uu___3 =
+                       let uu___2 =
                          FStarC_Class_Deq.op_Equals_Question
                            (FStarC_Class_Deq.deq_option deq_option_val) v0
                            (FStar_Pervasives_Native.Some v) in
-                       if uu___3
+                       if uu___2
                        then Obj.repr []
                        else
                          Obj.repr
@@ -515,8 +510,6 @@ let set_verification_options (o : optionstate) : unit=
     "smtencoding.elim_box";
     "smtencoding.nl_arith_repr";
     "smtencoding.l_arith_repr";
-    "smtencoding.valid_intro";
-    "smtencoding.valid_elim";
     "tcnorm";
     "no_plugins";
     "no_tactics";
@@ -717,10 +710,6 @@ let get_smtencoding_nl_arith_repr (uu___ : unit) : Prims.string=
   lookup_opt "smtencoding.nl_arith_repr" as_string
 let get_smtencoding_l_arith_repr (uu___ : unit) : Prims.string=
   lookup_opt "smtencoding.l_arith_repr" as_string
-let get_smtencoding_valid_intro (uu___ : unit) : Prims.bool=
-  lookup_opt "smtencoding.valid_intro" as_bool
-let get_smtencoding_valid_elim (uu___ : unit) : Prims.bool=
-  lookup_opt "smtencoding.valid_elim" as_bool
 let get_split_queries (uu___ : unit) : Prims.string=
   lookup_opt "split_queries" as_string
 let get_stats (uu___ : unit) : Prims.bool= lookup_opt "stats" as_bool
@@ -1026,8 +1015,7 @@ let interp_quake_arg (s : Prims.string) :
       if f2 = "k"
       then let uu___ = ios f1 in let uu___1 = ios f1 in (uu___, uu___1, true)
       else
-        (let uu___1 = ios f1 in
-         let uu___2 = ios f2 in (uu___1, uu___2, false))
+        (let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, false))
   | f1::f2::k::[] ->
       if k = "k"
       then let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
@@ -1391,10 +1379,6 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     =
                                                                     let uu___100
                                                                     =
-                                                                    let uu___101
-                                                                    =
-                                                                    let uu___102
-                                                                    =
                                                                     FStarC_Errors_Msg.bulleted
                                                                     [
                                                                     text
@@ -1406,14 +1390,18 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     FStar_Pprint.op_Hat_Hat
                                                                     (text
                                                                     "Split SMT verification conditions into several separate queries, one per goal. Helps with localizing errors.")
-                                                                    uu___102 in
+                                                                    uu___100 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "split_queries",
                                                                     (EnumStr
                                                                     ["no";
                                                                     "on_failure";
                                                                     "always"]),
-                                                                    uu___101) in
+                                                                    uu___99) in
+                                                                    let uu___99
+                                                                    =
+                                                                    let uu___100
+                                                                    =
                                                                     let uu___101
                                                                     =
                                                                     let uu___102
@@ -1480,10 +1468,6 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     =
                                                                     let uu___133
                                                                     =
-                                                                    let uu___134
-                                                                    =
-                                                                    let uu___135
-                                                                    =
                                                                     FStarC_Errors_Msg.bulleted
                                                                     [
                                                                     text
@@ -1497,14 +1481,14 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     FStar_Pprint.op_Hat_Hat
                                                                     (text
                                                                     "The [-warn_error] option follows the OCaml syntax, namely:")
-                                                                    uu___135 in
+                                                                    uu___133 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "warn_error",
                                                                     (ReverseAccumulated
                                                                     (SimpleStr
                                                                     "")),
-                                                                    uu___134) in
-                                                                    [uu___133;
+                                                                    uu___132) in
+                                                                    [uu___131;
                                                                     (FStarC_Getopt.noshort,
                                                                     "use_nbe",
                                                                     BoolStr,
@@ -1525,7 +1509,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Find.set_with_fstarc
                                                                     true)),
@@ -1539,7 +1523,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Effect.op_Colon_Equals
                                                                     debug_embedding
@@ -1554,7 +1538,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Effect.op_Colon_Equals
                                                                     eager_embedding
@@ -1597,7 +1581,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     display_debug_keys
                                                                     ();
@@ -1659,7 +1643,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Format.print_error
                                                                     "--ocamlenv must be the first argument, see fstar.exe --help for details\n";
@@ -1675,7 +1659,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Format.print_error
                                                                     "--ocamlc must be the first argument, see fstar.exe --help for details\n";
@@ -1691,7 +1675,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Format.print_error
                                                                     "--ocamlopt must be the first argument, see fstar.exe --help for details\n";
@@ -1707,7 +1691,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (WithSideEffect
                                                                     (((
                                                                     fun
-                                                                    uu___134
+                                                                    uu___132
                                                                     ->
                                                                     FStarC_Format.print_error
                                                                     "--ocamlopt_plugin must be the first argument, see fstar.exe --help for details\n";
@@ -1722,7 +1706,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     "__no_positivity",
                                                                     (WithSideEffect
                                                                     ((fun
-                                                                    uu___133
+                                                                    uu___131
                                                                     ->
                                                                     if
                                                                     warn_unsafe
@@ -1736,7 +1720,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Don't check positivity of inductive types"))
                                                                     ::
-                                                                    uu___132 in
+                                                                    uu___130 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3version",
                                                                     (SimpleStr
@@ -1744,7 +1728,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Set the version of Z3 that is to be used. Default: 4.13.3"))
                                                                     ::
-                                                                    uu___131 in
+                                                                    uu___129 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3seed",
                                                                     (IntStr
@@ -1752,7 +1736,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Set the Z3 random seed (default 0)"))
                                                                     ::
-                                                                    uu___130 in
+                                                                    uu___128 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3rlimit_factor",
                                                                     (IntStr
@@ -1760,7 +1744,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Set the Z3 per-query resource limit multiplier. This is useful when, say, regenerating hints and you want to be more lax. (default 1)"))
                                                                     ::
-                                                                    uu___129 in
+                                                                    uu___127 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3rlimit",
                                                                     (IntStr
@@ -1768,7 +1752,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Set the Z3 per-query resource limit (default 5 units, taking roughtly 5s)"))
                                                                     ::
-                                                                    uu___128 in
+                                                                    uu___126 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3refresh",
                                                                     (Const
@@ -1777,7 +1761,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Restart Z3 after each query; useful for ensuring proof robustness"))
                                                                     ::
-                                                                    uu___127 in
+                                                                    uu___125 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3smtopt",
                                                                     (ReverseAccumulated
@@ -1786,7 +1770,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Z3 options in smt2 format"))
                                                                     ::
-                                                                    uu___126 in
+                                                                    uu___124 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "z3cliopt",
                                                                     (ReverseAccumulated
@@ -1795,7 +1779,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Z3 command line options"))
                                                                     ::
-                                                                    uu___125 in
+                                                                    uu___123 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "warn_default_effects",
                                                                     (Const
@@ -1804,12 +1788,12 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Warn when (a -> b) is desugared to (a -> Tot b)"))
                                                                     ::
-                                                                    uu___124 in
+                                                                    uu___122 in
                                                                     (118,
                                                                     "version",
                                                                     (WithSideEffect
                                                                     ((fun
-                                                                    uu___124
+                                                                    uu___122
                                                                     ->
                                                                     display_version
                                                                     ();
@@ -1821,7 +1805,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Display version number"))
                                                                     ::
-                                                                    uu___123 in
+                                                                    uu___121 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "__temp_fast_implicits",
                                                                     (Const
@@ -1830,7 +1814,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "This does nothing and will be removed"))
                                                                     ::
-                                                                    uu___122 in
+                                                                    uu___120 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "using_facts_from",
                                                                     (ReverseAccumulated
@@ -1839,7 +1823,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Prunes the context to include only the facts from the given namespace or fact id. Facts can be include or excluded using the [+|-] qualifier. For example --using_facts_from '* -FStarC.Reflection +FStarC.List -FStarC.List.Tot' will remove all facts from FStarC.List.Tot.*, retain all remaining facts from FStarC.List.*, remove all facts from FStarC.Reflection.*, and retain all the rest. Note, the '+' is optional: --using_facts_from 'FStarC.List' is equivalent to --using_facts_from '+FStarC.List'. Multiple uses of this option accumulate, e.g., --using_facts_from A --using_facts_from B is interpreted as --using_facts_from A^B."))
                                                                     ::
-                                                                    uu___121 in
+                                                                    uu___119 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "no_tactics",
                                                                     (Const
@@ -1848,7 +1832,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Do not run the tactic engine before discharging a VC"))
                                                                     ::
-                                                                    uu___120 in
+                                                                    uu___118 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "no_plugins",
                                                                     (Const
@@ -1857,7 +1841,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Do not run plugins natively and interpret them as usual instead"))
                                                                     ::
-                                                                    uu___119 in
+                                                                    uu___117 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "use_native_tactics",
                                                                     (PathStr
@@ -1865,7 +1849,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Use compiled tactics from  path"))
                                                                     ::
-                                                                    uu___118 in
+                                                                    uu___116 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "use_hint_hashes",
                                                                     (Const
@@ -1874,7 +1858,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Admit queries if their hash matches the hash recorded in the hints database"))
                                                                     ::
-                                                                    uu___117 in
+                                                                    uu___115 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "use_hints",
                                                                     (Const
@@ -1883,7 +1867,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Use a previously recorded hints database for proof replay"))
                                                                     ::
-                                                                    uu___116 in
+                                                                    uu___114 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "use_eq_at_higher_order",
                                                                     (Const
@@ -1892,7 +1876,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Use equality constraints when comparing higher-order types (Temporary)"))
                                                                     ::
-                                                                    uu___115 in
+                                                                    uu___113 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "unsafe_tactic_exec",
                                                                     (Const
@@ -1901,7 +1885,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Allow tactics to run external processes. WARNING: checking an untrusted F* file while using this option can have disastrous effects."))
                                                                     ::
-                                                                    uu___114 in
+                                                                    uu___112 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "unthrottle_inductives",
                                                                     (Const
@@ -1910,7 +1894,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)"))
                                                                     ::
-                                                                    uu___113 in
+                                                                    uu___111 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "ugly",
                                                                     (Const
@@ -1919,7 +1903,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Emit output formatted for debugging"))
                                                                     ::
-                                                                    uu___112 in
+                                                                    uu___110 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "trace_error",
                                                                     (Const
@@ -1928,7 +1912,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Attach stack traces on errors"))
                                                                     ::
-                                                                    uu___111 in
+                                                                    uu___109 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "timing",
                                                                     (Const
@@ -1937,14 +1921,14 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Print the time it takes to verify each top-level definition. This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. In particular, it implies --profile_group_by_decl."))
                                                                     ::
-                                                                    uu___110 in
+                                                                    uu___108 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tcnorm",
                                                                     BoolStr,
                                                                     (text
                                                                     "Attempt to normalize definitions marked as tcnorm (default 'true')"))
                                                                     ::
-                                                                    uu___109 in
+                                                                    uu___107 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "__tactics_nbe",
                                                                     (Const
@@ -1953,7 +1937,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Use NBE to evaluate metaprograms (experimental)"))
                                                                     ::
-                                                                    uu___108 in
+                                                                    uu___106 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tactic_trace_d",
                                                                     (IntStr
@@ -1961,7 +1945,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Trace tactics up to a certain binding depth"))
                                                                     ::
-                                                                    uu___107 in
+                                                                    uu___105 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tactic_trace",
                                                                     (Const
@@ -1970,7 +1954,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Print a depth-indexed trace of tactic execution (Warning: very verbose)"))
                                                                     ::
-                                                                    uu___106 in
+                                                                    uu___104 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tactics_info",
                                                                     (Const
@@ -1979,7 +1963,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Print some rough information on tactics, such as the time they take to run"))
                                                                     ::
-                                                                    uu___105 in
+                                                                    uu___103 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tactics_failhard",
                                                                     (Const
@@ -1988,7 +1972,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Do not recover from metaprogramming errors, and abort if one occurs"))
                                                                     ::
-                                                                    uu___104 in
+                                                                    uu___102 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "tactic_raw_binders",
                                                                     (Const
@@ -1997,7 +1981,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     (text
                                                                     "Do not use the lexical scope of tactics to improve binder names"))
                                                                     ::
-                                                                    uu___103 in
+                                                                    uu___101 in
                                                                     (FStarC_Getopt.noshort,
                                                                     "stats",
                                                                     (PostProcessed
@@ -2022,31 +2006,17 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                                     FStarC_Stats.enabled
                                                                     false
                                                                     | 
-                                                                    uu___104
+                                                                    uu___102
                                                                     -> ());
                                                                     b),
                                                                     BoolStr)),
                                                                     (text
                                                                     "Print some statistics on the time spent in each phase of the compiler"))
                                                                     ::
-                                                                    uu___102 in
-                                                                    uu___100
-                                                                    ::
-                                                                    uu___101 in
-                                                                    (FStarC_Getopt.noshort,
-                                                                    "smtencoding.valid_elim",
-                                                                    BoolStr,
-                                                                    (text
-                                                                    "Include an axiom in the SMT encoding to eliminate proof-irrelevance into the existence of a proof witness"))
+                                                                    uu___100 in
+                                                                    uu___98
                                                                     ::
                                                                     uu___99 in
-                                                                    (FStarC_Getopt.noshort,
-                                                                    "smtencoding.valid_intro",
-                                                                    BoolStr,
-                                                                    (text
-                                                                    "Include an axiom in the SMT encoding to introduce proof-irrelevance from a constructive proof"))
-                                                                    ::
-                                                                    uu___98 in
                                                                     uu___96
                                                                     ::
                                                                     uu___97 in
@@ -2764,7 +2734,7 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                                              (SimpleStr
                                                                 "One or more semicolon separated occurrences of '[TargetName:]ModuleSelector'")),
                                                           (text
-                                                             "Extract only those modules whose names or namespaces match the provided options. 'TargetName' ranges over {OCaml, krml, FSharp, Plugin, PluginNoLib, Extension}. A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means for OCaml, extract everything in the A namespace only except A.B; for krml, extract everything in the A namespace only except A.C; for everything else, extract everything. Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'."))
+                                                             "Extract only those modules whose names or namespaces match the provided options. 'TargetName' ranges over {OCaml, krml, FSharp, Plugin, Extension}. A 'ModuleSelector' is a space or comma-separated list of '[+|-]( * | namespace | module)'. For example --extract 'OCaml:A -A.B' --extract 'krml:A -A.C' --extract '*' means for OCaml, extract everything in the A namespace only except A.B; for krml, extract everything in the A namespace only except A.C; for everything else, extract everything. Note, the '+' is optional: --extract '+A' and --extract 'A' mean the same thing. Note also that '--extract A' applies both to a module named 'A' and to any module in the 'A' namespace Multiple uses of this option accumulate, e.g., --extract A --extract B is interpreted as --extract 'A B'."))
                                                           :: uu___30 in
                                                       (FStarC_Getopt.noshort,
                                                         "ext",
@@ -2903,7 +2873,6 @@ let specs_with_types (warn_unsafe : Prims.bool) :
                                "FSharp";
                                "krml";
                                "Plugin";
-                               "PluginNoLib";
                                "Extension"]),
                             (text
                                "Generate code for further compilation to executable code, or build a compiler plugin"))
@@ -3055,8 +3024,6 @@ let settable (uu___ : Prims.string) : Prims.bool=
   | "smtencoding.elim_box" -> true
   | "smtencoding.l_arith_repr" -> true
   | "smtencoding.nl_arith_repr" -> true
-  | "smtencoding.valid_intro" -> true
-  | "smtencoding.valid_elim" -> true
   | "split_queries" -> true
   | "stats" -> true
   | "tactic_raw_binders" -> true
@@ -3106,10 +3073,10 @@ let settable_specs :
            else
              (let h' =
                 match h with
-                | FStarC_Getopt.ZeroArgs uu___3 ->
+                | FStarC_Getopt.ZeroArgs uu___2 ->
                     FStarC_Getopt.ZeroArgs
-                      ((fun uu___4 -> FStarC_Effect.raise (NotSettable x)))
-                | FStarC_Getopt.OneArg (uu___3, k) ->
+                      ((fun uu___3 -> FStarC_Effect.raise (NotSettable x)))
+                | FStarC_Getopt.OneArg (uu___2, k) ->
                     FStarC_Getopt.OneArg
                       (((fun s -> FStarC_Effect.raise (NotSettable x))), k) in
               ((c, x, h'), doc))) all_specs
@@ -3164,10 +3131,10 @@ let rec parse_filename_arg (specs1 : FStarC_Getopt.opt Prims.list)
   else
     (if enable_filenames
      then
-       (let uu___4 =
-          let uu___5 = FStarC_Effect.op_Bang file_list_ in
-          FStarC_List.op_At uu___5 [arg] in
-        FStarC_Effect.op_Colon_Equals file_list_ uu___4)
+       (let uu___3 =
+          let uu___4 = FStarC_Effect.op_Bang file_list_ in
+          FStarC_List.op_At uu___4 [arg] in
+        FStarC_Effect.op_Colon_Equals file_list_ uu___3)
      else ();
      FStarC_Getopt.Success)
 let parsed_args_state :
@@ -3274,8 +3241,8 @@ let parse_settings (ns : Prims.string Prims.list) :
         if FStarC_Util.starts_with s "-"
         then
           (let path =
-             let uu___4 = FStarC_Util.substring_from s Prims.int_one in
-             path_of_text uu___4 in
+             let uu___ = FStarC_Util.substring_from s Prims.int_one in
+             path_of_text uu___ in
            (path, false))
         else
           (let s1 =
@@ -3293,13 +3260,13 @@ let parse_settings (ns : Prims.string Prims.list) :
            with_cache
              (fun s2 ->
                 let s3 = FStarC_Util.replace_char s2 32 44 in
-                let uu___4 =
-                  let uu___5 =
+                let uu___3 =
+                  let uu___4 =
                     FStarC_List.concatMap
                       (fun s4 -> FStarC_Util.split s4 ",")
                       (FStarC_Util.splitlines s3) in
-                  FStarC_List.filter (fun s4 -> s4 <> "") uu___5 in
-                FStarC_List.map parse_one_setting uu___4) s1) ns in
+                  FStarC_List.filter (fun s4 -> s4 <> "") uu___4 in
+                FStarC_List.map parse_one_setting uu___3) s1) ns in
   FStarC_List.rev uu___
 let admit_smt_queries (uu___ : unit) : Prims.bool= get_admit_smt_queries ()
 let admit_except (uu___ : unit) :
@@ -3336,7 +3303,6 @@ let parse_codegen (uu___ : Prims.string) :
   | "FSharp" -> FStar_Pervasives_Native.Some FSharp
   | "krml" -> FStar_Pervasives_Native.Some Krml
   | "Plugin" -> FStar_Pervasives_Native.Some Plugin
-  | "PluginNoLib" -> FStar_Pervasives_Native.Some PluginNoLib
   | "Extension" -> FStar_Pervasives_Native.Some Extension
   | uu___3 -> FStar_Pervasives_Native.None
 let print_codegen (uu___ : codegen_t) : Prims.string=
@@ -3345,7 +3311,6 @@ let print_codegen (uu___ : codegen_t) : Prims.string=
   | FSharp -> "FSharp"
   | Krml -> "krml"
   | Plugin -> "Plugin"
-  | PluginNoLib -> "PluginNoLib"
   | Extension -> "Extension"
 let codegen (uu___ : unit) : codegen_t FStar_Pervasives_Native.option=
   let uu___3 = get_codegen () in
@@ -3385,12 +3350,12 @@ let message_format (uu___ : unit) : message_format_t=
       if uu___4
       then Human
       else
-        (let uu___6 =
+        (let uu___5 =
            FStarC_Util.expand_environment_variable "GITHUB_ACTIONS" in
-         match uu___6 with
+         match uu___5 with
          | FStar_Pervasives_Native.None -> Human
          | FStar_Pervasives_Native.Some "" -> Human
-         | FStar_Pervasives_Native.Some uu___7 -> Github)
+         | FStar_Pervasives_Native.Some uu___6 -> Github)
   | "human" -> Human
   | "json" -> Json
   | "github" -> Github
@@ -3546,10 +3511,6 @@ let smtencoding_l_arith_native (uu___ : unit) : Prims.bool=
   let uu___3 = get_smtencoding_l_arith_repr () in uu___3 = "native"
 let smtencoding_l_arith_default (uu___ : unit) : Prims.bool=
   let uu___3 = get_smtencoding_l_arith_repr () in uu___3 = "boxwrap"
-let smtencoding_valid_intro (uu___ : unit) : Prims.bool=
-  get_smtencoding_valid_intro ()
-let smtencoding_valid_elim (uu___ : unit) : Prims.bool=
-  get_smtencoding_valid_elim ()
 let parse_split_queries (s : Prims.string) :
   split_queries_t FStar_Pervasives_Native.option=
   match s with
@@ -3718,7 +3679,7 @@ let extract_settings :
       | FStar_Pervasives_Native.Some x -> [(tgt, x)] in
     let uu___ =
       FStarC_List.collect merge_target
-        [OCaml; FSharp; Krml; Plugin; PluginNoLib; Extension] in
+        [OCaml; FSharp; Krml; Plugin; Extension] in
     {
       target_specific_settings = uu___;
       default_settings =
@@ -3732,12 +3693,13 @@ let extract_settings :
           display_usage ();
           FStarC_Effect.failwith
             (FStarC_Format.fmt1
-               "Could not parse '%s' passed to the --extract option" msg) in
+               "Could not parse \226\128\152%s\226\128\153 passed to the --extract option"
+               msg) in
         if set1
         then result
         else
-          (let uu___5 = get_extract () in
-           match uu___5 with
+          (let uu___4 = get_extract () in
+           match uu___4 with
            | FStar_Pervasives_Native.None ->
                (FStarC_Effect.op_Colon_Equals memo
                   (FStar_Pervasives_Native.None, true);
@@ -3758,14 +3720,14 @@ let extract_settings :
                         | FStar_Pervasives_Native.Some tgt ->
                             FStar_Pervasives.Inl
                               (tgt, (FStarC_Util.trim_string setting))
-                        | uu___6 -> fail t_setting) in
+                        | uu___5 -> fail t_setting) in
                  let settings =
                    FStarC_List.map split_one tgt_specific_settings in
                  let fail_duplicate msg tgt =
                    display_usage ();
                    FStarC_Effect.failwith
                      (FStarC_Format.fmt2
-                        "Could not parse '%s'; multiple setting for %s target"
+                        "Could not parse \226\128\152%s\226\128\153; multiple setting for %s target"
                         msg tgt) in
                  let pes =
                    FStarC_List.fold_right
@@ -3780,16 +3742,16 @@ let extract_settings :
                                    default_settings =
                                      (FStar_Pervasives_Native.Some def)
                                  }
-                             | FStar_Pervasives_Native.Some uu___6 ->
+                             | FStar_Pervasives_Native.Some uu___5 ->
                                  fail_duplicate def "default")
                         | FStar_Pervasives.Inl (target, setting1) ->
-                            let uu___6 =
+                            let uu___5 =
                               FStarC_Util.try_find
-                                (fun uu___7 ->
-                                   match uu___7 with
-                                   | (x, uu___8) -> x = target)
+                                (fun uu___6 ->
+                                   match uu___6 with
+                                   | (x, uu___7) -> x = target)
                                 out.target_specific_settings in
-                            (match uu___6 with
+                            (match uu___5 with
                              | FStar_Pervasives_Native.None ->
                                  {
                                    target_specific_settings =
@@ -3797,7 +3759,7 @@ let extract_settings :
                                      (out.target_specific_settings));
                                    default_settings = (out.default_settings)
                                  }
-                             | FStar_Pervasives_Native.Some uu___7 ->
+                             | FStar_Pervasives_Native.Some uu___6 ->
                                  fail_duplicate setting1
                                    (print_codegen target))) settings
                      {
@@ -3813,8 +3775,8 @@ let extract_settings :
                let pes =
                  FStarC_List.fold_right
                    (fun setting pes1 ->
-                      let uu___6 = parse_one_setting setting in
-                      merge_parsed_extract_settings pes1 uu___6)
+                      let uu___5 = parse_one_setting setting in
+                      merge_parsed_extract_settings pes1 uu___5)
                    extract_settings1 empty_pes in
                (FStarC_Effect.op_Colon_Equals memo
                   ((FStar_Pervasives_Native.Some pes), true);
@@ -3824,22 +3786,22 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
   if m1 = "prims"
   then false
   else
-    (let uu___3 = extract_settings () in
-     match uu___3 with
+    (let uu___ = extract_settings () in
+     match uu___ with
      | FStar_Pervasives_Native.Some pes ->
-         ((let uu___5 =
-             let uu___6 = get_no_extract () in
-             let uu___7 = get_extract_namespace () in
-             let uu___8 = get_extract_module () in (uu___6, uu___7, uu___8) in
-           match uu___5 with
+         ((let uu___4 =
+             let uu___5 = get_no_extract () in
+             let uu___6 = get_extract_namespace () in
+             let uu___7 = get_extract_module () in (uu___5, uu___6, uu___7) in
+           match uu___4 with
            | ([], [], []) -> ()
-           | uu___6 ->
+           | uu___5 ->
                FStarC_Effect.failwith
                  "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
           (let tsetting =
-             let uu___5 =
+             let uu___4 =
                find_setting_for_target tgt pes.target_specific_settings in
-             match uu___5 with
+             match uu___4 with
              | FStar_Pervasives_Native.Some s -> s
              | FStar_Pervasives_Native.None ->
                  (match pes.default_settings with
@@ -3848,8 +3810,8 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
            module_matches_namespace_filter m1 [tsetting]))
      | FStar_Pervasives_Native.None ->
          let should_extract_namespace m2 =
-           let uu___4 = get_extract_namespace () in
-           match uu___4 with
+           let uu___3 = get_extract_namespace () in
+           match uu___3 with
            | [] -> false
            | ns ->
                FStarC_Util.for_some
@@ -3857,23 +3819,23 @@ let should_extract (m : Prims.string) (tgt : codegen_t) : Prims.bool=
                     FStarC_Util.starts_with m2 (FStarC_String.lowercase n))
                  ns in
          let should_extract_module m2 =
-           let uu___4 = get_extract_module () in
-           match uu___4 with
+           let uu___3 = get_extract_module () in
+           match uu___3 with
            | [] -> false
            | l ->
                FStarC_Util.for_some
                  (fun n -> (FStarC_String.lowercase n) = m2) l in
-         let uu___4 = let uu___5 = no_extract m1 in Prims.op_Negation uu___5 in
-         if uu___4
+         let uu___3 = let uu___4 = no_extract m1 in Prims.op_Negation uu___4 in
+         if uu___3
          then
-           let uu___5 =
-             let uu___6 = get_extract_namespace () in
-             let uu___7 = get_extract_module () in (uu___6, uu___7) in
-           (match uu___5 with
+           let uu___4 =
+             let uu___5 = get_extract_namespace () in
+             let uu___6 = get_extract_module () in (uu___5, uu___6) in
+           (match uu___4 with
             | ([], []) -> if tgt = Krml then true else should_check m1
-            | uu___6 ->
-                let uu___7 = should_extract_namespace m1 in
-                if uu___7 then true else should_extract_module m1)
+            | uu___5 ->
+                let uu___6 = should_extract_namespace m1 in
+                if uu___6 then true else should_extract_module m1)
          else false)
 let should_be_already_cached (m : Prims.string) : Prims.bool=
   let uu___ = let uu___3 = should_check m in Prims.op_Negation uu___3 in
@@ -3939,7 +3901,7 @@ let set_options (s : Prims.string) : FStarC_Getopt.parse_cmdline_res=
         ((FStarC_Format.fmt1 "File %s is not a valid option" s1), "")
 let with_options (s : Prims.string) (f : unit -> 'a) : 'a=
   with_saved_options (fun uu___ -> (let uu___4 = set_options s in ()); f ())
-let get_vconfig (uu___ : unit) : FStarC_VConfig.vconfig=
+let get_vconfig (uu___ : unit) : FStar_VConfig.vconfig=
   let vcfg =
     let uu___3 = get_initial_fuel () in
     let uu___4 = get_max_fuel () in
@@ -3955,102 +3917,94 @@ let get_vconfig (uu___ : unit) : FStarC_VConfig.vconfig=
     let uu___14 = get_smtencoding_elim_box () in
     let uu___15 = get_smtencoding_nl_arith_repr () in
     let uu___16 = get_smtencoding_l_arith_repr () in
-    let uu___17 = get_smtencoding_valid_intro () in
-    let uu___18 = get_smtencoding_valid_elim () in
-    let uu___19 = get_tcnorm () in
-    let uu___20 = get_no_plugins () in
-    let uu___21 = get_no_tactics () in
-    let uu___22 = get_z3cliopt () in
-    let uu___23 = get_z3smtopt () in
-    let uu___24 = get_z3refresh () in
-    let uu___25 = get_z3rlimit () in
-    let uu___26 = get_z3rlimit_factor () in
-    let uu___27 = get_z3seed () in
-    let uu___28 = get_z3version () in
-    let uu___29 = get_trivial_pre_for_unannotated_effectful_fns () in
-    let uu___30 = get_reuse_hint_for () in
+    let uu___17 = get_tcnorm () in
+    let uu___18 = get_no_plugins () in
+    let uu___19 = get_no_tactics () in
+    let uu___20 = get_z3cliopt () in
+    let uu___21 = get_z3smtopt () in
+    let uu___22 = get_z3refresh () in
+    let uu___23 = get_z3rlimit () in
+    let uu___24 = get_z3rlimit_factor () in
+    let uu___25 = get_z3seed () in
+    let uu___26 = get_z3version () in
+    let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+    let uu___28 = get_reuse_hint_for () in
     {
-      FStarC_VConfig.initial_fuel = uu___3;
-      FStarC_VConfig.max_fuel = uu___4;
-      FStarC_VConfig.initial_ifuel = uu___5;
-      FStarC_VConfig.max_ifuel = uu___6;
-      FStarC_VConfig.detail_errors = uu___7;
-      FStarC_VConfig.detail_hint_replay = uu___8;
-      FStarC_VConfig.no_smt = uu___9;
-      FStarC_VConfig.quake_lo = uu___10;
-      FStarC_VConfig.quake_hi = uu___11;
-      FStarC_VConfig.quake_keep = uu___12;
-      FStarC_VConfig.retry = uu___13;
-      FStarC_VConfig.smtencoding_elim_box = uu___14;
-      FStarC_VConfig.smtencoding_nl_arith_repr = uu___15;
-      FStarC_VConfig.smtencoding_l_arith_repr = uu___16;
-      FStarC_VConfig.smtencoding_valid_intro = uu___17;
-      FStarC_VConfig.smtencoding_valid_elim = uu___18;
-      FStarC_VConfig.tcnorm = uu___19;
-      FStarC_VConfig.no_plugins = uu___20;
-      FStarC_VConfig.no_tactics = uu___21;
-      FStarC_VConfig.z3cliopt = uu___22;
-      FStarC_VConfig.z3smtopt = uu___23;
-      FStarC_VConfig.z3refresh = uu___24;
-      FStarC_VConfig.z3rlimit = uu___25;
-      FStarC_VConfig.z3rlimit_factor = uu___26;
-      FStarC_VConfig.z3seed = uu___27;
-      FStarC_VConfig.z3version = uu___28;
-      FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___29;
-      FStarC_VConfig.reuse_hint_for = uu___30
+      FStar_VConfig.initial_fuel = uu___3;
+      FStar_VConfig.max_fuel = uu___4;
+      FStar_VConfig.initial_ifuel = uu___5;
+      FStar_VConfig.max_ifuel = uu___6;
+      FStar_VConfig.detail_errors = uu___7;
+      FStar_VConfig.detail_hint_replay = uu___8;
+      FStar_VConfig.no_smt = uu___9;
+      FStar_VConfig.quake_lo = uu___10;
+      FStar_VConfig.quake_hi = uu___11;
+      FStar_VConfig.quake_keep = uu___12;
+      FStar_VConfig.retry = uu___13;
+      FStar_VConfig.smtencoding_elim_box = uu___14;
+      FStar_VConfig.smtencoding_nl_arith_repr = uu___15;
+      FStar_VConfig.smtencoding_l_arith_repr = uu___16;
+      FStar_VConfig.tcnorm = uu___17;
+      FStar_VConfig.no_plugins = uu___18;
+      FStar_VConfig.no_tactics = uu___19;
+      FStar_VConfig.z3cliopt = uu___20;
+      FStar_VConfig.z3smtopt = uu___21;
+      FStar_VConfig.z3refresh = uu___22;
+      FStar_VConfig.z3rlimit = uu___23;
+      FStar_VConfig.z3rlimit_factor = uu___24;
+      FStar_VConfig.z3seed = uu___25;
+      FStar_VConfig.z3version = uu___26;
+      FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+      FStar_VConfig.reuse_hint_for = uu___28
     } in
   vcfg
-let set_vconfig (vcfg : FStarC_VConfig.vconfig) : unit=
+let set_vconfig (vcfg : FStar_VConfig.vconfig) : unit=
   let option_as tag o =
     match o with
     | FStar_Pervasives_Native.None -> Unset
     | FStar_Pervasives_Native.Some s -> tag s in
-  set_option "initial_fuel" (Int (vcfg.FStarC_VConfig.initial_fuel));
-  set_option "max_fuel" (Int (vcfg.FStarC_VConfig.max_fuel));
-  set_option "initial_ifuel" (Int (vcfg.FStarC_VConfig.initial_ifuel));
-  set_option "max_ifuel" (Int (vcfg.FStarC_VConfig.max_ifuel));
-  set_option "detail_errors" (Bool (vcfg.FStarC_VConfig.detail_errors));
+  set_option "initial_fuel" (Int (vcfg.FStar_VConfig.initial_fuel));
+  set_option "max_fuel" (Int (vcfg.FStar_VConfig.max_fuel));
+  set_option "initial_ifuel" (Int (vcfg.FStar_VConfig.initial_ifuel));
+  set_option "max_ifuel" (Int (vcfg.FStar_VConfig.max_ifuel));
+  set_option "detail_errors" (Bool (vcfg.FStar_VConfig.detail_errors));
   set_option "detail_hint_replay"
-    (Bool (vcfg.FStarC_VConfig.detail_hint_replay));
-  set_option "no_smt" (Bool (vcfg.FStarC_VConfig.no_smt));
-  set_option "quake_lo" (Int (vcfg.FStarC_VConfig.quake_lo));
-  set_option "quake_hi" (Int (vcfg.FStarC_VConfig.quake_hi));
-  set_option "quake_keep" (Bool (vcfg.FStarC_VConfig.quake_keep));
-  set_option "retry" (Bool (vcfg.FStarC_VConfig.retry));
+    (Bool (vcfg.FStar_VConfig.detail_hint_replay));
+  set_option "no_smt" (Bool (vcfg.FStar_VConfig.no_smt));
+  set_option "quake_lo" (Int (vcfg.FStar_VConfig.quake_lo));
+  set_option "quake_hi" (Int (vcfg.FStar_VConfig.quake_hi));
+  set_option "quake_keep" (Bool (vcfg.FStar_VConfig.quake_keep));
+  set_option "retry" (Bool (vcfg.FStar_VConfig.retry));
   set_option "smtencoding.elim_box"
-    (Bool (vcfg.FStarC_VConfig.smtencoding_elim_box));
+    (Bool (vcfg.FStar_VConfig.smtencoding_elim_box));
   set_option "smtencoding.nl_arith_repr"
-    (String (vcfg.FStarC_VConfig.smtencoding_nl_arith_repr));
+    (String (vcfg.FStar_VConfig.smtencoding_nl_arith_repr));
   set_option "smtencoding.l_arith_repr"
-    (String (vcfg.FStarC_VConfig.smtencoding_l_arith_repr));
-  set_option "smtencoding.valid_intro"
-    (Bool (vcfg.FStarC_VConfig.smtencoding_valid_intro));
-  set_option "smtencoding.valid_elim"
-    (Bool (vcfg.FStarC_VConfig.smtencoding_valid_elim));
-  set_option "tcnorm" (Bool (vcfg.FStarC_VConfig.tcnorm));
-  set_option "no_plugins" (Bool (vcfg.FStarC_VConfig.no_plugins));
-  set_option "no_tactics" (Bool (vcfg.FStarC_VConfig.no_tactics));
-  (let uu___22 =
-     let uu___23 =
-       FStarC_List.map (fun uu___24 -> String uu___24)
-         vcfg.FStarC_VConfig.z3cliopt in
-     List uu___23 in
-   set_option "z3cliopt" uu___22);
-  (let uu___23 =
-     let uu___24 =
-       FStarC_List.map (fun uu___25 -> String uu___25)
-         vcfg.FStarC_VConfig.z3smtopt in
-     List uu___24 in
-   set_option "z3smtopt" uu___23);
-  set_option "z3refresh" (Bool (vcfg.FStarC_VConfig.z3refresh));
-  set_option "z3rlimit" (Int (vcfg.FStarC_VConfig.z3rlimit));
-  set_option "z3rlimit_factor" (Int (vcfg.FStarC_VConfig.z3rlimit_factor));
-  set_option "z3seed" (Int (vcfg.FStarC_VConfig.z3seed));
-  set_option "z3version" (String (vcfg.FStarC_VConfig.z3version));
+    (String (vcfg.FStar_VConfig.smtencoding_l_arith_repr));
+  set_option "tcnorm" (Bool (vcfg.FStar_VConfig.tcnorm));
+  set_option "no_plugins" (Bool (vcfg.FStar_VConfig.no_plugins));
+  set_option "no_tactics" (Bool (vcfg.FStar_VConfig.no_tactics));
+  (let uu___20 =
+     let uu___21 =
+       FStarC_List.map (fun uu___22 -> String uu___22)
+         vcfg.FStar_VConfig.z3cliopt in
+     List uu___21 in
+   set_option "z3cliopt" uu___20);
+  (let uu___21 =
+     let uu___22 =
+       FStarC_List.map (fun uu___23 -> String uu___23)
+         vcfg.FStar_VConfig.z3smtopt in
+     List uu___22 in
+   set_option "z3smtopt" uu___21);
+  set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
+  set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
+  set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
+  set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
+  set_option "z3version" (String (vcfg.FStar_VConfig.z3version));
   set_option "trivial_pre_for_unannotated_effectful_fns"
-    (Bool (vcfg.FStarC_VConfig.trivial_pre_for_unannotated_effectful_fns));
+    (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
   set_option "reuse_hint_for"
-    (option_as (fun uu___30 -> String uu___30)
-       vcfg.FStarC_VConfig.reuse_hint_for)
+    (option_as (fun uu___28 -> String uu___28)
+       vcfg.FStar_VConfig.reuse_hint_for)
 let showable_codegen_t : codegen_t FStarC_Class_Show.showable=
   { FStarC_Class_Show.show = print_codegen }

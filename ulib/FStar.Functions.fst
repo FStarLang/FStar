@@ -1,5 +1,6 @@
 module FStar.Functions
 
+open FStar.Fin { fin }
 let inj_comp (#a #b #c : _) (f : a -> GTot b) (g : b -> GTot c)
   : Lemma (requires is_inj f /\ is_inj g)
           (ensures is_inj (fun x -> g (f x)))

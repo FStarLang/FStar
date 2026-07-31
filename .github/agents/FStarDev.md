@@ -394,6 +394,8 @@ git submodule update --init karamel
 | Variable | Description |
 |----------|-------------|
 | `FSTAR_EXTERNAL_STAGE0` | Path to external fstar.exe to use as stage 0, usually not used |
+| `FSTAR_USE_KRML_EXE` | Set to `1` to skip building the karamel/ submodule and use the Karamel executable in `KRML_EXE` instead |
+| `KRML_EXE` | Path to the Karamel (`krml`) executable used to extract/build Pulse tests; required when `FSTAR_USE_KRML_EXE=1` |
 | `FSTAR_EXE` | Override which fstar.exe to use for a target |
 | `FSTAR_LIB` | Override the library path (ulib location) |
 | `FSTAR_DUNE_RELEASE` | Set to `1` for release (optimized) builds |

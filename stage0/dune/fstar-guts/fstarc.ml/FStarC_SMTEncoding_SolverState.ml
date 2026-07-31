@@ -382,19 +382,19 @@ let give_delay_assumptions (resetting : Prims.bool)
                   }
                 else
                   (let hd2 =
-                     let uu___4 =
+                     let uu___3 =
                        FStarC_SMTEncoding_Pruning.add_decls decls
                          hd1.pruning_state in
-                     let uu___5 =
+                     let uu___4 =
                        add_named_assumptions hd1.named_assumptions
                          assumptions in
                      {
-                       pruning_state = uu___4;
+                       pruning_state = uu___3;
                        given_decl_names = (hd1.given_decl_names);
                        all_decls_at_level_rev = (hd1.all_decls_at_level_rev);
                        given_some_decls = (hd1.given_some_decls);
                        to_flush_rev = (hd1.to_flush_rev);
-                       named_assumptions = uu___5;
+                       named_assumptions = uu___4;
                        pruning_roots = (hd1.pruning_roots)
                      } in
                    add_retain_assumptions decls
@@ -450,11 +450,11 @@ let give_now (resetting : Prims.bool)
              }
            else
              (let hd2 =
-                let uu___4 =
+                let uu___3 =
                   FStarC_SMTEncoding_Pruning.add_decls decls
                     hd1.pruning_state in
                 {
-                  pruning_state = uu___4;
+                  pruning_state = uu___3;
                   given_decl_names = (hd1.given_decl_names);
                   all_decls_at_level_rev = (hd1.all_decls_at_level_rev);
                   given_some_decls = (hd1.given_some_decls);
@@ -697,8 +697,8 @@ let would_have_pruned (s : solver_state) :
        | level::levels1 ->
            (match level.pruning_roots with
             | FStar_Pervasives_Native.Some roots ->
-                let uu___2 = prune_sim roots s in
-                FStar_Pervasives_Native.Some uu___2
+                let uu___1 = prune_sim roots s in
+                FStar_Pervasives_Native.Some uu___1
             | FStar_Pervasives_Native.None -> aux levels1) in
      aux s.levels)
 let flush (s : solver_state) :
@@ -755,3 +755,6 @@ let flush (s : solver_state) :
     FStar_List_Tot_Base.op_At (FStarC_List.rev s1.pending_flushes_rev)
       to_flush in
   (flushed, s11)
+let all_decls (s : solver_state) : FStarC_SMTEncoding_Term.decl Prims.list=
+  let s1 = reset s.using_facts_from s in
+  let uu___ = flush s1 in match uu___ with | (flushed, uu___1) -> flushed

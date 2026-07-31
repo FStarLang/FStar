@@ -708,6 +708,7 @@ ensures
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 
+divergent
 fn cbor_map_get_with_typ
   (#t: typ)
   (ft: impl_typ t)
@@ -916,24 +917,29 @@ fn impl_matches_map_group_no_restricted
     (#v: Ghost.erased raw_data_item)
 {
     let i0 = cbor_map_iterator_init c;
+    with l0c . assert (cbor_map_iterator_match p i0 l0c);
+    let mut pn : erased nat = hide (List.Tot.length l0c);
     let mut pi = i0;
     let mut pres = true;
     let done0 = cbor_map_iterator_is_done i0;
     let mut pcont = not done0;
     while (let cont = !pcont ; cont)
-    invariant exists* (i: cbor_map_iterator_t) (l: list (raw_data_item & raw_data_item)) (res: bool) cont . (
+    invariant exists* (i: cbor_map_iterator_t) (l: list (raw_data_item & raw_data_item)) (res: bool) cont (nn:erased nat) . (
         pts_to pcont cont **
         pts_to pres res **
         pts_to pi i **
+        pts_to pn nn **
         cbor_map_iterator_match p i l **
         (cbor_map_iterator_match p i l @==> raw_data_item_match p c v) **
         pure (
+            reveal nn == List.Tot.length l /\
             (list_ghost_forall_exists matches_map_group_entry' (Map?.v v) g.zero_or_more <==>
                 (res /\ list_ghost_forall_exists matches_map_group_entry' l g.zero_or_more)) /\
             opt_precedes l (Ghost.reveal b) /\
             cont == (res && Cons? l)
         )
     )
+    decreases (reveal #nat (!pn))
     {   
         let x = cbor_map_iterator_next pi;
         stick_trans () #_ #_ #(raw_data_item_match p c v);
@@ -942,6 +948,7 @@ fn impl_matches_map_group_no_restricted
         stick_consume_l ()
             #(raw_data_item_map_entry_match p x vx)
             #(cbor_map_iterator_match p gi l);
+        pn := hide (List.Tot.length l);
         pres := res;
         if (res) {
             let i = !pi;

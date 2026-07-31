@@ -16,11 +16,14 @@
 
 module FStarC.Syntax.Embeddings
 
+open FStar.Char
+include FStarC.Syntax.Embeddings.Base
+module Range = FStarC.Range.Type
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
 open FStarC.Range
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStarC.Class.Show
 
@@ -865,7 +868,7 @@ let e_norm_step : embedding NormSteps.norm_step =
             t
             typ
             (fun t ->
-                let hd, args = U.head_and_args t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_simpl ->
                     Some Simpl
@@ -956,7 +959,7 @@ let e_vconfig =
                   rng
     in
     let un (t:term) norm : ML (option vconfig) =
-        let hd, args = U.head_and_args t in
+        let hd, args = U.head_and_args_full t in
         match (U.un_uinst hd).n, args with
         (* Sigh *)
         | Tm_fvar fv, [
@@ -1073,7 +1076,7 @@ let e_order =
   in
   let unembed_order (t:term) cb : ML (option order) =
       let t = U.unascribe t in
-      let hd, args = U.head_and_args t in
+      let hd, args = U.head_and_args_full t in
       match (U.un_uinst hd).n, args with
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Lt_lid -> Some Lt
       | Tm_fvar fv, [] when S.fv_eq_lid fv ord_Eq_lid -> Some Eq
@@ -1090,9 +1093,8 @@ let or_else (f: option 'a) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
     let typ () =
-        S.mk (Tm_arrow {bs=[S.mk_binder (S.null_bv (type_of ea))];
-                        comp=S.mk_Total (type_of eb)})
-              Range.dummyRange
+        U.arrow_ln [S.mk_binder (S.null_bv (type_of ea))]
+                   (S.mk_Total (type_of eb))
     in
     let emb_t_arr_a_b () = ET_fun(emb_typ_of 'a (), emb_typ_of 'b ()) in
     let printer (f:'a -> 'b) = "<fun>" in
@@ -1194,12 +1196,10 @@ let e_sealed (ea : embedding 'a) : Tot (embedding (Sealed.sealed 'a)) =
         emb_ty_a
 
 (*
- * Embed a range as a FStar.Range.__range
- * The user usually manipulates a FStar.Range.t = sealed __range
- * For embedding an actual FStar.Range.t, we compose this (automatically
- * via typeclass resolution) with e_sealed.
+ * Embed a range as a FStar.Range.range. Ranges are no longer sealed, so this is
+ * the single embedding for the (unsealed) range type.
  *)
-let e___range =
+instance e_range : embedding Range.t =
     let em (r:range) (rng:range) _shadow _norm : ML term =
         S.mk (Tm_constant (C.Const_range r)) rng
     in
@@ -1211,14 +1211,9 @@ let e___range =
     mk_emb_full
         em
         un
-        (fun () -> S.t___range)
+        (fun () -> S.t_range)
         show
         (fun () -> ET_app (PC.range_lid |> Ident.string_of_lid, []))
-
-(* This is an odd one. We embed ranges as sealed, but we don't want to use the Sealed.sealed
-type internally, so we "hack" it like this. *)
-let e_range : embedding Range.t =
-  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding Err.issue = e_lazy Lazy_issue (S.fvar PC.issue_lid None)
 let e_document : embedding Pprint.document = e_lazy Lazy_doc (S.fvar PC.document_lid None)

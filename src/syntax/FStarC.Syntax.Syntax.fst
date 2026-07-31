@@ -15,6 +15,11 @@
 *)
 module FStarC.Syntax.Syntax
 
+open FStarC.Range.Type
+include FStarC.Class.HasRange
+open FStarC.Class.Show
+open FStarC.Class.Deq
+open FStarC.Class.Tagged
 open FStarC.Effect
 open FStarC.List
 (* Type definitions for the core AST *)
@@ -24,7 +29,7 @@ open FStarC.Range
 open FStarC.Ident
 open FStarC.Const
 open FStar.Dyn
-open FStarC.VConfig
+open FStar.VConfig
 
 open FStarC.Class.Ord
 open FStarC.Class.HasRange
@@ -235,6 +240,7 @@ let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
     sigmeta_spliced=false;
+    sigmeta_extension_decl=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
     sigmeta_extension_data=[]
@@ -248,10 +254,33 @@ let mk_sigelt (e: sigelt') = {
     sigopts = None;
     sigopens_and_abbrevs = [] }
 
-let mk_Tm_app (t1:typ) (args:list arg) p =
+let rec mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app {hd=t1; args}) p
+    | arg::args -> mk_Tm_app (mk (Tm_app {hd=t1; arg}) p) args p
+
+(* The innermost lambda carries the residual comp; the outer ones get None. *)
+let rec mk_Tm_abs (bs:binders) (body:term) (rc:option residual_comp) p =
+    match bs with
+    | [] -> body
+    | [b] -> mk (Tm_abs {b; body; rc_opt=rc}) p
+    | b::bs -> mk (Tm_abs {b; body=mk_Tm_abs bs body rc p; rc_opt=None}) p
+
+(* An arrow with no binders is degenerate and unrepresentable now that the node
+   is unary. It only ever made sense for a Tot computation, where it denotes the
+   result type itself. *)
+let rec mk_Tm_arrow (bs:binders) (c:comp) p =
+    match bs with
+    | [] ->
+      begin match c.n with
+      | Total t -> t
+      | _ -> failwith "mk_Tm_arrow: no binders, and the computation is not Tot"
+      end
+    | [b] -> mk (Tm_arrow {b; comp=c}) p
+    | b::bs ->
+      let tail = mk_Tm_arrow bs c p in
+      mk (Tm_arrow {b; comp=mk (Total tail) tail.pos}) p
+
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->
@@ -261,9 +290,7 @@ let mk_Tm_uinst (t:term) (us:universes) =
     end
   | _ -> failwith "Unexpected universe instantiation"
 
-let extend_app_n t args' r = match t.n with
-    | Tm_app {hd; args} -> mk_Tm_app hd (args@args') r
-    | _ -> mk_Tm_app t args' r
+let extend_app_n t args' r = mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
 let mk_Tm_delayed lr pos : ML term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
 let mk_Total t : ML comp = mk (Total t) t.pos
@@ -481,7 +508,6 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
-let t___range   = tconst PC.__range_lid
 let t_vconfig   = tconst PC.vconfig_lid
 let t_norm_step = tconst PC.norm_step_lid
 let t_term      = tconst PC.term_lid

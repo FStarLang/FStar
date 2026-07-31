@@ -37,9 +37,6 @@ fstarc-full: _force
 libapp: _force
 	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) libapp
 
-libplugin: _force
-	cd dune && $(DUNE) build $(FSTAR_DUNE_BUILD_OPTIONS) libplugin
-
 clean: _force
 	dune clean $(FSTAR_DUNE_OPTIONS) --root=dune
 	rm -rf out

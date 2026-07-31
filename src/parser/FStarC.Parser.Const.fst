@@ -169,8 +169,8 @@ let int_of_string_lid = p2l ["FStar"; "Parse"; "int_of_string"]
 let bool_of_string_lid = p2l ["FStar"; "Parse"; "bool_of_string"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
-let vconfig_lid     = p2l ["FStar"; "Stubs"; "VConfig"; "vconfig"]
-let mkvconfig_lid   = p2l ["FStar"; "Stubs"; "VConfig"; "Mkvconfig"]
+let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
+let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -293,11 +293,9 @@ let hide   = p2l ["FStar"; "Ghost"; "hide"]
 
 (* FStar.Range *)
 let labeled_lid    = p2l ["FStar"; "Range"; "labeled"]
-let __range_lid    = p2l ["FStar"; "Range"; "__range"]
-let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
+let range_lid      = p2l ["FStar"; "Range"; "range"]
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
-let __mk_range_lid = p2l ["FStar"; "Range"; "__mk_range"]
 let __explode_range_lid = p2l ["FStar"; "Range"; "explode"]
 let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
@@ -344,6 +342,7 @@ let plugin_attr     = attr "plugin"
 let tcnorm_attr    =  attr "tcnorm"
 let must_erase_for_extraction_attr = attr "must_erase_for_extraction"
 let strict_on_arguments_attr =  attr "strict_on_arguments"
+let smt_arity_attr = attr "smt_arity"
 let resolve_implicits_attr_string = attr "resolve_implicits"
 let override_resolve_implicits_handler_lid = attr "override_resolve_implicits_handler"
 let handle_smt_goals_attr = attr "handle_smt_goals"
@@ -464,7 +463,7 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]
-let check_with_lid = lid_of_path (["FStar"; "Stubs"; "VConfig"; "check_with"]) FStarC.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "VConfig"; "check_with"]) FStarC.Range.dummyRange
 
 let decls_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "decls"]
 

@@ -4,29 +4,12 @@ open FStarC
 open FStarC.Effect
 open FStarC.Pprint
 
-(* FIXME: make this interface saner, especially by providing subdoc/sublist, etc *)
-
-(* An error message is a list of documents. This allows us to print errors like
-these:
-
-* Error 19 at tests/error-messages/Bug1997.fst(92,19-92,49):
-  - Assertion failed
-  - The SMT solver could not prove the query. Use --query_stats for more details.
-  - Also see: Prims.fst(96,32-96,42)
-
-The header is taken from the code and range, and then the documents are rendered
-in order.
-
-`empty` documents in the list are skipped.
-*)
+(* The compiler-internal error-message helpers. The user-facing subset
+(error_message, text, mkmsg) is mirrored in ulib as FStar.Errors.Msg; the
+definitions are kept separate here on purpose so that the compiler's [text]
+is NOT subject to the FStar.Errors.Msg reduction primop (which would round-trip
+documents through arbitrary_string and drop word-wrapping during extraction). *)
 type error_message = list document
-
-class is_error_message (t:Type) = {
-  to_doc_list : t -> error_message;
-}
-
-instance val is_error_message_string   : is_error_message string
-instance val is_error_message_list_doc : is_error_message (list Pprint.document)
 
 (* A helper for creating errors from strings, only to be used for text.
 This will split the string into words and format is a paragraph.
@@ -36,6 +19,22 @@ anything else) all its formatting will be lost. You should instead use
 [term_to_doc] or similar to work with the documents directly, or as a
 last resort use doc_of_string. *)
 val text : string -> document
+
+(* Create a simple error message from a string. If the string is just
+text and can be long, please use [text] instead. On the other hand, if
+you need to respect indentation/spacing in the string, then use this
+one, but if that's the case it's probably better to build a doc instead
+of lifting from a string. NB: mkmsg s is equal to [doc_of_string s]. *)
+val mkmsg : string -> error_message
+
+(* FIXME: make this interface saner, especially by providing subdoc/sublist, etc *)
+
+class is_error_message (t:Type) = {
+  to_doc_list : t -> error_message;
+}
+
+instance val is_error_message_string   : is_error_message string
+instance val is_error_message_list_doc : is_error_message (list Pprint.document)
 
 (* Wrap a document in fancy quotes (‘...’). Use this instead of squotes/dquotes/
 bquotes when quoting a term or identifier in a message: a plain ' or " or ` can
@@ -48,13 +47,6 @@ val sublist : bullet:document -> elems:list document -> ML document
 
 (* == sublist (doc_of_string "- ") *)
 val bulleted : list document -> ML document
-
-(* Create a simple error message from a string. If the string is just
-text and can be long, please use [text] instead. On the other hand, if
-you need to respect indentation/spacing in the string, then use this
-one, but if that's the case it's probably better to build a doc instead
-of lifting from a string. NB: mkmsg s is equal to [doc_of_string s]. *)
-val mkmsg : string -> error_message
 
 (* Only to be used by FStarC.Errors *)
 val renderdoc : document -> ML string

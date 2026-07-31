@@ -11,6 +11,37 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## Pulse
+
+  * Pulse now distinguishes terminating from possibly-divergent computations at
+    the type and surface-syntax level. The computation type `stt` is split into
+    `stt` (terminating, surface keyword `fn`) and `stt_div` (possibly divergent,
+    surface keyword `divergent fn`). A terminating `stt` computation lifts
+    silently into `stt_div` (via `Pulse.Lib.Core.lift_stt_div`), and divergence
+    is infectious: any computation that sequences a divergent step is itself
+    divergent.
+
+    Consequences for existing code:
+    - A `while` loop with no `decreases` measure is now a divergent computation.
+      To keep such a function terminating (a plain `fn`), add a `decreases`
+      clause to the loop, placed after the `invariant`/`ensures` clauses:
+      `while (...) invariant (...) decreases (<nat measure>) { ... }`.
+      Genuinely non-terminating loops (e.g. spin/CAS-retry loops) must instead
+      live in a function declared with `divergent fn`.
+    - A recursive `fn rec` must now prove termination with a `decreases` clause,
+      or be declared `divergent fn rec`. Concurrency primitives that block or
+      spin (e.g. `Pulse.Lib.SpinLock.acquire`, `Mutex.lock`, `Par.par`, the task
+      pool's `spawn`/`await`/`teardown_pool`) are now `divergent`, so any function
+      that uses them is divergent too.
+    - `Pulse.Lib.Par` gains `par_div`, a divergent-accepting sibling of `par`.
+    - `Pulse.Lib.Task`'s task thunks (`task_f`) are now possibly divergent
+      (`stt_div`), so `spawn`/`spawn_` can spawn divergent tasks (including
+      recursively-spawning ones). A terminating task must be lifted at the call
+      site, e.g. `spawn_ p (fun () -> lift_stt_div (f ()))`.
+
+    (The PulseCore model currently defines `stt_div = stt`; a foundational model
+    of divergence is future work.)
+
 # Version 0.9.7.0
 
 ## Tactics & Reflection
@@ -99,6 +130,41 @@ Guidelines for the changelog:
     `val` declarations and arrows which was not previously the case.
 
 ## Module system
+
+  * **Interfaces are no longer syntactically interleaved into their
+    implementations.** Previously, when checking `A.fst` in the presence of
+    `A.fsti`, F* spliced the *parsed* declarations of the interface into the
+    implementation's declaration list and rechecked everything from scratch.
+    Now `A.fsti` is a genuine dependency: it is checked (or loaded from
+    `A.fsti.checked`) first, and its *already-checked* declarations are kept in
+    the typechecking environment as an ordered to-do list. Each declaration of
+    `A.fst` discharges the matching entries; interface declarations that have no
+    counterpart in the implementation (e.g. a `let` in the interface, or
+    auto-generated projectors) are copied verbatim, without being rechecked.
+    If any entry is left over at the end of the module, F* reports an error
+    listing the declarations of the interface that the implementation does not
+    define.
+
+    Consequences for existing code:
+    - **`open`, `include` and module abbreviations in a `.fsti` no longer scope
+      over the corresponding `.fst`.** Each file must now declare the opens it
+      uses. To update existing code, copy the `open`/`include`/`module X = ...`
+      declarations of `A.fsti` to the top of `A.fst`.
+    - Pragmas such as `#set-options` / `#push-options` in a `.fsti` no longer
+      leak into the `.fst`.
+    - An implementation is now checked against the interface by *subsumption*:
+      the two must have the same number of universe parameters and the
+      implementation's type must be a subtype of the declared one. It is no
+      longer required to be syntactically identical up to normalization.
+    - Interface declarations are elaborated exactly once, so typeclass
+      resolution, tactics and splices in a `.fsti` can no longer produce
+      different terms in `A.fsti.checked` and in `A.fst.checked`.
+    - Errors are now reported in the source order of the `.fst` (interleaving
+      used to reorder declarations).
+    - `A.fsti.checked` is now required in order to check `A.fst`, so a build
+      produces (and must ship) checked files for interfaces.
+    - The checked-file format version was bumped; all `.checked` files must be
+      regenerated.
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
