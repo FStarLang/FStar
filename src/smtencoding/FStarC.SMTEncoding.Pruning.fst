@@ -177,7 +177,7 @@ let exclude_names : RBSet.t string =
   ]
 
 let free_top_level_names t = diff (Term.free_top_level_names t) exclude_names
-let assumption_free_names a = diff a.assumption_free_names exclude_names
+let assumption_free_names a = free_top_level_names a.assumption_term
 
 (* Triggers of a universally quantified term *)
 let triggers_of_term (t:term)
