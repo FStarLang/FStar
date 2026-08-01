@@ -104,9 +104,7 @@ let with_env env (f:uenv -> ML 'a) : ML 'a =
    befriended module B, which in turn loads B.fsti in order to check B.fst. *)
 let iface_solver_frames
   : ref (list (TcEnv.solver_depth_t &
-               list (Syntax.modul &
-                     (FStarC.SMTEncoding.Term.decls_t &
-                      list FStarC.SMTEncoding.Env.fvar_binding))))
+               list (Syntax.modul & FStarC.SMTEncoding.Env.module_encoding)))
   = mk_ref []
 
 (* Called at every point where a module's SMT encoding is handed to the solver. *)
@@ -133,7 +131,7 @@ let pop_iface_solver_frame (env:uenv) (name:string) : ML unit =
     (* Replay the encodings of the modules that were loaded on the fly while the
        interface was being processed; they are legitimate dependences. *)
     List.rev pending |> List.iter (fun (tcmod, smt_decls) ->
-      if fst smt_decls <> [] || snd smt_decls <> []
+      if not (FStarC.SMTEncoding.Env.is_empty_encoding smt_decls)
       then FStarC.SMTEncoding.Encode.encode_modul_from_cache tcenv tcmod smt_decls;
       record_encoded_modul tcmod smt_decls)
 
@@ -519,7 +517,7 @@ and tc_one_file_no_frame
           {
             checked_module=tcmod;
             tc_time=tc_time;
-            smt_decls=(fun () -> smt_decls);
+            smt_encoding=smt_decls;
 
             extraction_time = extract_time + iface_extraction_time;
             mii = mii
@@ -601,8 +599,8 @@ and tc_one_file_no_frame
                  file, and handing it to the solver, is pure waste if we never
                  issue a query. See FStarC.SMTEncoding.Encode.defer_encoding. *)
               FStarC.SMTEncoding.Encode.defer_encoding (fun () ->
-                let smt_decls = tc_result.smt_decls () in
-                if fst smt_decls <> [] || snd smt_decls <> [] then
+                let smt_decls = tc_result.smt_encoding in
+                if not (FStarC.SMTEncoding.Env.is_empty_encoding smt_decls) then
                   FStarC.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
                 record_encoded_modul tcmod smt_decls
               );

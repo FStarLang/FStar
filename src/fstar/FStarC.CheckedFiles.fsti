@@ -29,18 +29,17 @@ val cache_version_number : int
 (*
  * This is what is returned when clients read a module from the caches
  *)
-//list of smt decls and fvbs for a module
-type smt_decls_t = FStarC.SMTEncoding.Term.decls_t & list FStarC.SMTEncoding.Env.fvar_binding
-
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:DsEnv.module_inclusion_info; //persisted
 
-  //The SMT encoding of the module. It is persisted as a separate value in the
-  //checked file and is only read (once) if this thunk is ever forced: it
-  //accounts for the majority of a checked file's size, and is not needed at all
-  //by clients that do not talk to the solver.
-  smt_decls: unit -> ML smt_decls_t;
+  //The SMT encoding of the module. Its index and fvar bindings are persisted
+  //alongside the module, but the declarations themselves are persisted as a
+  //separate value in the checked file and are only read (once) if the thunk is
+  //ever forced: they account for the majority of a checked file's size, and are
+  //typically not needed at all, since context pruning discards most of a
+  //dependency's declarations for any given query.
+  smt_encoding: FStarC.SMTEncoding.Env.module_encoding;
 
   tc_time:int;
   extraction_time:int

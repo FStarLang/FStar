@@ -28,6 +28,8 @@ module Syntax  = FStarC.Syntax.Syntax
 module TcEnv   = FStarC.TypeChecker.Env
 module BU      = FStarC.Util
 module Dep     = FStarC.Parser.Dep
+open FStarC.SMTEncoding.Term
+open FStarC.SMTEncoding.Env
 
 let dbg = Debug.get_toggle "CheckedFiles"
 let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
@@ -36,7 +38,7 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *)
-let cache_version_number = 85
+let cache_version_number = 86
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -53,12 +55,16 @@ type checked_file_entry_stage1 =
   parsing_data: Parser.Dep.parsing_data
 }
 
-//The persisted part of a tc_result. The SMT encoding is not included: it is
-//written as a third value in the checked file so that it can be read on demand.
+//The persisted part of a tc_result. The SMT encoding's declarations are not
+//included: they are written as a third value in the checked file so that they
+//can be read on demand. Their index is small and is stored here, since it is
+//needed as soon as the module is loaded.
 type tc_result_stored =
 {
   stored_checked_module: Syntax.modul;
-  stored_mii: DsEnv.module_inclusion_info
+  stored_mii: DsEnv.module_inclusion_info;
+  stored_smt_index: list FStarC.SMTEncoding.Pruning.elt_summary;
+  stored_smt_fvbs: list FStarC.SMTEncoding.Env.fvar_binding
 }
 
 type checked_file_entry_stage2 =
@@ -247,17 +253,17 @@ let hash_dependences (deps:Dep.deps) (fn:string) (deps_of_fn:list string): ML (e
   hash_deps [] binary_deps
 
 
-(* Reads the SMT encoding of [checked_fn] -- the third value in the file -- and
-   memoizes the result, so that it is read at most once even if the thunk is
-   forced repeatedly. *)
-let smt_decls_thunk (checked_fn:string) : ML (unit -> ML smt_decls_t) =
-  let memo : ref (option smt_decls_t) = mk_ref None in
+(* Reads the declarations of the SMT encoding of [checked_fn] -- the third value
+   in the file -- and memoizes the result, so that they are read at most once
+   even if the thunk is forced repeatedly. *)
+let smt_decls_thunk (checked_fn:string) : ML (unit -> ML decls_t) =
+  let memo : ref (option decls_t) = mk_ref None in
   fun () ->
     match !memo with
     | Some d -> d
     | None ->
       let d =
-        match BU.load_3rd_value_from_file3 #smt_decls_t checked_fn with
+        match BU.load_3rd_value_from_file3 #decls_t checked_fn with
         | Some d -> d
         | None ->
           failwith (Format.fmt1 "Could not read the SMT encoding from checked file %s" checked_fn)
@@ -268,7 +274,9 @@ let smt_decls_thunk (checked_fn:string) : ML (unit -> ML smt_decls_t) =
 let tc_result_of_stored (checked_fn:string) (s:tc_result_stored) : ML tc_result =
   { checked_module = s.stored_checked_module;
     mii = s.stored_mii;
-    smt_decls = smt_decls_thunk checked_fn;
+    smt_encoding = { me_index = s.stored_smt_index;
+                     me_fvbs = s.stored_smt_fvbs;
+                     me_decls = smt_decls_thunk checked_fn };
     tc_time = 0;
     extraction_time = 0 }
 
@@ -525,7 +533,7 @@ let store_values_to_cache
     (cache_file:string)
     (stage1:checked_file_entry_stage1)
     (stage2:checked_file_entry_stage2)
-    (smt_decls:smt_decls_t)
+    (smt_decls:decls_t)
     :ML string =
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
     BU.save_3values_to_file cache_file stage1 stage2 smt_decls)
@@ -570,9 +578,12 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
     match digest with
     | Inr hashes ->
       let stage1 = {version=cache_version_number; digest=(BU.digest_of_file fn); parsing_data=parsing_data} in
-      let stored = {stored_checked_module=tc_result.checked_module; stored_mii=tc_result.mii} in
+      let stored = {stored_checked_module=tc_result.checked_module;
+                    stored_mii=tc_result.mii;
+                    stored_smt_index=tc_result.smt_encoding.me_index;
+                    stored_smt_fvbs=tc_result.smt_encoding.me_fvbs} in
       let stage2 = {deps_dig=hashes; tc_res=stored} in
-      let checked_digest = store_values_to_cache cache_file stage1 stage2 (tc_result.smt_decls ()) in
+      let checked_digest = store_values_to_cache cache_file stage1 stage2 (tc_result.smt_encoding.me_decls ()) in
       (* Record the digest we just wrote, so that dependents of this module can
          use it without having to read the file back. *)
       ignore <| add_and_return cache_file (Valid checked_digest, Inr parsing_data)
