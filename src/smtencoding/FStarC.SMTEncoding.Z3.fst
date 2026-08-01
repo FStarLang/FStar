@@ -554,7 +554,7 @@ let context_profile (theory:list decl) : ML unit =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
             match d with
-            | Module(name, decls) ->
+            | Module name decls ->
               let decls =
                 List.filter
                     (function Assume _ -> true

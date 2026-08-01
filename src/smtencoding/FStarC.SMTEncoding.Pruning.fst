@@ -169,11 +169,11 @@ let assumption_free_names a = diff a.assumption_free_names exclude_names
 let triggers_of_term (t:term)
 : ML triggers_set
 = let rec aux (t:term) : ML triggers_set =
-    match t.tm with
-    | Quant(Forall, triggers, _, _, _) ->
+    match t with
+    | Quant Forall triggers _ _ _ _ ->
       triggers |> List.map (fun disjunct ->
       disjunct |> List.fold_left (fun out t -> union out (free_top_level_names t)) (empty()))
-    | Labeled (t, _, _) -> aux t
+    | Labeled t _ _ -> aux t
     | _ -> []
   in aux t
 
@@ -184,7 +184,7 @@ let triggers_of_term (t:term)
    itself:
 
     - Applications of nullary functions are sometimes encoded as
-      App(Var "name", []) and sometiems as FreeV(FV("name", _, _))  
+      App (Var "name") [] and sometiems as FreeV(FV "name" _ _)  
 *)
 let maybe_add_ambient (a:assumption) (p:pruning_state)
 : ML pruning_state
@@ -204,23 +204,23 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     | _ -> false
   in
   let is_ambient_refinement ty =
-    match ty.tm with
-    | App(Var "Prims.squash", _) -> true
-    | App(Var name, _) 
-    | FreeV(FV(name, _, _)) -> BU.starts_with name "Tm_refine_"
+    match ty with
+    | App (Var "Prims.squash") _ _ -> true
+    | App (Var name) _ _ 
+    | FreeV(FV name _ _) -> BU.starts_with name "Tm_refine_"
     | _ -> false
   in
   let ambient_refinement_payload ty =
-    match ty.tm with
-    | App(Var "Prims.squash", [_;t]) -> t
+    match ty with
+    | App (Var "Prims.squash") [_;t] _ -> t
     | _ -> ty
   in
   begin
-    match a.assumption_term.tm with
+    match a.assumption_term with
     // - l_quant_interp assumptions give interpretations to deeply embedded quantifiers
     //   and have a specific shape of an Iff, where the LHS has a pattern, if the
     //   user annotated one.
-    | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
+    | App Iff [t0; t1] _ when BU.starts_with a.assumption_name "l_quant_interp" -> (
       let triggers_lhs = free_top_level_names t0 in
       add_assumption_with_triggers [triggers_lhs]
     )
@@ -241,7 +241,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     // - Top-level assumptions of the form `HasType term (squash ty)`
     //   or `HasType term (Tm_refine_... )` are deemed ambient and are
     //   always included in the pruned set and added as extra roots.
-    | App (Var "HasType", [term; ty])
+    | App (Var "HasType") [term; ty] _
       when is_ambient_refinement ty -> (
       //HasType term (squash ty) is an ambient that should trigger on either the term or the type
       let triggers = triggers_of_term (ambient_refinement_payload ty) in
@@ -257,14 +257,12 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
  
     // - Partial applications are triggered with a __uu__PartialApp token; this is
     //   triggered on either the symbol itself or its nullary token
-    | App (Var "Valid", 
-          [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
-    | App (Var "Valid", 
-          [{tm=App (Var "ApplyTT", [{tm=App(Var "__uu__PartialApp", _)}; term])}]) ->
+    | App (Var "Valid") [(App (Var "ApplyTT") [(FreeV (FV "__uu__PartialApp" _ _)); term] _)] _
+    | App (Var "Valid") [(App (Var "ApplyTT") [(App (Var "__uu__PartialApp") _ _); term] _)] _ ->
       let triggers =
-        match term.tm with
-        | FreeV(FV(token, _, _))
-        | App(Var token, []) ->
+        match term with
+        | FreeV(FV token _ _)
+        | App (Var token) [] _ ->
           if BU.ends_with token "@tok"
           then [singleton token; singleton (BU.substring token 0 (String.length token - 4))]
           else [singleton token]
@@ -275,32 +273,32 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
 
     // HasType, Valid, IsTotFun, and is-Tm_arrow are so common that we exclude them as triggers
     // and instead only consider the free names of the underlying terms
-    | App (Var "Valid", [term])
-    | App (Var "HasType", [term; _])
-    | App (Var "IsTotFun", [term])
-    | App (Var "is-Tm_arrow", [term]) ->
+    | App (Var "Valid") [term] _
+    | App (Var "HasType") [term; _] _
+    | App (Var "IsTotFun") [term] _
+    | App (Var "is-Tm_arrow") [term] _ ->
       add_assumption_with_triggers [free_top_level_names term]
 
     // Term_constr_id assumptions trigger on the free names of the underlying term
-    | App (Eq, [ _; {tm=App (Var "Term_constr_id", [term])}]) ->
+    | App Eq [ _; (App (Var "Term_constr_id") [term] _)] _ ->
       add_assumption_with_triggers [free_top_level_names term]
 
     // Descend into conjunctions and collect their triggers
     // Fire if any of the conjuncts have triggers that fire
-    | App (And, tms) ->
+    | App And tms _ ->
       let t1 = List.collect triggers_of_term tms in
       add_assumption_with_triggers t1
 
     // Assumptions named "equation_" are encodings of F* definitions and are
     // equations oriented from left to right
-    | App (Eq, [t0; t1]) when BU.starts_with a.assumption_name "equation_" ->
+    | App Eq [t0; t1] _ when BU.starts_with a.assumption_name "equation_" ->
       let t0 = free_top_level_names t0 in
       add_assumption_with_triggers [t0]
 
-    | App (Iff, [t0; t1]) -> (
-      match t0.tm, t1.tm with
-      | App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_u; lhs])}]),
-        App(Var "Valid", [{tm=App(Var "Prims.hasEq", [_v; rhs])}]) ->
+    | App Iff [t0; t1] _ -> (
+      match t0, t1 with
+      | App (Var "Valid") [(App (Var "Prims.hasEq") [_u; lhs] _)] _,
+        App (Var "Valid") [(App (Var "Prims.hasEq") [_v; rhs] _)] _ ->
         //hasEq t0 <==> hasEq t1
         //We have many of these for every refinement type; triggers from left-to-right
         //perhaps these are better written hasEq t1 ==> hasEq t0, and trigger in a goal-directed way
@@ -315,13 +313,13 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     )
 
     // Other equations are bidirectional
-    | App (Eq, [t0; t1]) ->
+    | App Eq [t0; t1] _ ->
       let t0 = free_top_level_names t0 in
       let t1 = free_top_level_names t1 in
       add_assumption_with_triggers [t0; t1]
 
     // we get many vacuous True facts; just drop them
-    | App (TrueOp, _) -> p
+    | App TrueOp _ _ -> p
 
     // Oterwise, add to ambients without scanning them further
     | _ ->
@@ -370,7 +368,7 @@ let rec assumptions_of_decl (d:decl)
 : ML (list assumption)
 = match d with
   | Assume a -> [a]
-  | Module (_, ds) -> List.collect assumptions_of_decl ds
+  | Module _ ds -> List.collect assumptions_of_decl ds
   | d -> []
 
 // Add a declaration to the pruning state, updating the trigger and assumption tables
@@ -382,13 +380,13 @@ let rec add_decl (d:decl) (p:pruning_state)
     let triggers = triggers_of_term a.assumption_term in
     let p = List.fold_left (List.fold_left (add_trigger_to_assumption a)) p (List.map elems triggers) in
     add_assumption_to_triggers a p triggers
-  | Module (_, ds) -> List.fold_left (fun p d -> add_decl d p) p ds
-  | DefineFun(macro, _, _, body, _) ->
+  | Module _ ds -> List.fold_left (fun p d -> add_decl d p) p ds
+  | DefineFun macro _ _ body _ ->
     let free_names = elems (free_top_level_names body) in
     { p with defs_and_decls=d::p.defs_and_decls; 
              defs_and_decls_map = PSMap.add p.defs_and_decls_map macro d;
              macro_freenames = PSMap.add p.macro_freenames macro free_names } 
-  | DeclFun(name, _, _, _) ->
+  | DeclFun name _ _ _ ->
     { p with defs_and_decls = d::p.defs_and_decls;
              defs_and_decls_map = PSMap.add p.defs_and_decls_map name d }
   | _ -> p
@@ -526,8 +524,8 @@ let print_reached_names_and_reasons (ctxt:ctxt) names : ML string =
 let name_of_decl (d:decl) : ML string =
   match d with
   | Assume a -> a.assumption_name
-  | DeclFun(a, _, _, _) -> a
-  | DefineFun(a, _, _, _, _) -> a
+  | DeclFun a _ _ _ -> a
+  | DefineFun a _ _ _ _ -> a
   | _ -> "<none>"
 
 let prune (p:pruning_state) (roots0:list decl)

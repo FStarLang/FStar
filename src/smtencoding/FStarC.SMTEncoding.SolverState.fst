@@ -196,7 +196,7 @@ let already_given_decl (s:solver_state) (aname:string)
 
 let rec flatten (d:decl) : ML (list decl) = 
   match d with
-  | Module (_, ds) -> List.collect flatten ds
+  | Module _ ds -> List.collect flatten ds
   | _ -> [d]
 
 (* Record assumptions with their names *)
@@ -388,17 +388,17 @@ let reset (using_facts_from:option using_facts_from_setting) (s:solver_state)
 let name_of_decl (d:decl) : ML string =
   match d with
   | Assume a -> a.assumption_name
-  | DeclFun(a, _, _, _) -> a
-  | DefineFun(a, _, _, _, _) -> a
+  | DeclFun a _ _ _ -> a
+  | DefineFun a _ _ _ _ -> a
   | _ -> failwith "Expected an assumption"
 
 let compare_decls (d0 d1:decl) : ML int =
   match d0, d1 with
-  | DeclFun(a0, _, _, _), DeclFun(a1, _, _, _)
-  | DefineFun(a0, _, _, _, _), DefineFun(a1, _, _, _, _)
+  | DeclFun a0 _ _ _, DeclFun a1 _ _ _
+  | DefineFun a0 _ _ _ _, DefineFun a1 _ _ _ _
   | Assume {assumption_name=a0}, Assume{assumption_name=a1} -> BU.compare a0 a1
-  | DeclFun _, _ -> -1
-  | DefineFun _, _ -> -1
+  | DeclFun _ _ _ _, _ -> -1
+  | DefineFun _ _ _ _ _, _ -> -1
   | _ -> failwith "Unexpected decl in compare decls"
 
 (* Prune the context with respect to a set of roots *)
