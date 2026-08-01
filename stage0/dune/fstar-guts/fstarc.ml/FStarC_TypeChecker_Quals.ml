@@ -395,17 +395,8 @@ let check_erasable (env : FStarC_TypeChecker_Env.env)
          (match uu___5 with
           | FStar_Pervasives.Inr lbname ->
               let has_iface_val =
-                let uu___6 =
-                  FStarC_Syntax_DsEnv.iface_decls
-                    (FStarC_TypeChecker_Env.dsenv env)
-                    (FStarC_TypeChecker_Env.current_module env) in
-                match uu___6 with
-                | FStar_Pervasives_Native.Some iface_decls ->
-                    FStarC_Util.for_some
-                      (FStarC_Parser_AST.decl_is_val
-                         (FStarC_Ident.ident_of_lid
-                            lbname.FStarC_Syntax_Syntax.fv_name)) iface_decls
-                | FStar_Pervasives_Native.None -> false in
+                FStarC_TypeChecker_Env.has_iface_val env
+                  lbname.FStarC_Syntax_Syntax.fv_name in
               let val_decl =
                 FStarC_TypeChecker_Env.try_lookup_val_decl env
                   lbname.FStarC_Syntax_Syntax.fv_name in
@@ -565,85 +556,73 @@ let check_must_erase_attribute (env : FStarC_TypeChecker_Env.env)
      | FStarC_Syntax_Syntax.Sig_let
          { FStarC_Syntax_Syntax.lbs1 = lbs; FStarC_Syntax_Syntax.lids1 = l;_}
          ->
-         let uu___1 =
-           FStarC_Syntax_DsEnv.iface_decls (FStarC_TypeChecker_Env.dsenv env)
-             (FStarC_TypeChecker_Env.current_module env) in
-         (match uu___1 with
-          | FStar_Pervasives_Native.None -> ()
-          | FStar_Pervasives_Native.Some iface_decls ->
-              FStarC_List.iter
-                (fun lb ->
-                   let lbname =
-                     FStar_Pervasives.__proj__Inr__item__v
-                       lb.FStarC_Syntax_Syntax.lbname in
-                   let has_iface_val =
-                     FStarC_Util.for_some
-                       (FStarC_Parser_AST.decl_is_val
-                          (FStarC_Ident.ident_of_lid
-                             lbname.FStarC_Syntax_Syntax.fv_name))
-                       iface_decls in
-                   if has_iface_val
+         FStarC_List.iter
+           (fun lb ->
+              let lbname =
+                FStar_Pervasives.__proj__Inr__item__v
+                  lb.FStarC_Syntax_Syntax.lbname in
+              let has_iface_val =
+                FStarC_TypeChecker_Env.has_iface_val env
+                  lbname.FStarC_Syntax_Syntax.fv_name in
+              if has_iface_val
+              then
+                let must_erase =
+                  FStarC_TypeChecker_Util.must_erase_for_extraction env
+                    lb.FStarC_Syntax_Syntax.lbdef in
+                let has_attr =
+                  FStarC_TypeChecker_Env.fv_has_attr env lbname
+                    FStarC_Parser_Const.must_erase_for_extraction_attr in
+                (if must_erase && (Prims.op_Negation has_attr)
+                 then
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 =
+                           FStarC_Class_Show.show
+                             FStarC_Syntax_Syntax.showable_fv lbname in
+                         FStarC_Format.fmt1
+                           "Values of type \226\128\152%s\226\128\153 will be erased during extraction, but its interface hides this fact."
+                           uu___4 in
+                       FStarC_Errors_Msg.text uu___3 in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             FStarC_Class_Show.show
+                               FStarC_Syntax_Syntax.showable_fv lbname in
+                           FStarC_Format.fmt1
+                             "Add the \226\128\152must_erase_for_extraction\226\128\153 attribute to the \226\128\152val %s\226\128\153 declaration for this symbol in the interface"
+                             uu___6 in
+                         FStarC_Errors_Msg.text uu___5 in
+                       [uu___4] in
+                     uu___2 :: uu___3 in
+                   FStarC_Errors.log_issue FStarC_Syntax_Syntax.hasRange_fv
+                     lbname FStarC_Errors_Codes.Error_MustEraseMissing ()
+                     (Obj.magic FStarC_Errors_Msg.is_error_message_list_doc)
+                     (Obj.magic uu___1)
+                 else
+                   if has_attr && (Prims.op_Negation must_erase)
                    then
-                     let must_erase =
-                       FStarC_TypeChecker_Util.must_erase_for_extraction env
-                         lb.FStarC_Syntax_Syntax.lbdef in
-                     let has_attr =
-                       FStarC_TypeChecker_Env.fv_has_attr env lbname
-                         FStarC_Parser_Const.must_erase_for_extraction_attr in
-                     (if must_erase && (Prims.op_Negation has_attr)
-                      then
+                     (let uu___1 =
                         let uu___2 =
                           let uu___3 =
                             let uu___4 =
-                              let uu___5 =
-                                FStarC_Class_Show.show
-                                  FStarC_Syntax_Syntax.showable_fv lbname in
-                              FStarC_Format.fmt1
-                                "Values of type \226\128\152%s\226\128\153 will be erased during extraction, but its interface hides this fact."
-                                uu___5 in
-                            FStarC_Errors_Msg.text uu___4 in
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 =
-                                let uu___7 =
-                                  FStarC_Class_Show.show
-                                    FStarC_Syntax_Syntax.showable_fv lbname in
-                                FStarC_Format.fmt1
-                                  "Add the \226\128\152must_erase_for_extraction\226\128\153 attribute to the \226\128\152val %s\226\128\153 declaration for this symbol in the interface"
-                                  uu___7 in
-                              FStarC_Errors_Msg.text uu___6 in
-                            [uu___5] in
-                          uu___3 :: uu___4 in
-                        FStarC_Errors.log_issue
-                          FStarC_Syntax_Syntax.hasRange_fv lbname
-                          FStarC_Errors_Codes.Error_MustEraseMissing ()
-                          (Obj.magic
-                             FStarC_Errors_Msg.is_error_message_list_doc)
-                          (Obj.magic uu___2)
-                      else
-                        if has_attr && (Prims.op_Negation must_erase)
-                        then
-                          (let uu___2 =
-                             let uu___3 =
-                               let uu___4 =
-                                 let uu___5 =
-                                   FStarC_Class_Show.show
-                                     FStarC_Syntax_Syntax.showable_fv lbname in
-                                 FStarC_Format.fmt1
-                                   "Values of type \226\128\152%s\226\128\153 cannot be erased during extraction, but the \226\128\152must_erase_for_extraction\226\128\153 attribute claims that it can."
-                                   uu___5 in
-                               FStarC_Errors_Msg.text uu___4 in
-                             [uu___3;
-                             FStarC_Errors_Msg.text
-                               "Please remove the attribute."] in
-                           FStarC_Errors.log_issue
-                             FStarC_Syntax_Syntax.hasRange_fv lbname
-                             FStarC_Errors_Codes.Error_MustEraseMissing ()
-                             (Obj.magic
-                                FStarC_Errors_Msg.is_error_message_list_doc)
-                             (Obj.magic uu___2))
-                        else ())
-                   else ()) (FStar_Pervasives_Native.snd lbs))
+                              FStarC_Class_Show.show
+                                FStarC_Syntax_Syntax.showable_fv lbname in
+                            FStarC_Format.fmt1
+                              "Values of type \226\128\152%s\226\128\153 cannot be erased during extraction, but the \226\128\152must_erase_for_extraction\226\128\153 attribute claims that it can."
+                              uu___4 in
+                          FStarC_Errors_Msg.text uu___3 in
+                        [uu___2;
+                        FStarC_Errors_Msg.text "Please remove the attribute."] in
+                      FStarC_Errors.log_issue
+                        FStarC_Syntax_Syntax.hasRange_fv lbname
+                        FStarC_Errors_Codes.Error_MustEraseMissing ()
+                        (Obj.magic
+                           FStarC_Errors_Msg.is_error_message_list_doc)
+                        (Obj.magic uu___1))
+                   else ())
+              else ()) (FStar_Pervasives_Native.snd lbs)
      | uu___1 -> ())
 let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
   (rng : FStarC_Range_Type.t) (se : FStarC_Syntax_Syntax.sigelt) : unit=
@@ -682,7 +661,7 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env)
               (Obj.magic uu___4)
           else ());
          (let t = FStarC_Syntax_Util.comp_result res in
-          let uu___3 = FStarC_Syntax_Util.head_and_args t in
+          let uu___3 = FStarC_Syntax_Util.head_and_args_full t in
           match uu___3 with
           | (head, uu___4) ->
               let err uu___5 =

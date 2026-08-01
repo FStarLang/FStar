@@ -339,7 +339,7 @@ let mk_extracted_embedding (name : Prims.string)
       'a FStar_Pervasives_Native.option)
   (e : 'a -> FStarC_Syntax_Syntax.term) : 'a embedding=
   let uu t _norm =
-    let uu___ = FStarC_Syntax_Util.head_and_args t in
+    let uu___ = FStarC_Syntax_Util.head_and_args_full t in
     match uu___ with
     | (hd, args) ->
         let uu___1 =

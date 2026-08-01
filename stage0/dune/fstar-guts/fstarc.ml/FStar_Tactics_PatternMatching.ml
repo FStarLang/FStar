@@ -250,58 +250,46 @@ let string_of_match_exception (uu___ : match_exception) :
   (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
   match uu___ with
   | NameMismatch (qn1, qn2) ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___1 ->
-           Prims.strcat "Match failure (name mismatch): expecting "
-             (Prims.strcat qn1 (Prims.strcat ", found " qn2)))
+      (fun uu___1 ->
+         Prims.strcat "Match failure (name mismatch): expecting "
+           (Prims.strcat qn1 (Prims.strcat ", found " qn2)))
   | SimpleMismatch (pat, tm) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStar_Tactics_Effect.tac_bind () ()
-              (FStarC_Tactics_V2_Builtins.term_to_string tm)
-              (fun uu___1 uu___2 -> Prims.strcat ", got " uu___1))
-           (fun uu___1 uu___2 -> Prims.strcat (desc_of_pattern pat) uu___1))
-        (fun uu___1 uu___2 ->
-           Prims.strcat "Match failure (sort mismatch): expecting " uu___1)
+      (fun ps ->
+         let x =
+           let x1 =
+             let x2 = FStarC_Tactics_V2_Builtins.term_to_string tm ps in
+             Prims.strcat ", got " x2 in
+           Prims.strcat (desc_of_pattern pat) x1 in
+         Prims.strcat "Match failure (sort mismatch): expecting " x)
   | NonLinearMismatch (nm, t1, t2) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStar_Tactics_Effect.tac_bind () ()
-              (FStar_Tactics_Effect.tac_bind () ()
-                 (FStarC_Tactics_V2_Builtins.term_to_string t1)
-                 (fun uu___1 ps ->
-                    let x =
-                      let x1 =
-                        FStarC_Tactics_V2_Builtins.term_to_string t2 ps in
-                      Prims.strcat " and " x1 in
-                    Prims.strcat uu___1 x))
-              (fun uu___1 uu___2 ->
-                 Prims.strcat " needs to match both " uu___1))
-           (fun uu___1 uu___2 -> Prims.strcat nm uu___1))
-        (fun uu___1 uu___2 ->
-           Prims.strcat "Match failure (nonlinear mismatch): variable "
-             uu___1)
+      (fun ps ->
+         let x =
+           let x1 =
+             let x2 =
+               let x3 = FStarC_Tactics_V2_Builtins.term_to_string t1 ps in
+               let x4 =
+                 let x5 = FStarC_Tactics_V2_Builtins.term_to_string t2 ps in
+                 Prims.strcat " and " x5 in
+               Prims.strcat x3 x4 in
+             Prims.strcat " needs to match both " x2 in
+           Prims.strcat nm x1 in
+         Prims.strcat "Match failure (nonlinear mismatch): variable " x)
   | UnsupportedTermInPattern tm ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string tm)
-           (fun uu___1 ps ->
-              let x =
-                let x1 = let x2 = term_head tm ps in Prims.strcat x2 ")" in
-                Prims.strcat " (" x1 in
-              Prims.strcat uu___1 x))
-        (fun uu___1 uu___2 ->
-           Prims.strcat "Match failure (unsupported term in pattern): "
-             uu___1)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string tm ps in
+           let x2 =
+             let x3 = let x4 = term_head tm ps in Prims.strcat x4 ")" in
+             Prims.strcat " (" x3 in
+           Prims.strcat x1 x2 in
+         Prims.strcat "Match failure (unsupported term in pattern): " x)
   | IncorrectTypeInAbsPatBinder typ ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () ()
-           (FStarC_Tactics_V2_Builtins.term_to_string typ)
-           (fun uu___1 uu___2 ->
-              Prims.strcat uu___1
-                " (use one of ``var``, ``hyp \226\128\166``, or ``goal \226\128\166``)"))
-        (fun uu___1 uu___2 ->
-           Prims.strcat "Incorrect type in pattern-matching binder: " uu___1)
+      (fun ps ->
+         let x =
+           let x1 = FStarC_Tactics_V2_Builtins.term_to_string typ ps in
+           Prims.strcat x1
+             " (use one of ``var``, ``hyp \226\128\166``, or ``goal \226\128\166``)" in
+         Prims.strcat "Incorrect type in pattern-matching binder: " x)
 type 'a match_res =
   | Success of 'a 
   | Failure of match_exception 
@@ -317,25 +305,24 @@ let return (x : 'a) : 'a match_res= Success x
 let op_let_Question (f : 'a match_res)
   (g : 'a -> ('b match_res, Obj.t) FStar_Tactics_Effect.tac_repr) :
   ('b match_res, Obj.t) FStar_Tactics_Effect.tac_repr=
-  match f with
-  | Success aa -> g aa
-  | Failure ex ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> Failure ex)
+  match f with | Success aa -> g aa | Failure ex -> (fun uu___ -> Failure ex)
 let raise (ex : match_exception) : 'a match_res= Failure ex
 let lift_exn_tac (f : 'a -> 'b match_res) (aa : 'a) :
   ('b, Obj.t) FStar_Tactics_Effect.tac_repr=
   match f aa with
-  | Success bb -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> bb)
+  | Success bb -> (fun uu___ -> bb)
   | Failure ex ->
-      FStar_Tactics_Effect.tac_bind () () (string_of_match_exception ex)
-        (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___)
+      (fun ps ->
+         let x = string_of_match_exception ex ps in
+         FStar_Tactics_V2_Derived.fail x ps)
 let lift_exn_tactic (f : 'a -> 'b match_res) (aa : 'a) :
   ('b, Obj.t) FStar_Tactics_Effect.tac_repr=
   match f aa with
-  | Success bb -> FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> bb)
+  | Success bb -> (fun uu___ -> bb)
   | Failure ex ->
-      FStar_Tactics_Effect.tac_bind () () (string_of_match_exception ex)
-        (fun uu___ -> FStar_Tactics_V2_Derived.fail uu___)
+      (fun ps ->
+         let x = string_of_match_exception ex ps in
+         FStar_Tactics_V2_Derived.fail x ps)
 type bindings = (varname * FStar_Tactics_NamedView.term) Prims.list
 let string_of_bindings (bindings1 : bindings) :
   (Prims.string, Obj.t) FStar_Tactics_Effect.tac_repr=
@@ -345,14 +332,14 @@ let string_of_bindings (bindings1 : bindings) :
         (fun uu___ ->
            match uu___ with
            | (nm, tm) ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (FStar_Tactics_Effect.tac_bind () ()
-                    (FStar_Tactics_Effect.tac_bind () ()
-                       (FStarC_Tactics_V2_Builtins.term_to_string tm)
-                       (fun uu___1 uu___2 -> Prims.strcat ": " uu___1))
-                    (fun uu___1 uu___2 -> Prims.strcat nm uu___1))
-                 (fun uu___1 uu___2 -> Prims.strcat ">> " uu___1)) bindings1
-        ps in
+               (fun ps1 ->
+                  let x1 =
+                    let x2 =
+                      let x3 =
+                        FStarC_Tactics_V2_Builtins.term_to_string tm ps1 in
+                      Prims.strcat ": " x3 in
+                    Prims.strcat nm x2 in
+                  Prims.strcat ">> " x1)) bindings1 ps in
     FStar_String.concat "\n" x
 let rec interp_pattern_aux (pat : pattern) (cur_bindings : bindings)
   (tm : FStar_Tactics_NamedView.term) :
@@ -481,12 +468,12 @@ let string_of_matching_solution (ms : matching_solution) :
           (fun uu___ ->
              match uu___ with
              | (varname1, tm) ->
-                 FStar_Tactics_Effect.tac_bind () ()
-                   (FStar_Tactics_Effect.tac_bind () ()
-                      (FStarC_Tactics_V2_Builtins.term_to_string tm)
-                      (fun uu___1 uu___2 -> Prims.strcat ": " uu___1))
-                   (fun uu___1 uu___2 -> Prims.strcat varname1 uu___1))
-          ms.ms_vars ps in
+                 (fun ps1 ->
+                    let x2 =
+                      let x3 =
+                        FStarC_Tactics_V2_Builtins.term_to_string tm ps1 in
+                      Prims.strcat ": " x3 in
+                    Prims.strcat varname1 x2)) ms.ms_vars ps in
       FStar_String.concat "\n            " x1 in
     let x1 =
       let x2 =
@@ -494,12 +481,13 @@ let string_of_matching_solution (ms : matching_solution) :
           (fun uu___ ->
              match uu___ with
              | (nm, binding) ->
-                 FStar_Tactics_Effect.tac_bind () ()
-                   (FStar_Tactics_Effect.tac_bind () ()
-                      (FStar_Tactics_V2_Derived.binding_to_string binding)
-                      (fun uu___1 uu___2 -> Prims.strcat ": " uu___1))
-                   (fun uu___1 uu___2 -> Prims.strcat nm uu___1)) ms.ms_hyps
-          ps in
+                 (fun ps1 ->
+                    let x3 =
+                      let x4 =
+                        FStar_Tactics_V2_Derived.binding_to_string binding
+                          ps1 in
+                      Prims.strcat ": " x4 in
+                    Prims.strcat nm x3)) ms.ms_hyps ps in
       FStar_String.concat "\n        " x2 in
     Prims.strcat "\n{ vars: "
       (Prims.strcat x
@@ -509,8 +497,7 @@ let assoc_varname_fail (key : varname) (ls : (varname * 'b) Prims.list) :
   match FStar_List_Tot_Base.assoc key ls with
   | FStar_Pervasives_Native.None ->
       FStar_Tactics_V2_Derived.fail (Prims.strcat "Not found: " key)
-  | FStar_Pervasives_Native.Some x ->
-      FStar_Tactics_Effect.lift_div_tac () (fun uu___ -> x)
+  | FStar_Pervasives_Native.Some x -> (fun uu___ -> x)
 let ms_locate_hyp (solution : matching_solution) (name : varname) :
   (hypothesis, Obj.t) FStar_Tactics_Effect.tac_repr=
   assoc_varname_fail name solution.ms_hyps
@@ -724,59 +711,51 @@ let matching_problem_of_abs (tm : FStar_Tactics_NamedView.term) :
               (fun problem uu___ ->
                  match uu___ with
                  | (binder, bv_name, binder_kind, typ) ->
-                     FStar_Tactics_Effect.tac_bind () ()
-                       (FStar_Tactics_Effect.tac_bind () ()
-                          (FStar_Tactics_Effect.tac_bind () ()
-                             (FStar_Tactics_Effect.tac_bind () ()
-                                (name_of_named_binder binder)
-                                (fun uu___1 ps1 ->
-                                   let x4 =
-                                     let x5 =
-                                       let x6 =
-                                         let x7 =
-                                           FStarC_Tactics_V2_Builtins.term_to_string
-                                             typ ps1 in
-                                         Prims.strcat ", with type " x7 in
-                                       Prims.strcat
-                                         (string_of_abspat_binder_kind
-                                            binder_kind) x6 in
-                                     Prims.strcat ", classified as " x5 in
-                                   Prims.strcat uu___1 x4))
-                             (fun uu___1 uu___2 ->
-                                Prims.strcat "Compiling binder " uu___1))
-                          (fun uu___1 -> debug uu___1))
-                       (fun uu___1 ->
-                          match binder_kind with
-                          | ABKVar uu___2 ->
-                              FStar_Tactics_Effect.lift_div_tac ()
-                                (fun uu___3 ->
-                                   {
-                                     mp_vars = (bv_name :: (problem.mp_vars));
-                                     mp_hyps = (problem.mp_hyps);
-                                     mp_goal = (problem.mp_goal)
-                                   })
-                          | ABKHyp ->
-                              (fun ps1 ->
-                                 let x4 =
-                                   let x5 =
-                                     let x6 = pattern_of_term typ ps1 in
-                                     (bv_name, x6) in
-                                   x5 :: (problem.mp_hyps) in
-                                 {
-                                   mp_vars = (problem.mp_vars);
-                                   mp_hyps = x4;
-                                   mp_goal = (problem.mp_goal)
-                                 })
-                          | ABKGoal ->
-                              (fun ps1 ->
-                                 let x4 =
-                                   let x5 = pattern_of_term typ ps1 in
-                                   FStar_Pervasives_Native.Some x5 in
-                                 {
-                                   mp_vars = (problem.mp_vars);
-                                   mp_hyps = (problem.mp_hyps);
-                                   mp_goal = x4
-                                 })))
+                     (fun ps1 ->
+                        (let x5 =
+                           let x6 =
+                             let x7 = name_of_named_binder binder ps1 in
+                             let x8 =
+                               let x9 =
+                                 let x10 =
+                                   let x11 =
+                                     FStarC_Tactics_V2_Builtins.term_to_string
+                                       typ ps1 in
+                                   Prims.strcat ", with type " x11 in
+                                 Prims.strcat
+                                   (string_of_abspat_binder_kind binder_kind)
+                                   x10 in
+                               Prims.strcat ", classified as " x9 in
+                             Prims.strcat x7 x8 in
+                           Prims.strcat "Compiling binder " x6 in
+                         debug x5 ps1);
+                        (match binder_kind with
+                         | ABKVar uu___1 ->
+                             {
+                               mp_vars = (bv_name :: (problem.mp_vars));
+                               mp_hyps = (problem.mp_hyps);
+                               mp_goal = (problem.mp_goal)
+                             }
+                         | ABKHyp ->
+                             let x5 =
+                               let x6 =
+                                 let x7 = pattern_of_term typ ps1 in
+                                 (bv_name, x7) in
+                               x6 :: (problem.mp_hyps) in
+                             {
+                               mp_vars = (problem.mp_vars);
+                               mp_hyps = x5;
+                               mp_goal = (problem.mp_goal)
+                             }
+                         | ABKGoal ->
+                             let x5 =
+                               let x6 = pattern_of_term typ ps1 in
+                               FStar_Pervasives_Native.Some x6 in
+                             {
+                               mp_vars = (problem.mp_vars);
+                               mp_hyps = (problem.mp_hyps);
+                               mp_goal = x5
+                             })))
               {
                 mp_vars = [];
                 mp_hyps = [];
@@ -866,33 +845,30 @@ let rec hoist_and_apply (head : FStar_Tactics_NamedView.term)
          FStar_Reflection_V2_Derived.mk_app head
            (FStar_List_Tot_Base.rev hoisted_args))
   | arg_term::rest ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.lift_div_tac ()
-           (fun uu___ -> FStar_List_Tot_Base.length hoisted_args))
-        (fun n ps ->
-           let x =
-             let x1 = FStarC_Tactics_V2_Builtins.fresh () ps in
-             {
-               FStar_Tactics_NamedView.uniq = x1;
-               FStar_Tactics_NamedView.ppname =
-                 (FStar_Sealed.seal
-                    (Prims.strcat "x" (Prims.string_of_int n)));
-               FStar_Tactics_NamedView.sort =
-                 (FStarC_Reflection_V2_Builtins.pack_ln
-                    FStarC_Reflection_V2_Data.Tv_Unknown);
-               FStar_Tactics_NamedView.qual =
-                 FStarC_Reflection_V2_Data.Q_Explicit;
-               FStar_Tactics_NamedView.attrs = []
-             } in
-           let x1 =
-             let x2 =
-               hoist_and_apply head rest
-                 (((FStar_Tactics_NamedView.pack
-                      (FStar_Tactics_NamedView.Tv_Var
-                         (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x))),
-                    FStarC_Reflection_V2_Data.Q_Explicit) :: hoisted_args) ps in
-             FStar_Tactics_NamedView.Tv_Let (false, [], x, arg_term, x2) in
-           FStar_Tactics_NamedView.pack x1)
+      (fun ps ->
+         let x = FStar_List_Tot_Base.length hoisted_args in
+         let x1 =
+           let x2 = FStarC_Tactics_V2_Builtins.fresh () ps in
+           {
+             FStar_Tactics_NamedView.uniq = x2;
+             FStar_Tactics_NamedView.ppname =
+               (FStar_Sealed.seal (Prims.strcat "x" (Prims.string_of_int x)));
+             FStar_Tactics_NamedView.sort =
+               (FStarC_Reflection_V2_Builtins.pack_ln
+                  FStarC_Reflection_V2_Data.Tv_Unknown);
+             FStar_Tactics_NamedView.qual =
+               FStarC_Reflection_V2_Data.Q_Explicit;
+             FStar_Tactics_NamedView.attrs = []
+           } in
+         let x2 =
+           let x3 =
+             hoist_and_apply head rest
+               (((FStar_Tactics_NamedView.pack
+                    (FStar_Tactics_NamedView.Tv_Var
+                       (FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x1))),
+                  FStarC_Reflection_V2_Data.Q_Explicit) :: hoisted_args) ps in
+           FStar_Tactics_NamedView.Tv_Let (false, [], x1, arg_term, x3) in
+         FStar_Tactics_NamedView.pack x2)
 let specialize_abspat_continuation' (continuation : abspat_continuation)
   (solution_term : FStar_Tactics_NamedView.term) :
   (FStar_Tactics_NamedView.term, Obj.t) FStar_Tactics_Effect.tac_repr=

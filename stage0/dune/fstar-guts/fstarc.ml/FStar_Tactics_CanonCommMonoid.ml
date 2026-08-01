@@ -92,9 +92,7 @@ let rec where_aux (n : Prims.nat) (x : FStar_Tactics_NamedView.term)
   | [] -> (fun uu___ -> FStar_Pervasives_Native.None)
   | x'::xs' ->
       if term_eq x x'
-      then
-        FStar_Tactics_Effect.lift_div_tac ()
-          (fun uu___ -> FStar_Pervasives_Native.Some n)
+      then (fun uu___ -> FStar_Pervasives_Native.Some n)
       else where_aux (n + Prims.int_one) x xs'
 let where :
   FStar_Tactics_NamedView.term ->
@@ -191,11 +189,9 @@ let reification
         (fun uu___ t ->
            match uu___ with
            | (es, vs, vm) ->
-               FStar_Tactics_Effect.tac_bind () ()
-                 (reification_aux unquotea vs vm f x x1 t)
-                 (fun uu___1 uu___2 ->
-                    match uu___1 with
-                    | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
+               (fun ps1 ->
+                  let x4 = reification_aux unquotea vs vm f x x1 t ps1 in
+                  match x4 with | (e, vs1, vm1) -> ((e :: es), vs1, vm1)))
         ([], [], (const munit def)) x2 ps in
     match x3 with | (es, uu___, vm) -> ((FStar_List_Tot_Base.rev es), vm)
 let rec term_mem (x : FStar_Tactics_NamedView.term)
@@ -203,10 +199,7 @@ let rec term_mem (x : FStar_Tactics_NamedView.term)
   (Prims.bool, Obj.t) FStar_Tactics_Effect.tac_repr=
   match uu___ with
   | [] -> (fun uu___1 -> false)
-  | hd::tl ->
-      if term_eq hd x
-      then FStar_Tactics_Effect.lift_div_tac () (fun uu___1 -> true)
-      else term_mem x tl
+  | hd::tl -> if term_eq hd x then (fun uu___1 -> true) else term_mem x tl
 let unfold_topdown (ts : FStar_Tactics_NamedView.term Prims.list) :
   (unit, Obj.t) FStar_Tactics_Effect.tac_repr=
   fun ps ->
@@ -234,27 +227,24 @@ let rec quote_list :
                    (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Nil"])))
              [(ta, FStarC_Reflection_V2_Data.Q_Implicit)])
     | x::xs' ->
-        FStar_Tactics_Effect.tac_bind () ()
-          (FStar_Tactics_Effect.tac_bind () ()
-             (FStar_Tactics_Effect.tac_bind () ()
-                (FStar_Tactics_Effect.tac_bind () () (quotea x)
-                   (fun uu___ uu___1 ->
-                      (uu___, FStarC_Reflection_V2_Data.Q_Explicit)))
-                (fun uu___ ps ->
-                   let x1 =
-                     let x2 =
-                       let x3 = quote_list ta quotea xs' ps in
-                       (x3, FStarC_Reflection_V2_Data.Q_Explicit) in
-                     [x2] in
-                   uu___ :: x1))
-             (fun uu___ uu___1 -> (ta, FStarC_Reflection_V2_Data.Q_Implicit)
-                :: uu___))
-          (fun uu___ uu___1 ->
-             FStar_Reflection_V2_Derived.mk_app
-               (FStarC_Reflection_V2_Builtins.pack_ln
-                  (FStarC_Reflection_V2_Data.Tv_FVar
-                     (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Cons"])))
-               uu___)
+        (fun ps ->
+           let x1 =
+             let x2 =
+               let x3 =
+                 let x4 = quotea x ps in
+                 (x4, FStarC_Reflection_V2_Data.Q_Explicit) in
+               let x4 =
+                 let x5 =
+                   let x6 = quote_list ta quotea xs' ps in
+                   (x6, FStarC_Reflection_V2_Data.Q_Explicit) in
+                 [x5] in
+               x3 :: x4 in
+             (ta, FStarC_Reflection_V2_Data.Q_Implicit) :: x2 in
+           FStar_Reflection_V2_Derived.mk_app
+             (FStarC_Reflection_V2_Builtins.pack_ln
+                (FStarC_Reflection_V2_Data.Tv_FVar
+                   (FStarC_Reflection_V2_Builtins.pack_fv ["Prims"; "Cons"])))
+             x1)
 let quote_vm (ta : FStar_Tactics_NamedView.term)
   (tb : FStar_Tactics_NamedView.term)
   (quotea :
@@ -349,28 +339,25 @@ let rec quote_exp (e : exp) :
               (FStarC_Reflection_V2_Builtins.pack_fv
                  ["FStar"; "Tactics"; "CanonCommMonoid"; "Unit"])))
   | Var x ->
-      FStar_Tactics_Effect.lift_div_tac ()
-        (fun uu___ ->
-           FStar_Reflection_V2_Derived.mk_e_app
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_FVar
-                   (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar"; "Tactics"; "CanonCommMonoid"; "Var"])))
-             [FStar_Tactics_NamedView.pack
-                (FStar_Tactics_NamedView.Tv_Const
-                   (FStarC_Reflection_V2_Data.C_Int x))])
+      (fun uu___ ->
+         FStar_Reflection_V2_Derived.mk_e_app
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "Tactics"; "CanonCommMonoid"; "Var"])))
+           [FStar_Tactics_NamedView.pack
+              (FStar_Tactics_NamedView.Tv_Const
+                 (FStarC_Reflection_V2_Data.C_Int x))])
   | Mult (e1, e2) ->
-      FStar_Tactics_Effect.tac_bind () ()
-        (FStar_Tactics_Effect.tac_bind () () (quote_exp e1)
-           (fun uu___ ps ->
-              let x = let x1 = quote_exp e2 ps in [x1] in uu___ :: x))
-        (fun uu___ uu___1 ->
-           FStar_Reflection_V2_Derived.mk_e_app
-             (FStarC_Reflection_V2_Builtins.pack_ln
-                (FStarC_Reflection_V2_Data.Tv_FVar
-                   (FStarC_Reflection_V2_Builtins.pack_fv
-                      ["FStar"; "Tactics"; "CanonCommMonoid"; "Mult"])))
-             uu___)
+      (fun ps ->
+         let x =
+           let x1 = quote_exp e1 ps in
+           let x2 = let x3 = quote_exp e2 ps in [x3] in x1 :: x2 in
+         FStar_Reflection_V2_Derived.mk_e_app
+           (FStarC_Reflection_V2_Builtins.pack_ln
+              (FStarC_Reflection_V2_Data.Tv_FVar
+                 (FStarC_Reflection_V2_Builtins.pack_fv
+                    ["FStar"; "Tactics"; "CanonCommMonoid"; "Mult"]))) x)
 let canon_monoid_aux (ta : FStar_Tactics_NamedView.term)
   (unquotea :
     FStar_Tactics_NamedView.term -> ('a, Obj.t) FStar_Tactics_Effect.tac_repr)
