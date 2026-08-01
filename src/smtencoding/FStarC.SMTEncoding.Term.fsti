@@ -330,6 +330,7 @@ val unboxBitVec: int -> term -> ML term
 
 val mk_PreType:      term -> ML term
 val mk_Valid:        term -> ML term
+val mk_valid_at:     Range.t -> term -> ML term
 val mk_HasType:      term -> term -> ML term
 val mk_HasTypeZ:     term -> term -> ML term
 val mk_IsTotFun:     term -> ML term

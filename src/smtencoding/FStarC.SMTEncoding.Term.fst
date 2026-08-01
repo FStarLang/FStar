@@ -1199,6 +1199,19 @@ let mk_Valid t        = match t with
     | App (Var "Prims.b2t") [t1] _ -> rng_of t (unboxBool t1)
     | _ ->
         rng_of t (mkApp("Valid",  [t]))
+
+(* [mk_Valid t] with the range [r] attached to the *result*.  Only [App] and
+   [Quant] nodes carry a range, so setting the range on [t] itself is a no-op
+   when [t] is e.g. a [FreeV]; the range would then be lost and, with it, the
+   "See also <definition site>" secondary location of an SMT error. *)
+let mk_valid_at (r:Range.t) (t:term) : ML term =
+    let r =
+      if Range.rng_included (Range.use_range (range_of_term t)) (Range.use_range r)
+      then range_of_term t
+      else r
+    in
+    set_range (mk_Valid (set_range t r)) r
+
 let mk_unit_type = mkApp("Prims.unit", [])
 let mk_HasType v t    = rng_of t (mkApp("HasType", [v;t]))
 let mk_HasTypeZ v t   = rng_of t (mkApp("HasTypeZ", [v;t]))

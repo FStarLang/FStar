@@ -1798,11 +1798,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
               let encode_valid () =
                 debug phi;
                 let tt, decls = encode_term phi env in
-                let tt =
-                    if Range.rng_included (Range.use_range (range_of_term tt)) (Range.use_range phi.pos)
-                    then tt
-                    else set_range tt phi.pos in
-                mk_Valid tt, decls
+                mk_valid_at phi.pos tt, decls
               in
               if head_redex env head
               then match maybe_whnf env head with
@@ -1813,11 +1809,7 @@ and encode_formula (phi:typ) (env:env_t) : ML (term & decls_t)  = (* expects phi
 
         | _ ->
             let tt, decls = encode_term phi env in
-            let tt =
-                  if Range.rng_included (Range.use_range (range_of_term tt)) (Range.use_range phi.pos)
-                  then tt
-                  else set_range tt phi.pos in
-            mk_Valid tt, decls in
+            mk_valid_at phi.pos tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list args) body =
         let vars, guards, env, decls, _ = encode_binders None bs env in
