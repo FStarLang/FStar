@@ -1586,13 +1586,22 @@ let already_loaded_iface_decls (en:env) (m:modul) : ML (list (list string & stri
     | Some i -> i.declarations |> List.map sigelt_key
     | None -> []
 
-let load_checked_module_sigelts (en:env) (m:modul) : ML env =
+(* [push] controls whether the module's sigelts are added under a fresh
+   context snapshot.  Callers that go on to [finish_partial_modul true] need it;
+   [load_checked_module] does not, since the env it keeps afterwards is the
+   pushed one and the popped one is discarded -- so the snapshot only costs 9
+   [SMap.copy]s per dependency. *)
+let load_checked_module_sigelts (push:bool) (en:env) (m:modul) : ML env =
   //This function tries to very carefully mimic the effect of the environment
   //of having checked the module from scratch, i.e., using tc_module below
   let loaded = already_loaded_iface_decls en m in
   let env = Env.set_current_module en m.name in
   //push context, finish_partial_modul will do the pop
-  let env = push_context env ("Internals for " ^ Ident.string_of_lid m.name) in
+  let env =
+    if push
+    then push_context env ("Internals for " ^ Ident.string_of_lid m.name)
+    else env
+  in
   let env = List.fold_left (fun env se ->
              if Cons? loaded && List.mem (sigelt_key se) loaded then env else
              //add every sigelt in the environment
@@ -1615,15 +1624,15 @@ let load_checked_module (en:env) (m:modul) : ML env =
   if not (Options.should_check (string_of_lid m.name)) && not (Options.debug_all_modules ())
   then Debug.disable_all ();
 
-  let env = load_checked_module_sigelts en m in
+  let env = load_checked_module_sigelts false en m in
   //And then call finish_partial_modul, which is the normal workflow of tc_modul below
   //except with the flag `must_check_exports` set to false, since this is already a checked module
-  let _, env = finish_partial_modul true true env m in
+  let _, env = finish_partial_modul false true env m in
   Debug.restore dsnap;
   env
 
 let load_partial_checked_module (en:env) (m:modul) : ML env =
-  load_checked_module_sigelts en m
+  load_checked_module_sigelts true en m
 
 let check_module env0 m : ML _ =
   if Debug.any()
